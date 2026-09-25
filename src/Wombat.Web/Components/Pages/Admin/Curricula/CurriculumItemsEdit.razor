@@ -21,7 +21,9 @@
 </PageHeader>
 
 @* What an action did. After a Remove it takes the focus once the dialog has closed (T222, as T206's Withdraw): the row's
-   Remove button, which had the focus before the dialog, is gone with its row. *@
+   Remove button, which had the focus before the dialog, is gone with its row. It takes it too once a Save closes its
+   row, taking Save with it, and once an Add is done and the form is still there (T234): "Curriculum item added."
+   arriving on its own is often not read. A refused Save or Add leaves the focus on its button, beside the refusal. *@
 <div @ref="_result" class="action-result" tabindex="-1">
   @if (!string.IsNullOrWhiteSpace(_statusMessage))
   {
@@ -170,7 +172,7 @@
                       <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Edit {ItemName(item)}")"
                               @onclick="() => BeginEditAsync(item)">Edit</button>
                       <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Remove {ItemName(item)}")"
-                              disabled="@(_saving || _removing)" @onclick="() => AskRemoveAsync(item)">Remove</button>
+                              disabled="@Busy" @onclick="() => AskRemoveAsync(item)">Remove</button>
                     </div>
                   }
                 </td>
@@ -303,7 +305,9 @@
                            beside Save, which points at it, so the reason Save is off is read with it and seen with it. *@
                         <span id="edit-minima-status" class="muted" role="status">@(MinimaComplete(_editModel) ? null : IncompleteText(_editModel, "Saving"))</span>
                         <button type="button" class="btn btn-outline" @onclick="CancelEdit">Cancel</button>
-                        <button type="button" class="btn btn-primary" disabled="@(_saving || !MinimaComplete(_editModel))"
+                        @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of
+                           a button it disables, to the page. A second press sends nothing (SaveItemAsync). *@
+                        <button type="button" class="btn btn-primary" disabled="@(_adding || _removing || !MinimaComplete(_editModel))" aria-disabled="@InFlight.AriaDisabled(_updating)"
                                 aria-describedby="edit-minima-status" @onclick="SaveItemAsync">Save</button>
                       </FormActions>
                     </fieldset>
@@ -453,7 +457,8 @@
           <FormActions>
             @* Always rendered, filled only when adding is off; see the edit row's status for why. *@
             <span id="add-minima-status" class="muted" role="status">@(MinimaComplete(_addModel) ? null : IncompleteText(_addModel, "Adding"))</span>
-            <button type="submit" class="btn btn-primary" disabled="@(_saving || !MinimaComplete(_addModel))"
+            @* Not disabled while its own add runs (T234), as the edit row's Save. *@
+            <button type="submit" class="btn btn-primary" disabled="@(_updating || _removing || !MinimaComplete(_addModel))" aria-disabled="@InFlight.AriaDisabled(_adding)"
                     aria-describedby="add-minima-status">Add item</button>
           </FormActions>
         </EditForm>
@@ -533,7 +538,15 @@
   private string? _addError;
   private string? _statusMessage;
   private bool _loading;
-  private bool _saving;
+
+  /// <summary>An Add has been sent and has not answered, its reloads included.</summary>
+  private bool _adding;
+
+  /// <summary>An edit row's Save has been sent and has not answered, its reloads included.</summary>
+  private bool _updating;
+
+  /// <summary>Something has been sent and has not answered, so nothing else may be sent. (T234)</summary>
+  private bool Busy => _adding || _updating || _removing;
 
   // One help text per field, printed by the edit form and the Add form alike (T176): the two are the same fields, in the
   // same order, with the same help, and CurriculumItemsEditLayoutTests holds them to it. The scale's matters most while
@@ -581,14 +594,31 @@
     }
   }
 
+  /// <remarks>
+  /// Sent at most once at a time (T234): the flag is set before the first await, so a second press of Add item, which
+  /// stays enabled while it runs, does nothing.
+  /// </remarks>
   private async Task AddItemAsync()
   {
     // The button is off until every minimum is picked; this is the same rule for a submit that did not come from it.
-    if (!MinimaComplete(_addModel))
+    if (!MinimaComplete(_addModel) || Busy)
     {
       return;
     }
 
+    _adding = true;
+    try
+    {
+      await AddItemCoreAsync();
+    }
+    finally
+    {
+      _adding = false;
+    }
+  }
+
+  private async Task AddItemCoreAsync()
+  {
     _addError = null;
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     _addError = await RunAsync(() => Sender.Send(new AddCurriculumItemCommand(Id, _addModel.EpaId, _addModel.RequiredCount, _addModel.QuotaPeriod, _addModel.MinimumLevelOrder!.Value, _addModel.WindowMonths, _addModel.Weight, _addModel.StageMinima.ToJson(), _addModel.PermittedToolKeys.ToList(), _addModel.DecisionCadence, NullIfBlank(_addModel.DecisionBodyKey), _addModel.DecisionIsOpportunistic, authState.User, _addModel.ScaleId)), AddedMessage);
@@ -619,6 +649,11 @@
     {
       _addEmptyLead = (AddedMessage, false);
       _focusAddEmpty = true;
+    }
+    else
+    {
+      // The form is still there, and its result is at the top of the page (T234).
+      _focusResult = true;
     }
   }
 
@@ -668,18 +703,34 @@
     _rowError = null;
   }
 
+  /// <remarks>
+  /// Sent at most once at a time (T234), as <see cref="AddItemAsync" /> is.
+  /// </remarks>
   private async Task SaveItemAsync()
   {
-    if (!_editingItemId.HasValue || !MinimaComplete(_editModel))
+    if (!_editingItemId.HasValue || !MinimaComplete(_editModel) || Busy)
     {
       return;
     }
 
+    _updating = true;
+    try
+    {
+      await SaveItemCoreAsync(_editingItemId.Value);
+    }
+    finally
+    {
+      _updating = false;
+    }
+  }
+
+  private async Task SaveItemCoreAsync(int itemId)
+  {
     _rowError = null;
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     // Only leave edit mode when the command actually succeeded. Closing the row on a refusal would throw away
     // everything the operator picked while showing them an error about it.
-    _rowError = await RunAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, _editingItemId.Value, _editModel.EpaId, _editModel.RequiredCount, _editModel.QuotaPeriod, _editModel.MinimumLevelOrder!.Value, _editModel.WindowMonths, _editModel.Weight, _editModel.StageMinima.ToJson(), _editModel.PermittedToolKeys.ToList(), _editModel.DecisionCadence, NullIfBlank(_editModel.DecisionBodyKey), _editModel.DecisionIsOpportunistic, authState.User, _editModel.ScaleId)), "Curriculum item saved.");
+    _rowError = await RunAsync(() => Sender.Send(new UpdateCurriculumItemCommand(Id, itemId, _editModel.EpaId, _editModel.RequiredCount, _editModel.QuotaPeriod, _editModel.MinimumLevelOrder!.Value, _editModel.WindowMonths, _editModel.Weight, _editModel.StageMinima.ToJson(), _editModel.PermittedToolKeys.ToList(), _editModel.DecisionCadence, NullIfBlank(_editModel.DecisionBodyKey), _editModel.DecisionIsOpportunistic, authState.User, _editModel.ScaleId)), "Curriculum item saved.");
     if (_rowError is not null)
     {
       // Refused, possibly because the page is out of date (T222 review): the EPA chosen was put on the curriculum
@@ -701,6 +752,9 @@
 
     // A save that moved the item to another EPA frees the one it held and takes the one it names (T222).
     await RefreshPickersAsync(authState.User);
+
+    // The row, and Save with it, is gone (T234).
+    _focusResult = true;
   }
 
   /// <summary>
@@ -722,7 +776,7 @@
 
   private async Task AskRemoveAsync(CurriculumItemDto item)
   {
-    if (_saving || _removing)
+    if (Busy)
     {
       return;
     }
@@ -744,7 +798,7 @@
   /// </remarks>
   private async Task RemoveItemAsync()
   {
-    if (_pendingRemove is not { } item || _saving || _removing)
+    if (_pendingRemove is not { } item || Busy)
     {
       return;
     }
@@ -852,7 +906,6 @@
   /// <summary>Runs a command and reloads the curriculum from its result. Returns the refusal, or null on success.</summary>
   private async Task<string?> RunAsync(Func<Task<CurriculumDto>> action, string successMessage)
   {
-    _saving = true;
     ClearResult();
 
     try
@@ -864,10 +917,6 @@
     catch (Exception exception)
     {
       return exception.Message;
-    }
-    finally
-    {
-      _saving = false;
     }
   }
 
@@ -1093,8 +1142,9 @@
 
   /// <remarks>
   /// A Remove's result takes the focus once the browser has acknowledged the render that follows it; by then the dialog
-  /// is closed, since ConfirmDialog closes it as soon as <see cref="RemoveItemAsync" /> returns (T206 review). The Add
-  /// form's empty state takes it after the Add that emptied the picker, whose button went with the form.
+  /// is closed, since ConfirmDialog closes it as soon as <see cref="RemoveItemAsync" /> returns (T206 review). So does a
+  /// Save's that closed its row, and an Add's that left the form (T234). The Add form's empty state takes it after the
+  /// Add that emptied the picker, whose button went with the form.
   /// </remarks>
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {

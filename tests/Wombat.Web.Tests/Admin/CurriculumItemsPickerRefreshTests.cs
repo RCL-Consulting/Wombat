@@ -120,6 +120,74 @@ public sealed class CurriculumItemsPickerRefreshTests : TestContext
         Text(cut.Find(".form-container .detail-card--empty-compact")).Should().Be(NationalEmptyText);
     }
 
+    // ---- T234: an Add or a Save keeps the keyboard focus ----
+
+    [Fact]
+    public void AnAddThatLeavesTheForm_MovesTheFocusToItsResult()
+    {
+        // T234. Add item was disabled while it ran, and a browser drops the focus of a button it disables, to the page.
+        // The form is still there after this Add, and its result is at the top of the page, so the focus goes there.
+        var cut = RenderPage(Stateful());
+
+        AddWithMinimum(cut);
+
+        cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Curriculum item added."));
+        cut.FindAll(".form-container .detail-card--empty-compact").Should().BeEmpty("PAED-005 is still left to add");
+        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
+            .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.ResultRegion.Id));
+    }
+
+    [Fact]
+    public void WhileAnAddRuns_AddItemStaysEnabled_AndASecondPressSendsNothing()
+    {
+        var sender = Stateful(holdAdds: true);
+        var cut = RenderPage(sender);
+
+        AddWithMinimum(cut);
+
+        AddButton(cut).HasAttribute("disabled").Should().BeFalse(
+            "it has the focus, and a browser drops the focus of a button it disables, to the page (T234)");
+        AddButton(cut).GetAttribute("aria-disabled").Should().Be("true", "a second press does nothing (T234 review)");
+        cut.Find("form").Submit();
+        sender.AddsSent.Should().Be(1, "a second press while the Add runs sends nothing");
+
+        sender.Release();
+
+        cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Curriculum item added."));
+        AddButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
+        sender.AddsSent.Should().Be(1);
+    }
+
+    [Fact]
+    public void ARefusedAdd_IsShownInTheForm_AndAddItemKeepsTheFocus()
+    {
+        var cut = RenderPage(new FakeSender { AddFailure = new InvalidOperationException("The target must be at least 1.") });
+
+        AddWithMinimum(cut);
+
+        cut.WaitForAssertion(() => Text(cut.Find("form .alert.alert-danger")).Should().Be("The target must be at least 1."));
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "Blazor._internal.domWrapper.focus");
+        AddButton(cut).HasAttribute("disabled").Should().BeFalse();
+    }
+
+    [Fact]
+    public void ASaveThatClosesItsRow_MovesTheFocusToItsResult()
+    {
+        // T234. The row closes, and Save with it, so the focus goes to the result at the top of the page.
+        var cut = RenderPage(Stateful());
+
+        BeginEdit(cut, "PAED-003");
+        ClickIn(cut.Find("tr.is-editing td[colspan]"), "Save");
+
+        cut.WaitForAssertion(() => cut.FindAll("tr.is-editing").Should().BeEmpty());
+        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Curriculum item saved.");
+        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
+            .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.ResultRegion.Id));
+    }
+
+    private static IElement AddButton(IRenderedComponent<CurriculumItemsEdit> cut)
+        => cut.Find("form button[type=submit]");
+
     [Fact]
     public void AfterARemove_ItsEpaIsOfferedAgain_AndTheAddFormKeepsItsChoice()
     {
@@ -315,13 +383,14 @@ public sealed class CurriculumItemsPickerRefreshTests : TestContext
     /// A curriculum holding PAED-001 to PAED-003, whose pickers are answered from the items it holds at each ask, as
     /// <c>ListCurriculumItemEpaOptionsQuery</c> answers: every nameable EPA but those another item holds.
     /// </summary>
-    private static FakeSender Stateful(IReadOnlyList<EpaDto>? nameable = null)
+    private static FakeSender Stateful(IReadOnlyList<EpaDto>? nameable = null, bool holdAdds = false)
     {
         var epas = nameable ?? EveryEpa;
         FakeSender sender = null!;
         sender = new FakeSender
         {
             StoresItems = true,
+            HoldAdds = holdAdds,
             EpaOptionsFor = itemId => epas
                 .Where(epa => !sender.CurrentItems.Any(item => item.Id != itemId && item.EpaId == epa.Id))
                 .ToList()

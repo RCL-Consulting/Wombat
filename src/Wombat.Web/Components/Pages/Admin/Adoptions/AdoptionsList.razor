@@ -8,14 +8,19 @@
 <PageHeader Title="Curriculum adoptions" Subtitle="Adopt the national (college-owned) curriculum versions your institution trains against. Trainees can only be admitted into an adopted version.">
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+@* What Adopt did. It takes the focus once an adoption is done (T234; DESIGN.md § Button system): the choice it cleared
+   leaves Adopt disabled, and a browser drops the focus of a button it disables, to the page. A refusal keeps the choice,
+   and the focus on Adopt: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
+</ActionResult>
 
 <StatePanel IsLoading="@(_loading)" IsEmpty="false" EmptyTitle="" EmptyBody="">
   @if (_isAdministrator)
@@ -49,7 +54,8 @@
         </FormField>
       </div>
       <FormActions>
-        <button type="button" class="btn btn-primary" @onclick="AdoptAsync" disabled="@(_saving || _selectedCurriculumId == 0)">@(_saving ? "Adopting..." : "Adopt")</button>
+        @* Not disabled while its adoption runs (T234): it has the focus. A second press sends nothing. *@
+        <button type="button" class="btn btn-primary" @onclick="AdoptAsync" disabled="@(_selectedCurriculumId == 0)" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Adopting..." : "Adopt")</button>
       </FormActions>
       <p class="page-subtitle">Re-adopting a newer version of a discipline you already follow supersedes the current adoption for that discipline.</p>
     </div>
@@ -100,6 +106,7 @@
   private string? _statusMessage;
   private bool _loading;
   private bool _saving;
+  private ActionResult? _result;
 
   protected override async Task OnInitializedAsync()
   {
@@ -155,7 +162,7 @@
 
   private async Task AdoptAsync()
   {
-    if (!_institutionId.HasValue || _selectedCurriculumId == 0)
+    if (_saving || !_institutionId.HasValue || _selectedCurriculumId == 0)
     {
       return;
     }
@@ -171,6 +178,7 @@
       _statusMessage = "Curriculum adopted.";
       _selectedCurriculumId = 0;
       await LoadAdoptionsAsync();
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {

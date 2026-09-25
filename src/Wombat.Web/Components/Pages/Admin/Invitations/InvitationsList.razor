@@ -9,30 +9,35 @@
 
 <PageHeader Title="Invitations" Subtitle="Issue invitation-only onboarding links and review active invitations." />
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+@* What an issue or a revoke did, and the link an issue made. It takes the focus once either is done (T234; DESIGN.md
+   § Button system): an issue rebuilds its form, and the button with it, and a revoked invitation's row is gone. A
+   refusal leaves the focus where it was: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_lastIssuedRegistrationUrl))
-{
-  <Alert Kind="info">
-    <p>
-      <strong>Share this registration link with the invitee.</strong>
-      It expires in 14 days. The link is shown here only on this page-load — copy it now;
-      it cannot be retrieved later. Email delivery is configured separately; if SMTP is not
-      set up, this link is the canonical onboarding handoff.
-    </p>
-    <p>
-      <code style="word-break:break-all">@_lastIssuedRegistrationUrl</code>
-    </p>
-  </Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_lastIssuedRegistrationUrl))
+  {
+    <Alert Kind="info">
+      <p>
+        <strong>Share this registration link with the invitee.</strong>
+        It expires in 14 days. The link is shown here only on this page-load — copy it now;
+        it cannot be retrieved later. Email delivery is configured separately; if SMTP is not
+        set up, this link is the canonical onboarding handoff.
+      </p>
+      <p>
+        <code style="word-break:break-all">@_lastIssuedRegistrationUrl</code>
+      </p>
+    </Alert>
+  }
+</ActionResult>
 
 <div class="details-grid">
   <section class="detail-card">
@@ -103,7 +108,10 @@
       </div>
 
       <FormActions>
-        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Issuing..." : "Issue invitation")</button>
+        @* Not disabled while its issue runs (T234): it has the focus. A second press sends nothing, and aria-disabled says
+           so. Disabled while a revoke runs. *@
+        <button type="submit" class="btn btn-primary" disabled="@(_revokingId is not null)"
+                aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Issuing..." : "Issue invitation")</button>
       </FormActions>
     </EditForm>
   </section>
@@ -135,7 +143,13 @@
             <td>@invitation.SubSpecialityName</td>
             <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
             <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
-            <td><button type="button" class="btn btn-danger btn-sm" @onclick="() => RevokeAsync(invitation.Id)">Revoke</button></td>
+            <td>
+              @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
+              <button type="button" class="btn btn-danger btn-sm"
+                      disabled="@(_saving || (_revokingId is not null && _revokingId != invitation.Id))"
+                      aria-disabled="@InFlight.AriaDisabled(_revokingId == invitation.Id)"
+                      @onclick="() => RevokeAsync(invitation.Id)">Revoke</button>
+            </td>
           </tr>
         </Row>
       </DataTable>
@@ -168,6 +182,11 @@
   private string? _lastIssuedRegistrationUrl;
   private bool _loading = true;
   private bool _saving;
+
+  /// <summary>The invitation whose revoke has been sent and has not answered, or null. (T234 review)</summary>
+  private int? _revokingId;
+
+  private ActionResult? _result;
 
   // Only a global Administrator may provision a CollegeAdmin (the handler enforces this too);
   // hide the option from InstitutionalAdmins so they aren't offered a path that will be rejected. (T093)
@@ -220,6 +239,11 @@
 
   private async Task IssueAsync()
   {
+    if (_saving || _revokingId is not null)
+    {
+      return;
+    }
+
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
@@ -266,6 +290,7 @@
       _statusMessage = $"Invitation issued for {_model.Email}. Copy the link below — it is shown only once.";
       _model = new InvitationFormModel();
       _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
@@ -279,6 +304,12 @@
 
   private async Task RevokeAsync(int invitationId)
   {
+    if (_saving || _revokingId is not null)
+    {
+      return;
+    }
+
+    _revokingId = invitationId;
     _errorMessage = null;
     _statusMessage = null;
 
@@ -288,10 +319,15 @@
       await Sender.Send(new RevokeInvitationCommand(invitationId, authState.User));
       _statusMessage = "Invitation revoked.";
       _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
       _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _revokingId = null;
     }
   }
 

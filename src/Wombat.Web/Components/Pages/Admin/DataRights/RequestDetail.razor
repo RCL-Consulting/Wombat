@@ -14,15 +14,20 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+@* What Approve or Reject did. It takes the focus once either is done (T234; DESIGN.md § Button system): a decided
+   request offers no action, so both buttons are gone. A refusal leaves the focus where it was: it is an alert, read at
+   once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
+</ActionResult>
 
 <StatePanel IsLoading="@(_request is null && string.IsNullOrWhiteSpace(_errorMessage))" IsEmpty="@(_request is null)" EmptyTitle="Not found" EmptyBody="The data rights request was not found.">
   @if (_request is not null)
@@ -68,11 +73,13 @@
         </FormField>
 
         <FormActions>
-          <button type="button" class="btn btn-primary" disabled="@_processing" @onclick="ApproveAsync">
-            @(_processing ? "Processing..." : "Approve")
+          @* Neither is disabled while its own decision runs (T234): the one pressed has the focus, and a browser drops the
+             focus of a button it disables, to the page. A second press sends nothing. *@
+          <button type="button" class="btn btn-primary" disabled="@_rejecting" aria-disabled="@InFlight.AriaDisabled(_approving)" @onclick="ApproveAsync">
+            @(_approving ? "Processing..." : "Approve")
           </button>
-          <button type="button" class="btn btn-outline" disabled="@_processing" @onclick="RejectAsync">
-            Reject
+          <button type="button" class="btn btn-outline" disabled="@_approving" aria-disabled="@InFlight.AriaDisabled(_rejecting)" @onclick="RejectAsync">
+            @(_rejecting ? "Processing..." : "Reject")
           </button>
         </FormActions>
       </div>
@@ -88,7 +95,12 @@
   private string? _errorMessage;
   private string? _statusMessage;
   private string _decisionNote = string.Empty;
-  private bool _processing;
+  private bool _approving;
+  private bool _rejecting;
+  private ActionResult? _result;
+
+  /// <summary>A decision has been sent and has not answered, so nothing else may be sent. (T234)</summary>
+  private bool Busy => _approving || _rejecting;
 
   protected override async Task OnInitializedAsync()
   {
@@ -106,13 +118,18 @@
 
   private async Task ApproveAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     if (string.IsNullOrWhiteSpace(_decisionNote))
     {
       _errorMessage = "A decision note is required.";
       return;
     }
 
-    _processing = true;
+    _approving = true;
     _errorMessage = null;
     _statusMessage = null;
 
@@ -124,6 +141,7 @@
           Id, _decisionNote, authState.User));
       _statusMessage = "Request approved.";
       _decisionNote = string.Empty;
+      _result?.FocusAfterRender();
     }
     catch (Exception ex)
     {
@@ -131,19 +149,24 @@
     }
     finally
     {
-      _processing = false;
+      _approving = false;
     }
   }
 
   private async Task RejectAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     if (string.IsNullOrWhiteSpace(_decisionNote))
     {
       _errorMessage = "A decision note is required.";
       return;
     }
 
-    _processing = true;
+    _rejecting = true;
     _errorMessage = null;
     _statusMessage = null;
 
@@ -155,6 +178,7 @@
           Id, _decisionNote, authState.User));
       _statusMessage = "Request rejected.";
       _decisionNote = string.Empty;
+      _result?.FocusAfterRender();
     }
     catch (Exception ex)
     {
@@ -162,7 +186,7 @@
     }
     finally
     {
-      _processing = false;
+      _rejecting = false;
     }
   }
 

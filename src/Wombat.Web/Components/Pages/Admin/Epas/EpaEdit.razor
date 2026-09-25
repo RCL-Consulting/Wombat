@@ -13,9 +13,11 @@
   </Actions>
 </PageHeader>
 
-@* What a save or a deactivation did. It takes the focus after the Deactivate button deactivates the EPA, because that
-   button is then gone and the focus would fall to the page when the dialog closes (T196 review; DESIGN.md § Button
-   system). Every other action leaves its own button, and the focus with it. *@
+@* What a save or a deactivation did. It takes the focus once a Save or a deactivation is done (T234; DESIGN.md § Button
+   system): "EPA saved.", or what reactivating credited, arriving on its own is often not read, and the Deactivate
+   button that deactivated the EPA is gone (T196 review). A refused Save leaves the focus where it was, on Save or the
+   field Enter was pressed in, and a refused deactivation leaves Deactivate, to which the dialog hands the focus back:
+   the refusal is an alert, read at once. *@
 <div @ref="_result" class="action-result" tabindex="-1">
   @if (!string.IsNullOrWhiteSpace(_statusMessage))
   {
@@ -91,9 +93,11 @@
            Active and saving. *@
         @if (!IsNew && _storedIsActive)
         {
-          <button type="button" class="btn btn-outline" @onclick="AskDeactivateAsync" disabled="@_saving">Deactivate</button>
+          <button type="button" class="btn btn-outline" @onclick="AskDeactivateAsync" disabled="@Busy">Deactivate</button>
         }
-        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+        @* Not disabled while its own save runs (T234): it has the focus then, and a browser drops the focus of a button
+           it disables, to the page. A second press sends nothing (SaveAsync). *@
+        <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
       </FormActions>
     </EditForm>
   </div>
@@ -118,7 +122,7 @@
   private ConfirmDialog? _confirmDeactivate;
   private ElementReference _result;
 
-  // The Deactivate button deactivated the EPA and is gone: its result takes the focus after the next render.
+  // A save or a deactivation is done: its result takes the focus after the next render.
   private bool _focusResult;
 
   internal ElementReference ResultRegion => _result;
@@ -128,7 +132,15 @@
   private string? _errorMessage;
   private string? _statusMessage;
   private bool _loading;
+
+  /// <summary>A save has been sent and has not yet answered.</summary>
   private bool _saving;
+
+  /// <summary>A deactivation through the Deactivate button has been sent and has not yet answered.</summary>
+  private bool _deactivating;
+
+  /// <summary>Something has been sent and has not answered, so nothing else may be sent.</summary>
+  private bool Busy => _saving || _deactivating;
 
   // What the database says, as against the checkbox, which the user can untick without saving.
   private bool _storedIsActive = true;
@@ -201,8 +213,17 @@
   /// Save, unless it would deactivate the EPA: unticking Active and saving is the same action as the Deactivate button, so
   /// it asks the same question first (T196), and the dialog's confirm saves.
   /// </summary>
+  /// <remarks>
+  /// A press while something is in flight sends nothing (T234). Save is not disabled while its own save runs, so a second
+  /// Enter or click reaches here, and the flag, set before the first await, turns it away.
+  /// </remarks>
   private async Task SaveAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     if (!IsNew && _storedIsActive && !_model.IsActive && _confirmDeactivate is not null)
     {
       _saveOnConfirm = true;
@@ -213,6 +234,11 @@
     await SaveCoreAsync();
   }
 
+  /// <remarks>
+  /// A save that is done moves the focus to its result (T234): a plain Save, a reactivating one, and one that deactivates
+  /// through the dialog, whose close comes first. Until T234 Save was disabled while it ran, and the focus fell to the
+  /// page body. A created EPA leaves for its own page, and the focus with it.
+  /// </remarks>
   private async Task SaveCoreAsync()
   {
     _saving = true;
@@ -240,6 +266,7 @@
         (true, false) => "EPA saved and deactivated.",
         _ => "EPA saved."
       };
+      _focusResult = true;
     }
     catch (Exception exception)
     {
@@ -261,6 +288,11 @@
 
   private async Task AskDeactivateAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     _saveOnConfirm = false;
     if (_confirmDeactivate is not null)
     {
@@ -270,6 +302,11 @@
 
   private async Task ConfirmDeactivationAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     if (_saveOnConfirm)
     {
       _saveOnConfirm = false;
@@ -285,7 +322,7 @@
 
   private async Task DeactivateAsync()
   {
-    _saving = true;
+    _deactivating = true;
     _errorMessage = null;
     _statusMessage = null;
 
@@ -304,15 +341,15 @@
     }
     finally
     {
-      _saving = false;
+      _deactivating = false;
     }
   }
 
   /// <remarks>
-  /// After a deactivation through the button, the focus moves once the browser has acknowledged the render that follows
-  /// it. By then the dialog is closed: ConfirmDialog asks the browser to close it as soon as the deactivation returns,
-  /// and while a modal dialog is open nothing outside it can take the focus (as on the MSF campaign pages, T206 review).
-  /// A refused deactivation leaves the button, and the dialog hands the focus back to it.
+  /// After a save or a deactivation is done, the focus moves once the browser has acknowledged the render that follows
+  /// it. By then any dialog that sent it is closed: ConfirmDialog asks the browser to close it as soon as the action
+  /// returns, and while a modal dialog is open nothing outside it can take the focus (as on the MSF campaign pages, T206
+  /// review). A refused deactivation leaves the button, and the dialog hands the focus back to it.
   /// </remarks>
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {

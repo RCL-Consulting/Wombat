@@ -49,13 +49,17 @@
           </td>
           <td>@(job.NextRunAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
           <td>
-            <button class="btn btn-outline btn-sm" @onclick="() => ToggleAsync(job)" disabled="@_actionInProgress">
+            @* While a row's action runs the other buttons are disabled, and the one pressed is not (T234): it has the
+               focus, and a browser drops the focus of a button it disables, to the page. A second press sends nothing. *@
+            <button class="btn btn-outline btn-sm" @onclick="() => ToggleAsync(job)" disabled="@OtherInFlight(ToggleAction(job))"
+                    aria-disabled="@InFlight.AriaDisabled(Running(ToggleAction(job)))">
               @(job.IsEnabled ? "Disable" : "Enable")
             </button>
           </td>
           <td>
             <div class="actions-cell">
-              <button class="btn btn-outline btn-sm" @onclick="() => RunNowAsync(job)" disabled="@(_actionInProgress || !job.IsEnabled)">
+              <button class="btn btn-outline btn-sm" @onclick="() => RunNowAsync(job)" disabled="@(OtherInFlight(RunAction(job)) || !job.IsEnabled)"
+                      aria-disabled="@InFlight.AriaDisabled(Running(RunAction(job)))">
                 Run now
               </button>
             </div>
@@ -66,15 +70,30 @@
   }
 </StatePanel>
 
-@if (!string.IsNullOrWhiteSpace(_actionMessage))
-{
-  <Alert Kind="@(_actionSuccess ? "success" : "danger")">@_actionMessage</Alert>
-}
+@* What Enable, Disable or Run now did. It takes the focus once the action is done (T234; DESIGN.md § Button system): a
+   status arriving on its own is often not read. A refusal leaves the focus on the button: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_actionMessage))
+  {
+    <Alert Kind="@(_actionSuccess ? "success" : "danger")">@_actionMessage</Alert>
+  }
+</ActionResult>
 
 @code {
   private IReadOnlyList<Wombat.Application.Features.Scheduling.ScheduledJobDto>? _jobs;
   private string? _errorMessage;
-  private bool _actionInProgress;
+  private ActionResult? _result;
+
+  /// <summary>The row action that has been sent and has not yet answered, or null. (T234)</summary>
+  private string? _inFlight;
+
+  private static string ToggleAction(Wombat.Application.Features.Scheduling.ScheduledJobDto job) => $"toggle:{job.Key}";
+
+  private static string RunAction(Wombat.Application.Features.Scheduling.ScheduledJobDto job) => $"run:{job.Key}";
+
+  private bool OtherInFlight(string action) => _inFlight is not null && _inFlight != action;
+
+  private bool Running(string action) => _inFlight == action;
   private string? _actionMessage;
   private bool _actionSuccess;
 
@@ -97,7 +116,12 @@
 
   private async Task ToggleAsync(Wombat.Application.Features.Scheduling.ScheduledJobDto job)
   {
-    _actionInProgress = true;
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
+    _inFlight = ToggleAction(job);
     _actionMessage = null;
 
     try
@@ -114,6 +138,7 @@
       }
       _actionSuccess = true;
       await LoadJobsAsync();
+      _result?.FocusAfterRender();
     }
     catch (Exception ex)
     {
@@ -122,13 +147,18 @@
     }
     finally
     {
-      _actionInProgress = false;
+      _inFlight = null;
     }
   }
 
   private async Task RunNowAsync(Wombat.Application.Features.Scheduling.ScheduledJobDto job)
   {
-    _actionInProgress = true;
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
+    _inFlight = RunAction(job);
     _actionMessage = null;
 
     try
@@ -139,6 +169,7 @@
       _actionMessage = $"Job '{job.Key}' dispatched.";
       _actionSuccess = true;
       await LoadJobsAsync();
+      _result?.FocusAfterRender();
     }
     catch (Exception ex)
     {
@@ -147,7 +178,7 @@
     }
     finally
     {
-      _actionInProgress = false;
+      _inFlight = null;
     }
   }
 

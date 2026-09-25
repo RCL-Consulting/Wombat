@@ -66,11 +66,14 @@
     @* Where creating the activity files it (a type born in `requested`, or born terminal like procedure_log) there is
        no draft to keep: "Save draft" would send the request to the assessor, or file a finished log. Only Submit is
        offered, and the create checks the author's required fields as a submit would. *@
+    @* While one runs the other is disabled, and the one pressed is not (T234): it has the focus, and a browser drops the
+       focus of a button it disables, to the page, where a refused create, which keeps the page, would leave it. A second
+       press sends nothing (CreateOrTransitionAsync). *@
     @if (!_createIsTheFiling)
     {
-      <button type="button" class="btn btn-outline" disabled="@_busy" @onclick="SaveDraftAsync">Save draft</button>
+      <button type="button" class="btn btn-outline" disabled="@(_busy && _submitPressed)" aria-disabled="@InFlight.AriaDisabled(_busy && !_submitPressed)" @onclick="SaveDraftAsync">Save draft</button>
     }
-    <button type="button" class="btn btn-primary" disabled="@_busy" @onclick="SubmitAsync">Submit</button>
+    <button type="button" class="btn btn-primary" disabled="@(_busy && !_submitPressed)" aria-disabled="@InFlight.AriaDisabled(_busy && _submitPressed)" @onclick="SubmitAsync">Submit</button>
   </FormActions>
 }
 
@@ -84,6 +87,9 @@
   // One action at a time: a double-click used to file two drafts, and since T102 two refusals at once would each remount
   // the form and race their option loads. Once a create has succeeded it stays set, because the page is leaving (T127).
   private bool _busy;
+
+  // Which of the two buttons sent the action _busy stands for: that one stays enabled while it runs (T234).
+  private bool _submitPressed;
 
   // Set when the page is torn down, by a click elsewhere while an action was still running. The action finishes, but the
   // page no longer navigates: taking the author back to the activity would undo the click they made.
@@ -209,6 +215,7 @@
     }
 
     _busy = true;
+    _submitPressed = submit;
     _error = null;
 
     ClaimsPrincipal user;

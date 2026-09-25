@@ -18,7 +18,9 @@
 
 @* Every action's result lands here. After Deactivate or Mark complete answers, the region takes the focus (DESIGN.md
    § Button system): on success both buttons are gone, and the dialog that sent it has closed. A refusal of either keeps
-   its id, which the last-day field names, so the refusal is read with the field it is usually about (T209 review). *@
+   its id, which the last-day field names, so the refusal is read with the field it is usually about (T209 review).
+   After Save profile, it takes the focus once the save is done (T234): "Trainee profile saved." arriving on its own is
+   often not read. A refused save leaves the focus where it was: the refusal is an alert, read at once. *@
 <div @ref="_result" class="action-result" tabindex="-1">
   @if (!string.IsNullOrWhiteSpace(_errorMessage))
   {
@@ -95,10 +97,12 @@
             {
               @* Each asks first, naming the day (DESIGN.md § Button system): neither can be undone, and the day each records
                  cannot be changed afterwards. The red button is only in the dialog's footer. *@
-              <button type="button" class="btn btn-outline" disabled="@_saving" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmDeactivate)">Deactivate</button>
-              <button type="button" class="btn btn-outline" disabled="@_saving" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmComplete)">Mark complete</button>
+              <button type="button" class="btn btn-outline" disabled="@Busy" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmDeactivate)">Deactivate</button>
+              <button type="button" class="btn btn-outline" disabled="@Busy" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmComplete)">Mark complete</button>
             }
-            <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
+            @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of a button it
+               disables, to the page. A second press sends nothing (SaveAsync). *@
+            <button type="submit" class="btn btn-primary" disabled="@_ending" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
           </FormActions>
         </EditForm>
       </section>
@@ -153,11 +157,19 @@
   /// <summary>Deactivate or Mark complete was refused, so the last-day field names the refusal.</summary>
   private bool _endRefused;
 
-  /// <summary>An end action has answered, and its result takes the focus after the next render.</summary>
+  /// <summary>An end action has answered, or a save is done, and its result takes the focus after the next render.</summary>
   private bool _focusResult;
   private TraineeProfileFormModel? _model;
   private bool _loading = true;
+
+  /// <summary>A save (or an admission) has been sent and has not yet answered.</summary>
   private bool _saving;
+
+  /// <summary>Deactivate or Mark complete has been sent and has not yet answered.</summary>
+  private bool _ending;
+
+  /// <summary>Something has been sent and has not answered, so nothing else may be sent. (T234)</summary>
+  private bool Busy => _saving || _ending;
   private bool _isAdmission;
   private string? _errorMessage;
   private string? _statusMessage;
@@ -244,7 +256,7 @@
 
   private async Task SaveAsync()
   {
-    if (_model is null)
+    if (_model is null || Busy)
     {
       return;
     }
@@ -278,6 +290,7 @@
         authState.User));
 
       _statusMessage = "Trainee profile saved.";
+      _focusResult = true;
     }
     catch (Exception exception)
     {
@@ -301,7 +314,7 @@
 
   private async Task AskAsync(ConfirmDialog? dialog)
   {
-    if (_saving || dialog is null)
+    if (Busy || dialog is null)
     {
       return;
     }
@@ -331,12 +344,12 @@
   /// </remarks>
   private async Task EndAsync(Func<int, DateOnly, ClaimsPrincipal, IRequest> command, Func<DateOnly, string> ended)
   {
-    if (_model is null || _model.Id <= 0 || _saving)
+    if (_model is null || _model.Id <= 0 || Busy)
     {
       return;
     }
 
-    _saving = true;
+    _ending = true;
     _errorMessage = null;
     _statusMessage = null;
     _endRefused = false;
@@ -356,7 +369,7 @@
     }
     finally
     {
-      _saving = false;
+      _ending = false;
       _focusResult = true;
     }
   }

@@ -11,15 +11,20 @@
 
 <PageHeader Title="SSO Group Mappings" Subtitle="Map external identity provider groups to Wombat roles. Changes take effect on the next login for each user." />
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+@* What an add or a delete did. It takes the focus once either is done (T234; DESIGN.md § Button system): an add
+   rebuilds its form, and the button with it, and a deleted mapping's row is gone. A refusal leaves the focus where it
+   was: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
+</ActionResult>
 
 <div class="details-grid">
   @if (SsoOptions.Value.Providers.Count > 0)
@@ -91,7 +96,10 @@
         </div>
 
         <FormActions>
-          <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Adding..." : "Add mapping")</button>
+          @* Not disabled while its add runs (T234): it has the focus. A second press sends nothing, and aria-disabled says
+             so. Disabled while a delete runs. *@
+          <button type="submit" class="btn btn-primary" disabled="@(_deletingId is not null)"
+                  aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Adding..." : "Add mapping")</button>
         </FormActions>
       </EditForm>
     </section>
@@ -126,7 +134,13 @@
             <td>@mapping.InstitutionName</td>
             <td>@mapping.SpecialityName</td>
             <td>@mapping.SubSpecialityName</td>
-            <td><button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteAsync(mapping.Id)">Delete</button></td>
+            <td>
+              @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
+              <button type="button" class="btn btn-danger btn-sm"
+                      disabled="@(_saving || (_deletingId is not null && _deletingId != mapping.Id))"
+                      aria-disabled="@InFlight.AriaDisabled(_deletingId == mapping.Id)"
+                      @onclick="() => DeleteAsync(mapping.Id)">Delete</button>
+            </td>
           </tr>
         </Row>
       </DataTable>
@@ -157,6 +171,11 @@
   private string? _errorMessage;
   private bool _loading = true;
   private bool _saving;
+
+  /// <summary>The mapping whose delete has been sent and has not answered, or null. (T234 review)</summary>
+  private int? _deletingId;
+
+  private ActionResult? _result;
 
   // Specialities are a national catalogue now (T091); not filtered by the selected institution.
   private IEnumerable<SpecialityDto> FilteredSpecialities => _specialities;
@@ -199,6 +218,11 @@
 
   private async Task CreateAsync()
   {
+    if (_saving || _deletingId is not null)
+    {
+      return;
+    }
+
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
@@ -222,6 +246,7 @@
         ProviderKey = SsoOptions.Value.Providers.Count > 0 ? SsoOptions.Value.Providers[0].Key : string.Empty
       };
       _mappings = await Sender.Send(new ListSsoGroupMappingsQuery(authState.User));
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
@@ -235,6 +260,12 @@
 
   private async Task DeleteAsync(int mappingId)
   {
+    if (_saving || _deletingId is not null)
+    {
+      return;
+    }
+
+    _deletingId = mappingId;
     _errorMessage = null;
     _statusMessage = null;
 
@@ -244,10 +275,15 @@
       await Sender.Send(new DeleteSsoGroupMappingCommand(mappingId, authState.User));
       _statusMessage = "Mapping deleted.";
       _mappings = await Sender.Send(new ListSsoGroupMappingsQuery(authState.User));
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
       _errorMessage = exception.Message;
+    }
+    finally
+    {
+      _deletingId = null;
     }
   }
 

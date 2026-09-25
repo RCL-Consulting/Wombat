@@ -112,6 +112,12 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
     /// <summary>Holds each Remove until <see cref="Release" /> (T222, as T206's Withdraw).</summary>
     public bool HoldRemoves { get; init; }
 
+    /// <summary>Holds each Add until <see cref="Release" />: the window a second press of Add item falls into (T234).</summary>
+    public bool HoldAdds { get; init; }
+
+    /// <summary>How many Adds the page sent, counted as each is sent, held or not (T234).</summary>
+    public int AddsSent { get; private set; }
+
     /// <summary>
     /// Holds the first EPA picker query after a Remove has answered until <see cref="Release" />: the page's refresh of
     /// its pickers, which is still part of the Remove (T222).
@@ -179,6 +185,17 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
 
     public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
+        if (request is AddCurriculumItemCommand)
+        {
+            AddsSent++;
+        }
+
+        if (request is AddCurriculumItemCommand heldAdd && HoldAdds)
+        {
+            _held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            return _held.Task.ContinueWith(_ => (TResponse)(object)Add(heldAdd), TaskScheduler.Default);
+        }
+
         if (request is RemoveCurriculumItemCommand heldRemove && HoldRemoves)
         {
             _held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -704,9 +704,11 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
     }
 
     [Fact]
-    public async Task WhileTheRebuildRuns_TheButtonIsDisabled()
+    public async Task WhileTheRebuildRuns_TheButtonSaysSo_AndAPressAsksNothing()
     {
-        // A second press while the first rebuild is still replaying would queue a second global rebuild.
+        // A second press while the first rebuild is still replaying would queue a second global rebuild. The button is
+        // not disabled (T234): the dialog, closed as the rebuild starts, hands the focus back to it, and a browser drops
+        // the focus of a button it disables, to the page. A press while it runs opens no dialog.
         var pending = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var sender = new FakeSender().OnAsync<RebuildCurriculumProgressCommand>(_ => pending.Task);
         var cut = RenderRebuildPage(sender);
@@ -714,17 +716,16 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
         PageRebuildButton(cut).Click();
         var confirming = ConfirmButton(cut).ClickAsync(new MouseEventArgs());
 
-        cut.WaitForAssertion(() =>
-        {
-            var button = PageRebuildButton(cut);
-            button.HasAttribute("disabled").Should().BeTrue();
-            Text(button).Should().Be("Rebuilding…");
-        });
+        cut.WaitForAssertion(() => Text(PageRebuildButton(cut)).Should().Be("Rebuilding…"));
+        PageRebuildButton(cut).HasAttribute("disabled").Should().BeFalse("it has the focus (T234)");
+
+        PageRebuildButton(cut).Click();
+        JSInterop.VerifyInvoke("wombatDialog.showModal", calledTimes: 1);
 
         pending.SetResult(ARebuildResult());
         await confirming;
 
-        cut.WaitForAssertion(() => PageRebuildButton(cut).HasAttribute("disabled").Should().BeFalse(), AsyncWorkTimeout);
+        cut.WaitForAssertion(() => Text(PageRebuildButton(cut)).Should().Be("Rebuild progress"), AsyncWorkTimeout);
         sender.Received.Should().ContainSingle();
     }
 

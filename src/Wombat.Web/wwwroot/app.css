@@ -309,6 +309,14 @@ h5 {
   opacity: 0.65;
 }
 
+/* A button whose own action is running: not disabled, since it has the focus and a browser drops the focus of a
+   disabled button, but a second press sends nothing, and aria-disabled says so (InFlight.AriaDisabled; DESIGN.md
+   § Button system, T234 review). It looks unavailable too, and keeps its focus ring. */
+.btn[aria-disabled="true"] {
+  cursor: progress;
+  opacity: 0.65;
+}
+
 .btn:focus-visible,
 .form-control:focus-visible,
 .form-select:focus-visible,
@@ -619,9 +627,9 @@ h1[tabindex="-1"]:focus {
   outline-offset: 2px;
 }
 
-/* The result of an action taken through a ConfirmDialog (Withdraw on the MSF campaign list, Deactivate on the EPA page):
-   it takes the focus once the dialog closes, since the button may be gone (tabindex="-1"). Its alerts carry the role
-   (T206 review, T196 review). */
+/* The result of an action (tabindex="-1", the shared ActionResult component or a page's own region): it takes the focus
+   once the action is done, and once a ConfirmDialog that sent it has closed, since the button may be gone and a status
+   arriving on its own is often not read. Its alerts carry the role (T206 review, T196 review, T234). */
 .action-result:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;

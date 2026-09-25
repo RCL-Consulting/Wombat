@@ -1,0 +1,39 @@
+@*
+  Where a page says what an action did (DESIGN.md § Button system, T234). The page puts the action's result alerts
+  inside, and once the action has answered, done or refused, asks the region to take the focus. By then the button that
+  was pressed may be gone, disabled by what the action changed, or rebuilt with its form, and the focus would fall to the
+  page body. A status alert that arrives already filled is not reliably read either; the focus reads it at once.
+*@
+<div @ref="_element" id="@Id" class="action-result" tabindex="-1">
+  @ChildContent
+</div>
+
+@code {
+  private ElementReference _element;
+  private bool _focusAfterRender;
+
+  [Parameter] public RenderFragment? ChildContent { get; set; }
+
+  /// <summary>The region's id, for a page whose controls name it.</summary>
+  [Parameter] public string? Id { get; set; }
+
+  /// <summary>The region's element. A test matches the reference a focus call was given to it.</summary>
+  public ElementReference Element => _element;
+
+  /// <summary>
+  /// Takes the focus after the page's next render, which shows the result. The page re-renders once the action's handler
+  /// returns, and this region with it, since its content is a fragment. So the focus moves once the browser has the
+  /// result, and after any <see cref="ConfirmDialog" /> that sent the action has closed: while a modal dialog is open
+  /// nothing outside it can take the focus (T206 review).
+  /// </summary>
+  public void FocusAfterRender() => _focusAfterRender = true;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusAfterRender)
+    {
+      _focusAfterRender = false;
+      await _element.FocusAsync();
+    }
+  }
+}

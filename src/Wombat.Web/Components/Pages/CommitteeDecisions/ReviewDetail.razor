@@ -8,15 +8,22 @@
 
 <PageHeader Title="Committee review" Subtitle="Evidence bundle, decision record, ratification, and appeals in one place." />
 
-@if (!string.IsNullOrWhiteSpace(_status))
-{
-  <Alert Kind="success">@_status</Alert>
-}
+@* What an action did. It takes the focus once the action is done (T234 review; DESIGN.md § Button system): Start, Close
+   review, Ratify, Record decision and Resolve appeal each take their own button away; staging clears its form, which
+   disables Stage pending decision; a removed decision's row and a deferred line's form are gone; and Reinstate gives way
+   to Stage and Defer. A refusal leaves the focus where it was: it is an alert, read at once, and the button is still
+   there. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_status))
+  {
+    <Alert Kind="success">@_status</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger">@_error</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_error))
+  {
+    <Alert Kind="danger">@_error</Alert>
+  }
+</ActionResult>
 
 @* An incomplete report is not a quiet one: without this banner, "some of this trainee's evidence
    is outside what you may read" would render exactly like "we checked the sampling and it is
@@ -136,6 +143,7 @@
             </span>
           }
           <button type="button" class="btn btn-primary" aria-describedby="@(awaitingAtStart > 0 ? "start-review-msf-note" : null)"
+                  disabled="@OtherInFlight(StartAction)" aria-disabled="@InFlight.AriaDisabled(Running(StartAction))"
                   @onclick="StartAsync">Start review</button>
         }
         @* T213: the chair's actions are offered to the chair alone, by the predicates their handlers demand
@@ -143,7 +151,8 @@
            complete yet, and nobody else may take these. #chair-actions-note says who can. *@
         @if (_review.State == CommitteeReviewState.InProgress && _review.IsFormative && ChairMayAct)
         {
-          <button type="button" class="btn btn-primary" @onclick="CloseFormativeAsync">Close review</button>
+          <button type="button" class="btn btn-primary" disabled="@OtherInFlight(CloseAction)"
+                  aria-disabled="@InFlight.AriaDisabled(Running(CloseAction))" @onclick="CloseFormativeAsync">Close review</button>
         }
         @if (_review.State == CommitteeReviewState.Decided && ChairMayAct)
         {
@@ -152,7 +161,8 @@
              would refuse with, in the ratify handler's order. No click handler while one stands. *@
           if (RatifyBlockedReason is null)
           {
-            <button type="button" class="btn btn-primary" @onclick="RatifyAsync">Ratify</button>
+            <button type="button" class="btn btn-primary" disabled="@OtherInFlight(RatifyAction)"
+                    aria-disabled="@InFlight.AriaDisabled(Running(RatifyAction))" @onclick="RatifyAsync">Ratify</button>
           }
           else
           {
@@ -251,7 +261,8 @@
               </span>
               @if (RecordBlockedReason is null)
               {
-                <button type="submit" class="btn btn-primary" aria-describedby="record-decision-note">Record decision</button>
+                <button type="submit" class="btn btn-primary" aria-describedby="record-decision-note"
+                        disabled="@OtherInFlight(RecordAction)" aria-disabled="@InFlight.AriaDisabled(Running(RecordAction))">Record decision</button>
               }
               else
               {
@@ -445,7 +456,8 @@
               </fieldset>
             </div>
             <FormActions>
-              <button type="submit" class="btn btn-primary" disabled="@(!EvidenceNamed)"
+              <button type="submit" class="btn btn-primary" disabled="@(!EvidenceNamed || OtherInFlight(StageAction))"
+                      aria-disabled="@InFlight.AriaDisabled(Running(StageAction))"
                       aria-describedby="@(EvidenceNamed ? null : "pending-evidence-reason")">Stage pending decision</button>
             </FormActions>
             @if (!EvidenceNamed)
@@ -495,7 +507,9 @@
                      (_review.State == CommitteeReviewState.InProgress ||
                       (_review.State == CommitteeReviewState.Decided && pending.NoLongerFits is not null)))
                 {
-                  <button type="button" class="btn btn-link" @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
+                  <button type="button" class="btn btn-link" disabled="@OtherInFlight(RemoveAction(pending.Id))"
+                          aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(pending.Id)))"
+                          @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
                 }
               </li>
             }
@@ -732,7 +746,8 @@
               }
               else
               {
-                <button type="submit" class="btn btn-primary">Resolve appeal</button>
+                <button type="submit" class="btn btn-primary" disabled="@OtherInFlight(ResolveAction)"
+                        aria-disabled="@InFlight.AriaDisabled(Running(ResolveAction))">Resolve appeal</button>
               }
             </FormActions>
             @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && _review.PanelShortfall is { } remitShortfall)
@@ -772,6 +787,32 @@
   private CommitteeReviewDetailDto? _review;
   private string? _status;
   private string? _error;
+  private ActionResult? _result;
+
+  /// <summary>
+  /// The action that has been sent and has not yet answered, and the reads after it, or null (T234 review). While one
+  /// runs nothing else is sent, and every other button is disabled; the one pressed is not: it has the focus, and a
+  /// browser drops the focus of a button it disables, to the page. Before, a second press sent the command again, and
+  /// the review's concurrency token refused it, so "Decision recorded." stood beside a red refusal.
+  /// </summary>
+  private string? _inFlight;
+
+  private const string StartAction = "start";
+  private const string CloseAction = "close";
+  private const string RatifyAction = "ratify";
+  private const string RecordAction = "record";
+  private const string ResolveAction = "resolve";
+  private const string StageAction = "stage";
+  private const string DeferAction = "defer";
+
+  private static string RemoveAction(int pendingId) => $"remove:{pendingId}";
+
+  private static string ReinstateAction(int lineId) => $"reinstate:{lineId}";
+
+  private bool Running(string action) => _inFlight == action;
+
+  private bool OtherInFlight(string action) => _inFlight is not null && _inFlight != action;
+
   private DecisionFormModel _decision = new();
   private AppealResolutionModel _appeal = new();
   private PendingDecisionFormModel _pending = new();
@@ -1062,12 +1103,13 @@
 
   private async Task StartAsync()
   {
-    await ExecuteAsync(user => Sender.Send(new StartCommitteeReviewCommand(ReviewId, user)), "Review started.");
+    await ExecuteAsync(StartAction, user => Sender.Send(new StartCommitteeReviewCommand(ReviewId, user)), "Review started.");
   }
 
   private async Task RecordDecisionAsync()
   {
     await ExecuteAsync(
+      RecordAction,
       user => Sender.Send(new RecordCommitteeDecisionCommand(
         ReviewId,
         // T131 slice 5: an entrustment-only review's decision records no category; the form offers none.
@@ -1147,17 +1189,18 @@
 
   private async Task RatifyAsync()
   {
-    await ExecuteAsync(user => Sender.Send(new RatifyCommitteeDecisionCommand(ReviewId, user)), "Decision ratified.");
+    await ExecuteAsync(RatifyAction, user => Sender.Send(new RatifyCommitteeDecisionCommand(ReviewId, user)), "Decision ratified.");
   }
 
   private async Task CloseFormativeAsync()
   {
-    await ExecuteAsync(user => Sender.Send(new CloseFormativeReviewCommand(ReviewId, user)), "Formative review closed.");
+    await ExecuteAsync(CloseAction, user => Sender.Send(new CloseFormativeReviewCommand(ReviewId, user)), "Formative review closed.");
   }
 
   private async Task ResolveAppealAsync()
   {
     await ExecuteAsync(
+      ResolveAction,
       user => Sender.Send(new ResolveAppealCommand(
         ReviewId,
         _appeal.Outcome,
@@ -1173,6 +1216,11 @@
 
   private async Task StagePendingAsync()
   {
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
     _error = null;
     _status = null;
 
@@ -1183,30 +1231,41 @@
       return;
     }
 
+    _inFlight = StageAction;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new StagePendingEntrustmentDecisionCommand(
-        ReviewId,
-        null,
-        _pending.EpaId,
-        _pending.AuthorisedLevelId,
-        _pending.IssuedOn,
-        _pending.ExpiresOn,
-        _pending.Rationale,
-        NamedEvidenceIds(),
-        authState.User));
-      _pending = new PendingDecisionFormModel();
-      _status = "Pending entrustment decision staged.";
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-      return;
-    }
+      try
+      {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        await Sender.Send(new StagePendingEntrustmentDecisionCommand(
+          ReviewId,
+          null,
+          _pending.EpaId,
+          _pending.AuthorisedLevelId,
+          _pending.IssuedOn,
+          _pending.ExpiresOn,
+          _pending.Rationale,
+          NamedEvidenceIds(),
+          authState.User));
+        _pending = new PendingDecisionFormModel();
+        _status = "Pending entrustment decision staged.";
+      }
+      catch (Exception exception)
+      {
+        _error = RefusalText.Of(exception);
+        return;
+      }
 
-    await LoadPendingDecisionsAsync();
-    await LoadAgendaAsync();
+      await LoadPendingDecisionsAsync();
+      await LoadAgendaAsync();
+
+      // The cleared form ticks no evidence, which disables Stage pending decision, and a disabled button loses the focus.
+      _result?.FocusAfterRender();
+    }
+    finally
+    {
+      _inFlight = null;
+    }
   }
 
   private StarEpaOptionDto? SelectedStarEpa => _starEpas.FirstOrDefault(option => option.EpaId == _pending.EpaId);
@@ -1326,23 +1385,39 @@
 
   private async Task RemovePendingAsync(int pendingId)
   {
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
+    _inFlight = RemoveAction(pendingId);
     _error = null;
     _status = null;
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new RemovePendingEntrustmentDecisionCommand(ReviewId, pendingId, authState.User));
-      _status = "Pending entrustment decision removed.";
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-      return;
-    }
+      try
+      {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        await Sender.Send(new RemovePendingEntrustmentDecisionCommand(ReviewId, pendingId, authState.User));
+        _status = "Pending entrustment decision removed.";
+      }
+      catch (Exception exception)
+      {
+        _error = RefusalText.Of(exception);
+        return;
+      }
 
-    await LoadPendingDecisionsAsync();
-    await LoadAgendaAsync();
+      await LoadPendingDecisionsAsync();
+      await LoadAgendaAsync();
+
+      // The removed decision's row, and its Remove, are gone.
+      _result?.FocusAfterRender();
+    }
+    finally
+    {
+      _inFlight = null;
+    }
   }
 
   /// <summary>
@@ -1386,7 +1461,35 @@
       .Select(rung => new TrajectoryChart.Rung(rung.Order, rung.Label))
       .ToArray();
 
-  private async Task ExecuteAsync(Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)
+  /// <summary>
+  /// Sends one of the review's own commands, unless an action is already running (T234 review), then reads again what it
+  /// changed. A done action's result takes the focus: each of these takes its own button away.
+  /// </summary>
+  private async Task ExecuteAsync(
+    string name, Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)
+  {
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
+    _inFlight = name;
+    try
+    {
+      if (await SendAsync(action, status))
+      {
+        await ReadAgainAfterActionAsync();
+        _result?.FocusAfterRender();
+      }
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  /// <summary>Sends the command and shows its answer, or its refusal. Returns whether it was done.</summary>
+  private async Task<bool> SendAsync(Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)
   {
     _error = null;
     _status = null;
@@ -1402,14 +1505,18 @@
       // would be a second round trip that can fail after the action has already succeeded. (T142)
       _review = updated.WithNamesFrom(_review);
       _status = status;
-
+      return true;
     }
     catch (Exception exception)
     {
       _error = RefusalText.Of(exception);
-      return;
+      return false;
     }
+  }
 
+  /// <summary>What a done action of the review's own changes, read again. Every failure here lands in its own card.</summary>
+  private async Task ReadAgainAfterActionAsync()
+  {
     // The MSF notice is live, and an action can change what it must say. Start above all: it freezes the snapshot the
     // counts are measured against, and a campaign released since the page loaded is now in it (T173). Refreshed outside
     // the action's try: the action has succeeded, and a failed count must not show that success beside an error (T142).
@@ -1550,48 +1657,75 @@
 
   private async Task DeferAsync()
   {
-    if (_deferral is not { } deferral)
+    if (_deferral is not { } deferral || _inFlight is not null)
     {
       return;
     }
 
+    _inFlight = DeferAction;
     _error = null;
     _status = null;
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new DeferAgendaLineCommand(ReviewId, deferral.LineId, deferral.Reason, authState.User));
-      _deferral = null;
-      _status = $"{deferral.EpaCode} deferred.";
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-      return;
-    }
+      try
+      {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        await Sender.Send(new DeferAgendaLineCommand(ReviewId, deferral.LineId, deferral.Reason, authState.User));
+        _deferral = null;
+        _status = $"{deferral.EpaCode} deferred.";
+      }
+      catch (Exception exception)
+      {
+        _error = RefusalText.Of(exception);
+        return;
+      }
 
-    await LoadAgendaAsync();
+      await LoadAgendaAsync();
+
+      // The deferral's form, and the button that sent it, are gone.
+      _result?.FocusAfterRender();
+    }
+    finally
+    {
+      _inFlight = null;
+    }
   }
 
   private async Task ReinstateAsync(CommitteeAgendaLineDto line)
   {
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
+    _inFlight = ReinstateAction(line.Id);
     _error = null;
     _status = null;
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new ReinstateAgendaLineCommand(ReviewId, line.Id, authState.User));
-      _status = $"{line.EpaCode} reinstated: it is due at this sitting again.";
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-      return;
-    }
+      try
+      {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        await Sender.Send(new ReinstateAgendaLineCommand(ReviewId, line.Id, authState.User));
+        _status = $"{line.EpaCode} reinstated: it is due at this sitting again.";
+      }
+      catch (Exception exception)
+      {
+        _error = RefusalText.Of(exception);
+        return;
+      }
 
-    await LoadAgendaAsync();
+      await LoadAgendaAsync();
+
+      // The line is due again, so Stage and Defer take Reinstate's place.
+      _result?.FocusAfterRender();
+    }
+    finally
+    {
+      _inFlight = null;
+    }
   }
 
   /// <summary>
@@ -1678,21 +1812,28 @@
                     @if (ChairMayAct)
                     {
                       <td class="actions-cell">
+                        @* Stage and Defer send nothing; each is disabled while an action runs, since what that action
+                           answers can change the line (T234 review). *@
                         @if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Due && !line.IsStaged)
                         {
-                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => StageFromAgendaAsync(line)"
+                          <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
+                                  @onclick="() => StageFromAgendaAsync(line)"
                                   aria-label="@($"Stage a decision on {line.EpaCode}")">Stage</button>
-                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenDeferral(line)"
+                          <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
+                                  @onclick="() => OpenDeferral(line)"
                                   aria-label="@($"Defer {line.EpaCode}")">Defer</button>
                         }
                         else if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Deferred)
                         {
-                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => ReinstateAsync(line)"
+                          <button type="button" class="btn btn-outline btn-sm" disabled="@OtherInFlight(ReinstateAction(line.Id))"
+                                  aria-disabled="@InFlight.AriaDisabled(Running(ReinstateAction(line.Id)))"
+                                  @onclick="() => ReinstateAsync(line)"
                                   aria-label="@($"Reinstate {line.EpaCode}")">Reinstate</button>
                         }
                         else if (MayDeferAfterRecording(line))
                         {
-                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenDeferral(line)"
+                          <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
+                                  @onclick="() => OpenDeferral(line)"
                                   aria-label="@($"Defer {line.EpaCode}")">Defer</button>
                         }
                       </td>
@@ -1729,8 +1870,9 @@
                 </FormField>
               </div>
               <FormActions>
-                <button type="button" class="btn btn-outline" @onclick="CancelDeferral">Cancel</button>
-                <button type="submit" class="btn btn-primary">Defer @deferral.EpaCode</button>
+                <button type="button" class="btn btn-outline" disabled="@(_inFlight is not null)" @onclick="CancelDeferral">Cancel</button>
+                <button type="submit" class="btn btn-primary" disabled="@OtherInFlight(DeferAction)"
+                        aria-disabled="@InFlight.AriaDisabled(Running(DeferAction))">Defer @deferral.EpaCode</button>
               </FormActions>
             </fieldset>
           </EditForm>

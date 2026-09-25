@@ -47,7 +47,11 @@
         </dl>
         <p class="muted">@decision.Rationale</p>
         <FormActions>
-          <button type="button" class="btn btn-primary" @onclick="() => DownloadAsync(decision.Id, decision.EpaCode)" disabled="@_downloading">
+          @* While a certificate is generated the other Download buttons are disabled, and the one pressed is not (T234): it
+             has the focus, and a browser drops the focus of a button it disables, to the page. The download says what it
+             did; a refusal is an alert, read at once. A second press sends nothing. *@
+          <button type="button" class="btn btn-primary" @onclick="() => DownloadAsync(decision.Id, decision.EpaCode)" disabled="@(_downloading && _downloadingId != decision.Id)"
+                  aria-disabled="@InFlight.AriaDisabled(_downloading && _downloadingId == decision.Id)">
             @if (_downloading && _downloadingId == decision.Id)
             {
               <span>Generating…</span>
@@ -87,6 +91,11 @@
 
   private async Task DownloadAsync(int decisionId, string epaCode)
   {
+    if (_downloading)
+    {
+      return;
+    }
+
     _downloadError = null;
     _downloading = true;
     _downloadingId = decisionId;

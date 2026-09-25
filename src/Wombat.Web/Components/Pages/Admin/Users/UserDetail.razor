@@ -11,15 +11,21 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_actionError))
-{
-  <Alert Kind="danger">@_actionError</Alert>
-}
+@* What an action did. It takes the focus once the action is done (T234; DESIGN.md § Button system): a removed role's
+   Remove is gone, Lock out and Reactivate replace each other, Revoke goes with the invitations, and Add role and Reset
+   password are disabled once their input is cleared. A refusal leaves the focus where it was, except a refused reset:
+   the password is cleared either way, which disables Reset password. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_actionError))
+  {
+    <Alert Kind="danger">@_actionError</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
+</ActionResult>
 
 <StatePanel IsLoading="_loading" IsEmpty="@(_user is null)" EmptyTitle="User unavailable" EmptyBody="The user could not be found or is outside your scope." LoadError="@_loadError">
   @if (_user is not null)
@@ -50,7 +56,7 @@
                 <span>@role</span>
                 @if (CanModifyRole(role))
                 {
-                  <button type="button" class="btn btn-danger btn-sm" disabled="@_busy" @onclick="() => RemoveRoleAsync(role)">Remove</button>
+                  <button type="button" class="btn btn-danger btn-sm" disabled="@OtherInFlight(RemoveAction(role))" aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(role)))" @onclick="() => RemoveRoleAsync(role)">Remove</button>
                 }
                 else
                 {
@@ -74,7 +80,7 @@
           </FormField>
         </div>
         <FormActions>
-          <button type="button" class="btn btn-primary" disabled="@(_busy || string.IsNullOrWhiteSpace(_addRoleSelection))" @onclick="AddRoleAsync">Add role</button>
+          <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(AddRoleAction) || string.IsNullOrWhiteSpace(_addRoleSelection))" aria-disabled="@InFlight.AriaDisabled(Running(AddRoleAction))" @onclick="AddRoleAsync">Add role</button>
         </FormActions>
       </section>
 
@@ -90,7 +96,7 @@
           </FormField>
         </div>
         <FormActions>
-          <button type="button" class="btn btn-primary" disabled="@(_busy || string.IsNullOrWhiteSpace(_newPassword) || _newPassword.Length < 8)" @onclick="ResetPasswordAsync">Reset password</button>
+          <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(ResetPasswordAction) || string.IsNullOrWhiteSpace(_newPassword) || _newPassword.Length < 8)" aria-disabled="@InFlight.AriaDisabled(Running(ResetPasswordAction))" @onclick="ResetPasswordAsync">Reset password</button>
         </FormActions>
       </section>
 
@@ -100,14 +106,14 @@
         {
           <p>This user is currently locked out and cannot sign in.</p>
           <FormActions>
-            <button type="button" class="btn btn-primary" disabled="@_busy" @onclick="() => SetLockoutAsync(false)">Reactivate user</button>
+            <button type="button" class="btn btn-primary" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(false)">Reactivate user</button>
           </FormActions>
         }
         else if (CanLockoutUser)
         {
           <p>Locking out the user prevents sign-in immediately. Reactivating clears the lockout.</p>
           <FormActions>
-            <button type="button" class="btn btn-danger" disabled="@_busy" @onclick="() => SetLockoutAsync(true)">Lock out user</button>
+            <button type="button" class="btn btn-danger" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(true)">Lock out user</button>
           </FormActions>
         }
         else
@@ -145,7 +151,7 @@
             </Row>
           </DataTable>
           <FormActions>
-            <button type="button" class="btn btn-danger" disabled="@_busy" @onclick="RevokeInvitationsAsync">Revoke all pending invitations</button>
+            <button type="button" class="btn btn-danger" disabled="@OtherInFlight(RevokeAction)" aria-disabled="@InFlight.AriaDisabled(Running(RevokeAction))" @onclick="RevokeInvitationsAsync">Revoke all pending invitations</button>
           </FormActions>
         }
       </section>
@@ -158,7 +164,25 @@
 
   private UserDetailDto? _user;
   private bool _loading = true;
-  private bool _busy;
+  private ActionResult? _result;
+
+  /// <summary>
+  /// The action that has been sent and has not yet answered, or null. While one is in flight nothing else may be sent,
+  /// and every other button is disabled; the one pressed is not (T234): it has the focus, and a browser drops the focus
+  /// of a button it disables, to the page. A second press of it sends nothing (<see cref="RunActionAsync" />).
+  /// </summary>
+  private string? _inFlight;
+
+  private const string AddRoleAction = "add-role";
+  private const string ResetPasswordAction = "reset-password";
+  private const string LockoutAction = "lockout";
+  private const string RevokeAction = "revoke";
+
+  private static string RemoveAction(string role) => $"remove:{role}";
+
+  private bool OtherInFlight(string action) => _inFlight is not null && _inFlight != action;
+
+  private bool Running(string action) => _inFlight == action;
   private string? _loadError;
   private string? _actionError;
   private string? _statusMessage;
@@ -208,17 +232,28 @@
     }
   }
 
-  private async Task RunActionAsync(Func<System.Security.Claims.ClaimsPrincipal, Task> action, string successMessage)
+  /// <summary>
+  /// Sends one action, unless one is already in flight. Returns whether it was done. A done action's result takes the
+  /// focus (T234): the button that sent it is gone, replaced or disabled by what it changed.
+  /// </summary>
+  private async Task<bool> RunActionAsync(string name, Func<System.Security.Claims.ClaimsPrincipal, Task> action, string successMessage)
   {
-    _busy = true;
+    if (_inFlight is not null)
+    {
+      return false;
+    }
+
+    _inFlight = name;
     _actionError = null;
     _statusMessage = null;
+    var done = false;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await action(authState.User);
       _statusMessage = successMessage;
       _user = await Sender.Send(new GetUserByIdQuery(UserId, authState.User));
+      done = true;
     }
     catch (Exception exception)
     {
@@ -226,8 +261,15 @@
     }
     finally
     {
-      _busy = false;
+      _inFlight = null;
     }
+
+    if (done)
+    {
+      _result?.FocusAfterRender();
+    }
+
+    return done;
   }
 
   private async Task AddRoleAsync()
@@ -237,33 +279,58 @@
       return;
     }
     var role = _addRoleSelection;
-    await RunActionAsync(
+    var done = await RunActionAsync(
+      AddRoleAction,
       principal => Sender.Send(new AddRoleToUserCommand(UserId, role, principal)),
       $"Role '{role}' added.");
-    _addRoleSelection = string.Empty;
+
+    // Kept after a refusal, so Add role stays enabled, with the focus on it, for the retry (T234).
+    if (done)
+    {
+      _addRoleSelection = string.Empty;
+    }
   }
 
   private Task RemoveRoleAsync(string role)
     => RunActionAsync(
+      RemoveAction(role),
       principal => Sender.Send(new RemoveRoleFromUserCommand(UserId, role, principal)),
       $"Role '{role}' removed.");
 
-  private Task ResetPasswordAsync()
+  /// <remarks>
+  /// The password is cleared once the reset has answered, done or refused, so it is not left on the page. It is not
+  /// cleared before, as it was until T234: that disabled Reset password while it had the focus. A refusal then leaves
+  /// Reset password disabled, so its result takes the focus too.
+  /// </remarks>
+  private async Task ResetPasswordAsync()
   {
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
     var newPassword = _newPassword;
-    _newPassword = string.Empty;
-    return RunActionAsync(
+    var done = await RunActionAsync(
+      ResetPasswordAction,
       principal => Sender.Send(new ResetUserPasswordCommand(UserId, newPassword, principal)),
       "Password reset. Share the new password with the user out-of-band.");
+    _newPassword = string.Empty;
+
+    if (!done)
+    {
+      _result?.FocusAfterRender();
+    }
   }
 
   private Task SetLockoutAsync(bool locked)
     => RunActionAsync(
+      LockoutAction,
       principal => Sender.Send(new SetUserLockoutCommand(UserId, locked, principal)),
       locked ? "User locked out." : "User reactivated.");
 
   private Task RevokeInvitationsAsync()
     => RunActionAsync(
+      RevokeAction,
       async principal =>
       {
         var revoked = await Sender.Send(new RevokePendingInvitationsForEmailCommand(_user!.Email, principal));

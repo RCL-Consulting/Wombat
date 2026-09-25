@@ -344,19 +344,23 @@ public sealed class NomineePickerPageTests : WombatTestContext
     // ---- one action at a time ----
 
     [Fact]
-    public async Task NewActivity_WhileASaveRuns_TheButtonsAreDisabled_AndAnotherClickSendsNothing()
+    public async Task NewActivity_WhileASaveRuns_TheOtherButtonIsDisabled_AndAnotherClickSendsNothing()
     {
         // A double-click used to file two drafts; since T102 two refusals at once would also each remount the form and
-        // race their option loads.
+        // race their option loads. The button pressed is not disabled (T234): it has the focus, and a browser drops the
+        // focus of a button it disables, to the page, where a refused create, which keeps the page, would leave it.
         SignIn("trainee-1");
         var pending = new TaskCompletionSource<ActivityDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         var sender = new NewSender { PendingCreate = pending.Task };
         var cut = SelectTheType(sender);
 
         var saving = FindButton(cut, "Save draft").ClickAsync(new MouseEventArgs());
-        cut.WaitForAssertion(() => NewActivityActionButtons(cut).Should().OnlyContain(button => button.HasAttribute("disabled")));
+        cut.WaitForAssertion(() => FindButton(cut, "Submit").HasAttribute("disabled").Should().BeTrue());
+        FindButton(cut, "Save draft").HasAttribute("disabled").Should().BeFalse("it has the focus (T234)");
+        FindButton(cut, "Save draft").GetAttribute("aria-disabled").Should().Be("true", "a second press does nothing (T234 review)");
+        FindButton(cut, "Submit").HasAttribute("aria-disabled").Should().BeFalse("it is disabled outright");
 
-        // Dispatched at the disabled buttons anyway, as a second click that beat the re-render would be. Not awaited
+        // Dispatched at both buttons, as a second click would be, on Submit one that beat the re-render. Not awaited
         // until the first has finished: an unguarded handler would wait on the same pending create.
         var again = FindButton(cut, "Save draft").ClickAsync(new MouseEventArgs());
         var submitToo = FindButton(cut, "Submit").ClickAsync(new MouseEventArgs());
@@ -367,11 +371,14 @@ public sealed class NomineePickerPageTests : WombatTestContext
         sender.Creates.Should().ContainSingle("the page carries out one action at a time");
         sender.Transitions.Should().BeEmpty();
 
-        // Since T127 a successful create leaves for the activity, and the buttons stay disabled until the router
-        // replaces the page: a press in between would create again.
+        // Since T127 a successful create leaves for the activity, and the page stays busy until the router replaces it:
+        // a press in between would create again. Submit stays disabled, and Save draft, which has the focus, sends
+        // nothing.
         Services.GetRequiredService<FakeNavigationManager>().History.Should().ContainSingle()
             .Which.Uri.Should().Be("/activities/7");
-        NewActivityActionButtons(cut).Should().OnlyContain(button => button.HasAttribute("disabled"));
+        FindButton(cut, "Submit").HasAttribute("disabled").Should().BeTrue();
+        await FindButton(cut, "Save draft").ClickAsync(new MouseEventArgs());
+        sender.Creates.Should().ContainSingle();
     }
 
     [Fact]
@@ -418,9 +425,6 @@ public sealed class NomineePickerPageTests : WombatTestContext
     private static IElement FindButton<TComponent>(IRenderedComponent<TComponent> cut, string label)
         where TComponent : IComponent
         => cut.FindAll("button").First(button => button.TextContent.Trim() == label);
-
-    private static IReadOnlyList<IElement> NewActivityActionButtons(IRenderedComponent<NewActivity> cut)
-        => [FindButton(cut, "Save draft"), FindButton(cut, "Submit")];
 
     private void SignIn(string userId)
     {

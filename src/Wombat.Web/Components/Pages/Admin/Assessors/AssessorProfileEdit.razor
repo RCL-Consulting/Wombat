@@ -12,15 +12,19 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_actionError))
-{
-  <Alert Kind="danger">@_actionError</Alert>
-}
+@* What a Save did. It takes the focus once the save is done (T234; DESIGN.md § Button system). A refusal leaves the
+   focus where it was: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_actionError))
+  {
+    <Alert Kind="danger">@_actionError</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
+</ActionResult>
 
 <StatePanel IsLoading="_loading" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The assessor profile could not be loaded." LoadError="@_loadError">
   @if (_model is not null)
@@ -96,7 +100,9 @@
 
         <FormActions>
           <a class="btn btn-outline" href="/admin/assessors">Cancel</a>
-          <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save assessor profile")</button>
+          @* Not disabled while its save runs (T234): it has the focus, and a browser drops the focus of a button it
+             disables, to the page. A second press sends nothing. *@
+          <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save assessor profile")</button>
         </FormActions>
       </EditForm>
     </div>
@@ -114,6 +120,7 @@
   private AssessorProfileFormModel? _model;
   private bool _loading = true;
   private bool _saving;
+  private ActionResult? _result;
   private bool _isExisting;
   private string? _loadError;
   private string? _actionError;
@@ -175,7 +182,7 @@
 
   private async Task SaveAsync()
   {
-    if (_model is null)
+    if (_model is null || _saving)
     {
       return;
     }
@@ -199,6 +206,7 @@
 
       _statusMessage = "Assessor profile saved.";
       _isExisting = true;
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {

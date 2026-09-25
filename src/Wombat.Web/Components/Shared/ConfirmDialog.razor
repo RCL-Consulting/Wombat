@@ -6,14 +6,21 @@
     <h2>@Title</h2>
     <p>@Body</p>
     <FormActions>
-      <button type="button" class="btn btn-outline" @onclick="CancelAsync">Cancel</button>
-      <button type="button" class="btn @(DangerAction ? "btn-danger" : "btn-primary")" @onclick="ConfirmAsync">@ConfirmLabel</button>
+      @* While the confirmed action runs, the dialog stays open and the confirm button keeps the focus: it is not disabled,
+         a second press sends nothing, and aria-disabled says so (DESIGN.md § Button system, T234 review). Cancel would
+         race it, so Cancel is disabled. *@
+      <button type="button" class="btn btn-outline" disabled="@_confirming" @onclick="CancelAsync">Cancel</button>
+      <button type="button" class="btn @(DangerAction ? "btn-danger" : "btn-primary")"
+              aria-disabled="@InFlight.AriaDisabled(_confirming)" @onclick="ConfirmAsync">@ConfirmLabel</button>
     </FormActions>
   </div>
 </dialog>
 
 @code {
   private ElementReference _dialog;
+
+  // The confirmed action has been sent and has not answered.
+  private bool _confirming;
 
   [Parameter] public string Title { get; set; } = "Confirm";
   [Parameter] public string Body { get; set; } = string.Empty;
@@ -30,12 +37,31 @@
 
   private async Task ConfirmAsync()
   {
-    await OnConfirm.InvokeAsync();
+    if (_confirming)
+    {
+      return;
+    }
+
+    _confirming = true;
+    try
+    {
+      await OnConfirm.InvokeAsync();
+    }
+    finally
+    {
+      _confirming = false;
+    }
+
     await CloseAsync();
   }
 
   private async Task CancelAsync()
   {
+    if (_confirming)
+    {
+      return;
+    }
+
     await OnCancel.InvokeAsync();
     await CloseAsync();
   }

@@ -27,6 +27,8 @@ src/Wombat.Web/
         ├── DataTable.razor                       ← generic list shell using .clinic-table
         ├── FormField.razor                       ← <label> + input slot + validation message
         ├── ConfirmDialog.razor
+        ├── ActionResult.razor                    ← .action-result region; takes the focus when an action is done (T234)
+        ├── InFlight.cs                           ← aria-disabled for a button whose own action runs (T234 review)
         ├── PagerControls.razor                   ← .pager .pager-actions .pager-page-size
         ├── StatePanel.razor                      ← empty / loading / error state shells
         ├── DashboardCard.razor                   ← <DashboardCard Title=…> wraps .detail-card
@@ -253,8 +255,41 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   (`tabindex="-1"`), which takes the focus in `OnAfterRenderAsync`, after the dialog has closed: the row's button may be
   gone, and while the modal is open nothing outside it can take the focus (T206 review).
 - The same holds on a form page whose confirmed action removes the button that opened the dialog: Deactivate on the EPA
-  page is offered only on an active EPA, so once it deactivates, its result takes the focus (T196 review). An action
-  that leaves its button, such as a refused deactivation or a Save, leaves the focus on it.
+  page is offered only on an active EPA, so once it deactivates, its result takes the focus (T196 review). A refused
+  deactivation leaves its button, and the dialog hands the focus back to it.
+- **A button is never disabled by its own action while that action runs** (T234; T225 review). It has the focus, and a
+  browser drops the focus of a button it disables, to the page body: until T234, Save on the EPA page and the action
+  buttons of 25 other pages left `document.activeElement` on BODY. The action's in-flight flag, set before its first
+  `await`, makes a second press send nothing (T202); the button may say what it is doing ("Saving..."). While it runs
+  the button carries `aria-disabled="true"` (`InFlight.AriaDisabled(running)`, Components/Shared; T234 review), so a
+  screen reader hears that it is unavailable: a changed label on the focused button is often not read.
+  `.btn[aria-disabled]` looks unavailable and keeps its focus ring. Every other button the action would race is disabled
+  while it runs. Where one flag serves several buttons, the page records which one was pressed (`OtherInFlight(action)`
+  and `Running(action)` on the user page, the activity type builder, the jobs list and the committee review page; the
+  row's id on the invitations, SSO mappings and data-rights pages). A `ConfirmDialog`'s confirm button is held to the
+  same rule while its `OnConfirm` runs, and its Cancel is disabled then.
+- **An action that is done moves the focus to its result** (T234), an `Alert` in an `.action-result` region
+  (`tabindex="-1"`) where the page reports the result (at the top of a form page; under the button on the rebuild page,
+  under the form on the export check, under the table on the jobs list), once the page has rendered it. A status that
+  arrives on its own is often not read, and what the action changed may have taken its button away (a cleared choice, a
+  closed row, a form rebuilt with what was stored, a swapped button). The shared `ActionResult` component
+  (Components/Shared) is the region: the page puts its result alerts inside and calls `FocusAfterRender()` when the
+  action is done. The older pages (EPA, trainee profile, curriculum items, the MSF campaign pages) hand-roll the same
+  region with `OnAfterRenderAsync`. An action that leaves the page (a create, a clone) moves no focus: the next page has
+  it.
+- **A refused action leaves the focus where it was**: on its button, still there and enabled, or in the field Enter was
+  pressed in. The refusal is a `danger` `Alert`, `role="alert"`, read at once, and the operator's next step is usually to
+  correct a field and press again. Where the refusal itself leaves the pressed button gone or disabled, its result takes
+  the focus too (the user page's Reset password, whose password is cleared either way). A refusal shown beside its button
+  (the curriculum item editor's Add and Save, the panel page's Save committee) is read there.
+- The exceptions are deliberate: the trainee profile's Deactivate and Mark complete move the focus to their result done
+  or refused (below); the MSF campaign page keeps it on Open after a refused open, for the retry, and puts it in the email
+  field after an invitee is added ("The MSF campaign page", below); the curriculum item editor moves it to the Add form's
+  empty state after the Add that took the last EPA (§ Card system); and a certificate download (My authorisations) keeps
+  it on the button pressed: the page shows no result of its own, and the browser's download says what it did.
+  `ActionFocusTests` (bUnit) holds each action in its `Scenarios` table to the rule (running, done, refused), and the
+  pages with their own tests (EPA, trainee profile, curriculum items, panel, new activity) are held there. A new action
+  gets a scenario.
 - A destructive action on a form page that acts on a field (the trainee profile's Deactivate and Mark complete, which
   each record the "Last day in the programme", T209 review) is an `.btn-outline` in the form's actions row whose
   `ConfirmDialog` names the value it will record and says it cannot be changed afterwards. Its result goes to the page's
@@ -1189,6 +1224,9 @@ Used in the Administrator dashboard system-health card to show service status at
 - Required fields show a visual `*` plus `aria-required="true"`.
 - `.visually-hidden` is available for screen-reader-only copy.
 - `:focus-visible` uses `--focus-ring`. Never remove focus outlines without replacing them.
+- Never leave the focus on the page body. A button is not disabled by its own action, and says it is unavailable with
+  `aria-disabled` while that action runs; an action that is done moves the focus to its result, and one whose button is
+  gone does too (§ Button system, T234).
 - An invalid field is marked by a stripe as well as the danger colour, and stays marked in a contrast theme (WCAG 1.4.1,
   § Form system, T236). Its focus ring is the usual outline, outside the stripe.
 - Up/down reorder buttons (T019) are keyboard-focusable `<button type="button">` with `aria-label="Move field up"`.
@@ -1273,6 +1311,11 @@ else
 
 ```
 <PageHeader Title="…" />
+
+<ActionResult @ref="_result">          @* what Save did; takes the focus once it is done (§ Button system, T234) *@
+  <Alert Kind="success">…</Alert>
+  <Alert Kind="danger">…</Alert>
+</ActionResult>
 
 <div class="form-container">
   <EditForm … >

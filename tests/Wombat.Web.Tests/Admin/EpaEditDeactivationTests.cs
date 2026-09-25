@@ -215,6 +215,100 @@ public sealed class EpaEditDeactivationTests : TestContext
         PageButtons(cut, "Deactivate").Should().ContainSingle("the EPA is active again");
     }
 
+    // ---- T234: a save keeps the keyboard focus on its result ----
+
+    /// <summary>
+    /// T234. Save was disabled while it ran, and a browser drops the focus of a button it disables, to the page: the G1
+    /// browser check found <c>document.activeElement</c> on BODY after "EPA saved.". A save that is done now moves the
+    /// focus to its result, as a deactivation does.
+    /// </summary>
+    [Fact]
+    public void ASave_MovesTheFocusToItsResult()
+    {
+        var cut = RenderPage(new FakeSender());
+
+        cut.Find("form").Submit();
+
+        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("EPA saved.");
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().Be(cut.Instance.ResultRegion.Id));
+    }
+
+    [Fact]
+    public void AReactivatingSave_MovesTheFocusToWhatItCredited()
+    {
+        var cut = RenderPage(new FakeSender(isActive: false, completionsCredited: 2));
+
+        cut.Find("#epa-active").Change(true);
+        cut.Find("form").Submit();
+
+        Text(cut.Find(".action-result .alert.alert-success")).Should().StartWith("EPA reactivated.");
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().Be(cut.Instance.ResultRegion.Id));
+    }
+
+    [Fact]
+    public void ASaveThatDeactivates_MovesTheFocusToItsResult_OnceTheDialogHasClosed()
+    {
+        var cut = RenderPage(new FakeSender());
+
+        cut.Find("#epa-active").Change(false);
+        cut.Find("form").Submit();
+        ConfirmButton(cut).Click();
+
+        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("EPA saved and deactivated.");
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().Be(cut.Instance.ResultRegion.Id));
+
+        var calls = JSInterop.Invocations.Select(invocation => invocation.Identifier).ToList();
+        calls.IndexOf("wombatDialog.close").Should().BeGreaterThan(-1)
+            .And.BeLessThan(calls.IndexOf(FocusIdentifier), "while the modal is open nothing outside it can take the focus");
+    }
+
+    [Fact]
+    public void WhileASaveRuns_SaveStaysEnabled_AndASecondPressSendsNothing()
+    {
+        var held = new TaskCompletionSource<UpdateEpaResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var sender = new FakeSender { HeldUpdate = held };
+        var cut = RenderPage(sender);
+
+        cut.Find("form").Submit();
+
+        var save = PageButton(cut, "Saving...");
+        save.HasAttribute("disabled").Should().BeFalse(
+            "it has the focus, and a browser drops the focus of a button it disables, to the page (T234)");
+        save.GetAttribute("aria-disabled").Should().Be("true", "a second press does nothing, and a screen reader hears so (T234 review)");
+        PageButton(cut, "Deactivate").HasAttribute("disabled").Should().BeTrue("nothing else may be sent while a save runs");
+
+        cut.Find("form").Submit();
+        sender.Commands.Should().ContainSingle("a second Enter while the save runs sends nothing");
+        FocusCalls().Should().BeEmpty("nothing has answered yet");
+
+        held.SetResult(new UpdateEpaResult(sender.Epa, 0));
+
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().Be(cut.Instance.ResultRegion.Id));
+        PageButton(cut, "Save").HasAttribute("disabled").Should().BeFalse();
+        PageButton(cut, "Save").HasAttribute("aria-disabled").Should().BeFalse();
+        sender.Commands.Should().ContainSingle();
+    }
+
+    [Fact]
+    public void ARefusedSave_LeavesTheFocusWhereItWas()
+    {
+        // The refusal is an alert, read at once, and Save is still there, enabled, for the correction.
+        var cut = RenderPage(new FakeSender { UpdateRefusal = new InvalidOperationException("An EPA with this code already exists.") });
+
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-danger")).Should().Be("An EPA with this code already exists."));
+        cut.Find(".action-result .alert.alert-danger").GetAttribute("role").Should().Be("alert");
+        FocusCalls().Should().BeEmpty();
+        PageButton(cut, "Save").HasAttribute("disabled").Should().BeFalse();
+    }
+
+    private ElementReference FocusedReference()
+        => JSInterop.VerifyFocusAsyncInvoke().Arguments[0].Should().BeOfType<ElementReference>().Subject;
+
+    private IReadOnlyList<JSRuntimeInvocation> FocusCalls()
+        => JSInterop.Invocations.Where(invocation => invocation.Identifier == FocusIdentifier).ToList();
+
     /// <summary>What <see cref="ElementReference" />.FocusAsync calls.</summary>
     private const string FocusIdentifier = "Blazor._internal.domWrapper.focus";
 
@@ -244,14 +338,31 @@ public sealed class EpaEditDeactivationTests : TestContext
             EpaId, 7, "General Paediatrics", "CMSA", "PAED-003", "Resuscitating a child", null, null, EpaCategory.Core,
             isActive, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
+        /// <summary>The EPA as stored.</summary>
+        public EpaDto Epa => _epa;
+
         /// <summary>Every command the page sent, in order. Queries are answered and not recorded.</summary>
         public List<object> Commands { get; } = [];
 
         /// <summary>When set, a deactivation is refused with it.</summary>
         public Exception? Refusal { get; init; }
 
+        /// <summary>When set, a save is refused with it.</summary>
+        public Exception? UpdateRefusal { get; init; }
+
+        /// <summary>When set, a save answers only when the test completes it: the window a second press falls into.</summary>
+        public TaskCompletionSource<UpdateEpaResult>? HeldUpdate { get; init; }
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
+            if (request is UpdateEpaCommand && (HeldUpdate is not null || UpdateRefusal is not null))
+            {
+                Commands.Add(request);
+                return UpdateRefusal is not null
+                    ? Task.FromException<TResponse>(UpdateRefusal)
+                    : (Task<TResponse>)(object)HeldUpdate!.Task;
+            }
+
             object response = request switch
             {
                 GetInstitutionsListQuery => Array.Empty<InstitutionDto>(),

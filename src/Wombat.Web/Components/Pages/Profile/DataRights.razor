@@ -7,15 +7,20 @@
 
 <PageHeader Title="Your data rights" Subtitle="Request access to your data, correct it, export it, manage processing preferences, or request erasure." />
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+@* What an action did. It takes the focus once the action is done (T234; DESIGN.md § Button system): a status arriving
+   on its own is often not read, and a withdrawn request's Withdraw is gone. A refusal leaves the focus where it was: it
+   is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
+</ActionResult>
 
 <div class="details-grid">
   <section class="detail-card">
@@ -41,7 +46,11 @@
         </div>
       </div>
       <FormActions>
-        <button type="button" class="btn btn-primary" disabled="@_savingFlags" @onclick="SaveFlagsAsync">
+        @* Neither this nor Submit request is disabled while its own action runs (T234): the one pressed has the focus,
+           and a browser drops the focus of a button it disables, to the page. A second press sends nothing, and
+           aria-disabled says so. Each is disabled while the other, or a withdrawal, runs. *@
+        <button type="button" class="btn btn-primary" disabled="@(_submitting || _withdrawingId is not null)"
+                aria-disabled="@InFlight.AriaDisabled(_savingFlags)" @onclick="SaveFlagsAsync">
           @(_savingFlags ? "Saving..." : "Save preferences")
         </button>
       </FormActions>
@@ -70,7 +79,8 @@
     </div>
 
     <FormActions>
-      <button type="button" class="btn btn-primary" disabled="@_submitting" @onclick="SubmitRequestAsync">
+      <button type="button" class="btn btn-primary" disabled="@(_savingFlags || _withdrawingId is not null)"
+              aria-disabled="@InFlight.AriaDisabled(_submitting)" @onclick="SubmitRequestAsync">
         @(_submitting ? "Submitting..." : "Submit request")
       </button>
     </FormActions>
@@ -99,7 +109,11 @@
           <td>
             @if (req.Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview)
             {
-              <button class="btn btn-outline btn-sm" @onclick="() => WithdrawAsync(req.Id)">Withdraw</button>
+              @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
+              <button type="button" class="btn btn-outline btn-sm"
+                      disabled="@(_savingFlags || _submitting || (_withdrawingId is not null && _withdrawingId != req.Id))"
+                      aria-disabled="@InFlight.AriaDisabled(_withdrawingId == req.Id)"
+                      @onclick="() => WithdrawAsync(req.Id)">Withdraw</button>
             }
             @if (req.Status == DataRightsRequestStatus.Completed &&
                  req.Type is DataRightsRequestType.Access or DataRightsRequestType.Export)
@@ -119,6 +133,14 @@
   private bool _loadingFlags = true;
   private bool _savingFlags;
   private bool _submitting;
+
+  /// <summary>The request whose withdrawal has been sent and has not answered, or null. (T234 review)</summary>
+  private Guid? _withdrawingId;
+
+  private ActionResult? _result;
+
+  /// <summary>A save, a submit or a withdrawal has been sent and has not answered, so nothing else may be sent. (T234)</summary>
+  private bool Busy => _savingFlags || _submitting || _withdrawingId is not null;
   private string? _errorMessage;
   private string? _statusMessage;
 
@@ -166,6 +188,11 @@
 
   private async Task SaveFlagsAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     _savingFlags = true;
     _errorMessage = null;
     _statusMessage = null;
@@ -178,6 +205,7 @@
         _optOutOfDigestEmails,
         authState.User));
       _statusMessage = "Processing preferences saved.";
+      _result?.FocusAfterRender();
     }
     catch (Exception ex)
     {
@@ -191,6 +219,11 @@
 
   private async Task SubmitRequestAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     if (string.IsNullOrWhiteSpace(_newRequestReason))
     {
       _errorMessage = "Please provide a reason for your request.";
@@ -215,6 +248,7 @@
       // Reload requests
       _requests = await Sender.Send(
         new Wombat.Application.Features.DataRights.Queries.GetMyDataRightsRequestsQuery(authState.User));
+      _result?.FocusAfterRender();
     }
     catch (Exception ex)
     {
@@ -228,6 +262,12 @@
 
   private async Task WithdrawAsync(Guid requestId)
   {
+    if (Busy)
+    {
+      return;
+    }
+
+    _withdrawingId = requestId;
     _errorMessage = null;
     _statusMessage = null;
 
@@ -240,10 +280,15 @@
       _statusMessage = "Request withdrawn.";
       _requests = await Sender.Send(
         new Wombat.Application.Features.DataRights.Queries.GetMyDataRightsRequestsQuery(authState.User));
+      _result?.FocusAfterRender();
     }
     catch (Exception ex)
     {
       _errorMessage = ex.Message;
+    }
+    finally
+    {
+      _withdrawingId = null;
     }
   }
 

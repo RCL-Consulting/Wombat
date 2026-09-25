@@ -16,15 +16,19 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+@* What a Save did. It takes the focus once the save is done (T234; DESIGN.md § Button system). A refusal leaves the
+   focus on Save: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
+</ActionResult>
 
 <StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="false" EmptyTitle="" EmptyBody="">
   <div class="details-grid">
@@ -97,7 +101,9 @@
 
   <FormActions>
     <a class="btn btn-outline" href="/admin/entrustment-scales">Cancel</a>
-    <button type="button" class="btn btn-primary" disabled="@_saving" @onclick="SaveAsync">@(_saving ? "Saving..." : "Save")</button>
+    @* Not disabled while its save runs (T234): it has the focus, and a browser drops the focus of a button it disables, to
+       the page. A second press sends nothing. *@
+    <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)" @onclick="SaveAsync">@(_saving ? "Saving..." : "Save")</button>
   </FormActions>
 </StatePanel>
 
@@ -109,6 +115,7 @@
   private readonly List<LevelModel> _levels = new();
   private bool _loading;
   private bool _saving;
+  private ActionResult? _result;
   private string? _loadError;
   private string? _statusMessage;
   private string? _errorMessage;
@@ -195,6 +202,11 @@
 
   private async Task SaveAsync()
   {
+    if (_saving)
+    {
+      return;
+    }
+
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
@@ -230,6 +242,7 @@
         });
       }
       _statusMessage = "Entrustment scale saved.";
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {

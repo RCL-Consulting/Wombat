@@ -238,7 +238,7 @@ public sealed class NewActivitySubmitFlowTests : TestContext
 
         Click(cut, "Save draft");
 
-        PressEverythingAgain(cut);
+        PressEverythingAgain(cut, pressed: "Save draft");
         sender.Creates.Should().ContainSingle();
         sender.Transitions.Should().BeEmpty();
         Navigation.History.Should().ContainSingle();
@@ -289,7 +289,7 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         TakeNotice().Should().Be(new ActivityNotice("success", "Submitted. It is now Requested."));
 
         // T143: "Submit twice files one activity". A press that beats the router's swap does nothing.
-        PressEverythingAgain(cut);
+        PressEverythingAgain(cut, pressed: "Submit");
         sender.Creates.Should().ContainSingle();
         sender.Transitions.Should().ContainSingle();
         Navigation.History.Should().ContainSingle();
@@ -317,7 +317,7 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         cut.FindAll(".alert-danger").Should().BeEmpty("the refusal is said on the draft's page, not on the one being left");
 
         // "Let them retry" here would be T127's duplicate: the page is leaving, and nothing on it creates again.
-        PressEverythingAgain(cut);
+        PressEverythingAgain(cut, pressed: "Submit");
         sender.Creates.Should().ContainSingle();
         sender.Transitions.Should().ContainSingle();
         Navigation.History.Should().ContainSingle();
@@ -523,13 +523,17 @@ public sealed class NewActivitySubmitFlowTests : TestContext
     }
 
     /// <summary>
-    /// Everything on the page that could act, pressed again after a create succeeded: the buttons and the type picker are
-    /// disabled until the router replaces the page, and a press that beats the re-render is ignored.
+    /// Everything on the page that could act, pressed again after a create succeeded: the type picker and the other button
+    /// are disabled until the router replaces the page, and every press is ignored. The button pressed is not disabled
+    /// (T234): it has the focus, and a browser drops the focus of a button it disables, to the page.
     /// </summary>
-    private static void PressEverythingAgain(IRenderedComponent<NewActivity> cut)
+    private static void PressEverythingAgain(IRenderedComponent<NewActivity> cut, string pressed)
     {
-        cut.WaitForAssertion(() => ActionButtons(cut).Should().OnlyContain(button => button.HasAttribute("disabled"),
-            "the page is leaving for the activity, so it offers nothing more"));
+        cut.WaitForAssertion(() => ActionButtons(cut).Where(button => button.TextContent.Trim() != pressed)
+            .Should().OnlyContain(button => button.HasAttribute("disabled"),
+                "the page is leaving for the activity, so it offers nothing more"));
+        FindButton(cut, pressed).HasAttribute("disabled").Should().BeFalse("it has the focus (T234)");
+        FindButton(cut, pressed).GetAttribute("aria-disabled").Should().Be("true", "a press does nothing now (T234 review)");
         cut.Find("#activity-type").HasAttribute("disabled").Should().BeTrue();
 
         foreach (var label in ActionButtons(cut).Select(button => button.TextContent.Trim()).ToList())

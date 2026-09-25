@@ -37,22 +37,28 @@
   </p>
 
   <FormActions>
-    <button type="button" class="btn btn-primary" disabled="@_running" @onclick="AskAsync">
+    @* Not disabled while the rebuild runs (T234): the dialog, closed as the rebuild starts, hands the focus back to it,
+       and a browser drops the focus of a button it disables, to the page. A press while it runs asks nothing. *@
+    <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_running)" @onclick="AskAsync">
       @(_running ? "Rebuilding…" : "Rebuild progress")
     </button>
   </FormActions>
 
-  @if (_result is not null)
-  {
-    <Alert Kind="success">Curriculum progress was rebuilt.</Alert>
-    <dl class="details-list">
-      <div><dt>Activities re-read</dt><dd>@_result.ActivitiesReplayed</dd></div>
-      <div><dt>Curriculum items credited</dt><dd>@_result.CreditApplications</dd></div>
-      <div><dt>Semester tallies written</dt><dd>@_result.ProgressRowsWritten</dd></div>
-      <div><dt>Stale tallies removed</dt><dd>@_result.ProgressRowsRemoved</dd></div>
-      <div><dt>Completions re-stamped</dt><dd>@_result.TransitionsStamped</dd></div>
-    </dl>
-  }
+  @* What the rebuild did. It takes the focus once the rebuild is done (T234; DESIGN.md § Button system): the figures are
+     not announced on their own. A refusal, at the top, is an alert, read at once, and leaves the focus on the button. *@
+  <ActionResult @ref="_region">
+    @if (_result is not null)
+    {
+      <Alert Kind="success">Curriculum progress was rebuilt.</Alert>
+      <dl class="details-list">
+        <div><dt>Activities re-read</dt><dd>@_result.ActivitiesReplayed</dd></div>
+        <div><dt>Curriculum items credited</dt><dd>@_result.CreditApplications</dd></div>
+        <div><dt>Semester tallies written</dt><dd>@_result.ProgressRowsWritten</dd></div>
+        <div><dt>Stale tallies removed</dt><dd>@_result.ProgressRowsRemoved</dd></div>
+        <div><dt>Completions re-stamped</dt><dd>@_result.TransitionsStamped</dd></div>
+      </dl>
+    }
+  </ActionResult>
 </div>
 
 <ConfirmDialog @ref="_confirm"
@@ -63,12 +69,18 @@
 
 @code {
   private ConfirmDialog? _confirm;
+  private ActionResult? _region;
   private RebuildCurriculumProgressResult? _result;
   private string? _error;
   private bool _running;
 
   private async Task AskAsync()
   {
+    if (_running)
+    {
+      return;
+    }
+
     if (_confirm is not null)
     {
       await _confirm.ShowAsync();
@@ -97,6 +109,7 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _result = await Sender.Send(new RebuildCurriculumProgressCommand(authState.User));
+      _region?.FocusAfterRender();
     }
     catch (Exception exception)
     {

@@ -19,15 +19,19 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+@* What an action did. It takes the focus once the action is done (T234; DESIGN.md § Button system). A refusal leaves
+   the focus where it was: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
+</ActionResult>
 
 <StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
   <div class="details-grid">
@@ -78,7 +82,9 @@
 
         <FormActions>
           <a class="btn btn-outline" href="/admin/curricula">Cancel</a>
-          <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+          @* Neither Save nor Clone is disabled while its own action runs (T234): the one pressed has the focus, and a
+             browser drops the focus of a button it disables, to the page. A second press sends nothing. *@
+          <button type="submit" class="btn btn-primary" disabled="@_cloning" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
         </FormActions>
       </EditForm>
     </section>
@@ -107,7 +113,7 @@
           </div>
 
           <FormActions>
-            <button type="submit" class="btn btn-outline" disabled="@_saving">Clone</button>
+            <button type="submit" class="btn btn-outline" disabled="@_saving" aria-disabled="@InFlight.AriaDisabled(_cloning)">@(_cloning ? "Cloning..." : "Clone")</button>
           </FormActions>
         </EditForm>
       </aside>
@@ -128,6 +134,11 @@
   private string? _statusMessage;
   private bool _loading;
   private bool _saving;
+  private bool _cloning;
+  private ActionResult? _result;
+
+  /// <summary>A save or a clone has been sent and has not answered, so nothing else may be sent. (T234)</summary>
+  private bool Busy => _saving || _cloning;
 
   private bool IsNew => !Id.HasValue;
 
@@ -189,6 +200,11 @@
 
   private async Task SaveAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
@@ -208,6 +224,7 @@
       curriculum = await Sender.Send(new UpdateCurriculumCommand(Id!.Value, _model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, _model.IsActive, authState.User));
       _model.IsActive = curriculum.IsActive;
       _statusMessage = "Curriculum saved.";
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
@@ -219,9 +236,15 @@
     }
   }
 
+  /// <remarks>A clone that is done leaves for the new version's page, and the focus with it.</remarks>
   private async Task CloneAsync()
   {
-    _saving = true;
+    if (Busy)
+    {
+      return;
+    }
+
+    _cloning = true;
     _errorMessage = null;
     _statusMessage = null;
 
@@ -237,7 +260,7 @@
     }
     finally
     {
-      _saving = false;
+      _cloning = false;
     }
   }
 

@@ -13,15 +13,21 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_status))
-{
-  <Alert Kind="success">@_status</Alert>
-}
+@* What a save did. It takes the focus once Save committee or Save panel is done (T234; DESIGN.md § Button system):
+   Save committee's form is rebuilt with what was stored, and the button with it, and a status arriving on its own is
+   often not read. A refusal leaves the focus where it was: Save panel's is an alert here, and Save committee's an alert
+   beside its button, each read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_status))
+  {
+    <Alert Kind="success">@_status</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger">@_error</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_error))
+  {
+    <Alert Kind="danger">@_error</Alert>
+  }
+</ActionResult>
 
 <StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="" LoadError="@_loadError">
   @if (_unseatable > 0)
@@ -60,7 +66,9 @@
               <Alert Kind="danger">@_bodyError</Alert>
             }
             <FormActions>
-              <button type="submit" class="btn btn-primary" disabled="@_savingBody">@(_savingBody ? "Saving..." : "Save committee")</button>
+              @* Neither save is disabled while it runs (T234): the one pressed has the focus, and a browser drops the focus
+                 of a button it disables, to the page. A second press sends nothing. *@
+              <button type="submit" class="btn btn-primary" disabled="@_saving" aria-disabled="@InFlight.AriaDisabled(_savingBody)">@(_savingBody ? "Saving..." : "Save committee")</button>
             </FormActions>
           </EditForm>
         }
@@ -183,7 +191,7 @@
           </FormField>
         </div>
         <FormActions>
-          <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save panel")</button>
+          <button type="submit" class="btn btn-primary" disabled="@_savingBody" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save panel")</button>
         </FormActions>
       </EditForm>
     </section>
@@ -202,6 +210,10 @@
   private bool _isAdministrator;
   private bool _mayChooseBody;
   private bool _savingBody;
+  private ActionResult? _result;
+
+  /// <summary>A save has been sent and has not answered, so nothing else may be sent. (T234)</summary>
+  private bool Busy => _saving || _savingBody;
   private string? _bodyError;
   private string? _bodyName;
   private PanelFormModel _model = new();
@@ -320,7 +332,7 @@
 
   private async Task SaveBodyAsync()
   {
-    if (!PanelId.HasValue)
+    if (!PanelId.HasValue || Busy)
     {
       return;
     }
@@ -338,6 +350,7 @@
       _status = result.DecisionBodyName is null
         ? "The panel is a general panel."
         : $"The panel sits as the {result.DecisionBodyName}.";
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
@@ -424,6 +437,11 @@
 
   private async Task SaveAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     _saving = true;
     _error = null;
     _status = null;
@@ -437,6 +455,7 @@
       {
         await Sender.Send(new UpdateDecisionPanelCommand(PanelId.Value, members, authState.User));
         _status = "Panel members updated.";
+        _result?.FocusAfterRender();
       }
       else
       {

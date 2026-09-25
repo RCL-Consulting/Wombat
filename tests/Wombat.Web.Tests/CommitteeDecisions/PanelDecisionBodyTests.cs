@@ -12,6 +12,7 @@ using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
+using Wombat.Web.Components.Shared;
 using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
@@ -131,6 +132,95 @@ public sealed class PanelDecisionBodyTests : TestContext
         cut.WaitForState(() => cut.Markup.Contains("The panel is a general panel."));
         _sender.Received.OfType<UpdateDecisionPanelCommand>().Should().BeEmpty("the members are their own form");
     }
+
+    // ─── T234: a save keeps the keyboard focus ───────────────────────────────
+
+    /// <summary>
+    /// T234. Save committee was disabled while it ran, and its form is rebuilt with what was stored, so the focus fell to
+    /// the page body. A save that is done moves the focus to its result.
+    /// </summary>
+    [Fact]
+    public void SavingTheCommittee_MovesTheFocusToItsResult()
+    {
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        var cut = RenderPanel();
+
+        cut.Find("#panel-body").Change("");
+        BodyForm(cut).Submit();
+
+        cut.WaitForState(() => cut.Markup.Contains("The panel is a general panel."));
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().Be(cut.FindComponent<ActionResult>().Instance.Element.Id));
+    }
+
+    [Fact]
+    public void SavingTheMembers_MovesTheFocusToItsResult()
+    {
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        _sender.On<UpdateDecisionPanelCommand>(_ => Panel("neonatal"));
+        var cut = RenderPanel();
+
+        MembersForm(cut).Submit();
+
+        cut.WaitForState(() => cut.Markup.Contains("Panel members updated."));
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().Be(cut.FindComponent<ActionResult>().Instance.Element.Id));
+    }
+
+    [Fact]
+    public void WhileTheCommitteeSaves_SaveCommitteeStaysEnabled_SavePanelIsDisabled_AndASecondPressSendsNothing()
+    {
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        _sender.Hold<SetDecisionPanelBodyCommand>();
+        var cut = RenderPanel();
+
+        BodyForm(cut).Submit();
+
+        BodyForm(cut).QuerySelector("button[type=submit]")!.HasAttribute("disabled").Should().BeFalse(
+            "it has the focus, and a browser drops the focus of a button it disables, to the page (T234)");
+        BodyForm(cut).QuerySelector("button[type=submit]")!.GetAttribute("aria-disabled").Should().Be("true",
+            "a second press does nothing (T234 review)");
+        MembersForm(cut).QuerySelector("button[type=submit]")!.HasAttribute("disabled").Should().BeTrue();
+
+        BodyForm(cut).Submit();
+        MembersForm(cut).Submit();
+        _sender.HeldSends.Should().Be(1, "a second press while the save runs sends nothing");
+        _sender.Received.OfType<UpdateDecisionPanelCommand>().Should().BeEmpty();
+
+        _sender.Release();
+
+        cut.WaitForState(() => cut.Markup.Contains("The panel sits as the"));
+        _sender.HeldSends.Should().Be(1);
+    }
+
+    [Fact]
+    public void ARefusedCommittee_IsShownBesideItsButton_WhichKeepsTheFocus()
+    {
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        _sender.On<SetDecisionPanelBodyCommand>(_ => throw new InvalidOperationException("The committee cannot be changed now."));
+        var cut = RenderPanel();
+
+        BodyForm(cut).Submit();
+
+        cut.WaitForAssertion(() => BodyForm(cut).QuerySelector(".alert-danger")!.TextContent.Trim()
+            .Should().Be("The committee cannot be changed now."));
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "Blazor._internal.domWrapper.focus");
+        BodyForm(cut).QuerySelector("button[type=submit]")!.HasAttribute("disabled").Should().BeFalse();
+    }
+
+    private IRenderedComponent<PanelEdit> RenderPanel()
+    {
+        var cut = RenderComponent<PanelEdit>(parameters => parameters.Add(page => page.PanelId, PanelId));
+        cut.WaitForState(() => cut.FindAll("#panel-body").Count == 1 && cut.FindAll("#panel-chair").Count == 1);
+        return cut;
+    }
+
+    private static AngleSharp.Dom.IElement BodyForm(IRenderedComponent<PanelEdit> cut)
+        => cut.FindAll("form").Single(form => form.QuerySelector("#panel-body") is not null);
+
+    private static AngleSharp.Dom.IElement MembersForm(IRenderedComponent<PanelEdit> cut)
+        => cut.FindAll("form").Single(form => form.QuerySelector("#panel-chair") is not null);
+
+    private Microsoft.AspNetCore.Components.ElementReference FocusedReference()
+        => JSInterop.VerifyFocusAsyncInvoke().Arguments[0].Should().BeOfType<Microsoft.AspNetCore.Components.ElementReference>().Subject;
 
     [Fact]
     public void ASpecialityAdmin_SeesTheCommitteeReadOnly()
@@ -295,8 +385,13 @@ public sealed class PanelDecisionBodyTests : TestContext
     private sealed class RecordingSender : IScopedSender
     {
         private readonly Dictionary<Type, Func<object, object?>> _answers = [];
+        private Type? _heldType;
+        private TaskCompletionSource? _held;
 
         public List<object> Received { get; } = [];
+
+        /// <summary>How many requests of the held type the page sent; each is answered only once released.</summary>
+        public int HeldSends { get; private set; }
 
         public RecordingSender On<TRequest>(Func<TRequest, object?> answer)
         {
@@ -304,8 +399,27 @@ public sealed class PanelDecisionBodyTests : TestContext
             return this;
         }
 
+        /// <summary>Holds each request of this type until <see cref="Release" />: the window a second press falls into.</summary>
+        public RecordingSender Hold<TRequest>()
+        {
+            _heldType = typeof(TRequest);
+            return this;
+        }
+
+        public void Release() => (_held ?? throw new InvalidOperationException("Nothing was held.")).SetResult();
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-            => Task.FromResult((TResponse)Answer(request)!);
+            => request.GetType() == _heldType
+                ? HeldAsync<TResponse>(request)
+                : Task.FromResult((TResponse)Answer(request)!);
+
+        private async Task<TResponse> HeldAsync<TResponse>(object request)
+        {
+            HeldSends++;
+            _held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            await _held.Task;
+            return (TResponse)Answer(request)!;
+        }
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
         {

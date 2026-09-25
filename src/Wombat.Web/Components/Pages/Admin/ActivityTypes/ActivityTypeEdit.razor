@@ -16,24 +16,31 @@
 <PageHeader Title="@PageTitleText" Subtitle="Build the form, workflow, and credit definition for this activity type.">
   <Actions>
     <a class="btn btn-outline" href="/admin/activity-types">Back to list</a>
-    <button type="button" class="btn btn-primary" disabled="@_busy" @onclick="SaveDraftAsync">Save draft</button>
+    @* While one of these runs the others are disabled, and the one pressed is not (T234): it has the focus, and a browser
+       drops the focus of a button it disables, to the page. A second press sends nothing. *@
+    <button type="button" class="btn btn-primary" disabled="@OtherInFlight(SaveAction)" aria-disabled="@InFlight.AriaDisabled(Running(SaveAction))" @onclick="SaveDraftAsync">Save draft</button>
     @if ((_editor?.Id ?? 0) > 0 && _editor?.HasDraft == true)
     {
-      <button type="button" class="btn btn-outline" disabled="@_busy" @onclick="DiscardDraftAsync">Discard draft</button>
+      <button type="button" class="btn btn-outline" disabled="@OtherInFlight(DiscardAction)" aria-disabled="@InFlight.AriaDisabled(Running(DiscardAction))" @onclick="DiscardDraftAsync">Discard draft</button>
     }
-    <button type="button" class="btn btn-success" disabled="@(_busy || !CanPublish)" title="@(CanPublish ? null : "Save a draft to publish.")" @onclick="PublishAsync">Publish</button>
+    <button type="button" class="btn btn-success" disabled="@(OtherInFlight(PublishAction) || !CanPublish)" aria-disabled="@InFlight.AriaDisabled(Running(PublishAction))" title="@(CanPublish ? null : "Save a draft to publish.")" @onclick="PublishAsync">Publish</button>
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_status))
-{
-  <Alert Kind="success">@_status</Alert>
-}
+@* What Save draft, Discard draft or Publish did. It takes the focus once the action is done (T234; DESIGN.md § Button
+   system): a discard or a publish leaves no draft, which takes Discard draft away and disables Publish, and a status
+   arriving on its own is often not read. A refusal leaves the focus where it was: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_status))
+  {
+    <Alert Kind="success">@_status</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_actionError))
-{
-  <Alert Kind="danger">@_actionError</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_actionError))
+  {
+    <Alert Kind="danger">@_actionError</Alert>
+  }
+</ActionResult>
 
 @if (_publishWarnings.Count > 0)
 {
@@ -365,7 +372,18 @@
   private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
   private IReadOnlyList<ActivityCatalogueOption> _entrustmentScales = [];
   private bool _loading = true;
-  private bool _busy;
+  private ActionResult? _result;
+
+  /// <summary>The header action that has been sent and has not yet answered, or null. (T234)</summary>
+  private string? _inFlight;
+
+  private const string SaveAction = "save";
+  private const string DiscardAction = "discard";
+  private const string PublishAction = "publish";
+
+  private bool OtherInFlight(string action) => _inFlight is not null && _inFlight != action;
+
+  private bool Running(string action) => _inFlight == action;
   private string? _loadError;
   private string? _actionError;
   private string? _status;
@@ -536,9 +554,35 @@
     _selectedFieldIndex = _selectedSectionIndex >= 0 && _builderSchema.Sections[0].Fields.Count > 0 ? 0 : -1;
   }
 
+  /// <remarks>
+  /// Sent at most once at a time (T234): the flag is set before the first await, so a second press does nothing. A save
+  /// that is done moves the focus to its result, unless it created the type: the page then moves to the type's own
+  /// address, which reads it again.
+  /// </remarks>
   private async Task SaveDraftAsync()
   {
-    _busy = true;
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
+    _inFlight = SaveAction;
+    try
+    {
+      if (await SaveDraftCoreAsync())
+      {
+        _result?.FocusAfterRender();
+      }
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  /// <summary>Saves the draft. Returns whether it was saved on a type that already existed, so the page stays.</summary>
+  private async Task<bool> SaveDraftCoreAsync()
+  {
     _actionError = null;
     _status = null;
 
@@ -569,31 +613,48 @@
       if (wasNew && _editor.Id > 0)
       {
         Navigation.NavigateTo($"/admin/activity-types/{_editor.Id}", forceLoad: false);
+        return false;
       }
+
+      return true;
     }
     catch (Exception exception)
     {
       _actionError = exception.Message;
-    }
-    finally
-    {
-      _busy = false;
+      return false;
     }
   }
 
   private async Task PublishAsync()
   {
-    if (_editor is null || _editor.Id <= 0)
-    {
-      await SaveDraftAsync();
-    }
-
-    if (_editor is null || _editor.Id <= 0)
+    if (_inFlight is not null)
     {
       return;
     }
 
-    _busy = true;
+    _inFlight = PublishAction;
+    try
+    {
+      if (_editor is null || _editor.Id <= 0)
+      {
+        await SaveDraftCoreAsync();
+      }
+
+      if (_editor is null || _editor.Id <= 0)
+      {
+        return;
+      }
+
+      await PublishCoreAsync(_editor.Id);
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  private async Task PublishCoreAsync(int activityTypeId)
+  {
     _actionError = null;
 
     try
@@ -601,30 +662,27 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var actorUserId = await GetCurrentUserIdAsync();
       _editor = await Sender.Send(new Wombat.Application.Features.Activities.Commands.PublishActivityTypeDraft.PublishActivityTypeDraftCommand(
-        _editor.Id,
+        activityTypeId,
         actorUserId,
         authState.User));
       _status = $"Published version {_editor.PublishedVersion}.";
       RefreshWarnings();
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
       _actionError = exception.Message;
     }
-    finally
-    {
-      _busy = false;
-    }
   }
 
   private async Task DiscardDraftAsync()
   {
-    if (_editor is null || _editor.Id <= 0)
+    if (_editor is null || _editor.Id <= 0 || _inFlight is not null)
     {
       return;
     }
 
-    _busy = true;
+    _inFlight = DiscardAction;
     _actionError = null;
 
     try
@@ -634,6 +692,7 @@
       LoadEditorState(_editor);
       _status = "Draft discarded.";
       RefreshWarnings();
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
@@ -641,7 +700,7 @@
     }
     finally
     {
-      _busy = false;
+      _inFlight = null;
     }
   }
 

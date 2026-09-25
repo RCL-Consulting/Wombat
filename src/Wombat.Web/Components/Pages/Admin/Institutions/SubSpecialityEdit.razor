@@ -14,15 +14,19 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+@* What a Save or a Deactivate did. It takes the focus once either is done (T234; DESIGN.md § Button system). A refusal
+   leaves the focus where it was: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  {
+    <Alert Kind="success">@_statusMessage</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
+</ActionResult>
 
 <StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
   <div class="form-container">
@@ -65,11 +69,13 @@
 
       <FormActions>
         <a class="btn btn-outline" href="@($"/admin/specialities/{SpecialityId}/sub-specialities")">Cancel</a>
+        @* Neither is disabled while its own action runs (T234): the one pressed has the focus, and a browser drops the focus
+           of a button it disables, to the page. A second press sends nothing. *@
         @if (!IsNew)
         {
-          <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving">Deactivate</button>
+          <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving" aria-disabled="@InFlight.AriaDisabled(_deactivating)">Deactivate</button>
         }
-        <button type="submit" class="btn btn-primary" disabled="@_saving">@(_saving ? "Saving..." : "Save")</button>
+        <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
       </FormActions>
     </EditForm>
   </div>
@@ -89,6 +95,11 @@
   private string? _statusMessage;
   private bool _loading;
   private bool _saving;
+  private bool _deactivating;
+  private ActionResult? _result;
+
+  /// <summary>A save or a deactivation has been sent and has not answered, so nothing else may be sent. (T234)</summary>
+  private bool Busy => _saving || _deactivating;
 
   private bool IsNew => !Id.HasValue;
 
@@ -147,6 +158,11 @@
 
   private async Task SaveAsync()
   {
+    if (Busy)
+    {
+      return;
+    }
+
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
@@ -167,6 +183,7 @@
       _model.IsActive = subSpeciality.IsActive;
       _model.DefaultEntrustmentScaleId = subSpeciality.DefaultEntrustmentScaleId;
       _statusMessage = "Sub-speciality saved.";
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
@@ -180,7 +197,12 @@
 
   private async Task DeactivateAsync()
   {
-    _saving = true;
+    if (Busy)
+    {
+      return;
+    }
+
+    _deactivating = true;
     _errorMessage = null;
     _statusMessage = null;
 
@@ -190,6 +212,7 @@
       await Sender.Send(new DeactivateSubSpecialityCommand(Id!.Value, authState.User));
       _model.IsActive = false;
       _statusMessage = "Sub-speciality deactivated.";
+      _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
@@ -197,7 +220,7 @@
     }
     finally
     {
-      _saving = false;
+      _deactivating = false;
     }
   }
 

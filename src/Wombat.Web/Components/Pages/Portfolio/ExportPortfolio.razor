@@ -9,15 +9,19 @@
 
 <PageHeader Title="Export portfolio" Subtitle="Generate a PDF export of the trainee's portfolio." />
 
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger">@_error</Alert>
-}
+@* What Export PDF did. It takes the focus once the export is done (T234; DESIGN.md § Button system): a status arriving
+   on its own is often not read. A refusal leaves the focus on the button: it is an alert, read at once. *@
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_error))
+  {
+    <Alert Kind="danger">@_error</Alert>
+  }
 
-@if (_success)
-{
-  <Alert Kind="success">Portfolio exported successfully. The download should start automatically.</Alert>
-}
+  @if (_success)
+  {
+    <Alert Kind="success">Portfolio exported successfully. The download should start automatically.</Alert>
+  }
+</ActionResult>
 
 <div class="form-container">
   <div class="form-grid">
@@ -30,7 +34,9 @@
   </div>
 
   <div class="form-actions">
-    <button class="btn btn-primary" @onclick="ExportAsync" disabled="@_exporting">
+    @* Not disabled while the export runs (T234): it has the focus, and a browser drops the focus of a button it disables,
+       to the page. A second press sends nothing. *@
+    <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_exporting)" @onclick="ExportAsync">
       @if (_exporting)
       {
         <span>Generating...</span>
@@ -49,6 +55,7 @@
   private DateOnly? _fromDate = DateOnly.FromDateTime(DateTime.Today.AddMonths(-12));
   private DateOnly? _toDate = DateOnly.FromDateTime(DateTime.Today);
   private bool _exporting;
+  private ActionResult? _result;
   private bool _success;
   private string? _error;
 
@@ -63,6 +70,11 @@
 
   private async Task ExportAsync()
   {
+    if (_exporting)
+    {
+      return;
+    }
+
     if (string.IsNullOrWhiteSpace(TraineeUserId))
     {
       _error = "No trainee specified.";
@@ -84,6 +96,7 @@
 
       await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
       _success = true;
+      _result?.FocusAfterRender();
     }
     catch (UnauthorizedAccessException)
     {
