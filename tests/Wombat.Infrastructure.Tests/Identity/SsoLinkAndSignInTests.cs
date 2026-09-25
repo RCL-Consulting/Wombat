@@ -196,6 +196,7 @@ public sealed class SsoLinkAndSignInTests : IDisposable
 
         var result = await Handler.LinkAndSignInAsync(Verified("sso-only@kgk.test", "another-subject"), Password, null, null);
 
+        result.ErrorCode.Should().Be(ExternalLoginRefusal.LinkRefused);
         result.ErrorMessage.Should().Be(ExternalLoginHandler.LinkRefusedMessage);
         (await Users.GetAccessFailedCountAsync(user)).Should().Be(0);
         (await Users.GetLoginsAsync(user)).Should().BeEmpty();
@@ -209,8 +210,54 @@ public sealed class SsoLinkAndSignInTests : IDisposable
 
         var result = await Handler.LinkAndSignInAsync(Verified("admin@kgk.test", "idp-admin"), Password, null, null);
 
+        result.ErrorCode.Should().Be(ExternalLoginRefusal.Administrator);
         result.ErrorMessage.Should().Be(ExternalLoginHandler.AdministratorMessage);
         (await Users.GetLoginsAsync(admin)).Should().BeEmpty();
+        _authentication.SignedInUserIds.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Identity refuses the link's write. Until T285 the person was sent Identity's descriptions, in the address, which can
+    /// quote the account's address; now a code, and the codes go to the log (T285).
+    /// </summary>
+    [Fact]
+    public async Task ALinkIdentityRefusesToSave_TravelsAsLinkFailed_NeverIdentitysWords()
+    {
+        const string address = "naidoo@kgk.test";
+        var user = await CreateUserAsync(address, ProviderInstitutionId);
+        Users.UserValidators.Add(new TakenBetweenCheckAndCreate(address));
+
+        var result = await Handler.LinkAndSignInAsync(Verified(address, "idp-subject-1"), Password, null, null);
+
+        result.Succeeded.Should().BeFalse();
+        result.ErrorCode.Should().Be(ExternalLoginRefusal.LinkFailed);
+        result.ErrorMessage.Should().Be("Linking failed.").And.NotContain(address);
+        _authentication.SignedInUserIds.Should().BeEmpty();
+        _audit.Actions.Should().NotContain("SsoAccountLinked");
+
+        // The audit trap: Identity's store adds the login before the write is validated, and the refusal must not leave it
+        // for the next save in the request to commit.
+        var stored = await StoredAsync(user.Id);
+        (await Db.UserLogins.AsNoTracking().CountAsync(login => login.UserId == stored.Id)).Should().Be(0);
+    }
+
+    /// <summary>
+    /// Identity refuses a link with LoginAlreadyAssociated when another request linked the same institutional sign-in after
+    /// the handler's own check, and it reads as that check's refusal (T285). Identity returns the code from its own look-up,
+    /// before it adds anything, and that race cannot be staged here, so a user validator makes Identity return it: what this
+    /// pins is the code's reading, not the race.
+    /// </summary>
+    [Fact]
+    public async Task ALinkMadeByAnotherRequestFirst_ReadsAsAlreadyLinked()
+    {
+        const string address = "naidoo@kgk.test";
+        await CreateUserAsync(address, ProviderInstitutionId);
+        Users.UserValidators.Add(new RefusesEveryUpdate(new IdentityErrorDescriber().LoginAlreadyAssociated()));
+
+        var result = await Handler.LinkAndSignInAsync(Verified(address, "idp-subject-1"), Password, null, null);
+
+        result.ErrorCode.Should().Be(ExternalLoginRefusal.AlreadyLinked);
+        result.ErrorMessage.Should().Be("This institutional sign-in is already linked to an account.");
         _authentication.SignedInUserIds.Should().BeEmpty();
     }
 
@@ -223,6 +270,7 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         var result = await Handler.HandleCallbackAsync(Verified("naidoo@kgk.test", "idp-subject-1"), null, null);
 
         result.RequiresLinking.Should().BeFalse();
+        result.ErrorCode.Should().Be(ExternalLoginRefusal.AccountLocked);
         result.ErrorMessage.Should().Be(ExternalLoginHandler.LockedOutMessage);
     }
 
@@ -655,6 +703,7 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         var result = await Handler.HandleCallbackAsync(External(address, "idp-new", emailVerified: "true"), null, null);
 
         result.Succeeded.Should().BeFalse();
+        result.ErrorCode.Should().Be(ExternalLoginRefusal.AccountNotCreated, "a code, never Identity's words (T285)");
         result.ErrorMessage.Should().Be(ExternalLoginHandler.AccountNotCreatedMessage);
         result.ErrorMessage.Should().NotContain("o'brien").And.NotContain("Username");
         (await Users.FindByLoginAsync(ProviderKey, "idp-new")).Should().BeNull();
@@ -801,6 +850,13 @@ public sealed class SsoLinkAndSignInTests : IDisposable
             => Task.FromResult(string.Equals(user.UserName, address, StringComparison.OrdinalIgnoreCase)
                 ? IdentityResult.Failed(new IdentityErrorDescriber().DuplicateUserName(address))
                 : IdentityResult.Success);
+    }
+
+    /// <summary>Refuses every write of an account with <paramref name="error" />; added once the account exists.</summary>
+    private sealed class RefusesEveryUpdate(IdentityError error) : IUserValidator<WombatIdentityUser>
+    {
+        public Task<IdentityResult> ValidateAsync(UserManager<WombatIdentityUser> manager, WombatIdentityUser user)
+            => Task.FromResult(IdentityResult.Failed(error));
     }
 
     private sealed class RecordingAuditWriter

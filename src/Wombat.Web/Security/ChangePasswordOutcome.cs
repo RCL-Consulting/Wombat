@@ -71,15 +71,16 @@ public static class ChangePasswordOutcome
         "This account signs in through your institution, so it has no password to change here.";
 
     /// <summary>
-    /// What the sign-in page says to a session that had already ended when it asked for a change: its cookie carried a
-    /// security stamp the account no longer has (a lock, a change made in another browser, a change of roles). No change
-    /// is made, and the cookie is taken away rather than issued again.
+    /// What the sign-in page says for <see cref="SignInOutcome.SessionEnded" />: a session that had already ended when it
+    /// asked for a change. Its cookie carried a security stamp the account no longer has (a lock, a change made in another
+    /// browser, a change of roles). No change is made, and the cookie is taken away rather than issued again.
     /// </summary>
     public const string SessionEndedMessage = "Your session has ended. Please sign in again.";
 
     /// <summary>
-    /// What the sign-in page says when the password was changed but the cookie could not be issued again: the old cookie's
-    /// stamp is stale, so it is taken away, and the user signs in with the new password.
+    /// What the sign-in page says for <see cref="SignInOutcome.PasswordChanged" />: the password was changed but the cookie
+    /// could not be issued again. The old cookie's stamp is stale, so it is taken away, and the user signs in with the new
+    /// password.
     /// </summary>
     public const string ChangedSignInAgainMessage = "Your password was changed. Please sign in with your new password.";
 
@@ -119,14 +120,7 @@ public static class ChangePasswordOutcome
                 TooManyAttempts => TooManyAttemptsMessage,
                 InstitutionalSignIn => InstitutionalSignInMessage,
                 nameof(IdentityErrorDescriber.PasswordMismatch) => describer.PasswordMismatch().Description,
-                nameof(IdentityErrorDescriber.PasswordTooShort) => describer.PasswordTooShort(rules.RequiredLength).Description,
-                nameof(IdentityErrorDescriber.PasswordRequiresUniqueChars) =>
-                    describer.PasswordRequiresUniqueChars(rules.RequiredUniqueChars).Description,
-                nameof(IdentityErrorDescriber.PasswordRequiresNonAlphanumeric) => describer.PasswordRequiresNonAlphanumeric().Description,
-                nameof(IdentityErrorDescriber.PasswordRequiresDigit) => describer.PasswordRequiresDigit().Description,
-                nameof(IdentityErrorDescriber.PasswordRequiresLower) => describer.PasswordRequiresLower().Description,
-                nameof(IdentityErrorDescriber.PasswordRequiresUpper) => describer.PasswordRequiresUpper().Description,
-                _ => GeneralRefusal
+                _ => PasswordRuleMessages.Describe(code, describer, rules) ?? GeneralRefusal
             };
 
             if (!sentences.Contains(sentence, StringComparer.Ordinal))

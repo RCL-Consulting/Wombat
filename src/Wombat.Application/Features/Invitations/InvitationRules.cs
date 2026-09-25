@@ -131,22 +131,22 @@ internal static class InvitationRules
 
             if (invitation.RevokedOn.HasValue)
             {
-                throw new InvalidOperationException("This invitation has been revoked.");
+                throw new InvitationRefusedException(InvitationRefusal.Revoked);
             }
 
             if (invitation.UsedOn.HasValue)
             {
-                throw new InvalidOperationException("This invitation has already been used.");
+                throw new InvitationRefusedException(InvitationRefusal.Used);
             }
 
             if (invitation.ExpiresOn < today)
             {
-                throw new InvalidOperationException("This invitation has expired.");
+                throw new InvitationRefusedException(InvitationRefusal.Expired);
             }
 
             return invitation;
         }
 
-        throw new InvalidOperationException("This invitation is invalid.");
+        throw new InvitationRefusedException(InvitationRefusal.Invalid);
     }
 }

@@ -234,7 +234,8 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         }
 
         lastSignIn!.StatusCode.Should().Be(HttpStatusCode.Redirect);
-        lastSignIn.Headers.Location!.ToString().Should().Contain("Too%20many%20failed%20sign-in%20attempts");
+        lastSignIn.Headers.Location!.ToString().Should().Be("/account/login?error=TooManyAttempts",
+            "the sign-in throttle's refusal, as a code since T285");
         lastSignIn.Dispose();
     }
 

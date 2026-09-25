@@ -244,8 +244,9 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
             submit.StatusCode.Should().Be(HttpStatusCode.Redirect);
             submit.Headers.Location!.ToString().Should().Be(
-                "/account/login?error=" + Uri.EscapeDataString(ChangePasswordOutcome.SessionEndedMessage) +
-                "&returnUrl=" + Uri.EscapeDataString(PagePath));
+                "/account/login?error=SessionEnded&returnUrl=" + Uri.EscapeDataString(PagePath),
+                "a code, never the words (T285)");
+            (await SignInPageRefusalAsync(browser, submit)).Should().Be("Your session has ended. Please sign in again.");
             IssuedSignInCookies(submit).Should().BeEmpty("no cookie is issued to a session that has ended");
             (await StampAsync(email)).Should().Be(stampAfterLock, "nothing changed");
             (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.SignInPassword)).Should().BeTrue();
@@ -362,8 +363,11 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
                 .Should().Be(ChangePasswordOutcome.TooManyAttemptsMessage);
 
             // Shared with the sign-in page: the same address is refused there too, before any password is checked.
-            (await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword, expectSuccess: false))
-                .Should().Be("/account/login?error=" + Uri.EscapeDataString(SignInMessages.TooManyFailedAttempts));
+            var signInRefused = await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword, expectSuccess: false);
+            signInRefused.Should().Be(SignInOutcome.Url(SignInOutcome.TooManyAttempts)).And.Be("/account/login?error=TooManyAttempts");
+            using var signInPage = await browser.GetAsync(signInRefused);
+            Parse(await signInPage.Content.ReadAsStringAsync()).QuerySelector(".alert-danger")!.TextContent.Trim()
+                .Should().Be("Too many failed sign-in attempts from this network. Please wait a few minutes and try again.");
         }
     }
 
@@ -459,8 +463,9 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
             fault.On = false;
 
             submit.StatusCode.Should().Be(HttpStatusCode.Redirect, "not the error page");
-            submit.Headers.Location!.ToString().Should().Be(
-                "/account/login?error=" + Uri.EscapeDataString(ChangePasswordOutcome.ChangedSignInAgainMessage));
+            submit.Headers.Location!.ToString().Should().Be("/account/login?error=PasswordChanged", "a code, never the words (T285)");
+            (await SignInPageRefusalAsync(browser, submit))
+                .Should().Be("Your password was changed. Please sign in with your new password.");
             IssuedSignInCookies(submit).Should().BeEmpty();
             (await StampAsync(email)).Should().NotBe(stamp, "the password was changed, and the answer must not say otherwise");
             (await PasswordIsAsync(email, NewPassword)).Should().BeTrue();
@@ -531,6 +536,17 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         }
 
         return location;
+    }
+
+    /// <summary>
+    /// Follows a redirect to the sign-in page and returns what its refusal says: the words the page chose for the code it
+    /// was sent (T285).
+    /// </summary>
+    private static async Task<string?> SignInPageRefusalAsync(HttpClient browser, HttpResponseMessage redirect)
+    {
+        using var page = await browser.GetAsync(redirect.Headers.Location);
+        page.StatusCode.Should().Be(HttpStatusCode.OK, "guard: the sign-in page loads");
+        return Parse(await page.Content.ReadAsStringAsync()).QuerySelector(".alert-danger")?.TextContent.Trim();
     }
 
     /// <summary>Whether the browser's cookie, as it holds it now, loads the page signed in.</summary>

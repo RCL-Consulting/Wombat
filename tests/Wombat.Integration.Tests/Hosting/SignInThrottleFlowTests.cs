@@ -45,7 +45,8 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
         _host = host;
     }
 
-    private static string Refused(string message) => "/account/login?error=" + Uri.EscapeDataString(message);
+    /// <summary>The sign-in page, refusing with <paramref name="code" />: a code, never the words, since T285.</summary>
+    private static string Refused(string code) => "/account/login?error=" + code;
 
     [Fact]
     public async Task TenFailuresFromOneAddress_RefuseTheEleventh_EvenWithTheRightPassword_ButNotANeighbourOnTheSameSlash24()
@@ -60,12 +61,12 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
             for (var guess = 1; guess <= 10; guess++)
             {
                 using var refused = await SignInAsync(guesser, NewEmail(), $"Guess-{guess}-Pa55word!");
-                refused.Headers.Location!.ToString().Should().Be(Refused(SignInMessages.InvalidCredentials),
+                refused.Headers.Location!.ToString().Should().Be(Refused(SignInOutcome.Refused),
                     $"guess {guess} of ten is checked");
             }
 
             using var throttled = await SignInAsync(guesser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
-            throttled.Headers.Location!.ToString().Should().Be(Refused(SignInMessages.TooManyFailedAttempts),
+            throttled.Headers.Location!.ToString().Should().Be(Refused(SignInOutcome.TooManyAttempts),
                 "the eleventh is refused before any password is checked");
             int.Parse(throttled.Headers.RetryAfter!.ToString()).Should().BeInRange(1, 300);
         }
@@ -95,12 +96,12 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
         for (var guess = 1; guess <= 10; guess++)
         {
             using var refused = await SignInAsync(guesser, NewEmail(), WrongPassword);
-            refused.Headers.Location!.ToString().Should().Be(Refused(SignInMessages.InvalidCredentials),
+            refused.Headers.Location!.ToString().Should().Be(Refused(SignInOutcome.Refused),
                 $"failure {guess} of ten is checked");
         }
 
         using var throttled = await SignInAsync(guesser, NewEmail(), WrongPassword);
-        throttled.Headers.Location!.ToString().Should().Be(Refused(SignInMessages.TooManyFailedAttempts));
+        throttled.Headers.Location!.ToString().Should().Be(Refused(SignInOutcome.TooManyAttempts));
     }
 
     /// <summary>
@@ -124,7 +125,7 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
         using var forInstitutional = await SignInAsync(browser, institutional, WrongPassword);
 
         forInstitutional.Headers.Location.Should().Be(forUnknown.Headers.Location);
-        forUnknown.Headers.Location!.ToString().Should().Be(Refused(SignInMessages.InvalidCredentials));
+        forUnknown.Headers.Location!.ToString().Should().Be(Refused(SignInOutcome.Refused));
 
         await using var scope = _host.Factory.Services.CreateAsyncScope();
         var rows = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().AuditEntries.AsNoTracking()
@@ -171,13 +172,21 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
         browser.DefaultRequestHeaders.Add("X-Forwarded-For", $"10.237.{NextSubnet()}.7");
 
         var locations = new List<string>();
+        var said = new List<string?>();
         foreach (var email in new[] { local, NewEmail(), institutional })
         {
             using var refused = await SignInAsync(browser, email, WrongPassword);
             locations.Add(refused.Headers.Location!.ToString());
+
+            // The page chooses the words for the code (T285), from whether it offers institutional sign-in.
+            using var page = await browser.GetAsync(refused.Headers.Location);
+            said.Add(new HtmlParser().ParseDocument(await page.Content.ReadAsStringAsync())
+                .QuerySelector(".alert-danger")?.TextContent.Trim());
         }
 
-        locations.Should().AllBe(Refused(SignInMessages.InvalidCredentialsOrInstitutional));
+        locations.Should().AllBe(Refused(SignInOutcome.Refused));
+        said.Should().AllBe(SignInMessages.InvalidCredentialsOrInstitutional)
+            .And.AllBe("Invalid email or password. If your institution signs you in, use its sign-in button below.");
     }
 
     /// <summary>
@@ -244,10 +253,16 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
                 && cookies.Any(cookie => cookie.StartsWith("__Host-Identity.External=;", StringComparison.Ordinal)));
         }
 
-        var throttled = Uri.EscapeDataString(SignInMessages.TooManyFailedAttempts);
-        locations.Take(10).Should().NotContain(location => location.Contains(throttled), "guard: ten are checked");
+        locations.Take(10).Should().NotContain(location => location.Contains("error=" + SignInOutcome.TooManyAttempts),
+            "guard: ten are checked");
+        // A wrong password until the account's own lockout trips, at the fifth: each comes back to the link page with a code,
+        // never the words (T285).
+        locations[0].Should().Be("/account/link-external?returnUrl=%2F&error=SsoLinkRefused");
+        locations.Take(10).Should().OnlyContain(location =>
+            location == LinkExternalOutcome.Url("/", ExternalLoginRefusal.LinkRefused)
+            || location == LinkExternalOutcome.Url("/", ExternalLoginRefusal.LinkLockedOut));
         externalCookieEnded.Take(10).Should().AllBeEquivalentTo(false, "guard: a refused password keeps the sign-in in progress");
-        locations[10].Should().Be(Refused(SignInMessages.TooManyFailedAttempts), "the sign-in page says to wait and try again");
+        locations[10].Should().Be(Refused(SignInOutcome.TooManyAttempts), "the sign-in page says to wait and try again");
         externalCookieEnded[10].Should().BeTrue("the institutional sign-in in progress is ended with the refusal");
 
         using var after = await browser.GetAsync("/account/link-external");
@@ -296,7 +311,7 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
         });
 
         answered.Response.StatusCode.Should().Be(StatusCodes.Status302Found);
-        answered.Response.Headers.Location.ToString().Should().Be(Refused(SignInMessages.InvalidCredentials));
+        answered.Response.Headers.Location.ToString().Should().Be(Refused(SignInOutcome.Refused));
 
         await using var scope = _host.Factory.Services.CreateAsyncScope();
         var row = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().AuditEntries.AsNoTracking()

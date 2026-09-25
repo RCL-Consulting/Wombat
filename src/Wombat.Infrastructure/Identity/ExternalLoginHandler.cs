@@ -55,6 +55,14 @@ public sealed class ExternalLoginHandler
 
     internal const string LockedOutMessage = "This account is locked. Contact your administrator.";
 
+    internal const string UnknownProviderMessage = "Unknown SSO provider.";
+
+    internal const string NoEmailMessage = "The identity provider did not supply an email address.";
+
+    internal const string AlreadyLinkedMessage = "This institutional sign-in is already linked to an account.";
+
+    internal const string LinkFailedMessage = "Linking failed.";
+
     internal const string AdministratorMessage =
         "An administrator account signs in with its password, not through institutional sign-in.";
 
@@ -131,7 +139,15 @@ public sealed class ExternalLoginHandler
         public bool RequiresLinking { get; init; }
         public string? UserId { get; init; }
         public string? Email { get; init; }
-        public string? ErrorMessage { get; init; }
+
+        /// <summary>
+        /// Why it was refused, as an <see cref="ExternalLoginRefusal" /> code: what the endpoints put in the address they
+        /// redirect to, and the page describes (T285).
+        /// </summary>
+        public string? ErrorCode { get; init; }
+
+        /// <summary>The sentence the page shows for <see cref="ErrorCode" />.</summary>
+        public string? ErrorMessage => ExternalLoginRefusal.Describe(ErrorCode);
     }
 
     /// <summary>
@@ -157,7 +173,7 @@ public sealed class ExternalLoginHandler
         if (providerConfig is null)
         {
             _logger.LogError("SSO callback for unknown provider '{ProviderKey}'", providerKey);
-            return new ExternalLoginResult { ErrorMessage = "Unknown SSO provider." };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.UnknownProvider };
         }
 
         // Extract group claims
@@ -192,7 +208,7 @@ public sealed class ExternalLoginHandler
                 // is wrong for an administrator's lock, and nothing it could do would let the person in. (T149)
                 if (UserDeactivation.IsDeactivated(emailUser.LockoutEnd))
                 {
-                    return new ExternalLoginResult { ErrorMessage = LockedOutMessage };
+                    return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.AccountLocked };
                 }
 
                 // Offer to link — do not auto-link across unverified email match. What gets linked is read back from
@@ -248,12 +264,12 @@ public sealed class ExternalLoginHandler
             p => string.Equals(p.Key, providerKey, StringComparison.Ordinal));
         if (providerConfig is null)
         {
-            return new ExternalLoginResult { ErrorMessage = "Unknown SSO provider." };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.UnknownProvider };
         }
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            return new ExternalLoginResult { ErrorMessage = "The identity provider did not supply an email address." };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.NoEmail };
         }
 
         // The callback offers a link only for a verified email, but this endpoint is reachable with any external cookie
@@ -265,13 +281,13 @@ public sealed class ExternalLoginHandler
         {
             await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user: null, ipAddress, userAgent,
                 EmailNotVerifiedReason);
-            return new ExternalLoginResult { ErrorMessage = EmailNotVerifiedMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.EmailNotVerified };
         }
 
         // Already linked: the callback signs that account in directly, so a link here can only be a replay.
         if (await _userManager.FindByLoginAsync(providerKey, externalSubjectId) is not null)
         {
-            return new ExternalLoginResult { ErrorMessage = "This institutional sign-in is already linked to an account." };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.AlreadyLinked };
         }
 
         var user = await _userManager.FindByEmailAsync(email);
@@ -280,7 +296,7 @@ public sealed class ExternalLoginHandler
             // Unstamped, like the local login's failure: stamping would say which institution the address belongs to.
             await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user: null, ipAddress, userAgent,
                 "No account in the provider's institution for the asserted email.");
-            return new ExternalLoginResult { ErrorMessage = LinkRefusedMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.LinkRefused };
         }
 
         // The local login refuses an SSO-only account before checking any password, and so does this: a password check
@@ -290,14 +306,14 @@ public sealed class ExternalLoginHandler
         {
             await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user: null, ipAddress, userAgent,
                 "The account the provider's email names has no local password to prove ownership with.");
-            return new ExternalLoginResult { ErrorMessage = LinkRefusedMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.LinkRefused };
         }
 
         if (await _userManager.IsInRoleAsync(user, WombatRoles.Administrator))
         {
             await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user, ipAddress, userAgent,
                 "An Administrator account cannot be linked to institutional sign-in.");
-            return new ExternalLoginResult { ErrorMessage = AdministratorMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.Administrator };
         }
 
         var check = await _signInManager.CheckPasswordSignInAsync(user, password ?? string.Empty, lockoutOnFailure: true);
@@ -305,25 +321,42 @@ public sealed class ExternalLoginHandler
         {
             await WriteLinkAuditAsync("SsoAccountLinkLockedOut", success: false, user, ipAddress, userAgent,
                 "Account locked; the link was refused.");
-            return new ExternalLoginResult { ErrorMessage = LinkLockedOutMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.LinkLockedOut };
         }
 
         if (!check.Succeeded)
         {
             await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user: null, ipAddress, userAgent,
                 "Wrong password for the account the provider's email names.");
-            return new ExternalLoginResult { ErrorMessage = LinkRefusedMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.LinkRefused };
         }
 
         var addLoginResult = await _userManager.AddLoginAsync(user,
             new UserLoginInfo(providerKey, externalSubjectId, providerConfig.DisplayName));
 
+        // Refused as a code, never Identity's description. LoginAlreadyAssociated is the one a person can meet: another
+        // request linked this institutional sign-in after the check above (during the password check, say) and before
+        // Identity's own look-up, which refuses before it adds anything; it reads as that check's refusal. Anything else is
+        // logged, and the page says linking failed (T285). Two requests that pass Identity's look-up together are not
+        // refused here: the second one's write breaks the logins table's key, and the user store throws rather than
+        // returning a result.
         if (!addLoginResult.Succeeded)
         {
-            return new ExternalLoginResult
+            // A refusal of the account's write (a user validator's) comes after Identity's store has added the login to the
+            // context, and returns without taking it back: the next save in this request, an audit row's, would commit the
+            // link that was just refused (the audit trap).
+            DiscardAddedLogins();
+
+            var codes = addLoginResult.Errors.Select(error => error.Code).ToList();
+            if (codes.Contains(nameof(IdentityErrorDescriber.LoginAlreadyAssociated)))
             {
-                ErrorMessage = string.Join("; ", addLoginResult.Errors.Select(e => e.Description))
-            };
+                return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.AlreadyLinked };
+            }
+
+            _logger.LogWarning(
+                "Linking user {UserId} to an institutional sign-in through '{ProviderKey}' was refused by Identity ({Codes}).",
+                user.Id, providerKey, string.Join(", ", codes));
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.LinkFailed };
         }
 
         // Stamped like SsoLogin and SsoFirstLogin below. An unstamped row is Administrator-only since T101, and this is
@@ -378,12 +411,12 @@ public sealed class ExternalLoginHandler
         if (taken)
         {
             await WriteProvisioningRefusedAuditAsync(institutionId, ipAddress, userAgent, EmailInUseReason);
-            return new ExternalLoginResult { ErrorMessage = EmailInUseMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.EmailInUse };
         }
 
         await WriteProvisioningRefusedAuditAsync(institutionId, ipAddress, userAgent,
             $"{AccountRefusedByValidationReason} ({string.Join(", ", codes)})");
-        return new ExternalLoginResult { ErrorMessage = AccountNotCreatedMessage };
+        return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.AccountNotCreated };
     }
 
     private Task WriteLinkAuditAsync(
@@ -436,21 +469,21 @@ public sealed class ExternalLoginHandler
         if (UserDeactivation.IsDeactivated(user.LockoutEnd))
         {
             await WriteLinkAuditAsync("SsoLoginRefused", success: false, user, ipAddress, userAgent, "Account is deactivated.");
-            return new ExternalLoginResult { ErrorMessage = LockedOutMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.AccountLocked };
         }
 
         if (await _userManager.IsInRoleAsync(user, WombatRoles.Administrator))
         {
             await WriteLinkAuditAsync("SsoLoginRefused", success: false, user, ipAddress, userAgent,
                 "Administrator accounts cannot sign in through SSO.");
-            return new ExternalLoginResult { ErrorMessage = AdministratorMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.Administrator };
         }
 
         if (user.InstitutionId != providerConfig.InstitutionId)
         {
             await WriteLinkAuditAsync("SsoLoginRefused", success: false, user, ipAddress, userAgent,
                 $"Account belongs to another institution than provider '{providerKey}'.");
-            return new ExternalLoginResult { ErrorMessage = WrongInstitutionMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.WrongInstitution };
         }
 
         if (!string.IsNullOrWhiteSpace(email) && !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
@@ -592,6 +625,17 @@ public sealed class ExternalLoginHandler
     private Task DiscardChangesAsync(WombatIdentityUser user, CancellationToken cancellationToken)
         => _dbContext.Entry(user).ReloadAsync(cancellationToken);
 
+    /// <summary>Takes out of the context every external login added to it and not yet saved. (T285)</summary>
+    private void DiscardAddedLogins()
+    {
+        foreach (var entry in _dbContext.ChangeTracker.Entries<IdentityUserLogin<string>>()
+                     .Where(entry => entry.State == EntityState.Added)
+                     .ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
+
     private async Task<ExternalLoginResult> ProvisionNewUserAsync(
         string providerKey,
         string externalSubjectId,
@@ -606,7 +650,7 @@ public sealed class ExternalLoginHandler
     {
         if (string.IsNullOrWhiteSpace(email))
         {
-            return new ExternalLoginResult { ErrorMessage = "The identity provider did not supply an email address." };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.NoEmail };
         }
 
         // An account is created from the email the provider asserts, and the address becomes its user name, its sign-in
@@ -625,7 +669,7 @@ public sealed class ExternalLoginHandler
                 providerKey);
             await WriteProvisioningRefusedAuditAsync(providerConfig.InstitutionId, ipAddress, userAgent,
                 EmailNotVerifiedReason);
-            return new ExternalLoginResult { ErrorMessage = EmailNotVerifiedMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.EmailNotVerified };
         }
 
         // Reached with a verified email only when no account of this institution has it, so a holder is another
@@ -639,7 +683,7 @@ public sealed class ExternalLoginHandler
                 providerKey);
             await WriteProvisioningRefusedAuditAsync(providerConfig.InstitutionId, ipAddress, userAgent,
                 EmailInUseReason);
-            return new ExternalLoginResult { ErrorMessage = EmailInUseMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.EmailInUse };
         }
 
         var parts = (name ?? email).Split(' ', 2);
@@ -675,7 +719,7 @@ public sealed class ExternalLoginHandler
                 "at the same moment; no account was created.",
                 providerKey);
             await WriteProvisioningRefusedAuditAsync(providerConfig.InstitutionId, ipAddress, userAgent, EmailInUseReason);
-            return new ExternalLoginResult { ErrorMessage = EmailInUseMessage };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.EmailInUse };
         }
 
         if (!createResult.Succeeded)

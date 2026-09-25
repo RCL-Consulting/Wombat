@@ -171,18 +171,20 @@ app.MapWombatStaticAssets();
 // Hosting/BlazorEndpointAccessTests maps the same method under the same policy.
 app.MapWombatRazorComponents();
 
+// Every refusal below goes back to the sign-in page with a code, never a sentence: the page chooses the words
+// (SignInOutcome), so a crafted link cannot put words of its own on it (T285). So do the institutional sign-in's, the link
+// page's lockout and change password's.
 app.MapPost("/account/login/submit", async (
     SignInManager<WombatIdentityUser> signInManager,
     UserManager<WombatIdentityUser> userManager,
     IAuditWriter auditWriter,
     SignInThrottle throttle,
-    IOptions<SsoOptions> ssoOpts,
     HttpContext httpContext,
     [FromForm] LoginRequest request) =>
 {
     if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
     {
-        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "Email and password are required."));
+        return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.FieldsMissing, request.ReturnUrl));
     }
 
     // Counted before the account is looked up, so every refusal below costs the client one of its ten (T156).
@@ -190,12 +192,15 @@ app.MapPost("/account/login/submit", async (
     if (attempt.Refused)
     {
         SignInThrottle.SetRetryAfter(httpContext.Response, attempt);
-        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, SignInMessages.TooManyFailedAttempts));
+        return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.TooManyAttempts, request.ReturnUrl));
     }
 
     var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
     var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
-    var refused = SignInMessages.Refused(institutionalSignInOffered: ssoOpts.Value.Providers.Count > 0);
+
+    // The words are the page's, which point at the institutional sign-in button where the page offers one
+    // (SignInMessages.Refused).
+    var refused = SignInOutcome.Url(SignInOutcome.Refused, request.ReturnUrl);
 
     // An account that signs in only through its institution has no password to check, and a check could only count
     // failures towards a lockout that would block its SSO sign-in too. It is refused as an address no account has is, in
@@ -205,7 +210,7 @@ app.MapPost("/account/login/submit", async (
     if (loginUser is not null && !loginUser.AllowLocalPassword)
     {
         await WriteLoginFailedAsync(auditWriter, ip, ua);
-        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, refused));
+        return Results.LocalRedirect(refused);
     }
 
     var result = await signInManager.PasswordSignInAsync(
@@ -264,35 +269,36 @@ app.MapPost("/account/login/submit", async (
             institutionId: loginUser?.InstitutionId,
             errorMessage: "Account locked after repeated failed sign-in attempts."));
 
-        return Results.LocalRedirect(BuildLoginUrl(
-            request.ReturnUrl,
-            "Too many failed sign-in attempts. Please try again later or reset your password."));
+        return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.LockedOut, request.ReturnUrl));
     }
     else
     {
         // Record failed login without leaking whether the user account exists.
         await WriteLoginFailedAsync(auditWriter, ip, ua);
 
-        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, refused));
+        return Results.LocalRedirect(refused);
     }
 })
 .AllowAnonymous()
 ;
 
-app.MapPost("/account/register/submit", async (
+// A refusal goes back to the register page as codes (RegisterOutcome), never as a sentence, and never as an exception's
+// message: a fault is logged, and the page says registration could not be completed (T285).
+app.MapPost(RegisterOutcome.SubmitPath, async (
     ISender sender,
     UserManager<WombatIdentityUser> userManager,
     SignInManager<WombatIdentityUser> signInManager,
+    ILoggerFactory loggerFactory,
     [FromForm] RegisterRequest request) =>
 {
     if (string.IsNullOrWhiteSpace(request.Token))
     {
-        return Results.LocalRedirect("/account/register?error=The%20invitation%20token%20is%20missing.");
+        return Results.LocalRedirect(RegisterOutcome.Url(null, [RegisterOutcome.TokenMissing]));
     }
 
     if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
     {
-        return Results.LocalRedirect(BuildRegisterUrl(request.Token, "The password confirmation does not match."));
+        return Results.LocalRedirect(RegisterOutcome.Url(request.Token, [RegisterOutcome.ConfirmationMismatch]));
     }
 
     try
@@ -306,15 +312,26 @@ app.MapPost("/account/register/submit", async (
         var user = await userManager.FindByIdAsync(result.UserId);
         if (user is null)
         {
-            return Results.LocalRedirect(BuildRegisterUrl(request.Token, "The invited user could not be loaded after registration."));
+            return Results.LocalRedirect(RegisterOutcome.Url(request.Token, [RegisterOutcome.UserNotLoaded]));
         }
 
         await signInManager.SignInAsync(user, isPersistent: false);
         return Results.LocalRedirect(GetLandingPath(result.AssignedRole));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-        return Results.LocalRedirect(BuildRegisterUrl(request.Token, exception.Message));
+        var codes = RegisterOutcome.CodesFor(exception);
+        var logger = loggerFactory.CreateLogger(RegisterOutcome.LogCategory);
+        if (RegisterOutcome.IsRefusal(exception))
+        {
+            logger.LogInformation("A registration was refused ({Codes}).", string.Join(", ", codes));
+        }
+        else
+        {
+            logger.LogError(exception, "A registration failed.");
+        }
+
+        return Results.LocalRedirect(RegisterOutcome.Url(request.Token, codes));
     }
 })
 .AllowAnonymous()
@@ -330,7 +347,7 @@ app.MapGet("/account/sso-challenge/{providerKey}", (
 
     if (provider is null)
     {
-        return Results.LocalRedirect(BuildLoginUrl(null, "Unknown SSO provider."));
+        return Results.LocalRedirect(SignInOutcome.Url(ExternalLoginRefusal.UnknownProvider));
     }
 
     var properties = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
@@ -353,7 +370,7 @@ app.MapGet("/account/sso-callback", async (
     var loginInfo = await signInManager.GetExternalLoginInfoAsync();
     if (loginInfo is null)
     {
-        return Results.LocalRedirect(BuildLoginUrl(returnUrl, "External login information was not available."));
+        return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.ExternalLoginUnavailable, returnUrl));
     }
 
     var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
@@ -377,10 +394,10 @@ app.MapGet("/account/sso-callback", async (
     {
         // Only what the page shows and where to go next. What gets linked is read back from the external cookie at
         // submit, never from the page (T149).
-        return Results.LocalRedirect(BuildLinkUrl(returnUrl, error: null));
+        return Results.LocalRedirect(LinkExternalOutcome.Url(returnUrl, code: null));
     }
 
-    return Results.LocalRedirect(BuildLoginUrl(returnUrl, result.ErrorMessage ?? "SSO login failed."));
+    return Results.LocalRedirect(SignInOutcome.Url(result.ErrorCode ?? SignInOutcome.SsoFailed, returnUrl));
 })
 .AllowAnonymous()
 ;
@@ -397,12 +414,12 @@ app.MapPost("/account/link-external/submit", async (
     var loginInfo = await signInManager.GetExternalLoginInfoAsync();
     if (loginInfo is null)
     {
-        return Results.LocalRedirect(BuildLoginUrl(null, "External login session expired. Please try again."));
+        return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.ExternalSessionExpired));
     }
 
     if (string.IsNullOrWhiteSpace(request.Password))
     {
-        return Results.LocalRedirect(BuildLinkUrl(request.ReturnUrl, "Your password is required."));
+        return Results.LocalRedirect(LinkExternalOutcome.Url(request.ReturnUrl, LinkExternalOutcome.PasswordRequired));
     }
 
     // A password check, so the sign-in throttle applies, shared with the sign-in page: ten failures in five minutes from
@@ -417,7 +434,7 @@ app.MapPost("/account/link-external/submit", async (
     {
         SignInThrottle.SetRetryAfter(httpContext.Response, attempt);
         await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, SignInMessages.TooManyFailedAttempts));
+        return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.TooManyAttempts, request.ReturnUrl));
     }
 
     var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
@@ -432,7 +449,8 @@ app.MapPost("/account/link-external/submit", async (
         return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
     }
 
-    return Results.LocalRedirect(BuildLinkUrl(request.ReturnUrl, result.ErrorMessage ?? "Linking failed."));
+    return Results.LocalRedirect(
+        LinkExternalOutcome.Url(request.ReturnUrl, result.ErrorCode ?? ExternalLoginRefusal.LinkFailed));
 })
 .AllowAnonymous()
 ;
@@ -486,8 +504,7 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
         if (current is null)
         {
             await signInManager.SignOutAsync();
-            return Results.LocalRedirect(
-                BuildLoginUrl(ChangePasswordOutcome.PagePath, ChangePasswordOutcome.SessionEndedMessage));
+            return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.SessionEnded, ChangePasswordOutcome.PagePath));
         }
 
         user = current;
@@ -555,7 +572,7 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
         loggerFactory.CreateLogger(ChangePasswordOutcome.LogCategory)
             .LogError(exception, "A password was changed, but the sign-in cookie could not be issued again.");
         await signInManager.SignOutAsync();
-        return Results.LocalRedirect(BuildLoginUrl(null, ChangePasswordOutcome.ChangedSignInAgainMessage));
+        return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.PasswordChanged));
     }
 
     return Results.LocalRedirect(ChangePasswordOutcome.UpdatedUrl);
@@ -687,27 +704,6 @@ static string GetSafeLocalUrl(string? url)
 
     return url;
 }
-
-// No email in the URL: the page reads it from the sign-in in progress, so a crafted link cannot show one address while
-// another is linked, and the address stays out of the proxy's access log (T149).
-static string BuildLinkUrl(string? returnUrl, string? error)
-    => $"/account/link-external?returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}" +
-       (string.IsNullOrWhiteSpace(error) ? string.Empty : $"&error={Uri.EscapeDataString(error)}");
-
-static string BuildLoginUrl(string? returnUrl, string error)
-{
-    var query = $"error={Uri.EscapeDataString(error)}";
-
-    if (!string.IsNullOrWhiteSpace(returnUrl))
-    {
-        query += $"&returnUrl={Uri.EscapeDataString(returnUrl)}";
-    }
-
-    return $"/account/login?{query}";
-}
-
-static string BuildRegisterUrl(string token, string error)
-    => $"/account/register?token={Uri.EscapeDataString(token)}&error={Uri.EscapeDataString(error)}";
 
 // The row every refused sign-in writes, but a lockout's: unstamped and naming no account, whatever the cause, so the log
 // says no more than the page about which addresses have accounts (T101, T156).

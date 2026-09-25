@@ -121,6 +121,9 @@ public sealed class AcceptInvitationAuditScopeTests
 
     private sealed class StubProvisioner : IInvitedUserProvisioner
     {
+        public Task<InvitedAddressStatus> GetAddressStatusAsync(string email, CancellationToken cancellationToken = default)
+            => Task.FromResult(InvitedAddressStatus.Available);
+
         public Task<ProvisionedInvitationUser> ProvisionAsync(
             string email,
             string password,

@@ -1606,7 +1606,8 @@ Used in the Administrator dashboard system-health card to show service status at
 - A refused sign-in (`?error=`) is named by the email and password fields' `aria-describedby`, and a refused link by
   the password field's: the page reloads with focus in the field, and the alert alone is not announced (§ Alerts,
   validation, empty states). A refused password change is named by each of its three fields; the page reloads with the
-  focus on the refusal (T265).
+  focus on the refusal (T265). A refused registration is named by each of its four fields, and the page reloads with the
+  focus in the first name (T285).
 - Required fields show a visual `*` plus `aria-required="true"`.
 - `.visually-hidden` is available for screen-reader-only copy.
 - `:focus-visible` uses `--focus-ring`. Never remove focus outlines without replacing them.
@@ -1797,7 +1798,7 @@ no `StatePanel` and no `@rendermode`: the grid and its cards are the whole file.
 ```
 <div class="account-form-container">
   <h2>Sign in</h2>
-  @if (Error is not null) { <Alert Kind="danger" Id="login-error">@Error</Alert> }   @* role="alert" by default *@
+  @if (Refusal is not null) { <Alert Kind="danger" Id="login-error">@Refusal</Alert> }   @* role="alert" by default *@
   <form method="post" action="/account/login/submit">
     <div class="mb-3"> label + .form-control with its autocomplete token, aria-describedby="login-error" on a refusal </div>
     …
@@ -1807,6 +1808,21 @@ no `StatePanel` and no `@rendermode`: the grid and its cards are the whole file.
 ```
 
 `.account-form-container` is a 400px centred card with a wide top margin — the shape ClinicAssist uses for its login/register/change-password pages.
+
+**A refusal travels as a code, and the page chooses the words** (T265, T285). Every endpoint that sends the browser back
+to an account page with a refusal puts a code in `?error=`, never a sentence, and never an exception's message: sign-in
+(`SignInOutcome`), link account (`LinkExternalOutcome`), register (`RegisterOutcome`) and change password
+(`ChangePasswordOutcome`), each in `Wombat.Web/Security`. The page shows the sentence it holds for each code it knows,
+and one general sentence for any other, so a crafted link (`/account/login?error=Call%20012`) cannot put words of its
+choosing on Wombat's own page. The institutional sign-in's refusals are `ExternalLoginRefusal` codes, which the sign-in
+and link pages read alike. An exception that is not a refusal is logged, and the page says the action could not be
+completed. Until T285 the sign-in, link and register pages printed their `?error=` as it arrived. A refused registration
+keeps the form under its refusal while the invitation can still be used, the first field taking the focus and every field
+naming the refusal; an invitation that cannot be used says why and offers no form. Whether it can be used is the
+invitation preview's answer, never the code's: the preview refuses whatever no input could put right, an invitation
+revoked, used, expired or unknown and an address no account can be created for (one an account already holds, or one
+Identity will not take as a user name), by the provisioner's own test. So the form never comes back under the same
+refusal on every submit.
 
 **A visitor who has not signed in gets static pages** (T181). `App.razor` gives them no render mode, so no page they
 reach opens a circuit: the Blazor hub stays behind the fallback policy, because inside a circuit navigation never meets
