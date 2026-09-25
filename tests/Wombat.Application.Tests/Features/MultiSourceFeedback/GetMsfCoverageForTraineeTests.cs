@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -286,6 +287,37 @@ public sealed class GetMsfCoverageForTraineeTests
         var coverage = await ReadAsync(db, Self(), from: null, to: new DateOnly(2026, 3, 1));
 
         coverage!.Periods.Select(period => period.Name).Should().Equal("Semester 1, 2026");
+    }
+
+    /// <summary>
+    /// The earlier semester is listed exactly when the programme had started by its last day, that day included
+    /// (<c>MsfSemesterCoverage.CountsIn</c>, the rule the programme's counts read too, T210): 30 June for semester 1, and
+    /// 31 December for semester 2 (D40's December fold).
+    /// </summary>
+    [Theory]
+    [InlineData("2026-06-30", "2026-09-01", true)]
+    [InlineData("2026-07-01", "2026-09-01", false)]
+    [InlineData("2025-12-31", "2026-03-01", true)]
+    [InlineData("2026-01-01", "2026-03-01", false)]
+    public async Task WithNoSpanGiven_TheEarlierSemester_IsListedWhenTheProgrammeStartedByItsLastDay(
+        string programmeStart, string to, bool listed)
+    {
+        var start = DateOnly.Parse(programmeStart, CultureInfo.InvariantCulture);
+        var today = DateOnly.Parse(to, CultureInfo.InvariantCulture);
+        await using var db = CreateDb();
+        await SeedAsync(db, [Item(1, "PAED-001")], programmeStart: start);
+        await db.SaveChangesAsync();
+
+        var coverage = await ReadAsync(db, Self(), from: null, to: today);
+
+        coverage!.Periods.Should().HaveCount(listed ? 2 : 1);
+        var current = coverage.Periods[^1];
+        (current.Start <= today && today <= current.End).Should().BeTrue("the current semester is always listed");
+        if (listed)
+        {
+            coverage.Periods[0].End.Should().Be(current.Start.AddDays(-1));
+            coverage.Periods[0].End.Should().BeOnOrAfter(start);
+        }
     }
 
     [Fact]

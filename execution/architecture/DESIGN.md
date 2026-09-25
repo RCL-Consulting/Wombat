@@ -177,7 +177,7 @@ The nav item list is role-driven. The initial set:
 | Trainee                     | Activities, My Activities, MSF Reports, Committee Reviews, My Progress |
 | PendingTrainee              | Activities, My Activities                                |
 | Assessor                    | Activity Inbox, Recent Activities                        |
-| Coordinator                 | Invitations, Stalled Activities, Decisions Due           |
+| Coordinator                 | Invitations, Data Rights, MSF Campaigns, Committee Reviews, Decisions Due, Stalled Activities |
 | SpecialityAdmin / SubSpec.  | Programme Trainees, Curriculum, STAR Review Queue, Decisions Due |
 | InstitutionalAdmin          | Institution, Specialities, Users, Decisions Due          |
 | Administrator               | Institutions, Invitations, Users, Activity Types, System, Decisions Due |
@@ -190,6 +190,11 @@ MSF Reports, Committee Reviews and My Progress sit in their own Trainee-only `Au
 shared with PendingTrainee, because their pages do not admit a pending trainee (T141). A link goes in the shared
 block only if its page admits PendingTrainee; `NavMenuAuthorizationTests` checks every link a trainee or pending
 trainee is offered against its page's `[Authorize]`.
+
+MSF coverage (`/msf/coverage`, T210) is not a nav item. It is a planning aid for the campaigns, so it is reached from
+the MSF campaign list's header, an outline "MSF coverage" link (`#msf-coverage-link`) beside New campaign, and its own
+header links back ("Back to campaigns"). The link is not offered to someone who holds Trainee, whom the page shows no
+programme (`GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo`).
 
 New items go in this table and then in `NavMenu.razor`, not anywhere else.
 
@@ -644,6 +649,34 @@ newest semester first, and gives this semester's count in the "This period" card
 campaign "about" it (D9). An uncovered semester that has ended is never worded as final ("…that closed in the semester
 has been released"): a campaign is placed by the day it closed, so one closed in June and released in July covers
 semester 1 only from its release.
+
+**The programme's MSF coverage** (T210, `/msf/coverage`, Coordinator and Administrator, as the campaign pages). Per
+programme, EPA and semester, how many of the programme's trainees were covered: "1 of 3 trainees covered". A programme
+is a curriculum as one institution follows it (`MsfProgrammeCoverageText.ProgrammeName`, "Paediatric EPA Curriculum 11.1
+at Demo Institution"), so an Administrator sees one per institution. The trainees are those the caller may read about
+(`TraineeScopeResolver.ReadableAsync`, the set form of T113's ladder) who are on the programme now; the semesters are
+today's and the one before, as on the trainee's progress page. Each trainee is counted from their own card: the counts
+are read by `MsfSemesterCoverage`, the one rule `GetMsfCoverageForTraineeQuery` reads too. The page holds:
+
+- A `.muted` opening (`#msf-coverage-intro`, one C# string): what covered means in D9's words, that each trainee is
+  counted from their own progress page, that MSF counts towards no target so an uncovered trainee is no shortfall, that a
+  trainee counts in a semester once their programme has started by its last day, and that an ended semester can still
+  gain a campaign released later.
+- One `section.detail-card` a programme, `aria-labelledby` its `<h2>`. A `details-list` gives each semester's trainees
+  ("3 trainees, whose programme had started by 30 June 2026"). Then two tables, each under an `<h3>` ("By EPA", "By
+  trainee"), each in a `.table-container` that is `tabindex="0"` and `role="region"`, as the decisions-due summary is,
+  since neither holds anything focusable. Its `aria-labelledby` names its `<h3>` and then the programme's `<h2>`, so that
+  where several programmes render (an Administrator's view, or an institution running two curricula) each region is
+  named for whose it is ("By EPA Paediatric EPA Curriculum 11.1 at Demo Institution"), not one of several "By EPA"s.
+  Both are `.clinic-table--compact` with a row header per row and a column per semester.
+  - **By EPA**: "n of m trainees covered", bold when n is above 0 and muted when it is 0; "No trainee had started" where
+    m is 0, never "0 of 0". An institution's own EPA is marked under its title, as on the trainee's grid.
+  - **By trainee**: "6 of 15 EPAs covered", the trainee's own count for the semester (for the current one, the count
+    their My progress "This period" line gives), or "Not started".
+- Like the trainee's grid it takes no badge, no warning tint and no bar: nothing here is a verdict against a target.
+- Someone who holds Trainee (T185's rung) reads no other trainee's record: the page opens with a standing `Alert`
+  (`Kind="warning"`, `Role=""`, `#msf-coverage-trainee`) saying so and that their own coverage is on My progress, and asks
+  for nothing. Nobody to show is the `StatePanel`'s empty card; a failed read is its error.
 
 **The MSF campaign page** (T217, `/msf/campaigns/{id}`). Its campaign card shows the campaign as it is now and offers
 only what its state allows. It is read again after every action on the page, refused or not: a refusal is likeliest

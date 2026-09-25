@@ -12,8 +12,10 @@ using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.MultiSourceFeedback;
 
@@ -185,6 +187,175 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
             await DropSchemasAsync();
         }
     }
+
+    /// <summary>
+    /// T210 on the server: the programme's "n of m trainees covered" is each trainee's card counted, and is read in one
+    /// query of the campaigns and one of the evidence rows for every trainee at once, not one pair a trainee. The
+    /// trainees are read through the preferred-profile rule with a list of ids, the campaigns and rows through lists of
+    /// trainees, and the semester edges are the server's UTC instants, as for one trainee.
+    /// </summary>
+    [Fact]
+    public async Task ProgrammeCoverage_OnPostgres_IsEachTraineesCardCounted_InOneReadOfTheCampaignsAndOneOfTheEvidence()
+    {
+        try
+        {
+            var schema = await MigratedSchemaAsync();
+            int host, first, second;
+
+            await using (var db = NewContext(schema))
+            {
+                host = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
+                var other = new Institution { Name = "T210 Other Hospital", ShortCode = "T210" };
+                db.Institutions.Add(other);
+
+                var curriculum = await db.Curricula.Include(entity => entity.Items).SingleAsync(entity => entity.Name == "IM Core Curriculum");
+                first = curriculum.Items.Single().EpaId;
+                var epa = new Epa
+                {
+                    SubSpecialityId = curriculum.SubSpecialityId,
+                    Code = "EPA-T210",
+                    Title = "A second EPA for T210",
+                    Description = "Integration test.",
+                    RequiredKnowledgeSkills = "None.",
+                    CreatedOn = DateTime.UtcNow
+                };
+                db.Epas.Add(epa);
+                await db.SaveChangesAsync();
+                second = epa.Id;
+                curriculum.Items.Add(new CurriculumItem { EpaId = second, RequiredCount = 1, MinimumLevelOrder = 4, WindowMonths = 12 });
+
+                // Three trainees here, one who has completed, and one at the other institution.
+                AddProfile(db, "t210-ada", host, curriculum.Id, new DateOnly(2025, 1, 1), isActive: true);
+                AddProfile(db, "t210-ben", host, curriculum.Id, new DateOnly(2025, 1, 1), isActive: true);
+                AddProfile(db, "t210-cara", host, curriculum.Id, new DateOnly(2026, 8, 1), isActive: true);
+                AddProfile(db, "t210-gus", host, curriculum.Id, new DateOnly(2021, 1, 1), isActive: false);
+                AddProfile(db, "t210-eve", other.Id, curriculum.Id, new DateOnly(2025, 1, 1), isActive: true);
+
+                var template = new MsfTemplate { Name = "T210 MSF" };
+                db.MsfTemplates.Add(template);
+                db.ActivityTypes.Add(new ActivityType
+                {
+                    Key = MsfEvidenceKinds.MsfActivityTypeKey,
+                    Name = "Multi-Source Feedback (Paediatrics)",
+                    Scope = ActivityScope.Institution,
+                    ScopeId = host,
+                    Version = 1,
+                    WorkflowJson = File.ReadAllText(
+                        Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", "msf_cpsa", "workflow.json")),
+                    OwnerUserId = "seed-system",
+                    CreatedOn = DateTime.UtcNow
+                });
+                await db.SaveChangesAsync();
+
+                // Ada: semester 1's last instant, the first EPA. Ben: semester 2's first instant, both, though only the
+                // second has a row. Cara, who started in August: a withdrawn campaign. Gus and Eve: covered, not counted
+                // here.
+                await AddCampaignAsync(db, template.Id, MsfCampaignState.Released, "2026-06-30T23:59:30Z", "t210-ada", (first, true));
+                await AddCampaignAsync(db, template.Id, MsfCampaignState.Released, "2026-07-01T00:00:00Z", "t210-ben", (first, false), (second, true));
+                await AddCampaignAsync(db, template.Id, MsfCampaignState.Withdrawn, "2026-08-20T12:00:00Z", "t210-cara", (first, true));
+                await AddCampaignAsync(db, template.Id, MsfCampaignState.Released, "2026-03-01T12:00:00Z", "t210-gus", (first, true));
+                await AddCampaignAsync(db, template.Id, MsfCampaignState.Released, "2026-03-01T12:00:00Z", "t210-eve", (first, true));
+            }
+
+            var asOf = new DateOnly(2026, 9, 1);
+            var commands = new CommandLog();
+            MsfProgrammeCoverageDto coverage;
+            await using (var db = NewContext(schema, commands))
+            {
+                coverage = await new GetMsfProgrammeCoverageQueryHandler(db, FakeUserDirectory.Empty).Handle(
+                    new GetMsfProgrammeCoverageQuery(Coordinator(host), asOf),
+                    CancellationToken.None);
+            }
+
+            var programme = coverage.Programmes.Should().ContainSingle("the coordinator's institution follows one curriculum").Subject;
+            programme.Trainees.Select(trainee => trainee.UserId).Should().BeEquivalentTo(["t210-ada", "t210-ben", "t210-cara"]);
+            programme.Periods.Select(period => period.Trainees).Should().Equal(2, 3);
+            programme.Epas.Single(epa => epa.EpaId == first).Periods.Select(period => (period.TraineesCovered, period.Trainees))
+                .Should().Equal((1, 2), (0, 3));
+            programme.Epas.Single(epa => epa.EpaId == second).Periods.Select(period => (period.TraineesCovered, period.Trainees))
+                .Should().Equal((0, 2), (1, 3));
+
+            var campaigns = commands.Texts.Where(text => text.Contains("\"MsfCampaigns\"", StringComparison.Ordinal))
+                .Should().ContainSingle("one read of every trainee's campaigns").Subject;
+            campaigns.Should().Contain("\"State\"").And.Contain("\"ClosedOn\"").And.Contain("\"SubjectUserId\"");
+            commands.Texts.Where(text => text.Contains("\"Activities\"", StringComparison.Ordinal))
+                .Should().ContainSingle("one read of every trainee's evidence rows");
+
+            // An Administrator sees the curriculum at both institutions, two programmes, and every programme's EPA list is
+            // drawn from one read of the curricula's items, not one read a programme.
+            var administratorCommands = new CommandLog();
+            MsfProgrammeCoverageDto everywhere;
+            await using (var db = NewContext(schema, administratorCommands))
+            {
+                everywhere = await new GetMsfProgrammeCoverageQueryHandler(db, FakeUserDirectory.Empty).Handle(
+                    new GetMsfProgrammeCoverageQuery(Administrator(), asOf),
+                    CancellationToken.None);
+            }
+
+            everywhere.Programmes.Select(entry => entry.Trainees.Count).Should().BeEquivalentTo([3, 1]);
+            everywhere.Programmes.Should().AllSatisfy(entry =>
+                entry.Epas.Select(epa => epa.EpaId).Should().BeEquivalentTo([first, second]));
+            administratorCommands.Texts.Where(text => text.Contains("\"CurriculumItems\"", StringComparison.Ordinal))
+                .Should().ContainSingle("one read of the items for every programme");
+
+            // Each trainee's own card on the same server says the same.
+            await using (var db = NewContext(schema))
+            {
+                foreach (var trainee in programme.Trainees)
+                {
+                    var card = (await new GetMsfCoverageForTraineeQueryHandler(db).Handle(
+                        new GetMsfCoverageForTraineeQuery(trainee.UserId, Coordinator(host), AsOf: asOf),
+                        CancellationToken.None))!;
+
+                    foreach (var period in trainee.Periods.Where(period => period.HadStarted))
+                    {
+                        period.EpasCovered.Should().Be(
+                            card.Periods.Single(entry => entry.Year == period.Year && entry.Semester == period.Semester).EpasCovered,
+                            $"{trainee.UserId} {period.Year} S{period.Semester}");
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    private static void AddProfile(
+        ApplicationDbContext db, string userId, int institutionId, int curriculumId, DateOnly start, bool isActive)
+        => db.TraineeProfiles.Add(new TraineeProfile
+        {
+            UserId = userId,
+            InstitutionId = institutionId,
+            CurriculumId = curriculumId,
+            ProgrammeStartDate = start,
+            ExpectedCompletionDate = start.AddYears(4),
+            IsActive = isActive
+        });
+
+    /// <summary>A global Administrator.</summary>
+    private static ClaimsPrincipal Administrator()
+        => new(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "administrator-t210"),
+                new Claim(ClaimTypes.Role, WombatRoles.Administrator)
+            ],
+            "IntegrationTest",
+            ClaimTypes.Name,
+            ClaimTypes.Role));
+
+    /// <summary>A coordinator at the trainees' institution.</summary>
+    private static ClaimsPrincipal Coordinator(int institutionId)
+        => new(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "coordinator-t210"),
+                new Claim(ClaimTypes.Role, WombatRoles.Coordinator),
+                new Claim(WombatClaimTypes.InstitutionId, institutionId.ToString(CultureInfo.InvariantCulture))
+            ],
+            "IntegrationTest",
+            ClaimTypes.Name,
+            ClaimTypes.Role));
 
     private static IEnumerable<(int Year, int Semester, int CampaignId)> Covered(MsfCoverageDto coverage, int epaId)
         => coverage.Epas.Single(epa => epa.EpaId == epaId).Periods

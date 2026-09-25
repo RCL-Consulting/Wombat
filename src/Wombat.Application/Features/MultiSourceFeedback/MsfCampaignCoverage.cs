@@ -24,7 +24,8 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// fact, and it can be missing where the evidence is not: campaigns released before the stamp existed have their
 /// <c>msf_cpsa</c> rows and a null stamp. Read from the stamp, the committee snapshot said such a campaign's EPAs were
 /// "no longer on the trainee's curriculum" and the coverage grid said they were not covered. Every reader of coverage
-/// reads it here: the committee snapshot's campaign line, the coverage grid, and the campaign report the coordinator,
+/// reads it here: the committee snapshot's campaign line, the coverage grid and the programme's counts drawn from it
+/// (<see cref="MsfSemesterCoverage" />, T210), and the campaign report the coordinator,
 /// the trainee and the portfolio PDF print (<see cref="IMsfAggregationService" />), so none can disagree with the
 /// evidence a panel sees listed beside them, or with another. Nothing reads the stamp. The declared set
 /// (<see cref="MsfCampaign.CoveredEpas" />) still says what the campaign was offered as evidence for; this says which of
@@ -52,9 +53,9 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// have an unfinished row read as coverage.
 /// </para>
 /// <para>
-/// <b>What is read.</b> One query: the subject's rows of the evidence type that carry an EPA, joined to the EPA for its
-/// code. The campaign id lives only inside <c>DataJson</c>, which is not portable SQL, so it is matched here, over one
-/// subject's rows of one system-written type: a row per EPA per campaign, tens in a programme. Only if a row names a
+/// <b>What is read.</b> One query: the subjects' rows of the evidence type that carry an EPA, joined to the EPA for its
+/// code. The campaign id lives only inside <c>DataJson</c>, which is not portable SQL, so it is matched here, over the
+/// subjects' rows of one system-written type: a row per EPA per campaign, tens a trainee. Only if a row names a
 /// released campaign are the finished states of those rows' pinned workflows read
 /// (<see cref="ActivityCompletion.LoadFinishedStatesAsync" />). Nothing leaves but campaign ids and EPAs. No activity
 /// id, no <c>DataJson</c> and no rating reaches a caller, which is why this does not
@@ -108,31 +109,63 @@ public static class MsfCampaignCoverage
     /// <param name="subjectUserId">The trainee the campaigns are about. Only their evidence rows are read.</param>
     /// <param name="campaigns">The campaigns to read, each with its state. Every one must be about <paramref name="subjectUserId" />.</param>
     /// <param name="evidenceTypeKey">The activity type key the campaigns' evidence is recorded as.</param>
-    public static async Task<ILookup<int, MsfRecordedEpa>> RecordedEpasAsync(
+    public static Task<ILookup<int, MsfRecordedEpa>> RecordedEpasAsync(
         IApplicationDbContext dbContext,
         string subjectUserId,
         IEnumerable<(int CampaignId, MsfCampaignState State)> campaigns,
         string evidenceTypeKey,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentException.ThrowIfNullOrWhiteSpace(subjectUserId);
+        ArgumentNullException.ThrowIfNull(campaigns);
+
+        return RecordedEpasAsync(
+            dbContext,
+            campaigns.Select(campaign => (subjectUserId, campaign.CampaignId, campaign.State)),
+            evidenceTypeKey,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// The same answer for campaigns about several trainees at once, each read from its own subject's rows: for each
+    /// released campaign of <paramref name="campaigns" />, the EPAs its finished evidence rows of
+    /// <paramref name="evidenceTypeKey" /> carry, in EPA code order. The one-trainee form above is one call of this. (T210)
+    /// </summary>
+    /// <remarks>
+    /// For a reader that counts coverage across a programme (<see cref="GetMsfProgrammeCoverageQuery" />), where one read
+    /// per trainee would be two round trips a trainee. Still one read of the rows and at most one of the finished states,
+    /// however many trainees. A row counts only for the campaign its data names and only when it is about that
+    /// campaign's own subject, which the one-trainee form had for free by reading one subject's rows.
+    /// </remarks>
+    /// <param name="campaigns">The campaigns to read, each with the trainee it is about and its state.</param>
+    public static async Task<ILookup<int, MsfRecordedEpa>> RecordedEpasAsync(
+        IApplicationDbContext dbContext,
+        IEnumerable<(string SubjectUserId, int CampaignId, MsfCampaignState State)> campaigns,
+        string evidenceTypeKey,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(campaigns);
         ArgumentException.ThrowIfNullOrWhiteSpace(evidenceTypeKey);
 
-        var released = campaigns
-            .Where(campaign => campaign.State == MsfCampaignState.Released)
-            .Select(campaign => campaign.CampaignId)
-            .ToHashSet();
+        // Each released campaign's subject, by campaign id: a row is its campaign's evidence only about that subject.
+        var released = new Dictionary<int, string>();
+        foreach (var campaign in campaigns.Where(campaign => campaign.State == MsfCampaignState.Released))
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(campaign.SubjectUserId, nameof(campaigns));
+            released[campaign.CampaignId] = campaign.SubjectUserId;
+        }
 
         if (released.Count == 0)
         {
             return None();
         }
 
+        var subjects = released.Values.Distinct(StringComparer.Ordinal).ToArray();
+
         var rows = await dbContext.Set<Activity>()
             .AsNoTracking()
-            .Where(activity => activity.SubjectUserId == subjectUserId &&
+            .Where(activity => subjects.Contains(activity.SubjectUserId) &&
                                activity.ActivityType.Key == evidenceTypeKey &&
                                activity.EpaId != null)
             .Join(
@@ -141,6 +174,7 @@ public static class MsfCampaignCoverage
                 epa => (int?)epa.Id,
                 (activity, epa) => new
                 {
+                    activity.SubjectUserId,
                     EpaId = epa.Id,
                     epa.Code,
                     activity.DataJson,
@@ -152,7 +186,9 @@ public static class MsfCampaignCoverage
 
         var naming = rows
             .Select(row => (CampaignId: ReadCampaignId(row.DataJson), Row: row))
-            .Where(entry => entry.CampaignId is int campaignId && released.Contains(campaignId))
+            .Where(entry => entry.CampaignId is int campaignId &&
+                            released.TryGetValue(campaignId, out var subjectUserId) &&
+                            string.Equals(subjectUserId, entry.Row.SubjectUserId, StringComparison.Ordinal))
             .ToList();
 
         if (naming.Count == 0)

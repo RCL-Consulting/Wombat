@@ -156,6 +156,37 @@ public sealed class MsfCampaignCoverageTests
             "declined is a dead end, not a finish, and recorded is MSF's terminal state, not this type's");
     }
 
+    /// <summary>
+    /// The programme's counts read several trainees' campaigns at once (T210). Each campaign is still read from its own
+    /// subject's rows: a row about one trainee naming another trainee's campaign is neither campaign's evidence, which
+    /// the one-trainee form had for free by reading one subject's rows.
+    /// </summary>
+    [Fact]
+    public async Task ForSeveralTrainees_EachCampaignIsReadFromItsOwnSubjectsRowsOnly_AsTheOneTraineeFormReadsIt()
+    {
+        await using var db = await SeedAsync();
+        AddRow(db, MsfTypeId, Evidence(50, Paed001), Paed001);
+        AddRow(db, MsfTypeId, Evidence(51, Paed002), Paed002, subjectUserId: "trainee-2");
+        // trainee-2's row naming trainee-1's campaign 50, and trainee-1's row naming trainee-2's campaign 51.
+        AddRow(db, MsfTypeId, Evidence(50, Paed010), Paed010, subjectUserId: "trainee-2");
+        AddRow(db, MsfTypeId, Evidence(51, Paed010), Paed010);
+        await db.SaveChangesAsync();
+
+        var together = await MsfCampaignCoverage.RecordedEpasAsync(
+            db,
+            [(Trainee, 50, MsfCampaignState.Released), ("trainee-2", 51, MsfCampaignState.Released), ("trainee-3", 52, MsfCampaignState.Draft)],
+            MsfEvidenceKinds.MsfActivityTypeKey,
+            CancellationToken.None);
+
+        together[50].Select(epa => epa.EpaId).Should().Equal([Paed001], "PAED-010's row naming campaign 50 is about trainee-2");
+        together[51].Select(epa => epa.EpaId).Should().Equal([Paed002], "PAED-010's row naming campaign 51 is about trainee-1");
+        together[52].Should().BeEmpty();
+
+        var alone = await MsfCampaignCoverage.RecordedEpasAsync(
+            db, "trainee-2", [(51, MsfCampaignState.Released)], MsfEvidenceKinds.MsfActivityTypeKey, CancellationToken.None);
+        alone[51].Should().Equal(together[51]);
+    }
+
     [Fact]
     public async Task NoReleasedCampaign_ReadsNothing()
     {

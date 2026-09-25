@@ -136,6 +136,100 @@ public sealed class OverseerRuleParityTests
             => await TraineeScopeResolver.AdministeredProfiles(db, Caller(caller)).Select(profile => profile.UserId).ToListAsync();
     }
 
+    // ─── The readable set (T210) ─────────────────────────────────────────────
+
+    public static TheoryData<string> Readers()
+    {
+        var data = new TheoryData<string>();
+        foreach (var caller in CallerNames.Concat(ReaderNames))
+        {
+            data.Add(caller);
+        }
+
+        return data;
+    }
+
+    /// <summary>
+    /// <see cref="TraineeScopeResolver.ReadableAsync" /> is <see cref="TraineeScopeResolver.MayReadAsync" /> asked of every
+    /// trainee at once: the programme's MSF coverage lists by it, and each trainee's own card is read by the other.
+    /// Every overseer above, and the rungs oversight does not cover: the Administrator, the trainee themselves, a trainee
+    /// who also holds an oversight role (T185), and an overseer whose own profile is at another institution.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Readers))]
+    public async Task ReadableAsync_ListsExactlyTheTraineesMayReadAsyncAdmits_EachWithItsResolvedScope(string caller)
+    {
+        await using var db = CreateDb();
+        SeedProfiles(db);
+        await db.SaveChangesAsync();
+        var principal = Reader(caller);
+
+        var readable = await TraineeScopeResolver.ReadableAsync(db, principal, CancellationToken.None);
+
+        var admitted = new List<string>();
+        foreach (var userId in ProfileUserIds)
+        {
+            if (await TraineeScopeResolver.MayReadAsync(db, principal, userId, CancellationToken.None))
+            {
+                admitted.Add(userId);
+            }
+        }
+
+        readable.Keys.Should().BeEquivalentTo(admitted, caller);
+        foreach (var (userId, scope) in readable)
+        {
+            scope.Should().Be(await TraineeScopeResolver.ResolveAsync(db, userId, CancellationToken.None), $"{caller}: {userId}");
+        }
+    }
+
+    [Fact]
+    public async Task Guard_TheReadableSetFollowsEachRung()
+    {
+        await using var db = CreateDb();
+        SeedProfiles(db);
+        await db.SaveChangesAsync();
+
+        using var scope = new AssertionScope();
+        (await Readable("a global Administrator")).Should().BeEquivalentTo(ProfileUserIds);
+        (await Readable("a Coordinator at the host")).Should().BeEquivalentTo(
+            ["paeds", "surgery", "no-curriculum", "orphaned-sub-speciality", "missing-sub-speciality"]);
+        (await Readable("the paediatric trainee")).Should().BeEquivalentTo(["paeds"]);
+        (await Readable("the paediatric trainee, who also coordinates at the host")).Should().BeEquivalentTo(
+            ["paeds"], "a trainee reads their own record and nobody else's, whatever other role they hold (T185)");
+        (await Readable("an Administrator who also holds Trainee")).Should().BeEquivalentTo(["surgery"]);
+        (await Readable("a Coordinator at the host whose own profile is elsewhere")).Should().Contain(
+            "moved", "anyone reads their own record");
+        (await Readable("an Assessor at the host")).Should().BeEmpty();
+
+        async Task<IEnumerable<string>> Readable(string caller)
+            => (await TraineeScopeResolver.ReadableAsync(db, Reader(caller), CancellationToken.None)).Keys;
+    }
+
+    private static readonly string[] ReaderNames =
+    [
+        "a global Administrator",
+        "the paediatric trainee",
+        "the paediatric trainee, who also coordinates at the host",
+        "an Administrator who also holds Trainee",
+        "a Coordinator at the host whose own profile is elsewhere"
+    ];
+
+    private static readonly string[] ProfileUserIds =
+        ["paeds", "surgery", "no-curriculum", "orphaned-sub-speciality", "missing-sub-speciality", "elsewhere", "moved"];
+
+    private static ClaimsPrincipal Reader(string caller) => caller switch
+    {
+        "a global Administrator" => TestPrincipals.Administrator(),
+        "the paediatric trainee" => TestPrincipals.Trainee("paeds", Host),
+        "the paediatric trainee, who also coordinates at the host" =>
+            TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.Coordinator], "paeds", Host),
+        "an Administrator who also holds Trainee" =>
+            TestPrincipals.InRoles([WombatRoles.Administrator, WombatRoles.Trainee], "surgery", Host),
+        "a Coordinator at the host whose own profile is elsewhere" =>
+            TestPrincipals.InRoles([WombatRoles.Coordinator], "moved", Host),
+        _ => Caller(caller)
+    };
+
     // ─── Fixture ─────────────────────────────────────────────────────────────
 
     private static readonly string[] CallerNames =

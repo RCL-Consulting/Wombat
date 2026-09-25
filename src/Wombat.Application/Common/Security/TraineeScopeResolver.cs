@@ -263,6 +263,64 @@ public static class TraineeScopeResolver
     }
 
     /// <summary>
+    /// Every trainee whose record this caller may read, with where each trains: the set form of
+    /// <see cref="MayReadAsync" />, for a page that lists trainees rather than asks about one. A trainee is here exactly
+    /// when they hold a profile and <see cref="MayReadAsync" /> admits the caller to them. (T210)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The same ladder, rung for rung and in the same order: someone who holds Trainee reads themselves and nobody else
+    /// (<see cref="ActsAsTrainee" />); a global Administrator reads everyone; anyone else reads themselves and the
+    /// trainees <see cref="IsOverseenBy" /> puts under them. Every arm of that rule requires the trainee's institution, so
+    /// only the caller's own institution's trainees are resolved to be judged, and a caller with no institution claim
+    /// oversees nobody. Three queries at most for each of the two resolves (<see cref="ResolveAllAsync" />), however many
+    /// trainees. A parity test holds this to <see cref="MayReadAsync" />, caller by caller.
+    /// </para>
+    /// <para>
+    /// A trainee with no profile is not listed, though <see cref="MayReadAsync" /> admits them to themselves: a list of
+    /// trainees has nothing to show for someone with no programme.
+    /// </para>
+    /// </remarks>
+    public static async Task<IReadOnlyDictionary<string, TraineeScope>> ReadableAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(principal);
+
+        var callerUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string[] self = string.IsNullOrEmpty(callerUserId) ? [] : [callerUserId];
+
+        if (ActsAsTrainee(principal))
+        {
+            return await ResolveManyAsync(dbContext, self, cancellationToken);
+        }
+
+        if (principal.IsAdministrator())
+        {
+            return await ResolveAllAsync(dbContext, null, cancellationToken);
+        }
+
+        var readable = new Dictionary<string, TraineeScope>(
+            await ResolveManyAsync(dbContext, self, cancellationToken),
+            StringComparer.Ordinal);
+
+        if (HoldsOversightRole(principal) && principal.GetInstitutionId() is int institutionId)
+        {
+            foreach (var (userId, scope) in await ResolveAllAsync(dbContext, institutionId, cancellationToken))
+            {
+                if (IsOverseenBy(scope, principal))
+                {
+                    readable[userId] = scope;
+                }
+            }
+        }
+
+        return readable;
+    }
+
+    /// <summary>
     /// Whether this caller is a trainee in the programme, and so reads and administers trainee records as one: their
     /// own record and nobody else's, whatever other role they hold, the Administrator role included. (T185)
     /// </summary>
@@ -275,7 +333,8 @@ public static class TraineeScopeResolver
     /// <list type="bullet">
     /// <item><see cref="MayReadAsync" />, and so every trainee read that climbs it: progress, committee reviews listed
     /// for a trainee, entrustment decisions and standing, the certificate, MSF campaigns and coverage, the portfolio
-    /// export;</item>
+    /// export; and its set form <see cref="ReadableAsync" />, which the programme's MSF coverage lists by (T210), and
+    /// which that page leaves empty for such a caller, since a programme view is about other trainees;</item>
     /// <item>the committee review itself (<c>CommitteeDecisionAuthorization.DemandReviewAccess</c>), where the rung
     /// started;</item>
     /// <item>the entrustment admin list and revoking (<c>ListEntrustmentDecisionsForAdminQuery</c>,

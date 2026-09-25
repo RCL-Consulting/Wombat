@@ -1,0 +1,180 @@
+@page "/msf/coverage"
+@attribute [Authorize(Roles = "Coordinator,Administrator")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@* T210: per programme, EPA and semester, how many of the programme's trainees a released MSF campaign covered, "n of m",
+   for a coordinator planning campaigns. Each trainee is counted from their own card (GetMsfProgrammeCoverageQuery reads
+   the rule GetMsfCoverageForTraineeQuery reads), so the trainee table's counts are the ones each trainee's progress page
+   gives. Coverage, never a shortfall, as on the trainee's card (DESIGN.md § Multi-source feedback coverage): no badge, no
+   warning tint, no bar. Reached from the MSF campaign list's header, not the nav (DESIGN.md § The NavMenu). *@
+
+<PageTitle>MSF Coverage</PageTitle>
+
+<PageHeader Title="MSF coverage" Subtitle="How many of each programme's trainees a released multi-source feedback campaign covered, per EPA and semester.">
+  <Actions>
+    <a class="btn btn-outline" href="/msf/campaigns">Back to campaigns</a>
+  </Actions>
+</PageHeader>
+
+@if (_actsAsTrainee is true)
+{
+  @* Standing content, as the campaign pages' own notice to someone who holds Trainee (T224): read on every visit, so
+     it is announced by no role. *@
+  <Alert Id="msf-coverage-trainee" Kind="warning" Role="">@MsfProgrammeCoverageText.TraineeSeesNoProgramme</Alert>
+}
+else if (_actsAsTrainee is false)
+{
+  <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(_coverage is { Programmes.Count: 0 })"
+              EmptyTitle="@MsfProgrammeCoverageText.EmptyTitle" EmptyBody="@MsfProgrammeCoverageText.EmptyBody">
+    @{ var coverage = _coverage!; }
+    <p id="msf-coverage-intro" class="muted">@MsfProgrammeCoverageText.Opening</p>
+
+    @foreach (var programme in coverage.Programmes)
+    {
+      var key = $"{programme.InstitutionId}-{programme.CurriculumId}";
+      <section id="@($"msf-programme-{key}")" class="detail-card mb-3" aria-labelledby="@($"msf-programme-{key}-heading")">
+        <h2 id="@($"msf-programme-{key}-heading")">@MsfProgrammeCoverageText.ProgrammeName(programme)</h2>
+
+        <dl class="details-list">
+          @foreach (var period in coverage.Periods)
+          {
+            <div>
+              <dt>@period.Name (@period.Months)</dt>
+              <dd>@MsfProgrammeCoverageText.TraineesLine(period, programme.For(period.Year, period.Semester))</dd>
+            </div>
+          }
+        </dl>
+
+        @if (programme.Epas.Count == 0)
+        {
+          <p class="muted">No EPA on this programme is in use at the moment, so there is no coverage to count.</p>
+        }
+        else
+        {
+          <h3 id="@($"msf-programme-{key}-epas")" class="mt-3">By EPA</h3>
+          @* Focusable, so a keyboard can scroll it on a narrow screen: it holds nothing focusable of its own. Named by its
+             <h3> and then the programme's <h2>, so where several programmes render, each region's name says whose it is
+             ("By EPA Paediatric EPA Curriculum 11.1 at Demo Institution"), not a list of regions all called "By EPA". *@
+          <div class="table-container" tabindex="0" role="region" aria-labelledby="@($"msf-programme-{key}-epas msf-programme-{key}-heading")">
+            <table class="clinic-table clinic-table--compact">
+              <caption>@MsfProgrammeCoverageText.EpaCaption</caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="col-wrap col-wrap--wide">EPA</th>
+                  @foreach (var period in coverage.Periods)
+                  {
+                    <th scope="col">@period.Name</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @foreach (var epa in programme.Epas)
+                {
+                  <tr id="@($"msf-programme-{key}-epa-{epa.CurriculumItemId}")">
+                    <th scope="row" class="col-wrap">
+                      <strong>@epa.EpaCode</strong>
+                      <div class="muted text-sm">@epa.EpaTitle</div>
+                      @if (epa.IsLocal)
+                      {
+                        <div class="muted text-sm">The institution's own EPA</div>
+                      }
+                    </th>
+                    @foreach (var period in coverage.Periods)
+                    {
+                      var cell = epa.For(period.Year, period.Semester);
+                      <td>
+                        @if (cell is { TraineesCovered: > 0 })
+                        {
+                          <strong>@MsfProgrammeCoverageText.EpaCell(cell)</strong>
+                        }
+                        else
+                        {
+                          <span class="muted">@MsfProgrammeCoverageText.EpaCell(cell)</span>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="@($"msf-programme-{key}-trainees")" class="mt-3">By trainee</h3>
+          <div class="table-container" tabindex="0" role="region" aria-labelledby="@($"msf-programme-{key}-trainees msf-programme-{key}-heading")">
+            <table class="clinic-table clinic-table--compact">
+              <caption>@MsfProgrammeCoverageText.TraineeCaption</caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="col-wrap">Trainee</th>
+                  @foreach (var period in coverage.Periods)
+                  {
+                    <th scope="col">@period.Name</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @foreach (var trainee in programme.Trainees)
+                {
+                  <tr>
+                    <th scope="row" class="col-wrap">@trainee.Name</th>
+                    @foreach (var period in coverage.Periods)
+                    {
+                      var cell = trainee.For(period.Year, period.Semester);
+                      <td>
+                        @if (cell is { HadStarted: true, EpasCovered: > 0 })
+                        {
+                          <strong>@MsfProgrammeCoverageText.TraineeCell(cell, programme.Epas.Count)</strong>
+                        }
+                        else
+                        {
+                          <span class="muted">@MsfProgrammeCoverageText.TraineeCell(cell, programme.Epas.Count)</span>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  </StatePanel>
+}
+
+@code {
+  private MsfProgrammeCoverageDto? _coverage;
+  private bool _loading = true;
+  private string? _error;
+
+  /// <summary>
+  /// Whether the caller holds Trainee (<see cref="GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo" />, T185's rung), who
+  /// reads no other trainee's record; null until the caller is known, so nothing is shown before the page knows which.
+  /// </summary>
+  private bool? _actsAsTrainee;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _actsAsTrainee = GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo(authState.User);
+
+      // Nothing is asked for a caller who reads nobody else: the handler would answer with no programme.
+      if (_actsAsTrainee is false)
+      {
+        _coverage = await Sender.Send(new GetMsfProgrammeCoverageQuery(authState.User));
+      }
+    }
+    catch (Exception exception)
+    {
+      _actsAsTrainee ??= false;
+      _error = exception.Message;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

@@ -7,9 +7,15 @@
 
 @* "New campaign" only for a caller who can create one (DESIGN.md § A row the caller cannot change, T211). Someone who
    holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224), and is told
-   so in the words a create refusal gives, as standing content. *@
+   so in the words a create refusal gives, as standing content. "MSF coverage" (T210), the programme's counts a
+   coordinator plans the next campaigns from, only for a caller it shows a programme to: someone who holds Trainee reads
+   no other trainee's coverage (GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo). *@
 <PageHeader Title="MSF campaigns" Subtitle="Create and review multi-source feedback campaigns.">
   <Actions>
+    @if (_showsCoverage is true)
+    {
+      <a id="msf-coverage-link" class="btn btn-outline" href="/msf/coverage">MSF coverage</a>
+    }
     @if (_runsNoCampaigns is false)
     {
       <a class="btn btn-primary" href="/msf/campaigns/new">New campaign</a>
@@ -126,12 +132,19 @@
   /// </summary>
   private bool? _runsNoCampaigns;
 
+  /// <summary>
+  /// Whether the programme coverage page shows this caller anything (<see cref="GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo" />,
+  /// T210); null until the caller is known.
+  /// </summary>
+  private bool? _showsCoverage;
+
   protected override async Task OnInitializedAsync()
   {
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _runsNoCampaigns = MsfCampaignRules.RunsNoCampaigns(authState.User);
+      _showsCoverage = !GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo(authState.User);
 
       // Nothing is asked for a caller who runs none: the list would be empty whatever it held.
       if (_runsNoCampaigns is false)

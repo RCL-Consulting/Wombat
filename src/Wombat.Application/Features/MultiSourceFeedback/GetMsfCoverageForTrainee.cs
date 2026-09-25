@@ -35,7 +35,9 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// not covered, whatever the reason. Not the per-EPA stamp <see cref="MsfCampaignEpa.RecordedOn" />, which a campaign
 /// released before it existed does not carry although its evidence does (T186). So a covered EPA is exactly an
 /// <c>msf_cpsa</c> evidence activity with that EPA, the rule the committee snapshot's campaign line is written by, and
-/// the two cannot disagree.
+/// the two cannot disagree. The campaigns, their semesters and this trainee's EPA list are read by
+/// <see cref="MsfSemesterCoverage" />, which the programme's "n of m trainees covered" counts too
+/// (<see cref="GetMsfProgrammeCoverageQuery" />, T210), so a programme's count is these cards counted.
 /// </para>
 /// <para>
 /// <b>Which semester.</b> The one containing the UTC day the campaign actually closed (<see cref="MsfCampaign.ClosedOn" />),
@@ -144,9 +146,7 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
 
         var items = await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
-            .InForce()
-            .Where(item => item.CurriculumId == profile.CurriculumId &&
-                           (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId))
+            .OnListOf(profile.CurriculumId, profile.InstitutionId)
             .Select(item => new
             {
                 item.Id,
@@ -160,71 +160,15 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
         items = items.OrderBy(item => item.EpaCode, StringComparer.Ordinal).ThenBy(item => item.Id).ToList();
         var epaIds = items.Select(item => item.EpaId).Distinct().ToArray();
 
-        // Half-open UTC bounds, as MsfCampaignReviewWindow draws them: ClosedOn is an instant, and its UTC day is the
-        // day the evidence is dated. The day after the last semester is the next semester's first; there is none only
-        // after the last representable one.
-        var closedFrom = periods[0].Start.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var closedBefore = periods[^1].Next() is { } after
-            ? after.Start.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)
-            : DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc);
-
-        // The campaigns first, windowed and cut to released in SQL; then which EPAs each one's evidence rows carry, from
-        // the one reader the committee snapshot shares (T186). No campaign, no second read.
-        var releasedCampaigns = epaIds.Length == 0
+        // The grid's one rule (T168, T186), which the programme's counts read too (T210): released MSF campaigns about the
+        // trainee, by the semester they closed in, and the EPAs their evidence rows carry. No EPA on the list, no read.
+        var covered = epaIds.Length == 0
             ? []
-            : await _dbContext.Set<MsfCampaign>()
-                .AsNoTracking()
-                .Where(campaign => campaign.SubjectUserId == traineeUserId &&
-                                   // Multi-source feedback only. A learner-feedback campaign is run on the same aggregate
-                                   // but is another instrument (T164, D35): counting it here would tell a committee that
-                                   // MSF covered PAED-015 when only learners answered. Its evidence rows are another type
-                                   // too, so the reader below would find none; this says so rather than relying on it.
-                                   campaign.Template.Kind == MsfTemplateKind.Msf &&
-                                   campaign.State == MsfCampaignState.Released &&
-                                   campaign.ClosedOn >= closedFrom &&
-                                   campaign.ClosedOn < closedBefore)
-                .Select(campaign => new
-                {
-                    campaign.Id,
-                    campaign.State,
-                    TemplateName = campaign.Template.Name,
-                    ClosedOn = campaign.ClosedOn!.Value,
-                    campaign.ReleasedOn
-                })
-                .ToListAsync(cancellationToken);
-
-        var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
-            _dbContext,
-            traineeUserId,
-            releasedCampaigns.Select(campaign => (campaign.Id, campaign.State)),
-            MsfEvidenceKinds.MsfActivityTypeKey,
-            cancellationToken);
+            : await MsfSemesterCoverage.ReadAsync(_dbContext, [traineeUserId], periods, cancellationToken);
 
         var onCurriculum = epaIds.ToHashSet();
-        var covering = releasedCampaigns
-            .SelectMany(campaign => recorded[campaign.Id]
-                .Where(epa => onCurriculum.Contains(epa.EpaId))
-                .Select(epa => new
-                {
-                    epa.EpaId,
-                    CampaignId = campaign.Id,
-                    campaign.TemplateName,
-                    campaign.ClosedOn,
-                    campaign.ReleasedOn
-                }))
-            .ToList();
-
-        var campaignsByEpaAndPeriod = covering
-            .Select(entry => new
-            {
-                entry.EpaId,
-                Period = AcademicPeriod.Containing(DateOnly.FromDateTime(entry.ClosedOn)),
-                Campaign = new MsfCoveringCampaignDto(
-                    entry.CampaignId,
-                    entry.TemplateName,
-                    DateOnly.FromDateTime(entry.ClosedOn),
-                    entry.ReleasedOn is DateTime released ? DateOnly.FromDateTime(released) : null)
-            })
+        var campaignsByEpaAndPeriod = covered
+            .Where(entry => onCurriculum.Contains(entry.EpaId))
             .GroupBy(entry => (entry.EpaId, entry.Period))
             .ToDictionary(
                 group => group.Key,
@@ -291,12 +235,13 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
 
     /// <summary>
     /// The semester before <paramref name="to" />'s and its own, as the progress page's cards show a current and a
-    /// previous window; the earlier one only if the programme had started by its last day.
+    /// previous window; the earlier one only if the programme had started by its last day
+    /// (<see cref="MsfSemesterCoverage.CountsIn" />, the rule the programme's counts read too).
     /// </summary>
     private static IReadOnlyList<AcademicPeriod> CurrentAndPrevious(DateOnly to, DateOnly programmeStart)
     {
         var current = AcademicPeriod.Containing(to);
-        return current.Previous() is { } previous && programmeStart <= previous.End
+        return current.Previous() is { } previous && MsfSemesterCoverage.CountsIn(programmeStart, previous)
             ? [previous, current]
             : [current];
     }

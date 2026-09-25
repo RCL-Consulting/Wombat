@@ -59,6 +59,8 @@ public sealed class RunsNoCampaignsPageTests : TestContext
         StandingReason(cut).Should().Be(MsfCampaignRules.TraineeRunsNoCampaigns);
         cut.FindAll("a[href='/msf/campaigns/new']").Should().BeEmpty("they cannot create a campaign there");
         cut.Markup.Should().NotContain("Create the first MSF campaign").And.NotContain("No MSF campaigns");
+        cut.FindAll("#msf-coverage-link").Should().BeEmpty(
+            "the programme's coverage shows them no other trainee (T210, GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo)");
         _sender.Asked.Should().BeEmpty("the list would be empty whatever it held");
     }
 
@@ -73,6 +75,9 @@ public sealed class RunsNoCampaignsPageTests : TestContext
 
         cut.FindAll("#msf-runs-no-campaigns").Should().BeEmpty();
         Text(cut.Find("a[href='/msf/campaigns/new']")).Should().Be("New campaign");
+        var coverage = cut.Find("#msf-coverage-link");
+        Text(coverage).Should().Be("MSF coverage");
+        coverage.GetAttribute("href").Should().Be("/msf/coverage", "the programme's counts a coordinator plans campaigns from (T210)");
         _sender.Asked.Should().Equal(nameof(ListMsfCampaignsForCoordinatorQuery));
     }
 
