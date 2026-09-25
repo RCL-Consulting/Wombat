@@ -59,6 +59,18 @@ public sealed record CreditSubject(
     public int? ResumedEpaId { get; init; }
 
     /// <summary>
+    /// Set only by the replay a completion or a withdrawal runs when the end it records takes credit back (T281,
+    /// <c>ProgrammeEndCredit</c>): the end that request is recording, which it has not saved yet. Credit judges the
+    /// encounter against it in place of the stored end when it is recorded on the profile credit accrues against.
+    /// </summary>
+    /// <remarks>
+    /// Passed explicitly, not read off an unsaved profile the request happens to track: every other plan, the live
+    /// completion's and the tool gate's included, reads the profile as it is stored, and a request that edits a profile
+    /// for any other reason does not change what its credit plans against.
+    /// </remarks>
+    public PendingProgrammeEnd? PendingEnd { get; init; }
+
+    /// <summary>
     /// The subject, date and data an activity already carries, credited at its newest transition: for a replay, or for a
     /// caller that has already transitioned it.
     /// </summary>
@@ -84,6 +96,12 @@ public sealed record CreditSubject(
         return CreditReplay.CreditedTransition(activity)?.OccurredOn ?? activity.UpdatedOn;
     }
 }
+
+/// <summary>
+/// A programme end a request is recording and has not yet saved (T281): the profile it is recorded on, and the last day.
+/// See <see cref="CreditSubject.PendingEnd" />.
+/// </summary>
+public sealed record PendingProgrammeEnd(int TraineeProfileId, DateOnly EndedOn);
 
 /// <summary>One curriculum item a completion will credit, decided with every read already done.</summary>
 public sealed record PlannedCredit(int CurriculumItemId, int Amount, LevelComparison Comparison, int? ItemScaleId);
@@ -136,8 +154,9 @@ public interface ICreditApplier
 
     /// <summary>
     /// <see cref="PlanAsync" /> then <see cref="Apply" />, for an activity that has already been transitioned
-    /// and stamped: the rebuild's replay, and tests. The live transition path calls the two halves separately,
-    /// with the transition in between.
+    /// and stamped, credited as <see cref="CreditSubject.Of" /> describes it. The live transition path calls the two
+    /// halves separately, with the transition in between, and so does the rebuild's replay, which may add a pending end
+    /// to the subject (T281).
     /// </summary>
     Task<CreditApplicationResult> ApplyAsync(
         Activity completedActivity,

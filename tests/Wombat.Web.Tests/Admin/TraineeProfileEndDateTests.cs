@@ -56,7 +56,9 @@ public sealed class TraineeProfileEndDateTests : TestContext
             .Contain("Mark complete records it as the graduation day").And
             .Contain("Deactivate records it as the day the trainee left without completing").And
             .Contain("It cannot be after today, and it cannot be changed afterwards").And
-            .Contain("the period it falls in holds no target unless it is in that period's last month");
+            .Contain("the period it falls in holds no target unless it is in that period's last month").And
+            .Contain("encounters observed after it count towards nothing in this programme, even those already counted",
+                "recording the day takes back credit given for encounters after it (T281), and the day cannot be changed");
 
         PageButton(cut, "Deactivate").GetAttribute("aria-describedby").Should().Be("programme-end-date-help");
         PageButton(cut, "Mark complete").GetAttribute("aria-describedby").Should().Be("programme-end-date-help");
@@ -88,6 +90,7 @@ public sealed class TraineeProfileEndDateTests : TestContext
         sender.Commands.Should().BeEmpty("opening the dialog must not deactivate the profile");
         Text(Dialog(cut, "Deactivate this trainee profile?")).Should()
             .Contain("Deactivate Lerato Molefe's profile, with 2026-05-31 as their last day in the programme?").And
+            .Contain("Encounters observed after that day will count towards nothing in this programme, including any already counted.").And
             .Contain("The day cannot be changed afterwards, and a deactivated profile cannot be made active again.");
         DialogButton(cut, "Deactivate this trainee profile?", "Deactivate").ClassList.Should().Contain("btn-danger");
 
@@ -108,6 +111,7 @@ public sealed class TraineeProfileEndDateTests : TestContext
         Text(Dialog(cut, "Mark this programme complete?")).Should()
             .Contain("Record 2026-09-20 as Lerato Molefe's graduation day?").And
             .Contain("the Trainee role is removed and a graduation email is sent").And
+            .Contain("Encounters observed after that day will count towards nothing in this programme, including any already counted.").And
             .Contain("this cannot be undone");
     }
 

@@ -293,23 +293,154 @@ public sealed class CreditPlannedBeforeTransitionTests
         (await verify.CurriculumItemProgresses.CountAsync()).Should().Be(0);
     }
 
+    [Fact]
+    public async Task TheCompletion_HoldsItsTrainee_AfterItsEpas_BeforeItPlans_AndCommitsAfterItsSave()
+    {
+        // T281. The plan reads the trainee's programme end, so it must read under the trainee's hold, and the hold must last
+        // until the save has committed, or an end recorded in between neither sees this credit nor is seen by it.
+        // ProgrammeEndCreditRacePostgresTests drives the races themselves.
+        var options = NewDatabase();
+        await using var db = new ApplicationDbContext(options);
+        Seed(db);
+
+        var events = new List<string>();
+        var service = Service(
+            db,
+            new RecordingPlanner(new CreditApplier(db), db, events),
+            epaCreditLock: new RecordingLock(db, events),
+            traineeCreditLock: new RecordingTraineeLock(db, events));
+        var principal = Principal("trainee-1");
+
+        var draft = await service.CreateDraftAsync(
+            new CreateActivityInput(ActivityTypeId, "trainee-1", "trainee-1", DataObservedOn("2026-03-10"), principal),
+            CancellationToken.None);
+
+        await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "submit", "trainee-1", principal, null, null),
+            CancellationToken.None);
+
+        events.Should().Equal(
+            ["hold []", "hold trainees []", "commit (saved: True)", "commit trainees (saved: True)"],
+            "a move that credits nothing holds nothing");
+        events.Clear();
+
+        await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "complete", "trainee-1", principal, null, null),
+            CancellationToken.None);
+
+        events.Should().Equal(
+            [$"hold [{CreditedEpaId}]", "hold trainees [trainee-1]", "plan", "commit (saved: True)", "commit trainees (saved: True)"]);
+    }
+
+    [Fact]
+    public async Task AFailureTakingTheTraineeHold_LeavesTheActivityUntransitioned_WithNothingForTheAuditSaveToCommit()
+    {
+        // T281. Taken among the reads, before the first mutation, as the EPA hold is (TraineeCreditLock.CreditBusy on
+        // PostgreSQL when an end holds the profile past the command timeout).
+        var options = NewDatabase();
+        await using var db = new ApplicationDbContext(options);
+        Seed(db);
+
+        var service = Service(db, new CreditApplier(db), traineeCreditLock: new FailingTraineeLock());
+        var principal = Principal("trainee-1");
+
+        var draft = await service.CreateDraftAsync(
+            new CreateActivityInput(ActivityTypeId, "trainee-1", "trainee-1", DataObservedOn("2026-03-10"), principal),
+            CancellationToken.None);
+
+        var submit = async () => await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "submit", "trainee-1", principal, null, null),
+            CancellationToken.None);
+        await submit.Should().NotThrowAsync("guard: a move that credits nothing asks for no trainee");
+
+        var complete = async () => await service.TransitionAsync(
+            new TransitionActivityInput(draft.Id, "complete", "trainee-1", principal, """{ "observed_on": "2026-08-01" }""", null),
+            CancellationToken.None);
+
+        await complete.Should().ThrowAsync<InvalidOperationException>().WithMessage("*induced*");
+
+        db.ChangeTracker.Entries()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Should().BeEmpty("the audit pipeline's catch saves this context, so anything dirty here would be committed");
+        (await db.SaveChangesAsync()).Should().Be(0);
+
+        await using var verify = new ApplicationDbContext(options);
+        var stored = await verify.Activities.Include(entity => entity.Transitions).SingleAsync(entity => entity.Id == draft.Id);
+        (stored.CurrentState, stored.ObservedOn).Should().Be(("submitted", new DateOnly(2026, 3, 10)));
+        stored.Transitions.Should().HaveCount(2);
+        (await verify.CurriculumItemProgresses.CountAsync()).Should().Be(0);
+    }
+
     private static ActivityService Service(
-        ApplicationDbContext db, ICreditApplier creditApplier, TimeProvider? clock = null, IEpaCreditLock? epaCreditLock = null)
-        => new(db, new SchemaValidator(), new WorkflowEvaluator(), creditApplier, new FieldPermissionEvaluator(), clock, epaCreditLock);
+        ApplicationDbContext db,
+        ICreditApplier creditApplier,
+        TimeProvider? clock = null,
+        IEpaCreditLock? epaCreditLock = null,
+        ITraineeCreditLock? traineeCreditLock = null)
+        => new(db, new SchemaValidator(), new WorkflowEvaluator(), creditApplier, new FieldPermissionEvaluator(), clock, epaCreditLock, traineeCreditLock);
+
+    /// <summary>Writes down which trainees it is asked to hold, and whether the save had gone through when it was committed.</summary>
+    private sealed class RecordingTraineeLock(ApplicationDbContext db, List<string> events) : ITraineeCreditLock
+    {
+        public Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
+            => throw new NotSupportedException("A completion never holds a profile for an end.");
+
+        public Task<ICreditHold> HoldForCreditAsync(IReadOnlyCollection<string> traineeUserIds, CancellationToken cancellationToken)
+        {
+            events.Add($"hold trainees [{string.Join(", ", traineeUserIds)}]");
+            return Task.FromResult<ICreditHold>(new Hold(db, events));
+        }
+
+        private sealed class Hold(ApplicationDbContext db, List<string> events) : ICreditHold
+        {
+            public Task CommitAsync(CancellationToken cancellationToken)
+            {
+                events.Add($"commit trainees (saved: {!db.ChangeTracker.HasChanges()})");
+                return Task.CompletedTask;
+            }
+
+            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        }
+    }
+
+    /// <summary>A trainee hold that cannot be had.</summary>
+    private sealed class FailingTraineeLock : ITraineeCreditLock
+    {
+        public Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public async Task<ICreditHold> HoldForCreditAsync(IReadOnlyCollection<string> traineeUserIds, CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            if (traineeUserIds.Count == 0)
+            {
+                return new NothingHeld();
+            }
+
+            throw new InvalidOperationException("induced failure while taking the trainee hold");
+        }
+
+        private sealed class NothingHeld : ICreditHold
+        {
+            public Task CommitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        }
+    }
 
     /// <summary>Writes down what it is asked to hold, and whether the save had gone through when it was committed.</summary>
     private sealed class RecordingLock(ApplicationDbContext db, List<string> events) : IEpaCreditLock
     {
-        public Task<IEpaCreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken)
+        public Task<ICreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken)
             => throw new NotSupportedException("A completion never holds an EPA for a change.");
 
-        public Task<IEpaCreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken)
+        public Task<ICreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken)
         {
             events.Add($"hold [{string.Join(", ", epaIds)}]");
-            return Task.FromResult<IEpaCreditHold>(new Hold(db, events));
+            return Task.FromResult<ICreditHold>(new Hold(db, events));
         }
 
-        private sealed class Hold(ApplicationDbContext db, List<string> events) : IEpaCreditHold
+        private sealed class Hold(ApplicationDbContext db, List<string> events) : ICreditHold
         {
             public Task CommitAsync(CancellationToken cancellationToken)
             {
@@ -324,10 +455,10 @@ public sealed class CreditPlannedBeforeTransitionTests
     /// <summary>A lock that cannot be had.</summary>
     private sealed class FailingLock : IEpaCreditLock
     {
-        public Task<IEpaCreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken)
+        public Task<ICreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken)
             => throw new NotSupportedException();
 
-        public async Task<IEpaCreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken)
+        public async Task<ICreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken)
         {
             await Task.Yield();
             if (epaIds.Count == 0)
@@ -338,7 +469,7 @@ public sealed class CreditPlannedBeforeTransitionTests
             throw new InvalidOperationException("induced failure while taking the EPA hold");
         }
 
-        private sealed class NothingHeld : IEpaCreditHold
+        private sealed class NothingHeld : ICreditHold
         {
             public Task CommitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 

@@ -29,6 +29,7 @@ public sealed class ActivityService : IActivityService
     private readonly IFieldPermissionEvaluator _fieldPermissionEvaluator;
     private readonly TimeProvider _timeProvider;
     private readonly IEpaCreditLock _epaCreditLock;
+    private readonly ITraineeCreditLock _traineeCreditLock;
 
     /// <param name="timeProvider">
     /// The clock every write takes its instant from, and so the South African "today" the encounter date is judged
@@ -39,6 +40,10 @@ public sealed class ActivityService : IActivityService
     /// gets the real lock on <paramref name="dbContext" />, never one that does nothing: it already does nothing on any
     /// provider but PostgreSQL.
     /// </param>
+    /// <param name="traineeCreditLock">
+    /// Holds the trainee a completion's credit judges until its save commits, against the recording of their programme's
+    /// end (T281). Optional on the same terms as <paramref name="epaCreditLock" />.
+    /// </param>
     public ActivityService(
         IApplicationDbContext dbContext,
         ISchemaValidator schemaValidator,
@@ -46,7 +51,8 @@ public sealed class ActivityService : IActivityService
         ICreditApplier creditApplier,
         IFieldPermissionEvaluator fieldPermissionEvaluator,
         TimeProvider? timeProvider = null,
-        IEpaCreditLock? epaCreditLock = null)
+        IEpaCreditLock? epaCreditLock = null,
+        ITraineeCreditLock? traineeCreditLock = null)
     {
         _dbContext = dbContext;
         _schemaValidator = schemaValidator;
@@ -55,6 +61,7 @@ public sealed class ActivityService : IActivityService
         _fieldPermissionEvaluator = fieldPermissionEvaluator;
         _timeProvider = timeProvider ?? TimeProvider.System;
         _epaCreditLock = epaCreditLock ?? new EpaCreditLock(dbContext);
+        _traineeCreditLock = traineeCreditLock ?? new TraineeCreditLock(dbContext);
     }
 
     private DateTime UtcNow() => _timeProvider.GetUtcNow().UtcDateTime;
@@ -486,6 +493,13 @@ public sealed class ActivityService : IActivityService
         // and one disposed on the way out rolls back and leaves no transaction open for that catch to write into.
         await using var epaHold = await HoldEpasCreditJudgesAsync(creditSubject, version, cancellationToken);
 
+        // T281. Likewise the trainee, whose programme end the plan reads (an encounter after the last day credits nothing),
+        // held shared until the save below commits, so the end cannot be recorded in between: an end in flight is waited
+        // for and read, and one recorded after this waits for this save and takes back what it credited. After the EPAs,
+        // in the same transaction; still among the reads, before the first mutation.
+        await using var traineeHold = await _traineeCreditLock.HoldForCreditAsync(
+            creditSubject is null ? [] : [creditSubject.SubjectUserId], cancellationToken);
+
         var creditPlan = creditSubject is null ? null : await PlanCreditAsync(creditSubject, version, cancellationToken);
 
         // T137. Resolved here, with the other reads, and assigned below with the date stamp. It reads the MERGED data,
@@ -515,7 +529,10 @@ public sealed class ActivityService : IActivityService
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // One of the two holds owns the transaction and the other joined it (ICreditHold), so committing both commits it once.
         await epaHold.CommitAsync(cancellationToken);
+        await traineeHold.CommitAsync(cancellationToken);
         return Map(activity);
     }
 
@@ -571,7 +588,7 @@ public sealed class ActivityService : IActivityService
     /// The EPAs are those of every item the directives match, in force or not (<c>CreditTargetResolver.EpasJudgedAsync</c>),
     /// read before the lock: the lock is on the EPA row, and what the plan reads after it is whether the EPA is in force.
     /// </remarks>
-    private async Task<IEpaCreditHold> HoldEpasCreditJudgesAsync(
+    private async Task<ICreditHold> HoldEpasCreditJudgesAsync(
         CreditSubject? subject,
         ActivityTypeVersion version,
         CancellationToken cancellationToken)

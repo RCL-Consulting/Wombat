@@ -51,6 +51,29 @@ public sealed class TraineeProfile
     /// </summary>
     public DateOnly? EndedOn => CompletedOn ?? DeactivatedOn;
 
+    /// <summary>
+    /// Whether <paramref name="day" /> is after the programme's last day (<see cref="EndedOn" />), and so outside it (T281).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The one rule for what an ended programme counts. An encounter observed after the last day credits nothing on this
+    /// profile (<c>CreditApplier</c>, live and in every replay), and a multi-source feedback campaign that closed after it
+    /// covers nothing on the profile's progress page. It is the end-side mirror of the programme-start bound (T160) and of
+    /// D49, which puts the periods after the end outside the programme. The last day itself is inside it.
+    /// </para>
+    /// <para>
+    /// False while the programme runs, and for a profile deactivated before Wombat recorded the day (T209): with no end
+    /// recorded, nothing is after it. Total for any dates, as every reader of <see cref="EndedOn" /> is: an erased profile
+    /// may record an end before its start (<see cref="Erase" />).
+    /// </para>
+    /// </remarks>
+    public bool IsAfterEnd(DateOnly day) => IsAfterEnd(EndedOn, day);
+
+    /// <inheritdoc cref="IsAfterEnd(DateOnly)" />
+    /// <param name="endedOn">The profile's <see cref="EndedOn" />, for a reader that projected it rather than loading the profile.</param>
+    /// <param name="day">The day judged: an encounter date, or the day a campaign closed.</param>
+    public static bool IsAfterEnd(DateOnly? endedOn, DateOnly day) => endedOn is { } ended && day > ended;
+
     public Curriculum Curriculum { get; set; } = null!;
 
     /// <summary>

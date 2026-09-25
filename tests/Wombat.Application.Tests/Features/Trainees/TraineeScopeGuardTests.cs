@@ -7,6 +7,7 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Trainees;
@@ -103,7 +104,7 @@ public sealed class TraineeScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task DeactivateTraineeProfile_InstitutionalAdmin_RejectsOtherInstitution()
     {
-        var handler = new DeactivateTraineeProfileCommandHandler(_db);
+        var handler = new DeactivateTraineeProfileCommandHandler(_db, new CreditApplier(_db), new TraineeCreditLock(_db));
         var act = () => handler.Handle(
             new DeactivateTraineeProfileCommand(_institutionBProfileId, new DateOnly(2026, 5, 31), TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);

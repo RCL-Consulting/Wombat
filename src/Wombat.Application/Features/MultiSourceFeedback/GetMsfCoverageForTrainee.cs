@@ -7,6 +7,7 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
@@ -46,6 +47,15 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// and not <see cref="MsfCampaign.ReleasedOn" />: a campaign that closed on 28 June and was released on 5 July is
 /// semester 1's evidence. The semesters are [T130]'s <see cref="AcademicPeriod" />, the national calendar every quota
 /// is bucketed on.
+/// </para>
+/// <para>
+/// <b>Not after the programme ended.</b> A campaign that closed after the profile's last day (<see cref="TraineeProfile.EndedOn" />)
+/// covers nothing (T281), as an encounter observed after it credits nothing: <see cref="TraineeProfile.IsAfterEnd(DateOnly?, DateOnly)" />,
+/// on the day it closed. So an ended programme's card counts only what closed by its last day, and a semester the
+/// programme ended in part-way shows only the part inside it. That day is the UTC day, as for the semester above, while the
+/// last day is on the South African calendar: a campaign that closed between midnight and 02:00 in South Africa on the day
+/// after the end counts as inside it, as it counts in the semester its UTC day falls in. Kept, so a campaign's day is one
+/// day for every reader (T281 review).
 /// </para>
 /// <para>
 /// <b>Who may ask:</b> the trainee themselves, a global Administrator, or someone who oversees the trainee's programme
@@ -130,7 +140,14 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
         var profile = await TraineeScopeResolver.PreferredProfiles(_dbContext)
             .AsNoTracking()
             .Where(entity => entity.UserId == traineeUserId)
-            .Select(entity => new { entity.CurriculumId, entity.InstitutionId, entity.ProgrammeStartDate })
+            .Select(entity => new
+            {
+                entity.CurriculumId,
+                entity.InstitutionId,
+                entity.ProgrammeStartDate,
+                // TraineeProfile.EndedOn, which is not mapped: completion, else withdrawal.
+                EndedOn = entity.CompletedOn ?? entity.DeactivatedOn
+            })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (profile is null)
@@ -166,9 +183,13 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
             ? []
             : await MsfSemesterCoverage.ReadAsync(_dbContext, [traineeUserId], periods, cancellationToken);
 
+        // A campaign that closed after the programme's last day covers nothing on this profile (T281), as an encounter after
+        // it credits nothing: the one rule both read (TraineeProfile.IsAfterEnd). Judged on the day the campaign closed,
+        // which is the day its evidence is dated and the semester it is bucketed in.
         var onCurriculum = epaIds.ToHashSet();
         var campaignsByEpaAndPeriod = covered
             .Where(entry => onCurriculum.Contains(entry.EpaId))
+            .Where(entry => !TraineeProfile.IsAfterEnd(profile.EndedOn, entry.Campaign.ClosedOn))
             .GroupBy(entry => (entry.EpaId, entry.Period))
             .ToDictionary(
                 group => group.Key,

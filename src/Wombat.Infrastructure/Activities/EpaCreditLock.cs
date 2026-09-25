@@ -1,8 +1,5 @@
-using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
-using Npgsql;
 using Wombat.Application.Common.Interfaces;
 
 namespace Wombat.Infrastructure.Activities;
@@ -39,7 +36,8 @@ namespace Wombat.Infrastructure.Activities;
 /// </para>
 /// <para>
 /// A context that already has a transaction open is joined: the lock is taken in it, and the hold returned does
-/// nothing, because the transaction's owner commits it. Nothing in the product opens one today.
+/// nothing, because the transaction's owner commits it. The plumbing is <see cref="CreditHolds" />, shared with
+/// <see cref="TraineeCreditLock" /> (T281), whose hold joins this one's on the completion's path and the reactivation's.
 /// </para>
 /// </remarks>
 public sealed class EpaCreditLock : IEpaCreditLock
@@ -65,7 +63,7 @@ public sealed class EpaCreditLock : IEpaCreditLock
     public const string CreditBusy =
         "An EPA this activity counts towards is being changed right now, so nothing was saved. Try again in a moment.";
 
-    public Task<IEpaCreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken)
+    public Task<ICreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken)
         => HoldAsync(
             database => database.ExecuteSqlInterpolatedAsync(
                 $"SELECT 1 FROM \"Epas\" WHERE \"Id\" = {epaId} FOR NO KEY UPDATE",
@@ -73,12 +71,12 @@ public sealed class EpaCreditLock : IEpaCreditLock
             ChangeBusy,
             cancellationToken);
 
-    public Task<IEpaCreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken)
+    public Task<ICreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(epaIds);
         if (epaIds.Count == 0)
         {
-            return Task.FromResult(Held.Nothing);
+            return Task.FromResult(CreditHolds.Nothing);
         }
 
         // In id order, so two holders of several EPAs take them in the same order. The lock node sits above the sort,
@@ -92,70 +90,9 @@ public sealed class EpaCreditLock : IEpaCreditLock
             cancellationToken);
     }
 
-    private async Task<IEpaCreditHold> HoldAsync(
+    private Task<ICreditHold> HoldAsync(
         Func<DatabaseFacade, Task<int>> takeLock,
         string busy,
         CancellationToken cancellationToken)
-    {
-        if (_dbContext is null || !_dbContext.Database.IsNpgsql())
-        {
-            return Held.Nothing;
-        }
-
-        var database = _dbContext.Database;
-        if (database.CurrentTransaction is not null)
-        {
-            await TakeAsync(takeLock, database, busy);
-            return Held.Nothing;
-        }
-
-        var transaction = await database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
-        try
-        {
-            await TakeAsync(takeLock, database, busy);
-        }
-        catch
-        {
-            await transaction.DisposeAsync();
-            throw;
-        }
-
-        return new Held(transaction);
-    }
-
-    /// <summary>
-    /// Takes the lock, and turns giving up on it into a refusal the pages can show: they print an exception's message, and
-    /// Npgsql's for a command timeout is "Exception while reading from stream".
-    /// </summary>
-    private static async Task TakeAsync(Func<DatabaseFacade, Task<int>> takeLock, DatabaseFacade database, string busy)
-    {
-        try
-        {
-            await takeLock(database);
-        }
-        catch (NpgsqlException exception) when (GaveUpWaiting(exception))
-        {
-            throw new InvalidOperationException(busy, exception);
-        }
-    }
-
-    /// <summary>
-    /// The command timeout ran out (Npgsql cancels the statement and reports a <see cref="TimeoutException" />), or the
-    /// server's <c>lock_timeout</c> or <c>statement_timeout</c> did. A cancellation the caller asked for is not this:
-    /// Npgsql reports it as an <see cref="OperationCanceledException" />.
-    /// </summary>
-    private static bool GaveUpWaiting(NpgsqlException exception)
-        => exception.InnerException is TimeoutException
-           || exception is PostgresException { SqlState: PostgresErrorCodes.LockNotAvailable or PostgresErrorCodes.QueryCanceled };
-
-    private sealed class Held(IDbContextTransaction? transaction) : IEpaCreditHold
-    {
-        public static IEpaCreditHold Nothing { get; } = new Held(null);
-
-        public Task CommitAsync(CancellationToken cancellationToken)
-            => transaction is null ? Task.CompletedTask : transaction.CommitAsync(cancellationToken);
-
-        // Rolls back a transaction that was not committed, and does nothing the second time.
-        public ValueTask DisposeAsync() => transaction?.DisposeAsync() ?? ValueTask.CompletedTask;
-    }
+        => CreditHolds.HoldAsync(_dbContext, takeLock, busy, cancellationToken);
 }

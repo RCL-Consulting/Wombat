@@ -8,6 +8,7 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Trainees;
@@ -90,7 +91,7 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
 
     private static CompleteTraineeProfileCommandHandler Handler(
         ApplicationDbContext db, Mock<IUserAdministrationService> users, Mock<IEmailSender> email)
-        => new(db, users.Object, email.Object, new FixedClock(Now));
+        => new(db, users.Object, email.Object, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now));
 
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider
     {

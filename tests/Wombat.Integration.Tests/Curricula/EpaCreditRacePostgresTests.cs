@@ -306,7 +306,7 @@ public sealed class EpaCreditRacePostgresTests : IAsyncLifetime
 
         await using var db = NewContext(fixture, "deactivation", commandTimeoutSeconds: 1);
         Func<Task> deactivate = bySave
-            ? () => new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(DeactivatedAt))
+            ? () => new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(DeactivatedAt))
                 .Handle(command, CancellationToken.None)
             : () => new DeactivateEpaCommandHandler(db, new EpaCreditLock(db), new FixedClock(DeactivatedAt))
                 .Handle(new DeactivateEpaCommand(fixture.EpaId, Administrator()), CancellationToken.None);
@@ -380,7 +380,7 @@ public sealed class EpaCreditRacePostgresTests : IAsyncLifetime
         var command = await EditCommandAsync(fixture, isActive);
 
         await using var db = NewContext(fixture, connection, beforeSave);
-        return await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), clock)
+        return await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), clock)
             .Handle(command, CancellationToken.None);
     }
 

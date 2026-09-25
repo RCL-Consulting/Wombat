@@ -43,23 +43,12 @@ public interface IEpaCreditLock
     /// <c>Epa.Reactivate</c> takes it (<c>EpaPauseWritePathTests</c>).
     /// </summary>
     /// <exception cref="InvalidOperationException">The wait outlasted the command timeout; nothing was held.</exception>
-    Task<IEpaCreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken);
+    Task<ICreditHold> HoldForChangeAsync(int epaId, CancellationToken cancellationToken);
 
     /// <summary>
     /// For a completion's credit: holds the EPAs it judges shared until the returned hold is committed or disposed. Take
     /// it before reading whether they are in force. No EPAs, no hold.
     /// </summary>
     /// <exception cref="InvalidOperationException">The wait outlasted the command timeout; nothing was held.</exception>
-    Task<IEpaCreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken);
-}
-
-/// <summary>
-/// A held EPA lock: commit it after the caller's save. Disposing it without committing rolls back whatever was saved
-/// under it, which is what a request that throws needs: the audit pipeline's catch then writes into a context that has
-/// no transaction left open.
-/// </summary>
-public interface IEpaCreditHold : IAsyncDisposable
-{
-    /// <summary>Commits the save made under the hold, and releases the lock. A no-op for a hold that opened nothing.</summary>
-    Task CommitAsync(CancellationToken cancellationToken);
+    Task<ICreditHold> HoldForCreditAsync(IReadOnlyCollection<int> epaIds, CancellationToken cancellationToken);
 }

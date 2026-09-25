@@ -75,6 +75,23 @@ public sealed class CreditApplier : ICreditApplier
             return CreditPlan.Nothing;
         }
 
+        // An encounter observed after the programme's last day credits nothing on it (T281): the end-side mirror of the
+        // programme-start bound (T160) and of D49, which puts the periods after the end outside the programme. Here, in
+        // the plan, so the live completion, every replay (RebuildCurriculumProgress, the replay a completion or withdrawal
+        // runs, an EPA's reactivation) and the transition stamp all take it from one place. The stamp then reads zero,
+        // which is the activity page's "counted towards no curriculum requirement". The record is kept: the encounter
+        // happened, it just belongs to no programme this profile holds. Not refused at filing, as a date before the start
+        // is: the end can be recorded after the fact, on an activity already filed, and a refusal would land on an
+        // assessor who cannot change the date, or push the author to type a date that credits. The end is the stored one,
+        // unless this plan is the replay of a request recording the end on this very profile, which passes it (PendingEnd).
+        var endedOn = subject.PendingEnd is { } pending && pending.TraineeProfileId == trainee.ProfileId
+            ? pending.EndedOn
+            : trainee.EndedOn;
+        if (TraineeProfile.IsAfterEnd(endedOn, subject.ObservedOn))
+        {
+            return CreditPlan.Nothing;
+        }
+
         // The ladder an achieved ordinal sits on is declared by the `scale_key` of the schema field the
         // directive names, and the schema here is the one the activity is PINNED to — so this answer is
         // fixed for the life of the activity and replays identically under RebuildCurriculumProgress (T109).

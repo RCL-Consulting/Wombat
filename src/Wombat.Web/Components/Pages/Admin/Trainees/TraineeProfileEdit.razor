@@ -134,7 +134,8 @@
   private const string EndDateHelp =
     "Mark complete records it as the graduation day, archives the profile and removes the Trainee role. Deactivate " +
     "records it as the day the trainee left without completing. It cannot be after today, and it cannot be changed " +
-    "afterwards. Either way, the period it falls in holds no target unless it is in that period's last month.";
+    "afterwards. Either way, the period it falls in holds no target unless it is in that period's last month, and " +
+    "encounters observed after it count towards nothing in this programme, even those already counted.";
 
   /// <summary>The id of the refusal alert, which the last-day field names after Deactivate or Mark complete is refused.</summary>
   private const string EndRefusalId = "programme-end-refusal";
@@ -302,15 +303,21 @@
     }
   }
 
+  // Each names what the day does that cannot be undone (T281 review, DESIGN.md § Button system): encounters observed after
+  // it stop counting, including any already counted, and neither the day nor the profile can be changed back.
+  private const string AfterTheDay =
+    " Encounters observed after that day will count towards nothing in this programme, including any already counted.";
+
   private string DeactivateBody => _model is null
     ? string.Empty
-    : $"Deactivate {_model.FullName}'s profile, with {_model.EndDate:yyyy-MM-dd} as their last day in the programme? " +
-      "The day cannot be changed afterwards, and a deactivated profile cannot be made active again.";
+    : $"Deactivate {_model.FullName}'s profile, with {_model.EndDate:yyyy-MM-dd} as their last day in the programme?" +
+      AfterTheDay + " The day cannot be changed afterwards, and a deactivated profile cannot be made active again.";
 
   private string CompleteBody => _model is null
     ? string.Empty
     : $"Record {_model.EndDate:yyyy-MM-dd} as {_model.FullName}'s graduation day? The profile is archived, the Trainee " +
-      "role is removed and a graduation email is sent. The day cannot be changed afterwards, and this cannot be undone.";
+      "role is removed and a graduation email is sent." + AfterTheDay +
+      " The day cannot be changed afterwards, and this cannot be undone.";
 
   private async Task AskAsync(ConfirmDialog? dialog)
   {

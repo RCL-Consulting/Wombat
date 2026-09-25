@@ -50,17 +50,20 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
     private readonly IApplicationDbContext _dbContext;
     private readonly ICreditApplier _creditApplier;
     private readonly IEpaCreditLock _epaCreditLock;
+    private readonly ITraineeCreditLock _traineeCreditLock;
     private readonly TimeProvider _timeProvider;
 
     public UpdateEpaCommandHandler(
         IApplicationDbContext dbContext,
         ICreditApplier creditApplier,
         IEpaCreditLock epaCreditLock,
+        ITraineeCreditLock traineeCreditLock,
         TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _creditApplier = creditApplier;
         _epaCreditLock = epaCreditLock;
+        _traineeCreditLock = traineeCreditLock;
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
@@ -122,13 +125,22 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
         // before the first mutation below, because the audit pipeline's catch saves this request's DbContext: a failure
         // after the reactivation would otherwise commit it without the credit it owes. The rows are confined to the
         // pause and reach no caller; only a count comes back (ActivityReadBoundaryTests.ScopeExemptHandlers).
-        ResumedEpaCredit? resumedCredit = null;
-        if (request.IsActive && !epa.IsActive)
-        {
-            var candidates = await ResumedEpaCredit.LoadCandidatesAsync(
-                _dbContext.Set<Activity>(), _dbContext.Set<ActivityTypeVersion>(), epa.DeactivatedOn, cancellationToken);
-            resumedCredit = await ResumedEpaCredit.PlanAsync(_creditApplier, epa, candidates, cancellationToken);
-        }
+        var reactivating = request.IsActive && !epa.IsActive;
+        var candidates = reactivating
+            ? await ResumedEpaCredit.LoadCandidatesAsync(
+                _dbContext.Set<Activity>(), _dbContext.Set<ActivityTypeVersion>(), epa.DeactivatedOn, cancellationToken)
+            : [];
+
+        // T281. The plans read each candidate's trainee, whose programme end they judge the encounter against, so those
+        // trainees are held shared until the save below commits, in the EPA hold's transaction: an end in flight for one
+        // of them is waited for and read, and one recorded after this waits for this save and takes back what it credited
+        // after the last day. Before the plans, among the reads.
+        await using var traineeHold = await _traineeCreditLock.HoldForCreditAsync(
+            candidates.Select(activity => activity.SubjectUserId).Distinct(StringComparer.Ordinal).ToList(), cancellationToken);
+
+        var resumedCredit = reactivating
+            ? await ResumedEpaCredit.PlanAsync(_creditApplier, epa, candidates, cancellationToken)
+            : null;
 
         epa.SubSpecialityId = request.SubSpecialityId;
         epa.Code = request.Code.Trim();
@@ -179,7 +191,9 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             throw new InvalidOperationException(ProgressChanged, exception);
         }
 
+        // The trainee hold joined the EPA hold's transaction (ICreditHold), so committing both commits it once.
         await hold.CommitAsync(cancellationToken);
+        await traineeHold.CommitAsync(cancellationToken);
 
         return new UpdateEpaResult(
             new EpaDto(epa.Id, epa.SubSpecialityId, subSpeciality.Name, subSpeciality.CollegeName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn),

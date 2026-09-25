@@ -60,6 +60,12 @@ public class ActivityReadBoundaryTests
         ["Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress.RebuildCurriculumProgressCommandHandler"] =
             "Replays every activity to rebuild curriculum credit. Returns a count; no activity row reaches a caller.",
 
+        ["Wombat.Application.Features.Trainees.CompleteTraineeProfileCommandHandler"] =
+            "Recording the completion day takes back credit earned by encounters after it (T281): reads one trainee's credited activities' encounter dates, then replays that trainee's credit as the rebuild does (ProgrammeEndCredit), after the institution scope check (CanAccessInstitution on the profile). The replay is the rebuild's for one trainee: it re-scores their whole history against today's curriculum and re-stamps their completions wherever they were filed, other institutions included, and runs only when the end takes credit back. Returns nothing; no activity row reaches a caller.",
+
+        ["Wombat.Application.Features.Trainees.DeactivateTraineeProfileCommandHandler"] =
+            "Recording the last day takes back credit earned by encounters after it (T281): reads one trainee's credited activities' encounter dates, then replays that trainee's credit as the rebuild does (ProgrammeEndCredit), after the institution scope check (CanAccessInstitution on the profile). The replay is the rebuild's for one trainee: it re-scores their whole history against today's curriculum and re-stamps their completions wherever they were filed, other institutions included, and runs only when the end takes credit back. Returns nothing; no activity row reaches a caller.",
+
         ["Wombat.Application.Features.Epas.UpdateEpaCommandHandler"] =
             "Reactivating an EPA credits the completions filed while it was inactive (T196, D48), as the rebuild would. Reads activities only on reactivation, after the EPA-owner check (CollegeAdmin or owning InstitutionalAdmin), and only completions that could hold paused credit: pinned to rules that credit, in a terminal state, with a transition since the pause began (ResumedEpaCredit.LoadCandidatesAsync). Returns the EPA and a count; no activity row reaches a caller.",
 

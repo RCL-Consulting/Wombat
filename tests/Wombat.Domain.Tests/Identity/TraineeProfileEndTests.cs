@@ -115,4 +115,42 @@ public sealed class TraineeProfileEndTests
 
         Assert.Null(profile.EndedOn);
     }
+
+    // ---- T281: what is after the end ----------------------------------------------------------------------------------
+
+    [Fact]
+    public void ADayAfterTheLastDay_IsAfterTheEnd_AndTheLastDayItselfIsNot()
+    {
+        // An encounter after the last day credits nothing on the profile (T281). The last day is inside the programme.
+        var profile = ActiveProfile();
+        profile.Deactivate(new DateOnly(2026, 8, 20), Today);
+
+        Assert.True(profile.IsAfterEnd(new DateOnly(2026, 8, 21)));
+        Assert.False(profile.IsAfterEnd(new DateOnly(2026, 8, 20)));
+        Assert.False(profile.IsAfterEnd(new DateOnly(2026, 8, 10)));
+    }
+
+    [Fact]
+    public void AGraduatesEnd_IsTheCompletionDay_ForWhatIsAfterIt()
+    {
+        var profile = ActiveProfile();
+        profile.Complete(new DateOnly(2026, 11, 20), Today);
+
+        Assert.True(profile.IsAfterEnd(new DateOnly(2026, 11, 21)));
+        Assert.False(profile.IsAfterEnd(new DateOnly(2026, 11, 20)));
+    }
+
+    [Fact]
+    public void NothingIsAfterTheEnd_OfARunningProgramme_OrOneWhoseEndWasNeverRecorded()
+    {
+        // A running programme has no end; nor has one deactivated before T209 recorded the day, so nothing is judged
+        // after it.
+        var running = ActiveProfile();
+        var unrecorded = ActiveProfile();
+        unrecorded.IsActive = false;
+
+        Assert.False(running.IsAfterEnd(new DateOnly(2030, 1, 1)));
+        Assert.False(unrecorded.IsAfterEnd(new DateOnly(2030, 1, 1)));
+        Assert.False(TraineeProfile.IsAfterEnd(null, new DateOnly(2030, 1, 1)));
+    }
 }

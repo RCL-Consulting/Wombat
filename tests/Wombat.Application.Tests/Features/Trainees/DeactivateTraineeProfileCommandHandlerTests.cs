@@ -5,6 +5,7 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Trainees;
@@ -117,7 +118,7 @@ public sealed class DeactivateTraineeProfileCommandHandlerTests
         await AssertStillActiveAfterTheAuditSave(db);
     }
 
-    private static DeactivateTraineeProfileCommandHandler Handler(ApplicationDbContext db) => new(db, new FixedClock(Now));
+    private static DeactivateTraineeProfileCommandHandler Handler(ApplicationDbContext db) => new(db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now));
 
     /// <summary>What the audit pipeline does after a throw: save the request's context. Nothing may have changed.</summary>
     private static async Task AssertStillActiveAfterTheAuditSave(ApplicationDbContext db)

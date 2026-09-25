@@ -4,17 +4,20 @@ using System.Xml.Linq;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
+using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
 using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Reporting;
+using Wombat.Application.Features.Trainees;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Reporting;
@@ -276,6 +279,39 @@ public sealed class PortfolioEpaProgressTests
 
         // A later export window still reads the last day, never a period after it.
         (await LoadAsync(db, toDate: new DateOnly(2027, 3, 1))).EpaProgress.AsOf.Should().Be(new DateOnly(2026, 8, 20));
+    }
+
+    [Fact]
+    public async Task TheEpaSection_ForALastDayRecordedAfterTheFact_CountsOnlyTheEncountersUpToIt()
+    {
+        // T281, as the lifecycle check found it (T252): the last day is recorded weeks after it, by which time encounters
+        // after it had credited semester 2. They credit nothing on the ended programme, so recording the day takes their
+        // credit back, and the export counts only what was observed up to it. The tallies here are the Mini-CEXes' own
+        // credit, not the fixture's hand-written rows.
+        await using var db = SeededDb();
+        db.CurriculumItemProgresses.RemoveRange(db.CurriculumItemProgresses);
+        var miniCex = db.ActivityTypes.Single(type => type.Key == "mini_cex_cpsa");
+        AddCompletedMiniCex(db, 120, miniCex, new DateOnly(2026, 8, 5));
+        AddCompletedMiniCex(db, 121, miniCex, new DateOnly(2026, 9, 10));
+        Save(db);
+
+        await new RebuildCurriculumProgressCommandHandler(db, new CreditApplier(db))
+            .Handle(new RebuildCurriculumProgressCommand(Administrator(), Trainee), CancellationToken.None);
+        db.ChangeTracker.Clear();
+        (await LoadAsync(db)).EpaProgress.Rows.Single(row => row.EpaCode == "PAED-001").Periods[0].Count
+            .Should().Be(3, "guard: while the programme runs, the Mini-CEXes of 5 August, 12 August and 10 September count");
+
+        await new DeactivateTraineeProfileCommandHandler(db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now))
+            .Handle(new DeactivateTraineeProfileCommand(1, new DateOnly(2026, 8, 8), Administrator()), CancellationToken.None);
+        db.ChangeTracker.Clear();
+
+        var progress = (await LoadAsync(db)).EpaProgress;
+        progress.AsOf.Should().Be(new DateOnly(2026, 8, 8));
+        var semester = progress.Rows.Single(row => row.EpaCode == "PAED-001").Periods[0];
+        semester.Name.Should().Be("Semester 2, 2026");
+        semester.Count.Should().Be(1, "only the encounter of 5 August is inside the programme");
+        EpaProgressSectionComponent.PeriodLine(semester, progress.Today, progress.Programme.IsActive)
+            .Should().Be("no target (the programme ended part-way through), 1 recorded");
     }
 
     [Fact]
@@ -891,6 +927,27 @@ public sealed class PortfolioEpaProgressTests
                 { "epa_id": {{epaId}}, "assessor_user_id": "{{assessor}}", "observed_on": "{{observedOn:yyyy-MM-dd}}",
                   "overall_level": {{rating}} }
                 """);
+
+    /// <summary>A Mini-CEX filed and completed two days after its encounter, with the history credit is recorded against.</summary>
+    private static void AddCompletedMiniCex(ApplicationDbContext db, int id, ActivityType type, DateOnly observedOn)
+    {
+        AddRated(db, id, type, "completed", epaId: 1, "assessor-a", rating: 3, observedOn);
+        var activity = db.Activities.Local.Single(entity => entity.Id == id);
+        var filedOn = observedOn.AddDays(2).ToDateTime(new TimeOnly(9, 0), DateTimeKind.Utc);
+        activity.Transitions.Add(new ActivityTransition
+        {
+            ActivityId = id, FromState = "draft", ToState = "requested", TransitionKey = "submit",
+            ActorUserId = Trainee, OccurredOn = filedOn.AddMinutes(-5)
+        });
+        activity.Transitions.Add(new ActivityTransition
+        {
+            ActivityId = id, FromState = "requested", ToState = "completed", TransitionKey = "complete",
+            ActorUserId = "assessor-a", OccurredOn = filedOn
+        });
+    }
+
+    private static ClaimsPrincipal Administrator()
+        => new(new ClaimsIdentity([new Claim(ClaimTypes.Role, WombatRoles.Administrator)], "test"));
 
     private static void AddActivity(
         ApplicationDbContext db,

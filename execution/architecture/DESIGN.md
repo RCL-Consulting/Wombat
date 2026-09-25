@@ -318,7 +318,8 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   hold it (`Account/ChangePasswordPageTests`, `Portfolio/VerifyExportPageTests`).
 - A destructive action on a form page that acts on a field (the trainee profile's Deactivate and Mark complete, which
   each record the "Last day in the programme", T209 review) is an `.btn-outline` in the form's actions row whose
-  `ConfirmDialog` names the value it will record and says it cannot be changed afterwards. Its result goes to the page's
+  `ConfirmDialog` names the value it will record, what it does that cannot be undone (encounters observed after the day
+  count towards nothing, including any already counted: T281 review), and says it cannot be changed afterwards. Its result goes to the page's
   `.action-result` region, which takes the focus once it has answered, done or refused. A refusal's `Alert` has an `Id`
   that the field names with `aria-describedby` (after its help, `FieldHelp.DescribedBy`) while the refusal stands; a
   refusal of anything else on the page (Save) carries no such id, and the field does not name it. A date field bounded by

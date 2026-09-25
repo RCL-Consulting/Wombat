@@ -16,6 +16,7 @@ using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Dashboards.Trainee;
+using Wombat.Application.Features.Trainees;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
@@ -49,6 +50,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
 {
     private const string T130Migration = "20260923082939_T130_AcademicPeriodQuota";
     private const string T219Migration = "20260925031231_T219_LastEncounterDeclared";
+    private const string T281Migration = "20260925172953_T281_ProgressWithoutEncountersAfterTheEnd";
     private const string LastMigrationBeforeT130 = "20260921071752_T121_MsfEvidenceRecordedPerEpa";
     private const string NaturalKeyIndex = "UX_CurriculumItemProgresses_Item_Trainee_Period";
     private const string PaediatricCurriculumName = "Paediatric EPA Curriculum";
@@ -630,6 +632,129 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task RecordingALastDay_OnPostgres_TakesBackTheCreditOfEncountersAfterIt_InTheSameSave()
+    {
+        // T281 on the real provider. Two PAED-001 completions in semester 2, on 10 August and 10 September, credited while
+        // the programme runs. Then an administrator records 20 August as the trainee's last day, on 25 September. The
+        // withdrawal replays the trainee's credit against that day before its one save, under its hold on the profile: the
+        // replay is handed the end, which is not saved yet (PendingProgrammeEnd). So the September encounter leaves the
+        // tally and its completion says it credited nothing; the August one stays.
+        var fixture = await ArrangePaediatricTraineeAsync();
+
+        int inside, after;
+        await using (var db = NewContext(fixture.Schema))
+        {
+            inside = await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed001.EpaId, score: 4,
+                observedOn: new DateOnly(2026, 8, 10), filedOn: new DateTime(2026, 8, 12, 9, 0, 0, DateTimeKind.Utc));
+            after = await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed001.EpaId, score: 4,
+                observedOn: new DateOnly(2026, 9, 10), filedOn: new DateTime(2026, 9, 12, 9, 0, 0, DateTimeKind.Utc));
+        }
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            (await new RebuildCurriculumProgressCommandHandler(db, new CreditApplier(db))
+                .Handle(new RebuildCurriculumProgressCommand(Administrator()), CancellationToken.None))
+                .CreditApplications.Should().Be(2, "guard: while the programme runs, both credit");
+        }
+
+        int profileId;
+        await using (var db = NewContext(fixture.Schema))
+        {
+            profileId = await db.TraineeProfiles.Where(profile => profile.UserId == TraineeUserId).Select(profile => profile.Id).SingleAsync();
+            await new DeactivateTraineeProfileCommandHandler(
+                    db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(new DateTimeOffset(2026, 9, 25, 8, 0, 0, TimeSpan.Zero)))
+                .Handle(new DeactivateTraineeProfileCommand(profileId, new DateOnly(2026, 8, 20), Administrator()), CancellationToken.None);
+        }
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            (await db.TraineeProfiles.SingleAsync(profile => profile.Id == profileId)).DeactivatedOn.Should().Be(new DateOnly(2026, 8, 20));
+
+            (await SnapshotsAsync(db)).Should().Equal(
+                new ProgressSnapshot(fixture.Paed001.ItemId, TraineeUserId, 2026, 2, CountsSoFar: 1, MinimumLevelReachedCount: 1,
+                    ScaleMismatchCount: 0, UnverifiedLevelCount: 1, LastActivityId: inside,
+                    LastObservedOn: new DateOnly(2026, 8, 10), LastObservedOnDeclared: true, CreditedActivityKeys: Keys(inside)));
+
+            (await CompletionStampAsync(db, inside)).Should().Be(1);
+            (await CompletionStampAsync(db, after)).Should().Be(0);
+
+            // The ended progress page, read on the server.
+            var summary = await TraineeQuotaProgressReader.ReadAsync(db, TraineeUserId, new DateOnly(2026, 9, 25), CancellationToken.None);
+            var current = summary!.Items.Single(item => item.EpaCode == "PAED-001").Current;
+            (current.Name, current.EndedPartWay, current.Count, current.LastObservedOn)
+                .Should().Be(("Semester 2, 2026", true, 1, (DateOnly?)new DateOnly(2026, 8, 10)));
+        }
+    }
+
+    [Fact]
+    public async Task T281Migration_OnAPopulatedDatabase_EmptiesProgress_AndTheStartupRebuildLeavesOutEncountersAfterAnEnd()
+    {
+        // An end recorded before T281, so the September encounter still sits in the tally. The migration empties the
+        // table, and the startup bootstrapper refills it through the new rule. Rehearsed by stepping back over T281 (its
+        // Down is a no-op) and applying it again, on a database that holds that stale row.
+        var fixture = await ArrangePaediatricTraineeAsync();
+
+        int inside, after;
+        await using (var db = NewContext(fixture.Schema))
+        {
+            inside = await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed001.EpaId, score: 4,
+                observedOn: new DateOnly(2026, 8, 10), filedOn: new DateTime(2026, 8, 12, 9, 0, 0, DateTimeKind.Utc));
+            after = await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed001.EpaId, score: 4,
+                observedOn: new DateOnly(2026, 9, 10), filedOn: new DateTime(2026, 9, 12, 9, 0, 0, DateTimeKind.Utc));
+        }
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            await new RebuildCurriculumProgressCommandHandler(db, new CreditApplier(db))
+                .Handle(new RebuildCurriculumProgressCommand(Administrator()), CancellationToken.None);
+        }
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            (await db.TraineeProfiles.SingleAsync(profile => profile.UserId == TraineeUserId))
+                .Deactivate(new DateOnly(2026, 8, 20), today: new DateOnly(2026, 9, 25));
+            await db.SaveChangesAsync();
+
+            var migrations = db.Database.GetMigrations().ToList();
+            migrations.Should().Contain(T281Migration);
+            await db.GetService<IMigrator>().MigrateAsync(migrations[migrations.IndexOf(T281Migration) - 1]);
+            (await db.Database.GetPendingMigrationsAsync()).Should().Equal(migrations.Skip(migrations.IndexOf(T281Migration)));
+        }
+
+        (await ScalarAsync<long>(fixture.Schema, """SELECT "CountsSoFar" FROM "CurriculumItemProgresses" """))
+            .Should().Be(2, "guard: the stale row counts the encounter after the end");
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            await db.Database.MigrateAsync();
+            (await db.Database.GetPendingMigrationsAsync()).Should().BeEmpty();
+        }
+
+        (await ScalarAsync<long>(fixture.Schema, """SELECT COUNT(*) FROM "CurriculumItemProgresses" """))
+            .Should().Be(0, "the migration empties the table; the startup rebuild regenerates it");
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            var result = await new CurriculumProgressBootstrapper(
+                    db,
+                    new RebuildingSender(db),
+                    new SystemAuditContext(),
+                    Options.Create(new WombatOptions()),
+                    NullLogger<CurriculumProgressBootstrapper>.Instance)
+                .RunAsync();
+
+            result!.CreditApplications.Should().Be(1);
+        }
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            (await SnapshotsAsync(db)).Select(row => (row.Semester, row.CountsSoFar, row.CreditedActivityKeys))
+                .Should().Equal((2, 1, Keys(inside)));
+            (await CompletionStampAsync(db, after)).Should().Be(0);
+        }
+    }
+
+    [Fact]
     public async Task ProgressReaders_TranslateOnPostgres_AndReadTheCurrentWindow()
     {
         // A translation smoke test with literal expectations. InMemory evaluates any .NET call in a predicate;
@@ -1011,6 +1136,18 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
                 row.LastObservedOnDeclared,
                 Canonical(row.CreditedActivityKeysJson)))
             .ToList();
+    }
+
+    private static async Task<int?> CompletionStampAsync(ApplicationDbContext db, int activityId)
+        => await db.ActivityTransitions
+            .AsNoTracking()
+            .Where(transition => transition.ActivityId == activityId && transition.TransitionKey == "complete")
+            .Select(transition => transition.CreditedItemCount)
+            .SingleAsync();
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 
     private static async Task<IReadOnlyList<int>> RowIdsAsync(ApplicationDbContext db)

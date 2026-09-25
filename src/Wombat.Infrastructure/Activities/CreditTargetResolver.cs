@@ -59,6 +59,15 @@ internal static class CreditTargetResolver
             .Where(profile => profile.UserId == traineeUserId)
             .FirstOrDefaultAsync(cancellationToken);
 
+    /// <summary>
+    /// What credit needs to know about the trainee on the day of the encounter: the profile <see cref="PickProfileAsync" />
+    /// picks, as it is stored.
+    /// </summary>
+    /// <remarks>
+    /// Read from the row, never from a profile the request tracks. The one request that needs an unsaved end, the replay a
+    /// completion or a withdrawal runs, passes it on the subject (<c>CreditSubject.PendingEnd</c>, T281), with the profile
+    /// id it applies to (<see cref="TraineeContext.ProfileId" />).
+    /// </remarks>
     public static async Task<TraineeContext?> ResolveTraineeAsync(
         IApplicationDbContext dbContext,
         string traineeUserId,
@@ -72,9 +81,11 @@ internal static class CreditTargetResolver
         }
 
         return new TraineeContext(
+            profile.Id,
             profile.CurriculumId,
             profile.InstitutionId,
-            profile.GetStage(observedOn));
+            profile.GetStage(observedOn),
+            profile.EndedOn);
     }
 
     public static async Task<IReadOnlyList<CurriculumItem>> ResolveCurriculumItemsAsync(
@@ -255,4 +266,9 @@ internal enum CreditTargetKind
 internal readonly record struct CreditTarget(CreditTargetKind Kind, string? SourceField, int Value);
 
 /// <summary>What credit needs to know about the trainee an activity is about, on the day it happened.</summary>
-internal sealed record TraineeContext(int CurriculumId, int InstitutionId, int? Stage);
+/// <param name="ProfileId">The profile credit accrues against, which a pending end must name to apply (T281).</param>
+/// <param name="EndedOn">
+/// The programme's last day (<c>TraineeProfile.EndedOn</c>), or null while it runs. An encounter after it credits nothing
+/// (<c>TraineeProfile.IsAfterEnd</c>, T281).
+/// </param>
+internal sealed record TraineeContext(int ProfileId, int CurriculumId, int InstitutionId, int? Stage, DateOnly? EndedOn);

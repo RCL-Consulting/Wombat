@@ -884,7 +884,10 @@ public sealed class RebuildCurriculumProgressTests
         }
     }
 
-    /// <summary>Fails the Nth credit application, leaving the earlier ones already written in memory.</summary>
+    /// <summary>
+    /// Fails the Nth credit application, leaving the earlier ones already written in memory. Counted where the replay asks
+    /// for each one, its plan (T281: the replay plans and applies, so it can add a pending end to the subject).
+    /// </summary>
     private sealed class ThrowsOnCall : ICreditApplier
     {
         private readonly ICreditApplier _inner;
@@ -899,6 +902,9 @@ public sealed class RebuildCurriculumProgressTests
 
         public async Task<CreditApplicationResult> ApplyAsync(
             Activity completedActivity, ActivityType activityType, CancellationToken cancellationToken = default)
+            => Apply(await PlanAsync(CreditSubject.Of(completedActivity), activityType, cancellationToken), completedActivity);
+
+        public Task<CreditPlan> PlanAsync(CreditSubject subject, ActivityType activityType, CancellationToken cancellationToken = default)
         {
             _calls++;
             if (_calls == _failOnCall)
@@ -906,11 +912,8 @@ public sealed class RebuildCurriculumProgressTests
                 throw new InvalidOperationException("induced failure mid-replay");
             }
 
-            return await _inner.ApplyAsync(completedActivity, activityType, cancellationToken);
+            return _inner.PlanAsync(subject, activityType, cancellationToken);
         }
-
-        public Task<CreditPlan> PlanAsync(CreditSubject subject, ActivityType activityType, CancellationToken cancellationToken = default)
-            => _inner.PlanAsync(subject, activityType, cancellationToken);
 
         public CreditApplicationResult Apply(CreditPlan plan, Activity completedActivity)
             => _inner.Apply(plan, completedActivity);

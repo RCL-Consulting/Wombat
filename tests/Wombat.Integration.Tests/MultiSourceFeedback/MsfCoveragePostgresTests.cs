@@ -315,6 +315,92 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// T281 on the server: an ended programme's card counts only campaigns that closed by its last day. The last day is
+    /// read as the profile's completion, else its withdrawal (<c>CompletedOn ?? DeactivatedOn</c>, which must translate),
+    /// and judged on the UTC day each campaign closed: 23:30 UTC on the last day is inside, 00:30 UTC the day after is not.
+    /// </summary>
+    [Fact]
+    public async Task Coverage_OnPostgres_ForAnEndedProgramme_CountsOnlyCampaignsClosedByItsLastDay()
+    {
+        try
+        {
+            var schema = await MigratedSchemaAsync();
+            var ended = new[] { ("t281-withdrawn", false), ("t281-graduate", true) };
+            int first;
+            var campaigns = new Dictionary<string, (int OnTheLastDay, int TheDayAfter)>(StringComparer.Ordinal);
+
+            await using (var db = NewContext(schema))
+            {
+                var host = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
+                var curriculum = await db.Curricula.Include(entity => entity.Items).SingleAsync(entity => entity.Name == "IM Core Curriculum");
+                first = curriculum.Items.Single().EpaId;
+
+                foreach (var (userId, _) in ended)
+                {
+                    AddProfile(db, userId, host, curriculum.Id, new DateOnly(2025, 1, 1), isActive: true);
+                }
+
+                var template = new MsfTemplate { Name = "T281 MSF" };
+                db.MsfTemplates.Add(template);
+                db.ActivityTypes.Add(new ActivityType
+                {
+                    Key = MsfEvidenceKinds.MsfActivityTypeKey,
+                    Name = "Multi-Source Feedback (Paediatrics)",
+                    Scope = ActivityScope.Institution,
+                    ScopeId = host,
+                    Version = 1,
+                    WorkflowJson = File.ReadAllText(
+                        Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", "msf_cpsa", "workflow.json")),
+                    OwnerUserId = "seed-system",
+                    CreatedOn = DateTime.UtcNow
+                });
+                await db.SaveChangesAsync();
+
+                foreach (var (userId, completed) in ended)
+                {
+                    campaigns[userId] = (
+                        await AddCampaignAsync(db, template.Id, MsfCampaignState.Released, "2026-08-20T23:30:00Z", userId, (first, true)),
+                        await AddCampaignAsync(db, template.Id, MsfCampaignState.Released, "2026-08-21T00:30:00Z", userId, (first, true)));
+
+                    var profile = await db.TraineeProfiles.SingleAsync(entity => entity.UserId == userId);
+                    if (completed)
+                    {
+                        profile.Complete(new DateOnly(2026, 8, 20), today: new DateOnly(2026, 9, 25));
+                    }
+                    else
+                    {
+                        profile.Deactivate(new DateOnly(2026, 8, 20), today: new DateOnly(2026, 9, 25));
+                    }
+                }
+
+                await db.SaveChangesAsync();
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                foreach (var (userId, _) in ended)
+                {
+                    var self = new ClaimsPrincipal(new ClaimsIdentity(
+                        [new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, WombatRoles.Trainee)],
+                        "IntegrationTest", ClaimTypes.Name, ClaimTypes.Role));
+
+                    var coverage = (await new GetMsfCoverageForTraineeQueryHandler(db).Handle(
+                        new GetMsfCoverageForTraineeQuery(userId, self, To: new DateOnly(2026, 8, 20), AsOf: new DateOnly(2026, 9, 25)),
+                        CancellationToken.None))!;
+
+                    coverage.Epas.Single(epa => epa.EpaId == first).For(2026, 2)!.Campaigns
+                        .Select(campaign => campaign.CampaignId)
+                        .Should().Equal([campaigns[userId].OnTheLastDay], $"{userId}: only the campaign closed by the last day");
+                }
+            }
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
     private static void AddProfile(
         ApplicationDbContext db, string userId, int institutionId, int curriculumId, DateOnly start, bool isActive)
         => db.TraineeProfiles.Add(new TraineeProfile

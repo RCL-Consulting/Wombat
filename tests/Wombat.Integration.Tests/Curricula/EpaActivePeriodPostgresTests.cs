@@ -147,7 +147,7 @@ public sealed class EpaActivePeriodPostgresTests : IAsyncLifetime
             var epa = await db.Epas.AsNoTracking().SingleAsync(entity => entity.Id == fixture.EpaId);
             epa.DeactivatedOn.Should().Be(DeactivatedAt);
 
-            reactivated = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(ReactivatedAt)).Handle(
+            reactivated = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(ReactivatedAt)).Handle(
                 new UpdateEpaCommand(epa.Id, epa.SubSpecialityId, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, IsActive: true, Administrator()),
                 CancellationToken.None);
         }
@@ -196,7 +196,7 @@ public sealed class EpaActivePeriodPostgresTests : IAsyncLifetime
         await using (var db = NewContext(fixture.Schema))
         {
             var epa = await db.Epas.AsNoTracking().SingleAsync(entity => entity.Id == fixture.EpaId);
-            await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(ReactivatedAt)).Handle(
+            await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(ReactivatedAt)).Handle(
                 new UpdateEpaCommand(epa.Id, epa.SubSpecialityId, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, IsActive: true, Administrator()),
                 CancellationToken.None);
         }
@@ -246,7 +246,7 @@ public sealed class EpaActivePeriodPostgresTests : IAsyncLifetime
             (await Rebuild(winner)).CreditApplications.Should().Be(1);
         }))
         {
-            var handler = new UpdateEpaCommandHandler(loser, new CreditApplier(loser), new EpaCreditLock(loser), new FixedClock(ReactivatedAt));
+            var handler = new UpdateEpaCommandHandler(loser, new CreditApplier(loser), new EpaCreditLock(loser), new TraineeCreditLock(loser), new FixedClock(ReactivatedAt));
             refusal = (await FluentActions.Awaiting(() => handler.Handle(reactivate, CancellationToken.None))
                 .Should().ThrowAsync<InvalidOperationException>()).Which;
         }
@@ -266,7 +266,7 @@ public sealed class EpaActivePeriodPostgresTests : IAsyncLifetime
         // Saving again, as the message asks, credits B into the row the rebuild opened.
         await using (var db = NewContext(fixture.Schema))
         {
-            (await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(ReactivatedAt))
+            (await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(ReactivatedAt))
                 .Handle(reactivate, CancellationToken.None)).CompletionsCredited.Should().Be(1);
         }
 
@@ -286,7 +286,7 @@ public sealed class EpaActivePeriodPostgresTests : IAsyncLifetime
             .Select(other => other.Code)
             .FirstAsync();
 
-        var handler = new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(ReactivatedAt));
+        var handler = new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(ReactivatedAt));
         var refusal = (await FluentActions.Awaiting(() => handler.Handle(
                 new UpdateEpaCommand(epa.Id, epa.SubSpecialityId, taken, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, Administrator()),
                 CancellationToken.None))

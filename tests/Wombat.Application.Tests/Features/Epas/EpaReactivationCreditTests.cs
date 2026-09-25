@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
@@ -166,7 +167,7 @@ public sealed class EpaReactivationCreditTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            var handler = new UpdateEpaCommandHandler(db, new PlanningFails(), new EpaCreditLock(db), new FixedClock(ReactivatedAt));
+            var handler = new UpdateEpaCommandHandler(db, new PlanningFails(), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(ReactivatedAt));
             var reactivate = () => handler.Handle(Update(NationalEpaId, isActive: true, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
 
             await reactivate.Should().ThrowAsync<InvalidOperationException>().WithMessage("*induced*");
@@ -192,7 +193,7 @@ public sealed class EpaReactivationCreditTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(DeactivatedAt.AddDays(20)))
+            await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(DeactivatedAt.AddDays(20)))
                 .Handle(Update(NationalEpaId, isActive: false, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
         }
 
@@ -209,7 +210,7 @@ public sealed class EpaReactivationCreditTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            var result = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(DeactivatedAt))
+            var result = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(DeactivatedAt))
                 .Handle(Update(NationalEpaId, isActive: false, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
 
             result.Epa.IsActive.Should().BeFalse();
@@ -269,7 +270,7 @@ public sealed class EpaReactivationCreditTests
         await AddUncreditedActivityAsync(options, 202, NonCreditingTypeId, "completed", during.AddHours(2));
 
         await using var db = new ApplicationDbContext(options);
-        var result = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(ReactivatedAt))
+        var result = await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(ReactivatedAt))
             .Handle(Update(NationalEpaId, isActive: true, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
 
         result.CompletionsCredited.Should().Be(1);
@@ -277,7 +278,83 @@ public sealed class EpaReactivationCreditTests
             "only a terminal completion pinned to rules that credit can hold paused credit");
     }
 
+    [Fact]
+    public async Task AReactivation_HoldsTheTraineesOfItsPausedCompletions_BeforeItPlans_AndCommitsAfterItsSave()
+    {
+        // T281. Each plan reads the trainee's programme end, so the reactivation holds every candidate's trainee shared,
+        // in its EPA hold's transaction, until its save commits: an end recorded for one of them waits for it, and one in
+        // flight is waited for. An edit that reactivates nothing holds no trainee.
+        var options = NewDatabase();
+        await SeedAsync(options);
+        await DeactivateAsync(options, NationalEpaId, TestPrincipals.CollegeAdmin(CollegeId));
+        await CompleteLiveAsync(options, 201, "trainee-1", NationalEpaId, new DateTime(2026, 8, 4, 9, 0, 0, DateTimeKind.Utc));
+        await CompleteLiveAsync(options, 202, "trainee-2", NationalEpaId, new DateTime(2026, 8, 5, 9, 0, 0, DateTimeKind.Utc));
+        await CompleteLiveAsync(options, 203, "trainee-1", NationalEpaId, new DateTime(2026, 8, 6, 9, 0, 0, DateTimeKind.Utc));
+
+        var events = new List<string>();
+        await using (var db = new ApplicationDbContext(options))
+        {
+            (await new UpdateEpaCommandHandler(
+                    db, new NotingPlanner(new CreditApplier(db), events), new EpaCreditLock(db), new RecordingTraineeLock(db, events),
+                    new FixedClock(ReactivatedAt))
+                .Handle(Update(NationalEpaId, isActive: true, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None))
+                .CompletionsCredited.Should().Be(3);
+        }
+
+        events.Should().Equal("hold trainees [trainee-1, trainee-2]", "plan", "plan", "plan", "commit trainees (saved: True)");
+        events.Clear();
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            await new UpdateEpaCommandHandler(
+                    db, new NotingPlanner(new CreditApplier(db), events), new EpaCreditLock(db), new RecordingTraineeLock(db, events),
+                    new FixedClock(ReactivatedAt))
+                .Handle(Update(NationalEpaId, isActive: true, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
+        }
+
+        events.Should().Equal(["hold trainees []", "commit trainees (saved: True)"], "an EPA already active has nothing paused");
+    }
+
     // ─── Harness ─────────────────────────────────────────────────────────────
+
+    /// <summary>The real planner, noting each plan.</summary>
+    private sealed class NotingPlanner(ICreditApplier inner, List<string> events) : ICreditApplier
+    {
+        public Task<CreditPlan> PlanAsync(CreditSubject subject, ActivityType activityType, CancellationToken cancellationToken = default)
+        {
+            events.Add("plan");
+            return inner.PlanAsync(subject, activityType, cancellationToken);
+        }
+
+        public CreditApplicationResult Apply(CreditPlan plan, Activity completedActivity) => inner.Apply(plan, completedActivity);
+
+        public Task<CreditApplicationResult> ApplyAsync(Activity completedActivity, ActivityType activityType, CancellationToken cancellationToken = default)
+            => inner.ApplyAsync(completedActivity, activityType, cancellationToken);
+    }
+
+    /// <summary>Writes down which trainees it is asked to hold (in id order), and whether the save had gone through at commit.</summary>
+    private sealed class RecordingTraineeLock(ApplicationDbContext db, List<string> events) : ITraineeCreditLock
+    {
+        public Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
+            => throw new NotSupportedException("A reactivation never records an end.");
+
+        public Task<ICreditHold> HoldForCreditAsync(IReadOnlyCollection<string> traineeUserIds, CancellationToken cancellationToken)
+        {
+            events.Add($"hold trainees [{string.Join(", ", traineeUserIds.Order(StringComparer.Ordinal))}]");
+            return Task.FromResult<ICreditHold>(new Hold(db, events));
+        }
+
+        private sealed class Hold(ApplicationDbContext db, List<string> events) : ICreditHold
+        {
+            public Task CommitAsync(CancellationToken cancellationToken)
+            {
+                events.Add($"commit trainees (saved: {!db.ChangeTracker.HasChanges()})");
+                return Task.CompletedTask;
+            }
+
+            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        }
+    }
 
     private static async Task DeactivateAsync(
         DbContextOptions<ApplicationDbContext> options, int epaId, ClaimsPrincipal principal, DateTime? at = null)
@@ -290,7 +367,7 @@ public sealed class EpaReactivationCreditTests
     private static async Task<UpdateEpaResult> ReactivateAsync(DbContextOptions<ApplicationDbContext> options, int epaId, ClaimsPrincipal principal)
     {
         await using var db = new ApplicationDbContext(options);
-        return await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new FixedClock(ReactivatedAt))
+        return await new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db), new FixedClock(ReactivatedAt))
             .Handle(Update(epaId, isActive: true, principal), CancellationToken.None);
     }
 

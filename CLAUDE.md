@@ -203,7 +203,14 @@ Runtime services in Infrastructure:
   through `Epa.Deactivate`/`Reactivate`, under `IEpaCreditLock.HoldForChangeAsync` taken before the EPA is read and
   committed with the save, reading the deactivation's moment only once it is held (T230; `EpaPauseWritePathTests`
   enforces the hold). Every picker, credit and progress reader applies it; the tool gate, the
-  curriculum editor and scale-reference checks do not.
+  curriculum editor and scale-reference checks do not. An encounter observed after the trainee's last day
+  (`TraineeProfile.EndedOn`, `IsAfterEnd`) credits nothing on that profile, live and in every replay (T281); it is
+  kept, not refused at filing. Recording an end takes back credit already given after it, in the same save, by
+  replaying that trainee against the unsaved end (`ProgrammeEndCredit`, `CurriculumProgressReplay`,
+  `CreditSubject.PendingEnd`). Record an end only through `TraineeProfile.Complete`/`Deactivate`, under
+  `ITraineeCreditLock.HoldForEndAsync` taken before the profile is read and committed with the save; the live
+  completion and an EPA's reactivation hold the trainee with `HoldForCreditAsync` (`ProgrammeEndWritePathTests`
+  enforces the end's hold).
 - `ToolPermissionGate` — the write-path half of the EPA→tool allow-list (T122, D20): refuses an activity whose
   instrument (`ActivityType.WbaToolKey`) the matched curriculum item's `PermittedToolsJson` does not name, judged per
   credit directive: at create; on a change of target wherever credit can still follow; and for an unchanged target only

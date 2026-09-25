@@ -26,7 +26,8 @@ namespace Wombat.Infrastructure.Persistence;
 /// </para>
 /// <para>
 /// T219's migration empties the table again, for the same reason: its new column (whether each row's last encounter
-/// date was stated) can only be computed by replaying the credit, and this is what replays it.
+/// date was stated) can only be computed by replaying the credit, and this is what replays it. So does T281's: an
+/// encounter observed after the trainee's programme ended no longer credits, and only a replay takes it out of a tally.
 /// </para>
 /// <para>
 /// <b>When it fires.</b> Only when the table holds no rows AND some transition records that it credited at

@@ -39,10 +39,13 @@
   @* T108. A completed activity that matched no curriculum item used to be indistinguishable from a
      credited one at every surface in the product. This is the one place a clinician is certain to
      look. It cannot fire on an activity type that credits nothing by design: the server only
-     records a count at all when the pinned version declares a non-empty `counts_for`. *@
+     records a count at all when the pinned version declares a non-empty `counts_for`. The third cause is T281: an
+     encounter dated after the trainee's programme ended credits nothing on it, and the page does not know the end (an
+     assessor may not read the trainee's profile), so it names every cause rather than guess. *@
   <Alert Kind="warning" Role="">
     This activity is complete, but it counted towards no curriculum requirement. The EPA it was
-    recorded against is most likely not part of this trainee's curriculum, or was not in use at the time.
+    recorded against is most likely not part of this trainee's curriculum, or was not in use at the time,
+    or the encounter is dated after the trainee's programme ended.
     The record is kept. If it should have counted, raise it with the programme administrator.
   </Alert>
 }

@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.Trainees;
 using Wombat.Infrastructure;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
@@ -13,9 +14,9 @@ using Wombat.Infrastructure.Persistence;
 namespace Wombat.Infrastructure.Tests.Activities;
 
 /// <summary>
-/// T230's wiring. The races themselves need two PostgreSQL connections and are driven in
-/// <c>EpaCreditRacePostgresTests</c>; this is what those tests cannot see: that the host hands the handlers the real lock,
-/// and that on any other provider a hold is harmless.
+/// T230's wiring, and T281's. The races themselves need two PostgreSQL connections and are driven in
+/// <c>EpaCreditRacePostgresTests</c> and <c>ProgrammeEndCreditRacePostgresTests</c>; this is what those tests cannot see:
+/// that the host hands the handlers the real locks, and that on any other provider a hold is harmless.
 /// </summary>
 public sealed class EpaCreditLockTests
 {
@@ -44,6 +45,13 @@ public sealed class EpaCreditLockTests
             .Should().BeOfType<UpdateEpaCommandHandler>();
         scope.ServiceProvider.GetRequiredService<IRequestHandler<DeactivateEpaCommand>>()
             .Should().BeOfType<DeactivateEpaCommandHandler>();
+
+        // T281: the trainee's lock, and the two handlers that record a programme's end with it.
+        scope.ServiceProvider.GetRequiredService<ITraineeCreditLock>().Should().BeOfType<TraineeCreditLock>();
+        scope.ServiceProvider.GetRequiredService<IRequestHandler<CompleteTraineeProfileCommand>>()
+            .Should().BeOfType<CompleteTraineeProfileCommandHandler>();
+        scope.ServiceProvider.GetRequiredService<IRequestHandler<DeactivateTraineeProfileCommand>>()
+            .Should().BeOfType<DeactivateTraineeProfileCommandHandler>();
     }
 
     [Fact]
@@ -61,6 +69,20 @@ public sealed class EpaCreditLockTests
         }
 
         await using (var credit = await epaCreditLock.HoldForCreditAsync([1, 2], CancellationToken.None))
+        {
+            db.Database.CurrentTransaction.Should().BeNull();
+            await credit.CommitAsync(CancellationToken.None);
+        }
+
+        var traineeCreditLock = new TraineeCreditLock(db);
+
+        await using (var end = await traineeCreditLock.HoldForEndAsync(1, CancellationToken.None))
+        {
+            db.Database.CurrentTransaction.Should().BeNull();
+            await end.CommitAsync(CancellationToken.None);
+        }
+
+        await using (var credit = await traineeCreditLock.HoldForCreditAsync(["trainee-1"], CancellationToken.None))
         {
             db.Database.CurrentTransaction.Should().BeNull();
             await credit.CommitAsync(CancellationToken.None);

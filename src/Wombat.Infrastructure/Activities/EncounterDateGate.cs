@@ -36,6 +36,13 @@ namespace Wombat.Infrastructure.Activities;
 /// and the message is always shown behind that field's own label (<c>ActivityService.ThrowIfInvalid</c>).
 /// </para>
 /// <para>
+/// There is no bound at the programme's end. An encounter observed after the profile's last day credits nothing on it
+/// (T281), and that is <c>CreditApplier</c>'s to apply, not this gate's to refuse. The end can be recorded after the
+/// fact (T209), on activities already filed, so a refusal here would land on whoever next moves one: an assessor
+/// completing it, who cannot change the date, or an author pushed to type a date inside the programme, which would then
+/// credit. The activity is kept, and its completion is stamped as crediting nothing, which the activity page warns of.
+/// </para>
+/// <para>
 /// Lateness is not this class's business: D15 never refuses a late filing (<see cref="EncounterDatePolicy" />).
 /// Every read is awaited before the caller's first mutation, and the profile is read untracked, so a refusal leaves
 /// the request's DbContext clean for the audit pipeline's save.

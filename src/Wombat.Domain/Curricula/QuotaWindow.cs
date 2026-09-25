@@ -46,6 +46,14 @@ public enum QuotaWindowStatus
 /// Evidence is never discarded. The target is waived.
 /// </para>
 /// <para>
+/// <b>The one exception is at the end (T281).</b> An encounter observed after the programme's last day
+/// (<c>TraineeProfile.IsAfterEnd</c>) credits nothing on that profile, and its completion is stamped zero, when credit is
+/// written. The start's argument does not carry over: the end cannot be changed once it is recorded, and recording it
+/// replays the trainee's credit against it in the same save, so the stored buckets never depend on an end that could
+/// still move. The stamp is right, too: such an encounter belongs to no programme the profile holds, and the activity
+/// page's warning names that cause. The record itself is kept.
+/// </para>
+/// <para>
 /// <b>What "part-way through" means (D42, provisional, awaiting the College).</b> D14 was asked about "a
 /// registrar who starts mid-year" and does not say how late a start has to be. Read literally, a start one
 /// day after a boundary exempts the whole period. That would take a year's annual targets away from a

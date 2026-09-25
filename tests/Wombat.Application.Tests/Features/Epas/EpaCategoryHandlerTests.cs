@@ -51,7 +51,7 @@ public sealed class EpaCategoryHandlerTests
         db.Epas.Add(new Epa { Id = 9, SubSpecialityId = 1, Code = "EPA-09", Title = "Nine", IsActive = true });
         await db.SaveChangesAsync();
 
-        var handler = new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db));
+        var handler = new UpdateEpaCommandHandler(db, new CreditApplier(db), new EpaCreditLock(db), new TraineeCreditLock(db));
         var result = await handler.Handle(
             new UpdateEpaCommand(9, 1, "EPA-09", "Nine", null, null, EpaCategory.Elective, true, TestPrincipals.Administrator()),
             CancellationToken.None);

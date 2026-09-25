@@ -232,6 +232,61 @@ public sealed class GetMsfCoverageForTraineeTests
         cell.Latest!.ClosedOn.Should().Be(new DateOnly(2026, 5, 20));
     }
 
+    /// <summary>
+    /// T281. The lifecycle check (T252): a trainee whose last day was 20 August still had a campaign that closed on
+    /// 25 September counted on their ended progress page. A campaign that closed after the last day covers nothing on the
+    /// profile, as an encounter after it credits nothing; one that closed on the last day itself is inside.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ACampaignThatClosedAfterTheProgrammesLastDay_CoversNothing_AndOneThatClosedOnIt_Does(bool completed)
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db, [Item(1, "PAED-001"), Item(2, "PAED-002")]);
+        AddCampaign(db, 50, MsfCampaignState.Released, Utc(2026, 8, 20, 9), (1, true));
+        AddCampaign(db, 51, MsfCampaignState.Released, Utc(2026, 9, 25, 9), (1, true), (2, true));
+        await db.SaveChangesAsync();
+
+        var profile = await db.Set<TraineeProfile>().SingleAsync();
+        if (completed)
+        {
+            profile.Complete(new DateOnly(2026, 8, 20), today: new DateOnly(2026, 9, 25));
+        }
+        else
+        {
+            profile.Deactivate(new DateOnly(2026, 8, 20), today: new DateOnly(2026, 9, 25));
+        }
+
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        // What the ended progress page asks: the span to the last day, read on a later day.
+        var coverage = await ReadAsync(db, Self(), from: null, to: new DateOnly(2026, 8, 20), asOf: new DateOnly(2026, 9, 25));
+
+        Covered(coverage!, "PAED-001").Should().Equal((2026, 2, 50));
+        Covered(coverage!, "PAED-002").Should().BeEmpty("the only campaign covering it closed after the programme ended");
+        coverage!.Periods.Single(period => period.Semester == 2).EpasCovered.Should().Be(1);
+
+        // The committee's span over the whole year says the same: the rule is the profile's, not the span's.
+        var year = await ReadAsync(db, Self(), Year2026From, Year2026To, asOf: new DateOnly(2026, 9, 25));
+        Covered(year!, "PAED-001").Should().Equal((2026, 2, 50));
+        Covered(year!, "PAED-002").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task WhileTheProgrammeRuns_ACampaignClosedAtAnyTimeInTheSpanCovers()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db, [Item(1, "PAED-001")]);
+        AddCampaign(db, 51, MsfCampaignState.Released, Utc(2026, 9, 25, 9), (1, true));
+        await db.SaveChangesAsync();
+
+        var coverage = await ReadAsync(db, Self(), Year2026From, Year2026To, asOf: new DateOnly(2026, 9, 26));
+
+        Covered(coverage!, "PAED-001").Should().Equal((2026, 2, 51));
+    }
+
     // ─── Which semesters ─────────────────────────────────────────────────────
 
     [Fact]
