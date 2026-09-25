@@ -15,24 +15,34 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
   - T205 (the MSF respondent page), T206, T207, T163 and T214 (MSF privacy and links).
   - T160 (the D15 date bounds), T137, T135 (D44), T113, T182 and T183 (security), and 40-odd smaller tasks.
   - See `git log` and each task's "As built".
-- **Master suites:** 4,806 tests (Domain 595, Application 2184, Infrastructure 885, Architecture 33, Web 997,
-  Integration 112), all green.
+- **2026-09-25, merged to master:** F1 (T191, T197, T192, T189 and T193, closed after browser checks) and F2 (T187,
+  T198, T211 and T217). F2 is browser-checked except where a page needs the admin credential. Follow-ups T221–T227 are
+  filed; **T221 is P2** (the catalogue seeder finds its rows by names an admin can edit).
+- **Master suites (`95b65f4`):** 4,895 tests (Domain 595, Application 2226, Infrastructure 888, Architecture 33,
+  Web 1039, Integration 114), all green.
 - **Running:**
-  - The committee chain: T215 (the planner reads STARs), then T213, T212, T216 and T194.
-  - The browser check of polish batch F1 (T191, T197, T192, T189, T193).
+  - The committee chain: T215, T213, T212, T216 and T194.
+  - Batch G1: T221, T219, T196 (D48) and T145 (retire forms), each with a migration. The merge agents regenerate them
+    on master's snapshot.
+  - The F2 browser check.
+- **Next:**
+  - Batch G2: T220, T151 (D50) with T227, T222 with T223, T224, T225 and T210, and T209 (D49).
+  - Then UI polish (T226, T188, T190, T178, T199), and T218 after the chain.
+  - T159 (the runbook replay on a fresh dev database) goes last, as the stream's end-to-end check.
 - **Decisions adopted on recommendation**, all in EPA-PROGRAMME § 3; the operator may overrule any of them:
   - D33 part 1; D34 (a link); D35 (an MSF kind); D38(a); D44; D45; D46 (quorum 2, no Administrator bypass).
-  - D47 (an interim 5-point MSF scale).
+  - D47 (an interim 5-point MSF scale); D48, D49 and D50 (2026-09-25; T196, T209 and T151).
   - T131's O1–O8 defaults; T160's credit-bearing scope; T174 (seeds pin on create only).
 - **Left for the operator or the College:**
-  - T139 (WindowMonths; § 3F question 10), T170 (self-assessment; question 11), T209 (partial-end rule; question 4).
+  - T139 (WindowMonths; § 3F question 10) and T170 (self-assessment; question 11). T209 is built to D49's
+    provisional default until question 4 is answered.
   - T146, T152 and T171, which are not needed for v11.1.
   - § 3F now holds 12 College questions.
 - **Browser checks:**
   - The Playwright MCP server disconnected; agents drive a scripted Chrome instead (`npm i playwright`, channel
     `chrome`).
   - Agents may not read the admin credential, so the DevUserSeeder accounts are used: trainee, assessor, committee,
-    committee2, coordinator and instadmin.
+    committee2, coordinator, instadmin and collegeadmin (added `6242208`).
   - Email is caught by a local SMTP sink on port 25.
 - **Dev DB:**
   - reviews 1–5 and panels 1–2 (Neonatal CCC);
