@@ -203,7 +203,7 @@ public sealed class DecisionPanelBodyTests
         read!.DecisionBodyKey.Should().Be(Neonatal);
         read.DecisionBodyName.Should().Be("Neonatal team Clinical Competency Committee");
 
-        var listed = await new ListDecisionPanelsQueryHandler(db).Handle(
+        var listed = await new ListDecisionPanelsQueryHandler(db, FakeUserDirectory.Empty).Handle(
             new ListDecisionPanelsQuery(adminOfA), CancellationToken.None);
         listed.Single(panel => panel.Id == created.Id).DecisionBodyName.Should().Be("Neonatal team Clinical Competency Committee");
         listed.Single(panel => panel.Id == PanelA).DecisionBodyName.Should().BeNull();

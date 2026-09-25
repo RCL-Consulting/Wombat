@@ -34,14 +34,14 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
             .Include(entity => entity.AgendaLines)
-            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
-            ?? throw new InvalidOperationException("The committee review could not be found.");
+            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
         // The ladder this handler used to spell out inline now lives beside the other committee
         // guards, because the two sibling queries on the same page have to climb the identical one.
         // The panel carries its own institution regardless of scope; the discipline is national
         // now (T091), so no further lookup is needed to place a review. (T101 finding E)
-        CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
+        // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
+        review = CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
 
         // T142. The trainee by name, looked up only once the caller has passed the review ladder above. T165 adds the
         // panel's members and those recorded as present at each decision, in the same one lookup.
@@ -78,6 +78,7 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
             // T213: what the caller may do here, by the predicates the handlers demand, so the page offers each control to
             // exactly the people its handler lets use it.
             CallerChairs = CommitteeDecisionAuthorization.Chairs(request.Principal, review.Panel),
+            CallerMayStart = CommitteeDecisionAuthorization.WorksOnPanel(request.Principal, review.Panel),
             CallerResolvesAppeals = CommitteeDecisionAuthorization.ResolvesAppeals(request.Principal, review.Panel),
             TraineeElsewhere = traineeElsewhere,
             PanelMembers = detail.PanelMembers

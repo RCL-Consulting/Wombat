@@ -46,10 +46,11 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
             .Include(entity => entity.AgendaLines)
-            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
-            ?? throw new InvalidOperationException("The committee review could not be found.");
+            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
-        CommitteeDecisionAuthorization.DemandPanelAccess(request.Principal, review.Panel);
+        // Authorise first: an unknown review and one of a panel the caller does not work on get the one refusal, before
+        // the review's state is said (T194 item 1).
+        review = CommitteeDecisionAuthorization.DemandStartableReview(request.Principal, review);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         var actorUserId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);

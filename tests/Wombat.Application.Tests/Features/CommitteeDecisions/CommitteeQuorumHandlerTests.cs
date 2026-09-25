@@ -470,7 +470,9 @@ public sealed class CommitteeQuorumHandlerTests
 
         var act = () => RecordAsync(db, TestPrincipals.Administrator(), "chair-1", "member-1");
 
-        (await act.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message.Should().Be("Only the panel's chair can do this.");
+        // The one refusal for a review the caller does not chair, which an unknown id gets too (T194 item 1).
+        (await act.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message
+            .Should().Be("The committee review could not be found among the reviews you chair.");
         await SaveAndClearAsAuditPipelineWouldAsync(db);
         (await SnapshotAsync()).Should().BeEquivalentTo(before);
     }
@@ -518,7 +520,7 @@ public sealed class CommitteeQuorumHandlerTests
         var act = () => ResolveAsync(db, TestPrincipals.Administrator(), outcome, "chair-1", "member-1");
 
         (await act.Should().ThrowAsync<UnauthorizedAccessException>())
-            .Which.Message.Should().Be("Only the appeal body can resolve committee appeals.");
+            .Which.Message.Should().Be("The committee review could not be found among the reviews whose appeals you resolve.");
         await SaveAndClearAsAuditPipelineWouldAsync(db);
         (await SnapshotAsync()).Should().BeEquivalentTo(before);
     }

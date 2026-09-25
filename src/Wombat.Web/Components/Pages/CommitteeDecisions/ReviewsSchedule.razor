@@ -31,8 +31,8 @@
       <DataAnnotationsValidator />
       <ValidationSummary class="validation-summary-errors" />
       <div class="form-grid">
-        <FormField Label="Panel" InputId="review-panel" Required="true">
-          <InputSelect id="review-panel" class="form-select" @bind-Value="_model.PanelId" @bind-Value:after="LoadTraineesAsync">
+        <FormField Label="Panel" InputId="review-panel" Required="true" HelpText="@PanelHelpText">
+          <InputSelect id="review-panel" class="form-select" aria-describedby="@FieldHelp.DescribedBy("review-panel", PanelHelpText)" @bind-Value="_model.PanelId" @bind-Value:after="LoadTraineesAsync">
             <option value="">Select panel</option>
             @foreach (var panel in _panels)
             {
@@ -209,8 +209,14 @@
 
       _access = await Sender.Send(new GetCommitteeReviewsAccessQuery(authState.User));
 
+      // Only the panels this caller may put a trainee before, by the scheduling rule itself (T194): not a panel they
+      // sit on at another institution, nor one covering a speciality they do not administer. None for a caller the
+      // command refuses outright, who is offered no form.
       _panels.Clear();
-      _panels.AddRange(await Sender.Send(new ListDecisionPanelsQuery(authState.User)));
+      if (MaySchedule)
+      {
+        _panels.AddRange(await Sender.Send(new ListDecisionPanelsQuery(authState.User, ForScheduling: true)));
+      }
 
       _reviews.Clear();
       _reviews.AddRange(await Sender.Send(new ListReviewsForPanelQuery(authState.User)));
@@ -407,6 +413,15 @@
       }
     </section>
   };
+
+  /// <summary>
+  /// Said when no panel is offered (T194): the list holds only panels with a trainee this caller may schedule, so an
+  /// empty one is not a fault to report.
+  /// </summary>
+  private string? PanelHelpText => _panels.Count == 0
+    ? "No panel has a trainee you can schedule a review for. A panel is listed once a trainee it reviews is in a " +
+      "programme you oversee."
+    : null;
 
   private string? TraineeHelpText => _model.PanelId is null
     ? "Choose a panel first. The list holds the trainees at its institution you can schedule."

@@ -219,7 +219,9 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
             [])
         {
             AcademicYear = 2026,
-            Semester = 1
+            Semester = 1,
+            // The reader works on the panel, so is offered Start (T194).
+            CallerMayStart = true
         };
     }
 

@@ -322,7 +322,7 @@ public sealed class MsfCampaignsOutsideSnapshotTests
     }
 
     [Fact]
-    public async Task AReviewThatDoesNotExist_IsNotFound()
+    public async Task AReviewThatDoesNotExist_IsRefusedAsOneOutOfReachIs()
     {
         await using var db = CreateDbContext();
         await SeedReviewAsync(db);
@@ -331,7 +331,9 @@ public sealed class MsfCampaignsOutsideSnapshotTests
             new CountMsfCampaignsOutsideSnapshotQuery(999, Chair),
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        // The read ladder's one refusal, which a review out of reach gets too (T194 item 1).
+        (await act.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message
+            .Should().Be("The committee review could not be found among the reviews you can view.");
     }
 
     private static ClaimsPrincipal Chair => Principal("chair-1", [WombatRoles.CommitteeMember], HostInstitution);

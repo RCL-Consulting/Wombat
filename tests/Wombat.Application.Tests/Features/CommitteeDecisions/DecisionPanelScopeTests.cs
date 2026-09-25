@@ -287,7 +287,7 @@ public sealed class DecisionPanelScopeTests
             new GetDecisionPanelByIdQuery(panelId, principal), CancellationToken.None);
 
     private static async Task<IReadOnlyList<string>> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => (await new ListDecisionPanelsQueryHandler(db).Handle(new ListDecisionPanelsQuery(principal), CancellationToken.None))
+        => (await new ListDecisionPanelsQueryHandler(db, FakeUserDirectory.Empty).Handle(new ListDecisionPanelsQuery(principal), CancellationToken.None))
             .Select(panel => panel.Name)
             .ToArray();
 

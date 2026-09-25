@@ -8,15 +8,23 @@ using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
-public sealed record ListDecisionPanelsQuery(ClaimsPrincipal Principal) : IRequest<IReadOnlyList<DecisionPanelSummaryDto>>;
+/// <param name="ForScheduling">
+/// True for the scheduling page's panel picker: only the panels this caller may put a trainee before
+/// (<see cref="CommitteeTraineeScope.ListSchedulablePanelsAsync" />, T194). False for the panels page, which lists every
+/// panel the caller may read.
+/// </param>
+public sealed record ListDecisionPanelsQuery(ClaimsPrincipal Principal, bool ForScheduling = false)
+    : IRequest<IReadOnlyList<DecisionPanelSummaryDto>>;
 
 public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisionPanelsQuery, IReadOnlyList<DecisionPanelSummaryDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ListDecisionPanelsQueryHandler(IApplicationDbContext dbContext)
+    public ListDecisionPanelsQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     /// <remarks>
@@ -27,9 +35,11 @@ public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisio
     /// country, and the scheduling page offered them panels its handler would refuse.
     /// </para>
     /// <para>
-    /// The scheduling page reads this list for its panel picker. A panel at the caller's institution is one the
-    /// scheduling rule can accept, since it demands that institution of the panel, the trainee and the caller alike; a
-    /// panel the caller only sits on elsewhere lists no trainee for them.
+    /// The scheduling page asks for <see cref="ListDecisionPanelsQuery.ForScheduling" />, which keeps only the panels on
+    /// which the scheduling rule accepts at least one trainee from this caller that the trainee picker can name: the panel
+    /// picker offers a panel exactly when its trainee picker would offer someone. Until T194 it read the whole list, so an
+    /// External member from another institution was offered that panel with no trainee to choose, and a SpecialityAdmin
+    /// another speciality's panel.
     /// </para>
     /// </remarks>
     public async Task<IReadOnlyList<DecisionPanelSummaryDto>> Handle(ListDecisionPanelsQuery request, CancellationToken cancellationToken)
@@ -44,6 +54,22 @@ public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisio
             panels = panels.Where(panel =>
                 (institutionId != null && panel.InstitutionId == institutionId) ||
                 (userId != null && panel.Members.Any(member => member.UserId == userId)));
+        }
+
+        if (request.ForScheduling)
+        {
+            var candidates = await panels.ToListAsync(cancellationToken);
+            var schedulableIds = (await CommitteeTraineeScope.ListSchedulablePanelsAsync(
+                    _dbContext, _users, request.Principal, candidates, cancellationToken))
+                .Select(panel => panel.Id)
+                .ToArray();
+
+            if (schedulableIds.Length == 0)
+            {
+                return [];
+            }
+
+            panels = panels.Where(panel => schedulableIds.Contains(panel.Id));
         }
 
         return await panels

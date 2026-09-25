@@ -48,10 +48,10 @@ public sealed class ListPendingEntrustmentDecisionsForReviewQueryHandler
             .AsNoTracking()
             .Include(r => r.Panel)
                 .ThenInclude(p => p.Members)
-            .SingleOrDefaultAsync(r => r.Id == request.ReviewId, cancellationToken)
-            ?? throw new InvalidOperationException("The committee review could not be found.");
+            .SingleOrDefaultAsync(r => r.Id == request.ReviewId, cancellationToken);
 
-        CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
+        // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
+        review = CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
 
         var pending = await _dbContext.Set<PendingEntrustmentDecision>()
             .AsNoTracking()

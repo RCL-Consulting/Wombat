@@ -40,6 +40,8 @@ public sealed class PanelEditSeatTests : TestContext
                 new InstitutionDto(InstitutionB, "Other Hospital", "OTH", null, true, DateTime.UtcNow)
             })
             .On<GetSpecialitiesListQuery>(_ => Array.Empty<SpecialityDto>())
+            // Only an Administrator signs in here, whose reach is every panel (T194).
+            .On<GetDecisionPanelFormOptionsQuery>(_ => new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: true, Specialities: null))
             // An Administrator may say which College committee a panel sits as (T131 slice 3), so the form reads the list.
             .On<GetDecisionBodiesQuery>(_ => new[] { new DecisionBodyDto("neonatal", "Neonatal team Clinical Competency Committee") })
             .On<ListPanelMemberCandidatesQuery>(query => query.InstitutionId == InstitutionA || query.InstitutionId is null

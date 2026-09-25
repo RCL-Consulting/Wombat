@@ -301,7 +301,7 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
             {
                 GetCommitteeReviewsAccessQuery query =>
                     await new GetCommitteeReviewsAccessQueryHandler().Handle(query, cancellationToken),
-                ListDecisionPanelsQuery query => await new ListDecisionPanelsQueryHandler(db).Handle(query, cancellationToken),
+                ListDecisionPanelsQuery query => await new ListDecisionPanelsQueryHandler(db, _users).Handle(query, cancellationToken),
                 ListReviewsForPanelQuery query =>
                     await new ListReviewsForPanelQueryHandler(db, _users).Handle(query, cancellationToken),
                 ListSchedulableTraineesQuery query =>

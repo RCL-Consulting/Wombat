@@ -714,9 +714,15 @@ issued, since ratifying issues every staged decision.
 
 **The chair's controls** (T213). The review page offers each control to exactly the people its handler lets use it,
 in exactly the states its handler takes it, by what `GetCommitteeReviewByIdQuery` says the caller may do:
-`CallerChairs` and `CallerResolvesAppeals`, computed by the predicates the handlers demand
-(`CommitteeDecisionAuthorization.Chairs` and `ResolvesAppeals`), and `TraineeElsewhere`, the trainee check every chair's
-action and Start also demand (`CommitteeTraineeScope`). The chair alone is offered the decision form and Record decision
+`CallerChairs`, `CallerResolvesAppeals` and `CallerMayStart`, computed by the predicates the handlers demand
+(`CommitteeDecisionAuthorization.Chairs`, `ResolvesAppeals` and `WorksOnPanel`), and `TraineeElsewhere`, the trainee check
+every chair's action and Start also demand (`CommitteeTraineeScope`). Start is offered on a scheduled review to a member
+of its panel, a coordinator of the panel's institution or an Administrator (T194); an institutional administrator who
+reads the review without a seat is not offered it, and `#chair-actions-note` reads "Only the panel's members, and the
+coordinators of its institution, can start this review." None of the three flags is ever true for someone who holds
+Trainee, whatever seat or role they hold beside it (T185's rung, asked by `WorksOnPanel` and by the seat predicates since
+the T194 review): a trainee who sits on the panel that reviews them reads their own review once it is ratified, and is
+offered neither the chair's controls nor the resolve form on it. The chair alone is offered the decision form and Record decision
 (while the review is in progress), Ratify and its reason (once decided), Close review, the staging form, Remove, and the
 agenda's Stage, Defer and Reinstate. The appeal body alone (the chair or an external member) is offered the
 resolve-appeal form, and only while the review is under appeal: a form is never shown with empty fields and no button.
@@ -736,6 +742,17 @@ caller, who is the resolver because only the appeal body is offered the form. A 
 (only a row written some other way can) says, while the review is in progress, that the chair can remove it and stage it
 again; once the decision is recorded it says what the ratify refusal says, that it is fixed and an administrator must
 look into it (D46).
+
+**A refusal never says whether an id exists** (T194). Every committee command and every read of a review authorises
+before it looks at anything else, and gives an id that names nothing the same sentence as one out of the caller's reach,
+before any state check. Each gate has one sentence, which the page prints as it is (`RefusalText.Of`): "The committee
+review could not be found among the reviews you can view." (the review page and its sibling reads, a trainee's own review
+before ratification included), "…you can start.", "…you chair." (every chair's action), "…whose appeals you resolve.",
+and "…among your own ratified reviews." (lodging an appeal). A panel id gets its own gate's sentence ("You can only
+manage panels in your institution.", or the scheduling refusal). Only who may act at all is said before the lookup,
+because it says nothing about the id: "Only trainees can lodge appeals.", "You are not allowed to manage committee
+panels.", "Only an institutional administrator can say which College committee a panel sits as.", or T216's scheduling
+refusals.
 
 **The trainee's own reviews** (`/committee/my-reviews`). The list's Period column names the period the review sat for,
 then its evidence window in a `.muted` span, as the schedule does: "2026 S2 · 2026-01-01 to 2026-12-31" (T212). The
@@ -757,7 +774,19 @@ Only the opening sentences sit in a `role="status"` region (`#agenda-preview-sum
 new choice changed, not every line again. Where a STAR already decided every EPA due, the opening sentence says so
 itself ("Every EPA this panel decides that is due for 2026 S2 is already decided in its window…"), not that none is
 due, since the note naming them is outside the live region (T215). The Trainee select offers exactly the trainees the
-scheduling handler would accept on the chosen panel (T182).
+scheduling handler would accept on the chosen panel (T182), and the Panel select offers exactly the panels on which that
+list is not empty (`ListDecisionPanelsQuery` with `ForScheduling`, T194): not a panel the caller sits on at another
+institution, not a speciality panel of a speciality they do not administer, and not a panel whose only trainee in reach
+was erased, whom the Trainee select leaves out for having no account to name (T194 review). When it offers none, its help
+text says so: "No panel has a trainee you can schedule a review for. A panel is listed once a trainee it reviews is in a
+programme you oversee."
+
+**The panel form** (`/committee/panels/new`, T194). A new panel's Scope and Speciality selects offer what creating the
+panel would accept from the caller, read from `GetDecisionPanelFormOptionsQuery`, never from roles: an Administrator or
+institutional administrator both scopes and the speciality list; a speciality or sub-speciality administrator the
+Speciality scope and only their own speciality. Speciality is selected first where it is offered. Where nothing is, the
+page shows no form: a `detail-card--empty` card (`#panel-none-creatable`) headed "Create panel" says in a `.muted`
+paragraph that they cannot create a panel, and who can.
 
 **Who is offered scheduling** (T216). The page reads it from `GetCommitteeReviewsAccessQuery`, never from the caller's
 roles: `MaySchedule` is the rule the scheduling command and the agenda preview demand first. A caller it refuses, a

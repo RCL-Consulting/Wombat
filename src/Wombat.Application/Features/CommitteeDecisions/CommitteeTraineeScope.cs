@@ -30,9 +30,10 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// SpecialityAdmin or SubSpecialityAdmin the trainee's own speciality or sub-speciality. An unknown trainee, a trainee
 /// with no profile and a trainee at another institution are refused alike, and so is an unknown panel, so the refusal
 /// never confirms that an id names someone. The scheduling page's picker (<see cref="ListSchedulableTraineesQuery" />)
-/// offers exactly the trainees this accepts, through <see cref="MayScheduleFor" />. Someone who holds Trainee schedules
-/// nobody, whatever other role they hold, the Administrator's included, and is offered nobody
-/// (<see cref="CommitteeDecisionAuthorization.MayScheduleReviews" />, T216).
+/// offers exactly the trainees this accepts, through <see cref="MayScheduleFor" />, less any it has no account to name
+/// by (<see cref="OfferableNamesAsync" />), and its panel list the panels on which the picker offers someone. Someone
+/// who holds Trainee schedules nobody, whatever other role they hold, the Administrator's included, and is offered
+/// nobody (<see cref="CommitteeDecisionAuthorization.MayScheduleReviews" />, T216).
 /// </item>
 /// <item>
 /// To act on a review already scheduled (<see cref="DemandTraineeAtPanelInstitutionAsync" />), its trainee must
@@ -163,6 +164,87 @@ internal static class CommitteeTraineeScope
             .Where(trainee => MayScheduleFor(principal, panel, trainee.Value))
             .Select(trainee => trainee.Key)
             .ToArray();
+    }
+
+    /// <summary>
+    /// The panels among <paramref name="panels" /> this caller may put someone before: each one on which
+    /// <see cref="MayScheduleFor" /> accepts at least one trainee the picker can offer (<see cref="OfferableNamesAsync" />).
+    /// The scheduling page's panel list, so it offers exactly the panels whose trainee picker
+    /// (<see cref="ListSchedulableTraineesQuery" />) is not empty. (T194 item 3)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Until T194 the page listed every panel at the caller's institution and every panel they sat on elsewhere, so an
+    /// External member from another institution was offered that panel with an empty trainee list, and a Surgery
+    /// SpecialityAdmin was offered the Paediatrics panel the same way. Asked by the predicate itself, not by a copy of its
+    /// institution and speciality halves. One read of the trainees, and one of their names, per institution the panels run
+    /// at.
+    /// </para>
+    /// <para>
+    /// The picker's own filter is applied too (T194 review): until then a panel whose only schedulable trainee had been
+    /// erased was listed with an empty trainee list, the symptom this list exists to remove.
+    /// </para>
+    /// </remarks>
+    public static async Task<IReadOnlyList<DecisionPanel>> ListSchedulablePanelsAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        ClaimsPrincipal principal,
+        IReadOnlyList<DecisionPanel> panels,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(panels);
+
+        if (!CommitteeDecisionAuthorization.MayScheduleReviews(principal))
+        {
+            return [];
+        }
+
+        var schedulable = new List<DecisionPanel>();
+        foreach (var institution in panels.GroupBy(panel => panel.InstitutionId))
+        {
+            var trainees = await TraineeScopeResolver.ResolveAllAsync(dbContext, institution.Key, cancellationToken);
+            var perPanel = institution
+                .Select(panel => (Panel: panel, TraineeUserIds: trainees
+                    .Where(trainee => MayScheduleFor(principal, panel, trainee.Value))
+                    .Select(trainee => trainee.Key)
+                    .ToArray()))
+                .ToArray();
+
+            var named = await OfferableNamesAsync(
+                users,
+                perPanel.SelectMany(entry => entry.TraineeUserIds).Distinct(StringComparer.Ordinal).ToArray(),
+                cancellationToken);
+
+            schedulable.AddRange(perPanel
+                .Where(entry => entry.TraineeUserIds.Any(named.ContainsKey))
+                .Select(entry => entry.Panel));
+        }
+
+        return schedulable;
+    }
+
+    /// <summary>
+    /// Which of these schedulable trainees the scheduling page can offer, with the name it offers each by: those with an
+    /// account to name them. The one filter the trainee picker (<see cref="ListSchedulableTraineesQuery" />) and the panel
+    /// list (<see cref="ListSchedulablePanelsAsync" />) apply to what <see cref="MayScheduleFor" /> accepts.
+    /// </summary>
+    /// <remarks>
+    /// An erased trainee's profile keeps its institution and programme under a pseudonym that names no account
+    /// (<c>ErasureExecutor</c>), so the rule still accepts it, and it has no one to name. The picker leaves it out rather
+    /// than offer a bare pseudonym (T182).
+    /// </remarks>
+    public static async Task<IReadOnlyDictionary<string, string>> OfferableNamesAsync(
+        IUserAdministrationService users,
+        IReadOnlyCollection<string> traineeUserIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(users);
+        ArgumentNullException.ThrowIfNull(traineeUserIds);
+
+        return traineeUserIds.Count == 0
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            : await users.GetDisplayNamesAsync(traineeUserIds, cancellationToken);
     }
 
     /// <summary>

@@ -173,7 +173,7 @@ public sealed class PanelScopeGuardTests
             new DecisionPanel { Name = "Spec-B-panel", Scope = DecisionPanelScope.Speciality, InstitutionId = InstitutionB, SpecialityId = SpecialityInB, CreatedOn = DateTime.UtcNow });
         await db.SaveChangesAsync();
 
-        var handler = new ListDecisionPanelsQueryHandler(db);
+        var handler = new ListDecisionPanelsQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new ListDecisionPanelsQuery(TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);

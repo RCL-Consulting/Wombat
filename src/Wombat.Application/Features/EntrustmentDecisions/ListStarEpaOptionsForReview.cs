@@ -50,10 +50,10 @@ public sealed class ListStarEpaOptionsForReviewQueryHandler
             .AsNoTracking()
             .Include(entity => entity.Panel)
                 .ThenInclude(panel => panel.Members)
-            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
-            ?? throw new InvalidOperationException("The committee review could not be found.");
+            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
-        CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
+        // One refusal for an unknown review and one out of reach, before anything about it is said (T194 item 1).
+        review = CommitteeDecisionAuthorization.DemandReviewAccess(request.Principal, review);
 
         return await StarCurriculum.ListAsync(_dbContext, review.TraineeUserId, cancellationToken);
     }

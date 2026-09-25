@@ -39,6 +39,13 @@ public sealed class PanelDecisionBodyTests : TestContext
                 new InstitutionDto(InstitutionA, "Kgosi Kgari", "KGK", null, true, DateTime.UtcNow)
             })
             .On<GetSpecialitiesListQuery>(_ => new[] { new SpecialityDto(Paediatrics, 1, "Paediatrics", null, true) })
+            // What a new panel may be (T194): every scope and speciality for an InstitutionalAdmin or an Administrator, the
+            // caller's own speciality for anyone else. PanelEditFormOptionsTests runs the real rule.
+            .On<GetDecisionPanelFormOptionsQuery>(query =>
+                query.Principal.IsInRole(WombatRoles.Administrator) || query.Principal.IsInRole(WombatRoles.InstitutionalAdmin)
+                    ? new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: true, Specialities: null)
+                    : new DecisionPanelFormOptionsDto(
+                        MayCreateInstitutionWide: false, Specialities: [new SpecialityDto(Paediatrics, 1, "Paediatrics", null, true)]))
             .On<ListPanelMemberCandidatesQuery>(_ => new[]
             {
                 new PanelMemberCandidateDto("zulu", "zulu@test", "Thandi", "Zulu", InstitutionA)

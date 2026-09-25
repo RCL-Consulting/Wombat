@@ -137,8 +137,9 @@ public sealed class ReviewSchedulingScopeGuardTests
             new GetCommitteeReviewByIdQuery(reviewId, TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);
 
+        // The one refusal an unknown id gets too (T194 item 1).
         await act.Should().ThrowAsync<UnauthorizedAccessException>()
-            .WithMessage("*your institution*");
+            .WithMessage("The committee review could not be found among the reviews you can view.");
     }
 
     private static async Task<int> AddPanelAsync(

@@ -301,6 +301,30 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
     }
 
     [Fact]
+    public void AScheduledReview_IsNotOfferedToStart_ToAReaderTheHandlerRefuses_AndSaysWhoCan()
+    {
+        // T194. An institutional administrator reads every review at their institution, but starting one is for the
+        // panel's members and the institution's coordinators (CommitteeDecisionAuthorization.WorksOnPanel). Before T194
+        // they were offered Start, and the click was refused.
+        SignInAs("instadmin-1");
+        var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false) with { CallerMayStart = false });
+
+        Buttons(cut).Should().NotContain("Start review");
+        Text(cut.Find("#chair-actions-note"))
+            .Should().Be("Only the panel's members, and the coordinators of its institution, can start this review.");
+    }
+
+    [Fact]
+    public void AScheduledReview_OfferedStart_SaysNothingAboutWhoCan()
+    {
+        SignInAs("member-1");
+        var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false));
+
+        Buttons(cut).Should().Contain("Start review");
+        cut.FindAll("#chair-actions-note").Should().BeEmpty();
+    }
+
+    [Fact]
     public void UnderAppeal_AnExternalMember_IsOfferedTheResolveForm_ThoughNotTheChairsControls()
     {
         SignInAs("external-1");
@@ -415,6 +439,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
             AcademicYear = 2026,
             Semester = 1,
             CallerChairs = callerChairs,
+            // Every reader here but T194's institutional administrator sits on the panel, so may start it.
+            CallerMayStart = true,
             CallerResolvesAppeals = callerChairs,
             TraineeName = "Lerato Molefe",
             Agenda = new CommitteeAgendaDto(

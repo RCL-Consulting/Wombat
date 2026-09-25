@@ -693,14 +693,12 @@ public sealed class CommitteeTraineeScopeTests
     }
 
     /// <summary>
-    /// The chair gate's refusal for each action. Ratify, Stage and Remove look the review up and authorise first, with the
-    /// one refusal that does not say whether the id names a review (T131, T194 item 1); Record and Close say the action
-    /// is the chair's. Neither has an Administrator bypass (T165, D46).
+    /// The chair gate's refusal for each action: every one looks the review up and authorises first, with the one refusal
+    /// that does not say whether the id names a review (T131; Record and Close since T194 item 1). None has an
+    /// Administrator bypass (T165, D46).
     /// </summary>
     private static string ChairRefusal(string command)
-        => command is "Ratify" or "Stage" or "Remove"
-            ? "The committee review could not be found among the reviews you chair."
-            : "Only the panel's chair can do this.";
+        => "The committee review could not be found among the reviews you chair.";
 
     [Fact]
     public async Task TheAppealBody_AnswersTheAppealOfATraineeWhoHasMovedAway()

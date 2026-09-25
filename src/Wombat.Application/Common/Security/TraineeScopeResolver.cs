@@ -288,7 +288,10 @@ public static class TraineeScopeResolver
     /// previewing its agenda and the scheduling page's trainee picker, which such a caller is refused, or offered nobody,
     /// for every trainee, themselves included;</item>
     /// <item>the committee reviews page's list (<c>ListReviewsForPanelQuery</c>, T216), which names each review's trainee
-    /// and outcome: such a caller is listed none, their own included, which are on My committee reviews.</item>
+    /// and outcome: such a caller is listed none, their own included, which are on My committee reviews;</item>
+    /// <item>conducting a committee review (<c>CommitteeDecisionAuthorization.WorksOnPanel</c> and <c>HoldsSeat</c>, the
+    /// T194 review): starting one, every chair's action, and resolving an appeal, which such a caller is refused, and not
+    /// offered, on every review, their own included, whatever seat they hold on its panel.</item>
     /// </list>
     /// <para>
     /// NOT yet the activity read gate (<c>ActivityService.IsScopedOverseerOf</c> and <c>ActivityReadScope.WhereReadableBy</c>,

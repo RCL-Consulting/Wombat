@@ -80,14 +80,15 @@ public sealed class ResolveAppealCommandHandler : IRequestHandler<ResolveAppealC
                 .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
-            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
-            ?? throw new InvalidOperationException("The committee review could not be found.");
+            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
-        // The appeal body answers an appeal against its own ratified review wherever the trainee now trains: resolving
-        // it reads no evidence and supersedes no entrustment decision, and a trainee who moved keeps their recourse.
-        // The review's trainee was held to the panel's institution when it was ratified. (T182; CommitteeTraineeScope)
-        // The appeal body is the panel's chair or an external member, with no Administrator bypass (T165, D46).
-        CommitteeDecisionAuthorization.DemandAppealResolverAccess(request.Principal, review.Panel);
+        // Authorise first: an unknown review and one whose appeal body the caller does not sit on get the one refusal,
+        // before whether it is under appeal is said (T194 item 1). The appeal body is the panel's chair or an external
+        // member, with no Administrator bypass (T165, D46). It answers an appeal against its own ratified review wherever
+        // the trainee now trains: resolving it reads no evidence and supersedes no entrustment decision, and a trainee who
+        // moved keeps their recourse. The review's trainee was held to the panel's institution when it was ratified.
+        // (T182; CommitteeTraineeScope)
+        review = CommitteeDecisionAuthorization.DemandAppealBodyReview(request.Principal, review);
 
         // T165: a remitted appeal replaces the committee's decision, so the replacement is held to what any committee
         // decision is: a quorum of the panel present, each of whom may sit now and none the trainee. Checked here and in

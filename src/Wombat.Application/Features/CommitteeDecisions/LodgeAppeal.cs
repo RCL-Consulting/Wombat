@@ -39,6 +39,9 @@ public sealed class LodgeAppealCommandHandler : IRequestHandler<LodgeAppealComma
 
     public async Task<CommitteeReviewDetailDto> Handle(LodgeAppealCommand request, CancellationToken cancellationToken)
     {
+        // Only a trainee lodges an appeal, asked before the review is looked up (T165).
+        CommitteeDecisionAuthorization.DemandLodgesAppeals(request.Principal);
+
         var review = await _dbContext.Set<CommitteeReview>()
             .Include(entity => entity.Panel)
                 .ThenInclude(panel => panel.Members)
@@ -46,10 +49,11 @@ public sealed class LodgeAppealCommandHandler : IRequestHandler<LodgeAppealComma
                 .ThenInclude(decision => decision.Attendees)
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
-            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
-            ?? throw new InvalidOperationException("The committee review could not be found.");
+            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
-        CommitteeDecisionAuthorization.DemandTraineeSelfAccess(request.Principal, review.TraineeUserId);
+        // Then one refusal for an unknown review, another trainee's, and the caller's own before it is ratified, before
+        // the review's state is said (T194 item 1).
+        review = CommitteeDecisionAuthorization.DemandOwnRatifiedReview(request.Principal, review);
         review.LodgeAppeal(request.Reason, CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal), DateTime.UtcNow);
 
         await _dbContext.SaveChangesAsync(cancellationToken);

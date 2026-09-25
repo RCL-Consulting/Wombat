@@ -52,8 +52,10 @@ public sealed class ListSchedulableTraineesQueryHandler
             return [];
         }
 
-        // A profile whose identity row is gone has no one to name; it is left out rather than offered as a bare id.
-        var names = await _userAdministrationService.GetDisplayNamesAsync(traineeUserIds, cancellationToken);
+        // A profile with no account to name it by (an erased trainee's) is left out rather than offered as a bare id, by
+        // the filter the scheduling page's panel list applies too (T194 review).
+        var names = await CommitteeTraineeScope.OfferableNamesAsync(
+            _userAdministrationService, traineeUserIds, cancellationToken);
 
         return traineeUserIds
             .Where(names.ContainsKey)

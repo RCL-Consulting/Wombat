@@ -281,7 +281,9 @@ public sealed class PeopleByNamePageTests : TestContext
         [])
         {
             AcademicYear = 2026,
-            Semester = 1
+            Semester = 1,
+            // The reader works on the panel, so is offered Start (T194).
+            CallerMayStart = true
         };
 
     /// <summary>Answers what a test registers, records every request, and refuses anything unregistered.</summary>

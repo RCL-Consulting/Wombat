@@ -76,6 +76,16 @@
         }
       </aside>
     }
+    @if (!PanelId.HasValue && _formOptions is { MayCreateAny: false })
+    {
+      @* T194. No scope is open to this caller, so the form is not offered empty: creating any panel would be refused. *@
+      <section class="detail-card detail-card--empty" id="panel-none-creatable">
+        <h3>Create panel</h3>
+        <p class="muted">@NoneCreatable</p>
+      </section>
+    }
+    else
+    {
     <section class="detail-card">
       <h3>@(PanelId.HasValue ? "Update members" : "Create panel")</h3>
       <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="committee-panel">
@@ -89,8 +99,9 @@
             </FormField>
             <FormField Label="Scope" InputId="panel-scope" Required="true">
               <InputSelect id="panel-scope" class="form-select" @bind-Value="_model.Scope">
-                @* Only the scopes the caller may create: a Speciality or SubSpecialityAdmin manages Speciality-scoped
-                   panels only, and used to be offered the institution-wide scope only to be refused it (T194). *@
+                @* Only the scopes the caller may create, by the rule creating a panel demands (GetDecisionPanelFormOptionsQuery,
+                   T194): a Speciality or SubSpecialityAdmin manages Speciality-scoped panels only, and used to be offered
+                   the institution-wide scope only to be refused it. *@
                 @foreach (var scope in Enum.GetValues<DecisionPanelScope>().Where(MayCreate))
                 {
                   <option value="@scope">@scope</option>
@@ -119,7 +130,7 @@
                          HelpText="@SpecialityHelpText">
                 <InputSelect id="panel-speciality" class="form-select" aria-describedby="@FieldHelp.DescribedBy("panel-speciality", SpecialityHelpText)" @bind-Value="_model.SpecialityId">
                   <option value="">Select speciality</option>
-                  @foreach (var speciality in _specialities)
+                  @foreach (var speciality in OfferedSpecialities)
                   {
                     @* Specialities are national now (T091); College prefix lands with the Phase 5 rework. *@
                     <option value="@speciality.Id">@speciality.Name</option>
@@ -176,6 +187,7 @@
         </FormActions>
       </EditForm>
     </section>
+    }
   </div>
 </StatePanel>
 
@@ -197,6 +209,7 @@
   private IReadOnlyList<DecisionBodyDto> _bodies = [];
   private IReadOnlyList<InstitutionDto> _institutions = [];
   private IReadOnlyList<SpecialityDto> _specialities = [];
+  private DecisionPanelFormOptionsDto? _formOptions;
   private IReadOnlyList<PanelMemberCandidateDto> _candidates = [];
   private int _unseatable;
 
@@ -215,13 +228,17 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
       _mayChooseBody = _isAdministrator || authState.User.IsInRole(WombatRoles.InstitutionalAdmin);
-      if (!_mayChooseBody)
-      {
-        // The institution-wide scope is not theirs to create (T194), so the form starts on the one it offers.
-        _model.Scope = DecisionPanelScope.Speciality;
-      }
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
       _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
+      if (!PanelId.HasValue)
+      {
+        // What a new panel may be, by the rule creating one demands (T194). The form starts on a scope it offers:
+        // Speciality where it offers one, as it always did, else the institution-wide scope.
+        _formOptions = await Sender.Send(new GetDecisionPanelFormOptionsQuery(authState.User));
+        _model.Scope = MayCreate(DecisionPanelScope.Speciality) || !MayCreate(DecisionPanelScope.Institution)
+          ? DecisionPanelScope.Speciality
+          : DecisionPanelScope.Institution;
+      }
       if (_mayChooseBody)
       {
         _bodies = await Sender.Send(new GetDecisionBodiesQuery());
@@ -268,6 +285,11 @@
     "decides EPAs 4 and 5), and nothing else. Where no panel sits as it, the general panels decide them. It cannot " +
     "change while a review before the panel is scheduled, in progress or awaiting ratification.";
 
+  /// <summary>Said in place of the form when no panel is the caller's to create (T194).</summary>
+  private const string NoneCreatable =
+    "You cannot create a decision panel. A speciality or sub-speciality administrator creates panels for their own " +
+    "speciality at their own institution, and an institutional administrator creates any panel there.";
+
   private const string MembersHelpText =
     "Hold Ctrl (Windows) / Cmd (Mac) to select multiple. The chair is excluded automatically. A panel needs at least " +
     "one member or external member besides the chair: no committee decision is one person's. Only active committee " +
@@ -276,9 +298,24 @@
   private const string ExternalsHelpText =
     "External examiners selected from the CommitteeMember pool. Cross-institution externals are not yet supported.";
 
-  /// <summary>Whether the caller may create a panel of this scope: the institution-wide one is an institution's.</summary>
-  private bool MayCreate(DecisionPanelScope scope)
-    => scope != DecisionPanelScope.Institution || _mayChooseBody;
+  /// <summary>
+  /// Whether the caller may create a panel of this scope (T194): the institution-wide one when the options say so, a
+  /// Speciality-scoped one when there is a speciality to offer. Read from what creating a panel would accept, not from
+  /// the caller's roles.
+  /// </summary>
+  private bool MayCreate(DecisionPanelScope scope) => scope switch
+  {
+    DecisionPanelScope.Institution => _formOptions?.MayCreateInstitutionWide == true,
+    DecisionPanelScope.Speciality => OfferedSpecialities.Count > 0,
+    _ => false
+  };
+
+  /// <summary>
+  /// The specialities a new Speciality-scoped panel may cover (T194): only the caller's own for a Speciality or
+  /// SubSpecialityAdmin, whom the speciality list gives none, and the speciality list itself for anyone whose reach is
+  /// every speciality.
+  /// </summary>
+  private IReadOnlyList<SpecialityDto> OfferedSpecialities => _formOptions?.Specialities ?? _specialities;
 
   private async Task SaveBodyAsync()
   {

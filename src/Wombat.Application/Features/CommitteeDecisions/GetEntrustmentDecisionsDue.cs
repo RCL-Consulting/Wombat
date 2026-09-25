@@ -505,7 +505,7 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
 
     /// <summary>
     /// Says, row by row, whether the caller may open the reviews a row names, the one its status is about and the one
-    /// holding its seat: the review's own read ladder (<see cref="CommitteeDecisionAuthorization.DemandReviewAccess" />),
+    /// holding its seat: the review's own read ladder (<see cref="CommitteeDecisionAuthorization.MayReadReview" />),
     /// asked of each review rather than copied, so the page links only to a review that will open. One query for every
     /// review named.
     /// </summary>
@@ -532,7 +532,7 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             .ToListAsync(cancellationToken);
 
         var readable = reviews
-            .Where(review => MayRead(principal, review))
+            .Where(review => CommitteeDecisionAuthorization.MayReadReview(principal, review))
             .Select(review => review.Id)
             .ToHashSet();
 
@@ -543,19 +543,6 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
                 MayOpenHoldingReview = row.HoldingReviewId is int holdingId && readable.Contains(holdingId)
             })
             .ToList();
-    }
-
-    private static bool MayRead(ClaimsPrincipal principal, CommitteeReview review)
-    {
-        try
-        {
-            CommitteeDecisionAuthorization.DemandReviewAccess(principal, review);
-            return true;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return false;
-        }
     }
 
     private sealed record DueTrainee(string UserId, TraineeScope Scope, int CurriculumId, DateOnly ProgrammeStart);

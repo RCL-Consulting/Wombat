@@ -244,6 +244,15 @@ public sealed record CommitteeReviewDetailDto(
     public bool CallerChairs { get; init; }
 
     /// <summary>
+    /// Whether the caller may start this review, once it is scheduled: a member of its panel, a Coordinator of the panel's
+    /// institution, or a global Administrator (T194). Filled by <c>GetCommitteeReviewByIdQuery</c> with the predicate
+    /// starting demands (<c>CommitteeDecisionAuthorization.WorksOnPanel</c>), so the review page offers Start to exactly
+    /// the people the handler lets start it: an InstitutionalAdmin who reads the review without a seat on its panel is not
+    /// offered it. Starting also demands the trainee check (<see cref="TraineeElsewhere" />). False from everywhere else.
+    /// </summary>
+    public bool CallerMayStart { get; init; }
+
+    /// <summary>
     /// Whether the caller sits on the panel's appeal body, as its chair or an external member, and so may resolve an
     /// appeal (T213): the predicate resolving demands (<c>CommitteeDecisionAuthorization.ResolvesAppeals</c>). Filled by
     /// <c>GetCommitteeReviewByIdQuery</c>; false from everywhere else.
@@ -358,6 +367,7 @@ public sealed record CommitteeReviewDetailDto(
         {
             TraineeName = earlier.TraineeName,
             CallerChairs = earlier.CallerChairs,
+            CallerMayStart = earlier.CallerMayStart,
             CallerResolvesAppeals = earlier.CallerResolvesAppeals,
             TraineeElsewhere = earlier.TraineeElsewhere,
             PanelMembers = PanelMembers

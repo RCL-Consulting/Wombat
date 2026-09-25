@@ -119,8 +119,11 @@
       </dl>
       <FormActions>
         @* T213 review: Start demands, as every chair's action does, that the trainee still trains at the panel's institution
-           (TraineeElsewhere); when that fails for this reader it is not offered, and #trainee-elsewhere-note says why. *@
-        @if (_review.State == CommitteeReviewState.Scheduled && _review.TraineeElsewhere is null)
+           (TraineeElsewhere); when that fails for this reader it is not offered, and #trainee-elsewhere-note says why.
+           T194: it is offered only to someone its handler lets start the review (CallerMayStart): a member of the panel,
+           a coordinator of its institution, or an Administrator. An institutional administrator who reads the review
+           without a seat is not; #chair-actions-note says who can. *@
+        @if (_review.State == CommitteeReviewState.Scheduled && _review.CallerMayStart && _review.TraineeElsewhere is null)
         {
           @* Said at the button as well as beside the list: the Evidence snapshot card can be three cards below this
              one on a narrow screen, and this is the click that decides it. (T173) *@
@@ -824,9 +827,10 @@
 
   /// <summary>
   /// Who can act at this review now, said to a reader who is not offered the chair's controls (T213), so they are not
-  /// left looking for a button: the chair by name, and what only the chair can do in the review's state. Nothing while
-  /// no chair's action is open, nothing to the chair, and nothing while the trainee check refuses the panel's actions,
-  /// the chair's included: #trainee-elsewhere-note says so instead.
+  /// left looking for a button: the chair by name, and what only the chair can do in the review's state; on a scheduled
+  /// review, to a reader not offered Start (T194), who can start it. Nothing while no such action is open, nothing to the
+  /// chair, and nothing while the trainee check refuses the panel's actions, the chair's included:
+  /// #trainee-elsewhere-note says so instead.
   /// </summary>
   private string? ChairActionsNote
   {
@@ -841,6 +845,9 @@
       var only = chair is null ? "Only the panel's chair" : $"Only the panel's chair, {chair.DisplayName},";
       return _review switch
       {
+        // T194: Start is not the chair's alone, but it is not every reader's either.
+        { State: CommitteeReviewState.Scheduled, CallerMayStart: false } =>
+          "Only the panel's members, and the coordinators of its institution, can start this review.",
         { IsFormative: true, State: CommitteeReviewState.InProgress } => $"{only} can close this review.",
         { IsFormative: false, State: CommitteeReviewState.InProgress } =>
           $"{only} can stage entrustment decisions, defer agenda lines and record the committee's decision.",

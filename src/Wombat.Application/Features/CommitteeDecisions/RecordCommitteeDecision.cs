@@ -78,12 +78,12 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
             .Include(entity => entity.Appeals)
             .Include(entity => entity.EvidenceItems)
             .Include(entity => entity.AgendaLines)
-            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken)
-            ?? throw new InvalidOperationException("The committee review could not be found.");
+            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
 
-        // The panel's chair, and no one else: T165 removed the Administrator's bypass from the actions that take a
-        // decision (D46).
-        CommitteeDecisionAuthorization.DemandChairAccess(request.Principal, review.Panel);
+        // Authorise first: an unknown review and one the caller does not chair get the one refusal, before the review's
+        // state is said (T194 item 1). The panel's chair, and no one else: T165 removed the Administrator's bypass from the
+        // actions that take a decision (D46).
+        review = CommitteeDecisionAuthorization.DemandChairedReview(request.Principal, review);
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         // Every check, the domain's own included, runs before RecordDecision changes anything: the audit pipeline saves

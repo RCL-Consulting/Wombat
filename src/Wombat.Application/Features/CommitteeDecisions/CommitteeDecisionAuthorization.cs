@@ -67,47 +67,59 @@ internal static class CommitteeDecisionAuthorization
         DecisionPanelScope scope,
         int? specialityId,
         CancellationToken cancellationToken)
+        => (await PanelReachAsync(dbContext, principal, cancellationToken)).Admits(institutionId, scope, specialityId);
+
+    /// <summary>
+    /// The panels this caller may create, change or open, as one value: what <see cref="MayAdministerPanelAsync" /> asks
+    /// of a panel, and what the panel form offers (<see cref="GetDecisionPanelFormOptionsQuery" />), so the form offers a
+    /// scope and a speciality exactly when creating that panel would be accepted. (T194)
+    /// </summary>
+    /// <remarks>
+    /// The speciality half reads the SubSpecialityAdmin's sub-specialities' specialities from the store, so it is asked
+    /// once per request, not once per speciality.
+    /// </remarks>
+    public static async Task<PanelAdministrationReach> PanelReachAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(principal);
 
         if (principal.IsAdministrator())
         {
-            return true;
+            return PanelAdministrationReach.EveryPanel;
         }
 
-        if (principal.GetInstitutionId() != institutionId)
+        if (principal.GetInstitutionId() is not int institutionId)
         {
-            return false;
+            return PanelAdministrationReach.None;
         }
 
         if (principal.IsInstitutionalAdmin())
         {
-            return true;
+            return new PanelAdministrationReach(false, institutionId, EveryPanelAtInstitution: true, new HashSet<int>());
         }
 
-        if (scope != DecisionPanelScope.Speciality || specialityId is not int speciality)
+        var specialityIds = new HashSet<int>();
+        if (principal.IsInRole(WombatRoles.SpecialityAdmin))
         {
-            return false;
+            specialityIds.UnionWith(principal.GetSpecialityIds());
         }
 
-        if (principal.IsInRole(WombatRoles.SpecialityAdmin) && principal.IsInSpeciality(speciality))
+        var subSpecialityIds = principal.IsInRole(WombatRoles.SubSpecialityAdmin)
+            ? principal.GetSubSpecialityIds().ToArray()
+            : [];
+        if (subSpecialityIds.Length > 0)
         {
-            return true;
+            specialityIds.UnionWith(await dbContext.Set<SubSpeciality>()
+                .AsNoTracking()
+                .Where(subSpeciality => subSpecialityIds.Contains(subSpeciality.Id))
+                .Select(subSpeciality => subSpeciality.SpecialityId)
+                .ToListAsync(cancellationToken));
         }
 
-        if (!principal.IsInRole(WombatRoles.SubSpecialityAdmin))
-        {
-            return false;
-        }
-
-        var subSpecialityIds = principal.GetSubSpecialityIds().ToArray();
-        return subSpecialityIds.Length > 0 &&
-               await dbContext.Set<SubSpeciality>()
-                   .AsNoTracking()
-                   .AnyAsync(
-                       subSpeciality => subSpecialityIds.Contains(subSpeciality.Id) && subSpeciality.SpecialityId == speciality,
-                       cancellationToken);
+        return new PanelAdministrationReach(false, institutionId, EveryPanelAtInstitution: false, specialityIds);
     }
 
     /// <summary>
@@ -234,82 +246,160 @@ internal static class CommitteeDecisionAuthorization
             : HoldsSchedulingRole(principal) ? TraineeSchedulesAndListsNoReview
             : TraineeListsNoReview;
 
-    public static void DemandPanelAccess(ClaimsPrincipal principal, DecisionPanel panel)
+    /// <summary>
+    /// Whether the caller works on this panel's reviews: a global Administrator, a Coordinator of the panel's institution,
+    /// or a member of the panel, and in every case not someone who holds Trainee. Who may start a review
+    /// (<see cref="DemandStartableReview" />), and the read ladder's last rung (<see cref="MayReadReview" />).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A Coordinator supports the programmes of ONE institution, so they reach the panels their own institution runs, not
+    /// every institution's. The waiver used to be role-only, which made any Coordinator anywhere a reader of every panel's
+    /// reviews and, through the queries that hang off a review, of every trainee's evidence. (T101 finding E)
+    /// </para>
+    /// <para>
+    /// <b>A trainee first</b> (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185), asked before every arm, the
+    /// Administrator's included. A registrar who coordinates, administers or sits on the panel works on no review: the read
+    /// ladder already refused them every review but their own ratified one, and until the T194 review Start did not, so a
+    /// Trainee who was also a Coordinator could start a peer's review, freeze its evidence and agenda, and be handed the
+    /// whole review the page would not show them. The chair's actions and the appeal body ask the same rung
+    /// (<see cref="HoldsSeat" />).
+    /// </para>
+    /// </remarks>
+    public static bool WorksOnPanel(ClaimsPrincipal principal, DecisionPanel panel)
     {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(panel);
+
+        if (TraineeScopeResolver.ActsAsTrainee(principal))
+        {
+            return false;
+        }
+
         if (principal.IsInRole(WombatRoles.Administrator))
         {
-            return;
+            return true;
         }
 
-        // A Coordinator supports the programmes of ONE institution, so they reach the panels their
-        // own institution runs — not every institution's. The waiver used to be role-only, which
-        // made any Coordinator anywhere a reader of every panel's reviews and, through the queries
-        // that hang off a review, of every trainee's evidence. (T101 finding E)
         if (principal.IsInRole(WombatRoles.Coordinator) && CoordinatesInstitution(principal, panel.InstitutionId))
         {
-            return;
+            return true;
         }
 
-        var userId = GetRequiredUserId(principal);
-        if (panel.Members.Any(member => string.Equals(member.UserId, userId, StringComparison.Ordinal)))
-        {
-            return;
-        }
-
-        throw new UnauthorizedAccessException("You are not a member of this decision panel.");
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return !string.IsNullOrEmpty(userId) &&
+               panel.Members.Any(member => string.Equals(member.UserId, userId, StringComparison.Ordinal));
     }
 
     /// <summary>
-    /// The one read ladder for a committee review and for everything computed from it.
+    /// The one refusal for a review id the caller may not read, whether or not the id names a review. (T194 item 1)
+    /// </summary>
+    internal const string ReviewNotReadableByCaller =
+        "The committee review could not be found among the reviews you can view.";
+
+    /// <summary>
+    /// The one read ladder for a committee review and for everything computed from it: refuses, before anything about
+    /// the review is said, unless <paramref name="review" /> exists and <see cref="MayReadReview" /> holds. An unknown id
+    /// and a review out of the caller's reach get the one refusal. (T101 finding E, T194 item 1)
     /// </summary>
     /// <remarks>
-    /// ReviewDetail.razor is fed by sibling queries — the review itself, the sampling
-    /// concentration report, and the entrustment decisions staged against it — and each used to
-    /// carry its own idea of who may read a review, or none at all. One ladder, called by all
-    /// of them, is the only arrangement in which they cannot drift apart again; the count of the
-    /// window's MSF campaigns missing from the snapshot climbs it too (T173). The review's
-    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded. (T101 finding E)
+    /// <para>
+    /// ReviewDetail.razor is fed by sibling queries — the review itself, the sampling concentration report, and the
+    /// entrustment decisions staged against it — and each used to carry its own idea of who may read a review, or none
+    /// at all. One ladder, called by all of them, is the only arrangement in which they cannot drift apart again; the
+    /// count of the window's MSF campaigns missing from the snapshot climbs it too (T173).
+    /// </para>
+    /// <para>
+    /// The page prints the refusal. Until T194 an unknown id was "could not be found" and every other reason had its own
+    /// sentence ("You are not a member of this decision panel", "This review is not yet visible to the trainee"), so
+    /// anyone who could open the page could walk review ids and learn which exist, and a trainee that a review of theirs
+    /// was scheduled. The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.
+    /// </para>
     /// </remarks>
-    public static void DemandReviewAccess(ClaimsPrincipal principal, CommitteeReview review)
+    public static CommitteeReview DemandReviewAccess(ClaimsPrincipal principal, CommitteeReview? review)
     {
-        // The trainee arm comes first deliberately: someone holding Trainee alongside an oversight
-        // role is still a trainee about their own record, and must not read a panel's working notes
-        // on someone else through the wider role.
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (review is null || !MayReadReview(principal, review))
+        {
+            throw new UnauthorizedAccessException(ReviewNotReadableByCaller);
+        }
+
+        return review;
+    }
+
+    /// <summary>
+    /// Whether the caller may read this review: the rule <see cref="DemandReviewAccess" /> demands, and the decisions-due
+    /// page's links read so it links only to a review that will open. The review's <see cref="CommitteeReview.Panel" />
+    /// and its members must be loaded.
+    /// </summary>
+    public static bool MayReadReview(ClaimsPrincipal principal, CommitteeReview review)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(review);
+
+        // The trainee arm comes first deliberately: someone holding Trainee alongside an oversight role is still a trainee
+        // about their own record, and must not read a panel's working notes on someone else through the wider role.
         if (principal.IsInRole(WombatRoles.Trainee))
         {
-            var userId = GetRequiredUserId(principal);
-            if (!string.Equals(review.TraineeUserId, userId, StringComparison.Ordinal))
-            {
-                throw new UnauthorizedAccessException("You can only view your own committee reviews.");
-            }
-
-            if (review.State is not (CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final))
-            {
-                throw new UnauthorizedAccessException("This review is not yet visible to the trainee.");
-            }
-
-            return;
+            return IsOwnVisibleReview(principal, review);
         }
 
         if (principal.IsAdministrator())
         {
-            return;
+            return true;
         }
 
         if (principal.IsInstitutionalAdmin())
         {
-            // An InstitutionalAdmin can view (read-only) any review for a panel in their
-            // institution, even without panel membership. Conduct actions (start/record/
-            // ratify) remain chair-gated in their respective handlers. (T075 / F-4A-1)
-            if (!principal.CanAccessInstitution(review.Panel.InstitutionId))
-            {
-                throw new UnauthorizedAccessException("You can only view committee reviews for panels in your institution.");
-            }
-
-            return;
+            // An InstitutionalAdmin can view (read-only) any review for a panel in their institution, even without panel
+            // membership. Conduct actions (start/record/ratify) keep their own gates. (T075 / F-4A-1)
+            //
+            // And, as anyone else, the reviews of a panel they work on (T194 review): one who holds a seat on another
+            // institution's panel, which happens only when a seated member moves institution (PanelSeat refuses such a
+            // seat on save), was admitted to Start by WorksOnPanel and refused the review it had just started. So whoever
+            // may start, chair or resolve an appeal on a review may read it.
+            return principal.CanAccessInstitution(review.Panel.InstitutionId) || WorksOnPanel(principal, review.Panel);
         }
 
-        DemandPanelAccess(principal, review.Panel);
+        return WorksOnPanel(principal, review.Panel);
+    }
+
+    /// <summary>
+    /// Whether this is the caller's own review in a state its trainee may see: ratified, under appeal or final. Before
+    /// ratification a review is the panel's working record, not yet the trainee's.
+    /// </summary>
+    private static bool IsOwnVisibleReview(ClaimsPrincipal principal, CommitteeReview review)
+    {
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return !string.IsNullOrEmpty(userId) &&
+               string.Equals(review.TraineeUserId, userId, StringComparison.Ordinal) &&
+               review.State is CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final;
+    }
+
+    /// <summary>
+    /// The one refusal for a review id the caller may not start, whether or not the id names a review. (T194 item 1)
+    /// </summary>
+    internal const string ReviewNotStartableByCaller =
+        "The committee review could not be found among the reviews you can start.";
+
+    /// <summary>
+    /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller works on its
+    /// panel (<see cref="WorksOnPanel" />). An unknown id and another panel's review get the one refusal; the review's
+    /// state is judged only after this. The review page offers Start by the same predicate
+    /// (<see cref="CommitteeReviewDetailDto.CallerMayStart" />). (T194 item 1)
+    /// </summary>
+    /// <remarks>The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.</remarks>
+    public static CommitteeReview DemandStartableReview(ClaimsPrincipal principal, CommitteeReview? review)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (review is null || !WorksOnPanel(principal, review.Panel))
+        {
+            throw new UnauthorizedAccessException(ReviewNotStartableByCaller);
+        }
+
+        return review;
     }
 
     /// <summary>
@@ -330,20 +420,28 @@ internal static class CommitteeDecisionAuthorization
 
     /// <summary>
     /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller chairs its
-    /// panel. An unknown id and a review of another panel get the one refusal. (T131, T165)
+    /// panel: the gate of every chair's action, recording the decision, ratifying it, closing a formative review, staging
+    /// and removing entrustment decisions, and deferring and reinstating agenda lines. An unknown id and a review of
+    /// another panel get the one refusal. (T131, T165, T194 item 1)
     /// </summary>
     /// <remarks>
     /// <para>
     /// The page prints a command's refusal. Before T131 the entrustment commands said "could not be found" for an unknown
     /// id and only then checked the formative flag, the review's state and the chair, each with its own message, so a
     /// committee member of one panel could try review ids and learn which exist, which are formative and how far each
-    /// has got (T194 item 1). The state checks now come after this one.
+    /// has got (T194 item 1). Recording and closing kept that shape until T194. The state checks now come after this one.
     /// </para>
     /// <para>
-    /// There is no Administrator bypass, as there is none on <see cref="DemandChairAccess" /> (T165, D46): a global
-    /// Administrator without a Chair seat on the review's panel gets the same one refusal as anyone else. The review's
-    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded.
+    /// There is no Administrator bypass (T165, D46). Until T165 a global Administrator who was not on the panel passed the
+    /// chair's check, so one person with no seat on the committee could record, ratify and issue a STAR end to end, and
+    /// the record could not show that anyone else was involved. An Administrator keeps panel administration and read
+    /// access; one who must act joins the panel first, which the panel's own record then shows. Joining takes what any
+    /// member's seat takes (<see cref="PanelSeat" />): the CommitteeMember role, at the panel's institution. So a review
+    /// stranded by a trainee's move is finished by seating an active committee member of the panel's institution as its
+    /// chair, not by an Administrator acting in their own right. There used to be two copies of the check, one here and
+    /// one in <c>EntrustmentDecisionAuthorization</c>, each with the bypass; this is the only one now.
     /// </para>
+    /// <para>The review's <see cref="CommitteeReview.Panel" /> and its members must be loaded.</para>
     /// </remarks>
     public static CommitteeReview DemandChairedReview(ClaimsPrincipal principal, CommitteeReview? review)
     {
@@ -359,8 +457,8 @@ internal static class CommitteeDecisionAuthorization
 
     /// <summary>
     /// Whether the caller holds this panel's Chair seat: the one predicate every chair's action demands
-    /// (<see cref="DemandChairAccess" />, <see cref="DemandChairedReview" />) and the review page's offer of those actions
-    /// reads (<see cref="CommitteeReviewDetailDto.CallerChairs" />), so the page offers the chair's controls to exactly the
+    /// (<see cref="DemandChairedReview" />) and the review page's offer of those actions reads
+    /// (<see cref="CommitteeReviewDetailDto.CallerChairs" />), so the page offers the chair's controls to exactly the
     /// people the handlers let use them. (T165, T213)
     /// </summary>
     public static bool Chairs(ClaimsPrincipal principal, DecisionPanel panel)
@@ -368,16 +466,40 @@ internal static class CommitteeDecisionAuthorization
 
     /// <summary>
     /// Whether the caller sits on this panel's appeal body, as its Chair or one of its External members: the predicate
-    /// <see cref="DemandAppealResolverAccess" /> demands and the review page's offer of the resolve form reads
+    /// <see cref="DemandAppealBodyReview" /> demands and the review page's offer of the resolve form reads
     /// (<see cref="CommitteeReviewDetailDto.CallerResolvesAppeals" />). (T165, T213)
     /// </summary>
     public static bool ResolvesAppeals(ClaimsPrincipal principal, DecisionPanel panel)
         => HoldsSeat(principal, panel, role => role is DecisionPanelMemberRole.Chair or DecisionPanelMemberRole.External);
 
+    /// <summary>
+    /// Whether the caller holds a seat of this kind on the panel and acts in it: never someone who holds Trainee.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A trainee may hold CommitteeMember and sit on a panel (<see cref="PanelSeat" />), as the trainees' representative,
+    /// and be recorded present at a peer's review. They do not act on a review from the seat, whichever seat it is: the
+    /// trainee rung (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185) is asked first, as the read ladder and
+    /// Start ask it (<see cref="WorksOnPanel" />). Until the T194 review it was not: a Trainee seated as the Chair could
+    /// record, ratify and stage on a peer's review the page refused them, and one seated as the Chair or an External member
+    /// of the panel that reviews them was offered, and could use, the resolve form on their own appeal, since the page
+    /// shows a trainee their own review under appeal: they could dismiss it, or remit it and write the replacement
+    /// decision with two others named present.
+    /// </para>
+    /// <para>
+    /// So a panel whose Chair holds Trainee has no one who can take the chair's actions until another chair is seated.
+    /// That was already so on the page, which never showed such a chair a review before ratification.
+    /// </para>
+    /// </remarks>
     private static bool HoldsSeat(ClaimsPrincipal principal, DecisionPanel panel, Func<DecisionPanelMemberRole, bool> role)
     {
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(panel);
+
+        if (TraineeScopeResolver.ActsAsTrainee(principal))
+        {
+            return false;
+        }
 
         var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return !string.IsNullOrEmpty(userId) &&
@@ -385,86 +507,84 @@ internal static class CommitteeDecisionAuthorization
                    string.Equals(member.UserId, userId, StringComparison.Ordinal) && role(member.Role));
     }
 
-    /// <summary>The refusal of a chair's action to anyone who is not the panel's chair.</summary>
-    internal const string OnlyTheChair = "Only the panel's chair can do this.";
+    /// <summary>
+    /// The one refusal for a review id whose appeal the caller may not resolve, whether or not the id names a review.
+    /// (T194 item 1)
+    /// </summary>
+    internal const string ReviewNotResolvableByCaller =
+        "The committee review could not be found among the reviews whose appeals you resolve.";
 
     /// <summary>
-    /// Refuses anyone who is not a Chair of this panel: the gate for the actions that take a committee decision.
-    /// Recording the decision and closing a formative review call it; ratifying, and staging and removing entrustment
-    /// decisions, hold the same rule through <see cref="DemandChairedReview" />, which also gives an unknown review id the
-    /// one refusal (T131). (T165, D46)
+    /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller sits on its
+    /// panel's appeal body: the panel's Chair or one of its External members. An unknown id and another panel's review get
+    /// the one refusal; whether the review is under appeal is judged only after this. (T165, D46, T194 item 1)
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// There is no Administrator bypass. Until T165 a global Administrator who was not on the panel passed this check,
-    /// so one person with no seat on the committee could record, ratify and issue a STAR end to end, and the record
-    /// could not show that anyone else was involved. An Administrator keeps panel administration and read access; one
-    /// who must act joins the panel first, which the panel's own record then shows. Joining takes what any member's seat
-    /// takes (<see cref="PanelSeat" />): the CommitteeMember role, at the panel's institution. So a review stranded by a
-    /// trainee's move is finished by seating an active committee member of the panel's institution as its chair, not by
-    /// an Administrator acting in their own right.
-    /// </para>
-    /// <para>
-    /// There used to be two copies of this check, this one and one in <c>EntrustmentDecisionAuthorization</c>, each
-    /// with the bypass. This is the only one now.
-    /// </para>
-    /// </remarks>
-    public static void DemandChairAccess(ClaimsPrincipal principal, DecisionPanel panel)
-    {
-        ArgumentNullException.ThrowIfNull(principal);
-        ArgumentNullException.ThrowIfNull(panel);
-
-        GetRequiredUserId(principal);
-        if (Chairs(principal, panel))
-        {
-            return;
-        }
-
-        throw new UnauthorizedAccessException(OnlyTheChair);
-    }
-
-    /// <summary>
-    /// Refuses anyone who is not the appeal body: the panel's Chair or one of its External members. (T165, D46)
-    /// </summary>
-    /// <remarks>
-    /// There is no Administrator bypass, as there is none on the chair's actions (<see cref="DemandChairAccess" />).
+    /// There is no Administrator bypass, as there is none on the chair's actions (<see cref="DemandChairedReview" />).
     /// Until T165 an Administrator with no seat on the panel could dismiss a trainee's appeal, or remit it and write the
-    /// replacement decision alone, which every page then showed beside the original sitting's attendance.
+    /// replacement decision alone, which every page then showed beside the original sitting's attendance. The review's
+    /// <see cref="CommitteeReview.Panel" /> and its members must be loaded.
     /// </remarks>
-    public static void DemandAppealResolverAccess(ClaimsPrincipal principal, DecisionPanel panel)
+    public static CommitteeReview DemandAppealBodyReview(ClaimsPrincipal principal, CommitteeReview? review)
     {
         ArgumentNullException.ThrowIfNull(principal);
-        ArgumentNullException.ThrowIfNull(panel);
 
-        GetRequiredUserId(principal);
-        if (ResolvesAppeals(principal, panel))
+        if (review is null || !ResolvesAppeals(principal, review.Panel))
         {
-            return;
+            throw new UnauthorizedAccessException(ReviewNotResolvableByCaller);
         }
 
-        throw new UnauthorizedAccessException("Only the appeal body can resolve committee appeals.");
+        return review;
     }
 
+    /// <summary>The refusal to lodge an appeal for anyone who does not hold the Trainee role. Given before any lookup.</summary>
+    internal const string OnlyTraineesAppeal = "Only trainees can lodge appeals.";
+
     /// <summary>
-    /// Refuses anyone but the trainee whose review it is: an appeal is the trainee's own. (T165)
+    /// The one refusal for a review id a trainee may not appeal, whether or not the id names a review: someone else's, or
+    /// their own before it is ratified, which they cannot see yet. (T194 item 1)
+    /// </summary>
+    internal const string ReviewNotAppealableByCaller =
+        "The committee review could not be found among your own ratified reviews.";
+
+    /// <summary>
+    /// Refuses anyone who does not hold the Trainee role: an appeal is the trainee's own. Asked before the review is
+    /// looked up, so it says nothing about the id. (T165)
     /// </summary>
     /// <remarks>
     /// There is no Administrator bypass. Until T165 an Administrator could lodge an appeal on a trainee's behalf, which
     /// with the appeal body's own bypass let one person reopen and replace a ratified committee decision end to end.
     /// </remarks>
-    public static void DemandTraineeSelfAccess(ClaimsPrincipal principal, string traineeUserId)
+    public static void DemandLodgesAppeals(ClaimsPrincipal principal)
     {
         ArgumentNullException.ThrowIfNull(principal);
 
         if (!principal.IsInRole(WombatRoles.Trainee))
         {
-            throw new UnauthorizedAccessException("Only trainees can lodge appeals.");
+            throw new UnauthorizedAccessException(OnlyTraineesAppeal);
+        }
+    }
+
+    /// <summary>
+    /// Refuses, before anything else is looked at, unless <paramref name="review" /> is the caller's own and in a state its
+    /// trainee may see, the read ladder's trainee arm (<see cref="MayReadReview" />). An unknown id, another trainee's
+    /// review, and the caller's own review before it is ratified get the one refusal. (T165, T194 item 1)
+    /// </summary>
+    /// <remarks>
+    /// Until T194 an unknown id was "could not be found", another trainee's review "You can only appeal your own committee
+    /// reviews", and the caller's own scheduled review "Only ratified reviews can be appealed", which told a trainee that a
+    /// review of theirs was under way before the panel had said anything. Whether a review they can see takes an appeal
+    /// (one is already open, or it is final) is the review's own rule, judged after this.
+    /// </remarks>
+    public static CommitteeReview DemandOwnRatifiedReview(ClaimsPrincipal principal, CommitteeReview? review)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (review is null || !IsOwnVisibleReview(principal, review))
+        {
+            throw new UnauthorizedAccessException(ReviewNotAppealableByCaller);
         }
 
-        var userId = GetRequiredUserId(principal);
-        if (!string.Equals(userId, traineeUserId, StringComparison.Ordinal))
-        {
-            throw new UnauthorizedAccessException("You can only appeal your own committee reviews.");
-        }
+        return review;
     }
 }
