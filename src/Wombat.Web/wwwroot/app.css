@@ -218,6 +218,53 @@ h5 {
   padding: var(--space-md);
 }
 
+/* A column of long text on a table of many columns: a title, a list of names (T198). When the table is short of room it
+   gives way first: its lines wrap, then a long word breaks inside itself, down to the floor its header sets, and only
+   then does the table scroll sideways. So its longest word no longer sets the table's narrowest width; the floor does.
+   Without the floor, break-anywhere let the column fall to one letter a line. Its header asks for a share of the table,
+   not a length: a length would hold the column there on a wide screen while every other column grew. On the curriculum
+   items table the narrowest width fell from 883px to 794px, 113px under the container at 1280px (T176 left 33). No word
+   breaks at 1280px, but with little to spare: DESIGN.md § Table system has the measurements. */
+.clinic-table .col-wrap {
+  overflow-wrap: anywhere;
+}
+
+.clinic-table th.col-wrap {
+  min-width: 4rem;
+  width: 14%;
+}
+
+.clinic-table th.col-wrap--wide {
+  min-width: 5rem;
+  width: 20%;
+}
+
+/* A column as narrow as its content: a row's ordinal, a short code (T198). Its text stays on one line. Not for a row's
+   buttons: at 1% the column shrinks to its widest button and stacks them. */
+.clinic-table .col-fit {
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* A row's buttons (T198). The column asks for room to hold three small buttons on one line, and gets it before the
+   columns beside it grow. When the table is short of room the buttons wrap, so the table scrolls only once they are
+   stacked. Keeping them on one line at any width made the scale editor scroll sideways, with Remove out of view,
+   wherever its card is narrow: at 390px, and near 700 and 1000px. */
+.clinic-table .col-actions {
+  width: 12rem;
+}
+
+/* A grid whose every row is a set of inputs, such as a scale's levels (T198). A row's text and buttons centre on its
+   inputs, rather than sit at the top of a cell the inputs make taller. Its rows take no hover tint: every row is a form,
+   and tinting a form as the pointer crosses it is noise (see .is-editing). */
+.clinic-table--inputs td {
+  vertical-align: middle;
+}
+
+.clinic-table--inputs tbody tr:hover {
+  background-color: transparent;
+}
+
 /* A list item open for editing (T176): its read-only row and, below it, the row whose one cell spans the table and
    holds the edit form. A stripe down the left ties the two together. They take no hover tint: neither is a list row
    while the edit is open, and tinting a whole form as the pointer crosses it is noise. */

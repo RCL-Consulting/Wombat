@@ -219,6 +219,38 @@ public sealed class CurriculumItemsEditLayoutTests : TestContext
     }
 
     [Fact]
+    public void TheEpaAndToolsColumns_WrapInsideAWord_RatherThanWidenTheTable()
+    {
+        // T198: with the compact padding the table had 33px to spare at 1280px (T176), its narrowest width being set by
+        // two words, "neurodevelopmental" in the EPA column and "observation," in Tools. A longer title or tool name, or
+        // another column, brought the sideways scroll back. Those two columns now give way first: they break inside a word
+        // (overflow-wrap: anywhere, on every cell of the column) down to a floor their headers set, and the headers ask
+        // for a share of the table. On a static render of the fifteen v11.1 items with app.css, the narrowest width went
+        // from 883px to 794px, against the 907px container at 1280px. The price is that "neurodevelopmental" breaks just
+        // below 1280px, where the table used to fit (DESIGN.md § Table system). The live 1280px check is a browser check.
+        var cut = RenderPage(Catalogue(Ladder.Pinned));
+        BeginEdit(cut, "PAED-001");
+
+        var headers = cut.FindAll("thead th");
+        headers.Select(header => (header.TextContent.Trim(), string.Join(' ', header.ClassList)))
+            .Should().Equal(
+                ("EPA", "col-wrap col-wrap--wide"), ("Target and decision", ""), ("Scale", ""), ("Minimum level", ""),
+                ("Minimum by training year", ""), ("Completion window (months)", ""), ("Weight", ""), ("Tools", "col-wrap"),
+                ("", ""));
+
+        var itemRows = cut.FindAll("tbody tr").Where(row => row.QuerySelector("td[colspan]") is null).ToList();
+        itemRows.Should().HaveCount(2);
+        foreach (var row in itemRows)
+        {
+            row.Children.Select(cell => cell.ClassList.Contains("col-wrap"))
+                .Should().Equal(true, false, false, false, false, false, false, true, false);
+        }
+
+        cut.Find("tbody td[colspan]").ClassList.Should().NotContain("col-wrap", "the edit form keeps its words whole");
+        cut.FindAll("th[style], td[style]").Should().BeEmpty("a column's width is a class in app.css");
+    }
+
+    [Fact]
     public void TheReasonSaveIsOff_SitsBesideSave()
     {
         // It used to be in the sub-row's first line, above the year editor and the tool list, far from the button.

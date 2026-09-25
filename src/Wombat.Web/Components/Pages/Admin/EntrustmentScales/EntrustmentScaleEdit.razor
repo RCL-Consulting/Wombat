@@ -56,35 +56,41 @@
       }
       else
       {
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th style="width:6rem;">Order</th>
-              <th>Label</th>
-              <th>Description</th>
-              <th style="width:12rem;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (var i = 0; i < _levels.Count; i++)
-            {
-              var index = i;
-              var level = _levels[index];
+        @* A grid of inputs, so each input sits in its cell (DESIGN.md § Table system), and each is named for its column
+           and its level: a column header names no input (T198). Order is as narrow as its content. The buttons ask for
+           room to sit on one line, and wrap where the card is narrow rather than push Remove out of view. The two
+           inputs share the rest. *@
+        <div class="table-container shadow">
+          <table class="clinic-table clinic-table--compact clinic-table--inputs">
+            <thead>
               <tr>
-                <td>@level.Order</td>
-                <td><input class="form-control" @bind="level.Label" /></td>
-                <td><input class="form-control" @bind="level.Description" /></td>
-                <td>
-                  <div class="actions-cell">
-                    <button type="button" class="btn btn-outline btn-sm" disabled="@(index == 0)" @onclick="() => MoveLevel(index, -1)">Up</button>
-                    <button type="button" class="btn btn-outline btn-sm" disabled="@(index == _levels.Count - 1)" @onclick="() => MoveLevel(index, 1)">Down</button>
-                    <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoveLevel(index)">Remove</button>
-                  </div>
-                </td>
+                <th class="col-fit">Order</th>
+                <th>Label</th>
+                <th>Description</th>
+                <th class="col-actions"><span class="visually-hidden">Actions</span></th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (var i = 0; i < _levels.Count; i++)
+              {
+                var index = i;
+                var level = _levels[index];
+                <tr>
+                  <td class="col-fit">@level.Order</td>
+                  <td><input class="form-control" aria-label="@($"Label, level {level.Order}")" @bind="level.Label" /></td>
+                  <td><input class="form-control" aria-label="@($"Description, level {level.Order}")" @bind="level.Description" /></td>
+                  <td class="col-actions">
+                    <div class="actions-cell">
+                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move level {level.Order} up")" disabled="@(index == 0)" @onclick="() => MoveLevel(index, -1)">Up</button>
+                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move level {level.Order} down")" disabled="@(index == _levels.Count - 1)" @onclick="() => MoveLevel(index, 1)">Down</button>
+                      <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Remove level {level.Order}")" @onclick="() => RemoveLevel(index)">Remove</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       }
     </section>
   </div>

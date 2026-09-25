@@ -260,20 +260,56 @@ Instead:
 - The form row is as wide as the table, so Save sits at the table's right edge. **The read-only table must fit its
   container**, or Save is off-screen however the form is laid out.
 
-A grid whose every row is always a set of inputs, such as a scale's rungs on `EntrustmentScaleEdit`, is a different
+A grid whose every row is always a set of inputs, such as a scale's levels on `EntrustmentScaleEdit`, is a different
 pattern and keeps its controls in the cells. Each of them still needs an accessible name; a column header does not
-give one.
+give one. Name each by its column and its row, in the words the page uses: `aria-label="Label, level 3"`, and a row's
+buttons `aria-label="Move level 3 up"` and `"Remove level 3"` (T198). The table is
+`clinic-table clinic-table--compact clinic-table--inputs`: the inputs' own padding spaces the row, and the row's text and
+buttons centre on its inputs. Its rows take no hover tint, for the reason `.is-editing` rows take none. Its ordinal is
+`.col-fit`, as narrow as its content. Its buttons are `.col-actions`, whose header is a `.visually-hidden` "Actions": the
+column asks for 12rem, three small buttons on one line, and gets it before the inputs grow. Where the card is narrow the
+buttons wrap, and the table scrolls only once they are stacked. The inputs share the rest. Not `.col-fit` for buttons:
+at 1% the column shrinks to its widest button and stacks them. And not buttons held on one line: the scale editor then
+scrolled sideways, with Remove out of view, at 390px and near 700 and 1000px (T198 review).
 
 **Many columns.** A table's narrowest width is its columns' longest words plus 2 × `--space-md` of padding per column.
 Nine columns spend 288px on padding alone. The curriculum items table needed 1018px against the 907px its container has
 at 1280px, and nothing in it was too wide. `.clinic-table--compact` halves the cell padding (a spanning cell keeps the
-full padding, because it holds a form). That brings the table to 874px. Reach for it on a table of eight or more
-columns, and measure a table at 1280px against the longest real values before adding a column.
+full padding, because it holds a form). That brought the table to 874px. Reach for it on a table of eight or more
+columns, and on a grid of inputs.
+
+A column of long text (a title, a list of names) is `.col-wrap`, on its header and every one of its cells. When the table
+is short of room it gives way first: its lines wrap, then a long word breaks inside itself (`overflow-wrap: anywhere`),
+down to a floor, and only then does the table scroll sideways. So its longest word no longer sets the table's narrowest
+width; the floor does. The header sets the floor, 4rem of text (5rem with `.col-wrap--wide`). Without one the column
+fell to a letter a line, 30px wide at 1024px (T198 review). The header also asks for a share of the table, 14% (20%
+with `--wide`). A share, not a length: a length would hold the column there on a wide screen while every other column
+grew.
+
+That is a trade, not a free gain. A static render of the curriculum items table (the fifteen v11.1 items; T198), whose
+EPA column is `--wide` and whose Tools column is not:
+- Its narrowest width is 794px, down from 883px, so it has 113px to spare at 1280px (a 907px container), up from 24 in
+  the same render (T176 measured 33 on the live page).
+- No word breaks at 1280px, but with 5px to spare: the EPA column is 168px, and "neurodevelopmental" needs 163. Below
+  about 1272px that word breaks, where the old table fitted down to about 1257px and then scrolled.
+- By about 1168px both columns are at their floors (96px and 80px with padding), and many words are broken. Below that
+  the table scrolls.
+- At 1440px every column is within 10px of its old width. At 1920px the EPA and Tools columns are narrower than they
+  were, 309px and 216px against 374px and 276px: they hold their share, and the other columns take the rest.
+
+Measure a table at 1280px against the longest real values before adding a column.
 
 ```css
 .clinic-table--compact /* cell padding --space-sm; a td[colspan] keeps --space-md (T176) */
+.clinic-table--inputs  /* a grid whose every row is a set of inputs: cells centre vertically (T198) */
 .is-editing            /* on a clinic-table row: the item open for editing and its form row below (T176) */
+.col-wrap              /* th and td of a long-text column: overflow-wrap anywhere; the th asks for 14%, floor 4rem (T198) */
+.col-wrap--wide        /* with .col-wrap on the th: asks for 20%, floor 5rem (T198) */
+.col-fit               /* th and td of a column as narrow as its content, on one line: an ordinal, a code (T198) */
+.col-actions           /* th and td of a row's buttons: asks for 12rem, one line of three; they wrap when short (T198) */
 ```
+
+No inline `style="width:…"` on a table's cells. A column's width is one of the classes above.
 
 A table **grouped by one column** puts each group in its own `<tbody>`, and the group's first row opens with
 `<th scope="rowgroup" rowspan="n">` naming it; `app.css` aligns that label to the top of its group. No new class. The
@@ -973,7 +1009,7 @@ body, h1..h5, .page-subtitle
 .header-container, .search-container, .search-input, .search-grid, .search-field, .search-hint
 
 /* ── Tables ────────────────────────────────────────── */
-.table-container, .clinic-table, .clinic-table tr.is-editing, .clinic-table--compact, .actions-cell
+.table-container, .clinic-table, .clinic-table tr.is-editing, .clinic-table--compact, .col-wrap, .col-fit, .col-actions, .clinic-table--inputs, .actions-cell
 
 /* ── Buttons ───────────────────────────────────────── */
 .btn, .btn-{variant}, .btn-sm, .btn-xs, .btn-outline

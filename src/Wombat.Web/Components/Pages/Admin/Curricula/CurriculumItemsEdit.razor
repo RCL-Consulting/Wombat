@@ -50,20 +50,25 @@
     <div class="detail-card">
       <h3>Existing items</h3>
       <div class="table-container shadow">
-        @* Compact (T176): at the default padding, nine columns need 1018px, and the container has 907px at 1280px. *@
+        @* Compact (T176): at the default padding, nine columns need 1018px, and the container has 907px at 1280px.
+           The EPA and Tools columns give way first when the table is short of room (T198): they wrap, breaking a long
+           word if they must, down to a floor, and only then does the table scroll. Their longest words,
+           "neurodevelopmental" and "observation,", had set its narrowest width and left it 33px to spare at 1280px
+           (T176); the floors leave 113. No word breaks at 1280px, but "neurodevelopmental" does just below it, where
+           the table used to fit. DESIGN.md § Table system has the measurements. *@
         <table class="clinic-table clinic-table--compact">
           <thead>
             <tr>
-              <th>EPA</th>
-              @* T131: the decision cadence and body share the target's cell, as they share Annexure B's row. A tenth column
-                 would widen a table that has 33px to spare at 1280px (T176). *@
+              <th class="col-wrap col-wrap--wide">EPA</th>
+              @* T131: the decision cadence and body share the target's cell, as they share Annexure B's row, rather than
+                 take a tenth column (T176). *@
               <th>Target and decision</th>
               <th>Scale</th>
               <th>Minimum level</th>
               <th>Minimum by training year</th>
               <th>Completion window (months)</th>
               <th>Weight</th>
-              <th>Tools</th>
+              <th class="col-wrap">Tools</th>
               <th></th>
             </tr>
           </thead>
@@ -75,7 +80,7 @@
               @* An item open for editing keeps its read-only row, so what is stored stays in view above what is being
                  changed; only its actions cell changes. *@
               <tr class="@(editing ? "is-editing" : null)">
-                <td>
+                <td class="col-wrap">
                   @item.EpaCode - @item.EpaTitle
                   @if (!item.EpaIsActive)
                   {
@@ -113,7 +118,7 @@
                 </td>
                 <td>@item.WindowMonths</td>
                 <td>@(item.Weight?.ToString("0.##") ?? "—")</td>
-                <td>@ToolsText(item.PermittedToolKeys)</td>
+                <td class="col-wrap">@ToolsText(item.PermittedToolKeys)</td>
                 <td>
                   @if (editing)
                   {
