@@ -85,55 +85,27 @@ read ([T147], [T151]), the size is **inferred** from the task file's "What to bu
 
 ### 2A. Open
 
-Grouped in the order § 4 recommends. A `+` joins tasks that land in one change; the folded task closes with its host.
+**Re-baselined 2026-09-25: the stream as planned in § 4 is built.** Every row that stood here on 2026-09-24 as READY,
+committee work or a gated instrument has shipped, except the items below. Each shipped task was reviewed, fixed,
+merged, browser-checked on dev and pushed, and its "As built" in `execution/tasks/done/` records the evidence. The
+review of each change filed follow-ups (T186–T287). Those that bear on correctness or security were built the same day.
+The P3 remainder is platform polish, listed in `DASHBOARD.md`, and none of it blocks v11.1.
 
-| Task | What it is | Verdict | Size | Depends on |
-|---|---|---|---|---|
-| **Ready now** | | | | |
-| [T127] + [T143] + [T148] · P2 | A refused Submit on `/activities/new` leaves an orphan draft and a retry makes another; after a success the form keeps its values ([T143]); Submit cancels a `requested`-born activity at once ([T148]). One change to `CreateOrTransitionAsync`: navigate to `/activities/{id}` after the create | READY | S each, one change | — |
-| [T138] · P3 | The committee's evidence snapshot includes draft, open and withdrawn MSF campaigns. Keep `Released` only | READY | S | — |
-| [T107] · P2 | An activity pinned to a superseded version still offers a transition it cannot complete. D33 part 1: render it disabled, with a reason naming the fields | READY | S | — |
-| [T125] + [T136] · P2 | Curriculum minima are typed as bare integers against an invisible ladder. Rung pickers; a scale change resets them; the refusal names the scale and the value ([T136] folded in) | READY | M | — (sequence with [T139], which edits the same page) |
-| [T137] + [T106] item 14 · P2 | A campaign's per-EPA MSF rows are indistinguishable on the trainee's list. Stamp `Activity.EpaId` from a schema pointer; add `ObservedOn` and the credit outcome to the list DTO; fix `/activities/inbox` too | READY | M | — (blocks [T167]) |
-| [T135] + [T150] · P2 | The sampling report's denominator and numerator disagree, and it and the trajectory count drafts, cancelled requests and a hard-coded assessor key ([T150], [T106] item 9). Count only a terminal state of the pinned workflow | READY: the state decision is recommended in its 2026-09-24 update; record it as a D-number when built | M | — |
-| [T160] · P2 | The encounter date is unbounded. Refuse a future or pre-programme date; warn, never refuse, past D15's fourteen days | READY | M (inferred) | — |
-| [T113] · P2 | Six trainee-id queries, and the MSF Open, Close, Withdraw, AddInvitation and aggregate report, take no principal. One shared resolver in Application (widened 2026-09-24) | READY | M | — |
-| [T159] · P3 | The paediatric scenario runbook (Acts 1–2) still builds the FCPaed world by hand. Retarget it onto the seeded catalogue and replay it | READY | M (inferred) | — |
-| [T140] · P2 | The integration suite's MSF flow test cannot set itself up on a fresh schema, and leaks a schema when it fails | READY | S | — |
-| [T141] · P3 | A trainee cannot reach My progress from the navigation | READY | S | — |
-| [T142] · P3 | Activity pages print raw user ids where people's names belong | READY | S | — |
-| [T144] · P3 | Classify rated evidence by `WbaToolKey` and retire the hard-coded family list | READY | S | — |
-| [T145] · P3 | The legacy FormEpaLink admin screen maps instruments to EPAs and restricts nothing | **DONE 2026-09-25** (`aa2b569`): the forms feature is retired | S | — |
-| [T147] · P3 | CampaignEdit's "Evidence for these EPAs" label points at no element | READY | S (inferred) | — |
-| [T151] · P3 | The assessor nudge job emails deactivated and opted-out nominees | READY | S (inferred) | — |
-| [T158] · P3 | Deactivating an EPA takes it out of the picker but not off the progress page, and credit still applies ([T104]'s step 2) | READY | S (inferred) | — |
-| [T161] · P3 | An undated activity's filing timestamp is shown as its encounter date (D28) | READY | S (inferred) | — (if [T137] lands first, the list gets the marker too) |
-| [T162] · P3 | The type picker offers the system-written `msf_cpsa` to trainees | READY | S (inferred) | — |
-| [T163] · P3 | Every MSF response loads and hashes every invitation ever issued | READY | S (inferred) | — |
-| **The committee** | | | | |
-| [T167] · P2 | The committee's evidence snapshot names no EPA, tool, rating or encounter date, and a STAR can be staged on an EPA outside the trainee's curriculum | READY once its dependency lands | M (inferred) | [T137] |
-| [T165] · P2 | A one-member panel validates and the chair alone ratifies. Panel composition, attendance and quorum, the Administrator bypass | NEEDS A DECISION: the quorum floor and the Administrator bypass (recommendations in the task) | M (inferred) | — |
-| [T166] · P2 | Nothing compares a trainee's entrustment decisions with Annexure A's year targets or the exit rule | READY, except what recording `Graduate` does when the rule is unmet (operator; recommendation: warn and require a reason) | M (inferred) | — |
-| [T168] · P3 | No surface shows, per EPA and period, whether a released MSF covered it | READY | M (inferred) | — (feeds [T167]'s per-EPA group) |
-| [T169] · P3 | The portfolio PDF has no per-EPA progress, and prints unrated and MSF evidence as never completed | READY | M (inferred) | — ([T166] and [T168] slot in when they land) |
-| [T131] · P2 | Governance ([T098] phase 4): a decision cadence from Annexure B, per-institution panel routing with a neonatal CCC for EPAs 4–5, an EPA agenda on reviews, and Annexure A's `currency` column | NEEDS A DECISION **D38**, then NEEDS DESIGN | L | [T130] (done); [T167] and [T138] before it or with it; College question 6 |
-| **Gated instruments and seed fidelity** | | | | |
-| [T154] · P3 | Clinical audit (EPAs 1–3) and portfolio and logbook review (EPA 15) cannot be filed | NEEDS A DECISION **D34**, and the portfolio-review shape | M | — |
-| [T164] · P3 | Learner feedback (PAED-015) cannot be recorded | NEEDS A DECISION **D35**; the teaching-context threshold NEEDS DESIGN (College question 9) | M (inferred) | — |
-| [T170] · P3 | The candidate's milestone self-assessment and learning plan, page 8's fourth information source, have no instrument | NEEDS A DECISION: the College's answer (question 11), or the operator's call to proceed without one | M (inferred) | — |
-| [T139] · P3 | The v11.1 items are seeded with a 12-month window, and `max(WindowMonths)` gives a four-year registrar a one-year completion date | NEEDS A DECISION: what `WindowMonths` is (reopens D19; the survey recommends deleting it for an explicit programme length) | M | College question 10; sequence with [T125] |
-| **Decide or defer: not required for v11.1** | | | | |
-| [T146] · P3 | A crediting activity type from another discipline can credit a trainee's curriculum | NEEDS A DECISION: whether a type's scope bounds what it may credit (to be recorded as D43) | M | — (revisit with D21) |
-| [T152] · P3 | A supervisor based at another institution cannot be named on a trainee's assessment | NEEDS A DECISION: build now, or keep D23's documented limit (the survey recommends defer) | M | — |
-| [T153] · P3 | A trainee who has left an institution still files there and is shown its staff to nominate | NEEDS A DECISION: the rule (the task recommends refusing at create) | S | — |
-| [T171] · P3 | An activity pinned to a superseded version cannot be re-pinned (D33 part 2) | Deferred by D33 part 2; the credit rule on a re-pin NEEDS DESIGN | M (inferred) | — (part 1 is [T107]) |
-| **After the stream** | | | | |
-| [T157] · P1 | Production runs the 16 September build: nothing from [T098] on is deployed | READY, **deferred by the operator** until the stream is complete | S, operator | `pg_dump` first, then `deploy/deploy.ps1` |
+| Task | What it is | Verdict | Depends on |
+|---|---|---|---|
+| **Waiting on the College or the operator** | | | |
+| [T139] · P3 | `WindowMonths` and the completion date for a four-year registrar | NEEDS A DECISION: § 3F question 10 | College |
+| [T170] · P3 | The candidate's milestone self-assessment (page 8's fourth source) has no instrument | NEEDS A DECISION: § 3F question 11 | College |
+| [T146] · P3 | A crediting type from another discipline can credit a trainee's curriculum | NEEDS A DECISION (D43) | operator |
+| [T152] · P3 | A supervisor at another institution cannot be named | Deferred: D23's documented limit | operator |
+| [T153] · P3 | A trainee who left an institution still files there | NEEDS A DECISION: the rule | operator |
+| [T171] · P3 | Re-pinning an activity to a newer version (D33 part 2) | Deferred by D33 part 2 | operator |
+| **The end-to-end check** | | | |
+| [T159] · P3 | Retarget the paediatric runbook onto the seeded catalogue and replay Acts 1–2 on a fresh database | READY | — |
+| **After the stream** | | | |
+| [T157] · P1 | Production runs the 16 September build | READY, **deferred by the operator** until the stream is complete | `pg_dump` first |
 
-[T106] was triaged on 2026-09-24 and stays a holding file outside the EPA stream: item 14 went to [T137], item 9 to
-[T135] through [T150], and items 3, 4, 6, 8, 10 and 12 are struck with pointers. Items 1, 2, 5, 7 and 11, and 13's
-residue, remain as platform work. Item 10 (`WindowMonths`) was D19, closed 2026-09-23; its seeding and completion-date
-follow-up is [T139].
+[T106] stays a holding file outside the stream (items 1, 2, 5, 7 and 11, and 13's residue, are platform work).
 
 ### 2B. Closed since the 2026-09-19 baseline
 
@@ -570,6 +542,8 @@ as such); an **academic-year** target is waived only for a start on or after 1 J
 
 ### 3F. The next message to the College — one line each
 
+A ready-to-send draft, with each interim answer Wombat has adopted, is `college-message-2026-09.md`.
+
 Questions 1–5 were collected on 2026-09-23 and 2026-09-24. Questions 6–11 were added on 2026-09-24 from the EPA-stream
 survey and the task register; 8–10 were derived by the survey, not raised by the College or an earlier message. None
 blocks a build. 1–4 are a read-model change, one constant or a rebuild, because storage is per semester. 5 and 8 are
@@ -638,6 +612,9 @@ preference, except where it says otherwise. **Re-baselined 2026-09-24:** Waves 0
 waves are kept as the record of how the stream was sequenced. What is left, and in what order, comes first.
 
 ### Order to finish the stream (2026-09-24)
+
+**Done 2026-09-25.** Steps 1–4 are built, and step 5's items are deferred or wait on a decision (§ 2A). Step 6, the deploy,
+waits for the operator. The College questions are drafted in `college-message-2026-09.md`.
 
 The operator's instruction stands: *"Not deploying yet, we need to get the EPA stream completed."* So [T157] deploys
 after this list, not during it. W-007 applies throughout. The order is a recommendation drawn from the survey; the only
