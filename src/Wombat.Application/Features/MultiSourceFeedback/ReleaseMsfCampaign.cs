@@ -96,6 +96,21 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
                 "Learner feedback records no supervision level. Release it without one.");
         }
 
+        // The state is judged here, before any evidence is staged. MsfCampaign.Release judges it too, but by then the
+        // evidence rows are staged on this context, and a refusal that is not a refused save is committed with them by the
+        // audit pipeline (T201 discards only a refused save): a campaign withdrawn in another tab kept an MSF record on
+        // the trainee's dashboard (the final browser check, 2026-09-25). A campaign released or withdrawn elsewhere gets
+        // the same sentence as one that changed during the save.
+        if (campaign.State is MsfCampaignState.Released or MsfCampaignState.Withdrawn)
+        {
+            throw new InvalidOperationException(CampaignChanged);
+        }
+
+        if (campaign.State != MsfCampaignState.UnderReview)
+        {
+            throw new InvalidOperationException("Only under-review campaigns can be released.");
+        }
+
         // Only the release gates are read from this report, before the release has written any evidence.
         var report = _aggregationService.BuildReport(campaign, []);
         if (!report.ReadyForRelease)

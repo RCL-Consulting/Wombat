@@ -532,6 +532,40 @@ public sealed class MsfEvidenceFanOutTests
         (await db.Activities.CountAsync()).Should().Be(1);
     }
 
+    /// <summary>
+    /// A campaign withdrawn or released in another tab is refused before any evidence is staged. The final browser check
+    /// (2026-09-25) found the withdrawn case staging an MSF record that the audit pipeline then committed with the
+    /// refusal, because <see cref="MsfCampaign.Release" /> judged the state only after staging. The save and the tracker
+    /// clear stand in for the audit pipeline's flush.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AReleaseOfACampaignWithdrawnOrReleasedElsewhere_IsRefused_AndStagesNoEvidence(bool releasedElsewhere)
+    {
+        await using var db = CreateDb();
+        var campaign = Seed(db, [EpaOnCurriculum]);
+        if (releasedElsewhere)
+        {
+            await ReleaseAsync(db, campaign.Id, entrustmentLevel: 4, narrative: null);
+        }
+        else
+        {
+            (await db.MsfCampaigns.SingleAsync()).Withdraw(DateTime.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        var activitiesBefore = await db.Activities.CountAsync();
+
+        var release = () => ReleaseAsync(db, campaign.Id, entrustmentLevel: 4, narrative: null);
+        (await release.Should().ThrowAsync<InvalidOperationException>())
+            .WithMessage(ReleaseMsfCampaignCommandHandler.CampaignChanged);
+
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        (await db.Activities.CountAsync()).Should().Be(activitiesBefore, "a refused release stages nothing");
+    }
+
     private static async Task ReleaseAsync(
         ApplicationDbContext db,
         int campaignId,
