@@ -53,3 +53,7 @@ area still shows its "Share this registration link…" panel with the now-dead l
 
 Note, 2026-09-25 (the T253 review): the entrustment scales list's Delete also shows `exception.Message` rather than
 `RefusalText.Of`.
+
+Note, 2026-09-25 (the T258 review): approving an erasure request (`Admin/DataRights/RequestDetail.razor`) has no
+ConfirmDialog. It should count the open reviews (including other institutions' and College panels') and campaigns it
+will withdraw, and say it cannot be undone.
