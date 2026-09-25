@@ -1,11 +1,12 @@
 ---
 id: T238
 title: An erased trainee's pseudonymised profile stays in committee scope, and the schedule command accepts it
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T238 — An erased trainee's pseudonymised profile stays in committee scope, and the schedule command accepts it
@@ -33,9 +34,34 @@ Check T113's other trainee lists against the same rule.
 
 ## Verification
 
-- [ ] Scheduling an erased trainee's pseudonym is refused before any write. Handler test.
-- [ ] The trainee lists omit erased and stale profiles. Tests.
+- [x] Scheduling an erased trainee's pseudonym is refused before any write. Handler test.
+- [x] The trainee lists omit erased and stale profiles. Tests.
 
 ## Related
 
 T194, T216, T113, T026 (erasure).
+
+---
+
+## As built — 2026-09-25 (`248c402`)
+
+One rule for a trainee a caller may act on: `TraineeScopeResolver.KeepCurrentAsync`, meaning an active profile whose
+user exists and still holds Trainee.
+- **Refusals.** Committee scheduling and its commands refuse anyone else before any write, and so does MSF create. The
+  MSF picker (`ListMsfCampaignSubjectsQuery`) offers exactly whom create accepts.
+- **Dashboards.** Every staff dashboard counts the same trainees.
+
+A Postgres test erases a trainee with the real `ErasureExecutor`, then tries both ids.
+
+Browser on dev (scripted Chrome, master `810236c`):
+- **Pseudonym ignored.** With a pseudonymised profile added by SQL, the scheduling picker, decisions-due, `/msf/coverage`,
+  the MSF picker and the committee dashboard never showed it.
+- **Trainee role removed.** Scheduling and MSF create were refused with the exact texts, and every list emptied. With the
+  role restored, all came back.
+- **Clean-up.** The pseudonym profile was deleted.
+
+**Behaviour change for the operator:** an Administrator can no longer create an MSF campaign for someone who is not a
+current trainee, and a graduate or withdrawn trainee gets no new campaign. A locked (not erased) account still counts
+as current.
+
+**Filed from the review:** [T258] (P2: erasure leaves open records running).

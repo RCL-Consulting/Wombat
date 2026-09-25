@@ -1,11 +1,12 @@
 ---
 id: T235
 title: An agenda line is never reconciled after Start: a window decided elsewhere still blocks ratify, and an EPA whose deciding STAR is revoked mid-review is not put back
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T235 — An agenda line is never reconciled after Start: a window decided elsewhere still blocks ratify, and an EPA whose deciding STAR is revoked mid-review is not put back
@@ -45,10 +46,38 @@ Keep the audit trap: every read before the first mutation.
 
 ## Verification
 
-- [ ] Handler tests for both cases: ratify is not refused, and the card names the undecided EPA. A mutation check on
+- [x] Handler tests for both cases: ratify is not refused, and the card names the undecided EPA. A mutation check on
       each gate.
-- [ ] Browser: both cases on dev.
+- [x] Browser: both cases on dev.
 
 ## Related
 
 T215, T131 (slices 4 and 6), D38, D46.
+
+---
+
+## As built — 2026-09-25 (`eb20d59`)
+
+Each agenda line is reconciled against the one "decided in its window" rule when the agenda is read and at ratify.
+- **Decided elsewhere.** A closing line whose window another sitting decided becomes optional, and records State 5 at
+  ratify. It is reconciled even when the review is stranded at its institution.
+- **The note** offers staging only while the review is in progress.
+- **Revoked since Start.** An EPA whose deciding STAR was revoked since Start is named above the agenda, with a "Stage …"
+  button for the chair.
+- `RecordDecision` has no overload that settles nothing.
+
+Handler and bUnit tests.
+
+Browser on dev (scripted Chrome, master `810236c`):
+- **Case 1, a line decided elsewhere.**
+  - Review #11 (2027 S2) held PAED-003 Due.
+  - Review #12 (2027 S1) staged PAED-003, recorded and ratified, issuing STAR #7.
+  - On #11, PAED-003 then read "Decided elsewhere": "…need not be decided here. A decision staged on it decides it
+    again." The Record reason dropped it, ratify succeeded, and the line stored State 5.
+  - After recording, the note read "…Ratifying the review records that." with no Stage button.
+- **Case 2, a STAR revoked mid-review.**
+  - Review #13 read "Already decided in this window…: PAED-003".
+  - After instadmin revoked STAR #7, the warning named PAED-003 with "Stage PAED-003", and committee2 saw no button.
+  - Staging it made a chair's row, and the warning went.
+
+**Found:** decisions-due names the routing panel, not the holding review's panel. Filed as [T259].

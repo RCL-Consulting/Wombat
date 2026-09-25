@@ -1,11 +1,12 @@
 ---
 id: T237
 title: A trainee can still be seated as a panel's chair or external member, where since T194 they cannot act, leaving the panel without a working chair
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T237 — A trainee can still be seated as a panel's chair or external member, where since T194 they cannot act, leaving the panel without a working chair
@@ -32,7 +33,7 @@ refuse. It is the same rule, and a seat that cannot act is a trap.
 
 ## Verification
 
-- [ ] A Trainee+CommitteeMember is not offered for a seat, and a crafted save is refused before any write. Handler and
+- [x] A Trainee+CommitteeMember is not offered for a seat, and a crafted save is refused before any write. Handler and
       bUnit tests.
 
 ## Related
@@ -43,3 +44,28 @@ Note, 2026-09-25 (the committee chain's browser check): a trainee already seated
 appeal-body note ("…and its external member, Demo Trainee"), including to the trainee on their own appeal, although the
 seat cannot act since T194. The remit's Present list leaves them out. Whatever T237 decides for new seats, the note
 should name only members who can act.
+
+---
+
+## As built — 2026-09-25 (`db21bf5`, D46 amended)
+
+No one who holds Trainee sits in any seat. The panel pickers and the save use one rule, `PanelSeat.SittingAt`.
+- **The appeal body** resolves only from a seat that rule still admits (`PanelSeat.AppealBodyAt`), so a chair or external
+  who lost CommitteeMember, moved or was deactivated cannot resolve an appeal. The note and the page flag use the same
+  list.
+- **The seat rule** asks only the institution's committee members whether they hold Trainee (`WhichHoldRoleAsync`).
+- **The chair field** says "Choose a chair."
+
+Handler, bUnit and Postgres tests.
+
+Browser on dev (scripted Chrome, master `810236c`):
+- **The pickers.** With trainee given CommitteeMember, the pickers listed only committee and committee2.
+- **A trainee seated by SQL** as External on panel 1 raised the warning, and was removed by the next save.
+- **The appeal note** named only the chair, to committee2 and to the trainee.
+- **A member who lost the role.** With committee2 made External, then losing CommitteeMember, the form went. A stale
+  tab's Dismiss was refused: "You sit on this panel's appeal body but cannot resolve its appeals now…".
+- **With neither able to act**, the trainee's note said so.
+- **Not run:** seating trainee as chair, because the classifier refused the SQL. It is covered by handler tests.
+
+**Filed from the review:** [T256] (P2: a trainee administers panels; a chair who can no longer sit keeps the chair's
+actions) and [T257] (a chair left in the members list). **Found:** a stale warning after the save, filed as [T260].
