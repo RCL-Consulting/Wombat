@@ -1,4 +1,6 @@
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
+using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -172,6 +174,61 @@ public sealed record CommitteeAgendaPreviewDto(
     public bool PanelDecidesAnything { get; init; } = true;
 }
 
+/// <summary>
+/// When a committee review sat, in sitting order: the period it sat for, then the order reviews were scheduled in.
+/// (T131 slice 6 review)
+/// </summary>
+/// <remarks>
+/// What sittings did to one decision is read in this order: a deferral stands only while no later sitting in the window
+/// has decided the EPA since, whatever has become of that decision. A sitting for a later period sat later. Within a
+/// period, a later review was scheduled later, and one seat holds one open binding review per period, so a remediation
+/// sitting comes after the sitting it remedies.
+/// </remarks>
+public readonly record struct CommitteeSitting(int AcademicYear, int Semester, int ReviewId)
+{
+    /// <summary>Whether this sitting came after <paramref name="other" />.</summary>
+    public bool IsAfter(CommitteeSitting other) => Key.CompareTo(other.Key) > 0;
+
+    /// <summary>The sitting order as one comparable value.</summary>
+    public (int AcademicYear, int Semester, int ReviewId) Key => (AcademicYear, Semester, ReviewId);
+}
+
+/// <summary>A STAR as the window rule reads it: the sitting that issued it, and what has become of it. (T131 slice 6 review)</summary>
+/// <param name="SupersededById">The STAR that superseded it, when it was superseded.</param>
+/// <param name="Sitting">The sitting of the review that issued it.</param>
+public sealed record DecisionWindowStar(
+    int Id,
+    string TraineeUserId,
+    int EpaId,
+    EntrustmentDecisionStatus Status,
+    int? SupersededById,
+    CommitteeSitting Sitting);
+
+/// <summary>An agenda line about an EPA in its window, as where the decision stands reads it. (T131 slice 6 review)</summary>
+/// <param name="State">The line's stored state.</param>
+/// <param name="Review">Its review's state.</param>
+/// <param name="Sitting">When its review sat.</param>
+/// <param name="StarDecides">
+/// For a Decided line, whether its STAR still decides the window (<see cref="CommitteeAgendaStatus.StarDecides" />).
+/// </param>
+public readonly record struct AgendaLineStanding(
+    CommitteeAgendaLineState State,
+    CommitteeReviewState Review,
+    CommitteeSitting Sitting,
+    bool StarDecides)
+{
+    /// <summary>Decided, on a STAR that still decides the window.</summary>
+    public bool Decides => State == CommitteeAgendaLineState.Decided && StarDecides;
+
+    /// <summary>Decided, on a STAR that no longer decides the window: a decision the window has lost.</summary>
+    public bool Lapsed => State == CommitteeAgendaLineState.Decided && !StarDecides;
+}
+
+/// <summary>A STAR from a sitting in the window, as where the decision stands reads it. (T131 slice 6 review)</summary>
+/// <param name="Decides">Whether it still decides the window (<see cref="CommitteeAgendaStatus.StarDecides" />).</param>
+/// <param name="Sitting">The sitting of the review that issued it.</param>
+public readonly record struct StarStanding(bool Decides, CommitteeSitting Sitting);
+
 /// <summary>The one reading of where a decision on an EPA stands in its window. (T131 slice 4)</summary>
 public static class CommitteeAgendaStatus
 {
@@ -179,10 +236,16 @@ public static class CommitteeAgendaStatus
     /// Where the decision on an EPA stands in its window, from the agenda lines about it in that window on any of the
     /// trainee's reviews: the one reading of "missed", computed and never stored (Decision 6).
     /// </summary>
+    /// <remarks>
+    /// A line Decided on a STAR that still decides the window decides it. Otherwise a line still due on an open review
+    /// puts it on the agenda. A deferral stands only when it is the latest thing a sitting did about the EPA in the window:
+    /// a later sitting that decided it, even on a STAR since revoked, has overtaken the deferral, and a sitting that
+    /// deferred it after a decision was revoked is the latest word (T131 slice 6 review). Then Missed, once the window has
+    /// ended.
+    /// </remarks>
     /// <param name="lines">
-    /// Each line's state as it stands, and its review's state. The caller passes only what bears on the decision here: a
-    /// line Decided on a STAR since revoked as NotDecided, and no line still due or deferred on a review at another
-    /// institution (<see cref="AgendaPlanner" />).
+    /// The lines. The caller passes only what bears on the decision here: no line still due or deferred on a review at
+    /// another institution (<see cref="AgendaPlanner" />).
     /// </param>
     /// <param name="mayBeMissed">
     /// False for an EPA decided as opportunity allows (O7) and for a window the trainee joined part-way through
@@ -190,32 +253,200 @@ public static class CommitteeAgendaStatus
     /// </param>
     /// <param name="windowEnd">The window's last counted day: <see cref="AcademicPeriod.End" /> of its last semester.</param>
     public static CommitteeAgendaElsewhereStatus Elsewhere(
-        IEnumerable<(CommitteeAgendaLineState Line, CommitteeReviewState Review)> lines,
+        IEnumerable<AgendaLineStanding> lines,
         bool mayBeMissed,
         DateOnly windowEnd,
         DateOnly today)
     {
         ArgumentNullException.ThrowIfNull(lines);
-        var states = lines.ToArray();
+        return Standing(lines.ToArray(), [], mayBeMissed, windowEnd, today);
+    }
 
-        if (states.Any(state => state.Line == CommitteeAgendaLineState.Decided))
+    /// <summary>
+    /// <see cref="Elsewhere" />'s reading, with <paramref name="otherLapses" />, the sittings of decisions no agenda line
+    /// records that the window has lost, weighed against a deferral as a lapsed line is.
+    /// </summary>
+    private static CommitteeAgendaElsewhereStatus Standing(
+        AgendaLineStanding[] lines,
+        IReadOnlyCollection<CommitteeSitting> otherLapses,
+        bool mayBeMissed,
+        DateOnly windowEnd,
+        DateOnly today)
+    {
+        if (lines.Any(line => line.Decides))
         {
             return CommitteeAgendaElsewhereStatus.Decided;
         }
 
-        if (states.Any(state => state.Line == CommitteeAgendaLineState.Due &&
-                                state.Review is CommitteeReviewState.Scheduled or CommitteeReviewState.InProgress or CommitteeReviewState.Decided))
+        if (lines.Any(line => line.State == CommitteeAgendaLineState.Due && IsOpen(line.Review)))
         {
             return CommitteeAgendaElsewhereStatus.OnAgenda;
         }
 
-        if (states.Any(state => state.Line == CommitteeAgendaLineState.Deferred))
+        var deferrals = lines.Where(line => line.State == CommitteeAgendaLineState.Deferred).ToArray();
+        if (deferrals.Length > 0)
         {
-            return CommitteeAgendaElsewhereStatus.Deferred;
+            var latestDeferral = deferrals.MaxBy(line => line.Sitting.Key).Sitting;
+            var overtaken = lines.Where(line => line.Lapsed).Select(line => line.Sitting)
+                .Concat(otherLapses)
+                .Any(lapse => lapse.IsAfter(latestDeferral));
+
+            if (!overtaken)
+            {
+                return CommitteeAgendaElsewhereStatus.Deferred;
+            }
         }
 
         return mayBeMissed && today > windowEnd
             ? CommitteeAgendaElsewhereStatus.Missed
             : CommitteeAgendaElsewhereStatus.NotYetDecided;
+    }
+
+    /// <summary>Scheduled, in progress, or decided and awaiting ratify: a review that can still decide what it holds.</summary>
+    private static bool IsOpen(CommitteeReviewState state)
+        => state is CommitteeReviewState.Scheduled or CommitteeReviewState.InProgress or CommitteeReviewState.Decided;
+
+    /// <summary>
+    /// Where the decision on an EPA due for <paramref name="period" /> stands for one trainee, as the decisions-due page
+    /// shows it (T131 slice 6): <see cref="Elsewhere" />'s reading of the agenda lines, with the STARs of the window taken
+    /// as the fact of a decision, and "still to be decided" told apart by why.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Decided</b> is a STAR from a sitting for a period in the window that still decides it (<see cref="StarDecides" />),
+    /// whether or not an agenda line records it: agenda lines are the record of what a sitting did, and a STAR issued
+    /// before agendas existed, or by any other path, still decides its window (T215).
+    /// </para>
+    /// <para>
+    /// Otherwise the lines decide, by <see cref="Elsewhere" />: on the agenda of an open review is <b>Scheduled</b>, then
+    /// <b>Deferred</b>, where no later sitting has decided it since, the window's STARs counted with its lines. Then a
+    /// window whose decision was revoked reads so ("re-decide") ahead of <b>Missed</b>, which is
+    /// <see cref="Elsewhere" />'s one computation. What is left is still to be decided and not scheduled, and says why it
+    /// cannot be missed where it cannot: a partial period (Decision 9), an EPA decided as opportunity allows (O7), or an
+    /// annual EPA before its year's last semester (Decision 5).
+    /// </para>
+    /// </remarks>
+    /// <param name="lines">
+    /// The agenda lines about the EPA in the window, as for <see cref="Elsewhere" />: no line still due or deferred on a
+    /// review before a panel at another institution.
+    /// </param>
+    /// <param name="starsInWindow">Every STAR on the EPA from a sitting for a period in the window.</param>
+    /// <param name="isOpportunistic">Whether the College decides the EPA as opportunity allows (O7).</param>
+    /// <param name="window">
+    /// The EPA's cadence window holding <paramref name="period" />, judged for the trainee; it must not be
+    /// <see cref="QuotaWindowStatus.NotStarted" /> (<see cref="CommitteeAgendaLine.IsDueAt" />).
+    /// </param>
+    /// <param name="period">The semester the page asks about.</param>
+    /// <param name="today">The programme's today (<see cref="ProgrammeCalendar.DateOf" />): only "missed" reads it.</param>
+    public static EntrustmentDecisionDueStatus DecisionDue(
+        IEnumerable<AgendaLineStanding> lines,
+        IEnumerable<StarStanding> starsInWindow,
+        bool isOpportunistic,
+        QuotaWindow window,
+        AcademicPeriod period,
+        DateOnly today)
+    {
+        ArgumentNullException.ThrowIfNull(lines);
+        ArgumentNullException.ThrowIfNull(starsInWindow);
+        ArgumentNullException.ThrowIfNull(window);
+
+        var stars = starsInWindow.ToArray();
+        if (stars.Any(star => star.Decides))
+        {
+            return EntrustmentDecisionDueStatus.Decided;
+        }
+
+        // Every STAR left is one the window has lost: revoked, or superseded inside it by one since revoked.
+        var lapses = stars.Select(star => star.Sitting).ToArray();
+        var lineStandings = lines.ToArray();
+        var partial = window.Status == QuotaWindowStatus.ExemptPartialPeriod;
+        var standing = Standing(lineStandings, lapses, mayBeMissed: !isOpportunistic && !partial, window.End, today);
+
+        switch (standing)
+        {
+            case CommitteeAgendaElsewhereStatus.Decided:
+                return EntrustmentDecisionDueStatus.Decided;
+            case CommitteeAgendaElsewhereStatus.OnAgenda:
+                return EntrustmentDecisionDueStatus.Scheduled;
+            case CommitteeAgendaElsewhereStatus.Deferred:
+                return EntrustmentDecisionDueStatus.Deferred;
+        }
+
+        if (lapses.Length > 0 || lineStandings.Any(line => line.Lapsed))
+        {
+            return EntrustmentDecisionDueStatus.Revoked;
+        }
+
+        if (standing == CommitteeAgendaElsewhereStatus.Missed)
+        {
+            return EntrustmentDecisionDueStatus.Missed;
+        }
+
+        if (partial)
+        {
+            return EntrustmentDecisionDueStatus.PartialPeriod;
+        }
+
+        if (isOpportunistic)
+        {
+            return EntrustmentDecisionDueStatus.AsOpportunityAllows;
+        }
+
+        return window.Semesters[^1] == period
+            ? EntrustmentDecisionDueStatus.NotScheduled
+            : EntrustmentDecisionDueStatus.DueByYearEnd;
+    }
+
+    /// <summary>
+    /// Whether a STAR decides <paramref name="window" />, the window of a sitting that issued it: the planner's rule and
+    /// the decisions-due page's. (T131 slice 6 review)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Revoked</b> decides nothing: the window must be decided again. <b>Active</b> decides it. So does
+    /// <b>Expired</b>: expiry is informational (Decision 10, T139), and a decision that has since lapsed was still taken
+    /// in its window, so it neither puts the EPA back on an agenda nor calls a closed window undecided.
+    /// </para>
+    /// <para>
+    /// <b>Superseded</b> decides it when the STAR that superseded it sat outside the window, as a later window's decision
+    /// does; or when that one, sitting inside the window, decides it in turn. A second sitting in the same window that
+    /// re-decided the EPA replaced the window's decision, so when that one is revoked the window has none: the first STAR
+    /// does not stand in again.
+    /// </para>
+    /// </remarks>
+    /// <param name="starsById">
+    /// The trainee's STARs from sittings in the window's academic year. A successor absent from it sat for another year,
+    /// outside every window of this one.
+    /// </param>
+    public static bool StarDecides(
+        DecisionWindowStar star,
+        QuotaWindow window,
+        IReadOnlyDictionary<int, DecisionWindowStar> starsById)
+    {
+        ArgumentNullException.ThrowIfNull(star);
+        ArgumentNullException.ThrowIfNull(window);
+        ArgumentNullException.ThrowIfNull(starsById);
+
+        var current = star;
+
+        // A chain is as long as the STARs it can pass through; SupersedeBy cannot make a cycle, and this does not trust it.
+        for (var hops = 0; hops <= starsById.Count; hops++)
+        {
+            switch (current.Status)
+            {
+                case EntrustmentDecisionStatus.Revoked:
+                    return false;
+                case EntrustmentDecisionStatus.Superseded
+                    when current.SupersededById is int successorId &&
+                         starsById.TryGetValue(successorId, out var successor) &&
+                         window.Covers(successor.Sitting.AcademicYear, successor.Sitting.Semester):
+                    current = successor;
+                    continue;
+                default:
+                    return true;
+            }
+        }
+
+        return true;
     }
 }

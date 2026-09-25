@@ -281,7 +281,9 @@ public static class TraineeScopeResolver
     /// <item>the entrustment admin list and revoking (<c>ListEntrustmentDecisionsForAdminQuery</c>,
     /// <c>EntrustmentDecisionAuthorization.DemandRevocationAccessAsync</c>), so every row the list shows is one the
     /// caller may revoke and download;</item>
-    /// <item>the committee member's dashboard, which names each trainee beside their targets.</item>
+    /// <item>the committee member's dashboard, which names each trainee beside their targets;</item>
+    /// <item>the decisions-due page (<c>GetEntrustmentDecisionsDueQuery</c>, T131 slice 6), which names each trainee's
+    /// standing on every EPA due in a period.</item>
     /// </list>
     /// <para>
     /// NOT yet the activity read gate (<c>ActivityService.IsScopedOverseerOf</c> and <c>ActivityReadScope.WhereReadableBy</c>,

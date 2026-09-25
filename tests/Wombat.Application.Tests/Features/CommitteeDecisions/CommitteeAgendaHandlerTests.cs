@@ -773,22 +773,61 @@ public sealed class CommitteeAgendaHandlerTests
     {
         var end = new DateOnly(2026, 6, 30);
         var after = new DateOnly(2026, 7, 1);
-        (CommitteeAgendaLineState, CommitteeReviewState)[] none = [];
+        AgendaLineStanding[] none = [];
 
         CommitteeAgendaStatus.Elsewhere(none, mayBeMissed: true, end, end).Should().Be(CommitteeAgendaElsewhereStatus.NotYetDecided);
         CommitteeAgendaStatus.Elsewhere(none, mayBeMissed: true, end, after).Should().Be(CommitteeAgendaElsewhereStatus.Missed);
         CommitteeAgendaStatus.Elsewhere(none, mayBeMissed: false, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.NotYetDecided, "opportunistic and partial-period decisions are never missed");
 
-        CommitteeAgendaStatus.Elsewhere([(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified)], true, end, after)
+        CommitteeAgendaStatus.Elsewhere([Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 1)], true, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.Deferred);
-        CommitteeAgendaStatus.Elsewhere([(CommitteeAgendaLineState.Due, CommitteeReviewState.InProgress)], true, end, after)
+        CommitteeAgendaStatus.Elsewhere([Standing(CommitteeAgendaLineState.Due, CommitteeReviewState.InProgress, 1)], true, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.OnAgenda, "a sitting still open has it");
         CommitteeAgendaStatus.Elsewhere(
-                [(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified), (CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified)],
+                [
+                    Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 1),
+                    Standing(CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified, 2, starDecides: true)
+                ],
                 true, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.Decided);
     }
+
+    [Fact]
+    public void ADeferral_StandsOnlyWhileNoLaterSittingHasDecidedIt_WhateverBecameOfThatDecision()
+    {
+        // T131 slice 6 review: the latest thing a sitting did about the EPA is the word. Review 1 deferred it and review 2
+        // decided it on a STAR since revoked: the deferral is overtaken. Review 1's STAR was revoked and review 2 deferred it:
+        // the deferral is the latest word.
+        var end = new DateOnly(2026, 6, 30);
+        var after = new DateOnly(2026, 7, 1);
+
+        CommitteeAgendaStatus.Elsewhere(
+                [
+                    Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 1),
+                    Standing(CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified, 2, starDecides: false)
+                ],
+                true, end, after)
+            .Should().Be(CommitteeAgendaElsewhereStatus.Missed, "a later sitting decided it, and that decision was revoked");
+        CommitteeAgendaStatus.Elsewhere(
+                [
+                    Standing(CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified, 1, starDecides: false),
+                    Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 2)
+                ],
+                true, end, after)
+            .Should().Be(CommitteeAgendaElsewhereStatus.Deferred, "the sitting after the revocation deferred it");
+        CommitteeAgendaStatus.Elsewhere(
+                [
+                    Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 9, semester: 1),
+                    Standing(CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified, 3, semester: 2, starDecides: false)
+                ],
+                true, new DateOnly(2026, 12, 31), new DateOnly(2027, 1, 4))
+            .Should().Be(CommitteeAgendaElsewhereStatus.Missed, "a sitting for semester 2 sat after one for semester 1, whatever the ids");
+    }
+
+    private static AgendaLineStanding Standing(
+        CommitteeAgendaLineState state, CommitteeReviewState review, int reviewId, int semester = 1, bool starDecides = false)
+        => new(state, review, new CommitteeSitting(2026, semester, reviewId), starDecides);
 
     // ---- What the agenda does not hold ------------------------------------------------------------------------------
 

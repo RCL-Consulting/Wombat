@@ -177,11 +177,14 @@ The nav item list is role-driven. The initial set:
 | Trainee                     | Activities, My Activities, MSF Reports, Committee Reviews, My Progress |
 | PendingTrainee              | Activities, My Activities                                |
 | Assessor                    | Activity Inbox, Recent Activities                        |
-| Coordinator                 | Invitations, Stalled Activities                          |
-| SpecialityAdmin / SubSpec.  | Programme Trainees, Curriculum, STAR Review Queue        |
-| InstitutionalAdmin          | Institution, Specialities, Users                         |
-| Administrator               | Institutions, Invitations, Users, Activity Types, System |
+| Coordinator                 | Invitations, Stalled Activities, Decisions Due           |
+| SpecialityAdmin / SubSpec.  | Programme Trainees, Curriculum, STAR Review Queue, Decisions Due |
+| InstitutionalAdmin          | Institution, Specialities, Users, Decisions Due          |
+| Administrator               | Institutions, Invitations, Users, Activity Types, System, Decisions Due |
 | CommitteeMember             | Programme Trainees (read-only)                           |
+
+Decisions Due (`/committee/decisions-due`, T131 slice 6) is offered to the roles that schedule committee reviews and to
+no other: a CommitteeMember is not offered it, and its page does not admit one. `NavMenuAuthorizationTests` checks both.
 
 MSF Reports, Committee Reviews and My Progress sit in their own Trainee-only `AuthorizeView`, outside the block
 shared with PendingTrainee, because their pages do not admit a pending trainee (T141). A link goes in the shared
@@ -610,6 +613,59 @@ panel's semester-1 sitting may be one too. Every page says so in the same words,
 - **The panel's College committee** ("Decides for" on the panel form) cannot change while a review before the panel is
   scheduled, in progress or awaiting ratification: what the review decides was fixed from it. The select's help text
   says so, and a refused save names the open review in the card's `Alert`.
+
+**Decisions due** (T131 slice 6). `/committee/decisions-due` is a list page for the roles that schedule reviews
+(Coordinator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Administrator). It lists, per trainee the caller
+administers or coordinates at their institution, each EPA due for an entrustment decision in a period and where the
+decision stands. Every sentence is built in C# (`DecisionsDueText`). A caller who also holds Trainee is shown nobody's
+decisions, whatever other role admits them (T185's trainee rung): the page shows its empty card.
+
+- **Filters**, in the `search-container`: Institution (an Administrator only, who belongs to none: nothing is read until
+  one is chosen, and `#due-choose-institution` says so), Period (the scheduling form's semesters, the current one by
+  default), Status ("Outstanding: not yet decided" by default, then "Every status", then each status), and EPA.
+- **The opening**: a `.muted` sentence (`#due-intro`) naming the period, how many trainees and where, and what Missed
+  means.
+- **By EPA**: a `.detail-card` holding a `.clinic-table--compact` of eight columns: EPA (the row header), Due, Decided,
+  Scheduled, Deferred, To schedule, Missed and Optional. Its caption says what the last three count. The filters do not
+  narrow it: it is the whole period at a glance. Its `.table-container` (`#due-summary-scroll`) is `tabindex="0"`,
+  `role="region"` and labelled by the card's heading, so a keyboard can scroll it at 390px: it holds nothing focusable.
+- **The count**: a `.muted` line (`#due-count`, `role="status"`), "4 of 15 decisions due in 2026 S2 shown.", which a
+  screen reader hears again whenever the Status or EPA filter changes it.
+- **The list**: a `.clinic-table` of five columns: Trainee (the row header, by name), EPA, window ("2026 S1", or "2026"
+  for an annual EPA), status, and action. The status cell holds the badge and, under it, a `.muted` line saying what it
+  means: the STAR and review for a decision, the open review holding it, the review that deferred it, or why it is
+  optional. `PagerControls` pages it, 20 rows to start. When the filters leave nothing, a `.detail-card--empty` says so.
+- **Actions.** "Open review" where the status names a review and the caller passes that review's read ladder. "Schedule"
+  on every row neither decided nor scheduled: it opens `/committee/reviews` with the panel the EPA routes to for the
+  trainee, the trainee and the period a sitting that decides the window sits for, the window's last semester
+  (`?panel=…&trainee=…&period=2026-2`): semester 2 for an annual EPA, whichever semester the page shows (Decision 5).
+  The scheduling form takes each value only where it offers it, so the link authorizes nothing. Where no panel the
+  caller can schedule before decides the EPA, the cell says so. Each link's `aria-label` names the trainee and the EPA.
+- **An open review holding the seat.** A trainee has one open binding review per period in each seat (the general
+  committee, or a College committee), and scheduling a second is refused. Where one is already open for the row's
+  schedule period before the panel's seat, the row offers "Open review #N" (where the caller may open it) instead of
+  Schedule, and its `.muted` line says "Review #N is open for 2026 S2 before General CCC: decide it there, or ratify that
+  review before scheduling another." A line deferred on that same open review reads "Deferred at review #N, which is
+  still open: its chair can reinstate it there", beside its one "Open review" link.
+- **States**: `StatePanel`'s skeletons while loading, its danger `Alert` on a failure, and its empty card ("Nothing due
+  for 2026 S2") when no trainee owes a decision.
+
+| Status | Badge |
+|---|---|
+| Decided | `badge-completed` |
+| Scheduled | `badge-submitted` |
+| Deferred | `badge-accepted` |
+| Not scheduled, Due by year end, Partial period, As opportunity allows | `badge-draft` |
+| Missed, Revoked: re-decide | `badge-declined` |
+
+Decided means a STAR from a sitting for a period in the window that still decides it, whether or not an agenda line
+records it: Active; Expired, since expiry is informational (Decision 10); or Superseded, by a STAR from another window or
+by one that decides this window in turn. A revoked one reads "Revoked: re-decide", and so does one superseded inside the
+window by a STAR since revoked. Deferred holds only while no later sitting has decided the EPA since, in sitting order
+(the period a review sat for, then the order reviews were scheduled in), so a deferral that a later, since-revoked
+decision overtook reads "Revoked: re-decide". Missed is computed when the page is read, as on the agenda: the window has
+ended with nothing decided, deferred or on an open review's agenda, and an EPA decided as opportunity allows, or in a
+partial period, is never missed. The agenda's "routed elsewhere" list reads the same rule (`CommitteeAgendaStatus`).
 
 ## Status dots
 

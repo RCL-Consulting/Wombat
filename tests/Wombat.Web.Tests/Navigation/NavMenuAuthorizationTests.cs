@@ -88,6 +88,37 @@ public sealed class NavMenuAuthorizationTests : TestContext
         }
     }
 
+    // T131 slice 6: the decisions-due page is for the roles that schedule reviews, one nav click away, and its page
+    // admits each of them. A CommitteeMember is not offered it: the page has no CommitteeMember arm.
+    [Theory]
+    [InlineData(WombatRoles.Coordinator)]
+    [InlineData(WombatRoles.InstitutionalAdmin)]
+    [InlineData(WombatRoles.SpecialityAdmin)]
+    [InlineData(WombatRoles.SubSpecialityAdmin)]
+    [InlineData(WombatRoles.Administrator)]
+    public void ASchedulingRole_IsOfferedDecisionsDue_ByAPageThatAdmitsIt(string role)
+    {
+        var cut = RenderFor(role);
+
+        var link = cut.FindAll("a.nav-link").SingleOrDefault(a => a.TextContent.Trim() == "Decisions Due");
+
+        link.Should().NotBeNull($"a {role} schedules committee reviews");
+        link!.GetAttribute("href").Should().Be("/committee/decisions-due");
+        RefusalOf(PageFor("/committee/decisions-due")!, role).Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(WombatRoles.CommitteeMember)]
+    [InlineData(WombatRoles.Trainee)]
+    [InlineData(WombatRoles.Assessor)]
+    public void ARoleThatSchedulesNoReview_IsNotOfferedDecisionsDue_AndItsPageRefusesIt(string role)
+    {
+        var cut = RenderFor(role);
+
+        cut.FindAll("a.nav-link").Should().NotContain(a => a.GetAttribute("href") == "/committee/decisions-due");
+        RefusalOf(PageFor("/committee/decisions-due")!, role).Should().NotBeNull();
+    }
+
     private IRenderedComponent<NavMenu> RenderFor(string role)
     {
         var auth = this.AddTestAuthorization();

@@ -77,9 +77,16 @@ public static class CommitteeReviewPeriods
     /// <summary>The period holding <paramref name="today" />: the scheduling page's default.</summary>
     public static CommitteeReviewPeriodOptionDto Current(DateOnly today) => ToOption(AcademicPeriod.Containing(today));
 
+    /// <summary>
+    /// A period's select value, "2026-1": what the scheduling page's period select and a link that fills it in (the
+    /// decisions-due page's Schedule link, T131 slice 6) both say.
+    /// </summary>
+    public static string KeyOf(int academicYear, int semester)
+        => string.Create(CultureInfo.InvariantCulture, $"{academicYear}-{semester}");
+
     private static CommitteeReviewPeriodOptionDto ToOption(AcademicPeriod period)
         => new(
-            string.Create(CultureInfo.InvariantCulture, $"{period.Year}-{period.Semester}"),
+            KeyOf(period.Year, period.Semester),
             period.Year,
             period.Semester,
             string.Create(

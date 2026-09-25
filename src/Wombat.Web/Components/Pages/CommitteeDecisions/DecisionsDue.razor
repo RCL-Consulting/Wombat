@@ -1,0 +1,374 @@
+@page "/committee/decisions-due"
+@attribute [Authorize(Roles = "Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Wombat.Application.Features.Curricula.Quota
+
+@* T131 slice 6: which EPAs each trainee's committee is to decide in a period, and where each decision stands, from the
+   agenda lines, the STARs and each EPA's cadence (GetEntrustmentDecisionsDueQuery). For the roles that schedule reviews;
+   a CommitteeMember is not offered it. *@
+
+<PageTitle>Decisions Due</PageTitle>
+
+<PageHeader Title="Decisions due" Subtitle="Which EPAs each trainee's committee is to decide in a period, and where each decision stands." />
+
+<div class="search-container shadow mb-3">
+  <div class="search-grid">
+    @if (_isAdministrator)
+    {
+      <div class="search-field">
+        <label for="due-institution">Institution</label>
+        <select id="due-institution" class="form-select" value="@_institutionId" @onchange="OnInstitutionChangedAsync">
+          <option value="">Select institution</option>
+          @foreach (var institution in _institutions)
+          {
+            <option value="@institution.Id">@institution.Name</option>
+          }
+        </select>
+      </div>
+    }
+    <div class="search-field">
+      <label for="due-period">Period</label>
+      <select id="due-period" class="form-select" value="@_periodKey" @onchange="OnPeriodChangedAsync">
+        @foreach (var period in _periods)
+        {
+          <option value="@period.Key">@period.Label</option>
+        }
+      </select>
+    </div>
+    <div class="search-field">
+      <label for="due-status">Status</label>
+      <select id="due-status" class="form-select" value="@_statusFilter" @onchange="OnStatusChanged">
+        <option value="@OutstandingFilter">Outstanding: not yet decided</option>
+        <option value="@EveryStatusFilter">Every status</option>
+        @foreach (var status in DecisionsDueText.FilterOrder)
+        {
+          <option value="@status">@DecisionsDueText.StatusLabel(status)</option>
+        }
+      </select>
+    </div>
+    <div class="search-field">
+      <label for="due-epa">EPA</label>
+      <select id="due-epa" class="form-select" value="@_epaFilter" @onchange="OnEpaChanged">
+        <option value="">Every EPA</option>
+        @foreach (var epa in EpaOptions)
+        {
+          <option value="@epa.EpaId">@epa.EpaCode — @epa.EpaTitle</option>
+        }
+      </select>
+    </div>
+  </div>
+</div>
+
+@if (_isAdministrator && _institutionId is null)
+{
+  <div id="due-choose-institution" class="detail-card detail-card--empty">
+    <div class="state-panel-title">Choose an institution</div>
+    <div class="state-panel-copy">An administrator belongs to no institution, so the decisions due are shown for the one chosen above.</div>
+  </div>
+}
+else
+{
+  <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@IsEmpty" EmptyTitle="@EmptyTitle" EmptyBody="@EmptyBody">
+    @{ var result = _result!; }
+    <p id="due-intro" class="muted">@DecisionsDueText.Intro(result)</p>
+
+    <section class="detail-card" aria-labelledby="due-summary-heading">
+      <h3 id="due-summary-heading">By EPA</h3>
+      @* Focusable, so a keyboard can scroll it on a narrow screen: it holds no link or button of its own. *@
+      <div id="due-summary-scroll" class="table-container" tabindex="0" role="region" aria-labelledby="due-summary-heading">
+        <table id="due-summary" class="clinic-table clinic-table--compact">
+          <caption>@SummaryCaption(result)</caption>
+          <thead>
+            <tr>
+              <th scope="col">EPA</th>
+              <th scope="col">Due</th>
+              <th scope="col">Decided</th>
+              <th scope="col">Scheduled</th>
+              <th scope="col">Deferred</th>
+              <th scope="col">To schedule</th>
+              <th scope="col">Missed</th>
+              <th scope="col">Optional</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var summary in result.ByEpa)
+            {
+              <tr id="@($"due-summary-{summary.EpaId}")">
+                <th scope="row">@summary.EpaCode — @summary.EpaTitle</th>
+                <td>@summary.Due</td>
+                <td>@summary.Decided</td>
+                <td>@summary.Scheduled</td>
+                <td>@summary.Deferred</td>
+                <td>@summary.ToSchedule</td>
+                <td>@summary.Missed</td>
+                <td>@summary.Optional</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p id="due-count" class="muted" role="status">@CountText(result)</p>
+
+    @if (FilteredItems.Count == 0)
+    {
+      <div id="due-no-match" class="detail-card detail-card--empty">
+        <div class="state-panel-title">No decision matches the filters</div>
+        <div class="state-panel-copy">Choose another status or EPA above.</div>
+      </div>
+    }
+    else
+    {
+      <div class="table-container shadow">
+        <table id="due-items" class="clinic-table">
+          <caption>@ItemsCaption(result)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Trainee</th>
+              <th scope="col">EPA</th>
+              <th scope="col">Window</th>
+              <th scope="col">Status</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var item in PageItems)
+            {
+              var scheduleHref = DecisionsDueText.ScheduleHref(item);
+              <tr id="@($"due-item-{item.TraineeUserId}-{item.EpaId}")">
+                <th scope="row">@item.TraineeName</th>
+                <td>@item.EpaCode — @item.EpaTitle</td>
+                <td>@item.WindowLabel</td>
+                <td>
+                  <span class="badge @DecisionsDueText.BadgeClass(item.Status)">@DecisionsDueText.StatusLabel(item.Status)</span>
+                  <div class="muted">@DecisionsDueText.Detail(item)</div>
+                </td>
+                <td class="actions-cell">
+                  @if (item.ReviewId is int reviewId && item.MayOpenReview)
+                  {
+                    <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{reviewId}")"
+                       aria-label="@($"Open review #{reviewId} for {item.TraineeName}, {item.EpaCode}")">Open review</a>
+                  }
+                  @if (DecisionsDueText.WantsASitting(item) && item.HoldingReviewId is int holdingId && holdingId != item.ReviewId)
+                  {
+                    @* Scheduling another binding review for the period would be refused: point to the one that is open. *@
+                    if (item.MayOpenHoldingReview)
+                    {
+                      <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{holdingId}")"
+                         aria-label="@($"Open review #{holdingId}, open for {item.SchedulePeriodLabel}, to decide {item.EpaCode} for {item.TraineeName}")">@($"Open review #{holdingId}")</a>
+                    }
+                  }
+                  else if (DecisionsDueText.OffersSchedule(item))
+                  {
+                    if (scheduleHref is not null)
+                    {
+                      <a class="btn btn-outline btn-sm" href="@scheduleHref"
+                         aria-label="@($"Schedule a review of {item.TraineeName} for {item.EpaCode} before {item.SchedulePanelName}")">Schedule</a>
+                    }
+                    else
+                    {
+                      <span class="muted">No panel you can schedule before decides it.</span>
+                    }
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <PagerControls Page="_page" PageSize="_pageSize" TotalCount="FilteredItems.Count"
+                     OnPageChanged="OnPageChanged" OnPageSizeChanged="OnPageSizeChanged" />
+    }
+  </StatePanel>
+}
+
+@code {
+  private const string OutstandingFilter = "outstanding";
+  private const string EveryStatusFilter = "all";
+
+  private readonly IReadOnlyList<CommitteeReviewPeriodOptionDto> _periods = CommitteeReviewPeriods.Around(QuotaCalendar.Today());
+
+  private bool _isAdministrator;
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private int? _institutionId;
+
+  private string _periodKey = CommitteeReviewPeriods.Current(QuotaCalendar.Today()).Key;
+  private string _statusFilter = OutstandingFilter;
+  private int? _epaFilter;
+  private int _page = 1;
+  private int _pageSize = 20;
+
+  private EntrustmentDecisionsDueDto? _result;
+  private bool _loading = true;
+  private string? _error;
+  private int _request;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
+
+    if (!_isAdministrator)
+    {
+      await LoadAsync();
+      return;
+    }
+
+    // An Administrator belongs to no institution: the page waits for one to be chosen.
+    _loading = false;
+    try
+    {
+      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+  }
+
+  private async Task OnInstitutionChangedAsync(ChangeEventArgs e)
+  {
+    _institutionId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+    _result = null;
+    _error = null;
+
+    if (_institutionId is not null)
+    {
+      await LoadAsync();
+    }
+  }
+
+  private async Task OnPeriodChangedAsync(ChangeEventArgs e)
+  {
+    if (_periods.FirstOrDefault(period => string.Equals(period.Key, e.Value?.ToString(), StringComparison.Ordinal)) is not { } chosen)
+    {
+      return;
+    }
+
+    _periodKey = chosen.Key;
+    if (!_isAdministrator || _institutionId is not null)
+    {
+      await LoadAsync();
+    }
+  }
+
+  private void OnStatusChanged(ChangeEventArgs e)
+  {
+    _statusFilter = e.Value?.ToString() ?? OutstandingFilter;
+    _page = 1;
+  }
+
+  private void OnEpaChanged(ChangeEventArgs e)
+  {
+    _epaFilter = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+    _page = 1;
+  }
+
+  private void OnPageChanged(int page) => _page = page;
+
+  private void OnPageSizeChanged(int pageSize)
+  {
+    _pageSize = pageSize;
+    _page = 1;
+  }
+
+  private async Task LoadAsync()
+  {
+    var request = ++_request;
+    var period = _periods.First(option => string.Equals(option.Key, _periodKey, StringComparison.Ordinal));
+    _loading = true;
+    _error = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var result = await Sender.Send(new GetEntrustmentDecisionsDueQuery(
+        period.AcademicYear, period.Semester, _isAdministrator ? _institutionId : null, authState.User));
+
+      // A later choice started another load while this one was in flight; the later one's answer counts.
+      if (request != _request)
+      {
+        return;
+      }
+
+      _result = result;
+      _page = 1;
+      if (_epaFilter is int epaId && !(result?.Items.Any(item => item.EpaId == epaId) ?? false))
+      {
+        _epaFilter = null;
+      }
+    }
+    catch (Exception exception)
+    {
+      if (request == _request)
+      {
+        _result = null;
+        _error = exception.Message;
+      }
+    }
+    finally
+    {
+      if (request == _request)
+      {
+        _loading = false;
+      }
+    }
+  }
+
+  private bool IsEmpty => !_loading && _error is null && (_result is null || _result.Items.Count == 0);
+
+  private string EmptyTitle => _result is null ? "Nothing to show" : $"Nothing due for {_result.PeriodLabel}";
+
+  private string EmptyBody => _result is null
+    ? "There are no decisions due to show for your institution."
+    : $"No trainee you oversee at {_result.InstitutionName} owes an entrustment decision in {_result.PeriodLabel}.";
+
+  private IReadOnlyList<EntrustmentDecisionDueEpaSummaryDto> EpaOptions => _result?.ByEpa ?? [];
+
+  private IReadOnlyList<EntrustmentDecisionDueDto> FilteredItems
+  {
+    get
+    {
+      if (_result is null)
+      {
+        return [];
+      }
+
+      var parsed = Enum.TryParse<EntrustmentDecisionDueStatus>(_statusFilter, out var status) ? status : (EntrustmentDecisionDueStatus?)null;
+      return _result.Items
+        .Where(item => _statusFilter switch
+        {
+          OutstandingFilter => item.IsOutstanding,
+          EveryStatusFilter => true,
+          _ => item.Status == parsed
+        })
+        .Where(item => _epaFilter is null || item.EpaId == _epaFilter)
+        .ToArray();
+    }
+  }
+
+  private IReadOnlyList<EntrustmentDecisionDueDto> PageItems
+  {
+    get
+    {
+      var items = FilteredItems;
+      var pages = Math.Max(1, (int)Math.Ceiling(items.Count / (double)Math.Max(1, _pageSize)));
+      var page = Math.Clamp(_page, 1, pages);
+      return items.Skip((page - 1) * _pageSize).Take(_pageSize).ToArray();
+    }
+  }
+
+  private static string SummaryCaption(EntrustmentDecisionsDueDto result)
+    => $"How many trainees stand where on each EPA due in {result.PeriodLabel}. To schedule: not scheduled, due by year " +
+       "end, or revoked. Optional: a partial period, or decided as opportunity allows.";
+
+  private static string ItemsCaption(EntrustmentDecisionsDueDto result)
+    => $"The decisions due in {result.PeriodLabel}, one row per trainee and EPA, as the filters above leave them.";
+
+  /// <summary>How many rows the filters leave: said again, politely, whenever a filter changes it (role="status").</summary>
+  private string CountText(EntrustmentDecisionsDueDto result)
+    => $"{FilteredItems.Count} of {result.Items.Count} decision{(result.Items.Count == 1 ? string.Empty : "s")} due in " +
+       $"{result.PeriodLabel} shown.";
+}

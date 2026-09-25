@@ -198,7 +198,7 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
     /// <summary>
     /// The open binding review of this trainee for this period before a panel in <paramref name="panel" />'s seat, if any:
     /// a panel at the same institution sitting as the same College committee, or as none. Includes the panel itself, which
-    /// is what the index allows one of.
+    /// is what the index allows one of. The decisions-due page asks the same (<see cref="CommitteeReviewSeats" />).
     /// </summary>
     private async Task<OpenReview?> OpenBindingReviewAsync(
         string traineeUserId, DecisionPanel panel, AcademicPeriod period, CancellationToken cancellationToken)
@@ -208,15 +208,12 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
 
         return await _dbContext.Set<CommitteeReview>()
             .AsNoTracking()
+            .OpenBinding()
             .Where(entity => entity.TraineeUserId == traineeUserId &&
                              entity.Panel.InstitutionId == institutionId &&
                              entity.Panel.DecisionBodyKey == bodyKey &&
                              entity.AcademicYear == period.Year &&
-                             entity.Semester == period.Semester &&
-                             !entity.IsFormative &&
-                             (entity.State == CommitteeReviewState.Scheduled ||
-                              entity.State == CommitteeReviewState.InProgress ||
-                              entity.State == CommitteeReviewState.Decided))
+                             entity.Semester == period.Semester)
             .OrderBy(entity => entity.Id)
             .Select(entity => new OpenReview(entity.Id, entity.Panel.Name, entity.State, entity.ScheduledOn))
             .FirstOrDefaultAsync(cancellationToken);

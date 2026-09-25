@@ -4,7 +4,6 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
-using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
@@ -60,11 +59,13 @@ internal sealed record AgendaPlan(
 /// (T182), and its page must not show the new institution's panels or where its decisions stand.
 /// </para>
 /// <para>
-/// <b>What another sitting already did.</b> A decision is the trainee's and goes with them: a line Decided on any review,
-/// whose STAR is still Active or Superseded, decides its window (the decisions-due page's rule, T131 slice 6). A revoked
-/// STAR decides nothing, so its EPA is planned again. A sitting is its institution's: a line still due, or deferred, on
-/// a review before a panel at another institution (a review the trainee stranded when they moved) says nothing about
-/// where the decision stands here.
+/// <b>What another sitting already did.</b> A decision is the trainee's and goes with them: a line Decided on any review
+/// decides its window while its STAR does (<see cref="CommitteeAgendaStatus.StarDecides" />, the decisions-due page's
+/// rule, T131 slice 6). A revoked STAR decides nothing, so its EPA is planned again, and so does one superseded inside
+/// the window by a STAR since revoked; an expired one decided its window (Decision 10). The records are the page's
+/// (<see cref="DecisionWindowRecords" />). A sitting is its institution's: a line still due, or deferred, on a review
+/// before a panel at another institution (a review the trainee stranded when they moved) says nothing about where the
+/// decision stands here.
 /// </para>
 /// <para>
 /// Reads only. Every caller runs it before its first mutation.
@@ -111,7 +112,7 @@ internal static class AgendaPlanner
             .ToListAsync(cancellationToken);
         var panelDecidesAnything = items.Any(item => DecisionRouting.RoutesTo(item.BodyKey, panel, context.Trainee, context.Panels));
 
-        var recorded = await RecordedLinesAsync(dbContext, traineeUserId, sitting.Year, cancellationToken);
+        var records = await DecisionWindowRecords.LoadAsync(dbContext, [traineeUserId], sitting.Year, cancellationToken);
         var institutionId = context.Trainee.InstitutionId;
 
         var lines = new List<CommitteeAgendaLine>();
@@ -129,16 +130,12 @@ internal static class AgendaPlanner
                 continue;
             }
 
-            int? windowSemester = window.Kind == QuotaPeriod.Semester ? window.Semesters[0].Semester : null;
-            var inWindow = recorded
-                .Where(line => line.EpaId == item.EpaId &&
-                               line.WindowYear == window.AcademicYear &&
-                               line.WindowSemester == windowSemester)
-                .ToArray();
+            var windowSemester = DecisionWindowRecords.WindowSemesterOf(window);
+            var inWindow = records.LinesIn(traineeUserId, item.EpaId, window);
 
             if (DecisionRouting.RoutesTo(item.BodyKey, panel, context.Trainee, context.Panels))
             {
-                if (inWindow.Any(line => line.Decides))
+                if (inWindow.Any(line => records.Standing(line, window).Decides))
                 {
                     decided.Add(item.Code);
                 }
@@ -165,8 +162,8 @@ internal static class AgendaPlanner
                     CommitteeAgendaLine.WindowLabelOf(window.AcademicYear, windowSemester),
                     CommitteeAgendaStatus.Elsewhere(
                         inWindow
-                            .Where(line => line.Decides || line.PanelInstitutionId == institutionId)
-                            .Select(line => (line.StandingState, line.ReviewState)),
+                            .Where(line => line.State == CommitteeAgendaLineState.Decided || line.PanelInstitutionId == institutionId)
+                            .Select(line => records.Standing(line, window)),
                         mayBeMissed: !item.IsOpportunistic && window.Status == QuotaWindowStatus.Counting,
                         window.End,
                         today)));
@@ -264,28 +261,6 @@ internal static class AgendaPlanner
         return new PlanningContext(trainee, profile.CurriculumId, profile.ProgrammeStartDate, panels);
     }
 
-    /// <summary>
-    /// Every agenda line about the trainee in the year's windows, on any review, with its review's state, the institution
-    /// of the panel it sat before, and the status of the STAR a Decided line names.
-    /// </summary>
-    private static async Task<IReadOnlyList<RecordedLine>> RecordedLinesAsync(
-        IApplicationDbContext dbContext,
-        string traineeUserId,
-        int year,
-        CancellationToken cancellationToken)
-        => await dbContext.Set<CommitteeAgendaLine>()
-            .AsNoTracking()
-            .Where(line => line.Review.TraineeUserId == traineeUserId && line.WindowYear == year)
-            .Select(line => new RecordedLine(
-                line.EpaId,
-                line.WindowYear,
-                line.WindowSemester,
-                line.State,
-                line.Review.State,
-                line.Review.Panel.InstitutionId,
-                line.EntrustmentDecision == null ? (EntrustmentDecisionStatus?)null : line.EntrustmentDecision.Status))
-            .ToListAsync(cancellationToken);
-
     private sealed record PlanningContext(
         TraineeScope Trainee,
         int CurriculumId,
@@ -300,28 +275,4 @@ internal static class AgendaPlanner
         QuotaPeriod? Cadence,
         string? BodyKey,
         bool IsOpportunistic);
-
-    private sealed record RecordedLine(
-        int EpaId,
-        int WindowYear,
-        int? WindowSemester,
-        CommitteeAgendaLineState State,
-        CommitteeReviewState ReviewState,
-        int PanelInstitutionId,
-        EntrustmentDecisionStatus? StarStatus)
-    {
-        /// <summary>
-        /// Whether the line decides its window: Decided, on a STAR still Active or Superseded. A revoked STAR decides
-        /// nothing (T131 slice 6's "Revoked: re-decide").
-        /// </summary>
-        public bool Decides => State == CommitteeAgendaLineState.Decided &&
-                               StarStatus is EntrustmentDecisionStatus.Active or EntrustmentDecisionStatus.Superseded;
-
-        /// <summary>
-        /// The line's state as it bears on where the decision stands: a Decided line whose STAR was revoked stands as
-        /// nothing, and reads as a sitting that is over without deciding it.
-        /// </summary>
-        public CommitteeAgendaLineState StandingState
-            => State == CommitteeAgendaLineState.Decided && !Decides ? CommitteeAgendaLineState.NotDecided : State;
-    }
 }

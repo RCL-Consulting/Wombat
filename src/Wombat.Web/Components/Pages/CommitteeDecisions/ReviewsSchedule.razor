@@ -143,9 +143,55 @@
     ApplyPeriod(CommitteeReviewPeriods.Current(QuotaCalendar.Today()));
   }
 
+  /// <summary>
+  /// The panel, trainee and period the decisions-due page's Schedule link names (T131 slice 6): "?panel=10&amp;trainee=…&amp;period=2026-1".
+  /// </summary>
+  /// <remarks>
+  /// A convenience, never an authorization statement (T111's rule for NewActivity's ?type=). Each value is resolved against
+  /// what this page has already loaded for the caller: the panels they may use, the trainees the scheduling handler would
+  /// accept on that panel, and the periods offered. A value that is not there leaves its field as it would be, and the
+  /// handler still decides.
+  /// </remarks>
+  [SupplyParameterFromQuery(Name = "panel")]
+  public int? PrefillPanelId { get; set; }
+
+  [SupplyParameterFromQuery(Name = "trainee")]
+  public string? PrefillTraineeUserId { get; set; }
+
+  [SupplyParameterFromQuery(Name = "period")]
+  public string? PrefillPeriodKey { get; set; }
+
   protected override async Task OnInitializedAsync()
   {
     await LoadAsync();
+    await ApplyPrefillAsync();
+  }
+
+  /// <summary>Opens the form filled from the query string, where the page offers what it names.</summary>
+  private async Task ApplyPrefillAsync()
+  {
+    if (PrefillPanelId is not int panelId || !_panels.Any(panel => panel.Id == panelId))
+    {
+      return;
+    }
+
+    _showCreateForm = true;
+
+    // The period first: choosing the panel takes its default review type for the period chosen.
+    if (_periods.FirstOrDefault(period => string.Equals(period.Key, PrefillPeriodKey, StringComparison.Ordinal)) is { } chosen)
+    {
+      ApplyPeriod(chosen);
+    }
+
+    _model.PanelId = panelId;
+    await LoadTraineesAsync();
+
+    if (!string.IsNullOrEmpty(PrefillTraineeUserId) &&
+        _trainees.Any(trainee => string.Equals(trainee.UserId, PrefillTraineeUserId, StringComparison.Ordinal)))
+    {
+      _model.TraineeUserId = PrefillTraineeUserId;
+      await LoadPreviewAsync();
+    }
   }
 
   private async Task LoadAsync()
