@@ -1641,7 +1641,26 @@ else
 Dashboards are a composition, not a standalone page pattern.
 
 - **`Home.razor`** is the one routed page at `/`. It owns the `<PageHeader Title="Welcome, {name}" Subtitle="Viewing as {role}" />`, resolves the active role (via a cookie plus `DashboardPriority.Order`), renders the "You also act as … Switch view:" link row if the user holds multiple roles, and picks one of the role dashboards to render inside.
-- **Role dashboards** live under `Components/Pages/Dashboards/` (`AdministratorDashboard`, `InstitutionalAdminDashboard`, `SpecialityAdminDashboard`, `SubSpecialityAdminDashboard`, `CommitteeMemberDashboard`, `CoordinatorDashboard`, `AssessorDashboard`, `TraineeDashboard`). Each one is a child component — **no `@page` directive**, **no `<PageTitle>`**, **no `<PageHeader>`**. Adding any of those would duplicate Home's header.
+- **Role dashboards** live under `Components/Pages/Dashboards/` (`AdministratorDashboard`, `CollegeAdminDashboard`, `InstitutionalAdminDashboard`, `SpecialityAdminDashboard`, `SubSpecialityAdminDashboard`, `CommitteeMemberDashboard`, `CoordinatorDashboard`, `AssessorDashboard`, `TraineeDashboard`). Each one is a child component — **no `@page` directive**, **no `<PageTitle>`**, **no `<PageHeader>`**. Adding any of those would duplicate Home's header.
+- **Every role has its own case in Home's switch**, and the dashboard it picks admits the role (T261). Until then a
+  CollegeAdmin fell through to the trainee's dashboard: "No curriculum assigned yet", beside links to pages that refuse
+  a CollegeAdmin. PendingTrainee shares the trainee's dashboard, which branches on it. A signed-in user who holds **no
+  role** (an administrator removed the last one) is not given a role's dashboard either: Home shows no "Viewing as"
+  subtitle and one "No role assigned" card with no link, since no page is theirs to open.
+- **Each dashboard names the roles it is for in `[Authorize(Roles = …)]`.** Blazor enforces `[Authorize]` on a routed
+  page only, so on a dashboard it is a statement the test reads, not a gate. A dashboard with none, or a bare
+  `[Authorize]`, would be judged as admitting every signed-in user; the test refuses both.
+- **Every link on a dashboard opens a page that admits the dashboard's role** (T261), the nav's rule (§ The NavMenu).
+  `DashboardLinkAuthorizationTests` renders Home for a holder of each role and judges every link on it with the nav
+  test's `PageAccess.PageFor` and `RefusalOf`. It also checks that each dashboard's renders draw every `href` it can
+  draw: those its own source declares, and those declared by every Wombat.Web component it names and by the components
+  those name (the shared `EpaTargetCoverageList`, say). So a link in a branch the test does not reach, in the dashboard
+  or in a component it uses, fails until the test's `DashboardSender` fills that branch; the sender fills every list a
+  dashboard shows. An `href` that only passes on the component's own parameter (`DashboardCard`'s `href="@Href"`) is
+  judged where the caller sets `Href`, and an SVG `<use href>` is no link. A
+  link to a page the role cannot open is removed or pointed at one it can: the Coordinator starts an MSF campaign rather
+  than issuing an invitation, and the InstitutionalAdmin's quick links are Users, Invitations, Curriculum adoptions and
+  Entrustment decisions, not the Administrator's Institutions or the College's Specialities.
 - **`/dashboard/switch/{role}`** (defined in `Program.cs`) is a minimal-API endpoint that writes the preferred-role cookie and 302s back to `/`. It never renders UI directly. Every way a user reaches a dashboard goes through Home.
 
 So a dashboard `.razor` file looks like this:
@@ -1668,6 +1687,9 @@ So a dashboard `.razor` file looks like this:
 Inline `style="..."` is acceptable inside a dashboard's list items — `style="display:flex;justify-content:space-between;padding:var(--space-xs) 0"` for a badge-row, `style="width:@percent%"` for a progress bar fill — because these are per-instance layout values, not a reusable utility. Keep them token-backed (`var(--space-*)`, never raw px). If the same inline-style pattern starts appearing in four or more dashboards, promote it to a named utility in `app.css`.
 
 Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metric` / `.progress-bar` / `.status-dot` primitives. Role-specific content lives inside the cards; the grid and card shapes do not.
+
+A dashboard that reads nothing (the CollegeAdmin's, a card of links to the national catalogue it authors) has no query,
+no `StatePanel` and no `@rendermode`: the grid and its cards are the whole file.
 
 ### Account / auth page
 

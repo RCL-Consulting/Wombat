@@ -1,15 +1,12 @@
-using System.Reflection;
 using System.Security.Claims;
 using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Identity;
 using Wombat.Web.Components.Layout;
 using Wombat.Web.Components.Pages.Placeholder;
+using static Wombat.Web.Tests.Navigation.PageAccess;
 
 namespace Wombat.Web.Tests.Navigation;
 
@@ -18,12 +15,8 @@ public sealed class NavMenuAuthorizationTests : TestContext
     private const string SignedOutRow = "Signed out";
     private const string EveryoneRow = "Everyone signed in";
 
-    // The app's own authorization: its policies (AddWombatAuthorization), the default policy for a bare [Authorize], and
-    // the fallback policy for a page that declares nothing, as the endpoint's authorization applies them.
-    private static readonly ServiceProvider Authorization = new ServiceCollection()
-        .AddLogging()
-        .AddWombatAuthorization()
-        .BuildServiceProvider();
+    // A link is judged by PageAccess: PageFor finds the page the router would open, RefusalOf judges it by the app's own
+    // policies. The role dashboards are held to the same rule by DashboardLinkAuthorizationTests (T261).
 
     public static TheoryData<string> EveryRole() => new(WombatRoles.All);
 
@@ -381,67 +374,6 @@ public sealed class NavMenuAuthorizationTests : TestContext
             .ToList();
     }
 
-    private static string SolutionRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && directory.GetFiles("Wombat.sln").Length == 0)
-        {
-            directory = directory.Parent;
-        }
-
-        return directory?.FullName ?? throw new InvalidOperationException("Could not find Wombat.sln.");
-    }
-
-    // A literal route wins over a parameterised one, as in the router: /activities/new is not /activities/{Id}.
-    private static Type? PageFor(string href)
-    {
-        var path = "/" + href.TrimStart('/');
-        var pages = typeof(NavMenu).Assembly.GetTypes()
-            .SelectMany(t => t.GetCustomAttributes<RouteAttribute>().Select(r => (Page: t, r.Template)))
-            .ToList();
-
-        return pages.FirstOrDefault(p => string.Equals(p.Template, path, StringComparison.OrdinalIgnoreCase)).Page
-            ?? pages.FirstOrDefault(p => Matches(p.Template, path)).Page;
-    }
-
-    private static bool Matches(string template, string path)
-    {
-        var want = template.Trim('/').Split('/');
-        var got = path.Trim('/').Split('/');
-
-        return want.Length == got.Length
-            && want.Zip(got).All(s => s.First.StartsWith('{') || string.Equals(s.First, s.Second, StringComparison.OrdinalIgnoreCase));
-    }
-
-    // Null when the role gets in; otherwise why not.
-    private static Task<string?> RefusalOf(Type page, string role) => RefusalOf(page, PrincipalFor(role), $"a {role}");
-
-    private static Task<string?> RefusalOf(Type page, ClaimsPrincipal principal)
-        => RefusalOf(page, principal, "this holder");
-
-    private static async Task<string?> RefusalOf(Type page, ClaimsPrincipal principal, string who)
-    {
-        if (page.GetCustomAttributes<AllowAnonymousAttribute>(inherit: true).Any())
-        {
-            return null;
-        }
-
-        var policies = Authorization.GetRequiredService<IAuthorizationPolicyProvider>();
-        var declared = page.GetCustomAttributes(inherit: true).OfType<IAuthorizeData>().ToList();
-        var policy = declared.Count == 0
-            ? await policies.GetFallbackPolicyAsync()
-            : await AuthorizationPolicy.CombineAsync(policies, declared);
-        if (policy is null)
-        {
-            return null;
-        }
-
-        var result = await Authorization.GetRequiredService<IAuthorizationService>().AuthorizeAsync(principal, policy);
-        return result.Succeeded
-            ? null
-            : $"{page.Name} refuses {who}: {string.Join("; ", result.Failure!.FailedRequirements)}";
-    }
-
     /// <summary>A signed-in user holding these roles, with no scope claim, and these claims.</summary>
     private static ClaimsPrincipal Holder(string[] roles, params Claim[] claims)
         => new(new ClaimsIdentity(
@@ -449,24 +381,4 @@ public sealed class NavMenuAuthorizationTests : TestContext
                 .Prepend(new Claim(ClaimTypes.NameIdentifier, "user"))
                 .Concat(claims),
             authenticationType: "Test"));
-
-    // A signed-in holder of the role, carrying the scope claims every holder of it carries (InvitationRules.ValidateScope)
-    // and no more, so a page gated on a scope claim is judged as it would be for the least-scoped holder.
-    private static ClaimsPrincipal PrincipalFor(string role)
-    {
-        string[] scopes = role switch
-        {
-            WombatRoles.CollegeAdmin => [WombatClaims.CollegeId],
-            WombatRoles.InstitutionalAdmin or WombatRoles.Coordinator or WombatRoles.CommitteeMember => [WombatClaims.InstitutionId],
-            WombatRoles.SpecialityAdmin => [WombatClaims.InstitutionId, WombatClaims.SpecialityId],
-            WombatRoles.SubSpecialityAdmin or WombatRoles.Assessor or WombatRoles.Trainee
-                => [WombatClaims.InstitutionId, WombatClaims.SpecialityId, WombatClaims.SubSpecialityId],
-            _ => []
-        };
-
-        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, "user"), new(ClaimTypes.Role, role) };
-        claims.AddRange(scopes.Select(scope => new Claim(scope, "1")));
-
-        return new ClaimsPrincipal(new ClaimsIdentity(claims, authenticationType: "Test"));
-    }
 }

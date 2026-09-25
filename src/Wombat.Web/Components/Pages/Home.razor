@@ -12,7 +12,7 @@
       var otherRoles = GetOtherRoles(state.User, resolvedRole);
     }
 
-    <PageHeader Title="@($"Welcome, {displayName}")" Subtitle="@($"Viewing as {resolvedRole}")" />
+    <PageHeader Title="@($"Welcome, {displayName}")" Subtitle="@(resolvedRole is null ? null : $"Viewing as {resolvedRole}")" />
 
     @if (otherRoles.Count > 0)
     {
@@ -30,6 +30,11 @@
     {
       case WombatRoles.Administrator:
         <Wombat.Web.Components.Pages.Dashboards.AdministratorDashboard />
+        break;
+      @* Every role has its own case: one that fell through to the trainee's dashboard was offered pages that refuse it
+         (T261, the CollegeAdmin). DashboardLinkAuthorizationTests renders this page for every role. *@
+      case WombatRoles.CollegeAdmin:
+        <Wombat.Web.Components.Pages.Dashboards.CollegeAdminDashboard />
         break;
       case WombatRoles.InstitutionalAdmin:
         <Wombat.Web.Components.Pages.Dashboards.InstitutionalAdminDashboard />
@@ -51,8 +56,17 @@
         break;
       case WombatRoles.PendingTrainee:
       case WombatRoles.Trainee:
-      default:
         <Wombat.Web.Components.Pages.Dashboards.TraineeDashboard />
+        break;
+      default:
+        @* A signed-in user who holds no role: an administrator removed the last one, which RemoveRoleFromUser allows.
+           Not the trainee's dashboard, whose links are to pages that refuse such a user (the T261 review). There is
+           nothing for them to open, so the card has no link. *@
+        <div class="dashboard-grid">
+          <DashboardCard Title="No role assigned" Icon="info" Emphasis="true" Span="3">
+            <p>Your account holds no role at the moment, so there is nothing to show you here. An administrator can give you one.</p>
+          </DashboardCard>
+        </div>
         break;
     }
   </Authorized>
@@ -62,7 +76,9 @@
 </AuthorizeView>
 
 @code {
-  private string ResolvePreferredRole(System.Security.Claims.ClaimsPrincipal user)
+  // The role whose dashboard Home shows: the cookie's, when the user holds it, else the first in DashboardPriority.Order
+  // the user holds. Null when they hold none, never a role they do not hold.
+  private string? ResolvePreferredRole(System.Security.Claims.ClaimsPrincipal user)
   {
     var cookieValue = HttpContextAccessor.HttpContext?.Request.Cookies[DashboardPriority.CookieName];
     if (!string.IsNullOrEmpty(cookieValue) &&
@@ -78,10 +94,10 @@
         return role;
     }
 
-    return WombatRoles.Trainee;
+    return null;
   }
 
-  private static IReadOnlyList<string> GetOtherRoles(System.Security.Claims.ClaimsPrincipal user, string currentRole)
+  private static IReadOnlyList<string> GetOtherRoles(System.Security.Claims.ClaimsPrincipal user, string? currentRole)
   {
     return DashboardPriority.Order
       .Where(r => !string.Equals(r, currentRole, StringComparison.Ordinal) && user.IsInRole(r))

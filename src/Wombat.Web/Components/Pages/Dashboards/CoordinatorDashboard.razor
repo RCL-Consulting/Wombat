@@ -46,8 +46,10 @@
         }
       </DashboardCard>
 
+      @* Not "Issue invitation": the invitations page admits only an Administrator or an InstitutionalAdmin, as the nav
+         says (T178). An MSF campaign is the Coordinator's own to start (T261). *@
       <DashboardCard Title="Quick action" Icon="plus">
-        <a href="/admin/invitations/new" class="btn btn-primary">Issue invitation</a>
+        <a href="/msf/campaigns/new" class="btn btn-primary">Start an MSF campaign</a>
       </DashboardCard>
     </div>
   }

@@ -12,7 +12,10 @@
       <DashboardCard Title="Awaiting admission" Icon="info" Emphasis="true" Span="3">
         <p>You are registered and waiting to be admitted to a curriculum by your programme administrator.</p>
         <div class="dashboard-card-footer">
-          <a href="/account/manage" class="btn btn-sm btn-outline">Complete your profile &rarr;</a>
+          @* The account page, "My account": the pending trainee's name and the roles they hold. It admits every signed-in
+             user (T261). Not "Complete your profile": the name came with the registration or the SSO sign-in, so nothing
+             is left to complete. *@
+          <a href="/account/profile" class="btn btn-sm btn-outline">Review your account &rarr;</a>
         </div>
       </DashboardCard>
     </div>

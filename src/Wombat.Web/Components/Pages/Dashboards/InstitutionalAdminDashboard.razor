@@ -38,11 +38,13 @@
         </div>
       </DashboardCard>
 
+      @* Not Institutions, whose list admits only an Administrator, and not Specialities, the College's national catalogue
+         (T091): an institution takes part in a speciality by adopting its curriculum (T261). *@
       <DashboardCard Title="Quick links" Icon="settings">
         <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">
-          <a href="/admin/institutions" class="btn btn-outline">Institutions</a>
           <a href="/admin/users" class="btn btn-outline">Users</a>
-          <a href="/admin/specialities" class="btn btn-outline">Specialities</a>
+          <a href="/admin/invitations" class="btn btn-outline">Invitations</a>
+          <a href="/admin/adoptions" class="btn btn-outline">Curriculum adoptions</a>
           <a href="/admin/entrustment-decisions" class="btn btn-outline">Entrustment decisions</a>
         </div>
       </DashboardCard>
