@@ -48,3 +48,12 @@ Notes, 2026-09-25 (the T285 review):
 - **Issuing never checks the address.** `IssueInvitation` should refuse an address that already has an account or that
   Identity will not accept, through T285's `GetAddressStatusAsync`.
 
+Notes, 2026-09-25 (the mail chain's reviews):
+- **Identity descriptions in exceptions.** Identity's error descriptions quote the address and are put into exception
+  text that reaches audit rows and logs: `UserAdministrationService` (two places) and `InvitedUserProvisioner` (two
+  places). `DevUserSeeder` does the same (dev only). Map them to fixed messages.
+- **The audit display name.** `HttpAuditContextProvider` falls back to `ClaimTypes.Name`, which is the address.
+- **A throwing logger** on the mail worker's retry or outcome path stops the worker.
+- **`RevokeInvitation`'s check.** Through the command, a CollegeAdmin can revoke their College's CollegeAdmin
+  invitation, although the comment says Administrator-only (T093). The page does not reach it. Apply T283's
+  `IsAdministrator()` rule.

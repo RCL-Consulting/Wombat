@@ -56,3 +56,11 @@ An operator step, not code:
 ## Related
 
 T099 (closed by this finding), T128 (off-host backup), HANDOVER.md.
+
+## Pre-deploy check, added 2026-09-25 (the T282 review)
+
+Confirm production has `Email__SmtpHost` set before the deploy. Without it, `LoggingEmailSender` is used, and it logs
+each mail's subject (which names the trainee) and its full body. That body includes MSF, password-reset and invitation
+links. `DependencyInjection.cs` falls back silently, and `Program.cs` does not refuse to start in Production. Make
+startup refuse in Production without an SMTP host, or check `wombat.env` on the box
+(`deploy/verify/drift-check.sh`), before the first real mail.

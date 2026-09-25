@@ -46,3 +46,8 @@ current trainee.") also reaches a Coordinator who types another report's id.
 
 Note, 2026-09-25 (the MSF chain 3 browser check): the trainee's learner-feedback report reads "Rates the trainee's
 teaching overall.: 4.00". The page adds a colon after question text that already ends in a full stop.
+
+Note, 2026-09-25 (the T284 review): on a draft whose trainee is no longer current, `CampaignEdit` still enables Add
+invitee and Open campaign, which are then refused. Disable both with a visible reason (a `SubjectIsCurrent` flag on
+`MsfCampaignSetupDto`), keep Withdraw working, and move the focus to `.action-result` after a refusal that disables the
+pressed button.
