@@ -25,7 +25,7 @@
           <th>Contact email</th>
           <th>Status</th>
           <th>Created</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="institution">
@@ -37,7 +37,8 @@
           <td>@institution.CreatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
           <td>
             <div class="actions-cell">
-              <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{institution.Id}")">Edit</a>
+              @* T239: named by the institution, whose name is unique. *@
+              <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{institution.Id}")" aria-label="@($"Edit {institution.Name}")">Edit</a>
             </div>
           </td>
         </tr>

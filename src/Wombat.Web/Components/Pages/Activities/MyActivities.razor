@@ -11,6 +11,7 @@
   </Actions>
 </PageHeader>
 
+@{ var rowNames = ActivityRowNames.For(_items, withSubject: false); }
 <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No activities yet" EmptyBody="Create the first activity from the activity catalogue.">
   <DataTable Items="_items">
     <HeaderRow>
@@ -23,7 +24,7 @@
         <th>Encounter date</th>
         <th>State</th>
         <th>Credited</th>
-        <th></th>
+        <th><span class="visually-hidden">Actions</span></th>
       </tr>
     </HeaderRow>
     <Row Context="item">
@@ -33,8 +34,11 @@
         <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
         <td>@item.CurrentStateLabel</td>
         <td>@CreditOutcome.Label(item.CreditedItemCount)</td>
-        <td class="actions-cell">
-          <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")">View</a>
+        <td>
+          @* T239: named by its row, "View Mini-CEX, PAED-003, encounter date 2026-09-01". *@
+          <div class="actions-cell">
+            <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")" aria-label="@($"View {rowNames[item.Id]}")">View</a>
+          </div>
         </td>
       </tr>
     </Row>

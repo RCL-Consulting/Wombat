@@ -56,7 +56,8 @@
                 <span>@role</span>
                 @if (CanModifyRole(role))
                 {
-                  <button type="button" class="btn btn-danger btn-sm" disabled="@OtherInFlight(RemoveAction(role))" aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(role)))" @onclick="() => RemoveRoleAsync(role)">Remove</button>
+                  @* T239: named by the role it removes; every role's button read "Remove". *@
+                  <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Remove the {role} role")" disabled="@OtherInFlight(RemoveAction(role))" aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(role)))" @onclick="() => RemoveRoleAsync(role)">Remove</button>
                 }
                 else
                 {

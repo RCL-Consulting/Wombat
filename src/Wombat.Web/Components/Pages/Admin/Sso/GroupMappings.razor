@@ -114,6 +114,14 @@
   <section class="detail-card">
     <h3>Current mappings</h3>
     <StatePanel IsLoading="_loading" LoadError="@(null)" IsEmpty="@(_mappings.Count == 0)" EmptyTitle="No group mappings" EmptyBody="Add a mapping above to link external groups to Wombat roles.">
+      @{
+        var rowNames = RowNames.Distinct(
+          _mappings,
+          row => row.Id,
+          row => $"the mapping of {row.ExternalGroupDisplayName} to {row.WombatRole}",
+          row => $" ({row.ProviderKey})",
+          row => $" ({row.ExternalGroupId})");
+      }
       <DataTable TItem="SsoGroupMappingDto" Items="_mappings" Caption="SSO group mappings">
         <HeaderRow>
           <tr>
@@ -123,7 +131,7 @@
             <th>Institution</th>
             <th>Speciality</th>
             <th>Sub-speciality</th>
-            <th></th>
+            <th><span class="visually-hidden">Actions</span></th>
           </tr>
         </HeaderRow>
         <Row Context="mapping">
@@ -136,7 +144,8 @@
             <td>@mapping.SubSpecialityName</td>
             <td>
               @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
-              <button type="button" class="btn btn-danger btn-sm"
+              @* T239: named by the mapping, "Delete the mapping of Paediatric registrars to Trainee". *@
+              <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete {rowNames[mapping.Id]}")"
                       disabled="@(_saving || (_deletingId is not null && _deletingId != mapping.Id))"
                       aria-disabled="@InFlight.AriaDisabled(_deletingId == mapping.Id)"
                       @onclick="() => DeleteAsync(mapping.Id)">Delete</button>

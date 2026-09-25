@@ -119,6 +119,14 @@
   <section class="detail-card">
     <h3>Active invitations</h3>
     <StatePanel IsLoading="_loading" LoadError="@(null)" IsEmpty="@(_invitations.Count == 0)" EmptyTitle="No active invitations" EmptyBody="Issue an invitation to create the first onboarding link.">
+      @{
+        var rowNames = RowNames.Distinct(
+          _invitations,
+          row => row.Id,
+          row => $"the {row.TargetRole} invitation to {row.Email}",
+          row => $", issued {row.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)}",
+          row => $", invitation {row.Id}");
+      }
       <DataTable TItem="ActiveInvitationDto" Items="_invitations" Caption="Active invitations">
         <HeaderRow>
           <tr>
@@ -130,7 +138,7 @@
             <th>Sub-speciality</th>
             <th>Issued</th>
             <th>Expires</th>
-            <th></th>
+            <th><span class="visually-hidden">Actions</span></th>
           </tr>
         </HeaderRow>
         <Row Context="invitation">
@@ -145,7 +153,8 @@
             <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
             <td>
               @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
-              <button type="button" class="btn btn-danger btn-sm"
+              @* T239: named by the invitation, "Revoke the Assessor invitation to a@example.test". *@
+              <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Revoke {rowNames[invitation.Id]}")"
                       disabled="@(_saving || (_revokingId is not null && _revokingId != invitation.Id))"
                       aria-disabled="@InFlight.AriaDisabled(_revokingId == invitation.Id)"
                       @onclick="() => RevokeAsync(invitation.Id)">Revoke</button>

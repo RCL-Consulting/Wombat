@@ -95,6 +95,7 @@
   </section>
 }
 
+@{ var rowNames = ReviewRowNames.For(_reviews, withTrainee: true); }
 <StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="@EmptyTitle" EmptyBody="@EmptyBody" EmptyActions="@EmptyActions">
   <DataTable Items="_reviews">
     <HeaderRow>
@@ -106,7 +107,7 @@
         <th>Mode</th>
         <th>State</th>
         <th>Decision</th>
-        <th></th>
+        <th><span class="visually-hidden">Actions</span></th>
       </tr>
     </HeaderRow>
     <Row Context="item">
@@ -119,8 +120,11 @@
         <td>@item.StateLabel</td>
         @* A withdrawn review says so, formative or not (T258 review): OutcomeLabel asks for it first. *@
         <td>@(item.IsFormative && item.State != CommitteeReviewState.Withdrawn ? "—" : CommitteeDecisionWording.OutcomeLabel(item))</td>
-        <td class="actions-cell">
-          <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{item.Id}")">Open</a>
+        <td>
+          @* T239: named by the review it opens, "Open the 2026 S2 review of Thandi Nkosi before General CCC". *@
+          <div class="actions-cell">
+            <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{item.Id}")" aria-label="@($"Open {rowNames[item.Id]}")">Open</a>
+          </div>
         </td>
       </tr>
     </Row>

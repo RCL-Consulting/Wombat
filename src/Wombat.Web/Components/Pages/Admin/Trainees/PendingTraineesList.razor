@@ -22,13 +22,15 @@
       }
       else
       {
+        var pendingNames = RowNames.Distinct(
+          _pendingTrainees, row => row.UserId, row => $"{row.FirstName} {row.LastName}", row => $" ({row.Email})");
         <DataTable TItem="PendingTraineeDto" Items="_pendingTrainees" Caption="Pending trainees">
           <HeaderRow>
             <tr>
               <th>Name</th>
               <th>Email</th>
               <th>Institution</th>
-              <th></th>
+              <th><span class="visually-hidden">Actions</span></th>
             </tr>
           </HeaderRow>
           <Row Context="trainee">
@@ -36,7 +38,8 @@
               <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
               <td>@trainee.Email</td>
               <td>@GetInstitutionName(trainee.InstitutionId)</td>
-              <td><a class="btn btn-primary btn-sm" href="@($"/admin/trainees/edit?userId={Uri.EscapeDataString(trainee.UserId)}")">Admit to curriculum</a></td>
+              @* T239: each row's action is named by the trainee, and their email where two share a name. *@
+              <td><a class="btn btn-primary btn-sm" href="@($"/admin/trainees/edit?userId={Uri.EscapeDataString(trainee.UserId)}")" aria-label="@($"Admit to curriculum: {pendingNames[trainee.UserId]}")">Admit to curriculum</a></td>
             </tr>
           </Row>
         </DataTable>
@@ -51,6 +54,7 @@
       }
       else
       {
+        var activeNames = ProfileNames(_activeTrainees);
         <DataTable TItem="TraineeProfileDto" Items="_activeTrainees" Caption="Active trainee profiles">
           <HeaderRow>
             <tr>
@@ -58,7 +62,7 @@
               <th>Curriculum</th>
               <th>Sub-speciality</th>
               <th>Expected completion</th>
-              <th></th>
+              <th><span class="visually-hidden">Actions</span></th>
             </tr>
           </HeaderRow>
           <Row Context="trainee">
@@ -67,7 +71,7 @@
               <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
               <td>@trainee.SubSpecialityName</td>
               <td>@trainee.ExpectedCompletionDate.ToString("yyyy-MM-dd")</td>
-              <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")">Edit</a></td>
+              <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")" aria-label="@($"Edit {activeNames[trainee.Id]}")">Edit</a></td>
             </tr>
           </Row>
         </DataTable>
@@ -78,6 +82,7 @@
     {
       <section class="detail-card">
         <h3>Completed &amp; closed profiles</h3>
+        @{ var closedNames = ProfileNames(_closedTrainees); }
         <DataTable TItem="TraineeProfileDto" Items="_closedTrainees" Caption="Completed and closed trainee profiles">
           <HeaderRow>
             <tr>
@@ -85,7 +90,7 @@
               <th>Curriculum</th>
               <th>Sub-speciality</th>
               <th>Outcome</th>
-              <th></th>
+              <th><span class="visually-hidden">Actions</span></th>
             </tr>
           </HeaderRow>
           <Row Context="trainee">
@@ -94,7 +99,7 @@
               <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
               <td>@trainee.SubSpecialityName</td>
               <td>@(trainee.CompletedOn.HasValue ? $"Completed {trainee.CompletedOn.Value:yyyy-MM-dd}" : trainee.DeactivatedOn.HasValue ? $"Withdrawn {trainee.DeactivatedOn.Value:yyyy-MM-dd}" : "Withdrawn")</td>
-              <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")">Edit</a></td>
+              <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")" aria-label="@($"Edit {closedNames[trainee.Id]}")">Edit</a></td>
             </tr>
           </Row>
         </DataTable>
@@ -104,6 +109,16 @@
 </StatePanel>
 
 @code {
+  // T239: a profile's Edit is named by its trainee, then by their email where two trainees share a name, then by the
+  // curriculum where one trainee has two profiles on the list.
+  private static IReadOnlyDictionary<int, string> ProfileNames(IEnumerable<TraineeProfileDto> profiles)
+    => RowNames.Distinct(
+      profiles,
+      profile => profile.Id,
+      profile => $"{profile.FirstName} {profile.LastName}",
+      profile => $" ({profile.Email})",
+      profile => $", {profile.CurriculumName} ({profile.CurriculumVersion})");
+
   private IReadOnlyList<PendingTraineeDto> _pendingTrainees = [];
   private IReadOnlyList<TraineeProfileDto> _trainees = [];
   private IReadOnlyList<InstitutionDto> _institutions = [];

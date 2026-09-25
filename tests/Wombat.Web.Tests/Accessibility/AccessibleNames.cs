@@ -13,7 +13,7 @@ namespace Wombat.Web.Tests.Accessibility;
 /// <remarks>
 /// This follows the parts of the W3C accessible name computation that Wombat's markup uses, in its order:
 /// <c>aria-labelledby</c>, then <c>aria-label</c>, then the control's <c>&lt;label for&gt;</c> or wrapping
-/// <c>&lt;label&gt;</c>, then, for a button, its own text. Text inside <c>aria-hidden="true"</c> does not count.
+/// <c>&lt;label&gt;</c>, then, for a button or a link, its own text. Text inside <c>aria-hidden="true"</c> does not count.
 /// A <c>title</c> or a <c>placeholder</c> does not count either: neither is a label a sighted user can rely on.
 /// Pair it with <see cref="IdReferences" />, which finds a label that points at no control.
 /// </remarks>
@@ -72,7 +72,8 @@ internal static partial class AccessibleNames
             return labelled;
         }
 
-        return control.LocalName == "button" ? Collapse(VisibleText(control)) : string.Empty;
+        // A button and a link are named by their own text when nothing else names them (T239: a row's "View" link).
+        return control.LocalName is "button" or "a" ? Collapse(VisibleText(control)) : string.Empty;
     }
 
     /// <summary>The text a screen reader would read from an element: everything but what is marked aria-hidden.</summary>

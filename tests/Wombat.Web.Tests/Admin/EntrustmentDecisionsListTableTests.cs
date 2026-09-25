@@ -116,6 +116,36 @@ public sealed partial class EntrustmentDecisionsListTableTests : TestContext
         header.QuerySelector(".visually-hidden")!.TextContent.Should().Be("Actions");
     }
 
+    [Fact]
+    public void EachAction_IsNamedByItsDecision_AndADecisionAndItsReissue_ByTheirStatus_ThenTheirLevel()
+    {
+        // T239 review: a decision revoked or superseded and its re-issue, on one day, for one trainee and EPA, read the same
+        // ("Download the certificate of Thandi Nkosi's PAED-003 decision, issued 2026-07-02") on every row.
+        Services.AddSingleton<IScopedSender>(new FakeSender(
+        [
+            Decision(1, "PAED-003", EntrustmentDecisionStatus.Active) with { TraineeName = "Thandi Nkosi" },
+            Decision(2, "PAED-003", EntrustmentDecisionStatus.Revoked) with { TraineeName = "Thandi Nkosi" },
+            Decision(3, "PAED-003", EntrustmentDecisionStatus.Superseded) with { TraineeName = "Thandi Nkosi", AuthorisedLevelLabel = "2" },
+            Decision(4, "PAED-003", EntrustmentDecisionStatus.Superseded) with { TraineeName = "Thandi Nkosi" },
+            Decision(5, "PAED-004", EntrustmentDecisionStatus.Active)
+        ]));
+
+        var cut = RenderComponent<DecisionsPage>();
+        cut.WaitForState(() => cut.Markup.Contains("PAED-004"));
+
+        const string Thandi = "Thandi Nkosi's PAED-003 decision, issued 2026-07-02";
+        cut.FindAll("tbody .actions-cell button")
+            .Select(button => Accessibility.AccessibleNames.NameOf(cut, button))
+            .Should().Equal(
+                $"Download the certificate of {Thandi}, Active",
+                $"Revoke {Thandi}, Active",
+                $"Download the certificate of {Thandi}, Revoked",
+                $"Download the certificate of {Thandi}, Superseded, level 2",
+                $"Download the certificate of {Thandi}, Superseded, level 3a",
+                "Download the certificate of Trainee 5's PAED-004 decision, issued 2026-07-02",
+                "Revoke Trainee 5's PAED-004 decision, issued 2026-07-02");
+    }
+
     private static EntrustmentDecisionDto Decision(int id, string code, EntrustmentDecisionStatus status)
         => new(
             id, $"trainee-{id}", id, code, $"EPA {code}", true, 13, "3a", 3, new DateOnly(2026, 7, 2), null, 30, "chair-1",

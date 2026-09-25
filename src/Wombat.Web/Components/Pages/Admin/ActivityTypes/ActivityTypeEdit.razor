@@ -187,6 +187,8 @@
             }
             else
             {
+              var sectionNames = SectionNames();
+              var fieldNames = FieldNames();
               @for (var sectionIndex = 0; sectionIndex < _builderSchema.Sections.Count; sectionIndex++)
               {
                 var capturedSectionIndex = sectionIndex;
@@ -198,10 +200,11 @@
                       <p class="page-subtitle"><code>@formSection.Key</code></p>
                     </div>
                     <div class="actions-cell">
-                      <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectSection(capturedSectionIndex)">Edit</button>
-                      <button type="button" class="btn btn-outline btn-sm" disabled="@(capturedSectionIndex == 0)" @onclick="() => MoveSection(capturedSectionIndex, -1)">Up</button>
-                      <button type="button" class="btn btn-outline btn-sm" disabled="@(capturedSectionIndex == _builderSchema.Sections.Count - 1)" @onclick="() => MoveSection(capturedSectionIndex, 1)">Down</button>
-                      <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteSection(capturedSectionIndex)">Delete</button>
+                      @{ var sectionName = sectionNames[capturedSectionIndex]; }
+                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Edit section {sectionName}")" @onclick="() => SelectSection(capturedSectionIndex)">Edit</button>
+                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move section {sectionName} up")" disabled="@(capturedSectionIndex == 0)" @onclick="() => MoveSection(capturedSectionIndex, -1)">Up</button>
+                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move section {sectionName} down")" disabled="@(capturedSectionIndex == _builderSchema.Sections.Count - 1)" @onclick="() => MoveSection(capturedSectionIndex, 1)">Down</button>
+                      <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete section {sectionName}")" @onclick="() => DeleteSection(capturedSectionIndex)">Delete</button>
                     </div>
                   </div>
 
@@ -215,16 +218,19 @@
                           <p class="page-subtitle"><code>@field.value.Key</code> · @field.value.Type</p>
                         </div>
                         <div class="actions-cell">
-                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectField(capturedSectionIndex, capturedFieldIndex)">Edit</button>
-                          <button type="button" class="btn btn-outline btn-sm" disabled="@(capturedFieldIndex == 0)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, -1)">Up</button>
-                          <button type="button" class="btn btn-outline btn-sm" disabled="@(capturedFieldIndex == formSection.Fields.Count - 1)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, 1)">Down</button>
-                          <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteField(capturedSectionIndex, capturedFieldIndex)">Delete</button>
+                          @{ var fieldName = fieldNames[field.value]; }
+                          <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Edit field {fieldName}")" @onclick="() => SelectField(capturedSectionIndex, capturedFieldIndex)">Edit</button>
+                          <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move field {fieldName} up")" disabled="@(capturedFieldIndex == 0)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, -1)">Up</button>
+                          <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move field {fieldName} down")" disabled="@(capturedFieldIndex == formSection.Fields.Count - 1)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, 1)">Down</button>
+                          <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete field {fieldName}")" @onclick="() => DeleteField(capturedSectionIndex, capturedFieldIndex)">Delete</button>
                         </div>
                       </div>
                     </div>
                   }
 
-                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => AddField(capturedSectionIndex)">Add field</button>
+                  @* T239 review: every section's Add field read the same. *@
+                  <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Add field to section {sectionNames[capturedSectionIndex]}")"
+                          @onclick="() => AddField(capturedSectionIndex)">Add field</button>
                 </div>
               }
             }
@@ -367,6 +373,26 @@
 
   private ActivityTypeEditorDto? _editor;
   private BuilderSchemaModel _builderSchema = new();
+
+  // T239: each section's and field's buttons are named by what they act on, "Move section Assessment up" (DESIGN.md
+  // § Table system, the scale editor's "Move level 3 up"); every one read "Edit", "Up", "Down" and "Delete". A section is
+  // named by its title and a field by its label, or by its key while it has none, and by its key as well where another
+  // section or field reads the same.
+  private IReadOnlyDictionary<int, string> SectionNames()
+    => RowNames.Distinct(
+      Enumerable.Range(0, _builderSchema.Sections.Count),
+      index => index,
+      index => TitleOrKey(_builderSchema.Sections[index].Title, _builderSchema.Sections[index].Key),
+      index => $" ({_builderSchema.Sections[index].Key})");
+
+  private IReadOnlyDictionary<BuilderFieldModel, string> FieldNames()
+    => RowNames.Distinct(
+      _builderSchema.Sections.SelectMany(section => section.Fields),
+      field => field,
+      field => TitleOrKey(field.Label, field.Key),
+      field => $" ({field.Key})");
+
+  private static string TitleOrKey(string title, string key) => string.IsNullOrWhiteSpace(title) ? key : title.Trim();
   private IReadOnlyList<InstitutionDto> _institutions = [];
   private IReadOnlyList<SpecialityDto> _specialities = [];
   private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];

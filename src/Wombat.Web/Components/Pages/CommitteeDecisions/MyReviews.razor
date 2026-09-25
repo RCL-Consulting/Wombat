@@ -17,6 +17,7 @@
   <Alert Kind="danger">@_actionError</Alert>
 }
 
+@{ var rowNames = ReviewRowNames.For(_reviews, withTrainee: false); }
 <StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="No decisions yet" EmptyBody="Ratified committee outcomes will appear here.">
   <DataTable Items="_reviews">
     <HeaderRow>
@@ -26,7 +27,7 @@
         <th>Type</th>
         <th>State</th>
         <th>Decision</th>
-        <th></th>
+        <th><span class="visually-hidden">Actions</span></th>
       </tr>
     </HeaderRow>
     <Row Context="item">
@@ -39,8 +40,12 @@
         <td>@item.StateLabel</td>
         @* T131 slice 5: an entrustment-only review's decision has no category, and is not "Pending" for that. *@
         <td>@CommitteeDecisionWording.OutcomeLabel(item)</td>
-        <td class="actions-cell">
-          <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenReviewAsync(item.Id)">View</button>
+        <td>
+          @* T239: named by the review it opens, "View the 2026 S2 review before General CCC"; every row's View read the same. *@
+          <div class="actions-cell">
+            <button type="button" class="btn btn-outline btn-sm" aria-label="@($"View {rowNames[item.Id]}")"
+                    @onclick="() => OpenReviewAsync(item.Id)">View</button>
+          </div>
         </td>
       </tr>
     </Row>

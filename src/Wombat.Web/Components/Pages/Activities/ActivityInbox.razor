@@ -7,6 +7,7 @@
 
 <PageHeader Title="Activity inbox" Subtitle="Activities that the current user can act on." />
 
+@{ var rowNames = ActivityRowNames.For(_items, withSubject: true); }
 <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="Inbox clear" EmptyBody="There are no activities waiting for your action.">
   <DataTable Items="_items">
     <HeaderRow>
@@ -20,7 +21,7 @@
         <th>Encounter date</th>
         <th>State</th>
         <th>Updated</th>
-        <th></th>
+        <th><span class="visually-hidden">Actions</span></th>
       </tr>
     </HeaderRow>
     <Row Context="item">
@@ -31,8 +32,11 @@
         <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
         <td>@item.CurrentStateLabel</td>
         <td>@item.UpdatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-        <td class="actions-cell">
-          <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")">Open</a>
+        <td>
+          @* T239: named by its row, "Open Mini-CEX for Thandi Nkosi, PAED-003, encounter date 2026-09-01". *@
+          <div class="actions-cell">
+            <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")" aria-label="@($"Open {rowNames[item.Id]}")">Open</a>
+          </div>
         </td>
       </tr>
     </Row>

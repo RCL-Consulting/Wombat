@@ -22,6 +22,10 @@
 <StatePanel IsLoading="@(_curricula is null)" LoadError="@_errorMessage" IsEmpty="@(_curricula?.Count == 0)" EmptyTitle="No curricula yet" EmptyBody="@EmptyBody">
   @if (_curricula is not null)
   {
+    @* T239: each row's actions are named by the curriculum as its items page names it, "IM Core (2026.1)", and by its
+       sub-speciality where two sub-specialities hold a curriculum of that name and version. *@
+    var rowNames = RowNames.Distinct(
+      _curricula, row => row.Id, row => $"{row.Name} ({row.Version})", row => $", {row.SubSpecialityName}");
     <DataTable TItem="CurriculumDto" Items="_curricula" Caption="Curricula">
       <HeaderRow>
         <tr>
@@ -33,7 +37,7 @@
           <th>Effective</th>
           <th>Items</th>
           <th>Status</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="curriculum">
@@ -53,9 +57,9 @@
             <div class="actions-cell">
               @if (curriculum.CanEditCurriculum)
               {
-                <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{curriculum.Id}")">Edit</a>
+                <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{curriculum.Id}")" aria-label="@($"Edit {rowNames[curriculum.Id]}")">Edit</a>
               }
-              <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{curriculum.Id}/items")">Items</a>
+              <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{curriculum.Id}/items")" aria-label="@($"Items of {rowNames[curriculum.Id]}")">Items</a>
             </div>
           </td>
         </tr>

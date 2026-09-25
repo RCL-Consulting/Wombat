@@ -51,8 +51,11 @@
           @* While a certificate is generated the other Download buttons are disabled, and the one pressed is not (T234): it
              has the focus, and a browser drops the focus of a button it disables, to the page. The download says what it
              did; a refusal is an alert, read at once. A second press sends nothing. *@
+          @* T239: named by its EPA at rest, since every card's button read "Download certificate"; while it runs, its own
+             "Generating…" is its name. *@
           <button type="button" class="btn btn-primary" @onclick="() => DownloadAsync(decision.Id, decision.EpaCode)" disabled="@(_downloading && _downloadingId != decision.Id)"
-                  aria-disabled="@InFlight.AriaDisabled(_downloading && _downloadingId == decision.Id)">
+                  aria-disabled="@InFlight.AriaDisabled(_downloading && _downloadingId == decision.Id)"
+                  aria-label="@(_downloading && _downloadingId == decision.Id ? null : $"Download certificate for {decision.EpaCode}")">
             @if (_downloading && _downloadingId == decision.Id)
             {
               <span>Generating…</span>

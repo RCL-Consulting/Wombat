@@ -17,6 +17,11 @@
 <StatePanel IsLoading="@(_epas is null || _subSpecialities is null || _specialities is null || _institutions is null)" LoadError="@_errorMessage" IsEmpty="@(_epas?.Count == 0)" EmptyTitle="No EPAs yet" EmptyBody="Create the first EPA to start building curricula and assessment forms.">
   @if (_epas is not null && _subSpecialities is not null && _specialities is not null && _institutions is not null)
   {
+    @* T239: each Edit is named by its EPA as every EPA surface writes it, "PAED-001 — Title", and by its sub-speciality,
+       then its College, where two rows would read the same. An institution's own EPA may share a national one's code in
+       one sub-speciality, so rows alike in all three are numbered (T239 review). *@
+    var rowNames = RowNames.Distinct(
+      _epas, row => row.Id, row => $"{row.Code} — {row.Title}", row => $" ({row.SubSpecialityName})", row => $" ({row.CollegeName})");
     <DataTable TItem="EpaDto" Items="_epas" Caption="Entrustable professional activities">
       <HeaderRow>
         <tr>
@@ -26,7 +31,7 @@
           <th>Speciality</th>
           <th>Sub-speciality</th>
           <th>Status</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="epa">
@@ -42,7 +47,7 @@
           <td>@subSpeciality.Name</td>
           <td>@(epa.IsActive ? "Active" : "Inactive")</td>
           <td>
-            <a class="btn btn-outline btn-sm" href="@($"/admin/epas/{epa.Id}")">Edit</a>
+            <a class="btn btn-outline btn-sm" href="@($"/admin/epas/{epa.Id}")" aria-label="@($"Edit {rowNames[epa.Id]}")">Edit</a>
           </td>
         </tr>
       </Row>

@@ -530,8 +530,10 @@
                      (_review.State == CommitteeReviewState.InProgress ||
                       (_review.State == CommitteeReviewState.Decided && pending.NoLongerFits is not null)))
                 {
+                  @* T239: named by the EPA whose staged decision it removes; a review stages one decision an EPA. *@
                   <button type="button" class="btn btn-link" disabled="@OtherInFlight(RemoveAction(pending.Id))"
                           aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(pending.Id)))"
+                          aria-label="@($"Remove the staged decision on {pending.EpaCode}")"
                           @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
                 }
               </li>

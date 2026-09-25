@@ -39,7 +39,12 @@
           <th>Name</th>
           <th>Description</th>
           <th>Levels</th>
-          <th></th>
+          @* Only an Administrator changes a scale, so no one else is shown a column of blank cells (T239; DESIGN.md
+             § Table system, "A column of actions that no row offers is not rendered"). *@
+          @if (_isAdministrator)
+          {
+            <th><span class="visually-hidden">Actions</span></th>
+          }
         </tr>
       </HeaderRow>
       <Row Context="scale">
@@ -47,15 +52,16 @@
           <td>@scale.Name</td>
           <td>@scale.Description</td>
           <td>@scale.Levels.Count</td>
-          <td>
-            @if (_isAdministrator)
-            {
+          @if (_isAdministrator)
+          {
+            <td>
+              @* T239: named by the scale, whose name is unique. *@
               <div class="actions-cell">
-                <a class="btn btn-outline btn-sm" href="@($"/admin/entrustment-scales/{scale.Id}")">Edit</a>
-                <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteAsync(scale.Id)">Delete</button>
+                <a class="btn btn-outline btn-sm" href="@($"/admin/entrustment-scales/{scale.Id}")" aria-label="@($"Edit {scale.Name}")">Edit</a>
+                <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete {scale.Name}")" @onclick="() => DeleteAsync(scale.Id)">Delete</button>
               </div>
-            }
-          </td>
+            </td>
+          }
         </tr>
       </Row>
     </DataTable>

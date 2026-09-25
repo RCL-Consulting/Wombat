@@ -386,6 +386,29 @@ institution's own item only that institution's, named as the row names its owner
 column's header is a `.visually-hidden` "Actions", never an empty `<th>`**: a header names the cells under it. A column of
 buttons that fits in its content's width needs no `.col-actions`; the curriculum items table has no room for its 12rem.
 
+**Every list's row actions name their rows** (T239). Until T239, 24 pages headed their actions column with an empty
+`<th>`, and most offered a column of identical "Edit", "View" or "Open" buttons. Each row's button, and each link styled
+as one, carries an `aria-label` that contains its visible label, and starts with it where the sentence allows, and names
+the row in the page's words: "View the 2026 S2 review before General CCC", "Open Mini-CEX for Thandi Nkosi, PAED-003,
+encounter date 2026-09-01", "Edit PAED-001 — Take a history", "Run now: msf-campaign-auto-close"; an "Up" reads "Move
+field Notes up" (WCAG 2.5.3 asks that the name contain the label, so a speech-input user can say what they see). A plain
+link whose own text is the row's words ("Mini-CEX") needs none. Where the list's key column is unique by rule (an
+institution's, a College's or a scale's name, a job's key), the page names the row by it. Where it is not (a person's
+name, a panel's, a review's period), `RowNames.Distinct` (Components/Shared) adds tie-breakers only to the rows that
+would otherwise share a name, each repeating a column the row shows where it can: the email, a review's type, an
+activity's state. A tie-breaker that says the same of every row sharing a name is not added to them, and rows that every
+tie-breaker leaves alike are numbered in list order, "(1 of 2)", so no two names on one list are ever the same (T239
+review: two drafts saved in one minute, or two panels of one name, read the same until then). `ReviewRowNames` and
+`ActivityRowNames` are the committee's and the activity lists' wordings. The same holds outside tables: a user's roles
+("Remove the Assessor role"), a review's staged decisions ("Remove the staged decision on PAED-003"), the builder's
+sections and fields ("Move field Notes up", "Add field to section Request"), and each STAR's "Download certificate for
+PAED-003". The edit row's Cancel and Save on the curriculum items page name the item too. `Design/RowActionMarkupTests`
+scans every page: no empty `<th>`, no `td.actions-cell`, and no button or `.btn` link in a `Row` fragment or a `tbody`
+without a name of its own, which is an `aria-label` computed from the row (a fixed "Detail" names every row alike) that
+contains the visible label. A column no row offers an action in is not rendered: the entrustment scales list shows its
+Edit and Delete column to an Administrator only, and the decision panels list its Edit column only to a caller who may
+manage one of its panels.
+
 **A picker offers exactly what the command it feeds accepts, and is asked again after every command that changes that**
 (T195, T222). The curriculum item editor's EPA pickers leave out every EPA the curriculum already holds for the same
 trainees, apart from the edited item's own, because the Add and Update commands refuse it (T223): a national item holds

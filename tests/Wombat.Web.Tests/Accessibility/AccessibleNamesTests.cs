@@ -32,6 +32,19 @@ public sealed class AccessibleNamesTests : TestContext
     }
 
     [Fact]
+    public void ALink_IsNamedByItsAriaLabel_ElseByItsText()
+    {
+        // T239: a row's link, named for its row, and one named by its text alone.
+        var cut = RenderMarkup("""
+            <a id="named" href="/activities/1" aria-label="Open Mini-CEX for Thandi Nkosi">Open</a>
+            <a id="plain" href="/activities/2">View <svg aria-hidden="true"></svg></a>
+            """);
+
+        NameOf(cut, "named").Should().Be("Open Mini-CEX for Thandi Nkosi");
+        NameOf(cut, "plain").Should().Be("View");
+    }
+
+    [Fact]
     public void AControlWithNoLabel_IsUnnamed()
     {
         // T176's defect: the edit row's EPA select and its Completion window and Weight inputs, bare in a table cell.

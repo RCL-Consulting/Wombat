@@ -23,7 +23,7 @@
             <th>Template</th>
             <th>Released</th>
             <th>Responses</th>
-            <th></th>
+            <th><span class="visually-hidden">Actions</span></th>
           </tr>
         </HeaderRow>
         <Row Context="item">
@@ -31,8 +31,12 @@
             <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
             <td>@item.ReleasedOn?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
             <td>@item.ResponseCount</td>
-            <td class="actions-cell">
-              <a class="btn btn-outline btn-sm" href="@($"/msf/my-reports/{item.Id}")">View</a>
+            <td>
+              <div class="actions-cell">
+                @* T239: named by the report, its template and when it was released. *@
+                <a class="btn btn-outline btn-sm" href="@($"/msf/my-reports/{item.Id}")"
+                   aria-label="@($"View the {item.TemplateName} report, released {item.ReleasedOn?.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)}")">View</a>
+              </div>
             </td>
           </tr>
         </Row>

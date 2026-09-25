@@ -25,7 +25,7 @@
           <th>Description</th>
           <th>Status</th>
           <th>Created</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="college">
@@ -37,8 +37,9 @@
           <td>@college.CreatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
           <td>
             <div class="actions-cell">
-              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{college.Id}")">Edit</a>
-              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{college.Id}/specialities")">Specialities</a>
+              @* T239: each named by its college, whose name is unique. *@
+              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{college.Id}")" aria-label="@($"Edit {college.Name}")">Edit</a>
+              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{college.Id}/specialities")" aria-label="@($"Specialities of {college.Name}")">Specialities</a>
             </div>
           </td>
         </tr>

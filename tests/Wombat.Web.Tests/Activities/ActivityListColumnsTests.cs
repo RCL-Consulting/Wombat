@@ -158,7 +158,49 @@ public sealed class ActivityListColumnsTests : TestContext
         MarkersIn(cut).Should().Equal([EpaOptionLabel.NoLongerInUse], "only the EPA that is not in force is marked, and muted");
     }
 
+    /// <summary>
+    /// T239. Each row's View is named by its row, so the campaign's three rows are three different links to a screen
+    /// reader too, and the column has a header.
+    /// </summary>
+    [Fact]
+    public void MyActivities_NamesEachRowsView_ByItsTypeEpaAndEncounterDate()
+    {
+        var cut = RenderMine(
+            Msf(1, 5001, "PAED-001", "Assess and manage an acutely unwell child"),
+            Msf(2, 5002, "PAED-002", "Lead a ward round"),
+            Msf(3, 5003, "PAED-003", "Communicate with families"));
+
+        LinkNames(cut, "View").Should().Equal(
+            $"View {MsfName}, PAED-001, encounter date 2026-09-19",
+            $"View {MsfName}, PAED-002, encounter date 2026-09-19",
+            $"View {MsfName}, PAED-003, encounter date 2026-09-19");
+        cut.FindAll("thead th").Last().TextContent.Trim().Should().Be("Actions");
+    }
+
+    /// <summary>T239. The inbox's Open names whose activity it is too; two that read the same add when each was updated.</summary>
+    [Fact]
+    public void Inbox_NamesEachRowsOpen_ByItsTypeSubjectEpaAndEncounterDate()
+    {
+        var cut = RenderInbox(
+            Row(1, "requested", creditedItemCount: null) with { SubjectName = "Thandi Nkosi" },
+            Row(2, "requested", creditedItemCount: null) with { SubjectName = "Sam Smit", EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null },
+            Row(3, "requested", creditedItemCount: null) with { SubjectName = "Thandi Nkosi", UpdatedOn = new DateTime(2026, 3, 21, 6, 44, 0, DateTimeKind.Utc) });
+
+        var names = LinkNames(cut, "Open");
+        names[1].Should().Be("Open Mini-CEX (CPSA) for Sam Smit, encounter date 2026-03-10");
+        names[0].Should().StartWith("Open Mini-CEX (CPSA) for Thandi Nkosi, PAED-001, encounter date 2026-03-10, updated ");
+        names.Should().OnlyHaveUniqueItems();
+        cut.FindAll("thead th").Last().TextContent.Trim().Should().Be("Actions");
+    }
+
     // ---- helpers ----------------------------------------------------------------------------------------------------
+
+    /// <summary>The accessible name of each row's link whose visible text is <paramref name="label" />.</summary>
+    private static IReadOnlyList<string> LinkNames<T>(IRenderedComponent<T> cut, string label) where T : Microsoft.AspNetCore.Components.IComponent
+        => cut.FindAll("tbody td .actions-cell a")
+            .Where(link => link.TextContent.Trim() == label)
+            .Select(link => Accessibility.AccessibleNames.NameOf(cut, link))
+            .ToList();
 
     private static ActivitySummaryDto Msf(int id, int epaId, string code, string title) => new(
         id,

@@ -53,6 +53,7 @@ else if (_decisions.Count == 0)
 }
 else
 {
+  var decisionNames = DecisionNames(_decisions);
   @* A list table (DESIGN.md § Table system): a clinic-table in its container, which scrolls sideways on a narrow screen
      rather than widen the page. Until T226 it was class="data-table", which app.css does not define: the table was
      unstyled and, at 390px, 133px wider than the screen. *@
@@ -83,10 +84,13 @@ else
             <td><span class="badge @StatusBadge(decision.Status)">@decision.Status</span></td>
             <td>
               <div class="actions-cell">
-                <button type="button" class="btn btn-sm btn-outline" @onclick="() => DownloadAsync(decision.Id)">Download</button>
+                @* T239: each named by the decision it acts on: whose, which EPA, and when it was issued. *@
+                <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Download the certificate of {decisionNames[decision.Id]}")"
+                        @onclick="() => DownloadAsync(decision.Id)">Download</button>
                 @if (decision.Status == EntrustmentDecisionStatus.Active)
                 {
-                  <button type="button" class="btn btn-sm btn-danger" @onclick="() => OpenRevokeDialog(decision)">Revoke</button>
+                  <button type="button" class="btn btn-sm btn-danger" aria-label="@($"Revoke {decisionNames[decision.Id]}")"
+                          @onclick="() => OpenRevokeDialog(decision)">Revoke</button>
                 }
               </div>
             </td>
@@ -118,6 +122,20 @@ else
 }
 
 @code {
+  /// <summary>
+  /// Each decision as its row's actions name it (T239): "Thandi Nkosi's PAED-003 decision, issued 2026-07-02". A decision
+  /// revoked or superseded and its re-issue can share all three, so a name two rows share adds each one's status and then
+  /// its level, as the Status and Level columns say them (T239 review), and rows still alike are numbered.
+  /// </summary>
+  private static IReadOnlyDictionary<int, string> DecisionNames(IEnumerable<EntrustmentDecisionDto> decisions)
+    => RowNames.Distinct(
+      decisions,
+      decision => decision.Id,
+      decision => $"{decision.TraineeName}'s {decision.EpaCode} decision, issued " +
+                  decision.IssuedOn.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+      decision => $", {decision.Status}",
+      decision => $", level {decision.AuthorisedLevelLabel}");
+
   private IReadOnlyList<EntrustmentDecisionDto>? _decisions;
   private string? _error;
   private string? _status;

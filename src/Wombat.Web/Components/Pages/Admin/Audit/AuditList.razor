@@ -60,6 +60,12 @@
 <StatePanel IsLoading="@(_result is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_result?.Items.Count == 0)" EmptyTitle="No entries" EmptyBody="No audit entries match the current filters.">
   @if (_result is not null)
   {
+    var rowNames = RowNames.Distinct(
+      _result.Items,
+      row => row.Id,
+      row => $"{row.Action} at {row.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}",
+      row => $" by {row.ActorDisplay ?? "system"}",
+      row => $", entry {row.Id}");
     <DataTable TItem="AuditEntryDto" Items="_result.Items" Caption="Audit entries">
       <HeaderRow>
         <tr>
@@ -69,7 +75,7 @@
           <th>Actor</th>
           <th>Subject</th>
           <th>Result</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="entry">
@@ -111,7 +117,8 @@
             }
           </td>
           <td>
-            <a class="btn btn-outline btn-sm" href="/admin/audit/@entry.Id">Detail</a>
+            @* T239: named by its row, what was done and when, and by whom where two entries share both. *@
+            <a class="btn btn-outline btn-sm" href="/admin/audit/@entry.Id" aria-label="@($"Detail: {rowNames[entry.Id]}")">Detail</a>
           </td>
         </tr>
       </Row>

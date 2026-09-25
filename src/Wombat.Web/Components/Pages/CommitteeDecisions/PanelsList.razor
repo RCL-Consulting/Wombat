@@ -24,6 +24,14 @@
   }
   <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No decision panels"
               EmptyBody="@EmptyBody">
+    @* T239: each Edit is named by its panel, and by what it decides for, then its scope, where two panels share a name;
+       panels alike in all three (a name is not unique) are numbered. A caller who may manage no panel on the list (a
+       committee member) is not shown the actions column at all: it was a column of blank cells (T239 review). *@
+    @{
+      var rowNames = RowNames.Distinct(
+        _items, row => row.Id, row => row.Name, row => $" ({row.DecisionBodyName ?? "General panel"})", row => $", {row.Scope}");
+      var anyManaged = _items.Any(item => item.CallerMayManage);
+    }
     <DataTable Items="_items">
       <HeaderRow>
         <tr>
@@ -31,7 +39,10 @@
           <th>Scope</th>
           <th>Decides for</th>
           <th>Members</th>
-          <th></th>
+          @if (anyManaged)
+          {
+            <th><span class="visually-hidden">Actions</span></th>
+          }
         </tr>
       </HeaderRow>
       <Row Context="item">
@@ -40,13 +51,18 @@
           <td>@item.Scope</td>
           <td>@(item.DecisionBodyName ?? "General panel")</td>
           <td>@item.MemberCount</td>
-          <td class="actions-cell">
-            @* T256: Edit only where the panel form would open, by the rule its read and panel update demand. *@
-            @if (item.CallerMayManage)
-            {
-              <a class="btn btn-outline btn-sm" href="@($"/committee/panels/{item.Id}")">Edit</a>
-            }
-          </td>
+          @if (anyManaged)
+          {
+            <td>
+              <div class="actions-cell">
+                @* T256: Edit only where the panel form would open, by the rule its read and panel update demand. *@
+                @if (item.CallerMayManage)
+                {
+                  <a class="btn btn-outline btn-sm" href="@($"/committee/panels/{item.Id}")" aria-label="@($"Edit {rowNames[item.Id]}")">Edit</a>
+                }
+              </div>
+            </td>
+          }
         </tr>
       </Row>
     </DataTable>

@@ -145,33 +145,35 @@ else
                   <span class="badge @DecisionsDueText.BadgeClass(item.Status)">@DecisionsDueText.StatusLabel(item.Status)</span>
                   <div class="muted">@DecisionsDueText.Detail(item)</div>
                 </td>
-                <td class="actions-cell">
-                  @if (item.ReviewId is int reviewId && item.MayOpenReview)
-                  {
-                    <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{reviewId}")"
-                       aria-label="@($"Open review #{reviewId} for {item.TraineeName}, {item.EpaCode}")">Open review</a>
-                  }
-                  @if (DecisionsDueText.WantsASitting(item) && item.HoldingReviewId is int holdingId && holdingId != item.ReviewId)
-                  {
-                    @* Scheduling another binding review for the period would be refused: point to the one that is open. *@
-                    if (item.MayOpenHoldingReview)
+                <td>
+                  <div class="actions-cell">
+                    @if (item.ReviewId is int reviewId && item.MayOpenReview)
                     {
-                      <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{holdingId}")"
-                         aria-label="@($"Open review #{holdingId}, open for {item.SchedulePeriodLabel}, to decide {item.EpaCode} for {item.TraineeName}")">@($"Open review #{holdingId}")</a>
+                      <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{reviewId}")"
+                         aria-label="@($"Open review #{reviewId} for {item.TraineeName}, {item.EpaCode}")">Open review</a>
                     }
-                  }
-                  else if (DecisionsDueText.OffersSchedule(item))
-                  {
-                    if (scheduleHref is not null)
+                    @if (DecisionsDueText.WantsASitting(item) && item.HoldingReviewId is int holdingId && holdingId != item.ReviewId)
                     {
-                      <a class="btn btn-outline btn-sm" href="@scheduleHref"
-                         aria-label="@($"Schedule a review of {item.TraineeName} for {item.EpaCode} before {item.SchedulePanelName}")">Schedule</a>
+                      @* Scheduling another binding review for the period would be refused: point to the one that is open. *@
+                      if (item.MayOpenHoldingReview)
+                      {
+                        <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{holdingId}")"
+                           aria-label="@($"Open review #{holdingId}, open for {item.SchedulePeriodLabel}, to decide {item.EpaCode} for {item.TraineeName}")">@($"Open review #{holdingId}")</a>
+                      }
                     }
-                    else
+                    else if (DecisionsDueText.OffersSchedule(item))
                     {
-                      <span class="muted">No panel you can schedule before decides it.</span>
+                      if (scheduleHref is not null)
+                      {
+                        <a class="btn btn-outline btn-sm" href="@scheduleHref"
+                           aria-label="@($"Schedule a review of {item.TraineeName} for {item.EpaCode} before {item.SchedulePanelName}")">Schedule</a>
+                      }
+                      else
+                      {
+                        <span class="muted">No panel you can schedule before decides it.</span>
+                      }
                     }
-                  }
+                  </div>
                 </td>
               </tr>
             }

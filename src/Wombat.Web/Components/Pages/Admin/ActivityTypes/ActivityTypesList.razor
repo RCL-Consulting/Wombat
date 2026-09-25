@@ -25,6 +25,7 @@
   </div>
 </div>
 
+@{ var rowNames = RowNames.Distinct(FilteredItems, type => type.Id, type => type.Name, type => $" ({type.Key})"); }
 <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && FilteredItems.Count == 0)" EmptyTitle="No activity types" EmptyBody="Create the first activity type to start the builder.">
   <DataTable Items="FilteredItems" Caption="Configured activity types">
     <HeaderRow>
@@ -35,7 +36,7 @@
         <th>Published</th>
         <th>Draft</th>
         <th>Status</th>
-        <th></th>
+        <th><span class="visually-hidden">Actions</span></th>
       </tr>
     </HeaderRow>
     <Row Context="item">
@@ -46,8 +47,11 @@
         <td>v@(item.PublishedVersion)</td>
         <td>@(item.HasDraft ? "Draft saved" : "None")</td>
         <td>@(item.IsActive ? "Active" : "Inactive")</td>
-        <td class="actions-cell">
-          <a class="btn btn-outline btn-sm" href="@($"/admin/activity-types/{item.Id}")">Edit</a>
+        <td>
+          @* T239: named by its row, the type's name, and its key where two types share a name. *@
+          <div class="actions-cell">
+            <a class="btn btn-outline btn-sm" href="@($"/admin/activity-types/{item.Id}")" aria-label="@($"Edit {rowNames[item.Id]}")">Edit</a>
+          </div>
         </td>
       </tr>
     </Row>

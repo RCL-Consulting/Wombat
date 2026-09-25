@@ -323,6 +323,100 @@ public sealed class ActionFocusTests : TestContext
         hold.Count.Should().Be(1);
     }
 
+    // ---- T239 review: the names of repeated actions outside a table ----
+    //
+    // These pages' repeated buttons sit in cards and lists, not a table's rows, so the source scan
+    // (Design/RowActionMarkupTests) does not see them. They are here for the fixtures: each page renders as its focus
+    // scenarios do.
+
+    /// <summary>
+    /// T239. Every card's button read "Download certificate". At rest each is named by its EPA; while its certificate is
+    /// generated, by what it then says, "Generating…", as a sighted user reads it; and named again once it is done.
+    /// </summary>
+    [Fact]
+    public void EachCertificatesDownload_IsNamedByItsEpa_AndWhileItRuns_ByWhatItSays()
+    {
+        SignIn(WombatRoles.Trainee);
+        var hold = new Hold();
+        var cut = Page<MyAuthorisations>(new Sender(
+            hold,
+            request => request is DownloadEntrustmentCertificateCommand,
+            request => request switch
+            {
+                GetActiveDecisionsForTraineeQuery => new[] { Decision(1, "PAED-001"), Decision(2, "PAED-002") },
+                DownloadEntrustmentCertificateCommand => new EntrustmentCertificateResult([1, 2, 3], "star.pdf", "hash-1"),
+                _ => null
+            }));
+
+        DownloadButtons(cut).Select(button => AccessibleNames.NameOf(cut, button))
+            .Should().Equal("Download certificate for PAED-001", "Download certificate for PAED-002");
+
+        DownloadButtons(cut)[0].Click();
+        cut.WaitForAssertion(() => DownloadButtons(cut)[0].TextContent.Trim().Should().Be("Generating…"));
+        DownloadButtons(cut).Select(button => AccessibleNames.NameOf(cut, button))
+            .Should().Equal("Generating…", "Download certificate for PAED-002");
+
+        hold.Release();
+        cut.WaitForAssertion(() => DownloadButtons(cut).Select(button => AccessibleNames.NameOf(cut, button))
+            .Should().Equal("Download certificate for PAED-001", "Download certificate for PAED-002"));
+    }
+
+    /// <summary>T239. Each of a user's roles had a "Remove" button, and a screen reader read "Remove" for every one.</summary>
+    [Fact]
+    public void EachRolesRemove_IsNamedByTheRoleItRemoves()
+    {
+        var cut = UserDetailPage(new Hold(), _ => false, User() with { Roles = [WombatRoles.Trainee, WombatRoles.Assessor] });
+
+        cut.FindAll("button").Where(button => button.TextContent.Trim() == "Remove")
+            .Select(button => AccessibleNames.NameOf(cut, button))
+            .Should().Equal("Remove the Trainee role", "Remove the Assessor role");
+    }
+
+    /// <summary>T239. A review stages one decision an EPA, and each staged decision's Remove is named by it.</summary>
+    [Fact]
+    public void EachStagedDecisionsRemove_IsNamedByItsEpa()
+    {
+        var cut = ReviewPage(new Hold(), _ => false,
+            Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.InProgress),
+            [PendingStar(), PendingStar() with { Id = 10, EpaId = 2, EpaCode = "PAED-002", EpaTitle = "EPA 2" }]);
+
+        cut.FindAll("button").Where(button => button.TextContent.Trim() == "Remove")
+            .Select(button => AccessibleNames.NameOf(cut, button))
+            .Should().Equal("Remove the staged decision on PAED-001", "Remove the staged decision on PAED-002");
+    }
+
+    /// <summary>
+    /// T239. A trainee's own requests: Withdraw names the request, and Download names what it downloads, the request's
+    /// export, not the request (T239 review).
+    /// </summary>
+    [Fact]
+    public void EachOwnRequestsActions_NameTheRequest_AndDownloadNamesItsExport()
+    {
+        var withdrawable = new DataRightsRequestSummaryDto(
+            RequestId, "Tia Trainee", Created, DataRightsRequestType.Access, DataRightsRequestStatus.Submitted);
+        var cut = Page<DataRights>(new Sender(new Hold(), _ => false, request => request switch
+        {
+            GetObjectionFlagsQuery => new ObjectionFlagsDto(false, false),
+            GetMyDataRightsRequestsQuery => new[]
+            {
+                withdrawable,
+                withdrawable with
+                {
+                    Id = new Guid("6a1f0000-0000-0000-0000-000000000002"),
+                    RequestedOn = Created.AddHours(3),
+                    Type = DataRightsRequestType.Export,
+                    Status = DataRightsRequestStatus.Completed
+                }
+            },
+            _ => null
+        }));
+        cut.WaitForState(() => cut.FindAll("tbody a.btn").Count == 1);
+
+        cut.FindAll("tbody button.btn, tbody a.btn").Select(control => AccessibleNames.NameOf(cut, control)).Should().Equal(
+            "Withdraw the Access request made 2026-01-01 00:00",
+            "Download the export of the Export request made 2026-01-01 03:00");
+    }
+
     /// <summary>
     /// T234 review. A confirmed action runs with its dialog open and the focus on the dialog's confirm button, which, like
     /// every button whose own action runs, stays enabled, says it is unavailable, and sends nothing on a second press.

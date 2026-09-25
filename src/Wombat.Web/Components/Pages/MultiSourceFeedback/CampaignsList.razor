@@ -54,7 +54,7 @@
           <th>Invitations</th>
           <th>Responses</th>
           <th>Closes</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="item">
@@ -69,25 +69,27 @@
           <td>@item.InvitationCount</td>
           <td>@item.ResponseCount</td>
           <td>@item.ClosesOn.ToString("yyyy-MM-dd")</td>
-          <td class="actions-cell">
-            @* Each link is named by what its page lets the coordinator do in this state, in the campaign page's words
-               (T225): "Manage" a draft or an open campaign, "View campaign" otherwise; "Review and release" one under
-               review, "View report" an open or a released one, and no report link on a draft or a withdrawn campaign,
-               as the campaign page offers none there (T217). Until T225 every row read "Edit" and "Report". *@
-            <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")"
-               aria-label="@MsfCampaignText.RowLinkName(campaignLink, Describe(item))">@campaignLink</a>
-            @if (reportLink is not null)
-            {
-              <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")"
-                 aria-label="@MsfCampaignText.RowLinkName(reportLink, Describe(item))">@reportLink</a>
-            }
-            @if (CanWithdraw(item))
-            {
-              @* The accessible name starts with the visible label and says which row it acts on (T206). *@
-              <button type="button" class="btn btn-sm btn-outline" disabled="@_withdrawing"
-                      aria-label="@($"Withdraw the campaign for {Describe(item)}")"
-                      @onclick="() => AskWithdrawAsync(item)">Withdraw</button>
-            }
+          <td>
+            <div class="actions-cell">
+              @* Each link is named by what its page lets the coordinator do in this state, in the campaign page's words
+                 (T225): "Manage" a draft or an open campaign, "View campaign" otherwise; "Review and release" one under
+                 review, "View report" an open or a released one, and no report link on a draft or a withdrawn campaign,
+                 as the campaign page offers none there (T217). Until T225 every row read "Edit" and "Report". *@
+              <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")"
+                 aria-label="@MsfCampaignText.RowLinkName(campaignLink, Describe(item))">@campaignLink</a>
+              @if (reportLink is not null)
+              {
+                <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")"
+                   aria-label="@MsfCampaignText.RowLinkName(reportLink, Describe(item))">@reportLink</a>
+              }
+              @if (CanWithdraw(item))
+              {
+                @* The accessible name starts with the visible label and says which row it acts on (T206). *@
+                <button type="button" class="btn btn-sm btn-outline" disabled="@_withdrawing"
+                        aria-label="@($"Withdraw the campaign for {Describe(item)}")"
+                        @onclick="() => AskWithdrawAsync(item)">Withdraw</button>
+              }
+            </div>
           </td>
         </tr>
       </Row>

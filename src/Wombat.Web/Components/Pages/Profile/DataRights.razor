@@ -100,7 +100,7 @@
           <th>Date</th>
           <th>Type</th>
           <th>Status</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="req">
@@ -112,7 +112,8 @@
             @if (req.Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview)
             {
               @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
-              <button type="button" class="btn btn-outline btn-sm"
+              @* T239: each action is named by its request, its type and when it was made. *@
+              <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Withdraw the {req.Type} request made {Made(req)}")"
                       disabled="@(_savingFlags || _submitting || (_withdrawingId is not null && _withdrawingId != req.Id))"
                       aria-disabled="@InFlight.AriaDisabled(_withdrawingId == req.Id)"
                       @onclick="() => WithdrawAsync(req.Id)">Withdraw</button>
@@ -120,7 +121,8 @@
             @if (req.Status == DataRightsRequestStatus.Completed &&
                  req.Type is DataRightsRequestType.Access or DataRightsRequestType.Export)
             {
-              <a class="btn btn-outline btn-sm" href="/account/data-rights/download/@req.Id">Download</a>
+              <a class="btn btn-outline btn-sm" href="/account/data-rights/download/@req.Id"
+                 aria-label="@($"Download the export of the {req.Type} request made {Made(req)}")">Download</a>
             }
           </td>
         </tr>
@@ -130,6 +132,10 @@
 </StatePanel>
 
 @code {
+  /// <summary>When a request was made, as its Date column says it (T239).</summary>
+  private static string Made(DataRightsRequestSummaryDto request)
+    => request.RequestedOn.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+
   private IReadOnlyList<DataRightsRequestSummaryDto>? _requests;
   private bool _loadingRequests = true;
   private bool _loadingFlags = true;

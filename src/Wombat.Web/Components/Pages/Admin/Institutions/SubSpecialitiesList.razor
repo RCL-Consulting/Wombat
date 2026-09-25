@@ -27,7 +27,7 @@
           <th>Name</th>
           <th>Description</th>
           <th>Status</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="subSpeciality">
@@ -36,7 +36,8 @@
           <td>@subSpeciality.Description</td>
           <td>@(subSpeciality.IsActive ? "Active" : "Inactive")</td>
           <td>
-            <a class="btn btn-outline btn-sm" href="@($"/admin/specialities/{SpecialityId}/sub-specialities/{subSpeciality.Id}")">Edit</a>
+            @* T239: named by the sub-speciality, whose name is unique within the speciality. *@
+            <a class="btn btn-outline btn-sm" href="@($"/admin/specialities/{SpecialityId}/sub-specialities/{subSpeciality.Id}")" aria-label="@($"Edit {subSpeciality.Name}")">Edit</a>
           </td>
         </tr>
       </Row>

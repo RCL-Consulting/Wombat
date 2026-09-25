@@ -159,6 +159,37 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
         cut.FindAll("#panels-trainee-note").Should().BeEmpty();
     }
 
+    [Fact]
+    public void ThePanelList_ShowsACallerWhoMayManageNoPanel_NoActionsColumn()
+    {
+        // T239 review: a committee member was shown an "Actions" column of blank cells, since no row offered them Edit.
+        SignInAs(WombatRoles.CommitteeMember, holdsTrainee: false);
+
+        var cut = RenderComponent<PanelsList>();
+        cut.WaitForState(() => cut.Markup.Contains("Paediatrics CCC"));
+
+        // The page's first table is the panel list; the routing section's follow it.
+        var list = cut.Find("table");
+        list.QuerySelectorAll("thead th").Select(header => header.TextContent.Trim())
+            .Should().Equal("Name", "Scope", "Decides for", "Members");
+        list.QuerySelectorAll("tbody tr").Should().OnlyContain(row => row.QuerySelectorAll("td").Length == 4);
+    }
+
+    [Fact]
+    public void ThePanelList_NamesEachEdit_ByItsPanel_UnderAnActionsHeader()
+    {
+        // The control: an institutional admin manages the panel, so the column is there, headed, and its Edit named.
+        SignInAs(WombatRoles.InstitutionalAdmin, holdsTrainee: false);
+
+        var cut = RenderComponent<PanelsList>();
+        cut.WaitForState(() => Links(cut).Contains("Edit"));
+
+        var list = cut.Find("table");
+        list.QuerySelectorAll("thead th").Last().QuerySelector("span.visually-hidden")!.TextContent.Should().Be("Actions");
+        var edit = list.QuerySelectorAll("tbody a.btn").Single(link => link.TextContent.Trim() == "Edit");
+        Accessibility.AccessibleNames.NameOf(cut, edit).Should().Be("Edit Paediatrics CCC");
+    }
+
     public static TheoryData<string, bool, string> EmptyListCopy => new()
     {
         // Offered New panel: told to create one.

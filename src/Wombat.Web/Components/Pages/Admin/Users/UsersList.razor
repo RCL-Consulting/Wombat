@@ -21,6 +21,8 @@
     }
     else
     {
+      var rowNames = RowNames.Distinct(
+        FilteredUsers, row => row.UserId, row => $"{row.FirstName} {row.LastName}", row => $" ({row.Email})");
       <DataTable TItem="UserSummaryDto" Items="FilteredUsers" Caption="Users">
         <HeaderRow>
           <tr>
@@ -29,7 +31,7 @@
             <th>Institution</th>
             <th>Roles</th>
             <th>Status</th>
-            <th></th>
+            <th><span class="visually-hidden">Actions</span></th>
           </tr>
         </HeaderRow>
         <Row Context="user">
@@ -39,7 +41,8 @@
             <td>@(user.InstitutionName ?? "Global")</td>
             <td>@string.Join(", ", user.Roles)</td>
             <td>@(user.IsLockedOut ? "Locked out" : "Active")</td>
-            <td><a class="btn btn-outline btn-sm" href="@($"/admin/users/{user.UserId}")">Manage</a></td>
+            @* T239: named by the user, and their email where two share a name. *@
+            <td><a class="btn btn-outline btn-sm" href="@($"/admin/users/{user.UserId}")" aria-label="@($"Manage {rowNames[user.UserId]}")">Manage</a></td>
           </tr>
         </Row>
       </DataTable>

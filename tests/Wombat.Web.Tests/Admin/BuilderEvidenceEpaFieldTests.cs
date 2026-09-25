@@ -140,6 +140,32 @@ public sealed class BuilderEvidenceEpaFieldTests : TestContext
         cut.Find("#evidence-epa-field").GetAttribute("value").Should().Be("epa_id");
     }
 
+    /// <summary>
+    /// T239. Each section's and field's Edit, Up, Down and Delete names what it acts on, as the scale editor's "Move
+    /// level 3 up" does; every one of them read its bare label.
+    /// </summary>
+    [Fact]
+    public void EachSectionAndFieldButton_NamesTheSectionOrFieldItActsOn()
+    {
+        var cut = RenderPage(new FakeSender(WithPointer));
+
+        var names = cut.FindAll(".actions-cell button")
+            .Where(button => button.TextContent.Trim() is "Edit" or "Up" or "Down" or "Delete")
+            .Select(button => Accessibility.AccessibleNames.NameOf(cut, button))
+            .ToList();
+
+        names.Should().Equal(
+            "Edit section Request", "Move section Request up", "Move section Request down", "Delete section Request",
+            "Edit field EPA", "Move field EPA up", "Move field EPA down", "Delete field EPA",
+            "Edit field Another EPA", "Move field Another EPA up", "Move field Another EPA down", "Delete field Another EPA",
+            "Edit field Notes", "Move field Notes up", "Move field Notes down", "Delete field Notes");
+
+        // T239 review: each section's Add field says which section it adds to; with two sections, both read "Add field".
+        cut.FindAll("button").Where(button => button.TextContent.Trim() == "Add field")
+            .Select(button => Accessibility.AccessibleNames.NameOf(cut, button))
+            .Should().Equal("Add field to section Request");
+    }
+
     [Fact]
     public void ChoosingAnEpaField_SavesThePointerInTheDraftSchema()
     {

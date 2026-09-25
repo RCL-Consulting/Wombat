@@ -73,6 +73,26 @@ public sealed class ReviewsScheduleListScopeTests : TestContext
         cut.FindAll(".detail-card--empty").Should().BeEmpty();
     }
 
+    [Fact]
+    public void EachOpen_IsNamedByTheReviewItOpens_AndItsTrainee_AndNoTwoReadTheSame()
+    {
+        // T239 review. The schedule lists many trainees' reviews, so each Open names whose review it opens: the two rows
+        // here sit for one period before one panel, and read the same without it.
+        SignIn(WombatRoles.Coordinator, "coord-a");
+        var cut = RenderList();
+
+        var opens = cut.FindAll("tbody td .actions-cell a")
+            .Where(link => link.TextContent.Trim() == "Open")
+            .ToDictionary(link => link.GetAttribute("href")!, link => Accessibility.AccessibleNames.NameOf(cut, link));
+
+        opens.Should().BeEquivalentTo(new Dictionary<string, string>
+        {
+            [$"/committee/reviews/{PaedsReviewAtA}"] = "Open the 2026 S2 review of Palesa Paeds before A's annual review panel",
+            [$"/committee/reviews/{SurgeryReviewAtA}"] = "Open the 2026 S2 review of Sipho Surgery before A's annual review panel"
+        });
+        cut.FindAll("thead th").Last().TextContent.Trim().Should().Be("Actions");
+    }
+
     [Theory]
     [InlineData(WombatRoles.SpecialityAdmin, Paediatrics, null, "Palesa Paeds")]
     [InlineData(WombatRoles.SubSpecialityAdmin, null, GeneralPaediatrics, "Palesa Paeds")]

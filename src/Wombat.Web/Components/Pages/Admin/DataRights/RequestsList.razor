@@ -49,7 +49,7 @@
           <th>Requester</th>
           <th>Type</th>
           <th>Status</th>
-          <th></th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="req">
@@ -59,7 +59,9 @@
           <td><span class="badge @TypeBadge(req.Type)">@req.Type</span></td>
           <td><span class="badge @StatusBadge(req.Status)">@req.Status</span></td>
           <td>
-            <a class="btn btn-outline btn-sm" href="/admin/data-rights/@req.Id">Review</a>
+            @* T239: named by its row: the request's type, who made it, and when. *@
+            <a class="btn btn-outline btn-sm" href="/admin/data-rights/@req.Id"
+               aria-label="@($"Review the {req.Type} request from {req.RequesterDisplayName}, {req.RequestedOn.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)}")">Review</a>
           </td>
         </tr>
       </Row>

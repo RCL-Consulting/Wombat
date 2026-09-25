@@ -304,11 +304,13 @@
                            a change to a region it already knows, not reliably one that arrives already filled. It sits
                            beside Save, which points at it, so the reason Save is off is read with it and seen with it. *@
                         <span id="edit-minima-status" class="muted" role="status">@(MinimaComplete(_editModel) ? null : IncompleteText(_editModel, "Saving"))</span>
-                        <button type="button" class="btn btn-outline" @onclick="CancelEdit">Cancel</button>
+                        @* T239: both named by the item, as the row's Edit and the legend name it; the edit row sits among
+                           the list's rows, whose actions each name theirs. *@
+                        <button type="button" class="btn btn-outline" aria-label="@($"Cancel editing {ItemName(item)}")" @onclick="CancelEdit">Cancel</button>
                         @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of
                            a button it disables, to the page. A second press sends nothing (SaveItemAsync). *@
                         <button type="button" class="btn btn-primary" disabled="@(_adding || _removing || !MinimaComplete(_editModel))" aria-disabled="@InFlight.AriaDisabled(_updating)"
-                                aria-describedby="edit-minima-status" @onclick="SaveItemAsync">Save</button>
+                                aria-label="@($"Save {ItemName(item)}")" aria-describedby="edit-minima-status" @onclick="SaveItemAsync">Save</button>
                       </FormActions>
                     </fieldset>
                   </td>
