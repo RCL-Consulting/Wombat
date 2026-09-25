@@ -32,5 +32,7 @@
   <ItemGroup>
     <!-- T216: names the trainees the real picker handler offers. -->
     <Compile Include="../Shared/FakeUserDirectory.cs" Link="TestSupport/FakeUserDirectory.cs" />
+    <!-- T245: what an institution has adopted, which a speciality panel of anyone but an Administrator needs. -->
+    <Compile Include="../Shared/AdoptionSeed.cs" Link="TestSupport/AdoptionSeed.cs" />
   </ItemGroup>
 </Project>

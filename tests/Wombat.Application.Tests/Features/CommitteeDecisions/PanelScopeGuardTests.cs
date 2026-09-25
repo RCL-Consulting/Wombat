@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
@@ -215,6 +216,11 @@ public sealed class PanelScopeGuardTests
             new Institution { Id = InstitutionA, Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow },
             new Institution { Id = InstitutionB, Name = "B", ShortCode = "B", IsActive = true, CreatedOn = DateTime.UtcNow });
         db.Set<Speciality>().Add(new Speciality { Id = SpecialityInB, CollegeId = InstitutionB, Name = "SpecB", IsActive = true });
+        // Specialities are national (T091), and A trains this one: a speciality panel is created only for a speciality
+        // its institution has adopted (T245).
+        db.Set<SubSpeciality>().Add(new SubSpeciality { Id = 50, SpecialityId = SpecialityInB, Name = "SubSpecB", IsActive = true });
+        db.Set<Curriculum>().Add(new Curriculum { Id = 500, SubSpecialityId = 50, Name = "SubSpecB", Version = "1" });
+        AdoptionSeed.Adopt(db, 1, InstitutionA, 500, 50);
         db.SaveChanges();
         return db;
     }

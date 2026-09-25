@@ -1236,6 +1236,12 @@ public sealed class CommitteeTraineeScopeTests
             new Curriculum { Id = 100, SubSpecialityId = GeneralPaediatrics, Name = "General Paediatrics", Version = "11.1" },
             new Curriculum { Id = 101, SubSpecialityId = Neonatology, Name = "Neonatology", Version = "1" },
             new Curriculum { Id = 200, SubSpecialityId = GeneralSurgery, Name = "General Surgery", Version = "1" });
+        // What each institution trains, the curricula its trainees follow: a speciality panel is created only for a
+        // speciality its institution has adopted (T245).
+        AdoptionSeed.Adopt(db, 1, InstitutionA, 100, GeneralPaediatrics);
+        AdoptionSeed.Adopt(db, 2, InstitutionA, 101, Neonatology);
+        AdoptionSeed.Adopt(db, 3, InstitutionA, 200, GeneralSurgery);
+        AdoptionSeed.Adopt(db, 4, InstitutionB, 100, GeneralPaediatrics);
 
         AddProfile(db, 1, PaedsAtA, InstitutionA, 100, isActive: true);
         AddProfile(db, 2, NeonatologyAtA, InstitutionA, 101, isActive: true);

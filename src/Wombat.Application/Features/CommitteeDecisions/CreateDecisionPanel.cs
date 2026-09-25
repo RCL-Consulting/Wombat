@@ -62,8 +62,8 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
         var specialityId = request.Scope == DecisionPanelScope.Speciality ? request.SpecialityId : null;
 
         // A SpecialityAdmin creates panels for their own speciality only (T131 slice 3, T194 item 2).
-        if (!await CommitteeDecisionAuthorization.MayAdministerPanelAsync(
-                _dbContext, request.Principal, institutionId, request.Scope, specialityId, cancellationToken))
+        var reach = await CommitteeDecisionAuthorization.PanelReachAsync(_dbContext, request.Principal, cancellationToken);
+        if (!reach.Admits(institutionId, request.Scope, specialityId))
         {
             throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.PanelOutOfScope);
         }
@@ -75,6 +75,12 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
         {
             throw new UnauthorizedAccessException(CommitteeDecisionAuthorization.DecisionBodyNeedsInstitutionalAdmin);
         }
+
+        // A speciality panel covers only a speciality the panel's institution has adopted, the specialities the panel form
+        // offers, whoever creates it, an Administrator included (T245 and its review). Read at the institution resolved
+        // above, after who may act is settled, and like every check here, before anything is added.
+        await CommitteeDecisionAuthorization.DemandAdoptedSpecialityAsync(
+            _dbContext, reach, institutionId, specialityId, cancellationToken);
 
         // T165: each member must be someone who may sit (an active committee member at the panel's institution who is not
         // a trainee, T237), in any seat, the rule the picker lists by and a decision's attendance is held to. Before the

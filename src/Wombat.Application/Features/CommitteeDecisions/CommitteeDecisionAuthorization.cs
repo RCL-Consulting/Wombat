@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Institutions;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
@@ -192,6 +193,109 @@ internal static class CommitteeDecisionAuthorization
         }
 
         return new PanelAdministrationReach(false, institutionId, EveryPanelAtInstitution: false, specialityIds);
+    }
+
+    /// <summary>
+    /// The refusal to create a Speciality-scoped panel for a speciality the panel's institution has adopted no curriculum
+    /// in, given to anyone but a global Administrator: their panel runs at their own institution (T245). Given only once
+    /// the caller's reach admits the panel, and never instead of <see cref="PanelOutOfScope" /> or
+    /// <see cref="DecisionBodyNeedsInstitutionalAdmin" />: who may act is said before what the store holds.
+    /// </summary>
+    internal const string SpecialityNotAdopted =
+        "Your institution has adopted no curriculum in this speciality, so a panel for it would have no trainee to review.";
+
+    /// <summary>
+    /// <see cref="SpecialityNotAdopted" /> as a global Administrator is told it, who belongs to no institution and names the
+    /// one every panel of theirs runs at (T245 review).
+    /// </summary>
+    internal const string SpecialityNotAdoptedAtChosenInstitution =
+        "The institution you chose has adopted no curriculum in this speciality, so a panel for it would have no trainee " +
+        "to review.";
+
+    /// <summary>
+    /// Refuses a new panel at <paramref name="institutionId" /> covering a speciality that is not among
+    /// <see cref="CreatableSpecialityIdsAsync" /> there, the specialities the panel form offers (T245): with
+    /// <see cref="SpecialityNotAdopted" />, or <see cref="SpecialityNotAdoptedAtChosenInstitution" /> for a global
+    /// Administrator. Panel create asks it once the caller's <paramref name="reach" /> admits the panel, and before
+    /// anything about its members or its College committee's slot is read.
+    /// </summary>
+    /// <param name="institutionId">The institution the new panel runs at, as panel create resolved it.</param>
+    /// <param name="specialityId">
+    /// The speciality the new panel covers: null for any panel but a Speciality-scoped one, which asks nothing.
+    /// </param>
+    public static async Task DemandAdoptedSpecialityAsync(
+        IApplicationDbContext dbContext,
+        PanelAdministrationReach reach,
+        int institutionId,
+        int? specialityId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(reach);
+
+        if (specialityId is int speciality &&
+            !(await CreatableSpecialityIdsAsync(dbContext, reach, institutionId, cancellationToken)).Contains(speciality))
+        {
+            throw new InvalidOperationException(
+                reach.EveryInstitution ? SpecialityNotAdoptedAtChosenInstitution : SpecialityNotAdopted);
+        }
+    }
+
+    /// <summary>
+    /// The specialities a new Speciality-scoped panel of this caller's at <paramref name="institutionId" /> may cover: of
+    /// the specialities their reach covers there, the ones that institution has adopted a curriculum in
+    /// (<see cref="AdoptedSpecialities" />, the institutional administrator's speciality list's predicate). What the panel
+    /// form offers (<see cref="GetDecisionPanelFormOptionsQuery" />) and panel create demands
+    /// (<see cref="DemandAdoptedSpecialityAsync" />). (T245)
+    /// </summary>
+    /// <returns>
+    /// Every speciality the institution has adopted for a global Administrator or its InstitutionalAdmin, and only those
+    /// among their own for a Speciality or SubSpecialityAdmin; empty at an institution their reach does not admit.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// Before T245 a speciality administrator was offered, and could create, a panel for every speciality their claims
+    /// named: a SpecialityAdmin whose claims named General Medicine created a General Medicine panel at a hospital that
+    /// trains only Paediatrics, which could never have a trainee. An InstitutionalAdmin was offered only the adopted
+    /// specialities, but create accepted any from them too, and a global Administrator was offered, and could create, any
+    /// speciality at any institution (T245 review). No one is exempt: a panel for a speciality its institution does not
+    /// train has no trainee to review, whoever creates it.
+    /// </para>
+    /// <para>
+    /// The institution is the panel's own, as panel create resolved it, not the caller's: a global Administrator has none,
+    /// and anyone else's reach admits only their own, so the adoptions read are always those of the institution the panel
+    /// would run at, whichever order a caller asks in.
+    /// </para>
+    /// <para>
+    /// Only a new panel is asked. An existing panel keeps its administrators when its institution's adoption lapses: the
+    /// trainees admitted under the adoption still follow it, and the panel that reviews them is still theirs to manage by
+    /// <see cref="PanelReachAsync" />, which reads no adoption. Updating a panel changes no speciality.
+    /// </para>
+    /// </remarks>
+    public static async Task<IReadOnlySet<int>> CreatableSpecialityIdsAsync(
+        IApplicationDbContext dbContext,
+        PanelAdministrationReach reach,
+        int institutionId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(reach);
+
+        if (!reach.EveryInstitution && reach.InstitutionId != institutionId)
+        {
+            return new HashSet<int>();
+        }
+
+        var creatable = (await AdoptedSpecialities.IdsAt(dbContext, institutionId)
+                .Distinct()
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
+
+        if (!reach.ManagesEveryPanel)
+        {
+            creatable.IntersectWith(reach.SpecialityIds);
+        }
+
+        return creatable;
     }
 
     /// <summary>

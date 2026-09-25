@@ -34,5 +34,7 @@
     <Compile Include="../Shared/StarEvidence.cs" Link="TestSupport/StarEvidence.cs" />
     <!-- T142: a user directory that answers the display-name lookup and counts the calls. -->
     <Compile Include="../Shared/FakeUserDirectory.cs" Link="TestSupport/FakeUserDirectory.cs" />
+    <!-- T245: what an institution has adopted, which a speciality panel of anyone but an Administrator needs. -->
+    <Compile Include="../Shared/AdoptionSeed.cs" Link="TestSupport/AdoptionSeed.cs" />
   </ItemGroup>
 </Project>

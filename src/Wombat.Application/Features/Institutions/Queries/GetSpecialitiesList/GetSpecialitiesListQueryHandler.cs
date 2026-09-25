@@ -35,12 +35,9 @@ public sealed class GetSpecialitiesListQueryHandler : IRequestHandler<GetSpecial
                 // adoption for — the disciplines they actually train, and so can invite assessors/
                 // trainees into and scope activity types / panels / forms against. Without this an
                 // InstitutionalAdmin (who has no College claim) saw an empty list and could not issue
-                // the Assessor/Trainee invitations that require speciality scope. (T092)
-                var adoptedSpecialityIds =
-                    from adoption in _dbContext.Set<InstitutionCurriculumAdoption>()
-                    where adoption.IsActive && adoption.InstitutionId == scopedInstitutionId.Value
-                    join subSpeciality in _dbContext.Set<SubSpeciality>() on adoption.SubSpecialityId equals subSpeciality.Id
-                    select subSpeciality.SpecialityId;
+                // the Assessor/Trainee invitations that require speciality scope. (T092) The one predicate the panel
+                // form's offer and panel create read too (T245).
+                var adoptedSpecialityIds = AdoptedSpecialities.IdsAt(_dbContext, scopedInstitutionId.Value);
 
                 query = query.Where(entity => adoptedSpecialityIds.Contains(entity.Id));
             }

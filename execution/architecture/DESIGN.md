@@ -1251,11 +1251,24 @@ text says so: "No panel has a trainee you can schedule a review for. A panel is 
 programme you oversee."
 
 **The panel form** (`/committee/panels/new`, T194). A new panel's Scope and Speciality selects offer what creating the
-panel would accept from the caller, read from `GetDecisionPanelFormOptionsQuery`, never from roles: an Administrator or
-institutional administrator both scopes and the speciality list; a speciality or sub-speciality administrator the
-Speciality scope and only their own speciality. Speciality is selected first where it is offered. Where nothing is, the
-page shows no form: a `detail-card--empty` card (`#panel-none-creatable`) headed "Create panel" says in a `.muted`
-paragraph that they cannot create a panel, and who can. Every seat's picker (Chair, Members, External members) offers
+panel would accept from the caller, read from `GetDecisionPanelFormOptionsQuery`, never from roles: an institutional
+administrator both scopes and the specialities their institution has adopted a curriculum in; a speciality or
+sub-speciality administrator the Speciality scope and only those of their own specialities their institution has adopted
+(T245); an Administrator both scopes and, once they have chosen the institution above, the specialities it has adopted
+(the query asked again with `InstitutionId` whenever the institution changes, T245 review). A speciality chosen before the
+institution changed that the institution now chosen has not adopted is unchosen. Adopted is one predicate
+(`AdoptedSpecialities.IdsAt`), the one the institutional administrator's speciality list reads, asked at the panel's
+institution, and panel create refuses any other speciality from everyone: "Your institution has adopted no curriculum in
+this speciality, so a panel for it would have no trainee to review.", or to an Administrator "The institution you chose
+has adopted no curriculum in this speciality, so a panel for it would have no trainee to review.", which the form,
+offering none, never draws. So that a speciality is not simply missing, the Speciality select's help text says why: "The
+panel runs at your institution. Only the specialities it has adopted a curriculum in are listed."; to an Administrator
+"Choose the institution first: only the specialities it has adopted a curriculum in are listed." until they have, then
+"Only the specialities the chosen institution has adopted a curriculum in are listed." Speciality is selected first where
+it is offered. Where nothing is, the page shows no form: a `detail-card--empty` card (`#panel-none-creatable`) headed "Create
+panel" says in a `.muted` paragraph that they cannot create a panel, and who can: "…A speciality or sub-speciality
+administrator creates panels for their own speciality at their own institution, once the institution has adopted a
+curriculum in it. An institutional administrator creates the institution's panels." Every seat's picker (Chair, Members, External members) offers
 exactly the people the panel may seat, `ListPanelMemberCandidatesQuery` by `PanelSeat`, the rule panel create and
 update enforce: active committee members at the panel's institution who do not hold Trainee (T165, T237). The Members
 help text ends "Only active committee members at the panel's institution who are not trainees are listed.", and the

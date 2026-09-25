@@ -285,6 +285,8 @@ public sealed class PanelAdministrationTraineeFirstTests
             Id = GeneralPaediatrics, SpecialityId = Paediatrics, Name = "General Paediatrics", IsActive = true
         });
         db.Curricula.Add(new Curriculum { Id = 100, SubSpecialityId = GeneralPaediatrics, Name = "General Paediatrics", Version = "11.1" });
+        // A trains it: a speciality panel is created only for a speciality its institution has adopted (T245).
+        AdoptionSeed.Adopt(db, 1, InstitutionA, 100, GeneralPaediatrics);
         db.Set<DecisionBody>().Add(new DecisionBody { Key = "neonatal", Name = "Neonatal team Clinical Competency Committee" });
         db.DecisionPanels.Add(new DecisionPanel
         {

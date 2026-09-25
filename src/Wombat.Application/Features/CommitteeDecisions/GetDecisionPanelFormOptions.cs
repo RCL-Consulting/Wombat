@@ -13,9 +13,12 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// </summary>
 /// <param name="MayCreateInstitutionWide">Whether the institution-wide scope is theirs to create.</param>
 /// <param name="Specialities">
-/// The specialities a Speciality-scoped panel of theirs may cover, when that is only some (a Speciality or
-/// SubSpecialityAdmin's own); null when it is any (an InstitutionalAdmin or a global Administrator), for whom the form
-/// offers the speciality list it reads for every caller. Empty when it is none.
+/// The specialities a Speciality-scoped panel of theirs may cover
+/// (<c>CommitteeDecisionAuthorization.CreatableSpecialityIdsAsync</c>, T245): the ones the panel's institution has adopted,
+/// all of them for an InstitutionalAdmin or a global Administrator and only their own for a Speciality or
+/// SubSpecialityAdmin. Null when it depends on an institution not yet chosen: a global Administrator's, asked without
+/// <see cref="GetDecisionPanelFormOptionsQuery.InstitutionId" />, who may create a speciality panel at an institution
+/// once it is chosen. Empty when it is none.
 /// </param>
 public sealed record DecisionPanelFormOptionsDto(bool MayCreateInstitutionWide, IReadOnlyList<SpecialityDto>? Specialities)
 {
@@ -33,18 +36,26 @@ public sealed record DecisionPanelFormOptionsDto(bool MayCreateInstitutionWide, 
 
 /// <summary>
 /// The panel form's offer, read from the rule creating a panel demands
-/// (<see cref="CommitteeDecisionAuthorization.PanelReachAsync" />), so the form offers a scope and a speciality exactly
-/// when <see cref="CreateDecisionPanelCommand" /> would accept them. (T194) The panel list reads it too, to offer New panel
+/// (<see cref="CommitteeDecisionAuthorization.PanelReachAsync" />, and for a speciality
+/// <see cref="CommitteeDecisionAuthorization.CreatableSpecialityIdsAsync" />, T245), so the form offers a scope and a
+/// speciality exactly when <see cref="CreateDecisionPanelCommand" /> would accept them. (T194) The panel list reads it too, to offer New panel
 /// only when creating one would be accepted, and both panel pages read its <see cref="DecisionPanelFormOptionsDto.TraineeNote" />
 /// to say why they offer someone who holds Trainee nothing (T256).
 /// </summary>
+/// <param name="InstitutionId">
+/// The institution a global Administrator has chosen for the new panel, whose adopted specialities are then offered; null
+/// until they choose one. Ignored for anyone else, whose panels run at their own institution. (T245 review)
+/// </param>
 /// <remarks>
 /// Before T194 the form decided from the caller's roles. A Speciality or SubSpecialityAdmin was offered only the
 /// Speciality scope, rightly, but the speciality list came from <c>GetSpecialitiesListQuery</c>, which lists a College's
 /// specialities, or the ones an InstitutionalAdmin's institution has adopted, and nothing to anyone else: the form offered
-/// them a scope with no speciality to choose, and they could create no panel at all.
+/// them a scope with no speciality to choose, and they could create no panel at all. Until T245 the offer was every
+/// speciality their claims named, adopted or not, an InstitutionalAdmin's was the speciality list, and an Administrator's
+/// every speciality whichever institution they chose, while create accepted any speciality from each of them.
 /// </remarks>
-public sealed record GetDecisionPanelFormOptionsQuery(ClaimsPrincipal Principal) : IRequest<DecisionPanelFormOptionsDto>;
+public sealed record GetDecisionPanelFormOptionsQuery(ClaimsPrincipal Principal, int? InstitutionId = null)
+    : IRequest<DecisionPanelFormOptionsDto>;
 
 public sealed class GetDecisionPanelFormOptionsQueryHandler
     : IRequestHandler<GetDecisionPanelFormOptionsQuery, DecisionPanelFormOptionsDto>
@@ -70,17 +81,27 @@ public sealed class GetDecisionPanelFormOptionsQueryHandler
         }
 
         var reach = await CommitteeDecisionAuthorization.PanelReachAsync(_dbContext, request.Principal, cancellationToken);
-        if (reach.ManagesEveryPanel)
+
+        // The panel's institution: the one a global Administrator chose, and anyone else's own.
+        var institutionId = reach.EveryInstitution ? request.InstitutionId : reach.InstitutionId;
+        if (institutionId is not int institution)
         {
-            return new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: true, Specialities: null);
+            // An Administrator who has not chosen one yet may create either scope, and is offered the specialities once
+            // they do; anyone else with no institution of their own may create nothing.
+            return reach.EveryInstitution
+                ? new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: true, Specialities: null)
+                : new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: false, Specialities: []);
         }
 
-        if (reach.InstitutionId is null || reach.SpecialityIds.Count == 0)
+        // The specialities panel create accepts from them there (T245): those of their reach the institution has adopted.
+        var creatable = await CommitteeDecisionAuthorization.CreatableSpecialityIdsAsync(
+            _dbContext, reach, institution, cancellationToken);
+        if (creatable.Count == 0)
         {
-            return new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: false, Specialities: []);
+            return new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: reach.ManagesEveryPanel, Specialities: []);
         }
 
-        var specialityIds = reach.SpecialityIds.ToArray();
+        var specialityIds = creatable.ToArray();
         var specialities = await _dbContext.Set<Speciality>()
             .AsNoTracking()
             .Where(speciality => specialityIds.Contains(speciality.Id))
@@ -89,6 +110,6 @@ public sealed class GetDecisionPanelFormOptionsQueryHandler
                 speciality.Id, speciality.CollegeId, speciality.Name, speciality.Description, speciality.IsActive))
             .ToListAsync(cancellationToken);
 
-        return new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: false, Specialities: specialities);
+        return new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: reach.ManagesEveryPanel, Specialities: specialities);
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
@@ -353,6 +354,12 @@ public sealed class DecisionPanelScopeTests
         db.SubSpecialities.AddRange(
             new SubSpeciality { Id = GeneralPaediatrics, SpecialityId = Paediatrics, Name = "General Paediatrics", IsActive = true },
             new SubSpeciality { Id = GeneralSurgery, SpecialityId = Surgery, Name = "General Surgery", IsActive = true });
+        // A and B both train Paediatrics, the speciality every speciality panel here covers: a speciality panel is created
+        // only for a speciality its institution has adopted, an Administrator's at B included (T245 and its review,
+        // PanelSpecialityAdoptionTests).
+        db.Curricula.Add(new Curriculum { Id = 100, SubSpecialityId = GeneralPaediatrics, Name = "General Paediatrics", Version = "11.1" });
+        AdoptionSeed.Adopt(db, 1, InstitutionA, 100, GeneralPaediatrics);
+        AdoptionSeed.Adopt(db, 2, InstitutionB, 100, GeneralPaediatrics);
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
         return db;

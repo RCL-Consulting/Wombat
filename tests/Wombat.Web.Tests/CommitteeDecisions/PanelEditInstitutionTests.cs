@@ -8,7 +8,6 @@ using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Institutions;
 using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList;
-using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
@@ -42,14 +41,16 @@ public sealed class PanelEditInstitutionTests : TestContext
                 new InstitutionDto(InstitutionA, "Kgosi Kgari", "KGK", null, true, DateTime.UtcNow),
                 new InstitutionDto(InstitutionB, "Other Hospital", "OTH", null, true, DateTime.UtcNow)
             })
-            .On<GetSpecialitiesListQuery>(_ => new[] { new SpecialityDto(Paediatrics, 1, "Paediatrics", null, true) })
-            // What a new panel may be (T194): every scope and speciality for an InstitutionalAdmin or an Administrator, the
-            // caller's own speciality for anyone else. PanelEditFormOptionsTests runs the real rule.
+            // What a new panel may be (T194, T245): both scopes for an InstitutionalAdmin or an Administrator, the Speciality
+            // scope for anyone else, and Paediatrics, the one speciality adopted here; an Administrator's only once they have
+            // chosen an institution. PanelEditFormOptionsTests runs the real rule.
             .On<GetDecisionPanelFormOptionsQuery>(query =>
-                query.Principal.IsInRole(WombatRoles.Administrator) || query.Principal.IsInRole(WombatRoles.InstitutionalAdmin)
+                query.Principal.IsInRole(WombatRoles.Administrator) && query.InstitutionId is null
                     ? new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: true, Specialities: null)
                     : new DecisionPanelFormOptionsDto(
-                        MayCreateInstitutionWide: false, Specialities: [new SpecialityDto(Paediatrics, 1, "Paediatrics", null, true)]))
+                        MayCreateInstitutionWide: query.Principal.IsInRole(WombatRoles.Administrator) ||
+                                                  query.Principal.IsInRole(WombatRoles.InstitutionalAdmin),
+                        Specialities: [new SpecialityDto(Paediatrics, 1, "Paediatrics", null, true)]))
             .On<ListPanelMemberCandidatesQuery>(_ => new[]
             {
                 new PanelMemberCandidateDto("zulu", "zulu@test", "Thandi", "Zulu", InstitutionA)

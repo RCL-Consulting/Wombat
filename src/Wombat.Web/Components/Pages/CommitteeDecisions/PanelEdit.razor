@@ -246,7 +246,12 @@
   private BodyFormModel _bodyModel = new();
   private IReadOnlyList<DecisionBodyDto> _bodies = [];
   private IReadOnlyList<InstitutionDto> _institutions = [];
-  private IReadOnlyList<SpecialityDto> _specialities = [];
+
+  /// <summary>
+  /// The specialities the institution a global Administrator chose has adopted, which a new panel of theirs there may
+  /// cover (T245 review); empty until they choose one. Anyone else's are the options' own.
+  /// </summary>
+  private IReadOnlyList<SpecialityDto> _institutionSpecialities = [];
   private DecisionPanelFormOptionsDto? _formOptions;
   private IReadOnlyList<PanelMemberCandidateDto> _candidates = [];
   private int _unseatable;
@@ -293,7 +298,10 @@
       }
 
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
+      // Anyone but a global Administrator is offered, from the options, exactly the specialities creating their panel
+      // accepts (T194, T245). An Administrator's follow the institution the form holds, usually none yet.
+      _institutionSpecialities = [];
+      await LoadInstitutionSpecialitiesAsync(authState.User);
       if (!PanelId.HasValue)
       {
         // The form starts on a scope it offers: Speciality where it offers one, as it always did, else the
@@ -351,7 +359,8 @@
   /// <summary>Said in place of the form when no panel is the caller's to create (T194).</summary>
   private const string NoneCreatable =
     "You cannot create a decision panel. A speciality or sub-speciality administrator creates panels for their own " +
-    "speciality at their own institution, and an institutional administrator creates any panel there.";
+    "speciality at their own institution, once the institution has adopted a curriculum in it. An institutional " +
+    "administrator creates the institution's panels.";
 
   private const string MembersHelpText =
     "Hold Ctrl (Windows) / Cmd (Mac) to select multiple. The chair is excluded automatically. A panel needs at least " +
@@ -370,16 +379,23 @@
   private bool MayCreate(DecisionPanelScope scope) => scope switch
   {
     DecisionPanelScope.Institution => _formOptions?.MayCreateInstitutionWide == true,
-    DecisionPanelScope.Speciality => OfferedSpecialities.Count > 0,
+    DecisionPanelScope.Speciality => SpecialitiesFollowInstitution || OfferedSpecialities.Count > 0,
     _ => false
   };
 
   /// <summary>
-  /// The specialities a new Speciality-scoped panel may cover (T194): only the caller's own for a Speciality or
-  /// SubSpecialityAdmin, whom the speciality list gives none, and the speciality list itself for anyone whose reach is
-  /// every speciality.
+  /// Whether the specialities offered depend on the institution chosen in the form: a global Administrator's, whose
+  /// options name none until an institution is chosen (T245 review). They may create a speciality panel wherever one has
+  /// been adopted, so the Speciality scope is theirs whichever institution is chosen.
   /// </summary>
-  private IReadOnlyList<SpecialityDto> OfferedSpecialities => _formOptions?.Specialities ?? _specialities;
+  private bool SpecialitiesFollowInstitution => _formOptions is { Specialities: null };
+
+  /// <summary>
+  /// The specialities a new Speciality-scoped panel may cover (T194): the ones the panel's institution has adopted, only
+  /// their own for a Speciality or SubSpecialityAdmin (T245), and for a global Administrator the ones the institution they
+  /// chose has adopted (T245 review).
+  /// </summary>
+  private IReadOnlyList<SpecialityDto> OfferedSpecialities => _formOptions?.Specialities ?? _institutionSpecialities;
 
   private async Task SaveBodyAsync()
   {
@@ -416,7 +432,17 @@
   private static string FormatCandidate(PanelMemberCandidateDto candidate)
     => $"{candidate.FirstName} {candidate.LastName} ({candidate.Email})";
 
-  private string? SpecialityHelpText => _isAdministrator ? null : "The panel runs at your institution.";
+  /// <summary>
+  /// Said under the Speciality select: a panel may cover only a speciality its institution has adopted (T245), so a
+  /// speciality the caller's claims name, or any other, is not offered where the institution has not, and this says why.
+  /// Anyone but a global Administrator creates at their own institution; an Administrator chooses it above, first
+  /// (T245 review).
+  /// </summary>
+  private string SpecialityHelpText => !SpecialitiesFollowInstitution
+    ? "The panel runs at your institution. Only the specialities it has adopted a curriculum in are listed."
+    : _model.InstitutionId is null
+      ? "Choose the institution first: only the specialities it has adopted a curriculum in are listed."
+      : "Only the specialities the chosen institution has adopted a curriculum in are listed.";
 
   private string? ChairHelpText
     => _isAdministrator && !PanelId.HasValue && _model.InstitutionId is null
@@ -458,11 +484,35 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await LoadInstitutionSpecialitiesAsync(authState.User);
       await LoadCandidatesAsync(authState.User);
     }
     catch (Exception exception)
     {
       _error = RefusalText.Of(exception);
+    }
+  }
+
+  /// <summary>
+  /// A global Administrator's new panel may cover only a speciality the institution they chose has adopted (T245 review):
+  /// read, by the rule panel create demands, whenever the institution changes, and a speciality chosen before that the
+  /// institution now chosen has not adopted is unchosen, so the form never sends one the save refuses. Anyone else's
+  /// panel runs at their own institution, whose specialities the options name already.
+  /// </summary>
+  private async Task LoadInstitutionSpecialitiesAsync(System.Security.Claims.ClaimsPrincipal user)
+  {
+    if (PanelId.HasValue || !SpecialitiesFollowInstitution)
+    {
+      return;
+    }
+
+    _institutionSpecialities = _model.InstitutionId is int institutionId
+      ? (await Sender.Send(new GetDecisionPanelFormOptionsQuery(user, institutionId))).Specialities ?? []
+      : [];
+
+    if (_model.SpecialityId is int chosen && _institutionSpecialities.All(speciality => speciality.Id != chosen))
+    {
+      _model.SpecialityId = null;
     }
   }
 

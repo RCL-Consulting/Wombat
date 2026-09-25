@@ -10,7 +10,6 @@ using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Institutions;
 using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList;
-using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
@@ -47,8 +46,9 @@ public sealed class PanelEditChairTests : TestContext
                 new InstitutionDto(InstitutionA, "Kgosi Kgari", "KGK", null, true, DateTime.UtcNow),
                 new InstitutionDto(InstitutionB, "Other Hospital", "OTH", null, true, DateTime.UtcNow)
             })
-            .On<GetSpecialitiesListQuery>(_ => Array.Empty<SpecialityDto>())
-            .On<GetDecisionPanelFormOptionsQuery>(_ => new DecisionPanelFormOptionsDto(MayCreateInstitutionWide: true, Specialities: null))
+            // An InstitutionalAdmin: both scopes, and the specialities their institution has adopted (T245).
+            .On<GetDecisionPanelFormOptionsQuery>(_ => new DecisionPanelFormOptionsDto(
+                MayCreateInstitutionWide: true, Specialities: [new SpecialityDto(4, 1, "Paediatrics", null, true)]))
             .On<GetDecisionBodiesQuery>(_ => Array.Empty<DecisionBodyDto>())
             .On<ListPanelMemberCandidatesQuery>(query => query.InstitutionId == InstitutionB
                 ? new[] { new PanelMemberCandidateDto("dube", "dube@test", "Musa", "Dube", InstitutionB) }
