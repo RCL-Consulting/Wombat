@@ -110,9 +110,46 @@ public sealed class SsoEmailSyncPostgresTests : IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// T156 review: two first sign-ins with one address, both past Identity's user-name check before either has inserted
+    /// its account. The unique index on the normalised user name refuses the later insert, which the user store throws
+    /// rather than returns, so until the review the person got the error page. They are told the address is in use, as
+    /// the in-use check would have told them, and the refusal's audit row, saved through the same context, carries
+    /// nothing else: the refused account is not sent again.
+    /// </summary>
+    [Fact]
+    public async Task AFirstSignInThatLosesTheRaceForItsAddress_IsToldItIsInUse_NotTheErrorPage()
+    {
+        const string address = "raced@kgk.test";
+        var race = new TakenAtTheSameMoment(address);
+
+        await WithSchemaAsync(
+            async root =>
+            {
+                race.Root = root;
+                race.InstitutionId = _institutionId;
+
+                var result = await SignInAsync(root, address, "idp-subject-late");
+
+                race.WinnerId.Should().NotBeNull("guard: the other account was created after Identity's own check had looked");
+                result.Succeeded.Should().BeFalse();
+                result.ErrorMessage.Should().Be(
+                    "A Wombat account already uses this email address, so a new one cannot be created. Contact your administrator.");
+
+                await using var scope = root.CreateAsyncScope();
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                (await db.Users.AsNoTracking().Where(user => user.NormalizedUserName == "RACED@KGK.TEST").Select(user => user.Id).ToListAsync())
+                    .Should().Equal([race.WinnerId!], "only the account that won the race holds the address");
+                (await db.UserLogins.AsNoTracking().AnyAsync(login => login.ProviderKey == "idp-subject-late")).Should().BeFalse();
+                (await db.Set<AuditEntry>().AsNoTracking().Where(entry => entry.Action == "SsoProvisioningRefused").ToListAsync())
+                    .Should().ContainSingle().Which.ErrorMessage.Should().Be("Another account holds the provider's verified email.");
+            },
+            services => services.AddScoped<IUserValidator<WombatIdentityUser>>(_ => race));
+    }
+
     // ---- helpers --------------------------------------------------------------------------------------------------
 
-    private async Task WithSchemaAsync(Func<ServiceProvider, Task> test)
+    private async Task WithSchemaAsync(Func<ServiceProvider, Task> test, Action<IServiceCollection>? configure = null)
     {
         var schema = await _schemas.CreateAsync();
 
@@ -136,6 +173,7 @@ public sealed class SsoEmailSyncPostgresTests : IAsyncLifetime
             }));
             services.AddScoped<SsoGroupMapper>();
             services.AddScoped<ExternalLoginHandler>();
+            configure?.Invoke(services);
 
             await using var root = services.BuildServiceProvider();
 
@@ -206,6 +244,46 @@ public sealed class SsoEmailSyncPostgresTests : IAsyncLifetime
         await using var scope = root.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
             .Set<AuditEntry>().AsNoTracking().Select(entry => entry.Action).ToListAsync();
+    }
+
+    /// <summary>
+    /// Stands in for another first sign-in with the same address: once Identity's own validator has looked and found no
+    /// holder, it creates an account with that address through a scope of its own, committed at once. Registered after
+    /// Identity's validator, so it runs after it; the account it creates passes it, as <see cref="WinnerId" /> is set
+    /// first.
+    /// </summary>
+    private sealed class TakenAtTheSameMoment(string address) : IUserValidator<WombatIdentityUser>
+    {
+        public ServiceProvider? Root { get; set; }
+
+        public int InstitutionId { get; set; }
+
+        public string? WinnerId { get; private set; }
+
+        public async Task<IdentityResult> ValidateAsync(UserManager<WombatIdentityUser> manager, WombatIdentityUser user)
+        {
+            if (WinnerId is not null || !string.Equals(user.UserName, address, StringComparison.OrdinalIgnoreCase))
+            {
+                return IdentityResult.Success;
+            }
+
+            var winner = new WombatIdentityUser
+            {
+                UserName = address,
+                Email = address,
+                EmailConfirmed = true,
+                FirstName = "First",
+                LastName = "Winner",
+                InstitutionId = InstitutionId,
+                AllowLocalPassword = false
+            };
+            WinnerId = winner.Id;
+
+            await using var other = Root!.CreateAsyncScope();
+            (await other.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>().CreateAsync(winner))
+                .Succeeded.Should().BeTrue();
+            return IdentityResult.Success;
+        }
     }
 
     private sealed class NullAuthenticationService : IAuthenticationService

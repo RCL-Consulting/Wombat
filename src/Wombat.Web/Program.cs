@@ -8,9 +8,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
-using System.Threading.RateLimiting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MediatR;
 using Wombat.Application;
@@ -87,54 +85,23 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>("database");
 
-const string LoginRateLimitPolicy = "login";
+// The sign-in throttle: ten failed password checks in five minutes from one client address, shared by the sign-in, link
+// and change-password endpoints below. Identity's lockout (see AddInfrastructure) caps the guesses at one account; this
+// caps them from one client, so a password spray across many accounts is slowed too. Only failures count, so the people
+// behind one hospital's address do not share ten sign-ins between them (T156). Each endpoint counts its own password
+// check: a rate-limiter policy counts a request before the endpoint runs, and cannot tell a failure from a success.
+builder.Services.AddSingleton<SignInThrottle>();
 
-// Login throttling. Identity lockout (see AddInfrastructure) caps attempts per *account*;
-// this caps them per client IP so an attacker cannot spread a password-spray across many
-// accounts, and cannot lock a legitimate user out by burning their attempts for them.
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddPolicy(LoginRateLimitPolicy, httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: TruncateLoginIp(httpContext.Connection.RemoteIpAddress) ?? "unknown",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 10,
-                Window = TimeSpan.FromMinutes(5),
-                QueueLimit = 0,
-            }));
-
     // The MSF respondent page (/msf/respond): ten requests a minute for one link from one address, and
     // sixty from one address whatever the links (a global limiter confined to the page's route). The
     // Api's respond endpoint carries the same, from the one definition both hosts register (T205).
     options.AddMsfRespondPolicy();
 
-    // These endpoints are browser form posts, so a bare 429 would render as a blank error
-    // page. Redirect (302) back to the form with an explanation instead, and set
-    // Retry-After so non-browser clients still learn how long to wait.
-    //
-    // Except a respondent's link: they are not signed in and have no account, so the sign-in
-    // page is the wrong answer. They get a 429 that says what happened (T205).
-    options.OnRejected = (context, cancellationToken) =>
-    {
-        if (MsfRespondRateLimit.Limits(context.HttpContext))
-        {
-            return MsfRespondThrottle.RefuseAsync(context.HttpContext, cancellationToken);
-        }
-
-        context.HttpContext.Response.Headers.RetryAfter = "300";
-
-        // A signed-in user changing their password goes back to that page, which says why, not to the sign-in page (T265).
-        if (context.HttpContext.Request.Path.Equals(ChangePasswordOutcome.SubmitPath, StringComparison.OrdinalIgnoreCase))
-        {
-            context.HttpContext.Response.Redirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.TooManyAttempts]));
-            return ValueTask.CompletedTask;
-        }
-
-        context.HttpContext.Response.Redirect(
-            BuildLoginUrl(null, "Too many sign-in attempts. Please wait a few minutes and try again."));
-        return ValueTask.CompletedTask;
-    };
+    // Its limits are the host's only ones. A respondent is not signed in and has no account, so they get a 429 that says
+    // what happened, not a redirect to a sign-in page (T205).
+    options.OnRejected = (context, cancellationToken) => MsfRespondThrottle.RefuseAsync(context.HttpContext, cancellationToken);
 });
 
 // DataProtection: persist keys so auth cookies / antiforgery tokens survive restarts.
@@ -158,12 +125,20 @@ var app = builder.Build();
 // loopback as plain HTTP. Honor X-Forwarded-Proto/-For (set by the Caddyfile) so the
 // app sees the real https scheme and client IP. Must run before authentication so the
 // Identity/antiforgery cookies are issued Secure and any redirects use https.
+//
+// Only from Caddy, which reaches Kestrel over loopback (ASPNETCORE_URLS=http://127.0.0.1:5080). Until T156 the headers
+// were believed from any peer, which was safe only while Kestrel listened on loopback alone: bound anywhere else, any
+// client could name the address the sign-in throttle counts, and the scheme the cookies are issued for. From any other
+// peer they are ignored, and the peer's own address and scheme stand. The middleware reads an IPv4 address mapped into
+// IPv6 as the IPv4 one, so a dual-stack socket's ::ffff:127.0.0.1 is loopback too.
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
 };
 forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
+forwardedHeadersOptions.KnownProxies.Add(System.Net.IPAddress.Loopback);
+forwardedHeadersOptions.KnownProxies.Add(System.Net.IPAddress.IPv6Loopback);
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Security headers (CSP nonce, nosniff, referrer policy) — before anything that can write
@@ -200,6 +175,8 @@ app.MapPost("/account/login/submit", async (
     SignInManager<WombatIdentityUser> signInManager,
     UserManager<WombatIdentityUser> userManager,
     IAuditWriter auditWriter,
+    SignInThrottle throttle,
+    IOptions<SsoOptions> ssoOpts,
     HttpContext httpContext,
     [FromForm] LoginRequest request) =>
 {
@@ -208,14 +185,27 @@ app.MapPost("/account/login/submit", async (
         return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "Email and password are required."));
     }
 
+    // Counted before the account is looked up, so every refusal below costs the client one of its ten (T156).
+    var attempt = throttle.Begin(httpContext);
+    if (attempt.Refused)
+    {
+        SignInThrottle.SetRetryAfter(httpContext.Response, attempt);
+        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, SignInMessages.TooManyFailedAttempts));
+    }
+
     var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
     var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
+    var refused = SignInMessages.Refused(institutionalSignInOffered: ssoOpts.Value.Providers.Count > 0);
 
-    // Block local login for SSO-only users
+    // An account that signs in only through its institution has no password to check, and a check could only count
+    // failures towards a lockout that would block its SSO sign-in too. It is refused as an address no account has is, in
+    // the same words and with the same audit row: telling it apart would say which addresses have accounts, and how they
+    // sign in (T156).
     var loginUser = await userManager.FindByEmailAsync(request.Email.Trim());
     if (loginUser is not null && !loginUser.AllowLocalPassword)
     {
-        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "This account uses institutional sign-in. Please use the SSO button below."));
+        await WriteLoginFailedAsync(auditWriter, ip, ua);
+        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, refused));
     }
 
     var result = await signInManager.PasswordSignInAsync(
@@ -226,6 +216,8 @@ app.MapPost("/account/login/submit", async (
 
     if (result.Succeeded)
     {
+        attempt.Release();
+
         var user = await userManager.FindByEmailAsync(request.Email.Trim());
         var display = user is not null ? $"{user.FirstName} {user.LastName}".Trim() : null;
 
@@ -249,9 +241,11 @@ app.MapPost("/account/login/submit", async (
     }
     else if (result.IsLockedOut)
     {
-        // Distinguished in the audit log so an admin can see a lockout trip, but the
-        // user-facing message stays generic: saying "this account is locked" would
-        // confirm the address exists.
+        // Distinguished in the audit log so an admin can see a lockout trip. The reply names no account, but it is not
+        // the reply an unknown address gets, so it does say one exists: Identity answers a locked account before it
+        // checks a password, so an account an administrator has deactivated gets it at the first try, and an active one
+        // after five wrong guesses. An unknown or institutional address never does. Left so, knowingly (T156 review):
+        // whether a locked-out person is told so is its own decision.
         //
         // Stamped, unlike LoginFailed below. A lockout only trips on an account that exists, and it
         // can only ever be that account's own institution — so naming the locked-out user to their
@@ -277,20 +271,12 @@ app.MapPost("/account/login/submit", async (
     else
     {
         // Record failed login without leaking whether the user account exists.
-        await auditWriter.WriteAsync(AuditEntry.Create(
-            occurredAt: DateTime.UtcNow,
-            category: AuditCategory.Authentication,
-            action: "LoginFailed",
-            success: false,
-            actorIpAddress: ip,
-            actorUserAgent: ua,
-            errorMessage: "Invalid email or password."));
+        await WriteLoginFailedAsync(auditWriter, ip, ua);
 
-        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, "Invalid email or password."));
+        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, refused));
     }
 })
 .AllowAnonymous()
-.RequireRateLimiting(LoginRateLimitPolicy)
 ;
 
 app.MapPost("/account/register/submit", async (
@@ -402,6 +388,7 @@ app.MapGet("/account/sso-callback", async (
 app.MapPost("/account/link-external/submit", async (
     SignInManager<WombatIdentityUser> signInManager,
     ExternalLoginHandler externalLoginHandler,
+    SignInThrottle throttle,
     HttpContext httpContext,
     [FromForm] LinkExternalRequest request) =>
 {
@@ -418,6 +405,21 @@ app.MapPost("/account/link-external/submit", async (
         return Results.LocalRedirect(BuildLinkUrl(request.ReturnUrl, "Your password is required."));
     }
 
+    // A password check, so the sign-in throttle applies, shared with the sign-in page: ten failures in five minutes from
+    // one address. The per-account lockout is the handler's (lockoutOnFailure). Before T149 this endpoint had neither.
+    //
+    // A refusal ends the institutional sign-in in progress and goes to the sign-in page, which says to wait and try
+    // again. The external cookie does not slide, and ends five minutes after the callback (T156), while the client's
+    // window can run five more, so a person told to wait here would come back to a sign-in that had expired. They start
+    // again from their institution's button once the window has passed (T156 review).
+    var attempt = throttle.Begin(httpContext);
+    if (attempt.Refused)
+    {
+        SignInThrottle.SetRetryAfter(httpContext.Response, attempt);
+        await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        return Results.LocalRedirect(BuildLoginUrl(request.ReturnUrl, SignInMessages.TooManyFailedAttempts));
+    }
+
     var ip = TruncateLoginIp(httpContext.Connection.RemoteIpAddress);
     var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
 
@@ -425,6 +427,7 @@ app.MapPost("/account/link-external/submit", async (
 
     if (result.Succeeded)
     {
+        attempt.Release();
         await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
     }
@@ -432,9 +435,6 @@ app.MapPost("/account/link-external/submit", async (
     return Results.LocalRedirect(BuildLinkUrl(request.ReturnUrl, result.ErrorMessage ?? "Linking failed."));
 })
 .AllowAnonymous()
-// A password check, so the local login's throttle applies: per-IP, 10 per five minutes. The per-account lockout is the
-// handler's (lockoutOnFailure). Before T149 this endpoint had neither. (T149)
-.RequireRateLimiting(LoginRateLimitPolicy)
 ;
 
 // The change-password page's form posts here (T265). Changing a password changes the account's security stamp, which the
@@ -459,6 +459,7 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
     SignInManager<WombatIdentityUser> signInManager,
     UserManager<WombatIdentityUser> userManager,
     ILoggerFactory loggerFactory,
+    SignInThrottle throttle,
     HttpContext httpContext,
     [FromForm] ChangePasswordRequest request) =>
 {
@@ -498,8 +499,22 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
             return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.InstitutionalSignIn]));
         }
 
+        // The sign-in throttle, as the sign-in and link pages apply it: ten failed password checks in five minutes from one
+        // address, shared with them. A refusal comes back to this page, which says why (T265, T156).
+        var attempt = throttle.Begin(httpContext);
+        if (attempt.Refused)
+        {
+            SignInThrottle.SetRetryAfter(httpContext.Response, attempt);
+            return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.TooManyAttempts]));
+        }
+
         // A locked account's password is not checked at all, and a fifth wrong one locks it.
         var check = await signInManager.CheckPasswordSignInAsync(user, request.CurrentPassword, lockoutOnFailure: true);
+        if (check.Succeeded)
+        {
+            attempt.Release();
+        }
+
         if (check.IsLockedOut)
         {
             return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.LockedOut]));
@@ -545,10 +560,7 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
 
     return Results.LocalRedirect(ChangePasswordOutcome.UpdatedUrl);
 })
-.RequireAuthorization()
-// A password check, so the sign-in throttle applies, as it does to the link page's (T149): per address, ten in five
-// minutes, shared with the sign-in page. A refusal comes back to this page (the limiter's OnRejected).
-.RequireRateLimiting(LoginRateLimitPolicy);
+.RequireAuthorization();
 
 // Where the sign-in page sends a user whose session had ended before they pressed Change password: the post was
 // challenged, and the address it was going to comes back as the sign-in's return address, as a GET. Without this it
@@ -697,6 +709,20 @@ static string BuildLoginUrl(string? returnUrl, string error)
 static string BuildRegisterUrl(string token, string error)
     => $"/account/register?token={Uri.EscapeDataString(token)}&error={Uri.EscapeDataString(error)}";
 
+// The row every refused sign-in writes, but a lockout's: unstamped and naming no account, whatever the cause, so the log
+// says no more than the page about which addresses have accounts (T101, T156).
+static Task WriteLoginFailedAsync(IAuditWriter auditWriter, string? ip, string? ua)
+    => auditWriter.WriteAsync(AuditEntry.Create(
+        occurredAt: DateTime.UtcNow,
+        category: AuditCategory.Authentication,
+        action: "LoginFailed",
+        success: false,
+        actorIpAddress: ip,
+        actorUserAgent: ua,
+        errorMessage: SignInMessages.InvalidCredentials));
+
+// The address an audit row keeps: its /24 (IPv6: its /48), never the whole of it. The sign-in throttle counts the whole
+// address (ClientAddress), in memory only.
 static string? TruncateLoginIp(System.Net.IPAddress? address)
 {
     if (address is null) return null;

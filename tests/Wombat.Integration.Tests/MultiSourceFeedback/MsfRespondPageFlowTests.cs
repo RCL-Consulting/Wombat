@@ -199,7 +199,8 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
 
     /// <summary>
     /// Ten requests a minute for one link from one address, as on the Api. <c>Program.cs</c> answers the eleventh with a
-    /// readable 429, not with the redirect to the sign-in page its sign-in throttle answers with, which still stands.
+    /// readable 429, not with the redirect to the sign-in page its sign-in throttle answers with, which still stands. The
+    /// sign-in throttle counts failed sign-ins from one address (T156), so a browser of its own makes eleven.
     /// </summary>
     [Fact]
     public async Task TheEleventhRequestInAMinuteForOneLink_IsAReadable429_AndTheSignInThrottleStillRedirects()
@@ -217,15 +218,23 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         refused.Content.Headers.ContentType!.MediaType.Should().Be("text/plain");
         (await refused.Content.ReadAsStringAsync()).Should().StartWith("Too many requests have been made to this feedback page");
 
+        using var browser = _host.NewBrowser("203.0.113.57");
         HttpResponseMessage? lastSignIn = null;
         for (var attempt = 1; attempt <= 11; attempt++)
         {
             lastSignIn?.Dispose();
-            lastSignIn = await _host.Client.PostAsync("/account/login/submit", new FormUrlEncodedContent([]));
+            using var loginPage = await browser.GetAsync("/account/login");
+            var form = Parse(await loginPage.Content.ReadAsStringAsync()).QuerySelector("form[action='/account/login/submit']")!;
+            lastSignIn = await browser.PostAsync("/account/login/submit", new FormUrlEncodedContent(
+            [
+                new("__RequestVerificationToken", form.QuerySelector("input[name=__RequestVerificationToken]")!.GetAttribute("value")!),
+                new("Email", $"nobody-{attempt}@example.test"),
+                new("Password", "Not-the-Pa55word!")
+            ]));
         }
 
         lastSignIn!.StatusCode.Should().Be(HttpStatusCode.Redirect);
-        lastSignIn.Headers.Location!.ToString().Should().Contain("Too%20many%20sign-in%20attempts");
+        lastSignIn.Headers.Location!.ToString().Should().Contain("Too%20many%20failed%20sign-in%20attempts");
         lastSignIn.Dispose();
     }
 

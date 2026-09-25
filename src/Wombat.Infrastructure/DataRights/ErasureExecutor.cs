@@ -36,13 +36,16 @@ namespace Wombat.Infrastructure.DataRights;
 /// All of it or none of it: the work runs in one transaction, and a failure leaves nothing tracked, since the audit
 /// pipeline writes its failure row through this same context and would otherwise commit what was still tracked, the
 /// request's approval with it. So a refused erasure leaves the request as it was, to be approved again. The request's
-/// approval and completion are written by this transaction's one save too, with everything else: the approving handler
+/// approval and completion are written inside this transaction too, with everything else: the approving handler
 /// marks both before it calls this, so no erasure stands under a request left merely approved.
 /// </para>
 /// <para>
 /// A row about the person that changed between being read here and the save (a review ratified, a campaign closed by
 /// the auto-close job, the account updated) fails the save on its concurrency token. That is refused as
-/// <see cref="PersonChanged" />, carrying EF's exception inside, rather than as EF's own message about row counts.
+/// <see cref="PersonChanged" />, carrying EF's exception inside, rather than as EF's own message about row counts. The
+/// account's conflict arrives differently: Identity's user store catches EF's exception and returns a failed result.
+/// Every Identity write's result is checked (T156): a conflict is refused as <see cref="PersonChanged" /> too, and any
+/// other refusal fails the erasure naming the step, so no erased account keeps a role or an institutional sign-in.
 /// </para>
 /// </remarks>
 public sealed class ErasureExecutor : IErasureExecutor
@@ -333,6 +336,13 @@ public sealed class ErasureExecutor : IErasureExecutor
         // --- Audit entries: RETAINED unchanged (legitimate interest / legal obligation) ---
         retentionReasons.Add("audit_log");
 
+        // Everything so far is saved before the account is touched, inside the transaction (T156 review). Identity's user
+        // store saves the whole context on each write and reports a concurrency conflict as a failed result, not as EF's
+        // exception, so a review or campaign changed elsewhere would otherwise be refused inside the account's update and
+        // read as the account's. Saved here, its conflict is EF's exception, refused below as PersonChanged, and only a
+        // conflict on the account itself reaches the Identity calls.
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
         // --- Identity user: clear PII, disable login ---
         var identityUser = await _userManager.FindByIdAsync(userId);
         if (identityUser is not null)
@@ -353,18 +363,20 @@ public sealed class ErasureExecutor : IErasureExecutor
             identityUser.OptOutOfDigestEmails = true;
             identityUser.InstitutionId = null;
 
-            await _userManager.UpdateAsync(identityUser);
+            EnsureSucceeded(await _userManager.UpdateAsync(identityUser), "clear the account");
 
             // Remove all roles
             var roles = await _userManager.GetRolesAsync(identityUser);
             if (roles.Count > 0)
-                await _userManager.RemoveFromRolesAsync(identityUser, roles);
+                EnsureSucceeded(await _userManager.RemoveFromRolesAsync(identityUser, roles), "remove the account's roles");
 
             // Remove every external login (T149). A linked provider subject is an identifier of the person, and a live
             // one is a way back in: SSO sign-in finds the account by it.
             foreach (var login in await _userManager.GetLoginsAsync(identityUser))
             {
-                await _userManager.RemoveLoginAsync(identityUser, login.LoginProvider, login.ProviderKey);
+                EnsureSucceeded(
+                    await _userManager.RemoveLoginAsync(identityUser, login.LoginProvider, login.ProviderKey),
+                    "remove the account's institutional sign-in");
             }
 
             // Remove institution scope associations
@@ -397,6 +409,36 @@ public sealed class ErasureExecutor : IErasureExecutor
 
         return erasureRecord;
     }
+
+    /// <summary>
+    /// Fails the erasure on a refused Identity write, which the transaction then rolls back with everything else (T156).
+    /// The user store reports a refusal as a result rather than an exception, and until T156 the erasure went on past it
+    /// and committed an erased account that kept its roles or its institutional sign-in.
+    /// </summary>
+    /// <remarks>
+    /// A concurrency conflict means the account changed elsewhere while it was being erased, and is refused as
+    /// <see cref="PersonChanged" />, as a conflict on any other row about the person is. Anything else names the step and
+    /// Identity's codes, never its descriptions, which can quote the person's address.
+    /// </remarks>
+    private static void EnsureSucceeded(IdentityResult result, string step)
+    {
+        if (result.Succeeded)
+        {
+            return;
+        }
+
+        var codes = result.Errors.Select(error => error.Code).ToArray();
+        if (codes.Contains(ConcurrencyFailureCode))
+        {
+            throw new InvalidOperationException(PersonChanged);
+        }
+
+        throw new InvalidOperationException(
+            $"The erasure could not {step} ({string.Join(", ", codes)}); nothing was erased.");
+    }
+
+    /// <summary>The code Identity's error describer gives a concurrency conflict.</summary>
+    private const string ConcurrencyFailureCode = nameof(IdentityErrorDescriber.ConcurrencyFailure);
 
     /// <summary>
     /// Generates a stable, deterministic pseudonym: deleted_user_ + first 8 hex chars

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -80,6 +81,10 @@ public static class DependencyInjection
             options.SlidingExpiration = true;
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
         });
+
+        // The external cookie holds an institutional sign-in between the provider's callback and the account it signs in
+        // or is linked to (T156). See ExternalSignInCookie.
+        services.Configure<CookieAuthenticationOptions>(IdentityConstants.ExternalScheme, ExternalSignInCookie.Configure);
 
         services.AddWombatAuthorization();
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));

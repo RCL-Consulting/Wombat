@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -69,11 +70,24 @@ public sealed class ExternalLoginHandler
         "Your institution's sign-in did not confirm your email address, so Wombat cannot use it to find your account " +
         "or create one. Sign in with your password if you have one, or ask your administrator for an invitation.";
 
+    /// <summary>
+    /// What a first sign-in is told when Identity refuses the new account for anything but a taken address: an address
+    /// its user-name rules do not allow, say. Never Identity's own description, which quotes the address. (T156)
+    /// </summary>
+    internal const string AccountNotCreatedMessage =
+        "Wombat could not create an account from your institution's sign-in. Contact your administrator.";
+
+    /// <summary>The audit reason when Identity refused the new account. The row names the codes, never the address. (T156)</summary>
+    internal const string AccountRefusedByValidationReason = "Identity refused the new account; none was created.";
+
     /// <summary>The audit reason when a first sign-in or a link is refused because the email is unverified. (T155)</summary>
     internal const string EmailNotVerifiedReason = "The provider did not assert the email as verified.";
 
     /// <summary>The audit reason when a first sign-in is refused because another account holds the email. (T155)</summary>
     internal const string EmailInUseReason = "Another account holds the provider's verified email.";
+
+    /// <summary><c>unique_violation</c>: the new account's user name was inserted by another request first.</summary>
+    private const string UniqueViolation = "23505";
 
     internal const string EmailInUseMessage =
         "A Wombat account already uses this email address, so a new one cannot be created. Contact your administrator.";
@@ -337,6 +351,40 @@ public sealed class ExternalLoginHandler
             actorUserAgent: userAgent,
             institutionId: institutionId,
             errorMessage: reason));
+
+    /// <summary>
+    /// A first sign-in whose new account Identity refused. Until T156 the person was shown Identity's descriptions, so an
+    /// address held as another account's user name read "Username '…' is already taken." A taken address, which
+    /// <see cref="AddressHeldByAnotherAccountAsync" /> catches first unless another sign-in took it in between, is told
+    /// what that check tells it; anything else gets <see cref="AccountNotCreatedMessage" />. The codes go to the log and
+    /// the audit row, never to the person. (T156) An address taken so late that Identity's own check missed it too is
+    /// refused by the database's unique index instead, and told the same, where the account is created.
+    /// </summary>
+    private async Task<ExternalLoginResult> RefuseCreatedAccountAsync(
+        IdentityResult createResult,
+        string providerKey,
+        int institutionId,
+        string? ipAddress,
+        string? userAgent)
+    {
+        var codes = createResult.Errors.Select(error => error.Code).ToList();
+        var taken = codes.Any(code => code is nameof(IdentityErrorDescriber.DuplicateUserName)
+            or nameof(IdentityErrorDescriber.DuplicateEmail));
+
+        _logger.LogWarning(
+            "SSO first sign-in through '{ProviderKey}' was refused by Identity ({Codes}); no account was created.",
+            providerKey, string.Join(", ", codes));
+
+        if (taken)
+        {
+            await WriteProvisioningRefusedAuditAsync(institutionId, ipAddress, userAgent, EmailInUseReason);
+            return new ExternalLoginResult { ErrorMessage = EmailInUseMessage };
+        }
+
+        await WriteProvisioningRefusedAuditAsync(institutionId, ipAddress, userAgent,
+            $"{AccountRefusedByValidationReason} ({string.Join(", ", codes)})");
+        return new ExternalLoginResult { ErrorMessage = AccountNotCreatedMessage };
+    }
 
     private Task WriteLinkAuditAsync(
         string action,
@@ -609,13 +657,30 @@ public sealed class ExternalLoginHandler
             AllowLocalPassword = false
         };
 
-        var createResult = await _userManager.CreateAsync(user);
+        IdentityResult createResult;
+        try
+        {
+            createResult = await _userManager.CreateAsync(user);
+        }
+        catch (DbUpdateException exception) when (exception.InnerException is DbException { SqlState: UniqueViolation })
+        {
+            // Another first sign-in with the same address created its account after both had passed Identity's user-name
+            // check, so the unique index on the normalised user name refuses this one, and the user store throws that
+            // rather than returning a result. It is refused as the in-use check refuses it, not left to the error page.
+            // The account is taken out of the context first: it is still tracked as added, and the refusal's audit row
+            // saves this context, which would send it again. (T156 review)
+            _dbContext.Entry(user).State = EntityState.Detached;
+            _logger.LogWarning(
+                "SSO first sign-in through '{ProviderKey}' was refused by the database: another account took the address " +
+                "at the same moment; no account was created.",
+                providerKey);
+            await WriteProvisioningRefusedAuditAsync(providerConfig.InstitutionId, ipAddress, userAgent, EmailInUseReason);
+            return new ExternalLoginResult { ErrorMessage = EmailInUseMessage };
+        }
+
         if (!createResult.Succeeded)
         {
-            return new ExternalLoginResult
-            {
-                ErrorMessage = string.Join("; ", createResult.Errors.Select(e => e.Description))
-            };
+            return await RefuseCreatedAccountAsync(createResult, providerKey, providerConfig.InstitutionId, ipAddress, userAgent);
         }
 
         var addLoginResult = await _userManager.AddLoginAsync(user,

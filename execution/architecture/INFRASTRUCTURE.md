@@ -95,6 +95,24 @@ wombat.example.com {
 
 `flush_interval -1` is required for SignalR / Blazor Server streaming responses. Do not forget it.
 
+**Forwarded headers are believed from loopback only (T156).** Caddy reaches Kestrel over loopback
+(`ASPNETCORE_URLS=http://127.0.0.1:5080`) and names the client in `X-Forwarded-For` and the scheme in
+`X-Forwarded-Proto`. The app believes them from `127.0.0.1` and `::1` alone (`KnownProxies`; an IPv4 address mapped into
+IPv6 counts as the IPv4 one). From any other peer they are ignored, so binding Kestrel beyond loopback, or putting another
+proxy in front of it, needs `KnownProxies` changed in `Program.cs` too, or every client is counted as the proxy.
+
+**The sign-in throttle (T097, T149, T265; T156).** Ten failed password checks in five minutes from one client address,
+shared by the sign-in page, the link-your-account page and the change-password page. An IPv4 client is its whole address,
+an IPv6 client its /64 (`ClientAddress`, the same client the MSF respondent limits count). A success costs nothing: a
+check is counted when it begins, so no more than ten are ever in flight, and taken off the count only when its password
+is right. Every other outcome stays counted, a refusal made without a check included (an account that signs in only
+through its institution, or an address the link page will not link), so the count cannot say which addresses have
+accounts. A refusal is a redirect with a `Retry-After` of the seconds left in the window: back to the sign-in or
+change-password form, and from the link page to the sign-in page, ending the institutional sign-in in progress, which
+would expire before the window did (the external cookie, below). The count lives in the process, so
+a restart forgets it. Identity's lockout (five failures, fifteen minutes) caps the guesses at one account; this caps them
+from one client. Audit rows keep the address's /24 (IPv6 /48), never the whole of it.
+
 Every path goes to Wombat.Web on 5080, which is all the MSF respondent page needs (`/msf/respond`, T205): it is a page
 of Wombat.Web, anonymous, static (no Blazor circuit) and rate-limited in the app, so Caddy carries no route, header or
 exemption for it. The access log (`/var/log/caddy/wombat.log`) records each request's full URI, so a respondent's
@@ -335,6 +353,11 @@ Sso__Providers__0__EmailVerifiedClaim=email_verified
 
 **`Wombat__PseudonymSalt`** — used by the erasure executor (T026) to generate deterministic pseudonyms for erased users (`deleted_user_<hex>`). This is a deployment secret. **Do not rotate it** — rotating the salt breaks pseudonym stability across exports and makes previously-issued pseudonyms unlinkable to erasure records.
 
+An erasure is one database transaction (T258): every step or none, and the request is left as it was, to be approved
+again. Every Identity write's result is checked too (T156), because the user store reports a refusal as a result, not an
+exception: a concurrency conflict on the account is refused as `ErasureExecutor.PersonChanged`, as one on a review or a
+campaign is, and any other refusal fails the erasure naming the step. See CUSTOMIZATION.md § Data subject rights.
+
 ## Deployment process
 
 Two paths depending on taste:
@@ -465,6 +488,20 @@ The double-underscore `__` with array index `0` maps to `Sso:Providers[0]:Client
   refused (`SsoProvisioningRefused`, stamped with the provider's institution), and the person is told to ask for an
   invitation. The unverified refusal comes before any lookup, so it reads the same whether or not an account holds the
   address.
+- **The external cookie does not slide, and is a `__Host-` cookie (T156).** It holds a provider's sign-in from the
+  callback until the account is signed in or linked, and ends five minutes after the callback however often the link
+  page reads it: until T156 each read past the halfway mark issued it again, so a sign-in could be kept alive past its
+  revocation at the provider. Its name is `__Host-Identity.External`, always `Secure`, `Path=/`, no `Domain`, so another
+  `rcl.co.za` subdomain cannot plant one. A browser treats `http://localhost` as a secure origin, so development over
+  plain HTTP keeps working (observed in Chrome). The application and antiforgery cookies keep their names.
+- **A wrong password, an unknown address and an institutional account read the same (T156).** All three get "Invalid
+  email or password." (with a pointer at the institution's button where the page offers one) and the same unstamped
+  `LoginFailed` row; no password is checked for the institutional account. A first sign-in whose new account Identity
+  refuses is told so in Wombat's words, never Identity's, which quote the address: a taken address as the in-use check
+  says, anything else as "could not create". **The lockout reply still differs:** Identity answers a locked account
+  before it checks a password, so an account an administrator has deactivated gets "Too many failed sign-in attempts…"
+  at the first try, and an active local account gets it after five wrong guesses, while an unknown or institutional
+  address never does. That is left as it was: whether a locked-out person is told so is its own decision.
 - **Only a verified email is matched to an account for linking (T155).** A link outlives a password change, so matching
   an unverified email would let anyone who can set their own address at the provider, and has learnt the account's
   password once, keep a way in. The callback offers no link for an unverified email (it is refused as above), and the

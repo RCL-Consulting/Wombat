@@ -1,11 +1,10 @@
 using System.Globalization;
-using System.Net;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
+using Wombat.Infrastructure.Http;
 
 namespace Wombat.Infrastructure.MultiSourceFeedback;
 
@@ -83,32 +82,10 @@ public static class MsfRespondRateLimit
 
     /// <summary>
     /// The client as the per-address limit counts it: an IPv4 address as it is, an IPv6 address by its /64, the block one
-    /// site is given (an IPv6 client can move within it freely).
+    /// site is given (an IPv6 client can move within it freely). The sign-in throttle counts the same client
+    /// (<see cref="ClientAddress" />, T156).
     /// </summary>
-    public static string AddressOf(HttpContext context)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-
-        var address = context.Connection.RemoteIpAddress;
-        if (address is null)
-        {
-            return "unknown-ip";
-        }
-
-        if (address.IsIPv4MappedToIPv6)
-        {
-            address = address.MapToIPv4();
-        }
-
-        if (address.AddressFamily != AddressFamily.InterNetworkV6)
-        {
-            return address.ToString();
-        }
-
-        var bytes = address.GetAddressBytes();
-        Array.Clear(bytes, 8, 8);
-        return new IPAddress(bytes) + "/64";
-    }
+    public static string AddressOf(HttpContext context) => ClientAddress.Of(context);
 
     private static RateLimitPartition<string> LinkPartition(HttpContext context)
         => RateLimitPartition.GetFixedWindowLimiter(LinkPartitionKey(context), _ => FixedWindow(PermitLimit));

@@ -54,7 +54,7 @@ evaluators, and renderers.
 | PDF generation | QuestPDF (portfolio export in T023) |
 | Auth | ASP.NET Core Identity; 9 roles (see below); admin-controlled onboarding via invitations; institutional SSO via OIDC (T027) |
 | Icons | Inline SVGs from Lucide via a shared `Icon.razor` component. **Bootstrap Icons font is not loaded** — `<i class="bi bi-*">` renders nothing |
-| Security | CSP with nonce-backed `script-src`; `X-Content-Type-Options: nosniff`; rate-limited login |
+| Security | CSP with nonce-backed `script-src`; `X-Content-Type-Options: nosniff`; sign-in throttled on failed password checks per client address (`SignInThrottle`, T156); `X-Forwarded-*` believed from loopback only |
 | Dependency licensing | GPLv3-compatible additions only |
 | Platform | Windows development; **Ubuntu 26.04 LTS** deployment target (the plan specified 24.04; the live box is 26.04) |
 

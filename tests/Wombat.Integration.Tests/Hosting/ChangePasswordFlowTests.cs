@@ -334,27 +334,36 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, _) = NewBrowser(_host.Factory);
         using (browser)
         {
-            // One of the address's ten in five minutes.
+            // Neither costs anything: the throttle counts failed password checks only (T156).
             await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            using (var changed = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword))
+            {
+                changed.Headers.Location!.ToString().Should().Be(ChangePasswordOutcome.UpdatedUrl, "guard: a change that succeeds");
+            }
 
             var codes = new List<string>();
             string? retryAfter = null;
-            for (var attempt = 1; attempt <= 10; attempt++)
+            for (var attempt = 1; attempt <= 11; attempt++)
             {
                 using var guess = await PostTheFormAsync(browser, $"Guess-{attempt}-Pa55word!", NewPassword, NewPassword);
                 codes.Add(guess.Headers.Location!.ToString());
                 retryAfter = guess.Headers.RetryAfter?.ToString();
             }
 
-            codes.Take(9).Should().NotContain(code => code.Contains(ChangePasswordOutcome.TooManyAttempts), "guard: nine more are allowed");
-            codes[9].Should().Be($"{PagePath}?error={ChangePasswordOutcome.TooManyAttempts}",
+            // The fifth locks the account, and the ones after it fail on the lock: failures all the same.
+            codes.Take(10).Should().NotContain(code => code.Contains(ChangePasswordOutcome.TooManyAttempts), "guard: ten are checked");
+            codes[10].Should().Be($"{PagePath}?error={ChangePasswordOutcome.TooManyAttempts}",
                 "a signed-in user is sent back to the page they were on, not to the sign-in page");
-            retryAfter.Should().Be("300");
+            int.Parse(retryAfter!).Should().BeInRange(1, 300, "the seconds left of the address's five minutes");
 
-            using var answer = await browser.GetAsync(codes[9]);
+            using var answer = await browser.GetAsync(codes[10]);
             answer.StatusCode.Should().Be(HttpStatusCode.OK);
             Parse(await answer.Content.ReadAsStringAsync()).QuerySelector(".action-result .alert-danger")!.TextContent.Trim()
                 .Should().Be(ChangePasswordOutcome.TooManyAttemptsMessage);
+
+            // Shared with the sign-in page: the same address is refused there too, before any password is checked.
+            (await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword, expectSuccess: false))
+                .Should().Be("/account/login?error=" + Uri.EscapeDataString(SignInMessages.TooManyFailedAttempts));
         }
     }
 

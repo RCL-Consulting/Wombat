@@ -643,6 +643,51 @@ public sealed class SsoLinkAndSignInTests : IDisposable
             .Which.ErrorMessage.Should().Be(ExternalLoginHandler.EmailInUseReason);
     }
 
+    /// <summary>
+    /// A verified address Identity's user-name rules refuse (they allow no apostrophe). The person was shown Identity's
+    /// own description until T156, which quotes the address; now a fixed sentence, and the codes go to the audit row.
+    /// </summary>
+    [Fact]
+    public async Task ANewAccountIdentityRefuses_IsRefusedInWombatsWords_NeverIdentitys()
+    {
+        const string address = "o'brien@kgk.test";
+
+        var result = await Handler.HandleCallbackAsync(External(address, "idp-new", emailVerified: "true"), null, null);
+
+        result.Succeeded.Should().BeFalse();
+        result.ErrorMessage.Should().Be(ExternalLoginHandler.AccountNotCreatedMessage);
+        result.ErrorMessage.Should().NotContain("o'brien").And.NotContain("Username");
+        (await Users.FindByLoginAsync(ProviderKey, "idp-new")).Should().BeNull();
+        (await Db.Users.AsNoTracking().CountAsync()).Should().Be(0, "no account was created");
+        _authentication.SignedInUserIds.Should().BeEmpty();
+        var refusal = _audit.Entries.Should().ContainSingle(entry => entry.Action == "SsoProvisioningRefused").Which;
+        refusal.InstitutionId.Should().Be(ProviderInstitutionId);
+        refusal.ErrorMessage.Should().StartWith(ExternalLoginHandler.AccountRefusedByValidationReason)
+            .And.Contain(nameof(IdentityErrorDescriber.InvalidUserName))
+            .And.NotContain("o'brien", "the row carries no address");
+    }
+
+    /// <summary>
+    /// An address another sign-in takes between the in-use check and the create: Identity refuses the duplicate user
+    /// name, and until T156 the person read "Username '…' is already taken." They are told what the in-use check tells.
+    /// </summary>
+    [Fact]
+    public async Task AnAddressTakenAfterTheInUseCheck_IsToldItIsInUse_NotIdentitysUsernameTaken()
+    {
+        const string address = "raced@kgk.test";
+        Users.UserValidators.Add(new TakenBetweenCheckAndCreate(address));
+
+        var result = await Handler.HandleCallbackAsync(External(address, "idp-new", emailVerified: "true"), null, null);
+
+        result.Succeeded.Should().BeFalse();
+        result.ErrorMessage.Should().Be(ExternalLoginHandler.EmailInUseMessage);
+        result.ErrorMessage.Should().NotContain("already taken").And.NotContain(address);
+        (await Users.FindByLoginAsync(ProviderKey, "idp-new")).Should().BeNull();
+        _authentication.SignedInUserIds.Should().BeEmpty();
+        _audit.Entries.Should().ContainSingle(entry => entry.Action == "SsoProvisioningRefused")
+            .Which.ErrorMessage.Should().Be(ExternalLoginHandler.EmailInUseReason);
+    }
+
     // Erasure's removal of external logins is tested on PostgreSQL (SsoErasurePostgresTests): the erasure executor runs
     // raw SQL the in-memory provider cannot.
 
@@ -744,6 +789,18 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         public Task ForbidAsync(HttpContext context, string? scheme, AuthenticationProperties? properties) => Task.CompletedTask;
 
         public Task SignOutAsync(HttpContext context, string? scheme, AuthenticationProperties? properties) => Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Refuses <paramref name="address" /> as Identity's own validator refuses a user name another account took: the
+    /// account that took it did so after the handler's in-use check had looked.
+    /// </summary>
+    private sealed class TakenBetweenCheckAndCreate(string address) : IUserValidator<WombatIdentityUser>
+    {
+        public Task<IdentityResult> ValidateAsync(UserManager<WombatIdentityUser> manager, WombatIdentityUser user)
+            => Task.FromResult(string.Equals(user.UserName, address, StringComparison.OrdinalIgnoreCase)
+                ? IdentityResult.Failed(new IdentityErrorDescriber().DuplicateUserName(address))
+                : IdentityResult.Success);
     }
 
     private sealed class RecordingAuditWriter

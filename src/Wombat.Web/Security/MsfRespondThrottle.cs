@@ -7,10 +7,10 @@ namespace Wombat.Web.Security;
 /// T205).
 /// </summary>
 /// <remarks>
-/// The web host's rate limiter has one rejection handler for every policy, and the sign-in throttle's answer is a
-/// redirect to the sign-in page. A respondent is not signed in and has no account, so sending them there says something
-/// untrue. They get a 429 that says what happened, in plain text: nothing on it needs the page's layout, its script or
-/// its stylesheet.
+/// The web host's rate limiter carries these limits alone; the sign-in throttle is not one of its policies
+/// (<see cref="SignInThrottle" />, T156) and answers with a redirect to the sign-in page. A respondent is not signed in
+/// and has no account, so sending them there would say something untrue. They get a 429 that says what happened, in
+/// plain text: nothing on it needs the page's layout, its script or its stylesheet.
 /// </remarks>
 internal static class MsfRespondThrottle
 {
