@@ -34,6 +34,9 @@ public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCam
         var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
 
         // Closing anonymises every respondent (MsfCampaign.Close), the same routine the auto-close job reaches. (T184)
+        // Asked of the campaign as it is now, not as the caller's report showed it: a campaign another tab or the job has
+        // closed already is refused (MsfCampaign.OnlyOpenCanBeClosed) before anything changes, so its ClosedOn stands and
+        // the audit pipeline's save in its catch finds nothing to commit (T246).
         campaign.Close(DateTime.UtcNow);
 
         try

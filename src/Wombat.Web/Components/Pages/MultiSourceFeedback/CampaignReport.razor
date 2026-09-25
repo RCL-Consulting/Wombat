@@ -82,43 +82,58 @@
 
       <section class="detail-card">
         <h3>Coordinator actions</h3>
-        @if (_report.State == MsfCampaignState.UnderReview && !_report.ReadyForRelease)
+        @if (!CanBeActedOn(_report))
         {
-          <Alert Kind="warning" Role="">@BlockedReason(_report)</Alert>
-        }
-        <EditForm Model="_review" OnValidSubmit="ReleaseAsync" FormName="msf-release">
-          <DataAnnotationsValidator />
-          <ValidationSummary class="validation-summary-errors" />
-          <FormField Label="Narrative" InputId="msf-narrative">
-            <InputTextArea id="msf-narrative" class="form-control" @bind-Value="_review.Narrative" />
-          </FormField>
+          @* T246 review: a campaign that can no longer be closed or released shows its narrative and level as stored,
+             never in fields. A tab that typed a narrative, then found the campaign released or withdrawn elsewhere when
+             its close or release was refused, kept that text in an editable box beside "State: Released", with nothing
+             to send it with, where the narrative the trainee was given belonged. *@
+          <p><strong>Narrative:</strong> @(string.IsNullOrWhiteSpace(_report.CoordinatorNarrative) ? "Not given" : _report.CoordinatorNarrative)</p>
           @if (_levelOptions.Count > 0)
           {
-            <FormField Label="Supervision level this feedback supports" InputId="msf-level"
-                       HelpText="Optional, and blank is a perfectly good answer. Your own judgement as the releasing clinician, informed by the aggregate below - never an average of respondent scores.">
-              <InputSelect id="msf-level" class="form-select" aria-describedby="@FieldHelp.Id("msf-level")" @bind-Value="_review.EntrustmentLevel">
-                <option value="">Not stated</option>
-                @foreach (var rung in _levelOptions)
-                {
-                  <option value="@rung.Value">@rung.Label</option>
-                }
-              </InputSelect>
-            </FormField>
+            <p><strong>Supervision level this feedback supports:</strong> @LevelText(_report.ReviewerEntrustmentLevel)</p>
           }
-          @* Neither is disabled while it runs (T225 review, as Add invitee since T228): the button pressed has the focus,
-             and a browser drops the focus of a button it disables, to the page, where a refusal that leaves the button
-             would leave it. The page refuses a second press instead (_acting). *@
-          <FormActions>
-            @if (_report.State == MsfCampaignState.Open)
+        }
+        else
+        {
+          @if (_report.State == MsfCampaignState.UnderReview && !_report.ReadyForRelease)
+          {
+            <Alert Kind="warning" Role="">@BlockedReason(_report)</Alert>
+          }
+          <EditForm Model="_review" OnValidSubmit="ReleaseAsync" FormName="msf-release">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary-errors" />
+            <FormField Label="Narrative" InputId="msf-narrative">
+              <InputTextArea id="msf-narrative" class="form-control" @bind-Value="_review.Narrative" />
+            </FormField>
+            @if (_levelOptions.Count > 0)
             {
-              <button id="msf-close-campaign" type="button" class="btn btn-outline" @onclick="CloseAsync">Close campaign</button>
+              <FormField Label="Supervision level this feedback supports" InputId="msf-level"
+                         HelpText="Optional, and blank is a perfectly good answer. Your own judgement as the releasing clinician, informed by the aggregate below - never an average of respondent scores.">
+                <InputSelect id="msf-level" class="form-select" aria-describedby="@FieldHelp.Id("msf-level")" @bind-Value="_review.EntrustmentLevel">
+                  <option value="">Not stated</option>
+                  @foreach (var rung in _levelOptions)
+                  {
+                    <option value="@rung.Value">@rung.Label</option>
+                  }
+                </InputSelect>
+              </FormField>
             }
-            @if (_report.State == MsfCampaignState.UnderReview)
-            {
-              <button id="msf-release-campaign" type="submit" class="btn btn-primary" disabled="@(!_report.ReadyForRelease)">Release to trainee</button>
-            }
-          </FormActions>
-        </EditForm>
+            @* Neither is disabled while it runs (T225 review, as Add invitee since T228): the button pressed has the focus,
+               and a browser drops the focus of a button it disables, to the page, where a refusal that leaves the button
+               would leave it. The page refuses a second press instead (_acting). *@
+            <FormActions>
+              @if (_report.State == MsfCampaignState.Open)
+              {
+                <button id="msf-close-campaign" type="button" class="btn btn-outline" @onclick="CloseAsync">Close campaign</button>
+              }
+              @if (_report.State == MsfCampaignState.UnderReview)
+              {
+                <button id="msf-release-campaign" type="submit" class="btn btn-primary" disabled="@(!_report.ReadyForRelease)">Release to trainee</button>
+              }
+            </FormActions>
+          </EditForm>
+        }
       </section>
     </div>
 
@@ -226,6 +241,20 @@
     }
   }
 
+  /// <summary>
+  /// Whether this page can still close or release the campaign: only an open one closes (T246), and only one under
+  /// review is released. Anything else shows its narrative and level as stored (T246 review).
+  /// </summary>
+  private static bool CanBeActedOn(MsfCampaignAggregateReportDto report)
+    => report.State is MsfCampaignState.Open or MsfCampaignState.UnderReview;
+
+  /// <summary>The stored level by its rung's label, as the form's select offers it, never its order (T100, T121).</summary>
+  private string LevelText(int? level)
+    => level is not int order
+      ? "Not stated"
+      : _levelOptions.FirstOrDefault(option => option.Value == order.ToString(System.Globalization.CultureInfo.InvariantCulture))?.Label
+        ?? order.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
   private static string TeachingContextsText(int count, IReadOnlyList<string>? names)
     => names is { Count: > 0 } ? $"{count} ({string.Join(", ", names)})" : $"{count}";
 
@@ -270,7 +299,8 @@
   /// <summary>
   /// The report as it is now, read again after an action, refused or not (T225, as the campaign page does since T217): a
   /// refusal is likeliest because the campaign changed elsewhere, and the page should show what it is now. The report
-  /// already shown stays in view while it is read, and the narrative and level typed are kept.
+  /// already shown stays in view while it is read, and the narrative and level typed are kept while the campaign can still
+  /// be closed or released. Once it cannot, the card shows them as stored instead (T246 review).
   /// </summary>
   /// <remarks>
   /// An action's refusal is kept over a failed read that follows it: it says why the action was not taken, and the panel
@@ -299,6 +329,12 @@
   /// second click while this close runs sends nothing. The button is not disabled meanwhile, so a refusal on a campaign
   /// still open leaves the focus on it, for the retry (T225 review). After a refusal the report is read again, so the
   /// refusal (<see cref="CloseMsfCampaignCommandHandler.CampaignChanged" />) names no other page (T225).
+  /// <para>
+  /// A report loaded while the campaign was open still offers Close after another tab or the auto-close job has closed
+  /// it. The campaign refuses that close (<c>MsfCampaign.OnlyOpenCanBeClosed</c>), and its close date stands
+  /// (T246); the report read again shows it under review, as the campaign page shows a refused open (T217). Close is then
+  /// gone, so the refusal takes the focus.
+  /// </para>
   /// </remarks>
   private async Task CloseAsync()
   {
@@ -319,7 +355,7 @@
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
+      _actionError = RefusalText.Of(exception);
       await ReadReportAsync();
     }
     finally
@@ -358,7 +394,7 @@
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
+      _actionError = RefusalText.Of(exception);
     }
 
     try

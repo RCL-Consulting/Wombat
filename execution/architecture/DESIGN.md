@@ -930,7 +930,17 @@ close refused on a campaign still open, a release refused on one still ready) le
 Release to trainee is disabled only on a report not ready for release; a refused release that finds it no longer ready
 moves the focus to the result. After a refused close or release the report is read again, keeping the narrative and
 level typed, so a refusal names no other page: "If it is still open, close it again."
-(`CloseMsfCampaignCommandHandler.CampaignChanged`, worded as T217's open and withdraw refusals).
+(`CloseMsfCampaignCommandHandler.CampaignChanged`, worded as T217's open and withdraw refusals). Only an open campaign
+closes (T246): a report loaded while the campaign was open still offers Close after another tab or the auto-close job
+has closed it, and that close is refused in the campaign's words ("Only open campaigns can be closed.",
+`MsfCampaign.OnlyOpenCanBeClosed`), as the campaign page's refused open is (T217). Its close date stands, since it
+places the campaign's semester, committee window and evidence date. The report read again shows it as it is now, Close
+is gone, and the refusal takes the focus. A refused close or release is shown through `RefusalText.Of`. The Coordinator
+actions card holds the narrative and level fields only while the campaign can still be closed or released (Open, Under
+review). Otherwise (released, withdrawn, a draft) it shows them as stored, as `<p><strong>Narrative:</strong> …</p>` and
+the level by its rung's label ("Not given", "Not stated" when empty), with no form (T246 review): a tab that typed a
+narrative and then found the campaign released elsewhere kept its own text in an editable box beside "State: Released",
+where the narrative the trainee was given belonged.
 
 The state's words are `MsfCampaignText.State` ("Under review", never the enum's "UnderReview"), which the campaign list
 and the report print too. Its badge is `MsfCampaignText.StateBadge`:

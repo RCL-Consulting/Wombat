@@ -4,6 +4,8 @@ using AngleSharp.Dom;
 using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
+using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +35,8 @@ public sealed class CampaignReportActionsTests : WombatTestContext
 {
     private const int CampaignId = 5;
     private const string TraineeUserId = "trainee-1";
+    private const string TypedNarrative = "Colleagues describe a careful registrar.";
+    private const string ReleasedNarrative = "Released elsewhere: colleagues describe steady progress.";
 
     private readonly TestAuthorizationContext _auth;
 
@@ -128,6 +132,64 @@ public sealed class CampaignReportActionsTests : WombatTestContext
             .And.EndWith("If it is still open, close it again.");
     }
 
+    /// <summary>
+    /// A report loaded while the campaign was open still offers Close once another tab or the auto-close job has closed
+    /// it, or it has been released or withdrawn. The campaign refuses that close in its own words, and its close date
+    /// stands; the report is read again and shows it as it is now, and Close is gone, so the refusal takes the focus. Until
+    /// T246 the close succeeded on a campaign under review, said "Campaign closed and anonymised for review." and moved
+    /// its close date. (T246)
+    /// </summary>
+    /// <remarks>
+    /// Under review, Release is offered and the narrative typed is kept for it. Released or withdrawn, nothing can be sent,
+    /// so the card shows the narrative as stored and no field: until the T246 review it kept this tab's own text in an
+    /// editable box beside "State: Released", where the narrative the trainee was given belonged.
+    /// </remarks>
+    [Theory]
+    [InlineData(MsfCampaignState.UnderReview, "Under review", null, null)]
+    [InlineData(MsfCampaignState.Released, "Released", ReleasedNarrative, "Narrative: " + ReleasedNarrative)]
+    [InlineData(MsfCampaignState.Withdrawn, "Withdrawn", null, "Narrative: Not given")]
+    public void ACloseRefusedBecauseTheCampaignIsNoLongerOpen_SaysWhyOnce_ShowsItAsItIsNow_AndTheRefusalTakesTheFocus(
+        MsfCampaignState stateNow, string stateText, string? storedNarrative, string? narrativeShown)
+    {
+        var sender = new ReportSender(Report(MsfCampaignState.Open))
+        {
+            Refusal = new InvalidOperationException(MsfCampaign.OnlyOpenCanBeClosed),
+            StateAfterRefusal = stateNow,
+            NarrativeAfterRefusal = storedNarrative
+        };
+        var cut = Render(sender);
+        cut.Find("#msf-narrative").Change(TypedNarrative);
+
+        cut.Find("#msf-close-campaign").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Select(Text).Should().Equal("Only open campaigns can be closed."));
+        cut.Find(".alert-danger").GetAttribute("role").Should().Be("alert");
+        cut.Find(".alert-danger").Closest(".action-result").Should().NotBeNull("in the page's one result region");
+        cut.FindAll(".alert-success").Should().BeEmpty("nothing was closed");
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<CloseMsfCampaignCommand>();
+
+        sender.Reads.Should().Be(2, "the report is read again after the refusal");
+        Summary(cut).Should().Contain($"State: {stateText}", "the page shows the campaign as it is now");
+        cut.FindAll("#msf-close-campaign").Should().BeEmpty("it is not open, so Close is not offered");
+
+        if (narrativeShown is null)
+        {
+            cut.FindAll("#msf-release-campaign").Should().ContainSingle("a campaign under review is released here");
+            cut.Find("#msf-narrative").GetAttribute("value").Should().Be(TypedNarrative,
+                "reading the report again keeps what was typed, for the release");
+        }
+        else
+        {
+            cut.FindAll("#msf-release-campaign").Should().BeEmpty();
+            cut.FindAll("form").Should().BeEmpty("nothing on this campaign can be sent any more");
+            Actions(cut).Should().Equal(narrativeShown);
+            cut.Markup.Should().NotContain(TypedNarrative, "this tab's text was never given to the trainee");
+        }
+
+        // The Close campaign button that had the focus is gone.
+        FocusWentToTheResult(cut);
+    }
+
     [Fact]
     public void ACloseRefusedOnACampaignStillOpen_LeavesCloseAndTheFocus_AndTheNarrativeTyped()
     {
@@ -192,6 +254,7 @@ public sealed class CampaignReportActionsTests : WombatTestContext
     {
         var sender = new ReportSender(Report(MsfCampaignState.UnderReview));
         var cut = Render(sender);
+        cut.Find("#msf-narrative").Change(TypedNarrative);
 
         cut.Find("form").Submit();
 
@@ -199,6 +262,8 @@ public sealed class CampaignReportActionsTests : WombatTestContext
         sender.Commands.Should().ContainSingle().Which.Should().BeOfType<ReleaseMsfCampaignCommand>();
         Summary(cut).Should().Contain("State: Released");
         cut.FindAll("#msf-release-campaign").Should().BeEmpty();
+        Actions(cut).Should().Equal("Narrative: " + TypedNarrative); // as released, no longer in a field (T246 review)
+        cut.FindAll("#msf-narrative").Should().BeEmpty();
         FocusWentToTheResult(cut);
         IdReferences.Broken(cut).Should().BeEmpty();
     }
@@ -253,6 +318,90 @@ public sealed class CampaignReportActionsTests : WombatTestContext
             "the button that had the focus is still there, and enabled");
     }
 
+    /// <summary>
+    /// A release refused because another tab has released the campaign: the report read again shows the narrative the
+    /// trainee was given, in no field, and not the one this tab typed. (T246 review)
+    /// </summary>
+    [Fact]
+    public void AReleaseRefusedOnACampaignReleasedElsewhere_ShowsTheNarrativeReleased_NotTheOneTyped()
+    {
+        var sender = new ReportSender(Report(MsfCampaignState.UnderReview))
+        {
+            Refusal = new InvalidOperationException("Only campaigns under review can be released."),
+            StateAfterRefusal = MsfCampaignState.Released,
+            NarrativeAfterRefusal = ReleasedNarrative
+        };
+        var cut = Render(sender);
+        cut.Find("#msf-narrative").Change(TypedNarrative);
+
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Should().ContainSingle());
+        Summary(cut).Should().Contain("State: Released");
+        cut.FindAll("#msf-narrative").Should().BeEmpty();
+        cut.FindAll("#msf-release-campaign").Should().BeEmpty();
+        Actions(cut).Should().Equal("Narrative: " + ReleasedNarrative);
+        cut.Markup.Should().NotContain(TypedNarrative);
+        FocusWentToTheResult(cut);
+    }
+
+    /// <summary>
+    /// A report already released shows what was released, the level by its rung's label (order 5 is rung "4" on the CPSA
+    /// ladder, T100), and no field: nothing here can send either again. (T246 review)
+    /// </summary>
+    [Fact]
+    public void AReleasedReport_ShowsItsNarrativeAndLevelAsReleased_InNoField()
+    {
+        Services.AddSingleton<IActivityReferenceDataService>(new RatedLevelsReferenceData());
+        var cut = Render(new ReportSender(Report(MsfCampaignState.Released) with
+        {
+            CoordinatorNarrative = ReleasedNarrative,
+            ReviewerEntrustmentLevel = 5
+        }));
+
+        cut.WaitForAssertion(() => Actions(cut).Should().Equal(
+            "Narrative: " + ReleasedNarrative,
+            "Supervision level this feedback supports: 4"));
+        cut.FindAll("#msf-narrative").Should().BeEmpty();
+        cut.FindAll("#msf-level").Should().BeEmpty();
+        cut.FindAll("form").Should().BeEmpty();
+        IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// A refusal by a command's validator shows each failure's message, never FluentValidation's log line ("Validation
+    /// failed: -- Narrative: ..."), for a close and a release alike: T213's <c>RefusalText</c>, which DESIGN.md asks every
+    /// page to use, and which T246 moved this page onto. (T246 review)
+    /// </summary>
+    [Theory]
+    [InlineData(MsfCampaignState.Open)]
+    [InlineData(MsfCampaignState.UnderReview)]
+    public void ARefusalByAValidator_ShowsEachFailuresMessage_NotItsLogLine(MsfCampaignState state)
+    {
+        var sender = new ReportSender(Report(state))
+        {
+            Refusal = new ValidationException(
+            [
+                new ValidationFailure("Narrative", "The narrative can be at most 4000 characters."),
+                new ValidationFailure("EntrustmentLevel", "That level is not on this campaign's scale.")
+            ])
+        };
+        var cut = Render(sender);
+
+        if (state == MsfCampaignState.Open)
+        {
+            cut.Find("#msf-close-campaign").Click();
+        }
+        else
+        {
+            cut.Find("form").Submit();
+        }
+
+        cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Select(Text).Should().Equal(
+            "The narrative can be at most 4000 characters. That level is not on this campaign's scale."));
+        cut.Markup.Should().NotContain("Validation failed");
+    }
+
     [Fact]
     public void AReleaseRefusedOnACampaignNoLongerReady_DisablesRelease_AndTheResultTakesTheFocus()
     {
@@ -298,7 +447,8 @@ public sealed class CampaignReportActionsTests : WombatTestContext
     {
         Services.AddSingleton<IScopedSender>(sender);
         var cut = RenderComponent<CampaignReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
-        cut.WaitForState(() => cut.FindAll("#msf-narrative").Count == 1);
+        // The report has loaded: a released report's card holds no narrative field (T246 review).
+        cut.WaitForState(() => cut.FindAll("h3").Any(heading => Text(heading) == "Coordinator actions"));
         return cut;
     }
 
@@ -317,6 +467,14 @@ public sealed class CampaignReportActionsTests : WombatTestContext
             .Select(Text)
             .ToList();
 
+    /// <summary>The Coordinator actions card's lines, when it shows the campaign as stored rather than a form.</summary>
+    private static IReadOnlyList<string> Actions(IRenderedFragment cut)
+        => cut.FindAll("section.detail-card")
+            .Single(section => Text(section.QuerySelector("h3")!) == "Coordinator actions")
+            .QuerySelectorAll("p")
+            .Select(Text)
+            .ToList();
+
     private static MsfCampaignAggregateReportDto Report(MsfCampaignState state, params MsfCategoryAggregateDto[] groups)
         => new(CampaignId, TraineeUserId, "Annual MSF", state, 8, 3, 9, null, true, groups, 2, 2,
             [new MsfCoveredEpaDto(101, "PAED-001", "Resuscitate a critically ill child", false)], null, null);
@@ -329,6 +487,17 @@ public sealed class CampaignReportActionsTests : WombatTestContext
                     new MsfScaleAggregateDto(4, 3, new Dictionary<int, int> { [4] = 3 }), [])]);
 
     private static string Text(IElement element) => Regex.Replace(element.TextContent, @"\s+", " ").Trim();
+
+    /// <summary>The CPSA ladder's rungs by their order: order 5 is rung "4" (T100).</summary>
+    private sealed class RatedLevelsReferenceData : StubActivityReferenceDataService
+    {
+        public override Task<IReadOnlyList<ActivityCatalogueOption>> GetRatedLevelOptionsForActivityTypeAsync(
+            string activityTypeKey, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>(
+            [
+                new("1", "1"), new("2", "2"), new("3", "3a"), new("4", "3b"), new("5", "4"), new("6", "5")
+            ]);
+    }
 
     /// <summary>
     /// Answers the report as it stands, and closes and releases it as the handlers would: it reads back under review or
@@ -350,6 +519,9 @@ public sealed class CampaignReportActionsTests : WombatTestContext
         public Exception? Refusal { get; init; }
 
         public MsfCampaignState? StateAfterRefusal { get; init; }
+
+        /// <summary>The narrative stored once a command has been refused, as another tab's release left it.</summary>
+        public string? NarrativeAfterRefusal { get; init; }
 
         /// <summary>What every read of the report throws once a command has been refused.</summary>
         public Exception? ReadFailureAfterRefusal { get; init; }
@@ -417,7 +589,13 @@ public sealed class CampaignReportActionsTests : WombatTestContext
                 return Task.FromException(Refusal);
             }
 
-            _report = _report with { State = MsfCampaignState.Released };
+            var release = (ReleaseMsfCampaignCommand)request;
+            _report = _report with
+            {
+                State = MsfCampaignState.Released,
+                CoordinatorNarrative = release.Narrative,
+                ReviewerEntrustmentLevel = release.EntrustmentLevel
+            };
             _taken = true;
             return Held(true);
         }
@@ -444,7 +622,7 @@ public sealed class CampaignReportActionsTests : WombatTestContext
             _refused = true;
             if (StateAfterRefusal is { } state)
             {
-                _report = _report with { State = state };
+                _report = _report with { State = state, CoordinatorNarrative = NarrativeAfterRefusal };
             }
 
             if (ReadyAfterRefusal is { } ready)

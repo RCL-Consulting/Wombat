@@ -129,12 +129,19 @@ public sealed class MsfCampaign
     /// places, the coordinator's close command and the hourly auto-close job, and until T184 each carried its own copy
     /// of the anonymise routine. The caller must have loaded <see cref="Invitations" />: an unloaded collection is
     /// empty, and nothing would be anonymised.
+    /// <para>
+    /// Only an open campaign closes, and the refusal comes before anything changes (T246). Until T246 a campaign already
+    /// under review closed again: a report tab loaded while it was open, pressed after another tab or the auto-close job
+    /// had closed it, moved <see cref="ClosedOn" /> to that day. <see cref="ClosedOn" /> is what places the campaign: the
+    /// semester its coverage counts in, the committee window that sees it, and the date its evidence records carry. Its
+    /// first value stands.
+    /// </para>
     /// </remarks>
     public void Close(DateTime utcNow)
     {
-        if (State is not (MsfCampaignState.Open or MsfCampaignState.UnderReview))
+        if (State != MsfCampaignState.Open)
         {
-            throw new InvalidOperationException("Only open or under-review campaigns can be closed.");
+            throw new InvalidOperationException(OnlyOpenCanBeClosed);
         }
 
         State = MsfCampaignState.UnderReview;
@@ -205,4 +212,11 @@ public sealed class MsfCampaign
 
     /// <summary>The refusal of a second withdrawal. (T206 review)</summary>
     public const string AlreadyWithdrawn = "This campaign has already been withdrawn.";
+
+    /// <summary>
+    /// The refusal of a close on a campaign that is not open: a draft, or one already closed, released or withdrawn.
+    /// (T246) Shown on the report page, which reads the campaign again and shows its state, as the campaign page does for
+    /// <see cref="EnsureCanOpen" />'s refusal (T217).
+    /// </summary>
+    public const string OnlyOpenCanBeClosed = "Only open campaigns can be closed.";
 }
