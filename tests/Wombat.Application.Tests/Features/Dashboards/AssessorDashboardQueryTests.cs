@@ -23,6 +23,7 @@ public sealed class AssessorDashboardQueryTests
     private const int WbaTypeId = 3;
     private const int MsfTypeId = 4;
     private const int ProcedureLogTypeId = 5;
+    private const int RelabelledWbaTypeId = 6;
 
     [Fact]
     public async Task AnActivityInATerminalStateOfItsWorkflow_IsADecision_AndNeverWorkNeedingAction()
@@ -93,6 +94,42 @@ public sealed class AssessorDashboardQueryTests
         result.RecentDecisions.Select(item => item.ActivityId).Should().BeEquivalentTo([1, 16]);
         result.AcceptedActivities.Should().BeEmpty();
         result.PendingRequestCount.Should().Be(0);
+    }
+
+    /// <summary>
+    /// T220 review: the "Accepted, needing action" card printed the key <c>accepted</c>. Each item carries the state's
+    /// label in the version the activity is pinned to: activity 1's version 1 renames it, where the type's current
+    /// version does not.
+    /// </summary>
+    [Fact]
+    public async Task AnAcceptedAssessment_CarriesItsStateLabel_FromThePinnedVersion()
+    {
+        await using var db = CreateDb();
+        SeedTypes(db);
+        db.ActivityTypes.Add(new ActivityType
+        {
+            Id = RelabelledWbaTypeId, Key = "mini_cex_relabelled", Name = "Mini-CEX (relabelled)",
+            Scope = ActivityScope.Global, Version = 2, WorkflowJson = FinishingWorkflows.Wba
+        });
+        db.Set<ActivityTypeVersion>().AddRange(
+            new ActivityTypeVersion
+            {
+                Id = 3, ActivityTypeId = RelabelledWbaTypeId, Version = 1,
+                WorkflowJson = FinishingWorkflows.Wba.Replace(
+                    "\"label\": \"Accepted\"", "\"label\": \"Accepted for observation\"", StringComparison.Ordinal)
+            },
+            new ActivityTypeVersion
+            {
+                Id = 4, ActivityTypeId = RelabelledWbaTypeId, Version = 2, WorkflowJson = FinishingWorkflows.Wba
+            });
+        AddActedOn(db, 1, RelabelledWbaTypeId, version: 1, "accepted");
+        AddActedOn(db, 2, WbaTypeId, version: 1, "accepted");
+        await db.SaveChangesAsync();
+
+        var result = await Handle(db);
+
+        result.AcceptedActivities.Select(item => (item.ActivityId, item.CurrentStateLabel))
+            .Should().BeEquivalentTo([(1, "Accepted for observation"), (2, "Accepted")]);
     }
 
     private static async Task<AssessorDashboardSummaryDto> Handle(ApplicationDbContext db, ClaimsPrincipal? principal = null)

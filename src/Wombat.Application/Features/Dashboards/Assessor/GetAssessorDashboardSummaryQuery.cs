@@ -64,10 +64,12 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
         // T203: "done" is a terminal state of the activity's PINNED workflow (D44, ActivityCompletion), not the literal
         // "completed". A discussed reflective exercise, a recorded MSF row and a logged procedure are finished, so they
         // are decisions; and a teaching session finishes in "accepted", so a finished one is not work needing action.
-        var finishedStates = await ActivityCompletion.LoadFinishedStatesAsync(
+        // The same pinned workflow names the state each decision left the activity in (T220).
+        var workflows = await PinnedWorkflows.LoadAsync(
             _dbContext,
             assessorActivities.Select(a => (a.ActivityTypeId, a.SchemaVersion)),
             cancellationToken);
+        var finishedStates = workflows.ToDictionary(pair => pair.Key, pair => ActivityCompletion.FinishedStates(pair.Value));
         bool IsFinished(Activity activity)
             => finishedStates[(activity.ActivityTypeId, activity.SchemaVersion)].Contains(activity.CurrentState);
 
@@ -81,6 +83,7 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
                 a.Id,
                 a.ActivityType.Name,
                 a.SubjectUserId,
+                PinnedWorkflows.StateLabel(workflows[(a.ActivityTypeId, a.SchemaVersion)], a.CurrentState),
                 a.UpdatedOn,
                 a.UpdatedOn < dueCutoff))
             .ToList();
@@ -93,6 +96,7 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
                 a.ActivityType.Name,
                 a.SubjectUserId,
                 a.CurrentState,
+                PinnedWorkflows.StateLabel(workflows[(a.ActivityTypeId, a.SchemaVersion)], a.CurrentState),
                 a.UpdatedOn))
             .ToList();
 

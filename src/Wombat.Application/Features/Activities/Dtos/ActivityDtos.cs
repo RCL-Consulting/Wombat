@@ -62,11 +62,24 @@ public sealed record ActivityTypeEditorDto(
 /// curriculum items credited. <paramref name="DaysAfterEncounter" /> is set only on the move that filed the
 /// activity, when its encounter date was stated and its pinned version can credit (T160, D15).
 /// </summary>
+/// <param name="FromStateLabel">
+/// <paramref name="FromState" /> as the activity's PINNED workflow labels it (<c>PinnedWorkflows.StateLabel</c>), the key
+/// only when that workflow does not declare it (T220). What the history prints; the key stays for logic.
+/// </param>
+/// <param name="ToStateLabel">The same, for <paramref name="ToState" />.</param>
+/// <param name="TransitionLabel">
+/// <paramref name="TransitionKey" /> as its button named the move (<c>PinnedWorkflows.TransitionLabel</c>): "Sign Off",
+/// "Create" for the create row, the key only for a move the pinned workflow does not declare (T220).
+/// </param>
 public sealed record ActivityTransitionDto(
     int Id,
     string FromState,
     string ToState,
     string TransitionKey,
+    // No defaults: a producer that forgets a label is a page that prints a key again (T220).
+    string FromStateLabel,
+    string ToStateLabel,
+    string TransitionLabel,
     string ActorUserId,
     DateTime OccurredOn,
     string? Note,
@@ -109,6 +122,9 @@ public sealed record ActivityDto(
     int? InstitutionId,
     string CreatedByUserId,
     string CurrentState,
+    // CurrentState as the pinned workflow labels it, the key only when that workflow does not declare it (T220): what
+    // the page's header and summary print, so they name the state as a refusal and a notice on the page do (T189).
+    string CurrentStateLabel,
     string DataJson,
     int? EpaId,
     int? CurriculumItemId,
@@ -139,8 +155,8 @@ public sealed record ActivityActionDto(
 
     /// <summary>
     /// The action's name on its button, from <see cref="WorkflowTransition.LabelFor" />: the name a refusal of the same
-    /// move uses (T189), so a button and a refusal of its move call it the same thing. The workflow history table still
-    /// prints the stored transition key.
+    /// move uses (T189), and the name the workflow history gives the move once it is made
+    /// (<see cref="ActivityTransitionDto.TransitionLabel" />, T220), so all three call it the same thing.
     /// </summary>
     public string Label => WorkflowTransition.LabelFor(TransitionKey);
 }
@@ -185,6 +201,9 @@ public sealed record ActivitySummaryDto(
     string ActivityTypeName,
     string SubjectUserId,
     string CurrentState,
+    // CurrentState as the activity's pinned workflow labels it, the key only when that workflow does not declare it
+    // (T220). What the lists print.
+    string CurrentStateLabel,
     DateTime CreatedOn,
     DateTime UpdatedOn,
     int? EpaId,

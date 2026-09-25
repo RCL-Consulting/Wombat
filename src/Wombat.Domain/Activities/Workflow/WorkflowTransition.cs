@@ -17,7 +17,8 @@ public sealed record WorkflowTransition(
     /// </summary>
     /// <remarks>
     /// The DSL declares no label for a transition, so its button on the activity's page is named from the key, and a
-    /// refusal of the move names it by the same text (T189). This is the one implementation of both. Invariant culture,
+    /// refusal of the move names it by the same text (T189), and so does the activity's history once it is made
+    /// (<see cref="Workflow.TransitionLabel" />, T220). This is the one implementation of all three. Invariant culture,
     /// so the name does not depend on the server's locale.
     /// </remarks>
     public static string LabelFor(string transitionKey)

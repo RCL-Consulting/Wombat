@@ -24,6 +24,10 @@ public sealed class CommitteeEvidenceConfiguration : IEntityTypeConfiguration<Co
         builder.Property(entity => entity.RatingLabel).HasMaxLength(200);
         builder.Property(entity => entity.SourceState).HasMaxLength(100);
 
+        // T220: the state's label, frozen with it. Unbounded, because it is copied from a workflow's jsonb, where a
+        // builder may write a label of any length, and a long label must not stop a review from starting.
+        builder.Property(entity => entity.SourceStateLabel);
+
         // T165: the assessor the line's version names, frozen at Start. A user id, like every other in the schema.
         builder.Property(entity => entity.AssessorUserId).HasMaxLength(450);
     }

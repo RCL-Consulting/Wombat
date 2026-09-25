@@ -7,20 +7,41 @@ public sealed record Workflow(
     IReadOnlyList<WorkflowTransition> Transitions)
 {
     /// <summary>
+    /// The key of the history row a create writes (<c>ActivityService</c>): from the initial state to itself. It is no
+    /// move a workflow declares, and <see cref="TransitionLabel" /> names it as though it were one.
+    /// </summary>
+    public const string CreateTransitionKey = "create";
+
+    /// <summary>
     /// The label this workflow declares for a state, or the key itself when it declares none (T189).
     /// </summary>
     /// <remarks>
-    /// A refusal names a state by this, never by key, as <c>NewActivity</c>'s notices do. The activity's own page, the
-    /// activity lists and the workflow history still print the stored key, so on a type whose label is not its key in
-    /// words ("submitted", "Awaiting supervisor") a refusal and the page beside it name the state differently until they
-    /// read it from here too. The parser requires a label on every declared state, so the key is what a state this
-    /// workflow does not declare is called: an activity whose stored state its pinned version has lost.
+    /// A refusal names a state by this, never by key, as <c>NewActivity</c>'s notices do, and so does every page, list,
+    /// dashboard, committee snapshot and portfolio export that shows an activity's state, from its PINNED version (T220),
+    /// so a refusal and the page beside it name the state alike: "Awaiting supervisor", not "submitted". The parser
+    /// requires a label on every declared state, so the key is what a state this workflow does not declare is called: an
+    /// activity whose stored state its pinned version has lost.
     /// </remarks>
     public string StateLabel(string stateKey)
         => States.FirstOrDefault(state => string.Equals(state.Key, stateKey, StringComparison.Ordinal))?.Label is { } label &&
            !string.IsNullOrWhiteSpace(label)
             ? label.Trim()
             : stateKey;
+
+    /// <summary>
+    /// The name a recorded move is shown by in an activity's history (T220): <see cref="WorkflowTransition.LabelFor" />,
+    /// the name its button had and a refusal of it uses, for a move this workflow declares and for the create row
+    /// (<see cref="CreateTransitionKey" />); the key itself for a move it does not declare.
+    /// </summary>
+    /// <remarks>
+    /// The DSL declares no label for a move, so a label is only ever the key in words. Asked of the activity's PINNED
+    /// version, which recorded every move on it, so the key is shown only for a row the version cannot account for.
+    /// </remarks>
+    public string TransitionLabel(string transitionKey)
+        => string.Equals(transitionKey, CreateTransitionKey, StringComparison.Ordinal) ||
+           Transitions.Any(transition => string.Equals(transition.Key, transitionKey, StringComparison.Ordinal))
+            ? WorkflowTransition.LabelFor(transitionKey)
+            : transitionKey;
 
     /// <summary>
     /// Whether any transition leaves this state. A non-terminal state with none is a dead end.

@@ -444,6 +444,28 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         TakeNotice().Should().Be(new ActivityNotice("success", "Submitted. It is now With the assessor."));
     }
 
+    /// <summary>
+    /// T220 review: the notice names the state by the label the server carried (<c>ActivityDto.CurrentStateLabel</c>), as
+    /// every other page does, and never works one out of the workflow itself. Here the server's words differ from the
+    /// workflow JSON's, so a notice that looked the label up would print the other.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(DraftBornWorkflow), "Submitted. It is now Awaiting supervisor.")]
+    [InlineData(nameof(RequestedBornWorkflow), "Filed. It is now Awaiting supervisor.")]
+    public void TheNotice_NamesTheStateByTheLabelTheServerCarried(string workflow, string expected)
+    {
+        var sender = new FlowSender(workflow == nameof(DraftBornWorkflow) ? DraftBornWorkflow : RequestedBornWorkflow)
+        {
+            CarriedLabel = state => state == "requested" ? "Awaiting supervisor" : state
+        };
+        var cut = SelectTheType(sender);
+
+        Click(cut, "Submit");
+
+        LeftForTheActivity();
+        TakeNotice().Should().Be(new ActivityNotice("success", expected));
+    }
+
     [Fact]
     public void Submit_WhenTheNextStepCannotBeWorkedOut_LeavesForTheActivity_ClaimingNothingMore()
     {
@@ -578,6 +600,12 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         /// <summary>What the server offers the author on the created activity, where the test says so.</summary>
         public IReadOnlyList<string>? OfferedMoves { get; init; }
 
+        /// <summary>
+        /// The state's label the server carries on each <see cref="ActivityDto" />, where the test says so; otherwise the
+        /// pinned workflow's, as <c>ActivityService</c> maps it.
+        /// </summary>
+        public Func<string, string>? CarriedLabel { get; init; }
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             switch (request)
@@ -696,6 +724,7 @@ public sealed class NewActivitySubmitFlowTests : TestContext
                 7,
                 "trainee-1",
                 state,
+                CarriedLabel?.Invoke(state) ?? _pinned.StateLabel(state),
                 "{}",
                 null,
                 null,

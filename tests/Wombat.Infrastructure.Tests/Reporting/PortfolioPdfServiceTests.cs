@@ -275,6 +275,75 @@ public sealed class PortfolioPdfServiceTests
     }
 
     /// <summary>
+    /// T220: the export names an activity's state, and every state and move in its audit trail, as the activity's page
+    /// does: by the labels of its PINNED workflow. A submitted clinical audit is "Awaiting supervisor", not "submitted".
+    /// </summary>
+    [Fact]
+    public async Task TheActivitiesSectionAndTheAuditTrail_NameStatesAndMovesByTheirLabels()
+    {
+        await using var db = SeededDb();
+        var workflowJson = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", "clinical_audit_cpsa", "workflow.json"));
+        var type = new ActivityType
+        {
+            Id = 40,
+            Key = "clinical_audit_cpsa",
+            Name = "Clinical Audit (Paediatrics)",
+            Version = 1,
+            WorkflowJson = workflowJson,
+            OwnerUserId = "seed-system",
+            CreatedOn = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        };
+        type.Versions.Add(new ActivityTypeVersion
+        {
+            ActivityTypeId = 40,
+            Version = 1,
+            SchemaJson = """{ "version": 1, "sections": [] }""",
+            WorkflowJson = workflowJson,
+            CreditRulesJson = "{}",
+            DisplayFieldsJson = "[]",
+            PublishedByUserId = "seed-system",
+            PublishedOn = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        });
+        db.Set<ActivityType>().Add(type);
+
+        var filed = new DateTime(2026, 3, 11, 8, 0, 0, DateTimeKind.Utc);
+        var activity = new Activity
+        {
+            ActivityTypeId = 40,
+            SchemaVersion = 1,
+            SubjectUserId = "trainee-1",
+            CreatedByUserId = "trainee-1",
+            CurrentState = "submitted",
+            DataJson = "{}",
+            CreatedOn = filed,
+            UpdatedOn = filed.AddHours(1),
+            ObservedOn = new DateOnly(2026, 3, 10),
+            ObservedOnSource = ObservationDateSource.Declared
+        };
+        activity.Transitions.Add(new ActivityTransition
+        {
+            FromState = "draft", ToState = "draft", TransitionKey = "create", ActorUserId = "trainee-1", OccurredOn = filed
+        });
+        activity.Transitions.Add(new ActivityTransition
+        {
+            FromState = "draft", ToState = "submitted", TransitionKey = "submit", ActorUserId = "trainee-1", OccurredOn = filed.AddHours(1)
+        });
+        db.Set<Activity>().Add(activity);
+        await db.SaveChangesAsync();
+
+        var service = new PortfolioPdfService(db, new ThrowingMsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+
+        var data = await service.LoadPortfolioDataAsync(request, CancellationToken.None);
+        data.AuditEntries.Select(entry => (entry.TransitionLabel, entry.FromStateLabel, entry.ToStateLabel))
+            .Should().Equal(("Create", "Draft", "Draft"), ("Submit", "Draft", "Awaiting supervisor"));
+
+        var text = string.Join("\f", PdfTextLayer.Pages((await service.GenerateAsync(request, CancellationToken.None)).PdfBytes));
+        text.Should().Contain("State: Awaiting supervisor").And.NotContain("State: submitted");
+    }
+
+    /// <summary>
     /// The portfolio is headed by the profile <c>TraineeScopeResolver</c> prefers: the active one, else the most recent
     /// (highest id). (T101, T113)
     /// </summary>

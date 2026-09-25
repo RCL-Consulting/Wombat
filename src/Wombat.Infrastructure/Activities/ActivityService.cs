@@ -340,7 +340,7 @@ public sealed class ActivityService : IActivityService
         {
             FromState = workflow.InitialState,
             ToState = workflow.InitialState,
-            TransitionKey = "create",
+            TransitionKey = Workflow.CreateTransitionKey,
             ActorUserId = createdByUserId.Trim(),
             OccurredOn = utcNow,
             SnapshotJson = normalizedDataJson
@@ -1578,6 +1578,10 @@ public sealed class ActivityService : IActivityService
     {
         var pinnedVersion = GetPinnedVersion(activity);
 
+        // T220: the state and every recorded move in the words of the PINNED workflow, which recorded them. Tolerant,
+        // though a pinned version parsed at publish: a page that shows an activity must not fail over its labels.
+        var workflow = PinnedWorkflows.TryParse(pinnedVersion.WorkflowJson);
+
         return new ActivityDto(
             activity.Id,
             activity.ActivityTypeId,
@@ -1593,6 +1597,7 @@ public sealed class ActivityService : IActivityService
             activity.InstitutionId,
             activity.CreatedByUserId,
             activity.CurrentState,
+            PinnedWorkflows.StateLabel(workflow, activity.CurrentState),
             activity.DataJson,
             activity.EpaId,
             activity.CurriculumItemId,
@@ -1607,6 +1612,9 @@ public sealed class ActivityService : IActivityService
                     entity.FromState,
                     entity.ToState,
                     entity.TransitionKey,
+                    PinnedWorkflows.StateLabel(workflow, entity.FromState),
+                    PinnedWorkflows.StateLabel(workflow, entity.ToState),
+                    PinnedWorkflows.TransitionLabel(workflow, entity.TransitionKey),
                     entity.ActorUserId,
                     entity.OccurredOn,
                     entity.Note,

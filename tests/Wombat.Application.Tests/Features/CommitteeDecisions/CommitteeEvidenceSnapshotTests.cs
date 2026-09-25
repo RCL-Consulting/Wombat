@@ -55,9 +55,90 @@ public sealed class CommitteeEvidenceSnapshotTests
         line.ObservedOn.Should().Be(EncounterDay);
         line.ObservedOnDeclared.Should().BeTrue();
         line.SourceState.Should().Be("completed");
+        line.SourceStateLabel.Should().Be("Completed");
+        // T220: the summary names the state as the page does, by its label.
         line.Summary.Should().Contain("EPA PAED-001").And.Contain("CCA").And.Contain("rated 3a")
-            .And.Contain("encounter 2026-02-10;").And.Contain("State: completed")
+            .And.Contain("encounter 2026-02-10;").And.Contain("State: Completed")
             .And.NotContain("not recorded");
+    }
+
+    /// <summary>
+    /// T220: a line names its state by the label its PINNED workflow gives it, frozen with the key, and quotes the same
+    /// words in its summary. A submitted clinical audit is "Awaiting supervisor", as on its own page, not "submitted".
+    /// </summary>
+    [Fact]
+    public async Task ALine_NamesItsStateByThePinnedWorkflowsLabel_AndKeepsTheKey()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var audit = await SeedTypeAsync(db, "clinical_audit_cpsa", "clinical_audit");
+        var activity = AddActivity(db, audit, "submitted", """{ "epa_id": 7, "assessor_user_id": "assessor-a", "observed_on": "2026-02-10" }""", Paed001);
+        await db.SaveChangesAsync();
+
+        var line = (await StartAsync(db)).EvidenceItems.Single(item => item.ActivityId == activity.Id);
+
+        line.SourceState.Should().Be("submitted");
+        line.SourceStateLabel.Should().Be("Awaiting supervisor");
+        line.Summary.Should().Contain("State: Awaiting supervisor").And.NotContain("submitted");
+
+        var stored = await db.Set<CommitteeEvidence>().AsNoTracking().SingleAsync(item => item.ActivityId == activity.Id);
+        stored.SourceStateLabel.Should().Be("Awaiting supervisor", "the label is frozen with the line");
+    }
+
+    /// <summary>
+    /// T220: the label is the pinned version's, not the type's current one. A later version that renames the state does
+    /// not reach an activity filed against the first.
+    /// </summary>
+    [Fact]
+    public async Task ALine_IsLabelledByItsPinnedVersion_NotByTheTypesCurrentOne()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var audit = await SeedTypeAsync(db, "clinical_audit_cpsa", "clinical_audit");
+        var renamed = audit.WorkflowJson!.Replace("Awaiting supervisor", "With the reviewer", StringComparison.Ordinal);
+        audit.WorkflowJson = renamed;
+        audit.Version = 2;
+        audit.Versions.Add(new ActivityTypeVersion
+        {
+            Version = 2,
+            SchemaJson = audit.SchemaJson!,
+            WorkflowJson = renamed,
+            CreditRulesJson = audit.CreditRulesJson!,
+            DisplayFieldsJson = "[]",
+            PublishedByUserId = "seed-system",
+            PublishedOn = DateTime.UtcNow
+        });
+        var activity = AddActivity(db, audit, "submitted", """{ "epa_id": 7, "assessor_user_id": "assessor-a", "observed_on": "2026-02-10" }""", Paed001);
+        activity.SchemaVersion = 1;
+        await db.SaveChangesAsync();
+
+        var line = (await StartAsync(db)).EvidenceItems.Single(item => item.ActivityId == activity.Id);
+
+        line.SourceStateLabel.Should().Be("Awaiting supervisor");
+    }
+
+    /// <summary>
+    /// T220: a line frozen before labels were has none, and the page is handed its key rather than nothing.
+    /// </summary>
+    [Fact]
+    public async Task ALineFrozenBeforeLabels_IsShownByItsKey()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var cca = await SeedTypeAsync(db, "cca_cpsa", "cca");
+        var activity = AddActivity(db, cca, "completed", Rated(3), Paed001);
+        await db.SaveChangesAsync();
+        await StartAsync(db);
+
+        var stored = await db.Set<CommitteeEvidence>().SingleAsync(item => item.ActivityId == activity.Id);
+        stored.SourceStateLabel = null;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var refreshed = await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
+
+        refreshed.EvidenceItems.Single(item => item.ActivityId == activity.Id).SourceStateLabel.Should().Be("completed");
     }
 
     [Fact]
@@ -235,6 +316,7 @@ public sealed class CommitteeEvidenceSnapshotTests
         var campaign = lines.Should().ContainSingle(item => item.MsfCampaignId == 50).Subject;
         campaign.EpaId.Should().BeNull();
         campaign.SourceState.Should().Be("Released");
+        campaign.SourceStateLabel.Should().Be("Released");
         campaign.FrozenBeforeLinesNamedTheirEpa.Should().BeFalse("a campaign line never carried an EPA");
     }
 

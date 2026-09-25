@@ -68,4 +68,24 @@ public sealed class WorkflowLabelTests
     [InlineData("-_-")]
     public void AMoveWhoseKeyIsOnlySeparators_IsNamedByItsKey(string transitionKey)
         => Assert.Equal(transitionKey, WorkflowTransition.LabelFor(transitionKey));
+
+    [Theory]
+    [InlineData("submit", "Submit")]
+    [InlineData("sign_off", "Sign Off")]
+    public void ARecordedMoveTheWorkflowDeclares_IsNamedAsItsButtonWas(string transitionKey, string label)
+    {
+        // T220: the history names a move as its button named it and a refusal of it did (T189).
+        Assert.Equal(label, ClinicalAuditShape.TransitionLabel(transitionKey));
+        Assert.Equal(WorkflowTransition.LabelFor(transitionKey), ClinicalAuditShape.TransitionLabel(transitionKey));
+    }
+
+    [Fact]
+    public void TheCreateRow_IsNamedInWords_ThoughNoWorkflowDeclaresIt()
+        // ActivityService writes it on every create, from the initial state to itself.
+        => Assert.Equal("Create", ClinicalAuditShape.TransitionLabel(Workflow.CreateTransitionKey));
+
+    [Fact]
+    public void ARecordedMoveTheWorkflowDoesNotDeclare_IsNamedByItsKey()
+        // A row the pinned version cannot account for is shown as it was stored, not dressed up as a move it knows.
+        => Assert.Equal("complete_legacy", ClinicalAuditShape.TransitionLabel("complete_legacy"));
 }

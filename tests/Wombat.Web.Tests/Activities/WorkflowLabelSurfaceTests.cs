@@ -1,0 +1,299 @@
+using System.Security.Claims;
+using AngleSharp.Dom;
+using Bunit;
+using Bunit.TestDoubles;
+using FluentAssertions;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Queries.GetActivityById;
+using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
+using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Dashboards.Assessor;
+using Wombat.Application.Features.Dashboards.Trainee;
+using Wombat.Web.Components.Pages.Activities;
+using Wombat.Web.Components.Pages.Dashboards;
+using Wombat.Web.Services;
+
+namespace Wombat.Web.Tests.Activities;
+
+/// <summary>
+/// T220: every page that shows an activity's workflow state or a recorded move shows it by the label the query carried
+/// from the activity's PINNED workflow, never by the stored key, so a page names a state as the refusals and notices on
+/// it do (T189). Each DTO here carries a key and a label that differ, as <c>clinical_audit_cpsa</c>'s <c>submitted</c>
+/// ("Awaiting supervisor") does, so a surface that printed the key would show it.
+/// </summary>
+public sealed class WorkflowLabelSurfaceTests : TestContext
+{
+    private const string SchemaJson = """
+        {
+          "version": 1,
+          "sections": [
+            { "key": "s", "title": "Audit", "fields": [ { "key": "audit_title", "type": "text", "label": "Audit title" } ] }
+          ]
+        }
+        """;
+
+    private const string WorkflowJson = """
+        {
+          "version": 1,
+          "initial_state": "draft",
+          "states": [
+            { "key": "draft", "label": "Draft" },
+            { "key": "submitted", "label": "Awaiting supervisor" },
+            { "key": "signed_off", "label": "Signed off", "terminal": true }
+          ],
+          "transitions": [
+            { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject" },
+            { "key": "sign_off", "from": "submitted", "to": "signed_off", "actor": "role:Assessor" }
+          ]
+        }
+        """;
+
+    private readonly TestAuthorizationContext _auth;
+
+    public WorkflowLabelSurfaceTests()
+    {
+        _auth = this.AddTestAuthorization();
+        _auth.SetAuthorized("trainee@test");
+        _auth.SetRoles("Trainee");
+        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "trainee-1"));
+
+        Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
+        Services.AddScoped<ActivityNotices>();
+    }
+
+    // ---- the activity's own page -------------------------------------------------------------------------------------
+
+    [Fact]
+    public void TheActivityPage_NamesItsStateByItsLabel_InTheHeaderAndTheSummary()
+    {
+        var cut = RenderActivity(SubmittedAudit());
+
+        Text(cut.Find(".page-subtitle")).Should().Be("State: Awaiting supervisor");
+        Text(cut.Find("#activity-state")).Should().Be("State: Awaiting supervisor");
+    }
+
+    [Fact]
+    public void TheActivityPage_NamesEachRecordedMoveAndItsStatesByTheirLabels()
+    {
+        var cut = RenderActivity(SubmittedAudit());
+
+        var history = cut.FindAll("table").Single(table => table.QuerySelector("caption")?.TextContent == "Workflow history");
+        var rows = history.QuerySelectorAll("tbody tr");
+        Cells(history, rows, "Action").Should().Equal("Create", "Submit");
+        Cells(history, rows, "State").Should().Equal("Draft → Draft", "Draft → Awaiting supervisor");
+    }
+
+    [Fact]
+    public void TheActivityPage_NeverPrintsTheStateOrMoveKeys()
+    {
+        var cut = RenderActivity(SubmittedAudit());
+
+        var visible = cut.Find(".header-container").TextContent + string.Concat(cut.FindAll(".detail-card").Select(card => card.TextContent));
+        visible.Should().NotContain("submitted").And.NotContain("draft →").And.NotContain("→ draft");
+    }
+
+    // ---- the lists ---------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void MyActivities_ShowsTheStateByItsLabel()
+    {
+        Services.AddSingleton<IScopedSender>(new FakeSender().On<ListActivitiesBySubjectQuery>(_ => ListRows()));
+        var cut = RenderComponent<MyActivities>();
+        cut.WaitForState(() => cut.FindAll("tbody tr").Count == 1);
+
+        StateColumn(cut).Should().Equal("Awaiting supervisor");
+    }
+
+    [Fact]
+    public void TheInbox_ShowsTheStateByItsLabel()
+    {
+        Services.AddSingleton<IScopedSender>(new FakeSender().On<ListActivitiesByActorInboxQuery>(_ => ListRows()));
+        var cut = RenderComponent<ActivityInbox>();
+        cut.WaitForState(() => cut.FindAll("tbody tr").Count == 1);
+
+        StateColumn(cut).Should().Equal("Awaiting supervisor");
+    }
+
+    // ---- the dashboards ----------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void TheTraineeDashboard_BadgesEachStateByItsLabel_ColouredByItsKey()
+    {
+        Services.AddSingleton<IScopedSender>(new FakeSender().On<GetTraineeDashboardSummaryQuery>(_ => new TraineeDashboardSummaryDto(
+            null,
+            [new ActivityInboxItem(41, "Clinical Audit (Paediatrics)", "draft", "Draft", new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))],
+            [new RecentActivityItem(42, "Clinical Audit (Paediatrics)", "submitted", "Awaiting supervisor", new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))],
+            [],
+            IsPendingTrainee: false)));
+
+        var cut = RenderComponent<TraineeDashboard>();
+        cut.WaitForState(() => cut.FindAll(".badge").Count >= 2);
+
+        var inbox = BadgeFor(cut, 41);
+        Text(inbox).Should().Be("Draft");
+        inbox.ClassList.Should().Contain("badge-draft");
+
+        var recent = BadgeFor(cut, 42);
+        Text(recent).Should().Be("Awaiting supervisor");
+        recent.ClassList.Should().Contain("badge-submitted", "the colour class is the state's key");
+    }
+
+    [Fact]
+    public void TheAssessorDashboard_BadgesEachDecisionByItsLabel()
+    {
+        _auth.SetRoles("Assessor");
+        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "assessor-1"));
+        Services.AddSingleton<IScopedSender>(new FakeSender().On<GetAssessorDashboardSummaryQuery>(_ => new AssessorDashboardSummaryDto(
+            0,
+            [],
+            [new RecentDecisionItem(43, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "signed_off", "Signed off", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc))])));
+
+        var cut = RenderComponent<AssessorDashboard>();
+        cut.WaitForState(() => cut.FindAll(".badge").Count >= 1);
+
+        var badge = BadgeFor(cut, 43);
+        Text(badge).Should().Be("Signed off");
+        badge.ClassList.Should().Contain("badge-signed_off");
+    }
+
+    /// <summary>
+    /// The "Accepted, needing action" card printed the key <c>accepted</c> as its badge's words (T220 review). It prints
+    /// the state's label, and says in words when the work is overdue.
+    /// </summary>
+    [Fact]
+    public void TheAssessorDashboard_BadgesAnAcceptedAssessmentByItsLabel_AndSaysWhenItIsOverdue()
+    {
+        _auth.SetRoles("Assessor");
+        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "assessor-1"));
+        Services.AddSingleton<IScopedSender>(new FakeSender().On<GetAssessorDashboardSummaryQuery>(_ => new AssessorDashboardSummaryDto(
+            0,
+            [
+                new AcceptedActivityItem(44, "Mini-CEX", "Thandi Nkosi", "Accepted for observation", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false),
+                new AcceptedActivityItem(45, "Mini-CEX", "Thandi Nkosi", "Accepted for observation", new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Utc), IsOverdue: true)
+            ],
+            [])));
+
+        var cut = RenderComponent<AssessorDashboard>();
+        cut.WaitForState(() => cut.FindAll(".badge").Count >= 2);
+
+        var onTime = BadgeFor(cut, 44);
+        Text(onTime).Should().Be("Accepted for observation");
+        onTime.ClassList.Should().Contain("badge-accepted", "the colour class is the state's key");
+        Text(BadgeFor(cut, 45)).Should().Be("Overdue");
+    }
+
+    // ---- helpers -----------------------------------------------------------------------------------------------------
+
+    private static IReadOnlyList<ActivitySummaryDto> ListRows() =>
+    [
+        new ActivitySummaryDto(
+            42,
+            2,
+            "clinical_audit_cpsa",
+            "Clinical Audit (Paediatrics)",
+            "trainee-1",
+            "submitted",
+            "Awaiting supervisor",
+            new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 3, 20, 9, 0, 0, DateTimeKind.Utc),
+            5000,
+            "PAED-001",
+            "Quality improvement",
+            new DateOnly(2026, 3, 10),
+            true,
+            null)
+        {
+            SubjectName = "Thandi Nkosi"
+        }
+    ];
+
+    /// <summary>A clinical audit its author has submitted: the create row and the submit, as the service maps them.</summary>
+    private static ActivityDetailDto SubmittedAudit()
+    {
+        var created = new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc);
+        var activity = new ActivityDto(
+            42,
+            2,
+            "clinical_audit_cpsa",
+            "Clinical Audit (Paediatrics)",
+            "clinical_audit",
+            1,
+            SchemaJson,
+            WorkflowJson,
+            "[]",
+            """{ "counts_for": [] }""",
+            "trainee-1",
+            1,
+            "trainee-1",
+            "submitted",
+            "Awaiting supervisor",
+            """{ "audit_title": "Hand hygiene before resuscitation" }""",
+            null,
+            null,
+            new DateOnly(2026, 3, 10),
+            true,
+            created,
+            created.AddHours(1),
+            [
+                new ActivityTransitionDto(1, "draft", "draft", "create", "Draft", "Draft", "Create", "trainee-1", created, null, "{}", null, null, null)
+                    { ActorName = "Thandi Nkosi" },
+                new ActivityTransitionDto(2, "draft", "submitted", "submit", "Draft", "Awaiting supervisor", "Submit", "trainee-1", created.AddHours(1), null, "{}", null, null, null)
+                    { ActorName = "Thandi Nkosi" }
+            ]);
+
+        // Submitted and waiting on the supervisor: nothing for its author to write or do. The read-only branch.
+        return new ActivityDetailDto(activity, [], []);
+    }
+
+    private IRenderedComponent<ActivityView> RenderActivity(ActivityDetailDto detail)
+    {
+        Services.AddSingleton<IScopedSender>(new FakeSender().On<GetActivityByIdQuery>(_ => detail));
+        var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, detail.Activity.Id));
+        cut.WaitForState(() => cut.Markup.Contains("Activity details"));
+        return cut;
+    }
+
+    private static IReadOnlyList<string> StateColumn<T>(IRenderedComponent<T> cut) where T : Microsoft.AspNetCore.Components.IComponent
+    {
+        var table = cut.Find("table");
+        return Cells(table, table.QuerySelectorAll("tbody tr"), "State");
+    }
+
+    /// <summary>The text of one column, found by its header, so a reordered table cannot pass by accident.</summary>
+    private static IReadOnlyList<string> Cells(IElement table, IEnumerable<IElement> rows, string header)
+    {
+        var index = table.QuerySelectorAll("thead th").Select(cell => cell.TextContent.Trim()).ToList().IndexOf(header);
+        index.Should().BeGreaterThanOrEqualTo(0, "the table must have a '{0}' column", header);
+        return rows.Select(row => Text(row.QuerySelectorAll("td")[index])).ToList();
+    }
+
+    /// <summary>The badge on the list item that links to activity <paramref name="activityId" />.</summary>
+    private static IElement BadgeFor(IRenderedFragment cut, int activityId)
+        => cut.FindAll("li").Single(item => item.QuerySelector($"a[href='/activities/{activityId}']") is not null)
+            .QuerySelector(".badge")!;
+
+    private static string Text(IElement element)
+        => string.Join(" ", element.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+    private sealed class FakeSender : IScopedSender
+    {
+        private readonly Dictionary<Type, Func<object, object?>> _answers = [];
+
+        public FakeSender On<TRequest>(Func<TRequest, object?> answer)
+        {
+            _answers[typeof(TRequest)] = request => answer((TRequest)request);
+            return this;
+        }
+
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+            => _answers.TryGetValue(request.GetType(), out var answer)
+                ? Task.FromResult((TResponse)answer(request)!)
+                : throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
+
+        public Task Send(IRequest request, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+    }
+}

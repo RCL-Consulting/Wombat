@@ -54,11 +54,11 @@ internal static class AuditAppendixComponent
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3)
                         .Padding(2).Text(entry.ActivityId.ToString()).Style(cellStyle);
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3)
-                        .Padding(2).Text(entry.FromState).Style(cellStyle);
+                        .Padding(2).Text(entry.FromStateLabel).Style(cellStyle);
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3)
-                        .Padding(2).Text(entry.ToState).Style(cellStyle);
+                        .Padding(2).Text(entry.ToStateLabel).Style(cellStyle);
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3)
-                        .Padding(2).Text(entry.TransitionKey).Style(cellStyle);
+                        .Padding(2).Text(entry.TransitionLabel).Style(cellStyle);
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3)
                         .Padding(2).Text(entry.OccurredOn.ToString("yyyy-MM-dd HH:mm")).Style(cellStyle);
                 }

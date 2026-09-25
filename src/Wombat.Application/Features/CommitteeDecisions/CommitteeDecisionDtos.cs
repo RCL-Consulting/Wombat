@@ -128,6 +128,9 @@ public sealed record CommitteeAppealDto(
 /// created (T161, T197).
 /// </param>
 /// <param name="SourceState">The activity's workflow state, or the campaign's state, when the review started.</param>
+/// <param name="SourceStateLabel">
+/// That state as the page prints it: the label frozen with it (T220), or the key for a line frozen before T220.
+/// </param>
 /// <param name="SourceFinished">
 /// Whether that was finished work: a terminal state of the activity's pinned workflow (D44), or a released campaign. Null
 /// on a line frozen before T131. The page says when every item a staged decision names was unfinished; nothing refuses it.
@@ -157,7 +160,8 @@ public sealed record CommitteeEvidenceDto(
     bool? ObservedOnDeclared = null,
     string? SourceState = null,
     bool? SourceFinished = null,
-    string? AssessorUserId = null)
+    string? AssessorUserId = null,
+    string? SourceStateLabel = null)
 {
     /// <summary>
     /// An activity line frozen before T167, which recorded none of the columns above: every activity line frozen since

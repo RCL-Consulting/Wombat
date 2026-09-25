@@ -31,7 +31,9 @@
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
                 <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                <span class="badge badge-accepted">@(item.IsOverdue ? "overdue" : "accepted")</span>
+                @* Every item here is in `accepted`, the badge's colour class; its words are the state's label, or that the
+                   work is overdue (T220). *@
+                <span class="badge badge-accepted">@(item.IsOverdue ? "Overdue" : item.CurrentStateLabel)</span>
               </li>
             }
           </ul>
@@ -50,7 +52,8 @@
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
                 <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                <span class="badge badge-@item.FinalState">@item.FinalState</span>
+                @* The badge's colour is the state's key; its words are the state's label (T220). *@
+                <span class="badge badge-@item.FinalState">@item.FinalStateLabel</span>
               </li>
             }
           </ul>

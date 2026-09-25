@@ -10,6 +10,7 @@ using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Epas;
 using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Domain.Activities.Workflow;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
@@ -63,14 +64,31 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
         var miniCex = article.QuerySelectorAll("tbody")[0].QuerySelectorAll("tr");
         miniCex.Should().HaveCount(2);
         miniCex[0].QuerySelector("th")!.GetAttribute("rowspan").Should().Be("2");
-        Cells(miniCex[0]).Should().Equal("Mini-CEX (Paediatrics) #101", "3a", "2026-02-01", "completed");
-        Cells(miniCex[1]).Should().Equal("Mini-CEX (Paediatrics) #103", "Not recorded", "2026-03-01", "declined");
+        // The state by the label frozen with the line (T220).
+        Cells(miniCex[0]).Should().Equal("Mini-CEX (Paediatrics) #101", "3a", "2026-02-01", "Completed");
+        Cells(miniCex[1]).Should().Equal("Mini-CEX (Paediatrics) #103", "Not recorded", "2026-03-01", "Declined");
 
         var reflective = article.QuerySelectorAll("tbody")[1].QuerySelector("tr")!;
         Cells(reflective)[1].Should().Be("Unrated");
 
         article.QuerySelector("a")!.GetAttribute("href").Should().Be("/activities/101");
         article.QuerySelector("caption")!.TextContent.Should().Be("3 records from 2 instruments");
+    }
+
+    /// <summary>
+    /// T220: a line's State column is the label frozen with it, not its key: a submitted clinical audit reads "Awaiting
+    /// supervisor", as it does on its own page.
+    /// </summary>
+    [Fact]
+    public void ALinesState_IsItsLabel_NotItsKey()
+    {
+        var cut = RenderPage(Review(
+            Line(1, 101, 7, "PAED-001", "Acute admission", "Clinical audit", rating: null, isRated: false,
+                state: "submitted", stateLabel: "Awaiting supervisor")));
+
+        var row = EpaArticle(cut, 7).QuerySelector("tbody tr")!;
+        Cells(row)[^1].Should().Be("Awaiting supervisor");
+        EpaArticle(cut, 7).TextContent.Should().NotContain("submitted");
     }
 
     [Fact]
@@ -185,7 +203,8 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
         bool isRated = true,
         string state = "completed",
         DateOnly? observedOn = null,
-        bool declared = true)
+        bool declared = true,
+        string? stateLabel = null)
         => new(
             id,
             CommitteeEvidenceSourceType.Activity,
@@ -203,7 +222,8 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
             RatingLabel: rating,
             ObservedOn: observedOn ?? new DateOnly(2026, 2, 10),
             ObservedOnDeclared: declared,
-            SourceState: state);
+            SourceState: state,
+            SourceStateLabel: stateLabel ?? WorkflowTransition.LabelFor(state));
 
     private static CommitteeEvidenceDto Campaign(int id, int campaignId)
         => new(
@@ -215,7 +235,8 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
             $"Annual MSF #{campaignId}",
             "State: Released; responses 8; closed 2026-02-10. Evidence recorded for PAED-001, one activity each.",
             new DateTime(2026, 2, 12, 8, 0, 0, DateTimeKind.Utc),
-            SourceState: "Released");
+            SourceState: "Released",
+            SourceStateLabel: "Released");
 
     /// <summary>A line frozen before T167: no EPA, instrument, rating or encounter date.</summary>
     private static CommitteeEvidenceDto Legacy(int id, int activityId)

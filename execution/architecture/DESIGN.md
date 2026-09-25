@@ -608,7 +608,8 @@ T019 introduces a small builder-specific extension to the shared system:
 .badge-declined  /* --danger-bg bg, --danger-color text */
 ```
 
-Used on activity state indicators in dashboard list cards and activity tables.
+Used on activity state indicators in dashboard list cards and activity tables. The class is the state's key and the
+text is its label (T220): `<span class="badge badge-submitted">Awaiting supervisor</span>`.
 
 ```css
 .badge-standing-met    /* --success-bg ground, --success-color border, body text (T166) */
@@ -1098,6 +1099,14 @@ Five pages keep ids on purpose. The audit log and an audit entry (`/admin/audit`
 a request (`/admin/data-rights`), because the id is the record there. The anonymous portfolio verification page
 (`/portfolio/verify`), because it must not disclose a name. No input takes a raw user id: the committee review schedule
 form's trainee is a picker since T182.
+
+**A workflow state or move is shown by its label, never by its key** (T220). The activity page's header, summary and
+history, the activity lists, the dashboards' badges, the committee's evidence snapshot and the portfolio PDF all print
+the label the query carried from the activity's pinned workflow (`CurrentStateLabel`, `FromStateLabel`, `ToStateLabel`,
+`TransitionLabel`, `FinalStateLabel`, `SourceStateLabel`), so a page names a state as the refusals and notices on it do
+(T189): "Awaiting supervisor", not `submitted`. A move is named as its button is ("Sign Off"). Razor never works a label
+out. The key appears only as a badge's colour class (`badge-@item.CurrentState`), and as text only where the pinned
+workflow cannot name it.
 
 ### List page
 

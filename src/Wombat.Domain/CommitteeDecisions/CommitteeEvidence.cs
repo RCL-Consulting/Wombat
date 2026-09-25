@@ -93,6 +93,17 @@ public sealed class CommitteeEvidence
     public string? SourceState { get; set; }
 
     /// <summary>
+    /// <see cref="SourceState" /> as the panel reads it, frozen with it (T220): an activity's state as its PINNED workflow
+    /// labels it ("Awaiting supervisor", not <c>submitted</c>), the key only where that workflow does not declare it; a
+    /// campaign's state as its name. Null on a line frozen before T220, which the page shows by its key.
+    /// </summary>
+    /// <remarks>
+    /// Frozen rather than looked up when the page is read, as <see cref="RatingLabel" /> is: the line keeps no pin, and
+    /// the summary quotes the same words.
+    /// </remarks>
+    public string? SourceStateLabel { get; set; }
+
+    /// <summary>
     /// Whether the source was finished work when the review started (T131): an activity in a terminal state of its
     /// pinned workflow, where its credit fires (D44, <c>ActivityCompletion</c>), or a released campaign, the only kind a
     /// snapshot holds. A requested form nobody filled in, a draft, and a declined or cancelled request are not. Null on a

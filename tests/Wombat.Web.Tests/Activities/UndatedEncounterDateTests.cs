@@ -190,6 +190,7 @@ public sealed class UndatedEncounterDateTests : TestContext
             1,
             "trainee-1",
             "completed",
+            "Completed",
             """{"what_happened":"A long night on the ward."}""",
             null,
             null,

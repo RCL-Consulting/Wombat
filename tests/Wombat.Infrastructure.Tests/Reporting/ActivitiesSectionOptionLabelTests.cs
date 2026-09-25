@@ -159,6 +159,7 @@ public sealed class ActivitiesSectionOptionLabelTests
                 content,
                 new Dictionary<string, List<Activity>> { ["Case analysis"] = [activity] },
                 new Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> { [(1, 1)] = version },
+                new Dictionary<(int ActivityTypeId, int Version), Wombat.Domain.Activities.Workflow.Workflow?>(),
                 EntrustmentRungLookup.Empty));
         })).GenerateSvg();
 

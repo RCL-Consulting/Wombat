@@ -129,6 +129,7 @@ public sealed class ActivityListColumnsTests : TestContext
         MsfName,
         "trainee-1",
         "recorded",
+        "Recorded",
         new DateTime(2026, 9, 21, 6, 44, 0, DateTimeKind.Utc),
         new DateTime(2026, 9, 21, 6, 44, 0, DateTimeKind.Utc),
         epaId,
@@ -145,6 +146,7 @@ public sealed class ActivityListColumnsTests : TestContext
         "Mini-CEX (CPSA)",
         "trainee-1",
         state,
+        LabelOf(state),
         new DateTime(2026, 3, 20, 6, 44, 0, DateTimeKind.Utc),
         new DateTime(2026, 3, 20, 6, 44, 0, DateTimeKind.Utc),
         5000,
@@ -153,6 +155,15 @@ public sealed class ActivityListColumnsTests : TestContext
         new DateOnly(2026, 3, 10),
         true,
         creditedItemCount);
+
+    /// <summary>What the list query hands the page for a <c>mini_cex_cpsa</c> state: its label in the seed.</summary>
+    private static string LabelOf(string state) => state switch
+    {
+        "requested" => "Requested",
+        "completed" => "Completed",
+        "draft" => "Draft",
+        _ => state
+    };
 
     private IRenderedComponent<MyActivities> RenderMine(params ActivitySummaryDto[] rows)
     {

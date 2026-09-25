@@ -282,6 +282,7 @@ public sealed class ActivityViewNoticeTests : TestContext
                 7,
                 "trainee-1",
                 "draft",
+                "Draft",
                 "{}",
                 null,
                 null,

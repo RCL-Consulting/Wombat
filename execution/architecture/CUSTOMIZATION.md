@@ -203,6 +203,19 @@ A workflow is a state machine defined as data. Minimum viable shape:
 
 Workflows can also be simpler — a Research Output might just be `draft → submitted → approved` with the subject trainee submitting and a SpecialityAdmin approving. Each activity type picks its own shape.
 
+### Keys are for logic, labels are for people (T189, T220)
+
+A state's `label` is the only name a person sees for it, read from the activity's **pinned** version: a submitted
+`clinical_audit_cpsa` is "Awaiting supervisor" on its page, in the lists, on the dashboards, in a committee's evidence
+snapshot (frozen there as `CommitteeEvidence.SourceStateLabel`) and in the portfolio PDF, as it is in every refusal and
+notice. A transition declares no label; it is named from its key in words (`WorkflowTransition.LabelFor`: `sign_off` is
+"Sign Off"), on its button, in a refusal and in the history. The history's create row, which no workflow declares, is
+"Create". The DTOs carry both (`CurrentState` and `CurrentStateLabel`, and each history row's `FromStateLabel`,
+`ToStateLabel` and `TransitionLabel`); `PinnedWorkflows` resolves them. The stored key is shown only where the pinned
+version cannot name it: a state or move it does not declare, or a type with no workflow that parses. A key never reaches
+a page otherwise, except as a badge's colour class. The subject-access report's JSON keeps the stored key, as it keeps
+`DataJson` raw.
+
 ### `validation` — how much of the form a move insists on (T105)
 
 Every transition checks formats. Which `required` fields count is the transition's `validation`:

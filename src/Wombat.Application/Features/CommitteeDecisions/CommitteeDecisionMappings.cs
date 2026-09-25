@@ -77,7 +77,9 @@ internal static class CommitteeDecisionMappings
                     item.ObservedOnSource is null ? null : item.ObservedOnSource == ObservationDateSource.Declared,
                     item.SourceState,
                     item.SourceFinished,
-                    item.AssessorUserId))
+                    item.AssessorUserId,
+                    // T220: the frozen label, else the key of a line frozen before labels were.
+                    item.SourceStateLabel ?? item.SourceState))
                 .ToArray(),
             review.IsFormative,
             review.ReviewType)

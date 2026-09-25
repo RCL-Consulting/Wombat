@@ -12,7 +12,8 @@
 
 @if (_activity is not null)
 {
-  <PageHeader Title="@_activity.ActivityTypeName" Subtitle="@($"State: {_activity.CurrentState}")" />
+  @* The state by its label in the pinned workflow (T220), as the notices and refusals on this page name it (T189). *@
+  <PageHeader Title="@_activity.ActivityTypeName" Subtitle="@($"State: {_activity.CurrentStateLabel}")" />
 }
 
 @if (_notice is not null)
@@ -67,7 +68,7 @@
         @* The stored encounter date, marked when nobody stated one (T161, D28). It is the date every list, the
            trajectory and the PDF place this activity on, so the page says what they say. *@
         <p id="activity-encounter-date"><strong>Encounter date:</strong> <EncounterDateLabel ObservedOn="@_activity.ObservedOn" Declared="@_activity.ObservedOnDeclared" /></p>
-        <p><strong>State:</strong> @_activity.CurrentState</p>
+        <p id="activity-state"><strong>State:</strong> @_activity.CurrentStateLabel</p>
         <p><strong>Version:</strong> @_activity.SchemaVersion</p>
         <ActivityWorkflowActions Actions="_actions" Busy="_busy" OnTransitionRequested="HandleTransitionAsync" />
       </aside>
@@ -139,8 +140,9 @@
         </HeaderRow>
         <Row Context="transition">
           <tr>
-            <td>@transition.TransitionKey</td>
-            <td>@($"{transition.FromState} → {transition.ToState}")</td>
+            @* Each move as its button named it and each state by its label, from the pinned workflow (T220). *@
+            <td>@transition.TransitionLabel</td>
+            <td>@($"{transition.FromStateLabel} → {transition.ToStateLabel}")</td>
             <td>@transition.ActorName</td>
             <td>
               @transition.OccurredOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")

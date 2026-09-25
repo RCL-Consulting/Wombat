@@ -622,7 +622,8 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             id, CommitteeEvidenceSourceType.Activity, id, null, null, $"Mini-CEX #{id}", "State: completed.",
             new DateTime(2026, 2, 10, 9, 0, 0, DateTimeKind.Utc),
             EpaId: epaId, EpaCode: $"PAED-00{epaId}", EpaTitle: $"EPA {epaId}", InstrumentName: "Mini-CEX",
-            ObservedOn: new DateOnly(2026, 2, 10), ObservedOnDeclared: true, SourceState: "completed", SourceFinished: true);
+            ObservedOn: new DateOnly(2026, 2, 10), ObservedOnDeclared: true, SourceState: "completed", SourceFinished: true,
+            SourceStateLabel: "Completed");
 
     private static AngleSharp.Dom.IElement Row(IRenderedComponent<ReviewDetail> cut, int epaId) => cut.Find($"#agenda-line-{epaId}");
 

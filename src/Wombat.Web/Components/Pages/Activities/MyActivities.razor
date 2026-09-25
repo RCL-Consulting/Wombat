@@ -31,7 +31,7 @@
         <td>@item.ActivityTypeName</td>
         <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" /></td>
         <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
-        <td>@item.CurrentState</td>
+        <td>@item.CurrentStateLabel</td>
         <td>@CreditOutcome.Label(item.CreditedItemCount)</td>
         <td class="actions-cell">
           <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")">View</a>

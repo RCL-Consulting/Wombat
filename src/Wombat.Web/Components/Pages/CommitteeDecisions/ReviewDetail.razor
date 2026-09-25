@@ -417,7 +417,7 @@
                     <div class="check-grid">
                       @foreach (var line in picker.AcrossEpas)
                       {
-                        @EvidenceCheckbox(line, line.SourceState)
+                        @EvidenceCheckbox(line, line.SourceStateLabel)
                       }
                     </div>
                   </fieldset>
@@ -589,7 +589,7 @@
                               <EncounterDateLabel ObservedOn="observedOn" Declared="@(line.ObservedOnDeclared == true)" />
                             }
                           </td>
-                          <td>@line.SourceState</td>
+                          <td>@line.SourceStateLabel</td>
                         </tr>
                       }
                     </tbody>

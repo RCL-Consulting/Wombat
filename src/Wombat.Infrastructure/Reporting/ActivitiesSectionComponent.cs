@@ -4,18 +4,25 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
+using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Infrastructure.Reporting;
 
 internal static class ActivitiesSectionComponent
 {
+    /// <param name="workflows">
+    /// Each activity's pinned workflow, by pin, or null where it has none that parses: what names its state (T220). A pin
+    /// missing from it is treated as null, so the state is printed by its key.
+    /// </param>
     public static void Compose(
         IContainer container,
         Dictionary<string, List<Activity>> activitiesByType,
         Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
+        IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> workflows,
         EntrustmentRungLookup rungLabels)
     {
         container.Column(column =>
@@ -27,7 +34,7 @@ internal static class ActivitiesSectionComponent
 
             foreach (var (typeName, activities) in activitiesByType.OrderBy(pair => pair.Key))
             {
-                column.Item().Element(e => ComposeTypeGroup(e, typeName, activities, schemaVersions, rungLabels));
+                column.Item().Element(e => ComposeTypeGroup(e, typeName, activities, schemaVersions, workflows, rungLabels));
             }
         });
     }
@@ -37,6 +44,7 @@ internal static class ActivitiesSectionComponent
         string typeName,
         List<Activity> activities,
         Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
+        IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> workflows,
         EntrustmentRungLookup rungLabels)
     {
         container.Column(column =>
@@ -51,7 +59,7 @@ internal static class ActivitiesSectionComponent
 
             foreach (var activity in activities)
             {
-                column.Item().Element(e => ComposeActivity(e, activity, schemaVersions, rungLabels));
+                column.Item().Element(e => ComposeActivity(e, activity, schemaVersions, workflows, rungLabels));
             }
         });
     }
@@ -60,8 +68,13 @@ internal static class ActivitiesSectionComponent
         IContainer container,
         Activity activity,
         Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
+        IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> workflows,
         EntrustmentRungLookup rungLabels)
     {
+        // T220: the state as the activity's page names it, from the pinned workflow.
+        var stateLabel = PinnedWorkflows.StateLabel(
+            workflows.GetValueOrDefault((activity.ActivityTypeId, activity.SchemaVersion)), activity.CurrentState);
+
         container.Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(column =>
         {
             column.Spacing(3);
@@ -71,7 +84,7 @@ internal static class ActivitiesSectionComponent
                 row.RelativeItem().Text(text =>
                 {
                     text.Span($"#{activity.Id}").FontSize(8).FontColor(Colors.Grey.Darken1);
-                    text.Span($"  State: {activity.CurrentState}").FontSize(8);
+                    text.Span($"  State: {stateLabel}").FontSize(8);
                 });
                 // The encounter date, not the filing date — the column the PDF is also filtered and
                 // sorted on, so a reader cannot be shown a row whose printed date sits outside the
@@ -98,7 +111,7 @@ internal static class ActivitiesSectionComponent
 
     /// <summary>
     /// The date printed on an activity's header line: its encounter date, marked when undated (T161), and named as the
-    /// encounter's (T197). Beside "#31  State: completed", a bare "not recorded (created …)" reads as though the
+    /// encounter's (T197). Beside "#31  State: Completed", a bare "not recorded (created …)" reads as though the
     /// activity were not recorded.
     /// </summary>
     private static string EncounterDateText(Activity activity)

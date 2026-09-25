@@ -91,7 +91,8 @@
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
                 <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                <span class="badge badge-@item.CurrentState">@item.CurrentState</span>
+                @* The badge's colour is the state's key; its words are the state's label (T220). *@
+                <span class="badge badge-@item.CurrentState">@item.CurrentStateLabel</span>
               </li>
             }
           </ul>
@@ -113,7 +114,7 @@
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
                 <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                <span class="badge badge-@item.CurrentState">@item.CurrentState</span>
+                <span class="badge badge-@item.CurrentState">@item.CurrentStateLabel</span>
               </li>
             }
           </ul>

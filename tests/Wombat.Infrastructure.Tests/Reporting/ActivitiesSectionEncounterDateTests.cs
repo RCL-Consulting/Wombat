@@ -70,6 +70,7 @@ public sealed class ActivitiesSectionEncounterDateTests
                 content,
                 new Dictionary<string, List<Activity>> { ["Reflective note"] = [activity] },
                 [],
+                new Dictionary<(int ActivityTypeId, int Version), Wombat.Domain.Activities.Workflow.Workflow?>(),
                 EntrustmentRungLookup.Empty));
         })).GenerateSvg();
 

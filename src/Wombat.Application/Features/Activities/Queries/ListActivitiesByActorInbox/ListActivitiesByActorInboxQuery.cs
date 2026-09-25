@@ -39,27 +39,34 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
             .OrderByDescending(activity => activity.UpdatedOn)
             .ToListAsync(cancellationToken);
 
-        var actionable = activities
-            .Where(activity =>
+        // Each pinned workflow parsed once, and kept: it decides whether the caller can act, and it names the state the
+        // row shows (T220).
+        var workflowsByPin = new Dictionary<(int ActivityTypeId, int Version), Workflow?>();
+        Workflow? PinnedWorkflow(Activity activity)
+        {
+            var pin = (activity.ActivityTypeId, activity.SchemaVersion);
+            if (!workflowsByPin.TryGetValue(pin, out var workflow))
             {
                 var pinnedVersion = activity.ActivityType.Versions.SingleOrDefault(version => version.Version == activity.SchemaVersion);
-                if (pinnedVersion is null)
-                {
-                    return false;
-                }
+                workflow = pinnedVersion is null ? null : WorkflowParser.Parse(pinnedVersion.WorkflowJson);
+                workflowsByPin[pin] = workflow;
+            }
 
-                var workflow = WorkflowParser.Parse(pinnedVersion.WorkflowJson);
-                return workflow.Transitions.Any(transition =>
-                    transition.From.Contains(activity.CurrentState, StringComparer.Ordinal) &&
-                    _workflowEvaluator.Evaluate(workflow, activity, transition.Key, request.Principal).Allowed);
-            })
+            return workflow;
+        }
+
+        var actionable = activities
+            .Select(activity => (Activity: activity, Workflow: PinnedWorkflow(activity)))
+            .Where(row => row.Workflow is { } workflow && workflow.Transitions.Any(transition =>
+                transition.From.Contains(row.Activity.CurrentState, StringComparer.Ordinal) &&
+                _workflowEvaluator.Evaluate(workflow, row.Activity, transition.Key, request.Principal).Allowed))
             .ToList();
 
         // T137. The EPA each row is about, from the stamped column, in one read for the rows that survived the act
         // gate. An assessor with three requests from one trainee used to see three rows that differed only by id.
         var epaIds = actionable
-            .Where(activity => activity.EpaId is not null)
-            .Select(activity => activity.EpaId!.Value)
+            .Where(row => row.Activity.EpaId is not null)
+            .Select(row => row.Activity.EpaId!.Value)
             .Distinct()
             .ToList();
 
@@ -75,11 +82,12 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
         // T142. Whose activity each row is, by name, in one lookup for the rows that survived the act gate. The column
         // used to print the subject's user id.
         var names = await UserDisplayNames.ResolveAsync(
-            _users, actionable.Select(activity => activity.SubjectUserId), cancellationToken);
+            _users, actionable.Select(row => row.Activity.SubjectUserId), cancellationToken);
 
         return actionable
-            .Select(activity =>
+            .Select(row =>
             {
+                var activity = row.Activity;
                 (string Code, string Title)? epa =
                     activity.EpaId is int epaId && epas.TryGetValue(epaId, out var found) ? found : null;
 
@@ -90,6 +98,8 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
                     activity.ActivityType.Name,
                     activity.SubjectUserId,
                     activity.CurrentState,
+                    // The state in the words of the pinned workflow, which the act gate above just read (T220).
+                    PinnedWorkflows.StateLabel(row.Workflow, activity.CurrentState),
                     activity.CreatedOn,
                     activity.UpdatedOn,
                     activity.EpaId,

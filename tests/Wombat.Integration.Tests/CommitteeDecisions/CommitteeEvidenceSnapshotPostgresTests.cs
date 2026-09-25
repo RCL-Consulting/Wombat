@@ -150,6 +150,7 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 line.ObservedOn.Should().Be(new DateOnly(2026, 2, 10));
                 line.ObservedOnDeclared.Should().BeTrue();
                 line.SourceState.Should().Be("completed");
+                line.SourceStateLabel.Should().Be("Completed", "T220: the state's label is frozen with it, in its own column");
                 line.SourceFinished.Should().BeTrue("T131: whether a line was finished work is frozen with its state");
 
                 // T131 slice 4: Start planned the agenda from the v11.1 cadence. A semester-1 sitting holds all fifteen

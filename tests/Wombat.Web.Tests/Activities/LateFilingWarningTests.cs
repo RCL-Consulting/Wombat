@@ -14,6 +14,7 @@ using Wombat.Application.Features.Activities.Queries.GetProgrammeStartForTrainee
 using Wombat.Application.Features.Activities.Queries.ListActivityTypes;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Workflow;
 using Wombat.Infrastructure.Activities;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Shared.Activities;
@@ -615,7 +616,9 @@ public sealed class LateFilingWarningTests : TestContext
         string actorId,
         DateTime occurredOn,
         int? daysAfterEncounter = null)
-        => new(id, from, to, key, actorId, occurredOn, null, "{}", null, null, daysAfterEncounter);
+        // The labels are the keys in words: these tests read the lateness line, not the labels (T220 tests those).
+        => new(id, from, to, key, WorkflowTransition.LabelFor(from), WorkflowTransition.LabelFor(to), WorkflowTransition.LabelFor(key),
+            actorId, occurredOn, null, "{}", null, null, daysAfterEncounter);
 
     private static ActivityDetailDto DetailFor(
         string workflowJson,
@@ -641,6 +644,7 @@ public sealed class LateFilingWarningTests : TestContext
             1,
             TraineeId,
             state,
+            PinnedWorkflows.StateLabel(PinnedWorkflows.TryParse(workflowJson), state),
             $$"""{ "observed_on": "{{Iso(observedOn)}}" }""",
             null,
             null,
@@ -717,13 +721,14 @@ public sealed class LateFilingWarningTests : TestContext
         var created = new DateTime(2026, 9, 17, 8, 0, 0, DateTimeKind.Utc);
         List<ActivityTransitionDto> transitions =
         [
-            new(1, "draft", "draft", "create", subjectId, created, null, "{}", null, null, null)
+            new(1, "draft", "draft", "create", "Draft", "Draft", "Create", subjectId, created, null, "{}", null, null, null)
         ];
 
         if (state != "draft")
         {
             transitions.Add(new ActivityTransitionDto(
-                2, "draft", "requested", "submit", subjectId, created.AddHours(1), null, "{}", null, null, submitDaysAfterEncounter));
+                2, "draft", "requested", "submit", "Draft", "Requested", "Submit", subjectId, created.AddHours(1), null, "{}", null, null,
+                submitDaysAfterEncounter));
         }
 
         var dataJson = observedOn is DateOnly date ? $$"""{ "observed_on": "{{Iso(date)}}" }""" : "{}";
@@ -743,6 +748,7 @@ public sealed class LateFilingWarningTests : TestContext
             1,
             subjectId,
             state,
+            PinnedWorkflows.StateLabel(PinnedWorkflows.TryParse(workflowJson), state),
             dataJson,
             null,
             null,

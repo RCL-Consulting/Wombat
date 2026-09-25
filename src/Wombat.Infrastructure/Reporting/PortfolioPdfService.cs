@@ -11,6 +11,7 @@ using Wombat.Application.Features.Reporting;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
+using Wombat.Domain.Activities.Workflow;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Institutions;
@@ -119,7 +120,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
 
             if (data.ActivitiesByType.Count > 0)
             {
-                column.Item().Element(e => ActivitiesSectionComponent.Compose(e, data.ActivitiesByType, data.SchemaVersions, data.RungLabels));
+                column.Item().Element(e => ActivitiesSectionComponent.Compose(e, data.ActivitiesByType, data.SchemaVersions, data.Workflows, data.RungLabels));
             }
 
             if (data.MsfReports.Count > 0)
@@ -245,25 +246,27 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .GroupBy(activity => activity.ActivityType.Name)
             .ToDictionary(group => group.Key, group => group.ToList());
 
-        // T169: "complete" is a terminal state of the activity's PINNED workflow (D44), the point where credit fires,
-        // as the sampling report and the trajectory already read it. The literal "completed" printed a trainee's
-        // discussed reflective exercises, recorded MSF rows and logged procedures as never finished. The pin is the
-        // version row the activity was filed against, else the type's own columns for a type whose version rows were
-        // never written, as RatedEvidenceProfiles resolves it. Parsed once per pin.
-        var finishedStatesByPin = new Dictionary<(int ActivityTypeId, int Version), IReadOnlySet<string>>();
-        bool IsComplete(Activity activity)
+        // Each activity's PINNED workflow: the version row the activity was filed against, else the type's own columns
+        // for a type whose version rows were never written, as RatedEvidenceProfiles resolves it. Parsed once per pin,
+        // and null where there is none or it no longer parses.
+        var workflows = new Dictionary<(int ActivityTypeId, int Version), Workflow?>();
+        foreach (var activity in activities)
         {
             var pin = (activity.ActivityTypeId, activity.SchemaVersion);
-            if (!finishedStatesByPin.TryGetValue(pin, out var finished))
+            if (!workflows.ContainsKey(pin))
             {
-                finished = ActivityCompletion.FinishedStates(schemaVersions.TryGetValue(pin, out var version)
+                workflows[pin] = PinnedWorkflows.TryParse(schemaVersions.TryGetValue(pin, out var version)
                     ? version.WorkflowJson
                     : activity.ActivityType.WorkflowJson);
-                finishedStatesByPin[pin] = finished;
             }
-
-            return finished.Contains(activity.CurrentState);
         }
+
+        // T169: "complete" is a terminal state of the activity's pinned workflow (D44), the point where credit fires,
+        // as the sampling report and the trajectory already read it. The literal "completed" printed a trainee's
+        // discussed reflective exercises, recorded MSF rows and logged procedures as never finished.
+        var finishedStatesByPin = workflows.ToDictionary(pair => pair.Key, pair => ActivityCompletion.FinishedStates(pair.Value));
+        bool IsComplete(Activity activity)
+            => finishedStatesByPin[(activity.ActivityTypeId, activity.SchemaVersion)].Contains(activity.CurrentState);
 
         var typeSummaries = activitiesByType
             // The order the activities section prints the same groups in.
@@ -351,15 +354,20 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .Select(campaign => _msfAggregationService.BuildReport(campaign, recordedMsfEpas[campaign.Id]))
             .ToList();
 
+        // T220: the appendix names each state and move as the activity's page does, from the pinned workflow.
         var auditEntries = activities
-            .SelectMany(activity => activity.Transitions.Select(transition => new AuditEntry(
-                activity.ActivityType.Name,
-                activity.Id,
-                transition.FromState,
-                transition.ToState,
-                transition.TransitionKey,
-                transition.ActorUserId,
-                transition.OccurredOn)))
+            .SelectMany(activity =>
+            {
+                var workflow = workflows[(activity.ActivityTypeId, activity.SchemaVersion)];
+                return activity.Transitions.Select(transition => new AuditEntry(
+                    activity.ActivityType.Name,
+                    activity.Id,
+                    PinnedWorkflows.StateLabel(workflow, transition.FromState),
+                    PinnedWorkflows.StateLabel(workflow, transition.ToState),
+                    PinnedWorkflows.TransitionLabel(workflow, transition.TransitionKey),
+                    transition.ActorUserId,
+                    transition.OccurredOn));
+            })
             .OrderBy(entry => entry.OccurredOn)
             .ToList();
 
@@ -390,6 +398,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             ActivitiesByType: activitiesByType,
             TypeSummaries: typeSummaries,
             SchemaVersions: schemaVersions,
+            Workflows: workflows,
             RungLabels: rungLabels,
             EpaProgress: epaProgress,
             CommitteeReviews: committeeReviews,
@@ -491,6 +500,8 @@ internal sealed record PortfolioData(
     Dictionary<string, List<Activity>> ActivitiesByType,
     IReadOnlyList<PortfolioTypeSummary> TypeSummaries,
     Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> SchemaVersions,
+    // Each activity's pinned workflow, or null where it has none that parses: what names its state (T220).
+    IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> Workflows,
     EntrustmentRungLookup RungLabels,
     PortfolioEpaProgress EpaProgress,
     List<CommitteeReview> CommitteeReviews,
@@ -499,11 +510,12 @@ internal sealed record PortfolioData(
     List<MsfCampaignAggregateReportDto> MsfReports,
     List<AuditEntry> AuditEntries);
 
+/// <summary>One recorded move in the audit appendix, its states and the move named as the activity's page names them (T220).</summary>
 internal sealed record AuditEntry(
     string ActivityTypeName,
     int ActivityId,
-    string FromState,
-    string ToState,
-    string TransitionKey,
+    string FromStateLabel,
+    string ToStateLabel,
+    string TransitionLabel,
     string ActorUserId,
     DateTime OccurredOn);

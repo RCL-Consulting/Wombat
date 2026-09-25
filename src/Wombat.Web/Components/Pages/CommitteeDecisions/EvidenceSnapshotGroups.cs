@@ -133,9 +133,10 @@ public static class EvidenceSnapshotGroups
             parts.Add(line.ObservedOnDeclared == false ? $"{day} (filed)" : day);
         }
 
-        if (!string.IsNullOrWhiteSpace(line.SourceState))
+        // The state by its label, frozen with the snapshot (T220).
+        if (!string.IsNullOrWhiteSpace(line.SourceStateLabel))
         {
-            parts.Add(line.SourceState);
+            parts.Add(line.SourceStateLabel);
         }
 
         return string.Join(" · ", parts);

@@ -365,7 +365,8 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
             ObservedOn: new DateOnly(2026, 2, 2),
             ObservedOnDeclared: true,
             SourceState: "completed",
-            AssessorUserId: assessor);
+            AssessorUserId: assessor,
+            SourceStateLabel: "Completed");
 
     private static CommitteeReviewDetailDto Review(
         CommitteeReviewState state,

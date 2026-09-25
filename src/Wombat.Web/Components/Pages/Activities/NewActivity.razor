@@ -264,7 +264,8 @@
 
   // What became of an activity the create has just filed, after sending the move that submits it if Submit was pressed.
   // Judged against the workflow the activity is pinned to, which the create returns: that is the version the server
-  // evaluates the move against, and the one that names the state the activity is in.
+  // evaluates the move against. The state the activity is in is named by the label the server carried from that same
+  // version (ActivityDto.CurrentStateLabel), never worked out here (T220).
   private async Task<ActivityNotice> FinishCreatedAsync(ActivityDto created, bool submit, ClaimsPrincipal user, string userId)
   {
     Workflow workflow;
@@ -287,8 +288,9 @@
     {
       // Nothing moves it on from here for this author, so the create was the filing. For a type born in `requested`
       // (the generic mini_cex, dops, cbd and acat) that is the submission itself, so no button may say it was not
-      // submitted. Nor may either say "Submitted" when nothing moved (T148). The state's own name is true in every case.
-      return new ActivityNotice("success", $"Filed. It is now {workflow.StateLabel(created.CurrentState)}.");
+      // submitted. Nor may either say "Submitted" when nothing moved (T148). The state's own name is true in every case:
+      // the label the server carried from the pinned workflow, as every other page prints it (T220).
+      return new ActivityNotice("success", $"Filed. It is now {created.CurrentStateLabel}.");
     }
 
     if (!submit)
@@ -322,7 +324,7 @@
         $"Saved as a draft, but not submitted: {AsSentence(exception.Message)} Fix the fields below and submit again.");
     }
 
-    return new ActivityNotice("success", $"Submitted. It is now {workflow.StateLabel(moved.CurrentState)}.");
+    return new ActivityNotice("success", $"Submitted. It is now {moved.CurrentStateLabel}.");
   }
 
   // The move that submits what the author has just created: the first of the moves the server offers them on it that

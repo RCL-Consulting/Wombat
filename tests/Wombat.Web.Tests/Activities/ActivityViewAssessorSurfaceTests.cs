@@ -169,7 +169,8 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         cut.WaitForState(() => cut.FindAll("#discard-changes").Count == 0);
 
         sender.LoadCount.Should().Be(2, "the writable set and the action list belong to the new state");
-        cut.Markup.Should().Contain("State: completed");
+        // The new state by its label (T220).
+        cut.Markup.Should().Contain("State: Completed");
     }
 
     [Fact]
@@ -268,15 +269,22 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     {
         var transitions = new[]
         {
-            new ActivityTransitionDto(1, "draft", "requested", "submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}", null, null, null),
-            new ActivityTransitionDto(2, "requested", "declined", "decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}", null, null, null)
+            new ActivityTransitionDto(1, "draft", "requested", "submit", "Draft", "Requested", "Submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}", null, null, null),
+            new ActivityTransitionDto(2, "requested", "declined", "decline", "Requested", "Declined", "Decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}", null, null, null)
         };
 
         var cut = RenderPage(new FakeSender(Detail(NoOne(), transitions: transitions)));
 
         cut.Markup.Should().Contain("Wrong patient encounter.");
-        cut.Markup.Should().Contain("decline");
-        cut.Markup.Should().Contain("requested → declined");
+        // T220: the move and the states by their labels, each read from its own column, since "Declined" in the State
+        // column would also satisfy a search of the markup for "Decline".
+        var history = cut.FindAll("table").Single(table => table.QuerySelector("caption")?.TextContent == "Workflow history");
+        var headers = history.QuerySelectorAll("thead th").Select(cell => cell.TextContent.Trim()).ToList();
+        var rows = history.QuerySelectorAll("tbody tr");
+        rows.Select(row => row.QuerySelectorAll("td")[headers.IndexOf("Action")].TextContent.Trim())
+            .Should().Equal("Submit", "Decline");
+        rows.Select(row => row.QuerySelectorAll("td")[headers.IndexOf("State")].TextContent.Trim())
+            .Should().Equal("Draft → Requested", "Requested → Declined");
     }
 
     /// <summary>
@@ -287,9 +295,9 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     {
         var transitions = new[]
         {
-            new ActivityTransitionDto(1, "draft", "requested", "submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}", null, null, null)
+            new ActivityTransitionDto(1, "draft", "requested", "submit", "Draft", "Requested", "Submit", "trainee-1", new DateTime(2026, 9, 16, 8, 0, 0, DateTimeKind.Utc), null, "{}", null, null, null)
                 { ActorName = "Thandi Nkosi" },
-            new ActivityTransitionDto(2, "requested", "declined", "decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}", null, null, null)
+            new ActivityTransitionDto(2, "requested", "declined", "decline", "Requested", "Declined", "Decline", "assessor-1", new DateTime(2026, 9, 17, 9, 30, 0, DateTimeKind.Utc), "Wrong patient encounter.", "{}", null, null, null)
                 { ActorName = "Dr Ruth Mokoena" }
         };
 
@@ -353,6 +361,8 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
             1,
             "trainee-1",
             state,
+            // What the page is handed: the state by its label in WorkflowJson above (T220).
+            state switch { "requested" => "Requested", "completed" => "Completed", _ => state },
             dataJson,
             null,
             null,

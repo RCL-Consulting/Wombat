@@ -59,10 +59,33 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
             })
             .ToListAsync(cancellationToken);
 
-        var finishedStates = await ActivityCompletion.LoadFinishedStatesAsync(
+        var recent = await _dbContext.Set<Activity>()
+            .AsNoTracking()
+            .Where(a => a.SubjectUserId == userId)
+            .OrderByDescending(a => a.CreatedOn)
+            .Take(5)
+            .Select(a => new
+            {
+                a.Id,
+                a.ActivityTypeId,
+                a.SchemaVersion,
+                TypeName = a.ActivityType.Name,
+                a.CurrentState,
+                a.CreatedOn
+            })
+            .ToListAsync(cancellationToken);
+
+        // Each pin's workflow, read once for both lists: it says which states are finished (T203) and what each state is
+        // called, so a badge names the state as the activity's own page does (T220).
+        var workflows = await PinnedWorkflows.LoadAsync(
             _dbContext,
-            activityStates.Select(a => (a.ActivityTypeId, a.SchemaVersion)),
+            activityStates.Select(a => (a.ActivityTypeId, a.SchemaVersion))
+                .Concat(recent.Select(a => (a.ActivityTypeId, a.SchemaVersion))),
             cancellationToken);
+        var finishedStates = workflows.ToDictionary(pair => pair.Key, pair => ActivityCompletion.FinishedStates(pair.Value));
+        string StateLabel(int activityTypeId, int version, string state)
+            => PinnedWorkflows.StateLabel(workflows[(activityTypeId, version)], state);
+
         var unfinished = activityStates
             .Where(a => !finishedStates[(a.ActivityTypeId, a.SchemaVersion)].Contains(a.CurrentState))
             .ToList();
@@ -71,18 +94,14 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
             .Where(a => a.CurrentState is "requested" or "accepted" or "declined" or "draft")
             .OrderByDescending(a => a.UpdatedOn)
             .Take(5)
-            .Select(a => new ActivityInboxItem(a.Id, a.TypeName, a.CurrentState, a.UpdatedOn))
+            .Select(a => new ActivityInboxItem(
+                a.Id, a.TypeName, a.CurrentState, StateLabel(a.ActivityTypeId, a.SchemaVersion, a.CurrentState), a.UpdatedOn))
             .ToList();
 
-        var recentActivities = await _dbContext.Set<Activity>()
-            .AsNoTracking()
-            .Include(a => a.ActivityType)
-            .Where(a => a.SubjectUserId == userId)
-            .OrderByDescending(a => a.CreatedOn)
-            .Take(5)
+        var recentActivities = recent
             .Select(a => new RecentActivityItem(
-                a.Id, a.ActivityType.Name, a.CurrentState, a.CreatedOn))
-            .ToListAsync(cancellationToken);
+                a.Id, a.TypeName, a.CurrentState, StateLabel(a.ActivityTypeId, a.SchemaVersion, a.CurrentState), a.CreatedOn))
+            .ToList();
 
         var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(14));
         var today = DateOnly.FromDateTime(DateTime.UtcNow);

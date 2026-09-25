@@ -253,6 +253,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
             1,
             "trainee-1",
             state,
+            PinnedWorkflows.StateLabel(PinnedWorkflows.TryParse(WorkflowJson), state),
             """{"epa_id":"17"}""",
             null,
             null,

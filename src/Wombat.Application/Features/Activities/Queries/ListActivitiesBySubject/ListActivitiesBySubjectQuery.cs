@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Epas;
 
@@ -47,33 +48,59 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
         // Ordered by the encounter date, the column the list shows in place of the audit clock, so an encounter filed
         // late sits at its own date rather than at the top of a list that would then look unsorted. Ties fall back to
         // the most recently updated, then the id, so the order is total.
-        return await (
+        var rows = await (
                 from activity in readable
                 join epa in _dbContext.Set<Epa>() on activity.EpaId equals (int?)epa.Id into epas
                 from epa in epas.DefaultIfEmpty()
                 orderby activity.ObservedOn descending, activity.UpdatedOn descending, activity.Id descending
-                select new ActivitySummaryDto(
+                select new
+                {
                     activity.Id,
                     activity.ActivityTypeId,
-                    activity.ActivityType.Key,
-                    activity.ActivityType.Name,
+                    activity.SchemaVersion,
+                    TypeKey = activity.ActivityType.Key,
+                    TypeName = activity.ActivityType.Name,
                     activity.SubjectUserId,
                     activity.CurrentState,
                     activity.CreatedOn,
                     activity.UpdatedOn,
                     activity.EpaId,
-                    epa == null ? null : epa.Code,
-                    epa == null ? null : epa.Title,
+                    EpaCode = epa == null ? null : epa.Code,
+                    EpaTitle = epa == null ? null : epa.Title,
                     activity.ObservedOn,
-                    activity.ObservedOnSource == ObservationDateSource.Declared,
+                    ObservedOnDeclared = activity.ObservedOnSource == ObservationDateSource.Declared,
                     // Null when no transition evaluated credit, which is the honest answer for an activity still in
                     // flight and for a type that credits nothing by design (T108).
-                    activity.Transitions
+                    CreditedItemCount = activity.Transitions
                         .Where(transition => transition.CreditedItemCount != null)
                         .OrderByDescending(transition => transition.OccurredOn)
                         .ThenByDescending(transition => transition.Id)
                         .Select(transition => transition.CreditedItemCount)
-                        .FirstOrDefault()))
+                        .FirstOrDefault()
+                })
             .ToListAsync(cancellationToken);
+
+        // T220: each state in the words of the workflow the activity is pinned to, read once per pin.
+        var workflows = await PinnedWorkflows.LoadAsync(
+            _dbContext, rows.Select(row => (row.ActivityTypeId, row.SchemaVersion)), cancellationToken);
+
+        return rows
+            .Select(row => new ActivitySummaryDto(
+                row.Id,
+                row.ActivityTypeId,
+                row.TypeKey,
+                row.TypeName,
+                row.SubjectUserId,
+                row.CurrentState,
+                PinnedWorkflows.StateLabel(workflows[(row.ActivityTypeId, row.SchemaVersion)], row.CurrentState),
+                row.CreatedOn,
+                row.UpdatedOn,
+                row.EpaId,
+                row.EpaCode,
+                row.EpaTitle,
+                row.ObservedOn,
+                row.ObservedOnDeclared,
+                row.CreditedItemCount))
+            .ToList();
     }
 }

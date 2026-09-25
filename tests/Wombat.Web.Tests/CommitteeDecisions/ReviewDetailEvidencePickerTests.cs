@@ -39,7 +39,34 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
         Legends(cut).Should().Equal("PAED-001 — Acute admission", "PAED-002 — Ward round", "Not about a single EPA");
         CheckboxIds(cut).Should().BeEquivalentTo(new[] { "pending-evidence-1", "pending-evidence-2", "pending-evidence-3" });
         cut.FindAll("#pending-evidence-4").Should().BeEmpty("a supervisor report cannot ground a decision");
-        cut.Find("label[for=pending-evidence-1]").TextContent.Should().Contain("Mini-CEX #101").And.Contain("3a · 2026-02-10 · completed");
+        // The state by its frozen label (T220).
+        cut.Find("label[for=pending-evidence-1]").TextContent.Should().Contain("Mini-CEX #101").And.Contain("3a · 2026-02-10 · Completed");
+    }
+
+    /// <summary>
+    /// An activity whose type names no EPA is listed under "Not about a single EPA", and its detail is its state by the
+    /// label frozen with it, never the key (T220 review): a submitted clinical audit reads "Awaiting supervisor".
+    /// </summary>
+    [Fact]
+    public void ALineAboutNoSingleEpa_NamesItsStateByItsLabel()
+    {
+        var noEpa = Line(5, 105, 7, "PAED-001", "Acute admission") with
+        {
+            EpaId = null,
+            EpaCode = null,
+            EpaTitle = null,
+            SourceLabel = "Clinical Audit #105",
+            SourceState = "submitted",
+            SourceStateLabel = "Awaiting supervisor",
+            SourceFinished = false
+        };
+
+        var (cut, _) = RenderPage(evidence: [Line(1, 101, 7, "PAED-001", "Acute admission"), noEpa]);
+
+        Legends(cut).Should().Equal("PAED-001 — Acute admission", "Not about a single EPA");
+        var label = cut.Find("label[for=pending-evidence-5]").TextContent;
+        label.Should().Contain("Clinical Audit #105").And.Contain("Awaiting supervisor");
+        label.Should().NotContain("submitted");
     }
 
     [Fact]
@@ -234,10 +261,11 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
             ObservedOn: new DateOnly(2026, 2, 10),
             ObservedOnDeclared: true,
             SourceState: "completed",
-            SourceFinished: true);
+            SourceFinished: true,
+            SourceStateLabel: "Completed");
 
     private static CommitteeEvidenceDto Unfinished(CommitteeEvidenceDto line, string state)
-        => line with { SourceState = state, RatingLabel = null, Summary = $"State: {state}.", SourceFinished = false };
+        => line with { SourceState = state, SourceStateLabel = state, RatingLabel = null, Summary = $"State: {state}.", SourceFinished = false };
 
     private static CommitteeEvidenceDto Campaign(int id, int campaignId)
         => new(
@@ -250,7 +278,8 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
             "State: Released; responses 8.",
             new DateTime(2026, 5, 2, 8, 0, 0, DateTimeKind.Utc),
             SourceState: "Released",
-            SourceFinished: true);
+            SourceFinished: true,
+            SourceStateLabel: "Released");
 
     private static CommitteeEvidenceDto Report(int id)
         => new(

@@ -478,6 +478,7 @@ public sealed class NomineePickerPageTests : TestContext
             institutionId,
             "trainee-1",
             "draft",
+            "Draft",
             dataJson,
             null,
             null,

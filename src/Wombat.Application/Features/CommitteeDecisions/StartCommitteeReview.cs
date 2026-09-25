@@ -9,6 +9,7 @@ using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Workflow;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -169,6 +170,8 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             // A campaign is a report across the EPAs it covers, not evidence for one: it has no EPA, instrument, rating
             // or encounter of its own. Its per-EPA claims are ordinary activities above, each under its EPA. (T167)
             SourceState = campaign.State.ToString(),
+            // Every campaign here is released, and "Released" is the word for it (MsfCampaignText.State). (T220)
+            SourceStateLabel = campaign.State.ToString(),
             // Every campaign here is released (the filter above), and a released report is finished work. (T131)
             SourceFinished = campaign.State == MsfCampaignState.Released
         });
@@ -194,6 +197,8 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
     ///   declined rating as declined, where the sampling report leaves it out (D44).</item>
     ///   <item><b>The encounter date</b> is <c>Activity.ObservedOn</c> (T119) with its source, so a date nobody stated is
     ///   shown as the day the activity was created (T161, T197), not as a clinical fact.</item>
+    ///   <item><b>The state</b> is the stored key, with its label in the pinned workflow (<see cref="PinnedWorkflows" />,
+    ///   T220), so a submitted clinical audit reads "Awaiting supervisor" here as it does on its own page.</item>
     /// </list>
     /// <para>
     /// Each is also written into <see cref="CommitteeEvidence.Summary" />, so the line reads on its own wherever the
@@ -203,17 +208,20 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
     private sealed class ActivityDescriber
     {
         private readonly IReadOnlyDictionary<(int ActivityTypeId, int Version), RatedEvidenceProfile> _profiles;
+        private readonly IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> _workflows;
         private readonly EntrustmentRungLookup _ladders;
         private readonly IReadOnlyDictionary<int, (string Code, string Title)> _epas;
         private readonly IReadOnlyDictionary<string, string> _instrumentNames;
 
         private ActivityDescriber(
             IReadOnlyDictionary<(int ActivityTypeId, int Version), RatedEvidenceProfile> profiles,
+            IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> workflows,
             EntrustmentRungLookup ladders,
             IReadOnlyDictionary<int, (string Code, string Title)> epas,
             IReadOnlyDictionary<string, string> instrumentNames)
         {
             _profiles = profiles;
+            _workflows = workflows;
             _ladders = ladders;
             _epas = epas;
             _instrumentNames = instrumentNames;
@@ -225,6 +233,11 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             CancellationToken cancellationToken)
         {
             var profiles = await RatedEvidenceProfiles.LoadAsync(
+                dbContext,
+                activities.Select(activity => (activity.ActivityTypeId, activity.SchemaVersion)),
+                cancellationToken);
+
+            var workflows = await PinnedWorkflows.LoadAsync(
                 dbContext,
                 activities.Select(activity => (activity.ActivityTypeId, activity.SchemaVersion)),
                 cancellationToken);
@@ -256,7 +269,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
                     .Where(tool => toolKeys.Contains(tool.Key))
                     .ToDictionaryAsync(tool => tool.Key, tool => tool.Name, StringComparer.Ordinal, cancellationToken);
 
-            return new ActivityDescriber(profiles, ladders, epas, instrumentNames);
+            return new ActivityDescriber(profiles, workflows, ladders, epas, instrumentNames);
         }
 
         public CommitteeEvidence Describe(Activity activity)
@@ -275,10 +288,12 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             var rating = profile.ReadRating(activity.DataJson);
             var ratingLabel = rating is int order ? _ladders.FormatByScaleKey(profile.RatedScaleKey, order) : null;
             var declared = activity.ObservedOnSource == ObservationDateSource.Declared;
+            var stateLabel = PinnedWorkflows.StateLabel(
+                _workflows[(activity.ActivityTypeId, activity.SchemaVersion)], activity.CurrentState);
 
             var summary = new List<string>
             {
-                $"State: {activity.CurrentState}",
+                $"State: {stateLabel}",
                 epa is { } described ? $"EPA {described.Code}" : "about no EPA",
                 instrumentName,
                 ratingLabel is not null
@@ -310,6 +325,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
                 ObservedOn = activity.ObservedOn,
                 ObservedOnSource = activity.ObservedOnSource,
                 SourceState = activity.CurrentState,
+                SourceStateLabel = stateLabel,
                 // D44's "finished": a terminal state of the pinned workflow, the one answer the sampling report and the
                 // trajectory share. Frozen here, where the pin is known, so the page can say when a staged decision
                 // names only unfinished forms. (T131)

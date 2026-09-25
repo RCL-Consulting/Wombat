@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Workflow;
@@ -55,73 +54,20 @@ public static class ActivityCompletion
     /// type is gone reads as a type with no workflow. Each distinct pin is parsed once.
     /// </summary>
     /// <remarks>
-    /// Matched in memory over a set already bounded by the caller's activities, because <c>Activity</c> carries no
-    /// foreign key to its version (<c>ActivityConfiguration</c>).
+    /// The pin is resolved by <see cref="PinnedWorkflows.LoadAsync" />, the resolution the surfaces that print a state's
+    /// label share (T220), so an activity's finished states and the words for its state come from the same workflow.
     /// </remarks>
     public static async Task<IReadOnlyDictionary<(int ActivityTypeId, int Version), IReadOnlySet<string>>> LoadFinishedStatesAsync(
         IApplicationDbContext dbContext,
         IEnumerable<(int ActivityTypeId, int Version)> pins,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        ArgumentNullException.ThrowIfNull(pins);
-
-        var wanted = pins.Distinct().ToArray();
-        var finished = new Dictionary<(int ActivityTypeId, int Version), IReadOnlySet<string>>(wanted.Length);
-        if (wanted.Length == 0)
-        {
-            return finished;
-        }
-
-        var typeIds = wanted.Select(pin => pin.ActivityTypeId).Distinct().ToArray();
-        var versionNumbers = wanted.Select(pin => pin.Version).Distinct().ToArray();
-
-        var typeWorkflows = await dbContext.Set<ActivityType>()
-            .AsNoTracking()
-            .Where(type => typeIds.Contains(type.Id))
-            .Select(type => new { type.Id, type.WorkflowJson })
-            .ToDictionaryAsync(type => type.Id, type => type.WorkflowJson, cancellationToken);
-
-        var versions = await dbContext.Set<ActivityTypeVersion>()
-            .AsNoTracking()
-            .Where(version => typeIds.Contains(version.ActivityTypeId) && versionNumbers.Contains(version.Version))
-            .Select(version => new { version.ActivityTypeId, version.Version, version.WorkflowJson })
-            .ToListAsync(cancellationToken);
-
-        var versionWorkflowByPin = versions
-            .GroupBy(version => (version.ActivityTypeId, version.Version))
-            .ToDictionary(group => group.Key, group => group.First().WorkflowJson);
-
-        foreach (var pin in wanted)
-        {
-            finished[pin] = versionWorkflowByPin.TryGetValue(pin, out var versionWorkflow)
-                ? FinishedStates(versionWorkflow)
-                : FinishedStates(typeWorkflows.GetValueOrDefault(pin.ActivityTypeId));
-        }
-
-        return finished;
+        var workflows = await PinnedWorkflows.LoadAsync(dbContext, pins, cancellationToken);
+        return workflows.ToDictionary(pair => pair.Key, pair => FinishedStates(pair.Value));
     }
 
     /// <summary>
-    /// A stored workflow, parsed, or null when there is none or it no longer parses. Total: a stored workflow that no
-    /// longer parses is a defect, but not one a report or a chart should fail over.
+    /// A stored workflow, parsed, or null when there is none or it no longer parses (<see cref="PinnedWorkflows.TryParse" />).
     /// </summary>
-    internal static Workflow? TryParseWorkflow(string? workflowJson)
-    {
-        if (string.IsNullOrWhiteSpace(workflowJson))
-        {
-            return null;
-        }
-
-        try
-        {
-            return WorkflowParser.Parse(workflowJson);
-        }
-        catch (Exception)
-        {
-            // Deliberately broad, as CreditRuleFields is: the parser raises its own exception for the shapes it
-            // checks, and System.Text.Json raises InvalidOperationException for a value of the wrong kind.
-            return null;
-        }
-    }
+    internal static Workflow? TryParseWorkflow(string? workflowJson) => PinnedWorkflows.TryParse(workflowJson);
 }
