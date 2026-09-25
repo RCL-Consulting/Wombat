@@ -755,6 +755,12 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
             builder.UseEnvironment("IntegrationTest");
             builder.UseSetting("ConnectionStrings:DefaultConnection", _connectionString);
             builder.UseSetting("Wombat:MsfRespondUrl", _respondUrl);
+
+            // The static-asset endpoints a publish maps. A build's manifest (this one) switches on the development
+            // reloader, which also maps a GET/HEAD fallback, {**path:file}, that the server does not have. Its route
+            // matches every address before its constraint is checked, so it turned a POST to an unknown address into a
+            // 405, and a GET of a POST-only address into a 404, which the server answers the other way round (T233).
+            builder.UseSetting("ReloadStaticAssetsAtRuntime", "false");
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<IEmailSender>();

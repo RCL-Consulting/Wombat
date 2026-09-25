@@ -24,6 +24,7 @@ using Wombat.Infrastructure;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.MultiSourceFeedback;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Web.Navigation;
 using Wombat.Web.Security;
 using Wombat.Web.Services;
 
@@ -151,6 +152,11 @@ app.UseForwardedHeaders(forwardedHeadersOptions);
 // Security headers (CSP nonce, nosniff, referrer policy) — before anything that can write
 // a response, so static files and error pages carry them too.
 app.UseMiddleware<SecurityHeadersMiddleware>();
+
+// A browser's 404 is rerun as /not-found, the app's own page, still answered 404. Only a GET that accepts HTML for an
+// address that is not a file: every other status, and every other request, is answered as before (T233). After the
+// security headers, so the page carries them and its nonce; before static files and routing, so the rerun is routed.
+app.UseWombatNotFoundPage();
 
 app.UseStaticFiles();
 app.UseRouting();
