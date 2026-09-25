@@ -13,12 +13,13 @@
 
 <PageHeader Title="MSF campaign" Subtitle="Create a campaign, add respondents, then open the anonymous response window." />
 
-@* Someone who holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224).
-   Standing content, in the words a create refusal gives: the create form is not shown to them, and a campaign's page
-   answers them with its "Campaign unavailable" card, which alone would not say why. *@
-@if (_runsNoCampaigns is true)
+@* Someone who holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224);
+   nor does a Coordinator at no institution (MsfCampaignRules.RunsCampaigns, T248). Standing content, in the words the
+   create and template commands refuse them in: neither the create form nor the Quick template card is shown to them
+   (T248), and a campaign's page answers them with its "Campaign unavailable" card, which alone would not say why. *@
+@if (_runsCampaigns is false)
 {
-  <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@MsfCampaignRules.TraineeRunsNoCampaigns</Alert>
+  <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@_runsNoCampaignsReason</Alert>
 }
 
 @* What an action did. Given the focus whenever the button that acted is gone (T217): after an open or a withdraw, and
@@ -38,9 +39,11 @@
 
 <div class="details-grid">
   @* The Quick template card only where a campaign is being created (T225): a template is chosen at create, and a
-     campaign that exists already has its questionnaire. Until T225 it sat beside every campaign's own card. It stays for
-     someone who holds Trainee, since a template is about no trainee (T224 review). *@
-  @if (!CampaignId.HasValue)
+     campaign that exists already has its questionnaire. Until T225 it sat beside every campaign's own card. Only for
+     someone who runs campaigns (T248): creating a template is running campaigns, and the command refuses anyone else in
+     the standing alert's words (MsfCampaignRules.EnsureRunsCampaigns). Until T248 the card stayed for someone who holds
+     Trainee, since a template is about no trainee, and the command took no caller to refuse. *@
+  @if (!CampaignId.HasValue && _runsCampaigns is true)
   {
     <section class="detail-card">
       <h3>Quick template</h3>
@@ -74,7 +77,7 @@
     </section>
   }
 
-  @if (CampaignId.HasValue || _runsNoCampaigns is false)
+  @if (CampaignId.HasValue || _runsCampaigns is true)
   {
     <section class="detail-card">
       <h3>@(CampaignId.HasValue ? "Campaign details" : "Create campaign")</h3>
@@ -384,26 +387,39 @@
   private InviteeFormModel _invitee = new();
 
   /// <summary>
-  /// Whether the caller runs no campaign at all (<see cref="MsfCampaignRules.RunsNoCampaigns" />, T224); null until the
-  /// caller is known, so the create form is not shown to someone who is about to be told they cannot use it.
+  /// Whether the caller runs any campaign (<see cref="MsfCampaignRules.RunsCampaigns" />, T248): an Administrator, or a
+  /// Coordinator at an institution, who does not hold Trainee (T224). Null until the caller is known, so neither form is
+  /// shown to someone who is about to be told they cannot use it.
   /// </summary>
-  private bool? _runsNoCampaigns;
+  private bool? _runsCampaigns;
+
+  /// <summary>
+  /// Why the caller runs no campaign, in the words the create and template commands refuse them in: holding Trainee
+  /// (<see cref="MsfCampaignRules.TraineeRunsNoCampaigns" />), or else their roles
+  /// (<see cref="MsfCampaignRules.RunsCampaignsRoles" />).
+  /// </summary>
+  private string _runsNoCampaignsReason = string.Empty;
 
   protected override async Task OnInitializedAsync()
   {
-    _runsNoCampaigns = MsfCampaignRules.RunsNoCampaigns(await GetPrincipalAsync());
-    await LoadTraineesAsync();
+    var principal = await GetPrincipalAsync();
+    _runsCampaigns = MsfCampaignRules.RunsCampaigns(principal);
+    _runsNoCampaignsReason = MsfCampaignRules.RunsNoCampaigns(principal)
+      ? MsfCampaignRules.TraineeRunsNoCampaigns
+      : MsfCampaignRules.RunsCampaignsRoles;
   }
 
   /// <remarks>
-  /// The templates are read only where a campaign is being created: a campaign's own page has neither the Quick template
-  /// card nor the create form that lists them (T225).
+  /// The templates and the trainees are read only where a campaign is being created: a campaign's own page has neither
+  /// the Quick template card nor the create form that lists them (T225, T248 review). Nor does the create page of someone
+  /// who runs no campaign (T248).
   /// </remarks>
   protected override async Task OnParametersSetAsync()
   {
-    if (!CampaignId.HasValue)
+    if (!CampaignId.HasValue && _runsCampaigns is true)
     {
       await LoadTemplatesAsync();
+      await LoadTraineesAsync();
     }
 
     await LoadSetupAsync();
@@ -591,9 +607,9 @@
   /// <summary>
   /// The trainees the create accepts (<see cref="ListMsfCampaignSubjectsQuery" />, T238): the current trainees at the
   /// caller's institution, or everywhere for an Administrator, less the ones
-  /// <see cref="MsfCampaignRules.IsKeptFromCampaignsAbout" /> keeps the caller from (T224): never the caller themselves. A
-  /// caller who holds Trainee is shown no create form and nobody is read for them. The EPA picker reads only a trainee
-  /// offered here.
+  /// <see cref="MsfCampaignRules.IsKeptFromCampaignsAbout" /> keeps the caller from (T224): never the caller themselves.
+  /// Read only on the create page of someone who runs campaigns (T248): nobody is read for anyone else, or on a campaign's
+  /// own page, which has no create form. The EPA picker reads only a trainee offered here.
   /// </summary>
   /// <remarks>
   /// The query leaves out whom the exclusions keep out already; the page asks them again because they read nothing, so
@@ -604,11 +620,6 @@
   private async Task LoadTraineesAsync()
   {
     _trainees.Clear();
-    if (_runsNoCampaigns is not false)
-    {
-      return;
-    }
-
     var principal = await GetPrincipalAsync();
     _trainees.AddRange((await Sender.Send(new ListMsfCampaignSubjectsQuery(principal)))
       .Where(trainee => !MsfCampaignRules.IsKeptFromCampaignsAbout(principal, trainee.UserId)));
@@ -694,6 +705,7 @@
           new CreateMsfTemplateQuestionItem(_template.ScalePrompt, MsfQuestionType.Scale, null, true),
           new CreateMsfTemplateQuestionItem(_template.CommentPrompt, MsfQuestionType.LongText, null, false)
         ],
+        await GetPrincipalAsync(),
         _template.Kind));
 
       _template = new();

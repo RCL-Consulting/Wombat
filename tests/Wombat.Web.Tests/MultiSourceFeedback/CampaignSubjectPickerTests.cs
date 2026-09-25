@@ -5,6 +5,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Trainees;
 using Wombat.Domain.Identity;
@@ -27,13 +28,14 @@ public sealed class CampaignSubjectPickerTests : TestContext
 
     private readonly TestAuthorizationContext _auth;
     private readonly ReferenceData _referenceData = new();
+    private readonly FakeSender _sender = new();
 
     public CampaignSubjectPickerTests()
     {
         _auth = this.AddTestAuthorization();
         _auth.SetAuthorized("caller@test");
 
-        Services.AddSingleton<IScopedSender>(new FakeSender());
+        Services.AddSingleton<IScopedSender>(_sender);
         Services.AddSingleton<IActivityReferenceDataService>(_referenceData);
     }
 
@@ -89,10 +91,31 @@ public sealed class CampaignSubjectPickerTests : TestContext
         _referenceData.Asked.Should().Equal(Classmate);
     }
 
+    /// <summary>
+    /// A campaign's own page has no create form, so it lists no trainee and reads no template (T248 review): until then
+    /// every visit to a campaign read the whole picker, every current trainee at the institution, for nothing.
+    /// </summary>
+    [Theory]
+    [InlineData(WombatRoles.Coordinator)]
+    [InlineData(WombatRoles.Administrator)]
+    public void ACampaignsOwnPage_ListsNoTrainee_AndReadsNoTemplate(string role)
+    {
+        SignIn("coordinator-1", role);
+
+        var cut = RenderComponent<CampaignEdit>(parameters => parameters.Add(page => page.CampaignId, 7));
+        cut.WaitForState(() => cut.Markup.Contains("Campaign unavailable"));
+
+        cut.FindAll("#msf-subject").Should().BeEmpty();
+        _sender.Received.Select(request => request.GetType().Name).Should().Equal(nameof(GetMsfCampaignSetupQuery));
+    }
+
+    /// <summary>Signed in as a user at an institution, as every coordinator who runs campaigns is (T248 review).</summary>
     private void SignIn(string userId, params string[] roles)
     {
         _auth.SetRoles(roles);
-        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, userId));
+        _auth.SetClaims(
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(WombatClaimTypes.InstitutionId, "1"));
     }
 
     private static string[] OfferedSubjects(IRenderedComponent<CampaignEdit> cut)
@@ -119,17 +142,22 @@ public sealed class CampaignSubjectPickerTests : TestContext
 
     private sealed class FakeSender : IScopedSender
     {
+        public List<object> Received { get; } = [];
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
-            object response = request switch
+            Received.Add(request);
+
+            object? response = request switch
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
                 ListMsfCampaignSubjectsQuery => (IReadOnlyList<TraineeProfileDto>)
                     [Trainee(Registrar, "Thandi"), Trainee(Classmate, "Sipho")],
+                GetMsfCampaignSetupQuery => null,
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 
-            return Task.FromResult((TResponse)response);
+            return Task.FromResult((TResponse)response!);
         }
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)

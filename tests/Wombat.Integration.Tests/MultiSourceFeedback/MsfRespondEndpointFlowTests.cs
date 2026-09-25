@@ -300,7 +300,8 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             [
                 new CreateMsfTemplateQuestionItem("Rates the trainee's overall professional performance.", MsfQuestionType.Scale, null, true),
                 new CreateMsfTemplateQuestionItem("What should the trainee keep doing or improve?", MsfQuestionType.LongText, null, false)
-            ]));
+            ],
+            _coordinator));
 
         var campaign = await SendAsync(new CreateMsfCampaignCommand(
             "trainee-1",
@@ -499,6 +500,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
                 new CreateMsfTemplateQuestionItem("Rates the trainee's teaching overall.", MsfQuestionType.Scale, null, true),
                 new CreateMsfTemplateQuestionItem("What should the trainee keep doing or change in their teaching?", MsfQuestionType.LongText, null, false)
             ],
+            _coordinator,
             MsfTemplateKind.LearnerFeedback));
 
         var refused = () => SendAsync(new CreateMsfCampaignCommand(
@@ -612,7 +614,8 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             [
                 new CreateMsfTemplateQuestionItem("Rates the trainee's overall professional performance.", MsfQuestionType.Scale, null, true),
                 new CreateMsfTemplateQuestionItem("What should the trainee keep doing or improve?", MsfQuestionType.LongText, null, false)
-            ]));
+            ],
+            _coordinator));
 
         async Task<int> OpenCampaignAsync(string respondent, MsfRespondentCategory category)
         {
@@ -747,7 +750,8 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             [
                 new CreateMsfTemplateQuestionItem("Rates the trainee's overall professional performance.", MsfQuestionType.Scale, null, true),
                 new CreateMsfTemplateQuestionItem("What should the trainee keep doing or improve?", MsfQuestionType.LongText, null, false)
-            ]));
+            ],
+            _coordinator));
 
         var campaign = await SendAsync(new CreateMsfCampaignCommand(
             "trainee-1",

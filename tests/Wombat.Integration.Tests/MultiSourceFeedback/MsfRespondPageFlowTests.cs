@@ -474,6 +474,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
                 null,
                 false,
                 questions,
+                Coordinator,
                 kind));
 
             var campaign = await SendAsync(new CreateMsfCampaignCommand(

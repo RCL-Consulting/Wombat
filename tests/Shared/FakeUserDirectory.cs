@@ -99,6 +99,23 @@ internal sealed class FakeUserDirectory : IUserAdministrationService
         return Task.FromResult(found);
     }
 
+    /// <summary>The name and email of each user added with <see cref="With" /> who is asked about (T248).</summary>
+    public Task<IReadOnlyDictionary<string, UserContact>> GetContactsAsync(
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        IReadOnlyDictionary<string, UserContact> found = _users
+            .Where(user => wanted.Contains(user.UserId))
+            .GroupBy(user => user.UserId, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => new UserContact(group.Key, group.First().FirstName, group.First().LastName, group.First().Email),
+                StringComparer.Ordinal);
+
+        return Task.FromResult(found);
+    }
+
     /// <summary>
     /// A user added with <see cref="With" />, with every role they were added with; null for anyone else, as the real
     /// store answers an id that names no account (an erased trainee's pseudonym among them). (T238)

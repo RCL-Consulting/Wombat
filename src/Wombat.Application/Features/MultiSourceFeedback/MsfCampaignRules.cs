@@ -121,6 +121,10 @@ public static class MsfCampaignRules
     /// out-of-scope caller learns nothing from any id they send. (T224)
     /// </para>
     /// <para>
+    /// So is a caller who runs no campaign by their roles (<see cref="EnsureRunsCampaigns" />, T248): an InstitutionalAdmin,
+    /// or a Coordinator at no institution, is told whom campaigns are run by, not something about the subject.
+    /// </para>
+    /// <para>
     /// Anyone but an Administrator gets one refusal for every other subject the rule keeps out (an id that names nobody,
     /// a trainee elsewhere, an erased trainee's pseudonym, a trainee whose programme has ended), so it confirms nothing
     /// about the id. An Administrator runs campaigns at every institution, so the one reason left is said plainly. (T238)
@@ -141,10 +145,7 @@ public static class MsfCampaignRules
             throw new UnauthorizedAccessException(OwnCampaignRefused);
         }
 
-        if (RunsNoCampaigns(principal))
-        {
-            throw new UnauthorizedAccessException(TraineeRunsNoCampaigns);
-        }
+        EnsureRunsCampaigns(principal);
 
         if (!await MayStartCampaignAboutAsync(dbContext, users, principal, subjectUserId, cancellationToken))
         {
@@ -187,7 +188,8 @@ public static class MsfCampaignRules
     /// </para>
     /// <para>
     /// A current trainee's active profile is their preferred one, so this is <see cref="IsSubjectInScopeAsync" />'s answer
-    /// with the current-trainee half added, from one resolve.
+    /// with the current-trainee half added, from one resolve. The answer is <see cref="MayStartCampaignAbout" />'s, the
+    /// predicate the picker filters by too (T248).
     /// </para>
     /// </remarks>
     public static async Task<bool> MayStartCampaignAboutAsync(
@@ -208,7 +210,27 @@ public static class MsfCampaignRules
         var trainee = await TraineeScopeResolver.ResolveCurrentAsync(
             dbContext, users, subjectUserId.Trim(), cancellationToken);
 
-        return trainee is not null &&
+        return MayStartCampaignAbout(principal, subjectUserId, trainee);
+    }
+
+    /// <summary>
+    /// Whether this caller may start a campaign about this trainee, given where the trainee trains if they are a current
+    /// trainee (<see cref="TraineeScopeResolver.ResolveCurrentAsync" />) and null if not. The one predicate the create
+    /// (<see cref="MayStartCampaignAboutAsync" />) and the campaign form's picker (<see cref="CampaignSubjectsAsync" />)
+    /// both ask, as T102's nominee gate and picker share theirs, so the two cannot drift apart. Reads nothing. (T248)
+    /// </summary>
+    /// <remarks>
+    /// The exclusions first (<see cref="IsKeptFromCampaignsAbout" />), then a current trainee, then the caller's scope: a
+    /// global Administrator runs a campaign about a current trainee anywhere, a Coordinator about one at their own
+    /// institution, and nobody else about anyone.
+    /// </remarks>
+    public static bool MayStartCampaignAbout(ClaimsPrincipal principal, string subjectUserId, TraineeScope? trainee)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(subjectUserId);
+
+        return !IsKeptFromCampaignsAbout(principal, subjectUserId) &&
+               trainee is not null &&
                (principal.IsAdministrator() || CampaignInstitutionOf(principal) == trainee.InstitutionId);
     }
 
@@ -219,8 +241,10 @@ public static class MsfCampaignRules
     /// </summary>
     /// <remarks>
     /// A Coordinator's are the current trainees at their institution, an Administrator's every current trainee; never the
-    /// caller, and nobody for a caller who holds Trainee (<see cref="IsKeptFromCampaignsAbout" />). One resolve of the
-    /// current trainees (<see cref="TraineeScopeResolver.ResolveAllCurrentAsync" />).
+    /// caller, and nobody for a caller who runs no campaign (<see cref="RunsCampaigns" />). One resolve of the current
+    /// trainees (<see cref="TraineeScopeResolver.ResolveAllCurrentAsync" />), each kept only if
+    /// <see cref="MayStartCampaignAbout" />, the create's own predicate, keeps it (T248). The institution the resolve is
+    /// narrowed to drops nobody the predicate would keep, since it demands that institution of a Coordinator's subjects.
     /// </remarks>
     public static async Task<IReadOnlyList<string>> CampaignSubjectsAsync(
         IApplicationDbContext dbContext,
@@ -230,7 +254,7 @@ public static class MsfCampaignRules
     {
         ArgumentNullException.ThrowIfNull(principal);
 
-        if (RunsNoCampaigns(principal))
+        if (!RunsCampaigns(principal))
         {
             return [];
         }
@@ -248,9 +272,58 @@ public static class MsfCampaignRules
 
         var trainees = await TraineeScopeResolver.ResolveAllCurrentAsync(dbContext, users, institutionId, cancellationToken);
 
-        return trainees.Keys
-            .Where(userId => !IsKeptFromCampaignsAbout(principal, userId))
+        return trainees
+            .Where(trainee => MayStartCampaignAbout(principal, trainee.Key, trainee.Value))
+            .Select(trainee => trainee.Key)
             .ToArray();
+    }
+
+    /// <summary>
+    /// Refuses a caller who runs no campaign at all, before anything is written: anyone who holds Trainee, in
+    /// <see cref="TraineeRunsNoCampaigns" />'s words, and anyone who is neither an Administrator nor a Coordinator at an
+    /// institution. What creating a questionnaire template asks, since a template is about no trainee, and what a campaign
+    /// create asks before its subject. (T248)
+    /// </summary>
+    /// <remarks>
+    /// Until T248 the template command took no caller at all, so anyone the campaign page admitted created templates,
+    /// someone who holds Trainee among them (T224's rule), and the templates are every institution's.
+    /// </remarks>
+    public static void EnsureRunsCampaigns(ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (RunsNoCampaigns(principal))
+        {
+            throw new UnauthorizedAccessException(TraineeRunsNoCampaigns);
+        }
+
+        if (!RunsCampaigns(principal))
+        {
+            throw new UnauthorizedAccessException(RunsCampaignsRoles);
+        }
+    }
+
+    /// <summary>
+    /// The refusal of a caller who is neither an Administrator nor a Coordinator at an institution; also what the campaign
+    /// page says to such a caller as standing content. (T248)
+    /// </summary>
+    public const string RunsCampaignsRoles =
+        "Multi-source feedback campaigns and their templates are run by a coordinator at an institution, or by an " +
+        "administrator.";
+
+    /// <summary>
+    /// Whether this caller runs any campaign at all: an Administrator, or a Coordinator at an institution, who does not
+    /// hold Trainee (<see cref="RunsNoCampaigns" />). Answered from the caller's claims, so it reads nothing. (T248)
+    /// </summary>
+    /// <remarks>
+    /// A Coordinator at no institution is reachable: an Administrator can add the role to an account that has none.
+    /// </remarks>
+    public static bool RunsCampaigns(ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        return !RunsNoCampaigns(principal) &&
+               (principal.IsAdministrator() || CampaignInstitutionOf(principal) is not null);
     }
 
     /// <summary>The refusal, at create, of a campaign about the caller themselves. (T224)</summary>

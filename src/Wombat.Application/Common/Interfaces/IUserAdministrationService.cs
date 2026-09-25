@@ -37,6 +37,24 @@ public interface IUserAdministrationService
             .ToHashSet(StringComparer.Ordinal);
     }
 
+    /// <summary>
+    /// The name and email of exactly the users asked about, whatever roles they hold: what a picker labels a person by.
+    /// A user who does not exist is left out. The default implementation reads every user; the real service overrides it
+    /// with one query by id, so a picker of an institution's trainees reads only them. (T248)
+    /// </summary>
+    async Task<IReadOnlyDictionary<string, UserContact>> GetContactsAsync(
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        return (await ListAllUsersAsync(cancellationToken))
+            .Where(user => wanted.Contains(user.UserId))
+            .ToDictionary(
+                user => user.UserId,
+                user => new UserContact(user.UserId, user.FirstName, user.LastName, user.Email),
+                StringComparer.Ordinal);
+    }
+
     Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default);
     Task UpdateScopeAsync(
         string userId,
@@ -69,3 +87,6 @@ public sealed record UserIdentityDetails(
     IReadOnlyCollection<string> Roles,
     bool IsLockedOut = false,
     bool IsDeactivated = false);
+
+/// <summary>What a picker labels a person by: their name and email, and nothing about their roles or scope. (T248)</summary>
+public sealed record UserContact(string UserId, string FirstName, string LastName, string Email);

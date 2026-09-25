@@ -7,6 +7,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Trainees;
 using Wombat.Domain.Identity;
@@ -24,7 +25,8 @@ namespace Wombat.Web.Tests.MultiSourceFeedback;
 /// Until the review the list offered them "New campaign" and "Create the first MSF campaign", and the create form a
 /// required Trainee picker with nobody in it, so a submit gave only "required" and the reason was never said
 /// (DESIGN.md § A row the caller cannot change, T211). Now both pages show the reason as standing content, in the words a
-/// create refusal gives; the list offers no "New campaign", and the create form is not shown.
+/// create refusal gives; the list offers no "New campaign", and the create form is not shown. Since T248 neither is the
+/// Quick template card, since the template command refuses them too.
 /// </remarks>
 public sealed class RunsNoCampaignsPageTests : TestContext
 {
@@ -85,7 +87,7 @@ public sealed class RunsNoCampaignsPageTests : TestContext
 
     [Theory]
     [MemberData(nameof(RolesThatBringThemHere))]
-    public void TheCreatePage_SaysWhy_AndShowsNoCreateForm_AndListsNobody(string role)
+    public void TheCreatePage_SaysWhy_AndShowsNoCreateForm_NoTemplateCard_AndAsksForNothing(string role)
     {
         SignIn(role, WombatRoles.Trainee);
 
@@ -94,16 +96,18 @@ public sealed class RunsNoCampaignsPageTests : TestContext
         StandingReason(cut).Should().Be(MsfCampaignRules.TraineeRunsNoCampaigns);
         cut.FindAll("#msf-subject, #msf-template-id, #msf-opens").Should().BeEmpty();
         cut.FindAll("button").Select(Text).Should().NotContain("Create campaign");
-        _sender.Asked.Should().NotContain(nameof(ListMsfCampaignSubjectsQuery), "no trainee is listed for them");
 
-        // The Quick template card stays: a template is about no trainee (T224 review, T225).
-        cut.FindAll("h3").Select(Text).Should().Contain("Quick template");
-        cut.FindAll("#msf-template-name").Should().ContainSingle();
-        cut.FindAll("button").Select(Text).Should().Contain("Add template");
+        // Nor the Quick template card (T248): the template command refuses them in the alert's words. Until T248 it stayed,
+        // since a template is about no trainee, and the command took no caller to refuse.
+        cut.FindAll("h3").Select(Text).Should().NotContain("Quick template");
+        cut.FindAll("#msf-template-name, #msf-template-kind").Should().BeEmpty();
+        cut.FindAll("button").Select(Text).Should().NotContain("Add template");
+
+        _sender.Asked.Should().BeEmpty("no trainee is listed for them, and no template is read for a form they are not shown");
     }
 
     [Fact]
-    public void TheCreatePage_ForSomeoneWhoHoldsNoTrainee_ShowsTheCreateForm_AndSaysNothingOfIt()
+    public void TheCreatePage_ForSomeoneWhoHoldsNoTrainee_ShowsBothForms_AndSaysNothingOfIt()
     {
         SignIn(WombatRoles.Coordinator);
 
@@ -111,7 +115,28 @@ public sealed class RunsNoCampaignsPageTests : TestContext
 
         cut.FindAll("#msf-runs-no-campaigns").Should().BeEmpty();
         cut.FindAll("#msf-subject").Should().ContainSingle();
-        cut.FindAll("button").Select(Text).Should().Contain("Create campaign");
+        cut.FindAll("button").Select(Text).Should().Contain("Create campaign").And.Contain("Add template");
+        _sender.Asked.Should().BeEquivalentTo(nameof(ListMsfCampaignSubjectsQuery), nameof(ListMsfTemplatesQuery));
+    }
+
+    /// <summary>
+    /// A Coordinator with no institution runs no campaign either (<see cref="MsfCampaignRules.RunsCampaigns" />, T248
+    /// review): an Administrator can add Coordinator to an account at no institution. The create and template commands
+    /// refuse them in <see cref="MsfCampaignRules.RunsCampaignsRoles" />'s words, so the page says that as standing content
+    /// and shows neither form, rather than a picker with nobody in it and a template form whose every press is refused.
+    /// </summary>
+    [Fact]
+    public void TheCreatePage_ForACoordinatorAtNoInstitution_SaysWhy_ShowsNeitherForm_AndAsksForNothing()
+    {
+        _auth.SetRoles(WombatRoles.Coordinator);
+        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, CallerId));
+
+        var cut = RenderComponent<CampaignEdit>();
+
+        StandingReason(cut).Should().Be(MsfCampaignRules.RunsCampaignsRoles);
+        cut.FindAll("#msf-subject, #msf-template-id, #msf-template-name").Should().BeEmpty();
+        cut.FindAll("button").Select(Text).Should().NotContain("Create campaign").And.NotContain("Add template");
+        _sender.Asked.Should().BeEmpty("nobody could be offered, and no template form is shown");
     }
 
     [Fact]
@@ -131,7 +156,9 @@ public sealed class RunsNoCampaignsPageTests : TestContext
     private void SignIn(params string[] roles)
     {
         _auth.SetRoles(roles);
-        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, CallerId));
+        _auth.SetClaims(
+            new Claim(ClaimTypes.NameIdentifier, CallerId),
+            new Claim(WombatClaimTypes.InstitutionId, "1"));
     }
 
     /// <summary>The standing reason: a warning with no live role, since it is there on every visit (DESIGN.md, T193).</summary>
@@ -152,10 +179,7 @@ public sealed class RunsNoCampaignsPageTests : TestContext
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
-            if (request is not ListMsfTemplatesQuery)
-            {
-                Asked.Add(request.GetType().Name);
-            }
+            Asked.Add(request.GetType().Name);
 
             object? response = request switch
             {

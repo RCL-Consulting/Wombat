@@ -5,6 +5,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Trainees;
 using Wombat.Domain.Identity;
@@ -45,7 +46,9 @@ public sealed class LearnerFeedbackPageTests : TestContext
         var auth = this.AddTestAuthorization();
         auth.SetAuthorized("coordinator@test");
         auth.SetRoles(WombatRoles.Coordinator);
-        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "coordinator-1"));
+        auth.SetClaims(
+            new Claim(ClaimTypes.NameIdentifier, "coordinator-1"),
+            new Claim(WombatClaimTypes.InstitutionId, "1"));
         _auth = auth;
 
         Services.AddSingleton<IScopedSender>(_sender);
@@ -129,6 +132,8 @@ public sealed class LearnerFeedbackPageTests : TestContext
         command.Kind.Should().Be(MsfTemplateKind.LearnerFeedback);
         command.Name.Should().Be("Learner feedback (interim questionnaire)");
         command.AllowPatientResponses.Should().BeFalse();
+        command.Principal.FindFirst(ClaimTypes.NameIdentifier)!.Value.Should().Be(
+            "coordinator-1", "the command refuses a caller who runs no campaigns, so it is sent as the caller (T248)");
     }
 
     // ─── Inviting ────────────────────────────────────────────────────────────

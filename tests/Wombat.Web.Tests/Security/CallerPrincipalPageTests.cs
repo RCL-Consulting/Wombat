@@ -8,6 +8,7 @@ using Wombat.Application.Features.Accounts;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Trainees;
 using Wombat.Domain.EntrustmentDecisions;
@@ -294,6 +295,9 @@ public sealed class CallerPrincipalPageTests : TestContext
         // The select's value arrives from the browser. The reference service answers any id, so a value edited in the
         // page would read another institution's trainee's curriculum and confirm that the id names someone.
         SignIn(CoordinatorUserId, WombatRoles.Coordinator);
+        _auth.SetClaims(
+            new Claim(ClaimTypes.NameIdentifier, CoordinatorUserId),
+            new Claim(WombatClaimTypes.InstitutionId, "1"));
         StubTheEditorsLists();
 
         var cut = RenderComponent<CampaignEdit>();

@@ -458,9 +458,9 @@ public sealed class LearnerFeedbackCampaignTests
         var validator = new CreateMsfTemplateCommandValidator();
         var questions = new[] { new CreateMsfTemplateQuestionItem("Teaching overall", MsfQuestionType.Scale, null, true) };
 
-        validator.TestValidate(new CreateMsfTemplateCommand("Learner feedback", null, true, questions, MsfTemplateKind.LearnerFeedback))
+        validator.TestValidate(new CreateMsfTemplateCommand("Learner feedback", null, true, questions, Coordinator(), MsfTemplateKind.LearnerFeedback))
             .ShouldHaveValidationErrorFor(command => command.AllowPatientResponses);
-        validator.TestValidate(new CreateMsfTemplateCommand("Learner feedback", null, false, questions, MsfTemplateKind.LearnerFeedback))
+        validator.TestValidate(new CreateMsfTemplateCommand("Learner feedback", null, false, questions, Coordinator(), MsfTemplateKind.LearnerFeedback))
             .ShouldNotHaveAnyValidationErrors();
     }
 

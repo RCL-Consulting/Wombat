@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Wombat.Application.Common.Interfaces;
@@ -7,6 +8,10 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 
 public sealed record CreateMsfTemplateQuestionItem(string Prompt, MsfQuestionType Type, int? ScaleId, bool Required);
 
+/// <param name="Principal">
+/// The caller, who must run campaigns (<see cref="MsfCampaignRules.EnsureRunsCampaigns" />, T248): a Coordinator at an
+/// institution or an Administrator, and never someone who holds Trainee.
+/// </param>
 /// <param name="Kind">
 /// What the questionnaire collects (T164, D35): multi-source feedback, or learner feedback, which only learners answer and
 /// whose release records <c>learner_feedback_cpsa</c> evidence. Fixed for the template's life.
@@ -16,6 +21,7 @@ public sealed record CreateMsfTemplateCommand(
     int? SpecialityId,
     bool AllowPatientResponses,
     IReadOnlyList<CreateMsfTemplateQuestionItem> Questions,
+    ClaimsPrincipal Principal,
     MsfTemplateKind Kind = MsfTemplateKind.Msf) : IRequest<MsfTemplateDto>;
 
 public sealed class CreateMsfTemplateCommandValidator : AbstractValidator<CreateMsfTemplateCommand>
@@ -48,6 +54,10 @@ public sealed class CreateMsfTemplateCommandHandler : IRequestHandler<CreateMsfT
 
     public async Task<MsfTemplateDto> Handle(CreateMsfTemplateCommand request, CancellationToken cancellationToken)
     {
+        // Before the template is built, let alone added (T248): the audit pipeline saves the request's context from its
+        // catch, so a refusal after the Add would store the template it refused.
+        MsfCampaignRules.EnsureRunsCampaigns(request.Principal);
+
         var template = new MsfTemplate
         {
             Name = request.Name.Trim(),

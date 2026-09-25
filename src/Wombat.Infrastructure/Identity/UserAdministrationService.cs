@@ -77,6 +77,33 @@ public sealed class UserAdministrationService : IUserAdministrationService
     }
 
     /// <summary>
+    /// One query over exactly the users asked about, reading only their names and emails: the campaign form's trainee
+    /// picker labels an institution's current trainees by it, and would otherwise read each one's account and roles in
+    /// turn (T248).
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, UserContact>> GetContactsAsync(
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (userIds.Count == 0)
+        {
+            return new Dictionary<string, UserContact>(StringComparer.Ordinal);
+        }
+
+        var ids = userIds.Distinct(StringComparer.Ordinal).ToArray();
+        var users = await _dbContext.Users
+            .AsNoTracking()
+            .Where(entity => ids.Contains(entity.Id))
+            .Select(entity => new { entity.Id, entity.FirstName, entity.LastName, entity.Email })
+            .ToListAsync(cancellationToken);
+
+        return users.ToDictionary(
+            user => user.Id,
+            user => new UserContact(user.Id, user.FirstName, user.LastName, user.Email ?? string.Empty),
+            StringComparer.Ordinal);
+    }
+
+    /// <summary>
     /// One query over the role links of exactly the users asked about, never the role's whole listing: who may sit on a
     /// decision panel asks it of the committee members at one institution, and would otherwise load every trainee in the
     /// country with their scopes on each review page (T237).

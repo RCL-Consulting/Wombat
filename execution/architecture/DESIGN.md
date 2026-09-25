@@ -889,18 +889,24 @@ Trainee). So it offers no graduate, no trainee who has withdrawn or moved away, 
 role, and no erased trainee's pseudonym, and a crafted create for any of them is refused before anything is written, in
 the words a trainee elsewhere gets (an Administrator is told "…only be run for a trainee in a programme now…"). A
 campaign already created stays one its coordinator can close, release or withdraw after its trainee's programme ends.
-The campaign page answers a campaign about the caller as it answers an id that names nothing (its "Campaign
-unavailable" card), the campaign list leaves those campaigns out, and the report is theirs only as the released
-trainee's copy.
+The picker and the create ask one predicate (`MsfCampaignRules.MayStartCampaignAbout`, T248), and the page lists no
+trainee on a campaign's own page, which has no create form. The campaign page answers a campaign about the caller as it
+answers an id that names nothing (its "Campaign unavailable" card), the campaign list leaves those campaigns out, and
+the report is theirs only as the released trainee's copy.
 
 Someone who holds Trainee is told so, whatever role brought them there (`MsfCampaignRules.RunsNoCampaigns`; § A row
 the caller cannot change). The campaign list and the campaign page open with a standing `Alert` (`Kind="warning"`,
 `Role=""`, `#msf-runs-no-campaigns`) in the words a create refusal gives (`MsfCampaignRules.TraineeRunsNoCampaigns`).
 The list then offers no "New campaign" and no empty card, and asks for nothing. The campaign page shows no create card
-and lists no trainee; on a campaign's own page the alert sits above its "Campaign unavailable" card. The create page's
-Quick template card stays, because a template is about no trainee. The MSF Campaigns nav link stays too, as Committee
-Reviews and Decisions due stay for the same people (T185); the page it opens now says why nothing is there. (T224
-review)
+and lists no trainee; on a campaign's own page the alert sits above its "Campaign unavailable" card. The create page
+shows them no Quick template card either, and reads no template list: creating a template is running campaigns, and the
+template command refuses them in the alert's words (`MsfCampaignRules.EnsureRunsCampaigns`, T248; until then the card
+stayed, since a template is about no trainee, and the command took no caller to refuse). A Coordinator at no
+institution (an Administrator can add the role to such an account) runs no campaign either
+(`MsfCampaignRules.RunsCampaigns`): the campaign page gives them the same standing alert in the words the create and
+template commands refuse them in (`MsfCampaignRules.RunsCampaignsRoles`), and neither form (T248 review). The MSF
+Campaigns nav link stays, as Committee Reviews and Decisions due stay for the same people (T185); the page it opens
+now says why nothing is there. (T224 review)
 
 **The MSF campaign list's row links** (T225, `/msf/campaigns`) are named by what their page lets the coordinator do in
 the row's state, in the campaign page's words (`MsfCampaignText.CampaignLinkLabel`, `ReportLinkLabel`), never "Edit" in

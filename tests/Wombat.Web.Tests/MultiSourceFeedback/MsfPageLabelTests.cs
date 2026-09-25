@@ -5,6 +5,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Features.Trainees;
 using Wombat.Domain.Identity;
@@ -38,7 +39,9 @@ public sealed class MsfPageLabelTests : TestContext
         var auth = this.AddTestAuthorization();
         auth.SetAuthorized("coordinator@test");
         auth.SetRoles(WombatRoles.Coordinator);
-        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "coordinator-1"));
+        auth.SetClaims(
+            new Claim(ClaimTypes.NameIdentifier, "coordinator-1"),
+            new Claim(WombatClaimTypes.InstitutionId, "1"));
 
         Services.AddSingleton<IScopedSender>(new FakeSender());
         Services.AddSingleton<IActivityReferenceDataService>(new ReferenceData());

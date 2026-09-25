@@ -52,11 +52,14 @@ public sealed class ListMsfCampaignSubjectsQueryHandler
                     .ThenInclude(subSpeciality => subSpeciality.Speciality)
             .ToListAsync(cancellationToken);
 
+        // One read of exactly these accounts' names and emails, not one account and its roles per trainee (T248 review).
+        var contacts = await _users.GetContactsAsync(subjectUserIds, cancellationToken);
+
         var offered = new List<TraineeProfileDto>(profiles.Count);
         foreach (var profile in profiles)
         {
             // Every current trainee has an account; one removed since the rule was read is left out, not shown by id.
-            if (await _users.GetByIdAsync(profile.UserId, cancellationToken) is not { } user)
+            if (!contacts.TryGetValue(profile.UserId, out var user))
             {
                 continue;
             }
