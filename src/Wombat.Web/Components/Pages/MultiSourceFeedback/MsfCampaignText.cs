@@ -29,6 +29,41 @@ public static class MsfCampaignText
         => $"The campaign for {describedCampaign} has been withdrawn. Its respondents' links no longer work, and their " +
            "email addresses have been removed.";
 
+    /// <summary>
+    /// The link to the campaign's own page, named by what it lets the coordinator do (T225): a draft or an open campaign
+    /// is managed there (invitees, Open, Withdraw); any other is only shown there. Until T225 every row of the campaign
+    /// list read "Edit", whatever the state.
+    /// </summary>
+    public static string CampaignLinkLabel(MsfCampaignState state)
+        => state is MsfCampaignState.Draft or MsfCampaignState.Open ? "Manage" : "View campaign";
+
+    /// <summary>
+    /// The link to the campaign's report, named by what the coordinator goes there to do (T217, T225): one closed and
+    /// under review is reviewed and released there; an open or a released one's report is there to read, and an open
+    /// one is closed there. Null for a draft, which has no responses to report, and for a withdrawn campaign, which will
+    /// never be released: neither page offers a report link on those.
+    /// </summary>
+    public static string? ReportLinkLabel(MsfCampaignState state)
+        => state switch
+        {
+            MsfCampaignState.Closed or MsfCampaignState.UnderReview => "Review and release",
+            MsfCampaignState.Open or MsfCampaignState.Released => "View report",
+            _ => null
+        };
+
+    /// <summary>
+    /// A row link's accessible name: its visible label first, then the campaign it acts on, since a column of identical
+    /// "Manage" links is otherwise indistinguishable to a screen reader (DESIGN.md § Button system, T206, T225).
+    /// </summary>
+    public static string RowLinkName(string label, string describedCampaign)
+        => $"{label}: the campaign for {describedCampaign}";
+
+    /// <summary>
+    /// Why Open campaign is disabled on a draft that invites nobody (T225, the T107 pattern): opening mails each invitee
+    /// a link, and the handler refuses a campaign with none.
+    /// </summary>
+    public const string OpenNeedsInvitees = "add at least one invitee first. Opening the campaign emails each invitee a link to respond.";
+
     /// <summary>The state in words: "Under review", not the enum's "UnderReview" (T217).</summary>
     public static string State(MsfCampaignState state)
         => state switch

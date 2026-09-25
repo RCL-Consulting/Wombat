@@ -38,14 +38,16 @@ public sealed class CampaignOpenInFlightTests : TestContext
     }
 
     [Fact]
-    public void WhileAnOpenRuns_TheOpenAndAddButtonsAreDisabled_AndSayWhy()
+    public void WhileAnOpenRuns_OpenSaysSo_AndKeepsTheFocus_AndAddIsDisabled()
     {
         var sender = new HeldOpenSender();
         var cut = Render(sender);
 
         OpenButton(cut).Click();
 
-        OpenButton(cut).HasAttribute("disabled").Should().BeTrue();
+        // Not disabled (T225 review): it has the focus, and a browser drops the focus of a button it disables, to the
+        // page, where a refused open that leaves the button would leave it. A second click sends nothing (below).
+        OpenButton(cut).HasAttribute("disabled").Should().BeFalse();
         OpenButton(cut).TextContent.Trim().Should().Be("Opening campaign…");
         AddButton(cut).HasAttribute("disabled").Should().BeTrue("an invitee added mid-open would be left out of the mailing");
 
@@ -106,6 +108,8 @@ public sealed class CampaignOpenInFlightTests : TestContext
 
         cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Should().ContainSingle());
         OpenButton(cut).HasAttribute("disabled").Should().BeFalse();
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "Blazor._internal.domWrapper.focus",
+            "the Open button that had the focus is still there, never disabled, so it keeps it for the retry (T225 review)");
 
         OpenButton(cut).Click();
         sender.Opens.Should().Be(2, "the retry the refusal asks for is sent");
@@ -158,9 +162,13 @@ public sealed class CampaignOpenInFlightTests : TestContext
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
                 ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[],
+                // Someone is invited: Open is disabled on a draft that invites nobody (T225).
                 GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
                     setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, _state,
-                    [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse]),
+                    [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse])
+                {
+                    Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 3, 0)]
+                },
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

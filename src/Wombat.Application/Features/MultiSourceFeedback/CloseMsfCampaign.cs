@@ -56,9 +56,11 @@ public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCam
 
     /// <summary>
     /// The refusal when the campaign changed between being read and the save: it was closed or withdrawn elsewhere, or a
-    /// respondent was sent a reminder. Nothing is stored. (T214 review)
+    /// respondent was sent a reminder. Nothing this attempt did is stored. (T214 review) Shown on the report page, which
+    /// reads the campaign again and shows its state, so it names no other page (T225, as T217 worded open and withdraw).
+    /// It says "this attempt", not "it has not been closed": closed elsewhere, it has been.
     /// </summary>
     public const string CampaignChanged =
         "The campaign changed while it was being closed: it was closed or withdrawn elsewhere, or a respondent was sent " +
-        "a reminder. It has not been closed. If the campaigns list still shows it as open, close it again.";
+        "a reminder. This attempt did not close it. If it is still open, close it again.";
 }

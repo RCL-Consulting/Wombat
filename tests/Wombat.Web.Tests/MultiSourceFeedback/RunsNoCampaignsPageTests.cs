@@ -90,6 +90,11 @@ public sealed class RunsNoCampaignsPageTests : TestContext
         cut.FindAll("#msf-subject, #msf-template-id, #msf-opens").Should().BeEmpty();
         cut.FindAll("button").Select(Text).Should().NotContain("Create campaign");
         _sender.Asked.Should().NotContain(nameof(ListTraineesForSpecialityQuery), "no trainee is listed for them");
+
+        // The Quick template card stays: a template is about no trainee (T224 review, T225).
+        cut.FindAll("h3").Select(Text).Should().Contain("Quick template");
+        cut.FindAll("#msf-template-name").Should().ContainSingle();
+        cut.FindAll("button").Select(Text).Should().Contain("Add template");
     }
 
     [Fact]

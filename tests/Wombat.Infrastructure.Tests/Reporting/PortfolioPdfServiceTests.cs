@@ -125,6 +125,26 @@ public sealed class PortfolioPdfServiceTests
     }
 
     /// <summary>
+    /// T225: the feedback section names each respondent group by its label, as the report page does, never by the key it
+    /// stores. A peer doctor's line read "PeerDoctor: 1 responses", and an allied health professional's "Ahp: …".
+    /// </summary>
+    [Fact]
+    public async Task TheFeedbackSection_NamesEachRespondentGroupByItsLabel()
+    {
+        await using var db = SeededDb();
+        SeedReleasedCampaign(db, categories: [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Ahp]);
+
+        var service = new PortfolioPdfService(db, new MsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+
+        var text = string.Join("\f", PdfTextLayer.Pages((await service.GenerateAsync(request, CancellationToken.None)).PdfBytes));
+        text.Should().Contain("Peer doctor:")
+            .And.Contain("Allied health professional:")
+            .And.NotContain("PeerDoctor")
+            .And.NotContain("Ahp:");
+    }
+
+    /// <summary>
     /// T164 review, after T186: the PDF reads a learner-feedback campaign's recorded EPAs from the rows of the type its
     /// release writes. A <c>learner_feedback_cpsa</c> row naming it records PAED-001; an <c>msf_cpsa</c> row naming it,
     /// which no learner-feedback release writes, records PAED-002 for nothing.
@@ -468,7 +488,10 @@ public sealed class PortfolioPdfServiceTests
     }
 
     private static MsfCampaign SeedReleasedCampaign(
-        ApplicationDbContext db, MsfTemplateKind kind = MsfTemplateKind.Msf, int[]? coveredEpaIds = null)
+        ApplicationDbContext db,
+        MsfTemplateKind kind = MsfTemplateKind.Msf,
+        int[]? coveredEpaIds = null,
+        MsfRespondentCategory[]? categories = null)
     {
         var learnerFeedback = kind == MsfTemplateKind.LearnerFeedback;
         var template = new MsfTemplate
@@ -497,7 +520,9 @@ public sealed class PortfolioPdfServiceTests
 
         var respondents = learnerFeedback
             ? new[] { (MsfRespondentCategory.Learner, (string?)"Ward round"), (MsfRespondentCategory.Learner, "Student tutorial") }
-            : [(MsfRespondentCategory.Consultant, null), (MsfRespondentCategory.Nurse, null)];
+            : (categories ?? [MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse])
+                .Select(category => (category, (string?)null))
+                .ToArray();
 
         foreach (var (category, teachingContext) in respondents)
         {

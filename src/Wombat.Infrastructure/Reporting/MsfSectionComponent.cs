@@ -115,7 +115,8 @@ internal static class MsfSectionComponent
 
             column.Item().Text(text =>
             {
-                text.Span($"{category.Category}: ").FontSize(9).Bold();
+                // By the group's label, never its key (T225): "Peer doctor", not "PeerDoctor".
+                text.Span($"{MsfRespondentCategories.Describe(category.Category)}: ").FontSize(9).Bold();
                 text.Span($"{category.ResponseCount} responses").FontSize(9);
             });
 

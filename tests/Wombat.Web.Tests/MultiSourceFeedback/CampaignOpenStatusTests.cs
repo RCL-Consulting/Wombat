@@ -83,10 +83,14 @@ public sealed class CampaignOpenStatusTests : TestContext
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
                 ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[],
+                // Someone is invited: Open is disabled on a draft that invites nobody (T225).
                 GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
                     setup.CampaignId, "Default MSF", MsfTemplateKind.Msf,
                     Opened.Count > 0 ? MsfCampaignState.Open : MsfCampaignState.Draft,
-                    [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse]),
+                    [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse])
+                {
+                    Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 3, 0)]
+                },
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

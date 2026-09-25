@@ -2,10 +2,11 @@ using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
-/// <summary>What each respondent group is called on a page. (T217)</summary>
+/// <summary>What each respondent group is called on a page and in the portfolio. (T217, T225)</summary>
 /// <remarks>
 /// An option is shown by its label, never by the key it stores (DESIGN.md § Form system, T191): the campaign form offered
-/// "PeerDoctor" and "Ahp". The report's category headings and the portfolio PDF still print the key.
+/// "PeerDoctor" and "Ahp". The report's category headings, the trainee's copy of it and the portfolio PDF printed the key
+/// until T225.
 /// </remarks>
 public static class MsfRespondentCategories
 {

@@ -52,6 +52,10 @@
         </tr>
       </HeaderRow>
       <Row Context="item">
+        @{
+          var campaignLink = MsfCampaignText.CampaignLinkLabel(item.State);
+          var reportLink = MsfCampaignText.ReportLinkLabel(item.State);
+        }
         <tr>
           <td>@item.SubjectName</td>
           <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
@@ -60,8 +64,17 @@
           <td>@item.ResponseCount</td>
           <td>@item.ClosesOn.ToString("yyyy-MM-dd")</td>
           <td class="actions-cell">
-            <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")">Edit</a>
-            <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")">Report</a>
+            @* Each link is named by what its page lets the coordinator do in this state, in the campaign page's words
+               (T225): "Manage" a draft or an open campaign, "View campaign" otherwise; "Review and release" one under
+               review, "View report" an open or a released one, and no report link on a draft or a withdrawn campaign,
+               as the campaign page offers none there (T217). Until T225 every row read "Edit" and "Report". *@
+            <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")"
+               aria-label="@MsfCampaignText.RowLinkName(campaignLink, Describe(item))">@campaignLink</a>
+            @if (reportLink is not null)
+            {
+              <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")"
+                 aria-label="@MsfCampaignText.RowLinkName(reportLink, Describe(item))">@reportLink</a>
+            }
             @if (CanWithdraw(item))
             {
               @* The accessible name starts with the visible label and says which row it acts on (T206). *@

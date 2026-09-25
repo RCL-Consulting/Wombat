@@ -10,17 +10,23 @@
 
 <PageHeader Title="MSF report" Subtitle="Review aggregate results and release them to the trainee." />
 
-@if (!string.IsNullOrWhiteSpace(_status))
-{
-  <Alert Kind="success">@_status</Alert>
-}
+@* What Close campaign or Release to trainee did, as on the campaign page (T217, T225). Given the focus whenever the
+   button that acted is gone: a closed campaign has no Close campaign, a released one no Release to trainee. The focus
+   would otherwise fall to the page. Until T225 an action's refusal was also the panel's load error, so a refused close
+   hid the whole report and showed its refusal twice. *@
+<div @ref="_result" class="action-result" tabindex="-1">
+  @if (!string.IsNullOrWhiteSpace(_status))
+  {
+    <Alert Kind="success" Role="status">@_status</Alert>
+  }
 
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger">@_error</Alert>
-}
+  @if (!string.IsNullOrWhiteSpace(_actionError))
+  {
+    <Alert Kind="danger" Role="alert">@_actionError</Alert>
+  }
+</div>
 
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _report is null)" EmptyTitle="Report unavailable" EmptyBody="The selected report could not be loaded.">
+<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _report is null)" EmptyTitle="Report unavailable" EmptyBody="The selected report could not be loaded.">
   @if (_report is not null)
   {
     <div class="details-grid">
@@ -99,14 +105,17 @@
               </InputSelect>
             </FormField>
           }
+          @* Neither is disabled while it runs (T225 review, as Add invitee since T228): the button pressed has the focus,
+             and a browser drops the focus of a button it disables, to the page, where a refusal that leaves the button
+             would leave it. The page refuses a second press instead (_acting). *@
           <FormActions>
             @if (_report.State == MsfCampaignState.Open)
             {
-              <button type="button" class="btn btn-outline" @onclick="CloseAsync">Close campaign</button>
+              <button id="msf-close-campaign" type="button" class="btn btn-outline" @onclick="CloseAsync">Close campaign</button>
             }
             @if (_report.State == MsfCampaignState.UnderReview)
             {
-              <button type="submit" class="btn btn-primary" disabled="@(!_report.ReadyForRelease)">Release to trainee</button>
+              <button id="msf-release-campaign" type="submit" class="btn btn-primary" disabled="@(!_report.ReadyForRelease)">Release to trainee</button>
             }
           </FormActions>
         </EditForm>
@@ -116,7 +125,8 @@
     @foreach (var category in _report.Categories)
     {
       <section class="detail-card">
-        <h3>@category.Category</h3>
+        @* By the group's label, never its key (T225): "Peer doctor", not "PeerDoctor". *@
+        <h3>@MsfRespondentCategories.Describe(category.Category)</h3>
         @if (category.IsSuppressed)
         {
           <Alert Kind="warning" Role="">Insufficient responses in this category. Results are suppressed.</Alert>
@@ -162,7 +172,29 @@
   private ReviewFormModel _review = new();
   private bool _loading = true;
   private string? _status;
-  private string? _error;
+
+  /// <summary>
+  /// Why the report could not be read at all, on arriving or after an action that was taken. The panel shows it in place
+  /// of the report.
+  /// </summary>
+  private string? _loadError;
+
+  /// <summary>Why Close campaign or Release to trainee was refused. Shown above the report, which stays. (T225)</summary>
+  private string? _actionError;
+
+  /// <summary>
+  /// A close or a release has been sent and has not yet answered, so neither may be sent again (T225). The buttons stay
+  /// enabled meanwhile, so the one pressed keeps the focus (T225 review); this flag is what refuses a second press.
+  /// </summary>
+  private bool _acting;
+
+  private ElementReference _result;
+
+  /// <summary>An action has answered and its button is gone, so its result takes the focus after the next render.</summary>
+  private bool _focusResult;
+
+  /// <summary>The region holding an action's result, which takes the focus once it has answered. For its tests.</summary>
+  internal ElementReference ResultRegion => _result;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -190,7 +222,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _loadError = exception.Message;
     }
   }
 
@@ -213,7 +245,7 @@
   private async Task LoadAsync()
   {
     _loading = true;
-    _error = null;
+    _loadError = null;
 
     try
     {
@@ -227,7 +259,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _loadError = exception.Message;
     }
     finally
     {
@@ -235,8 +267,50 @@
     }
   }
 
+  /// <summary>
+  /// The report as it is now, read again after an action, refused or not (T225, as the campaign page does since T217): a
+  /// refusal is likeliest because the campaign changed elsewhere, and the page should show what it is now. The report
+  /// already shown stays in view while it is read, and the narrative and level typed are kept.
+  /// </summary>
+  /// <remarks>
+  /// An action's refusal is kept over a failed read that follows it: it says why the action was not taken, and the panel
+  /// then says the report is unavailable. After an action that was taken, a failed read is the panel's load error, as it
+  /// is on arriving: it is not a refusal, so it is not shown as one beside the action's result (T225 review).
+  /// </remarks>
+  private async Task ReadReportAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId, authState.User));
+    }
+    catch (Exception exception)
+    {
+      _report = null;
+      if (_actionError is null)
+      {
+        _loadError = exception.Message;
+      }
+    }
+  }
+
+  /// <remarks>
+  /// Sent at most once at a time, as the campaign page's open is (T202): the flag is set before the first await, so a
+  /// second click while this close runs sends nothing. The button is not disabled meanwhile, so a refusal on a campaign
+  /// still open leaves the focus on it, for the retry (T225 review). After a refusal the report is read again, so the
+  /// refusal (<see cref="CloseMsfCampaignCommandHandler.CampaignChanged" />) names no other page (T225).
+  /// </remarks>
   private async Task CloseAsync()
   {
+    if (_acting)
+    {
+      return;
+    }
+
+    _acting = true;
+    _status = null;
+    _actionError = null;
+
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -245,12 +319,29 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _actionError = exception.Message;
+      await ReadReportAsync();
     }
+    finally
+    {
+      _acting = false;
+    }
+
+    // Close campaign is offered only on an open campaign, so it is gone unless the close was refused on one still open.
+    _focusResult = _report is not { State: MsfCampaignState.Open };
   }
 
   private async Task ReleaseAsync()
   {
+    if (_acting)
+    {
+      return;
+    }
+
+    _acting = true;
+    _status = null;
+    _actionError = null;
+
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -263,12 +354,33 @@
         ?? throw new InvalidOperationException("The current user identifier is missing.");
 
       await Sender.Send(new ReleaseMsfCampaignCommand(CampaignId, userId, _review.Narrative, _review.EntrustmentLevel, principal));
-      await LoadAsync();
       _status = "Report released to the trainee.";
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _actionError = exception.Message;
+    }
+
+    try
+    {
+      await ReadReportAsync();
+    }
+    finally
+    {
+      _acting = false;
+    }
+
+    // Release to trainee is offered only on a campaign under review, so it is gone once released, here or elsewhere, and
+    // it is disabled on one no longer ready for release; either way the focus it had is lost (T225 review).
+    _focusResult = _report is not { State: MsfCampaignState.UnderReview, ReadyForRelease: true };
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult)
+    {
+      _focusResult = false;
+      await _result.FocusAsync();
     }
   }
 

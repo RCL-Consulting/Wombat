@@ -647,7 +647,8 @@ semester 1 only from its release.
 
 **The MSF campaign page** (T217, `/msf/campaigns/{id}`). Its campaign card shows the campaign as it is now and offers
 only what its state allows. It is read again after every action on the page, refused or not: a refusal is likeliest
-because the campaign changed elsewhere. The card holds:
+because the campaign changed elsewhere. The Quick template card is only on the create page, `/msf/campaigns/new`: a
+campaign that exists already has its questionnaire, and its page reads no template list (T225). The card holds:
 
 - A `details-list`: Trainee (by name), Template (with its kind), State (a badge) and Response window. Then one sentence
   saying what the state means and what comes next: an open campaign names its respondents' last day to respond and says
@@ -665,14 +666,21 @@ because the campaign changed elsewhere. The card holds:
 - One `.form-actions` row, with nothing a state does not allow: a draft has Withdraw campaign and Open campaign; an
   open campaign has Withdraw campaign and a "View report" link, where it is closed; a closed one under review has a
   "Review and release" link; a released one "View report"; a withdrawn one has no row. Withdraw is where the campaign
-  list offers it (T206), behind the same `ConfirmDialog` wording (`MsfCampaignText`).
+  list offers it (T206), behind the same `ConfirmDialog` wording (`MsfCampaignText`). On a draft that invites nobody,
+  Open campaign is shown **disabled** with its reason (the T107 pattern above, T225): no click handler, and
+  `aria-describedby="msf-open-reason"`, a `.workflow-action-reasons` list below the row reading "Open campaign: add at
+  least one invitee first…" (`MsfCampaignText.OpenNeedsInvitees`). The handler's refusal of a campaign with no invitee
+  stays the rule; until T225 the button was enabled and the refusal came only after the press.
 - An action's result is an `Alert` in an `.action-result` region that takes the focus once it has answered, whenever
   the button that sent it is gone: after an open or a withdraw, and after an invitee add refused because the campaign
   was opened or withdrawn elsewhere (its form is gone). A refused open on a campaign that is still a draft leaves the
   focus on Open, for the retry; an add on a draft leaves it in the form. An address the campaign already invites, in any
   capitals, is refused the same way (T228): a `role="alert"` refusal naming no address, with the address left typed to
-  correct and nobody counted. While an open or a withdraw is in flight, Open,
-  Withdraw campaign and Add invitee are disabled and a second click sends nothing. While an invitee add is in flight,
+  correct and nobody counted. While an open is in flight, Withdraw campaign and Add invitee are disabled, and Open reads
+  "Opening campaign…" but stays enabled and a second click on it sends nothing (T225 review): it holds the focus, and a
+  browser drops the focus of a button it disables, to the page (observed in Chrome), so a refused open would otherwise
+  leave the focus nowhere. While a withdraw is in flight, Open, Withdraw campaign and Add invitee are disabled (the focus
+  is in the dialog). While an invitee add is in flight,
   Open and Withdraw campaign are disabled and a second Enter or click on Add invitee sends nothing (T228 review); Add
   invitee itself stays enabled, because it may hold the focus that a refusal on a draft leaves in place. A refusal is kept
   when the campaign cannot then be read again: the card says it could not be loaded, and the refusal says why the action
@@ -689,9 +697,40 @@ Someone who holds Trainee is told so, whatever role brought them there (`MsfCamp
 the caller cannot change). The campaign list and the campaign page open with a standing `Alert` (`Kind="warning"`,
 `Role=""`, `#msf-runs-no-campaigns`) in the words a create refusal gives (`MsfCampaignRules.TraineeRunsNoCampaigns`).
 The list then offers no "New campaign" and no empty card, and asks for nothing. The campaign page shows no create card
-and lists no trainee; on a campaign's own page the alert sits above its "Campaign unavailable" card. The Quick template
-card stays, because a template is about no trainee. The MSF Campaigns nav link stays too, as Committee Reviews and
-Decisions due stay for the same people (T185); the page it opens now says why nothing is there. (T224 review)
+and lists no trainee; on a campaign's own page the alert sits above its "Campaign unavailable" card. The create page's
+Quick template card stays, because a template is about no trainee. The MSF Campaigns nav link stays too, as Committee
+Reviews and Decisions due stay for the same people (T185); the page it opens now says why nothing is there. (T224
+review)
+
+**The MSF campaign list's row links** (T225, `/msf/campaigns`) are named by what their page lets the coordinator do in
+the row's state, in the campaign page's words (`MsfCampaignText.CampaignLinkLabel`, `ReportLinkLabel`), never "Edit" in
+every state:
+
+| Campaign state | Campaign page link | Report link |
+|---|---|---|
+| Draft | Manage | none |
+| Open | Manage | View report |
+| Closed, Under review | View campaign | Review and release |
+| Released | View campaign | View report |
+| Withdrawn | View campaign | none |
+
+A draft has no responses to report and a withdrawn campaign is never released, so neither row links to a report, as
+the campaign page offers none there. Each link's `aria-label` starts with its visible label and names the row
+("Manage: the campaign for Sipho Dlamini (Annual MSF, closing 2029-03-21)", `MsfCampaignText.RowLinkName`), as the row's
+Withdraw button does (T206).
+
+**The MSF report page** (`/msf/reports/{id}`) names each respondent group by its label ("Peer doctor", never
+"PeerDoctor"), as its card headings, as the trainee's copy (`/msf/my-reports`) and as the portfolio PDF print it
+(`MsfRespondentCategories.Describe`, T225). Close campaign and Release to trainee put their result in an
+`.action-result` region above the report, which takes the focus when the button that acted is gone, as on the campaign
+page; a load failure is the `StatePanel`'s, including a read that fails after an action that was taken, and a refusal
+never replaces the report. Neither can be sent twice at once, and neither is disabled while it runs (T225 review, as Add
+invitee): the page refuses the second press, and the button pressed keeps the focus, so a refusal that leaves it (a
+close refused on a campaign still open, a release refused on one still ready) leaves the focus on it for the retry.
+Release to trainee is disabled only on a report not ready for release; a refused release that finds it no longer ready
+moves the focus to the result. After a refused close or release the report is read again, keeping the narrative and
+level typed, so a refusal names no other page: "If it is still open, close it again."
+(`CloseMsfCampaignCommandHandler.CampaignChanged`, worded as T217's open and withdraw refusals).
 
 The state's words are `MsfCampaignText.State` ("Under review", never the enum's "UnderReview"), which the campaign list
 and the report print too. Its badge is `MsfCampaignText.StateBadge`:

@@ -37,36 +37,42 @@
 </div>
 
 <div class="details-grid">
-  <section class="detail-card">
-    <h3>Quick template</h3>
-    <EditForm Model="_template" OnValidSubmit="CreateTemplateAsync" FormName="msf-template">
-      <DataAnnotationsValidator />
-      <ValidationSummary class="validation-summary-errors" />
-      <div class="form-grid">
-        @* T164, D35: learner feedback is a template of its own kind. Only learners answer it, and its release records
-           learner-feedback evidence, not multi-source feedback. *@
-        <FormField Label="Kind" InputId="msf-template-kind" Required="true"
-                   HelpText="Learner feedback is answered only by people the trainee taught, and is recorded as learner feedback, not as multi-source feedback.">
-          <InputSelect id="msf-template-kind" class="form-select" aria-describedby="@FieldHelp.Id("msf-template-kind")" @bind-Value="_template.Kind" @bind-Value:after="OnTemplateKindChanged">
-            <option value="@MsfTemplateKind.Msf">@MsfEvidenceKinds.Describe(MsfTemplateKind.Msf)</option>
-            <option value="@MsfTemplateKind.LearnerFeedback">@MsfEvidenceKinds.Describe(MsfTemplateKind.LearnerFeedback)</option>
-          </InputSelect>
-        </FormField>
-        <FormField Label="Template name" InputId="msf-template-name" Required="true">
-          <InputText id="msf-template-name" class="form-control" @bind-Value="_template.Name" />
-        </FormField>
-        <FormField Label="Scale question" InputId="msf-template-scale" Required="true">
-          <InputText id="msf-template-scale" class="form-control" @bind-Value="_template.ScalePrompt" />
-        </FormField>
-        <FormField Label="Comment question" InputId="msf-template-comment" Required="true">
-          <InputText id="msf-template-comment" class="form-control" @bind-Value="_template.CommentPrompt" />
-        </FormField>
-      </div>
-      <FormActions>
-        <button type="submit" class="btn btn-outline">Add template</button>
-      </FormActions>
-    </EditForm>
-  </section>
+  @* The Quick template card only where a campaign is being created (T225): a template is chosen at create, and a
+     campaign that exists already has its questionnaire. Until T225 it sat beside every campaign's own card. It stays for
+     someone who holds Trainee, since a template is about no trainee (T224 review). *@
+  @if (!CampaignId.HasValue)
+  {
+    <section class="detail-card">
+      <h3>Quick template</h3>
+      <EditForm Model="_template" OnValidSubmit="CreateTemplateAsync" FormName="msf-template">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary-errors" />
+        <div class="form-grid">
+          @* T164, D35: learner feedback is a template of its own kind. Only learners answer it, and its release records
+             learner-feedback evidence, not multi-source feedback. *@
+          <FormField Label="Kind" InputId="msf-template-kind" Required="true"
+                     HelpText="Learner feedback is answered only by people the trainee taught, and is recorded as learner feedback, not as multi-source feedback.">
+            <InputSelect id="msf-template-kind" class="form-select" aria-describedby="@FieldHelp.Id("msf-template-kind")" @bind-Value="_template.Kind" @bind-Value:after="OnTemplateKindChanged">
+              <option value="@MsfTemplateKind.Msf">@MsfEvidenceKinds.Describe(MsfTemplateKind.Msf)</option>
+              <option value="@MsfTemplateKind.LearnerFeedback">@MsfEvidenceKinds.Describe(MsfTemplateKind.LearnerFeedback)</option>
+            </InputSelect>
+          </FormField>
+          <FormField Label="Template name" InputId="msf-template-name" Required="true">
+            <InputText id="msf-template-name" class="form-control" @bind-Value="_template.Name" />
+          </FormField>
+          <FormField Label="Scale question" InputId="msf-template-scale" Required="true">
+            <InputText id="msf-template-scale" class="form-control" @bind-Value="_template.ScalePrompt" />
+          </FormField>
+          <FormField Label="Comment question" InputId="msf-template-comment" Required="true">
+            <InputText id="msf-template-comment" class="form-control" @bind-Value="_template.CommentPrompt" />
+          </FormField>
+        </div>
+        <FormActions>
+          <button type="submit" class="btn btn-outline">Add template</button>
+        </FormActions>
+      </EditForm>
+    </section>
+  }
 
   @if (CampaignId.HasValue || _runsNoCampaigns is false)
   {
@@ -278,18 +284,34 @@
                 {
                   <button id="msf-withdraw-campaign" type="button" class="btn btn-outline" disabled="@Busy" @onclick="AskWithdrawAsync">Withdraw campaign</button>
                 }
-                @if (setup.State == MsfCampaignState.Draft)
+                @if (setup.State == MsfCampaignState.Draft && !HasInvitees(setup))
                 {
-                  @* Disabled while an open is in flight (T202): a second open would mail every respondent a second link. *@
-                  <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@Busy" @onclick="OpenCampaignAsync">
+                  @* T107's pattern (T225): shown, not hidden, with its reason below the row, which it names. No click
+                     handler at all: pressing it could only be refused. Until T225 it was enabled, and the refusal came
+                     only after the press. *@
+                  <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled aria-describedby="msf-open-reason">Open campaign</button>
+                }
+                else if (setup.State == MsfCampaignState.Draft)
+                {
+                  @* A second open would mail every respondent a second link (T202), so a click while one is in flight sends
+                     nothing (OpenCampaignAsync). Disabled while a withdraw or an add is in flight, but not while its own
+                     open runs (T225 review): it has the focus then, and a browser drops the focus of a button it disables,
+                     to the page, where a refused open that leaves the button would leave it. *@
+                  <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@(_withdrawing || _adding)" @onclick="OpenCampaignAsync">
                     @(_opening ? "Opening campaign…" : "Open campaign")
                   </button>
                 }
-                else
+                else if (MsfCampaignText.ReportLinkLabel(setup.State) is { } reportLink)
                 {
-                  <a id="msf-campaign-report" class="btn btn-primary" href="@($"/msf/reports/{setup.CampaignId}")">@ReportLinkLabel(setup.State)</a>
+                  <a id="msf-campaign-report" class="btn btn-primary" href="@($"/msf/reports/{setup.CampaignId}")">@reportLink</a>
                 }
               </FormActions>
+              @if (setup.State == MsfCampaignState.Draft && !HasInvitees(setup))
+              {
+                <ul class="workflow-action-reasons">
+                  <li id="msf-open-reason"><strong>Open campaign:</strong> @MsfCampaignText.OpenNeedsInvitees</li>
+                </ul>
+              }
             }
           }
         </StatePanel>
@@ -370,13 +392,20 @@
   protected override async Task OnInitializedAsync()
   {
     _runsNoCampaigns = MsfCampaignRules.RunsNoCampaigns(await GetPrincipalAsync());
-    await LoadTemplatesAsync();
     await LoadTraineesAsync();
   }
 
+  /// <remarks>
+  /// The templates are read only where a campaign is being created: a campaign's own page has neither the Quick template
+  /// card nor the create form that lists them (T225).
+  /// </remarks>
   protected override async Task OnParametersSetAsync()
   {
-    await LoadTemplatesAsync();
+    if (!CampaignId.HasValue)
+    {
+      await LoadTemplatesAsync();
+    }
+
     await LoadSetupAsync();
   }
 
@@ -453,9 +482,11 @@
     };
   }
 
-  /// <summary>Where the report link takes the coordinator, by what they go there to do. (T217)</summary>
-  private static string ReportLinkLabel(MsfCampaignState state)
-    => state is MsfCampaignState.Closed or MsfCampaignState.UnderReview ? "Review and release" : "View report";
+  /// <summary>
+  /// Whether anybody has been invited, so that the draft can be opened: the open handler refuses a campaign with no
+  /// invitation (T225). The same test the "Nobody has been invited yet." line makes.
+  /// </summary>
+  private static bool HasInvitees(MsfCampaignSetupDto setup) => setup.Invitees.Count > 0;
 
   /// <summary>The campaign as the withdraw dialog and its result name it, as the campaign list does (T206).</summary>
   private static string Described(MsfCampaignSetupDto setup)
@@ -757,10 +788,10 @@
 
   /// <remarks>
   /// <para>
-  /// Sent at most once at a time (T202). The disabled button is not enough on its own: a second click can leave the
-  /// browser before the render that disables the button arrives, and the circuit then runs it as soon as the first open
-  /// awaits. So the flag is set before the first await, and a click that finds it set does nothing. Before T202 a
-  /// double-click raced two opens, and every respondent was mailed two links, one of them dead.
+  /// Sent at most once at a time (T202). The flag is set before the first await, and a click that finds it set does
+  /// nothing. Until the T225 review the button was also disabled while its open ran, which was never enough on its own
+  /// (a second click can leave the browser before the render that disables it arrives) and dropped the focus to the page.
+  /// Before T202 a double-click raced two opens, and every respondent was mailed two links, one of them dead.
   /// </para>
   /// <para>
   /// The campaign is read again before the flag is released (T217), so the page shows it open, with no Open button,

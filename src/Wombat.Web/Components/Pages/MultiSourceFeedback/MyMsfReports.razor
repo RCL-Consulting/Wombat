@@ -55,7 +55,8 @@
       @foreach (var category in _report.Categories.Where(category => !category.IsSuppressed))
       {
         <div class="mb-3">
-          <strong>@category.Category</strong>
+          @* By the group's label, never its key (T225). *@
+          <strong>@MsfRespondentCategories.Describe(category.Category)</strong>
           @foreach (var question in category.Questions)
           {
             @if (question.Type == MsfQuestionType.Scale && question.Scale is not null)

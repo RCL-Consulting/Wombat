@@ -81,7 +81,91 @@ public sealed class CampaignStatePageTests : TestContext
             CampaignCard(cut).QuerySelectorAll(".form-actions").Should().BeEmpty();
         }
 
+        // Someone is invited, so a draft's Open is live and gives no reason (T225).
+        cut.FindAll("#msf-open-reason, .workflow-action-reasons").Should().BeEmpty();
+        cut.FindAll("#msf-open-campaign").Should().OnlyContain(button => !button.HasAttribute("disabled"));
+
         IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    // ─── The Quick template card (T225) ──────────────────────────────────────
+
+    [Fact]
+    public void ACampaignsOwnPage_HasNoQuickTemplateCard_AndReadsNoTemplates()
+    {
+        // A campaign that exists already has its questionnaire: until T225 the card sat beside every campaign's own.
+        var sender = new CampaignSender(Setup(MsfCampaignState.Draft, Group(MsfRespondentCategory.PeerDoctor, 1, 0)));
+        var cut = Render(sender);
+
+        cut.FindAll("h3").Select(Text).Should().Equal("Campaign details");
+        cut.FindAll("#msf-template-kind, #msf-template-name, #msf-template-scale, #msf-template-comment").Should().BeEmpty();
+        cut.FindAll("button").Select(Text).Should().NotContain("Add template");
+        sender.Queries.Should().NotContain(nameof(ListMsfTemplatesQuery), "nothing on the page lists them");
+    }
+
+    [Fact]
+    public void TheCreatePage_KeepsTheQuickTemplateCard_BesideTheCreateForm()
+    {
+        var sender = new CampaignSender(Setup(MsfCampaignState.Draft));
+        Services.AddSingleton<IScopedSender>(sender);
+
+        var cut = RenderComponent<CampaignEdit>();
+
+        cut.FindAll("h3").Select(Text).Should().Equal("Quick template", "Create campaign");
+        cut.Find("#msf-template-name");
+        cut.FindAll("#msf-template-id option").Select(Text).Should().Equal("Select template", "Annual MSF");
+    }
+
+    // ─── Opening a draft that invites nobody (T225) ──────────────────────────
+
+    [Fact]
+    public void ADraftThatInvitesNobody_OffersOpenDisabled_WithItsReasonBelowTheRow()
+    {
+        // The T107 pattern: shown, not hidden, and never pressable. Until T225 it was enabled and the handler's refusal
+        // came only after the press.
+        var sender = new CampaignSender(Setup(MsfCampaignState.Draft));
+        var cut = Render(sender);
+
+        var open = cut.Find("#msf-open-campaign");
+        Text(open).Should().Be("Open campaign");
+        open.HasAttribute("disabled").Should().BeTrue("the handler refuses a campaign with no invitee");
+        open.GetAttribute("aria-describedby").Should().Be("msf-open-reason");
+
+        var reason = cut.Find("#msf-open-reason");
+        Text(reason).Should().Be(
+            "Open campaign: add at least one invitee first. Opening the campaign emails each invitee a link to respond.");
+        reason.ParentElement!.ClassList.Should().Contain("workflow-action-reasons");
+        reason.ParentElement!.PreviousElementSibling!.ClassList.Should().Contain("form-actions",
+            "the reason is visible text below the row whose button it explains");
+
+        // No handler at all: pressing it could only be refused.
+        open.Invoking(button => button.Click()).Should().Throw<MissingEventHandlerException>();
+        sender.Commands.Should().BeEmpty();
+
+        // Withdraw is not held back by it: a draft that invites nobody can still be withdrawn.
+        cut.Find("#msf-withdraw-campaign").HasAttribute("disabled").Should().BeFalse();
+        IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AddingTheFirstInvitee_EnablesOpen_AndItsReasonGoes()
+    {
+        var sender = new CampaignSender(Setup(MsfCampaignState.Draft));
+        var cut = Render(sender);
+        cut.Find("#msf-open-campaign").HasAttribute("disabled").Should().BeTrue();
+
+        SubmitInvitee(cut, "peer-1@example.test");
+
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-success")).Should().Be("Invitee added."));
+        var open = cut.Find("#msf-open-campaign");
+        open.HasAttribute("disabled").Should().BeFalse("somebody is invited now");
+        open.HasAttribute("aria-describedby").Should().BeFalse("it names no reason once it can be pressed");
+        cut.FindAll("#msf-open-reason, .workflow-action-reasons").Should().BeEmpty();
+
+        open.Click();
+        cut.WaitForAssertion(() => Text(cut.Find("#msf-campaign-state")).Should().Be("Open"));
+        sender.Commands.Select(command => command.GetType()).Should().Equal(
+            typeof(AddMsfInvitationCommand), typeof(OpenMsfCampaignCommand));
     }
 
     [Fact]
@@ -553,6 +637,9 @@ public sealed class CampaignStatePageTests : TestContext
         /// <summary>Every add, open and withdraw sent, in order.</summary>
         public List<object> Commands { get; } = [];
 
+        /// <summary>The name of every query the page sent, in order. (T225)</summary>
+        public List<string> Queries { get; } = [];
+
         public Exception? Refusal { get; init; }
 
         public MsfCampaignState? StateAfterRefusal { get; init; }
@@ -567,6 +654,11 @@ public sealed class CampaignStatePageTests : TestContext
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
+            if (request is not AddMsfInvitationCommand)
+            {
+                Queries.Add(request.GetType().Name);
+            }
+
             if (request is GetMsfCampaignSetupQuery && _refused && ReadFailureAfterRefusal is not null)
             {
                 return Task.FromException<TResponse>(ReadFailureAfterRefusal);

@@ -349,7 +349,11 @@ public sealed class CallerPrincipalPageTests : TestContext
             .On<ListTraineesForSpecialityQuery>(_ => new[] { Trainee() })
             .On<GetMsfCampaignSetupQuery>(query => new MsfCampaignSetupDto(
                 query.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
-                [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse]));
+                [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse])
+            {
+                // Someone is invited: Open is disabled on a draft that invites nobody (T225).
+                Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 1, 0)]
+            });
 
     private static string? CallerOf(ClaimsPrincipal principal)
         => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
