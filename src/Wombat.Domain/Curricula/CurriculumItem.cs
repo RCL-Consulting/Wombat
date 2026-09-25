@@ -60,8 +60,9 @@ public sealed class CurriculumItem
     /// to the WRONG ladder silently refuses credit the trainee legitimately earned. That asymmetry is why
     /// nothing infers this value: the only automatic pins come from the seeders that author the minima and
     /// therefore know which ladder they were written against. In particular it is NOT inferred from
-    /// <c>Curriculum.SubSpeciality.DefaultEntrustmentScaleId</c>, which
-    /// <c>PaediatricCatalogueSeeder.EnsureDefaultScaleAsync</c> force-overwrites on every boot and which
+    /// <c>Curriculum.SubSpeciality.DefaultEntrustmentScaleId</c>, which is a committee-picker default an
+    /// administrator may change at any time (the catalogue seeder sets it only when it creates the sub-speciality,
+    /// T187), says nothing about the ladder any one item's minima were written on, and
     /// cannot differ between two versions of one curriculum anyway, <c>CloneAsNewVersion</c> copying
     /// <c>SubSpecialityId</c>. The item editor's Add form may <em>suggest</em> that default as the ladder to start on
     /// (T125), saying so beside the field; that is not an inference, because the administrator then picks every minimum

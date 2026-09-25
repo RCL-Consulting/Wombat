@@ -707,6 +707,14 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
                     ladderId, catalogueItems.Values.ToArray()))
                 .Should().Be(15, "guard: exactly the fifteen catalogue items are pinned");
 
+            // The Paediatrics programme defaulting to the same ladder, as every boot before T187 set it (T076). Since T187
+            // only the seeder's create sets it, so without this the fixture would be a database whose administrator had
+            // cleared the default, and the seeder would rightly announce it.
+            (await ExecuteAsync(connection,
+                    """UPDATE "SubSpecialities" SET "DefaultEntrustmentScaleId" = $1 WHERE "Id" = $2""",
+                    ladderId, paediatricsSubId))
+                .Should().Be(1, "guard: the Paediatrics sub-speciality defaults to the v11.1 ladder");
+
             // Pins the two "OwningInstitutionId" IS NULL clauses together: an institution's local EPA may reuse a
             // national code. The item-side clause cannot be pinned alone here, because every catalogue EPA already
             // has its national item in this curriculum and (CurriculumId, EpaId) is unique.

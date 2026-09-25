@@ -62,9 +62,10 @@ public sealed class PaediatricCatalogueSeeder
         // Before the curriculum too, and for a harder reason: an item's DecisionBodyKey is a foreign key (T131).
         await EnsureDecisionBodiesAsync(catalogue.DecisionBodyVocabulary, cancellationToken);
 
-        var (specialityId, subSpecialityId) = await EnsureCollegeAndDisciplineAsync(cancellationToken);
+        // Before the discipline, so the sub-speciality can be created already defaulting to it (T187).
         var scale = await EnsureScaleAsync(catalogue.Scale, cancellationToken);
-        await EnsureDefaultScaleAsync(subSpecialityId, scale.Id, cancellationToken);
+        var (specialityId, subSpecialityId) = await EnsureCollegeAndDisciplineAsync(scale.Id, cancellationToken);
+        await WarnWhereTheDefaultScaleDiffersAsync(subSpecialityId, scale, cancellationToken);
         var epaIdsByCode = await EnsureEpasAsync(subSpecialityId, catalogue.Epas, cancellationToken);
         await EnsureCurriculumAsync(subSpecialityId, scale.Id, catalogue, epaIdsByCode, cancellationToken);
         await EnsureActivityTypesAsync(specialityId, cancellationToken);
@@ -239,7 +240,10 @@ public sealed class PaediatricCatalogueSeeder
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<(int SpecialityId, int SubSpecialityId)> EnsureCollegeAndDisciplineAsync(CancellationToken cancellationToken)
+    /// <param name="scaleId">
+    /// The v11.1 ladder, which a sub-speciality this creates defaults to. An existing one is left as it is (T187).
+    /// </param>
+    private async Task<(int SpecialityId, int SubSpecialityId)> EnsureCollegeAndDisciplineAsync(int scaleId, CancellationToken cancellationToken)
     {
         var college = await _dbContext.Colleges
             .SingleOrDefaultAsync(entity => entity.ShortCode == CollegeShortCode, cancellationToken);
@@ -283,7 +287,11 @@ public sealed class PaediatricCatalogueSeeder
             {
                 Name = SubSpecialityName,
                 Description = "General paediatric specialist training programme.",
-                SpecialityId = speciality.Id
+                SpecialityId = speciality.Id,
+                // Constrains committee STAR level pickers to this ladder for paediatric trainees (T076). On create only:
+                // an administrator may change it on the sub-speciality's edit page, and a later boot never reverts that
+                // (T187). Existing databases were stamped by the boots before T187.
+                DefaultEntrustmentScaleId = scaleId
             };
 
             _dbContext.SubSpecialities.Add(subSpeciality);
@@ -328,19 +336,49 @@ public sealed class PaediatricCatalogueSeeder
         return scale;
     }
 
-    private async Task EnsureDefaultScaleAsync(int subSpecialityId, int scaleId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Logs, and never writes, when the Paediatrics sub-speciality does not default to the v11.1 ladder (T187).
+    /// </summary>
+    /// <remarks>
+    /// Before T187 every boot set the default back to v11.1, so an administrator's change on the sub-speciality's edit
+    /// page was silently undone at the next restart. Null is a deliberate state too ("No default — offer every scale"),
+    /// so a boot cannot tell a choice from a gap. The same contract as the target, tool-list and scale-pin passes: the
+    /// seeder sets the value when it creates the row (<see cref="EnsureCollegeAndDisciplineAsync" />), and a difference
+    /// is announced at every startup, never reverted.
+    /// </remarks>
+    private async Task WarnWhereTheDefaultScaleDiffersAsync(int subSpecialityId, EntrustmentScale scale, CancellationToken cancellationToken)
     {
         var subSpeciality = await _dbContext.SubSpecialities
-            .SingleAsync(entity => entity.Id == subSpecialityId, cancellationToken);
+            .AsNoTracking()
+            .Where(entity => entity.Id == subSpecialityId)
+            .Select(entity => new { entity.Name, entity.DefaultEntrustmentScaleId })
+            .SingleAsync(cancellationToken);
 
-        if (subSpeciality.DefaultEntrustmentScaleId == scaleId)
+        if (subSpeciality.DefaultEntrustmentScaleId == scale.Id)
         {
             return;
         }
 
-        // Constrains committee STAR level pickers to this ladder for paediatric trainees (T076).
-        subSpeciality.DefaultEntrustmentScaleId = scaleId;
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        var storedDefault = "has no default scale";
+        if (subSpeciality.DefaultEntrustmentScaleId is int storedScaleId)
+        {
+            // Named, not only numbered, so the line says which ladder without a second query by whoever reads it.
+            var storedName = await _dbContext.EntrustmentScales
+                .AsNoTracking()
+                .Where(entity => entity.Id == storedScaleId)
+                .Select(entity => entity.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+            storedDefault = storedName is null
+                ? $"defaults to scale {storedScaleId}"
+                : $"defaults to '{storedName}' (scale {storedScaleId})";
+        }
+
+        _logger.LogWarning(
+            "Sub-speciality {SubSpecialityId} ({SubSpecialityName}) {StoredDefault}, but EPA v11.1 is written on {ExpectedScale}. Not changed: this seeder sets a sub-speciality's default scale only when it creates the sub-speciality, so an administrator's choice on its edit page survives a restart.",
+            subSpecialityId,
+            subSpeciality.Name,
+            storedDefault,
+            $"'{scale.Name}' (scale {scale.Id})");
     }
 
     private async Task<IReadOnlyDictionary<string, int>> EnsureEpasAsync(

@@ -251,8 +251,9 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
     /// The source is <c>CurriculumItem.ScaleId</c> — T109's per-item pin, which is literally "the scale
     /// this EPA's minima are expressed on" for this trainee's curriculum. It is deliberately NOT
     /// <c>Curriculum.SubSpeciality.DefaultEntrustmentScaleId</c>, which two neighbouring queries do read
-    /// and which <c>CurriculumItem</c>'s own remarks reject as a source of pins, because
-    /// <c>PaediatricCatalogueSeeder</c> force-overwrites it on every boot.
+    /// and which <c>CurriculumItem</c>'s own remarks reject as a source of pins, because it is a
+    /// programme-wide committee-picker default an administrator may change at any time (T187), not the
+    /// ladder any one EPA's minima were written on.
     /// </para>
     /// <para>
     /// The profile is the trainee's preferred one (<see cref="TraineeScopeResolver.PreferredProfiles" />:

@@ -3,18 +3,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Infrastructure.Tests.Persistence;
 
 /// <summary>
-/// T174: the catalogue seeder pins a curriculum item to the v11.1 ladder when it creates the item, and on no later boot.
+/// T174 and T187: the catalogue seeder puts a curriculum item, and the Paediatrics sub-speciality's default, on the v11.1
+/// ladder when it creates each, and on no later boot.
 /// </summary>
 /// <remarks>
 /// <para>
 /// The pin (T109) says which ladder an item's stored minima are ordinals on. Before T174 every boot pinned any seeded
 /// item whose <c>ScaleId</c> was null, keeping its minima. An administrator who chose "Not pinned" on the item editor
 /// (T125) and entered 4 and 8 found the item back on v11.1 after a restart, where 4 means 3b and 8 is no rung at all.
+/// </para>
+/// <para>
+/// The sub-speciality's default (T076) limits committee STAR level pickers to one ladder. Before T187 every boot set it
+/// back to v11.1, so a change on the sub-speciality's edit page lasted only until the next restart.
 /// </para>
 /// <para>
 /// The ladder is identified here by the name and rungs typed from the College's document, never read from the seed
@@ -158,6 +164,88 @@ public sealed class PaediatricCatalogueScalePinSeedTests
         secondBoot.Warnings.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// T187, the create path: the sub-speciality is created already defaulting to the v11.1 ladder, and no boot
+    /// announces anything about it.
+    /// </summary>
+    [Fact]
+    public async Task AFreshSeed_DefaultsTheSubSpecialityToTheV111Ladder_AndWarnsAboutNothing()
+    {
+        var database = new SeedDatabase();
+        var firstBoot = new CapturingLogger<PaediatricCatalogueSeeder>();
+        await database.BootAsync(firstBoot);
+
+        var ladderId = await database.ReadV111LadderIdAsync();
+        (await database.ReadSubSpecialityDefaultScaleIdAsync()).Should().Be(ladderId);
+
+        var secondBoot = new CapturingLogger<PaediatricCatalogueSeeder>();
+        await database.BootAsync(secondBoot);
+
+        (await database.ReadSubSpecialityDefaultScaleIdAsync()).Should().Be(ladderId);
+        firstBoot.Warnings.Should().BeEmpty("a freshly created sub-speciality defaults to the ladder the catalogue states");
+        secondBoot.Warnings.Should().BeEmpty("the default is still the ladder the catalogue states");
+    }
+
+    /// <summary>
+    /// T187, the defect. An administrator moves the default to another ladder; a restart keeps their choice, says once
+    /// that it differs from v11.1, and touches no curriculum item.
+    /// </summary>
+    [Fact]
+    public async Task AChangedDefaultScale_SurvivesASecondSeed_AndIsAnnouncedOnce()
+    {
+        var database = new SeedDatabase();
+        await database.BootAsync();
+
+        var ladderId = await database.ReadV111LadderIdAsync();
+        var otherLadderId = await database.ReadScaleIdAsync(DataSeeder.OrScaleName);
+        otherLadderId.Should().NotBe(ladderId, "the premise: DataSeeder's O-R Scale is a different ladder");
+
+        await database.EditSubSpecialityAsync(subSpeciality => subSpeciality.DefaultEntrustmentScaleId = otherLadderId);
+        var itemsBefore = await database.LoadCatalogueItemsAsync();
+
+        var secondBoot = new CapturingLogger<PaediatricCatalogueSeeder>();
+        await database.BootAsync(secondBoot);
+
+        (await database.ReadSubSpecialityDefaultScaleIdAsync()).Should().Be(otherLadderId, "a boot never reverts an administrator's default");
+
+        var warning = secondBoot.Warnings.Should().ContainSingle("nothing else was changed").Which;
+        warning.Values["SubSpecialityName"].Should().Be("Paediatrics");
+        warning.Values["StoredDefault"].Should().Be($"defaults to '{DataSeeder.OrScaleName}' (scale {otherLadderId})");
+        warning.Values["ExpectedScale"].Should().Be($"'{V111ScaleName}' (scale {ladderId})");
+        warning.Message.Should().Contain(DataSeeder.OrScaleName).And.Contain(V111ScaleName);
+
+        (await database.LoadCatalogueItemsAsync()).Should().Equal(itemsBefore, "the default is not a pin, and moving it re-pins no item");
+    }
+
+    /// <summary>
+    /// T187: "No default — offer every scale" is a choice too, and survives a restart the same way.
+    /// </summary>
+    [Fact]
+    public async Task AClearedDefaultScale_StaysClearedAcrossASecondSeed_AndIsAnnouncedOnce()
+    {
+        var database = new SeedDatabase();
+        await database.BootAsync();
+
+        await database.EditSubSpecialityAsync(subSpeciality => subSpeciality.DefaultEntrustmentScaleId = null);
+
+        var secondBoot = new CapturingLogger<PaediatricCatalogueSeeder>();
+        await database.BootAsync(secondBoot);
+
+        (await database.ReadSubSpecialityDefaultScaleIdAsync()).Should().BeNull("a boot cannot tell a cleared default from a gap, so it fills neither");
+
+        var warning = secondBoot.Warnings.Should().ContainSingle().Which;
+        warning.Values["StoredDefault"].Should().Be("has no default scale");
+        warning.Values["ExpectedScale"].Should().Be($"'{V111ScaleName}' (scale {await database.ReadV111LadderIdAsync()})");
+    }
+
+    /// <summary>The sub-speciality the catalogue curriculum belongs to: the Paediatrics programme.</summary>
+    private static Task<int> QueryCatalogueSubSpecialityIdAsync(ApplicationDbContext dbContext)
+        => dbContext.Curricula
+            .AsNoTracking()
+            .Where(curriculum => curriculum.Name == CurriculumName && curriculum.Version == CatalogueVersion)
+            .Select(curriculum => curriculum.SubSpecialityId)
+            .SingleAsync();
+
     private static async Task<IReadOnlyList<SeededItem>> QueryCatalogueItemsAsync(ApplicationDbContext dbContext)
         => await (
                 from item in dbContext.CurriculumItems.AsNoTracking()
@@ -209,6 +297,24 @@ public sealed class PaediatricCatalogueScalePinSeedTests
                 var seeded = (await QueryCatalogueItemsAsync(dbContext)).Single(entry => entry.Code == code);
                 edit(await dbContext.CurriculumItems.SingleAsync(entity => entity.Id == seeded.Id));
             });
+
+        public Task EditSubSpecialityAsync(Action<SubSpeciality> edit)
+            => EditAsync(async dbContext =>
+            {
+                var id = await QueryCatalogueSubSpecialityIdAsync(dbContext);
+                edit(await dbContext.SubSpecialities.SingleAsync(entity => entity.Id == id));
+            });
+
+        public async Task<int?> ReadSubSpecialityDefaultScaleIdAsync()
+        {
+            await using var dbContext = NewContext();
+            var id = await QueryCatalogueSubSpecialityIdAsync(dbContext);
+            return await dbContext.SubSpecialities
+                .AsNoTracking()
+                .Where(entity => entity.Id == id)
+                .Select(entity => entity.DefaultEntrustmentScaleId)
+                .SingleAsync();
+        }
 
         public async Task<IReadOnlyList<SeededItem>> LoadCatalogueItemsAsync()
         {

@@ -248,10 +248,12 @@ Three things follow:
 - **A seeded curriculum item's values are written when a seeder creates the item, and on no later boot.** That is the
   tool list, the target and the scale pin for the v11.1 items (`PaediatricCatalogueSeeder`), and the scale pin for the
   demo IM Core item (`DataSeeder`). So no boot changes what a stored minimum means (T174), and an administrator's
-  "Not pinned" survives a restart. On existing databases the tool lists came from the T122 migration, the targets from
-  T130's, and the demo item's pin from T174's; the v11.1 pins were stamped by the boots before T174. A later change to any
-  of these values, or to `WbaToolKey`, reaches an existing database only through a new migration. The seeders log a
-  warning where the stored value differs.
+  "Not pinned" survives a restart. The same holds for the Paediatrics sub-speciality's default entrustment scale:
+  `PaediatricCatalogueSeeder` sets it only when it creates the sub-speciality, so an administrator's choice survives a
+  restart too (T187). On existing databases the tool lists came from the T122 migration, the targets from T130's, and
+  the demo item's pin from T174's; the v11.1 pins were stamped by the boots before T174, and the Paediatrics default by
+  the boots before T187. A later change to any of these values, or to `WbaToolKey`, reaches an existing database only
+  through a new migration. The seeders log a warning where the stored value differs.
 
 Read `execution/architecture/CUSTOMIZATION.md` for the full model.
 
