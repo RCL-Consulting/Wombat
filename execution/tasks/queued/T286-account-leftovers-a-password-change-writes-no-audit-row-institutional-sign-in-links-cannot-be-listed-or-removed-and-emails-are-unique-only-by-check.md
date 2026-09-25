@@ -37,3 +37,14 @@ created: 2026-09-25
 ## Related
 
 T265, T155, T258.
+
+Notes, 2026-09-25 (the T285 review):
+- **A link race answers 500.** In `ExternalLoginHandler.LinkAndSignInAsync`, two link requests that both pass
+  `AddLoginAsync`'s internal check break the `AspNetUserLogins` key, and nothing catches the `DbUpdateException`. Catch
+  it as `ProvisionNewUserAsync` does, discard, reload, and return `AlreadyLinked`.
+- **A failed role leaves an account.** `InvitedUserProvisioner.ProvisionAsync` throws a bare exception if
+  `AddToRoleAsync` fails after `CreateAsync` has saved the account, so the account stays without a role and the
+  invitation stays unused.
+- **Issuing never checks the address.** `IssueInvitation` should refuse an address that already has an account or that
+  Identity will not accept, through T285's `GetAddressStatusAsync`.
+
