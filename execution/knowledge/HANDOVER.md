@@ -248,8 +248,9 @@ Structural, and true as of 2026-09-20:
   mapper and `/admin/sso/group-mappings`. Enabling a provider is **config plus a restart,
   not a redeploy** — it needs an institution's authority, client id/secret and group-to-role
   map in `wombat.env`. The Administrator role can never be assigned via SSO, by design.
-- **Integration tests are Docker-gated** and are not run on the deploy box, so the
-  Testcontainers suite has never gated a production deploy.
+- **Integration tests need a PostgreSQL server** (`WOMBAT_TEST_CONNECTION`, else Wombat.Web's user secrets), one
+  throwaway `it_<guid>` schema per test, and are not run on the deploy box, so they have never gated a production
+  deploy. Dev's server is PostgreSQL 16; production runs 18 (T243).
 - **Migrations apply at startup**, so a bad one fails the service rather than the deploy.
 - **Filed, unfixed defects live in `execution/tasks/`.** That folder, not this file, is the
   register — `execution/STATE.md` names which are in flight.
