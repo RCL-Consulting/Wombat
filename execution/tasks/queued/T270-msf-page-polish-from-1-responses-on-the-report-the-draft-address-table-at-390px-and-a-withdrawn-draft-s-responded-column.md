@@ -39,3 +39,7 @@ tests; browser at 390px.
 ## Related
 
 T247, T249, T225, T266.
+
+Note, 2026-09-25 (the T269 review): `MyMsfReports.razor` shows a refusal twice: in the top danger alert (no `Role`) and
+again as the StatePanel's `LoadError`, which replaces the "Released reports" list. The wording ("…not available to the
+current trainee.") also reaches a Coordinator who types another report's id.
