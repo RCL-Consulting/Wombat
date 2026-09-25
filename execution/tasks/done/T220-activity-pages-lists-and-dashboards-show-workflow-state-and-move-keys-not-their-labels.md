@@ -1,11 +1,12 @@
 ---
 id: T220
 title: Activity pages, lists and dashboards show workflow state and move keys, not their labels
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T220 — Activity pages, lists and dashboards show workflow state and move keys, not their labels
@@ -34,8 +35,31 @@ and print them everywhere a key is shown today.
 
 ## Verification
 
-- [ ] Every surface above shows labels. bUnit, and a browser check on a clinical audit ("Awaiting supervisor").
+- [x] Every surface above shows labels. bUnit, and a browser check on a clinical audit ("Awaiting supervisor").
 
 ## Related
 
 T189, T172.
+
+---
+
+## As built — 2026-09-25 (`a3ae666`)
+
+Workflow states and moves are printed by their labels from the activity's pinned version. This covers `ActivityView`
+(header, summary and history), My activities, the Inbox, the trainee and assessor dashboards, the PDF and the NewActivity
+notice. The key is used only where a pinned workflow no longer declares it.
+
+The committee evidence snapshot freezes the source state's label (`CommitteeEvidenceItem.SourceStateLabel`, migration
+`T220_CommitteeEvidenceSourceStateLabel`). Snapshots taken before it fall back to the key; W-007 would allow a backfill,
+and none was needed.
+
+Browser on dev (scripted Chrome, master `ec58d2e`; `pg_dump` first, at `recovery/pre-g2-migrations.dump`): clinical audit #41:
+- **Submit** read "Submitted. It is now Awaiting supervisor."
+- **The page** reads "State: Awaiting supervisor". Its history reads "Submit | Draft → Awaiting supervisor", then "Sign
+  Off | Awaiting supervisor → Signed off".
+- **The lists.** My activities, the dashboard badge and the assessor's inbox read the labels.
+- **The PDF** prints "State: Signed off".
+- **Review 10's evidence picker** reads "Clinical Audit (Paediatrics) #41 · Unrated · 2026-09-20 · Signed off".
+- **Not run:** the "accepted" state; no offered type has one.
+
+**Filed from the review:** [T250] (committee review states print enum names).

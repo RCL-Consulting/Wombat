@@ -39,3 +39,9 @@ created: 2026-09-25
 ## Related
 
 T224, T238, T113, T102.
+
+Note, 2026-09-25 (the G2 browser check), needs confirmation: as Trainee plus Coordinator, `/msf/reports/14` (their own
+released campaign) showed the coordinator's report page. It had a Coordinator actions card with an editable Narrative
+box and the supervision-level list, no action button, and no T224 warning. The subject should get the trainee's view
+(`/msf/my-reports/{id}`), or the T224 warning, never the coordinator's card. Check whether a learner-feedback campaign
+would show teaching contexts there.

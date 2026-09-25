@@ -1,11 +1,12 @@
 ---
 id: T224
 title: A Coordinator who is an MSF campaign's own subject can open, manage and watch the live counts of their own campaign
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T224 — A Coordinator who is an MSF campaign's own subject can open, manage and watch the live counts of their own campaign
@@ -33,9 +34,31 @@ apply `TraineeScopeResolver.ActsAsTrainee` where the caller is also a Trainee.
 
 ## Verification
 
-- [ ] A Coordinator who is the subject cannot list, read the setup of, add to, open, close or withdraw their own
+- [x] A Coordinator who is the subject cannot list, read the setup of, add to, open, close or withdraw their own
       campaign. Handler tests.
 
 ## Related
 
 T217, T185, T216, T205.
+
+---
+
+## As built — 2026-09-25 (`9520aab`)
+
+No one runs or watches the MSF campaign about themselves.
+- `MsfCampaignRules.IsSubjectInScopeAsync` and `WhereRunBy` refuse the caller's own campaign, as `CanReadReportAsync`
+  already did.
+- Anyone who holds Trainee runs no campaign (`RunsNoCampaigns`, the trainee-first rule), and the pages say so.
+- Create checks scope before the template.
+
+Handler tests cover each command and the list; bUnit covers the pages.
+
+Browser on dev (scripted Chrome, master `ec58d2e`; `pg_dump` first, at `recovery/pre-g2-migrations.dump`): trainee was given Coordinator by instadmin, then removed.
+- `/msf/campaigns` warned "You hold the Trainee role, so you cannot run…" and offered no New campaign.
+- `/msf/campaigns/15` and `/14` read "Campaign unavailable", and `/msf/reports/15` "Report unavailable".
+- **Not run:** removing the Trainee role (the permission classifier refused it; restoring it would need SQL).
+
+**Needs confirmation, noted on [T248]:** the subject's own released report (`/msf/reports/14`) showed the coordinator's
+actions card.
+
+**Filed from the review:** [T248] (picker against create, and templates need scope).

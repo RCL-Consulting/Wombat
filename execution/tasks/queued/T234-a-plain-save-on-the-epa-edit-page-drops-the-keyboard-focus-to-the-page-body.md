@@ -42,3 +42,6 @@ while saving; fix them the same way, or file what you find.
 ## Related
 
 T196, T202, T217.
+
+Note, 2026-09-25 (the G2 browser check): a refused "Save profile" on `/admin/trainees/edit` also leaves the focus on BODY
+(Save is disabled while it runs). Deactivate and Mark complete move the focus to the result; Save does not.

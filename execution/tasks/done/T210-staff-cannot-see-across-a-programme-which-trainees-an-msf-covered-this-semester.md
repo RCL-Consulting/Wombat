@@ -1,11 +1,12 @@
 ---
 id: T210
 title: Staff cannot see across a programme which trainees an MSF covered this semester
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T210 — Staff cannot see across a programme which trainees an MSF covered this semester
@@ -27,8 +28,26 @@ released campaign covered.
 
 ## Verification
 
-- [ ] The counts match the per-trainee cards for dev's trainees. Test and browser.
+- [x] The counts match the per-trainee cards for dev's trainees. Test and browser.
 
 ## Related
 
 T168, T113, T186.
+
+---
+
+## As built — 2026-09-25 (`c8bc1e1`)
+
+`/msf/coverage` shows, for a coordinator's programmes (T113 scope, trainee first), how many trainees a released campaign
+covered, per EPA and semester ("n of m trainee(s) covered"), with a by-trainee table. It uses the one coverage rule
+(`MsfCampaignCoverage`, from evidence rows, T186) and one started-by rule shared with the per-trainee card. Linked from
+the campaigns list. Handler, scope and bUnit tests.
+
+Browser on dev (scripted Chrome, master `ec58d2e`; `pg_dump` first, at `recovery/pre-g2-migrations.dump`): as coordinator:
+- **The section** "Paediatric EPA Curriculum 11.1 at Demo Institution".
+- **Semester 2, 2026.** PAED-001, 002, 005, 007, 010 and 012 read "1 of 1 trainee covered", and the rest "0 of 1".
+  Semester 1 reads 0 throughout.
+- **The by-trainee table** reads 0 of 15 and 6 of 15. The counts match the trainee's progress page ("6 of 15 EPAs
+  covered…").
+- **The trainee** is refused the page.
+- **Not run:** the second-institution coordinator, and the Administrator.
