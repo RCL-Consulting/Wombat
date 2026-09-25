@@ -1,11 +1,12 @@
 ---
 id: T248
 title: MSF: the campaign trainee picker disagrees with create, and anyone who can open the campaign page can create a template
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T248 — MSF: the campaign trainee picker disagrees with create, and anyone who can open the campaign page can create a template
@@ -33,8 +34,8 @@ created: 2026-09-25
 
 ## Verification
 
-- [ ] The picker offers exactly whom create accepts. Handler tests.
-- [ ] A Trainee holder cannot create a template. Handler test (the audit trap).
+- [x] The picker offers exactly whom create accepts. Handler tests.
+- [x] A Trainee holder cannot create a template. Handler test (the audit trap).
 
 ## Related
 
@@ -45,3 +46,23 @@ released campaign) showed the coordinator's report page. It had a Coordinator ac
 box and the supervision-level list, no action button, and no T224 warning. The subject should get the trainee's view
 (`/msf/my-reports/{id}`), or the T224 warning, never the coordinator's card. Check whether a learner-feedback campaign
 would show teaching contexts there.
+
+---
+
+## As built — 2026-09-25 (`fd5bde2`)
+
+The campaign trainee picker offers exactly whom create accepts: current trainees at the caller's institution (T238's
+rule, `ListMsfCampaignSubjectsQuery`, contacts from `GetContactsAsync`). Creating a template needs the right to run
+campaigns (`RunsNoCampaigns` and the coordinator's institution), checked before any write. Handler, Postgres and bUnit
+tests.
+
+Browser on dev (scripted Chrome, master `8e00e68`):
+- **The picker** offered only Demo Trainee, and a quick template was created.
+- **A stale form.** With the profile deactivated by SQL, it was refused: "A multi-source feedback campaign can only be run
+  for a trainee in a programme at your own institution." No campaign was created, and the profile was restored. The same
+  held with the Trainee role removed through instadmin's UI (then re-added).
+- **A Coordinator with no institution** (collegeadmin plus Coordinator, by SQL, then removed) saw only "…run by a
+  coordinator at an institution, or by an administrator."
+- **A Trainee plus Coordinator** saw only "You hold the Trainee role, so you cannot run multi-source feedback campaigns…".
+
+**Filed from the review:** [T268] (a locked trainee is not current) and [T269] (the subject's own report).
