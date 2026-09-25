@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.Curricula;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Epas;
 using Wombat.Application.Features.MultiSourceFeedback;
@@ -162,6 +163,84 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             .Add(panel => panel.Self, true));
 
         PageText(cut).Should().Contain("Your programme starts on 15 January 2027, so the targets shown are for training year 1.");
+    }
+
+    [Fact]
+    public void AnEndedProgramme_OnTheTraineesOwnPage_SaysTheTargetsAreTheYearItEndedIn()
+    {
+        // T252: the page reads the standing as on the programme's last day, so the year is the one it ended in. "You are
+        // in training year 3 on 20 August 2026" would read as though the programme were still running.
+        var standing = Standing(Epa("PAED-001", decision: "3b", year: EntrustmentStandingStatus.AtOrAbove,
+            exit: EntrustmentStandingStatus.Below)) with
+        {
+            AsOf = new DateOnly(2026, 8, 20),
+            TargetYear = 3
+        };
+
+        var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
+            .Add(panel => panel.Standing, standing)
+            .Add(panel => panel.Self, true)
+            .Add(panel => panel.ProgrammeEnd, new ProgrammeEndDto(Completed: false, EndedOn: new DateOnly(2026, 8, 20), Today: new DateOnly(2026, 9, 23))));
+
+        PageText(cut).Should().Contain(
+            "Your programme ended on 20 August 2026, in training year 3, so the targets shown are that year's. " +
+            "STAR decisions and ratings are shown as they stand today.");
+        PageText(cut).Should().NotContain("You are in training year");
+    }
+
+    [Fact]
+    public void ACompletedProgramme_OnTheTraineesOwnPage_SaysItWasCompleted_AsThePagesNoticeDoes()
+    {
+        var standing = Standing(Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove,
+            exit: EntrustmentStandingStatus.AtOrAbove)) with
+        {
+            AsOf = new DateOnly(2026, 6, 30),
+            TargetYear = 4
+        };
+
+        var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
+            .Add(panel => panel.Standing, standing)
+            .Add(panel => panel.Self, true)
+            .Add(panel => panel.ProgrammeEnd, new ProgrammeEndDto(Completed: true, EndedOn: new DateOnly(2026, 6, 30), Today: new DateOnly(2026, 9, 23))));
+
+        PageText(cut).Should().Contain(
+            "You completed your programme on 30 June 2026, in training year 4, so the targets shown are that year's.");
+    }
+
+    [Fact]
+    public void AnEndedProgrammeWhoseDayWasNeverRecorded_IsNotSaidToBeRunning()
+    {
+        // T252 review. A profile ended before T209 recorded the day is read on today. The page's notice says the programme
+        // has ended, so "You are in training year 3 on 23 September 2026" beneath it would contradict it.
+        var standing = Standing(Epa("PAED-001", decision: "3b", year: EntrustmentStandingStatus.AtOrAbove,
+            exit: EntrustmentStandingStatus.Below)) with
+        {
+            AsOf = new DateOnly(2026, 9, 23),
+            TargetYear = 3
+        };
+
+        var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
+            .Add(panel => panel.Standing, standing)
+            .Add(panel => panel.Self, true)
+            .Add(panel => panel.ProgrammeEnd, new ProgrammeEndDto(Completed: false, EndedOn: null, Today: new DateOnly(2026, 9, 23))));
+
+        PageText(cut).Should().Contain(
+            "Your programme has ended, but Wombat did not record the day it ended, so the targets shown are for training " +
+            "year 3, counted from your start date to 23 September 2026. STAR decisions and ratings are shown as they stand today.");
+        PageText(cut).Should().NotContain("You are in training year");
+    }
+
+    [Fact]
+    public void ARunningProgramme_OnTheTraineesOwnPage_SaysWhichYearTheyAreIn()
+    {
+        var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
+            .Add(panel => panel.Standing, Standing(Epa("PAED-001", decision: null, year: EntrustmentStandingStatus.NoDecision,
+                exit: EntrustmentStandingStatus.NoDecision)))
+            .Add(panel => panel.Self, true)
+            .Add(panel => panel.ProgrammeEnd, null));
+
+        PageText(cut).Should().Contain("You are in training year 2 on 1 March 2026.");
+        PageText(cut).Should().NotContain("programme ended");
     }
 
     [Fact]
@@ -384,6 +463,33 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         query.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value.Should().Be("trainee-1");
         PageText(cut).Should().Contain("You are in training year 2 on 1 March 2026.");
         Badges(cut).Should().Equal("Below");
+    }
+
+    [Fact]
+    public void MyProgress_ForAnEndedProgramme_HandsThePanelTheEnd_SoItSaysTheYearTheProgrammeEndedIn()
+    {
+        // T252: the page reads the standing as on the last day and tells the panel how the programme ended. Without the
+        // end the panel would say "You are in training year 2 on 20 August 2026" beneath a notice that it has ended.
+        SignIn("trainee-1", WombatRoles.Trainee);
+        var endedOn = new DateOnly(2026, 8, 20);
+        Services.AddSingleton<IScopedSender>(new RecordingSender()
+            .On<GetCurriculumProgressForTraineeQuery>(_ => new TraineeCurriculumProgressSummaryDto(
+                endedOn, new DateOnly(2025, 1, 1), 2, "Semester 2, 2026", "July to November", new DateOnly(2026, 11, 30),
+                false, 0, 0, 0, 0, false, false, false, null, null, [],
+                Ended: new ProgrammeEndDto(Completed: false, EndedOn: endedOn, Today: new DateOnly(2026, 9, 23))))
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetEntrustmentStandingForTraineeQuery>(query => Standing(
+                Epa("PAED-001", decision: "3a", year: EntrustmentStandingStatus.Below, exit: EntrustmentStandingStatus.Below)) with
+            {
+                AsOf = query.AsOf ?? new DateOnly(2026, 9, 23)
+            })
+            .On<GetMsfCoverageForTraineeQuery>(_ => null));
+
+        var cut = RenderComponent<MyProgress>();
+        cut.WaitForState(() => cut.Markup.Contains("Entrustment against Annexure A"));
+
+        PageText(cut).Should().Contain("Your programme ended on 20 August 2026, in training year 2, so the targets shown are that year's.");
+        PageText(cut).Should().NotContain("You are in training year");
     }
 
     [Fact]

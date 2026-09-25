@@ -49,6 +49,13 @@ public sealed class WombatUserClaimsPrincipalFactory : UserClaimsPrincipalFactor
             identity.AddClaim(new Claim(WombatClaims.SubSpecialityId, subSpecialityId.ToString()));
         }
 
+        // T252: a graduate keeps their own record after completion takes the Trainee role away. Any profile, current or
+        // ended: the reader shows the current one while there is one, and the one they ended on after.
+        if (await _dbContext.TraineeProfiles.AsNoTracking().AnyAsync(profile => profile.UserId == user.Id))
+        {
+            identity.AddClaim(new Claim(WombatClaims.TraineeRecord, "true"));
+        }
+
         return identity;
     }
 }

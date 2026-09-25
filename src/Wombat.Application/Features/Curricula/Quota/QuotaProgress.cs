@@ -220,6 +220,24 @@ public static class QuotaText
     public static string TargetPhrase(QuotaPeriod kind, int target)
         => kind == QuotaPeriod.Semester ? $"{target} per semester" : $"{target} per academic year";
 
+    /// <summary>
+    /// How the trainee's own programme ended, as a clause with no full stop, for each surface that says so to them (T252):
+    /// "You completed your programme on 30 June 2026", "Your programme ended on 20 August 2026", or, for a profile ended
+    /// before Wombat recorded the day (T209), "Your programme has ended". One sentence, so My progress, its standing panel
+    /// and the trainee dashboard cannot word the same end differently.
+    /// </summary>
+    public static string ProgrammeEnded(ProgrammeEndDto ended)
+    {
+        ArgumentNullException.ThrowIfNull(ended);
+
+        return ended switch
+        {
+            { EndedOn: { } on, Completed: true } => $"You completed your programme on {LongDate(on)}",
+            { EndedOn: { } on } => $"Your programme ended on {LongDate(on)}",
+            _ => "Your programme has ended"
+        };
+    }
+
     private static string MonthRange(DateOnly start, DateOnly end)
         => $"{start.ToString("MMMM", English)} to {end.ToString("MMMM", English)}";
 }

@@ -415,9 +415,9 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
     /// <remarks>
     /// <para>
     /// <b>Which programme.</b> <paramref name="profile" />, the one the cover names: <c>TraineeScopeResolver</c>'s
-    /// preferred profile, which the export was authorised against. The progress page reads the active profile only, so a
-    /// completed or deactivated trainee has no targets there. A graduation export is exactly the one that must show
-    /// them, so the section reads the cover's profile whatever its state, and says what that state is.
+    /// preferred profile, which the export was authorised against: the programme the trainee's progress page reads too,
+    /// a completed or deactivated one included (T252). A graduation export is exactly the one that must show its targets,
+    /// so the section reads the cover's profile whatever its state, and says what that state is.
     /// </para>
     /// <para>
     /// <b>Which day.</b> <see cref="PortfolioEpaProgress.ReadOn" />: the export's last day, or today on the South African

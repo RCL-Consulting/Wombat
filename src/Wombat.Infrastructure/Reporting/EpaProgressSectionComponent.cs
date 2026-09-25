@@ -213,10 +213,9 @@ internal static class EpaProgressSectionComponent
 
     private static string Standing(QuotaWindowDto period, DateOnly today, bool programmeActive)
     {
-        // The window's last counted day: 31 December when it ends in semester 2, a month after the College's own last
-        // day, because December encounters count towards it (D40).
-        var lastCountedDay = AcademicPeriod.Containing(period.NominalEnd).End;
-        if (today > lastCountedDay)
+        // Closed once past its last counted day: 31 December when it ends in semester 2, a month after the College's own
+        // last day, because December encounters count towards it (D40). The rule My progress reads too (T252).
+        if (period.HasClosedBy(today))
         {
             return period.IsMet ? ", met" : $", {period.Shortfall} short";
         }

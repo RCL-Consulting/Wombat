@@ -47,6 +47,8 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
 {
     private static readonly DateOnly AsOf = new(2026, 9, 23);
 
+    private static readonly WindowShape Semester1Of2025 = new("Semester 1, 2025", "January to June", new(2025, 1, 1), new(2025, 6, 30));
+    private static readonly WindowShape Semester2Of2025 = new("Semester 2, 2025", "July to November", new(2025, 7, 1), new(2025, 11, 30));
     private static readonly WindowShape Semester1Of2026 = new("Semester 1, 2026", "January to June", new(2026, 1, 1), new(2026, 6, 30));
     private static readonly WindowShape Semester2Of2026 = new("Semester 2, 2026", "July to November", new(2026, 7, 1), new(2026, 11, 30));
     private static readonly WindowShape Year2026 = new("2026 academic year", "January to November", new(2026, 1, 1), new(2026, 11, 30));
@@ -293,11 +295,11 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
     [Fact]
     public void AWindowTheProgrammeEndedIn_OrAfter_ReadsAsNoTarget_NeverAsALateStartOrAShortfall()
     {
-        // T209, D49. The one fixture here no reader builds today: the page reads the active profile only, and an active
-        // programme has not ended. It pins the copy for the statuses D49 added, so that no reader handing the page one can
-        // make an ended programme read "you started part-way through", "targets start with" or "short". Programme ended
-        // 15 May 2026: semester 1 was cut short before June, semester 2 is after the end, and the year was cut short
-        // before November.
+        // T209, D49. A fixture no reader builds: a running programme has not ended, and an ended one is read as on its
+        // last day with its own cards (T252, below), so no period after the end reaches these cards. It pins the copy for
+        // the statuses D49 added, so that no reader handing the page one can make an ended programme read "you started
+        // part-way through", "targets start with" or "short". Programme ended 15 May 2026: semester 1 was cut short
+        // before June, semester 2 is after the end, and the year was cut short before November.
         var cut = RenderMyProgress(Summary(
             AsOf,
             programmeStart: new(2025, 1, 1),
@@ -377,10 +379,218 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
         PageText(cut).Should().NotContain("academic year ended");
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // MyProgress once the programme has ended (T252)
+    // ---------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void AGraduate_SeesEveryPeriodOfTheirProgramme_ReadOnly_WithTheEndAtTheTop()
+    {
+        // Until T252 a graduate read "No curriculum items assigned yet" here while the PDF printed their periods.
+        var cut = RenderMyProgress(Graduate());
+
+        Text(cut.Find(".alert.alert-info")).Should().Be(
+            "You completed your programme on 30 June 2026. This page is your record of it and is read-only: no target " +
+            "applies to you any more. A period your programme ended in before that period's last month has no target, " +
+            "and no period after it is listed.");
+        cut.Find(".alert.alert-info").HasAttribute("role").Should().BeFalse("standing page content is not announced on every visit");
+        Text(cut.Find(".page-subtitle")).Should().Contain("Your record of the programme you ended");
+
+        var programme = cut.FindAll("section.detail-card").Single(card => Text(card.QuerySelector("h3")!) == "Your programme");
+        Details(programme.QuerySelector("dl.details-list")!).Should().Equal(new Dictionary<string, string>
+        {
+            ["Started"] = "1 January 2025",
+            ["Completed"] = "30 June 2026",
+            ["Training year"] = "2 when your programme ended"
+        });
+
+        var semester = ItemCard(cut, "PAED-001");
+        Details(semester.QuerySelector("dl.details-list")!).Should().Equal(new Dictionary<string, string>
+        {
+            ["Semester 1, 2026"] = "2 of 3, 1 short; 1 at the minimum level when observed",
+            ["Semester 2, 2025"] = "3 of 3, met; 3 at the minimum level when observed",
+            ["Semester 1, 2025"] = "1 of 3, 2 short; 0 at the minimum level when observed"
+        }, "each line as the portfolio PDF prints it, with how many met the minimum when observed");
+        semester.QuerySelectorAll("dl.details-list dt").Select(Text).Should().Equal(
+            ["Semester 1, 2026", "Semester 2, 2025", "Semester 1, 2025"], "newest period first, as the PDF prints them");
+        Text(semester).Should().Contain("Target: 3 per semester (6 a year). Minimum when your programme ended: 3a.");
+
+        Details(ItemCard(cut, "PAED-011").QuerySelector("dl.details-list")!).Should().Equal(new Dictionary<string, string>
+        {
+            ["2026 academic year"] = "no target (your programme ended part-way through) · 0 recorded",
+            ["2025 academic year"] = "1 of 1, met; 1 at the minimum level when observed"
+        });
+
+        cut.FindAll(".progress-bar").Should().BeEmpty("nothing is still to do");
+        PageText(cut).Should().NotContain("more by");
+        PageText(cut).Should().NotContain("No curriculum items assigned yet");
+        cut.FindAll("section.detail-card h3").Select(Text).Should().NotContain("This period");
+        PageText(cut).Should().NotContain("You started the programme on", "no D14 notice: the targets stopped, they do not start later");
+    }
+
+    [Fact]
+    public void AWithdrawnTrainee_IsToldTheirProgrammeEnded_AndThePeriodItEndedInHoldsNoTarget()
+    {
+        // The G2 browser case: deactivated with a last day of 20 August 2026, before November (D49).
+        var cut = RenderMyProgress(Withdrawn());
+
+        Text(cut.Find(".alert.alert-info")).Should().StartWith("Your programme ended on 20 August 2026. This page is your record of it");
+        PageText(cut).Should().NotContain("completed");
+
+        var programme = cut.FindAll("section.detail-card").Single(card => Text(card.QuerySelector("h3")!) == "Your programme");
+        Details(programme.QuerySelector("dl.details-list")!)["Ended"].Should().Be("20 August 2026");
+
+        Details(ItemCard(cut, "PAED-001").QuerySelector("dl.details-list")!).Should().Equal(new Dictionary<string, string>
+        {
+            ["Semester 2, 2026"] = "no target (your programme ended part-way through) · 1 recorded",
+            ["Semester 1, 2026"] = "3 of 3, met; 2 at the minimum level when observed"
+        });
+    }
+
+    [Theory]
+    [InlineData(2026, 12, 10, 2, "2 of 3 so far; 2 at the minimum level when observed")]
+    [InlineData(2026, 12, 31, 2, "2 of 3 so far; 2 at the minimum level when observed")]
+    [InlineData(2027, 1, 1, 2, "2 of 3, 1 short; 2 at the minimum level when observed")]
+    [InlineData(2027, 1, 5, 2, "2 of 3, 1 short; 2 at the minimum level when observed")]
+    [InlineData(2026, 12, 10, 3, "3 of 3 so far, met; 3 at the minimum level when observed")]
+    [InlineData(2027, 1, 1, 3, "3 of 3, met; 3 at the minimum level when observed")]
+    [InlineData(2027, 1, 1, 0, "0 of 3, 3 short")]
+    public void APeriodNotClosedByToday_IsACountSoFar_AndIsShortOnlyOnceItHasClosed(int year, int month, int day, int count, string expected)
+    {
+        // Graduated on 20 November 2026, in semester 2's last month, so it keeps its target (D49). December encounters
+        // still count towards it (D40), and one observed before the end can still be credited, so through 31 December it
+        // is a count so far, and short only from 1 January. A period already met says so either way. With no encounter
+        // there is no minimum-level share to state, as the PDF prints it.
+        var today = new DateOnly(year, month, day);
+        var cut = RenderMyProgress(Summary(
+            new DateOnly(2026, 11, 20),
+            programmeStart: new(2025, 1, 1),
+            stage: 2,
+            [
+                Item(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3,
+                    Counting(Semester2Of2026, count, target: 3, minimumReached: count),
+                    periods: [Counting(Semester2Of2026, count, target: 3, minimumReached: count)])
+            ]) with { Ended = new ProgrammeEndDto(Completed: true, EndedOn: new DateOnly(2026, 11, 20), Today: today) });
+
+        Details(ItemCard(cut, "PAED-001").QuerySelector("dl.details-list")!)["Semester 2, 2026"].Should().Be(expected);
+    }
+
+    [Fact]
+    public void AnEndedProgrammesCard_StillSaysWhetherAReleasedMsfCampaignCoveredTheEpa()
+    {
+        // T168 beside an ended programme's periods (T252): the coverage is read to the last day, and each card keeps its line.
+        var coverage = new MsfCoverageDto(
+            new DateOnly(2026, 8, 20),
+            [
+                new MsfCoveragePeriodDto(2026, 1, "Semester 1, 2026", "January to June", new(2026, 1, 1), new(2026, 6, 30), new(2026, 6, 30), HasEnded: true, EpasCovered: 1),
+                new MsfCoveragePeriodDto(2026, 2, "Semester 2, 2026", "July to November", new(2026, 7, 1), new(2026, 12, 31), new(2026, 11, 30), HasEnded: false, EpasCovered: 0)
+            ],
+            [
+                new MsfEpaCoverageDto(101, EpaId: 1, "PAED-001", "Providing paediatric emergency care to children", IsLocal: false,
+                [
+                    new MsfEpaPeriodCoverageDto(2026, 1, [new MsfCoveringCampaignDto(50, "Annual MSF", new(2026, 3, 10), new(2026, 3, 13))]),
+                    new MsfEpaPeriodCoverageDto(2026, 2, [])
+                ])
+            ]);
+        var cut = RenderMyProgressWith(new FakeSender()
+            .On<GetCurriculumProgressForTraineeQuery>(_ => Withdrawn())
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
+            .On<GetMsfCoverageForTraineeQuery>(_ => coverage));
+
+        ItemCard(cut, "PAED-001").QuerySelectorAll("p.progress-row-meta").Select(Text)
+            .Should().Contain(
+                "MSF in Semester 2, 2026: no released campaign covering this EPA has closed yet. " +
+                "MSF in Semester 1, 2026: covered by a released campaign that closed on 10 March 2026.");
+    }
+
+    [Fact]
+    public void AnEndedProgramme_SaysWhenItsMsfCoverageCouldNotBeLoaded_AndStillShowsItsPeriods()
+    {
+        // T168's rule, that a failed coverage read says so and takes no card down with it, holds on the ended view too.
+        var cut = RenderMyProgressWith(new FakeSender()
+            .On<GetCurriculumProgressForTraineeQuery>(_ => Withdrawn())
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
+            .On<GetMsfCoverageForTraineeQuery>(_ => throw new InvalidOperationException("The database is unavailable.")));
+
+        Text(cut.Find(".alert.alert-warning")).Should().Be(
+            "Your multi-source feedback coverage could not be loaded: The database is unavailable.");
+        Details(ItemCard(cut, "PAED-001").QuerySelector("dl.details-list")!).Should().ContainKey("Semester 2, 2026");
+        cut.Markup.Should().NotContain("MSF in ");
+    }
+
+    [Fact]
+    public void AnEndThatWasNeverRecorded_SaysSo_RatherThanInventingADay()
+    {
+        var cut = RenderMyProgress(Graduate() with { Ended = new ProgrammeEndDto(Completed: false, EndedOn: null, Today: AsOf) });
+
+        Text(cut.Find(".alert.alert-info")).Should().Be(
+            "Your programme has ended. Wombat did not record the day it ended, so your periods are shown up to 23 September " +
+            "2026. This page is your record of it and is read-only: no target applies to you any more.");
+        var programme = cut.FindAll("section.detail-card").Single(card => Text(card.QuerySelector("h3")!) == "Your programme");
+        Details(programme.QuerySelector("dl.details-list")!)["Ended"].Should().Be("The day was not recorded");
+    }
+
+    [Fact]
+    public void AnEndedProgramme_ReadsItsStandingAndMsfCoverage_AsOnItsLastDay()
+    {
+        // The targets are read as on the last day; the standing's training year and the MSF cards follow them, or the page
+        // would judge a graduate against the year their start date puts them in today.
+        var sender = new FakeSender()
+            .On<GetCurriculumProgressForTraineeQuery>(_ => Withdrawn())
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
+            .On<GetMsfCoverageForTraineeQuery>(_ => null);
+        RenderMyProgressWith(sender);
+
+        sender.Received.OfType<GetEntrustmentStandingForTraineeQuery>().Should().ContainSingle()
+            .Which.AsOf.Should().Be(new DateOnly(2026, 8, 20));
+        var coverage = sender.Received.OfType<GetMsfCoverageForTraineeQuery>().Should().ContainSingle().Which;
+        (coverage.From, coverage.To, coverage.AsOf).Should().Be(((DateOnly?)null, (DateOnly?)new DateOnly(2026, 8, 20), (DateOnly?)null));
+    }
+
+    [Fact]
+    public void ARunningProgramme_ReadsItsStandingAndMsfCoverage_OnToday()
+    {
+        var sender = new FakeSender()
+            .On<GetCurriculumProgressForTraineeQuery>(_ => BoundaryStarter())
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
+            .On<GetMsfCoverageForTraineeQuery>(_ => null);
+        var cut = RenderMyProgressWith(sender);
+
+        sender.Received.OfType<GetEntrustmentStandingForTraineeQuery>().Single().AsOf.Should().BeNull();
+        sender.Received.OfType<GetMsfCoverageForTraineeQuery>().Single().To.Should().BeNull();
+        cut.FindAll(".alert.alert-info").Select(Text).Should().NotContain(text => text.Contains("record of it"));
+        Text(cut.Find(".page-subtitle")).Should().Contain("What your curriculum expects of you this period");
+    }
+
+    [Fact]
+    public void TheDashboard_SaysAWithdrawnTraineesProgrammeEnded_NotThatNoCurriculumIsAssigned()
+    {
+        // Deactivation keeps the Trainee role, so a withdrawn trainee still lands on this dashboard.
+        var card = CurriculumTargetsCard(RenderTraineeDashboard(Withdrawn()));
+
+        Text(card).Should().Contain(
+            "Your programme ended on 20 August 2026, so no target applies to you any more. Your progress in each period is " +
+            "kept on My progress, read-only.");
+        Text(card).Should().NotContain("No curriculum assigned yet");
+        Metrics(card).Should().BeEmpty();
+        card.QuerySelectorAll(".progress-bar").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TheDashboard_SaysAGraduateCompletedTheirProgramme()
+    {
+        Text(CurriculumTargetsCard(RenderTraineeDashboard(Graduate()))).Should().Contain(
+            "You completed your programme on 30 June 2026, so no target applies to you any more.");
+    }
+
     [Fact]
     public void ATraineeWithNoCurriculum_IsToldSo()
     {
-        // The reader returns null when there is no active trainee profile.
+        // The reader returns null when there is no trainee profile at all.
         var cut = RenderMyProgress(null);
 
         PageText(cut).Should().Contain("No curriculum items assigned yet.");
@@ -840,6 +1050,56 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
             semesterStart: new QuotaStartDto("semester 1, 2027", new(2027, 1, 1)),
             yearStart: new QuotaStartDto("the 2027 academic year", new(2027, 1, 1)));
 
+    /// <summary>
+    /// Started 1 January 2025 and completed on 30 June 2026, in semester 1's last month, read on 23 September 2026: what
+    /// the reader builds for a graduate (T252), as on the last day, with every period back to the start. Semester 1 keeps
+    /// its target (D49) and has closed; the 2026 academic year was cut short before November.
+    /// </summary>
+    private static TraineeCurriculumProgressSummaryDto Graduate()
+        => Summary(
+            new DateOnly(2026, 6, 30),
+            programmeStart: new(2025, 1, 1),
+            stage: 2,
+            [
+                Item(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3,
+                    Counting(Semester1Of2026, count: 2, target: 3, minimumReached: 1),
+                    previous: Counting(Semester2Of2025, count: 3, target: 3, minimumReached: 3),
+                    periods:
+                    [
+                        Counting(Semester1Of2026, count: 2, target: 3, minimumReached: 1),
+                        Counting(Semester2Of2025, count: 3, target: 3, minimumReached: 3),
+                        Counting(Semester1Of2025, count: 1, target: 3)
+                    ]),
+                Item(11, "PAED-011", "Managing population health challenges", QuotaPeriod.AcademicYear, 1,
+                    NoTargetAfterTheEnd(Year2026, QuotaWindowStatus.ExemptProgrammeEnded, count: 0, target: 1),
+                    previous: Counting(Year2025, count: 1, target: 1, minimumReached: 1),
+                    periods:
+                    [
+                        NoTargetAfterTheEnd(Year2026, QuotaWindowStatus.ExemptProgrammeEnded, count: 0, target: 1),
+                        Counting(Year2025, count: 1, target: 1, minimumReached: 1)
+                    ])
+            ]) with { Ended = new ProgrammeEndDto(Completed: true, EndedOn: new DateOnly(2026, 6, 30), Today: AsOf) };
+
+    /// <summary>
+    /// Started 1 January 2025 and deactivated with a last day of 20 August 2026, read on 23 September 2026 (the G2 browser
+    /// case). Semester 2 was cut short before November, so it holds no target (D49).
+    /// </summary>
+    private static TraineeCurriculumProgressSummaryDto Withdrawn()
+        => Summary(
+            new DateOnly(2026, 8, 20),
+            programmeStart: new(2025, 1, 1),
+            stage: 2,
+            [
+                Item(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3,
+                    NoTargetAfterTheEnd(Semester2Of2026, QuotaWindowStatus.ExemptProgrammeEnded, count: 1, target: 3),
+                    previous: Counting(Semester1Of2026, count: 3, target: 3, minimumReached: 2),
+                    periods:
+                    [
+                        NoTargetAfterTheEnd(Semester2Of2026, QuotaWindowStatus.ExemptProgrammeEnded, count: 1, target: 3),
+                        Counting(Semester1Of2026, count: 3, target: 3, minimumReached: 2)
+                    ])
+            ]) with { Ended = new ProgrammeEndDto(Completed: false, EndedOn: new DateOnly(2026, 8, 20), Today: AsOf) };
+
     /// <summary>A boundary starter reading the page on 10 December 2026, after the College's year has ended.</summary>
     private static TraineeCurriculumProgressSummaryDto DecemberReader()
         => Summary(
@@ -866,8 +1126,9 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
         QuotaPeriod period,
         int target,
         QuotaWindowDto current,
-        QuotaWindowDto? previous = null)
-        => new(id, EpaId: id, code, title, period, target, current, previous, EffectiveMinimumLevelOrder: 3, EffectiveMinimumLevelLabel: "3a", TrainingYearChangedOn: null);
+        QuotaWindowDto? previous = null,
+        IReadOnlyList<QuotaWindowDto>? periods = null)
+        => new(id, EpaId: id, code, title, period, target, current, previous, EffectiveMinimumLevelOrder: 3, EffectiveMinimumLevelLabel: "3a", TrainingYearChangedOn: null, periods);
 
     private static QuotaWindowDto Counting(
         WindowShape window, int count, int target, int minimumReached = 0, DateOnly? lastObservedOn = null, bool lastObservedOnDeclared = true)

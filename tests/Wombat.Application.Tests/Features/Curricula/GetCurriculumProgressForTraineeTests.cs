@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Application.Features.Curricula.Quota;
@@ -335,7 +337,7 @@ public sealed class GetCurriculumProgressForTraineeTests
     }
 
     [Fact]
-    public async Task NoActiveProfile_ReturnsNull()
+    public async Task NoProfileAtAll_ReturnsNull()
     {
         await using var db = CreateDb();
         SeedCurriculum(db);
@@ -478,26 +480,163 @@ public sealed class GetCurriculumProgressForTraineeTests
     }
 
     [Fact]
-    public async Task AResolvedProfileIsReadWhateverItsState_WhileTheProgressPageReadsOnlyAnActiveOne()
+    public async Task AGraduate_ReadsTheProgrammeTheyCompleted_AsOnItsLastDay_WithEveryPeriod_MarkedAsEnded()
     {
-        // T169 review: the portfolio export reads the programme its cover names, which for a graduate is a completed,
-        // inactive profile. The progress page still has nothing to show for one.
+        // T252. Until then the page read the active profile only, so a graduate was told "No curriculum items assigned
+        // yet" while the portfolio export printed their periods. Completed on 30 June 2026, in semester 1's last month,
+        // so semester 1 keeps its full target (D49), and read on 23 September, when semester 2 has begun: it is after the
+        // end, so it is not listed at all.
         await using var db = CreateDb();
         SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2025, 2, counts: 3);
         AddRow(db, SemesterItemId, 2026, 1, counts: 2);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 1);   // credited after the end: outside the programme
         db.SaveChanges();
         db.Set<TraineeProfile>().Local.Single().Complete(new DateOnly(2026, 6, 30), today: new DateOnly(2026, 6, 30));
         db.SaveChanges();
         db.ChangeTracker.Clear();
 
-        var page = await new GetCurriculumProgressForTraineeQueryHandler(db).Handle(
-            new GetCurriculumProgressForTraineeQuery("trainee-1", TestPrincipals.Trainee("trainee-1"), AsOf),
-            CancellationToken.None);
-        page.Should().BeNull();
+        var summary = await Read(db);
 
-        var summary = await ReadSpan(db, periodsFrom: DateOnly.MinValue, asOf: new DateOnly(2026, 6, 30));
-        summary.Items.Single(entry => entry.EpaCode == "PAED-001").Current
-            .Should().Match<QuotaWindowDto>(window => window.Name == "Semester 1, 2026" && window.Count == 2);
+        summary.Ended.Should().Be(new ProgrammeEndDto(Completed: true, EndedOn: new DateOnly(2026, 6, 30), Today: AsOf));
+        summary.AsOf.Should().Be(new DateOnly(2026, 6, 30), "an ended programme is read as on its last day, as the PDF reads it");
+        summary.TraineeStage.Should().Be(3, "the training year the programme ended in, not the one today would give");
+
+        var item = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+        item.Current.Should().Match<QuotaWindowDto>(window =>
+            window.Name == "Semester 1, 2026" && window.Status == QuotaWindowStatus.Counting && window.Count == 2);
+        item.Periods!.Select(period => period.Name).Should().Equal(
+            "Semester 1, 2026", "Semester 2, 2025", "Semester 1, 2025", "Semester 2, 2024", "Semester 1, 2024");
+        item.Periods!.Select(period => period.Count).Should().Equal(2, 3, 0, 0, 0);
+
+        // The same read the portfolio export makes for the same profile on the same day, so the two cannot disagree.
+        var export = await ReadSpan(db, periodsFrom: DateOnly.MinValue, asOf: new DateOnly(2026, 6, 30));
+        summary.Items.Should().BeEquivalentTo(export.Items);
+        export.Ended.Should().BeNull("a caller that resolved the profile itself is told nothing about how it chose it");
+    }
+
+    [Fact]
+    public async Task AWithdrawnTrainee_ReadsThePeriodTheirProgrammeEndedIn_AsHoldingNoTarget()
+    {
+        // T252, the G2 browser case: deactivated with a last day of 20 August 2026, before November, the last month of
+        // semester 2 and of the academic year. Neither holds a target (D49), and what was credited in them still shows.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 1, counts: 3);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 1);
+        AddRow(db, YearItemId, 2026, 1, counts: 1);
+        db.SaveChanges();
+        db.Set<TraineeProfile>().Local.Single().Deactivate(new DateOnly(2026, 8, 20), today: new DateOnly(2026, 8, 20));
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var summary = await Read(db);
+
+        summary.Ended.Should().Be(new ProgrammeEndDto(Completed: false, EndedOn: new DateOnly(2026, 8, 20), Today: AsOf));
+        summary.AsOf.Should().Be(new DateOnly(2026, 8, 20));
+
+        var semester = summary.Items.Single(entry => entry.EpaCode == "PAED-001");
+        semester.Periods!.Select(period => (period.Name, period.Status, period.Count)).Take(2).Should().Equal(
+            ("Semester 2, 2026", QuotaWindowStatus.ExemptProgrammeEnded, 1),
+            ("Semester 1, 2026", QuotaWindowStatus.Counting, 3));
+        semester.Current.Shortfall.Should().Be(0, "a period the programme ended in before its last month is never short");
+
+        var year = summary.Items.Single(entry => entry.EpaCode == "PAED-002");
+        year.Periods!.Select(period => (period.Name, period.Status)).First().Should().Be(
+            ("2026 academic year", QuotaWindowStatus.ExemptProgrammeEnded));
+        year.Periods!.Select(period => period.Name).Should().Equal(
+            "2026 academic year", "2025 academic year", "2024 academic year");
+
+        summary.SemesterTargetsStart.Should().BeNull("an ended programme's targets stopped; they do not start later");
+        summary.YearTargetsStart.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task AGraduateAdmittedToANewProgramme_ReadsTheNewOne_NotTheOneTheyEnded()
+    {
+        // The preferred profile is the active one whenever there is one (T185), so an ended programme is read only when
+        // there is no current one.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        db.SaveChanges();
+        db.Set<TraineeProfile>().Local.Single().Complete(new DateOnly(2026, 6, 30), today: new DateOnly(2026, 6, 30));
+        db.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 2, UserId = "trainee-1", InstitutionId = 1, CurriculumId = 1,
+            ProgrammeStartDate = new DateOnly(2026, 7, 1), ExpectedCompletionDate = new DateOnly(2030, 7, 1),
+            IsActive = true
+        });
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var summary = await Read(db);
+
+        summary.Ended.Should().BeNull();
+        summary.ProgrammeStartDate.Should().Be(new DateOnly(2026, 7, 1));
+        summary.AsOf.Should().Be(AsOf);
+        summary.Items.Should().OnlyContain(item => item.Periods == null, "a running programme shows this period and the last");
+    }
+
+    [Fact]
+    public async Task AProgrammeWhoseEndWasNeverRecorded_IsReadOnToday_AndSaysSo()
+    {
+        // A profile deactivated before T209 recorded the day. Nothing bounds its periods, so they run to today, and the
+        // marker says the day is unknown rather than inventing one.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        db.Set<TraineeProfile>().Local.Single().IsActive = false;
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var summary = await Read(db);
+
+        summary.Ended.Should().Be(new ProgrammeEndDto(Completed: false, EndedOn: null, Today: AsOf));
+        summary.AsOf.Should().Be(AsOf);
+        summary.Items.Single(entry => entry.EpaCode == "PAED-001").Periods!.First().Name.Should().Be("Semester 2, 2026");
+    }
+
+    [Fact]
+    public async Task AnotherTraineesEndedProgramme_IsNotReadForATrainee()
+    {
+        // The read is widened to ended programmes, not to other people: MayReadAsync still decides first (T113, T185).
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        db.SaveChanges();
+        db.Set<TraineeProfile>().Local.Single().Complete(new DateOnly(2026, 6, 30), today: new DateOnly(2026, 6, 30));
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var result = await new GetCurriculumProgressForTraineeQueryHandler(db).Handle(
+            new GetCurriculumProgressForTraineeQuery("trainee-1", TestPrincipals.Trainee("trainee-2"), AsOf),
+            CancellationToken.None);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task AGraduateWithoutTheTraineeRole_ReadsTheirOwnRecord()
+    {
+        // Completion removes the Trainee role (CompleteTraineeProfileCommand), so the graduate asks holding no trainee
+        // role at all, only the trainee-record claim sign-in issues. MayReadAsync admits anyone to themselves.
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        db.SaveChanges();
+        db.Set<TraineeProfile>().Local.Single().Complete(new DateOnly(2026, 6, 30), today: new DateOnly(2026, 6, 30));
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+
+        var graduate = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, "trainee-1"),
+                new Claim(WombatClaimTypes.TraineeRecord, "true")
+            ],
+            authenticationType: "Test"));
+
+        var result = await new GetCurriculumProgressForTraineeQueryHandler(db).Handle(
+            new GetCurriculumProgressForTraineeQuery("trainee-1", graduate, AsOf), CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Ended!.Completed.Should().BeTrue();
     }
 
     [Fact]

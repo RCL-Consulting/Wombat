@@ -56,6 +56,14 @@ public sealed record QuotaWindowDto(
     /// <summary>The whole window is after the programme ended: outside it, and never short (D49).</summary>
     public bool IsAfterProgrammeEnd => Status == QuotaWindowStatus.AfterProgrammeEnd;
 
+    /// <summary>
+    /// Whether the window is over by <paramref name="today" />: past its last counted day, which for a window ending in
+    /// semester 2 is 31 December, a month after the College's own last day, because December encounters count towards it
+    /// (D40). Until then its count is a count so far, not a result, whether or not the trainee is still in the programme:
+    /// an encounter observed before the end can still be credited after it (T252).
+    /// </summary>
+    public bool HasClosedBy(DateOnly today) => today > AcademicPeriod.Containing(NominalEnd).End;
+
     public static QuotaWindowDto From(QuotaWindowTally tally)
     {
         var startsLater = tally.Window.Status is QuotaWindowStatus.NotStarted or QuotaWindowStatus.ExemptPartialPeriod;
@@ -129,6 +137,13 @@ public sealed record TraineeCurriculumProgressDto(
 /// the curriculum has no semester items, so no surface can announce a waiver of targets the trainee does not have.
 /// </param>
 /// <param name="YearTargetsStart">The same for academic-year targets. D42 usually waives only ONE of the two kinds.</param>
+/// <param name="Ended">
+/// How and when the programme ended, when the trainee holds no current programme and this is the one they ended on
+/// (T252). Null while the programme runs, and on a read of a profile the caller resolved
+/// (<see cref="TraineeQuotaProgressReader.ReadForProfileAsync" />), which says nothing about how it chose it. When set,
+/// every figure above is read as on the last day (<see cref="AsOf" />), and each item carries every period of the
+/// programme (<see cref="TraineeCurriculumProgressDto.Periods" />).
+/// </param>
 public sealed record TraineeCurriculumProgressSummaryDto(
     DateOnly AsOf,
     DateOnly ProgrammeStartDate,
@@ -146,10 +161,27 @@ public sealed record TraineeCurriculumProgressSummaryDto(
     bool ProgrammeNotStarted,
     QuotaStartDto? SemesterTargetsStart,
     QuotaStartDto? YearTargetsStart,
-    IReadOnlyList<TraineeCurriculumProgressDto> Items);
+    IReadOnlyList<TraineeCurriculumProgressDto> Items,
+    ProgrammeEndDto? Ended = null);
 
 /// <summary>The first window of a kind a trainee is held to: "semester 1, 2027", from 1 January 2027.</summary>
 public sealed record QuotaStartDto(string Name, DateOnly StartsOn);
+
+/// <summary>How a trainee's programme ended, for the reader of a programme that has (T252).</summary>
+/// <param name="Completed">
+/// True for a completion (graduation, <c>TraineeProfile.CompletedOn</c>); false for a programme ended without being
+/// completed (a withdrawal, <c>TraineeProfile.DeactivatedOn</c>).
+/// </param>
+/// <param name="EndedOn">
+/// The last day (<c>TraineeProfile.EndedOn</c>), which D49 reads. Null only for a profile deactivated before Wombat
+/// recorded the day (T209), whose periods are then read up to <paramref name="Today" />.
+/// </param>
+/// <param name="Today">
+/// The day the record was read, on the South African calendar. The summary is read as on <paramref name="EndedOn" />, so
+/// this is the day that says whether a period has closed (<see cref="QuotaWindowDto.HasClosedBy" />): one that has not
+/// is a count so far, since an encounter observed before the end can still be credited after it.
+/// </param>
+public sealed record ProgrammeEndDto(bool Completed, DateOnly? EndedOn, DateOnly Today);
 
 /// <summary>
 /// Builds one trainee's quota progress. Shared by the progress page and the trainee dashboard, so the two
@@ -158,9 +190,25 @@ public sealed record QuotaStartDto(string Name, DateOnly StartsOn);
 public static class TraineeQuotaProgressReader
 {
     /// <summary>
-    /// The trainee's progress on <paramref name="asOf" />, or null when they have no active trainee profile.
+    /// The trainee's own progress: their current programme read on <paramref name="today" />, or, when they hold no
+    /// current programme, the one they ended on, read as on its last day and marked as ended
+    /// (<see cref="TraineeCurriculumProgressSummaryDto.Ended" />, T252). Null when they hold no trainee profile at all.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// The profile is the trainee's preferred one (<see cref="TraineeScopeResolver.PreferredProfiles" />, T185): the active
+    /// one whenever there is one, else the most recent. It is the pick credit, the activity scope stamp, the standing, the
+    /// MSF coverage and the portfolio export all make, so a graduate's progress page reads the programme their export's
+    /// cover names. Until T252 this read the active profile only, so a completed or withdrawn trainee was told "No
+    /// curriculum items assigned yet" while the PDF printed their periods.
+    /// </para>
+    /// <para>
+    /// An ended programme is read as the portfolio export reads one (<c>PortfolioEpaProgress.ReadOn</c>): as on the last
+    /// day, never later, so no period that began after it is listed (D49: outside the programme), with every window back
+    /// to the programme start. The window the programme ended in holds no target unless it ended in that window's last
+    /// month (D49), which <see cref="QuotaProgressCalculator" /> applies. A profile deactivated before Wombat recorded its
+    /// day is read on <paramref name="today" />.
+    /// </para>
     /// <para>
     /// Items are listed from the curriculum, not from the progress rows: a new period has no rows yet, and it must
     /// read "0 of 3", not vanish. The items are the national core plus the trainee's own institution's local
@@ -178,23 +226,28 @@ public static class TraineeQuotaProgressReader
     public static async Task<TraineeCurriculumProgressSummaryDto?> ReadAsync(
         IApplicationDbContext dbContext,
         string traineeUserId,
-        DateOnly asOf,
+        DateOnly today,
         CancellationToken cancellationToken)
     {
-        // The trainee's preferred profile, the one pick credit, the activity scope stamp and the export all make
-        // (TraineeScopeResolver.PreferredProfiles, T185), and only while it is current: this page is the trainee's
-        // own current programme, read against today's windows, and a completed programme has no window today. The
-        // preferred profile is the active one whenever there is one, so "active only" chooses no differently; until
-        // T185 this broke ties among active profiles by the latest programme start, which only a store without the
-        // one-active-profile index could hold, and there it read a different curriculum from the one credit landed on.
         var profile = await TraineeScopeResolver.PreferredProfiles(dbContext)
             .AsNoTracking()
-            .Where(p => p.UserId == traineeUserId && p.IsActive)
+            .Where(p => p.UserId == traineeUserId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return profile is null
-            ? null
-            : await ReadForProfileAsync(dbContext, profile, asOf, periodsFrom: null, cancellationToken);
+        if (profile is null)
+        {
+            return null;
+        }
+
+        if (profile.IsActive)
+        {
+            return await ReadForProfileAsync(dbContext, profile, today, periodsFrom: null, cancellationToken);
+        }
+
+        var lastDay = profile.EndedOn is { } ended && ended < today ? ended : today;
+        var summary = await ReadForProfileAsync(dbContext, profile, lastDay, periodsFrom: DateOnly.MinValue, cancellationToken);
+
+        return summary with { Ended = new ProgrammeEndDto(profile.CompletedOn is not null, profile.EndedOn, today) };
     }
 
     /// <summary>

@@ -3,8 +3,9 @@ using Wombat.Application.Features.Curricula.Quota;
 namespace Wombat.Application.Features.Dashboards.Trainee;
 
 /// <param name="CurriculumTargets">
-/// The trainee's curriculum progress for the current period: the same read model the progress page uses (T130).
-/// Null for a pending trainee or one with no active profile.
+/// The trainee's curriculum progress for the current period: the same read model the progress page uses (T130). For a
+/// trainee whose programme has ended, the one they ended on, marked as ended (T252). Null for a pending trainee or one
+/// with no profile at all.
 /// </param>
 public sealed record TraineeDashboardSummaryDto(
     TraineeCurriculumProgressSummaryDto? CurriculumTargets,

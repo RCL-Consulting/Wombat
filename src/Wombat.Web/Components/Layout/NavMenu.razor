@@ -1,4 +1,5 @@
 @using Wombat.Domain.Identity
+@using Wombat.Application.Common.Security
 
 <div class="top-row ps-3 navbar navbar-dark">
   <div class="container-fluid">
@@ -83,7 +84,15 @@
 
   private sealed record NavItem(string Href, string Label, string Icon);
 
-  private sealed record NavSection(string[] Roles, NavItem[] Items);
+  /// <param name="Claim">
+  /// A claim type that also admits a user to the section, whatever their roles, or null. For the one link that is a
+  /// person's own record rather than a role's work (T252).
+  /// </param>
+  private sealed record NavSection(string[] Roles, NavItem[] Items, string? Claim = null)
+  {
+    public bool Admits(System.Security.Claims.ClaimsPrincipal user)
+      => Roles.Any(user.IsInRole) || (Claim is { } type && user.HasClaim(claim => claim.Type == type));
+  }
 
   // One entry per page, so a page has one label and one icon wherever it is offered. Every label is unique, so a user
   // holding several roles never sees two links with the same name (T178).
@@ -130,6 +139,10 @@
     // export the period and hand the PDF to their reviewer.
     new([WombatRoles.Trainee], [MyMsfReports, MyCommitteeReviews, MyProgress, ExportPortfolio]),
 
+    // T252: completing a programme removes the Trainee role, but a graduate still reads their own progress, as their
+    // portfolio export prints it. Offered to anyone who holds a trainee profile (the claim), where a Trainee has it.
+    new([], [MyProgress], Claim: WombatClaimTypes.TraineeRecord),
+
     new([WombatRoles.Assessor], [ActivityInbox, RecentActivities]),
 
     // Not Invitations: its page admits only an Administrator or an InstitutionalAdmin (T178).
@@ -164,7 +177,7 @@
     var offered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     var links = new List<NavItem>();
 
-    foreach (var section in Sections.Where(section => section.Roles.Any(user.IsInRole)))
+    foreach (var section in Sections.Where(section => section.Admits(user)))
     {
       foreach (var item in section.Items)
       {

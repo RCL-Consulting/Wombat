@@ -22,6 +22,14 @@ public static class AuthorizationPolicies
     /// </summary>
     public const string NationalCatalogueAccess = nameof(NationalCatalogueAccess);
 
+    /// <summary>
+    /// A trainee's own record, which outlives the programme (T252): the Trainee role, or a trainee profile held
+    /// (<see cref="WombatClaims.TraineeRecord" />). Completing a programme removes the Trainee role, so without the claim a
+    /// graduate could no longer open their own progress page, although the portfolio export still printed it. It admits
+    /// only to pages that read the caller's own record; a PendingTrainee who has never held a profile is not admitted.
+    /// </summary>
+    public const string TraineeOrFormerTrainee = nameof(TraineeOrFormerTrainee);
+
     public static IServiceCollection AddWombatAuthorization(this IServiceCollection services)
     {
         services.AddSingleton<IAuthorizationHandler, ScopeClaimRequirementHandler>();
@@ -71,6 +79,11 @@ public static class AuthorizationPolicies
 
             options.AddPolicy(NationalCatalogueAccess, policy =>
                 policy.RequireRole(WombatRoles.Administrator, WombatRoles.CollegeAdmin, WombatRoles.InstitutionalAdmin));
+
+            options.AddPolicy(TraineeOrFormerTrainee, policy =>
+                policy.RequireAssertion(context =>
+                    context.User.IsInRole(WombatRoles.Trainee) ||
+                    context.User.HasClaim(claim => claim.Type == WombatClaims.TraineeRecord)));
         });
 
         return services;

@@ -25,6 +25,12 @@
         {
           <p class="muted">No curriculum assigned yet. Once you are admitted, your targets for each period appear here.</p>
         }
+        else if (_vm.CurriculumTargets.Ended is { } ended)
+        {
+          @* T252: a withdrawn trainee keeps the Trainee role and lands here. Their programme is over, so no target is owed;
+             the card says so and points to the record, rather than reading "No curriculum assigned yet". *@
+          <p class="muted">@EndedLine(ended) Your progress in each period is kept on My progress, read-only.</p>
+        }
         else if (_vm.CurriculumTargets is not { Items.Count: > 0 } targets)
         {
           @* Admitted, but no item is in force: every EPA on the curriculum is inactive (T158), or it has none yet. *@
@@ -164,6 +170,10 @@
   private TraineeDashboardSummaryDto? _vm;
   private bool _loading = true;
   private string? _error;
+
+  /// <summary>How the programme ended, in the words of the progress page's notice (T252, <see cref="QuotaText.ProgrammeEnded" />).</summary>
+  private static string EndedLine(ProgrammeEndDto ended)
+    => $"{QuotaText.ProgrammeEnded(ended)}, so no target applies to you any more.";
 
   protected override async Task OnInitializedAsync()
   {

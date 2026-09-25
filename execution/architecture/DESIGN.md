@@ -222,6 +222,15 @@ MSF Reports, My Committee Reviews, My Progress and Export Portfolio sit in their
 the one shared with PendingTrainee, because their pages do not admit a pending trainee (T141). A link goes in the
 shared section only if its page admits PendingTrainee.
 
+My Progress is also offered to someone who holds a trainee profile without the Trainee role (T252): completing a
+programme removes the role, and a graduate still reads their own record, as their portfolio export prints it. That
+section is keyed on a claim, not a role, so it is not a row of the table: `trainee_record`
+(`WombatClaimTypes.TraineeRecord`), which sign-in issues to anyone holding a trainee profile, current or ended. It sits
+straight after the Trainee section, so a Trainee, who holds the claim too, sees My Progress once, where their row puts
+it. The page's policy, `TraineeOrFormerTrainee`, admits the same two: the role or the claim. `NavMenuAuthorizationTests`
+checks that a holder of the claim alone is offered the link and admitted, and that a PendingTrainee without it is
+neither. The graduate's other trainee pages (MSF Reports, My Committee Reviews) still require the role.
+
 MSF coverage (`/msf/coverage`, T210) is not a nav item. It is a planning aid for the campaigns, so it is reached from
 the MSF campaign list's header, an outline "MSF coverage" link (`#msf-coverage-link`) beside New campaign, and its own
 header links back ("Back to campaigns"). The link is not offered to someone who holds Trainee, whom the page shows no
@@ -788,7 +797,11 @@ failure shows in the panel and never replaces the page.
 
 What the panel must not claim. On the review page the year is read for the review period's last day once that has
 passed (`ReviewPeriodTo`), and the opening sentence says so and that decisions are today's: a review held after its
-period judges that period's year, not the next one. A target the curriculum sets no level for (no per-stage map, or a
+period judges that period's year, not the next one. On the trainee's own page once their programme has ended, the year is
+read for its last day (`ProgrammeEnd`), and the sentence says the programme ended, or was completed, then, in that year,
+rather than "you are in" a year the start date would put them in today (T252). A profile ended before Wombat recorded the
+day (T209) is read on today, and the sentence says the day was not recorded and the year is counted from the start date
+to today, never "you are in" it. A target the curriculum sets no level for (no per-stage map, or a
 year past the ones it names) is the exit level standing in, and its cell says "Exit level; no year N level set" rather
 than passing it off as Annexure A's. An institution's own EPA is a row, marked under its title, but the exit rule is
 the College's and counts only the College's EPAs. For someone else, "nothing to show" does not say "no curriculum":
@@ -816,6 +829,21 @@ newest semester first, and gives this semester's count in the "This period" card
 campaign "about" it (D9). An uncovered semester that has ended is never worded as final ("…that closed in the semester
 has been released"): a campaign is placed by the day it closed, so one closed in June and released in July covers
 semester 1 only from its release.
+
+**My progress once the programme has ended** (T252). A trainee with no current programme, completed or withdrawn, sees
+the one they ended on, read as on its last day, never "No curriculum items assigned yet". The page opens with an
+`<Alert Kind="info">` (standing content, so no role) saying that the programme ended and on which day, "You completed
+your programme on …" or "Your programme ended on …", that the page is their record and read-only, and D49's rule, as the
+PDF states it. The "This period" card becomes "Your programme": started, completed or ended, and the training year it
+ended in. Each quota card keeps its heading and target line, and lists every period in a `details-list`, newest first,
+from the one it ended in back to the start: "Semester 2, 2026: no target (your programme ended part-way through) · 1
+recorded", "Semester 1, 2026: 3 of 3, met; 2 at the minimum level when observed". A period not yet closed by today
+(`QuotaWindowDto.HasClosedBy`, through 31 December for semester 2, D40) is "2 of 3 so far", or "3 of 3 so far, met",
+never "more by": nothing is owed. There is no bar, no D14 alert and no December notice. The period lines are the
+portfolio PDF's (`PeriodLine`, which reads the same closing rule), in the page's "your", and each card keeps its MSF
+line; a coverage read that fails says so above the cards, as on the running view. The opening sentence ("You completed
+your programme on …") is `QuotaText.ProgrammeEnded`, which the standing panel and the trainee dashboard's Curriculum
+targets card also use; that card says the programme ended and points here.
 
 **The programme's MSF coverage** (T210, `/msf/coverage`, Coordinator and Administrator, as the campaign pages). Per
 programme, EPA and semester, how many of the programme's trainees were covered: "1 of 3 trainees covered". A programme

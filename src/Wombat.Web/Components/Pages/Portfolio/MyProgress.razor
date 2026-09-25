@@ -1,5 +1,7 @@
 @page "/portfolio/progress"
-@attribute [Authorize(Roles = "Trainee")]
+@* T252: the Trainee role, or a trainee profile held. Completion removes the role, and a graduate still reads their own
+   record here, as their portfolio export prints it. *@
+@attribute [Authorize(Policy = "TraineeOrFormerTrainee")]
 @rendermode InteractiveServer
 @using Wombat.Application.Features.Curricula.Quota
 @inject IScopedSender Sender
@@ -7,10 +9,16 @@
 
 <PageTitle>My progress</PageTitle>
 
-<PageHeader Title="My progress" Subtitle="What your curriculum expects of you this period, and your rating trajectory for each EPA you have evidence against." />
+<PageHeader Title="My progress" Subtitle="@Subtitle" />
 
 <StatePanel IsLoading="@(!_loaded && _error is null)"
             LoadError="@_error">
+  @if (_summary?.Ended is { } programmeEnd)
+  {
+    @* T252: standing page content, there on every visit, so an info alert with no role (DESIGN.md § Alerts). *@
+    <Alert Kind="info">@EndedNotice(programmeEnd)</Alert>
+  }
+
   <section>
     <h2>Curriculum targets</h2>
     @if (_summary is null)
@@ -20,7 +28,56 @@
     else if (_summary.Items.Count == 0)
     {
       @* Admitted, but no item is in force: every EPA on the curriculum is inactive (T158), or it has none yet. *@
-      <p class="muted">No EPA on your curriculum is in use at the moment, so no target applies to you.</p>
+      <p class="muted">@(_summary.Ended is null ? "No EPA on your curriculum is in use at the moment, so no target applies to you." : "No EPA on your curriculum is in use any more, so there are no targets to show.")</p>
+    }
+    else if (_summary.Ended is { } ended)
+    {
+      @* T252: the programme they ended on, read-only. Every period from the one it ended in back to the start, each in
+         the words the PDF prints (D49 for the last one), and nothing about what is still to do: nothing is. *@
+      <section class="detail-card">
+        <h3>Your programme</h3>
+        <dl class="details-list">
+          <div>
+            <dt>Started</dt>
+            <dd>@QuotaText.LongDate(_summary.ProgrammeStartDate)</dd>
+          </div>
+          <div>
+            <dt>@(ended.Completed ? "Completed" : "Ended")</dt>
+            <dd>@(ended.EndedOn is { } endedOn ? QuotaText.LongDate(endedOn) : "The day was not recorded")</dd>
+          </div>
+          @if (_summary.TraineeStage is { } finalStage)
+          {
+            <div>
+              <dt>Training year</dt>
+              <dd>@finalStage @(ended.EndedOn is null ? "today" : "when your programme ended")</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      @MsfCoverageErrorAlert
+
+      @if (HasSemesterItems)
+      {
+        <h3 class="progress-group-title">Each semester</h3>
+        <div class="dashboard-grid">
+          @foreach (var item in _summary.Items.Where(entry => entry.IsPerSemester))
+          {
+            @EndedItemCard(item, ended)
+          }
+        </div>
+      }
+
+      @if (HasYearItems)
+      {
+        <h3 class="progress-group-title">Once a year</h3>
+        <div class="dashboard-grid">
+          @foreach (var item in _summary.Items.Where(entry => !entry.IsPerSemester))
+          {
+            @EndedItemCard(item, ended)
+          }
+        </div>
+      }
     }
     else
     {
@@ -110,11 +167,7 @@
         </dl>
       </section>
 
-      @* T168: apart from the targets, like the standing below. A failure says so here and takes no card down with it. *@
-      @if (!string.IsNullOrWhiteSpace(_msfCoverageError))
-      {
-        <Alert Kind="warning">Your multi-source feedback coverage could not be loaded: @_msfCoverageError</Alert>
-      }
+      @MsfCoverageErrorAlert
 
       @if (HasSemesterItems)
       {
@@ -147,7 +200,7 @@
   {
     <section class="progress-group-title">
       <h2>Entrustment against Annexure A</h2>
-      <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" Self="true" />
+      <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" Self="true" ProgrammeEnd="@_summary?.Ended" />
     </section>
   }
 
@@ -188,6 +241,16 @@
   private bool HasSemesterItems => _summary?.HasSemesterItems == true;
   private bool HasYearItems => _summary?.HasYearItems == true;
 
+  /// <summary>
+  /// The last day of an ended programme, which the standing's training year and the MSF coverage are read to, as the
+  /// targets are (T252). Null while the programme runs, and for one whose end was never recorded: both then read today.
+  /// </summary>
+  private DateOnly? EndedOn => _summary?.Ended?.EndedOn;
+
+  private string Subtitle => _summary?.Ended is null
+    ? "What your curriculum expects of you this period, and your rating trajectory for each EPA you have evidence against."
+    : "Your record of the programme you ended: what your curriculum held you to in each period, and your rating trajectory for each EPA you have evidence against.";
+
   protected override async Task OnInitializedAsync()
   {
     try
@@ -212,7 +275,9 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("Current user identifier missing.");
-      _standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(userId, authState.User));
+      // An ended programme is judged against the training year it ended in (T252), not the one its start date would
+      // put the trainee in today.
+      _standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(userId, authState.User, EndedOn));
     }
     catch (Exception exception)
     {
@@ -225,7 +290,9 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("Current user identifier missing.");
-      _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(userId, authState.User));
+      // An ended programme's cards show the semester it ended in and the one before, as a running one's show this
+      // semester and the last (T252).
+      _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(userId, authState.User, To: EndedOn));
     }
     catch (Exception exception)
     {
@@ -244,9 +311,9 @@
 
   /// <summary>
   /// The window before this one, in words. A window with no target says why: the programme started part-way through
-  /// it (D14), or ended part-way through it before its last month (D49), or it is after the programme ended. This page
-  /// reads the active profile only, so today only the first can reach it; the others are worded so that no reader can
-  /// ever make an ended programme read as a late start.
+  /// it (D14), or ended part-way through it before its last month (D49), or it is after the programme ended. A running
+  /// programme reaches only the first; the others are worded so that no reader can ever make an ended programme read as
+  /// a late start. An ended programme's cards list their periods with <see cref="EndedPeriodLine" /> instead (T252).
   /// </summary>
   private static string PreviousLine(QuotaWindowDto previous)
   {
@@ -269,6 +336,105 @@
       ? $"{previous.Name}: {previous.Count} of {previous.Target}, met"
       : $"{previous.Name}: {previous.Count} of {previous.Target}, {previous.Shortfall} short";
   }
+
+  /// <summary>
+  /// The notice at the top of an ended programme's page (T252): that it ended, on what day, and that the page is a
+  /// record, followed by D49's rule for the period it ended in, which the PDF states beside the same figures.
+  /// </summary>
+  private static string EndedNotice(ProgrammeEndDto ended)
+  {
+    const string record = "This page is your record of it and is read-only: no target applies to you any more.";
+
+    var how = QuotaText.ProgrammeEnded(ended);
+
+    return ended.EndedOn is null
+      ? $"{how}. Wombat did not record the day it ended, so your periods are shown up to {QuotaText.LongDate(ended.Today)}. {record}"
+      : $"{how}. {record} A period your programme ended in before that period's last month has no target, and no period after it is listed.";
+  }
+
+  /// <summary>
+  /// T168: the MSF coverage is apart from the targets, like the standing. A failure says so beside the cards and takes
+  /// none of them down with it, whether the programme runs or has ended (T252 review: the ended view dropped it).
+  /// </summary>
+  private RenderFragment MsfCoverageErrorAlert => __builder =>
+  {
+    @if (!string.IsNullOrWhiteSpace(_msfCoverageError))
+    {
+      <Alert Kind="warning">Your multi-source feedback coverage could not be loaded: @_msfCoverageError</Alert>
+    }
+  };
+
+  /// <summary>
+  /// One period of an ended programme, in the words the portfolio PDF prints it (T169, T209; its <c>PeriodLine</c>). A
+  /// closed period is met or short. One that has not closed by today is its count so far and nothing more: the trainee
+  /// owes nothing, but an encounter observed before the end can still be credited. Either says how many of its
+  /// encounters met the minimum level when observed, as the PDF does. A waived period says why: the programme started
+  /// part-way through it (D14), or ended part-way through it before its last month (D49).
+  /// </summary>
+  private static string EndedPeriodLine(QuotaWindowDto period, DateOnly today)
+  {
+    if (period.IsExempt)
+    {
+      return $"no target (you started part-way through) · {period.Count} recorded";
+    }
+
+    if (period.EndedPartWay)
+    {
+      return $"no target (your programme ended part-way through) · {period.Count} recorded";
+    }
+
+    if (period.IsAfterProgrammeEnd)
+    {
+      return $"no target (after your programme ended) · {period.Count} recorded";
+    }
+
+    if (!period.Applies)
+    {
+      return "no target (before your programme started)";
+    }
+
+    var standing = period.HasClosedBy(today)
+      ? (period.IsMet ? ", met" : $", {period.Shortfall} short")
+      : (period.IsMet ? " so far, met" : " so far");
+    var atMinimum = period.Count > 0
+      ? $"; {period.MinimumLevelReachedCount} at the minimum level when observed"
+      : string.Empty;
+
+    return $"{period.Count} of {period.Target}{standing}{atMinimum}";
+  }
+
+  /// <summary>
+  /// An item of an ended programme (T252): its target, and every period from the one the programme ended in back to its
+  /// start, newest first. No bar and no "more by": nothing is still to do.
+  /// </summary>
+  private RenderFragment EndedItemCard(TraineeCurriculumProgressDto item, ProgrammeEndDto ended) => __builder =>
+  {
+    IReadOnlyList<QuotaWindowDto> periods = item.Periods ?? (item.Previous is { } previous ? [item.Current, previous] : [item.Current]);
+    <section class="detail-card">
+      <div class="progress-row-head">
+        <h3>@item.EpaCode</h3>
+      </div>
+      <p class="muted">@item.EpaTitle</p>
+      <p class="progress-row-meta">
+        Target: @QuotaText.TargetPhrase(item.QuotaPeriod, item.Target)@(item.IsPerSemester ? $" ({item.Target * 2} a year)" : string.Empty).
+        Minimum @(ended.EndedOn is null ? "now" : "when your programme ended"): @item.EffectiveMinimumLevelLabel.
+      </p>
+      <dl class="details-list">
+        @foreach (var period in periods)
+        {
+          <div>
+            <dt>@period.Name</dt>
+            <dd>@EndedPeriodLine(period, ended.Today)</dd>
+          </div>
+        }
+      </dl>
+
+      @if (_msfCoverage is not null && MsfCoverageText.CardLine(_msfCoverage, item.EpaId) is { } msfLine)
+      {
+        <p class="progress-row-meta">@msfLine</p>
+      }
+    </section>
+  };
 
   private RenderFragment ItemCard(TraineeCurriculumProgressDto item) => __builder =>
   {

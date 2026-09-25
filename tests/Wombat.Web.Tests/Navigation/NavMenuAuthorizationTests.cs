@@ -152,6 +152,43 @@ public sealed class NavMenuAuthorizationTests : TestContext
         links.Select(a => a.GetAttribute("href")).Where(href => href is not null).Should().OnlyHaveUniqueItems();
     }
 
+    // T252: completing a programme removes the Trainee role, but a graduate still holds a trainee profile, and sign-in
+    // gives them the trainee-record claim. It offers My Progress alone, and the page's policy admits them on it.
+    [Fact]
+    public async Task AGraduateHoldingNoRole_IsOfferedMyProgress_ByAPageThatAdmitsThem()
+    {
+        var cut = RenderFor([], TraineeRecord());
+
+        var links = cut.FindAll("a.nav-link").ToList();
+        links.Select(a => a.GetAttribute("href")).Where(href => href is not null && href != string.Empty)
+            .Should().Equal(["/account/profile", "/account/data-rights", "/portfolio/progress"],
+                "the record is theirs; the role's work, filing and exporting included, is not offered");
+        (await RefusalOf(PageFor("/portfolio/progress")!, Holder(roles: [], TraineeRecord()))).Should().BeNull();
+    }
+
+    [Fact]
+    public void AGraduateWhoIsNowAnAssessor_SeesMyProgressOnce_BeforeTheirAssessorLinks()
+    {
+        LabelsFor([WombatRoles.Assessor], TraineeRecord()).Should().Equal(
+            "Home", "My Account", "Data Rights", "My Progress", "Activity Inbox", "Recent Activities", "Logout");
+    }
+
+    [Fact]
+    public void ATraineeWhoHoldsTheClaimToo_SeesTheirOwnNav_UnchangedByIt()
+    {
+        LabelsFor([WombatRoles.Trainee], TraineeRecord()).Should().Equal(LabelsFor(WombatRoles.Trainee));
+    }
+
+    [Theory]
+    [InlineData(WombatRoles.PendingTrainee)]
+    [InlineData(WombatRoles.Assessor)]
+    [InlineData(WombatRoles.CommitteeMember)]
+    public async Task WithoutTheTraineeRoleOrTheClaim_MyProgressIsNotOffered_AndItsPageRefuses(string role)
+    {
+        RenderFor(role).FindAll("a.nav-link").Should().NotContain(a => a.GetAttribute("href") == "/portfolio/progress");
+        (await RefusalOf(PageFor("/portfolio/progress")!, role)).Should().NotBeNull();
+    }
+
     // T178: DESIGN.md's table had gone stale for most roles. It is now read and compared, row by row, with the nav as
     // rendered, so the two change together.
     [Fact]
@@ -261,14 +298,20 @@ public sealed class NavMenuAuthorizationTests : TestContext
         PageFor(href).Should().BeNull($"{href} was the retired assessment-forms screen, so it answers 404");
     }
 
-    private IRenderedComponent<NavMenu> RenderFor(params string[] roles)
+    private IRenderedComponent<NavMenu> RenderFor(params string[] roles) => RenderFor(roles, []);
+
+    private IRenderedComponent<NavMenu> RenderFor(string[] roles, params Claim[] claims)
     {
         var auth = this.AddTestAuthorization();
         auth.SetAuthorized("user@example.com");
         auth.SetRoles(roles);
+        auth.SetClaims(claims);
 
         return RenderComponent<NavMenu>();
     }
+
+    /// <summary>The claim sign-in issues to anyone holding a trainee profile, current or ended (T252).</summary>
+    private static Claim TraineeRecord() => new(WombatClaims.TraineeRecord, "true");
 
     // Every item's name, the links and the Logout button alike, in menu order.
     private static List<string> Labels(IRenderedComponent<NavMenu> cut)
@@ -276,14 +319,17 @@ public sealed class NavMenuAuthorizationTests : TestContext
 
     // The nav's labels for a user holding these roles, or signed out when there are none, each in a context of its own:
     // a context's authorization cannot be replaced once it has rendered.
-    private static List<string> LabelsFor(params string[] roles)
+    private static List<string> LabelsFor(params string[] roles) => LabelsFor(roles, []);
+
+    private static List<string> LabelsFor(string[] roles, params Claim[] claims)
     {
         using var context = new TestContext();
         var auth = context.AddTestAuthorization();
-        if (roles.Length > 0)
+        if (roles.Length > 0 || claims.Length > 0)
         {
             auth.SetAuthorized("user@example.com");
             auth.SetRoles(roles);
+            auth.SetClaims(claims);
         }
 
         return Labels(context.RenderComponent<NavMenu>());
@@ -352,7 +398,12 @@ public sealed class NavMenuAuthorizationTests : TestContext
     }
 
     // Null when the role gets in; otherwise why not.
-    private static async Task<string?> RefusalOf(Type page, string role)
+    private static Task<string?> RefusalOf(Type page, string role) => RefusalOf(page, PrincipalFor(role), $"a {role}");
+
+    private static Task<string?> RefusalOf(Type page, ClaimsPrincipal principal)
+        => RefusalOf(page, principal, "this holder");
+
+    private static async Task<string?> RefusalOf(Type page, ClaimsPrincipal principal, string who)
     {
         if (page.GetCustomAttributes<AllowAnonymousAttribute>(inherit: true).Any())
         {
@@ -369,11 +420,19 @@ public sealed class NavMenuAuthorizationTests : TestContext
             return null;
         }
 
-        var result = await Authorization.GetRequiredService<IAuthorizationService>().AuthorizeAsync(PrincipalFor(role), policy);
+        var result = await Authorization.GetRequiredService<IAuthorizationService>().AuthorizeAsync(principal, policy);
         return result.Succeeded
             ? null
-            : $"{page.Name} refuses a {role}: {string.Join("; ", result.Failure!.FailedRequirements)}";
+            : $"{page.Name} refuses {who}: {string.Join("; ", result.Failure!.FailedRequirements)}";
     }
+
+    /// <summary>A signed-in user holding these roles, with no scope claim, and these claims.</summary>
+    private static ClaimsPrincipal Holder(string[] roles, params Claim[] claims)
+        => new(new ClaimsIdentity(
+            roles.Select(role => new Claim(ClaimTypes.Role, role))
+                .Prepend(new Claim(ClaimTypes.NameIdentifier, "user"))
+                .Concat(claims),
+            authenticationType: "Test"));
 
     // A signed-in holder of the role, carrying the scope claims every holder of it carries (InvitationRules.ValidateScope)
     // and no more, so a page gated on a scope claim is judged as it would be for the least-scoped holder.

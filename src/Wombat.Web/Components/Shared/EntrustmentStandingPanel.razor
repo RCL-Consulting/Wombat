@@ -30,6 +30,16 @@ else
     {
       <text>@(Self ? "Your" : "The") programme starts on @QuotaText.LongDate(Standing.ProgrammeStartDate), so the targets shown are for training year 1.</text>
     }
+    else if (Self && ProgrammeEnd is { EndedOn: { } endedOn } ended && endedOn == Standing.AsOf)
+    {
+      <text>@QuotaText.ProgrammeEnded(ended), in training year @year, so the targets shown are that year's. STAR decisions and ratings are shown as they stand today.</text>
+    }
+    else if (Self && ProgrammeEnd is { EndedOn: null } unrecorded)
+    {
+      @* T252 review: a profile ended before Wombat recorded the day (T209) is read on today, and the page's notice says
+         the programme has ended, so the year is not "you are in" one either. *@
+      <text>@QuotaText.ProgrammeEnded(unrecorded), but Wombat did not record the day it ended, so the targets shown are for training year @year, counted from your start date to @QuotaText.LongDate(Standing.AsOf). STAR decisions and ratings are shown as they stand today.</text>
+    }
     else if (ReviewPeriodTo is { } periodEnd && periodEnd == Standing.AsOf)
     {
       <text>The review period's last day, @QuotaText.LongDate(periodEnd), falls in training year @year, so the targets shown are that year's. STAR decisions and ratings are shown as they stand today.</text>
@@ -168,6 +178,13 @@ else
   /// period has passed), the panel says the targets are that year's and the decisions today's.
   /// </summary>
   [Parameter] public DateOnly? ReviewPeriodTo { get; set; }
+
+  /// <summary>
+  /// How the trainee's own programme ended, on their progress page once it has (T252); null while it runs. The standing
+  /// is read for its last day, so the panel says the targets are the training year it ended in, not "you are in" one
+  /// today. A profile whose day was never recorded is read on today, and the panel says that instead.
+  /// </summary>
+  [Parameter] public ProgrammeEndDto? ProgrammeEnd { get; set; }
 
   private static string YearLine(EntrustmentStandingDto standing)
   {

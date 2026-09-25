@@ -54,6 +54,28 @@ public sealed class TraineeDashboardQueryTests
     }
 
     [Fact]
+    public async Task AWithdrawnTrainee_WhoKeepsTheTraineeRole_GetsTheProgrammeTheyEnded_MarkedAsEnded()
+    {
+        // T252. Deactivation keeps the Trainee role, so a withdrawn trainee lands on this dashboard. It reads what their
+        // progress page reads (TraineeQuotaProgressReader.ReadAsync), so the card can say the programme ended rather than
+        // "No curriculum assigned yet".
+        await using var db = CreateDb();
+        SeedTraineeData(db);
+        await db.SaveChangesAsync();
+        db.Set<TraineeProfile>().Local.Single().Deactivate(new DateOnly(2026, 8, 20), today: new DateOnly(2026, 8, 20));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db).Handle(
+            new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"]), AsOf: new DateOnly(2026, 9, 23)),
+            CancellationToken.None);
+
+        result.CurriculumTargets.Should().NotBeNull();
+        result.CurriculumTargets!.Ended.Should().Be(new Wombat.Application.Features.Curricula.Quota.ProgrammeEndDto(
+            Completed: false, EndedOn: new DateOnly(2026, 8, 20), Today: new DateOnly(2026, 9, 23)));
+    }
+
+    [Fact]
     public async Task Trainee_WithNoProfile_ReturnsEmptyProgress()
     {
         await using var db = CreateDb();

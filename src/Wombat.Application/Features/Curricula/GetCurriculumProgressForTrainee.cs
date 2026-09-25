@@ -15,13 +15,21 @@ namespace Wombat.Application.Features.Curricula;
 /// credit yet are included. The trainee dashboard shows a summary of the same read model via
 /// <see cref="GetTraineeDashboardSummaryQuery"/>.
 /// </summary>
+/// <remarks>
+/// A trainee whose programme has ended (completed or withdrawn, and not since admitted to another) gets the programme
+/// they ended on, read as on its last day with every period back to its start, and marked as ended
+/// (<see cref="TraineeCurriculumProgressSummaryDto.Ended" />, T252): <see cref="TraineeQuotaProgressReader.ReadAsync" />.
+/// </remarks>
 /// <param name="Principal">
 /// The caller. Null comes back for anyone who may not read about this trainee
-/// (<see cref="TraineeScopeResolver.MayReadAsync" />), exactly as it does for a trainee with no active profile, so the
+/// (<see cref="TraineeScopeResolver.MayReadAsync" />), exactly as it does for a trainee with no profile at all, so the
 /// answer never confirms that the id names somebody. Until T113 this query answered on the caller-supplied id alone.
 /// It sits before <paramref name="AsOf" /> because the date must keep its default and the caller must not have one.
 /// </param>
-/// <param name="AsOf">The day to read progress for. Defaults to today in South Africa; tests pin it.</param>
+/// <param name="AsOf">
+/// The day to read progress for. Defaults to today in South Africa; tests pin it. An ended programme is read as on its
+/// last day when that is earlier.
+/// </param>
 public sealed record GetCurriculumProgressForTraineeQuery(
     string TraineeUserId,
     ClaimsPrincipal Principal,
