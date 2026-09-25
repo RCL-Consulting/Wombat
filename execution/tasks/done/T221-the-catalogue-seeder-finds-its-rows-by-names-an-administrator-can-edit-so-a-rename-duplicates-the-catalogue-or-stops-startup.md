@@ -1,11 +1,12 @@
 ---
 id: T221
 title: The catalogue seeder finds its rows by names an administrator can edit, so a rename duplicates the catalogue or stops startup
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T221 — The catalogue seeder finds its rows by names an administrator can edit, so a rename duplicates the catalogue or stops startup
@@ -47,9 +48,30 @@ applies: a migration that adds a seed key and stamps the existing rows is fine.
 
 ## Verification
 
-- [ ] Renaming each of the four rows, then booting, creates nothing and logs at most a warning. Postgres test per row.
-- [ ] A fresh database still seeds the whole catalogue once. Existing seed tests stay green.
+- [x] Renaming each of the four rows, then booting, creates nothing and logs at most a warning. Postgres test per row.
+- [x] A fresh database still seeds the whole catalogue once. Existing seed tests stay green.
 
 ## Related
 
 T187, T174, T122, T130.
+
+---
+
+## As built — 2026-09-25 (`62447ad`)
+
+`PaediatricCatalogueSeeder` finds its catalogue rows by a `SeedKey` column: the College, speciality, sub-speciality,
+v11.1 scale, 15 EPAs and curriculum. The keys are unique where not null, and existing rows were stamped by the migration
+`T221_CatalogueSeedKeys`. Once the catalogue exists, a row it cannot find is warned about and skipped, never created, and
+the first seeding is one save. Postgres tests cover each rename, a fresh database, and a first boot that fails part-way.
+CLAUDE.md says later catalogue additions reach an existing database only through a migration.
+
+Browser on dev (scripted Chrome, master `d6b2796`; `pg_dump` first, at `recovery/pre-g1-migrations.dump`):
+- **The first boot** logged no seed-key warnings. There are 20 keys: 1 each for the College, speciality, sub-speciality
+  and scale, 15 EPAs and 1 curriculum.
+- **Renames, as collegeadmin.** The sub-speciality was renamed and PAED-015's code changed, then the app was restarted.
+  There were no warnings and no new rows (Colleges 2, SubSpecialities 2, Epas 17, Curricula 2), and both rows kept
+  their keys. Both were reverted.
+- **Not run in a browser:** the College short-code change, because `CollegeEdit` is Administrator-only. It is covered by
+  its Postgres test.
+
+**Filed from the review:** [T229] (P2): `DataSeeder`'s demo rows have the same defect.

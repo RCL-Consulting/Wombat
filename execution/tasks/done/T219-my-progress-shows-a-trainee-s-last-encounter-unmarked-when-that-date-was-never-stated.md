@@ -1,11 +1,12 @@
 ---
 id: T219
 title: My progress shows a trainee's last encounter unmarked when that date was never stated
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T219 — My progress shows a trainee's last encounter unmarked when that date was never stated
@@ -26,8 +27,25 @@ recorded (created …)").
 
 ## Verification
 
-- [ ] An undated last encounter is marked on My progress. bUnit and browser.
+- [x] An undated last encounter is marked on My progress. bUnit and browser.
 
 ## Related
 
 T197, T161, D28.
+
+---
+
+## As built — 2026-09-25 (`79eabe8`)
+
+`CurriculumItemProgress.LastObservedOnDeclared` records whether the last encounter's date was stated. It is set by the
+credit path and the rebuild from what the completion writes, not from what the draft said. The access report exports
+it too. My progress prints "Last encounter date: not recorded (created …)" through `EncounterDate.Label`.
+
+The migration `T219_LastEncounterDeclared` empties the progress table, and the bootstrapper refills it.
+
+Browser on dev (scripted Chrome, master `d6b2796`; `pg_dump` first, at `recovery/pre-g1-migrations.dump`):
+- **The first boot** logged: "Curriculum progress was empty and 9 completions record credit, so it was rebuilt".
+- **A stated date.** The PAED-006 card read "Last encounter date: 2026-08-15."
+- **An undated date.** Activity 10 was set in SQL to `ObservedOnSource = CreatedOn`, then progress was emptied and
+  refilled. The card read "Last encounter date: not recorded (created 2026-09-23)." After the values were restored and
+  progress rebuilt, it read "2026-08-15." again.
