@@ -91,3 +91,5 @@ T165 and T131 the order is now:
 
 Reorder Act 4 when the runbook is retargeted.
 
+Note, 2026-09-25 (the T178 review): `scenario-paediatrics.md` (about line 736) still lists the Coordinator's nav as
+"Invitations / Data Rights / …". A Coordinator cannot invite; restate it from DESIGN.md's nav table during the replay.

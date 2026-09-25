@@ -93,7 +93,7 @@ Wombat currently declares nine roles. In the rewrite, keep all nine but document
 | **InstitutionalAdmin** | One institution | Manage users within their institution; approve Specialities and SubSpecialities for that institution. |
 | **SpecialityAdmin** | One speciality within an institution | Define curricula, approve STAR reflections for the speciality. |
 | **SubSpecialityAdmin** | One sub-speciality | Like SpecialityAdmin, scoped one level down. |
-| **Coordinator** | An institution or speciality | Operational role: invite users, reassign assessments, nudge stalled requests. No curriculum editing. |
+| **Coordinator** | An institution or speciality | Operational role: schedule committee reviews, run MSF campaigns, follow up stalled requests. Does not invite users (an Administrator or InstitutionalAdmin does, T178). No curriculum editing. |
 | **CommitteeMember** | A speciality | Read-only oversight plus final sign-off on trainee progression. Cannot edit forms or curricula. |
 | **Assessor** | Their own assessments | Accept/decline/complete assessment requests addressed to them. |
 | **Trainee** | Their own record | Request assessments, submit STAR reflections, view their own progress. |
@@ -113,7 +113,7 @@ These claims are populated at login from the user's profile data, not stored loo
 
 The current Wombat has a `RegistrationInvitation` entity. Keep the flow but simplify the state:
 
-1. An Admin or Coordinator issues an invitation for a specific email, assigning target role, institution, speciality, sub-speciality.
+1. An Administrator or InstitutionalAdmin issues an invitation for a specific email, assigning target role, institution, speciality, sub-speciality. A Coordinator does not (T178).
 2. An invitation row is created with a random token and an expiry (default 14 days).
 3. An email is sent containing a registration link with the token in the query string.
 4. The recipient clicks the link. If the token is valid and unused, they land on a registration form pre-populated from the invitation.

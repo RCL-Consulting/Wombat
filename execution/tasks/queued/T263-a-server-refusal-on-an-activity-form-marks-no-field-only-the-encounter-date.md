@@ -1,0 +1,39 @@
+---
+id: T263
+title: A server refusal on an activity form marks no field, only the encounter date
+status: queued
+priority: P3
+owner: agent
+depends_on: []
+created: 2026-09-25
+---
+
+# T263 — A server refusal on an activity form marks no field, only the encounter date
+
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
+**Severity:** Low. The refusal names the field in words, but the field itself is not marked.
+**Surfaced:** 2026-09-25, the T236 review (finding 4).
+
+## Symptom
+
+When the server refuses an activity form (the tool gate, the nominee gate, required fields), `NewActivity.razor` shows
+the refusal in its danger alert. Only the encounter date is ever marked (`ActivityForm`, when the page predicts the
+refusal). No other input gets `aria-invalid` or `.input-validation-error`.
+
+## What to build
+
+Carry the refused field keys on the refusal (the validators already name fields), and mark those inputs with T236's
+invalid style and `aria-invalid`, pointing `aria-describedby` at the refusal. Also on `ActivityView`'s edit and move
+refusals.
+
+## Verification
+
+- [ ] A refused required field and a refused nominee are marked. bUnit.
+
+## Related
+
+T236, T189, T193, T102.
