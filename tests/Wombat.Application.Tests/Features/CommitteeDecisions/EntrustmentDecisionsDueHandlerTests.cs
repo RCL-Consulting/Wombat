@@ -314,6 +314,10 @@ public sealed class EntrustmentDecisionsDueHandlerTests
         var row = Row(await DueAsync(db, 2026, 1), Trainee, "PAED-001");
 
         (row.Status, row.ReviewId).Should().Be((EntrustmentDecisionDueStatus.Decided, review));
+
+        // The planner reads the page's rule, so a sitting for the period never plans what the page calls decided.
+        var remediation = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1);
+        (await PlannedCodesAsync(db, remediation.Id)).Should().NotContain("PAED-001");
     }
 
     [Fact]

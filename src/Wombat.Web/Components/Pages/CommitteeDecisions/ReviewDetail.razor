@@ -1453,6 +1453,11 @@
           </EditForm>
         }
 
+        @if (CommitteeAgendaText.DecidedInWindowNote(_agenda.DecidedInWindow) is { } decidedInWindow)
+        {
+          <p id="agenda-decided-in-window" class="muted">@decidedInWindow</p>
+        }
+
         @if (_agenda.RoutedElsewhere.Count > 0)
         {
           <h4 id="agenda-elsewhere-heading">Decided by another panel</h4>
@@ -1478,7 +1483,8 @@
 
   private static string AgendaEmpty(CommitteeReviewState state)
     => state == CommitteeReviewState.Scheduled
-      ? "Nothing is on the agenda yet. Starting the review adds every EPA routed to this panel that is due in its period."
+      ? "Nothing is on the agenda yet. Starting the review adds every EPA routed to this panel that is due in its period " +
+        "and not already decided in its window."
       : "Nothing is on this review's agenda. A decision can still be staged on any EPA of the trainee's curriculum that " +
         "routes to this panel, and staging it adds it.";
 

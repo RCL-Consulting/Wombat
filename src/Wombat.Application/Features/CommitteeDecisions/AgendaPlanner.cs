@@ -12,7 +12,10 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// <param name="TraineeHasCurriculum">False when the trainee holds no profile, so nothing can be planned.</param>
 /// <param name="Lines">The cadence lines the review's panel decides at this sitting, in code order. Unattached.</param>
 /// <param name="RoutedElsewhere">The EPAs due in the period that a panel sitting as a College committee decides instead.</param>
-/// <param name="DecidedInWindow">The codes of EPAs this panel decides that a STAR already decided in their window.</param>
+/// <param name="DecidedInWindow">
+/// The EPAs this panel decides, due in the period, that a STAR already decided in their window, whether or not an agenda
+/// line records it (<see cref="CommitteeAgendaStatus.IsDecided" />, T215), in code order: not planned.
+/// </param>
 /// <param name="PanelDecidesAnything">
 /// Whether any of the trainee's in-force curriculum items routes to this panel, with a cadence or without, due or not: whether
 /// a sitting before it could decide anything at all. An entrustment-only review is not scheduled where it could not (T131
@@ -22,7 +25,7 @@ internal sealed record AgendaPlan(
     bool TraineeHasCurriculum,
     IReadOnlyList<CommitteeAgendaLine> Lines,
     IReadOnlyList<CommitteeAgendaElsewhereDto> RoutedElsewhere,
-    IReadOnlyList<string> DecidedInWindow,
+    IReadOnlyList<DecidedEpa> DecidedInWindow,
     bool PanelDecidesAnything)
 {
     public static readonly AgendaPlan Empty = new(false, [], [], [], false);
@@ -30,6 +33,9 @@ internal sealed record AgendaPlan(
     /// <summary>The plan for a panel the trainee is no longer eligible for: nothing, and nothing about anyone else.</summary>
     public static readonly AgendaPlan Stranded = new(true, [], [], [], false);
 }
+
+/// <summary>An EPA the planner left off because a STAR already decided its window. (T215)</summary>
+internal sealed record DecidedEpa(int EpaId, string Code);
 
 /// <summary>
 /// Which EPAs a committee sitting is there to decide: the one planner the schedule preview, scheduling and Start share,
@@ -50,8 +56,9 @@ internal sealed record AgendaPlan(
 /// <para>
 /// <b>The panel</b> is <see cref="DecisionRouting" />'s: an item comes onto this panel's agenda only when it routes to
 /// this panel for this trainee, so a general review leaves EPAs 4 and 5 off wherever a neonatal panel covers the trainee.
-/// An item already Decided on some review's line for the same window is skipped. What another panel sitting as a College
-/// committee owes in the period is reported beside the agenda, read-only, with its standing in the window.
+/// An item whose window is already decided is skipped, and named (<see cref="AgendaPlan.DecidedInWindow" />). What
+/// another panel sitting as a College committee owes in the period is reported beside the agenda, read-only, with its
+/// standing in the window.
 /// </para>
 /// <para>
 /// <b>A review its trainee has left.</b> A panel plans, and reports, nothing for a trainee it is not eligible for
@@ -59,10 +66,13 @@ internal sealed record AgendaPlan(
 /// (T182), and its page must not show the new institution's panels or where its decisions stand.
 /// </para>
 /// <para>
-/// <b>What another sitting already did.</b> A decision is the trainee's and goes with them: a line Decided on any review
-/// decides its window while its STAR does (<see cref="CommitteeAgendaStatus.StarDecides" />, the decisions-due page's
-/// rule, T131 slice 6). A revoked STAR decides nothing, so its EPA is planned again, and so does one superseded inside
-/// the window by a STAR since revoked; an expired one decided its window (Decision 10). The records are the page's
+/// <b>What another sitting already did.</b> A decision is the trainee's and goes with them. A window is decided by a STAR
+/// from a sitting for a period it holds that still decides it (<see cref="CommitteeAgendaStatus.StarDecides" />), whether
+/// or not an agenda line records it: <see cref="CommitteeAgendaStatus.IsDecided" />, the one predicate the decisions-due
+/// page reads too (T131 slice 6, T215), so an EPA the page calls decided is never planned as due. Agenda lines are the
+/// record of what a sitting did; the STAR is the fact, and one ratified before agendas existed has no line. A revoked
+/// STAR decides nothing, so its EPA is planned again, and nor does one superseded inside the window by a STAR since
+/// revoked; an expired one decided its window (Decision 10). The records are the page's
 /// (<see cref="DecisionWindowRecords" />). A sitting is its institution's: a line still due, or deferred, on a review
 /// before a panel at another institution (a review the trainee stranded when they moved) says nothing about where the
 /// decision stands here.
@@ -117,7 +127,7 @@ internal static class AgendaPlanner
 
         var lines = new List<CommitteeAgendaLine>();
         var elsewhere = new List<CommitteeAgendaElsewhereDto>();
-        var decided = new List<string>();
+        var decided = new List<DecidedEpa>();
 
         foreach (var item in items
                      .Where(item => item.Cadence is not null)
@@ -133,11 +143,14 @@ internal static class AgendaPlanner
             var windowSemester = DecisionWindowRecords.WindowSemesterOf(window);
             var inWindow = records.LinesIn(traineeUserId, item.EpaId, window);
 
+            // The window's STARs, whether or not a line records them (T215): a STAR is the trainee's, and goes with them.
+            var starsInWindow = records.StarStandingsIn(traineeUserId, item.EpaId, window);
+
             if (DecisionRouting.RoutesTo(item.BodyKey, panel, context.Trainee, context.Panels))
             {
-                if (inWindow.Any(line => records.Standing(line, window).Decides))
+                if (CommitteeAgendaStatus.IsDecided(inWindow.Select(line => records.Standing(line, window)), starsInWindow))
                 {
-                    decided.Add(item.Code);
+                    decided.Add(new DecidedEpa(item.EpaId, item.Code));
                 }
                 else
                 {
@@ -164,6 +177,7 @@ internal static class AgendaPlanner
                         inWindow
                             .Where(line => line.State == CommitteeAgendaLineState.Decided || line.PanelInstitutionId == institutionId)
                             .Select(line => records.Standing(line, window)),
+                        starsInWindow,
                         mayBeMissed: !item.IsOpportunistic && window.Status == QuotaWindowStatus.Counting,
                         window.End,
                         today)));

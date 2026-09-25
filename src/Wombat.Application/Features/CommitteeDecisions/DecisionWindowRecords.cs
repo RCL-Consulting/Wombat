@@ -122,6 +122,13 @@ internal sealed class DecisionWindowRecords
             .ToArray();
     }
 
+    /// <summary>
+    /// The trainee's STARs on the EPA from a sitting for a period the window holds, each as where the decision stands reads
+    /// it: what <see cref="CommitteeAgendaStatus.IsDecided" /> weighs beside the lines, whether or not a line records them.
+    /// </summary>
+    public IReadOnlyList<StarStanding> StarStandingsIn(string traineeUserId, int epaId, QuotaWindow window)
+        => StarsIn(traineeUserId, epaId, window).Select(star => Standing(star, window)).ToArray();
+
     /// <summary>The agenda lines about the trainee's EPA in the window, on any review.</summary>
     public IReadOnlyList<RecordedAgendaLine> LinesIn(string traineeUserId, int epaId, QuotaWindow window)
     {

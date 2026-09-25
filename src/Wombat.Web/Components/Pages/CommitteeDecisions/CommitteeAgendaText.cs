@@ -148,9 +148,13 @@ public static class CommitteeAgendaText
             return ["This panel decides no EPA on this trainee's curriculum, so an entrustment-only review before it would have nothing to decide."];
         }
 
+        // T215: where a STAR already decided every EPA due, the live sentence says so itself. The note naming them sits
+        // outside the live region, and "none is due" would read as if the period asked nothing of this panel.
         if (preview.Lines.Count == 0)
         {
-            return [$"No EPA this panel decides is due for {preview.PeriodLabel}."];
+            return preview.DecidedInWindow.Count > 0
+                ? [$"Every EPA this panel decides that is due for {preview.PeriodLabel} is already decided in its window, so the review will have nothing on its agenda."]
+                : [$"No EPA this panel decides is due for {preview.PeriodLabel}."];
         }
 
         var sentences = new List<string>
@@ -178,11 +182,21 @@ public static class CommitteeAgendaText
                              $"{group.Key}: schedule {(group.Count() == 1 ? "it" : "them")} separately.")
             .ToList();
 
-        if (preview.DecidedInWindow.Count > 0)
+        if (DecidedInWindowNote(preview.DecidedInWindow) is { } decided)
         {
-            notes.Add($"Already decided in this window, so not on the agenda: {Codes(preview.DecidedInWindow)}.");
+            notes.Add(decided);
         }
 
         return notes;
+    }
+
+    /// <summary>
+    /// The EPAs routed to the panel that a STAR already decided in their window, so the planner left them off the agenda
+    /// (T215): said in the same words on the scheduling preview and the review's agenda card. Null when there are none.
+    /// </summary>
+    public static string? DecidedInWindowNote(IReadOnlyList<string> codes)
+    {
+        ArgumentNullException.ThrowIfNull(codes);
+        return codes.Count == 0 ? null : $"Already decided in this window, so not on the agenda: {Codes(codes)}.";
     }
 }

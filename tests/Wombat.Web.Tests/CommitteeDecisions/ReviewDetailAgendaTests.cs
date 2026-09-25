@@ -223,6 +223,29 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     }
 
     [Fact]
+    public void WhatAStarAlreadyDecidedInTheWindow_IsNamedInTheAgendaCard_InThePreviewsWords()
+    {
+        // T215: the planner left these off because a STAR already decided their window; the card says so, as the
+        // scheduling preview did, so the chair is not left wondering where PAED-001 went.
+        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(2, "PAED-002")) with { DecidedInWindow = ["PAED-001", "PAED-006"] });
+
+        var note = cut.Find("#agenda-decided-in-window");
+        note.TextContent.Should().Be("Already decided in this window, so not on the agenda: PAED-001 and PAED-006.");
+        note.ClassList.Should().Contain("muted");
+        note.Closest("section")!.QuerySelector("h3")!.TextContent.Should().Be("Agenda");
+        cut.FindAll("#agenda-line-1").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AnAgendaWithNothingAlreadyDecided_SaysNothingOfIt()
+    {
+        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
+
+        cut.FindAll("#agenda-decided-in-window").Should().BeEmpty();
+        cut.Markup.Should().NotContain("Already decided");
+    }
+
+    [Fact]
     public void AReviewWithNothingOnItsAgenda_SaysWhatStagingDoes()
     {
         var cut = Render(CommitteeReviewState.InProgress, Agenda());
@@ -230,6 +253,19 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         Text(cut.Find("#agenda-heading").ParentElement!).Should().Contain(
             "Nothing is on this review's agenda. A decision can still be staged on any EPA of the trainee's curriculum that routes to this panel, and staging it adds it.");
         RatifyButtonOrNull(cut).Should().BeNull("the review is not decided yet");
+    }
+
+    [Fact]
+    public void AScheduledReviewWithNothingOnItsAgenda_SaysStartAddsOnlyWhatIsNotAlreadyDecided()
+    {
+        // T215 review: beside "Already decided in this window", the empty agenda must not promise that Start adds them.
+        var cut = Render(CommitteeReviewState.Scheduled, Agenda() with { DecidedInWindow = ["PAED-001", "PAED-002"] });
+
+        var card = Text(cut.Find("#agenda-heading").ParentElement!);
+        card.Should().Contain(
+                "Nothing is on the agenda yet. Starting the review adds every EPA routed to this panel that is due in its " +
+                "period and not already decided in its window.")
+            .And.Contain("Already decided in this window, so not on the agenda: PAED-001 and PAED-002.");
     }
 
     [Fact]

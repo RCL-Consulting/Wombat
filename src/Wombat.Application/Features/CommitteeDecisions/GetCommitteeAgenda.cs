@@ -10,8 +10,8 @@ using Wombat.Domain.EntrustmentDecisions;
 namespace Wombat.Application.Features.CommitteeDecisions;
 
 /// <summary>
-/// A review's agenda: the EPAs it is there to decide and where each stands, and what another panel sitting as a College
-/// committee still owes in the period. (T131 slice 4)
+/// A review's agenda: the EPAs it is there to decide and where each stands, what another panel sitting as a College
+/// committee still owes in the period, and what a STAR already decided in its window (T215). (T131 slice 4)
 /// </summary>
 /// <remarks>
 /// Read through <see cref="CommitteeDecisionAuthorization.DemandReviewAccess" />, the one read ladder of a review and of
@@ -93,10 +93,13 @@ internal static class CommitteeAgendaReader
             .Select(line => ToDto(line, sitting, staged.Contains(line.EpaId), evidenceByEpa.GetValueOrDefault(line.EpaId)))
             .ToArray();
 
-        var elsewhere = review.IsFormative
-            ? []
-            : (await AgendaPlanner.PlanAsync(dbContext, review.TraineeUserId, review.Panel, sitting, today, cancellationToken))
-                .RoutedElsewhere;
+        var plan = review.IsFormative
+            ? AgendaPlan.Empty
+            : await AgendaPlanner.PlanAsync(dbContext, review.TraineeUserId, review.Panel, sitting, today, cancellationToken);
+
+        // What a STAR already decided in its window, so the planner left it off (T215); an EPA this review holds a line
+        // for is not named: its line says what this sitting did with it.
+        var onAgenda = review.AgendaLines.Select(line => line.EpaId).ToHashSet();
 
         return new CommitteeAgendaDto(
             review.Id,
@@ -105,9 +108,10 @@ internal static class CommitteeAgendaReader
             sitting.ToString(),
             review.IsFormative,
             lines,
-            elsewhere)
+            plan.RoutedElsewhere)
         {
-            DecidesProgression = review.DecidesProgression
+            DecidesProgression = review.DecidesProgression,
+            DecidedInWindow = plan.DecidedInWindow.Where(epa => !onAgenda.Contains(epa.EpaId)).Select(epa => epa.Code).ToArray()
         };
     }
 

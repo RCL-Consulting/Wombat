@@ -274,6 +274,144 @@ public sealed class CommitteeAgendaHandlerTests
             .Should().NotBe(second.Id, "a review stranded at A does not hold the trainee's seat at B");
     }
 
+    // ---- A STAR no agenda line records (T215) -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task AnActiveStarNoAgendaLineRecords_DecidesItsWindow_SoItsEpaIsNotPlannedAgain_AndIsNamedAlreadyDecided()
+    {
+        // On dev, reviews 2 and 3 were ratified before agendas existed, so no line records their STARs, and review 4
+        // planned PAED-001 and PAED-006 as Due although both were active in the window. The STAR is the fact.
+        await using var db = await SeededDbAsync();
+        await DecideAsync(db, GeneralPanel, 2026, 2, "PAED-001", "PAED-003");
+        await ForgetAgendaLinesAsync(db);
+        (await StatusesAsync(db)).Should().Equal(EntrustmentDecisionStatus.Active, EntrustmentDecisionStatus.Active);
+
+        var preview = await PreviewAsync(db, GeneralPanel, Trainee, 2026, 2);
+
+        preview.DecidedInWindow.Should().Equal("PAED-001", "PAED-003");
+        preview.Lines.Select(line => line.EpaCode).Should().NotContain(["PAED-001", "PAED-003"]).And.Contain("PAED-002");
+
+        var second = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 2);
+        var scheduled = await AgendaAsync(db, second.Id);
+        scheduled.Lines.Select(line => line.EpaCode).Should().Equal(preview.Lines.Select(line => line.EpaCode), "the preview is the agenda");
+        scheduled.DecidedInWindow.Should().Equal("PAED-001", "PAED-003");
+
+        await StartAsync(db, second.Id);
+        (await AgendaAsync(db, second.Id)).Lines.Select(line => line.EpaCode)
+            .Should().NotContain(["PAED-001", "PAED-003"], "Start plans again by the same rule");
+    }
+
+    [Fact]
+    public async Task ASupersededStarNoAgendaLineRecords_StillDecidesItsWindow_WhenItsSuccessorSatForALaterOne()
+    {
+        await using var db = await SeededDbAsync();
+        await DecideAsync(db, GeneralPanel, 2026, 1, "PAED-001");
+        await DecideAsync(db, GeneralPanel, 2026, 2, "PAED-001");
+        await ForgetAgendaLinesAsync(db);
+        (await StatusesAsync(db)).Should().Equal(EntrustmentDecisionStatus.Superseded, EntrustmentDecisionStatus.Active);
+
+        var preview = await PreviewAsync(db, GeneralPanel, Trainee, 2026, 1);
+
+        preview.DecidedInWindow.Should().Contain("PAED-001", "it was superseded by a decision for semester 2, a later window");
+        preview.Lines.Select(line => line.EpaCode).Should().NotContain("PAED-001");
+    }
+
+    [Fact]
+    public async Task ARevokedStarNoAgendaLineRecords_DecidesNothing_NorDoesOneSupersededInItsWindowByOneSinceRevoked()
+    {
+        // PAED-001's one STAR is revoked. PAED-002's first STAR is superseded at a second sitting for the same semester,
+        // whose STAR is revoked: the window's decision was the second, and it has none now.
+        await using var db = await SeededDbAsync();
+        await DecideAsync(db, GeneralPanel, 2026, 1, "PAED-001", "PAED-002");
+        await DecideAsync(db, GeneralPanel, 2026, 1, "PAED-002");
+        await ForgetAgendaLinesAsync(db);
+        await RevokeActiveAsync(db, "PAED-001");
+        await RevokeActiveAsync(db, "PAED-002");
+        (await StatusesAsync(db)).Should().Equal(
+            EntrustmentDecisionStatus.Revoked, EntrustmentDecisionStatus.Superseded, EntrustmentDecisionStatus.Revoked);
+
+        var preview = await PreviewAsync(db, GeneralPanel, Trainee, 2026, 1);
+
+        preview.DecidedInWindow.Should().BeEmpty();
+        preview.Lines.Where(line => line.EpaCode is "PAED-001" or "PAED-002").Select(line => (line.EpaCode, line.Status))
+            .Should().Equal(("PAED-001", CommitteeAgendaLineStatus.Due), ("PAED-002", CommitteeAgendaLineStatus.Due));
+    }
+
+    [Fact]
+    public async Task AnotherPanelsStarNoAgendaLineRecords_ReadsDecided_UntilItIsRevoked()
+    {
+        await using var db = await SeededDbAsync(withNeonatalPanel: true);
+        await DecideAsync(db, NeonatalPanel, 2026, 1, "PAED-004");
+        await ForgetAgendaLinesAsync(db);
+
+        var preview = await PreviewAsync(db, GeneralPanel, Trainee, 2026, 1);
+        Elsewhere(preview, "PAED-004").Status.Should().Be(CommitteeAgendaElsewhereStatus.Decided);
+        Elsewhere(preview, "PAED-005").Status.Should().Be(
+            CommitteeAgendaElsewhereStatus.Missed, "semester 1 has ended, and nothing records a decision or a deferral");
+
+        await RevokeActiveAsync(db, "PAED-004");
+
+        Elsewhere(await PreviewAsync(db, GeneralPanel, Trainee, 2026, 1), "PAED-004").Status
+            .Should().Be(CommitteeAgendaElsewhereStatus.Missed, "a revoked STAR decides nothing");
+    }
+
+    [Fact]
+    public async Task TheAgendaCard_NamesWhatAStarAlreadyDecided_ButNotAnEpaTheReviewHoldsALineFor()
+    {
+        await using var db = await SeededDbAsync();
+        var first = await DecideAsync(db, GeneralPanel, 2026, 1, "PAED-001", "PAED-003");
+
+        (await AgendaAsync(db, first)).DecidedInWindow.Should().BeEmpty("its own Decided lines say what this sitting did with both");
+
+        var second = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1);
+        (await AgendaAsync(db, second.Id)).DecidedInWindow.Should().Equal("PAED-001", "PAED-003");
+
+        var formative = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1, formative: true);
+        (await AgendaAsync(db, formative.Id)).DecidedInWindow.Should().BeEmpty("a formative review carries no agenda");
+    }
+
+    [Fact]
+    public async Task AnAnnualEpasStarNoAgendaLineRecords_FromTheFirstSemestersSitting_DecidesTheYear_SoTheSecondSemesterDoesNotPlanIt()
+    {
+        // PAED-003 is decided annually: a STAR from the semester-1 sitting decides its 2026 window, which semester 2 closes.
+        // PAED-001 is decided each semester, so the same sitting's STAR says nothing of semester 2's window.
+        await using var db = await SeededDbAsync();
+        await DecideAsync(db, GeneralPanel, 2026, 1, "PAED-001", "PAED-003");
+        await ForgetAgendaLinesAsync(db);
+
+        var preview = await PreviewAsync(db, GeneralPanel, Trainee, 2026, 2);
+
+        preview.DecidedInWindow.Should().Equal("PAED-003");
+        preview.Lines.Select(line => line.EpaCode).Should().NotContain("PAED-003");
+        preview.Lines.Where(line => line.EpaCode == "PAED-001").Select(line => (line.WindowLabel, line.Status))
+            .Should().Equal([("2026 S2", CommitteeAgendaLineStatus.Due)], "semester 2 is a window of its own");
+
+        var second = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 2);
+        await StartAsync(db, second.Id);
+        var agenda = await AgendaAsync(db, second.Id);
+        agenda.Lines.Select(line => line.EpaCode).Should().NotContain("PAED-003", "Start plans the year by the same rule");
+        agenda.DecidedInWindow.Should().Equal("PAED-003");
+    }
+
+    [Fact]
+    public async Task AStarNoAgendaLineRecords_FromTheTraineesPreviousInstitution_StillDecidesItsWindowAtTheirNewOne()
+    {
+        // A STAR is the trainee's, and goes with them, whether or not a line records it: B's panels do not decide again what
+        // A's sitting decided in the window.
+        await using var db = await SeededDbAsync();
+        db.DecisionPanels.Add(Panel(NeonatalPanelAtB, "B's neonatal CCC", InstitutionB, Neonatal, "chair-bn"));
+        await SaveAndClearAsync(db);
+        await DecideAsync(db, GeneralPanel, 2026, 1, "PAED-001", "PAED-004");
+        await ForgetAgendaLinesAsync(db);
+        await MoveAsync(db, Trainee, InstitutionB);
+
+        var preview = await PreviewAsync(db, PanelAtB, Trainee, 2026, 1, TestPrincipals.Coordinator(InstitutionB));
+
+        preview.DecidedInWindow.Should().Contain("PAED-001");
+        preview.Lines.Select(line => line.EpaCode).Should().NotContain("PAED-001").And.Contain("PAED-002");
+        Elsewhere(preview, "PAED-004").Status.Should().Be(CommitteeAgendaElsewhereStatus.Decided, "A's general panel decided it");
+    }
+
     // ---- Scheduling -------------------------------------------------------------------------------------------------
 
     [Fact]
@@ -775,20 +913,21 @@ public sealed class CommitteeAgendaHandlerTests
         var after = new DateOnly(2026, 7, 1);
         AgendaLineStanding[] none = [];
 
-        CommitteeAgendaStatus.Elsewhere(none, mayBeMissed: true, end, end).Should().Be(CommitteeAgendaElsewhereStatus.NotYetDecided);
-        CommitteeAgendaStatus.Elsewhere(none, mayBeMissed: true, end, after).Should().Be(CommitteeAgendaElsewhereStatus.Missed);
-        CommitteeAgendaStatus.Elsewhere(none, mayBeMissed: false, end, after)
+        CommitteeAgendaStatus.Elsewhere(none, [], mayBeMissed: true, end, end).Should().Be(CommitteeAgendaElsewhereStatus.NotYetDecided);
+        CommitteeAgendaStatus.Elsewhere(none, [], mayBeMissed: true, end, after).Should().Be(CommitteeAgendaElsewhereStatus.Missed);
+        CommitteeAgendaStatus.Elsewhere(none, [], mayBeMissed: false, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.NotYetDecided, "opportunistic and partial-period decisions are never missed");
 
-        CommitteeAgendaStatus.Elsewhere([Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 1)], true, end, after)
+        CommitteeAgendaStatus.Elsewhere([Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 1)], [], true, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.Deferred);
-        CommitteeAgendaStatus.Elsewhere([Standing(CommitteeAgendaLineState.Due, CommitteeReviewState.InProgress, 1)], true, end, after)
+        CommitteeAgendaStatus.Elsewhere([Standing(CommitteeAgendaLineState.Due, CommitteeReviewState.InProgress, 1)], [], true, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.OnAgenda, "a sitting still open has it");
         CommitteeAgendaStatus.Elsewhere(
                 [
                     Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 1),
                     Standing(CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified, 2, starDecides: true)
                 ],
+                [],
                 true, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.Decided);
     }
@@ -807,6 +946,7 @@ public sealed class CommitteeAgendaHandlerTests
                     Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 1),
                     Standing(CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified, 2, starDecides: false)
                 ],
+                [],
                 true, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.Missed, "a later sitting decided it, and that decision was revoked");
         CommitteeAgendaStatus.Elsewhere(
@@ -814,6 +954,7 @@ public sealed class CommitteeAgendaHandlerTests
                     Standing(CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified, 1, starDecides: false),
                     Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 2)
                 ],
+                [],
                 true, end, after)
             .Should().Be(CommitteeAgendaElsewhereStatus.Deferred, "the sitting after the revocation deferred it");
         CommitteeAgendaStatus.Elsewhere(
@@ -821,6 +962,7 @@ public sealed class CommitteeAgendaHandlerTests
                     Standing(CommitteeAgendaLineState.Deferred, CommitteeReviewState.Ratified, 9, semester: 1),
                     Standing(CommitteeAgendaLineState.Decided, CommitteeReviewState.Ratified, 3, semester: 2, starDecides: false)
                 ],
+                [],
                 true, new DateOnly(2026, 12, 31), new DateOnly(2027, 1, 4))
             .Should().Be(CommitteeAgendaElsewhereStatus.Missed, "a sitting for semester 2 sat after one for semester 1, whatever the ids");
     }
@@ -1004,6 +1146,54 @@ public sealed class CommitteeAgendaHandlerTests
             new RatifyCommitteeDecisionCommand(reviewId, await ChairOfAsync(db, reviewId)), CancellationToken.None);
         db.ChangeTracker.Clear();
     }
+
+    /// <summary>
+    /// A binding sitting of the panel for the period that stages a STAR on each EPA named, defers every other closing line,
+    /// records the decision with a quorum and ratifies it. Returns the review's id.
+    /// </summary>
+    private static async Task<int> DecideAsync(ApplicationDbContext db, int panelId, int year, int semester, params string[] codes)
+    {
+        var review = await ScheduleAsync(db, panelId, Trainee, year, semester);
+        await StartWithEvidenceAsync(db, review.Id);
+        foreach (var code in codes)
+        {
+            await StageAsync(db, review.Id, EpaIdOf(code));
+        }
+
+        await DeferAllOutstandingAsync(db, review.Id);
+        await RecordDecisionAsync(db, review.Id);
+        await RatifyAsync(db, review.Id);
+        return review.Id;
+    }
+
+    /// <summary>
+    /// Deletes every agenda line, as on dev, where reviews 2 and 3 were ratified before agendas existed (T215): their STARs
+    /// stand, and no line records them.
+    /// </summary>
+    private static async Task ForgetAgendaLinesAsync(ApplicationDbContext db)
+    {
+        db.CommitteeAgendaLines.RemoveRange(await db.CommitteeAgendaLines.ToListAsync());
+        await SaveAndClearAsync(db);
+        (await db.CommitteeAgendaLines.CountAsync()).Should().Be(0);
+    }
+
+    /// <summary>Revokes the trainee's active STAR on the EPA.</summary>
+    private static async Task RevokeActiveAsync(ApplicationDbContext db, string code)
+    {
+        var epaId = EpaIdOf(code);
+        var star = await db.EntrustmentDecisions.SingleAsync(entity =>
+            entity.TraineeUserId == Trainee && entity.EpaId == epaId && entity.Status == EntrustmentDecisionStatus.Active);
+        star.Revoke("Issued in error.", "admin-user", DateTime.UtcNow);
+        await SaveAndClearAsync(db);
+    }
+
+    /// <summary>The status of each of the trainee's STARs, in the order they were issued.</summary>
+    private static async Task<IReadOnlyList<EntrustmentDecisionStatus>> StatusesAsync(ApplicationDbContext db)
+        => await db.EntrustmentDecisions.AsNoTracking()
+            .Where(star => star.TraineeUserId == Trainee)
+            .OrderBy(star => star.Id)
+            .Select(star => star.Status)
+            .ToListAsync();
 
     private static async Task<CommitteeAgendaDto> AgendaAsync(
         ApplicationDbContext db, int reviewId, ClaimsPrincipal? principal = null, DateOnly? today = null)

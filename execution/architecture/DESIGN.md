@@ -657,6 +657,12 @@ no Agenda card. The card holds:
 - A deferral opens a `<fieldset>` form under the table, with its `<legend>` naming the EPA ("Defer PAED-002"), a
   required reason, and Cancel and Defer in a `.form-actions` row. The focus moves to the reason once the form is
   rendered, as Stage moves it to the EPA. The trainee sees the reason once the review is ratified (below).
+- The EPAs routed to this panel that a STAR already decided in their window, so the planner left them off, as one
+  `.muted` sentence (`#agenda-decided-in-window`) in the scheduling preview's words: "Already decided in this window, so
+  not on the agenda: PAED-001 and PAED-006." (T215). A STAR decides its window whether or not an agenda line records it,
+  by the decisions-due page's rule. An EPA the review holds a line for is not named: its line says what this sitting did
+  with it, and the decisions-due page says where the decision stands now. An empty agenda on a scheduled review says
+  that Start adds every EPA due in its period and not already decided in its window.
 - The EPAs another panel sitting as a College committee decides for the period ("Decided by another panel"), as a
   read-only list: the panel, the window, and a badge. While one is not yet decided, the progression Decision card shows
   a `.field-warning` above Record decision. That is a warning, never a refusal (O8).
@@ -697,7 +703,9 @@ annual EPAs a semester-2 sitting closes are judged on the whole year. Under the 
 the agenda. It says how many EPAs will be on it and which must be decided, lists the optional ones with their status,
 says which EPAs another panel decides ("schedule them separately"), and says which are already decided in the window.
 Only the opening sentences sit in a `role="status"` region (`#agenda-preview-summary`), so a screen reader hears what a
-new choice changed, not every line again.
+new choice changed, not every line again. Where a STAR already decided every EPA due, the opening sentence says so
+itself ("Every EPA this panel decides that is due for 2026 S2 is already decided in its window…"), not that none is
+due, since the note naming them is outside the live region (T215).
 
 **Entrustment-only reviews** (T131 slice 5). A review before a panel sitting as a College committee (the neonatal CCC)
 decides entrustment only: its decision is the STARs staged at it, and it records no progression category. A general
@@ -789,7 +797,9 @@ window by a STAR since revoked. Deferred holds only while no later sitting has d
 (the period a review sat for, then the order reviews were scheduled in), so a deferral that a later, since-revoked
 decision overtook reads "Revoked: re-decide". Missed is computed when the page is read, as on the agenda: the window has
 ended with nothing decided, deferred or on an open review's agenda, and an EPA decided as opportunity allows, or in a
-partial period, is never missed. The agenda's "routed elsewhere" list reads the same rule (`CommitteeAgendaStatus`).
+partial period, is never missed. The agenda planner, its "routed elsewhere" list and its "Already decided in this
+window" sentence read the same rule (`CommitteeAgendaStatus.IsDecided`), so a sitting never plans as due an EPA this page
+calls decided (T215).
 
 ## Status dots
 

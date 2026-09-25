@@ -99,6 +99,54 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
     }
 
     [Fact]
+    public void EpasAStarAlreadyDecided_AreNamedAlreadyDecidedInThisWindow_AndAreNotOnTheAgenda()
+    {
+        // T215: the planner leaves off an EPA a STAR already decided in its window, whether or not an agenda line records
+        // that STAR, and the preview names it.
+        _sender.On<PreviewCommitteeAgendaQuery>(query => Preview(query.AcademicYear, query.Semester) with
+        {
+            Lines = [Line(3, "PAED-003", "Paediatric ward round", closing: false, CommitteeAgendaLineStatus.DueByYearEnd, $"{query.AcademicYear}")],
+            DecidedInWindow = ["PAED-001", "PAED-002", "PAED-006"]
+        });
+        var cut = RenderForm();
+
+        ChoosePanelAndTrainee(cut);
+
+        var preview = Text(cut.Find("#agenda-preview"));
+        preview.Should().Contain($"1 EPA will be on the agenda for {_current.AcademicYear} S{_current.Semester}.")
+            .And.Contain("Already decided in this window, so not on the agenda: PAED-001, PAED-002 and PAED-006.")
+            .And.NotContain("must be decided at this sitting");
+        cut.FindAll("#agenda-preview li").Select(item => Text(item)).Should().ContainSingle()
+            .Which.Should().StartWith("PAED-003");
+        Text(cut.Find("#agenda-preview-summary")).Should().NotContain("Already decided", "only the opening sentences are live");
+    }
+
+    [Fact]
+    public void WhereAStarAlreadyDecidedEveryEpaDue_TheLiveSentenceSaysSo_NotThatNoneIsDue()
+    {
+        // T215 review: the note naming them is outside the live region, so the live sentence must not say the period asks
+        // nothing of this panel.
+        _sender.On<PreviewCommitteeAgendaQuery>(query => Preview(query.AcademicYear, query.Semester) with
+        {
+            Lines = [],
+            DecidedInWindow = ["PAED-001", "PAED-002"]
+        });
+        var cut = RenderForm();
+        var period = $"{_current.AcademicYear} S{_current.Semester}";
+
+        ChoosePanelAndTrainee(cut, until: "already decided in its window");
+
+        Text(cut.Find("#agenda-preview-summary")).Should().Be(
+            $"Every EPA this panel decides that is due for {period} is already decided in its window, so the review will " +
+            "have nothing on its agenda.");
+        Text(cut.Find("#agenda-preview")).Should().Contain(
+            "Already decided in this window, so not on the agenda: PAED-001 and PAED-002.");
+
+        CommitteeAgendaText.PreviewSentences(new CommitteeAgendaPreviewDto(2026, 2, "2026 S2", true, [], [], []))
+            .Should().Equal(["No EPA this panel decides is due for 2026 S2."], "with nothing decided, none is due");
+    }
+
+    [Fact]
     public void OnlyThePreviewsSummary_IsALiveRegion()
     {
         // A screen reader hears what changed when a choice changes the preview, not every optional line and note again.
@@ -149,12 +197,12 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
         return cut;
     }
 
-    private static void ChoosePanelAndTrainee(IRenderedComponent<ReviewsSchedule> cut)
+    private static void ChoosePanelAndTrainee(IRenderedComponent<ReviewsSchedule> cut, string until = "will be on the agenda")
     {
         cut.Find("#review-panel").Change(Panel.ToString());
         cut.WaitForState(() => cut.FindAll("select#review-trainee option[value='paeds-a']").Count == 1);
         cut.Find("#review-trainee").Change("paeds-a");
-        cut.WaitForState(() => cut.Find("#agenda-preview").TextContent.Contains("will be on the agenda"));
+        cut.WaitForState(() => cut.Find("#agenda-preview").TextContent.Contains(until));
     }
 
     private static CommitteeAgendaPreviewDto Preview(int year, int semester)

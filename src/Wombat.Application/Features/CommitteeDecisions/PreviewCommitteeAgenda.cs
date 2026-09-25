@@ -77,7 +77,7 @@ public sealed class PreviewCommitteeAgendaQueryHandler : IRequestHandler<Preview
             plan.TraineeHasCurriculum,
             plan.Lines.Select(line => CommitteeAgendaReader.ToDto(line, sitting, staged: false, evidenceCount: 0)).ToArray(),
             plan.RoutedElsewhere,
-            plan.DecidedInWindow)
+            plan.DecidedInWindow.Select(epa => epa.Code).ToArray())
         {
             PanelDecidesAnything = plan.PanelDecidesAnything
         };
