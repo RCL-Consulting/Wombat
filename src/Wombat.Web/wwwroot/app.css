@@ -425,6 +425,19 @@ h1[tabindex="-1"]:focus {
   gap: var(--space-sm);
 }
 
+/* A field-level fieldset is a form group too (T188), and holds what a <FormField> does not: its help as a paragraph, a
+   status line ("Select a trainee first."), and an action (Add year). The group's gap spaces them, as it spaces a
+   label, its control and its help, so a paragraph takes no margin of its own (1em above and below made the group
+   looser than the fields beside it). A button keeps its own width: a column stretches its items, and "Add year 3" ran
+   the width of the form. */
+.form-group > p {
+  margin: 0;
+}
+
+.form-group > .btn {
+  align-self: flex-start;
+}
+
 .full-width {
   grid-column: 1 / -1;
 }
@@ -502,7 +515,6 @@ h1[tabindex="-1"]:focus {
   display: grid;
   gap: var(--space-sm) var(--space-md);
   grid-template-columns: fit-content(12rem) minmax(0, 18rem) max-content;
-  margin-bottom: var(--space-sm);
 }
 
 /* A stored key or value is shown verbatim and may be one long token; let it wrap rather than widen the row. */
@@ -1320,11 +1332,29 @@ fieldset legend {
   padding: 0;
 }
 
-/* A fieldset that is one field among others (an activity form's multi-choice, T177): its legend is that field's
-   label, so it reads like the labels beside it, not like the section title above it. */
+/* A fieldset that is one field among others (an activity form's multi-choice, T177; every field-level group, T188): its
+   legend is that field's label, so it reads like the labels beside it, not like the section title above it. */
 fieldset.form-group > legend {
   font-size: inherit;
   font-weight: inherit;
+}
+
+/* A group within a field-level group (the committee review's evidence picker, its lines grouped by EPA, T131). Its
+   legend is the size of the field's own, so a rule down its left side and an indent show it belongs to that field
+   rather than standing beside it (T188). */
+fieldset.form-group fieldset.form-group {
+  border-left: 2px solid var(--border-color);
+  padding-left: var(--space-md);
+}
+
+/* A fieldset's legend sits across its top border, so the border box, and with it the rule down the left, starts at the
+   legend's middle: halfway down "PAED-001 — …", or between its lines once it wraps. A floated legend is laid out in the
+   group like any other part, spaced by the group's gap, so the rule runs the legend's full height. It still names the
+   fieldset: a fieldset is named by its first legend, however it is laid out. (T188 review) */
+fieldset.form-group fieldset.form-group > legend {
+  float: left;
+  margin: 0;
+  width: 100%;
 }
 
 /* ── Trajectory chart ─────────────────────────────── */

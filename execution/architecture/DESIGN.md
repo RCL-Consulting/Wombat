@@ -545,7 +545,9 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 .form-container   /* surface card with padding, border, shadow */
 .form-grid        /* grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap 1.5rem */
 .form-grid--wide  /* minmax(min(350px, 100%), 1fr) — wide sections that must not truncate */
-.form-group       /* flex-column, gap .5rem, label on top of input */
+.form-group       /* flex-column, gap .5rem, label on top of input; a field-level fieldset too (T188) */
+.form-group > p   /* no margin: the group's gap spaces a group's help and status lines (T188) */
+.form-group > .btn /* keeps its own width in the column: Add year (T188) */
 .full-width       /* grid-column: 1 / -1 */
 
 .form-control     /* padding .75rem, border --input-border, radius 6px */
@@ -620,11 +622,27 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
   `.form-check`), every checkbox with its own unique id. **Not** a `<FormField>`: its `<label for>` would point at
   no single input. When two groups share a page (an inline edit row and an Add form), prefix their ids differently
   (`edit-tool-{key}` / `add-tool-{key}`, T122's curriculum tool list).
-- In `ActivityForm`, a field that is not one control is a `fieldset.form-group` among the section's `<FormField>`s:
-  a multi-choice field, and a field with no control to name (the file placeholder, an unsupported type) (T177).
-  `.form-group` makes its legend read as that field's label, not as the section title. Help text goes inside the
-  fieldset, which names it with `aria-describedby`. The checkbox groups on the MSF campaign form (T147) and the
-  curriculum item forms (T122) are plain fieldsets with a section-size legend.
+- **A fieldset that is one field is a `fieldset.form-group`, wherever it is** (T177 in `ActivityForm`, every page since
+  T188): a group of checkboxes or radios, and a field with no control to name (the activity form's file placeholder,
+  an unsupported type). `.form-group` makes its legend read as that field's label, like the labels beside it, not as a
+  section title. It sits straight in the `.form-grid` among the `<FormField>`s, `full-width` when its options need the
+  row, never inside a wrapper: the MSF campaign form's EPAs (T147), the curriculum item forms' Minimum by training year
+  (`StageMinimaEditor`, whose own fieldset is the grid item, T125) and Tools (T122), the committee review's Evidence it
+  rests on (T131) and Present (T165), the activity form's multi-choice, and the MSF questionnaire's scale (T205). A
+  required group carries the mark a required `<FormField>` does, in its legend (`*` hidden from a screen reader, then
+  a visually hidden "required"). Help text goes inside the fieldset, which names it with `aria-describedby`, and is a
+  `.page-subtitle`, the size of a `<FormField>`'s help: a `<p class="page-subtitle">` under the legend, or the activity
+  form's `<small class="page-subtitle">` after the options. A status line in the group ("Select a trainee first.") is
+  one too; a `.field-warning` stays a warning. The group's gap spaces its parts, so a paragraph in it takes no margin,
+  and a button in it keeps its own width. A group inside such a field (the evidence picker's lines by EPA) is a form
+  group too, and is set in by a 2px rule down its left, because its legend is the same size as the field's. Its legend
+  is floated, so it is laid out inside the group and the rule runs its full height (a rendered legend straddles the
+  top border, and the rule began halfway down it); a floated legend still names its fieldset. A fieldset that
+  **holds** fields (a `.form-grid` or `<FormField>`s: an activity form's section, the curriculum item's edit row, a
+  deferral) is a cluster, and keeps the section-size legend. `Design/FieldGroupTests` reads every `<fieldset` in every
+  `.razor` file, the render fragments in `@code` included, and fails on a field whose class does not write
+  `form-group` out (one an expression adds is sometimes not there), and on a paragraph in a field that does not write
+  `page-subtitle` (or `field-warning`) out.
 - An option is shown by its label, never by the key it stores (T191): `<option value="picu">PICU</option>`, and a
   checkbox's id is built from the key, checking it stores the key, and its `<label>` shows the words. A schema option
   is a bare string only when the string reads as words ("1"); a key is written
@@ -1598,7 +1616,7 @@ Used in the Administrator dashboard system-health card to show service status at
 - An invalid field is marked by a stripe as well as the danger colour, and stays marked in a contrast theme (WCAG 1.4.1,
   § Form system, T236). Its focus ring is the usual outline, outside the stripe.
 - Up/down reorder buttons (T019) are keyboard-focusable `<button type="button">` with `aria-label="Move field up"`.
-- `<fieldset>` is reset to no border/padding and its `<legend>` styled as a heading — this is the semantic grouping for multi-field clusters.
+- `<fieldset>` is reset to no border/padding and its `<legend>` styled as a heading — this is the semantic grouping for multi-field clusters. A fieldset that is one field (a group of checkboxes) is a `.form-group`, whose legend reads as a label (§ Form system, T188).
 
 ## Icons
 
@@ -1908,7 +1926,7 @@ body, h1..h5, .page-subtitle
 .btn, .btn-{variant}, .btn-sm, .btn-xs, .btn-outline
 
 /* ── Forms ─────────────────────────────────────────── */
-.form-container, .form-grid, .form-group, .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .scale-choices, .form-actions, .account-form-container(--wide)
+.form-container, .form-grid, .form-group (+ > p, > .btn), .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .scale-choices, .form-actions, .account-form-container(--wide)
 
 /* ── Alerts ────────────────────────────────────────── */
 .alert, .alert-{kind}, .error-summary
@@ -1938,7 +1956,7 @@ body, h1..h5, .page-subtitle
 .shadow, .text-center, .mb-3, .font-mono, .code-block (a stored text block shown verbatim, T266), .visually-hidden
 
 /* ── Accessibility ────────────────────────────────── */
-fieldset, fieldset legend
+fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fieldset.form-group (+ > legend)
 ```
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.

@@ -123,14 +123,15 @@
               <InputNumber id="msf-min-category-count" class="form-control" aria-describedby="@FieldHelp.Id("msf-min-category-count")" @bind-Value="_campaign.MinimumRespondentCategories" disabled="@IsLearnerFeedback" />
             </FormField>
             @* A group of checkboxes has no single control for a <label for> to name, so it is a fieldset whose legend
-               names the group (DESIGN.md § Form system, T147). *@
-            <fieldset class="full-width" aria-describedby="msf-epas-help">
+               names the group (DESIGN.md § Form system, T147). One field among the others, so a form group: its legend
+               reads as a field's label, like the labels beside it (T188). *@
+            <fieldset class="form-group full-width" aria-describedby="msf-epas-help">
               <legend>
                 Evidence for these EPAs
                 <span aria-hidden="true">*</span>
                 <span class="visually-hidden">required</span>
               </legend>
-              <p id="msf-epas-help" class="muted">@EpasHelp</p>
+              <p id="msf-epas-help" class="page-subtitle">@EpasHelp</p>
               @if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
               {
                 <p class="page-subtitle">Select a trainee first.</p>

@@ -148,6 +148,28 @@ public sealed class CurriculumItemsEditLayoutTests : TestContext
         edit.Single(field => field.Name == "Completion window (months)").Help.Should().StartWith("Only used to suggest");
     }
 
+    [Theory]
+    [InlineData(Ladder.Pinned)]
+    [InlineData(Ladder.Unpinned)]
+    public void EveryFieldOfBothForms_IsAFormGroup_StraightInTheGrid(Ladder ladder)
+    {
+        // T188. The minimum by training year and Tools were plain fieldsets among the fields, so each legend was a
+        // section title (1.1rem, semibold) in a grid of labels, and the year list sat in a bare div.full-width. Every
+        // field of either form is now a form group, a FormField's div or a group's fieldset, straight in the grid.
+        var cut = RenderPage(Catalogue(ladder));
+
+        BeginEdit(cut, "PAED-001");
+
+        foreach (var grid in new[] { cut.Find("tbody td[colspan] .form-grid"), cut.Find(".form-container .form-grid") })
+        {
+            grid.Children.Should().OnlyContain(field => field.ClassList.Contains("form-group"),
+                "a field of the form reads as one: its label or legend at a label's size");
+            grid.Children.Where(field => field.LocalName == "fieldset")
+                .Select(group => Collapse(group.QuerySelector("legend")!.TextContent))
+                .Should().Equal(["Minimum by training year", "Tools"], "both groups are fields of their own");
+        }
+    }
+
     // ---- Every help is read with its field (T193) ----
 
     [Theory]
@@ -375,7 +397,7 @@ public sealed class CurriculumItemsEditLayoutTests : TestContext
 
     /// <summary>
     /// A field's help: the first muted line under it that is not the Add form's note on why it starts on a ladder.
-    /// FormField renders its help as <c>small.page-subtitle</c>; a group's is a <c>p.muted</c> under its legend.
+    /// FormField renders its help as <c>small.page-subtitle</c>; a group's is a <c>p.page-subtitle</c> under its legend (T188).
     /// </summary>
     private static IElement? HelpElementOf(IElement group)
         => group.Children

@@ -416,18 +416,23 @@
                  are the ones StagePendingEntrustmentDecision accepts (CanGroundADecision: never a supervisor report),
                  grouped as the snapshot card below groups them, with the chosen EPA's lines first as a hint. A line
                  about any EPA may be named; that none is about this one, or that only one is named, is said, not
-                 refused. *@
+                 refused. One field of the form, so a form group, and so is each list by EPA inside it (T188). Marked
+                 required, as Rationale beside it is: Stage waits for a line, and the command refuses none (D38). *@
               @{ var picker = EvidenceSnapshotGroups.BuildPicker(_review.EvidenceItems, _pending.EpaId); }
-              <fieldset class="full-width" aria-describedby="pending-evidence-help">
-                <legend>Evidence it rests on</legend>
-                <p id="pending-evidence-help" class="muted">
+              <fieldset class="form-group full-width" aria-describedby="pending-evidence-help">
+                <legend>
+                  Evidence it rests on
+                  <span aria-hidden="true">*</span>
+                  <span class="visually-hidden">required</span>
+                </legend>
+                <p id="pending-evidence-help" class="page-subtitle">
                   Tick the lines of the evidence snapshot this decision rests on.@(SelectedStarEpa is null
                     ? string.Empty
                     : $" {SelectedStarEpa.Code}'s lines are listed first.")
                 </p>
                 @if (picker.IsEmpty)
                 {
-                  <p class="muted">
+                  <p class="page-subtitle">
                     The evidence snapshot holds no line a decision can rest on, so no entrustment decision can be staged
                     at this review.
                   </p>
@@ -1194,18 +1199,19 @@
   /// <summary>
   /// Who sat, as a group of checkboxes: a fieldset whose legend names it, one checkbox per panel member who may sit
   /// (<c>PanelSeat</c>), each with its own id under <paramref name="idPrefix" /> (DESIGN.md § Form system). Nobody who
-  /// may not sit is offered, so the form cannot send someone the server refuses. (T165)
+  /// may not sit is offered, so the form cannot send someone the server refuses. (T165) One field among the form's
+  /// others, so a form group, its legend read as a label (T188).
   /// </summary>
   private RenderFragment PresentFieldset(string idPrefix, HashSet<string> ticked, string? lockedUserId) => __builder =>
   {
     var seated = _review?.PanelMembers.Where(member => member.MaySit).ToArray() ?? [];
-    <fieldset class="full-width" aria-describedby="@($"{idPrefix}-help")">
+    <fieldset class="form-group full-width" aria-describedby="@($"{idPrefix}-help")">
       <legend>
         Present
         <span aria-hidden="true">*</span>
         <span class="visually-hidden">required</span>
       </legend>
-      <p id="@($"{idPrefix}-help")" class="muted">
+      <p id="@($"{idPrefix}-help")" class="page-subtitle">
         Tick every panel member at this sitting. @CommitteeReviewDetailDto.QuorumRule
       </p>
       <div class="check-grid">

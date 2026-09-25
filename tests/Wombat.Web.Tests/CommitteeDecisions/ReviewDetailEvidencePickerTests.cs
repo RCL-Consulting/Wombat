@@ -43,6 +43,37 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
         cut.Find("label[for=pending-evidence-1]").TextContent.Should().Contain("Mini-CEX #101").And.Contain("3a · 2026-02-10 · Completed");
     }
 
+    [Fact]
+    public void ThePicker_IsOneFieldAmongTheForms_WithItsListsByEpaSetInsideIt()
+    {
+        // T188. The picker is one field of the staging form, so a form group: its legend reads as a label, like
+        // Rationale's beside it, not as a section title. Its lists by EPA are form groups inside it, which app.css sets
+        // in by a rule down their left (fieldset.form-group fieldset.form-group), since their legends are the same size.
+        var (cut, _) = RenderPage();
+
+        var picker = cut.Find("#pending-evidence-help").Closest("fieldset")!;
+        picker.ClassList.Should().Contain(["form-group", "full-width"]);
+        picker.ParentElement!.ClassList.Should().Contain("form-grid", "it sits among the form's fields");
+        PendingForm(cut).QuerySelectorAll("fieldset.form-group fieldset.form-group > legend")
+            .Select(legend => legend.TextContent.Trim())
+            .Should().Equal(Legends(cut), "every list by EPA is a group within the picker's group");
+    }
+
+    [Fact]
+    public void ThePickersLegend_IsMarkedRequired_AndItsHelpIsTheSizeOfAFieldsHelp()
+    {
+        // T188 review. Read as a label beside "Rationale *", the legend said nothing of what Stage waits for: at least one
+        // line (D38; StagePendingEntrustmentDecision refuses none). It carries the mark FormField gives a required
+        // field, seen and heard. Its help, like a FormField's, is a page-subtitle, not a body-size muted paragraph.
+        var (cut, _) = RenderPage();
+
+        var picker = cut.Find("#pending-evidence-help").Closest("fieldset")!;
+        var legend = picker.Children.First(child => child.LocalName == "legend");
+        legend.QuerySelector("span[aria-hidden=true]")!.TextContent.Should().Be("*");
+        legend.QuerySelector("span.visually-hidden")!.TextContent.Should().Be("required");
+        cut.Find("#pending-evidence-help").ClassList.Should().Contain("page-subtitle");
+    }
+
     /// <summary>
     /// An activity whose type names no EPA is listed under "Not about a single EPA", and its detail is its state by the
     /// label frozen with it, never the key (T220 review): a submitted clinical audit reads "Awaiting supervisor".

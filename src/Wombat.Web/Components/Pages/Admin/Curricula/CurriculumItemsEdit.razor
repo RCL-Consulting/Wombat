@@ -266,9 +266,7 @@
                           <RungPicker Id="edit-minimum" Scale="ScaleOf(_editModel.ScaleId)" @bind-Value="_editModel.MinimumLevelOrder" />
                         </FormField>
 
-                        <div class="full-width">
-                          <StageMinimaEditor Draft="_editModel.StageMinima" IdPrefix="edit" Scale="ScaleOf(_editModel.ScaleId)" OnChanged="StateHasChanged" />
-                        </div>
+                        <StageMinimaEditor Draft="_editModel.StageMinima" IdPrefix="edit" Scale="ScaleOf(_editModel.ScaleId)" OnChanged="StateHasChanged" />
 
                         <FormField Label="Completion window (months)" InputId="edit-window" HelpText="@WindowHelp">
                           <InputNumber id="edit-window" aria-describedby="@FieldHelp.Id("edit-window")" class="form-control" @bind-Value="_editModel.WindowMonths" />
@@ -278,9 +276,9 @@
                           <InputNumber id="edit-weight" class="form-control" @bind-Value="_editModel.Weight" />
                         </FormField>
 
-                        <fieldset class="full-width" aria-describedby="edit-tools-help">
+                        <fieldset class="form-group full-width" aria-describedby="edit-tools-help">
                           <legend>Tools</legend>
-                          <p id="edit-tools-help" class="muted">@ToolsHelp</p>
+                          <p id="edit-tools-help" class="page-subtitle">@ToolsHelp</p>
                           <div class="check-grid">
                             @foreach (var tool in ToolOptions(_editModel))
                             {
@@ -428,9 +426,7 @@
               <RungPicker Id="curriculum-item-level" Scale="ScaleOf(_addModel.ScaleId)" @bind-Value="_addModel.MinimumLevelOrder" />
             </FormField>
 
-            <div class="full-width">
-              <StageMinimaEditor Draft="_addModel.StageMinima" IdPrefix="add" Scale="ScaleOf(_addModel.ScaleId)" OnChanged="StateHasChanged" />
-            </div>
+            <StageMinimaEditor Draft="_addModel.StageMinima" IdPrefix="add" Scale="ScaleOf(_addModel.ScaleId)" OnChanged="StateHasChanged" />
 
             <FormField Label="Completion window (months)" InputId="curriculum-item-window" HelpText="@WindowHelp">
               <InputNumber id="curriculum-item-window" aria-describedby="@FieldHelp.Id("curriculum-item-window")" class="form-control" @bind-Value="_addModel.WindowMonths" />
@@ -440,10 +436,11 @@
               <InputNumber id="curriculum-item-weight" class="form-control" @bind-Value="_addModel.Weight" />
             </FormField>
 
-            @* T122. A fieldset, not a FormField: a group of checkboxes has no single input for a label to point at. *@
-            <fieldset class="full-width" aria-describedby="add-tools-help">
+            @* T122. A fieldset, not a FormField: a group of checkboxes has no single input for a label to point at. A
+               form group, as every field-level fieldset is (T188), so Tools reads as a field's label. *@
+            <fieldset class="form-group full-width" aria-describedby="add-tools-help">
               <legend>Tools</legend>
-              <p id="add-tools-help" class="muted">@ToolsHelp</p>
+              <p id="add-tools-help" class="page-subtitle">@ToolsHelp</p>
               <div class="check-grid">
                 @foreach (var tool in ToolOptions(_addModel))
                 {

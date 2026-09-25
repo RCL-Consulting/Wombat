@@ -1,11 +1,13 @@
 @* T125. The minimum-by-training-year map, as rows of a year and a rung picker. It replaces a free-text JSON box whose
    help text had to explain the JSON shape. The rows are the years the item already has, plus Add year; anything
    stored that is not a year and a rung is listed, never dropped, and the page will not save until it is removed
-   (see StageMinimaDraft). *@
+   (see StageMinimaDraft).
+   One field among the item form's others, so a form group spanning the grid (DESIGN.md § Form system, T188): its
+   legend reads as a field's label, not as a section title. Both forms place it straight in their .form-grid. *@
 
-<fieldset aria-describedby="@HelpId">
+<fieldset class="form-group full-width" aria-describedby="@HelpId">
   <legend>Minimum by training year</legend>
-  <p id="@HelpId" class="muted">
+  <p id="@HelpId" class="page-subtitle">
     A trainee in a year listed here is measured against that year's rung instead of the minimum level. A year not
     listed uses the minimum level.
   </p>
@@ -45,7 +47,7 @@
   }
   else
   {
-    <p class="muted">No year has its own minimum.</p>
+    <p class="page-subtitle">No year has its own minimum.</p>
   }
 
   @if (Draft.CanAddYear)
