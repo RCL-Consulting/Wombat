@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
@@ -123,8 +124,29 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
         }
 
         // One commit: the release, and the evidence it produced, or neither.
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // The campaign's xmin token (MsfCampaignConfiguration) refused the save: it was withdrawn or released
+            // elsewhere between this read and this save. Since T199 a campaign under review can be withdrawn, so a
+            // coordinator's release can race another's withdraw. Carried as the inner exception, so the audit pipeline
+            // still sees a refused save, discards the staged evidence and writes its row alone (T201); EF's own message
+            // names row counts and a documentation link. (T199 review)
+            throw new InvalidOperationException(CampaignChanged, exception);
+        }
     }
+
+    /// <summary>
+    /// The refusal when the campaign changed between being read and the save: it was released or withdrawn elsewhere.
+    /// Nothing this attempt did is stored, the evidence it staged included. (T199 review) Shown on the report page, which
+    /// reads the campaign again and shows its state, so it names no other page, as the close's refusal is worded (T225).
+    /// </summary>
+    public const string CampaignChanged =
+        "The campaign changed while it was being released: it was released or withdrawn elsewhere. This attempt did not " +
+        "release it and recorded no evidence. If it is still under review, release it again.";
 
     /// <summary>
     /// Stages one terminal evidence activity per covered EPA that the campaign may still cover, without saving:

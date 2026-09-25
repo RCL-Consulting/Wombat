@@ -376,6 +376,131 @@ public sealed class PortfolioPdfServiceTests
     }
 
     /// <summary>
+    /// T199: a field that stores an id prints as what the id names, as the activity's page shows it. The export printed an
+    /// MSF record as "EPA: 1" and "MSF campaign: 7", and a Mini-CEX's assessor as their account id.
+    /// </summary>
+    [Fact]
+    public async Task TheActivitiesSection_NamesAnEpaAPersonAndACampaign_NeverByTheirIds()
+    {
+        await using var db = SeededDb();
+        db.Set<Epa>().Add(new Epa { Id = 3, SubSpecialityId = 1, Code = "PAED-003", Title = "Resuscitation", IsActive = false });
+        db.Set<WombatIdentityUser>().Add(new WombatIdentityUser { Id = "assessor-1", FirstName = "Thandi", LastName = "Zulu", Email = "zulu@test" });
+        var campaign = SeedReleasedCampaign(db);
+        AddSeededType(db, 30, MsfEvidenceKinds.MsfActivityTypeKey);
+        AddSeededType(db, 31, "mini_cex_cpsa");
+        var observed = new DateTime(2029, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+        db.Set<Activity>().AddRange(
+            new Activity
+            {
+                ActivityTypeId = 30,
+                SchemaVersion = 1,
+                SubjectUserId = "trainee-1",
+                CreatedByUserId = "coord-1",
+                CurrentState = "recorded",
+                DataJson = $$"""{ "epa_id": 1, "{{MsfCampaignCoverage.CampaignIdField}}": {{campaign.Id}}, "respondent_count": 2 }""",
+                EpaId = 1,
+                CreatedOn = observed,
+                UpdatedOn = observed,
+                ObservedOn = campaign.ClosesOn,
+                ObservedOnSource = ObservationDateSource.Declared
+            },
+            new Activity
+            {
+                ActivityTypeId = 31,
+                SchemaVersion = 1,
+                SubjectUserId = "trainee-1",
+                CreatedByUserId = "trainee-1",
+                CurrentState = "completed",
+                DataJson = """{ "epa_id": "3", "assessor_user_id": "assessor-1" }""",
+                EpaId = 3,
+                CreatedOn = observed,
+                UpdatedOn = observed,
+                ObservedOn = new DateOnly(2029, 6, 1),
+                ObservedOnSource = ObservationDateSource.Declared
+            });
+        await db.SaveChangesAsync();
+
+        var service = new PortfolioPdfService(db, new MsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+        var campaignLabel = $"Annual MSF (Campaign #{campaign.Id})";
+
+        var references = (await service.LoadPortfolioDataAsync(request, CancellationToken.None)).FieldReferences;
+        references.EpaLabels.Should().BeEquivalentTo(new Dictionary<int, string>
+        {
+            [1] = "PAED-001 — Acute admission",
+            [3] = "PAED-003 — Resuscitation (no longer in use)"
+        });
+        references.PersonNames.Should().BeEquivalentTo(new Dictionary<string, string> { ["assessor-1"] = "Thandi Zulu" });
+        references.CampaignLabels.Should().BeEquivalentTo(new Dictionary<int, string> { [campaign.Id] = campaignLabel });
+
+        // The text layer ends a line after each span, so a field's label and its value are joined back into one line.
+        var text = System.Text.RegularExpressions.Regex.Replace(
+            string.Join(" ", PdfTextLayer.Pages((await service.GenerateAsync(request, CancellationToken.None)).PdfBytes)),
+            @"\s+",
+            " ");
+        text.Should().Contain("EPA: PAED-001 — Acute admission")
+            .And.Contain("EPA: PAED-003 — Resuscitation (no longer in use)")
+            .And.Contain($"MSF campaign: {campaignLabel}", "as the MSF section heads the same campaign")
+            .And.Contain("Assessor: Thandi Zulu");
+        text.Should().NotContain("EPA: 1").And.NotContain("EPA: 3")
+            .And.NotContain($"MSF campaign: {campaign.Id}")
+            .And.NotContain("assessor-1").And.NotContain("zulu@test", "an export names a person, never their address");
+    }
+
+    /// <summary>
+    /// T199: a campaign is named only among the trainee's own. A record naming someone else's campaign by its number, as
+    /// no release writes, prints the number alone, not another trainee's questionnaire.
+    /// </summary>
+    [Fact]
+    public async Task TheActivitiesSection_NamesOnlyTheTraineesOwnCampaigns()
+    {
+        await using var db = SeededDb();
+        var theirs = SeedReleasedCampaign(db);
+        var someoneElses = new MsfCampaign
+        {
+            SubjectUserId = "trainee-2",
+            CreatedByUserId = "coord-1",
+            CreatedOn = theirs.CreatedOn,
+            OpensOn = theirs.OpensOn,
+            ClosesOn = theirs.ClosesOn,
+            State = MsfCampaignState.Released,
+            ReleasedOn = theirs.ReleasedOn,
+            Template = new MsfTemplate { Name = "Another trainee's MSF", Kind = MsfTemplateKind.Msf }
+        };
+        db.Set<MsfCampaign>().Add(someoneElses);
+        db.SaveChanges();
+        AddSeededType(db, 30, MsfEvidenceKinds.MsfActivityTypeKey);
+        foreach (var campaign in new[] { theirs, someoneElses })
+        {
+            db.Set<Activity>().Add(new Activity
+            {
+                ActivityTypeId = 30,
+                SchemaVersion = 1,
+                SubjectUserId = "trainee-1",
+                CreatedByUserId = "coord-1",
+                CurrentState = "recorded",
+                DataJson = $$"""{ "epa_id": 1, "{{MsfCampaignCoverage.CampaignIdField}}": {{campaign.Id}}, "respondent_count": 2 }""",
+                EpaId = 1,
+                CreatedOn = campaign.ReleasedOn!.Value,
+                UpdatedOn = campaign.ReleasedOn!.Value,
+                ObservedOn = campaign.ClosesOn,
+                ObservedOnSource = ObservationDateSource.Declared
+            });
+        }
+
+        await db.SaveChangesAsync();
+
+        var references = (await new PortfolioPdfService(db, new MsfAggregationService()).LoadPortfolioDataAsync(
+            new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1")),
+            CancellationToken.None)).FieldReferences;
+
+        references.CampaignLabels.Should().BeEquivalentTo(new Dictionary<int, string>
+        {
+            [theirs.Id] = $"Annual MSF (Campaign #{theirs.Id})"
+        });
+    }
+
+    /// <summary>
     /// T220: the export names an activity's state, and every state and move in its audit trail, as the activity's page
     /// does: by the labels of its PINNED workflow. A submitted clinical audit is "Awaiting supervisor", not "submitted".
     /// </summary>
@@ -785,6 +910,38 @@ public sealed class PortfolioPdfServiceTests
             ObservedOn = campaign.ClosesOn,
             ObservedOnSource = ObservationDateSource.Declared
         });
+    }
+
+    /// <summary>A seeded type with its version 1 row, whose schema and workflow are the shipped seed's.</summary>
+    private static void AddSeededType(ApplicationDbContext db, int typeId, string key)
+    {
+        string Seed(string file) => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Activities", "Seeds", key, file));
+        var schemaJson = Seed("schema.json");
+        var workflowJson = Seed("workflow.json");
+
+        var type = new ActivityType
+        {
+            Id = typeId,
+            Key = key,
+            Name = key,
+            Version = 1,
+            SchemaJson = schemaJson,
+            WorkflowJson = workflowJson,
+            OwnerUserId = "seed-system",
+            CreatedOn = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        };
+        type.Versions.Add(new ActivityTypeVersion
+        {
+            ActivityTypeId = typeId,
+            Version = 1,
+            SchemaJson = schemaJson,
+            WorkflowJson = workflowJson,
+            CreditRulesJson = "{}",
+            DisplayFieldsJson = "[]",
+            PublishedByUserId = "seed-system",
+            PublishedOn = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        });
+        db.Set<ActivityType>().Add(type);
     }
 
     private static ApplicationDbContext SeededDb()

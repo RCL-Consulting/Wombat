@@ -71,7 +71,8 @@ public sealed class ActivitiesSectionEncounterDateTests
                 new Dictionary<string, List<Activity>> { ["Reflective note"] = [activity] },
                 [],
                 new Dictionary<(int ActivityTypeId, int Version), Wombat.Domain.Activities.Workflow.Workflow?>(),
-                EntrustmentRungLookup.Empty));
+                EntrustmentRungLookup.Empty,
+                PortfolioFieldReferences.Empty));
         })).GenerateSvg();
 
         return pages

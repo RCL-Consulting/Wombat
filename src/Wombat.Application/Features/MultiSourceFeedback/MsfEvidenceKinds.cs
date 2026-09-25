@@ -29,6 +29,14 @@ public static class MsfEvidenceKinds
     /// <summary>The College instrument learner feedback is: the key PAED-015's tool list names (T122, T164).</summary>
     public const string LearnerFeedbackToolKey = "learner_feedback";
 
+    /// <summary>
+    /// Whether an activity of this type is a campaign's evidence record, one a release writes, whose data names the
+    /// campaign under <see cref="MsfCampaignCoverage.CampaignIdField" />. The portfolio export prints that field as the
+    /// campaign, not as its id (T199).
+    /// </summary>
+    public static bool IsEvidenceType(string? activityTypeKey)
+        => activityTypeKey is MsfActivityTypeKey or LearnerFeedbackActivityTypeKey;
+
     /// <summary>The evidence type a released campaign on a template of this kind writes.</summary>
     public static string ActivityTypeKeyFor(MsfTemplateKind kind)
         => kind switch

@@ -17,7 +17,8 @@ using Wombat.Web.Tests.TestSupport;
 namespace Wombat.Web.Tests.MultiSourceFeedback;
 
 /// <summary>
-/// A Coordinator withdraws a draft or an open campaign from the campaign list, after a confirmation. (T206)
+/// A Coordinator withdraws a campaign not yet released from the campaign list, after a confirmation: a draft or an open
+/// one (T206), and since T199 one closed and under review.
 /// </summary>
 /// <remarks>
 /// Until T206 <see cref="WithdrawMsfCampaignCommand" /> had no caller in the product, so T202's anonymise-on-withdraw
@@ -39,17 +40,20 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
         JSInterop.SetupVoid("wombatDialog.close", _ => true).SetVoidResult();
     }
 
+    // T199: a campaign under review is withdrawn too, which is the decision never to release its report. Until then a
+    // campaign nobody would release stayed under review for good (dev campaign 4).
     [Fact]
-    public void Withdraw_IsOfferedOnADraftOrAnOpenCampaign_AndOnNoOther()
+    public void Withdraw_IsOfferedOnEveryCampaignNotYetReleased_AndOnNoOther()
     {
         var cut = RenderPage(new FakeSender(
             Campaign(1, "Thandi Nkosi", MsfCampaignState.Draft),
             Campaign(2, "Sipho Dlamini", MsfCampaignState.Open),
             Campaign(3, "Anna Botha", MsfCampaignState.UnderReview),
             Campaign(4, "Lerato Mokoena", MsfCampaignState.Released),
-            Campaign(5, "Johan Smit", MsfCampaignState.Withdrawn)));
+            Campaign(5, "Johan Smit", MsfCampaignState.Withdrawn),
+            Campaign(6, "Pieter Venter", MsfCampaignState.Closed)));
 
-        RowsWithAWithdrawButton(cut).Should().Equal("Thandi Nkosi", "Sipho Dlamini");
+        RowsWithAWithdrawButton(cut).Should().Equal("Thandi Nkosi", "Sipho Dlamini", "Anna Botha", "Pieter Venter");
 
         var button = WithdrawButton(cut, "Sipho Dlamini");
         button.ClassList.Should().Contain(["btn", "btn-sm", "btn-outline"])
@@ -78,6 +82,34 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
             .ClassList.Should().Contain("btn-danger");
     }
 
+    // T199: closing already stopped every link and removed every address, so the dialog and the result say what
+    // withdrawing a closed campaign does: its report is never released.
+    [Fact]
+    public void WithdrawingACampaignUnderReview_SaysItsReportWillNeverBeReleased()
+    {
+        var sender = new FakeSender(Campaign(3, "Anna Botha", MsfCampaignState.UnderReview));
+        var cut = RenderPage(sender);
+
+        WithdrawButton(cut, "Anna Botha").Click();
+
+        Text(cut.Find("dialog")).Should().Contain(
+                "Withdraw the campaign for Anna Botha (Annual MSF, closing 2029-03-21)? It has closed, and its report has " +
+                "not been released. A withdrawn campaign is never released to the trainee and is never evidence on their " +
+                "record, and withdrawing cannot be undone.")
+            .And.NotContain("any link already sent stops working", "closing stopped them");
+
+        cut.FindAll("dialog button").Single(button => Text(button) == "Withdraw campaign").Click();
+
+        var command = sender.Commands.Should().ContainSingle().Which.Should().BeOfType<WithdrawMsfCampaignCommand>().Subject;
+        command.CampaignId.Should().Be(3);
+        command.ConfirmedState.Should().Be(MsfCampaignState.UnderReview, "the state the dialog was worded by (T199 review)");
+        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-success")).Should().Be(
+            "The campaign for Anna Botha (Annual MSF, closing 2029-03-21) has been withdrawn. Its report will never be " +
+            "released to the trainee."));
+        StateOf(cut, "Anna Botha").Should().Be("Withdrawn");
+        RowsWithAWithdrawButton(cut).Should().BeEmpty();
+    }
+
     [Fact]
     public void CancellingTheDialog_SendsNothing()
     {
@@ -103,6 +135,7 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
 
         var command = sender.Commands.Should().ContainSingle().Which.Should().BeOfType<WithdrawMsfCampaignCommand>().Subject;
         command.CampaignId.Should().Be(2);
+        command.ConfirmedState.Should().Be(MsfCampaignState.Open, "the state the dialog was worded by (T199 review)");
         command.Principal.FindFirst(ClaimTypes.NameIdentifier)!.Value.Should().Be("coordinator-1");
 
         cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-success")).Should().Be(
@@ -127,6 +160,46 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
         cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-danger")).Should().Be("Released campaigns cannot be withdrawn."));
         cut.FindAll(".alert.alert-success").Should().BeEmpty();
         StateOf(cut, "Sipho Dlamini").Should().Be("Open");
+    }
+
+    /// <summary>
+    /// T199 review: the list was read while the campaign was open, and the auto-close job closed it before the coordinator
+    /// confirmed. The command refuses a withdraw worded for an open campaign; the list is read again, and the next
+    /// Withdraw asks in the closed campaign's words, which are the ones its second confirm is taken on.
+    /// </summary>
+    [Fact]
+    public void AWithdrawOfACampaignClosedSinceTheListWasRead_IsRefused_AndTheNextDialogAsksInItsClosedWords()
+    {
+        var sender = new FakeSender(Campaign(2, "Sipho Dlamini", MsfCampaignState.Open))
+        {
+            Refusal = new InvalidOperationException(WithdrawMsfCampaignCommandHandler.ClosedSinceShown),
+            RefuseOnce = true,
+            StateAfterRefusal = MsfCampaignState.UnderReview
+        };
+        var cut = RenderPage(sender);
+
+        WithdrawButton(cut, "Sipho Dlamini").Click();
+        Text(cut.Find("dialog")).Should().Contain("any link already sent stops working", "guard: asked in an open campaign's words");
+        cut.FindAll("dialog button").Single(button => Text(button) == "Withdraw campaign").Click();
+
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<WithdrawMsfCampaignCommand>()
+            .Which.ConfirmedState.Should().Be(MsfCampaignState.Open);
+        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-danger")).Should().Be(WithdrawMsfCampaignCommandHandler.ClosedSinceShown));
+        cut.Find(".alert.alert-danger").GetAttribute("role").Should().Be("alert");
+        StateOf(cut, "Sipho Dlamini").Should().Be("Under review", "the list is read again after the refusal");
+
+        WithdrawButton(cut, "Sipho Dlamini").Click();
+        Text(cut.Find("dialog")).Should().Contain("It has closed, and its report has not been released.")
+            .And.NotContain("any link already sent stops working");
+        cut.FindAll("dialog button").Single(button => Text(button) == "Withdraw campaign").Click();
+
+        sender.Commands.Should().HaveCount(2);
+        sender.Commands[1].Should().BeOfType<WithdrawMsfCampaignCommand>()
+            .Which.ConfirmedState.Should().Be(MsfCampaignState.UnderReview);
+        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-success")).Should().Be(
+            "The campaign for Sipho Dlamini (Annual MSF, closing 2029-03-21) has been withdrawn. Its report will never be " +
+            "released to the trainee."));
+        StateOf(cut, "Sipho Dlamini").Should().Be("Withdrawn");
     }
 
     [Fact]
@@ -241,6 +314,14 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
 
         public Exception? Refusal { get; init; }
 
+        /// <summary>Refuses only the first withdraw, as a refusal for a campaign changed elsewhere does. (T199 review)</summary>
+        public bool RefuseOnce { get; init; }
+
+        /// <summary>The state a refused campaign reads back in, as one changed elsewhere does.</summary>
+        public MsfCampaignState? StateAfterRefusal { get; init; }
+
+        private bool _refused;
+
         /// <summary>Holds each withdraw until <see cref="Release" />.</summary>
         public bool Hold { get; init; }
 
@@ -263,8 +344,15 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
         {
             Commands.Add(request);
 
-            if (Refusal is not null)
+            if (Refusal is not null && !(RefuseOnce && _refused))
             {
+                _refused = true;
+                if (StateAfterRefusal is { } state && request is WithdrawMsfCampaignCommand refused)
+                {
+                    var at = _campaigns.FindIndex(campaign => campaign.Id == refused.CampaignId);
+                    _campaigns[at] = _campaigns[at] with { State = state };
+                }
+
                 return Task.FromException(Refusal);
             }
 

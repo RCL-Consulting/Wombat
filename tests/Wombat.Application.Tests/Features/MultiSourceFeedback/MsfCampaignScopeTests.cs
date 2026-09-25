@@ -532,7 +532,7 @@ public sealed class MsfCampaignScopeTests
                 break;
             case "Withdraw":
                 await new WithdrawMsfCampaignCommandHandler(db)
-                    .Handle(new WithdrawMsfCampaignCommand(campaignId, principal), CancellationToken.None);
+                    .Handle(new WithdrawMsfCampaignCommand(campaignId, StateFor(command), principal), CancellationToken.None);
                 break;
             case "AddInvitation":
                 await new AddMsfInvitationCommandHandler(db, new InvitationTokenService())

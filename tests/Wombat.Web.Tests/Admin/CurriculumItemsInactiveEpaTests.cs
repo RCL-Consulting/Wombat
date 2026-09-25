@@ -48,6 +48,20 @@ public sealed class CurriculumItemsInactiveEpaTests : TestContext
             .And.Contain("Reactivating an EPA on its own page brings its item back, and credits what was completed against it meanwhile.");
     }
 
+    // T199 item 1: Razor drops the whitespace before a code block, so the marker was printed against the title,
+    // "…PAED-002 title(inactive: not in force)".
+    [Fact]
+    public void TheInactiveMarker_IsSetApartFromTheTitle_ByASpace()
+    {
+        var cut = RenderPage(new FakeSender(
+        [
+            FakeSender.Item(12, 2, 3, QuotaPeriod.AcademicYear, null, epaIsActive: false)
+        ]) { EpaList = FakeSender.EpasWithInactive(2) });
+
+        var cell = cut.FindAll("tbody tr").Select(row => row.QuerySelector("td")!).First();
+        cell.TextContent.Should().Contain("PAED-002 title (inactive: not in force)", "the text as rendered, not collapsed");
+    }
+
     [Fact]
     public void ACurriculumWhoseItemsAreAllInForce_HasNoNotice()
     {

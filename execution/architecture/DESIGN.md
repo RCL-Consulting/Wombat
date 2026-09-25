@@ -625,7 +625,11 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
   `{ "value": "admission_notes", "label": "Admission notes" }`, and the builder's Options box takes it as
   `admission_notes | Admission notes`. The box holds one option per line, and a comma is part of the option, never a
   separator. The portfolio export prints the label too, except on a scale, where the rung the College prints comes
-  first (T100).
+  first (T100). A field that stores an id prints as what the id names, never as the id (T199,
+  `PortfolioFieldReferences`): an `epa` field as its picker labels it ("PAED-003 — Title", "(no longer in use)" after
+  one not in force), a `user` field as the person's name (never their address; "Unknown person" when the account is
+  gone), and a campaign's evidence record's `campaign_id` as the MSF section of the same export heads that campaign,
+  "Annual MSF (Campaign #3)".
 - A rating scale answered by choosing one point is a `fieldset.form-group` whose `<legend>` is the question (with the
   required `*`), holding a `.scale-choices` list of `.form-check` rows: one radio each, lowest point first, each with its
   own id and `<label for>`, a point's description as a `<small>` in its label (T205, the MSF questionnaire). A list, not
@@ -975,9 +979,19 @@ campaign that exists already has its questionnaire, and its page reads no templa
 - One `.form-actions` row, with nothing a state does not allow: a draft has Withdraw campaign and Open campaign; an
   open campaign has Withdraw campaign and a "View report" link, where it is closed, and, first, "Resend 2 links"
   (`.btn .btn-outline`, `#msf-resend-links`) while any link was not delivered, whose `aria-describedby` names the
-  warning above (T251); a closed one under review has a
-  "Review and release" link; a released one "View report"; a withdrawn one has no row. Withdraw is where the campaign
-  list offers it (T206), behind the same `ConfirmDialog` wording (`MsfCampaignText`). On a draft that invites nobody,
+  warning above (T251); a closed one under review has Withdraw campaign and a "Review and release" link; a released one
+  "View report"; a withdrawn one has no row. Withdraw is where the campaign list offers it (T206): on every campaign not
+  yet released (`MsfCampaignRules.IsWithdrawable`, which the command asks too). Withdrawing a closed campaign is the
+  decision never to release its report, which whoever may release it may take (T199; until then a campaign nobody would
+  release stayed under review for good). Both pages use the same `ConfirmDialog` wording (`MsfCampaignText`). For a
+  closed campaign, the dialog and the result say that its report will never be released. They do not mention links or
+  addresses, which closing already removed, and its state note ends "If it should never be released, withdraw it here."
+  The command is sent the state the dialog was worded by (`WithdrawMsfCampaignCommand.ConfirmedState`), and refuses a
+  withdraw confirmed while the page showed the campaign as a draft or open once it has closed
+  (`MsfCampaignRules.WithdrawingForgoesRelease`, `WithdrawMsfCampaignCommandHandler.ClosedSinceShown`): a page loaded
+  before the auto-close job ran would otherwise withdraw, never to be released, a campaign whose coordinator was asked
+  only to stop its links (T199 review). Both pages read the campaign again after the refusal, so the next dialog asks in
+  the closed campaign's words. On a draft that invites nobody,
   Open campaign is shown **disabled** with its reason (the T107 pattern above, T225): no click handler, and
   `aria-describedby="msf-open-reason"`, a `.workflow-action-reasons` list below the row reading "Open campaign: add at
   least one invitee first…" (`MsfCampaignText.OpenNeedsInvitees`). The handler's refusal of a campaign with no invitee
@@ -1058,7 +1072,11 @@ never replaces the report. Neither can be sent twice at once, and neither is dis
 invitee): the page refuses the second press, and the button pressed keeps the focus, so a refusal that leaves it (a
 close refused on a campaign still open, a release refused on one still ready) leaves the focus on it for the retry.
 Release to trainee is disabled only on a report not ready for release; a refused release that finds it no longer ready
-moves the focus to the result. After a refused close or release the report is read again, keeping the narrative and
+moves the focus to the result. The warning that says why (a campaign under review short of responses or groups) is
+standing content (`Role=""`) and ends "If it should never be released, withdraw it on its campaign page.", the last
+words a link to `/msf/campaigns/{id}` (`#msf-withdraw-elsewhere`), where Withdraw is (T199 review). A release whose save
+a withdraw from another tab beat is refused in `ReleaseMsfCampaignCommandHandler.CampaignChanged`'s words, never EF's
+row counts; the report read again shows the campaign withdrawn, with no form (T199 review). After a refused close or release the report is read again, keeping the narrative and
 level typed, so a refusal names no other page: "If it is still open, close it again."
 (`CloseMsfCampaignCommandHandler.CampaignChanged`, worded as T217's open and withdraw refusals). Only an open campaign
 closes (T246): a report loaded while the campaign was open still offers Close after another tab or the auto-close job

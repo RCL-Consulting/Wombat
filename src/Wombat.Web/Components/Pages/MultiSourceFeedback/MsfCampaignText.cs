@@ -1,4 +1,5 @@
 using System.Globalization;
+using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Web.Components.Pages.MultiSourceFeedback;
@@ -18,16 +19,32 @@ public static class MsfCampaignText
 
     public const string WithdrawConfirmLabel = "Withdraw campaign";
 
-    /// <summary>What withdrawing does, and that it cannot be undone (MsfCampaign.Withdraw, T202).</summary>
-    public static string WithdrawBody(string describedCampaign)
-        => $"Withdraw the campaign for {describedCampaign}? It will take no more responses: any link already sent stops " +
-           "working, and every respondent's email address is removed. A withdrawn campaign is never released to the " +
-           "trainee, and withdrawing cannot be undone.";
+    /// <summary>
+    /// What withdrawing does, and that it cannot be undone (MsfCampaign.Withdraw, T202). A campaign that has closed has
+    /// no link left to stop and no address left to remove: closing did both. Withdrawing it is the decision never to
+    /// release its report, and it is told that instead (T199).
+    /// </summary>
+    public static string WithdrawBody(string describedCampaign, MsfCampaignState state)
+        => HasClosed(state)
+            ? $"Withdraw the campaign for {describedCampaign}? It has closed, and its report has not been released. A " +
+              "withdrawn campaign is never released to the trainee and is never evidence on their record, and " +
+              "withdrawing cannot be undone."
+            : $"Withdraw the campaign for {describedCampaign}? It will take no more responses: any link already sent " +
+              "stops working, and every respondent's email address is removed. A withdrawn campaign is never released " +
+              "to the trainee, and withdrawing cannot be undone.";
 
-    /// <summary>What a withdraw did.</summary>
-    public static string Withdrawn(string describedCampaign)
-        => $"The campaign for {describedCampaign} has been withdrawn. Its respondents' links no longer work, and their " +
-           "email addresses have been removed.";
+    /// <summary>What a withdraw did, for a campaign that was in this state when it was asked about.</summary>
+    public static string Withdrawn(string describedCampaign, MsfCampaignState state)
+        => HasClosed(state)
+            ? $"The campaign for {describedCampaign} has been withdrawn. Its report will never be released to the trainee."
+            : $"The campaign for {describedCampaign} has been withdrawn. Its respondents' links no longer work, and " +
+              "their email addresses have been removed.";
+
+    /// <summary>
+    /// Closed to responses and not yet released: closing has already stopped every link and removed every address. The
+    /// rule the withdraw command asks too, so a page worded for an open campaign cannot withdraw a closed one (T199 review).
+    /// </summary>
+    private static bool HasClosed(MsfCampaignState state) => MsfCampaignRules.WithdrawingForgoesRelease(state);
 
     /// <summary>
     /// The link to the campaign's own page, named by what it lets the coordinator do (T225): a draft or an open campaign

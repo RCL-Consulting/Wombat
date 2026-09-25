@@ -18,13 +18,21 @@ internal static class ActivitiesSectionComponent
     /// Each activity's pinned workflow, by pin, or null where it has none that parses: what names its state (T220). A pin
     /// missing from it is treated as null, so the state is printed by its key.
     /// </param>
+    /// <param name="references">
+    /// What the activities' EPA, person and campaign fields name (T199). Required (T199 review): a caller that left it out
+    /// would print every person as "Unknown person" and every EPA by its id. <see cref="PortfolioFieldReferences.Empty" />
+    /// is for a caller that knows its activities hold none.
+    /// </param>
     public static void Compose(
         IContainer container,
         Dictionary<string, List<Activity>> activitiesByType,
         Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
         IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> workflows,
-        EntrustmentRungLookup rungLabels)
+        EntrustmentRungLookup rungLabels,
+        PortfolioFieldReferences references)
     {
+        ArgumentNullException.ThrowIfNull(references);
+
         container.Column(column =>
         {
             column.Spacing(8);
@@ -34,7 +42,7 @@ internal static class ActivitiesSectionComponent
 
             foreach (var (typeName, activities) in activitiesByType.OrderBy(pair => pair.Key))
             {
-                column.Item().Element(e => ComposeTypeGroup(e, typeName, activities, schemaVersions, workflows, rungLabels));
+                column.Item().Element(e => ComposeTypeGroup(e, typeName, activities, schemaVersions, workflows, rungLabels, references));
             }
         });
     }
@@ -45,7 +53,8 @@ internal static class ActivitiesSectionComponent
         List<Activity> activities,
         Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
         IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> workflows,
-        EntrustmentRungLookup rungLabels)
+        EntrustmentRungLookup rungLabels,
+        PortfolioFieldReferences references)
     {
         container.Column(column =>
         {
@@ -59,7 +68,7 @@ internal static class ActivitiesSectionComponent
 
             foreach (var activity in activities)
             {
-                column.Item().Element(e => ComposeActivity(e, activity, schemaVersions, workflows, rungLabels));
+                column.Item().Element(e => ComposeActivity(e, activity, schemaVersions, workflows, rungLabels, references));
             }
         });
     }
@@ -69,7 +78,8 @@ internal static class ActivitiesSectionComponent
         Activity activity,
         Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> schemaVersions,
         IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> workflows,
-        EntrustmentRungLookup rungLabels)
+        EntrustmentRungLookup rungLabels,
+        PortfolioFieldReferences references)
     {
         // T220: the state as the activity's page names it, from the pinned workflow.
         var stateLabel = PinnedWorkflows.StateLabel(
@@ -100,7 +110,7 @@ internal static class ActivitiesSectionComponent
             var key = (activity.ActivityTypeId, activity.SchemaVersion);
             if (schemaVersions.TryGetValue(key, out var version))
             {
-                RenderDataFromSchema(column, version.SchemaJson, activity.DataJson, rungLabels);
+                RenderDataFromSchema(column, version.SchemaJson, activity.DataJson, rungLabels, references, activity.ActivityType?.Key);
             }
             else
             {
@@ -119,7 +129,12 @@ internal static class ActivitiesSectionComponent
            EncounterDate.Label(activity.ObservedOn, activity.ObservedOnSource == ObservationDateSource.Declared);
 
     private static void RenderDataFromSchema(
-        ColumnDescriptor column, string schemaJson, string dataJson, EntrustmentRungLookup rungLabels)
+        ColumnDescriptor column,
+        string schemaJson,
+        string dataJson,
+        EntrustmentRungLookup rungLabels,
+        PortfolioFieldReferences references,
+        string? activityTypeKey)
     {
         FormSchema? schema;
         try
@@ -148,7 +163,7 @@ internal static class ActivitiesSectionComponent
 
             foreach (var field in section.Fields)
             {
-                var value = FieldValueText(field, data, rungLabels);
+                var value = FieldValueText(field, data, rungLabels, references, activityTypeKey);
                 if (string.IsNullOrWhiteSpace(value))
                 {
                     continue;
@@ -209,12 +224,29 @@ internal static class ActivitiesSectionComponent
     /// The form shows an option's label and the stored key never; printing the key here would make the export the one
     /// place a committee reads <c>admission_notes</c>. A value no option of the pinned version declares prints as stored.
     /// </para>
+    /// <para>
+    /// A field storing an id prints as what the id names: an EPA by its code and title, a person by name, a campaign's
+    /// evidence record's campaign as the MSF section heads it (T199). There is no form without the references (T199
+    /// review), so no caller can print those ids by leaving them out.
+    /// </para>
     /// </remarks>
-    internal static string? FieldValueText(FormField field, JsonElement data, EntrustmentRungLookup rungLabels)
+    internal static string? FieldValueText(
+        FormField field,
+        JsonElement data,
+        EntrustmentRungLookup rungLabels,
+        PortfolioFieldReferences references,
+        string? activityTypeKey)
     {
         if (!data.TryGetProperty(field.Key, out var element))
         {
             return null;
+        }
+
+        if (PortfolioFieldReferences.IsReference(field, activityTypeKey))
+        {
+            return PortfolioFieldReferences.StoredText(element) is { } stored
+                ? references.Label(field, activityTypeKey, stored)
+                : null;
         }
 
         if (field.Type == FieldType.Scale &&

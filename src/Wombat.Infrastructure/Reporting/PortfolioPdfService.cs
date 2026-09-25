@@ -120,7 +120,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
 
             if (data.ActivitiesByType.Count > 0)
             {
-                column.Item().Element(e => ActivitiesSectionComponent.Compose(e, data.ActivitiesByType, data.SchemaVersions, data.Workflows, data.RungLabels));
+                column.Item().Element(e => ActivitiesSectionComponent.Compose(e, data.ActivitiesByType, data.SchemaVersions, data.Workflows, data.RungLabels, data.FieldReferences));
             }
 
             if (data.MsfReports.Count > 0)
@@ -221,6 +221,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
         // printing the raw number tells the reader the wrong rung. Resolve every ladder the loaded
         // schemas name, once, and hand the map to the composer (which has no database).
         var scaleKeys = new List<string?>();
+        var parsedSchemas = new Dictionary<(int ActivityTypeId, int Version), FormSchema>();
         foreach (var version in schemaVersions.Values)
         {
             FormSchema schema;
@@ -233,6 +234,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
                 continue;
             }
 
+            parsedSchemas[(version.ActivityTypeId, version.Version)] = schema;
             scaleKeys.AddRange(schema.Sections
                 .SelectMany(section => section.Fields)
                 .Where(field => field.Type == FieldType.Scale)
@@ -241,6 +243,11 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
 
         var rungLabels = await EntrustmentRungLabels.LoadForScaleKeysAsync(
             _dbContext, scaleKeys, cancellationToken);
+
+        // T199: an EPA, person or campaign field stores an id, which the export printed ("EPA: 3"). Each is named here,
+        // once per kind, and handed to the composer, which has no database.
+        var fieldReferences = await PortfolioFieldReferences.LoadAsync(
+            _dbContext, activities, parsedSchemas, request.TraineeUserId, cancellationToken);
 
         var activitiesByType = activities
             .GroupBy(activity => activity.ActivityType.Name)
@@ -400,6 +407,7 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             SchemaVersions: schemaVersions,
             Workflows: workflows,
             RungLabels: rungLabels,
+            FieldReferences: fieldReferences,
             EpaProgress: epaProgress,
             CommitteeReviews: committeeReviews,
             CommitteeAttendeeNames: committeeAttendeeNames,
@@ -503,6 +511,8 @@ internal sealed record PortfolioData(
     // Each activity's pinned workflow, or null where it has none that parses: what names its state (T220).
     IReadOnlyDictionary<(int ActivityTypeId, int Version), Workflow?> Workflows,
     EntrustmentRungLookup RungLabels,
+    // What the activities' EPA, person and campaign fields name, so none prints as an id (T199).
+    PortfolioFieldReferences FieldReferences,
     PortfolioEpaProgress EpaProgress,
     List<CommitteeReview> CommitteeReviews,
     IReadOnlyDictionary<string, string> CommitteeAttendeeNames,

@@ -127,7 +127,8 @@ public sealed class ActivitiesSectionOptionLabelTests
     private static string? Text(FormField field, string dataJson, EntrustmentRungLookup? rungs = null)
     {
         using var document = JsonDocument.Parse(dataJson);
-        return ActivitiesSectionComponent.FieldValueText(field, document.RootElement, rungs ?? EntrustmentRungLookup.Empty);
+        return ActivitiesSectionComponent.FieldValueText(
+            field, document.RootElement, rungs ?? EntrustmentRungLookup.Empty, PortfolioFieldReferences.Empty, activityTypeKey: null);
     }
 
     private static string CcaSchema
@@ -160,7 +161,8 @@ public sealed class ActivitiesSectionOptionLabelTests
                 new Dictionary<string, List<Activity>> { ["Case analysis"] = [activity] },
                 new Dictionary<(int ActivityTypeId, int Version), ActivityTypeVersion> { [(1, 1)] = version },
                 new Dictionary<(int ActivityTypeId, int Version), Wombat.Domain.Activities.Workflow.Workflow?>(),
-                EntrustmentRungLookup.Empty));
+                EntrustmentRungLookup.Empty,
+                PortfolioFieldReferences.Empty));
         })).GenerateSvg();
 
         return pages

@@ -402,6 +402,61 @@ public sealed class CampaignReportActionsTests : WombatTestContext
         cut.Markup.Should().NotContain("Validation failed");
     }
 
+    /// <summary>
+    /// T199 review: since T199 a campaign under review can be withdrawn from another tab while this page releases it. The
+    /// release is refused in the handler's words, never EF's row counts, and the report read again shows it withdrawn,
+    /// with nothing left to send and the focus on the refusal.
+    /// </summary>
+    [Fact]
+    public void AReleaseRefusedBecauseTheCampaignWasWithdrawnElsewhere_SaysSoInItsWords_AndShowsItWithdrawn()
+    {
+        var sender = new ReportSender(Report(MsfCampaignState.UnderReview))
+        {
+            Refusal = new InvalidOperationException(ReleaseMsfCampaignCommandHandler.CampaignChanged),
+            StateAfterRefusal = MsfCampaignState.Withdrawn
+        };
+        var cut = Render(sender);
+        cut.Find("#msf-narrative").Change(TypedNarrative);
+
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Select(Text)
+            .Should().Equal(ReleaseMsfCampaignCommandHandler.CampaignChanged));
+        cut.Markup.Should().NotContain("row(s)").And.NotContain("go.microsoft.com");
+        Summary(cut).Should().Contain("State: Withdrawn");
+        cut.FindAll("#msf-release-campaign, #msf-narrative").Should().BeEmpty();
+        FocusWentToTheResult(cut);
+    }
+
+    /// <summary>
+    /// T199 review: a campaign under review that cannot be released is the one a coordinator withdraws instead, and
+    /// Withdraw is on its campaign page. The warning that says why it cannot be released says where, as a link, set apart
+    /// from the reason by a space.
+    /// </summary>
+    [Fact]
+    public void AReportThatCannotBeReleased_SaysItCanBeWithdrawnOnItsCampaignPage()
+    {
+        var cut = Render(new ReportSender(Report(MsfCampaignState.UnderReview) with { ReadyForRelease = false, TotalResponses = 2 }));
+
+        var warning = cut.Find(".alert-warning");
+        Text(warning).Should().Be(
+            "Release needs 8 responses; 2 have come back. If it should never be released, withdraw it on its campaign page.");
+        warning.HasAttribute("role").Should().BeFalse("standing page content, there on every visit");
+        var link = cut.Find("#msf-withdraw-elsewhere");
+        link.GetAttribute("href").Should().Be($"/msf/campaigns/{CampaignId}");
+        Text(link).Should().Be("withdraw it on its campaign page");
+        IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AReportReadyForRelease_OffersNoWithdrawLink()
+    {
+        var cut = Render(new ReportSender(Report(MsfCampaignState.UnderReview)));
+
+        cut.FindAll(".alert-warning").Should().BeEmpty();
+        cut.FindAll("#msf-withdraw-elsewhere").Should().BeEmpty();
+    }
+
     [Fact]
     public void AReleaseRefusedOnACampaignNoLongerReady_DisablesRelease_AndTheResultTakesTheFocus()
     {

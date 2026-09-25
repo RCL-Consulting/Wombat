@@ -536,6 +536,31 @@ public static class MsfCampaignRules
     }
 
     /// <summary>
+    /// Whether a campaign in this state can be withdrawn: any campaign not yet released, and not withdrawn already, as
+    /// <see cref="MsfCampaign.Withdraw" /> accepts. The withdraw command refuses the rest, and the campaign list and the
+    /// campaign page offer Withdraw on exactly these. (T206; T199 added a closed campaign and one under review)
+    /// </summary>
+    /// <remarks>
+    /// Withdrawing a campaign under review is the decision never to release its report. Whoever may release it may take
+    /// that decision instead: the release and the withdraw ask the same caller rule
+    /// (<see cref="EnsureCampaignIsInScopeAsync" />). Until T199 only a draft or an open campaign could be withdrawn, so a
+    /// campaign whose report nobody would release stayed under review for good, and a committee review kept saying it
+    /// was awaiting release (T173's notice).
+    /// </remarks>
+    public static bool IsWithdrawable(MsfCampaignState state)
+        => state is not (MsfCampaignState.Released or MsfCampaignState.Withdrawn);
+
+    /// <summary>
+    /// Whether withdrawing a campaign in this state is the decision never to release its report: it has closed, which
+    /// already stopped every link and removed every address, and it has not been released. Withdrawing a draft or an open
+    /// campaign stops its links and removes its addresses instead. The two pages word the withdraw dialog and its result
+    /// by this, and the command refuses a withdraw confirmed in the one's words when the campaign now means the other
+    /// (<see cref="WithdrawMsfCampaignCommandHandler.ClosedSinceShown" />). (T199 review)
+    /// </summary>
+    public static bool WithdrawingForgoesRelease(MsfCampaignState state)
+        => state is MsfCampaignState.Closed or MsfCampaignState.UnderReview;
+
+    /// <summary>
     /// Whether the caller is this user; never for a caller with no id. The one answer to "is this the campaign's subject",
     /// for the scope rules here and for the report, which names teaching contexts to anyone else. (T224)
     /// </summary>

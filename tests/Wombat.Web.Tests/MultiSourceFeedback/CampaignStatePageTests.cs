@@ -52,8 +52,8 @@ public sealed class CampaignStatePageTests : WombatTestContext
     [Theory]
     [InlineData(MsfCampaignState.Draft, "Draft", true, true, null)]
     [InlineData(MsfCampaignState.Open, "Open", false, true, "View report")]
-    [InlineData(MsfCampaignState.Closed, "Closed", false, false, "Review and release")]
-    [InlineData(MsfCampaignState.UnderReview, "Under review", false, false, "Review and release")]
+    [InlineData(MsfCampaignState.Closed, "Closed", false, true, "Review and release")]
+    [InlineData(MsfCampaignState.UnderReview, "Under review", false, true, "Review and release")]
     [InlineData(MsfCampaignState.Released, "Released", false, false, "View report")]
     [InlineData(MsfCampaignState.Withdrawn, "Withdrawn", false, false, null)]
     public void EachState_ShowsItself_AndOffersOnlyWhatItAllows(
@@ -467,6 +467,7 @@ public sealed class CampaignStatePageTests : WombatTestContext
 
         var command = sender.Commands.Should().ContainSingle().Which.Should().BeOfType<WithdrawMsfCampaignCommand>().Subject;
         command.CampaignId.Should().Be(CampaignId);
+        command.ConfirmedState.Should().Be(MsfCampaignState.Draft, "the state the dialog was worded by (T199 review)");
         command.Principal.FindFirst(ClaimTypes.NameIdentifier)!.Value.Should().Be("coordinator-1");
 
         cut.WaitForAssertion(() => Text(cut.Find("#msf-campaign-state")).Should().Be("Withdrawn"));
@@ -556,13 +557,14 @@ public sealed class CampaignStatePageTests : WombatTestContext
         cut.Find("#msf-open-campaign").HasAttribute("disabled").Should().BeFalse("released once the add has answered");
     }
 
+    // Since T199 a campaign under review offers Withdraw, and the refusal it can meet is a release from another tab.
     [Fact]
     public void ARefusedWithdraw_SaysWhy_AndShowsTheCampaignAsItIsNow()
     {
-        var sender = new CampaignSender(Setup(MsfCampaignState.Open, Group(MsfRespondentCategory.PeerDoctor, 3, 3)))
+        var sender = new CampaignSender(Setup(MsfCampaignState.UnderReview, Group(MsfRespondentCategory.PeerDoctor, 3, 3)))
         {
-            Refusal = new InvalidOperationException("Only a draft or open campaign can be withdrawn, and this one has closed and is under review."),
-            StateAfterRefusal = MsfCampaignState.UnderReview
+            Refusal = new InvalidOperationException(WithdrawMsfCampaignCommandHandler.ReleasedNotWithdrawable),
+            StateAfterRefusal = MsfCampaignState.Released
         };
         var cut = Render(sender);
 
@@ -570,10 +572,65 @@ public sealed class CampaignStatePageTests : WombatTestContext
         cut.FindAll("dialog button").Single(candidate => Text(candidate) == "Withdraw campaign").Click();
 
         cut.WaitForAssertion(() => cut.Find(".alert-danger").GetAttribute("role").Should().Be("alert"));
-        Text(cut.Find(".alert-danger")).Should().Contain("has closed and is under review");
-        Text(cut.Find("#msf-campaign-state")).Should().Be("Under review");
+        Text(cut.Find(".alert-danger")).Should().Be(WithdrawMsfCampaignCommandHandler.ReleasedNotWithdrawable);
+        Text(cut.Find("#msf-campaign-state")).Should().Be("Released");
         cut.FindAll("#msf-withdraw-campaign").Should().BeEmpty();
-        Text(cut.Find("#msf-campaign-report")).Should().Be("Review and release");
+        Text(cut.Find("#msf-campaign-report")).Should().Be("View report");
+    }
+
+    // T199: the page says what a closed campaign's Withdraw is for, and its dialog says what it does now.
+    [Fact]
+    public void ACampaignUnderReview_SaysItCanBeWithdrawnHere_AndItsDialogSaysItsReportIsNeverReleased()
+    {
+        var cut = Render(new CampaignSender(Setup(MsfCampaignState.UnderReview, Group(MsfRespondentCategory.PeerDoctor, 3, 3))));
+
+        Text(CampaignCard(cut)).Should().Contain(
+            "Review the responses on its report, and release it to the trainee there. If it should never be released, " +
+            "withdraw it here.");
+
+        cut.Find("#msf-withdraw-campaign").Click();
+        Text(cut.Find("dialog")).Should().Contain("It has closed, and its report has not been released.")
+            .And.NotContain("any link already sent stops working");
+    }
+
+    /// <summary>
+    /// T199 review: the page was read while the campaign was open, and the auto-close job or the report page closed it
+    /// before the coordinator confirmed. The command refuses a withdraw worded for an open campaign; the page reads the
+    /// campaign again, and the next dialog and the result are in the closed campaign's words.
+    /// </summary>
+    [Fact]
+    public void AWithdrawOfACampaignClosedSinceThePageWasRead_IsRefused_AndTheNextDialogAsksInItsClosedWords()
+    {
+        var sender = new CampaignSender(Setup(MsfCampaignState.Open, Group(MsfRespondentCategory.PeerDoctor, 3, 2)))
+        {
+            Refusal = new InvalidOperationException(WithdrawMsfCampaignCommandHandler.ClosedSinceShown),
+            RefuseOnce = true,
+            StateAfterRefusal = MsfCampaignState.UnderReview
+        };
+        var cut = Render(sender);
+
+        cut.Find("#msf-withdraw-campaign").Click();
+        Text(cut.Find("dialog")).Should().Contain("any link already sent stops working", "guard: asked in an open campaign's words");
+        ConfirmWithdrawButton(cut).Click();
+
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<WithdrawMsfCampaignCommand>()
+            .Which.ConfirmedState.Should().Be(MsfCampaignState.Open);
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-danger")).Should().Be(WithdrawMsfCampaignCommandHandler.ClosedSinceShown));
+        cut.Find(".alert-danger").GetAttribute("role").Should().Be("alert");
+        Text(cut.Find("#msf-campaign-state")).Should().Be("Under review", "the campaign is read again after the refusal");
+
+        cut.Find("#msf-withdraw-campaign").Click();
+        Text(cut.Find("dialog")).Should().Contain("It has closed, and its report has not been released.")
+            .And.NotContain("any link already sent stops working");
+        ConfirmWithdrawButton(cut).Click();
+
+        sender.Commands.Should().HaveCount(2);
+        sender.Commands[1].Should().BeOfType<WithdrawMsfCampaignCommand>()
+            .Which.ConfirmedState.Should().Be(MsfCampaignState.UnderReview);
+        cut.WaitForAssertion(() => Text(cut.Find("#msf-campaign-state")).Should().Be("Withdrawn"));
+        Text(cut.Find(".alert-success")).Should().Be(
+            "The campaign for Sipho Dlamini (Annual MSF, closing 2029-03-21) has been withdrawn. Its report will never be " +
+            "released to the trainee.");
     }
 
     // ─── Removing a draft's invitee (T247) ───────────────────────────────────
@@ -902,6 +959,9 @@ public sealed class CampaignStatePageTests : WombatTestContext
 
         public Exception? Refusal { get; init; }
 
+        /// <summary>Refuses only the first command, as a refusal for a campaign changed elsewhere does. (T199 review)</summary>
+        public bool RefuseOnce { get; init; }
+
         public MsfCampaignState? StateAfterRefusal { get; init; }
 
         /// <summary>What every read of the campaign throws once a command has been refused.</summary>
@@ -973,7 +1033,7 @@ public sealed class CampaignStatePageTests : WombatTestContext
         {
             Commands.Add(request);
 
-            if (Refusal is not null)
+            if (Refusal is not null && !(RefuseOnce && _refused))
             {
                 Refuse();
                 return Task.FromException(Refusal);

@@ -633,7 +633,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         var autoClose = Factory.Services.GetRequiredService<MsfCampaignAutoCloseJob>().Key;
         await SendAsync(new RunScheduledJobNowCommand(autoClose, "admin-1"));
 
-        await SendAsync(new WithdrawMsfCampaignCommand(withdrawn, _coordinator));
+        await SendAsync(new WithdrawMsfCampaignCommand(withdrawn, MsfCampaignState.Open, _coordinator));
 
         await using (var scope = Factory.Services.CreateAsyncScope())
         {
@@ -810,7 +810,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         await UpdateInvitationAsync(campaign.Id, Second, invitation => invitation.RevokedOn, (DateTime?)null);
 
         // Withdrawn: the campaign takes no more responses, and its respondents are anonymised (T202).
-        await SendAsync(new WithdrawMsfCampaignCommand(campaign.Id, _coordinator));
+        await SendAsync(new WithdrawMsfCampaignCommand(campaign.Id, MsfCampaignState.Open, _coordinator));
         await ShouldRefuseAsync(await Client.GetAsync(secondLink), HttpStatusCode.Gone, "Feedback request closed", "no longer accepting responses");
 
         await using var scope = Factory.Services.CreateAsyncScope();

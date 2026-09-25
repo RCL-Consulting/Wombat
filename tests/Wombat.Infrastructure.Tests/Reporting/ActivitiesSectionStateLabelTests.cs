@@ -79,7 +79,8 @@ public sealed class ActivitiesSectionStateLabelTests
                 new Dictionary<string, List<Activity>> { ["Clinical audit"] = [activity] },
                 [],
                 workflows,
-                EntrustmentRungLookup.Empty));
+                EntrustmentRungLookup.Empty,
+                PortfolioFieldReferences.Empty));
         })).GenerateSvg();
 
         return pages

@@ -111,7 +111,9 @@
                   @item.EpaCode - @item.EpaTitle
                   @if (!item.EpaIsActive)
                   {
-                    <span class="muted">(inactive: not in force)</span>
+                    @* The space is written: Razor drops the whitespace before a code block, so the marker was glued to
+                       the title ("…care(inactive: …)", T199). *@
+                    @(" ")<span class="muted">(inactive: not in force)</span>
                   }
                   @if (item.IsLocal)
                   {

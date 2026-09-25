@@ -193,7 +193,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         await ShouldBeRefusedAsync(link, HttpStatusCode.Gone, "Feedback link revoked");
         await _host.UpdateInvitationAsync(campaign.Id, invitation => invitation.RevokedOn, (DateTime?)null);
 
-        await _host.SendAsync(new WithdrawMsfCampaignCommand(campaign.Id, _host.Coordinator));
+        await _host.SendAsync(new WithdrawMsfCampaignCommand(campaign.Id, MsfCampaignState.Open, _host.Coordinator));
         await ShouldBeRefusedAsync(link, HttpStatusCode.Gone, "Feedback request closed");
     }
 

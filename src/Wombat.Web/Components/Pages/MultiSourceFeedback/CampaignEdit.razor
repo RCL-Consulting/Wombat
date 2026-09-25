@@ -338,9 +338,9 @@
             }
 
             @* What the state allows, and nothing else (T217): a draft opens or is withdrawn; an open campaign is withdrawn
-               here or closed on its report, where its responses are; one under review is released on its report; a
-               released campaign's report is there to read; a withdrawn campaign offers nothing. Withdraw is offered where
-               the campaign list offers it (T206). *@
+               here or closed on its report, where its responses are; one under review is withdrawn here or released on
+               its report (T199); a released campaign's report is there to read; a withdrawn campaign offers nothing.
+               Withdraw is offered where the campaign list offers it (T206). *@
             @if (setup.State != MsfCampaignState.Withdrawn)
             {
               <FormActions>
@@ -590,9 +590,8 @@
   private static bool CanResend(MsfCampaignSetupDto setup)
     => setup.State == MsfCampaignState.Open && setup.LinksNotDelivered > 0;
 
-  /// <summary>A draft or an open campaign, the two the campaign list offers Withdraw on (T206).</summary>
-  private static bool CanWithdraw(MsfCampaignSetupDto setup)
-    => setup.State is MsfCampaignState.Draft or MsfCampaignState.Open;
+  /// <summary>Any campaign not yet released, as the campaign list offers Withdraw on (T206, T199).</summary>
+  private static bool CanWithdraw(MsfCampaignSetupDto setup) => MsfCampaignRules.IsWithdrawable(setup.State);
 
   /// <summary>What the state means and what comes next, in one sentence built in C#. (T217)</summary>
   private string StateNote(MsfCampaignSetupDto setup)
@@ -608,7 +607,7 @@
         "closes by itself once that day has passed; to close it sooner, use Close campaign on its report.",
       MsfCampaignState.Closed or MsfCampaignState.UnderReview =>
         "Closed to responses, and every respondent's email address has been removed. Review the responses on its " +
-        "report, and release it to the trainee there.",
+        "report, and release it to the trainee there. If it should never be released, withdraw it here.",
       MsfCampaignState.Released => "The report has been released to the trainee.",
       _ =>
         "Withdrawn. It takes no responses, any link sent no longer works, and every respondent's email address has " +
@@ -626,7 +625,7 @@
   private static string Described(MsfCampaignSetupDto setup)
     => MsfCampaignText.Describe(setup.SubjectName ?? "the trainee", setup.TemplateName, setup.ClosesOn);
 
-  private string WithdrawBody => _setup is null ? string.Empty : MsfCampaignText.WithdrawBody(Described(_setup));
+  private string WithdrawBody => _setup is null ? string.Empty : MsfCampaignText.WithdrawBody(Described(_setup), _setup.State);
 
   /// <summary>
   /// The categories the invitee picker offers: the edited campaign's, or, until it has loaded, every category a
@@ -1047,8 +1046,10 @@
 
     try
     {
-      await Sender.Send(new WithdrawMsfCampaignCommand(CampaignId.Value, await GetPrincipalAsync()));
-      _status = MsfCampaignText.Withdrawn(Described(campaign));
+      // The state the dialog was worded by: a campaign closed since is refused, not withdrawn in words it was not
+      // asked in (T199 review).
+      await Sender.Send(new WithdrawMsfCampaignCommand(CampaignId.Value, campaign.State, await GetPrincipalAsync()));
+      _status = MsfCampaignText.Withdrawn(Described(campaign), campaign.State);
     }
     catch (Exception exception)
     {

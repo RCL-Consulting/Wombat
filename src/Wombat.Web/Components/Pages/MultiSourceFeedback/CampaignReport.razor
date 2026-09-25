@@ -99,7 +99,10 @@
         {
           @if (_report.State == MsfCampaignState.UnderReview && !_report.ReadyForRelease)
           {
-            <Alert Kind="warning" Role="">@BlockedReason(_report)</Alert>
+            @* T199 review: a campaign that cannot be released is the one a coordinator withdraws, never to be released,
+               and Withdraw is on its campaign page (as on the list), so the warning says where. Whoever sees this form
+               may withdraw it: release and withdraw ask the same caller rule. *@
+            <Alert Kind="warning" Role="">@BlockedReason(_report) If it should never be released, <a id="msf-withdraw-elsewhere" href="@($"/msf/campaigns/{CampaignId}")">withdraw it on its campaign page</a>.</Alert>
           }
           <EditForm Model="_review" OnValidSubmit="ReleaseAsync" FormName="msf-release">
             <DataAnnotationsValidator />

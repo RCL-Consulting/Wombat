@@ -505,7 +505,7 @@ public sealed class MsfLinkDeliveryPostgresTests : IAsyncLifetime
                 await using (var db = NewContext(schema, interceptor))
                 {
                     await new WithdrawMsfCampaignCommandHandler(db)
-                        .Handle(new WithdrawMsfCampaignCommand(campaignId, Administrator()), CancellationToken.None);
+                        .Handle(new WithdrawMsfCampaignCommand(campaignId, MsfCampaignState.Open, Administrator()), CancellationToken.None);
                 }
 
                 break;

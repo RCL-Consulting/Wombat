@@ -98,7 +98,8 @@
 }
 
 @* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system): withdrawing kills every link a
-   respondent holds and removes their addresses for good (MsfCampaign.Withdraw, T202). *@
+   respondent holds and removes their addresses for good (MsfCampaign.Withdraw, T202), and a closed campaign's report is
+   then never released (T199). *@
 <ConfirmDialog @ref="_confirmWithdraw"
                Title="@MsfCampaignText.WithdrawTitle"
                Body="@WithdrawBody"
@@ -174,18 +175,17 @@
   }
 
   /// <summary>
-  /// A draft or an open campaign: the two a coordinator stops before any report exists (T206). The aggregate would also
-  /// withdraw one under review; that is a decision not to release, which this list does not offer.
+  /// Any campaign not yet released (<see cref="MsfCampaignRules.IsWithdrawable" />): a draft or an open one, stopped
+  /// before any report exists (T206), and one closed and under review, whose report is then never released (T199).
   /// </summary>
-  private static bool CanWithdraw(MsfCampaignSummaryDto item)
-    => item.State is MsfCampaignState.Draft or MsfCampaignState.Open;
+  private static bool CanWithdraw(MsfCampaignSummaryDto item) => MsfCampaignRules.IsWithdrawable(item.State);
 
   /// <summary>The campaign as its row's button, the dialog and the result name it, in the campaign page's words (T217).</summary>
   private static string Describe(MsfCampaignSummaryDto item)
     => MsfCampaignText.Describe(item.SubjectName ?? item.SubjectUserId, item.TemplateName, item.ClosesOn);
 
   private string WithdrawBody
-    => _pendingWithdraw is null ? string.Empty : MsfCampaignText.WithdrawBody(Describe(_pendingWithdraw));
+    => _pendingWithdraw is null ? string.Empty : MsfCampaignText.WithdrawBody(Describe(_pendingWithdraw), _pendingWithdraw.State);
 
   private async Task AskWithdrawAsync(MsfCampaignSummaryDto item)
   {
@@ -224,8 +224,10 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new WithdrawMsfCampaignCommand(campaign.Id, authState.User));
-      _status = MsfCampaignText.Withdrawn(Describe(campaign));
+      // The state the dialog was worded by: a campaign closed since is refused, not withdrawn in words it was not
+      // asked in (T199 review).
+      await Sender.Send(new WithdrawMsfCampaignCommand(campaign.Id, campaign.State, authState.User));
+      _status = MsfCampaignText.Withdrawn(Describe(campaign), campaign.State);
     }
     catch (Exception exception)
     {
@@ -237,8 +239,8 @@
       _withdrawing = false;
     }
 
-    // Reloaded after a refusal too: the likeliest refusal is a campaign that changed elsewhere (released, say), and the
-    // list should show what it is now.
+    // Reloaded after a refusal too: the likeliest refusal is a campaign that changed elsewhere (released, say, or closed
+    // since the list was read), and the list should show what it is now, so a second Withdraw asks in its words.
     try
     {
       await LoadAsync();
