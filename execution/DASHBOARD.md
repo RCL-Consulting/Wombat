@@ -35,11 +35,7 @@
 | queued | [T179](tasks/queued/T179-a-rated-type-s-evidence-category-changes-when-a-draft-is-saved-not-when-it-is-published.md) | P3 | A rated type's evidence category changes when a draft is saved, not wh |  |
 | queued | [T187](tasks/queued/T187-a-sub-speciality-s-default-entrustment-scale-is-reset-by-the-catalogue-seeder-on-every-boot.md) | P3 | A sub-speciality's default entrustment scale is reset by the catalogue |  |
 | queued | [T188](tasks/queued/T188-field-level-fieldsets-outside-activityform-lack-the-form-group-class-the-design-rule-now-asks-for.md) | P3 | Field-level fieldsets outside ActivityForm lack the form-group class t |  |
-| queued | [T189](tasks/queued/T189-refusal-texts-errors-joined-with-after-full-stops-and-transitionasync-s-remaining-key-named-refusals.md) | P3 | Refusal texts: errors joined with '; ' after full stops, and Transitio |  |
 | queued | [T190](tasks/queued/T190-page-titles-follow-no-common-pattern.md) | P3 | Page titles follow no common pattern |  |
-| queued | [T191](tasks/queued/T191-choice-options-in-some-seeds-are-bare-keys-so-the-form-shows-admission-notes-instead-of-a-label.md) | P3 | Choice options in some seeds are bare keys, so the form shows admissio |  |
-| queued | [T192](tasks/queued/T192-the-late-filing-warning-says-a-date-can-still-be-filed-when-the-server-will-refuse-it-as-before-the-programme.md) | P3 | The late-filing warning says a date 'can still be filed' when the serv |  |
-| queued | [T193](tasks/queued/T193-refusal-alerts-are-not-announced-and-field-help-text-is-not-linked-to-its-input.md) | P3 | Refusal alerts are not announced, and field help text is not linked to |  |
 | queued | [T196](tasks/queued/T196-reactivating-an-epa-does-not-re-credit-what-was-filed-while-it-was-inactive-and-a-rebuild-while-inactive-drops-earned-credit.md) | P3 | Reactivating an EPA does not re-credit what was filed while it was ina |  |
 | queued | [T197](tasks/queued/T197-the-undated-date-wording-names-an-encounter-date-and-then-denies-it-and-progress-shows-an-unmarked-last-encounter.md) | P3 | The undated-date wording names an encounter date and then denies it, a |  |
 | queued | [T198](tasks/queued/T198-the-entrustment-scale-editor-s-rung-inputs-have-no-accessible-name-and-the-curriculum-items-table-is-only-just-wide-enough.md) | P3 | The entrustment scale editor's rung inputs have no accessible name, an |  |
@@ -51,8 +47,10 @@
 | queued | [T216](tasks/queued/T216-a-user-who-is-both-trainee-and-coordinator-can-schedule-and-preview-a-peer-s-committee-review.md) | P3 | A user who is both Trainee and Coordinator can schedule and preview a  |  |
 | queued | [T217](tasks/queued/T217-the-msf-campaign-page-does-not-change-after-the-campaign-opens-it-still-offers-open-and-shows-no-invitees.md) | P3 | The MSF campaign page does not change after the campaign opens: it sti |  |
 | queued | [T218](tasks/queued/T218-a-coordinator-s-committee-review-list-is-empty-and-a-ratified-review-still-shows-empty-decision-inputs.md) | P3 | A Coordinator's committee review list is empty, and a ratified review  |  |
+| queued | [T219](tasks/queued/T219-my-progress-shows-a-trainee-s-last-encounter-unmarked-when-that-date-was-never-stated.md) | P3 | My progress shows a trainee's last encounter unmarked when that date w |  |
+| queued | [T220](tasks/queued/T220-activity-pages-lists-and-dashboards-show-workflow-state-and-move-keys-not-their-labels.md) | P3 | Activity pages, lists and dashboards show workflow state and move keys |  |
 
-Done: 158 task(s).
+Done: 162 task(s).
 
 ## From STATE.md
 
@@ -68,9 +66,9 @@ workstream is the CPSA Paediatric EPA v11.1 catalogue; everything else is operat
 ## Recent commits
 
 ```
-7d50b49 feat(committee): a decisions-due page shows, per trainee and EPA, what is decided, scheduled, deferred, missed or not scheduled this period (T131 slice 6)
-727e691 feat(committee): a review before a College committee decides entrustment only, with no progression category; a remit says the STARs stand (T131 slice 5)
-00dbf95 docs(execution): task files filed today carry their real headings (a filing script had kept the template's placeholder)
-5045041 docs(execution): close T207, T163, T214, T181, T208, T185 and T195 (browser/SQL-verified where reachable; T195's browser check moves to T211); file T217
-150417e docs(execution): CUSTOMIZATION.md's MSF anonymity note follows T207 and T205; file T216
+850de24 docs(execution): handoff progress
+2561f07 fix(web): refusals are announced, help text is linked to its input, and sign-in fields say what they are (T193)
+7e52344 fix(activities): refusals read as sentences and name transitions and states by label (T189)
+960d738 fix(activities): the late-filing warning never contradicts a pre-programme refusal; an undated date is named as the encounter's where nothing else says so (T192, T197 review)
+b74d4c8 fix(activities): an undated activity reads 'not recorded (created …)', and a date refusal names its own field (T197)
 ```

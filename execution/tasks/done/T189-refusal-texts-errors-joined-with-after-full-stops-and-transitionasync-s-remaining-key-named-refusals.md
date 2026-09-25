@@ -1,11 +1,12 @@
 ---
 id: T189
 title: Refusal texts: errors joined with '; ' after full stops, and TransitionAsync's remaining key-named refusals
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T189 — Refusal texts: errors joined with '; ' after full stops, and TransitionAsync's remaining key-named refusals
@@ -32,9 +33,21 @@ the exact-match tests deliberately.
 
 ## Verification
 
-- [ ] A two-error refusal reads as two sentences. Test.
-- [ ] The transition refusals name labels. Tests.
+- [x] A two-error refusal reads as two sentences. Test.
+- [x] The transition refusals name labels. Tests.
 
 ## Related
 
 T172.
+
+---
+
+## As built — 2026-09-25 (`7e52344`)
+
+Validation errors join with a space, and every message ends with a full stop. `TransitionAsync`'s remaining refusals
+name fields and states by label.
+
+Browser on dev (scripted Chrome, `2561f07`):  Activity 37 reads "Saved as a draft, but not submitted: Presenting problem: A value is required. Case complexity: A
+value is required. Fix the fields below and submit again."
+
+**Filed:** [T220] (pages still show state and move keys, the display half of the review's finding).

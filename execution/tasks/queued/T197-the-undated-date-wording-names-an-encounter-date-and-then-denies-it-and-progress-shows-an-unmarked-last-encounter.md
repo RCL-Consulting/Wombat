@@ -32,7 +32,7 @@ Add the declared flag to the progress row, and mark "Last encounter".
 
 ## Verification
 
-- [ ] Every surface shows the new wording. bUnit.
+- [x] Every surface shows the new wording. bUnit.
 - [ ] An undated last encounter is marked on My progress. bUnit.
 
 ## Related
@@ -44,3 +44,15 @@ T161, T137, D28.
 The date refusal names the date as "the encounter date" whatever the field is: "Review period to: The encounter date
 cannot be after today". Word it by the field's own label, or neutrally ("cannot be after today").
 
+---
+
+## As built — 2026-09-25 (`b74d4c8`, `960d738`)
+
+`EncounterDate.Label` reads "not recorded (created yyyy-mm-dd)". A surface with no heading names the date itself: the
+standing panel, the trajectory tooltip and the PDF line. A date refusal names its own field ("The date cannot be after
+today").
+
+Browser on dev (scripted Chrome, `2561f07`):  Activity 31 reads "Encounter date: not recorded (created 2026-09-24)", on its page and on `/activities/mine`. A
+future date is refused: "Nothing was saved. Date observed: The date cannot be after today (2026-09-25)."
+
+**The "Last encounter" marker on My progress needs a migration: split to [T219].**

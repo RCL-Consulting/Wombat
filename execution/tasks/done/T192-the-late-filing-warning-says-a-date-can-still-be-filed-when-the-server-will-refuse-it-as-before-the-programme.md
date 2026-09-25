@@ -1,11 +1,12 @@
 ---
 id: T192
 title: The late-filing warning says a date 'can still be filed' when the server will refuse it as before the programme
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T192 — The late-filing warning says a date 'can still be filed' when the server will refuse it as before the programme
@@ -33,8 +34,20 @@ the server stays the rule.
 
 ## Verification
 
-- [ ] A pre-programme date shows the programme-start hint, not the lateness warning. bUnit test.
+- [x] A pre-programme date shows the programme-start hint, not the lateness warning. bUnit test.
 
 ## Related
 
 T160.
+
+---
+
+## As built — 2026-09-25 (`960d738`)
+
+The form warns about lateness only for a date the server would accept. A date before the programme start shows a
+programme-start hint, and marks the input `aria-invalid`. The page resolves the start once, and a failed read is
+logged.
+
+Browser on dev (scripted Chrome, `2561f07`):  2025-12-31 reads "This date is before the trainee's programme started (2026-01-01), and will not be accepted.", with
+`aria-invalid="true"`. 20 days ago reads "…It can still be filed, but a filing more than 14 days after the encounter is
+recorded as late." and nothing is marked invalid.

@@ -1,11 +1,12 @@
 ---
 id: T193
 title: Refusal alerts are not announced, and field help text is not linked to its input
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T193 — Refusal alerts are not announced, and field help text is not linked to its input
@@ -33,8 +34,8 @@ field's help text gets an id, and the input's `aria-describedby` lists the help 
 
 ## Verification
 
-- [ ] A danger `Alert` renders with `role="alert"`. bUnit test.
-- [ ] Every ActivityForm input with help text references it. bUnit test over the seed schemas.
+- [x] A danger `Alert` renders with `role="alert"`. bUnit test.
+- [x] Every ActivityForm input with help text references it. bUnit test over the seed schemas.
 
 ## Related
 
@@ -47,3 +48,18 @@ Give `FormField` an id for its help, and have `FormField` set the input's `aria-
 fixed EpaEdit only locally.
 
 Note, 2026-09-25: the sign-in password input lacks `autocomplete="current-password"`.
+
+---
+
+## As built — 2026-09-25 (`2561f07`)
+
+- **Alert roles:** a danger alert is `role="alert"`, and warning and success alerts are `role="status"`. A refused-submit
+  notice on ActivityView is an alert.
+- **Help text:** `FieldHelp` gives each field's help an id. The input names its help, then any notice region. 21 help
+  texts on other pages were linked too, and a scan test fails on any unlinked help written into a FormField.
+- **Sign-in:** the fields carry `autocomplete="username"` and `"current-password"`.
+
+Browser on dev (scripted Chrome, `2561f07`): 
+- Both refusals are `role="alert"`, and the success notice is `role="status"`.
+- "Date observed" has `aria-describedby="observed_on-help observed_on-filing-notice"`, both present.
+- The sign-in autocomplete attributes are present.

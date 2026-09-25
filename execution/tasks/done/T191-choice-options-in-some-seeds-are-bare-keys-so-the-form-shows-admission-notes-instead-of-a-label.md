@@ -1,11 +1,12 @@
 ---
 id: T191
 title: Choice options in some seeds are bare keys, so the form shows admission_notes instead of a label
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T191 — Choice options in some seeds are bare keys, so the form shows admission_notes instead of a label
@@ -31,8 +32,24 @@ change only the labels.
 
 ## Verification
 
-- [ ] No seeded option renders a snake_case key. Test over every seed schema.
+- [x] No seeded option renders a snake_case key. Test over every seed schema.
 
 ## Related
 
 T120 (the CCA seed), T177.
+
+---
+
+## As built — 2026-09-25 (`5a29004`)
+
+Choice and multichoice options may carry a label (`{ "value", "label" }`, `FieldOption`; Parse + Serialize +
+round-trip fixture). Stored values are unchanged. Every seed's options are labelled. The builder's Options box is one
+option per line, written `value | Label`. The parser refuses a `|` or a line break in a value, a line break in a label,
+and a value offered twice, naming the field. The PDF prints a scale's rung first, then the option's label.
+
+Browser on dev (scripted Chrome, `2561f07`): 
+- **Boots.** The first boot republished exactly the 15 changed seeds, the second none.
+- **The form.** A new CCA shows "Admission notes …" and "PICU".
+- **Storage.** Activity 35 stores `admission_notes` and `picu`, and its page shows the labels.
+
+CUSTOMIZATION.md's option form is updated.
