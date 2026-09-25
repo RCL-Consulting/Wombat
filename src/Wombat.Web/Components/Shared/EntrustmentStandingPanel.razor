@@ -136,7 +136,9 @@ else
                 {
                   <span class="muted"> on @ladder</span>
                 }
-                <div class="text-sm"><EncounterDateLabel ObservedOn="@rating.ObservedOn" Declared="@rating.ObservedOnDeclared" /></div>
+                @* Named as the encounter's (T197): under "Latest rating", a bare "not recorded (created …)" reads as though
+                   the rating were not recorded. *@
+                <div class="text-sm">Encounter <EncounterDateLabel ObservedOn="@rating.ObservedOn" Declared="@rating.ObservedOnDeclared" /></div>
                 <div class="muted text-sm">@RatingWords(epa, rating)</div>
               }
               else

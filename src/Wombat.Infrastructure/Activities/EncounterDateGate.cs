@@ -15,7 +15,7 @@ namespace Wombat.Infrastructure.Activities;
 /// <para>
 /// It judges the date the stamp would write: <see cref="ObservationDateResolver" /> over the PINNED schema's
 /// <c>observation_date_field</c>, so a hidden field, a malformed value or a schema with no pointer is judged exactly as
-/// the stamp treats it. A date nobody stated falls back to the filing date and is never refused.
+/// the stamp treats it. A date nobody stated falls back to the day the activity was created and is never refused.
 /// </para>
 /// <para>
 /// "Today" is the South African calendar date (<see cref="Wombat.Domain.Curricula.ProgrammeCalendar" />), the calendar

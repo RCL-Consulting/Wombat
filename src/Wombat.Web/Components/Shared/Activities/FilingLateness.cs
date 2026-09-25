@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Queries.GetProgrammeStartForTrainee;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Activities.Workflow;
 using Wombat.Domain.Curricula;
+using Wombat.Web.Services;
 
 namespace Wombat.Web.Components.Shared.Activities;
 
@@ -90,6 +92,47 @@ public static class FilingLateness
             .ToHashSet(StringComparer.Ordinal);
 
         return actions.Any(action => filingMoves.Contains(action.TransitionKey)) ? Today() : null;
+    }
+
+    /// <summary>
+    /// The subject's programme start, which the write path bounds a crediting type's encounter date by (T192), as
+    /// <see cref="GetProgrammeStartForTraineeQuery" /> reads it for this viewer. Null when the subject holds no profile,
+    /// when the viewer may not read it, or when it cannot be read.
+    /// </summary>
+    /// <remarks>
+    /// A page asks once, where it passes <c>FiledOn</c>, and hands the answer to <c>ActivityForm.ProgrammeStartsOn</c>. A
+    /// read that fails is no hint rather than a failed page: the hint is advisory, and the server's refusal still comes.
+    /// It is logged as a warning, though: "no hint" is also what a trainee with no profile sees, so without the log a
+    /// broken read (a query failing on the database, a handler missing) would pass for that and hide the hint everywhere.
+    /// </remarks>
+    public static async Task<DateOnly?> ProgrammeStartAsync(
+        IScopedSender sender,
+        string? subjectUserId,
+        ClaimsPrincipal viewer,
+        ILogger logger)
+    {
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(viewer);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        if (string.IsNullOrWhiteSpace(subjectUserId))
+        {
+            return null;
+        }
+
+        try
+        {
+            return await sender.Send(new GetProgrammeStartForTraineeQuery(subjectUserId, viewer));
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogWarning(
+                exception,
+                "The programme start of trainee {SubjectUserId} could not be read, so the activity form shows no " +
+                "pre-programme date hint. The server still refuses such a date.",
+                subjectUserId);
+            return null;
+        }
     }
 
     /// <summary>

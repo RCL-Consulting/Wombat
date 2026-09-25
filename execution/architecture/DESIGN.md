@@ -437,6 +437,12 @@ T019 introduces a small builder-specific extension to the shared system:
 
 - `StatePanel.razor` renders three canonical states: loading (skeletons), error (`.alert .alert-danger`), empty (`.detail-card--empty` + optional CTA).
 - Every list page handles all three states explicitly. **No more "Loading…" plain text** — that pattern is dead.
+- A field's warning and its predicted refusal never show together. When the page can tell the server will refuse what is
+  typed (an encounter date before the trainee's programme started, T192), the field says so as a `.validation-message`
+  in place of any `.field-warning`, whose "can still be filed" would contradict it. Both sit in one `role="status"`
+  region under the field, present before anything is typed, which the input names with `aria-describedby`. While the
+  refusal is predicted the input also carries `aria-invalid="true"` and `.input-validation-error`; a warning alone marks
+  nothing, since what it warns of is accepted. It is a hint: the server's refusal stays the rule.
 
 ## Skeleton loaders
 

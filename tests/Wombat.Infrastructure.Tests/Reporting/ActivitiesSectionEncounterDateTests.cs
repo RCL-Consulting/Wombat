@@ -10,7 +10,7 @@ namespace Wombat.Infrastructure.Tests.Reporting;
 
 /// <summary>
 /// T161, D28, T197: the portfolio PDF prints an undated activity's date as not recorded, with the day it was created, in
-/// the wording the lists use.
+/// the wording the lists use, and names it as the encounter date, so it cannot be read as the activity not being recorded.
 /// </summary>
 /// <remarks>
 /// The section is rendered through QuestPDF's SVG output, which keeps each run of text as a <c>&lt;text&gt;</c> element,
@@ -33,15 +33,15 @@ public sealed class ActivitiesSectionEncounterDateTests
         // A reflective note: its type declares no date field, so ObservationDateResolver fell back to the day it was created.
         var lines = RenderedLines(Reflection(ObservationDateSource.CreatedOn));
 
-        lines.Should().Contain("not recorded (created 2026-03-20)");
+        lines.Should().Contain("Encounter date: not recorded (created 2026-03-20)");
     }
 
     [Fact]
-    public void AnActivityWithAStatedEncounterDate_IsPrintedWithTheBareDate()
+    public void AnActivityWithAStatedEncounterDate_IsPrintedAsTheEncounterDate_Unqualified()
     {
         var lines = RenderedLines(Reflection(ObservationDateSource.Declared));
 
-        lines.Should().Contain("2026-03-20");
+        lines.Should().Contain("Encounter date: 2026-03-20");
         lines.Should().NotContain(line => line.Contains("not recorded"));
     }
 

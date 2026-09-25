@@ -96,9 +96,14 @@ internal static class ActivitiesSectionComponent
         });
     }
 
-    /// <summary>The date printed on an activity's header line: its encounter date, marked when undated (T161).</summary>
+    /// <summary>
+    /// The date printed on an activity's header line: its encounter date, marked when undated (T161), and named as the
+    /// encounter's (T197). Beside "#31  State: completed", a bare "not recorded (created …)" reads as though the
+    /// activity were not recorded.
+    /// </summary>
     private static string EncounterDateText(Activity activity)
-        => EncounterDate.Label(activity.ObservedOn, activity.ObservedOnSource == ObservationDateSource.Declared);
+        => "Encounter date: " +
+           EncounterDate.Label(activity.ObservedOn, activity.ObservedOnSource == ObservationDateSource.Declared);
 
     private static void RenderDataFromSchema(
         ColumnDescriptor column, string schemaJson, string dataJson, EntrustmentRungLookup rungLabels)

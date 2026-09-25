@@ -382,9 +382,10 @@ public sealed class TrajectoryChartTests : TestContext
 
         var cut = RenderComponent<TrajectoryChart>(parameters => parameters.Add(p => p.Points, points));
 
+        // The tooltip names the date as the encounter's: "not recorded (created …) · 3" would read as the rating (T197).
         cut.FindAll("circle.trajectory-chart-dot title")
             .Select(title => title.TextContent.Split(" · ")[0])
-            .Should().Equal("2026-01-15", "not recorded (created 2026-03-20)");
+            .Should().Equal("Encounter 2026-01-15", "Encounter not recorded (created 2026-03-20)");
 
         cut.FindAll("table.visually-hidden tbody tr")
             .Select(row => row.QuerySelector("td")!.TextContent)

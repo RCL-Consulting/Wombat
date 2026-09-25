@@ -13,6 +13,7 @@
 @inject IFieldPermissionEvaluator FieldPermissionEvaluator
 @inject NavigationManager Navigation
 @inject ActivityNotices Notices
+@inject ILogger<NewActivity> Logger
 @implements IDisposable
 
 <PageTitle>New Activity</PageTitle>
@@ -48,7 +49,8 @@
      filed against (T122): the write path refuses anything else. *@
   @* Keyed on a generation so a refused create remounts it with fresh option lists (T102). What is typed here is filed
      today, whether by the create or by the submit sent straight after it, so the encounter date warns of a late filing
-     against today (T160, D15), on a type that can credit: the form reads that from the credit rules. *@
+     against today (T160, D15), on a type that can credit: the form reads that from the credit rules. A date before the
+     author's programme started is refused on such a type, so the form says that instead (T192). *@
   <ActivityForm @key="_formGeneration"
                 SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)"
                 DataJson="@_dataJson"
@@ -57,6 +59,7 @@
                 WbaToolKey="@_selectedEditor.WbaToolKey"
                 EditableFieldKeys="_editableFieldKeys"
                 FiledOn="@FilingLateness.Today()"
+                ProgrammeStartsOn="@_programmeStartsOn"
                 DataJsonChanged="OnDataChanged" />
 
   <FormActions>
@@ -94,6 +97,10 @@
   // picker's option list is keyed on it (T108).
   private string? _currentUserId;
 
+  // When the subject's programme started, the bound the server holds a crediting type's encounter date to (T192). Read
+  // once: it is the same subject whatever type is picked.
+  private DateOnly? _programmeStartsOn;
+
   // The fields this creator owns on the selected type (T070). Null means "no per-field
   // restriction", which is both the pre-T070 behaviour and the fallback whenever the set cannot be
   // resolved — the server filters the submitted data either way.
@@ -118,6 +125,7 @@
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    _programmeStartsOn = await FilingLateness.ProgrammeStartAsync(Sender, _currentUserId, authState.User, Logger);
     // The creator IS the subject here, so the type picker narrows to tools whose rating ladder this
     // trainee's curriculum could actually credit — the same reasoning the EPA picker below already
     // applies to EPAs (T123 defect 3). Permissive wherever the subject cannot be resolved.

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Queries.GetProgrammeStartForTrainee;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
 using Wombat.Domain.Curricula;
@@ -129,6 +130,42 @@ public sealed class EncounterDateBoundsTests
         var draft = await CreateAsync(options, CpsaTypeId, CpsaRequest(ProgrammeStart));
 
         (await StoredAsync(options, draft.Id)).ObservedOn.Should().Be(ProgrammeStart);
+    }
+
+    [Fact]
+    public async Task TheStartTheFormIsGiven_IsTheOneThisBoundRefusesBy()
+    {
+        // T192: the form's hint reads GetProgrammeStartForTraineeQuery, and this refusal reads the profile credit picks.
+        // With a second, past profile that started a year later and has the higher id, a query that ranked by either
+        // would hint at a day the server does not refuse by.
+        var options = await SeededAsync();
+        await using (var db = new ApplicationDbContext(options))
+        {
+            db.Set<TraineeProfile>().Add(new TraineeProfile
+            {
+                Id = 2,
+                UserId = TraineeId,
+                InstitutionId = InstitutionId,
+                CurriculumId = 3000,
+                ProgrammeStartDate = ProgrammeStart.AddYears(1),
+                ExpectedCompletionDate = ProgrammeStart.AddYears(5),
+                IsActive = false
+            });
+            await db.SaveChangesAsync();
+        }
+
+        DateOnly? hinted;
+        await using (var db = new ApplicationDbContext(options))
+        {
+            hinted = await new GetProgrammeStartForTraineeQueryHandler(db).Handle(
+                new GetProgrammeStartForTraineeQuery(TraineeId, Principal(TraineeId)), CancellationToken.None);
+        }
+
+        hinted.Should().Be(ProgrammeStart);
+        (await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
+            CreateInput(CpsaTypeId, TraineeId, CpsaRequest(hinted!.Value.AddDays(-1))))))
+            .Should().EndWith($"before the trainee's programme started ({Iso(hinted!.Value)}).");
+        (await CreateAsync(options, CpsaTypeId, CpsaRequest(hinted!.Value))).ObservedOn.Should().Be(hinted);
     }
 
     [Fact]

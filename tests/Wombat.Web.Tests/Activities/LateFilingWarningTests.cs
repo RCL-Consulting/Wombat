@@ -6,9 +6,11 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityById;
 using Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
+using Wombat.Application.Features.Activities.Queries.GetProgrammeStartForTrainee;
 using Wombat.Application.Features.Activities.Queries.ListActivityTypes;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -25,12 +27,16 @@ namespace Wombat.Web.Tests.Activities;
 /// (<see cref="EncounterDatePolicy.CanCredit" />): the server records no lateness for any other, so the form must not
 /// say it will.
 /// </summary>
+/// <remarks>
+/// T192: a date before the subject's programme started is refused on such a type, so it is never called late ("It can
+/// still be filed"); the form says it will not be accepted instead, from the start the page passes it.
+/// </remarks>
 public sealed class LateFilingWarningTests : TestContext
 {
     private const string TraineeId = "trainee-1";
     private const string AssessorId = "assessor-1";
 
-    private const string WarningSelector = "#observed_on-late-filing .field-warning";
+    private const string WarningSelector = "#observed_on-filing-notice .field-warning";
 
     // The pointer names observed_on. A second date field shows that only the encounter date warns.
     private const string SchemaJson = """
@@ -60,6 +66,11 @@ public sealed class LateFilingWarningTests : TestContext
 
     private static readonly DateOnly FiledOn = new(2026, 9, 24);
 
+    /// <summary>Well over fourteen days before <see cref="FiledOn" />, so a date just before it would also be late.</summary>
+    private static readonly DateOnly ProgrammeStart = new(2026, 1, 1);
+
+    private const string HintSelector = "#observed_on-filing-notice .validation-message";
+
     public LateFilingWarningTests()
     {
         var auth = this.AddTestAuthorization();
@@ -79,7 +90,7 @@ public sealed class LateFilingWarningTests : TestContext
 
         // The live region is there, empty, before anything is typed: a screen reader announces content added to a region
         // that already exists, and often not a region inserted together with its content.
-        var region = cut.Find("#observed_on-late-filing");
+        var region = cut.Find("#observed_on-filing-notice");
         region.GetAttribute("role").Should().Be("status");
         region.TextContent.Trim().Should().BeEmpty();
 
@@ -87,8 +98,8 @@ public sealed class LateFilingWarningTests : TestContext
 
         var warning = cut.Find(WarningSelector);
         warning.TextContent.Should().Contain("15 days ago").And.Contain("recorded as late");
-        cut.Find("#observed_on").GetAttribute("aria-describedby").Should().Be("observed_on-late-filing");
-        cut.Find("#observed_on-late-filing").GetAttribute("role").Should().Be("status");
+        cut.Find("#observed_on").GetAttribute("aria-describedby").Should().Be("observed_on-filing-notice");
+        cut.Find("#observed_on-filing-notice").GetAttribute("role").Should().Be("status");
     }
 
     [Fact]
@@ -130,7 +141,7 @@ public sealed class LateFilingWarningTests : TestContext
         // The builder preview, and an activity's page for anyone but its author before the filing.
         var cut = RenderForm(filedOn: null, dataJson: $$"""{ "observed_on": "{{Iso(FiledOn.AddDays(-30))}}" }""");
 
-        cut.FindAll("#observed_on-late-filing").Should().BeEmpty();
+        cut.FindAll("#observed_on-filing-notice").Should().BeEmpty();
         cut.FindAll(".field-warning").Should().BeEmpty();
     }
 
@@ -154,7 +165,7 @@ public sealed class LateFilingWarningTests : TestContext
 
         cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-30)));
 
-        cut.FindAll("#observed_on-late-filing").Should().BeEmpty();
+        cut.FindAll("#observed_on-filing-notice").Should().BeEmpty();
         cut.FindAll(".field-warning").Should().BeEmpty();
         cut.Find("#observed_on").HasAttribute("aria-describedby").Should().BeFalse();
     }
@@ -172,6 +183,102 @@ public sealed class LateFilingWarningTests : TestContext
 
         cut.FindAll(".field-warning").Should().BeEmpty();
         cut.FindAll(".alert").Should().BeEmpty("guard: the form rendered rather than failing to load");
+    }
+
+    // ---- T192: a date before the programme started -----------------------------------------------------------------
+
+    [Fact]
+    public void ADateBeforeTheProgrammeStarted_SaysItWillNotBeAccepted_AndIsNotCalledLate()
+    {
+        var cut = RenderForm(FiledOn, programmeStartsOn: ProgrammeStart);
+
+        cut.Find("#observed_on").Input(Iso(ProgrammeStart.AddDays(-1)));
+
+        cut.Find(HintSelector).TextContent.Should()
+            .Contain("before the trainee's programme started (2026-01-01)").And.Contain("will not be accepted");
+        cut.FindAll(WarningSelector).Should().BeEmpty("the server refuses it, so it cannot 'still be filed'");
+        cut.Find("#observed_on").GetAttribute("aria-describedby").Should().Be("observed_on-filing-notice");
+
+        // A predicted refusal marks the value itself as wrong, not only a note beside it.
+        cut.Find("#observed_on").GetAttribute("aria-invalid").Should().Be("true");
+        cut.Find("#observed_on").ClassList.Should().Contain("input-validation-error");
+    }
+
+    [Fact]
+    public void TheDayTheProgrammeStarted_IsAccepted_SoOnlyItsLatenessIsWarnedOf()
+    {
+        // The server's bound is "not before" the start: the day itself is accepted, and it is 266 days before the filing.
+        var cut = RenderForm(FiledOn, programmeStartsOn: ProgrammeStart);
+
+        cut.Find("#observed_on").Input(Iso(ProgrammeStart));
+
+        cut.FindAll(HintSelector).Should().BeEmpty();
+        cut.Find(WarningSelector).TextContent.Should().Contain("266 days ago");
+
+        // A late filing is accepted, so the value is not marked invalid.
+        cut.Find("#observed_on").HasAttribute("aria-invalid").Should().BeFalse();
+        cut.Find("#observed_on").ClassList.Should().NotContain("input-validation-error");
+    }
+
+    [Fact]
+    public void TheHintFollowsTheDateAsItIsRetyped()
+    {
+        var cut = RenderForm(FiledOn, programmeStartsOn: ProgrammeStart);
+
+        cut.Find("#observed_on").Input(Iso(ProgrammeStart.AddDays(-10)));
+        cut.FindAll(HintSelector).Should().ContainSingle();
+
+        cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-2)));
+        cut.FindAll(HintSelector).Should().BeEmpty();
+        cut.FindAll(WarningSelector).Should().BeEmpty();
+        cut.Find("#observed_on").HasAttribute("aria-invalid").Should().BeFalse();
+    }
+
+    [Fact]
+    public void WithNoKnownStart_APreProgrammeDate_IsWarnedOfAsLate_AsBefore()
+    {
+        // No profile, or a viewer who may not read it: the page passes nothing. With no profile the server does not bound
+        // the date (EncounterDateGate), so lateness is the true thing to say.
+        var cut = RenderForm(FiledOn, programmeStartsOn: null);
+
+        cut.Find("#observed_on").Input(Iso(ProgrammeStart.AddDays(-1)));
+
+        cut.FindAll(HintSelector).Should().BeEmpty();
+        cut.Find(WarningSelector).TextContent.Should().Contain("days ago");
+    }
+
+    [Fact]
+    public void ATypeThatCreditsNothing_MayPrecedeTheProgramme_AndIsNotHinted()
+    {
+        // A research output or reflective exercise may be dated from before admission: the server does not bound it.
+        var cut = RenderForm(FiledOn, creditRulesJson: NonCreditingRules, programmeStartsOn: ProgrammeStart);
+
+        cut.Find("#observed_on").Input(Iso(ProgrammeStart.AddDays(-1)));
+
+        cut.FindAll("#observed_on-filing-notice").Should().BeEmpty();
+        cut.FindAll(".validation-message").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AFormThatIsNotTheFiling_IsNotHinted()
+    {
+        var cut = RenderForm(
+            filedOn: null,
+            dataJson: $$"""{ "observed_on": "{{Iso(ProgrammeStart.AddDays(-1))}}" }""",
+            programmeStartsOn: ProgrammeStart);
+
+        cut.FindAll("#observed_on-filing-notice").Should().BeEmpty();
+        cut.FindAll(".validation-message").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void OnlyTheEncounterDateIsHinted()
+    {
+        var cut = RenderForm(FiledOn, programmeStartsOn: ProgrammeStart);
+
+        cut.Find("#follow_up_on").Input(Iso(ProgrammeStart.AddDays(-1)));
+
+        cut.FindAll(".validation-message").Should().BeEmpty();
     }
 
     // ---- the create page -------------------------------------------------------------------------------------------
@@ -193,6 +300,51 @@ public sealed class LateFilingWarningTests : TestContext
 
         cut.Find("#observed_on").Input(Iso(FilingLateness.Today().AddDays(-15)));
         cut.Find(WarningSelector).TextContent.Should().Contain("15 days ago");
+    }
+
+    [Fact]
+    public void TheCreatePage_HintsAtTheAuthorsProgrammeStart_InPlaceOfTheLatenessWarning()
+    {
+        // The page asks for the author's start once and hands it to the form: the author is the subject here.
+        var startedOn = FilingLateness.Today().AddDays(-100);
+        var sender = new CreatePageSender(startedOn);
+        Services.AddSingleton<IWorkflowEvaluator, WorkflowEvaluator>();
+        Services.AddSingleton<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
+        Services.AddSingleton<IScopedSender>(sender);
+
+        var cut = RenderComponent<NewActivity>();
+        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
+        cut.Find("#activity-type").Change("2");
+        cut.WaitForState(() => cut.FindAll("#observed_on").Count == 1);
+
+        cut.Find("#observed_on").Input(Iso(startedOn.AddDays(-1)));
+        cut.Find(HintSelector).TextContent.Should().Contain($"programme started ({Iso(startedOn)})");
+        cut.FindAll(WarningSelector).Should().BeEmpty();
+
+        cut.Find("#observed_on").Input(Iso(startedOn));
+        cut.FindAll(HintSelector).Should().BeEmpty();
+        cut.Find(WarningSelector).TextContent.Should().Contain("100 days ago");
+
+        sender.ProgrammeStartAskedFor.Should().Equal(TraineeId);
+    }
+
+    [Fact]
+    public void TheCreatePage_LogsAStartThatCannotBeRead()
+    {
+        var logger = new CapturingLogger<NewActivity>();
+        Services.AddSingleton<ILogger<NewActivity>>(logger);
+        Services.AddSingleton<IWorkflowEvaluator, WorkflowEvaluator>();
+        Services.AddSingleton<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
+        // No start given: the fake refuses the read, as a failing query would.
+        Services.AddSingleton<IScopedSender>(new CreatePageSender());
+
+        var cut = RenderComponent<NewActivity>();
+        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
+
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Warning &&
+            entry.Exception is NotSupportedException &&
+            entry.Message.Contains(TraineeId));
     }
 
     // ---- the activity's page ---------------------------------------------------------------------------------------
@@ -225,6 +377,67 @@ public sealed class LateFilingWarningTests : TestContext
         var cut = RenderPage(detail);
 
         cut.Find(WarningSelector).TextContent.Should().Contain("15 days ago");
+    }
+
+    [Fact]
+    public void TheAuthorsDraft_HintsAtTheProgrammeStart_InPlaceOfTheLatenessWarning()
+    {
+        var startedOn = FilingLateness.Today().AddDays(-100);
+        var detail = Detail(
+            state: "draft",
+            submitDaysAfterEncounter: null,
+            editable: ["observed_on"],
+            observedOn: startedOn.AddDays(-1));
+        var sender = new FakeSender(detail, startedOn);
+
+        var cut = RenderPage(sender);
+
+        // The stored date is handed on at the submit, where the server judges it whether it changed or not.
+        cut.Find(HintSelector).TextContent.Should().Contain($"programme started ({Iso(startedOn)})");
+        cut.FindAll(WarningSelector).Should().BeEmpty();
+        sender.ProgrammeStartAskedFor.Should().Equal(TraineeId);
+    }
+
+    [Fact]
+    public void SomeoneElsesView_DoesNotAskForTheProgrammeStart()
+    {
+        // Only a page that may be the filing uses it, so no other view reads it.
+        var detail = Detail(
+            state: "draft",
+            submitDaysAfterEncounter: null,
+            editable: ["observed_on"],
+            observedOn: FilingLateness.Today().AddDays(-200),
+            subjectId: "someone-else");
+        var sender = new FakeSender(detail, FilingLateness.Today().AddDays(-100));
+
+        var cut = RenderPage(sender);
+
+        cut.FindAll(".validation-message").Should().BeEmpty();
+        sender.ProgrammeStartAskedFor.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AStartThatCannotBeRead_IsLogged_AndTheAuthorsDraftStillWarnsOfLateness()
+    {
+        // No hint is also what a trainee with no profile sees, so a read that fails has to be told apart somewhere, or a
+        // broken query would hide the hint on every page and look like nothing at all.
+        var logger = new CapturingLogger<ActivityView>();
+        Services.AddSingleton<ILogger<ActivityView>>(logger);
+        var detail = Detail(
+            state: "draft",
+            submitDaysAfterEncounter: null,
+            editable: ["observed_on"],
+            observedOn: FilingLateness.Today().AddDays(-15));
+
+        // No start given: the fake refuses the read, as a failing query would.
+        var cut = RenderPage(new FakeSender(detail));
+
+        cut.Find(WarningSelector).TextContent.Should().Contain("15 days ago");
+        cut.FindAll(HintSelector).Should().BeEmpty();
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Warning &&
+            entry.Exception is NotSupportedException &&
+            entry.Message.Contains(TraineeId));
     }
 
     [Fact]
@@ -280,7 +493,7 @@ public sealed class LateFilingWarningTests : TestContext
         var cut = RenderPage(detail);
 
         cut.Find("#observed_on").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
-        cut.FindAll("#observed_on-late-filing").Should().BeEmpty();
+        cut.FindAll("#observed_on-filing-notice").Should().BeEmpty();
         cut.FindAll(".field-warning").Should().BeEmpty();
     }
 
@@ -454,18 +667,22 @@ public sealed class LateFilingWarningTests : TestContext
         DateOnly? filedOn,
         string dataJson = "{}",
         IReadOnlySet<string>? writableFieldKeys = null,
-        string? creditRulesJson = CreditingRules)
+        string? creditRulesJson = CreditingRules,
+        DateOnly? programmeStartsOn = null)
         => RenderComponent<ActivityForm>(parameters => parameters
             .Add(component => component.SchemaJson, SchemaJson)
             .Add(component => component.DataJson, dataJson)
             .Add(component => component.CreditRulesJson, creditRulesJson)
             .Add(component => component.EditableFieldKeys, writableFieldKeys)
             .Add(component => component.FiledOn, filedOn)
+            .Add(component => component.ProgrammeStartsOn, programmeStartsOn)
             .Add(component => component.DataJsonChanged, EventCallback.Factory.Create<string>(this, _ => { })));
 
-    private IRenderedComponent<ActivityView> RenderPage(ActivityDetailDto detail)
+    private IRenderedComponent<ActivityView> RenderPage(ActivityDetailDto detail) => RenderPage(new FakeSender(detail));
+
+    private IRenderedComponent<ActivityView> RenderPage(FakeSender sender)
     {
-        Services.AddSingleton<IScopedSender>(new FakeSender(detail));
+        Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 11));
         cut.WaitForState(() => cut.Markup.Contains("Activity details"));
@@ -539,9 +756,14 @@ public sealed class LateFilingWarningTests : TestContext
         return new ActivityDetailDto(activity, editable, actions);
     }
 
-    /// <summary>The create page's two reads: one type, and its editor with the dated schema.</summary>
-    private sealed class CreatePageSender : IScopedSender
+    /// <summary>
+    /// The create page's reads: one type, its editor with the dated schema, and the author's programme start when a test
+    /// gives one (T192). Without one it refuses that read as an unhandled request, which the page takes as no start.
+    /// </summary>
+    private sealed class CreatePageSender(DateOnly? programmeStart = null) : IScopedSender
     {
+        public List<string> ProgrammeStartAskedFor { get; } = [];
+
         private const string DraftBornWorkflow = """
             {
               "version": 1,
@@ -573,6 +795,10 @@ public sealed class LateFilingWarningTests : TestContext
                         "admin-1", null, null, []);
                     return Task.FromResult((TResponse)(object)editor);
 
+                case GetProgrammeStartForTraineeQuery query when programmeStart is not null:
+                    ProgrammeStartAskedFor.Add(query.TraineeUserId);
+                    return Task.FromResult((TResponse)(object)programmeStart);
+
                 default:
                     throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
             }
@@ -582,16 +808,51 @@ public sealed class LateFilingWarningTests : TestContext
             => throw new NotSupportedException();
     }
 
-    private sealed class FakeSender : IScopedSender
+    /// <summary>What a page logged, so a test can see a failure the page otherwise shows only as nothing.</summary>
+    private sealed class CapturingLogger<T> : ILogger<T>
     {
-        private readonly ActivityDetailDto _detail;
+        public List<(LogLevel Level, Exception? Exception, string Message)> Entries { get; } = [];
 
-        public FakeSender(ActivityDetailDto detail) => _detail = detail;
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull
+            => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+            => Entries.Add((logLevel, exception, formatter(state, exception)));
+    }
+
+    /// <summary>
+    /// The activity page's read, and the subject's programme start when a test gives one (T192). Without one it refuses
+    /// that read, which the page takes as no start.
+    /// </summary>
+    private sealed class FakeSender(ActivityDetailDto detail, DateOnly? programmeStart = null) : IScopedSender
+    {
+        public List<string> ProgrammeStartAskedFor { get; } = [];
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-            => request is GetActivityByIdQuery
-                ? Task.FromResult((TResponse)(object)_detail)
-                : throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
+        {
+            switch (request)
+            {
+                case GetActivityByIdQuery:
+                    return Task.FromResult((TResponse)(object)detail);
+
+                case GetProgrammeStartForTraineeQuery query:
+                    ProgrammeStartAskedFor.Add(query.TraineeUserId);
+                    return programmeStart is null
+                        ? throw new NotSupportedException("No programme start in this test.")
+                        : Task.FromResult((TResponse)(object)programmeStart);
+
+                default:
+                    throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
+            }
+        }
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();

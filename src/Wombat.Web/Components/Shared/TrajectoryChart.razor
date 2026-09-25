@@ -43,7 +43,8 @@ else
               cx="@Fmt(cx)"
               cy="@Fmt(cy)"
               r="4">
-        <title>@EncounterDate.Label(point.Date, point.DateDeclared) · @RungTextOf(point)@(string.IsNullOrWhiteSpace(point.Label) ? string.Empty : $" · {point.Label}")@(offLadder ? " · not a rung on this scale" : string.Empty)</title>
+        @* "Encounter …": a bare "not recorded (created …)" in front of the rung reads as though the rating were (T197). *@
+        <title>Encounter @EncounterDate.Label(point.Date, point.DateDeclared) · @RungTextOf(point)@(string.IsNullOrWhiteSpace(point.Label) ? string.Empty : $" · {point.Label}")@(offLadder ? " · not a rung on this scale" : string.Empty)</title>
       </circle>
     }
 
@@ -301,8 +302,8 @@ else
   /// <summary>
   /// One plotted observation. <c>Label</c> is the EVIDENCE SOURCE ("Direct observation"), which is what
   /// the screen-reader table's third column is headed — it is not, and never was, a rung label.
-  /// <c>DateDeclared</c> is false when nobody stated the encounter date and <c>Date</c> is only the filing
-  /// day; the tooltip and the table then say so (T161, D28).
+  /// <c>DateDeclared</c> is false when nobody stated the encounter date and <c>Date</c> is only the day the
+  /// activity was created; the tooltip and the table then say so (T161, D28, T197).
   /// </summary>
   public sealed record ChartPoint(
     DateOnly Date,

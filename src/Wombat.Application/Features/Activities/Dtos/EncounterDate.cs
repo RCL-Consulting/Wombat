@@ -16,7 +16,9 @@ namespace Wombat.Application.Features.Activities.Dtos;
 /// <para>
 /// It says "created", not "filed" (T197): the fallback is the day the form was first saved, which on a draft is not a
 /// filing at all. And it never names an encounter date only to deny it; the surface's own heading or sentence already
-/// says what the date is of.
+/// says what the date is of. A surface with no such heading names it itself ("Encounter …"): a trajectory tooltip, the
+/// standing panel's cell under "Latest rating", the PDF's activity line. Bare, "not recorded" there reads as though the
+/// rating or the activity were.
 /// </para>
 /// <para>
 /// The qualifier is text, never only a colour, a title attribute or an icon: a keyboard, touch or screen-reader user
