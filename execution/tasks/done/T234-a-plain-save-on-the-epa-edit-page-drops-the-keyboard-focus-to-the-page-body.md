@@ -1,11 +1,12 @@
 ---
 id: T234
 title: A plain Save on the EPA edit page drops the keyboard focus to the page body
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T234 — A plain Save on the EPA edit page drops the keyboard focus to the page body
@@ -36,7 +37,7 @@ while saving; fix them the same way, or file what you find.
 
 ## Verification
 
-- [ ] After Save, and after a reactivating Save, the focus is on the status region. bUnit (`VerifyFocusAsyncInvoke`) and
+- [x] After Save, and after a reactivating Save, the focus is on the status region. bUnit (`VerifyFocusAsyncInvoke`) and
       browser.
 
 ## Related
@@ -45,3 +46,23 @@ T196, T202, T217.
 
 Note, 2026-09-25 (the G2 browser check): a refused "Save profile" on `/admin/trainees/edit` also leaves the focus on BODY
 (Save is disabled while it runs). Deactivate and Mark complete move the focus to the result; Save does not.
+
+---
+
+## As built — 2026-09-25 (`2b1b035`)
+
+A save keeps the keyboard focus. The pressed button stays enabled, with `aria-disabled` while it runs and re-entry
+guarded, and the focus then moves to the result region (`ActionResult`). This covers EpaEdit (Save, Deactivate,
+reactivating), the trainee profile, the committee review page's actions, the institution and profile pages, curriculum
+items and invitations. bUnit `ActionFocusTests` and `VerifyFocusAsyncInvoke` tests.
+
+Browser on dev (scripted Chrome, master `675a53d`):
+- **EpaEdit** (as collegeadmin and instadmin): the focus lands on "EPA saved.", "EPA deactivated.", "EPA reactivated…" or
+  "EPA saved and deactivated.". A duplicate code is refused with the focus kept on Save.
+- **Review 10** (as the chair): Stage, Remove, Defer, Reinstate, Record and Ratify each moved the focus to their result.
+  Double Enter on Record and on Ratify wrote one audit row each.
+- **Institution, profile, curriculum item and invitation saves** focus their results. A refused activity submit keeps
+  the focus on Submit.
+
+**Found:** changing a password crashes the page (it predates T234; the password is changed, but the circuit errors).
+It is confirmed and raised to P2 as [T265]. **Filed from the review:** [T264] (destructive actions, pagers).

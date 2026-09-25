@@ -1,11 +1,12 @@
 ---
 id: T233
 title: A signed-in user who opens an unknown URL gets a bare 404, not the app's "Page not found" page
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T233 — A signed-in user who opens an unknown URL gets a bare 404, not the app's "Page not found" page
@@ -38,10 +39,32 @@ respondent page's own 404 ("Feedback link not recognised", T163) must keep its t
 
 ## Verification
 
-- [ ] Signed in, `/no-such-page` shows the app's "Page not found" page with status 404. Browser, and an integration
+- [x] Signed in, `/no-such-page` shows the app's "Page not found" page with status 404. Browser, and an integration
       test with WebApplicationFactory.
-- [ ] Negotiate still answers 401 signed out, and a tampered MSF link still reads "Feedback link not recognised".
+- [x] Negotiate still answers 401 signed out, and a tampered MSF link still reads "Feedback link not recognised".
 
 ## Related
 
 T145, T181, T163, T202.
+
+---
+
+## As built — 2026-09-25 (`4032f2a`)
+
+A GET that ends 404 with no body, from a request that accepts HTML, is re-executed on `/not-found` (the app's Page not
+found, status kept at 404). Left alone:
+- negotiate's 401, a 400 or 405;
+- static files;
+- HEAD requests (pages answer HEAD with 405);
+- any response with a body, such as the MSF respond page's "Feedback link not recognised".
+
+`NotFoundPageFlowTests` (WebApplicationFactory) covers each case.
+
+Browser on dev (scripted Chrome, master `675a53d`):
+- **Signed in.** `/no-such-page`, `/admin/forms` and `/activities/no/such/page` each gave 404 "Page not found" inside the
+  full layout, with the circuit connected.
+- **A missing static file** (`/brand/no-such-mark.svg`) got Chrome's bare 404.
+- **Signed out,** the redirect went to login, then to the page with 404.
+- **Negotiate** answers 401 signed out.
+- **A tampered MSF link** reads "Feedback link not recognised" with 404.
+- **Dev only:** HEAD `/not-found` answers 404 (the dev static-file fallback). It is 405 on the server.

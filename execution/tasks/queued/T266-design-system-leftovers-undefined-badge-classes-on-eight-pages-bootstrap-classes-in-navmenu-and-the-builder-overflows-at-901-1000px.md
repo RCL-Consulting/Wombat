@@ -48,3 +48,6 @@ browser pass at 390, 950 and 1280px.
 ## Related
 
 T226, T198, T188.
+
+Note, 2026-09-25 (the H1 browser check): on `/msf/campaigns/4` at 1000px, the only card sits in the narrow column of
+the page's two-column grid (223px wide, 447px empty beside it), and its table scrolls 143px inside.

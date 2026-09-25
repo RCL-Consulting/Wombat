@@ -1,11 +1,12 @@
 ---
 id: T236
 title: No field shows an invalid state: app.css never styles Blazor's .invalid class or aria-invalid inputs
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T236 — No field shows an invalid state: app.css never styles Blazor's .invalid class or aria-invalid inputs
@@ -31,9 +32,27 @@ passes WCAG 1.4.1). Record it in DESIGN.md § Forms.
 
 ## Verification
 
-- [ ] An invalid input on the deferral form and on one activity form shows the invalid style. A CSS test in the style of
+- [x] An invalid input on the deferral form and on one activity form shows the invalid style. A CSS test in the style of
       `TableColumnClassTests`, and browser.
 
 ## Related
 
 T212, T193.
+
+---
+
+## As built — 2026-09-25 (`3b5e15a`)
+
+An invalid input shows it, not only its message. Blazor's `.invalid` and `[aria-invalid="true"]` on `.form-control`,
+`.form-select` and textarea take the danger token's border and a 3px inset left stripe. It is paint only: text does not
+move. In forced colours it becomes a 4px left border. Recorded in DESIGN.md § Forms. A CSS test pins the rule.
+
+Browser on dev (scripted Chrome, master `675a53d`):
+- **The deferral form, left empty** (review 10, as the chair): `form-control invalid`, `aria-invalid=true`, border
+  rgb(231,76,60), inset stripe, and the message shown. The focus ring sits outside the stripe. Typing a reason cleared
+  all of it.
+- **The activity form:** a date before the programme start gets the stripe and the refusal hint. A late date gets only
+  the warning.
+- **The staging form's** empty level select shows the stripe too.
+
+**Filed from the review:** [T263] (a server refusal marks no field).

@@ -1,14 +1,14 @@
 ---
 id: T265
-title: VerifyExport and ChangePassword: an unhandled failure path each (needs confirmation)
+title: Changing a password crashes the page (confirmed), and VerifyExport has an unhandled failure path
 status: queued
-priority: P3
+priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
 ---
 
-# T265 — VerifyExport and ChangePassword: an unhandled failure path each (needs confirmation)
+# T265 — Changing a password crashes the page (confirmed), and VerifyExport has an unhandled failure path
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
@@ -36,3 +36,17 @@ link.
 ## Related
 
 T234, T023, T010.
+
+## Confirmed, 2026-09-25 (the H1 browser check); raised to P2
+
+As trainee, open `/account/change-password`, enter the current password and a new one, and press "Change password".
+The password **is** changed. But the button stays on "Saving..." and Blazor's "An unhandled error has occurred.
+Reload" appears, and "Password updated." never shows. The log reads:
+`InvalidOperationException: Headers are read-only, response has already started`, from
+`SignInManager.RefreshSignInCoreAsync` / `CookieAuthenticationHandler.HandleSignInAsync`, called at
+`ChangePassword.razor:107` inside the interactive circuit.
+
+A cookie cannot be reissued from a circuit. Change the password in the circuit, then refresh the sign-in through a
+real HTTP request: post a form to an endpoint, as the login page does (T181's `[ExcludeFromInteractiveRouting]`
+pattern), or redirect to an endpoint that refreshes and returns. Verify in the browser that the page says "Password
+updated." and the user stays signed in.

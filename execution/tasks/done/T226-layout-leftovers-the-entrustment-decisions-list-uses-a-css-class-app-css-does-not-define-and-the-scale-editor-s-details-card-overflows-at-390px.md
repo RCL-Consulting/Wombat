@@ -1,11 +1,12 @@
 ---
 id: T226
 title: Layout leftovers: the entrustment decisions list uses a CSS class app.css does not define, and the scale editor's details card overflows at 390px
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T226 — Layout leftovers: the entrustment decisions list uses a CSS class app.css does not define, and the scale editor's details card overflows at 390px
@@ -30,7 +31,7 @@ created: 2026-09-25
 
 ## Verification
 
-- [ ] The decisions list is a `clinic-table`. The scale editor has no horizontal scroll at 390, 700 and 1000px. Browser.
+- [x] The decisions list is a `clinic-table`. The scale editor has no horizontal scroll at 390, 700 and 1000px. Browser.
 
 ## Related
 
@@ -40,3 +41,28 @@ Note, 2026-09-25 (the F2 browser check): at 390px on `/msf/campaigns/{id}` the p
 
 Note, 2026-09-25 (the committee chain's browser check): the chair's agenda keeps an "Action" column with blank cells
 on decided and ratified reviews (4, 6 and 7 on dev). Drop the column when no line has an action.
+
+---
+
+## As built — 2026-09-25 (`77ceb58`)
+
+- **The entrustment decisions list** is a `clinic-table`, with a styled filter, a hidden Actions header and state
+  badges.
+- **Phone widths** have a 16px gutter, and no card or field overflows.
+- **The agenda** has no Action column when no line has an action, and a line with no action says why ("Staged
+  below").
+- **A grid of inputs** keeps one line of buttons only from 44rem.
+
+CSS tests (`NarrowLayoutTests`, `EntrustmentDecisionsListTableTests`) and bUnit.
+
+Browser on dev (scripted Chrome, master `675a53d`):
+- **`/msf/campaigns/4`** at 390px has a 16px gutter and no sideways scroll, and at 700, 1000 and 1280px no scroll.
+- **The decisions list** at 390, 700, 1000 and 1280px: the page never scrolls sideways, and the table scrolls inside its
+  container.
+- **EpaEdit and Users** show no field overflow at 390–1280px.
+- **The agenda.** Reviews 4, 6 and 7 have no Action column. Review 10 had one while in progress ("Staged below" once
+  staged) and lost it after Record.
+- **Not run:** the scale editor (Administrator-only; covered by the CSS test), and an expired STAR's amber badge (dev
+  has none).
+
+**Filed from the review:** [T266] (design-system leftovers).

@@ -1,11 +1,12 @@
 ---
 id: T178
 title: DESIGN.md's nav table is stale for several roles, and PlaceholderPage still maps pages that exist
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T178 — DESIGN.md's nav table is stale for several roles, and PlaceholderPage still maps pages that exist
@@ -34,8 +35,8 @@ only Trainee and PendingTrainee.
 
 ## Verification
 
-- [ ] DESIGN.md's table matches NavMenu.razor for every role.
-- [ ] No placeholder route shadows a real page, and `EveryLinkOffered…` runs for all nine roles.
+- [x] DESIGN.md's table matches NavMenu.razor for every role.
+- [x] No placeholder route shadows a real page, and `EveryLinkOffered…` runs for all nine roles.
 
 ## Related
 
@@ -44,3 +45,26 @@ T141.
 Note, 2026-09-25: the Coordinator's nav lists "Data Rights" twice.
 
 Note, 2026-09-25 (T211 implementation): the nav menu gives SpecialityAdmin and SubSpecialityAdmin a "Curriculum" link to `/admin/curricula`, which that page refuses them.
+
+---
+
+## As built — 2026-09-25 (`7fe1dd6`)
+
+- **The nav.** Each role's menu offers only pages that admit it, once each. The Coordinator's duplicate Data Rights is
+  gone. SpecialityAdmin and SubSpecialityAdmin get no Curriculum link they are refused.
+- **DESIGN.md's nav table** is tested against `NavMenu.razor` for every role. `EveryLinkOffered…` runs for all roles, and
+  a 46-case test covers each pair of roles and all at once.
+- **Placeholders.** Retired placeholder routes are Page not found.
+
+Browser on dev (scripted Chrome, master `675a53d`): every seeded role's nav was recorded and each link opened. No duplicate label or address, and no Access denied:
+- trainee: 6 links;
+- assessor: 2;
+- committee: 5;
+- committee2: 3;
+- coordinator: 5, and no Invitations;
+- instadmin: 14;
+- collegeadmin: 3.
+
+`/placeholder/activities` and `/placeholder/nonsense` are Page not found.
+
+**Filed from the review:** [T261] (dashboard links). DOMAIN.md is corrected: a Coordinator does not issue invitations.

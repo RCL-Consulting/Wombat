@@ -47,3 +47,6 @@ and keep the focus on the pressed control or move it to the list heading. bUnit 
 ## Related
 
 T234, T222, T206, T239.
+
+Note, 2026-09-25 (the H1 browser check): on `/admin/invitations`, after revoking the invitation just issued, the result
+area still shows its "Share this registration link…" panel with the now-dead link, beside "Invitation revoked.".
