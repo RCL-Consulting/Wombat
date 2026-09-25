@@ -42,3 +42,5 @@ only Trainee and PendingTrainee.
 T141.
 
 Note, 2026-09-25: the Coordinator's nav lists "Data Rights" twice.
+
+Note, 2026-09-25 (T211 implementation): the nav menu gives SpecialityAdmin and SubSpecialityAdmin a "Curriculum" link to `/admin/curricula`, which that page refuses them.
