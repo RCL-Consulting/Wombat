@@ -167,16 +167,11 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
                 ("CurriculumItemProgresses", "Semester", "integer", "NO", (string?)null),
                 ("CurriculumItems", "QuotaPeriod", "integer", "NO", "0"));
 
-        var uniqueIndexes = await QueryAsync(
-            schema,
-            """
-            SELECT indexname, indexdef
-            FROM pg_indexes
-            WHERE schemaname = $1 AND tablename = 'CurriculumItemProgresses' AND indexdef LIKE 'CREATE UNIQUE INDEX%'
-            ORDER BY indexname
-            """,
-            reader => (Name: reader.GetString(0), Definition: reader.GetString(1)),
-            schema);
+        List<(string Name, string Definition)> uniqueIndexes;
+        await using (var connection = await OpenAsync(schema))
+        {
+            uniqueIndexes = await UniqueIndexesOnProgressTableAsync(connection);
+        }
 
         // Only the primary key and the period key. The old unique index on (item, trainee) would refuse the
         // second semester's row for the same item, so its absence matters as much as the new one's presence.
@@ -203,6 +198,41 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             "CK_CurriculumItems_QuotaPeriod",
             // Not T130's: T131 slice 2 checks the decision cadence the same way (DecisionCadenceMigrationPostgresTests).
             "CK_CurriculumItems_DecisionCadence");
+    }
+
+    [Fact]
+    public async Task TheUniqueIndexQuery_WhileAnotherSchemaIsBeingDropped_ReadsOnlyItsOwnTable_AndWaitsOnNothing()
+    {
+        // T227: the moment that made the migration test above fail intermittently, held open. Another test's
+        // DisposeAsync is part-way through dropping its schema, whose table has the same name. The drop has locked
+        // that table and its indexes and has not committed yet.
+        var schema = await CreateSchemaAsync();
+        var otherTestsSchema = await CreateSchemaAsync();
+        await ExecuteAsync(schema, """CREATE TABLE "CurriculumItemProgresses" ("Id" integer CONSTRAINT "PK_Own" PRIMARY KEY)""");
+        await ExecuteAsync(otherTestsSchema, """CREATE TABLE "CurriculumItemProgresses" ("Id" integer CONSTRAINT "PK_Other" PRIMARY KEY)""");
+
+        await using var dropper = await OpenAsync(otherTestsSchema);
+        await using var drop = await dropper.BeginTransactionAsync();
+        await using (var dropSchema = new NpgsqlCommand($"DROP SCHEMA \"{otherTestsSchema}\" CASCADE", dropper, drop))
+        {
+            await dropSchema.ExecuteNonQueryAsync();
+        }
+
+        await using var connection = await OpenAsync(schema);
+        // A query that touches the other schema's index now waits on the drop. The lock timeout turns that wait
+        // into a failure within seconds. join_collapse_limit = 1 keeps each view's joins in their written order.
+        // For the old pg_indexes query, that order applies the schema filter last, which the planner also chose on
+        // its own under load. Of 290 runs of the old query sampled during two concurrent suite runs, 87 were
+        // planned that way, and 7 more failed with the error itself. The fixed query is safe under any join order.
+        await ExecuteAsync(connection, "SET lock_timeout = '3s'");
+        await ExecuteAsync(connection, "SET join_collapse_limit = 1");
+
+        var indexes = await UniqueIndexesOnProgressTableAsync(connection);
+
+        indexes.Should().ContainSingle().Which.Name.Should().Be("PK_Own");
+
+        // Nothing is committed: the other schema stays, and DisposeAsync drops it with this one.
+        await drop.RollbackAsync();
     }
 
     [Fact]
@@ -1131,6 +1161,49 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
     {
         await using var command = Command(connection, sql, values);
         return await command.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// The unique indexes on the connection's own <c>CurriculumItemProgresses</c>, each with its definition.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// T227. Every filter is on a plain catalog column, and the table is named by its own OID, which <c>::regclass</c>
+    /// resolves on the connection's search path: the test's schema, after the <c>pg_temp</c> and <c>pg_catalog</c>
+    /// that Postgres searches first when they are not listed, neither of which holds a table of that name.
+    /// <c>pg_get_indexdef</c> appears only in the select list, so it is only ever run on the rows the filters kept.
+    /// </para>
+    /// <para>
+    /// The query this replaces filtered <c>pg_indexes</c> on <c>indexdef LIKE 'CREATE UNIQUE INDEX%'</c>. SQL fixes no
+    /// order for a WHERE clause. Under load the planner tested that predicate on the indexes of every table called
+    /// CurriculumItemProgresses in every schema, and applied the schema filter last. Rendering an index in a schema
+    /// that another test's <see cref="DisposeAsync" /> was dropping waited on that drop's lock. When the drop
+    /// committed, the query failed with XX000 "could not open relation with OID". The rule for any catalog query in
+    /// this suite: a function that renders a definition (<c>pg_get_indexdef</c>, <c>pg_get_constraintdef</c>,
+    /// <c>pg_get_expr</c>) goes in the select list, never in the WHERE clause. ARCHITECTURE.md § Testing states it
+    /// for every class, with the one case where the select list is not enough.
+    /// </para>
+    /// </remarks>
+    private static async Task<List<(string Name, string Definition)>> UniqueIndexesOnProgressTableAsync(NpgsqlConnection connection)
+    {
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT idx.relname, pg_get_indexdef(idx.oid)
+            FROM pg_index ix
+            JOIN pg_class idx ON idx.oid = ix.indexrelid
+            WHERE ix.indrelid = '"CurriculumItemProgresses"'::regclass AND ix.indisunique
+            ORDER BY idx.relname
+            """,
+            connection);
+        await using var reader = await command.ExecuteReaderAsync();
+
+        var indexes = new List<(string Name, string Definition)>();
+        while (await reader.ReadAsync())
+        {
+            indexes.Add((reader.GetString(0), reader.GetString(1)));
+        }
+
+        return indexes;
     }
 
     private async Task<int> ExecuteAsync(string schema, string sql, params object[] values)
