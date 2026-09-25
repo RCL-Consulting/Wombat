@@ -692,7 +692,7 @@ public sealed class CampaignStatePageTests : TestContext
             object? response = request switch
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Annual MSF", null, false, true, [])],
-                ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[],
+                ListMsfCampaignSubjectsQuery => (IReadOnlyList<TraineeProfileDto>)[],
                 GetMsfCampaignSetupQuery query when query.CampaignId == CampaignId => _setup,
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

@@ -121,7 +121,7 @@ public sealed class EntrustmentOnlyReviewHandlerTests
         await using var db = await SeededDbAsync();
         await AddTraineeWithoutNeonatalEpasAsync(db);
 
-        var preview = await new PreviewCommitteeAgendaQueryHandler(db).Handle(
+        var preview = await new PreviewCommitteeAgendaQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
             new PreviewCommitteeAgendaQuery(TraineeWithoutNeonatal, NeonatalPanel, 2026, 1, TestPrincipals.Coordinator(InstitutionA)),
             CancellationToken.None);
         var act = () => ScheduleAsync(db, NeonatalPanel, semester: 1, type: null, TraineeWithoutNeonatal);
@@ -141,7 +141,7 @@ public sealed class EntrustmentOnlyReviewHandlerTests
         // before it, and a progression review before either panel is never refused for it.
         (await ScheduleAsync(db, GeneralPanel, semester: 1, CommitteeReviewType.EntrustmentOnly, TraineeWithoutNeonatal))
             .ReviewType.Should().Be(CommitteeReviewType.EntrustmentOnly);
-        (await new PreviewCommitteeAgendaQueryHandler(db).Handle(
+        (await new PreviewCommitteeAgendaQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
                 new PreviewCommitteeAgendaQuery(TraineeWithoutNeonatal, GeneralPanel, 2026, 2, TestPrincipals.Coordinator(InstitutionA)),
                 CancellationToken.None))
             .PanelDecidesAnything.Should().BeTrue();
@@ -413,7 +413,7 @@ public sealed class EntrustmentOnlyReviewHandlerTests
     private static async Task<CommitteeReviewListItemDto> ScheduleAsync(
         ApplicationDbContext db, int panelId, int semester, CommitteeReviewType? type, string trainee = Trainee)
     {
-        var scheduled = await new ScheduleCommitteeReviewCommandHandler(db).Handle(
+        var scheduled = await new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
             new ScheduleCommitteeReviewCommand(
                 trainee, panelId, 2026, semester, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), new DateOnly(2026, 7, 2),
                 TestPrincipals.Coordinator(InstitutionA), ReviewType: type),

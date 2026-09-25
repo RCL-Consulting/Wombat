@@ -11,6 +11,7 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.CommitteeDecisions;
 
@@ -249,7 +250,7 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
     // ---- arrange --------------------------------------------------------------------------------------------------------
 
     private static Task<CommitteeReviewListItemDto> ScheduleAsync(ApplicationDbContext db, int panelId, ClaimsPrincipal principal)
-        => new ScheduleCommitteeReviewCommandHandler(db).Handle(
+        => new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
             new ScheduleCommitteeReviewCommand(
                 "trainee-1", panelId, 2026, 1, new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 30), new DateOnly(2026, 7, 2), principal),
             CancellationToken.None);

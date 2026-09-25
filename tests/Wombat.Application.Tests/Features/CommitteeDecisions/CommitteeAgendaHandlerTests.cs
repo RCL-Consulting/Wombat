@@ -1285,7 +1285,7 @@ public sealed class CommitteeAgendaHandlerTests
         ApplicationDbContext db, int panelId, string trainee, int year, int semester, bool formative = false,
         ClaimsPrincipal? principal = null)
     {
-        var scheduled = await new ScheduleCommitteeReviewCommandHandler(db).Handle(
+        var scheduled = await new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
             new ScheduleCommitteeReviewCommand(
                 trainee, panelId, year, semester, new DateOnly(year, 1, 1), new DateOnly(year, 12, 31), new DateOnly(2026, 7, 2),
                 principal ?? TestPrincipals.Coordinator(InstitutionA), formative),
@@ -1296,7 +1296,7 @@ public sealed class CommitteeAgendaHandlerTests
 
     private static async Task<CommitteeAgendaPreviewDto> PreviewAsync(
         ApplicationDbContext db, int panelId, string trainee, int year, int semester, ClaimsPrincipal? principal = null)
-        => await new PreviewCommitteeAgendaQueryHandler(db).Handle(
+        => await new PreviewCommitteeAgendaQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
             new PreviewCommitteeAgendaQuery(trainee, panelId, year, semester, principal ?? TestPrincipals.Coordinator(InstitutionA), Today),
             CancellationToken.None);
 
@@ -1462,7 +1462,7 @@ public sealed class CommitteeAgendaHandlerTests
     /// </summary>
     private static async Task<EntrustmentDecisionDueStatus> DueStatusAsync(ApplicationDbContext db, string code)
     {
-        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, new FakeUserDirectory((Trainee, "Ada Trainee"))).Handle(
+        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, new FakeUserDirectory((Trainee, "Ada Trainee")).WithTraineesOf(db)).Handle(
             new GetEntrustmentDecisionsDueQuery(2026, 2, null, TestPrincipals.Coordinator(InstitutionA), Today),
             CancellationToken.None);
         db.ChangeTracker.Clear();

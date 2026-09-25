@@ -46,22 +46,26 @@ public sealed class CreateMsfCampaignCommandHandler : IRequestHandler<CreateMsfC
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IActivityReferenceDataService _referenceDataService;
+    private readonly IUserAdministrationService _users;
 
     public CreateMsfCampaignCommandHandler(
         IApplicationDbContext dbContext,
-        IActivityReferenceDataService referenceDataService)
+        IActivityReferenceDataService referenceDataService,
+        IUserAdministrationService users)
     {
         _dbContext = dbContext;
         _referenceDataService = referenceDataService;
+        _users = users;
     }
 
     public async Task<MsfCampaignSummaryDto> Handle(CreateMsfCampaignCommand request, CancellationToken cancellationToken)
     {
         // Scope first, before the template is read (T224 review): a caller who may not run this campaign is told that,
-        // whatever template id they sent.
+        // whatever template id they sent. Only a current trainee (T238): an erased trainee's pseudonym and a trainee
+        // whose programme has ended are refused here, before anything is written.
         var subjectUserId = request.SubjectUserId.Trim();
         await MsfCampaignRules.EnsureSubjectIsInScopeAsync(
-            _dbContext, request.Principal, subjectUserId, cancellationToken);
+            _dbContext, _users, request.Principal, subjectUserId, cancellationToken);
 
         var template = await _dbContext.Set<MsfTemplate>()
             .SingleOrDefaultAsync(candidate => candidate.Id == request.TemplateId && candidate.IsActive, cancellationToken)

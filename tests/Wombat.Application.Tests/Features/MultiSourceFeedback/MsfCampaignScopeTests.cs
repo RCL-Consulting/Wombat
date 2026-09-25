@@ -467,7 +467,7 @@ public sealed class MsfCampaignScopeTests
 
     private static Task<MsfCampaignSummaryDto> CreateAsync(
         ApplicationDbContext db, int templateId, string subjectUserId, ClaimsPrincipal principal)
-        => new CreateMsfCampaignCommandHandler(db, new ActivityReferenceDataService(db)).Handle(
+        => new CreateMsfCampaignCommandHandler(db, new ActivityReferenceDataService(db), FakeUserDirectory.TraineesOf(db)).Handle(
             new CreateMsfCampaignCommand(
                 subjectUserId,
                 templateId,

@@ -101,7 +101,8 @@ public static class MsfCampaignRules
         "The MSF campaign could not be found among the campaigns you run.";
 
     /// <summary>
-    /// Refuses to create a campaign about a trainee the caller does not run campaigns for. (T121, T113)
+    /// Refuses to create a campaign about a trainee the caller may not start one about
+    /// (<see cref="MayStartCampaignAboutAsync" />). (T121, T113, T238)
     /// </summary>
     /// <remarks>
     /// <para>
@@ -114,14 +115,20 @@ public static class MsfCampaignRules
     /// somewhere in the handler.
     /// </para>
     /// <para>
-    /// The rule is <see cref="IsSubjectInScopeAsync" />. A caller it keeps out whoever the subject is
+    /// The rule is <see cref="MayStartCampaignAboutAsync" />. A caller it keeps out whoever the subject is
     /// (<see cref="IsKeptFromCampaignsAbout" />) is told why, before anything is read: the reason is their own id or their
     /// own role, so it says nothing about the id they gave. Create runs this before it reads the template too, so an
     /// out-of-scope caller learns nothing from any id they send. (T224)
     /// </para>
+    /// <para>
+    /// Anyone but an Administrator gets one refusal for every other subject the rule keeps out (an id that names nobody,
+    /// a trainee elsewhere, an erased trainee's pseudonym, a trainee whose programme has ended), so it confirms nothing
+    /// about the id. An Administrator runs campaigns at every institution, so the one reason left is said plainly. (T238)
+    /// </para>
     /// </remarks>
     public static async Task EnsureSubjectIsInScopeAsync(
         IApplicationDbContext dbContext,
+        IUserAdministrationService users,
         ClaimsPrincipal principal,
         string subjectUserId,
         CancellationToken cancellationToken)
@@ -139,11 +146,111 @@ public static class MsfCampaignRules
             throw new UnauthorizedAccessException(TraineeRunsNoCampaigns);
         }
 
-        if (!await IsSubjectInScopeAsync(dbContext, principal, subjectUserId, cancellationToken))
+        if (!await MayStartCampaignAboutAsync(dbContext, users, principal, subjectUserId, cancellationToken))
         {
             throw new UnauthorizedAccessException(
-                "A multi-source feedback campaign can only be run for a trainee admitted to your own institution.");
+                principal.IsAdministrator() ? SubjectNotCurrentTrainee : SubjectNotRunByCaller);
         }
+    }
+
+    /// <summary>The refusal, at create, of a subject the caller may not start a campaign about, whoever it names. (T238)</summary>
+    internal const string SubjectNotRunByCaller =
+        "A multi-source feedback campaign can only be run for a trainee in a programme at your own institution.";
+
+    /// <summary>
+    /// The refusal, at create, to an Administrator, of a subject who is not a current trainee: no active profile, or an
+    /// account that is gone or no longer holds Trainee. (T238)
+    /// </summary>
+    internal const string SubjectNotCurrentTrainee =
+        "A multi-source feedback campaign can only be run for a trainee in a programme now: someone whose trainee " +
+        "profile is active and who still holds the Trainee role.";
+
+    /// <summary>
+    /// Whether this caller may start a campaign about this trainee: they run campaigns for the trainee
+    /// (<see cref="IsSubjectInScopeAsync" />), and the trainee is a current trainee
+    /// (<see cref="TraineeScopeResolver.ResolveCurrentAsync" />): an active profile, on an account that exists and still
+    /// holds Trainee. What create asks, and what the campaign form's picker offers by (<see cref="CampaignSubjectsAsync" />).
+    /// (T238)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Only a new campaign asks for a current trainee. An erased trainee's profile stays active under a pseudonym no
+    /// account holds (<c>ErasureExecutor</c>), so until T238 a crafted create could name it; and the form offered graduates
+    /// and trainees who had withdrawn. None of them is on a programme to plan feedback for, and the programme's coverage
+    /// page (<see cref="GetMsfProgrammeCoverageQuery" />) counts none of them.
+    /// </para>
+    /// <para>
+    /// A campaign already created is acted on by <see cref="IsSubjectInScopeAsync" /> alone, which reads the trainee's
+    /// preferred profile, active or not: a trainee who completes while their feedback is being collected leaves a
+    /// campaign their coordinator can still close, release or withdraw, as a review already scheduled stays one its panel
+    /// can finish (<c>CommitteeTraineeScope</c>).
+    /// </para>
+    /// <para>
+    /// A current trainee's active profile is their preferred one, so this is <see cref="IsSubjectInScopeAsync" />'s answer
+    /// with the current-trainee half added, from one resolve.
+    /// </para>
+    /// </remarks>
+    public static async Task<bool> MayStartCampaignAboutAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        ClaimsPrincipal principal,
+        string subjectUserId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(subjectUserId);
+
+        if (IsKeptFromCampaignsAbout(principal, subjectUserId))
+        {
+            return false;
+        }
+
+        var trainee = await TraineeScopeResolver.ResolveCurrentAsync(
+            dbContext, users, subjectUserId.Trim(), cancellationToken);
+
+        return trainee is not null &&
+               (principal.IsAdministrator() || CampaignInstitutionOf(principal) == trainee.InstitutionId);
+    }
+
+    /// <summary>
+    /// The trainees this caller may start a campaign about: the set form of <see cref="MayStartCampaignAboutAsync" />,
+    /// which the campaign form's trainee picker offers from (<see cref="ListMsfCampaignSubjectsQuery" />), so it offers
+    /// exactly whom create accepts. (T238)
+    /// </summary>
+    /// <remarks>
+    /// A Coordinator's are the current trainees at their institution, an Administrator's every current trainee; never the
+    /// caller, and nobody for a caller who holds Trainee (<see cref="IsKeptFromCampaignsAbout" />). One resolve of the
+    /// current trainees (<see cref="TraineeScopeResolver.ResolveAllCurrentAsync" />).
+    /// </remarks>
+    public static async Task<IReadOnlyList<string>> CampaignSubjectsAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (RunsNoCampaigns(principal))
+        {
+            return [];
+        }
+
+        int? institutionId = null;
+        if (!principal.IsAdministrator())
+        {
+            if (CampaignInstitutionOf(principal) is not int callerInstitutionId)
+            {
+                return [];
+            }
+
+            institutionId = callerInstitutionId;
+        }
+
+        var trainees = await TraineeScopeResolver.ResolveAllCurrentAsync(dbContext, users, institutionId, cancellationToken);
+
+        return trainees.Keys
+            .Where(userId => !IsKeptFromCampaignsAbout(principal, userId))
+            .ToArray();
     }
 
     /// <summary>The refusal, at create, of a campaign about the caller themselves. (T224)</summary>
@@ -318,9 +425,10 @@ public static class MsfCampaignRules
     /// <para>
     /// <see cref="IsSubjectInScopeAsync" /> and <see cref="WhereRunBy" /> apply it first, and through them every campaign
     /// command, the campaign page and the campaign list. The campaign form's trainee picker applies it too, so it never
-    /// offers the caller, and offers nobody to a caller who holds Trainee. That is all the picker shares with the create:
-    /// the picker lists every trainee profile at the caller's institution, and the create asks where each trainee trains
-    /// now (<see cref="TraineeScopeResolver" />), so a trainee whose current profile is elsewhere is offered and refused.
+    /// offers the caller, and offers nobody to a caller who holds Trainee. Since T238 the picker offers exactly whom the
+    /// create accepts (<see cref="CampaignSubjectsAsync" />, <see cref="MayStartCampaignAboutAsync" />). Until then it
+    /// listed every trainee profile at the caller's institution, ended ones included, and a trainee whose current profile
+    /// was elsewhere was offered and refused.
     /// </para>
     /// <para>
     /// The trainee is kept out whatever other roles they hold, the Administrator role included, for the reason

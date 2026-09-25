@@ -27,8 +27,10 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// <b>Whose trainees.</b> Those whose record the caller may read (<see cref="TraineeScopeResolver.ReadableAsync" />, T113's
 /// ladder): a Coordinator's own institution's, everyone's for a global Administrator. Someone who holds Trainee reads only
 /// their own record whatever other role they hold (T185's rung), and their own card is on My progress, so they are shown
-/// no programme. Of those, the trainees on a programme now: a profile that is active. A trainee who has completed or left
-/// is on no programme to plan a campaign for.
+/// no programme. Of those, the trainees on a programme now: current trainees (<see cref="TraineeScopeResolver.WhichAreCurrentAsync" />,
+/// T238), whose profile is active and whose account still holds Trainee. A trainee who has completed or left is on no
+/// programme to plan a campaign for, and an erased trainee's pseudonym, whose profile stays active under an id no account
+/// holds, is no trainee to count in "n of m".
 /// </para>
 /// <para>
 /// <b>What a programme is.</b> A curriculum as one institution follows it: its trainees there, and its EPAs in force, the
@@ -106,10 +108,17 @@ public sealed class GetMsfProgrammeCoverageQueryHandler
             return new MsfProgrammeCoverageDto(today, periodDtos, []);
         }
 
-        var readableIds = readable.Keys.ToArray();
-        var profiles = await TraineeScopeResolver.PreferredProfiles(_dbContext)
+        // Of the readable trainees, the current ones (T238): the rule every list of the programme's trainees keeps to.
+        var readableIds = (await TraineeScopeResolver.WhichAreCurrentAsync(_dbContext, _users, readable.Keys, cancellationToken))
+            .ToArray();
+        if (readableIds.Length == 0)
+        {
+            return new MsfProgrammeCoverageDto(today, periodDtos, []);
+        }
+
+        var profiles = await TraineeScopeResolver.ActiveProfiles(_dbContext)
             .AsNoTracking()
-            .Where(profile => profile.IsActive && readableIds.Contains(profile.UserId))
+            .Where(profile => readableIds.Contains(profile.UserId))
             .Select(profile => new
             {
                 profile.UserId,

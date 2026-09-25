@@ -223,6 +223,39 @@ public sealed class GetMsfProgrammeCoverageTests
     // ─── Who is counted ──────────────────────────────────────────────────────
 
     [Fact]
+    public async Task AnErasedTraineesPseudonym_AndAProfileThatOutlivedItsTrainee_AreNotCounted()
+    {
+        // T238. An erasure leaves the profile active under a pseudonym no account holds (ErasureExecutor), and lia's
+        // profile outlived her Trainee role. Neither is a trainee on a programme now: counted, each would be a row, the
+        // first by its bare pseudonym, and every "n of m" would be out by two.
+        await using var db = await SeedAsync();
+        var directory = Directory().WithTrainees("ada", "ben", "cara", "dan", "eve", "fay", "gus", "hal", "ivy", "jo", "kim");
+        var before = await PaediatricsAsync(db, directory);
+
+        Profile(db, 12, "deleted_user_3b4c5d6e", Host, Paediatrics, new DateOnly(2025, 1, 1));
+        Profile(db, 13, "lia", Host, Paediatrics, new DateOnly(2025, 1, 1));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var paediatrics = await PaediatricsAsync(db, directory);
+
+        paediatrics.Trainees.Select(trainee => trainee.UserId)
+            .Should().Equal("ada", "ben", "cara", "dan", "fay", "hal", "jo", "kim");
+        foreach (var epa in paediatrics.Epas)
+        {
+            Counts(paediatrics, epa.EpaCode).Should().Equal(Counts(before, epa.EpaCode), epa.EpaCode);
+        }
+
+        // As without them: both started in 2025, so counted they would have made these 6 and 9.
+        Counts(paediatrics, "PAED-001").Select(count => count.Trainees).Should().Equal(4, 7);
+
+        static async Task<MsfProgrammeDto> PaediatricsAsync(ApplicationDbContext db, FakeUserDirectory directory)
+            => (await new GetMsfProgrammeCoverageQueryHandler(db, directory).Handle(
+                    new GetMsfProgrammeCoverageQuery(TestPrincipals.Coordinator(Host), AsOf), CancellationToken.None))
+                .Programmes.Single(programme => programme.CurriculumId == Paediatrics);
+    }
+
+    [Fact]
     public async Task ACoordinator_CountsOnlyTheirOwnInstitutionsTrainees()
     {
         await using var db = await SeedAsync();
@@ -316,7 +349,7 @@ public sealed class GetMsfProgrammeCoverageTests
             .ToArray();
 
     private static Task<MsfProgrammeCoverageDto> ReadAsync(ApplicationDbContext db, ClaimsPrincipal principal, DateOnly? asOf = null)
-        => new GetMsfProgrammeCoverageQueryHandler(db, Directory()).Handle(
+        => new GetMsfProgrammeCoverageQueryHandler(db, Directory().WithTraineesOf(db)).Handle(
             new GetMsfProgrammeCoverageQuery(principal, asOf ?? AsOf),
             CancellationToken.None);
 

@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
@@ -18,10 +19,12 @@ public sealed class GetSubSpecialityAdminDashboardSummaryQueryHandler
     : IRequestHandler<GetSubSpecialityAdminDashboardSummaryQuery, SubSpecialityAdminDashboardSummaryDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public GetSubSpecialityAdminDashboardSummaryQueryHandler(IApplicationDbContext dbContext)
+    public GetSubSpecialityAdminDashboardSummaryQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<SubSpecialityAdminDashboardSummaryDto> Handle(
@@ -58,13 +61,19 @@ public sealed class GetSubSpecialityAdminDashboardSummaryQueryHandler
                 .Where(p => isAdministrator || p.InstitutionId == institutionId)
                 .ToListAsync(cancellationToken);
 
-        var activeCount = traineeProfiles.Count(p => p.IsActive);
+        // The current trainees (T238), as the committee dashboard reads them: an active profile is not enough. An erased
+        // trainee's profile stays active under a pseudonym no account holds, and a profile can outlive its user's Trainee
+        // role. Counted as active, either made the tile and every "n of m" below disagree with the committee's card, which
+        // shares the list that draws them (EpaTargetCoverageList). Neither is counted as inactive either: the admin
+        // trainees list is where a profile that outlived its trainee is seen, and ended.
+        var current = await TraineeScopeResolver.KeepCurrentAsync(_dbContext, _users, traineeProfiles, cancellationToken);
+        var activeCount = current.Count;
         var inactiveCount = traineeProfiles.Count(p => !p.IsActive);
 
         // Each EPA's target for the current period, through the same calculator as the trainee's own page (T130).
         var coverage = await CurriculumCoverageReader.ReadAsync(
             _dbContext,
-            traineeProfiles.Where(p => p.IsActive).ToList(),
+            current,
             request.AsOf ?? QuotaCalendar.Today(),
             cancellationToken);
 

@@ -94,7 +94,7 @@ public sealed class RunsNoCampaignsPageTests : TestContext
         StandingReason(cut).Should().Be(MsfCampaignRules.TraineeRunsNoCampaigns);
         cut.FindAll("#msf-subject, #msf-template-id, #msf-opens").Should().BeEmpty();
         cut.FindAll("button").Select(Text).Should().NotContain("Create campaign");
-        _sender.Asked.Should().NotContain(nameof(ListTraineesForSpecialityQuery), "no trainee is listed for them");
+        _sender.Asked.Should().NotContain(nameof(ListMsfCampaignSubjectsQuery), "no trainee is listed for them");
 
         // The Quick template card stays: a template is about no trainee (T224 review, T225).
         cut.FindAll("h3").Select(Text).Should().Contain("Quick template");
@@ -161,7 +161,7 @@ public sealed class RunsNoCampaignsPageTests : TestContext
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
                 ListMsfCampaignsForCoordinatorQuery => (IReadOnlyList<MsfCampaignSummaryDto>)[],
-                ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[],
+                ListMsfCampaignSubjectsQuery => (IReadOnlyList<TraineeProfileDto>)[],
                 GetMsfCampaignSetupQuery => null,
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

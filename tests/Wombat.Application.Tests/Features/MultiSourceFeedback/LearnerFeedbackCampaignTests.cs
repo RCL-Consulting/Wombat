@@ -486,7 +486,8 @@ public sealed class LearnerFeedbackCampaignTests
 
     private static Task<MsfCampaignSummaryDto> CreateAsync(
         ApplicationDbContext db, int templateId, int[] epaIds, int minimumRespondentCategories)
-        => new CreateMsfCampaignCommandHandler(db, new ActivityReferenceDataService(db)).Handle(
+        => new CreateMsfCampaignCommandHandler(
+                db, new ActivityReferenceDataService(db), FakeUserDirectory.Trainees(TraineeUserId)).Handle(
             new CreateMsfCampaignCommand(
                 TraineeUserId,
                 templateId,

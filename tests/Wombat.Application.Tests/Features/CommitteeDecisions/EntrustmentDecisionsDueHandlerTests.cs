@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Tests.TestHelpers;
@@ -132,6 +133,30 @@ public sealed class EntrustmentDecisionsDueHandlerTests
         await using var db = await SeededDbAsync();
 
         (await DueAsync(db, 2026, 2)).Items.Should().NotContain(item => item.TraineeUserId == Leaver);
+    }
+
+    [Fact]
+    public async Task AnErasedTraineesPseudonym_AndAProfileThatOutlivedItsTrainee_AreNotListed()
+    {
+        // T238. An erasure leaves the profile active at A under a pseudonym no account holds (ErasureExecutor), and a
+        // profile can outlive its user's Trainee role. Listed, each would owe decisions, the first named by its bare
+        // pseudonym, and each would be offered a Schedule link the scheduling handler refuses.
+        await using var db = await SeededDbAsync();
+        db.TraineeProfiles.AddRange(
+            Profile(7, "deleted_user_7c0ffee1", InstitutionA, new DateOnly(2025, 1, 15)),
+            Profile(8, "former-a", InstitutionA, new DateOnly(2025, 1, 15)));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var directory = Names()
+            .WithTrainees(Trainee, LateStarter, FutureStarter, Leaver, SurgeryTrainee, TraineeAtB)
+            .With(new UserIdentityDetails("former-a", "former-a@test", "Fezile", "Former", InstitutionA, [], [], [WombatRoles.Assessor]));
+
+        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, directory).Handle(
+            new GetEntrustmentDecisionsDueQuery(2026, 2, null, TestPrincipals.Coordinator(InstitutionA), Today),
+            CancellationToken.None);
+
+        due!.Items.Select(item => item.TraineeUserId).Distinct()
+            .Should().BeEquivalentTo([Trainee, LateStarter, SurgeryTrainee]);
     }
 
     // ---- Where a decision stands ------------------------------------------------------------------------------------
@@ -713,7 +738,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
         ApplicationDbContext db, int year, int semester, ClaimsPrincipal? principal = null, int? institutionId = null,
         DateOnly? today = null)
     {
-        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, Names()).Handle(
+        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, Names().WithTraineesOf(db)).Handle(
             new GetEntrustmentDecisionsDueQuery(
                 year, semester, institutionId, principal ?? TestPrincipals.Coordinator(InstitutionA), today ?? Today),
             CancellationToken.None);
@@ -800,7 +825,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
     private static async Task<CommitteeReviewListItemDto> ScheduleAsync(
         ApplicationDbContext db, int panelId, string trainee, int year, int semester, bool formative = false)
     {
-        var scheduled = await new ScheduleCommitteeReviewCommandHandler(db).Handle(
+        var scheduled = await new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
             new ScheduleCommitteeReviewCommand(
                 trainee, panelId, year, semester, new DateOnly(year, 1, 1), new DateOnly(year, 12, 31), new DateOnly(2026, 7, 2),
                 TestPrincipals.Coordinator(InstitutionA), IsFormative: formative),

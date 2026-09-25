@@ -288,7 +288,7 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
     /// </summary>
     private sealed class HandlerSender(Func<ApplicationDbContext> createDb) : IScopedSender
     {
-        private readonly FakeUserDirectory _users = new((Peer, "Palesa Paeds"));
+        private readonly FakeUserDirectory _users = new FakeUserDirectory((Peer, "Palesa Paeds")).WithTrainees(Peer);
 
         public List<object> Received { get; } = [];
 
@@ -307,9 +307,9 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
                 ListSchedulableTraineesQuery query =>
                     await new ListSchedulableTraineesQueryHandler(db, _users).Handle(query, cancellationToken),
                 PreviewCommitteeAgendaQuery query =>
-                    await new PreviewCommitteeAgendaQueryHandler(db).Handle(query, cancellationToken),
+                    await new PreviewCommitteeAgendaQueryHandler(db, _users).Handle(query, cancellationToken),
                 ScheduleCommitteeReviewCommand command =>
-                    await new ScheduleCommitteeReviewCommandHandler(db).Handle(command, cancellationToken),
+                    await new ScheduleCommitteeReviewCommandHandler(db, _users).Handle(command, cancellationToken),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

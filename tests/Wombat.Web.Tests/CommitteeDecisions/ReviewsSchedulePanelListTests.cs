@@ -187,7 +187,9 @@ public sealed class ReviewsSchedulePanelListTests : TestContext
     /// <summary>Sends the page's requests to the real handlers, each on a fresh context over the one store.</summary>
     private sealed class HandlerSender(Func<ApplicationDbContext> createDb) : IScopedSender
     {
-        private readonly FakeUserDirectory _users = new(("paeds-a", "Palesa Paeds"), ("surgery-a", "Sipho Surgery"), ("paeds-b", "Bongani Paeds"));
+        private readonly FakeUserDirectory _users =
+            new FakeUserDirectory(("paeds-a", "Palesa Paeds"), ("surgery-a", "Sipho Surgery"), ("paeds-b", "Bongani Paeds"))
+                .WithTrainees("paeds-a", "surgery-a", "paeds-b");
 
         public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {

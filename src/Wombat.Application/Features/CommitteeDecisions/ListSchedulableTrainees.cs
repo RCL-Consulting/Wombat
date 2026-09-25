@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Domain.CommitteeDecisions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
@@ -12,7 +13,9 @@ public sealed record SchedulableTraineeDto(string UserId, string DisplayName);
 /// <summary>
 /// The trainees the caller may schedule a review of on this panel: exactly the ones
 /// <see cref="ScheduleCommitteeReviewCommand" /> would accept, by the same predicate
-/// (<see cref="CommitteeTraineeScope.MayScheduleFor" />). Empty for a panel that does not exist. (T182)
+/// (<see cref="CommitteeTraineeScope.MayScheduleFor" />) over the same current trainees
+/// (<see cref="Wombat.Application.Common.Security.TraineeScopeResolver.ResolveAllCurrentAsync" />, T238). Empty for a
+/// panel that does not exist. (T182)
 /// </summary>
 public sealed record ListSchedulableTraineesQuery(int PanelId, ClaimsPrincipal Principal)
     : IRequest<IReadOnlyList<SchedulableTraineeDto>>;
@@ -45,23 +48,20 @@ public sealed class ListSchedulableTraineesQueryHandler
         }
 
         var traineeUserIds = await CommitteeTraineeScope.ListSchedulableAsync(
-            _dbContext, request.Principal, panel, cancellationToken);
+            _dbContext, _userAdministrationService, request.Principal, panel, cancellationToken);
 
         if (traineeUserIds.Count == 0)
         {
             return [];
         }
 
-        // A profile with no account to name it by (an erased trainee's) is left out rather than offered as a bare id, by
-        // the filter the scheduling page's panel list applies too (T194 review).
-        var names = await CommitteeTraineeScope.OfferableNamesAsync(
-            _userAdministrationService, traineeUserIds, cancellationToken);
+        // Every trainee the rule keeps is a current trainee, whose account exists (T238), so each has a name; the id is
+        // shown only for one with no name on record. An erased trainee's pseudonym is not among them: the rule leaves it
+        // out, for the handler as here, where until T238 the picker left it out by a filter the handler did not apply.
+        var names = await UserDisplayNames.ResolveAsync(_userAdministrationService, traineeUserIds, cancellationToken);
 
         return traineeUserIds
-            .Where(names.ContainsKey)
-            .Select(userId => new SchedulableTraineeDto(
-                userId,
-                string.IsNullOrWhiteSpace(names[userId]) ? userId : names[userId]))
+            .Select(userId => new SchedulableTraineeDto(userId, names.NameOf(userId)))
             .OrderBy(trainee => trainee.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(trainee => trainee.UserId, StringComparer.Ordinal)
             .ToArray();

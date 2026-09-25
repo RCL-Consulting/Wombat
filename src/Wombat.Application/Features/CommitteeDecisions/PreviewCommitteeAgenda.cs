@@ -43,10 +43,12 @@ public sealed class PreviewCommitteeAgendaQueryValidator : AbstractValidator<Pre
 public sealed class PreviewCommitteeAgendaQueryHandler : IRequestHandler<PreviewCommitteeAgendaQuery, CommitteeAgendaPreviewDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public PreviewCommitteeAgendaQueryHandler(IApplicationDbContext dbContext)
+    public PreviewCommitteeAgendaQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<CommitteeAgendaPreviewDto> Handle(PreviewCommitteeAgendaQuery request, CancellationToken cancellationToken)
@@ -61,7 +63,8 @@ public sealed class PreviewCommitteeAgendaQueryHandler : IRequestHandler<Preview
                 ? new InvalidOperationException("The decision panel could not be found.")
                 : new UnauthorizedAccessException(CommitteeTraineeScope.NotSchedulable));
 
-        await CommitteeTraineeScope.DemandSchedulableAsync(_dbContext, request.Principal, panel, traineeUserId, cancellationToken);
+        await CommitteeTraineeScope.DemandSchedulableAsync(
+            _dbContext, _users, request.Principal, panel, traineeUserId, cancellationToken);
 
         var sitting = new AcademicPeriod(request.AcademicYear, request.Semester);
         var plan = await AgendaPlanner.PlanAsync(

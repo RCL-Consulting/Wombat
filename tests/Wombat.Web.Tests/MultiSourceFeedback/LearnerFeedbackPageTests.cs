@@ -275,7 +275,7 @@ public sealed class LearnerFeedbackPageTests : TestContext
                 new(MsfTemplateId, "Annual MSF", null, false, true, []),
                 new(LearnerFeedbackTemplateId, "Teaching feedback", null, false, true, [], MsfTemplateKind.LearnerFeedback)
             });
-            On<ListTraineesForSpecialityQuery>(_ => new[] { Trainee() });
+            On<ListMsfCampaignSubjectsQuery>(_ => new[] { Trainee() });
         }
 
         public List<object> Received { get; } = [];

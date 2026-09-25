@@ -161,7 +161,7 @@ public sealed class CampaignOpenInFlightTests : TestContext
             object response = request switch
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
-                ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[],
+                ListMsfCampaignSubjectsQuery => (IReadOnlyList<TraineeProfileDto>)[],
                 // Someone is invited: Open is disabled on a draft that invites nobody (T225).
                 GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
                     setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, _state,

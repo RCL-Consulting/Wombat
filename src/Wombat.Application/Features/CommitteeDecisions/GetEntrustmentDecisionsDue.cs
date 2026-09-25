@@ -161,10 +161,12 @@ public sealed record EntrustmentDecisionsDueDto(
 /// <para>
 /// <b>Who and where.</b> An institution's trainees, so it is scoped like one (the T056 family). A global Administrator
 /// must name the institution. Anyone else reads their own, whatever they name: institution B's query ignores
-/// <c>InstitutionId = A</c>. The trainees are those whose active preferred profile is at the institution
-/// (<see cref="TraineeScopeResolver" />), each kept only when the caller administers or coordinates them
-/// (<see cref="TraineeScopeResolver.IsAdministeredOrCoordinatedBy" />): the reach of the roles that schedule reviews, with
-/// no CommitteeMember arm. A trainee whose programme has ended owes the committee nothing, and is not listed.
+/// <c>InstitutionId = A</c>. The trainees are the current trainees whose active profile is at the institution
+/// (<see cref="TraineeScopeResolver.ResolveAllCurrentAsync" />, T238), each kept only when the caller administers or
+/// coordinates them (<see cref="TraineeScopeResolver.IsAdministeredOrCoordinatedBy" />): the reach of the roles that
+/// schedule reviews, with no CommitteeMember arm. A trainee whose programme has ended owes the committee nothing, and is
+/// not listed; nor is an erased trainee's pseudonym, whose profile stays active under an id no account holds, nor anyone
+/// who no longer holds Trainee. The page's Schedule link is then offered only for a trainee scheduling accepts.
 /// </para>
 /// <para>
 /// <b>A trainee first</b> (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185). A registrar who also coordinates, or
@@ -368,15 +370,17 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
     }
 
     /// <summary>
-    /// The trainees at the institution whose preferred profile is active, each kept only if the caller administers or
-    /// coordinates them; a global Administrator keeps every one.
+    /// The current trainees at the institution (T238), each kept only if the caller administers or coordinates them; a
+    /// global Administrator keeps every one.
     /// </summary>
     private async Task<IReadOnlyList<DueTrainee>> TraineesAsync(
         ClaimsPrincipal principal,
         int institutionId,
         CancellationToken cancellationToken)
     {
-        var scopes = await TraineeScopeResolver.ResolveAllAsync(_dbContext, institutionId, cancellationToken);
+        // Current trainees only, by the rule scheduling resolves its trainee by, so every Schedule link this page offers
+        // is one the handler accepts, and a profile that outlived its trainee is not listed (T238).
+        var scopes = await TraineeScopeResolver.ResolveAllCurrentAsync(_dbContext, _users, institutionId, cancellationToken);
         var inScope = scopes
             .Where(pair => principal.IsAdministrator() || TraineeScopeResolver.IsAdministeredOrCoordinatedBy(pair.Value, principal))
             .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
@@ -387,9 +391,9 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
         }
 
         var userIds = inScope.Keys.ToArray();
-        var profiles = await TraineeScopeResolver.PreferredProfiles(_dbContext)
+        var profiles = await TraineeScopeResolver.ActiveProfiles(_dbContext)
             .AsNoTracking()
-            .Where(profile => profile.InstitutionId == institutionId && profile.IsActive && userIds.Contains(profile.UserId))
+            .Where(profile => profile.InstitutionId == institutionId && userIds.Contains(profile.UserId))
             .Select(profile => new { profile.UserId, profile.CurriculumId, profile.ProgrammeStartDate })
             .ToListAsync(cancellationToken);
 

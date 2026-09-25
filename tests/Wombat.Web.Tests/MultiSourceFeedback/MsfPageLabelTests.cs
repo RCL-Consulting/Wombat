@@ -152,7 +152,7 @@ public sealed class MsfPageLabelTests : TestContext
             object response = request switch
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
-                ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[Trainee()],
+                ListMsfCampaignSubjectsQuery => (IReadOnlyList<TraineeProfileDto>)[Trainee()],
                 GetCampaignAggregateReportQuery => Report(),
                 GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
                     setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,

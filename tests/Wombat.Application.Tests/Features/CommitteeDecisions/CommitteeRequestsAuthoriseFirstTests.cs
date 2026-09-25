@@ -482,12 +482,12 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
                 CancellationToken.None),
             "SetPanelBody" => await new SetDecisionPanelBodyCommandHandler(db).Handle(
                 new SetDecisionPanelBodyCommand(panelId, null, principal), CancellationToken.None),
-            "Schedule" => await new ScheduleCommitteeReviewCommandHandler(db).Handle(
+            "Schedule" => await new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
                 new ScheduleCommitteeReviewCommand(
                     PaedsAtA, panelId, 2026, 2, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31),
                     new DateOnly(2027, 1, 8), principal),
                 CancellationToken.None),
-            "PreviewAgenda" => (object)await new PreviewCommitteeAgendaQueryHandler(db).Handle(
+            "PreviewAgenda" => (object)await new PreviewCommitteeAgendaQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
                 new PreviewCommitteeAgendaQuery(PaedsAtA, panelId, 2026, 2, principal, new DateOnly(2026, 9, 24)),
                 CancellationToken.None),
             _ => throw new ArgumentOutOfRangeException(nameof(request), request, null)
@@ -735,8 +735,9 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
     public async Task APanelWhoseOnlySchedulableTraineeWasErased_IsNotOffered_AsItsPickerOffersNobody()
     {
         // An erased trainee's profile keeps its institution and programme under a pseudonym that names no account
-        // (ErasureExecutor), so the scheduling rule still accepts it. The picker leaves it out (T182); until the T194
-        // review the panel list counted it, and offered the Paediatrics panel with nobody to choose.
+        // (ErasureExecutor). Until the T194 review the panel list counted it, and offered the Paediatrics panel with
+        // nobody to choose; since T238 the scheduling rule itself leaves it out (a current trainee holds Trainee), so the
+        // handler refuses it too.
         await using var db = await SeededDbAsync();
         var admin = TestPrincipals.InstitutionalAdmin(InstitutionA);
 
@@ -749,11 +750,13 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
     }
 
     private static FakeUserDirectory EveryoneNamed
-        => new((PaedsAtA, "Palesa Paeds"), (SurgeryAtA, "Sipho Surgery"), (PaedsAtB, "Bongani Paeds"));
+        => new FakeUserDirectory((PaedsAtA, "Palesa Paeds"), (SurgeryAtA, "Sipho Surgery"), (PaedsAtB, "Bongani Paeds"))
+            .WithTrainees(PaedsAtA, SurgeryAtA, PaedsAtB);
 
     /// <summary>A directory in which the paediatric trainee at A has no account: their profile was erased.</summary>
     private static FakeUserDirectory WithPaedsAtAErased
-        => new((SurgeryAtA, "Sipho Surgery"), (PaedsAtB, "Bongani Paeds"));
+        => new FakeUserDirectory((SurgeryAtA, "Sipho Surgery"), (PaedsAtB, "Bongani Paeds"))
+            .WithTrainees(SurgeryAtA, PaedsAtB);
 
     private static async Task<IReadOnlyList<int>> PanelIdsAsync(
         ApplicationDbContext db, ClaimsPrincipal caller, bool forScheduling, FakeUserDirectory? directory = null)

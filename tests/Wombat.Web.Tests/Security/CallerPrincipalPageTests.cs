@@ -305,6 +305,9 @@ public sealed class CallerPrincipalPageTests : TestContext
         cut.Find("#msf-subject").Change(TraineeUserId);
         cut.WaitForState(() => cut.FindAll("input[type=checkbox]").Count > 0);
         _referenceData.CurriculumAskedFor.Should().Equal(TraineeUserId);
+
+        // T238: whom the picker offers is asked as the signed-in coordinator, by the rule the create applies.
+        CallerOf(_sender.Single<ListMsfCampaignSubjectsQuery>().Principal).Should().Be(CoordinatorUserId);
     }
 
     // ─── The account page ────────────────────────────────────────────────────
@@ -346,7 +349,7 @@ public sealed class CallerPrincipalPageTests : TestContext
     private void StubTheEditorsLists()
         => _sender
             .On<ListMsfTemplatesQuery>(_ => new[] { new MsfTemplateDto(1, "Default MSF", null, false, true, []) })
-            .On<ListTraineesForSpecialityQuery>(_ => new[] { Trainee() })
+            .On<ListMsfCampaignSubjectsQuery>(_ => new[] { Trainee() })
             .On<GetMsfCampaignSetupQuery>(query => new MsfCampaignSetupDto(
                 query.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
                 [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse])

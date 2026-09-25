@@ -1,12 +1,14 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Common.Security;
 
@@ -322,6 +324,48 @@ public sealed class TraineeScopeResolverTests
         "a principal with no claims at all" => TestPrincipals.Anonymous(),
         _ => throw new ArgumentOutOfRangeException(nameof(caller), caller, null)
     };
+
+    // ─── Current trainees (T238) ─────────────────────────────────────────────
+
+    [Fact]
+    public async Task ACurrentTrainee_IsAnActiveProfile_OnAnAccountThatStillHoldsTrainee_AndTheThreeFormsAgree()
+    {
+        // The rule committee scheduling and the lists of a programme's trainees read. An erased trainee's profile stays
+        // active under a pseudonym no account holds (ErasureExecutor); a profile can outlive its user's Trainee role; a
+        // trainee who has left has no active profile. None of the three is current, and each form says so alike.
+        await using var db = CreateDb();
+        SeedTree(db);
+        AddProfile(db, id: 1, "current", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
+        AddProfile(db, id: 2, "left", HostInstitution, isActive: false, start: new DateOnly(2022, 1, 1));
+        AddProfile(db, id: 3, "deleted_user_9f8e7d6c", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
+        AddProfile(db, id: 4, "role-taken", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
+        AddProfile(db, id: 5, "elsewhere", OtherInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
+        // A past profile elsewhere and a running one here: the running one is read.
+        AddProfile(db, id: 6, "moved", OtherInstitution, isActive: false, start: new DateOnly(2022, 1, 1));
+        AddProfile(db, id: 7, "moved", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
+        await db.SaveChangesAsync();
+        var users = FakeUserDirectory.Trainees("current", "left", "elsewhere", "moved")
+            .With(new UserIdentityDetails(
+                "role-taken", "role-taken@test", "Rea", "Taken", HostInstitution, [], [], [WombatRoles.Assessor]));
+        string[] everyone = ["current", "left", "deleted_user_9f8e7d6c", "role-taken", "elsewhere", "moved", "no-profile"];
+
+        var atHost = await TraineeScopeResolver.ResolveAllCurrentAsync(db, users, HostInstitution, CancellationToken.None);
+        var anywhere = await TraineeScopeResolver.ResolveAllCurrentAsync(db, users, null, CancellationToken.None);
+        var which = await TraineeScopeResolver.WhichAreCurrentAsync(db, users, everyone, CancellationToken.None);
+
+        atHost.Keys.Should().BeEquivalentTo(["current", "moved"]);
+        atHost["moved"].InstitutionId.Should().Be(HostInstitution);
+        anywhere.Keys.Should().BeEquivalentTo(["current", "moved", "elsewhere"]);
+        which.Should().BeEquivalentTo(["current", "moved", "elsewhere"]);
+        foreach (var userId in everyone)
+        {
+            (await TraineeScopeResolver.ResolveCurrentAsync(db, users, userId, CancellationToken.None))
+                .Should().Be(anywhere.GetValueOrDefault(userId), userId);
+        }
+
+        // Reading a record is not this rule: the one who left is still resolved where they trained.
+        (await TraineeScopeResolver.ResolveAsync(db, "left", CancellationToken.None))!.InstitutionId.Should().Be(HostInstitution);
+    }
 
     private static void SeedTree(ApplicationDbContext db)
     {

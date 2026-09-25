@@ -62,8 +62,24 @@ public sealed class CommitteeTraineeScopeTests
     private const string LeftA = "left-a";
     private const string NoProfile = "no-profile";
 
+    /// <summary>
+    /// An erased trainee: <c>ErasureExecutor</c> rewrote their active profile at A to a pseudonym that names no account.
+    /// </summary>
+    private const string ErasedAtA = "deleted_user_0a1b2c3d";
+
+    /// <summary>An active profile at A whose account no longer holds Trainee: it outlived its trainee. (T238)</summary>
+    private const string NoLongerTraineeAtA = "no-longer-trainee-a";
+
     private static readonly string[] EveryTrainee =
-        [PaedsAtA, NeonatologyAtA, SurgeryAtA, PaedsAtB, MovedFromAToB, LeftA, NoProfile];
+        [PaedsAtA, NeonatologyAtA, SurgeryAtA, PaedsAtB, MovedFromAToB, LeftA, NoProfile, ErasedAtA, NoLongerTraineeAtA];
+
+    private const string NotSchedulable =
+        "A review can only be scheduled on a panel of your institution that covers the trainee's programme, for a " +
+        "trainee at that institution whose programme you oversee.";
+
+    private const string NotCurrentTrainee =
+        "Only a trainee in a programme now can be put before a panel: someone whose trainee profile is active and who " +
+        "still holds the Trainee role.";
 
     private readonly string _databaseName = Guid.NewGuid().ToString();
 
@@ -152,13 +168,69 @@ public sealed class CommitteeTraineeScopeTests
     }
 
     [Fact]
-    public async Task ATraineeWhoMovedToB_IsBsToSchedule_AndOneWhoLeftA_IsStillAs()
+    public async Task ATraineeWhoMovedToB_IsBsToSchedule_AndOneWhoLeftA_IsNobodysToSchedule()
     {
+        // Until T238 a trainee who had left A, with no active profile anywhere, was still A's to schedule: their last
+        // profile was at A. A trainee whose programme has ended owes the committee no new review.
         await using var db = await SeededDbAsync();
 
         (await AcceptsAsync(db, TestPrincipals.Coordinator(InstitutionA), PanelA, MovedFromAToB)).Should().BeFalse();
         (await AcceptsAsync(db, TestPrincipals.Coordinator(InstitutionB), PanelB, MovedFromAToB)).Should().BeTrue();
-        (await AcceptsAsync(db, TestPrincipals.Coordinator(InstitutionA), PanelA, LeftA)).Should().BeTrue();
+        (await AcceptsAsync(db, TestPrincipals.Coordinator(InstitutionA), PanelA, LeftA)).Should().BeFalse();
+        (await AcceptsAsync(db, TestPrincipals.Administrator(), PanelA, LeftA)).Should().BeFalse();
+    }
+
+    // ─── Only a current trainee (T238) ───────────────────────────────────────
+
+    public static TheoryData<string, string> TraineesWhoAreNotCurrent()
+    {
+        var cases = new TheoryData<string, string>();
+        foreach (var caller in new[]
+                 {
+                     "Coordinator of A", "InstitutionalAdmin of A", "SpecialityAdmin of A", "SubSpecialityAdmin of A",
+                     "Administrator"
+                 })
+        {
+            foreach (var trainee in new[] { ErasedAtA, NoLongerTraineeAtA, LeftA })
+            {
+                cases.Add(caller, trainee);
+            }
+        }
+
+        return cases;
+    }
+
+    [Theory]
+    [MemberData(nameof(TraineesWhoAreNotCurrent))]
+    public async Task AProfileThatOutlivedItsTrainee_IsRefusedScheduling_BeforeAnyWrite_AndIsOfferedByNoPicker(
+        string caller, string trainee)
+    {
+        // An erased trainee's profile stays active at A under a pseudonym no account holds (ErasureExecutor), and a
+        // profile can outlive its user's Trainee role: until T238 a crafted request put either before A's panel, since
+        // only the picker left them out. A trainee who left A has no active profile, and was accepted by both.
+        await using var db = await SeededDbAsync();
+        var principal = Caller(caller);
+
+        var schedule = await RefusalAsync(() => ScheduleAsync(db, principal, PanelA, trainee));
+        var preview = await RefusalAsync(() => PreviewAsync(db, principal, PanelA, trainee));
+
+        // Anyone but an Administrator gets the one refusal an out-of-scope trainee gets, which confirms nothing about the
+        // id; an Administrator may see who trains where, and is told what is wrong.
+        var expected = caller == "Administrator" ? NotCurrentTrainee : NotSchedulable;
+        schedule.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(expected);
+        preview.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(expected);
+
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await ReviewCountAsync()).Should().Be(0, "the refusal comes before any write");
+
+        foreach (var panelId in new[] { PanelA, PaediatricsPanelA })
+        {
+            (await PickerAsync(db, principal, panelId)).Select(offered => offered.UserId)
+                .Should().NotContain(trainee, $"panel {panelId}");
+        }
+
+        // The control: the same caller schedules a current trainee on the same panel, so the refusal is the trainee's.
+        (await AcceptsAsync(db, principal, PanelA, PaedsAtA)).Should().BeTrue();
     }
 
     [Fact]
@@ -174,11 +246,7 @@ public sealed class CommitteeTraineeScopeTests
         (await AcceptsAsync(db, administrator, PanelA, SurgeryAtA)).Should().BeTrue("an Administrator oversees everyone");
         (await AcceptsAsync(db, administrator, PanelB, MovedFromAToB)).Should().BeTrue();
 
-        foreach (var (panelId, traineeUserId) in new[]
-                 {
-                     (PanelA, PaedsAtB), (PanelA, MovedFromAToB), (PanelB, PaedsAtA), (PanelA, NoProfile),
-                     (PanelA, "nobody-by-this-id")
-                 })
+        foreach (var (panelId, traineeUserId) in new[] { (PanelA, PaedsAtB), (PanelA, MovedFromAToB), (PanelB, PaedsAtA) })
         {
             var refusal = await RefusalAsync(() => ScheduleAsync(db, administrator, panelId, traineeUserId));
 
@@ -186,6 +254,15 @@ public sealed class CommitteeTraineeScopeTests
                 .Which.Message.Should().Be(
                     "A panel reviews only trainees at its own institution, and this trainee does not train there.",
                     $"panel {panelId}, {traineeUserId}");
+        }
+
+        // No profile, and an id that names nobody, are no current trainee (T238).
+        foreach (var traineeUserId in new[] { NoProfile, "nobody-by-this-id" })
+        {
+            var refusal = await RefusalAsync(() => ScheduleAsync(db, administrator, PanelA, traineeUserId));
+
+            refusal.Should().BeOfType<UnauthorizedAccessException>()
+                .Which.Message.Should().Be(NotCurrentTrainee, traineeUserId);
         }
 
         await SaveAndClearAsAuditPipelineWouldAsync(db);
@@ -504,7 +581,7 @@ public sealed class CommitteeTraineeScopeTests
 
         var offered = await PickerAsync(db, TestPrincipals.Coordinator(InstitutionA), PaediatricsPanelA);
 
-        offered.Select(trainee => trainee.UserId).Should().BeEquivalentTo([PaedsAtA, NeonatologyAtA, LeftA]);
+        offered.Select(trainee => trainee.UserId).Should().BeEquivalentTo([PaedsAtA, NeonatologyAtA]);
     }
 
     // ─── The picker is the gate ──────────────────────────────────────────────
@@ -558,7 +635,6 @@ public sealed class CommitteeTraineeScopeTests
         var offered = await PickerAsync(db, TestPrincipals.Coordinator(InstitutionA), PanelA);
 
         offered.Should().Equal(
-            new SchedulableTraineeDto(LeftA, "Lindiwe Left"),
             new SchedulableTraineeDto(NeonatologyAtA, "Nandi Neonatal"),
             new SchedulableTraineeDto(PaedsAtA, "Palesa Paeds"),
             new SchedulableTraineeDto(SurgeryAtA, "Sipho Surgery"));
@@ -741,7 +817,7 @@ public sealed class CommitteeTraineeScopeTests
 
     private async Task<CommitteeReviewListItemDto> ScheduleAsync(
         ApplicationDbContext db, ClaimsPrincipal principal, int panelId, string traineeUserId)
-        => await new ScheduleCommitteeReviewCommandHandler(db).Handle(
+        => await new ScheduleCommitteeReviewCommandHandler(db, new NamedUsers()).Handle(
             new ScheduleCommitteeReviewCommand(
                 traineeUserId,
                 panelId,
@@ -789,7 +865,7 @@ public sealed class CommitteeTraineeScopeTests
     /// <summary>The scheduling form's agenda preview, for the period <see cref="ScheduleAsync" /> schedules. (T216)</summary>
     private static async Task<CommitteeAgendaPreviewDto> PreviewAsync(
         ApplicationDbContext db, ClaimsPrincipal principal, int panelId, string traineeUserId)
-        => await new PreviewCommitteeAgendaQueryHandler(db).Handle(
+        => await new PreviewCommitteeAgendaQueryHandler(db, new NamedUsers()).Handle(
             new PreviewCommitteeAgendaQuery(traineeUserId, panelId, 2026, 2, principal, new DateOnly(2026, 9, 24)),
             CancellationToken.None);
 
@@ -977,6 +1053,8 @@ public sealed class CommitteeTraineeScopeTests
         AddProfile(db, 5, MovedFromAToB, InstitutionA, 100, isActive: false);
         AddProfile(db, 6, MovedFromAToB, InstitutionB, 100, isActive: true);
         AddProfile(db, 7, LeftA, InstitutionA, 100, isActive: false);
+        AddProfile(db, 8, ErasedAtA, InstitutionA, 100, isActive: true);
+        AddProfile(db, 9, NoLongerTraineeAtA, InstitutionA, 100, isActive: true);
 
         var paediatricsPanel = Panel(PaediatricsPanelA, InstitutionA, "chair-a", "member-a", "external-a");
         paediatricsPanel.Scope = DecisionPanelScope.Speciality;
@@ -1157,7 +1235,10 @@ public sealed class CommitteeTraineeScopeTests
             .UseInMemoryDatabase(_databaseName)
             .Options);
 
-    /// <summary>Names every trainee in the fixture, and no one else.</summary>
+    /// <summary>
+    /// Names every trainee in the fixture, and no one else. Each holds Trainee but the one whose profile outlived the role;
+    /// the erased trainee's pseudonym names no account at all.
+    /// </summary>
     private sealed class NamedUsers : IUserAdministrationService
     {
         private static readonly UserIdentityDetails[] Users =
@@ -1168,11 +1249,13 @@ public sealed class CommitteeTraineeScopeTests
             User(PaedsAtB, "Bongani", "Paeds", InstitutionB),
             User(MovedFromAToB, "Mpho", "Moved", InstitutionB),
             User(LeftA, "Lindiwe", "Left", InstitutionA),
-            User(NoProfile, "Noma", "Profile", InstitutionA)
+            User(NoProfile, "Noma", "Profile", InstitutionA),
+            User(NoLongerTraineeAtA, "Nolwazi", "Former", InstitutionA, WombatRoles.Assessor)
         ];
 
-        private static UserIdentityDetails User(string userId, string first, string last, int institutionId)
-            => new(userId, $"{userId}@test", first, last, institutionId, [], [], [WombatRoles.Trainee]);
+        private static UserIdentityDetails User(
+            string userId, string first, string last, int institutionId, string role = WombatRoles.Trainee)
+            => new(userId, $"{userId}@test", first, last, institutionId, [], [], [role]);
 
         public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<UserIdentityDetails>>(Users);
@@ -1180,8 +1263,10 @@ public sealed class CommitteeTraineeScopeTests
         public Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
             => Task.FromResult(Users.FirstOrDefault(user => user.UserId == userId));
 
+        /// <summary>The role listing, which whether a trainee still holds Trainee is read through (T238).</summary>
         public Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
-            => throw new NotSupportedException();
+            => Task.FromResult<IReadOnlyList<UserIdentityDetails>>(
+                Users.Where(user => user.Roles.Contains(role, StringComparer.Ordinal)).ToArray());
         public Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
         public Task UpdateScopeAsync(string userId, int institutionId, IReadOnlyCollection<int> specialityIds, IReadOnlyCollection<int> subSpecialityIds, CancellationToken cancellationToken = default)

@@ -217,7 +217,7 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
     private async Task<int> ScheduleAsync(string schema, int panelId, int hostId, int year, int semester)
     {
         await using var db = NewContext(schema);
-        var review = await new ScheduleCommitteeReviewCommandHandler(db).Handle(
+        var review = await new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
             new ScheduleCommitteeReviewCommand(
                 TraineeUserId, panelId, year, semester, new DateOnly(year, 1, 1), new DateOnly(year, 12, 31),
                 new DateOnly(2026, 7, 2), Coordinator(hostId)),
@@ -228,7 +228,7 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
     private async Task<EntrustmentDecisionsDueDto> DueAsync(string schema, int hostId, int year, int semester)
     {
         await using var db = NewContext(schema);
-        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, FakeUserDirectory.Empty).Handle(
+        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
             new GetEntrustmentDecisionsDueQuery(year, semester, null, Coordinator(hostId), Today),
             CancellationToken.None);
         return due ?? throw new InvalidOperationException("The query returned nothing.");

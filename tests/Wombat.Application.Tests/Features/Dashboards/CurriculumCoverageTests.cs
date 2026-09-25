@@ -345,6 +345,63 @@ public sealed class CurriculumCoverageTests
     }
 
     [Fact]
+    public async Task CommitteeMemberDashboard_NamesOnlyCurrentTrainees_NotAnErasedPseudonym_NorAProfileThatOutlivedItsTrainee()
+    {
+        // T238. An erased trainee's profile stays active under a pseudonym no account holds (ErasureExecutor), and hana's
+        // profile outlived her Trainee role. Both have met PAED-001 three times this semester: listed, the card would name
+        // the first by its bare pseudonym, and read PAED-001 "3 of 5" of a programme with three trainees.
+        await using var db = CreateDb();
+        SeedProgramme(db);
+        AddTrainee(db, "deleted_user_5e1f0a2b", curriculumId: 1, OnTime);
+        AddTrainee(db, "hana", curriculumId: 1, OnTime);
+        AddRow(db, 1, "deleted_user_5e1f0a2b", 2026, 2, counts: 3);
+        AddRow(db, 1, "hana", 2026, 2, counts: 3);
+        Commit(db);
+
+        var result = await new GetCommitteeMemberDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
+            new GetCommitteeMemberDashboardSummaryQuery(CommitteeMember(subSpecialityIds: [1, 2]), AsOf), CancellationToken.None);
+
+        result.TraineeTargets.Select(trainee => trainee.TraineeUserId).Should().Equal("bongani", "amara", "chen");
+        result.EpaTargets.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
+    }
+
+    [Fact]
+    public async Task EveryStaffDashboard_CountsOnlyCurrentTrainees_SoTheThreeCardsAgree()
+    {
+        // T238 review. The committee card, the speciality admin's and the sub-speciality admin's are drawn by one list
+        // (EpaTargetCoverageList). An erased trainee's profile stays active under a pseudonym no account holds, and hana's
+        // outlived her Trainee role; both have met PAED-001. Until the review only the committee card left them out, so
+        // the admins' cards read PAED-001 "3 of 4" beside the committee's "1 of 2", and their tiles counted six active.
+        await using var db = CreateDb();
+        SeedProgramme(db);
+        AddTrainee(db, "deleted_user_5e1f0a2b", curriculumId: 1, OnTime);
+        AddTrainee(db, "hana", curriculumId: 1, OnTime);
+        AddRow(db, 1, "deleted_user_5e1f0a2b", 2026, 2, counts: 3);
+        AddRow(db, 1, "hana", 2026, 2, counts: 3);
+        Commit(db);
+        var users = TraineeNames().Object;
+
+        var committee = await new GetCommitteeMemberDashboardSummaryQueryHandler(db, users).Handle(
+            new GetCommitteeMemberDashboardSummaryQuery(CommitteeMember(subSpecialityIds: [1, 2]), AsOf), CancellationToken.None);
+        var speciality = await new GetSpecialityAdminDashboardSummaryQueryHandler(db, users).Handle(
+            new GetSpecialityAdminDashboardSummaryQuery(SpecialityAdmin(1), AsOf), CancellationToken.None);
+        var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db, users).Handle(
+            new GetSubSpecialityAdminDashboardSummaryQuery(SubSpecialityAdmin(1), AsOf), CancellationToken.None);
+
+        committee.EpaTargets.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
+        speciality.CurriculumCoverage.Epas.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
+        speciality.CurriculumCoverage.Trainees.Select(trainee => trainee.TraineeUserId)
+            .Should().Equal(committee.TraineeTargets.Select(trainee => trainee.TraineeUserId));
+        speciality.ActiveTraineeCount.Should().Be(4, "amara, bongani, chen and dineo; not the pseudonym, not hana");
+        speciality.InactiveTraineeCount.Should().Be(1, "emeka, whose programme ended; neither of the two is counted here");
+
+        subSpeciality.ActiveTraineeCount.Should().Be(3, "amara, bongani and dineo");
+        subSpeciality.CurriculumCoverage.Epas.Single(epa => epa.EpaCode == "PAED-001").Should().Be(
+            committee.EpaTargets.Single(epa => epa.EpaCode == "PAED-001"),
+            "chen, the one trainee the committee reads beyond sub-speciality 1, is on a curriculum without PAED-001");
+    }
+
+    [Fact]
     public async Task EveryStaffDashboard_KeepsToTheCallersInstitution_ThoughTheCurriculumIsShared()
     {
         // A sub-speciality id is national (College-owned), so on its own it matches every adopting institution's
@@ -360,9 +417,9 @@ public sealed class CurriculumCoverageTests
 
         var committee = await new GetCommitteeMemberDashboardSummaryQueryHandler(db, users.Object).Handle(
             new GetCommitteeMemberDashboardSummaryQuery(CommitteeMember(subSpecialityIds: [1, 2]), AsOf), CancellationToken.None);
-        var speciality = await new GetSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+        var speciality = await new GetSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
             new GetSpecialityAdminDashboardSummaryQuery(SpecialityAdmin(1), AsOf), CancellationToken.None);
-        var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+        var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
             new GetSubSpecialityAdminDashboardSummaryQuery(SubSpecialityAdmin(1), AsOf), CancellationToken.None);
 
         committee.TraineeTargets.Select(trainee => trainee.TraineeUserId).Should().NotContain("gugu");
@@ -398,9 +455,9 @@ public sealed class CurriculumCoverageTests
         AddPending(db, 6, "submitted", null, specialityId: 1, subSpecialityId: 1);
         Commit(db);
 
-        var speciality = await new GetSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+        var speciality = await new GetSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
             new GetSpecialityAdminDashboardSummaryQuery(SpecialityAdmin(1), AsOf), CancellationToken.None);
-        var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+        var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
             new GetSubSpecialityAdminDashboardSummaryQuery(SubSpecialityAdmin(1), AsOf), CancellationToken.None);
 
         speciality.PendingReviewCount.Should().Be(1, "only activity 1 is pending, in speciality 1, at this institution");
@@ -413,7 +470,7 @@ public sealed class CurriculumCoverageTests
                 new Claim(WombatClaimTypes.SpecialityId, "1")
             ],
             "test"));
-        (await new GetSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+        (await new GetSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
                 new GetSpecialityAdminDashboardSummaryQuery(noInstitution, AsOf), CancellationToken.None))
             .PendingReviewCount.Should().Be(0, "a staff member with no institution oversees none, activity 6 included");
 
@@ -424,7 +481,7 @@ public sealed class CurriculumCoverageTests
                 new Claim(WombatClaimTypes.SubSpecialityId, "1")
             ],
             "test"));
-        (await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+        (await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
                 new GetSubSpecialityAdminDashboardSummaryQuery(noInstitutionSubSpeciality, AsOf), CancellationToken.None))
             .PendingReviewCount.Should().Be(0, "a staff member with no institution oversees none, activity 6 included");
 
@@ -435,7 +492,7 @@ public sealed class CurriculumCoverageTests
                 new Claim(WombatClaimTypes.SubSpecialityId, "1")
             ],
             "test"));
-        (await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db).Handle(
+        (await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
                 new GetSubSpecialityAdminDashboardSummaryQuery(administrator, AsOf), CancellationToken.None))
             .PendingReviewCount.Should().Be(3, "a global Administrator counts every institution's, and one stamped with none");
     }
@@ -617,7 +674,7 @@ public sealed class CurriculumCoverageTests
         // the coverage, and sub-speciality 3 belongs to speciality 2, so its trainee is in neither.
         await using var db = CreateDb();
         SeedProgramme(db);
-        var handler = new GetSpecialityAdminDashboardSummaryQueryHandler(db);
+        var handler = new GetSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object);
 
         var result = await handler.Handle(
             new GetSpecialityAdminDashboardSummaryQuery(SpecialityAdmin(specialityId: 1), AsOf),
@@ -648,7 +705,7 @@ public sealed class CurriculumCoverageTests
         // PAED-001 and PAED-011 are not counted.
         await using var db = CreateDb();
         SeedProgramme(db);
-        var handler = new GetSubSpecialityAdminDashboardSummaryQueryHandler(db);
+        var handler = new GetSubSpecialityAdminDashboardSummaryQueryHandler(db, TraineeNames().Object);
 
         var result = await handler.Handle(
             new GetSubSpecialityAdminDashboardSummaryQuery(SubSpecialityAdmin(subSpecialityId: 1), AsOf),
@@ -856,7 +913,9 @@ public sealed class CurriculumCoverageTests
             Person("dineo", "Dineo", "Mokoena"),
             Person("emeka", "Emeka", "Obi"),
             Person("farai", "Farai", "Moyo"),
-            Person("gugu", "Gugu", "Zulu")
+            Person("gugu", "Gugu", "Zulu"),
+            // An account whose Trainee role was taken away while its profile ran on (T238).
+            Person("hana", "Hana", "Former") with { Roles = [WombatRoles.Assessor] }
         };
 
         // Names are looked up for exactly the trainees listed, whatever roles they hold (the review of T130: the
@@ -868,6 +927,17 @@ public sealed class CurriculumCoverageTests
                 (IReadOnlyDictionary<string, string>)people
                     .Where(person => ids.Contains(person.UserId))
                     .ToDictionary(person => person.UserId, person => $"{person.FirstName} {person.LastName}", StringComparer.Ordinal));
+
+        // Who still holds Trainee, of exactly the people asked about: the account half of a current trainee (T238). An
+        // erased trainee's pseudonym names no account, so it is never among them.
+        users
+            .Setup(service => service.WhichHoldRoleAsync(
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, string role, CancellationToken _) =>
+                (IReadOnlySet<string>)people
+                    .Where(person => ids.Contains(person.UserId) && person.Roles.Contains(role))
+                    .Select(person => person.UserId)
+                    .ToHashSet(StringComparer.Ordinal));
         return users;
     }
 

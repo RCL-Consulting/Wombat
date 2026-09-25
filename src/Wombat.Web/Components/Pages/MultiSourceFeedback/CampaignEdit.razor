@@ -589,13 +589,17 @@
   }
 
   /// <summary>
-  /// The trainee profiles at the caller's institution, less the ones <see cref="MsfCampaignRules.IsKeptFromCampaignsAbout" />
-  /// keeps the caller from, whoever else they are (T224): never the caller themselves. A caller who holds Trainee is
-  /// shown no create form and nobody is read for them. The EPA picker reads only a trainee offered here.
+  /// The trainees the create accepts (<see cref="ListMsfCampaignSubjectsQuery" />, T238): the current trainees at the
+  /// caller's institution, or everywhere for an Administrator, less the ones
+  /// <see cref="MsfCampaignRules.IsKeptFromCampaignsAbout" /> keeps the caller from (T224): never the caller themselves. A
+  /// caller who holds Trainee is shown no create form and nobody is read for them. The EPA picker reads only a trainee
+  /// offered here.
   /// </summary>
   /// <remarks>
-  /// Only those two exclusions are the create's. The list is every profile at the caller's institution, and the create
-  /// asks where the trainee trains now, so a trainee whose current profile is elsewhere is still offered, and refused.
+  /// The query leaves out whom the exclusions keep out already; the page asks them again because they read nothing, so
+  /// the caller is never offered whatever the list holds. Until T238 the list was every trainee profile at the caller's
+  /// institution, so it offered graduates, trainees who had withdrawn and a trainee who now trains elsewhere, whom the
+  /// create refused.
   /// </remarks>
   private async Task LoadTraineesAsync()
   {
@@ -606,7 +610,7 @@
     }
 
     var principal = await GetPrincipalAsync();
-    _trainees.AddRange((await Sender.Send(new ListTraineesForSpecialityQuery(principal)))
+    _trainees.AddRange((await Sender.Send(new ListMsfCampaignSubjectsQuery(principal)))
       .Where(trainee => !MsfCampaignRules.IsKeptFromCampaignsAbout(principal, trainee.UserId)));
   }
 

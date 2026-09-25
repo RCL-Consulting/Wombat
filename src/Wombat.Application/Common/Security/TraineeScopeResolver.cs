@@ -156,6 +156,172 @@ public static class TraineeScopeResolver
         return await ResolveProfilesAsync(dbContext, preferred, cancellationToken);
     }
 
+    // ─── Current trainees ───────────────────────────────────────────────────
+    //
+    // A CURRENT trainee is one in a programme now: their profile is active, and their account exists and still holds
+    // Trainee. It is the trainee a committee may be asked to act on afresh, and the trainee a list of the programme's
+    // trainees shows. (T238)
+    //
+    // The profile alone does not say so. An erasure (ErasureExecutor) rewrites the profile's user id to a pseudonym that
+    // names no account and leaves the profile active, so the profile keeps its institution and programme under an id
+    // nobody holds. Completing a programme ends the profile and takes Trainee away; a withdrawal ends the profile and
+    // leaves the role; an administrator can take the role away and leave the profile running. Each of those is a profile
+    // that outlived its trainee, and none of them is someone to schedule a review of, or to list among the trainees.
+    //
+    // The two halves live in two stores: the profile in the application's, the role in Identity's, which Application
+    // reaches only through IUserAdministrationService. So the rule is two reads, and these members are the only place
+    // they are put together: ResolveCurrentAsync for one trainee, ResolveAllCurrentAsync for an institution's, and
+    // WhichAreCurrentAsync for a list that has read the profiles it shows itself.
+    //
+    // Reading someone's record is NOT this rule (MayReadAsync, ReadableAsync): a graduate's record is still theirs, and
+    // their programme's, to read.
+
+    /// <summary>
+    /// Each trainee's active profile: the profile half of a current trainee. At most one per trainee, so it is the
+    /// preferred profile (<see cref="PreferredProfiles" />) of every trainee who has an active one. (T238)
+    /// </summary>
+    public static IQueryable<TraineeProfile> ActiveProfiles(IApplicationDbContext dbContext)
+        => PreferredProfiles(dbContext).Where(profile => profile.IsActive);
+
+    /// <summary>
+    /// Where this trainee trains, or null unless they are a current trainee: an active profile, on an account that exists
+    /// and still holds Trainee. What committee scheduling resolves the trainee it is given by. (T238)
+    /// </summary>
+    /// <remarks>
+    /// Null for an id that names nobody, for a trainee with no profile, for one whose programme has ended, for an erased
+    /// trainee's pseudonym, and for someone who no longer holds Trainee, alike: a caller that refuses on null confirms
+    /// nothing about which.
+    /// </remarks>
+    public static async Task<TraineeScope?> ResolveCurrentAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        string traineeUserId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(users);
+
+        if (string.IsNullOrWhiteSpace(traineeUserId))
+        {
+            return null;
+        }
+
+        var scopes = await KeepHoldersAsync(
+            users,
+            await ResolveProfilesAsync(
+                dbContext,
+                ActiveProfiles(dbContext).Where(entity => entity.UserId == traineeUserId),
+                cancellationToken),
+            cancellationToken);
+
+        return scopes.GetValueOrDefault(traineeUserId);
+    }
+
+    /// <summary>
+    /// Where each current trainee trains, for every current trainee whose active profile is at this institution, or for
+    /// every current trainee when the institution is null: the set form of <see cref="ResolveCurrentAsync" />, which the
+    /// committee's scheduling picker offers from, so the picker offers exactly whom the handler accepts. (T238)
+    /// </summary>
+    /// <remarks>
+    /// Two reads of the application's store for the profiles, as <see cref="ResolveAllAsync" />, and one of the role
+    /// links for the trainees those profiles name, never every holder of Trainee in the country.
+    /// </remarks>
+    public static async Task<IReadOnlyDictionary<string, TraineeScope>> ResolveAllCurrentAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        int? institutionId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(users);
+
+        var active = ActiveProfiles(dbContext);
+        if (institutionId is int onlyInstitutionId)
+        {
+            active = active.Where(entity => entity.InstitutionId == onlyInstitutionId);
+        }
+
+        return await KeepHoldersAsync(
+            users,
+            await ResolveProfilesAsync(dbContext, active, cancellationToken),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Which of <paramref name="traineeUserIds" /> are current trainees: the rule, for a list of trainees that reads the
+    /// profiles it shows itself, and keeps a row only when this answers yes for its trainee. (T238)
+    /// </summary>
+    public static async Task<IReadOnlySet<string>> WhichAreCurrentAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        IEnumerable<string> traineeUserIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(users);
+        ArgumentNullException.ThrowIfNull(traineeUserIds);
+
+        var userIds = traineeUserIds
+            .Where(userId => !string.IsNullOrWhiteSpace(userId))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (userIds.Length == 0)
+        {
+            return new HashSet<string>(StringComparer.Ordinal);
+        }
+
+        var withActiveProfile = await ActiveProfiles(dbContext)
+            .Where(entity => userIds.Contains(entity.UserId))
+            .Select(entity => entity.UserId)
+            .ToListAsync(cancellationToken);
+
+        return withActiveProfile.Count == 0
+            ? new HashSet<string>(StringComparer.Ordinal)
+            : await HoldersAsync(users, withActiveProfile, cancellationToken);
+    }
+
+    /// <summary>
+    /// Of these profiles, the active profile of each current trainee (<see cref="WhichAreCurrentAsync" />): what a list
+    /// that has read its own profiles reads its trainees from. The three staff dashboards' target cards read theirs through
+    /// this, so they count the same trainees. (T238)
+    /// </summary>
+    public static async Task<IReadOnlyList<TraineeProfile>> KeepCurrentAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        IReadOnlyCollection<TraineeProfile> profiles,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+
+        var active = profiles.Where(profile => profile.IsActive).ToList();
+        var current = await WhichAreCurrentAsync(
+            dbContext, users, active.Select(profile => profile.UserId), cancellationToken);
+
+        return active.Where(profile => current.Contains(profile.UserId)).ToList();
+    }
+
+    /// <summary>
+    /// The account half of the rule: these scopes, less any whose trainee's account does not exist or no longer holds
+    /// Trainee (<see cref="HoldersAsync" />).
+    /// </summary>
+    private static async Task<IReadOnlyDictionary<string, TraineeScope>> KeepHoldersAsync(
+        IUserAdministrationService users,
+        IReadOnlyDictionary<string, TraineeScope> scopes,
+        CancellationToken cancellationToken)
+    {
+        if (scopes.Count == 0)
+        {
+            return scopes;
+        }
+
+        var holders = await HoldersAsync(users, scopes.Keys.ToArray(), cancellationToken);
+
+        return scopes
+            .Where(pair => holders.Contains(pair.Key))
+            .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+    }
+
     /// <summary>
     /// The scope of each of these preferred profiles, keyed by user id: the one assembly every resolve reads, one
     /// level at a time, as <see cref="ResolveAsync" /> explains. A curriculum or sub-speciality that cannot be reached
@@ -382,7 +548,9 @@ public static class TraineeScopeResolver
     /// or an appeal body that cannot act, and a quorum that counts someone who cannot. A user record from a role listing
     /// carries only the role it was listed by, never the user's others, so this asks the store's role links
     /// (<see cref="IUserAdministrationService.WhichHoldRoleAsync" />) rather than any record's
-    /// <see cref="UserIdentityDetails.Roles" />, and only about the people named, not every trainee in the country.
+    /// <see cref="UserIdentityDetails.Roles" />, and only about the people named, not every trainee in the country. It is
+    /// also the account half of a current trainee (<see cref="ResolveCurrentAsync" />, T238): an id that names no account
+    /// holds nothing, so an erased trainee's pseudonym is never among the answers.
     /// </remarks>
     public static Task<IReadOnlySet<string>> HoldersAsync(
         IUserAdministrationService users,

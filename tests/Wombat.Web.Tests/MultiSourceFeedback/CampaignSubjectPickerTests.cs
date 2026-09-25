@@ -124,7 +124,7 @@ public sealed class CampaignSubjectPickerTests : TestContext
             object response = request switch
             {
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
-                ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)
+                ListMsfCampaignSubjectsQuery => (IReadOnlyList<TraineeProfileDto>)
                     [Trainee(Registrar, "Thandi"), Trainee(Classmate, "Sipho")],
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

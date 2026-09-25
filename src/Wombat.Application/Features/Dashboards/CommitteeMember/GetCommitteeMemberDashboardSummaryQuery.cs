@@ -50,17 +50,22 @@ public sealed class GetCommitteeMemberDashboardSummaryQueryHandler
             return new CommitteeMemberDashboardSummaryDto(empty.CurrentSemesterName, empty.CurrentSemesterMonths, [], [], 0);
         }
 
-        var traineeProfiles = await _dbContext.Set<TraineeProfile>()
+        var activeProfiles = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Where(p => p.IsActive && subSpecialityIds.Contains(p.Curriculum.SubSpecialityId))
             .Where(p => isAdministrator || p.InstitutionId == institutionId)
             .ToListAsync(cancellationToken);
 
+        // Current trainees only (T238): an active profile is not enough. An erased trainee's profile stays active under a
+        // pseudonym no account holds, and a profile can outlive its user's Trainee role; neither is a trainee for the
+        // committee to weigh, and each would be named here, the first by its bare pseudonym. The speciality and
+        // sub-speciality dashboards keep the same trainees, by the same call, since the three draw one card.
+        var traineeProfiles = await TraineeScopeResolver.KeepCurrentAsync(_dbContext, _users, activeProfiles, cancellationToken);
+
         var coverage = await CurriculumCoverageReader.ReadAsync(
             _dbContext, traineeProfiles, request.AsOf ?? QuotaCalendar.Today(), cancellationToken);
 
-        // Names, not user ids (the old card printed the id in the name column), and only for the trainees
-        // listed: whatever roles they hold now, since nothing ties an active profile to the Trainee role.
+        // Names, not user ids (the old card printed the id in the name column), and only for the trainees listed.
         var names = await UserDisplayNames.ResolveAsync(
             _users, coverage.Trainees.Select(trainee => trainee.TraineeUserId), cancellationToken);
 

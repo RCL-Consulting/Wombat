@@ -1,4 +1,5 @@
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Tests.Shared;
 
@@ -10,7 +11,7 @@ namespace Wombat.Tests.Shared;
 /// <remarks>
 /// Every member that manages users throws: a handler that only shows names, or reads who holds a role, must not be
 /// managing users. The role listing answers the users added with <see cref="With" />; a committee's panel members are
-/// read through it (T165, <c>PanelSeat</c>).
+/// read through it (T165, <c>PanelSeat</c>), and so is whether a trainee still holds Trainee (T238).
 /// </remarks>
 internal sealed class FakeUserDirectory : IUserAdministrationService
 {
@@ -43,6 +44,37 @@ internal sealed class FakeUserDirectory : IUserAdministrationService
         return this;
     }
 
+    /// <summary>
+    /// Accounts that hold Trainee, one per id: whom a fixture's trainee profiles belong to. An active profile on one of
+    /// these is a current trainee (<c>TraineeScopeResolver.ResolveCurrentAsync</c>, T238); a profile whose id is not here
+    /// is one that outlived its trainee, as an erased trainee's pseudonym is.
+    /// </summary>
+    public static FakeUserDirectory Trainees(params string[] userIds)
+        => new FakeUserDirectory().WithTrainees(userIds);
+
+    /// <summary>
+    /// An account that holds Trainee for every trainee profile in <paramref name="db" />, as it stands when this is
+    /// called: a fixture in which every profile belongs to a trainee, so each active one is a current trainee (T238). A
+    /// test about a profile that outlived its trainee builds its directory with <see cref="Trainees" /> instead.
+    /// </summary>
+    public static FakeUserDirectory TraineesOf(IApplicationDbContext db)
+        => new FakeUserDirectory().WithTraineesOf(db);
+
+    /// <summary>Adds an account that holds Trainee for every trainee profile in <paramref name="db" /> (T238).</summary>
+    public FakeUserDirectory WithTraineesOf(IApplicationDbContext db)
+        => WithTrainees(db.Set<TraineeProfile>().Select(profile => profile.UserId).Distinct().ToArray());
+
+    /// <summary>Adds accounts that hold Trainee, one per id (T238).</summary>
+    public FakeUserDirectory WithTrainees(params string[] userIds)
+    {
+        foreach (var userId in userIds)
+        {
+            With(new UserIdentityDetails(userId, $"{userId}@test", userId, string.Empty, null, [], [], ["Trainee"]));
+        }
+
+        return this;
+    }
+
     /// <summary>Adds a user whom the role listing answers for each role they hold.</summary>
     public FakeUserDirectory With(UserIdentityDetails user)
     {
@@ -67,8 +99,18 @@ internal sealed class FakeUserDirectory : IUserAdministrationService
         return Task.FromResult(found);
     }
 
+    /// <summary>
+    /// A user added with <see cref="With" />, with every role they were added with; null for anyone else, as the real
+    /// store answers an id that names no account (an erased trainee's pseudonym among them). (T238)
+    /// </summary>
     public Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
-        => throw new NotSupportedException();
+    {
+        var records = _users.Where(user => string.Equals(user.UserId, userId, StringComparison.Ordinal)).ToArray();
+
+        return Task.FromResult(records.Length == 0
+            ? null
+            : records[0] with { Roles = records.SelectMany(user => user.Roles).Distinct(StringComparer.Ordinal).ToArray() });
+    }
 
     public Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<UserIdentityDetails>>(_users

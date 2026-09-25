@@ -29,7 +29,7 @@ public sealed class ReviewSchedulingScopeGuardTests
     {
         await using var db = SeededDb();
         var panelId = await AddPanelAsync(db, DecisionPanelScope.Institution, institutionId: InstitutionA);
-        var handler = new ScheduleCommitteeReviewCommandHandler(db);
+        var handler = new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db));
 
         var result = await handler.Handle(
             new ScheduleCommitteeReviewCommand(
@@ -53,7 +53,7 @@ public sealed class ReviewSchedulingScopeGuardTests
     {
         await using var db = SeededDb();
         var panelId = await AddPanelAsync(db, DecisionPanelScope.Speciality, institutionId: InstitutionA, specialityId: SpecialityInA);
-        var handler = new ScheduleCommitteeReviewCommandHandler(db);
+        var handler = new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db));
 
         var result = await handler.Handle(
             new ScheduleCommitteeReviewCommand(
@@ -75,7 +75,7 @@ public sealed class ReviewSchedulingScopeGuardTests
     {
         await using var db = SeededDb();
         var panelId = await AddPanelAsync(db, DecisionPanelScope.Institution, institutionId: InstitutionB);
-        var handler = new ScheduleCommitteeReviewCommandHandler(db);
+        var handler = new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db));
 
         var act = () => handler.Handle(
             new ScheduleCommitteeReviewCommand(

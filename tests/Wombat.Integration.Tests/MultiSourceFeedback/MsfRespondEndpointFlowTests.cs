@@ -255,7 +255,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
         // The invitations name the trainee, and opening refuses a trainee with no name on record (T202).
         var users = scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>();
-        (await users.CreateAsync(new WombatIdentityUser
+        var subject = new WombatIdentityUser
         {
             Id = "trainee-1",
             UserName = "trainee-1@example.test",
@@ -263,7 +263,17 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             FirstName = SubjectFirstName,
             LastName = SubjectLastName,
             InstitutionId = _institutionId
-        })).Succeeded.Should().BeTrue("guard: the subject exists as a named user");
+        };
+        (await users.CreateAsync(subject)).Succeeded.Should().BeTrue("guard: the subject exists as a named user");
+
+        // A campaign is started only about a current trainee: an active profile, on an account that holds Trainee (T238).
+        var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        if (!await roles.RoleExistsAsync(WombatRoles.Trainee))
+        {
+            (await roles.CreateAsync(new IdentityRole(WombatRoles.Trainee))).Succeeded.Should().BeTrue();
+        }
+
+        (await users.AddToRoleAsync(subject, WombatRoles.Trainee)).Succeeded.Should().BeTrue("guard: the subject holds Trainee");
 
         // Built with the role and institution claim types the app issues, and with ClaimsIdentity told
         // which claim carries a role - ClaimsPrincipal.IsInRole is the BCL instance method and reads

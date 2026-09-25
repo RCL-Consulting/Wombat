@@ -8,6 +8,7 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.CommitteeDecisions;
 
@@ -19,7 +20,7 @@ public sealed class CommitteeReviewTypeTests
         await using var dbContext = CreateDbContext();
         await SeedAsync(dbContext);
 
-        var handler = new ScheduleCommitteeReviewCommandHandler(dbContext);
+        var handler = new ScheduleCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.TraineesOf(dbContext));
         var dto = await handler.Handle(
             new ScheduleCommitteeReviewCommand(
                 "trainee-1", 20, 2026, 1,
@@ -39,7 +40,7 @@ public sealed class CommitteeReviewTypeTests
         await using var dbContext = CreateDbContext();
         await SeedAsync(dbContext);
 
-        var handler = new ScheduleCommitteeReviewCommandHandler(dbContext);
+        var handler = new ScheduleCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.TraineesOf(dbContext));
         var dto = await handler.Handle(
             new ScheduleCommitteeReviewCommand(
                 "trainee-1", 20, 2026, 1,

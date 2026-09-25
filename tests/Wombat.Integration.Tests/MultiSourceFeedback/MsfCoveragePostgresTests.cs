@@ -262,7 +262,7 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
             MsfProgrammeCoverageDto coverage;
             await using (var db = NewContext(schema, commands))
             {
-                coverage = await new GetMsfProgrammeCoverageQueryHandler(db, FakeUserDirectory.Empty).Handle(
+                coverage = await new GetMsfProgrammeCoverageQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
                     new GetMsfProgrammeCoverageQuery(Coordinator(host), asOf),
                     CancellationToken.None);
             }
@@ -287,7 +287,7 @@ public sealed class MsfCoveragePostgresTests : IAsyncLifetime
             MsfProgrammeCoverageDto everywhere;
             await using (var db = NewContext(schema, administratorCommands))
             {
-                everywhere = await new GetMsfProgrammeCoverageQueryHandler(db, FakeUserDirectory.Empty).Handle(
+                everywhere = await new GetMsfProgrammeCoverageQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
                     new GetMsfProgrammeCoverageQuery(Administrator(), asOf),
                     CancellationToken.None);
             }

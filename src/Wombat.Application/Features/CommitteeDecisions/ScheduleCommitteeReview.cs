@@ -72,10 +72,12 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
     private const string UniqueViolation = "23505";
 
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ScheduleCommitteeReviewCommandHandler(IApplicationDbContext dbContext)
+    public ScheduleCommitteeReviewCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<CommitteeReviewListItemDto> Handle(ScheduleCommitteeReviewCommand request, CancellationToken cancellationToken)
@@ -97,11 +99,11 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
                 : new UnauthorizedAccessException(CommitteeTraineeScope.NotSchedulable);
         }
 
-        // The trainee must train at the panel's institution, and anyone but an Administrator must oversee them; before
-        // T182 only an InstitutionalAdmin's panel was checked, and the trainee not at all. Nothing is written until this
-        // passes.
+        // The trainee must be a current trainee (T238) who trains at the panel's institution, and anyone but an
+        // Administrator must oversee them; before T182 only an InstitutionalAdmin's panel was checked, and the trainee not
+        // at all, and before T238 an erased trainee's pseudonym passed. Nothing is written until this passes.
         await CommitteeTraineeScope.DemandSchedulableAsync(
-            _dbContext, request.Principal, panel, traineeUserId, cancellationToken);
+            _dbContext, _users, request.Principal, panel, traineeUserId, cancellationToken);
 
         var period = new AcademicPeriod(request.AcademicYear, request.Semester);
 

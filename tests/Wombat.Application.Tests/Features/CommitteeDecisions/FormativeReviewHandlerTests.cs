@@ -22,7 +22,7 @@ public sealed class FormativeReviewHandlerTests
         await using var dbContext = CreateDbContext();
         await SeedAsync(dbContext);
 
-        var scheduleHandler = new ScheduleCommitteeReviewCommandHandler(dbContext);
+        var scheduleHandler = new ScheduleCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.TraineesOf(dbContext));
         var dto = await scheduleHandler.Handle(
             new ScheduleCommitteeReviewCommand(
                 "trainee-1", 20, 2026, 1,

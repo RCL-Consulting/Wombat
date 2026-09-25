@@ -665,7 +665,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
 
             var names = TraineeName.Split(' ');
             var users = scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>();
-            (await users.CreateAsync(new WombatIdentityUser
+            var subject = new WombatIdentityUser
             {
                 Id = SubjectUserId,
                 UserName = "trainee-web-1@example.test",
@@ -673,7 +673,13 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
                 FirstName = names[0],
                 LastName = names[1],
                 InstitutionId = institutionId
-            })).Succeeded.Should().BeTrue("guard: the subject exists as a named user");
+            };
+            (await users.CreateAsync(subject)).Succeeded.Should().BeTrue("guard: the subject exists as a named user");
+
+            // A campaign is started only about a current trainee, whose account holds Trainee (T238). The web host's
+            // startup seeds the roles.
+            (await users.AddToRoleAsync(subject, WombatRoles.Trainee)).Succeeded
+                .Should().BeTrue("guard: the subject holds Trainee");
 
             Coordinator = new ClaimsPrincipal(new ClaimsIdentity(
                 [
