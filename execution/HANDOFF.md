@@ -15,20 +15,23 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
   - T205 (the MSF respondent page), T206, T207, T163 and T214 (MSF privacy and links).
   - T160 (the D15 date bounds), T137, T135 (D44), T113, T182 and T183 (security), and 40-odd smaller tasks.
   - See `git log` and each task's "As built".
-- **2026-09-25, merged to master:** F1 (T191, T197, T192, T189 and T193, closed after browser checks) and F2 (T187,
-  T198, T211 and T217). F2 is browser-checked except where a page needs the admin credential. Follow-ups T221–T227 are
-  filed; **T221 is P2** (the catalogue seeder finds its rows by names an admin can edit).
-- **Master suites (`95b65f4`):** 4,895 tests (Domain 595, Application 2226, Infrastructure 888, Architecture 33,
-  Web 1039, Integration 114), all green.
+- **2026-09-25, merged to master and closed after browser checks:**
+  - F1: T191, T197, T192, T189 and T193.
+  - F2: T187, T198, T211 and T217.
+  - G1: T145 (forms retired), T219, T221 and T196 (D48), each with a migration. A `pg_dump` was taken first:
+    `recovery/pre-g1-migrations.dump`.
+- **The committee chain is merged** (T215, T213, T212, T216, T194; `69da24d`..`225763e`). Its browser check is running.
+- **Master suites:** 4,993 at `e6d388b` (G1). The chain's tree was 5,233 (Domain 612, Application 2409,
+  Infrastructure 894, Architecture 33, Web 1135, Integration 150), all green.
 - **Running:**
-  - The committee chain: T215, T213, T212, T216 and T194.
-  - Batch G1: T221, T219, T196 (D48) and T145 (retire forms), each with a migration. The merge agents regenerate them
-    on master's snapshot.
-  - The F2 browser check.
+  - G2: MSF T228, T224, T225 and T210; T220; T209 (D49).
+  - G3: T151 (D50) and T227; T222 and T223.
+  - G4: T229 (P2), T232, T231 and T230.
+  - Committee chain 2: T235 (P2), T237 and T238.
 - **Next:**
-  - Batch G2: T220, T151 (D50) with T227, T222 with T223, T224, T225 and T210, and T209 (D49).
-  - Then UI polish (T226, T188, T190, T178, T199), and T218 after the chain.
-  - T159 (the runbook replay on a fresh dev database) goes last, as the stream's end-to-end check.
+  - UI polish H: T226, T188, T190, T178, T199, T233, T234, T236 and T239.
+  - T218, if the chain's browser check shows it is still open.
+  - T159 (the runbook replay on a fresh dev database) goes last.
 - **Decisions adopted on recommendation**, all in EPA-PROGRAMME § 3; the operator may overrule any of them:
   - D33 part 1; D34 (a link); D35 (an MSF kind); D38(a); D44; D45; D46 (quorum 2, no Administrator bypass).
   - D47 (an interim 5-point MSF scale); D48, D49 and D50 (2026-09-25; T196, T209 and T151).
