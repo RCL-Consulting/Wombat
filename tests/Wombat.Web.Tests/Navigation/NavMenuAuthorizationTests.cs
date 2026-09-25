@@ -298,6 +298,22 @@ public sealed class NavMenuAuthorizationTests : TestContext
         PageFor(href).Should().BeNull($"{href} was the retired assessment-forms screen, so it answers 404");
     }
 
+    // T269: the coordinator's MSF report page sends a campaign's subject to their own copy, whatever role brought them
+    // there, so every role that page admits is admitted to the trainee's page, or the subject would be sent to a
+    // refusal. Not a nav link: the nav still offers MSF Reports to Trainee alone.
+    [Theory]
+    [MemberData(nameof(EveryRole))]
+    public async Task EveryRoleTheCoordinatorsReportPageAdmits_IsAdmittedToTheTraineesCopy(string role)
+    {
+        if (await RefusalOf(PageFor("/msf/reports/1")!, role) is not null)
+        {
+            return;
+        }
+
+        (await RefusalOf(PageFor("/msf/my-reports/1")!, role)).Should().BeNull(
+            $"a {role} who is a campaign's subject is sent from /msf/reports/1 to /msf/my-reports/1");
+    }
+
     private IRenderedComponent<NavMenu> RenderFor(params string[] roles) => RenderFor(roles, []);
 
     private IRenderedComponent<NavMenu> RenderFor(string[] roles, params Claim[] claims)

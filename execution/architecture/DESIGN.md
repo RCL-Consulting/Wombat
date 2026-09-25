@@ -994,7 +994,7 @@ its coordinator can close, release or withdraw after its trainee's programme end
 predicate (`MsfCampaignRules.MayStartCampaignAbout`, T248), and the page lists no trainee on a campaign's own page,
 which has no create form. The campaign page answers a campaign about the caller as it answers an id that names nothing
 (its "Campaign unavailable" card), the campaign list leaves those campaigns out, and the report is theirs only as the
-released trainee's copy.
+released trainee's copy, on their own page (T269, below).
 
 Someone who holds Trainee is told so, whatever role brought them there (`MsfCampaignRules.RunsNoCampaigns`; § A row
 the caller cannot change). The campaign list and the campaign page open with a standing `Alert` (`Kind="warning"`,
@@ -1049,6 +1049,21 @@ review). Otherwise (released, withdrawn, a draft) it shows them as stored, as `<
 the level by its rung's label ("Not given", "Not stated" when empty), with no form (T246 review): a tab that typed a
 narrative and then found the campaign released elsewhere kept its own text in an editable box beside "State: Released",
 where the narrative the trainee was given belonged.
+
+The campaign's own subject never reads the report on this page (T269). A trainee who also coordinates, or an
+Administrator who is the subject, is admitted to it by role, and the handler admits the subject to the released report.
+So the page sends them to their own copy, `/msf/my-reports/{id}`, replacing its address in the history so that Back does
+not return to it, and renders nothing of the report meanwhile, only the `StatePanel`'s skeleton. That is the navigation
+inside a circuit. A page load (the address bar, a bookmark, a link from outside the app) is the page's prerender, where
+the same `NavigateTo` is the server's redirect, a 302 to `/msf/my-reports/{id}` with nothing of the report in it, because
+`Wombat.Web.csproj` sets `BlazorDisableThrowNavigationException`. No page links the subject here (the campaign list and
+the campaign page leave out a campaign about the caller), so the page load is the usual way in; `MsfReportPageFlowTests`
+covers it and `SubjectReadsOwnReportTests` the circuit. Whether a copy is the caller's is the handler's answer
+(`MsfCampaignAggregateReportDto.IsSubjectsCopy`), the same answer that leaves the teaching contexts unnamed (T164). The
+trainee's page shows only a copy marked that way, so neither page names a context to the subject. The flag says which
+page shows a copy, never what a copy may name: the portfolio PDF's copy is not marked, and the trainee reads it. The
+trainee's page admits Coordinator as well as Trainee and Administrator, so that every role this page admits can open the
+page it is sent to. The nav still offers MSF Reports to Trainee alone.
 
 The state's words are `MsfCampaignText.State` ("Under review", never the enum's "UnderReview"), which the campaign list
 and the report print too. Its badge is `MsfCampaignText.StateBadge`:

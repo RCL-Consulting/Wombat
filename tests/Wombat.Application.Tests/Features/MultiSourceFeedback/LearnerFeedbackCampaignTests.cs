@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
@@ -239,6 +240,49 @@ public sealed class LearnerFeedbackCampaignTests
 
         trainees!.TeachingContextCount.Should().Be(2);
         trainees.TeachingContextsResponded.Should().BeNull("the trainee is told how many contexts answered, never which");
+    }
+
+    /// <summary>
+    /// T269: the subject's copy says it is theirs, whatever other role they hold, so the coordinator's report page,
+    /// which a trainee who also coordinates can open, sends them to their own page instead of showing it. It is the
+    /// copy that names no teaching context, by the one answer (<c>MsfCampaignRules.IsCaller</c>). Whoever runs the
+    /// campaign reads a copy that is not theirs, and is told the names.
+    /// </summary>
+    /// <remarks>
+    /// "Coordinator" is a former trainee who now holds only Coordinator: the handler still admits them to their own
+    /// released report, and it is still the subject's copy.
+    /// </remarks>
+    [Theory]
+    [InlineData(WombatRoles.Trainee)]
+    [InlineData(WombatRoles.Trainee, WombatRoles.Coordinator)]
+    [InlineData(WombatRoles.Coordinator)]
+    [InlineData(WombatRoles.Administrator)]
+    [InlineData(WombatRoles.Trainee, WombatRoles.Administrator)]
+    public async Task TheSubjectsCopy_SaysItIsTheirs_WhateverElseTheyHold_AndNamesNoContext(params string[] roles)
+    {
+        await using var db = CreateDb();
+        Seed(db);
+        var campaign = AddUnderReviewCampaign(db, LearnerFeedbackTemplateId, [Paed015],
+            (MsfRespondentCategory.Learner, "Ward round"),
+            (MsfRespondentCategory.Learner, "Ward round"),
+            (MsfRespondentCategory.Learner, "Neonatal night teaching"));
+        await ReleaseAsync(db, campaign.Id, entrustmentLevel: null, narrative: null);
+
+        var subject = TestPrincipals.InRoles(
+            roles, TraineeUserId, roles.Contains(WombatRoles.Administrator) ? null : InstitutionId);
+        var subjects = await ReportAsync(db, campaign.Id, subject);
+        var coordinators = await ReportAsync(db, campaign.Id, Coordinator());
+        var administrators = await ReportAsync(db, campaign.Id, TestPrincipals.Administrator());
+
+        subjects.Should().NotBeNull("the subject reads their own report once it is released, whatever else they hold");
+        subjects!.IsSubjectsCopy.Should().BeTrue();
+        subjects.State.Should().Be(MsfCampaignState.Released);
+        subjects.TeachingContextCount.Should().Be(2);
+        subjects.TeachingContextsResponded.Should().BeNull("the trainee is told how many contexts answered, not which");
+
+        coordinators!.IsSubjectsCopy.Should().BeFalse();
+        coordinators.TeachingContextsResponded.Should().Equal("Neonatal night teaching", "Ward round");
+        administrators!.IsSubjectsCopy.Should().BeFalse();
     }
 
     /// <summary>

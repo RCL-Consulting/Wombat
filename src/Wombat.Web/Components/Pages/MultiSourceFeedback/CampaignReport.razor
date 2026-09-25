@@ -5,6 +5,7 @@
 @inject IScopedSender Sender
 @inject IActivityReferenceDataService ReferenceData
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
 <PageTitle>MSF Report</PageTitle>
 
@@ -214,7 +215,34 @@
   protected override async Task OnParametersSetAsync()
   {
     await LoadAsync();
+
+    if (_report is { IsSubjectsCopy: true })
+    {
+      SendTheSubjectToTheirOwnCopy();
+      return;
+    }
+
     await LoadLevelOptionsAsync();
+  }
+
+  /// <summary>
+  /// The trainee the campaign is about reads their released report on their own page, <c>/msf/my-reports/{id}</c>,
+  /// never here: this is the coordinator's page, with its actions card and every group's card, suppressed ones
+  /// included. A trainee who also coordinates (or an Administrator who is the subject) is admitted to this page by
+  /// role, and the handler admits them to the released report (<c>MsfCampaignRules.CanReadReportAsync</c>), so this
+  /// page is where the two would otherwise meet. Their copy is not shown for the moment the navigation takes: the page
+  /// keeps its skeleton (<c>_loading</c>, which alone hides the report), and the copy is dropped besides, so nothing on
+  /// the page can read it. It replaces this address in the history, so Back does not return here only to be sent on
+  /// again. That is the circuit, where the page renders once more after this returns. A page load runs this in the
+  /// prerender instead, where the navigation is the server's 302 (<c>BlazorDisableThrowNavigationException</c>, so
+  /// nothing throws) and the prerender renders nothing after it: the redirect's body is the page as it stood before the
+  /// report was read, its skeleton, with or without the two lines above (<c>MsfReportPageFlowTests</c>). (T269)
+  /// </summary>
+  private void SendTheSubjectToTheirOwnCopy()
+  {
+    _report = null;
+    _loading = true;
+    Navigation.NavigateTo($"/msf/my-reports/{CampaignId}", replace: true);
   }
 
   /// <summary>

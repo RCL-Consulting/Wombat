@@ -90,6 +90,21 @@ public sealed record MsfCoveredEpaDto(int EpaId, string Code, string Title, bool
 /// a learner-feedback campaign, whoever reads it. Null for multi-source feedback, whose respondents are counted by group
 /// instead.
 /// </param>
+/// <param name="IsSubjectsCopy">
+/// Whether the trainee the campaign is about read this copy: <c>MsfCampaignRules.IsCaller</c>'s answer, the one that
+/// also leaves the teaching contexts unnamed, so the two cannot disagree. Such a copy is always a released report
+/// (<see cref="MsfCampaignRules.CanReadReportAsync" />). The coordinator's report page (<c>/msf/reports/{id}</c>) does
+/// not show it and sends its reader to their own copy (<c>/msf/my-reports/{id}</c>), whatever other role brought them
+/// there: the subject reads the report as a trainee, never beside the coordinator's actions card and the per-group
+/// detail. False in every report built for anyone else, and in the ones that are printed or frozen. (T269)
+/// <para>
+/// It says who asked through <see cref="GetCampaignAggregateReportQuery" />, and so which page shows the copy; it is not
+/// what the copy may show. False is not "whoever runs the campaign": the portfolio PDF's copy is false, and the trainee
+/// reads it. So never name a teaching context because this is false. What a copy may name is decided where it is built,
+/// and <see cref="MsfCampaignAggregateReportDto.TeachingContextsResponded" /> is null in every copy the trainee can be
+/// given, this one included.
+/// </para>
+/// </param>
 public sealed record MsfCampaignAggregateReportDto(
     int CampaignId,
     string SubjectUserId,
@@ -108,7 +123,8 @@ public sealed record MsfCampaignAggregateReportDto(
     DateTime? EvidenceRecordedOn,
     MsfTemplateKind Kind = MsfTemplateKind.Msf,
     IReadOnlyList<string>? TeachingContextsResponded = null,
-    int? TeachingContextCount = null);
+    int? TeachingContextCount = null,
+    bool IsSubjectsCopy = false);
 
 /// <summary>One point a respondent can choose on a scale question: the value stored, and what it means. (T205)</summary>
 public sealed record MsfScalePointDto(int Value, string Label, string? Description);

@@ -72,7 +72,7 @@ public sealed class CampaignReportActionsTests : WombatTestContext
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, TraineeUserId));
         Services.AddSingleton<IScopedSender>(new ReportSender(Report(MsfCampaignState.Released,
             Group(MsfRespondentCategory.PeerDoctor, suppressed: false),
-            Group(MsfRespondentCategory.Ahp, suppressed: false))));
+            Group(MsfRespondentCategory.Ahp, suppressed: false)) with { IsSubjectsCopy = true }));
 
         var cut = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
         cut.WaitForState(() => cut.Markup.Contains("Selected report"));

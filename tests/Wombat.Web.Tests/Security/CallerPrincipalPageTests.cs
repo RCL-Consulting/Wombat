@@ -94,7 +94,8 @@ public sealed class CallerPrincipalPageTests : TestContext
         SignIn(TraineeUserId, WombatRoles.Trainee);
         _sender
             .On<ListMsfCampaignsForTraineeQuery>(_ => new[] { Summary(TraineeUserId) })
-            .On<GetCampaignAggregateReportQuery>(_ => Report(TraineeUserId, MsfCampaignState.Released));
+            .On<GetCampaignAggregateReportQuery>(_ =>
+                Report(TraineeUserId, MsfCampaignState.Released) with { IsSubjectsCopy = true });
 
         var cut = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
         cut.WaitForState(() => cut.Markup.Contains("Selected report"));

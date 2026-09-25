@@ -224,7 +224,7 @@ public sealed class LearnerFeedbackPageTests : TestContext
         _sender
             .On<ListMsfCampaignsForTraineeQuery>(_ => Array.Empty<MsfCampaignSummaryDto>())
             .On<GetCampaignAggregateReportQuery>(_ => Report(MsfTemplateKind.LearnerFeedback, ["Neonatal night teaching", "Ward round"])
-                with { State = MsfCampaignState.Released });
+                with { State = MsfCampaignState.Released, IsSubjectsCopy = true });
         var cut = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, 9));
         cut.WaitForState(() => cut.Markup.Contains("Selected report"));
 

@@ -375,6 +375,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
         var releasedReport = (await SendAsync(new GetCampaignAggregateReportQuery(campaign.Id, Trainee())))!;
         releasedReport.State.Should().Be(MsfCampaignState.Released);
+        releasedReport.IsSubjectsCopy.Should().BeTrue("the trainee's own copy, which /msf/reports sends on (T269)");
         releasedReport.CoordinatorNarrative.Should().Be("Released after coordinator review.");
         releasedReport.ReadyForRelease.Should().BeTrue();
         releasedReport.Categories.Should().OnlyContain(category =>

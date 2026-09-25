@@ -363,6 +363,9 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         public const string RespondUrl = "http://localhost/msf/respond";
         public const string TraineeName = "Thandi Nkosi";
 
+        /// <summary>The trainee's sign-in name, once <see cref="LetTheSubjectSignInAsync" /> has given them a password.</summary>
+        public const string SubjectEmail = "trainee-web-1@example.test";
+
         private const string PaediatricCurriculumName = "Paediatric EPA Curriculum";
         private const string DemoInstitutionShortCode = "DEMO";
         private const string SubjectUserId = "trainee-web-1";
@@ -555,10 +558,17 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
             return client;
         }
 
-        public const string AssessorPassword = "Respondent-Pa55word!";
+        /// <summary>
+        /// The password of everyone a test signs in (<see cref="SignInAsync" />): whoever <see cref="CreateUserAsync" />
+        /// made, and the trainee once <see cref="LetTheSubjectSignInAsync" /> has run.
+        /// </summary>
+        public const string SignInPassword = "Respondent-Pa55word!";
 
         /// <summary>An Assessor at the trainee's institution who signs in with a password: a respondent who is also a user.</summary>
-        public async Task<WombatIdentityUser> CreateAssessorAsync(string email)
+        public Task<WombatIdentityUser> CreateAssessorAsync(string email) => CreateUserAsync(email, WombatRoles.Assessor);
+
+        /// <summary>A user at the trainee's institution who holds <paramref name="role" /> and signs in with a password.</summary>
+        public async Task<WombatIdentityUser> CreateUserAsync(string email, string role)
         {
             await using var scope = Factory.Services.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -568,17 +578,32 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
                 .SingleAsync();
 
             var users = scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>();
-            var assessor = new WombatIdentityUser
+            var user = new WombatIdentityUser
             {
                 UserName = email,
                 Email = email,
                 FirstName = "Signed",
-                LastName = "Assessor",
+                LastName = role,
                 InstitutionId = institutionId
             };
-            (await users.CreateAsync(assessor, AssessorPassword)).Succeeded.Should().BeTrue("guard: the assessor exists");
-            (await users.AddToRoleAsync(assessor, WombatRoles.Assessor)).Succeeded.Should().BeTrue("guard: the assessor holds the role");
-            return assessor;
+            (await users.CreateAsync(user, SignInPassword)).Succeeded.Should().BeTrue($"guard: the {role} exists");
+            (await users.AddToRoleAsync(user, role)).Succeeded.Should().BeTrue($"guard: the {role} holds the role");
+            return user;
+        }
+
+        /// <summary>
+        /// Gives the trainee the campaigns are about a password, and <paramref name="roles" /> beside Trainee, so a browser
+        /// can sign in as them (<see cref="SubjectEmail" />). Once per host: it is their one password.
+        /// </summary>
+        public async Task LetTheSubjectSignInAsync(params string[] roles)
+        {
+            await using var scope = Factory.Services.CreateAsyncScope();
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>();
+            var subject = await users.FindByIdAsync(SubjectUserId);
+            subject.Should().NotBeNull("guard: the subject exists");
+
+            (await users.AddPasswordAsync(subject!, SignInPassword)).Succeeded.Should().BeTrue("guard: the subject has a password");
+            (await users.AddToRolesAsync(subject!, roles)).Succeeded.Should().BeTrue("guard: the subject holds the roles");
         }
 
         /// <summary>Signs a browser in through the sign-in page's own form, as a person does.</summary>
@@ -592,7 +617,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
             [
                 new("__RequestVerificationToken", form.QuerySelector("input[name=__RequestVerificationToken]")!.GetAttribute("value")!),
                 new("Email", email),
-                new("Password", AssessorPassword)
+                new("Password", SignInPassword)
             ]));
 
             signIn.StatusCode.Should().Be(HttpStatusCode.Redirect);
@@ -654,8 +679,8 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
             var subject = new WombatIdentityUser
             {
                 Id = SubjectUserId,
-                UserName = "trainee-web-1@example.test",
-                Email = "trainee-web-1@example.test",
+                UserName = SubjectEmail,
+                Email = SubjectEmail,
                 FirstName = names[0],
                 LastName = names[1],
                 InstitutionId = institutionId

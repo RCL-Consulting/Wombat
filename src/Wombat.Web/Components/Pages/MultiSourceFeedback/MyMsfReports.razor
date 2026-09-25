@@ -1,8 +1,15 @@
 @page "/msf/my-reports"
 @page "/msf/my-reports/{CampaignId:int}"
-@attribute [Authorize(Roles = "Trainee,Administrator")]
+@attribute [Authorize(Roles = "Trainee,Coordinator,Administrator")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+
+@* Coordinator is admitted (T269) because the coordinator's report page sends a campaign's subject here, whatever role
+   brought them there, and every role that page admits must be admitted here, or the subject would be sent to a refusal.
+   A Coordinator who no longer holds Trainee still reads their own released reports: the handlers admit the subject
+   whatever their roles (MsfCampaignRules.CanReadReportAsync, TraineeScopeResolver.MayReadAsync). A coordinator who is
+   nobody's subject finds an empty list, and a report about anyone else is refused below, as an Administrator's is. The
+   nav offers the page to Trainee alone. *@
 
 <PageTitle>My MSF Reports</PageTitle>
 
@@ -109,10 +116,12 @@
       if (CampaignId.HasValue)
       {
         // The handler decides who may read it and returns null otherwise (T113): the subject, once released.
-        // The check below is not that gate; it keeps an Administrator, who may read any report, on a page that
-        // is about their OWN reports.
+        // The check below is not that gate; it keeps an Administrator or a Coordinator, who may read reports about
+        // others, on a page that is about their OWN reports. Whether a copy is the caller's own is the handler's
+        // answer (IsSubjectsCopy, T269), the one that also leaves the teaching contexts unnamed, so this page never
+        // shows a copy that names them (T164).
         _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId.Value, authState.User));
-        if (_report is null || _report.State != MsfCampaignState.Released || _report.SubjectUserId != userId)
+        if (_report is not { State: MsfCampaignState.Released, IsSubjectsCopy: true })
         {
           _report = null;
           throw new InvalidOperationException("The selected report is not available to the current trainee.");

@@ -17,6 +17,8 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// <para>
 /// The trainee's copy counts a learner-feedback campaign's teaching contexts and does not name them; whoever runs the
 /// campaign typed them and is told them (<see cref="MsfCampaignAggregateReportDto.TeachingContextsResponded" />, T164).
+/// It says it is the trainee's (<see cref="MsfCampaignAggregateReportDto.IsSubjectsCopy" />), so the coordinator's
+/// report page, which a trainee who also coordinates can open, sends them to their own copy instead (T269).
 /// </para>
 /// </remarks>
 public sealed record GetCampaignAggregateReportQuery(int CampaignId, ClaimsPrincipal Principal)
@@ -66,9 +68,11 @@ public sealed class GetCampaignAggregateReportQueryHandler
 
         // Only the trainee reads the report about themselves; anyone else CanReadReportAsync admitted runs the campaign.
         // Asked as CanReadReportAsync asks it (MsfCampaignRules.IsCaller), so the two cannot disagree about who the
-        // subject is. (T224 review)
+        // subject is (T224 review). The same answer marks the copy as theirs, which the coordinator's report page reads
+        // to send them to their own (T269).
         var callerIsSubject = MsfCampaignRules.IsCaller(request.Principal, campaign.SubjectUserId);
 
-        return _aggregationService.BuildReport(campaign, recorded[campaign.Id], nameTeachingContexts: !callerIsSubject);
+        return _aggregationService.BuildReport(campaign, recorded[campaign.Id], nameTeachingContexts: !callerIsSubject)
+            with { IsSubjectsCopy = callerIsSubject };
     }
 }
