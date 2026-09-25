@@ -308,6 +308,33 @@ public sealed class MsfCampaignsOutsideSnapshotTests
             .Should().Be(MsfCampaignsOutsideSnapshotDto.None);
     }
 
+    /// <summary>
+    /// T258 review: a withdrawn review weighs nothing more, so nothing is missing from it, whether it had started or not.
+    /// Counted, a review withdrawn while still scheduled was told of a campaign "released after this review started",
+    /// which it never did.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AWithdrawnReview_IsToldNothing(bool startedFirst)
+    {
+        await using var db = CreateDbContext();
+        var review = await SeedReviewAsync(db);
+        if (startedFirst)
+        {
+            await StartAsync(db);
+        }
+
+        db.MsfCampaigns.AddRange(Campaign(51, MsfCampaignState.UnderReview), Campaign(52, MsfCampaignState.Released));
+        await db.SaveChangesAsync();
+        (await CountAsync(db, Chair)).Total.Should().BeGreaterThan(0, "the setup: the review open, it is told");
+
+        review.Withdraw(CommitteeReview.WithdrawnTraineeErased, InWindow.AddDays(60));
+        await db.SaveChangesAsync();
+
+        (await CountAsync(db, Chair)).Should().Be(MsfCampaignsOutsideSnapshotDto.None);
+    }
+
     [Fact]
     public async Task TheTraineeBeforeRatification_IsRefusedByTheLadder()
     {

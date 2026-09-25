@@ -251,6 +251,8 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
     [InlineData(CommitteeReviewState.Ratified, Concluded)]
     [InlineData(CommitteeReviewState.UnderAppeal, Concluded)]
     [InlineData(CommitteeReviewState.Final, Concluded)]
+    // T258 review: a withdrawn review may never have started, so it is not told of "after the review started".
+    [InlineData(CommitteeReviewState.Withdrawn, "Read live, though the review was withdrawn: nothing more is decided at it.")]
     public void TheLiveSentence_FitsWhereTheReviewStands(CommitteeReviewState state, string expected)
     {
         var cut = RenderPanel(

@@ -18,6 +18,11 @@ public static class CommitteeDecisionWording
     /// <summary>The outcome of a formative review, which records no binding decision.</summary>
     public const string FormativeOutcome = "No binding decision";
 
+    /// <summary>
+    /// The outcome of a review withdrawn while it was open (T258): nothing was ratified at it, whatever it had recorded.
+    /// </summary>
+    public const string WithdrawnOutcome = "None: the review was withdrawn";
+
     /// <summary>What an entrustment-only review decides, said to the panel until it is ratified.</summary>
     public const string EntrustmentOnlyForThePanel =
         "This review decides entrustment only. Its decision is the entrustment decisions staged below, and it records no " +
@@ -56,13 +61,31 @@ public static class CommitteeDecisionWording
     public const string EntrustmentOnlySeeTheAgenda = "What it decided on each EPA is on its agenda below.";
 
     /// <summary>
-    /// What an entrustment-only review decides, said to the panel in <paramref name="state" />: the decisions staged below
-    /// until it is ratified, the decisions it issued after.
+    /// What an entrustment-only review was to decide, said to the panel once it is withdrawn (T258 review): nothing is
+    /// staged at it, and it issued nothing.
     /// </summary>
-    public static string EntrustmentOnlyPanelNote(CommitteeReviewState state)
-        => state is CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final
-            ? EntrustmentOnlyIssuedForThePanel
-            : EntrustmentOnlyForThePanel;
+    public const string EntrustmentOnlyWithdrawnForThePanel =
+        "This review was to decide entrustment only. It was withdrawn before it was ratified, so it issued no entrustment " +
+        "decision, and it records no progression category.";
+
+    /// <summary>
+    /// What an entrustment-only review decides, said to the panel in <paramref name="state" />: the decisions staged below
+    /// until it is ratified, the decisions it issued after, and none once it is withdrawn (T258 review).
+    /// </summary>
+    public static string EntrustmentOnlyPanelNote(CommitteeReviewState state) => state switch
+    {
+        CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final =>
+            EntrustmentOnlyIssuedForThePanel,
+        CommitteeReviewState.Withdrawn => EntrustmentOnlyWithdrawnForThePanel,
+        _ => EntrustmentOnlyForThePanel
+    };
+
+    /// <summary>
+    /// Said above a decision recorded at a review that was then withdrawn (T258 review): its category is what the panel
+    /// recorded, and it was never ratified, so it decided nothing.
+    /// </summary>
+    public const string WithdrawnDecisionNote =
+        "Recorded, and never ratified: the review was withdrawn before it was, so this decision took no effect.";
 
     /// <summary>The review's type as a heading or a detail line says it: "Entrustment-only review".</summary>
     public static string ReviewTypeLabel(CommitteeReviewType type) => type switch
@@ -103,12 +126,19 @@ public static class CommitteeDecisionWording
         => category is { } value ? CategoryLabel(value) : EntrustmentOnlyOutcome;
 
     /// <summary>
-    /// A listed review's outcome: no binding decision for a formative review, pending until the decision is recorded, then
-    /// the decision's outcome (<see cref="OutcomeLabel" />).
+    /// A listed review's outcome: none for a withdrawn review, no binding decision for a formative review, pending until the
+    /// decision is recorded, then the decision's outcome (<see cref="OutcomeLabel" />).
     /// </summary>
     public static string OutcomeLabel(CommitteeReviewListItemDto review)
     {
         ArgumentNullException.ThrowIfNull(review);
+
+        // Asked first: a review decided and then withdrawn holds a decision that was never ratified, and one never decided
+        // is not pending, since nothing more is decided at it (T258).
+        if (review.State == CommitteeReviewState.Withdrawn)
+        {
+            return WithdrawnOutcome;
+        }
 
         if (review.IsFormative)
         {

@@ -1,5 +1,6 @@
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -95,6 +96,10 @@ internal static class CommitteeDecisionMappings
                 ? review.QuorumShortfall()
                 : null,
             AcademicYear = review.AcademicYear,
-            Semester = review.Semester
+            Semester = review.Semester,
+            // The day, on the South African calendar the erasure ends the trainee's profile on (T258 review): on the UTC
+            // calendar the two disagree for an erasure between 22:00 and midnight.
+            WithdrawnOn = review.WithdrawnOn is { } withdrawnOn ? ProgrammeCalendar.DateOf(withdrawnOn) : null,
+            WithdrawalReason = review.WithdrawalReason
         };
 }

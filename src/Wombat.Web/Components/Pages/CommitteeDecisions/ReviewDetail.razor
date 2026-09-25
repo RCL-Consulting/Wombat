@@ -123,6 +123,12 @@
         <div><dt>Type</dt><dd id="review-type">@CommitteeDecisionWording.ReviewTypeLabel(_review.ReviewType)</dd></div>
         <div><dt>Mode</dt><dd>@(_review.IsFormative ? "Formative (interim check-in, no binding decision)" : "Summative")</dd></div>
         <div><dt>State</dt><dd>@_review.State</dd></div>
+        @* T258: a withdrawn review says when and why, where its state is read. Nothing is offered at it: every action above
+           and below asks for an open state. *@
+        @if (_review.WithdrawnOn is { } withdrawnOn)
+        {
+          <div><dt>Withdrawn</dt><dd id="review-withdrawn">@withdrawnOn.ToString("yyyy-MM-dd"). @_review.WithdrawalReason</dd></div>
+        }
       </dl>
       <FormActions>
         @* T213 review: Start demands, as every chair's action does, that the trainee still trains at the panel's institution
@@ -283,7 +289,10 @@
         {
           @* T213 review: without the form, a review with no decision yet would leave the card a bare heading. Who can
              record one is said in the Review card (#chair-actions-note). *@
-          <p id="no-decision-note" class="muted">No decision has been recorded yet.</p>
+          @* T258 review: nothing more is recorded at a withdrawn review, so it is not "yet". *@
+          <p id="no-decision-note" class="muted">@(_review.State == CommitteeReviewState.Withdrawn
+            ? "No decision was recorded before the review was withdrawn."
+            : "No decision has been recorded yet.")</p>
         }
 
         @if (_review.Decisions.Count > 0)
@@ -292,6 +301,12 @@
             .Select(decision => decision.SupersedesDecisionId)
             .OfType<int>()
             .ToHashSet();
+          @* T258 review: a decision recorded and then withdrawn keeps its category as its heading, the record of what the
+             panel recorded, and is said never to have been ratified. *@
+          if (_review.State == CommitteeReviewState.Withdrawn)
+          {
+            <p id="withdrawn-decision-note" class="muted">@CommitteeDecisionWording.WithdrawnDecisionNote</p>
+          }
           <div class="stack-list">
             @foreach (var decision in _review.Decisions)
             {
@@ -554,6 +569,11 @@
       @if (_review.EvidenceItems.Count == 0 && _review.State == CommitteeReviewState.Scheduled)
       {
         <p>No evidence has been frozen yet. Starting the review captures the current bundle.</p>
+      }
+      else if (_review.EvidenceItems.Count == 0 && _review.StartedOn is null)
+      {
+        @* T258 review: withdrawn while still scheduled, so it never started and froze nothing. *@
+        <p>No evidence was frozen: the review was withdrawn before it started.</p>
       }
       else if (_review.EvidenceItems.Count == 0)
       {
@@ -994,7 +1014,10 @@
   /// progression review with an empty agenda).
   /// </summary>
   private string NoPendingNote
-    => _review?.State is not (CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final)
+    => _review?.State == CommitteeReviewState.Withdrawn
+      // T258 review: withdrawing removed whatever was staged, so "none have been staged" could be false.
+      ? "Nothing is pending: the review was withdrawn, so it issues no STAR, and anything staged at it was removed."
+      : _review?.State is not (CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final)
       ? "No pending entrustment decisions have been staged for this review."
       : _agenda is null
         ? "Nothing is pending: the review is ratified."
@@ -1957,12 +1980,16 @@
        "and when it started. A line marked Due must be staged or deferred with a reason before the decision is recorded; " +
        "the others are optional.";
 
-  private static string AgendaEmpty(CommitteeReviewState state)
-    => state == CommitteeReviewState.Scheduled
-      ? "Nothing is on the agenda yet. Starting the review adds every EPA routed to this panel that is due in its period " +
-        "and not already decided in its window."
-      : "Nothing is on this review's agenda. A decision can still be staged on any EPA of the trainee's curriculum that " +
-        "routes to this panel, and staging it adds it.";
+  private static string AgendaEmpty(CommitteeReviewState state) => state switch
+  {
+    CommitteeReviewState.Scheduled =>
+      "Nothing is on the agenda yet. Starting the review adds every EPA routed to this panel that is due in its period " +
+      "and not already decided in its window.",
+    // T258: nothing more is staged at a withdrawn review.
+    CommitteeReviewState.Withdrawn => "Nothing was on this review's agenda when it was withdrawn.",
+    _ => "Nothing is on this review's agenda. A decision can still be staged on any EPA of the trainee's curriculum that " +
+         "routes to this panel, and staging it adds it."
+  };
 
   private static string AgendaCaption(CommitteeAgendaDto agenda)
   {

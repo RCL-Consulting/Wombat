@@ -18,15 +18,47 @@ using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Infrastructure.DataRights;
 
+/// <summary>
+/// Erases a data subject: every reference to them is moved to a pseudonym no account holds, and their account keeps no
+/// name, address, password, role or login (T026).
+/// </summary>
+/// <remarks>
+/// <para>
+/// What was open about the person is ended, and what was settled is kept under the pseudonym (T258). Ended: every trainee
+/// profile, deactivated on the erasure day; every committee review still open (<see cref="CommitteeReview.OpenStates" />),
+/// withdrawn with its reason, and the decisions staged at it removed, since only ratifying issues one; and every multi-source
+/// feedback campaign about them not yet released, withdrawn, which anonymises its invitations. Kept: ratified reviews and
+/// their appeals, issued STARs, released feedback reports, activities and progress. Until T258 only the first profile moved,
+/// it stayed active, and the open reviews and campaigns ran on under the pseudonym, so a panel could still ratify a review
+/// and a release could still write activities about someone who had left.
+/// </para>
+/// <para>
+/// All of it or none of it: the work runs in one transaction, and a failure leaves nothing tracked, since the audit
+/// pipeline writes its failure row through this same context and would otherwise commit what was still tracked, the
+/// request's approval with it. So a refused erasure leaves the request as it was, to be approved again. The request's
+/// approval and completion are written by this transaction's one save too, with everything else: the approving handler
+/// marks both before it calls this, so no erasure stands under a request left merely approved.
+/// </para>
+/// <para>
+/// A row about the person that changed between being read here and the save (a review ratified, a campaign closed by
+/// the auto-close job, the account updated) fails the save on its concurrency token. That is refused as
+/// <see cref="PersonChanged" />, carrying EF's exception inside, rather than as EF's own message about row counts.
+/// </para>
+/// </remarks>
 public sealed class ErasureExecutor : IErasureExecutor
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly UserManager<WombatIdentityUser> _userManager;
+    private readonly TimeProvider _timeProvider;
 
-    public ErasureExecutor(ApplicationDbContext dbContext, UserManager<WombatIdentityUser> userManager)
+    public ErasureExecutor(
+        ApplicationDbContext dbContext,
+        UserManager<WombatIdentityUser> userManager,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _userManager = userManager;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<DataRightsErasureRecord> ExecuteAsync(
@@ -34,10 +66,59 @@ public sealed class ErasureExecutor : IErasureExecutor
         string pseudonymSalt,
         CancellationToken cancellationToken)
     {
+        // Raw UPDATEs run beside the tracked changes, and UserManager saves this context several times on the way, so
+        // without a transaction a failure part-way would leave the person half erased.
+        await using var transaction = _dbContext.Database.CurrentTransaction is null
+            ? await _dbContext.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+
+        try
+        {
+            var record = await EraseAsync(request, pseudonymSalt, cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return record;
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // As below, and said in words: EF's message names row counts. Carried inside, so the audit pipeline still sees
+            // a refused save (T201).
+            _dbContext.ChangeTracker.Clear();
+            throw new InvalidOperationException(PersonChanged, exception);
+        }
+        catch
+        {
+            // The transaction rolls back when it is disposed. What is still tracked goes too: the audit pipeline saves this
+            // context from its catch (the audit trap), and would commit it, and the request's approval, without the rest.
+            _dbContext.ChangeTracker.Clear();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// The refusal when something about the person changed while they were being erased: nothing is erased, and the
+    /// request stays as it was, to be approved again (T258 review).
+    /// </summary>
+    public const string PersonChanged =
+        "Something about this person changed while they were being erased: a review, a feedback campaign or their account " +
+        "was changed elsewhere at the same moment. Nothing has been erased, and the request has not been approved. " +
+        "Approve it again.";
+
+    private async Task<DataRightsErasureRecord> EraseAsync(
+        DataRightsRequest request,
+        string pseudonymSalt,
+        CancellationToken cancellationToken)
+    {
         var userId = request.RequesterUserId;
         var pseudonym = GeneratePseudonym(userId, pseudonymSalt);
         var retentionReasons = new List<string>();
-        var utcNow = DateTime.UtcNow;
+        var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+
+        // The erasure day on the South African calendar: the last day of every profile it ends (T258, D49).
+        var erasedOn = ProgrammeCalendar.DateOf(utcNow);
 
         // --- Activities: pseudonymise subject and author ---
         var activitiesAsSubject = await _dbContext.Set<Activity>()
@@ -99,10 +180,27 @@ public sealed class ErasureExecutor : IErasureExecutor
             .Where(r => r.TraineeUserId == userId)
             .ToListAsync(cancellationToken);
         foreach (var review in reviewsAsTrainee)
+        {
             review.TraineeUserId = pseudonym;
+
+            // T258: a review still open is withdrawn, so no panel starts, records or ratifies a review of someone who has
+            // left. Only open reviews are asked, and those Withdraw accepts, so it refuses nothing here. A ratified review,
+            // and one under appeal, is settled and kept as it is.
+            if (CommitteeReview.OpenStates.Contains(review.State))
+                review.Withdraw(CommitteeReview.WithdrawnTraineeErased, utcNow);
+        }
 
         if (reviewsAsTrainee.Count > 0)
             retentionReasons.Add("committee_decision");
+
+        // --- Pending entrustment decisions staged at the trainee's reviews (T258) ---
+        // Only ratifying issues a staged decision, and a withdrawn review is never ratified, so what was staged at the
+        // reviews just withdrawn goes. A review ratified already staged nothing that is left: ratifying cleared it.
+        var traineeReviewIds = reviewsAsTrainee.Select(review => review.Id).ToArray();
+        var stagedForTrainee = await _dbContext.Set<PendingEntrustmentDecision>()
+            .Where(pending => traineeReviewIds.Contains(pending.ReviewId))
+            .ToListAsync(cancellationToken);
+        _dbContext.Set<PendingEntrustmentDecision>().RemoveRange(stagedForTrainee);
 
         // --- Committee decisions ---
         await _dbContext.Database.ExecuteSqlInterpolatedAsync(
@@ -159,11 +257,25 @@ public sealed class ErasureExecutor : IErasureExecutor
             cancellationToken);
 
         // --- MSF campaigns: pseudonymise subject, creator, reviewer ---
+        // The invitations are loaded because withdrawing a campaign anonymises them (MsfCampaign.Withdraw): an unloaded
+        // collection is empty, and nothing would be anonymised.
         var campaigns = await _dbContext.Set<MsfCampaign>()
+            .Include(c => c.Invitations)
             .Where(c => c.SubjectUserId == userId || c.CreatedByUserId == userId || c.ReviewedByUserId == userId)
             .ToListAsync(cancellationToken);
         foreach (var campaign in campaigns)
         {
+            // T258: a campaign about the person that is not yet released is withdrawn, which ends it for good: no invitee
+            // is added, it is not opened, closed or released, and no release writes activities about the pseudonym. That
+            // includes one under review, whose report could only be released to someone who has left. A released report
+            // is settled and kept. The states asked are exactly the ones Withdraw accepts (every one but Released and
+            // Withdrawn, so Closed too, which nothing produces today), so it refuses nothing here.
+            if (campaign.SubjectUserId == userId && campaign.State is not
+                    (MsfCampaignState.Released or MsfCampaignState.Withdrawn))
+            {
+                campaign.Withdraw(utcNow);
+            }
+
             if (campaign.SubjectUserId == userId) campaign.SubjectUserId = pseudonym;
             if (campaign.CreatedByUserId == userId) campaign.CreatedByUserId = pseudonym;
             if (campaign.ReviewedByUserId == userId) campaign.ReviewedByUserId = pseudonym;
@@ -187,16 +299,22 @@ public sealed class ErasureExecutor : IErasureExecutor
             if (export.ExportedByUserId == userId) export.ExportedByUserId = pseudonym;
         }
 
-        // --- Trainee profile ---
-        var traineeProfile = await _dbContext.Set<TraineeProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
-        if (traineeProfile is not null)
-            traineeProfile.UserId = pseudonym;
+        // --- Trainee profiles: every one, each ended on the erasure day (T258) ---
+        // A trainee holds one active profile and any number that have ended. Until T258 only the first moved, and it stayed
+        // active. A profile that had already ended keeps its recorded end (TraineeProfile.Erase).
+        var traineeProfiles = await _dbContext.Set<TraineeProfile>()
+            .Where(p => p.UserId == userId)
+            .ToListAsync(cancellationToken);
+        foreach (var traineeProfile in traineeProfiles)
+            traineeProfile.Erase(pseudonym, erasedOn);
 
-        // --- Assessor profile ---
-        var assessorProfile = await _dbContext.Set<AssessorProfile>()
-            .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
-        if (assessorProfile is not null)
+        // --- Assessor profiles: every one (T258) ---
+        // The table holds one per user, but nothing is left under the id whatever it holds. An assessor profile has no
+        // active state to end: it is a directory entry, and the assessor list drops one whose account is gone.
+        var assessorProfiles = await _dbContext.Set<AssessorProfile>()
+            .Where(p => p.UserId == userId)
+            .ToListAsync(cancellationToken);
+        foreach (var assessorProfile in assessorProfiles)
             assessorProfile.UserId = pseudonym;
 
         // --- Invitations (issued by erased user) ---

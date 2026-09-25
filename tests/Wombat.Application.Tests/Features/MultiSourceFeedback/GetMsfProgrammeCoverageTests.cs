@@ -225,7 +225,7 @@ public sealed class GetMsfProgrammeCoverageTests
     [Fact]
     public async Task AnErasedTraineesPseudonym_AndAProfileThatOutlivedItsTrainee_AreNotCounted()
     {
-        // T238. An erasure leaves the profile active under a pseudonym no account holds (ErasureExecutor), and lia's
+        // T238. An erasure left the profile active under a pseudonym until T258 (ErasureExecutor), and lia's
         // profile outlived her Trainee role. Neither is a trainee on a programme now: counted, each would be a row, the
         // first by its bare pseudonym, and every "n of m" would be out by two.
         await using var db = await SeedAsync();

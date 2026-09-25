@@ -42,6 +42,9 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// that no other caller can reach round it.
 /// </para>
 /// <para>
+/// A withdrawn review is told nothing either (T258 review): nothing more is decided at it, so nothing is missing from it.
+/// </para>
+/// <para>
 /// Not narrowed by <c>TraineeScopeResolver.MayReadAsync</c>, deliberately. An External panel member from another
 /// institution passes the review ladder but not that one, and reads the frozen snapshot, released campaigns included,
 /// through the review. Answering them zero would tell them nothing is missing when something is, which is the defect
@@ -101,6 +104,14 @@ public sealed class CountMsfCampaignsOutsideSnapshotQueryHandler
         // The ladder's trainee arm comes first and admits only the trainee's own ratified review, so reaching here
         // in the role means this is the subject reading about themselves.
         if (request.Principal.IsInRole(WombatRoles.Trainee))
+        {
+            return MsfCampaignsOutsideSnapshotDto.None;
+        }
+
+        // A withdrawn review weighs nothing more, so nothing is missing from what it will weigh (T258 review). Counted, one
+        // withdrawn while still scheduled would be told of campaigns "released after this review started", which it never
+        // did.
+        if (review.State == CommitteeReviewState.Withdrawn)
         {
             return MsfCampaignsOutsideSnapshotDto.None;
         }

@@ -83,8 +83,12 @@ public sealed class ApproveDataRightsRequestCommandHandler : IRequestHandler<App
         switch (entity.Type)
         {
             case DataRightsRequestType.Erasure:
+                // Completed before the erasure runs, not after, so the executor's one save writes the approval and the
+                // completion inside its transaction, with the erasure (T258 review). Completed after, it would be the save
+                // below, outside that transaction: were it refused, the erasure would stand under a request left Approved,
+                // which cannot be approved again. A refused erasure clears what is tracked, the completion with it.
+                entity.Complete(utcNow);
                 await _erasureExecutor.ExecuteAsync(entity, erasureSalt!, cancellationToken);
-                entity.Complete(DateTime.UtcNow);
                 break;
 
             case DataRightsRequestType.Access:

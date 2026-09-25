@@ -205,7 +205,7 @@ public sealed class CommitteeTraineeScopeTests
     public async Task AProfileThatOutlivedItsTrainee_IsRefusedScheduling_BeforeAnyWrite_AndIsOfferedByNoPicker(
         string caller, string trainee)
     {
-        // An erased trainee's profile stays active at A under a pseudonym no account holds (ErasureExecutor), and a
+        // An erased trainee's profile stayed active at A under a pseudonym until T258 (ErasureExecutor), and a
         // profile can outlive its user's Trainee role: until T238 a crafted request put either before A's panel, since
         // only the picker left them out. A trainee who left A has no active profile, and was accepted by both.
         await using var db = await SeededDbAsync();

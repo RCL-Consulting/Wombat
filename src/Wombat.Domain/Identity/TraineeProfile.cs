@@ -89,6 +89,31 @@ public sealed class TraineeProfile
     }
 
     /// <summary>
+    /// Hands the profile to an erased person's pseudonym and ends it on the erasure day (T258). An erasure is the person
+    /// leaving: a profile still active is deactivated as a withdrawal is, with <paramref name="erasedOn" /> as its last day
+    /// (<see cref="DeactivatedOn" />, which D49 reads). A profile that had already ended keeps the end it recorded, completion
+    /// or withdrawal: that is settled.
+    /// </summary>
+    /// <remarks>
+    /// Never refuses, unlike <see cref="Deactivate" />: an erasure is the data subject's right and is not held to the
+    /// programme's dates. So a profile whose programme had not yet begun records the erasure day as its end even though it
+    /// is before the start; every reader of <see cref="EndedOn" /> is total for any dates (<c>QuotaWindow.For</c>).
+    /// </remarks>
+    /// <param name="pseudonym">The erased person's pseudonym, which no account holds.</param>
+    /// <param name="erasedOn">The erasure day on the South African calendar.</param>
+    public void Erase(string pseudonym, DateOnly erasedOn)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(pseudonym);
+
+        UserId = pseudonym;
+        if (IsActive)
+        {
+            DeactivatedOn = erasedOn;
+            IsActive = false;
+        }
+    }
+
+    /// <summary>
     /// The checks both ways out of the programme share, run before either changes anything: the profile is still active,
     /// and the day it ends on lies between the programme start and today.
     /// </summary>

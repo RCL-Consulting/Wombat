@@ -15,12 +15,19 @@ public sealed class CommitteeReviewConfiguration : IEntityTypeConfiguration<Comm
         {
             table.HasCheckConstraint("CK_CommitteeReviews_Semester", "\"Semester\" IN (1, 2)");
             table.HasCheckConstraint("CK_CommitteeReviews_AcademicYear", "\"AcademicYear\" BETWEEN 2 AND 9998");
+
+            // A withdrawn review (7) says when and why, and no other review claims either (T258).
+            table.HasCheckConstraint(
+                "CK_CommitteeReviews_Withdrawn",
+                "(\"State\" = 7 AND \"WithdrawnOn\" IS NOT NULL AND \"WithdrawalReason\" IS NOT NULL) OR " +
+                "(\"State\" <> 7 AND \"WithdrawnOn\" IS NULL AND \"WithdrawalReason\" IS NULL)");
         });
         builder.Property(entity => entity.TraineeUserId).HasMaxLength(450).IsRequired();
         builder.Ignore(entity => entity.Period);
         builder.Ignore(entity => entity.DecidesProgression);
         builder.Property(entity => entity.StartedByUserId).HasMaxLength(450);
         builder.Property(entity => entity.RatifiedByUserId).HasMaxLength(450);
+        builder.Property(entity => entity.WithdrawalReason).HasMaxLength(CommitteeReview.WithdrawalReasonMaxLength);
         builder.Property(entity => entity.ReviewPeriodFrom).HasColumnType("date");
         builder.Property(entity => entity.ReviewPeriodTo).HasColumnType("date");
         builder.Property(entity => entity.ScheduledOn).HasColumnType("date");

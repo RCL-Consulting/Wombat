@@ -46,12 +46,20 @@ public sealed class DataRightsCommandHandlerTests
         result.Reason.Should().Be("I want my data.");
     }
 
-    [Fact]
-    public async Task Submit_ErasureRequest_BlockedByActiveCommitteeReview()
+    /// <summary>
+    /// T258 review: no committee review refuses an erasure request. T026 refused one while a review of the requester was
+    /// scheduled, in progress, decided or under appeal; since T258 approving the erasure withdraws an open review and
+    /// keeps one under appeal answerable, so the refusal only contradicted what approval does. The approver decides.
+    /// </summary>
+    [Theory]
+    [InlineData(CommitteeReviewState.Scheduled)]
+    [InlineData(CommitteeReviewState.InProgress)]
+    [InlineData(CommitteeReviewState.Decided)]
+    [InlineData(CommitteeReviewState.UnderAppeal)]
+    public async Task Submit_ErasureRequest_IsAccepted_WhateverTheRequestersCommitteeReviews(CommitteeReviewState state)
     {
         await using var db = CreateDb();
 
-        // Create an active committee review for this user
         db.Set<DecisionPanel>().Add(new DecisionPanel
         {
             Name = "Test Panel",
@@ -61,7 +69,7 @@ public sealed class DataRightsCommandHandlerTests
         });
         await db.SaveChangesAsync();
 
-        db.Set<CommitteeReview>().Add(new CommitteeReview
+        var review = new CommitteeReview
         {
             AcademicYear = 2026,
             Semester = 1,
@@ -70,18 +78,18 @@ public sealed class DataRightsCommandHandlerTests
             ReviewPeriodFrom = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-6)),
             ReviewPeriodTo = DateOnly.FromDateTime(DateTime.UtcNow),
             ScheduledOn = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7))
-        });
+        };
+        db.Set<CommitteeReview>().Add(review);
+        db.Entry(review).Property(entity => entity.State).CurrentValue = state;
         await db.SaveChangesAsync();
 
-        var handler = new SubmitDataRightsRequestCommandHandler(db);
-        var principal = UserPrincipal();
-
-        var act = () => handler.Handle(
-            new SubmitDataRightsRequestCommand(DataRightsRequestType.Erasure, "Please erase my data.", principal),
+        var result = await new SubmitDataRightsRequestCommandHandler(db).Handle(
+            new SubmitDataRightsRequestCommand(DataRightsRequestType.Erasure, "Please erase my data.", UserPrincipal()),
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*active committee review*");
+        result.Type.Should().Be(DataRightsRequestType.Erasure);
+        result.Status.Should().Be(DataRightsRequestStatus.Submitted);
+        (await db.Set<DataRightsRequest>().CountAsync()).Should().Be(1);
     }
 
     [Fact]

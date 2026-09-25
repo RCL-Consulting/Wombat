@@ -533,6 +533,46 @@ Not everything survives the pivot to schema-driven. These stay hardcoded because
    - **Data-subject deletion (T026) must not delete audit entries.** An audit entry records that an *action occurred*; the subject's identity is a foreign key but the record of the action is legally and operationally independent. POPIA/GDPR allows retention of audit data for accountability purposes even after a deletion request. T026's deletion path must null or pseudonymise the `ActorDisplayName` field but leave the entry itself intact.
    - **Retention window is configurable per deployment.** The `AuditLogRetentionJob` uses a 2-year active window (entries older than 2 years are moved to `AuditEntryArchives`). An institution whose governing body specifies a different active period can adjust this window via configuration; the 7-year total retention (2 active + 5 archive) before cold-storage export is the default, not a hard limit. See `INFRASTRUCTURE.md` for the full lifecycle table.
 5. **Data subject rights.** POPIA/GDPR compliance is a regulatory obligation; it must be predictable and testable. Hardcoded.
+   - **Erasure ends what is open about the person and keeps what is settled (T258).** `ErasureExecutor` moves every
+     reference to the person to a pseudonym no account holds, and then:
+     - **Profiles.** Every trainee profile moves, not only the first. One still active is deactivated with the erasure day
+       as its last day (`TraineeProfile.Erase`: `DeactivatedOn`, `IsActive` false; D49 reads it). One that had already
+       ended keeps its recorded end. Every assessor profile moves too. An assessor profile has no active state: it is a
+       directory entry, and the assessor list drops one whose account is gone.
+     - **Committee reviews.** A review still open (Scheduled, InProgress or Decided: `CommitteeReview.OpenStates`) is
+       withdrawn with a recorded reason (`CommitteeReview.Withdraw`, state `Withdrawn`, `WithdrawnOn` and
+       `WithdrawalReason`, which the review page shows, the day on the South African calendar). The decisions staged at it
+       are removed, since only ratifying issues one. Its snapshot, agenda and any unratified decision stay as the record
+       of what happened. The pages read it as withdrawn: its list outcome is "None: the review was withdrawn" (formative
+       too), a decision it recorded is said never to have been ratified, nothing is said to be coming or staged, and the
+       MSF notices beside its snapshot say nothing, since nothing more is weighed at it.
+     - **Multi-source feedback.** Every campaign about the person not yet released is withdrawn (`MsfCampaign.Withdraw`),
+       which anonymises its invitations as any withdrawal does: every state `Withdraw` accepts, which is all but Released
+       and Withdrawn (Draft, Open, UnderReview, and Closed, which nothing produces today). So no invitee is added, and no
+       release writes activities about someone who has left. Under review is included: its report could only be released
+       to the person. A campaign withdrawn by an erasure records no reason, as no campaign withdrawal does.
+     - **Kept, under the pseudonym.** Ratified reviews, and a review under appeal (its decision is ratified; the appeal
+       body can still answer the appeal, which reads no evidence and issues no STAR). Issued STARs, released feedback
+       reports, activities, progress and audit entries.
+   - **No committee review refuses an erasure request (T258 review).** T026 refused a request while a review of the
+     requester was Scheduled, InProgress, Decided or UnderAppeal, because an erasure then left the review running under
+     the pseudonym. Approval now ends the open ones and keeps the one under appeal answerable, so the refusal only
+     contradicted it: a request made before a review was scheduled withdrew it at approval, while one made a day after
+     was refused for the same review. Whether the person may be erased is the approver's decision, taken on the request.
+   - **All of it or none of it.** The erasure runs in one transaction, and a failure leaves nothing tracked. The audit
+     pipeline saves the same context from its catch, so anything still tracked would otherwise commit without the rest,
+     along with the request's approval. The request's approval and its completion are written by the erasure's own save,
+     inside the transaction (the approving handler marks both before the erasure runs), so no erasure stands under a
+     request left merely Approved. A refused erasure leaves the request as it was, ready to approve again. A row about the
+     person that changed while the erasure ran (a campaign closed by the auto-close job, a review ratified) fails the save
+     on its concurrency token, and the approver is told so in words (`ErasureExecutor.PersonChanged`), not EF's.
+   - **Not ended by an erasure, yet:** an activity about the person still in its workflow runs on under the pseudonym and
+     can still be completed and credited; a user id held in an activity's `DataJson` (a nominee field) is not rewritten;
+     the person's address as a respondent on someone else's open campaign stays until that campaign closes; and a review,
+     campaign or profile created about the person while the erasure runs (it reads under READ COMMITTED and locks
+     nothing) lands under the original id. Approving an erasure asks for no confirmation and does not list what it will
+     withdraw.
+   - T238 keeps a pseudonym out of every new scope. T258 ends what was already open when the erasure ran.
 6. **Institutional SSO.** Protocol-level code.
 7. **Notification primitives.** The queue, worker, templates live in code. *Which* events trigger notifications can be data (part of the workflow definition).
 

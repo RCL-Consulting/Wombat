@@ -117,7 +117,8 @@
         <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType)</td>
         <td>@(item.IsFormative ? "Formative" : "Summative")</td>
         <td>@item.State</td>
-        <td>@(item.IsFormative ? "—" : CommitteeDecisionWording.OutcomeLabel(item))</td>
+        @* A withdrawn review says so, formative or not (T258 review): OutcomeLabel asks for it first. *@
+        <td>@(item.IsFormative && item.State != CommitteeReviewState.Withdrawn ? "—" : CommitteeDecisionWording.OutcomeLabel(item))</td>
         <td class="actions-cell">
           <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{item.Id}")">Open</a>
         </td>

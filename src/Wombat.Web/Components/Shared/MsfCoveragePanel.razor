@@ -134,6 +134,9 @@ else
       "after that is shown here but not held in it.",
     null or CommitteeReviewState.InProgress =>
       "Read live: a campaign released after the review started is shown here, though the evidence snapshot does not hold it.",
+    // T258 review: a withdrawn review may never have started, and nothing more is decided at it.
+    CommitteeReviewState.Withdrawn =>
+      "Read live, though the review was withdrawn: nothing more is decided at it.",
     _ =>
       "Read live, so it may differ from what the panel saw: a campaign released after the review started is shown " +
       "here, though the evidence snapshot does not hold it."

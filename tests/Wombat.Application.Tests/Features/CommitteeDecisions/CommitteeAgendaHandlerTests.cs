@@ -108,6 +108,26 @@ public sealed class CommitteeAgendaHandlerTests
     }
 
     [Fact]
+    public async Task AWithdrawnReview_ReadsItsLinesStillDue_AsNotDecided_AndNothingOnItIsOutstanding()
+    {
+        // T258: an erasure withdraws a review still open. What it still held due was not decided, and nothing on it keeps a
+        // review from being ratified that nobody will ratify.
+        await using var db = await SeededDbAsync();
+        var scheduled = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1);
+        (await AgendaAsync(db, scheduled.Id)).OutstandingClosingLines.Should().NotBeEmpty();
+
+        var review = await db.CommitteeReviews.SingleAsync(entity => entity.Id == scheduled.Id);
+        review.Withdraw(CommitteeReview.WithdrawnTraineeErased, DateTime.UtcNow);
+        await SaveAndClearAsync(db);
+
+        var agenda = await AgendaAsync(db, scheduled.Id);
+        agenda.Lines.Should().NotBeEmpty()
+            .And.OnlyContain(line => line.Status == CommitteeAgendaLineStatus.NotDecided && !line.BlocksRatify);
+        agenda.OutstandingClosingLines.Should().BeEmpty();
+        agenda.RatifyBlockedReason.Should().BeNull();
+    }
+
+    [Fact]
     public async Task AFormativeReview_CarriesNoAgenda()
     {
         await using var db = await SeededDbAsync();

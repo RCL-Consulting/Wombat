@@ -55,7 +55,9 @@ public static class CommitteeAgendaText
         CommitteeAgendaLineStatus.Staged => "A decision is staged below.",
         CommitteeAgendaLineStatus.Deferred => line.DeferralReason is null ? null : $"Reason: {line.DeferralReason}",
         CommitteeAgendaLineStatus.Decided => line.EntrustmentDecisionId is int starId ? $"STAR #{starId}." : null,
-        CommitteeAgendaLineStatus.NotDecided => "The review was ratified without deciding it.",
+        CommitteeAgendaLineStatus.NotDecided => reviewState == CommitteeReviewState.Withdrawn
+            ? "The review was withdrawn before deciding it."
+            : "The review was ratified without deciding it.",
         CommitteeAgendaLineStatus.DecidedElsewhere => DecidedElsewhereDetail(line, reviewState),
         _ => null
     };

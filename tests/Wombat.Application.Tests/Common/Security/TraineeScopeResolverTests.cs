@@ -330,9 +330,9 @@ public sealed class TraineeScopeResolverTests
     [Fact]
     public async Task ACurrentTrainee_IsAnActiveProfile_OnAnAccountThatStillHoldsTrainee_AndTheThreeFormsAgree()
     {
-        // The rule committee scheduling and the lists of a programme's trainees read. An erased trainee's profile stays
-        // active under a pseudonym no account holds (ErasureExecutor); a profile can outlive its user's Trainee role; a
-        // trainee who has left has no active profile. None of the three is current, and each form says so alike.
+        // The rule committee scheduling and the lists of a programme's trainees read. Until T258 an erased trainee's
+        // profile stayed active under a pseudonym no account holds (ErasureExecutor), and the rule holds whatever erasure
+        // leaves; a profile can outlive its user's Trainee role; a trainee who has left has no active profile. None of the three is current, and each form says so alike.
         await using var db = CreateDb();
         SeedTree(db);
         AddProfile(db, id: 1, "current", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));

@@ -227,6 +227,15 @@ public sealed record CommitteeReviewDetailDto(
     /// </summary>
     public string? TraineeName { get; init; }
 
+    /// <summary>
+    /// The day the review was withdrawn, or null (<c>CommitteeReview.Withdraw</c>, T258): the South African calendar day of
+    /// the moment it records (<c>ProgrammeCalendar.DateOf</c>), the day an erasure ends the trainee's profile on.
+    /// </summary>
+    public DateOnly? WithdrawnOn { get; init; }
+
+    /// <summary>Why the review was withdrawn, as recorded with the withdrawal, or null (T258).</summary>
+    public string? WithdrawalReason { get; init; }
+
     /// <summary>The rule a decision's attendance is held to, as the review page states it (T165).</summary>
     public static string QuorumRule => CommitteeReview.QuorumRule;
 

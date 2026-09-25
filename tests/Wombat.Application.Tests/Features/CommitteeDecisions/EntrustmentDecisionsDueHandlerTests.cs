@@ -138,7 +138,7 @@ public sealed class EntrustmentDecisionsDueHandlerTests
     [Fact]
     public async Task AnErasedTraineesPseudonym_AndAProfileThatOutlivedItsTrainee_AreNotListed()
     {
-        // T238. An erasure leaves the profile active at A under a pseudonym no account holds (ErasureExecutor), and a
+        // T238. An erasure left the profile active at A under a pseudonym until T258 (ErasureExecutor), and a
         // profile can outlive its user's Trainee role. Listed, each would owe decisions, the first named by its bare
         // pseudonym, and each would be offered a Schedule link the scheduling handler refuses.
         await using var db = await SeededDbAsync();

@@ -175,9 +175,9 @@ public static class MsfCampaignRules
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Only a new campaign asks for a current trainee. An erased trainee's profile stays active under a pseudonym no
-    /// account holds (<c>ErasureExecutor</c>), so until T238 a crafted create could name it; and the form offered graduates
-    /// and trainees who had withdrawn. None of them is on a programme to plan feedback for, and the programme's coverage
+    /// Only a new campaign asks for a current trainee. Until T258 an erased trainee's profile stayed active under a
+    /// pseudonym no account holds (<c>ErasureExecutor</c>), so until T238 a crafted create could name it; and the form
+    /// offered graduates and trainees who had withdrawn. None of them is on a programme to plan feedback for, and the programme's coverage
     /// page (<see cref="GetMsfProgrammeCoverageQuery" />) counts none of them.
     /// </para>
     /// <para>

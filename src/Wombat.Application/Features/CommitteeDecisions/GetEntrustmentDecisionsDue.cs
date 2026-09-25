@@ -165,7 +165,7 @@ public sealed record EntrustmentDecisionsDueDto(
 /// (<see cref="TraineeScopeResolver.ResolveAllCurrentAsync" />, T238), each kept only when the caller administers or
 /// coordinates them (<see cref="TraineeScopeResolver.IsAdministeredOrCoordinatedBy" />): the reach of the roles that
 /// schedule reviews, with no CommitteeMember arm. A trainee whose programme has ended owes the committee nothing, and is
-/// not listed; nor is an erased trainee's pseudonym, whose profile stays active under an id no account holds, nor anyone
+/// not listed; nor is an erased trainee's pseudonym, whose profile stayed active until T258 ended it, nor anyone
 /// who no longer holds Trainee. The page's Schedule link is then offered only for a trainee scheduling accepts.
 /// </para>
 /// <para>

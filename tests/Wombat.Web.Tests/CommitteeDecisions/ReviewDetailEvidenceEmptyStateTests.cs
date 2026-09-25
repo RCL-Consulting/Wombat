@@ -58,6 +58,30 @@ public sealed class ReviewDetailEvidenceEmptyStateTests : TestContext
         cut.Markup.Should().NotContain(NotFrozenYet, "the review has started; there is no Start button to press");
     }
 
+    /// <summary>
+    /// T258 review: a review withdrawn while still scheduled never started, so it froze nothing, and is not told the
+    /// window held nothing when it started. One withdrawn after it started reads as any started review does.
+    /// </summary>
+    [Theory]
+    [InlineData(false, WithdrawnBeforeStart)]
+    [InlineData(true, StartedEmpty)]
+    public void AWithdrawnReviewWithAnEmptySnapshot_SaysWhetherItEverStarted(bool started, string expected)
+    {
+        var review = Review(CommitteeReviewState.Withdrawn, evidence: []);
+        if (!started)
+        {
+            review = review with { StartedOn = null, StartedByUserId = null };
+        }
+
+        var cut = RenderPage(review);
+
+        cut.Markup.Should().Contain(expected);
+        cut.Markup.Should().NotContain(NotFrozenYet, "a withdrawn review is never started");
+        cut.Markup.Should().NotContain(started ? WithdrawnBeforeStart : StartedEmpty);
+    }
+
+    private const string WithdrawnBeforeStart = "No evidence was frozen: the review was withdrawn before it started.";
+
     [Fact]
     public void AStartedReviewWithEvidence_ListsItAndSaysNeither()
     {

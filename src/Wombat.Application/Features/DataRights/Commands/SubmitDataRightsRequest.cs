@@ -50,22 +50,12 @@ public sealed class SubmitDataRightsRequestCommandHandler : IRequestHandler<Subm
             ?? request.Principal.FindFirst(ClaimTypes.Email)?.Value
             ?? userId;
 
-        // Block erasure if the user has an unratified committee review in progress
-        if (request.Type == DataRightsRequestType.Erasure)
-        {
-            var hasActiveReview = _dbContext.Set<Domain.CommitteeDecisions.CommitteeReview>()
-                .Any(review => review.TraineeUserId == userId &&
-                    (review.State == Domain.CommitteeDecisions.CommitteeReviewState.Scheduled ||
-                     review.State == Domain.CommitteeDecisions.CommitteeReviewState.InProgress ||
-                     review.State == Domain.CommitteeDecisions.CommitteeReviewState.Decided ||
-                     review.State == Domain.CommitteeDecisions.CommitteeReviewState.UnderAppeal));
-
-            if (hasActiveReview)
-                throw new InvalidOperationException(
-                    "You cannot request erasure while you have an active committee review. " +
-                    "Please wait until all reviews are ratified or finalized.");
-        }
-
+        // No committee review refuses an erasure request (T258 review). T026 refused one while a review of the requester
+        // was scheduled, in progress, decided or under appeal, because an erasure then left the review running under the
+        // pseudonym. Since T258 approving the erasure ends what is open (ErasureExecutor withdraws an open review) and
+        // keeps what is settled (a review under appeal stays answerable), so the refusal only contradicted it: a request
+        // made before a review was scheduled withdrew it, and one made a day after was refused for the same review.
+        // Whether the person may be erased is the approver's decision.
         var utcNow = DateTime.UtcNow;
         var entity = DataRightsRequest.Create(
             userId,

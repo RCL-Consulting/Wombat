@@ -28,8 +28,9 @@ namespace Wombat.Integration.Tests.Identity;
 /// <para>
 /// Every handler test of the rule fakes the erasure: it adds a <c>deleted_user_*</c> profile, and answers the account
 /// half from a fake directory. This is the check that the rule holds against what an erasure actually leaves: the
-/// profile moved to a pseudonym that no account row holds and still active, and the account itself kept under its old
-/// id with every role taken away.
+/// profile moved to a pseudonym that no account row holds, and the account itself kept under its old id with every role
+/// taken away. Since T258 the erasure also ends the profile, so an active one is put back under each id before the
+/// checks: otherwise the profile half alone refuses both, and the account half goes untested.
 /// </para>
 /// <para>
 /// Isolated the way <c>SsoErasurePostgresTests</c> is: a migrated schema of its own (<c>it_&lt;guid&gt;</c>), registered
@@ -68,12 +69,12 @@ public sealed class ErasedTraineeScopePostgresTests : IAsyncLifetime
         {
             await using var root = await MigratedAndSeededServicesAsync(schema);
 
-            int hostId, panelId, templateId;
+            int hostId, panelId, templateId, curriculumId;
             await using (var arrange = root.CreateAsyncScope())
             {
                 var db = arrange.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 hostId = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
-                var curriculumId = await db.Curricula
+                curriculumId = await db.Curricula
                     .Where(entity => entity.Name == "Paediatric EPA Curriculum" && entity.Version == "11.1")
                     .Select(entity => entity.Id)
                     .SingleAsync();
@@ -136,9 +137,31 @@ public sealed class ErasedTraineeScopePostgresTests : IAsyncLifetime
             {
                 var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 (await db.TraineeProfiles.SingleAsync(profile => profile.UserId == pseudonym)).IsActive
-                    .Should().BeTrue("an erasure moves the profile to the pseudonym and leaves it active");
+                    .Should().BeFalse("an erasure moves the profile to the pseudonym and ends it (T258)");
                 (await db.Users.AnyAsync(user => user.Id == pseudonym)).Should().BeFalse("no account holds the pseudonym");
                 (await db.UserRoles.AnyAsync(link => link.UserId == ErasedUserId)).Should().BeFalse("the account keeps no role");
+            }
+
+            // The account half of the rule, held against the real user store. Since T258 the erasure ends the profile, so
+            // the profile half alone would refuse both ids and this test would pass with no account check at all (the T258
+            // review, by mutation). So an active profile is put back under each id, the shape an erasure left before T258:
+            // the pseudonym's, which no account holds, and one under the id they had, whose account holds no role. Only
+            // the account half can refuse them now.
+            await using (var stale = root.CreateAsyncScope())
+            {
+                var db = stale.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                (await db.Database.ExecuteSqlInterpolatedAsync(
+                        $"UPDATE \"TraineeProfiles\" SET \"IsActive\" = TRUE, \"DeactivatedOn\" = NULL WHERE \"UserId\" = {pseudonym}"))
+                    .Should().Be(1);
+                db.TraineeProfiles.Add(new TraineeProfile
+                {
+                    UserId = ErasedUserId,
+                    InstitutionId = hostId,
+                    CurriculumId = curriculumId,
+                    ProgrammeStartDate = new DateOnly(2025, 1, 15),
+                    ExpectedCompletionDate = new DateOnly(2029, 1, 14)
+                });
+                await db.SaveChangesAsync();
             }
 
             await using var act = root.CreateAsyncScope();

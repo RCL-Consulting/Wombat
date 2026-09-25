@@ -20,6 +20,21 @@ public sealed class CommitteeReview
     public const string QuorumRule =
         "A committee decision needs at least two panel members present: the chair and at least one other.";
 
+    /// <summary>
+    /// The states in which a review is still open: scheduled, in progress, or decided and not yet ratified. Nothing is
+    /// settled at an open review; it is what the panel still has to start, record or ratify, and what
+    /// <see cref="Withdraw" /> ends. A review under appeal is not open: its decision is ratified and its STARs issued.
+    /// </summary>
+    public static readonly IReadOnlyList<CommitteeReviewState> OpenStates =
+        [CommitteeReviewState.Scheduled, CommitteeReviewState.InProgress, CommitteeReviewState.Decided];
+
+    /// <summary>The longest <see cref="WithdrawalReason" /> stored.</summary>
+    public const int WithdrawalReasonMaxLength = 500;
+
+    /// <summary>The reason an erasure withdraws a trainee's open review with (T258).</summary>
+    public const string WithdrawnTraineeErased =
+        "Withdrawn because the trainee's personal data was erased at their request. Nothing more is decided at this review.";
+
     public int Id { get; set; }
     public string TraineeUserId { get; set; } = string.Empty;
     public int PanelId { get; set; }
@@ -57,6 +72,15 @@ public sealed class CommitteeReview
     public DateTime? RatifiedOn { get; private set; }
     public string? RatifiedByUserId { get; private set; }
     public DateTime? FinalizedOn { get; private set; }
+
+    /// <summary>When the review was withdrawn (<see cref="Withdraw" />), or null. Set exactly when it is withdrawn (T258).</summary>
+    public DateTime? WithdrawnOn { get; private set; }
+
+    /// <summary>
+    /// Why the review was withdrawn, as recorded with the withdrawal and shown on the review, or null. Set exactly when it
+    /// is withdrawn (T258).
+    /// </summary>
+    public string? WithdrawalReason { get; private set; }
 
     public DecisionPanel Panel { get; set; } = null!;
     public ICollection<CommitteeDecision> Decisions { get; private set; } = [];
@@ -580,6 +604,41 @@ public sealed class CommitteeReview
         RatifiedOn = utcNow;
         FinalizedOn = utcNow;
         State = CommitteeReviewState.Final;
+    }
+
+    /// <summary>
+    /// Withdraws a review that is still open (<see cref="OpenStates" />), recording why: nothing more is started, recorded
+    /// or ratified at it (T258). Formative or summative alike.
+    /// </summary>
+    /// <remarks>
+    /// What the review already holds stays as the record of what happened: its evidence snapshot, its agenda, and a decision
+    /// recorded but never ratified, which issued nothing. The decisions staged at it are not the review's to keep: its caller
+    /// removes them, since only ratifying issues a staged decision and a withdrawn review is never ratified. A review whose
+    /// decision is ratified is settled and is refused here. Every check runs before anything changes.
+    /// </remarks>
+    public void Withdraw(string reason, DateTime utcNow)
+    {
+        if (!OpenStates.Contains(State))
+        {
+            throw new InvalidOperationException(
+                "Only a review that is scheduled, in progress, or decided and not yet ratified can be withdrawn.");
+        }
+
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new InvalidOperationException("A withdrawn review records why it was withdrawn.");
+        }
+
+        var trimmed = reason.Trim();
+        if (trimmed.Length > WithdrawalReasonMaxLength)
+        {
+            throw new InvalidOperationException(
+                $"The reason a review was withdrawn is at most {WithdrawalReasonMaxLength} characters.");
+        }
+
+        WithdrawalReason = trimmed;
+        WithdrawnOn = utcNow;
+        State = CommitteeReviewState.Withdrawn;
     }
 
     public void Ratify(string actorUserId, DateTime utcNow)

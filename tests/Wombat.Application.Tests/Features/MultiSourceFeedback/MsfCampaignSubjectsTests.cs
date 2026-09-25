@@ -23,7 +23,7 @@ namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 /// Until T238 the form listed every trainee profile at the caller's institution through the admin trainees list, which
 /// shows completed and withdrawn profiles by design, and the create accepted any trainee whose latest profile was at the
 /// caller's institution. So the form offered graduates and trainees who had withdrawn, and a crafted create named an
-/// erased trainee's pseudonym, whose profile <c>ErasureExecutor</c> leaves active under an id no account holds.
+/// erased trainee's pseudonym, whose profile <c>ErasureExecutor</c> left active under an id no account holds until T258.
 /// </para>
 /// <para>
 /// Every refusal is followed by the save the audit pipeline makes from its catch, and the campaigns are counted through a

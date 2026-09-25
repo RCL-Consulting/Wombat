@@ -62,7 +62,7 @@ public sealed class GetSubSpecialityAdminDashboardSummaryQueryHandler
                 .ToListAsync(cancellationToken);
 
         // The current trainees (T238), as the committee dashboard reads them: an active profile is not enough. An erased
-        // trainee's profile stays active under a pseudonym no account holds, and a profile can outlive its user's Trainee
+        // trainee's profile stayed active under a pseudonym until T258, and a profile can outlive its user's Trainee
         // role. Counted as active, either made the tile and every "n of m" below disagree with the committee's card, which
         // shares the list that draws them (EpaTargetCoverageList). Neither is counted as inactive either: the admin
         // trainees list is where a profile that outlived its trainee is seen, and ended.

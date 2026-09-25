@@ -168,6 +168,35 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     }
 
     [Fact]
+    public void AWithdrawnReview_SaysWhenAndWhy_ReadsWhatItHeldDueAsNotDecided_AndOffersNothing()
+    {
+        // T258: an erasure withdraws a review still open. Its page is the record of it: when and why it was withdrawn, and
+        // the lines it never decided. Nothing more is decided at it, so no action is offered, the chair included.
+        var cut = Render(
+            CommitteeReviewState.Withdrawn,
+            Agenda(
+                Line(1, "PAED-001", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.Due, closing: true),
+                Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")),
+            withdrawn: (new DateOnly(2026, 9, 25), CommitteeReview.WithdrawnTraineeErased));
+
+        Text(cut.Find("#review-withdrawn")).Should().Be("2026-09-25. " + CommitteeReview.WithdrawnTraineeErased);
+        Text(Row(cut, 1)).Should().Contain("Not decided").And.Contain("The review was withdrawn before deciding it.");
+        Text(Row(cut, 4)).Should().Contain("Reason: Later.");
+        AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence");
+        cut.FindAll("button").Select(button => button.TextContent.Trim())
+            .Should().NotContain(["Start review", "Close review", "Record decision", "Ratify", "Stage", "Defer", "Reinstate"]);
+        cut.FindAll("#chair-actions-note").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AnOpenReview_ShowsNoWithdrawal()
+    {
+        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
+
+        cut.FindAll("#review-withdrawn").Should().BeEmpty();
+    }
+
+    [Fact]
     public void AnAgendaInProgress_WhoseEveryLineIsStaged_HasNoActionColumn()
     {
         var cut = Render(CommitteeReviewState.InProgress, Agenda(Staged(1, "PAED-001"), Staged(2, "PAED-002")));
@@ -702,6 +731,19 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         cut.Find("#no-pending-note").TextContent.Should().Be("No pending entrustment decisions have been staged for this review.");
     }
 
+    [Fact]
+    public void AWithdrawnReview_SaysNothingIsPending_NotThatNothingWasStaged()
+    {
+        // T258 review: withdrawing removed whatever was staged, so "none have been staged" could be false.
+        var cut = Render(
+            CommitteeReviewState.Withdrawn,
+            Agenda(Line(1, "PAED-001", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.Due, closing: true)),
+            withdrawn: (new DateOnly(2026, 9, 25), CommitteeReview.WithdrawnTraineeErased));
+
+        cut.Find("#no-pending-note").TextContent.Should().Be(
+            "Nothing is pending: the review was withdrawn, so it issues no STAR, and anything staged at it was removed.");
+    }
+
     // ---- Fixture ------------------------------------------------------------------------------------------------------
 
     /// <param name="seatsAQuorum">
@@ -716,9 +758,15 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         bool formative = false,
         bool seatsAQuorum = false,
         IReadOnlyList<PendingEntrustmentDecisionDto>? pending = null,
-        bool callerChairs = true)
+        bool callerChairs = true,
+        (DateOnly On, string Reason)? withdrawn = null)
     {
-        var review = Review(state, agenda, formative, seatsAQuorum) with { CallerChairs = callerChairs };
+        var review = Review(state, agenda, formative, seatsAQuorum) with
+        {
+            CallerChairs = callerChairs,
+            WithdrawnOn = withdrawn?.On,
+            WithdrawalReason = withdrawn?.Reason
+        };
 
         _sender
             .On<GetCommitteeReviewByIdQuery>(_ => review)

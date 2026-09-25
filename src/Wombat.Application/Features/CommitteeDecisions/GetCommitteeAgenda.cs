@@ -100,7 +100,8 @@ internal static class CommitteeAgendaReader
                 sitting,
                 staged.Contains(line.EpaId),
                 plan.DecidedElsewhere.Contains(line.EpaId),
-                evidenceByEpa.GetValueOrDefault(line.EpaId)))
+                evidenceByEpa.GetValueOrDefault(line.EpaId),
+                reviewWithdrawn: review.State == CommitteeReviewState.Withdrawn))
             .ToArray();
 
         // What a STAR already decided in its window, so the planner left it off (T215); an EPA this review holds a line
@@ -130,12 +131,14 @@ internal static class CommitteeAgendaReader
     /// Whether the line is still due and another sitting has decided its window (<see cref="AgendaPlan.DecidedElsewhere" />,
     /// T235): false for a line the planner has just planned, which it plans only when the window is undecided.
     /// </param>
+    /// <param name="reviewWithdrawn">Whether the line's review was withdrawn (T258): see <see cref="StatusOf" />.</param>
     public static CommitteeAgendaLineDto ToDto(
         CommitteeAgendaLine line,
         AcademicPeriod sitting,
         bool staged,
         bool decidedElsewhere,
-        int evidenceCount)
+        int evidenceCount,
+        bool reviewWithdrawn = false)
     {
         ArgumentNullException.ThrowIfNull(line);
 
@@ -151,9 +154,10 @@ internal static class CommitteeAgendaReader
             line.IsClosing,
             line.IsPartialPeriod,
             line.State,
-            StatusOf(line, sitting, staged, decidedElsewhere),
+            StatusOf(line, sitting, staged, decidedElsewhere, reviewWithdrawn),
             staged && line.State == CommitteeAgendaLineState.Due,
-            line.BlocksRatify(staged, decidedElsewhere),
+            // A withdrawn review is never ratified, so nothing on it is outstanding (T258).
+            !reviewWithdrawn && line.BlocksRatify(staged, decidedElsewhere),
             line.DeferralReason,
             line.EntrustmentDecisionId,
             evidenceCount);
@@ -161,9 +165,15 @@ internal static class CommitteeAgendaReader
 
     /// <summary>
     /// How a line reads: its state, and for a line still due, whether it is staged, decided at another sitting (T235),
-    /// closing, or optional and why.
+    /// closing, or optional and why. A line still due on a withdrawn review was not decided, and nothing more is decided at
+    /// it (T258).
     /// </summary>
-    public static CommitteeAgendaLineStatus StatusOf(CommitteeAgendaLine line, AcademicPeriod sitting, bool staged, bool decidedElsewhere)
+    public static CommitteeAgendaLineStatus StatusOf(
+        CommitteeAgendaLine line,
+        AcademicPeriod sitting,
+        bool staged,
+        bool decidedElsewhere,
+        bool reviewWithdrawn = false)
     {
         ArgumentNullException.ThrowIfNull(line);
 
@@ -173,6 +183,7 @@ internal static class CommitteeAgendaReader
             CommitteeAgendaLineState.Deferred => CommitteeAgendaLineStatus.Deferred,
             CommitteeAgendaLineState.NotDecided => CommitteeAgendaLineStatus.NotDecided,
             CommitteeAgendaLineState.DecidedElsewhere => CommitteeAgendaLineStatus.DecidedElsewhere,
+            _ when reviewWithdrawn => CommitteeAgendaLineStatus.NotDecided,
             _ when staged => CommitteeAgendaLineStatus.Staged,
             _ when decidedElsewhere => CommitteeAgendaLineStatus.DecidedElsewhere,
             _ when line.IsClosing => CommitteeAgendaLineStatus.Due,

@@ -163,10 +163,11 @@ public static class TraineeScopeResolver
     // trainees shows. (T238)
     //
     // The profile alone does not say so. An erasure (ErasureExecutor) rewrites the profile's user id to a pseudonym that
-    // names no account and leaves the profile active, so the profile keeps its institution and programme under an id
-    // nobody holds. Completing a programme ends the profile and takes Trainee away; a withdrawal ends the profile and
-    // leaves the role; an administrator can take the role away and leave the profile running. Each of those is a profile
-    // that outlived its trainee, and none of them is someone to schedule a review of, or to list among the trainees.
+    // names no account. Until T258 it left the profile active, so the profile kept its institution and programme under
+    // an id nobody holds; since T258 it ends it too, but the rule does not lean on that. Completing a programme ends the
+    // profile and takes Trainee away; a withdrawal ends the profile and leaves the role; an administrator can take the
+    // role away and leave the profile running. Each of those is a profile that outlived its trainee, and none of them is
+    // someone to schedule a review of, or to list among the trainees.
     //
     // The two halves live in two stores: the profile in the application's, the role in Identity's, which Application
     // reaches only through IUserAdministrationService. So the rule is two reads, and these members are the only place

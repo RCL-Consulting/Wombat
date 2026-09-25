@@ -347,7 +347,7 @@ public sealed class CurriculumCoverageTests
     [Fact]
     public async Task CommitteeMemberDashboard_NamesOnlyCurrentTrainees_NotAnErasedPseudonym_NorAProfileThatOutlivedItsTrainee()
     {
-        // T238. An erased trainee's profile stays active under a pseudonym no account holds (ErasureExecutor), and hana's
+        // T238. An erased trainee's profile stayed active under a pseudonym until T258 (ErasureExecutor), and hana's
         // profile outlived her Trainee role. Both have met PAED-001 three times this semester: listed, the card would name
         // the first by its bare pseudonym, and read PAED-001 "3 of 5" of a programme with three trainees.
         await using var db = CreateDb();
@@ -369,7 +369,7 @@ public sealed class CurriculumCoverageTests
     public async Task EveryStaffDashboard_CountsOnlyCurrentTrainees_SoTheThreeCardsAgree()
     {
         // T238 review. The committee card, the speciality admin's and the sub-speciality admin's are drawn by one list
-        // (EpaTargetCoverageList). An erased trainee's profile stays active under a pseudonym no account holds, and hana's
+        // (EpaTargetCoverageList). An erased trainee's profile stayed active under a pseudonym until T258, and hana's
         // outlived her Trainee role; both have met PAED-001. Until the review only the committee card left them out, so
         // the admins' cards read PAED-001 "3 of 4" beside the committee's "1 of 2", and their tiles counted six active.
         await using var db = CreateDb();
