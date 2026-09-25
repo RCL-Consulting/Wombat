@@ -1,8 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
@@ -266,22 +264,14 @@ public sealed class AssessorPendingNudgeJobTests
     /// <summary>The run's one log line, read from its structured values rather than from the rendered text.</summary>
     private static NudgeSummary Summary(CapturingLogger logger)
     {
-        var entry = logger.Entries.Should().ContainSingle().Which;
-        entry.Level.Should().Be(LogLevel.Information);
-
+        var entry = logger.OneLine();
         return new NudgeSummary(
-            Nudged: Count(entry, "NudgedCount"),
-            NudgedActivities: Count(entry, "NudgedActivityCount"),
-            UnknownUser: Count(entry, "UnknownUserCount"),
-            Deactivated: Count(entry, "DeactivatedCount"),
-            OptedOut: Count(entry, "OptedOutCount"),
-            NoEmail: Count(entry, "NoEmailCount"));
-
-        static int Count(CapturedLogEntry entry, string key)
-        {
-            entry.Values.Should().ContainKey(key);
-            return (int)entry.Values[key]!;
-        }
+            Nudged: entry.Count("NudgedCount"),
+            NudgedActivities: entry.Count("NudgedActivityCount"),
+            UnknownUser: entry.Count("UnknownUserCount"),
+            Deactivated: entry.Count("DeactivatedCount"),
+            OptedOut: entry.Count("OptedOutCount"),
+            NoEmail: entry.Count("NoEmailCount"));
     }
 
     private sealed record NudgeSummary(
@@ -443,49 +433,4 @@ public sealed class AssessorPendingNudgeJobTests
           ]
         }
         """;
-
-    /// <summary>Keeps every message the job hands over, in order, so a test asserts on exactly who was written to.</summary>
-    private sealed class RecordingEmailSender : IEmailSender
-    {
-        public List<EmailMessage> Sent { get; } = [];
-
-        public IReadOnlyList<string> Recipients => Sent.Select(message => message.To).ToList();
-
-        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
-        {
-            Sent.Add(message);
-            return Task.CompletedTask;
-        }
-    }
-
-    /// <summary>
-    /// Keeps every entry with its structured values, so a test asserts on <c>{DeactivatedCount}</c> itself rather than
-    /// on a substring of a rendered message that a reworded template would silently stop matching.
-    /// </summary>
-    private sealed class CapturingLogger : ILogger
-    {
-        public List<CapturedLogEntry> Entries { get; } = [];
-
-        public IDisposable? BeginScope<TState>(TState state)
-            where TState : notnull
-            => null;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(
-            LogLevel logLevel,
-            EventId eventId,
-            TState state,
-            Exception? exception,
-            Func<TState, Exception?, string> formatter)
-        {
-            var values = state is IReadOnlyList<KeyValuePair<string, object?>> pairs
-                ? pairs.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal)
-                : new Dictionary<string, object?>(StringComparer.Ordinal);
-
-            Entries.Add(new CapturedLogEntry(logLevel, formatter(state, exception), values));
-        }
-    }
-
-    private sealed record CapturedLogEntry(LogLevel Level, string Message, IReadOnlyDictionary<string, object?> Values);
 }

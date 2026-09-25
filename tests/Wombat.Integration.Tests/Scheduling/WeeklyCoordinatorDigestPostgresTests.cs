@@ -24,7 +24,8 @@ namespace Wombat.Integration.Tests.Scheduling;
 
 /// <summary>
 /// T117 on a real PostgreSQL server: the weekly coordinator digest, run end to end, mails each coordinator only their own
-/// institution's trainees, campaigns and reviews.
+/// institution's trainees, campaigns and reviews; and (T240) no coordinator whose account is deactivated or who opted out
+/// of digest emails.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -115,6 +116,12 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
                 unaddressed.Email = null;
                 unaddressed.NormalizedEmail = null;
 
+                // T240: the shared reminder policy, on the server. An administrator's lock is written as
+                // DateTimeOffset.MaxValue and read back through Npgsql; a brute-force lockout is not a deactivation.
+                NomineeSeed.AddUser(db, "coord-locked", host, DateTimeOffset.MaxValue, WombatRoles.Coordinator);
+                NomineeSeed.AddUser(db, "coord-locked-out", host, DateTimeOffset.UtcNow.AddMinutes(15), WombatRoles.Coordinator);
+                NomineeSeed.AddUser(db, "coord-opted-out", host, WombatRoles.Coordinator).OptOutOfDigestEmails = true;
+
                 AddTrainee(db, "a-idle", "Aisha", "Idle", host, curriculumId);
                 AddTrainee(db, "a-busy", "Andile", "Busy", host, curriculumId);
                 AddTrainee(db, "b-idle", "Bongani", "Idle", elsewhere.Id, curriculumId);
@@ -155,9 +162,10 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
                 .ExecuteAsync(new ScheduledJobContext(now, logger), CancellationToken.None);
 
             emailSender.Sent.Select(message => message.To).Should().BeEquivalentTo(
-                ["coord-a@test.local", "coord-b@test.local", "admin-coord@test.local"]);
+                ["coord-a@test.local", "coord-b@test.local", "admin-coord@test.local", "coord-locked-out@test.local"]);
             logger.Messages.Should().ContainSingle().Which.Should().Be(
-                "WeeklyCoordinatorDigestJob: digests sent 3; coordinators skipped: holds Trainee 0, no institution 0, no email address 1.");
+                "WeeklyCoordinatorDigestJob: digests sent 4; coordinators skipped: deactivated 1, opted out of digest emails 1, " +
+                "no email address 1, holds Trainee 0, no institution 0.");
 
             var expectedA = new[]
             {
@@ -173,7 +181,7 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
             };
 
             // The Administrator who also coordinates is held to their institution, on the server as in memory.
-            foreach (var hostRecipient in new[] { "coord-a", "admin-coord" })
+            foreach (var hostRecipient in new[] { "coord-a", "admin-coord", "coord-locked-out" })
             {
                 ListedItems(emailSender.To(hostRecipient)).Should().Equal(expectedA);
             }

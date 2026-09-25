@@ -32,18 +32,20 @@
 
     <StatePanel IsLoading="_loadingFlags" IsEmpty="false">
       <div class="form-grid">
-        <div class="form-check-group">
-          <label class="form-check-label">
-            <input type="checkbox" class="form-check-input" @bind="_optOutOfOptionalProcessing" />
-            Opt out of optional processing (e.g. analytics)
-          </label>
-        </div>
-        <div class="form-check-group">
-          <label class="form-check-label">
-            <input type="checkbox" class="form-check-input" @bind="_optOutOfDigestEmails" />
-            Opt out of digest emails
-          </label>
-        </div>
+        <FormField Label="Optional processing" InputId="data-rights-optional-processing">
+          <div class="form-check">
+            <input id="data-rights-optional-processing" type="checkbox" class="form-check-input" @bind="_optOutOfOptionalProcessing" />
+            <label for="data-rights-optional-processing">Opt out of optional processing (e.g. analytics)</label>
+          </div>
+        </FormField>
+        @* T240. The opt-out stops three periodic reminders, not only the one called a digest, so the box says which. *@
+        <FormField Label="Digest emails" InputId="data-rights-digest-emails" HelpText="@DigestEmailsHelp">
+          <div class="form-check">
+            <input id="data-rights-digest-emails" type="checkbox" class="form-check-input" @bind="_optOutOfDigestEmails"
+                   aria-describedby="@FieldHelp.Id("data-rights-digest-emails")" />
+            <label for="data-rights-digest-emails">Opt out of digest emails</label>
+          </div>
+        </FormField>
       </div>
       <FormActions>
         @* Neither this nor Submit request is disabled while its own action runs (T234): the one pressed has the focus,
@@ -146,6 +148,15 @@
 
   private bool _optOutOfOptionalProcessing;
   private bool _optOutOfDigestEmails;
+
+  /// <summary>
+  /// What the opt-out stops: the three jobs that ask <c>ReminderRecipientPolicy</c> (T151, T240), and what it does not.
+  /// </summary>
+  private const string DigestEmailsHelp =
+    "Stops three regular reminders: the weekly coordinator digest, the reminder of drafts left untouched for 14 days, " +
+    "and the reminder of activities that have waited more than 5 days for you to assess. Email about one particular " +
+    "thing is still sent, such as a request to assess, an invitation to give feedback, or a committee or entrustment " +
+    "decision.";
 
   private DataRightsRequestType _newRequestType = DataRightsRequestType.Access;
   private string _newRequestReason = string.Empty;

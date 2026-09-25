@@ -7,10 +7,25 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Workflow;
-using Wombat.Infrastructure.Identity;
 
 namespace Wombat.Infrastructure.Scheduling.Jobs;
 
+/// <summary>
+/// Nudges each assessor, daily, about the activities that have waited on them for more than five days: one email per
+/// assessor listing them all.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Whom the nudge does not write to (D50, T151) is <see cref="ReminderRecipientPolicy" />, shared with the other
+/// periodic reminders since T240: not an id naming no account, not a deactivated account, not a user who opted out of
+/// digest emails (the nudge is a digest), and not one with no address.
+/// </para>
+/// <para>
+/// A nominee who has since lost the Assessor role or moved institution IS still nudged. The nominee gate (T102)
+/// judges eligibility when the activity is handed to them, and lets them complete it afterwards; so this job
+/// deliberately does not re-read <c>NomineeDirectory</c>, which would silence the one person able to act.
+/// </para>
+/// </remarks>
 public sealed class AssessorPendingNudgeJob : IScheduledJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -94,10 +109,10 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
             "{OptedOutCount}, no email address {NoEmailCount}.",
             outcome.Nudged,
             outcome.NudgedActivities,
-            outcome.Skipped(NudgeSkipReason.UnknownUser),
-            outcome.Skipped(NudgeSkipReason.Deactivated),
-            outcome.Skipped(NudgeSkipReason.OptedOut),
-            outcome.Skipped(NudgeSkipReason.NoEmail));
+            outcome.Skipped[ReminderSkipReason.UnknownUser],
+            outcome.Skipped[ReminderSkipReason.Deactivated],
+            outcome.Skipped[ReminderSkipReason.OptedOut],
+            outcome.Skipped[ReminderSkipReason.NoEmail]);
     }
 
     private static async Task<NudgeOutcome> NudgeAsync(
@@ -116,18 +131,15 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
             .Distinct()
             .ToList();
 
-        var users = await dbContext.Set<WombatIdentityUser>()
-            .AsNoTracking()
-            .Where(u => userIds.Contains(u.Id))
-            .Select(u => new NudgePerson(u.Id, u.Email, u.FirstName, u.LastName, u.LockoutEnd, u.OptOutOfDigestEmails))
-            .ToDictionaryAsync(u => u.Id, StringComparer.Ordinal, cancellationToken);
+        var users = await ReminderRecipientPolicy.LoadAsync(dbContext, userIds, cancellationToken);
 
         foreach (var group in grouped)
         {
+            // The shared reminder policy (T240), and nothing more: see the class remarks on who is NOT skipped.
             var nominee = users.GetValueOrDefault(group.Key);
-            if (SkipReasonFor(nominee) is { } reason)
+            if (ReminderRecipientPolicy.SkipReasonFor(nominee) is { } reason)
             {
-                outcome.Skip(reason);
+                outcome.Skipped.Add(reason);
                 continue;
             }
 
@@ -148,58 +160,14 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
         return outcome;
     }
 
-    /// <summary>
-    /// Why a nominee is not written to (D50, T151), or null when they are. One reason each, the first that applies in
-    /// this order, so an erased account (deactivated, opted out and without an email) is counted once, as deactivated.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// A deactivated account (<see cref="UserDeactivation" />: an administrator's lock or an erasure) is not written to,
-    /// and neither is a user who opted out of digest emails: the nudge is a digest. A brute-force lockout is not a
-    /// deactivation and lifts itself, so that nominee is still nudged.
-    /// </para>
-    /// <para>
-    /// A nominee who has since lost the Assessor role or moved institution IS still nudged. The nominee gate (T102)
-    /// judges eligibility when the activity is handed to them, and lets them complete it afterwards; so this job
-    /// deliberately does not re-read <c>NomineeDirectory</c>, which would silence the one person able to act.
-    /// </para>
-    /// </remarks>
-    internal static NudgeSkipReason? SkipReasonFor(NudgePerson? nominee) => nominee switch
-    {
-        null => NudgeSkipReason.UnknownUser,
-        _ when UserDeactivation.IsDeactivated(nominee.LockoutEnd) => NudgeSkipReason.Deactivated,
-        { OptOutOfDigestEmails: true } => NudgeSkipReason.OptedOut,
-        _ when string.IsNullOrWhiteSpace(nominee.Email) => NudgeSkipReason.NoEmail,
-        _ => null
-    };
-
-    internal sealed record NudgePerson(
-        string Id,
-        string? Email,
-        string FirstName,
-        string LastName,
-        DateTimeOffset? LockoutEnd,
-        bool OptOutOfDigestEmails);
-
-    internal enum NudgeSkipReason
-    {
-        UnknownUser,
-        Deactivated,
-        OptedOut,
-        NoEmail
-    }
-
+    /// <summary>What a run did, for its one log line.</summary>
     private sealed class NudgeOutcome
     {
-        private readonly Dictionary<NudgeSkipReason, int> _skipped = [];
-
         public int Nudged { get; set; }
 
         public int NudgedActivities { get; set; }
 
-        public void Skip(NudgeSkipReason reason) => _skipped[reason] = Skipped(reason) + 1;
-
-        public int Skipped(NudgeSkipReason reason) => _skipped.GetValueOrDefault(reason);
+        public SkipTally<ReminderSkipReason> Skipped { get; } = new();
     }
 
     private static bool HasFieldUserActor(ActorRule rule) => rule switch

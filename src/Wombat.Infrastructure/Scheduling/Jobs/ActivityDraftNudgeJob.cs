@@ -5,10 +5,24 @@ using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
-using Wombat.Infrastructure.Identity;
 
 namespace Wombat.Infrastructure.Scheduling.Jobs;
 
+/// <summary>
+/// Reminds each trainee, daily, of their drafts untouched for 14 days: one email per trainee listing them all.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Written to each draft's subject, through <see cref="ReminderRecipientPolicy" /> (T240). The reminder is a periodic,
+/// unsolicited summary, so it counts as a digest: a trainee who opted out of digest emails is not sent it, and neither is
+/// an account an administrator locked.
+/// </para>
+/// <para>
+/// An erased trainee is never reached at all. Erasure keeps their drafts on the record but writes a pseudonym into each
+/// one's subject (<see cref="Wombat.Infrastructure.DataRights.ErasureExecutor" />), and a pseudonym names no account, so
+/// those drafts are counted under "no such account", not "deactivated".
+/// </para>
+/// </remarks>
 public sealed class ActivityDraftNudgeJob : IScheduledJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -31,7 +45,7 @@ public sealed class ActivityDraftNudgeJob : IScheduledJob
         var cutoff = context.UtcNow.AddDays(-14);
 
         var staleActivities = await dbContext.Set<Activity>()
-            .Include(a => a.ActivityType)
+            .AsNoTracking()
             .Where(a => a.CurrentState == "draft" && a.UpdatedOn < cutoff)
             .Select(a => new
             {
@@ -41,29 +55,40 @@ public sealed class ActivityDraftNudgeJob : IScheduledJob
             })
             .ToListAsync(cancellationToken);
 
-        if (staleActivities.Count == 0)
+        var bySubject = staleActivities.GroupBy(a => a.SubjectUserId, StringComparer.Ordinal).ToList();
+        var recipients = await ReminderRecipientPolicy.LoadAsync(dbContext, bySubject.Select(g => g.Key), cancellationToken);
+
+        var reminded = 0;
+        var remindedDrafts = 0;
+        var skipped = new SkipTally<ReminderSkipReason>();
+
+        foreach (var drafts in bySubject)
         {
-            context.Logger.LogInformation("ActivityDraftNudgeJob: no stale drafts found.");
-            return;
-        }
-
-        var grouped = staleActivities.GroupBy(a => a.SubjectUserId);
-
-        foreach (var group in grouped)
-        {
-            var user = await dbContext.Set<WombatIdentityUser>()
-                .Where(u => u.Id == group.Key)
-                .Select(u => new { u.Email, u.FirstName })
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (user is null || string.IsNullOrWhiteSpace(user.Email))
+            var recipient = recipients.GetValueOrDefault(drafts.Key);
+            if (ReminderRecipientPolicy.SkipReasonFor(recipient) is { } reason)
+            {
+                skipped.Add(reason);
                 continue;
+            }
 
-            var items = group.Select(a => (a.ActivityTypeName, a.DaysOld)).ToList();
-            var email = DraftNudgeEmail.Build(user.Email, user.FirstName, items);
+            var items = drafts.Select(a => (a.ActivityTypeName, a.DaysOld)).ToList();
+            var email = DraftNudgeEmail.Build(recipient!.Email!, recipient.FirstName, items);
             await emailSender.SendAsync(email, cancellationToken);
+            reminded++;
+            remindedDrafts += items.Count;
         }
 
-        context.Logger.LogInformation("ActivityDraftNudgeJob: sent nudges to {Count} trainees.", grouped.Count());
+        // One line per run, whatever happened, as the assessor nudge logs (T151): a quiet day reads apart from a day on
+        // which every trainee was skipped.
+        context.Logger.LogInformation(
+            "ActivityDraftNudgeJob: trainees reminded {RemindedCount} (drafts {RemindedDraftCount}); trainees skipped: " +
+            "no such account {UnknownUserCount}, deactivated {DeactivatedCount}, opted out of digest emails " +
+            "{OptedOutCount}, no email address {NoEmailCount}.",
+            reminded,
+            remindedDrafts,
+            skipped[ReminderSkipReason.UnknownUser],
+            skipped[ReminderSkipReason.Deactivated],
+            skipped[ReminderSkipReason.OptedOut],
+            skipped[ReminderSkipReason.NoEmail]);
     }
 }

@@ -48,8 +48,10 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// follows it.
 /// </para>
 /// <para>
-/// Some recipients are sent nothing, counted by reason in the run's one log line: one with no institution, who oversees
-/// nobody, rather than the national roster the job used to send; and one who holds Trainee
+/// Some coordinators are sent nothing, counted by reason in the run's one log line. First, whoever the shared reminder
+/// policy skips (<see cref="ReminderRecipientPolicy" />, T240): a deactivated account, one who opted out of digest emails
+/// (this is the email that flag is named after), and one with no address. Then two of the digest's own: one with no
+/// institution, who oversees nobody, rather than the national roster the job used to send; and one who holds Trainee
 /// (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185), who reads no peer's record, and whose own is on their own
 /// pages. An empty digest to either would say "no items requiring attention", which is not what the job knows.
 /// </para>
@@ -89,10 +91,17 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
 
             foreach (var coordinator in coordinators)
             {
-                var recipient = await claimsFactory.CreateAsync(coordinator);
-                if (SkipReasonFor(recipient, coordinator.Email) is { } reason)
+                // The account first, so a locked or opted-out coordinator's principal is never even built.
+                if (ReminderRecipientPolicy.SkipReasonFor(ReminderRecipientPolicy.From(coordinator)) is { } accountReason)
                 {
-                    outcome.Skip(reason);
+                    outcome.SkippedAccounts.Add(accountReason);
+                    continue;
+                }
+
+                var recipient = await claimsFactory.CreateAsync(coordinator);
+                if (SkipReasonFor(recipient) is { } reason)
+                {
+                    outcome.SkippedRecipients.Add(reason);
                     continue;
                 }
 
@@ -111,34 +120,32 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
             }
         }
 
-        // One line per run, whatever happened, as the assessor nudge logs (T151).
+        // One line per run, whatever happened, as the assessor nudge logs (T151). The reasons are in the order asked.
         context.Logger.LogInformation(
-            "WeeklyCoordinatorDigestJob: digests sent {SentCount}; coordinators skipped: holds Trainee {HoldsTraineeCount}, " +
-            "no institution {NoInstitutionCount}, no email address {NoEmailCount}.",
+            "WeeklyCoordinatorDigestJob: digests sent {SentCount}; coordinators skipped: deactivated {DeactivatedCount}, " +
+            "opted out of digest emails {OptedOutCount}, no email address {NoEmailCount}, holds Trainee " +
+            "{HoldsTraineeCount}, no institution {NoInstitutionCount}.",
             outcome.Sent,
-            outcome.Skipped(DigestSkipReason.HoldsTrainee),
-            outcome.Skipped(DigestSkipReason.NoInstitution),
-            outcome.Skipped(DigestSkipReason.NoEmail));
+            outcome.SkippedAccounts[ReminderSkipReason.Deactivated],
+            outcome.SkippedAccounts[ReminderSkipReason.OptedOut],
+            outcome.SkippedAccounts[ReminderSkipReason.NoEmail],
+            outcome.SkippedRecipients[DigestSkipReason.HoldsTrainee],
+            outcome.SkippedRecipients[DigestSkipReason.NoInstitution]);
     }
 
     /// <summary>
-    /// Why a coordinator is sent no digest, or null when they are sent one. One reason each, the first that applies in
-    /// this order. Asked of the principal the app's claims factory builds for them, so it sees the roles and institution
-    /// a sign-in would.
+    /// Why a coordinator the reminder policy lets through is still sent no digest, or null when they are sent one. One
+    /// reason each, the first that applies in this order. Asked of the principal the app's claims factory builds for
+    /// them, so it sees the roles and institution a sign-in would.
     /// </summary>
-    internal static DigestSkipReason? SkipReasonFor(ClaimsPrincipal recipient, string? email)
+    internal static DigestSkipReason? SkipReasonFor(ClaimsPrincipal recipient)
     {
         if (TraineeScopeResolver.ActsAsTrainee(recipient))
         {
             return DigestSkipReason.HoldsTrainee;
         }
 
-        if (recipient.GetInstitutionId() is null)
-        {
-            return DigestSkipReason.NoInstitution;
-        }
-
-        return string.IsNullOrWhiteSpace(email) ? DigestSkipReason.NoEmail : null;
+        return recipient.GetInstitutionId() is null ? DigestSkipReason.NoInstitution : null;
     }
 
     /// <summary>
@@ -242,11 +249,11 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
         return new Digest(inactiveTrainees, msfCampaignsNeedingReview, committeeReviewsThisWeek);
     }
 
+    /// <summary>The digest's own reasons, asked after <see cref="ReminderSkipReason" />'s.</summary>
     internal enum DigestSkipReason
     {
         HoldsTrainee,
-        NoInstitution,
-        NoEmail
+        NoInstitution
     }
 
     private sealed record DigestFacts(
@@ -262,12 +269,10 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
 
     private sealed class DigestOutcome
     {
-        private readonly Dictionary<DigestSkipReason, int> _skipped = [];
-
         public int Sent { get; set; }
 
-        public void Skip(DigestSkipReason reason) => _skipped[reason] = Skipped(reason) + 1;
+        public SkipTally<ReminderSkipReason> SkippedAccounts { get; } = new();
 
-        public int Skipped(DigestSkipReason reason) => _skipped.GetValueOrDefault(reason);
+        public SkipTally<DigestSkipReason> SkippedRecipients { get; } = new();
     }
 }

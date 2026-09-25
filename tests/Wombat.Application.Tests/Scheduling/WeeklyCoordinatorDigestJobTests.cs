@@ -2,7 +2,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
@@ -350,6 +349,86 @@ public sealed class WeeklyCoordinatorDigestJobTests
         Section(emailSender.To(CoordinatorA), MsfCampaigns).Should().Equal("Annual MSF (campaign #101)");
     }
 
+    // ---- T240: the shared reminder policy -------------------------------------------------------------------
+
+    [Fact]
+    public async Task ADeactivatedCoordinator_IsSentNothing_AndIsCounted()
+    {
+        // An administrator's lock: indefinite, as UserAdministrationService writes it. The account keeps its role and its
+        // institution, so before T240 it was sent the Monday digest like any other.
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddCoordinators(db);
+            NomineeSeed.AddUser(db, "coord-locked", InstitutionA, UserDeactivation.IndefiniteLockoutEnd, WombatRoles.Coordinator);
+            AddTrainee(db, "a-idle", "Aisha", "Idle", InstitutionA);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().BeEquivalentTo([EmailOf(CoordinatorA), EmailOf(CoordinatorB)]);
+        Summary(logger).Should().Be(new DigestSummary(Sent: 2, Deactivated: 1));
+    }
+
+    [Fact]
+    public async Task ACoordinatorLockedOutByFailedPasswords_IsStillSentTheirDigest()
+    {
+        // Identity's brute-force lockout writes the same column minutes out and lifts itself. Treating it as a
+        // deactivation would let anyone silence a coordinator's digest by typing five wrong passwords at their account.
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddCoordinators(db);
+            NomineeSeed.AddUser(db, "coord-locked-out", InstitutionA, Now.AddMinutes(15), WombatRoles.Coordinator);
+            AddTrainee(db, "a-idle", "Aisha", "Idle", InstitutionA);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().BeEquivalentTo(
+            [EmailOf(CoordinatorA), EmailOf(CoordinatorB), EmailOf("coord-locked-out")]);
+        Section(emailSender.To("coord-locked-out"), TraineesAtRisk).Should().Equal("Aisha Idle");
+        Summary(logger).Should().Be(new DigestSummary(Sent: 3));
+    }
+
+    [Fact]
+    public async Task ACoordinatorWhoOptedOutOfDigestEmails_IsSentNothing_AndIsCounted()
+    {
+        // This is the email the T026 objection flag is named after. Before T240 the job never read it.
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddCoordinators(db);
+            NomineeSeed.AddUser(db, "coord-opted-out", InstitutionA, WombatRoles.Coordinator).OptOutOfDigestEmails = true;
+            AddTrainee(db, "a-idle", "Aisha", "Idle", InstitutionA);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().BeEquivalentTo([EmailOf(CoordinatorA), EmailOf(CoordinatorB)]);
+        Summary(logger).Should().Be(new DigestSummary(Sent: 2, OptedOut: 1));
+    }
+
+    [Fact]
+    public async Task AReasonAboutTheAccount_IsCountedBeforeTheDigestsOwn()
+    {
+        // One reason each. A locked coordinator with no institution is counted as deactivated, and an opted-out one who
+        // also holds Trainee as opted out: the shared policy is asked first, so every mailing job counts an account alike.
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddCoordinators(db);
+            NomineeSeed.AddUser(db, "coord-locked-nowhere", institutionId: null, UserDeactivation.IndefiniteLockoutEnd, WombatRoles.Coordinator);
+            AddTrainee(db, "registrar", "Rethabile", "Registrar", InstitutionA).OptOutOfDigestEmails = true;
+            NomineeSeed.AddRole(db, "registrar", WombatRoles.Coordinator);
+        });
+
+        var logger = await RunAsync(provider);
+
+        emailSender.Recipients.Should().BeEquivalentTo([EmailOf(CoordinatorA), EmailOf(CoordinatorB)]);
+        Summary(logger).Should().Be(new DigestSummary(Sent: 2, Deactivated: 1, OptedOut: 1));
+    }
+
     [Fact]
     public async Task ARunWithNoCoordinators_StillLogsItsOneLine()
     {
@@ -422,7 +501,7 @@ public sealed class WeeklyCoordinatorDigestJobTests
     }
 
     /// <summary>A Trainee with one profile, at <paramref name="institutionId" />, and no activity unless one is added.</summary>
-    private static void AddTrainee(
+    private static WombatIdentityUser AddTrainee(
         ApplicationDbContext db,
         string userId,
         string firstName,
@@ -435,6 +514,7 @@ public sealed class WeeklyCoordinatorDigestJobTests
         trainee.FirstName = firstName;
         trainee.LastName = lastName;
         AddProfile(db, userId, institutionId, curriculumId, isActive);
+        return trainee;
     }
 
     private static void AddProfile(ApplicationDbContext db, string userId, int institutionId, int curriculumId, bool isActive)
@@ -507,7 +587,7 @@ public sealed class WeeklyCoordinatorDigestJobTests
         return review;
     }
 
-    private static string EmailOf(string userId) => $"{userId}@test.local";
+    private static string EmailOf(string userId) => RecordingEmailSender.EmailOf(userId);
 
     /// <summary>The items listed under one heading of a digest's text body, in order; empty when the heading is absent.</summary>
     private static IReadOnlyList<string> Section(EmailMessage message, string heading)
@@ -538,65 +618,21 @@ public sealed class WeeklyCoordinatorDigestJobTests
     /// <summary>The run's one log line, read from its structured values rather than from the rendered text.</summary>
     private static DigestSummary Summary(CapturingLogger logger)
     {
-        var entry = logger.Entries.Should().ContainSingle().Which;
-        entry.Level.Should().Be(LogLevel.Information);
-
+        var entry = logger.OneLine();
         return new DigestSummary(
-            Sent: Count(entry, "SentCount"),
-            HoldsTrainee: Count(entry, "HoldsTraineeCount"),
-            NoInstitution: Count(entry, "NoInstitutionCount"),
-            NoEmail: Count(entry, "NoEmailCount"));
-
-        static int Count(CapturedLogEntry entry, string key)
-        {
-            entry.Values.Should().ContainKey(key);
-            return (int)entry.Values[key]!;
-        }
+            Sent: entry.Count("SentCount"),
+            Deactivated: entry.Count("DeactivatedCount"),
+            OptedOut: entry.Count("OptedOutCount"),
+            NoEmail: entry.Count("NoEmailCount"),
+            HoldsTrainee: entry.Count("HoldsTraineeCount"),
+            NoInstitution: entry.Count("NoInstitutionCount"));
     }
 
-    private sealed record DigestSummary(int Sent = 0, int HoldsTrainee = 0, int NoInstitution = 0, int NoEmail = 0);
-
-    /// <summary>Keeps every message the job hands over, so a test asserts on exactly who was written to and what.</summary>
-    private sealed class RecordingEmailSender : IEmailSender
-    {
-        public List<EmailMessage> Sent { get; } = [];
-
-        public IReadOnlyList<string> Recipients => Sent.Select(message => message.To).ToList();
-
-        public EmailMessage To(string userId) => Sent.Should().ContainSingle(message => message.To == EmailOf(userId)).Which;
-
-        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
-        {
-            Sent.Add(message);
-            return Task.CompletedTask;
-        }
-    }
-
-    /// <summary>Keeps every entry with its structured values.</summary>
-    private sealed class CapturingLogger : ILogger
-    {
-        public List<CapturedLogEntry> Entries { get; } = [];
-
-        public IDisposable? BeginScope<TState>(TState state)
-            where TState : notnull
-            => null;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(
-            LogLevel logLevel,
-            EventId eventId,
-            TState state,
-            Exception? exception,
-            Func<TState, Exception?, string> formatter)
-        {
-            var values = state is IReadOnlyList<KeyValuePair<string, object?>> pairs
-                ? pairs.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal)
-                : new Dictionary<string, object?>(StringComparer.Ordinal);
-
-            Entries.Add(new CapturedLogEntry(logLevel, formatter(state, exception), values));
-        }
-    }
-
-    private sealed record CapturedLogEntry(LogLevel Level, string Message, IReadOnlyDictionary<string, object?> Values);
+    private sealed record DigestSummary(
+        int Sent = 0,
+        int Deactivated = 0,
+        int OptedOut = 0,
+        int NoEmail = 0,
+        int HoldsTrainee = 0,
+        int NoInstitution = 0);
 }
