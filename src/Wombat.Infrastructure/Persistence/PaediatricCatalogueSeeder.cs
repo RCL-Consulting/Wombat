@@ -47,10 +47,34 @@ public sealed class PaediatricCatalogueSeeder
     internal static string ScaleSeedKey(string catalogueVersion) => $"cpsa:scale:v{catalogueVersion}";
 
     /// <summary>The curriculum's key, from the catalogue's own version: <c>cpsa:paediatrics:curriculum:v11.1</c>.</summary>
-    internal static string CurriculumSeedKey(string catalogueVersion) => $"cpsa:paediatrics:curriculum:v{catalogueVersion}";
+    internal static string CurriculumSeedKey(string catalogueVersion) => $"{CurriculumSeedKeyPrefix}{catalogueVersion}";
+
+    /// <summary>
+    /// What every version's curriculum key starts with, for a reader that does not hold the catalogue file (the dev-user
+    /// seeder).
+    /// </summary>
+    internal const string CurriculumSeedKeyPrefix = "cpsa:paediatrics:curriculum:v";
 
     /// <summary>An EPA's key, from the College's code for it: <c>cpsa:paediatrics:epa:PAED-001</c>.</summary>
     internal static string EpaSeedKey(string code) => $"cpsa:paediatrics:epa:{code}";
+
+    /// <summary>
+    /// Every catalogue row and its key, as the collision warning names them. The catalogue is found only when every row
+    /// carries its key, so an operator who keys some of them by hand has to key them all.
+    /// </summary>
+    private static string SeedKeysForOperators(CatalogueSeed catalogue)
+        => string.Join(
+            "; ",
+            new (string Row, string SeedKey)[]
+                {
+                    ("College", CollegeSeedKey),
+                    ("speciality", SpecialitySeedKey),
+                    ("sub-speciality", SubSpecialitySeedKey),
+                    ("entrustment scale", ScaleSeedKey(catalogue.CatalogueVersion)),
+                    ("curriculum", CurriculumSeedKey(catalogue.CatalogueVersion))
+                }
+                .Concat(catalogue.Epas.Select(seed => (Row: $"EPA {seed.Code}", SeedKey: EpaSeedKey(seed.Code))))
+                .Select(pair => $"{pair.Row} '{pair.SeedKey}'"));
 
     // What the catalogue's rows are called when this seeder creates them. Never used to find one.
     private const string CollegeName = "College of Paediatricians of South Africa";
@@ -232,8 +256,9 @@ public sealed class PaediatricCatalogueSeeder
         if (collisions.Count > 0)
         {
             _logger.LogWarning(
-                "The paediatric EPA catalogue was not seeded, because a row it did not create already holds a name the catalogue needs: {Collisions}. Nothing was written: creating the catalogue beside it would break a unique index. Rename that row, or, if it is the catalogue's own, give it its seed key; the next startup then seeds or finds the catalogue.",
-                string.Join("; ", collisions));
+                "The paediatric EPA catalogue was not seeded, because a row it did not create already holds a name the catalogue needs: {Collisions}. Nothing was written: creating the catalogue beside it would break a unique index. If that row is not the catalogue's, change the name or short code it shares with the catalogue, and the next startup seeds the catalogue. If it is the catalogue's own, left without its key when the T221 migration could not find it, give it and every other catalogue row its seed key: {SeedKeys}. The next startup then finds the catalogue. Keying only some of them is not enough: the next startup finds the catalogue present, announces each row that has no key, and creates none of them.",
+                string.Join("; ", collisions),
+                SeedKeysForOperators(catalogue));
             return CatalogueRows.None;
         }
 

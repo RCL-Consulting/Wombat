@@ -22,6 +22,11 @@ public sealed class PaediatricCatalogueSeedKeyTests
         .Select(number => $"PAED-{number.ToString("000", CultureInfo.InvariantCulture)}")
         .ToArray();
 
+    /// <summary>
+    /// The demo rows <see cref="DataSeeder" /> creates in the same boot carry keys of their own since T229, each "demo" or
+    /// starting "demo:" (<see cref="DemoSeedKeyTests" />), so they are set aside here, exactly as
+    /// <c>CatalogueSeedKeyPostgresTests</c> sets them aside; every other key is the catalogue's.
+    /// </summary>
     [Fact]
     public async Task AFreshSeed_GivesEveryCatalogueRowItsSeedKey_AndNoOtherRowOne()
     {
@@ -30,17 +35,17 @@ public sealed class PaediatricCatalogueSeedKeyTests
 
         await using var dbContext = database.NewContext();
 
-        (await dbContext.Colleges.Where(entity => entity.SeedKey != null).Select(entity => new { entity.SeedKey, entity.ShortCode }).ToListAsync())
+        (await dbContext.Colleges.Where(entity => entity.SeedKey != null && entity.SeedKey != "demo" && !entity.SeedKey.StartsWith("demo:")).Select(entity => new { entity.SeedKey, entity.ShortCode }).ToListAsync())
             .Should().ContainSingle().Which.Should().BeEquivalentTo(new { SeedKey = "cpsa", ShortCode = "CPSA" });
-        (await dbContext.Specialities.Where(entity => entity.SeedKey != null).Select(entity => entity.SeedKey).ToListAsync())
+        (await dbContext.Specialities.Where(entity => entity.SeedKey != null && entity.SeedKey != "demo" && !entity.SeedKey.StartsWith("demo:")).Select(entity => entity.SeedKey).ToListAsync())
             .Should().Equal("cpsa:paediatrics");
-        (await dbContext.SubSpecialities.Where(entity => entity.SeedKey != null).Select(entity => entity.SeedKey).ToListAsync())
+        (await dbContext.SubSpecialities.Where(entity => entity.SeedKey != null && entity.SeedKey != "demo" && !entity.SeedKey.StartsWith("demo:")).Select(entity => entity.SeedKey).ToListAsync())
             .Should().Equal("cpsa:paediatrics:paediatrics");
-        (await dbContext.EntrustmentScales.Where(entity => entity.SeedKey != null).Select(entity => entity.SeedKey).ToListAsync())
+        (await dbContext.EntrustmentScales.Where(entity => entity.SeedKey != null && entity.SeedKey != "demo" && !entity.SeedKey.StartsWith("demo:")).Select(entity => entity.SeedKey).ToListAsync())
             .Should().Equal("cpsa:scale:v11.1");
-        (await dbContext.Curricula.Where(entity => entity.SeedKey != null).Select(entity => entity.SeedKey).ToListAsync())
+        (await dbContext.Curricula.Where(entity => entity.SeedKey != null && entity.SeedKey != "demo" && !entity.SeedKey.StartsWith("demo:")).Select(entity => entity.SeedKey).ToListAsync())
             .Should().Equal("cpsa:paediatrics:curriculum:v11.1");
-        (await dbContext.Epas.Where(entity => entity.SeedKey != null).Select(entity => new { entity.Code, entity.SeedKey }).ToListAsync())
+        (await dbContext.Epas.Where(entity => entity.SeedKey != null && entity.SeedKey != "demo" && !entity.SeedKey.StartsWith("demo:")).Select(entity => new { entity.Code, entity.SeedKey }).ToListAsync())
             .Should().BeEquivalentTo(EpaCodes.Select(code => new { Code = code, SeedKey = $"cpsa:paediatrics:epa:{code}" }));
     }
 
@@ -76,6 +81,78 @@ public sealed class PaediatricCatalogueSeedKeyTests
         (await database.CensusAsync()).Should().Be(before, "every renamed row is found by its seed key");
         secondBoot.Warnings.Should().BeEmpty();
     }
+
+    /// <summary>
+    /// The catalogue with none of its keys, as the T221 migration leaves it when every lookup its stamp uses was edited
+    /// away first but the College's name and the ladder's were not. The seeder then sees a fresh database whose names are
+    /// taken, and says how to recover. Its advice must work as written: every catalogue row needs its key, because a key
+    /// on only some of them makes the seeder treat the catalogue as present and announce the rest as missing at every boot.
+    /// </summary>
+    [Fact]
+    public async Task TheCatalogueWithoutItsKeys_IsRefusedWithAWarningNamingEveryKey_AndKeyingEveryRowAsItSaysFindsTheCatalogue()
+    {
+        var database = new SeedDatabase();
+        await database.BootAsync();
+        await database.EditAsync(async dbContext =>
+        {
+            foreach (var (_, _, find) in CatalogueRowsByKey)
+            {
+                dbContext.Entry(await find(dbContext)).Property("SeedKey").CurrentValue = null;
+            }
+        });
+        var before = await database.CensusAsync();
+
+        var refused = new CapturingLogger<PaediatricCatalogueSeeder>();
+        await database.BootAsync(refused);
+
+        (await database.CensusAsync()).Should().Be(before, "nothing is created beside a row the seeder did not make");
+        var warning = refused.Warnings.Should().ContainSingle().Which;
+        warning.Values["SeedKeys"].Should().Be(
+            string.Join("; ", CatalogueRowsByKey.Select(row => $"{row.Row} '{row.Key}'")),
+            "the warning names every catalogue row's key, which is what the operator has to write");
+
+        // One key alone, as the warning said before this was fixed: the catalogue now counts as present, and every other
+        // row is announced as missing and created by nothing.
+        await database.EditAsync(async dbContext =>
+            dbContext.Entry(await CatalogueRowsByKey[0].Find(dbContext)).Property("SeedKey").CurrentValue = CatalogueRowsByKey[0].Key);
+        var partlyKeyed = new CapturingLogger<PaediatricCatalogueSeeder>();
+        await database.BootAsync(partlyKeyed);
+
+        (await database.CensusAsync()).Should().Be(before);
+        partlyKeyed.Warnings.Select(entry => entry.Values["SeedKey"])
+            .Should().BeEquivalentTo(CatalogueRowsByKey.Skip(1).Select(row => row.Key));
+
+        // Every key, as the warning says now: the catalogue is found whole.
+        await database.EditAsync(async dbContext =>
+        {
+            foreach (var (_, key, find) in CatalogueRowsByKey)
+            {
+                dbContext.Entry(await find(dbContext)).Property("SeedKey").CurrentValue = key;
+            }
+        });
+        var keyed = new CapturingLogger<PaediatricCatalogueSeeder>();
+        await database.BootAsync(keyed);
+
+        (await database.CensusAsync()).Should().Be(before);
+        keyed.Warnings.Should().BeEmpty("every catalogue row is found by the key the warning named");
+    }
+
+    /// <summary>
+    /// Each catalogue row as the warning names it, its key typed here rather than read from the seeder, and how this test
+    /// finds the row without it.
+    /// </summary>
+    private static readonly (string Row, string Key, Func<ApplicationDbContext, Task<object>> Find)[] CatalogueRowsByKey =
+    [
+        ("College", "cpsa", async db => await db.Colleges.SingleAsync(entity => entity.ShortCode == "CPSA")),
+        ("speciality", "cpsa:paediatrics", async db => await db.Specialities.SingleAsync(entity => entity.Name == "Paediatrics")),
+        ("sub-speciality", "cpsa:paediatrics:paediatrics", async db => await db.SubSpecialities.SingleAsync(entity => entity.Name == "Paediatrics")),
+        ("entrustment scale", "cpsa:scale:v11.1", async db => await db.EntrustmentScales.SingleAsync(entity => entity.Name == "CPSA Paediatric Entrustment Scale v11.1")),
+        ("curriculum", "cpsa:paediatrics:curriculum:v11.1", async db => await db.Curricula.SingleAsync(entity => entity.Name == "Paediatric EPA Curriculum")),
+        .. EpaCodes.Select(code => (
+            $"EPA {code}",
+            $"cpsa:paediatrics:epa:{code}",
+            (Func<ApplicationDbContext, Task<object>>)(async db => await db.Epas.SingleAsync(entity => entity.Code == code && entity.OwningInstitutionId == null))))
+    ];
 
     private sealed record Census(int Colleges, int Specialities, int SubSpecialities, int Scales, int Epas, int Curricula, int Items);
 

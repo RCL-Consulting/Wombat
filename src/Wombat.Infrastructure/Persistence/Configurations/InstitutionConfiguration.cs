@@ -14,5 +14,6 @@ public sealed class InstitutionConfiguration : IEntityTypeConfiguration<Institut
         builder.Property(entity => entity.ContactEmail).HasMaxLength(320);
         builder.HasIndex(entity => entity.Name).IsUnique();
         builder.HasIndex(entity => entity.ShortCode).IsUnique();
+        builder.HasSeedKey();
     }
 }

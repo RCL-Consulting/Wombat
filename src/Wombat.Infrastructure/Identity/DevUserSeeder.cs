@@ -73,30 +73,45 @@ public sealed class DevUserSeeder
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        // The demo curriculum and institution are found by the seed keys DataSeeder gives them (T229), never by a name or
+        // short code an administrator can edit. Before T229 the institution was a SingleAsync on ShortCode "DEMO", so
+        // changing that short code stopped every later dev startup here.
         var demoCurriculum = await _dbContext.Curricula
             .Include(curriculum => curriculum.SubSpeciality)
             .ThenInclude(subSpeciality => subSpeciality.Speciality)
-            .SingleOrDefaultAsync(
-                curriculum => curriculum.Name == "IM Core Curriculum" && curriculum.Version == "2026.1",
-                cancellationToken);
+            .SingleOrDefaultAsync(curriculum => curriculum.SeedKey == DataSeeder.CurriculumSeedKey, cancellationToken);
 
         if (demoCurriculum is null)
         {
             _logger.LogWarning(
-                "Dev user seed skipped: the Demo curriculum is not present. " +
-                "DataSeeder must run before DevUserSeeder.");
+                "Dev user seed skipped: no curriculum carries the demo seed key '{SeedKey}'. " +
+                "DataSeeder must run before DevUserSeeder, and announces a demo row it cannot find.",
+                DataSeeder.CurriculumSeedKey);
             return;
         }
 
-        // The curriculum is national now (T091); the dev trainee trains at the seeded DEMO institution.
+        // The curriculum is national now (T091); the dev trainee trains at the seeded Demo Institution.
         var institutionId = await _dbContext.Institutions
-            .Where(institution => institution.ShortCode == "DEMO")
-            .Select(institution => institution.Id)
-            .SingleAsync(cancellationToken);
+            .Where(institution => institution.SeedKey == DataSeeder.InstitutionSeedKey)
+            .Select(institution => (int?)institution.Id)
+            .SingleOrDefaultAsync(cancellationToken);
 
+        if (institutionId is null)
+        {
+            _logger.LogWarning(
+                "Dev user seed skipped: no institution carries the demo seed key '{SeedKey}'. " +
+                "DataSeeder announces a demo row it cannot find.",
+                DataSeeder.InstitutionSeedKey);
+            return;
+        }
+
+        // By the catalogue's curriculum key (T221), whatever the curriculum is now called. The key carries the catalogue
+        // version, which this seeder does not read, so any version's key counts and the newest active one wins.
         var paediatricCurriculum = await _dbContext.Curricula
             .Include(curriculum => curriculum.SubSpeciality)
-            .Where(curriculum => curriculum.Name == "Paediatric EPA Curriculum" && curriculum.IsActive)
+            .Where(curriculum => curriculum.SeedKey != null
+                && curriculum.SeedKey.StartsWith(PaediatricCatalogueSeeder.CurriculumSeedKeyPrefix)
+                && curriculum.IsActive)
             .OrderByDescending(curriculum => curriculum.EffectiveFrom)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -112,19 +127,20 @@ public sealed class DevUserSeeder
 
         var traineeCurriculumId = paediatricCurriculum?.Id ?? demoCurriculum.Id;
 
-        await EnsureTraineeAsync(traineeCurriculumId, institutionId, scopes, cancellationToken);
-        await EnsureStaffUserAsync(CommitteeMemberEmail, CommitteeMemberPassword, "Committee", WombatRoles.CommitteeMember, institutionId, scopes, cancellationToken);
-        await EnsureStaffUserAsync(SecondCommitteeMemberEmail, SecondCommitteeMemberPassword, "Committee Two", WombatRoles.CommitteeMember, institutionId, scopes, cancellationToken);
-        await EnsureStaffUserAsync(AssessorEmail, AssessorPassword, "Assessor", WombatRoles.Assessor, institutionId, scopes, cancellationToken);
-        await EnsureStaffUserAsync(CoordinatorEmail, CoordinatorPassword, "Coordinator", WombatRoles.Coordinator, institutionId, scopes, cancellationToken);
-        await EnsureStaffUserAsync(InstitutionalAdminEmail, InstitutionalAdminPassword, "Institutional Admin", WombatRoles.InstitutionalAdmin, institutionId, scopes, cancellationToken);
+        await EnsureTraineeAsync(traineeCurriculumId, institutionId.Value, scopes, cancellationToken);
+        await EnsureStaffUserAsync(CommitteeMemberEmail, CommitteeMemberPassword, "Committee", WombatRoles.CommitteeMember, institutionId.Value, scopes, cancellationToken);
+        await EnsureStaffUserAsync(SecondCommitteeMemberEmail, SecondCommitteeMemberPassword, "Committee Two", WombatRoles.CommitteeMember, institutionId.Value, scopes, cancellationToken);
+        await EnsureStaffUserAsync(AssessorEmail, AssessorPassword, "Assessor", WombatRoles.Assessor, institutionId.Value, scopes, cancellationToken);
+        await EnsureStaffUserAsync(CoordinatorEmail, CoordinatorPassword, "Coordinator", WombatRoles.Coordinator, institutionId.Value, scopes, cancellationToken);
+        await EnsureStaffUserAsync(InstitutionalAdminEmail, InstitutionalAdminPassword, "Institutional Admin", WombatRoles.InstitutionalAdmin, institutionId.Value, scopes, cancellationToken);
         await EnsureCollegeAdminAsync(cancellationToken);
     }
 
     private async Task EnsureCollegeAdminAsync(CancellationToken cancellationToken)
     {
+        // By the catalogue's seed key (T221), not its short code, which an administrator can edit.
         var collegeId = await _dbContext.Colleges
-            .Where(college => college.ShortCode == "CPSA")
+            .Where(college => college.SeedKey == PaediatricCatalogueSeeder.CollegeSeedKey)
             .Select(college => (int?)college.Id)
             .SingleOrDefaultAsync(cancellationToken);
 

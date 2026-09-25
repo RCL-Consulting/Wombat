@@ -257,8 +257,10 @@ Three things follow:
   the boots before T187. A later change to any of these values, or to `WbaToolKey`, reaches an existing database only
   through a new migration. The seeders log a warning where the stored value differs.
 - **`PaediatricCatalogueSeeder` finds its College, speciality, sub-speciality, v11.1 ladder, EPAs and curriculum by
-  their `SeedKey` column, never by a name an administrator can edit, and creates them only on a database that holds none
-  of them, in one save; a row missing by its key is warned about and skipped, never created again (T221).** So a new
+  their `SeedKey` column (T221), and `DataSeeder` its Demo Institution, Demo College, discipline, O-R Scale, EPA-001 and
+  IM Core curriculum by theirs (T229), never by a name or short code an administrator can edit; each creates its rows
+  only on a database that holds none of them, in one save, and a row missing by its key is warned about and skipped,
+  never created again.** So a new
   catalogue EPA, or a new `catalogueVersion` (which changes the ladder's and the curriculum's keys), reaches an existing
   database only through a migration, like every other seeded value; until then each boot announces it as missing.
 

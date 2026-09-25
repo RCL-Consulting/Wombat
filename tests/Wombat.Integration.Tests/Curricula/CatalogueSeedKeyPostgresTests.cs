@@ -133,10 +133,10 @@ public sealed class CatalogueSeedKeyPostgresTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// One key names one row, and any number of rows an administrator made carry none.
+    /// One key names one row, and any number of rows an administrator made carry none. Seven tables since T229.
     /// </summary>
     [Fact]
-    public async Task TheSeedKeyIndexes_AreUniqueWhereAKeyIsSet_OnAllSixTables()
+    public async Task TheSeedKeyIndexes_AreUniqueWhereAKeyIsSet_OnEveryKeyedTable()
     {
         try
         {
@@ -641,7 +641,8 @@ public sealed class CatalogueSeedKeyPostgresTests : IAsyncLifetime
 
     // ---- expectations, census and boots ------------------------------------------------------------------------------------
 
-    private static string[] ExpectedIndexedTables() => ["Colleges", "Curricula", "EntrustmentScales", "Epas", "Specialities", "SubSpecialities"];
+    /// <summary>The tables with a seed key: T221's six, and institutions since T229, for DataSeeder's Demo Institution.</summary>
+    private static string[] ExpectedIndexedTables() => ["Colleges", "Curricula", "EntrustmentScales", "Epas", "Institutions", "Specialities", "SubSpecialities"];
 
     private static IEnumerable<(string Table, string Key)> ExpectedKeys()
         => new[]
@@ -660,14 +661,19 @@ public sealed class CatalogueSeedKeyPostgresTests : IAsyncLifetime
 
     private static bool IsSeedKeyWarning(CapturedLogEntry entry) => entry.Values.ContainsKey("SeedKey") || entry.Values.ContainsKey("Collisions");
 
-    /// <summary>Every row that carries a seed key, as (table, key) to id.</summary>
+    /// <summary>
+    /// Every row that carries a seed key, as (table, key) to id, but for <see cref="DataSeeder" />'s demo rows. Those carry
+    /// keys of their own since T229, each <c>demo</c> or starting <c>demo:</c>, and are <c>DemoSeedKeyPostgresTests</c>'
+    /// concern: the seeder creates them at the first boot after a migration.
+    /// </summary>
     private async Task<Dictionary<(string Table, string Key), int>> SeedKeysAsync(string schema)
     {
         var rows = await QueryAsync(
             schema,
             string.Join(
                 " UNION ALL ",
-                ExpectedIndexedTables().Select(table => $"""SELECT '{table}', "SeedKey", "Id" FROM "{table}" WHERE "SeedKey" IS NOT NULL""")),
+                ExpectedIndexedTables().Select(table =>
+                    $"""SELECT '{table}', "SeedKey", "Id" FROM "{table}" WHERE "SeedKey" IS NOT NULL AND "SeedKey" <> 'demo' AND "SeedKey" NOT LIKE 'demo:%'""")),
             reader => (Table: reader.GetString(0), Key: reader.GetString(1), Id: reader.GetInt32(2)));
 
         return rows.ToDictionary(row => (row.Table, row.Key), row => row.Id);

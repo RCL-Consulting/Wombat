@@ -433,8 +433,9 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
                 listsAfterBoot[itemId].Should().Be(list, "the seeders never write a list onto an item that already exists (item {0})", itemId);
             }
 
-            listsAfterBoot.Where(pair => !listsAfterMigration.ContainsKey(pair.Key))
-                .Should().OnlyContain(pair => pair.Value == null, "the only item a boot adds here is the demo curriculum's");
+            listsAfterBoot.Keys.Should().BeEquivalentTo(
+                listsAfterMigration.Keys,
+                "a boot adds no item here: the demo curriculum's own is already there, and so is each catalogue item");
 
             // Every type the migration saw is left exactly as the migration stamped it. The only rows the boot adds are
             // the instruments seeded after T122, each keyed on create.
@@ -646,11 +647,32 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
             var demoSpecialityId = await InsertAsync(connection,
                 """INSERT INTO "Specialities" ("CollegeId", "Name", "IsActive") VALUES ($1, 'General Medicine', TRUE) RETURNING "Id" """,
                 demoCollegeId);
-            await InsertAsync(connection,
+            var demoSubSpecialityId = await InsertAsync(connection,
                 """INSERT INTO "SubSpecialities" ("SpecialityId", "Name", "IsActive") VALUES ($1, 'General Internal Medicine', TRUE) RETURNING "Id" """,
                 demoSpecialityId);
             await InsertAsync(connection,
                 """INSERT INTO "Institutions" ("Name", "ShortCode", "CreatedOn", "IsActive") VALUES ('Demo Institution', 'DEMO', TIMESTAMPTZ '2026-06-19 00:00:00+00', TRUE) RETURNING "Id" """);
+
+            // The rest of the demo tree, as every DataSeeder boot left it: the O-R Scale, EPA-001 and the IM Core curriculum
+            // with its item, pinned to the scale as the boots before T174 pinned it. Since T229 the seeder finds each by the
+            // seed key the T229 migration stamps, and creates none of them on a database that holds the rest of the demo
+            // data, so without these the fixture would be a database whose administrator had deleted them, and the next
+            // boot would rightly announce each.
+            var orScaleId = await InsertAsync(connection,
+                """INSERT INTO "EntrustmentScales" ("Name") VALUES ('O-R Scale') RETURNING "Id" """);
+            string[] orRungs = ["Observe only", "Direct supervision", "Indirect supervision", "Independent", "Supervises others"];
+            for (var order = 1; order <= orRungs.Length; order++)
+            {
+                await ExecuteAsync(connection,
+                    """INSERT INTO "EntrustmentLevels" ("ScaleId", "Order", "Label") VALUES ($1, $2, $3)""",
+                    orScaleId, order, orRungs[order - 1]);
+            }
+
+            var demoEpaId = await InsertEpaAsync(connection, demoSubSpecialityId, "EPA-001", owningInstitutionId: null);
+            var imCoreId = await InsertCurriculumAsync(connection, demoSubSpecialityId, "IM Core Curriculum", "2026.1");
+            await InsertAsync(connection,
+                """INSERT INTO "CurriculumItems" ("CurriculumId", "EpaId", "OwningInstitutionId", "RequiredCount", "QuotaPeriod", "MinimumLevelOrder", "WindowMonths", "ScaleId") VALUES ($1, $2, NULL, 5, 0, 4, 12, $3) RETURNING "Id" """,
+                imCoreId, demoEpaId, orScaleId);
 
             var hospitalId = await InsertAsync(connection,
                 """INSERT INTO "Institutions" ("Name", "ShortCode", "CreatedOn", "IsActive") VALUES ('Legacy Hospital', 'LEGACY', TIMESTAMPTZ '2026-06-19 00:00:00+00', TRUE) RETURNING "Id" """);
