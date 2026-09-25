@@ -120,6 +120,7 @@ public sealed class ReviewsSchedulePrefillTests : TestContext
                         NeonatalPanel, "Neonatal CCC", DecisionPanelScope.Institution, 1, null, 2, "neonatal",
                         "Neonatal team Clinical Competency Committee")
                 },
+                GetCommitteeReviewsAccessQuery => new CommitteeReviewsAccessDto(MaySchedule: true, TraineeNote: null),
                 ListReviewsForPanelQuery => Array.Empty<CommitteeReviewListItemDto>(),
                 ListSchedulableTraineesQuery => new[] { new SchedulableTraineeDto("paeds-a", "Palesa Paeds") },
                 PreviewCommitteeAgendaQuery query => new CommitteeAgendaPreviewDto(

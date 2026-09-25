@@ -756,7 +756,20 @@ says which EPAs another panel decides ("schedule them separately"), and says whi
 Only the opening sentences sit in a `role="status"` region (`#agenda-preview-summary`), so a screen reader hears what a
 new choice changed, not every line again. Where a STAR already decided every EPA due, the opening sentence says so
 itself ("Every EPA this panel decides that is due for 2026 S2 is already decided in its window…"), not that none is
-due, since the note naming them is outside the live region (T215).
+due, since the note naming them is outside the live region (T215). The Trainee select offers exactly the trainees the
+scheduling handler would accept on the chosen panel (T182).
+
+**Who is offered scheduling** (T216). The page reads it from `GetCommitteeReviewsAccessQuery`, never from the caller's
+roles: `MaySchedule` is the rule the scheduling command and the agenda preview demand first. A caller it refuses, a
+committee member or anyone who also holds Trainee, is not offered "Schedule review", and a link that names a panel
+opens no form (only a typed or saved one: Decisions due gives such a caller no Schedule link). The subtitle then reads "Open existing
+committee reviews.". Someone who holds Trainee, whatever other role admits them, the Administrator's included (T185's
+trainee rung), is also listed no review, their own included, so the list's empty card says why: its title is "No
+reviews to show", its body is the query's `TraineeNote` ("You hold the Trainee role, so you cannot schedule a committee
+review or preview its agenda, and this page lists no one's reviews. Your own are on My committee reviews once they are
+ratified.", or, beside a committee member's role alone, "…so this page lists no one's committee reviews…"), and its
+action is a `.btn-outline` link, "Open My committee reviews". A committee member who holds no Trainee role keeps the
+list of their panels' reviews; their empty card says those appear once they are scheduled.
 
 **Entrustment-only reviews** (T131 slice 5). A review before a panel sitting as a College committee (the neonatal CCC)
 decides entrustment only: its decision is the STARs staged at it, and it records no progression category. A general

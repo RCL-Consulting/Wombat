@@ -30,7 +30,9 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// SpecialityAdmin or SubSpecialityAdmin the trainee's own speciality or sub-speciality. An unknown trainee, a trainee
 /// with no profile and a trainee at another institution are refused alike, and so is an unknown panel, so the refusal
 /// never confirms that an id names someone. The scheduling page's picker (<see cref="ListSchedulableTraineesQuery" />)
-/// offers exactly the trainees this accepts, through <see cref="MayScheduleFor" />.
+/// offers exactly the trainees this accepts, through <see cref="MayScheduleFor" />. Someone who holds Trainee schedules
+/// nobody, whatever other role they hold, the Administrator's included, and is offered nobody
+/// (<see cref="CommitteeDecisionAuthorization.MayScheduleReviews" />, T216).
 /// </item>
 /// <item>
 /// To act on a review already scheduled (<see cref="DemandTraineeAtPanelInstitutionAsync" />), its trainee must
@@ -87,6 +89,13 @@ internal static class CommitteeTraineeScope
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(panel);
 
+        // Who schedules at all, asked first and of everyone, the Administrator included: it holds the trainee rung
+        // (T216), so someone who holds Trainee beside a role that schedules is offered, and accepted for, nobody.
+        if (!CommitteeDecisionAuthorization.MayScheduleReviews(principal))
+        {
+            return false;
+        }
+
         // The institution first, then the speciality a Speciality-scoped panel covers: the one eligibility rule the
         // committee's routing reads too (T131).
         if (!DecisionRouting.IsEligible(panel, trainee))
@@ -95,16 +104,20 @@ internal static class CommitteeTraineeScope
         }
 
         // Not IsOverseenBy: its CommitteeMember arm would let someone who also sits on a committee borrow that role's
-        // reach for a right it does not grant. The role check stays as the statement of who schedules; the arms of
+        // reach for a right it does not grant. The role check above is the statement of who schedules; the arms of
         // IsAdministeredOrCoordinatedBy are those same roles.
-        return principal.IsAdministrator() ||
-               (CommitteeDecisionAuthorization.MayScheduleReviews(principal) &&
-                TraineeScopeResolver.IsAdministeredOrCoordinatedBy(trainee, principal));
+        return principal.IsAdministrator() || TraineeScopeResolver.IsAdministeredOrCoordinatedBy(trainee, principal);
     }
 
     /// <summary>
     /// Refuses to schedule a review of this trainee on this panel unless <see cref="MayScheduleFor" /> allows it.
     /// </summary>
+    /// <remarks>
+    /// Its callers first demand <see cref="CommitteeDecisionAuthorization.DemandReviewScheduling" />, before they look the
+    /// panel up, so that a caller who schedules nobody, someone who holds Trainee among them (T216), is refused before
+    /// either id is looked at, and only an Administrator who schedules reaches the refusals below that say which half
+    /// failed.
+    /// </remarks>
     public static async Task DemandSchedulableAsync(
         IApplicationDbContext dbContext,
         ClaimsPrincipal principal,

@@ -87,6 +87,7 @@ public sealed class PeopleByNamePageTests : TestContext
     public void TheReviewSchedule_NamesEachTrainee()
     {
         _sender
+            .On<GetCommitteeReviewsAccessQuery>(_ => new CommitteeReviewsAccessDto(MaySchedule: true, TraineeNote: null))
             .On<ListDecisionPanelsQuery>(_ => Array.Empty<DecisionPanelSummaryDto>())
             .On<ListReviewsForPanelQuery>(_ => new[] { ListItem(30, "trainee-1", "Thandi Nkosi") });
 

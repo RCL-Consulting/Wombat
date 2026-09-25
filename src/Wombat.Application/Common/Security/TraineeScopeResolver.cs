@@ -283,7 +283,12 @@ public static class TraineeScopeResolver
     /// caller may revoke and download;</item>
     /// <item>the committee member's dashboard, which names each trainee beside their targets;</item>
     /// <item>the decisions-due page (<c>GetEntrustmentDecisionsDueQuery</c>, T131 slice 6), which names each trainee's
-    /// standing on every EPA due in a period.</item>
+    /// standing on every EPA due in a period;</item>
+    /// <item>committee scheduling (<c>CommitteeDecisionAuthorization.MayScheduleReviews</c>, T216): scheduling a review,
+    /// previewing its agenda and the scheduling page's trainee picker, which such a caller is refused, or offered nobody,
+    /// for every trainee, themselves included;</item>
+    /// <item>the committee reviews page's list (<c>ListReviewsForPanelQuery</c>, T216), which names each review's trainee
+    /// and outcome: such a caller is listed none, their own included, which are on My committee reviews.</item>
     /// </list>
     /// <para>
     /// NOT yet the activity read gate (<c>ActivityService.IsScopedOverseerOf</c> and <c>ActivityReadScope.WhereReadableBy</c>,

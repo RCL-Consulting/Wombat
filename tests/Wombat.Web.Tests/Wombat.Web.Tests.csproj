@@ -13,6 +13,8 @@
     </PackageReference>
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+    <!-- T216: a page test that runs the real scheduling handlers against an in-memory store, so the rule is the one under test. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
@@ -25,5 +27,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Wombat.Web\Wombat.Web.csproj" />
     <ProjectReference Include="..\..\src\Wombat.Domain\Wombat.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- T216: names the trainees the real picker handler offers. -->
+    <Compile Include="../Shared/FakeUserDirectory.cs" Link="TestSupport/FakeUserDirectory.cs" />
   </ItemGroup>
 </Project>

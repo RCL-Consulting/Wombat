@@ -139,6 +139,26 @@ internal static class CommitteeDecisionAuthorization
     public static bool HoldsDecisionBodyRole(ClaimsPrincipal principal)
         => principal.IsAdministrator() || principal.IsInstitutionalAdmin();
 
+    /// <summary>The refusal to schedule, or preview, a review for a caller who holds no role that schedules.</summary>
+    internal const string MayNotScheduleReviews = "You are not allowed to schedule committee reviews.";
+
+    /// <summary>
+    /// The refusal to schedule, or preview the agenda of, any committee review for a caller who holds the Trainee role
+    /// beside a role that schedules. It is given before any panel or trainee is looked up, so it says nothing about
+    /// either id. (T216)
+    /// </summary>
+    internal const string TraineeSchedulesNoReview =
+        "You hold the Trainee role, so you cannot schedule a committee review or preview its agenda, including your own.";
+
+    /// <summary>
+    /// Refuses, before anything is looked up, a caller who may not put trainees before a panel at all
+    /// (<see cref="MayScheduleReviews" />). (T216)
+    /// </summary>
+    /// <remarks>
+    /// Only a caller whose Trainee role is what stands in the way, one who also holds a role that schedules, is told that
+    /// it is. A trainee alone, or one who also sits on a committee, holds no role that schedules, and is told so: the
+    /// Trainee sentence would say that dropping the role lets them schedule, which it does not.
+    /// </remarks>
     public static void DemandReviewScheduling(ClaimsPrincipal principal)
     {
         if (MayScheduleReviews(principal))
@@ -146,24 +166,73 @@ internal static class CommitteeDecisionAuthorization
             return;
         }
 
-        throw new UnauthorizedAccessException("You are not allowed to schedule committee reviews.");
+        throw new UnauthorizedAccessException(
+            HoldsSchedulingRole(principal) ? TraineeSchedulesNoReview : MayNotScheduleReviews);
     }
 
     /// <summary>
-    /// The roles that put trainees before a panel. Which trainees, and on which panels, is
-    /// <see cref="CommitteeTraineeScope" />'s question. (T182)
+    /// What the committee reviews page says to someone who holds Trainee beside a role that schedules: why it offers no
+    /// scheduling and lists no review, and where their own are. (T216)
+    /// </summary>
+    internal const string TraineeSchedulesAndListsNoReview =
+        "You hold the Trainee role, so you cannot schedule a committee review or preview its agenda, and this page lists " +
+        "no one's reviews. Your own are on My committee reviews once they are ratified.";
+
+    /// <summary>
+    /// What the committee reviews page says to someone who holds Trainee beside a role that lists a panel's reviews but
+    /// schedules none, a committee member's: why it lists no review, and where their own are. (T216)
+    /// </summary>
+    internal const string TraineeListsNoReview =
+        "You hold the Trainee role, so this page lists no one's committee reviews. Your own are on My committee reviews " +
+        "once they are ratified.";
+
+    /// <summary>
+    /// Whether this caller may put trainees before a panel at all: a role that schedules reviews, and not the Trainee
+    /// role. Which trainees, and on which panels, is <see cref="CommitteeTraineeScope" />'s question. (T182, T216)
     /// </summary>
     /// <remarks>
+    /// <para>
     /// InstitutionalAdmin can schedule reviews on panels in their own institution. This mirrors
     /// DemandPanelAdministration, which already admits InstitutionalAdmin — scheduling a review on a panel you can
     /// administer should not require a lesser Coordinator role. (T075 / F-4A-1)
+    /// </para>
+    /// <para>
+    /// <b>A trainee first</b> (<see cref="TraineeScopeResolver.ActsAsTrainee" />, T185, T216). A registrar who also
+    /// coordinates or administers the programme, the Administrator role included, schedules no review and previews no
+    /// agenda. Not a peer's: scheduling chooses the panel that decides the peer's EPAs and the window of evidence it
+    /// reads, and the agenda preview names the peer's standing on every EPA due, which is the peer's record. Not their
+    /// own either, as with revoking, where a trainee revokes none of their own entrustment decisions: a trainee does not
+    /// choose which panel sits on them, for which period, or on which evidence. For scheduling, the rung is asked here
+    /// and nowhere else. The scheduling command and the agenda preview demand it before anything is looked up
+    /// (<see cref="DemandReviewScheduling" />). The scheduling predicate asks it before its Administrator arm
+    /// (<see cref="CommitteeTraineeScope.MayScheduleFor" />), so the picker and the decisions-due page's Schedule link
+    /// offer such a caller nobody, and the committee reviews page reads it (<see cref="GetCommitteeReviewsAccessQuery" />)
+    /// to offer no Schedule review. Until T216 a Trainee who was also a Coordinator could schedule a peer's review, and
+    /// preview its agenda.
+    /// </para>
     /// </remarks>
     public static bool MayScheduleReviews(ClaimsPrincipal principal)
+        => !TraineeScopeResolver.ActsAsTrainee(principal) && HoldsSchedulingRole(principal);
+
+    /// <summary>
+    /// Whether this caller holds a role that schedules reviews, whatever else they hold. Not the right to schedule, which
+    /// is <see cref="MayScheduleReviews" />: this only says which refusal a caller who may not is given.
+    /// </summary>
+    private static bool HoldsSchedulingRole(ClaimsPrincipal principal)
         => principal.IsInRole(WombatRoles.Administrator) ||
            principal.IsInRole(WombatRoles.InstitutionalAdmin) ||
            principal.IsInRole(WombatRoles.Coordinator) ||
            principal.IsInRole(WombatRoles.SpecialityAdmin) ||
            principal.IsInRole(WombatRoles.SubSpecialityAdmin);
+
+    /// <summary>
+    /// Why the committee reviews page lists this caller no review and offers them no scheduling, when the reason is the
+    /// Trainee role (T185's rung); null for anyone else. (T216)
+    /// </summary>
+    public static string? TraineeNoteOnReviewsPage(ClaimsPrincipal principal)
+        => !TraineeScopeResolver.ActsAsTrainee(principal) ? null
+            : HoldsSchedulingRole(principal) ? TraineeSchedulesAndListsNoReview
+            : TraineeListsNoReview;
 
     public static void DemandPanelAccess(ClaimsPrincipal principal, DecisionPanel panel)
     {

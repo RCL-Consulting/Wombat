@@ -248,6 +248,220 @@ public sealed class CommitteeTraineeScopeTests
         (await AcceptsAsync(db, Member("member-a", InstitutionA), PanelA, PaedsAtA)).Should().BeFalse();
     }
 
+    // ─── A trainee first (T216) ──────────────────────────────────────────────
+    //
+    // T185's rung: someone who holds Trainee beside a role that schedules, the Administrator's included, schedules nobody,
+    // previews nobody's agenda, and is offered nobody. Each case has its control: the same sign-in without the Trainee
+    // role is accepted, so the refusal is the rung's and not the fixture's.
+
+    private const string TraineeRefusal =
+        "You hold the Trainee role, so you cannot schedule a committee review or preview its agenda, including your own.";
+
+    /// <summary>A registrar with no programme in the fixture, so every trainee in it is a peer.</summary>
+    private const string Registrar = "registrar-a";
+
+    public static TheoryData<string> RolesThatSchedule => new()
+    {
+        "Coordinator", "InstitutionalAdmin", "SpecialityAdmin", "SubSpecialityAdmin", "Administrator"
+    };
+
+    [Theory]
+    [MemberData(nameof(RolesThatSchedule))]
+    public async Task ATraineeWhoAlsoSchedules_IsRefusedAPeersReview_BeforeEitherIdIsLookedUp_AndNothingIsWritten(string role)
+    {
+        await using var db = await SeededDbAsync();
+        var registrar = TraineeWho(role, Registrar);
+
+        foreach (var (panelId, traineeUserId) in new[]
+                 {
+                     (PanelA, PaedsAtA), (PanelA, SurgeryAtA), (PanelB, PaedsAtB), (999, PaedsAtA), (PanelA, "nobody-by-this-id")
+                 })
+        {
+            // One refusal for every pair, an unknown panel included: an Administrator who is also a trainee is not told
+            // that a panel id names nothing, or where a trainee trains.
+            var refusal = await RefusalAsync(() => ScheduleAsync(db, registrar, panelId, traineeUserId));
+
+            refusal.Should().BeOfType<UnauthorizedAccessException>()
+                .Which.Message.Should().Be(TraineeRefusal, $"{role}: panel {panelId}, {traineeUserId}");
+        }
+
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await ReviewCountAsync()).Should().Be(0);
+
+        (await AcceptsAsync(db, WithoutTrainee(registrar), PanelA, PaedsAtA))
+            .Should().BeTrue($"the same {role} without the Trainee role schedules the peer");
+    }
+
+    [Theory]
+    [MemberData(nameof(RolesThatSchedule))]
+    public async Task ATraineeWhoAlsoSchedules_CannotScheduleTheirOwnReview_Either(string role)
+    {
+        // A trainee does not choose which panel sits on them, for which period, or on which evidence.
+        await using var db = await SeededDbAsync();
+        var paedsWhoAlsoSchedules = TraineeWho(role, PaedsAtA);
+
+        var refusal = await RefusalAsync(() => ScheduleAsync(db, paedsWhoAlsoSchedules, PanelA, PaedsAtA));
+
+        refusal.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(TraineeRefusal);
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await ReviewCountAsync()).Should().Be(0);
+
+        (await AcceptsAsync(db, WithoutTrainee(paedsWhoAlsoSchedules), PanelA, PaedsAtA)).Should().BeTrue();
+    }
+
+    [Theory]
+    [MemberData(nameof(RolesThatSchedule))]
+    public async Task ATraineeWhoAlsoSchedules_PreviewsNoAgenda_APeersOrTheirOwn(string role)
+    {
+        // The preview names the trainee's standing on every EPA due: a peer's record.
+        await using var db = await SeededDbAsync();
+        var registrar = TraineeWho(role, Registrar);
+        var paedsWhoAlsoSchedules = TraineeWho(role, PaedsAtA);
+
+        foreach (var (principal, panelId) in new[]
+                 {
+                     (registrar, PanelA), (registrar, 999), (registrar, PanelB), (paedsWhoAlsoSchedules, PanelA)
+                 })
+        {
+            var refusal = await RefusalAsync(() => PreviewAsync(db, principal, panelId, PaedsAtA));
+
+            refusal.Should().BeOfType<UnauthorizedAccessException>()
+                .Which.Message.Should().Be(TraineeRefusal, $"{role}: panel {panelId}");
+        }
+
+        var preview = await PreviewAsync(db, WithoutTrainee(registrar), PanelA, PaedsAtA);
+        preview.PeriodLabel.Should().Be("2026 S2", $"the same {role} without the Trainee role previews the peer's agenda");
+        preview.TraineeHasCurriculum.Should().BeTrue();
+    }
+
+    [Theory]
+    [MemberData(nameof(RolesThatSchedule))]
+    public async Task ThePicker_OffersATraineeWhoAlsoSchedules_Nobody_ThemselvesIncluded(string role)
+    {
+        await using var db = await SeededDbAsync();
+        var registrar = TraineeWho(role, Registrar);
+        var paedsWhoAlsoSchedules = TraineeWho(role, PaedsAtA);
+
+        foreach (var panelId in new[] { PanelA, PaediatricsPanelA, PanelB })
+        {
+            (await PickerAsync(db, registrar, panelId)).Should().BeEmpty($"{role} on panel {panelId}");
+            (await PickerAsync(db, paedsWhoAlsoSchedules, panelId)).Should().BeEmpty($"{role} on panel {panelId}");
+        }
+
+        (await PickerAsync(db, WithoutTrainee(registrar), PanelA)).Select(trainee => trainee.UserId)
+            .Should().Contain(PaedsAtA, $"the same {role} without the Trainee role is offered A's trainees");
+    }
+
+    private const string MayNotSchedule = "You are not allowed to schedule committee reviews.";
+
+    [Fact]
+    public async Task OnlyATraineeWhoAlsoHoldsARoleThatSchedules_IsToldTheTraineeRoleIsWhy()
+    {
+        // A trainee alone, or one who also sits on a committee, holds no role that schedules: dropping Trainee would not
+        // let them schedule, so they are not told that it is the reason (T216 review).
+        await using var db = await SeededDbAsync();
+
+        foreach (var (caller, principal, expected) in new[]
+                 {
+                     ("a trainee alone", TestPrincipals.Trainee(PaedsAtA, InstitutionA), MayNotSchedule),
+                     ("a trainee on the committee", TraineeWho("CommitteeMember", "member-a"), MayNotSchedule),
+                     ("a committee member", Member("member-a", InstitutionA), MayNotSchedule),
+                     ("a trainee who coordinates", TraineeWho("Coordinator", Registrar), TraineeRefusal)
+                 })
+        {
+            var schedule = await RefusalAsync(() => ScheduleAsync(db, principal, PanelA, PaedsAtA));
+            var preview = await RefusalAsync(() => PreviewAsync(db, principal, PanelA, PaedsAtA));
+
+            schedule.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(expected, caller);
+            preview.Should().BeOfType<UnauthorizedAccessException>().Which.Message.Should().Be(expected, caller);
+        }
+
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await ReviewCountAsync()).Should().Be(0);
+    }
+
+    // ─── The committee reviews page (T216) ───────────────────────────────────
+    //
+    // The page's list names each review's trainee and the committee's outcome, and the review itself refuses someone who
+    // holds Trainee every review but their own once ratified (DemandReviewAccess). So such a caller is listed none, a
+    // peer's or their own, whatever other role brings them to the page. Each case has its control without Trainee.
+
+    public static TheoryData<string> RolesThatListReviews => new()
+    {
+        "Coordinator", "InstitutionalAdmin", "SpecialityAdmin", "SubSpecialityAdmin", "Administrator", "CommitteeMember"
+    };
+
+    [Theory]
+    [MemberData(nameof(RolesThatListReviews))]
+    public async Task TheReviewList_ListsATraineeWhoAlsoHoldsAnotherRole_NoReview_APeersOrTheirOwn(string role)
+    {
+        await using var db = await SeededDbAsync();
+
+        // member-a sits on panel A, so every role's own reach lists panel A's reviews: a member's through the seat.
+        var peers = await SeedReviewForAsync(db, "Ratify", PaedsAtA);
+        var own = await SeedReviewForAsync(db, "Start", "member-a");
+        var registrar = TraineeWho(role, "member-a");
+
+        (await ListAsync(db, registrar)).Should().BeEmpty($"{role} who also holds Trainee");
+
+        var control = await ListAsync(db, WithoutTrainee(registrar));
+        control.Select(review => review.Id).Should().Contain(
+            [peers, own], $"the same {role} without the Trainee role lists panel A's reviews");
+        var peersRow = control.Single(review => review.Id == peers);
+        peersRow.TraineeName.Should().Be("Palesa Paeds");
+        peersRow.CurrentDecisionCategory.Should().Be(
+            CommitteeDecisionCategory.SatisfactoryProgress, "the row shows the committee's outcome, which is why it is withheld");
+    }
+
+    [Theory]
+    [MemberData(nameof(RolesThatListReviews))]
+    public async Task TheReviewsPage_OffersScheduling_ExactlyToWhomTheHandlersAdmit_AndSaysWhyToATrainee(string role)
+    {
+        await using var db = await SeededDbAsync();
+        var schedules = role != "CommitteeMember";
+
+        foreach (var (holdsTrainee, principal) in new[]
+                 {
+                     (true, TraineeWho(role, Registrar)), (false, WithoutTrainee(TraineeWho(role, Registrar)))
+                 })
+        {
+            var access = await new GetCommitteeReviewsAccessQueryHandler().Handle(
+                new GetCommitteeReviewsAccessQuery(principal), CancellationToken.None);
+
+            // The flag is the handlers' own first rule: the preview (which writes nothing) is refused by that rule exactly
+            // when the page offers no scheduling.
+            var refusedByTheRule = await PreviewRefusedByTheSchedulingRuleAsync(db, principal);
+            access.MaySchedule.Should().Be(!refusedByTheRule, $"{role}, Trainee: {holdsTrainee}");
+            access.MaySchedule.Should().Be(schedules && !holdsTrainee, $"{role}, Trainee: {holdsTrainee}");
+
+            access.TraineeNote.Should().Be(
+                !holdsTrainee ? null : schedules ? TraineeSchedulesAndListsNoReview : TraineeListsNoReview,
+                $"{role}, Trainee: {holdsTrainee}");
+        }
+    }
+
+    private const string TraineeSchedulesAndListsNoReview =
+        "You hold the Trainee role, so you cannot schedule a committee review or preview its agenda, and this page lists " +
+        "no one's reviews. Your own are on My committee reviews once they are ratified.";
+
+    private const string TraineeListsNoReview =
+        "You hold the Trainee role, so this page lists no one's committee reviews. Your own are on My committee reviews " +
+        "once they are ratified.";
+
+    /// <summary>Whether the agenda preview is refused by the rule that admits a caller to scheduling at all.</summary>
+    private static async Task<bool> PreviewRefusedByTheSchedulingRuleAsync(ApplicationDbContext db, ClaimsPrincipal principal)
+    {
+        try
+        {
+            await PreviewAsync(db, principal, PanelA, PaedsAtA);
+            return false;
+        }
+        catch (UnauthorizedAccessException refusal) when (refusal.Message is MayNotSchedule or TraineeRefusal)
+        {
+            return true;
+        }
+    }
+
     // ─── A panel that covers one speciality (T131 slice 3, T194 item 2) ──────
 
     [Theory]
@@ -302,7 +516,7 @@ public sealed class CommitteeTraineeScopeTests
                  {
                      "Coordinator of A", "InstitutionalAdmin of A", "SpecialityAdmin of A", "SubSpecialityAdmin of A",
                      "Coordinator of B", "CommitteeMember of A", "Trainee of A", "SpecialityAdmin on the committee of A",
-                     "Administrator"
+                     "Administrator", "Trainee who coordinates at A", "Trainee who is an Administrator"
                  })
         {
             foreach (var panel in new[] { PanelA, PanelB, 999 })
@@ -568,6 +782,19 @@ public sealed class CommitteeTraineeScopeTests
             new ListSchedulableTraineesQuery(panelId, principal),
             CancellationToken.None);
 
+    /// <summary>The committee reviews page's list. (T216)</summary>
+    private static async Task<IReadOnlyList<CommitteeReviewListItemDto>> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
+        => await new ListReviewsForPanelQueryHandler(db, new NamedUsers()).Handle(
+            new ListReviewsForPanelQuery(principal),
+            CancellationToken.None);
+
+    /// <summary>The scheduling form's agenda preview, for the period <see cref="ScheduleAsync" /> schedules. (T216)</summary>
+    private static async Task<CommitteeAgendaPreviewDto> PreviewAsync(
+        ApplicationDbContext db, ClaimsPrincipal principal, int panelId, string traineeUserId)
+        => await new PreviewCommitteeAgendaQueryHandler(db).Handle(
+            new PreviewCommitteeAgendaQuery(traineeUserId, panelId, 2026, 2, principal, new DateOnly(2026, 9, 24)),
+            CancellationToken.None);
+
     private static async Task RunAsync(
         ApplicationDbContext db, string command, int reviewId, string traineeUserId, ClaimsPrincipal principal)
     {
@@ -827,8 +1054,32 @@ public sealed class CommitteeTraineeScopeTests
         "Trainee of A" => TestPrincipals.Trainee(PaedsAtA, InstitutionA),
         "SpecialityAdmin on the committee of A" => AlsoCommitteeMember(Scheduler("SpecialityAdmin", InstitutionA)),
         "Administrator" => TestPrincipals.Administrator(),
+        "Trainee who coordinates at A" => TraineeWho("Coordinator", Registrar),
+        "Trainee who is an Administrator" => TraineeWho("Administrator", Registrar),
         _ => throw new ArgumentOutOfRangeException(nameof(caller), caller, null)
     };
+
+    /// <summary>
+    /// Someone who holds Trainee and <paramref name="role" /> on one sign-in at A, with the scope claims
+    /// <see cref="Scheduler" /> gives that role. (T216)
+    /// </summary>
+    private static ClaimsPrincipal TraineeWho(string role, string userId) => role switch
+    {
+        "Coordinator" or "InstitutionalAdmin" or "Administrator" => TestPrincipals.InRoles(
+            [WombatRoles.Trainee, role], userId, InstitutionA),
+        "SpecialityAdmin" => TestPrincipals.InRoles(
+            [WombatRoles.Trainee, WombatRoles.SpecialityAdmin], userId, InstitutionA, specialityId: Paediatrics),
+        "SubSpecialityAdmin" => TestPrincipals.InRoles(
+            [WombatRoles.Trainee, WombatRoles.SubSpecialityAdmin], userId, InstitutionA, subSpecialityId: GeneralPaediatrics),
+        "CommitteeMember" => TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.CommitteeMember], userId, InstitutionA),
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, null)
+    };
+
+    /// <summary>The same sign-in, every claim kept but the Trainee role: the control for each T216 refusal.</summary>
+    private static ClaimsPrincipal WithoutTrainee(ClaimsPrincipal principal)
+        => new(new ClaimsIdentity(
+            principal.Claims.Where(claim => !(claim.Type == ClaimTypes.Role && claim.Value == WombatRoles.Trainee)),
+            "test"));
 
     /// <summary>The same person, sitting on the committee as well: the two-role case of the overseer rule.</summary>
     private static ClaimsPrincipal AlsoCommitteeMember(ClaimsPrincipal principal)

@@ -7,9 +7,14 @@
 
 <PageTitle>Committee Reviews</PageTitle>
 
-<PageHeader Title="Committee reviews" Subtitle="Schedule progression reviews and open existing ones.">
+@* Schedule review is offered only to a caller the scheduling command would admit at all, as the query says
+   (GetCommitteeReviewsAccessQuery, T216): not to a committee member, and not to anyone who also holds Trainee. *@
+<PageHeader Title="Committee reviews" Subtitle="@Subtitle">
   <Actions>
-    <button type="button" class="btn btn-primary" @onclick="ToggleCreateForm">Schedule review</button>
+    @if (MaySchedule)
+    {
+      <button type="button" class="btn btn-primary" @onclick="ToggleCreateForm">Schedule review</button>
+    }
   </Actions>
 </PageHeader>
 
@@ -90,7 +95,7 @@
   </section>
 }
 
-<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="No reviews yet" EmptyBody="Schedule the first committee review to start the progression record.">
+<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="@EmptyTitle" EmptyBody="@EmptyBody" EmptyActions="@EmptyActions">
   <DataTable Items="_reviews">
     <HeaderRow>
       <tr>
@@ -131,6 +136,7 @@
   private string? _loadError;
   private string? _actionError;
   private ReviewFormModel _model = new();
+  private CommitteeReviewsAccessDto? _access;
 
   // The periods a review can sit for, around today, read from the one academic calendar (T131).
   private readonly IReadOnlyList<CommitteeReviewPeriodOptionDto> _periods = CommitteeReviewPeriods.Around(QuotaCalendar.Today());
@@ -170,7 +176,8 @@
   /// <summary>Opens the form filled from the query string, where the page offers what it names.</summary>
   private async Task ApplyPrefillAsync()
   {
-    if (PrefillPanelId is not int panelId || !_panels.Any(panel => panel.Id == panelId))
+    // A caller who may schedule no one is not offered the form, from a link any more than from the button (T216).
+    if (!MaySchedule || PrefillPanelId is not int panelId || !_panels.Any(panel => panel.Id == panelId))
     {
       return;
     }
@@ -200,6 +207,8 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
+      _access = await Sender.Send(new GetCommitteeReviewsAccessQuery(authState.User));
+
       _panels.Clear();
       _panels.AddRange(await Sender.Send(new ListDecisionPanelsQuery(authState.User)));
 
@@ -220,6 +229,31 @@
   {
     _showCreateForm = !_showCreateForm;
   }
+
+  /// <summary>Whether the scheduling command would admit this caller at all; false until the page knows (T216).</summary>
+  private bool MaySchedule => _access?.MaySchedule == true;
+
+  private string Subtitle => _access is { MaySchedule: false }
+    ? "Open existing committee reviews."
+    : "Schedule progression reviews and open existing ones.";
+
+  // The list is always empty for someone who holds Trainee (T185's rung, T216), so its empty card says why, in the
+  // query's words, and where their own reviews are.
+  private string EmptyTitle => _access?.TraineeNote is not null ? "No reviews to show" : "No reviews yet";
+
+  private string EmptyBody => _access switch
+  {
+    { TraineeNote: { } note } => note,
+    { MaySchedule: false } => "The reviews of the panels you sit on appear here once they are scheduled.",
+    _ => "Schedule the first committee review to start the progression record."
+  };
+
+  private RenderFragment? EmptyActions => _access?.TraineeNote is null ? null : MyReviewsLink;
+
+  private RenderFragment MyReviewsLink => __builder =>
+  {
+    <a class="btn btn-outline" href="/committee/my-reviews">Open My committee reviews</a>
+  };
 
   /// <summary>
   /// Offers the trainees the scheduling handler would accept on the chosen panel, by the handler's own predicate

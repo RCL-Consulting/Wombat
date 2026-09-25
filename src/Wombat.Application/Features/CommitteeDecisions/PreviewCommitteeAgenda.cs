@@ -15,7 +15,9 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// </summary>
 /// <remarks>
 /// Authorised as scheduling is (<see cref="CommitteeTraineeScope.DemandSchedulableAsync" />): whoever may not put this
-/// trainee before this panel gets the scheduling refusal, which says nothing about either id.
+/// trainee before this panel gets the scheduling refusal, which says nothing about either id. A caller who holds Trainee
+/// previews no agenda, whatever other role they hold, and is told so before either id is looked up: the preview names the
+/// trainee's standing on every EPA due (T216).
 /// </remarks>
 /// <param name="Today">The day "missed" is judged on; the programme's today when null.</param>
 public sealed record PreviewCommitteeAgendaQuery(

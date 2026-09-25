@@ -372,6 +372,7 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
                 new DecisionPanelSummaryDto(GeneralPanel, "General CCC", DecisionPanelScope.Institution, 1, null, 3),
                 new DecisionPanelSummaryDto(NeonatalPanel, "Neonatal CCC", DecisionPanelScope.Institution, 1, null, 2, "neonatal", NeonatalCcc)
             })
+            .On<GetCommitteeReviewsAccessQuery>(_ => new CommitteeReviewsAccessDto(MaySchedule: true, TraineeNote: null))
             .On<ListReviewsForPanelQuery>(_ => Array.Empty<CommitteeReviewListItemDto>())
             .On<ListSchedulableTraineesQuery>(_ => new[] { new SchedulableTraineeDto("paeds-a", "Palesa Paeds") })
             .On<PreviewCommitteeAgendaQuery>(query => new CommitteeAgendaPreviewDto(

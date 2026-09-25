@@ -43,6 +43,7 @@ public sealed class ReviewsScheduleTraineePickerTests : TestContext
                 new DecisionPanelSummaryDto(PanelA, "A's annual review panel", DecisionPanelScope.Institution, 1, null, 3),
                 new DecisionPanelSummaryDto(PanelB, "A's second panel", DecisionPanelScope.Institution, 1, null, 3)
             })
+            .On<GetCommitteeReviewsAccessQuery>(_ => new CommitteeReviewsAccessDto(MaySchedule: true, TraineeNote: null))
             .On<ListReviewsForPanelQuery>(_ => Array.Empty<CommitteeReviewListItemDto>())
             .On<ListSchedulableTraineesQuery>(query => query.PanelId switch
             {
