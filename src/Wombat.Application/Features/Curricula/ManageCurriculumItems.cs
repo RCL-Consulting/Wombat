@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
@@ -186,11 +187,14 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
 
+        // T223: an institution adds items of its own only to a curriculum it has adopted, now or before.
+        await CurriculumAdminScope.EnsureOwnerAdoptedAsync(_dbContext, curriculum.Id, owningInstitutionId, request.Principal, cancellationToken);
+
         // T195: a national item names a national EPA of the curriculum's sub-speciality; a local one may also name its
         // institution's own local EPAs. The Add picker lists exactly these.
         await CurriculumItemEpas.EnsureNameableAsync(_dbContext, curriculum, owningInstitutionId, request.EpaId, cancellationToken);
 
-        CurriculumAdminScope.EnsureEpaNotYetOn(curriculum, request.EpaId, exceptItemId: null, request.Principal);
+        CurriculumAdminScope.EnsureEpaNotYetOn(curriculum, request.EpaId, exceptItemId: null, owningInstitutionId);
 
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
             _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, currentScaleId: null, cancellationToken);
@@ -214,7 +218,16 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
             DecisionIsOpportunistic = request.DecisionIsOpportunistic
         });
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (CurriculumAdminScope.IsEpaHeldRefusal(exception))
+        {
+            // Another item took the EPA after the check above (T223 review): refused in the check's words, not EF's.
+            throw await CurriculumAdminScope.EpaHeldRefusalAsync(
+                _dbContext, curriculum.Id, request.EpaId, exceptItemId: null, owningInstitutionId, exception, cancellationToken);
+        }
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
@@ -255,11 +268,14 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
 
+        // T223: an institution's own item is changed only on a curriculum that institution has adopted, now or before.
+        await CurriculumAdminScope.EnsureOwnerAdoptedAsync(_dbContext, curriculum.Id, item.OwningInstitutionId, request.Principal, cancellationToken);
+
         // T195: judged against the STORED item's owner, and on the requested EPA whether or not it changed. The edit
         // row's picker lists exactly these.
         await CurriculumItemEpas.EnsureNameableAsync(_dbContext, curriculum, item.OwningInstitutionId, request.EpaId, cancellationToken);
 
-        CurriculumAdminScope.EnsureEpaNotYetOn(curriculum, request.EpaId, request.ItemId, request.Principal);
+        CurriculumAdminScope.EnsureEpaNotYetOn(curriculum, request.EpaId, request.ItemId, item.OwningInstitutionId);
 
         // Before the first mutation (the audit pipeline commits a half-finished one), and judged on the REQUESTED
         // values: a save that changes the scale, the flat minimum and the stage minima together is re-pinning the
@@ -283,7 +299,16 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         item.DecisionBodyKey = DecisionBody.NormalizeKey(request.DecisionBodyKey);
         item.DecisionIsOpportunistic = request.DecisionIsOpportunistic;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (CurriculumAdminScope.IsEpaHeldRefusal(exception))
+        {
+            // Another item took the EPA after the check above (T223 review): refused in the check's words, not EF's.
+            throw await CurriculumAdminScope.EpaHeldRefusalAsync(
+                _dbContext, curriculum.Id, request.EpaId, request.ItemId, item.OwningInstitutionId, exception, cancellationToken);
+        }
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
         return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
@@ -325,6 +350,8 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
 
+        // Unlike Add and Update, no adoption is asked for (T223): an institution takes its own item off a curriculum wherever
+        // it is, on a version it has moved off (T211) or on one it never adopted.
         _dbContext.Set<CurriculumItem>().Remove(item);
         await _dbContext.SaveChangesAsync(cancellationToken);
 

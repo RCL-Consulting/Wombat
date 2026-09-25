@@ -162,13 +162,14 @@
                   }
                   else
                   {
-                    @* Each button's name starts with its label and names the item's EPA (T222): a column of identical
-                       "Edit" and "Remove" buttons is otherwise indistinguishable to a screen reader. Remove asks first, in
-                       the one ConfirmDialog below; the red button is only in its footer (DESIGN.md § Button system). *@
+                    @* Each button's name starts with its label and names the item (T222, T223 review): a column of
+                       identical "Edit" and "Remove" buttons is otherwise indistinguishable to a screen reader. Remove asks
+                       first, in the one ConfirmDialog below; the red button is only in its footer (DESIGN.md § Button
+                       system). *@
                     <div class="actions-cell">
-                      <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Edit {item.EpaCode}")"
+                      <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Edit {ItemName(item)}")"
                               @onclick="() => BeginEditAsync(item)">Edit</button>
-                      <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Remove {item.EpaCode}")"
+                      <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Remove {ItemName(item)}")"
                               disabled="@(_saving || _removing)" @onclick="() => AskRemoveAsync(item)">Remove</button>
                     </div>
                   }
@@ -184,7 +185,7 @@
                 <tr class="is-editing">
                   <td colspan="9">
                     <fieldset>
-                      <legend>Edit @item.EpaCode</legend>
+                      <legend>Edit @ItemName(item)</legend>
                       <div class="form-grid form-grid--wide">
                         <FormField Label="EPA" InputId="edit-epa" Required="true" FullWidth="true" HelpText="@EpaHelp">
                           <ChildContent>
@@ -537,7 +538,7 @@
   // One help text per field, printed by the edit form and the Add form alike (T176): the two are the same fields, in the
   // same order, with the same help, and CurriculumItemsEditLayoutTests holds them to it. The scale's matters most while
   // editing, which is when a change of ladder clears the minima already stored.
-  private const string EpaHelp = "Lists only the EPAs this item can name that are not already on this curriculum: the national EPAs of its sub-speciality and, for an item an institution added, that institution's own local EPAs. An EPA can be on a curriculum only once.";
+  private const string EpaHelp = "Lists only the EPAs this item can name that no item on this curriculum already holds for the same trainees: the national EPAs of its sub-speciality and, for an item an institution added, that institution's own local EPAs. A national item holds its EPA for every institution; an institution's own item holds it for that institution alone.";
   private const string TargetHelp = "Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.";
   private const string PeriodHelp = "A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.";
   private const string ScaleHelp = "The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.";
@@ -752,7 +753,7 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _actionError = await RunAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, item.Id, authState.User)), $"{item.EpaCode} removed from this curriculum.");
+      _actionError = await RunAsync(() => Sender.Send(new RemoveCurriculumItemCommand(Id, item.Id, authState.User)), $"{ItemName(item)} removed from this curriculum.");
       if (_actionError is null)
       {
         // Its EPA is free again, so the pickers offer it (T222).
@@ -1064,15 +1065,30 @@
     => item.OwningInstitutionName is { Length: > 0 } owner ? $"{owner}'s own item" : "Your institution's own item";
 
   /// <summary>
+  /// The item as its row actions, its edit row's legend and its Remove result name it: its EPA, and whose own item it is
+  /// where the row names the owner (T223 review). Since T223 two institutions may each hold an item of their own on one
+  /// EPA, and an Administrator reads both, so "Edit PAED-099" named two buttons. Anyone else reads at most one item per
+  /// EPA (a national item and an institution's own never share one), and the EPA alone names it.
+  /// </summary>
+  private static string ItemName(CurriculumItemDto item)
+    => item.OwningInstitutionName is { Length: > 0 } owner ? $"{item.EpaCode} ({owner}'s own item)" : item.EpaCode;
+
+  /// <summary>
   /// The Add form's empty state, in the words of the item it would have added (T222): a national item where the caller
   /// writes the College's (<see cref="CurriculumDto.CanEditCurriculum" />, as the form's heading reads it), else one of
   /// the caller's institution's own. It says what would have to change for there to be something to add.
   /// </summary>
+  /// <remarks>
+  /// A national item cannot share its EPA with an institution's own item (T223), and the College reads no institution's
+  /// items, so a national EPA can be missing from the College's picker with no row on its page to say why. The national
+  /// text says an EPA may be held that way, and that only its institution frees it: "remove an item" alone pointed the
+  /// College at a row it could neither see nor remove (T222 review, finding 2). It names no institution and no EPA.
+  /// </remarks>
   private string AddEmptyText
     => _curriculum is not { } curriculum
       ? string.Empty
       : curriculum.CanEditCurriculum
-        ? $"Every national EPA of {curriculum.SubSpecialityName} is already on this curriculum, so there is none left to add. To add an item, first add a national EPA of {curriculum.SubSpecialityName}, or remove an item to free its EPA."
+        ? $"Every national EPA of {curriculum.SubSpecialityName} is already on this curriculum, as a national item or as an institution's own item, so there is none left to add. To add an item, first add a national EPA of {curriculum.SubSpecialityName}, or remove a national item to free its EPA. An EPA an institution has as its own item is freed only when that institution removes it."
         : $"Every EPA your institution could add is already on this curriculum: each national EPA of {curriculum.SubSpecialityName}, and each of your institution's own EPAs of {curriculum.SubSpecialityName}. To add an item of your own, first create a local EPA of {curriculum.SubSpecialityName}.";
 
   /// <remarks>

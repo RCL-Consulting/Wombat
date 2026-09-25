@@ -294,9 +294,9 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
         }
 
         // The owner predicate is not optional. A national curriculum row is SHARED by every adopting
-        // institution (AdoptCurriculumCommandHandler never clones it) and CurriculumItems is uniquely
-        // indexed on (CurriculumId, EpaId), so an institution-local item added by institution B is the
-        // ONLY row for that EPA. Without this, a trainee at institution A would take B's ladder as
+        // institution (AdoptCurriculumCommandHandler never clones it), and a national item never shares
+        // an EPA with an institution's own (T223), so an institution-local item added by institution B
+        // has no national row beside it for that EPA. Without this, a trainee at institution A would take B's ladder as
         // their chart's axis — and then have their own correctly-rated observations marked "not a rung
         // on this scale" against a ladder that was never theirs.
         var pins = await _dbContext.Set<CurriculumItem>()

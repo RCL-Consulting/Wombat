@@ -339,9 +339,10 @@ public sealed class CurriculumAdminScopeTests
             var offered = await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
                 new ListCurriculumItemEpaOptionsQuery(Adopted, null, principal), CancellationToken.None);
             // An item of A's own names a national EPA or one of A's, never B's (T195); and not one the curriculum already
-            // holds, whoever's item holds it (T222): PAED-001 to 003 and LOC-A01 are all items here.
-            offered.Select(epa => epa.Code).Should().Equal(["LOC-A02"],
-                "of the national EPAs and A's own, only LOC-A02 is not yet on the curriculum");
+            // holds for A's trainees (T222, T223): PAED-001 is the national item's, PAED-002 and LOC-A01 A's own items'.
+            // PAED-003 is B's own item's, which no trainee of A's reads.
+            offered.Select(epa => epa.Code).Should().Equal(["LOC-A02", "PAED-003"],
+                "of the national EPAs and A's own, only LOC-A02 and PAED-003 are not yet on the curriculum for A");
 
             var added = await new AddCurriculumItemCommandHandler(dbContext).Handle(
                 new AddCurriculumItemCommand(Adopted, LocA02, 1, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, principal),
@@ -436,7 +437,8 @@ public sealed class CurriculumAdminScopeTests
     public async Task AddingAnEpaAnInstitutionHasOnTheCurriculumAsItsOwn_SaysSo_WithoutNamingTheInstitution()
     {
         // The College cannot see institution A's item naming PAED-002, so "already contains" alone would point at a list
-        // that does not show it. The refusal says why, and names neither A nor the item.
+        // that does not show it. The refusal says why, and names neither A nor the item. A national item beside A's would
+        // measure A's trainees against PAED-002 twice (T223).
         await using var dbContext = await SeededAsync();
 
         var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
@@ -445,15 +447,17 @@ public sealed class CurriculumAdminScopeTests
 
         var refusal = (await act.Should().ThrowAsync<InvalidOperationException>()).Which;
         refusal.Message.Should().Be(
-            "This curriculum already contains the selected EPA, as an institution's own item. An EPA can be on a curriculum only once.");
+            "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.");
         refusal.Message.Should().NotContain("Institution A").And.NotContain(ANationalEpaItem.ToString(CultureInfo.InvariantCulture));
         dbContext.ChangeTracker.Entries<CurriculumItem>().Should().NotContain(entry => entry.State == EntityState.Added);
     }
 
     [Theory]
-    [InlineData(Caller.InstitutionalAdminA)]
-    [InlineData(Caller.Administrator)]
-    public async Task AddingAnEpaOnAnItemTheCallerReads_IsRefusedAsBefore(Caller caller)
+    // A's own item holds PAED-002 for A.
+    [InlineData(Caller.InstitutionalAdminA, "This curriculum already contains the selected EPA.")]
+    // An Administrator adds a national item, which A's own item holds PAED-002 from (T223).
+    [InlineData(Caller.Administrator, "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.")]
+    public async Task AddingAnEpaOnAnItemTheCallerReads_IsRefused_SayingWhichKindOfItemHoldsIt(Caller caller, string message)
     {
         await using var dbContext = await SeededAsync();
 
@@ -461,16 +465,15 @@ public sealed class CurriculumAdminScopeTests
             new AddCurriculumItemCommand(Adopted, Paed002, 1, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, Principal(caller)),
             CancellationToken.None);
 
-        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message
-            .Should().Be("This curriculum already contains the selected EPA.");
+        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(message);
     }
 
     [Theory]
-    // B's own item, left from B's earlier adoption, holds PAED-003: A does not read it.
-    [InlineData(Paed003, "This curriculum already contains the selected EPA, as an institution's own item. An EPA can be on a curriculum only once.")]
-    // The national item holds PAED-001: A reads it.
-    [InlineData(Paed001, "This curriculum already contains the selected EPA.")]
-    public async Task MovingAnItemOntoAnEpaAlreadyOnTheCurriculum_IsRefused_InTermsOfWhatTheCallerReads(int epaId, string refusal)
+    // The national item holds PAED-001 for A's trainees too (T223).
+    [InlineData(Paed001, "This curriculum already contains the selected EPA, as a national item. An institution's own item adds an EPA to the national curriculum and cannot repeat one on it.")]
+    // A's other own item holds LOC-A01.
+    [InlineData(LocA01, "This curriculum already contains the selected EPA.")]
+    public async Task MovingAnItemOntoAnEpaAlreadyOnTheCurriculumForItsInstitution_IsRefused(int epaId, string refusal)
     {
         await using var dbContext = await SeededAsync();
 
@@ -480,6 +483,27 @@ public sealed class CurriculumAdminScopeTests
 
         (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(refusal);
         dbContext.ChangeTracker.Entries<CurriculumItem>().Should().NotContain(entry => entry.State == EntityState.Modified);
+    }
+
+    [Fact]
+    public async Task MovingAnItemOntoAnEpaAnotherInstitutionHasAsItsOwn_IsStored()
+    {
+        // B's own item, left from B's earlier adoption, holds PAED-003 for B's trainees alone. Before T223 one index held one
+        // item per EPA whoever owned it, so A was refused ("as an institution's own item") an EPA it could not see held.
+        var databaseName = Guid.NewGuid().ToString();
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            await SeedAsync(dbContext);
+            var updated = await new UpdateCurriculumItemCommandHandler(dbContext).Handle(
+                new UpdateCurriculumItemCommand(Adopted, ANationalEpaItem, Paed003, 1, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, Principal(Caller.InstitutionalAdminA)),
+                CancellationToken.None);
+            updated.Items.Single(item => item.Id == ANationalEpaItem).EpaId.Should().Be(Paed003);
+            updated.Items.Should().NotContain(item => item.Id == BNationalEpaItem, "B's item is B's business, as before");
+        }
+
+        await using var readContext = CreateDbContext(databaseName);
+        (await readContext.Set<CurriculumItem>().Where(item => item.EpaId == Paed003).Select(item => item.OwningInstitutionId).ToListAsync())
+            .Should().BeEquivalentTo(new int?[] { InstitutionA, InstitutionB });
     }
 
     // ---- helpers ----

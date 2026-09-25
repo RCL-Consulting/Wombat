@@ -306,12 +306,12 @@ public sealed class CurriculumItemEpaOwnershipTests
     }
 
     [Fact]
-    public async Task ThePicker_LeavesOutAnEpaAnotherOwnersItemHolds_AsTheCommandRefusesIt()
+    public async Task AnInstitutionsOwnItem_HoldsItsEpaFromTheCollege_AndNotFromAnotherInstitution()
     {
-        // T222. The unique index is one item per EPA per curriculum, whoever owns it (T091), so an institution's own item on
-        // a national EPA keeps it from the College too. The picker follows the command: an EPA held by an item of the same
-        // owner is left out, and so is one held by an item of another owner. With PAED-001 on the national item and
-        // PAED-009 on institution A's, the College has nothing left to add, and says nothing of A's item.
+        // T223. An EPA is on a curriculum once for each institution's trainees. Institution A's own item on PAED-009 holds it
+        // from a national item, which A's trainees would read beside it, but not from institution B's own item, which no
+        // trainee of A's reads. Before T223 one index held one item per EPA whoever owned it (T091), and A's item kept B
+        // from PAED-009 as well. The picker follows the command both ways.
         var databaseName = Guid.NewGuid().ToString();
         await using (var dbContext = CreateDbContext(databaseName))
         {
@@ -330,21 +330,79 @@ public sealed class CurriculumItemEpaOwnershipTests
             await dbContext.SaveChangesAsync();
         }
 
+        var college = TestPrincipals.CollegeAdmin(CollegeId);
         await using (var dbContext = CreateDbContext(databaseName))
         {
             var options = await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
-                new ListCurriculumItemEpaOptionsQuery(CurriculumId, null, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
+                new ListCurriculumItemEpaOptionsQuery(CurriculumId, null, college), CancellationToken.None);
             options.Should().BeEmpty("every national EPA of the sub-speciality is on the curriculum, one as A's own item");
 
             var nationalEdit = await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
-                new ListCurriculumItemEpaOptionsQuery(CurriculumId, NationalItemId, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
+                new ListCurriculumItemEpaOptionsQuery(CurriculumId, NationalItemId, college), CancellationToken.None);
             nationalEdit.Select(option => option.Code).Should().Equal(["PAED-001"], "an edit row keeps its own EPA, and nothing else is free");
 
-            var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
-                AddCommand(NationalHere, TestPrincipals.CollegeAdmin(CollegeId)), CancellationToken.None);
-            (await act.Should().ThrowAsync<InvalidOperationException>()).WithMessage("This curriculum already contains the selected EPA*");
+            var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(AddCommand(NationalHere, college), CancellationToken.None);
+            var refusal = (await act.Should().ThrowAsync<InvalidOperationException>()).Which;
+            refusal.Message.Should().Be(
+                "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.");
+            AssertNamesNothingOf(refusal.Message, NationalHere);
             await AssertNothingForTheAuditSaveToCommitAsync(dbContext);
         }
+
+        var institutionB = Principal(Caller.InstitutionalAdminB);
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            var options = await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
+                new ListCurriculumItemEpaOptionsQuery(CurriculumId, null, institutionB), CancellationToken.None);
+            options.Select(option => option.Code).Should().Equal(["LOC-B01", "PAED-009"],
+                "A's own item on PAED-009 holds it for A's trainees, not B's");
+
+            await new AddCurriculumItemCommandHandler(dbContext).Handle(AddCommand(NationalHere, institutionB), CancellationToken.None);
+        }
+
+        await using (var readContext = CreateDbContext(databaseName))
+        {
+            (await readContext.Set<CurriculumItem>().Where(item => item.EpaId == NationalHere).Select(item => item.OwningInstitutionId).ToListAsync())
+                .Should().BeEquivalentTo(new int?[] { InstitutionA, InstitutionB }, "each institution holds an item of its own on PAED-009");
+
+            var byA = await new ListCurriculumItemEpaOptionsQueryHandler(readContext).Handle(
+                new ListCurriculumItemEpaOptionsQuery(CurriculumId, null, Principal(Caller.InstitutionalAdminA)), CancellationToken.None);
+            byA.Select(option => option.Code).Should().Equal(["LOC-A01"],
+                "PAED-001 is the national item's and PAED-009 A's own: B's item beside it takes nothing more from A");
+        }
+    }
+
+    [Theory]
+    // An institution's own item on the national item's EPA: its trainees would read both.
+    [InlineData(Caller.InstitutionalAdminA, null, "This curriculum already contains the selected EPA, as a national item. An institution's own item adds an EPA to the national curriculum and cannot repeat one on it.")]
+    [InlineData(Caller.InstitutionalAdminA, LocalItemId, "This curriculum already contains the selected EPA, as a national item. An institution's own item adds an EPA to the national curriculum and cannot repeat one on it.")]
+    [InlineData(Caller.Administrator, LocalItemId, "This curriculum already contains the selected EPA, as a national item. An institution's own item adds an EPA to the national curriculum and cannot repeat one on it.")]
+    public async Task AnInstitutionsOwnItem_CannotRepeatANationalItemsEpa(Caller caller, int? itemId, string message)
+    {
+        // T223 keeps T091's rule: an institution adds to the national core and never restates it with a target of its own.
+        var databaseName = Guid.NewGuid().ToString();
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            await SeedAsync(dbContext);
+        }
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            Func<Task<CurriculumDto>> act = itemId is int id
+                ? () => new UpdateCurriculumItemCommandHandler(dbContext).Handle(UpdateCommand(id, CoreEpaId, Principal(caller), requiredCount: 9), CancellationToken.None)
+                : () => new AddCurriculumItemCommandHandler(dbContext).Handle(AddCommand(CoreEpaId, Principal(caller)), CancellationToken.None);
+
+            (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(message);
+            await AssertNothingForTheAuditSaveToCommitAsync(dbContext);
+
+            var offered = await new ListCurriculumItemEpaOptionsQueryHandler(dbContext).Handle(
+                new ListCurriculumItemEpaOptionsQuery(CurriculumId, itemId, Principal(caller)), CancellationToken.None);
+            offered.Select(option => option.Code).Should().NotContain("PAED-001");
+        }
+
+        await using var readContext = CreateDbContext(databaseName);
+        (await readContext.Set<CurriculumItem>().Select(item => item.Id).ToListAsync()).Should().BeEquivalentTo([NationalItemId, LocalItemId]);
+        (await readContext.Set<CurriculumItem>().SingleAsync(item => item.Id == LocalItemId)).EpaId.Should().Be(LocalCoreEpaId);
     }
 
     [Fact]
@@ -659,6 +717,11 @@ public sealed class CurriculumItemEpaOwnershipTests
         });
 
         dbContext.Curricula.Add(curriculum);
+
+        // Both institutions adopted the curriculum: an institution keeps items of its own only on one it adopted (T223).
+        dbContext.InstitutionCurriculumAdoptions.AddRange(
+            new InstitutionCurriculumAdoption { Id = 1, InstitutionId = InstitutionA, CurriculumId = CurriculumId, SubSpecialityId = HereSubSpecialityId, AdoptedOn = new DateOnly(2026, 1, 1), IsActive = true },
+            new InstitutionCurriculumAdoption { Id = 2, InstitutionId = InstitutionB, CurriculumId = CurriculumId, SubSpecialityId = HereSubSpecialityId, AdoptedOn = new DateOnly(2026, 1, 1), IsActive = true });
         await dbContext.SaveChangesAsync();
     }
 }

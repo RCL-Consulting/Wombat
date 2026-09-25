@@ -20,14 +20,14 @@ namespace Wombat.Integration.Tests.Curricula;
 /// T211 on a real PostgreSQL server, against the seeded CPSA paediatric catalogue: an InstitutionalAdmin opens the
 /// curriculum their institution adopted, with the fifteen national items and their own, and not another institution's;
 /// an institution that no longer adopts it opens it to keep the items of its own still on it; the College reads the
-/// national items only; an institution with neither an adoption nor an item there opens nothing.
+/// national items only; an institution that never adopted it opens nothing, even with an item of its own there (T223).
 /// </summary>
 /// <remarks>
 /// <para>
 /// The unit suites run on EF InMemory, which evaluates <see cref="CurriculumAdminScope.Openable" />'s institution arms in
-/// memory. On Npgsql they have to become correlated EXISTS subqueries, over the adoptions and over the curriculum's own
-/// items, inside the curriculum query, and the item projection a collection read in the same statement, or EF throws.
-/// Both are asserted on what reached the server.
+/// memory. On Npgsql they have to become correlated EXISTS subqueries, over the adoptions and, inside that, over the
+/// curriculum's own items, inside the curriculum query, and the item projection a collection read in the same statement,
+/// or EF throws. Both are asserted on what reached the server.
 /// </para>
 /// <para>
 /// The schema helpers follow <c>EntrustmentDecisionAdminScopePostgresTests</c>: each test builds its context on a schema
@@ -93,12 +93,12 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
             var otherReads = otherCommands.Texts.Where(text => text.Contains("\"Curricula\"", StringComparison.Ordinal)).ToList();
             otherReads.Should().ContainSingle("the own-item arm is checked in the same statement");
             System.Text.RegularExpressions.Regex.Count(otherReads[0], "EXISTS").Should().Be(2,
-                "each institution arm is its own correlated EXISTS: the adoptions, and the curriculum's own items");
+                "the institution arm is one correlated EXISTS over the adoptions, with the own-item test an EXISTS inside it (T223)");
 
             await using (var db = NewContext(schema))
             {
                 (await ReadAsync(db, world.CurriculumId, InstitutionalAdmin(world.Stranger)))
-                    .Should().BeNull("an institution with neither an adoption nor an item there reads it as not found");
+                    .Should().BeNull("an institution that never adopted it reads it as not found, its own item there or not (T223)");
 
                 var list = await new GetCurriculaListQueryHandler(db).Handle(
                     new GetCurriculaListQuery(InstitutionalAdmin(world.Adopter)), CancellationToken.None);
@@ -119,7 +119,7 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
                     "an institution's own items are neither the College's to change nor to read");
 
                 var administrator = await ReadAsync(db, world.CurriculumId, Administrator());
-                administrator!.Items.Should().HaveCount(17).And.OnlyContain(item => item.CanEdit);
+                administrator!.Items.Should().HaveCount(18).And.OnlyContain(item => item.CanEdit);
             }
         }
         finally
@@ -173,7 +173,8 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
                     .Should().BeEquivalentTo(new Dictionary<int, string?>
                     {
                         [world.AdopterItem] = "Adopting Academic",
-                        [world.OtherItem] = "Other Academic"
+                        [world.OtherItem] = "Other Academic",
+                        [world.StrangerItem] = "Stranger Academic"
                     });
                 administrator.Items.Where(item => !item.IsLocal).Should().HaveCount(15).And.OnlyContain(item => item.OwningInstitutionName == null);
             }
@@ -207,11 +208,12 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
             .Select(epa => epa.Code)
             .ToList();
 
-    private sealed record World(int CurriculumId, int CollegeId, int Adopter, int Other, int Stranger, int AdopterItem, int OtherItem, int AdopterEpa);
+    private sealed record World(int CurriculumId, int CollegeId, int Adopter, int Other, int Stranger, int AdopterItem, int OtherItem, int StrangerItem, int AdopterEpa);
 
     /// <summary>
-    /// Three institutions. The first adopts the paediatric curriculum and keeps an item of its own on it; the second keeps
-    /// one there too (as it would from an adoption since superseded) and has adopted nothing; the third has neither.
+    /// Three institutions. The first adopts the paediatric curriculum and keeps an item of its own on it; the second adopted
+    /// it and moved off (its adoption superseded), keeping an item of its own there; the third never adopted it, yet has an
+    /// item of its own there, as a command could write before T223.
     /// </summary>
     private async Task<World> SeedWorldAsync(string schema)
     {
@@ -230,24 +232,31 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
 
         var adopterEpa = new Epa { Code = "LOC-A01", Title = "The adopter's own", SubSpecialityId = curriculum.SubSpecialityId, OwningInstitutionId = adopter.Id };
         var otherEpa = new Epa { Code = "LOC-B01", Title = "The other's own", SubSpecialityId = curriculum.SubSpecialityId, OwningInstitutionId = other.Id };
-        db.Epas.AddRange(adopterEpa, otherEpa);
+        var strangerEpa = new Epa { Code = "LOC-C01", Title = "The stranger's own", SubSpecialityId = curriculum.SubSpecialityId, OwningInstitutionId = stranger.Id };
+        db.Epas.AddRange(adopterEpa, otherEpa, strangerEpa);
         await db.SaveChangesAsync();
 
         var adopterItem = LocalItem(curriculum.Id, adopterEpa.Id, adopter.Id);
         var otherItem = LocalItem(curriculum.Id, otherEpa.Id, other.Id);
-        db.Set<CurriculumItem>().AddRange(adopterItem, otherItem);
-        db.InstitutionCurriculumAdoptions.Add(new InstitutionCurriculumAdoption
-        {
-            InstitutionId = adopter.Id,
-            CurriculumId = curriculum.Id,
-            SubSpecialityId = curriculum.SubSpecialityId,
-            AdoptedOn = new DateOnly(2026, 1, 1),
-            IsActive = true
-        });
+        var strangerItem = LocalItem(curriculum.Id, strangerEpa.Id, stranger.Id);
+        db.Set<CurriculumItem>().AddRange(adopterItem, otherItem, strangerItem);
+        db.InstitutionCurriculumAdoptions.AddRange(
+            Adoption(adopter.Id, curriculum.Id, curriculum.SubSpecialityId, isActive: true),
+            Adoption(other.Id, curriculum.Id, curriculum.SubSpecialityId, isActive: false));
         await db.SaveChangesAsync();
 
-        return new World(curriculum.Id, curriculum.CollegeId, adopter.Id, other.Id, stranger.Id, adopterItem.Id, otherItem.Id, adopterEpa.Id);
+        return new World(curriculum.Id, curriculum.CollegeId, adopter.Id, other.Id, stranger.Id, adopterItem.Id, otherItem.Id, strangerItem.Id, adopterEpa.Id);
     }
+
+    private static InstitutionCurriculumAdoption Adoption(int institutionId, int curriculumId, int subSpecialityId, bool isActive)
+        => new()
+        {
+            InstitutionId = institutionId,
+            CurriculumId = curriculumId,
+            SubSpecialityId = subSpecialityId,
+            AdoptedOn = new DateOnly(2026, 1, 1),
+            IsActive = isActive
+        };
 
     private static CurriculumItem LocalItem(int curriculumId, int epaId, int institutionId)
         => new()

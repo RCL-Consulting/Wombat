@@ -221,8 +221,8 @@ public sealed class CurriculumItemDecisionTests
     /// The item editor loads the curriculum through this query. Since T211 an InstitutionalAdmin opens a curriculum their
     /// institution has adopted or keeps items of its own on, with every national item marked as one they may not change,
     /// so the page offers them Edit and Remove, and so a decision, only on their own (<see cref="CurriculumAdminScopeTests" />).
-    /// This seed records no adoption: the institution with the local item opens the curriculum for it, and another
-    /// institution, with neither, reads it as not found.
+    /// The institution with the local item adopted the curriculum; another institution, with neither an adoption nor an
+    /// item, reads it as not found.
     /// </summary>
     [Fact]
     public async Task TheItemEditorsRead_OffersAnInstitutionalAdminOnlyTheirOwnItem_AndAnotherInstitutionNothing()
@@ -535,6 +535,17 @@ public sealed class CurriculumItemDecisionTests
         });
 
         dbContext.Curricula.Add(curriculum);
+
+        // The institution adopted the curriculum: it keeps items of its own only on one it adopted (T223).
+        dbContext.InstitutionCurriculumAdoptions.Add(new InstitutionCurriculumAdoption
+        {
+            Id = 1,
+            InstitutionId = InstitutionId,
+            CurriculumId = CurriculumId,
+            SubSpecialityId = 1,
+            AdoptedOn = new DateOnly(2026, 1, 1),
+            IsActive = true
+        });
         await dbContext.SaveChangesAsync();
     }
 }

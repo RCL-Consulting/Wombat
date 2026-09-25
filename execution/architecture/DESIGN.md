@@ -277,7 +277,10 @@ their own. The query decides which (`CurriculumItemDto.OwningInstitutionName`, c
 `CurriculumAdminScope.NamesItemOwners`), never the page from the caller's roles.
 
 **Row actions on the curriculum items page** (T222) follow § Button system: Edit and Remove are `.btn .btn-sm
-.btn-outline`, named by the item's EPA (`aria-label="Edit PAED-001"`, `"Remove PAED-001"`), and Remove opens the page's one
+.btn-outline`, named by the item's EPA (`aria-label="Edit PAED-001"`, `"Remove PAED-001"`), and, where the row names its
+owner, by whose item it is (`"Edit PAED-099 (Groote Schuur Hospital's own item)"`). Since T223 two institutions may each
+hold an item of their own on one EPA, and an Administrator reads both rows, so the EPA alone no longer names one button;
+the edit row's legend and the Remove result name the item the same way. Remove opens the page's one
 `ConfirmDialog`, whose result takes the focus in an `.action-result` region once the dialog has closed. The dialog says
 whose trainees the item stops measuring: a national item's in every institution that has adopted the curriculum, an
 institution's own item only that institution's, named as the row names its owner (T222 review). **An actions
@@ -285,10 +288,15 @@ column's header is a `.visually-hidden` "Actions", never an empty `<th>`**: a he
 buttons that fits in its content's width needs no `.col-actions`; the curriculum items table has no room for its 12rem.
 
 **A picker offers exactly what the command it feeds accepts, and is asked again after every command that changes that**
-(T195, T222). The curriculum item editor's EPA pickers leave out every EPA the curriculum already holds, apart from the
-edited item's own, because the Add and Update commands refuse it; after each Add, Save and Remove the page asks for both
-pickers again (the edit row's while one is open). A choice the new answer no longer offers moves to one it does: the Add
-form's to the first EPA on offer, the edit row's back to the item's stored EPA. **A refusal reads the page again too**
+(T195, T222). The curriculum item editor's EPA pickers leave out every EPA the curriculum already holds for the same
+trainees, apart from the edited item's own, because the Add and Update commands refuse it (T223): a national item holds
+its EPA for every institution, and an institution's own item holds it for that institution alone, so institution B's
+picker still offers an EPA that institution A has as its own item, and the College's does not. The EPA field's help says
+so, and so does the College's empty state: an EPA can be missing from its picker because an institution has it as its own
+item, which the College does not read, and only that institution frees it. It names no institution and no EPA. After
+each Add, Save and Remove the page asks for both pickers again (the edit row's while one is open). A choice the new
+answer no longer offers moves to one it does: the Add form's to the first EPA on offer, the edit row's back to the item's
+stored EPA. **A refusal reads the page again too**
 (T222 review): the likeliest one comes from a page that is out of date (an EPA added, or an item removed, in another tab),
 so the page reads the curriculum and both pickers again and keeps the refusal. An edit row whose item has gone closes, and
 its refusal moves to the `.action-result` region, which takes the focus; a refused Add that leaves nothing to add puts its

@@ -717,7 +717,8 @@ public sealed class WbaToolAllowListPostgresTests : IAsyncLifetime
 
             // Pins the two "OwningInstitutionId" IS NULL clauses together: an institution's local EPA may reuse a
             // national code. The item-side clause cannot be pinned alone here, because every catalogue EPA already
-            // has its national item in this curriculum and (CurriculumId, EpaId) is unique.
+            // has its national item in this curriculum, and an institution's own item may not share an EPA with a
+            // national one (T223's exclusion constraint).
             decoys["an institution-local item on a local EPA reusing PAED-005"] =
                 await InsertCurriculumItemAsync(connection, catalogueCurriculum, localPaed005, QuotaPeriod.Semester, 3, owningInstitutionId: hospitalId);
             // Pins e."OwningInstitutionId" IS NULL on its own: a national item on a local EPA. T091 forbids it, so only

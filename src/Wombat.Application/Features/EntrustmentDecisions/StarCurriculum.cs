@@ -30,8 +30,8 @@ public sealed record StarEpaOptionDto(int EpaId, string Code, string Title, int?
 /// <b>The EPAs</b> are the items of the curriculum on the trainee's preferred profile
 /// (<see cref="TraineeScopeResolver.PreferredProfiles" />: the active one, else the most recent). The national core and
 /// the trainee's OWN institution's local extras, never another institution's: a curriculum row is shared by every
-/// institution that adopted it, and <c>CurriculumItems</c> is unique on (curriculum, EPA), so another institution's
-/// local item is the only row for its EPA and would otherwise be offered here as if it were this trainee's. A trainee
+/// institution that adopted it, and another institution's local item on an EPA never has a national item beside it
+/// (T223), so it would otherwise be offered here as if it were this trainee's item for that EPA. A trainee
 /// with no profile has no curriculum and no EPA a STAR may be granted on. Only items in force count
 /// (<see cref="CurriculumItemsInForce" />, T158): a deactivated EPA is no longer a target, so no new STAR is granted on
 /// it, as no new credit lands on it.

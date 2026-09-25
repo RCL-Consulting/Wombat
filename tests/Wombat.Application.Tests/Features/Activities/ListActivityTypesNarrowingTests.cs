@@ -193,9 +193,9 @@ public sealed class ListActivityTypesNarrowingTests
     [Fact]
     public async Task AnotherInstitutionsLocalCurriculumItemDoesNotDecideThisTraineesMenu()
     {
-        // A national curriculum row is SHARED by every adopting institution and CurriculumItems is
-        // unique on (CurriculumId, EpaId), so an institution-local item added by institution 99 is the
-        // only row for its EPA. Unscoped, its ladder would narrow institution 2's trainee's picker.
+        // A national curriculum row is SHARED by every adopting institution, and an institution-local
+        // item added by institution 99 never has a national item beside it on its EPA (T223). Unscoped,
+        // its ladder would narrow institution 2's trainee's picker.
         // CreditApplier and ResolveCreditableEpaIdsAsync both scope on OwningInstitutionId; so must this.
         await using var db = CreateDb();
         SeedLadders(db);

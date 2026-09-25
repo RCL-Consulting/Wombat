@@ -58,6 +58,70 @@ public sealed class CurriculumItemsRemoveTests : TestContext
         }
     }
 
+    private const string GrooteSchuur = "Groote Schuur Hospital";
+    private const string RedCross = "Red Cross War Memorial Children's Hospital";
+
+    /// <summary>
+    /// A national item and two institutions' own items on one EPA, as an Administrator reads them, each local row naming its
+    /// owner (<c>CurriculumAdminScope.NamesItemOwners</c>). T223 lets two institutions each hold an item of their own on one EPA.
+    /// </summary>
+    private static FakeSender TwoInstitutionsOnOneEpa()
+        => new(
+        [
+            FakeSender.Item(11, 1, 3, QuotaPeriod.Semester, null),
+            FakeSender.Item(21, 2, 3, QuotaPeriod.AcademicYear, null, owningInstitutionId: 40, owningInstitutionName: GrooteSchuur),
+            FakeSender.Item(22, 2, 2, QuotaPeriod.AcademicYear, null, owningInstitutionId: 41, owningInstitutionName: RedCross)
+        ]);
+
+    [Fact]
+    public void TwoInstitutionsOwnItemsOnOneEpa_AreNamedApart_ByWhoseItemEachIs()
+    {
+        // T223 review: named by the EPA alone, the page had two "Edit PAED-002" and two "Remove PAED-002" buttons, which a
+        // screen reader could not tell apart. A national item cannot share an EPA with either, so its EPA still names it.
+        var cut = RenderPage(TwoInstitutionsOnOneEpa());
+
+        var names = cut.FindAll("tbody .actions-cell button").Select(button => button.GetAttribute("aria-label")).ToList();
+        names.Should().Equal(
+            "Edit PAED-001", "Remove PAED-001",
+            $"Edit PAED-002 ({GrooteSchuur}'s own item)", $"Remove PAED-002 ({GrooteSchuur}'s own item)",
+            $"Edit PAED-002 ({RedCross}'s own item)", $"Remove PAED-002 ({RedCross}'s own item)");
+        names.Should().OnlyHaveUniqueItems("a screen reader must be able to tell every button apart");
+
+        // The edit row's legend, the name of the group of fields under it, says which of the two is open.
+        ActionButton(cut, $"Edit PAED-002 ({RedCross}'s own item)").Click();
+        cut.WaitForAssertion(() => Text(cut.Find("tr.is-editing td[colspan] > fieldset > legend"))
+            .Should().Be($"Edit PAED-002 ({RedCross}'s own item)"));
+    }
+
+    [Fact]
+    public void RemovingOneOfTwoItemsOnAnEpa_SaysWhoseWasRemoved()
+    {
+        var sender = TwoInstitutionsOnOneEpa();
+        var cut = RenderPage(sender);
+
+        ActionButton(cut, $"Remove PAED-002 ({GrooteSchuur}'s own item)").Click();
+        ConfirmRemove(cut);
+
+        sender.Removes.Should().ContainSingle().Which.ItemId.Should().Be(21);
+        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-success"))
+            .Should().Be($"PAED-002 ({GrooteSchuur}'s own item) removed from this curriculum.", "another PAED-002 item is still listed"));
+    }
+
+    [Fact]
+    public void AnItemOfTheCallersOwnInstitution_IsNamedByItsEpaAlone()
+    {
+        // An InstitutionalAdmin's rows name no owner: every local item they read is their own institution's, and a national
+        // item cannot share its EPA, so no two of their rows share an EPA.
+        var cut = RenderPage(new FakeSender(
+        [
+            FakeSender.Item(11, 1, 3, QuotaPeriod.Semester, null),
+            FakeSender.Item(21, 2, 3, QuotaPeriod.AcademicYear, null, owningInstitutionId: 40)
+        ]));
+
+        cut.FindAll("tbody .actions-cell button").Select(button => button.GetAttribute("aria-label"))
+            .Should().Equal("Edit PAED-001", "Remove PAED-001", "Edit PAED-002", "Remove PAED-002");
+    }
+
     [Fact]
     public void TheActionsColumnsHeader_IsNamed_ForAScreenReaderOnly()
     {
@@ -244,6 +308,10 @@ public sealed class CurriculumItemsRemoveTests : TestContext
 
     private static IElement RemoveButton(IRenderedComponent<CurriculumItemsEdit> cut, string epaCode)
         => Row(cut, epaCode).QuerySelectorAll("button").Single(button => Text(button) == "Remove");
+
+    /// <summary>The one row action with this accessible name.</summary>
+    private static IElement ActionButton(IRenderedComponent<CurriculumItemsEdit> cut, string name)
+        => cut.FindAll("tbody .actions-cell button").Single(button => button.GetAttribute("aria-label") == name);
 
     private static string Text(IElement element) => Regex.Replace(element.TextContent, @"\s+", " ").Trim();
 }

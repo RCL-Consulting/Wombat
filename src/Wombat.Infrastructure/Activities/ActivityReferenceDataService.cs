@@ -249,7 +249,8 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
     /// <summary>
     /// The raw predicate both readings share: the items on the subject's curriculum that are either
     /// national core or their own institution's local extra, and whose EPA is active, with each item's
-    /// tool list. At most one per EPA: <c>CurriculumItems</c> is unique on (CurriculumId, EpaId).
+    /// tool list. At most one per EPA: a curriculum holds one national item per EPA, one of each institution's own, and
+    /// never a national item and an institution's own on one EPA (T223), so of the items this reads only one can hold it.
     /// </summary>
     /// <remarks>
     /// One query for both readings, so the tool list is judged on exactly the rows the caller renders. The MSF

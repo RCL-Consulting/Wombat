@@ -506,6 +506,17 @@ public sealed class CurriculumItemPermittedToolsTests
         });
 
         dbContext.Curricula.Add(curriculum);
+
+        // The institution adopted the curriculum: it keeps items of its own only on one it adopted (T223).
+        dbContext.InstitutionCurriculumAdoptions.Add(new InstitutionCurriculumAdoption
+        {
+            Id = 1,
+            InstitutionId = InstitutionId,
+            CurriculumId = CurriculumId,
+            SubSpecialityId = 1,
+            AdoptedOn = new DateOnly(2026, 1, 1),
+            IsActive = true
+        });
         await dbContext.SaveChangesAsync();
     }
 }

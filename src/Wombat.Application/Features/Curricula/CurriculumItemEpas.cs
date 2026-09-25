@@ -80,8 +80,9 @@ public static class CurriculumItemEpas
 
     /// <summary>
     /// The EPAs the picker offers such an item, by code: the ones it may name (<see cref="Nameable" />) that the curriculum
-    /// does not already hold (<see cref="CurriculumAdminScope.HoldsItsEpaAgainst" />, T222), so exactly the ones the Add or
-    /// Update command accepts. Inactive ones included, as the item editor marks them (T158).
+    /// does not already hold against an item of its owner (<see cref="CurriculumAdminScope.HoldsItsEpaAgainst" />, T222,
+    /// T223), so exactly the ones the Add or Update command accepts. Inactive ones included, as the item editor marks them
+    /// (T158).
     /// </summary>
     /// <param name="editedItemId">The item being edited, whose own EPA stays on offer; null for the Add form.</param>
     internal static async Task<IReadOnlyList<EpaDto>> ListAsync(
@@ -95,7 +96,7 @@ public static class CurriculumItemEpas
         // Composed into the one statement as a NOT IN subquery; the curriculum's items are not read first.
         var held = dbContext.Set<CurriculumItem>()
             .Where(item => item.CurriculumId == curriculumId)
-            .Where(CurriculumAdminScope.HoldsItsEpaAgainst(editedItemId))
+            .Where(CurriculumAdminScope.HoldsItsEpaAgainst(editedItemId, itemOwningInstitutionId))
             .Select(item => item.EpaId);
 
         return await dbContext.Set<Epa>()

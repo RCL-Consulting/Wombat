@@ -12,8 +12,10 @@ namespace Wombat.Application.Features.Curricula;
 /// <summary>
 /// The EPAs the curriculum item editor's picker offers (T195): for the Add form when <paramref name="ItemId" /> is
 /// null, else for that item's edit row. Exactly what the Add and Update handlers accept: an EPA the item may name
-/// (<see cref="CurriculumItemEpas.Nameable" />) that the curriculum does not already hold, apart from the edited item's
-/// own (<see cref="CurriculumAdminScope.HoldsItsEpaAgainst" />, T222). Empty when every such EPA is already on it.
+/// (<see cref="CurriculumItemEpas.Nameable" />) that the curriculum does not already hold against an item of its owner,
+/// apart from the edited item's own (<see cref="CurriculumAdminScope.HoldsItsEpaAgainst" />, T222, T223). Empty when every
+/// such EPA is already on it. Refused, as the commands are, for an institution's own item on a curriculum that institution
+/// has never adopted (<see cref="CurriculumAdminScope.EnsureOwnerAdoptedAsync" />, T223).
 /// </summary>
 /// <remarks>
 /// It replaces <c>ListEpasForSubSpecialityQuery</c> on that page, which listed the EPAs in the CALLER's scope: every
@@ -79,6 +81,10 @@ public sealed class ListCurriculumItemEpaOptionsQueryHandler
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
         }
+
+        // T223: the commands refuse an institution's own item on a curriculum it never adopted, so the picker does too.
+        await CurriculumAdminScope.EnsureOwnerAdoptedAsync(
+            _dbContext, request.CurriculumId, owningInstitutionId, request.Principal, cancellationToken);
 
         return await CurriculumItemEpas.ListAsync(
             _dbContext, request.CurriculumId, curriculum.SubSpecialityId, owningInstitutionId, request.ItemId, cancellationToken);

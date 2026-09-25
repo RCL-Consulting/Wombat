@@ -272,9 +272,9 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
         }
 
         // Scoped by owner exactly as CreditApplier and ResolveCreditableEpaIdsAsync are. A national
-        // curriculum row is shared across adopting institutions and CurriculumItems is unique on
-        // (CurriculumId, EpaId), so another institution's local item is the only row for its EPA —
-        // and without this predicate its ladder would decide which tools this trainee is offered.
+        // curriculum row is shared across adopting institutions, and another institution's local item
+        // on an EPA never has a national item beside it (T223), so it would be this trainee's row for
+        // that EPA — and without this predicate its ladder would decide which tools this trainee is offered.
         var scaleIds = await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
             .InForce()

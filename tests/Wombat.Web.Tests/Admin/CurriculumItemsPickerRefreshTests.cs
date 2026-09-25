@@ -49,7 +49,7 @@ public sealed class CurriculumItemsPickerRefreshTests : TestContext
 
     [Theory]
     [InlineData(true, "Add item",
-        "Every national EPA of General Paediatrics is already on this curriculum, so there is none left to add. To add an item, first add a national EPA of General Paediatrics, or remove an item to free its EPA.")]
+        "Every national EPA of General Paediatrics is already on this curriculum, as a national item or as an institution's own item, so there is none left to add. To add an item, first add a national EPA of General Paediatrics, or remove a national item to free its EPA. An EPA an institution has as its own item is freed only when that institution removes it.")]
     [InlineData(false, "Add your institution's own item",
         "Every EPA your institution could add is already on this curriculum: each national EPA of General Paediatrics, and each of your institution's own EPAs of General Paediatrics. To add an item of your own, first create a local EPA of General Paediatrics.")]
     public void TheAddForm_WithNothingLeftToAdd_SaysSo_InsteadOfOfferingAnEmptyPicker(bool canEditCurriculum, string heading, string emptyText)
@@ -309,7 +309,7 @@ public sealed class CurriculumItemsPickerRefreshTests : TestContext
     // ---- helpers ----
 
     private const string NationalEmptyText =
-        "Every national EPA of General Paediatrics is already on this curriculum, so there is none left to add. To add an item, first add a national EPA of General Paediatrics, or remove an item to free its EPA.";
+        "Every national EPA of General Paediatrics is already on this curriculum, as a national item or as an institution's own item, so there is none left to add. To add an item, first add a national EPA of General Paediatrics, or remove a national item to free its EPA. An EPA an institution has as its own item is freed only when that institution removes it.";
 
     /// <summary>
     /// A curriculum holding PAED-001 to PAED-003, whose pickers are answered from the items it holds at each ask, as
