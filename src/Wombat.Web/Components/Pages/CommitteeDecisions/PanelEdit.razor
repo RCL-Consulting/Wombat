@@ -173,21 +173,34 @@
           }
 
           <FormField Label="Chair" InputId="panel-chair" Required="true" HelpText="@ChairHelpText">
-            <InputSelect id="panel-chair" class="form-select" aria-describedby="@FieldHelp.DescribedBy("panel-chair", ChairHelpText)" @bind-Value="_model.ChairUserId">
-              <option value="">Select chair</option>
-              @foreach (var candidate in _candidates)
-              {
-                <option value="@candidate.UserId">@FormatCandidate(candidate)</option>
-              }
-            </InputSelect>
+            <ChildContent>
+              <InputSelect id="panel-chair" class="form-select" aria-describedby="@FieldHelp.DescribedBy("panel-chair", ChairHelpText, _chairNote is null ? null : ChairNoteId)"
+                           @bind-Value="_model.ChairUserId" @bind-Value:after="OnChairChanged">
+                <option value="">Select chair</option>
+                @foreach (var candidate in _candidates)
+                {
+                  <option value="@candidate.UserId">@FormatCandidate(candidate)</option>
+                }
+              </InputSelect>
+            </ChildContent>
+            <ValidationContent>
+              @* T257. The chosen chair is taken off the Members and External members selections, whose pickers leave the
+                 chair out, and put back there when another chair is chosen; this line says so. A live region present
+                 before anything is chosen, so what appears in it is read while the focus stays on the Chair select. *@
+              <div id="@ChairNoteId" class="muted" role="status">@_chairNote</div>
+            </ValidationContent>
           </FormField>
 
+          @* Each option is keyed by the person it offers (T257; DESIGN.md § Form system). Unkeyed, Blazor reuses the options
+             by position when someone leaves the list (the chair, or a member under External members), and a browser
+             ignores a change to the selected attribute of an option the user has clicked: the element reused for the next
+             person still showed them selected, although the form did not hold them. *@
           <FormField Label="Members" InputId="panel-members" FullWidth="true" HelpText="@MembersHelpText">
             <select id="panel-members" class="form-select" multiple size="6" aria-describedby="@FieldHelp.Id("panel-members")" @onchange="OnMembersChanged">
               @foreach (var candidate in _candidates.Where(candidate => candidate.UserId != _model.ChairUserId))
               {
                 var isSelected = _model.MemberUserIds.Contains(candidate.UserId);
-                <option value="@candidate.UserId" selected="@isSelected">@FormatCandidate(candidate)</option>
+                <option @key="candidate.UserId" value="@candidate.UserId" selected="@isSelected">@FormatCandidate(candidate)</option>
               }
             </select>
           </FormField>
@@ -197,7 +210,7 @@
               @foreach (var candidate in _candidates.Where(candidate => candidate.UserId != _model.ChairUserId && !_model.MemberUserIds.Contains(candidate.UserId)))
               {
                 var isSelected = _model.ExternalUserIds.Contains(candidate.UserId);
-                <option value="@candidate.UserId" selected="@isSelected">@FormatCandidate(candidate)</option>
+                <option @key="candidate.UserId" value="@candidate.UserId" selected="@isSelected">@FormatCandidate(candidate)</option>
               }
             </select>
           </FormField>
@@ -239,6 +252,18 @@
   private int _unseatable;
   private string? _traineeNote;
 
+  /// <summary>The line under the Chair select, a polite live region (T257).</summary>
+  private const string ChairNoteId = "panel-chair-note";
+
+  /// <summary>What the last choice of chair took off or put back; null when it did neither (T257).</summary>
+  private string? _chairNote;
+
+  /// <summary>
+  /// The chair now, and the selections choosing them took them off, to put them back when another chair is chosen; null
+  /// when choosing them took them off none, and after a save or a fresh read, which make the chair the stored one (T257).
+  /// </summary>
+  private ChairTakenFrom? _chairTakenFrom;
+
   protected override async Task OnParametersSetAsync()
   {
     await LoadAsync();
@@ -248,6 +273,8 @@
   {
     _loading = true;
     _loadError = null;
+    _chairNote = null;
+    _chairTakenFrom = null;
 
     try
     {
@@ -423,6 +450,11 @@
 
   private async Task OnInstitutionChangedAsync()
   {
+    // Whoever the line names may not sit at the institution now chosen, and the chair may be cleared with it. Nor is the
+    // chair put back later in a selection it was taken from: the selections now keep only who may sit there.
+    _chairNote = null;
+    _chairTakenFrom = null;
+
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -433,6 +465,71 @@
       _error = RefusalText.Of(exception);
     }
   }
+
+  /// <summary>
+  /// Takes the chair just chosen off the Members and External members selections, puts the chair before back where
+  /// choosing them took them from, and says so (T257). Those pickers leave the chair out, but a selection made before the
+  /// chair was chosen kept them, unseen, and the save sent them twice, to be refused with "A panel member is listed more
+  /// than once.". Putting the chair before back means a chair chosen and then changed takes nobody off: in Chrome and
+  /// Edge on Windows each arrow key on the closed Chair select is a change, so moving down the list chose everyone passed.
+  /// </summary>
+  private void OnChairChanged()
+  {
+    var chair = _model.ChairUserId;
+    var putBack = _chairTakenFrom;
+    if (putBack is not null && string.Equals(putBack.UserId, chair, StringComparison.Ordinal))
+    {
+      // Not a change: the select calls this only when its value changes. Were it run, putting the chair back would seat
+      // them twice.
+      return;
+    }
+
+    var sentences = new List<string>(2);
+    _chairTakenFrom = null;
+
+    if (!string.IsNullOrEmpty(chair))
+    {
+      var fromMembers = _model.MemberUserIds.Remove(chair);
+      var fromExternals = _model.ExternalUserIds.Remove(chair);
+      if (fromMembers || fromExternals)
+      {
+        _chairTakenFrom = new ChairTakenFrom(chair, fromMembers, fromExternals);
+        sentences.Add($"{PersonName(chair, "The new chair")} is the chair now, so is no longer selected under {Seats(fromMembers, fromExternals)}.");
+      }
+    }
+
+    if (putBack is not null)
+    {
+      if (putBack.FromMembers)
+      {
+        _model.MemberUserIds.Add(putBack.UserId);
+      }
+
+      if (putBack.FromExternals)
+      {
+        _model.ExternalUserIds.Add(putBack.UserId);
+      }
+
+      sentences.Add($"{PersonName(putBack.UserId, "The chair before")} is selected under {Seats(putBack.FromMembers, putBack.FromExternals)} again.");
+    }
+
+    _chairNote = sentences.Count == 0 ? null : string.Join(" ", sentences);
+  }
+
+  private static string Seats(bool members, bool externals) => (members, externals) switch
+  {
+    (true, true) => "Members and External members",
+    (true, false) => "Members",
+    _ => "External members"
+  };
+
+  private string PersonName(string userId, string unnamed)
+    => _candidates.FirstOrDefault(candidate => string.Equals(candidate.UserId, userId, StringComparison.Ordinal)) is { } candidate
+      ? $"{candidate.FirstName} {candidate.LastName}"
+      : unnamed;
+
+  /// <summary>The chair, and which selections choosing them took them off (T257).</summary>
+  private sealed record ChairTakenFrom(string UserId, bool FromMembers, bool FromExternals);
 
   private void OnMembersChanged(ChangeEventArgs e)
   {
@@ -479,6 +576,10 @@
       {
         await Sender.Send(new UpdateDecisionPanelCommand(PanelId.Value, members, authState.User));
         _status = "Panel members updated.";
+        // The change it described is saved now; the result says so. The saved chair is the stored one, so choosing
+        // another does not put them back under Members.
+        _chairNote = null;
+        _chairTakenFrom = null;
         _result?.FocusAfterRender();
       }
       else

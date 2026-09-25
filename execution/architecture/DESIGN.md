@@ -569,6 +569,11 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
   has an id, and the control names it after its help. A group's help (a `<fieldset>` of checkboxes or rows) has an id
   the fieldset names. The same scan fails on help written into a slot (T193).
 - Inputs default to `.form-control`. Selects use `.form-select` (never native unstyled).
+- **An option of a `<select multiple>` rendered from data is keyed by what it offers**: `<option @key="candidate.UserId"
+  value="@candidate.UserId" selected="@isSelected">` (T257). Unkeyed, Blazor reuses the option elements by position when
+  the list changes (the panel form's Members list leaves out the chair), and a browser ignores a change to the `selected`
+  attribute of an option the user has clicked, so the element reused for the next person shows them selected when the
+  form does not hold them, and the next click sends them. `Design/MultiSelectOptionKeyTests` scans every page.
 - Validation summaries render as `.validation-summary-errors` (red panel) at the top of the form. Per-field errors render as `.validation-message` under the field.
 - **An invalid field shows it on the control**, not only in the message under it (T236). Blazor's inputs carry `.invalid`
   and `aria-invalid="true"` while the `EditContext` holds a message for them. A control a page marks by hand, where the
@@ -1260,7 +1265,19 @@ member who can no longer sit is not listed and not sent back: a standing warning
 says so before the save ("1 member of this panel can no longer sit on it, so is not listed below: only an active
 committee member at its institution who is not a trainee can. Saving takes that member off the panel."). A stored chair
 who cannot sit leaves the Chair select on "Select chair", so the form cannot be saved until another chair is chosen:
-Save shows "Choose a chair." in the validation summary.
+Save shows "Choose a chair." in the validation summary. The Members and External members pickers leave the chair out,
+and choosing as chair someone already selected in either takes them off that selection too (T257): until then the
+selection kept them, unseen, and the save was refused with "A panel member is listed more than once.". A polite line
+under the Chair select says so ("Priya Naidoo is the chair now, so is no longer selected under Members."): a
+`role="status"` region (`#panel-chair-note`, `.muted`) present before any chair is chosen, which the select names with
+`aria-describedby` after its help while the line says something. Choosing another chair, or none, puts the chair before
+back in the selection choosing them took them from, and the line says that too, after what the new choice took, if
+anything ("Priya Naidoo is selected under Members again."). So a chair chosen by mistake takes nobody off, nor does
+moving down the Chair select with the arrow keys, which in Chrome and Edge on Windows chooses each person passed. The
+line is emptied when a choice takes nobody off and puts nobody back, when the institution changes, when the panel is
+read again, and when the save succeeds; after any of these nobody is put back, so a stored chair is not moved to Members
+when another is chosen: they are offered there again, unselected. Each option in the Members and External members
+selects is keyed by the person it offers (§ Form system).
 
 **Nobody who holds Trainee administers a panel** (T256). Panel create and update refuse someone who holds Trainee beside
 a role that manages panels (the Administrator's included, T185's rung) before anything is read, the panel's read gives
