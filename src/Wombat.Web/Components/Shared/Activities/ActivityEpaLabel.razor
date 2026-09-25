@@ -1,19 +1,33 @@
 @* The EPA an activity is evidence for, as a list cell (T137). "Code — Title", the form every other EPA surface uses;
-   a dash when the activity is about no EPA. *@
+   a dash when the activity is about no EPA.
+
+   T231. An EPA that is not in force now is marked "(no longer in use)": the words the activity's own EPA picker uses
+   (EpaOptionLabel, D48), for the same EPA, because the flag is the one that picker reads (Epa.IsActive, carried as
+   ActivitySummaryDto.EpaInForce). Muted, as the curriculum editor marks an inactive EPA beside its title. *@
 @if (string.IsNullOrWhiteSpace(Code))
 {
   <span>—</span>
 }
-else if (string.IsNullOrWhiteSpace(Title))
+else if (InForce == false)
 {
-  <span>@Code</span>
+  <span>@Label <span class="muted">@EpaOptionLabel.NoLongerInUse</span></span>
 }
 else
 {
-  <span>@Code — @Title</span>
+  <span>@Label</span>
 }
 
 @code {
   [Parameter] public string? Code { get; set; }
   [Parameter] public string? Title { get; set; }
+
+  /// <summary>
+  /// Whether the EPA is in force now (<see cref="ActivitySummaryDto.EpaInForce" />), or null when there is no EPA.
+  /// Required, so a list that shows an activity's EPA cannot leave out that it is no longer in use.
+  /// </summary>
+  [Parameter, EditorRequired] public bool? InForce { get; set; }
+
+  // The picker's own text for an EPA in force (EpaOptionLabel.For), so the cell and the option cannot drift apart; the
+  // marker is added beside it in its own span rather than inside the string, so it can be muted.
+  private string Label => string.IsNullOrWhiteSpace(Title) ? Code! : EpaOptionLabel.For(Code!, Title, inForce: true);
 }

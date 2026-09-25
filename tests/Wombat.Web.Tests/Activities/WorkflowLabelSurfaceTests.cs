@@ -202,6 +202,7 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
             5000,
             "PAED-001",
             "Quality improvement",
+            true,
             new DateOnly(2026, 3, 10),
             true,
             null)

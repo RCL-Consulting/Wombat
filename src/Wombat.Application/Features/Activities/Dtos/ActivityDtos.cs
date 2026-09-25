@@ -181,6 +181,13 @@ public sealed record ActivityDetailDto(
 /// <param name="EpaId">The stamped <c>Activity.EpaId</c>: the EPA this activity is evidence for, or null.</param>
 /// <param name="EpaCode">That EPA's code, or null when the activity is about no EPA.</param>
 /// <param name="EpaTitle">That EPA's title, or null when the activity is about no EPA.</param>
+/// <param name="EpaInForce">
+/// Whether that EPA is in force now, or null when the activity is about no EPA (T231, D48). It is <c>Epa.IsActive</c>,
+/// the rule <c>CurriculumItemsInForce.InForce</c> filters by and <see cref="Wombat.Application.Features.Epas.EpaOptionLabel" />
+/// labels by, so a list marks "(no longer in use)" on exactly the EPA the activity's own picker marks. It is judged now,
+/// not at the activity's completion: the credit already stamped (<paramref name="CreditedItemCount" />) is the record of
+/// then.
+/// </param>
 /// <param name="ObservedOn">
 /// When the encounter happened (<c>Activity.ObservedOn</c>, T119), not when the paperwork was filed.
 /// </param>
@@ -209,6 +216,7 @@ public sealed record ActivitySummaryDto(
     int? EpaId,
     string? EpaCode,
     string? EpaTitle,
+    bool? EpaInForce,
     DateOnly ObservedOn,
     bool ObservedOnDeclared,
     int? CreditedItemCount)

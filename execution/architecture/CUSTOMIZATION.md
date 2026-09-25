@@ -388,7 +388,9 @@ as a target (`CurriculumItemsInForce.InForce`). It does not refuse filing, and i
   `CK_Epas_DeactivatedOn` keeps `IsActive` and `DeactivatedOn` in step; change them through `Epa.Deactivate` and
   `Epa.Reactivate`. `IsActive` is init-only, so a stored EPA's flag cannot be set any other way.
 - **An activity already filed against it keeps its EPA**, shown as "(no longer in use)" in its option list
-  (`EpaOptionLabel`), because the pickers offer only EPAs in force.
+  (`EpaOptionLabel`), because the pickers offer only EPAs in force. My activities and the Inbox mark it the same way
+  (T231): `ActivitySummaryDto.EpaInForce` carries the flag the picker reads (`Epa.IsActive`, judged now), and
+  `ActivityEpaLabel` prints `EpaOptionLabel.NoLongerInUse` after the title, muted.
 
 ## Rendering
 

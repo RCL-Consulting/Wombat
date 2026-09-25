@@ -64,6 +64,7 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
 
         // T137. The EPA each row is about, from the stamped column, in one read for the rows that survived the act
         // gate. An assessor with three requests from one trainee used to see three rows that differed only by id.
+        // T231. With whether it is in force now, by the rule the activity's own picker labels by (EpaOptionLabel).
         var epaIds = actionable
             .Where(row => row.Activity.EpaId is not null)
             .Select(row => row.Activity.EpaId!.Value)
@@ -71,13 +72,13 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
             .ToList();
 
         var epas = epaIds.Count == 0
-            ? new Dictionary<int, (string Code, string Title)>()
+            ? new Dictionary<int, (string Code, string Title, bool InForce)>()
             : (await _dbContext.Set<Epa>()
                     .AsNoTracking()
                     .Where(epa => epaIds.Contains(epa.Id))
-                    .Select(epa => new { epa.Id, epa.Code, epa.Title })
+                    .Select(epa => new { epa.Id, epa.Code, epa.Title, epa.IsActive })
                     .ToListAsync(cancellationToken))
-                .ToDictionary(epa => epa.Id, epa => (epa.Code, epa.Title));
+                .ToDictionary(epa => epa.Id, epa => (epa.Code, epa.Title, InForce: epa.IsActive));
 
         // T142. Whose activity each row is, by name, in one lookup for the rows that survived the act gate. The column
         // used to print the subject's user id.
@@ -88,7 +89,7 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
             .Select(row =>
             {
                 var activity = row.Activity;
-                (string Code, string Title)? epa =
+                (string Code, string Title, bool InForce)? epa =
                     activity.EpaId is int epaId && epas.TryGetValue(epaId, out var found) ? found : null;
 
                 return new ActivitySummaryDto(
@@ -105,6 +106,7 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
                     activity.EpaId,
                     epa?.Code,
                     epa?.Title,
+                    epa?.InForce,
                     activity.ObservedOn,
                     activity.ObservedOnSource == ObservationDateSource.Declared,
                     // The same rule as the trainee's own list: the latest transition that evaluated credit (T108).

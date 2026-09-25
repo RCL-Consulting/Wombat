@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
 using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
+using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Identity;
@@ -192,6 +193,44 @@ public sealed class EpaActivePeriodPostgresTests : IAsyncLifetime
         }
 
         (await SnapshotAsync(fixture.Schema)).Should().BeEquivalentTo(afterReactivation);
+    }
+
+    /// <summary>
+    /// T231. The trainee's activity list marks an EPA that is not in force now, through the LEFT JOIN as Npgsql
+    /// translates it, and stops marking it once it is reactivated: the flag is the EPA's standing now, not a stamp.
+    /// </summary>
+    [Fact]
+    public async Task TheActivityList_SaysAnEpaIsNotInForce_WhileItIsDeactivated()
+    {
+        var fixture = await ArrangeAsync();
+
+        var filed = await AddCompletedActivityAsync(fixture, observedOn: new DateOnly(2026, 3, 10), completedAt: new DateTime(2026, 3, 12, 9, 0, 0, DateTimeKind.Utc));
+        (await ExecuteAsync(fixture.Schema, """UPDATE "Activities" SET "EpaId" = $1 WHERE "Id" = $2""", fixture.EpaId, filed)).Should().Be(1);
+        // Left unstamped: an activity about no EPA.
+        var aboutNoEpa = await AddCompletedActivityAsync(fixture, observedOn: new DateOnly(2026, 3, 11), completedAt: new DateTime(2026, 3, 13, 9, 0, 0, DateTimeKind.Utc));
+
+        (await InForceByActivityAsync(fixture.Schema)).Should().BeEquivalentTo(
+            new Dictionary<int, bool?> { [filed] = true, [aboutNoEpa] = null });
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            await new DeactivateEpaCommandHandler(db, new FixedClock(DeactivatedAt))
+                .Handle(new DeactivateEpaCommand(fixture.EpaId, Administrator()), CancellationToken.None);
+        }
+
+        (await InForceByActivityAsync(fixture.Schema)).Should().BeEquivalentTo(
+            new Dictionary<int, bool?> { [filed] = false, [aboutNoEpa] = null });
+
+        await using (var db = NewContext(fixture.Schema))
+        {
+            var epa = await db.Epas.AsNoTracking().SingleAsync(entity => entity.Id == fixture.EpaId);
+            await new UpdateEpaCommandHandler(db, new CreditApplier(db), new FixedClock(ReactivatedAt)).Handle(
+                new UpdateEpaCommand(epa.Id, epa.SubSpecialityId, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, IsActive: true, Administrator()),
+                CancellationToken.None);
+        }
+
+        (await InForceByActivityAsync(fixture.Schema)).Should().BeEquivalentTo(
+            new Dictionary<int, bool?> { [filed] = true, [aboutNoEpa] = null });
     }
 
     [Fact]
@@ -390,6 +429,19 @@ public sealed class EpaActivePeriodPostgresTests : IAsyncLifetime
         await db.SaveChangesAsync();
 
         return credited.UpdatedRows.Count;
+    }
+
+    /// <summary>The trainee's own list, as the trainee reads it: each row's EPA-in-force flag by activity.</summary>
+    private async Task<IReadOnlyDictionary<int, bool?>> InForceByActivityAsync(string schema)
+    {
+        await using var db = NewContext(schema);
+        var rows = await new ListActivitiesBySubjectQueryHandler(db).Handle(
+            new ListActivitiesBySubjectQuery(
+                TraineeUserId,
+                new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, TraineeUserId)], "IntegrationTest"))),
+            CancellationToken.None);
+
+        return rows.ToDictionary(row => row.Id, row => row.EpaInForce);
     }
 
     private static Task<RebuildCurriculumProgressResult> Rebuild(ApplicationDbContext db)

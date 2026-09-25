@@ -44,7 +44,8 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
 
         // T137. The EPA comes from the stamped column, joined LEFT: an activity about no EPA is still listed. Before
         // the stamp existed the EPA lived only inside DataJson, so a released MSF campaign covering eight EPAs listed
-        // as eight identical rows. The credit column is T106 item 14: the latest transition that evaluated credit.
+        // as eight identical rows. An EPA that is not in force now is marked on the row (T231). The credit column is
+        // T106 item 14: the latest transition that evaluated credit.
         // Ordered by the encounter date, the column the list shows in place of the audit clock, so an encounter filed
         // late sits at its own date rather than at the top of a list that would then look unsorted. Ties fall back to
         // the most recently updated, then the id, so the order is total.
@@ -67,6 +68,8 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
                     activity.EpaId,
                     EpaCode = epa == null ? null : epa.Code,
                     EpaTitle = epa == null ? null : epa.Title,
+                    // T231. In force now, by the rule the activity's own picker labels by (EpaOptionLabel).
+                    EpaInForce = epa == null ? null : (bool?)epa.IsActive,
                     activity.ObservedOn,
                     ObservedOnDeclared = activity.ObservedOnSource == ObservationDateSource.Declared,
                     // Null when no transition evaluated credit, which is the honest answer for an activity still in
@@ -98,6 +101,7 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
                 row.EpaId,
                 row.EpaCode,
                 row.EpaTitle,
+                row.EpaInForce,
                 row.ObservedOn,
                 row.ObservedOnDeclared,
                 row.CreditedItemCount))

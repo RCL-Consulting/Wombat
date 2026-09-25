@@ -29,7 +29,7 @@
     <Row Context="item">
       <tr>
         <td>@item.ActivityTypeName</td>
-        <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" /></td>
+        <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="@item.EpaInForce" /></td>
         <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
         <td>@item.CurrentStateLabel</td>
         <td>@CreditOutcome.Label(item.CreditedItemCount)</td>

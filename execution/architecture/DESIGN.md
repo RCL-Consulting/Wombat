@@ -316,6 +316,10 @@ so the page reads the curriculum and both pickers again and keeps the refusal. A
 its refusal moves to the `.action-result` region, which takes the focus; a refused Add that leaves nothing to add puts its
 refusal at the head of the empty state (§ Card system).
 
+**An EPA that is not in force** is marked beside its title in a `.muted` span, on the same line: "(inactive: not in
+force)" on the curriculum editor, which admins read, and "(no longer in use)" on an activity's EPA cell on My
+activities and the Inbox (`ActivityEpaLabel`, T231), the words the activity's own EPA picker uses (`EpaOptionLabel`).
+
 A grid whose every row is always a set of inputs, such as a scale's levels on `EntrustmentScaleEdit`, is a different
 pattern and keeps its controls in the cells. Each of them still needs an accessible name; a column header does not
 give one. Name each by its column and its row, in the words the page uses: `aria-label="Label, level 3"`, and a row's

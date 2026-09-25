@@ -27,7 +27,7 @@
       <tr>
         <td>@item.ActivityTypeName</td>
         <td>@item.SubjectName</td>
-        <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" /></td>
+        <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="@item.EpaInForce" /></td>
         <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
         <td>@item.CurrentStateLabel</td>
         <td>@item.UpdatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>

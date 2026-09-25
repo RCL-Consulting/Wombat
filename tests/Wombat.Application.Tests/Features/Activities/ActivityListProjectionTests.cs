@@ -73,6 +73,25 @@ public sealed class ActivityListProjectionTests
         Row(rows, 5).EpaCode.Should().BeNull();
     }
 
+    /// <summary>
+    /// T231. Each row says whether its EPA is in force now, by the flag the activity's own picker labels by
+    /// (<c>EpaOptionLabel</c>): false for a deactivated EPA, true for one in force, and null where there is no EPA to
+    /// mark, whether the activity is about none or its EPA no longer exists.
+    /// </summary>
+    [Fact]
+    public async Task SubjectList_SaysWhetherEachRowsEpaIsInForceNow()
+    {
+        await using var db = await SeededAsync();
+        await DeactivateAsync(db, WardRoundEpaId);
+
+        var rows = await SubjectListAsync(db);
+
+        rows.Where(row => row.EpaId == WardRoundEpaId).Select(row => row.EpaInForce).Should().Equal(false, false, false);
+        rows.Where(row => row.EpaId == HistoryEpaId).Select(row => row.EpaInForce).Should().Equal(true, true, true);
+        Row(rows, 3).EpaInForce.Should().BeNull("the activity is about no EPA");
+        Row(rows, 5).EpaInForce.Should().BeNull("its EPA no longer exists, so there is nothing to mark");
+    }
+
     [Fact]
     public async Task SubjectList_CarriesTheEncounterDate_AndWhetherAnyoneStatedIt()
     {
@@ -186,6 +205,21 @@ public sealed class ActivityListProjectionTests
         withoutEpa.ObservedOnDeclared.Should().BeFalse();
     }
 
+    /// <summary>T231. The inbox says it too, by the same flag.</summary>
+    [Fact]
+    public async Task Inbox_SaysWhetherEachRowsEpaIsInForceNow()
+    {
+        await using var db = await SeededAsync();
+        await DeactivateAsync(db, WardRoundEpaId);
+
+        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
+            .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
+
+        rows.Single(row => row.Id == 6).EpaInForce.Should().BeFalse("PAED-002 is deactivated");
+        rows.Single(row => row.Id == 8).EpaInForce.Should().BeTrue("PAED-001 is in force");
+        rows.Single(row => row.Id == 3).EpaInForce.Should().BeNull("the activity is about no EPA");
+    }
+
     /// <summary>
     /// The inbox carries the same credit outcome as the trainee's list, by the same rule: an activity back in an
     /// actionable state after a completion that credited still says what the latest evaluation credited, ties going to
@@ -234,6 +268,12 @@ public sealed class ActivityListProjectionTests
             .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None);
 
     private static ActivitySummaryDto Row(IReadOnlyList<ActivitySummaryDto> rows, int id) => rows.Single(row => row.Id == id);
+
+    private static async Task DeactivateAsync(ApplicationDbContext db, int epaId)
+    {
+        (await db.Epas.SingleAsync(epa => epa.Id == epaId)).Deactivate(Clock).Should().BeTrue();
+        await db.SaveChangesAsync();
+    }
 
     /// <summary>
     /// Eight activities of one type about one trainee:

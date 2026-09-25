@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
+using Wombat.Application.Features.Epas;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Services;
 
@@ -85,7 +86,7 @@ public sealed class ActivityListColumnsTests : TestContext
     [Fact]
     public void MyActivities_ShowsADashForAnActivityAboutNoEpa()
     {
-        var cut = RenderMine(Row(1, "draft", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null });
+        var cut = RenderMine(Row(1, "draft", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null });
 
         Column(cut, BodyRows(cut), "EPA").Should().Equal("—");
     }
@@ -95,7 +96,7 @@ public sealed class ActivityListColumnsTests : TestContext
     {
         var cut = RenderInbox(
             Row(1, "requested", creditedItemCount: null) with { EpaCode = "PAED-004", EpaTitle = "Resuscitate a child", ObservedOn = new DateOnly(2026, 3, 11) },
-            Row(2, "requested", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, ObservedOnDeclared = false, ObservedOn = new DateOnly(2026, 3, 12) });
+            Row(2, "requested", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null, ObservedOnDeclared = false, ObservedOn = new DateOnly(2026, 3, 12) });
 
         var rows = BodyRows(cut);
         Column(cut, rows, "EPA").Should().Equal("PAED-004 — Resuscitate a child", "—");
@@ -120,6 +121,43 @@ public sealed class ActivityListColumnsTests : TestContext
         cut.Markup.Should().NotContain("trainee-1", "the first row's user id is not on the page");
     }
 
+    /// <summary>
+    /// T231. An EPA that is not in force now reads "(no longer in use)", the words and the flag of the activity's own
+    /// picker (<c>EpaOptionLabel</c>, D48), in a muted span. An EPA in force, and an activity about no EPA, read as before.
+    /// The marked cell is compared with the picker's own text (<c>EpaOptionLabel.For</c>), not a copy of it, so a change
+    /// to the picker's wording that the cell does not follow fails here.
+    /// </summary>
+    [Fact]
+    public void MyActivities_MarksAnEpaThatIsNoLongerInForce()
+    {
+        var cut = RenderMine(
+            Row(1, "completed", creditedItemCount: 1),
+            Row(2, "completed", creditedItemCount: 0) with { EpaId = 5006, EpaCode = "PAED-006", EpaTitle = "Manage a sick neonate", EpaInForce = false },
+            Row(3, "draft", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null });
+
+        Column(cut, BodyRows(cut), "EPA").Should().Equal(
+            "PAED-001 — Take a history",
+            EpaOptionLabel.For("PAED-006", "Manage a sick neonate", inForce: false),
+            "—");
+        MarkersIn(cut).Should().Equal([EpaOptionLabel.NoLongerInUse], "only the EPA that is not in force is marked, and muted");
+    }
+
+    /// <summary>T231. The inbox marks it too: an assessor asked to act on an activity whose EPA was deactivated.</summary>
+    [Fact]
+    public void Inbox_MarksAnEpaThatIsNoLongerInForce()
+    {
+        var cut = RenderInbox(
+            Row(1, "requested", creditedItemCount: null) with { EpaId = 5006, EpaCode = "PAED-006", EpaTitle = "Manage a sick neonate", EpaInForce = false },
+            Row(2, "requested", creditedItemCount: null),
+            Row(3, "requested", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null });
+
+        Column(cut, BodyRows(cut), "EPA").Should().Equal(
+            EpaOptionLabel.For("PAED-006", "Manage a sick neonate", inForce: false),
+            "PAED-001 — Take a history",
+            "—");
+        MarkersIn(cut).Should().Equal([EpaOptionLabel.NoLongerInUse], "only the EPA that is not in force is marked, and muted");
+    }
+
     // ---- helpers ----------------------------------------------------------------------------------------------------
 
     private static ActivitySummaryDto Msf(int id, int epaId, string code, string title) => new(
@@ -135,6 +173,7 @@ public sealed class ActivityListColumnsTests : TestContext
         epaId,
         code,
         title,
+        true,
         CampaignClosed,
         true,
         null);
@@ -152,6 +191,7 @@ public sealed class ActivityListColumnsTests : TestContext
         5000,
         "PAED-001",
         "Take a history",
+        true,
         new DateOnly(2026, 3, 10),
         true,
         creditedItemCount);
@@ -179,6 +219,16 @@ public sealed class ActivityListColumnsTests : TestContext
         var cut = RenderComponent<ActivityInbox>();
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == rows.Length);
         return cut;
+    }
+
+    /// <summary>The text of every muted span in the EPA column's cells (an undated encounter is muted too).</summary>
+    private static IReadOnlyList<string> MarkersIn<T>(IRenderedComponent<T> cut) where T : Microsoft.AspNetCore.Components.IComponent
+    {
+        var index = cut.FindAll("thead th").Select(cell => cell.TextContent.Trim()).ToList().IndexOf("EPA");
+        return BodyRows(cut)
+            .SelectMany(row => row.QuerySelectorAll("td")[index].QuerySelectorAll("span.muted"))
+            .Select(span => span.TextContent.Trim())
+            .ToList();
     }
 
     private static IReadOnlyList<IElement> BodyRows<T>(IRenderedComponent<T> cut) where T : Microsoft.AspNetCore.Components.IComponent
