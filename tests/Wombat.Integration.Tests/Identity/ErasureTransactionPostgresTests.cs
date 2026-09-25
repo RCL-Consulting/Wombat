@@ -15,9 +15,11 @@ namespace Wombat.Integration.Tests.Identity;
 
 /// <summary>
 /// T156: an erasure is all or nothing, on real PostgreSQL with the real <see cref="ErasureExecutor" />. It writes in many
-/// steps: raw updates that committed as they ran, and Identity calls that each saved the whole context. Until T156 a
-/// failure part-way left a half-erased person: committee rows under a pseudonym, beside an account that still carried
-/// their name, email, roles and institutional sign-in, and no erasure record to say so.
+/// steps: raw updates that commit as they run, and Identity calls that each save the whole context. A failure part-way
+/// used to leave a half-erased person: committee rows under a pseudonym, beside an account that still carried their name,
+/// email, roles and institutional sign-in, and no erasure record to say so. T258 put the erasure in one transaction; T156
+/// checks each Identity write's result, which the user store reports as a result rather than an exception, so a refused
+/// one fails the erasure too instead of being stepped past and committed.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -52,31 +54,34 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task AnAccountUpdateIdentityRefuses_FailsTheErasure_AndErasesNothing()
+    public async Task AnAccountChangedDuringTheErasure_IsRefusedAsThePersonChanged_AndErasesNothing()
     {
         // An administrator's edit lands between the erasure reading the account and writing it. The user store reports the
-        // conflict as a failed result, not an exception, and until T156 the erasure went on past it.
+        // conflict as a failed result, not an exception, and until T156 the erasure went on past it. It is refused as a
+        // conflict on any other row about the person is (T258), in the same words (T156 review).
         await RunAsync(
             fault => fault.ConcurrentEditBeforeUpdate = true,
             (thrown, _) => thrown.Should().BeOfType<InvalidOperationException>()
-                .Which.Message.Should().Contain("could not clear the account", "it stops at the refusal, not at a later step")
-                .And.Contain(nameof(IdentityErrorDescriber.ConcurrencyFailure)).And.NotContain(Email),
+                .Which.Message.Should().Be(ErasureExecutor.PersonChanged, "it stops at the refusal, not at a later step"),
             concurrentEditStands: true);
     }
 
     /// <summary>
-    /// A later Identity write refused as a result, after the account has been cleared. Until T156 the erasure went on
-    /// past it and committed: an erased account that kept its role or its institutional sign-in, recorded as erased.
+    /// An Identity write refused as a result: the account's own update, or a later write after the account has been
+    /// cleared. Until T156 the erasure went on past it and committed: an erased account that kept its role or its
+    /// institutional sign-in, recorded as erased, or, past a refused update, one cleared by the next write's save anyway.
+    /// A refusal that is not a conflict names the step and Identity's code.
     /// </summary>
     [Theory]
-    [InlineData(IdentityStep.RemoveRoles, "could not remove the account's roles")]
-    [InlineData(IdentityStep.RemoveLogin, "could not remove the account's institutional sign-in")]
-    public async Task AnIdentityWriteRefusedAfterTheAccountIsCleared_FailsTheErasure_AndErasesNothing(IdentityStep step, string named)
+    [InlineData(IdentityStep.Update, "could not clear the account (DefaultError)")]
+    [InlineData(IdentityStep.RemoveRoles, "could not remove the account's roles (DefaultError)")]
+    [InlineData(IdentityStep.RemoveLogin, "could not remove the account's institutional sign-in (DefaultError)")]
+    public async Task AnIdentityWriteRefused_FailsTheErasure_NamingTheStep_AndErasesNothing(IdentityStep step, string named)
     {
         await RunAsync(
             fault => fault.RefuseAt = step,
             (thrown, _) => thrown.Should().BeOfType<InvalidOperationException>()
-                .Which.Message.Should().Contain(named).And.Contain(nameof(IdentityErrorDescriber.ConcurrencyFailure)));
+                .Which.Message.Should().Contain(named).And.NotContain(Email));
     }
 
     [Fact]
@@ -278,10 +283,11 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
 
     private sealed record Arranged(string UserId, int InstitutionId, int ReviewId, Guid RequestId);
 
-    /// <summary>An Identity write the erasure makes after the account's own update.</summary>
+    /// <summary>An Identity write the erasure makes: the account's own update, and those after it.</summary>
     public enum IdentityStep
     {
         None,
+        Update,
         RemoveRoles,
         RemoveLogin
     }
@@ -295,7 +301,7 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
 
         public bool ThrowAtRemoveLogin { get; set; }
 
-        /// <summary>The write the user store refuses, as it reports a conflict: a failed result, not an exception.</summary>
+        /// <summary>The write the user store refuses, as it reports a refusal: a failed result, not an exception.</summary>
         public IdentityStep RefuseAt { get; set; }
 
         /// <summary>An edit of the account through another connection, committed at once.</summary>
@@ -309,7 +315,7 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
             RefuseAt = IdentityStep.None;
         }
 
-        public static IdentityResult Refused() => IdentityResult.Failed(new IdentityErrorDescriber().ConcurrencyFailure());
+        public static IdentityResult Refused() => IdentityResult.Failed(new IdentityErrorDescriber().DefaultError());
 
         public static InvalidOperationException Thrown() => new("A fault the test put here: the database has gone.");
     }
@@ -339,7 +345,7 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
                 await fault.EditConcurrently!(user.Id);
             }
 
-            return await base.UpdateAsync(user);
+            return fault.RefuseAt == IdentityStep.Update ? ErasureFault.Refused() : await base.UpdateAsync(user);
         }
 
         public override Task<IdentityResult> RemoveFromRolesAsync(WombatIdentityUser user, IEnumerable<string> roles)

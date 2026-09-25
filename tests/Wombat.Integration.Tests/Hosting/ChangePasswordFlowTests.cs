@@ -67,11 +67,11 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, cookies) = NewBrowser(app);
         using (browser)
         {
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             var cookieBefore = SignInCookieOf(cookies);
             var stampBefore = await StampAsync(email);
 
-            using var submit = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword);
+            using var submit = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
 
             submit.StatusCode.Should().Be(HttpStatusCode.Redirect);
             submit.Headers.Location!.ToString().Should().Be($"{PagePath}?status=updated");
@@ -101,7 +101,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (fresh, _) = NewBrowser(app);
         using (fresh)
         {
-            (await SignInAsync(fresh, email, MsfRespondPageFlowTests.WebHost.AssessorPassword, expectSuccess: false))
+            (await SignInAsync(fresh, email, MsfRespondPageFlowTests.WebHost.SignInPassword, expectSuccess: false))
                 .Should().Contain("/account/login?error=", "the old password is refused");
             await SignInAsync(fresh, email, NewPassword);
         }
@@ -109,9 +109,9 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
     [Theory]
     [InlineData("Not-the-Pa55word!", NewPassword, NewPassword, "PasswordMismatch", "Incorrect password.")]
-    [InlineData(MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, "Changed-Pa55word?", "ConfirmationMismatch",
+    [InlineData(MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, "Changed-Pa55word?", "ConfirmationMismatch",
         "The password confirmation does not match.")]
-    [InlineData(MsfRespondPageFlowTests.WebHost.AssessorPassword, "short1A!", "short1A!", "PasswordTooShort",
+    [InlineData(MsfRespondPageFlowTests.WebHost.SignInPassword, "short1A!", "short1A!", "PasswordTooShort",
         "Passwords must be at least 12 characters.")]
     [InlineData(" ", " ", " ", "FieldsMissing",
         "Enter your current password, a new password, and the new password again to confirm it.")]
@@ -127,7 +127,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, _) = NewBrowser(_host.Factory);
         using (browser)
         {
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             var stamp = await StampAsync(email);
 
             using var submit = await PostTheFormAsync(browser, current, replacement, confirmation);
@@ -145,7 +145,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (fresh, _) = NewBrowser(_host.Factory);
         using (fresh)
         {
-            await SignInAsync(fresh, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(fresh, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
         }
     }
 
@@ -157,13 +157,13 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, _) = NewBrowser(_host.Factory);
         using (browser)
         {
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             var stamp = await StampAsync(email);
 
             // Another site's form, posted with the user's cookies: it cannot read the page, so it has no token.
             using var forged = await browser.PostAsync(SubmitPath, new FormUrlEncodedContent(
             [
-                new("CurrentPassword", MsfRespondPageFlowTests.WebHost.AssessorPassword),
+                new("CurrentPassword", MsfRespondPageFlowTests.WebHost.SignInPassword),
                 new("NewPassword", NewPassword),
                 new("ConfirmPassword", NewPassword)
             ]));
@@ -196,7 +196,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
             returnUrl.Should().Be(SubmitPath, "the sign-in page is sent where the post was going");
 
             // Signing in sends the browser there with a GET, which lands on the page, not on a blank 405 (T265 review).
-            var afterSignIn = await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword, returnUrl: returnUrl);
+            var afterSignIn = await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword, returnUrl: returnUrl);
             afterSignIn.Should().Be(SubmitPath);
             using var get = await browser.GetAsync(afterSignIn);
             get.StatusCode.Should().Be(HttpStatusCode.Redirect);
@@ -219,7 +219,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, cookies) = NewBrowser(app);
         using (browser)
         {
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             var cookieBefore = SignInCookieOf(cookies);
 
             // An administrator's "Lock out user": the account is deactivated and its stamp changed, which ends the session
@@ -233,7 +233,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
             var stampAfterLock = await StampAsync(email);
 
             // Whoever holds the session, and knows the password, changes it before that check.
-            using var submit = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword);
+            using var submit = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
 
             // Past the check, neither the cookie the browser now holds nor the one from before signs anyone in. Until the
             // T265 review the change went through, the cookie was issued again with the new stamp, and the session outlived
@@ -248,7 +248,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
                 "&returnUrl=" + Uri.EscapeDataString(PagePath));
             IssuedSignInCookies(submit).Should().BeEmpty("no cookie is issued to a session that has ended");
             (await StampAsync(email)).Should().Be(stampAfterLock, "nothing changed");
-            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.AssessorPassword)).Should().BeTrue();
+            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.SignInPassword)).Should().BeTrue();
         }
     }
 
@@ -262,11 +262,11 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         using (first)
         using (second)
         {
-            await SignInAsync(first, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
-            await SignInAsync(second, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(first, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
+            await SignInAsync(second, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
 
             // The first browser's change ends every other session: their cookies carry the old stamp.
-            using (var changed = await PostTheFormAsync(first, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword))
+            using (var changed = await PostTheFormAsync(first, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword))
             {
                 changed.Headers.Location!.ToString().Should().Be($"{PagePath}?status=updated", "guard: the first change went through");
             }
@@ -294,7 +294,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, _) = NewBrowser(_host.Factory);
         using (browser)
         {
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             var stamp = await StampAsync(email);
 
             var codes = new List<string>();
@@ -312,11 +312,11 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
                 $"{PagePath}?error=PasswordMismatch",
                 $"{PagePath}?error={ChangePasswordOutcome.LockedOut}");
 
-            using var right = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword);
+            using var right = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
             right.Headers.Location!.ToString().Should().Be($"{PagePath}?error={ChangePasswordOutcome.LockedOut}",
                 "a locked account's password is not checked");
             (await StampAsync(email)).Should().Be(stamp);
-            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.AssessorPassword)).Should().BeTrue();
+            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.SignInPassword)).Should().BeTrue();
 
             // A lockout the typing caused is not a deactivation: the session goes on, and the page says why.
             using var answer = await browser.GetAsync(right.Headers.Location);
@@ -335,8 +335,8 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         using (browser)
         {
             // Neither costs anything: the throttle counts failed password checks only (T156).
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
-            using (var changed = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword))
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
+            using (var changed = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword))
             {
                 changed.Headers.Location!.ToString().Should().Be(ChangePasswordOutcome.UpdatedUrl, "guard: a change that succeeds");
             }
@@ -362,7 +362,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
                 .Should().Be(ChangePasswordOutcome.TooManyAttemptsMessage);
 
             // Shared with the sign-in page: the same address is refused there too, before any password is checked.
-            (await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword, expectSuccess: false))
+            (await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword, expectSuccess: false))
                 .Should().Be("/account/login?error=" + Uri.EscapeDataString(SignInMessages.TooManyFailedAttempts));
         }
     }
@@ -375,7 +375,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, _) = NewBrowser(_host.Factory);
         using (browser)
         {
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
 
             // Moved to institutional sign-in while signed in. Its password no longer signs anyone in, and an SSO-provisioned
             // account has none, so checking one could only count failures towards a lockout that blocks its SSO sign-in.
@@ -389,11 +389,11 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
             var stamp = await StampAsync(email);
 
-            using var submit = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword);
+            using var submit = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
 
             submit.Headers.Location!.ToString().Should().Be($"{PagePath}?error={ChangePasswordOutcome.InstitutionalSignIn}");
             (await StampAsync(email)).Should().Be(stamp);
-            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.AssessorPassword)).Should().BeTrue();
+            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.SignInPassword)).Should().BeTrue();
         }
     }
 
@@ -413,12 +413,12 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, _) = NewBrowser(app);
         using (browser)
         {
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             var stamp = await StampAsync(email);
 
             using var load = await browser.GetAsync(PagePath);
             fault.On = true;
-            using var submit = await PostTheLoadedFormAsync(browser, load, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword);
+            using var submit = await PostTheLoadedFormAsync(browser, load, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
             fault.On = false;
 
             submit.StatusCode.Should().Be(HttpStatusCode.Redirect, "not the error page");
@@ -449,13 +449,13 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         var (browser, _) = NewBrowser(app);
         using (browser)
         {
-            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             var stamp = await StampAsync(email);
 
             // The password changes; issuing the cookie again then fails, as it would with the database gone mid-request.
             using var load = await browser.GetAsync(PagePath);
             fault.On = true;
-            using var submit = await PostTheLoadedFormAsync(browser, load, MsfRespondPageFlowTests.WebHost.AssessorPassword, NewPassword, NewPassword);
+            using var submit = await PostTheLoadedFormAsync(browser, load, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
             fault.On = false;
 
             submit.StatusCode.Should().Be(HttpStatusCode.Redirect, "not the error page");

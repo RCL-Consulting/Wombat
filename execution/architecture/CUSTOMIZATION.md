@@ -565,7 +565,11 @@ Not everything survives the pivot to schema-driven. These stay hardcoded because
      inside the transaction (the approving handler marks both before the erasure runs), so no erasure stands under a
      request left merely Approved. A refused erasure leaves the request as it was, ready to approve again. A row about the
      person that changed while the erasure ran (a campaign closed by the auto-close job, a review ratified) fails the save
-     on its concurrency token, and the approver is told so in words (`ErasureExecutor.PersonChanged`), not EF's.
+     on its concurrency token, and the approver is told so in words (`ErasureExecutor.PersonChanged`), not EF's. Those
+     rows are saved before the account is touched, so their conflict is never read as the account's. The account's own
+     writes go through Identity, whose user store reports a refusal as a failed result, not an exception: each result is
+     checked (T156), a conflict is refused as `PersonChanged` too, and any other refusal fails the erasure naming the step
+     and Identity's code, so no erased account keeps a role or an institutional sign-in.
    - **Not ended by an erasure, yet:** an activity about the person still in its workflow runs on under the pseudonym and
      can still be completed and credited; a user id held in an activity's `DataJson` (a nominee field) is not rewritten;
      the person's address as a respondent on someone else's open campaign stays until that campaign closes; and a review,

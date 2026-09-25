@@ -64,7 +64,7 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
                     $"guess {guess} of ten is checked");
             }
 
-            using var throttled = await SignInAsync(guesser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            using var throttled = await SignInAsync(guesser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             throttled.Headers.Location!.ToString().Should().Be(Refused(SignInMessages.TooManyFailedAttempts),
                 "the eleventh is refused before any password is checked");
             int.Parse(throttled.Headers.RetryAfter!.ToString()).Should().BeInRange(1, 300);
@@ -72,7 +72,7 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
 
         // Until T156 the throttle counted the /24, so the neighbour behind the same NAT block was refused too.
         using var neighbour = _host.NewBrowser($"10.237.{subnet}.8");
-        using var signedIn = await SignInAsync(neighbour, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+        using var signedIn = await SignInAsync(neighbour, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
         signedIn.Headers.Location!.ToString().Should().Be("/", "a neighbour's failures are not theirs");
     }
 
@@ -87,7 +87,7 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
         for (var signIn = 1; signIn <= 12; signIn++)
         {
             using var browser = _host.NewBrowser(address);
-            using var signedIn = await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.AssessorPassword);
+            using var signedIn = await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
             signedIn.Headers.Location!.ToString().Should().Be("/", $"sign-in {signIn} succeeds");
         }
 
