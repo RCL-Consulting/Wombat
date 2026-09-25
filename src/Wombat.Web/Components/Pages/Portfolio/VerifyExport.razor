@@ -1,32 +1,54 @@
 @page "/portfolio/verify"
 @attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
 @inject IScopedSender Sender
+@inject ILogger<VerifyExport> Logger
+
+@*
+  Whoever holds a portfolio PDF checks here whether Wombat produced it, signed in or not. Static HTML for every visitor,
+  with a plain GET form ([ExcludeFromInteractiveRouting], App.razor): Verify loads /portfolio/verify?hash=..., and the
+  check is made as the page renders, so it needs no circuit, which a visitor who has not signed in never has (T181).
+  Until T265 Verify was a circuit button, and signed out it did nothing; only a link that carried the hash checked it.
+
+  Verify sends check=1 beside the hash, so the page can tell a press from a link. After a press the result takes the
+  focus as the page loads (ActionResult's FocusOnLoad; DESIGN.md § Button system); a check made on arrival from a link
+  leaves the focus alone. A check that fails is said on the page, not left to the error page (T265).
+*@
 
 <PageTitle>Verify Portfolio Export</PageTitle>
 
 <PageHeader Title="Verify portfolio export" Subtitle="Check whether a PDF was produced by this system." />
 
 <div class="form-container">
-  <div class="form-grid">
-    <FormField Label="Content hash (SHA-256)" InputId="contentHash" FullWidth="true">
-      <input type="text" id="contentHash" class="form-control" @bind="_hash" placeholder="Enter the hash from the PDF footer" />
-    </FormField>
-  </div>
+  <form method="get" action="/portfolio/verify">
+    <div class="form-grid">
+      <FormField Label="Content hash (SHA-256)" InputId="contentHash" FullWidth="true">
+        <input type="text" id="contentHash" name="hash" class="form-control" value="@Hash" required autocomplete="off"
+               spellcheck="false" placeholder="Enter the hash from the PDF footer" />
+      </FormField>
+    </div>
 
-  <div class="form-actions">
-    @* Not disabled while the check runs (T234): it has the focus, and a browser drops the focus of a button it disables,
-       to the page. A second press sends nothing. *@
-    <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_loading)" @onclick="CheckAsync">
-      @(_loading ? "Checking..." : "Verify")
-    </button>
-  </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" name="@PressedParameter" value="1">Verify</button>
+    </div>
+  </form>
 </div>
 
-@* What Verify found. It takes the focus once a check has answered (T234; DESIGN.md § Button system): the card below
-   the form is not announced on its own. A check made on arrival, from a link that carries the hash, leaves the focus
-   alone. *@
-<ActionResult @ref="_region">
-  @if (_searched)
+@* What Verify found, under the form. *@
+<ActionResult FocusOnLoad="@Pressed">
+  @if (_fault)
+  {
+    <div style="margin-top: var(--space-lg);">
+      <Alert Kind="danger">The export could not be checked just now. Please try again in a few minutes.</Alert>
+    </div>
+  }
+  else if (_blank)
+  {
+    <div style="margin-top: var(--space-lg);">
+      <Alert Kind="danger">Enter the content hash to check.</Alert>
+    </div>
+  }
+  else if (_searched)
   {
     @if (_result is not null)
     {
@@ -52,57 +74,40 @@
 </ActionResult>
 
 @code {
-  [SupplyParameterFromQuery(Name = "hash")] public string? HashFromQuery { get; set; }
+  /// <summary>The query parameter Verify sends, and only Verify: its presence says the page is the answer to a press.</summary>
+  public const string PressedParameter = "check";
 
-  private string? _hash;
-  private ActionResult? _region;
-  private bool _loading;
-  private bool _searched;
+  [SupplyParameterFromQuery(Name = "hash")] public string? Hash { get; set; }
+
+  [SupplyParameterFromQuery(Name = PressedParameter)] public string? Check { get; set; }
+
   private Wombat.Application.Features.Reporting.PortfolioExportRecordDto? _result;
+  private bool _searched;
+  private bool _blank;
+  private bool _fault;
+
+  private bool Pressed => !string.IsNullOrEmpty(Check);
 
   protected override async Task OnInitializedAsync()
   {
-    if (!string.IsNullOrWhiteSpace(HashFromQuery))
+    if (string.IsNullOrWhiteSpace(Hash))
     {
-      _hash = HashFromQuery;
-      await VerifyAsync();
-    }
-  }
-
-  private async Task CheckAsync()
-  {
-    if (_loading)
-    {
+      // The field is required, so a browser sends no empty hash, but spaces pass that check: a press with nothing to
+      // check is refused. A visit with no hash, pressed for by nobody, is the form alone.
+      _blank = Pressed;
       return;
     }
 
-    // A blank hash runs no check, so the result below is still the last check's: the focus stays on Verify (T234 review).
-    if (await VerifyAsync())
-    {
-      _region?.FocusAfterRender();
-    }
-  }
-
-  /// <summary>Checks the hash entered. Returns whether a check ran and answered: none runs for a blank hash.</summary>
-  private async Task<bool> VerifyAsync()
-  {
-    if (string.IsNullOrWhiteSpace(_hash))
-    {
-      return false;
-    }
-
-    _loading = true;
-    _searched = false;
-
     try
     {
-      _result = await Sender.Send(new Wombat.Application.Features.Reporting.VerifyExportQuery(_hash.Trim()));
+      _result = await Sender.Send(new Wombat.Application.Features.Reporting.VerifyExportQuery(Hash.Trim()));
       _searched = true;
-      return true;
     }
-    finally
+    catch (Exception exception)
     {
-      _loading = false;
+      // A fault, not an answer: the visitor is told the check could not be made, and the log says why.
+      Logger.LogError(exception, "The portfolio export check failed.");
+      _fault = true;
     }
   }
 

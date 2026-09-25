@@ -3,8 +3,11 @@
   inside, and once the action has answered, done or refused, asks the region to take the focus. By then the button that
   was pressed may be gone, disabled by what the action changed, or rebuilt with its form, and the focus would fall to the
   page body. A status alert that arrives already filled is not reliably read either; the focus reads it at once.
+
+  An action that is a page load (a form post the server answers with the page again, or a GET form) has its result
+  arrive with the page: FocusOnLoad (T265).
 *@
-<div @ref="_element" id="@Id" class="action-result" tabindex="-1">
+<div @ref="_element" id="@Id" class="action-result" tabindex="-1" autofocus="@FocusOnLoad">
   @ChildContent
 </div>
 
@@ -16,6 +19,14 @@
 
   /// <summary>The region's id, for a page whose controls name it.</summary>
   [Parameter] public string? Id { get; set; }
+
+  /// <summary>
+  /// The result arrived with the page: the page is the answer to a form that reloaded it (change password, the export
+  /// check; T265). The region takes the focus as the page loads, twice over: <c>autofocus</c> in the HTML, for a static
+  /// page and for the moment before a circuit starts, and a focus call once the circuit has rendered, since that render
+  /// replaces the HTML the browser focused.
+  /// </summary>
+  [Parameter] public bool FocusOnLoad { get; set; }
 
   /// <summary>The region's element. A test matches the reference a focus call was given to it.</summary>
   public ElementReference Element => _element;
@@ -30,7 +41,7 @@
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (_focusAfterRender)
+    if (_focusAfterRender || (firstRender && FocusOnLoad))
     {
       _focusAfterRender = false;
       await _element.FocusAsync();

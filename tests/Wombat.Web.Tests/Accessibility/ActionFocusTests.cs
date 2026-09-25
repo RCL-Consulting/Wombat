@@ -5,12 +5,8 @@ using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Commands.DiscardActivityTypeDraft;
@@ -63,7 +59,6 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
-using Wombat.Infrastructure.Identity;
 using Wombat.Web.Components.Pages.Account;
 using Wombat.Web.Components.Pages.Admin.ActivityTypes;
 using Wombat.Web.Components.Pages.Admin.Adoptions;
@@ -455,32 +450,6 @@ public sealed class ActionFocusTests : TestContext
         hold.Count.Should().Be(1);
     }
 
-    /// <summary>
-    /// T234 review. Verify with a blank hash runs no check, so the result below the form is still the last check's: the
-    /// focus stays on Verify rather than going to an answer this press did not give.
-    /// </summary>
-    [Fact]
-    public void AVerifyWithABlankHash_RunsNoCheck_AndLeavesTheFocusOnVerify()
-    {
-        var hold = new Hold();
-        var cut = Page<VerifyExport>(new Sender(hold, request => request is VerifyExportQuery, request => request switch
-        {
-            VerifyExportQuery => new PortfolioExportRecordDto(1, "trainee-1", "admin-1", Created, null, null, "hash-1", "portfolio.pdf"),
-            _ => null
-        }));
-        cut.Find("#contentHash").Change("hash-1");
-        Named(cut, "Verify", "Checking...").Click();
-        hold.Release();
-        cut.WaitForAssertion(() => FocusCalls().Should().ContainSingle());
-
-        cut.Find("#contentHash").Change("   ");
-        Named(cut, "Verify", "Checking...").Click();
-
-        hold.Count.Should().Be(1, "a blank hash is not checked");
-        FocusCalls().Should().ContainSingle("the result shown is the last check's, not an answer to this press");
-        cut.Find(".action-result").TextContent.Should().Contain("Export verified");
-    }
-
     private static IReadOnlyList<IElement> DownloadButtons(IRenderedFragment cut)
         => cut.FindAll(".detail-card button").ToList();
 
@@ -624,16 +593,9 @@ public sealed class ActionFocusTests : TestContext
             cut => Named(cut, "Save profile", "Saving..."),
             cut => Named(cut, "Save profile", "Saving...").Click()),
 
-        ["ChangePassword Change password"] = new(
-            (test, hold) => test.ChangePasswordPage(hold),
-            SubmitButton,
-            cut =>
-            {
-                cut.Find("#current-password").Change("Old-password-1");
-                cut.Find("#new-password").Change("New-password-1");
-                cut.Find("#confirm-password").Change("New-password-1");
-                Submit(cut);
-            }),
+        // Change password (/account/change-password) and Verify on the export check (/portfolio/verify) are not here: since
+        // T265 each is a form the browser sends, and its result arrives with the page it loads (ActionResult.FocusOnLoad).
+        // Account/ChangePasswordPageTests and Portfolio/VerifyExportPageTests hold them to the rule.
 
         ["AdoptionsList Adopt"] = new(
             (test, hold) =>
@@ -791,23 +753,6 @@ public sealed class ActionFocusTests : TestContext
                 parameters => parameters.Add(page => page.TraineeUserId, "trainee-1")),
             cut => Named(cut, "Export PDF", "Generating..."),
             cut => Named(cut, "Export PDF", "Generating...").Click()),
-
-        ["VerifyExport Verify"] = new(
-            (test, hold) => test.Page<VerifyExport>(
-                new Sender(hold, request => request is VerifyExportQuery, request => request switch
-                {
-                    VerifyExportQuery => new PortfolioExportRecordDto(
-                        1, "trainee-1", "admin-1", Created, null, null, "hash-1", "portfolio.pdf"),
-                    _ => null
-                })),
-            cut => Named(cut, "Verify", "Checking..."),
-            cut =>
-            {
-                cut.Find("#contentHash").Change("hash-1");
-                Named(cut, "Verify", "Checking...").Click();
-            },
-            // The page has never reported a failed check (it catches nothing), so there is no refusal to show.
-            CanBeRefused: false),
 
         ["ActivityTypeEdit Save draft"] = new(
             (test, hold) => test.ActivityTypePage(hold, request => request is SaveActivityTypeDraftCommand, hasDraft: false),
@@ -1152,17 +1097,6 @@ public sealed class ActionFocusTests : TestContext
             parameters => parameters.Add(page => page.ActivityTypeId, 4));
     }
 
-    private IRenderedFragment ChangePasswordPage(Hold hold)
-    {
-        var users = new HeldUserManager(hold);
-        Services.AddSingleton<UserManager<WombatIdentityUser>>(users);
-        Services.AddSingleton<SignInManager<WombatIdentityUser>>(new NoOpSignInManager(users));
-
-        var cut = RenderComponent<ChangePassword>();
-        cut.WaitForState(() => cut.FindAll("button[type=submit]").Count > 0);
-        return cut;
-    }
-
     private void SignIn(string role, params Claim[] claims)
     {
         _auth.SetAuthorized("caller@test");
@@ -1367,68 +1301,5 @@ public sealed class ActionFocusTests : TestContext
         public void Refuse() => Pending.SetException(new InvalidOperationException(Refusal));
 
         private TaskCompletionSource Pending => _pending ?? throw new InvalidOperationException("Nothing was sent.");
-    }
-
-    /// <summary>
-    /// The change-password page talks to Identity, not to the sender. The change is held; a refusal is Identity's failed
-    /// result, which is how the page hears one.
-    /// </summary>
-    private sealed class HeldUserManager(Hold hold) : UserManager<WombatIdentityUser>(
-        new NoStore(), null!, null!, null!, null!, null!, null!, null!, NullLogger<UserManager<WombatIdentityUser>>.Instance)
-    {
-        public override Task<WombatIdentityUser?> FindByIdAsync(string userId)
-            => Task.FromResult<WombatIdentityUser?>(new WombatIdentityUser { Id = userId });
-
-        public override async Task<IdentityResult> ChangePasswordAsync(WombatIdentityUser user, string currentPassword, string newPassword)
-        {
-            try
-            {
-                await hold.Next();
-                return IdentityResult.Success;
-            }
-            catch (InvalidOperationException refusal)
-            {
-                return IdentityResult.Failed(new IdentityError { Description = refusal.Message });
-            }
-        }
-    }
-
-    private sealed class NoOpSignInManager(UserManager<WombatIdentityUser> users) : SignInManager<WombatIdentityUser>(
-        users,
-        new HttpContextAccessor(),
-        new UserClaimsPrincipalFactory<WombatIdentityUser>(users, Microsoft.Extensions.Options.Options.Create(new IdentityOptions())),
-        Microsoft.Extensions.Options.Options.Create(new IdentityOptions()),
-        NullLogger<SignInManager<WombatIdentityUser>>.Instance,
-        new AuthenticationSchemeProvider(Microsoft.Extensions.Options.Options.Create(new AuthenticationOptions())),
-        new DefaultUserConfirmation<WombatIdentityUser>())
-    {
-        public override Task RefreshSignInAsync(WombatIdentityUser user) => Task.CompletedTask;
-    }
-
-    private sealed class NoStore : IUserStore<WombatIdentityUser>
-    {
-        public void Dispose()
-        {
-        }
-
-        public Task<string> GetUserIdAsync(WombatIdentityUser user, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task<string?> GetUserNameAsync(WombatIdentityUser user, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task SetUserNameAsync(WombatIdentityUser user, string? userName, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task<string?> GetNormalizedUserNameAsync(WombatIdentityUser user, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task SetNormalizedUserNameAsync(WombatIdentityUser user, string? normalizedName, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task<IdentityResult> CreateAsync(WombatIdentityUser user, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task<IdentityResult> UpdateAsync(WombatIdentityUser user, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task<IdentityResult> DeleteAsync(WombatIdentityUser user, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task<WombatIdentityUser?> FindByIdAsync(string userId, CancellationToken cancellationToken) => throw new NotSupportedException();
-
-        public Task<WombatIdentityUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }

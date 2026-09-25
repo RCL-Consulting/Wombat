@@ -291,6 +291,13 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   action is done. The older pages (EPA, trainee profile, curriculum items, the MSF campaign pages) hand-roll the same
   region with `OnAfterRenderAsync`. An action that leaves the page (a create, a clone) moves no focus: the next page has
   it.
+- **An action that is a page load has its result arrive with the page** (T265): a form the browser sends itself, whose
+  answer is the page again. Change password posts to an endpoint that sends the browser back with what happened; Verify
+  on the export check is a GET form. The region is still `ActionResult`, given `FocusOnLoad` when the page is that
+  answer, done or refused: it renders `autofocus`, which a static page needs, and focuses itself once a circuit has
+  rendered, since that render replaces the HTML the browser focused (after the router's `FocusOnNavigate` has put it on
+  the heading). The export check sends `check=1` with the hash, so a check opened from a link, which nobody pressed for,
+  moves no focus.
 - **A refused action leaves the focus where it was**: on its button, still there and enabled, or in the field Enter was
   pressed in. The refusal is a `danger` `Alert`, `role="alert"`, read at once, and the operator's next step is usually to
   correct a field and press again. Where the refusal itself leaves the pressed button gone or disabled, its result takes
@@ -303,7 +310,8 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   it on the button pressed: the page shows no result of its own, and the browser's download says what it did.
   `ActionFocusTests` (bUnit) holds each action in its `Scenarios` table to the rule (running, done, refused), and the
   pages with their own tests (EPA, trainee profile, curriculum items, panel, new activity) are held there. A new action
-  gets a scenario.
+  gets a scenario. A page-load action is not one, having no button whose action runs in a circuit: its page's own tests
+  hold it (`Account/ChangePasswordPageTests`, `Portfolio/VerifyExportPageTests`).
 - A destructive action on a form page that acts on a field (the trainee profile's Deactivate and Mark complete, which
   each record the "Last day in the programme", T209 review) is an `.btn-outline` in the form's actions row whose
   `ConfirmDialog` names the value it will record and says it cannot be changed afterwards. Its result goes to the page's
@@ -1505,7 +1513,8 @@ Used in the Administrator dashboard system-health card to show service status at
   and an administrator's reset, where the browser would otherwise offer the administrator's own password (T193).
 - A refused sign-in (`?error=`) is named by the email and password fields' `aria-describedby`, and a refused link by
   the password field's: the page reloads with focus in the field, and the alert alone is not announced (§ Alerts,
-  validation, empty states).
+  validation, empty states). A refused password change is named by each of its three fields; the page reloads with the
+  focus on the refusal (T265).
 - Required fields show a visual `*` plus `aria-required="true"`.
 - `.visually-hidden` is available for screen-reader-only copy.
 - `:focus-visible` uses `--focus-ring`. Never remove focus outlines without replacing them.
@@ -1689,10 +1698,31 @@ post that the pipeline sees. Signed in, it is an `@onsubmit` event in the circui
 limit) or response status applies to it. Such a page carries `[ExcludeFromInteractiveRouting]` as well, as `/msf/respond`
 does, or it posts to an endpoint instead.
 
-Three predate the rule and are dead signed out: `PasswordToggleButton` (sign-in, register, link), the register page's
-`OnAfterRenderAsync` that clears the invitation token from the address, and `/portfolio/verify`'s Verify button (a
-`?hash=` link still verifies, in the server render). None ever worked signed out: the hub has always refused an
-anonymous circuit.
+Two predate the rule and are dead signed out: `PasswordToggleButton` (sign-in, register, link) and the register page's
+`OnAfterRenderAsync` that clears the invitation token from the address. Neither ever worked signed out: the hub has
+always refused an anonymous circuit. `/portfolio/verify`'s Verify button was the third. Since T265 that page carries
+`[ExcludeFromInteractiveRouting]` and its form is a GET: Verify loads `/portfolio/verify?hash=…&check=1`, and the check
+is made as the page renders, the same for every visitor. A check that fails says so on the page.
+
+**The sign-in cookie is written only in an HTTP request** (T265). A circuit's response started when the page first
+loaded, so `SignInManager` there throws "Headers are read-only". Sign-in, register, link-account, sign-out and change
+password each post a form to an endpoint in `Program.cs`, which writes the cookie and redirects. Change password stays
+an interactive page, for its Show buttons. Its form, a plain `<form method="post" action="/account/change-password/submit">`
+with `<AntiforgeryToken />`, is posted by the browser, which the circuit does not intercept. The endpoint changes the
+password and issues the cookie again with the new security stamp, in one request. A separate "refresh the cookie"
+endpoint would hand the new stamp to any cookie still inside the stamp validator's interval, a stolen one included. The
+redirect back carries `?status=updated`, or a code for each refusal (`?error=PasswordMismatch`), never the words.
+The page chooses the words (`ChangePasswordOutcome`), so a crafted link cannot put its own text in the page's alert.
+
+An endpoint that issues the cookie again checks the session first (T265 review). The stamp validator looks at a cookie
+once in thirty minutes, so until then a session that has already ended (an administrator's lock, a password changed in
+another browser, a change of roles) still reaches the endpoint. `SignInManager.ValidateSecurityStampAsync` refuses it,
+and the endpoint signs it out rather than hand it the new stamp, which would keep it alive past the lock. A password
+such an endpoint checks is checked as the sign-in page checks one: `CheckPasswordSignInAsync` with
+`lockoutOnFailure: true`, under the sign-in throttle (`LoginRateLimitPolicy`), whose refusal goes back to the form the
+post came from. An account that signs in through its institution (`AllowLocalPassword` false) has no password to
+change. A fault before the change says the password could not be changed; a fault after it, in issuing the cookie,
+signs the user out and says the password was changed.
 
 ### Anonymous static page (the MSF respondent page, T205)
 

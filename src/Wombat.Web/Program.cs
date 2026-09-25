@@ -100,8 +100,8 @@ builder.Services.AddRateLimiter(options =>
     // Api's respond endpoint carries the same, from the one definition both hosts register (T205).
     options.AddMsfRespondPolicy();
 
-    // This endpoint is a browser form post, so a bare 429 would render as a blank error
-    // page. Redirect (302) back to the login form with an explanation instead, and set
+    // These endpoints are browser form posts, so a bare 429 would render as a blank error
+    // page. Redirect (302) back to the form with an explanation instead, and set
     // Retry-After so non-browser clients still learn how long to wait.
     //
     // Except a respondent's link: they are not signed in and have no account, so the sign-in
@@ -114,6 +114,14 @@ builder.Services.AddRateLimiter(options =>
         }
 
         context.HttpContext.Response.Headers.RetryAfter = "300";
+
+        // A signed-in user changing their password goes back to that page, which says why, not to the sign-in page (T265).
+        if (context.HttpContext.Request.Path.Equals(ChangePasswordOutcome.SubmitPath, StringComparison.OrdinalIgnoreCase))
+        {
+            context.HttpContext.Response.Redirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.TooManyAttempts]));
+            return ValueTask.CompletedTask;
+        }
+
         context.HttpContext.Response.Redirect(
             BuildLoginUrl(null, "Too many sign-in attempts. Please wait a few minutes and try again."));
         return ValueTask.CompletedTask;
@@ -420,6 +428,125 @@ app.MapPost("/account/link-external/submit", async (
 .RequireRateLimiting(LoginRateLimitPolicy)
 ;
 
+// The change-password page's form posts here (T265). Changing a password changes the account's security stamp, which the
+// sign-in cookie carries, so the cookie is issued again here, in the same request, while its response can still set it.
+// Until T265 the page did both in its circuit, whose response had started long before: the password changed, and writing
+// the cookie threw "Headers are read-only".
+//
+// The change and the new cookie are one request on purpose. An endpoint that only issued the cookie again, called after
+// the circuit had changed the password, would do it for any cookie still inside the stamp validator's interval, a stolen
+// one included, and hand it the new stamp: the change would not end the session it was made to end.
+//
+// For the same reason the session itself is checked first. The stamp validator looks at a cookie once in thirty minutes,
+// so between its checks a session that has already ended (an administrator's lock, a change made in another browser, a
+// change of roles) still reaches this endpoint. Such a session is signed out, not issued a cookie carrying the new stamp,
+// which would have kept it alive past the lock for as long as it was used (T265 review).
+//
+// The current password is checked as the sign-in page checks it: with Identity's lockout, and under the sign-in throttle.
+// Someone holding a stolen cookie could otherwise guess at it without limit, and one hit would give them the account.
+//
+// Every outcome is a redirect: back to the page, which says what happened (ChangePasswordOutcome), or to the sign-in page.
+app.MapPost(ChangePasswordOutcome.SubmitPath, async (
+    SignInManager<WombatIdentityUser> signInManager,
+    UserManager<WombatIdentityUser> userManager,
+    ILoggerFactory loggerFactory,
+    HttpContext httpContext,
+    [FromForm] ChangePasswordRequest request) =>
+{
+    if (string.IsNullOrWhiteSpace(request.CurrentPassword)
+        || string.IsNullOrWhiteSpace(request.NewPassword)
+        || string.IsNullOrWhiteSpace(request.ConfirmPassword))
+    {
+        return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.FieldsMissing]));
+    }
+
+    if (!string.Equals(request.NewPassword, request.ConfirmPassword, StringComparison.Ordinal))
+    {
+        return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.ConfirmationMismatch]));
+    }
+
+    // Everything up to and including the change. A fault here (the database gone) has changed nothing, so the page says
+    // the password could not be changed, rather than the request ending on the error page.
+    WombatIdentityUser user;
+    try
+    {
+        // The account, only if the cookie's stamp is still the account's. Null for a stamp that has changed since the
+        // cookie was issued, or an account that is gone.
+        var current = await signInManager.ValidateSecurityStampAsync(httpContext.User);
+        if (current is null)
+        {
+            await signInManager.SignOutAsync();
+            return Results.LocalRedirect(
+                BuildLoginUrl(ChangePasswordOutcome.PagePath, ChangePasswordOutcome.SessionEndedMessage));
+        }
+
+        user = current;
+
+        // Its password does not sign it in, and an SSO-provisioned account has none: a check could only count failures
+        // towards a lockout, which would block its SSO sign-in too.
+        if (!user.AllowLocalPassword)
+        {
+            return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.InstitutionalSignIn]));
+        }
+
+        // A locked account's password is not checked at all, and a fifth wrong one locks it.
+        var check = await signInManager.CheckPasswordSignInAsync(user, request.CurrentPassword, lockoutOnFailure: true);
+        if (check.IsLockedOut)
+        {
+            return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.LockedOut]));
+        }
+
+        if (!check.Succeeded)
+        {
+            return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl(check.IsNotAllowed
+                ? [ChangePasswordOutcome.Failed]
+                : [nameof(IdentityErrorDescriber.PasswordMismatch)]));
+        }
+
+        // Changes the password and the security stamp together, or changes nothing. A change made elsewhere since the
+        // account was read fails on the row's concurrency stamp (ConcurrencyFailure, the general refusal); it is not
+        // overwritten.
+        var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl(result.Errors.Select(error => error.Code)));
+        }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+        loggerFactory.CreateLogger(ChangePasswordOutcome.LogCategory)
+            .LogError(exception, "A password change failed before the password was changed.");
+        return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.Failed]));
+    }
+
+    // The cookie again, with the new stamp, keeping the old one's "remember me" and how the user signed in. The password
+    // has changed by now, so a fault here must not say it could not be: the old cookie's stamp is stale, so it is taken
+    // away, and the sign-in page asks for the new password.
+    try
+    {
+        await signInManager.RefreshSignInAsync(user);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+        loggerFactory.CreateLogger(ChangePasswordOutcome.LogCategory)
+            .LogError(exception, "A password was changed, but the sign-in cookie could not be issued again.");
+        await signInManager.SignOutAsync();
+        return Results.LocalRedirect(BuildLoginUrl(null, ChangePasswordOutcome.ChangedSignInAgainMessage));
+    }
+
+    return Results.LocalRedirect(ChangePasswordOutcome.UpdatedUrl);
+})
+.RequireAuthorization()
+// A password check, so the sign-in throttle applies, as it does to the link page's (T149): per address, ten in five
+// minutes, shared with the sign-in page. A refusal comes back to this page (the limiter's OnRejected).
+.RequireRateLimiting(LoginRateLimitPolicy);
+
+// Where the sign-in page sends a user whose session had ended before they pressed Change password: the post was
+// challenged, and the address it was going to comes back as the sign-in's return address, as a GET. Without this it
+// answered 405 with an empty page (T265 review).
+app.MapGet(ChangePasswordOutcome.SubmitPath, () => Results.LocalRedirect(ChangePasswordOutcome.PagePath))
+    .RequireAuthorization();
+
 app.MapPost("/account/logout", async (
     SignInManager<WombatIdentityUser> signInManager,
     IAuditWriter auditWriter,
@@ -611,6 +738,14 @@ internal sealed class LinkExternalRequest
 {
     public string? Password { get; init; }
     public string? ReturnUrl { get; init; }
+}
+
+/// <summary>The change-password form (T265). The account is the signed-in user's, never the form's.</summary>
+internal sealed class ChangePasswordRequest
+{
+    public string? CurrentPassword { get; init; }
+    public string? NewPassword { get; init; }
+    public string? ConfirmPassword { get; init; }
 }
 
 /// <summary>

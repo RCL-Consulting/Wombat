@@ -51,16 +51,17 @@
         HttpContextAccessor.HttpContext?.Items[SecurityHeadersMiddleware.NonceItemKey] as string;
 
     /// <summary>
-    /// Interactive server for a signed-in user's every page, except one marked <c>[ExcludeFromInteractiveRouting]</c>.
-    /// That page, and every page for a visitor who has not signed in, renders as static server-side HTML with plain
-    /// form posts and no circuit. (T205, T181)
+    /// Interactive server for a signed-in user's every page, except those marked <c>[ExcludeFromInteractiveRouting]</c>.
+    /// Those pages, and every page for a visitor who has not signed in, render as static server-side HTML with plain
+    /// forms and no circuit. (T205, T181, T265)
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The one excluded page is the MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not
+    /// Two pages are excluded. The MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not
     /// signed in. Static, its every request, the submit included, is an HTTP request, so the link's rate limit applies
     /// to it; over a circuit the submit would be a SignalR message the limiter never sees. It works without WebSockets
-    /// or script, for a signed-in user too.
+    /// or script, for a signed-in user too. And the export check (<c>/portfolio/verify</c>, T265), open to anyone holding
+    /// a portfolio PDF: its Verify is a GET form whose check is made as the page renders, the same signed in or not.
     /// </para>
     /// <para>
     /// A visitor who has not signed in gets no interactive root because the circuit is not theirs to have. The Blazor
