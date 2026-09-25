@@ -18,7 +18,8 @@ public sealed class CommitteeReviewStateLabelTests
         [CommitteeReviewState.Decided] = "Decided",
         [CommitteeReviewState.Ratified] = "Ratified",
         [CommitteeReviewState.UnderAppeal] = "Under appeal",
-        [CommitteeReviewState.Final] = "Closed"
+        [CommitteeReviewState.Final] = "Closed",
+        [CommitteeReviewState.Withdrawn] = "Withdrawn"
     };
 
     [Fact]
