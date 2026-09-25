@@ -156,7 +156,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
     finally
     {
@@ -172,7 +172,7 @@
       }
       catch (Exception exception)
       {
-        _routingError = exception.Message;
+        _routingError = RefusalText.Of(exception);
       }
     }
     else
@@ -205,7 +205,7 @@
     }
     catch (Exception exception)
     {
-      _routingError = exception.Message;
+      _routingError = RefusalText.Of(exception);
     }
     finally
     {

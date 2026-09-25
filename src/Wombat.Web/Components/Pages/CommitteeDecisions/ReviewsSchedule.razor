@@ -208,7 +208,7 @@
     }
     catch (Exception exception)
     {
-      _loadError = exception.Message;
+      _loadError = RefusalText.Of(exception);
     }
     finally
     {
@@ -251,7 +251,7 @@
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
+      _actionError = RefusalText.Of(exception);
     }
     finally
     {
@@ -320,7 +320,7 @@
     {
       if (request == _previewRequest)
       {
-        _previewError = exception.Message;
+        _previewError = RefusalText.Of(exception);
       }
     }
   }
@@ -453,7 +453,7 @@
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
+      _actionError = RefusalText.Of(exception);
     }
   }
 

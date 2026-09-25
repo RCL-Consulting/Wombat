@@ -280,17 +280,40 @@ internal static class CommitteeDecisionAuthorization
     {
         ArgumentNullException.ThrowIfNull(principal);
 
-        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (review is null ||
-            string.IsNullOrEmpty(userId) ||
-            !review.Panel.Members.Any(member =>
-                string.Equals(member.UserId, userId, StringComparison.Ordinal) &&
-                member.Role == DecisionPanelMemberRole.Chair))
+        if (review is null || !Chairs(principal, review.Panel))
         {
             throw new UnauthorizedAccessException(ReviewNotChairedByCaller);
         }
 
         return review;
+    }
+
+    /// <summary>
+    /// Whether the caller holds this panel's Chair seat: the one predicate every chair's action demands
+    /// (<see cref="DemandChairAccess" />, <see cref="DemandChairedReview" />) and the review page's offer of those actions
+    /// reads (<see cref="CommitteeReviewDetailDto.CallerChairs" />), so the page offers the chair's controls to exactly the
+    /// people the handlers let use them. (T165, T213)
+    /// </summary>
+    public static bool Chairs(ClaimsPrincipal principal, DecisionPanel panel)
+        => HoldsSeat(principal, panel, role => role == DecisionPanelMemberRole.Chair);
+
+    /// <summary>
+    /// Whether the caller sits on this panel's appeal body, as its Chair or one of its External members: the predicate
+    /// <see cref="DemandAppealResolverAccess" /> demands and the review page's offer of the resolve form reads
+    /// (<see cref="CommitteeReviewDetailDto.CallerResolvesAppeals" />). (T165, T213)
+    /// </summary>
+    public static bool ResolvesAppeals(ClaimsPrincipal principal, DecisionPanel panel)
+        => HoldsSeat(principal, panel, role => role is DecisionPanelMemberRole.Chair or DecisionPanelMemberRole.External);
+
+    private static bool HoldsSeat(ClaimsPrincipal principal, DecisionPanel panel, Func<DecisionPanelMemberRole, bool> role)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(panel);
+
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return !string.IsNullOrEmpty(userId) &&
+               panel.Members.Any(member =>
+                   string.Equals(member.UserId, userId, StringComparison.Ordinal) && role(member.Role));
     }
 
     /// <summary>The refusal of a chair's action to anyone who is not the panel's chair.</summary>
@@ -322,10 +345,8 @@ internal static class CommitteeDecisionAuthorization
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(panel);
 
-        var userId = GetRequiredUserId(principal);
-        if (panel.Members.Any(member =>
-            string.Equals(member.UserId, userId, StringComparison.Ordinal) &&
-            member.Role == DecisionPanelMemberRole.Chair))
+        GetRequiredUserId(principal);
+        if (Chairs(principal, panel))
         {
             return;
         }
@@ -346,10 +367,8 @@ internal static class CommitteeDecisionAuthorization
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(panel);
 
-        var userId = GetRequiredUserId(principal);
-        if (panel.Members.Any(member =>
-            string.Equals(member.UserId, userId, StringComparison.Ordinal) &&
-            member.Role is DecisionPanelMemberRole.Chair or DecisionPanelMemberRole.External))
+        GetRequiredUserId(principal);
+        if (ResolvesAppeals(principal, panel))
         {
             return;
         }

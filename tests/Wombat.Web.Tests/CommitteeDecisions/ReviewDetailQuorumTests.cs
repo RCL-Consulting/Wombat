@@ -226,9 +226,10 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
     [Fact]
     public void RemittingAnAppeal_RecordsWhoSatForIt_WithTheChairAndTheResolverLocked()
     {
-        // The external member resolves for independence; the chair must sit too.
+        // The external member resolves for independence; the chair must sit too. The external sits on the appeal body but
+        // does not chair (T213).
         SignInAs("external-1");
-        var sender = new FakeSender(Review(CommitteeReviewState.UnderAppeal));
+        var sender = new FakeSender(Review(CommitteeReviewState.UnderAppeal) with { CallerChairs = false });
         var (cut, _) = Render(sender);
 
         cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
@@ -393,6 +394,10 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
         {
             AcademicYear = 2026,
             Semester = 1,
+            // Signed in as the chair unless a test says otherwise: the page offers the chair's controls by what the query
+            // says the caller may do (T213).
+            CallerChairs = true,
+            CallerResolvesAppeals = true,
             TraineeName = "Lerato Molefe",
             PanelMembers =
             [

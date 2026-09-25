@@ -75,21 +75,32 @@ public sealed class RemovePendingEntrustmentDecisionCommandHandler
             _dbContext.Set<CommitteeAgendaLine>().Remove(chairLine);
         }
 
+        // The review is marked modified, though nothing about it changes, as staging marks it (T213): its xmin token
+        // (CommitteeReviewConfiguration) is then checked in this save, which is refused whole when the review changed
+        // after it was read above. Without it a remove that read the review in progress could delete a staged decision
+        // after the committee's decision was recorded, and the STARs the panel recorded would not be the ones ratifying
+        // issues (D46). A record, stage, deferral or ratify that reads the review before this commits is refused the same
+        // way. A staged row already gone, ratified or removed, is refused by its own delete.
+        _dbContext.Set<CommitteeReview>().Entry(review).Property(r => r.State).IsModified = true;
+
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException exception)
         {
-            // The row was gone by the save: a ratify issued it, or another remove took it. Carried as the inner
-            // exception, so the audit pipeline still sees a refused save and writes its row alone (T201).
-            throw new InvalidOperationException(AlreadyGone, exception);
+            // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
+            // (T201).
+            throw new InvalidOperationException(ReviewChanged, exception);
         }
 
         return Unit.Value;
     }
 
-    /// <summary>The refusal when the staged decision was ratified or removed between being read and the save.</summary>
-    public const string AlreadyGone =
-        "This staged decision was ratified or removed while it was being removed. Nothing was changed. Reload the review.";
+    /// <summary>
+    /// The refusal when the review, or the staged decision, changed between being read and the save. Nothing is removed.
+    /// </summary>
+    public const string ReviewChanged =
+        "This review changed while the staged decision was being removed: " + CommitteeReviewChanged.WhatChanges + ". " +
+        "Nothing was removed. Reload the review.";
 }

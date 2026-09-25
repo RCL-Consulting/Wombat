@@ -281,6 +281,9 @@ public sealed class StagedEvidenceTests
 
         refusal.Should().StartWith("This review cannot be ratified: 1 staged entrustment decision names no evidence", way)
             .And.Contain("EPA-08").And.NotContain("EPA-07");
+        // T213: the decision is recorded, so the staged decisions are fixed (D46): the refusal no longer tells the chair to
+        // remove it and stage it again, which neither handler allows on a decided review.
+        refusal.Should().EndWith(StagedEvidence.UngroundedOnceRecorded, way).And.NotContain("Remove", way);
         await SaveAndClearAsync(db);
         await using var read = CreateDb();
         (await read.CommitteeReviews.SingleAsync(review => review.Id == ReviewId)).State.Should().Be(CommitteeReviewState.Decided);
@@ -310,7 +313,12 @@ public sealed class StagedEvidenceTests
 
         var refusal = await RefusalAsync<InvalidOperationException>(() => RatifyAsync(db));
 
-        refusal.Should().Contain("two entrustment decisions are staged on one EPA");
+        // T213 review: the decision is recorded, so the staged decisions are fixed (D46) and the chair can remove neither;
+        // the refusal says who can look into it, as the no-evidence refusal does.
+        refusal.Should().Be(RatifyCommitteeDecisionCommandHandler.TwoStagedOnOneEpa)
+            .And.Contain("two entrustment decisions are staged on one EPA")
+            .And.EndWith("ask an administrator to look into it.")
+            .And.NotContain("Remove");
         await SaveAndClearAsync(db);
         await using var read = CreateDb();
         (await read.CommitteeReviews.SingleAsync(review => review.Id == ReviewId)).State.Should().Be(CommitteeReviewState.Decided);

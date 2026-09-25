@@ -165,18 +165,35 @@ internal static class CommitteeTraineeScope
         CommitteeReview review,
         CancellationToken cancellationToken)
     {
+        if (!await MayActOnTraineeAsync(dbContext, principal, review, cancellationToken))
+        {
+            throw new UnauthorizedAccessException(TraineeNotAtPanelInstitution);
+        }
+    }
+
+    /// <summary>
+    /// Whether this caller passes <see cref="DemandTraineeAtPanelInstitutionAsync" /> on this review: a global
+    /// Administrator always, anyone else while the review's trainee trains at the panel's institution. The one predicate
+    /// the demand throws on and the review page's offer of the panel's actions reads
+    /// (<see cref="CommitteeReviewDetailDto.TraineeElsewhere" />, T213), so a chair is not offered an action every click of
+    /// which would be refused because the trainee moved.
+    /// </summary>
+    /// <remarks>The review's <see cref="CommitteeReview.Panel" /> must be loaded.</remarks>
+    public static async Task<bool> MayActOnTraineeAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        CommitteeReview review,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(review);
 
         if (principal.IsAdministrator())
         {
-            return;
+            return true;
         }
 
         var trainee = await TraineeScopeResolver.ResolveAsync(dbContext, review.TraineeUserId, cancellationToken);
-        if (trainee is null || review.Panel.InstitutionId != trainee.InstitutionId)
-        {
-            throw new UnauthorizedAccessException(TraineeNotAtPanelInstitution);
-        }
+        return trainee is not null && review.Panel.InstitutionId == trainee.InstitutionId;
     }
 }

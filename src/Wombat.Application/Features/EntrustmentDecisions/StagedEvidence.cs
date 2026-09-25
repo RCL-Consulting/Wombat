@@ -113,8 +113,19 @@ public static class StagedEvidence
             $"This review cannot be ratified: {named.Length} staged entrustment " +
             $"{(named.Length == 1 ? "decision names" : "decisions name")} no evidence from the review's snapshot " +
             $"({string.Join(", ", named)}). A decision is taken on the assessment evidence, never on none. " +
-            $"Remove {(named.Length == 1 ? "it" : "them")} and stage again, naming the evidence, then ratify.");
+            UngroundedOnceRecorded);
     }
+
+    /// <summary>
+    /// What a chair can do about a staged decision that rests on no evidence once the committee's decision is recorded:
+    /// nothing on the page. Only a decided review is ratified, and its staged decisions are fixed with the decision (D46),
+    /// so it can be neither removed nor staged again; and staging never stores one, so it was written some other way.
+    /// Said by the ratify refusal and by the review page beside the decision. Before T213 both told the chair to remove
+    /// it and stage it again. (T213)
+    /// </summary>
+    public const string UngroundedOnceRecorded =
+        "Staging never stores such a decision, and the staged decisions are fixed once the committee's decision is " +
+        "recorded, so ask an administrator to look into it.";
 
     private static string? RefusalFor(
         CommitteeReview review,

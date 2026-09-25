@@ -72,8 +72,8 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
     /// recorded meanwhile is caught here too, so the staged set stays fixed from the moment it is recorded (T165).
     /// </summary>
     public const string ReviewChanged =
-        "This review changed while the decision was being staged: a decision was staged, edited or removed, or the " +
-        "committee's decision was recorded or ratified. Nothing was staged. Reload the review and stage the decision again.";
+        "This review changed while the decision was being staged: " + CommitteeReviewChanged.WhatChanges + ". Nothing " +
+        "was staged. Reload the review; if it is still in progress, stage the decision again.";
 
     /// <summary>PostgreSQL's unique_violation, which the (review, EPA) index raises.</summary>
     private const string UniqueViolation = "23505";

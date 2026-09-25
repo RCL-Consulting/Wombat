@@ -118,7 +118,9 @@
         <div><dt>State</dt><dd>@_review.State</dd></div>
       </dl>
       <FormActions>
-        @if (_review.State == CommitteeReviewState.Scheduled)
+        @* T213 review: Start demands, as every chair's action does, that the trainee still trains at the panel's institution
+           (TraineeElsewhere); when that fails for this reader it is not offered, and #trainee-elsewhere-note says why. *@
+        @if (_review.State == CommitteeReviewState.Scheduled && _review.TraineeElsewhere is null)
         {
           @* Said at the button as well as beside the list: the Evidence snapshot card can be three cards below this
              one on a narrow screen, and this is the click that decides it. (T173) *@
@@ -133,11 +135,14 @@
           <button type="button" class="btn btn-primary" aria-describedby="@(awaitingAtStart > 0 ? "start-review-msf-note" : null)"
                   @onclick="StartAsync">Start review</button>
         }
-        @if (_review.State == CommitteeReviewState.InProgress && _review.IsFormative)
+        @* T213: the chair's actions are offered to the chair alone, by the predicates their handlers demand
+           (ChairMayAct). Hidden, not disabled: T107's disabled button is for an action the reader may take but cannot
+           complete yet, and nobody else may take these. #chair-actions-note says who can. *@
+        @if (_review.State == CommitteeReviewState.InProgress && _review.IsFormative && ChairMayAct)
         {
           <button type="button" class="btn btn-primary" @onclick="CloseFormativeAsync">Close review</button>
         }
-        @if (_review.State == CommitteeReviewState.Decided)
+        @if (_review.State == CommitteeReviewState.Decided && ChairMayAct)
         {
           @* Shown, not hidden, so the chair learns why (T107's pattern): the attendance falls short of a quorum (T165), or a
              closing line of the agenda is neither staged nor deferred (T131 slice 4). The reason is the first the server
@@ -152,11 +157,21 @@
           }
         }
       </FormActions>
-      @if (_review.State == CommitteeReviewState.Decided && RatifyBlockedReason is { } ratifyReason)
+      @if (_review.State == CommitteeReviewState.Decided && ChairMayAct && RatifyBlockedReason is { } ratifyReason)
       {
         <ul class="workflow-action-reasons">
           <li id="ratify-reason"><strong>Ratify:</strong> @ratifyReason</li>
         </ul>
+      }
+      @if (ChairActionsNote is { } chairActionsNote)
+      {
+        <p id="chair-actions-note" class="muted">@chairActionsNote</p>
+      }
+      @* T213 review. Standing page content, there on every visit until the trainee's move is resolved: no role. The
+         sentence Start and every chair's action refuse with, said where their buttons would be. *@
+      @if (_review.TraineeElsewhere is { } traineeElsewhere)
+      {
+        <Alert Kind="warning" Role="" Id="trainee-elsewhere-note">@traineeElsewhere</Alert>
       }
     </section>
 
@@ -185,54 +200,53 @@
         {
           <p id="entrustment-only-note" class="muted">@CommitteeDecisionWording.EntrustmentOnlyPanelNote(_review.State)</p>
         }
-        <EditForm Model="_decision" OnValidSubmit="RecordDecisionAsync" FormName="committee-decision">
-          <DataAnnotationsValidator />
-          <ValidationSummary class="validation-summary-errors" />
-          <div class="form-grid">
-            @if (_review.DecidesProgression)
-            {
-              @* Opens on no category, as the remit's select does (DESIGN.md § Entrustment-only reviews): a chair who
-                 leaves it alone records nothing, and the handler says a progression review needs one. *@
-              <FormField Label="Category" InputId="decision-category" Required="true">
-                <InputSelect id="decision-category" class="form-select" @bind-Value="_decision.Category">
-                  <option value="">Select a category…</option>
-                  @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
-                  {
-                    <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
-                  }
-                </InputSelect>
+        @* T213: the chair records the decision, so only the chair is offered the form, and only while the review is in
+           progress, the one state in which the record handler takes a decision (T213 review: before it, a chair on a
+           decided or appealed review was shown empty fields with no button). *@
+        @if (OffersDecisionForm)
+        {
+          <EditForm Model="_decision" OnValidSubmit="RecordDecisionAsync" FormName="committee-decision">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary-errors" />
+            <div class="form-grid">
+              @if (_review.DecidesProgression)
+              {
+                @* Opens on no category, as the remit's select does (DESIGN.md § Entrustment-only reviews): a chair who
+                   leaves it alone records nothing, and the handler says a progression review needs one. *@
+                <FormField Label="Category" InputId="decision-category" Required="true">
+                  <InputSelect id="decision-category" class="form-select" @bind-Value="_decision.Category">
+                    <option value="">Select a category…</option>
+                    @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+                    {
+                      <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
+                    }
+                  </InputSelect>
+                </FormField>
+              }
+              <FormField Label="Rationale" InputId="decision-rationale" Required="true">
+                <InputTextArea id="decision-rationale" class="form-control" @bind-Value="_decision.Rationale" />
               </FormField>
-            }
-            <FormField Label="Rationale" InputId="decision-rationale" Required="true">
-              <InputTextArea id="decision-rationale" class="form-control" @bind-Value="_decision.Rationale" />
-            </FormField>
-            <FormField Label="Conditions" InputId="decision-conditions">
-              <InputTextArea id="decision-conditions" class="form-control" @bind-Value="_decision.Conditions" />
-            </FormField>
-            @if (_review.State == CommitteeReviewState.InProgress)
-            {
+              <FormField Label="Conditions" InputId="decision-conditions">
+                <InputTextArea id="decision-conditions" class="form-control" @bind-Value="_decision.Conditions" />
+              </FormField>
               @* T165. Who sat: a group of checkboxes, so a fieldset whose legend names it (DESIGN.md § Form system). The
                  chair is ticked and cannot be unticked, because the chair records the decision and must be present. *@
               @PresentFieldset("decision-present", _decision.PresentUserIds, lockedUserId: null)
-            }
-          </div>
-          @* O8's warning is about a progression decision taken before another panel's entrustment decisions: an
-             entrustment-only review takes none, so it is not warned. *@
-          @if (_review.State == CommitteeReviewState.InProgress && _review.DecidesProgression &&
-               CommitteeAgendaText.SittingOrderWarning(_agenda) is { } sittingOrder)
-          {
-            <p id="sitting-order-warning" class="field-warning">@sittingOrder</p>
-          }
-          <FormActions>
-            @if (_review.State == CommitteeReviewState.InProgress)
+            </div>
+            @* O8's warning is about a progression decision taken before another panel's entrustment decisions: an
+               entrustment-only review takes none, so it is not warned. *@
+            @if (_review.DecidesProgression && CommitteeAgendaText.SittingOrderWarning(_agenda) is { } sittingOrder)
             {
+              <p id="sitting-order-warning" class="field-warning">@sittingOrder</p>
+            }
+            <FormActions>
               @* The staged STARs below are part of this decision and are fixed with it (T165), and so are the agenda's
                  deferrals (T131 slice 4): said at the button, the click that fixes them. *@
               <span id="record-decision-note" class="muted">
                 Recording fixes the entrustment decisions staged below and the agenda's deferrals:
                 they cannot be changed afterwards.
               </span>
-              if (RecordBlockedReason is null)
+              @if (RecordBlockedReason is null)
               {
                 <button type="submit" class="btn btn-primary" aria-describedby="record-decision-note">Record decision</button>
               }
@@ -242,15 +256,21 @@
                    chair had written the rationale. *@
                 <button type="button" class="btn btn-primary" disabled aria-describedby="record-reason">Record decision</button>
               }
+            </FormActions>
+            @if (RecordBlockedReason is { } recordReason)
+            {
+              <ul class="workflow-action-reasons">
+                <li id="record-reason"><strong>Record decision:</strong> @recordReason</li>
+              </ul>
             }
-          </FormActions>
-          @if (_review.State == CommitteeReviewState.InProgress && RecordBlockedReason is { } recordReason)
-          {
-            <ul class="workflow-action-reasons">
-              <li id="record-reason"><strong>Record decision:</strong> @recordReason</li>
-            </ul>
-          }
-        </EditForm>
+          </EditForm>
+        }
+        else if (_review.Decisions.Count == 0)
+        {
+          @* T213 review: without the form, a review with no decision yet would leave the card a bare heading. Who can
+             record one is said in the Review card (#chair-actions-note). *@
+          <p id="no-decision-note" class="muted">No decision has been recorded yet.</p>
+        }
 
         @if (_review.Decisions.Count > 0)
         {
@@ -308,7 +328,8 @@
           </p>
         }
 
-        @if (_review.State == CommitteeReviewState.InProgress)
+        @* T213: staging is the chair's, so only the chair is offered the form (ChairMayAct). *@
+        @if (_review.State == CommitteeReviewState.InProgress && ChairMayAct)
         {
           @* The EPAs are the trainee's curriculum, and each EPA's levels are the rungs of its item's ladder: the same
              list StagePendingEntrustmentDecision enforces (StarCurriculum, T167). Before T167 this listed the EPAs in
@@ -450,7 +471,7 @@
                 <p class="muted">
                   @if (restsOn.Count == 0)
                   {
-                    @:Names no evidence, so the review cannot be ratified with it. Remove it and stage it again.
+                    @NoEvidenceNote
                   }
                   else
                   {
@@ -461,8 +482,9 @@
                 {
                   <p class="muted"><strong>No longer fits:</strong> @noLongerFits</p>
                 }
-                @if (_review.State == CommitteeReviewState.InProgress ||
-                     (_review.State == CommitteeReviewState.Decided && pending.NoLongerFits is not null))
+                @if (ChairMayAct &&
+                     (_review.State == CommitteeReviewState.InProgress ||
+                      (_review.State == CommitteeReviewState.Decided && pending.NoLongerFits is not null)))
                 {
                   <button type="button" class="btn btn-link" @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
                 }
@@ -647,50 +669,55 @@
     {
       <section class="detail-card">
         <h3>Appeals</h3>
-        <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" FormName="committee-appeal-resolution">
-          <DataAnnotationsValidator />
-          <ValidationSummary class="validation-summary-errors" />
-          <div class="form-grid">
-            <FormField Label="Outcome" InputId="appeal-outcome" Required="true">
-              <InputSelect id="appeal-outcome" class="form-select" @bind-Value="_appeal.Outcome">
-                @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
-                {
-                  <option value="@outcome">@outcome</option>
-                }
-              </InputSelect>
-            </FormField>
-            @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
-            {
-              @* T131 slice 5: a remitted entrustment-only review's replacement records no category either. *@
-              if (_review.DecidesProgression)
-              {
-                <FormField Label="Replacement category" InputId="appeal-category" Required="true">
-                  <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
-                    <option value="">Select a category…</option>
-                    @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
-                    {
-                      <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
-                    }
-                  </InputSelect>
-                </FormField>
-              }
-              else
-              {
-                @* A remit here changes no STAR the review issued: the appeal body is told so, and how one is changed. *@
-                <p id="remit-entrustment-only-note" class="full-width muted">@CommitteeDecisionWording.EntrustmentOnlyRemitForThePanel</p>
-              }
-              <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
-                <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
+        @* T213: resolving is the appeal body's, the chair or an external member, so only they are offered the form
+           (CallerResolvesAppeals), and only under appeal, the one state in which the resolve handler takes an answer (T213
+           review: before it, the body was shown a required Outcome with no button on every other review). *@
+        @if (_review.CallerResolvesAppeals && _review.State == CommitteeReviewState.UnderAppeal)
+        {
+          <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" FormName="committee-appeal-resolution">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary-errors" />
+            <div class="form-grid">
+              <FormField Label="Outcome" InputId="appeal-outcome" Required="true">
+                <InputSelect id="appeal-outcome" class="form-select" @bind-Value="_appeal.Outcome">
+                  @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
+                  {
+                    <option value="@outcome">@outcome</option>
+                  }
+                </InputSelect>
               </FormField>
-              @* T165. The replacement is a committee decision, so it records who sat for it, held to the same quorum. The
-                 chair and whoever resolves are ticked and locked: both must have sat. *@
-              @PresentFieldset("remit-present", _appeal.PresentUserIds, lockedUserId: _currentUserId)
-            }
-          </div>
-          <FormActions>
-            @if (_review.State == CommitteeReviewState.UnderAppeal)
-            {
-              if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && _review.PanelShortfall is not null)
+              @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
+              {
+                @* T131 slice 5: a remitted entrustment-only review's replacement records no category either. *@
+                if (_review.DecidesProgression)
+                {
+                  <FormField Label="Replacement category" InputId="appeal-category" Required="true">
+                    <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
+                      <option value="">Select a category…</option>
+                      @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+                      {
+                        <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
+                      }
+                    </InputSelect>
+                  </FormField>
+                }
+                else
+                {
+                  @* A remit here changes no STAR the review issued: the appeal body is told so, and how one is changed. *@
+                  <p id="remit-entrustment-only-note" class="full-width muted">@CommitteeDecisionWording.EntrustmentOnlyRemitForThePanel</p>
+                }
+                <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
+                  <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
+                </FormField>
+                @* T165. The replacement is a committee decision, so it records who sat for it, held to the same quorum. The
+                   chair and the caller are ticked and locked, since both must have sat (CommitteeReview.ResolveAppeal):
+                   this form is offered only to the appeal body (T213), so the caller is whoever resolves the appeal,
+                   the chair or an external member. *@
+                @PresentFieldset("remit-present", _appeal.PresentUserIds, lockedUserId: _currentUserId)
+              }
+            </div>
+            <FormActions>
+              @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && _review.PanelShortfall is not null)
               {
                 <button type="button" class="btn btn-primary" disabled aria-describedby="remit-reason">Resolve appeal</button>
               }
@@ -698,19 +725,25 @@
               {
                 <button type="submit" class="btn btn-primary">Resolve appeal</button>
               }
+            </FormActions>
+            @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && _review.PanelShortfall is { } remitShortfall)
+            {
+              <ul class="workflow-action-reasons">
+                <li id="remit-reason"><strong>Resolve appeal:</strong> @remitShortfall</li>
+              </ul>
             }
-          </FormActions>
-          @if (_review.State == CommitteeReviewState.UnderAppeal &&
-               _appeal.Outcome == CommitteeAppealOutcome.Remitted &&
-               _review.PanelShortfall is { } remitShortfall)
-          {
-            <ul class="workflow-action-reasons">
-              <li id="remit-reason"><strong>Resolve appeal:</strong> @remitShortfall</li>
-            </ul>
-          }
-        </EditForm>
+          </EditForm>
+        }
+        else if (_review.State == CommitteeReviewState.UnderAppeal)
+        {
+          <p id="appeal-body-note" class="muted">@AppealBodyNote</p>
+        }
 
-        @if (_review.Appeals.Count > 0)
+        @if (_review.Appeals.Count == 0)
+        {
+          <p class="muted">No appeal has been lodged against this review.</p>
+        }
+        else
         {
           <ul class="list-unstyled">
             @foreach (var appeal in _review.Appeals)
@@ -767,6 +800,118 @@
   /// </summary>
   private string? RecordBlockedReason => _review?.PanelShortfall ?? _agenda?.RecordBlockedReason;
 
+  /// <summary>
+  /// Whether the reader may take the chair's actions at this review (T213): they hold the panel's Chair seat
+  /// (<c>CommitteeReviewDetailDto.CallerChairs</c>), and the trainee check every one of those actions also demands passes
+  /// for them (<c>TraineeElsewhere</c> is null, T213 review). The chair's controls (Record decision, Ratify, Close review,
+  /// the staging form, Remove, and the agenda's Stage, Defer and Reinstate) are offered only then, by the predicates their
+  /// handlers demand. Before T213 every reader was offered them, and each refused on the click.
+  /// </summary>
+  private bool ChairMayAct => _review is { CallerChairs: true, TraineeElsewhere: null };
+
+  /// <summary>
+  /// Whether the decision form is offered: to the chair (<see cref="ChairMayAct" />), while the review is in progress,
+  /// the one state in which recording takes a decision. (T213 review)
+  /// </summary>
+  private bool OffersDecisionForm => ChairMayAct && _review?.State == CommitteeReviewState.InProgress;
+
+  /// <summary>
+  /// Who can act at this review now, said to a reader who is not offered the chair's controls (T213), so they are not
+  /// left looking for a button: the chair by name, and what only the chair can do in the review's state. Nothing while
+  /// no chair's action is open, nothing to the chair, and nothing while the trainee check refuses the panel's actions,
+  /// the chair's included: #trainee-elsewhere-note says so instead.
+  /// </summary>
+  private string? ChairActionsNote
+  {
+    get
+    {
+      if (_review is null || _review.CallerChairs || _review.TraineeElsewhere is not null)
+      {
+        return null;
+      }
+
+      var chair = _review.PanelMembers.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
+      var only = chair is null ? "Only the panel's chair" : $"Only the panel's chair, {chair.DisplayName},";
+      return _review switch
+      {
+        { IsFormative: true, State: CommitteeReviewState.InProgress } => $"{only} can close this review.",
+        { IsFormative: false, State: CommitteeReviewState.InProgress } =>
+          $"{only} can stage entrustment decisions, defer agenda lines and record the committee's decision.",
+        { IsFormative: false, State: CommitteeReviewState.Decided } => $"{only} can {JoinWithAnd(DecidedChairActions())}.",
+        _ => null
+      };
+    }
+  }
+
+  /// <summary>
+  /// What the chair can still do at a decided review, in the order the page offers it (T213 review): remove a staged
+  /// decision that no longer fits the trainee's curriculum, where one is staged (the page's Remove); defer a closing line
+  /// that keeps the review from being ratified, where one does (<see cref="MayDeferAfterRecording" />); and ratify.
+  /// </summary>
+  private IReadOnlyList<string> DecidedChairActions()
+  {
+    var actions = new List<string>();
+    if (_pendingDecisions.Any(pending => pending.NoLongerFits is not null))
+    {
+      actions.Add("remove a staged decision that no longer fits the trainee's curriculum");
+    }
+
+    if (_agenda?.Lines.Any(MayDeferAfterRecording) == true)
+    {
+      actions.Add("defer an agenda line that keeps the review from being ratified");
+    }
+
+    actions.Add("ratify the committee's decision");
+    return actions;
+  }
+
+  /// <summary>
+  /// Who resolves the appeal, said to a reader who is not offered the resolve form (T213): the appeal body, the chair and
+  /// the external members, by name, as the chair's note names the chair (T213 review). The trainee sees the same people
+  /// named as present at their decision.
+  /// </summary>
+  private string AppealBodyNote
+  {
+    get
+    {
+      var members = _review?.PanelMembers ?? [];
+      var chair = members.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
+      var externals = members
+        .Where(member => member.Role == DecisionPanelMemberRole.External)
+        .Select(member => member.DisplayName)
+        .ToArray();
+
+      var body = new List<string> { chair is null ? "the panel's chair" : $"the panel's chair, {chair.DisplayName}," };
+      if (externals.Length > 0)
+      {
+        body.Add($"its external member{(externals.Length == 1 ? string.Empty : "s")}, {JoinWithAnd(externals)}");
+      }
+
+      return $"Only the appeal body can resolve the appeal: {JoinWithAnd(body).TrimEnd(',')}.";
+    }
+  }
+
+  /// <summary>"a", "a and b", "a, b and c".</summary>
+  private static string JoinWithAnd(IReadOnlyList<string> parts)
+    => parts.Count <= 1
+      ? string.Concat(parts)
+      : $"{string.Join(", ", parts.Take(parts.Count - 1))} and {parts[^1]}";
+
+  /// <summary>
+  /// Said beside a staged decision that names no evidence (T213). Staging never stores one, so only a row written some
+  /// other way can show it; ratifying refuses it. While the review is in progress it can be removed and staged again, by
+  /// the chair; once the decision is recorded it is fixed with it (D46), and the page says what the ratify refusal says
+  /// (<c>StagedEvidence.UngroundedOnceRecorded</c>). Before T213 the page told the chair to remove it and stage it again
+  /// in every state, which on a decided review neither handler allows.
+  /// </summary>
+  private string NoEvidenceNote
+    => "Names no evidence, so the review cannot be ratified with it. " + (_review?.State switch
+    {
+      CommitteeReviewState.InProgress when ChairMayAct => "Remove it and stage it again, naming the evidence.",
+      CommitteeReviewState.InProgress => "The chair can remove it and stage it again, naming the evidence.",
+      _ => StagedEvidence.UngroundedOnceRecorded
+    });
+
   protected override async Task OnParametersSetAsync()
   {
     await LoadAsync();
@@ -795,7 +940,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
 
     await LoadStandingAsync();
@@ -827,7 +972,7 @@
     catch (Exception exception)
     {
       _msfCoverage = null;
-      _msfCoverageError = exception.Message;
+      _msfCoverageError = RefusalText.Of(exception);
     }
   }
 
@@ -854,7 +999,7 @@
     catch (Exception exception)
     {
       _standing = null;
-      _standingError = exception.Message;
+      _standingError = RefusalText.Of(exception);
     }
   }
 
@@ -1000,7 +1145,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
       return;
     }
 
@@ -1134,7 +1279,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
       return;
     }
 
@@ -1202,7 +1347,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
       return;
     }
 
@@ -1241,7 +1386,7 @@
     }
     catch (Exception exception)
     {
-      _agendaError = exception.Message;
+      _agendaError = RefusalText.Of(exception);
     }
   }
 
@@ -1323,7 +1468,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
       return;
     }
 
@@ -1343,7 +1488,7 @@
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
       return;
     }
 
@@ -1389,7 +1534,11 @@
                   <th scope="col">Window</th>
                   <th scope="col">State</th>
                   <th scope="col">Evidence</th>
-                  <th scope="col">Action</th>
+                  @* T213: staging, deferring and reinstating are the chair's, so nobody else gets the column. *@
+                  @if (ChairMayAct)
+                  {
+                    <th scope="col">Action</th>
+                  }
                 </tr>
               </thead>
               <tbody>
@@ -1407,25 +1556,28 @@
                       }
                     </td>
                     <td>@line.EvidenceCount item@(line.EvidenceCount == 1 ? string.Empty : "s")</td>
-                    <td class="actions-cell">
-                      @if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Due && !line.IsStaged)
-                      {
-                        <button type="button" class="btn btn-outline btn-sm" @onclick="() => StageFromAgendaAsync(line)"
-                                aria-label="@($"Stage a decision on {line.EpaCode}")">Stage</button>
-                        <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenDeferral(line)"
-                                aria-label="@($"Defer {line.EpaCode}")">Defer</button>
-                      }
-                      else if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Deferred)
-                      {
-                        <button type="button" class="btn btn-outline btn-sm" @onclick="() => ReinstateAsync(line)"
-                                aria-label="@($"Reinstate {line.EpaCode}")">Reinstate</button>
-                      }
-                      else if (MayDeferAfterRecording(line))
-                      {
-                        <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenDeferral(line)"
-                                aria-label="@($"Defer {line.EpaCode}")">Defer</button>
-                      }
-                    </td>
+                    @if (ChairMayAct)
+                    {
+                      <td class="actions-cell">
+                        @if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Due && !line.IsStaged)
+                        {
+                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => StageFromAgendaAsync(line)"
+                                  aria-label="@($"Stage a decision on {line.EpaCode}")">Stage</button>
+                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenDeferral(line)"
+                                  aria-label="@($"Defer {line.EpaCode}")">Defer</button>
+                        }
+                        else if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Deferred)
+                        {
+                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => ReinstateAsync(line)"
+                                  aria-label="@($"Reinstate {line.EpaCode}")">Reinstate</button>
+                        }
+                        else if (MayDeferAfterRecording(line))
+                        {
+                          <button type="button" class="btn btn-outline btn-sm" @onclick="() => OpenDeferral(line)"
+                                  aria-label="@($"Defer {line.EpaCode}")">Defer</button>
+                        }
+                      </td>
+                    }
                   </tr>
                 }
               </tbody>

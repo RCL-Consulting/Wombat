@@ -170,13 +170,137 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
             });
 
             var refusal = await remove.Should().ThrowExactlyAsync<InvalidOperationException>();
-            refusal.Which.Message.Should().Be(RemovePendingEntrustmentDecisionCommandHandler.AlreadyGone);
+            refusal.Which.Message.Should().Be(RemovePendingEntrustmentDecisionCommandHandler.ReviewChanged);
             refusal.Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>();
 
             await using var read = NewContext(review.Schema);
             (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
                 .Should().Be(CommitteeReviewState.Ratified);
             (await read.EntrustmentDecisions.Select(star => star.EpaId).ToListAsync()).Should().Equal(review.Paed001);
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    /// <summary>
+    /// T213 item 1. The staged STARs are fixed when the committee's decision is recorded (T165, D46), and a remove checks
+    /// the review's state only when it reads it. Before T213 it did not mark the review modified, so one that read the
+    /// review in progress deleted the staged decision after the decision was recorded, and ratifying then issued less than
+    /// the panel recorded. Now the remove's save checks the review's xmin and is refused whole.
+    /// </summary>
+    [Fact]
+    public async Task ARemoveThatReadTheReviewBeforeARecordCommitted_IsRefusedWhole_AndTheRecordedStarStaysStaged()
+    {
+        try
+        {
+            var review = await InProgressReviewWithPaed001StagedAsync();
+
+            // The remove reads the review while it is in progress; the decision is recorded from start to commit; then the
+            // remove saves.
+            var remove = () => RemoveAsync(review, review.PendingId, beforeSave: () => RecordAsync(review));
+
+            var refusal = await remove.Should().ThrowExactlyAsync<InvalidOperationException>();
+            refusal.Which.Message.Should().Be(RemovePendingEntrustmentDecisionCommandHandler.ReviewChanged);
+            refusal.Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>();
+
+            await using (var read = NewContext(review.Schema))
+            {
+                (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
+                    .Should().Be(CommitteeReviewState.Decided);
+                (await read.PendingEntrustmentDecisions.Select(pending => pending.Id).ToListAsync())
+                    .Should().Equal(new[] { review.PendingId }, "the decision recorded with it is the committee's, and fixed");
+            }
+
+            (await AuditRowsOfAsync(review.Schema, nameof(RecordCommitteeDecisionCommand), nameof(RemovePendingEntrustmentDecisionCommand)))
+                .Should().BeEquivalentTo(
+                    "RecordCommitteeDecisionCommand: succeeded",
+                    $"RemovePendingEntrustmentDecisionCommand: {RemovePendingEntrustmentDecisionCommandHandler.ReviewChanged}");
+
+            // And the ratify issues what was recorded.
+            await RatifyAsync(review);
+            await using var after = NewContext(review.Schema);
+            (await after.EntrustmentDecisions.Select(star => star.EpaId).ToListAsync()).Should().Equal(review.Paed001);
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    /// <summary>
+    /// T213 item 1, the other way round: a record that read the review, and the decision staged on it, is refused whole
+    /// when a remove commits before its save. Otherwise the decision would fix a staged set other than the one the chair
+    /// saw when recording it.
+    /// </summary>
+    [Fact]
+    public async Task ARecordThatReadTheReviewBeforeARemoveCommitted_IsRefusedWhole_WithAReadableRefusal()
+    {
+        try
+        {
+            var review = await InProgressReviewWithPaed001StagedAsync();
+
+            var record = () => RecordAsync(review, beforeSave: () => RemoveAsync(review, review.PendingId));
+
+            var refusal = await record.Should().ThrowExactlyAsync<InvalidOperationException>();
+            refusal.Which.Message.Should().Be(RecordCommitteeDecisionCommandHandler.ReviewChanged);
+            refusal.Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>();
+
+            await using var read = NewContext(review.Schema);
+            (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
+                .Should().Be(CommitteeReviewState.InProgress);
+            (await read.CommitteeDecisions.CountAsync()).Should().Be(0, "nothing of the refused record is stored");
+            (await read.PendingEntrustmentDecisions.CountAsync()).Should().Be(0);
+            (await AuditRowsOfAsync(review.Schema, nameof(RecordCommitteeDecisionCommand), nameof(RemovePendingEntrustmentDecisionCommand)))
+                .Should().BeEquivalentTo(
+                    "RemovePendingEntrustmentDecisionCommand: succeeded",
+                    $"RecordCommitteeDecisionCommand: {RecordCommitteeDecisionCommandHandler.ReviewChanged}");
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
+    /// <summary>
+    /// T213 item 2. A decision staged between a record's read and its save moves the review's xmin (staging marks the
+    /// review modified), so the record is refused whole. Before T213 the chair was shown EF's own concurrency message; now
+    /// the refusal says what happened and what to do, as staging's and ratifying's do.
+    /// </summary>
+    [Fact]
+    public async Task ARecordThatReadTheReviewBeforeAStageCommitted_IsRefusedWhole_WithAReadableRefusal()
+    {
+        try
+        {
+            var review = await InProgressReviewWithPaed001StagedAsync();
+
+            var record = () => RecordAsync(review, beforeSave: () => StageAsync(review, review.Paed002, review.Rung3a, [review.LineB]));
+
+            var refusal = await record.Should().ThrowExactlyAsync<InvalidOperationException>();
+            refusal.Which.Message.Should().Be(RecordCommitteeDecisionCommandHandler.ReviewChanged);
+            refusal.Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>();
+
+            await using (var read = NewContext(review.Schema))
+            {
+                (await read.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
+                    .Should().Be(CommitteeReviewState.InProgress, "the review is still open, so the chair can record again");
+                (await read.CommitteeDecisions.CountAsync()).Should().Be(0);
+                (await read.CommitteeDecisionAttendees.CountAsync()).Should().Be(0);
+                (await read.PendingEntrustmentDecisions.Select(pending => pending.EpaId).ToListAsync())
+                    .Should().BeEquivalentTo(new[] { review.Paed001, review.Paed002 });
+            }
+
+            (await AuditRowsOfAsync(review.Schema, nameof(RecordCommitteeDecisionCommand), nameof(StagePendingEntrustmentDecisionCommand)))
+                .Should().BeEquivalentTo(
+                    "StagePendingEntrustmentDecisionCommand: succeeded",
+                    $"RecordCommitteeDecisionCommand: {RecordCommitteeDecisionCommandHandler.ReviewChanged}");
+
+            // The chair records again, and the decision now fixes both staged decisions.
+            await RecordAsync(review);
+            await using var after = NewContext(review.Schema);
+            (await after.CommitteeReviews.SingleAsync(entity => entity.Id == review.ReviewId)).State
+                .Should().Be(CommitteeReviewState.Decided);
         }
         finally
         {
@@ -522,14 +646,19 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
             .Handle(command, () => handle(), CancellationToken.None);
 
     /// <summary>The raced requests' audit rows, as "action: outcome". The seeding ran its handlers without the pipeline.</summary>
-    private async Task<IReadOnlyList<string>> AuditRowsAsync(string schema)
+    private Task<IReadOnlyList<string>> AuditRowsAsync(string schema)
+        => AuditRowsOfAsync(
+            schema,
+            nameof(StagePendingEntrustmentDecisionCommand), nameof(RatifyCommitteeDecisionCommand),
+            nameof(DeferAgendaLineCommand), nameof(ReinstateAgendaLineCommand));
+
+    /// <summary>The audit rows of these commands, as "action: outcome".</summary>
+    private async Task<IReadOnlyList<string>> AuditRowsOfAsync(string schema, params string[] actions)
     {
         await using var read = NewContext(schema);
         var rows = await read.AuditEntries
             .AsNoTracking()
-            .Where(entry => entry.Category == AuditCategory.Command
-                && (entry.Action == "StagePendingEntrustmentDecisionCommand" || entry.Action == "RatifyCommitteeDecisionCommand"
-                    || entry.Action == "DeferAgendaLineCommand" || entry.Action == "ReinstateAgendaLineCommand"))
+            .Where(entry => entry.Category == AuditCategory.Command && actions.Contains(entry.Action))
             .Select(entry => new { entry.Action, entry.Success, entry.ErrorMessage })
             .ToListAsync();
 

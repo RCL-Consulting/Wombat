@@ -56,6 +56,17 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
 
         var seated = await SeatedAsync(review, request.Principal, cancellationToken);
 
+        // T213 review. Starting the review and every chair's action also demand that its trainee still trains at the
+        // panel's institution, so the page is told when that fails for this caller, by the same predicate, and offers none
+        // of them. Asked only in the states where one of them is open.
+        var actionOpen = review.State is CommitteeReviewState.Scheduled
+            or CommitteeReviewState.InProgress
+            or CommitteeReviewState.Decided;
+        var traineeElsewhere =
+            actionOpen && !await CommitteeTraineeScope.MayActOnTraineeAsync(_dbContext, request.Principal, review, cancellationToken)
+                ? CommitteeTraineeScope.TraineeNotAtPanelInstitution
+                : null;
+
         // T131 slice 4. The agenda, read by the reader GetCommitteeAgendaQuery shares, past the same ladder.
         var agenda = await CommitteeAgendaReader.ReadAsync(
             _dbContext, review, request.Today ?? ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken);
@@ -64,6 +75,11 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         {
             TraineeName = names.NameOf(review.TraineeUserId),
             Agenda = agenda,
+            // T213: what the caller may do here, by the predicates the handlers demand, so the page offers each control to
+            // exactly the people its handler lets use it.
+            CallerChairs = CommitteeDecisionAuthorization.Chairs(request.Principal, review.Panel),
+            CallerResolvesAppeals = CommitteeDecisionAuthorization.ResolvesAppeals(request.Principal, review.Panel),
+            TraineeElsewhere = traineeElsewhere,
             PanelMembers = detail.PanelMembers
                 .Select(person => person with
                 {

@@ -93,8 +93,7 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
         // each supersede the trainee's prior STAR, and the second SupersedeBy would throw after the first mutation.
         if (pending.GroupBy(p => p.EpaId).Any(group => group.Count() > 1))
         {
-            throw new InvalidOperationException(
-                "This review cannot be ratified: two entrustment decisions are staged on one EPA. Remove one, then ratify.");
+            throw new InvalidOperationException(TwoStagedOnOneEpa);
         }
 
         // The trainee's active STARs on those EPAs, which the new ones supersede. Loaded before the first mutation.
@@ -159,6 +158,15 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
 
     /// <summary>The refusal when the review changed between being read and the save. Nothing is written.</summary>
     public const string ReviewChanged =
-        "This review changed while it was being ratified: a decision was staged, edited or removed, or the review was " +
-        "ratified. Nothing was ratified. Reload the review and ratify it again.";
+        "This review changed while it was being ratified: " + CommitteeReviewChanged.WhatChanges + ". Nothing was " +
+        "ratified. Reload the review; if it is still decided, ratify it again.";
+
+    /// <summary>
+    /// The refusal for two staged decisions on one EPA. Staging never stores them (the table is unique on review and EPA),
+    /// and once the decision is recorded the staged decisions are fixed with it (D46), so the chair can remove neither: an
+    /// administrator must look into it. Before the T213 review it told the chair to remove one.
+    /// </summary>
+    public const string TwoStagedOnOneEpa =
+        "This review cannot be ratified: two entrustment decisions are staged on one EPA. Staging never stores two, and " +
+        "the staged decisions are fixed once the committee's decision is recorded, so ask an administrator to look into it.";
 }

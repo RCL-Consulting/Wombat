@@ -224,7 +224,7 @@ else
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
   }
 
@@ -305,7 +305,7 @@ else
       if (request == _request)
       {
         _result = null;
-        _error = exception.Message;
+        _error = RefusalText.Of(exception);
       }
     }
     finally

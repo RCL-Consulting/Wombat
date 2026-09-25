@@ -150,8 +150,8 @@ internal static class AgendaLineCommands
 {
     /// <summary>The refusal when the review changed between being read and the save. Nothing is written.</summary>
     public const string ReviewChanged =
-        "This review changed while its agenda was being changed: a decision was staged, removed or ratified, or a line " +
-        "was deferred. Nothing was changed. Reload the review and try again.";
+        "This review changed while its agenda was being changed: " + CommitteeReviewChanged.WhatChanges + ". Nothing " +
+        "was changed. Reload the review and try again.";
 
     /// <summary>
     /// The refusal to defer or reinstate once the committee's decision is recorded: the deferrals are part of it, as the

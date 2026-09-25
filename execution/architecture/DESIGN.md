@@ -503,6 +503,12 @@ T019 introduces a small builder-specific extension to the shared system:
   - a warning or success that is **standing page content**, there on every visit (a banner, "credited nothing", a
     suppressed category), is `Role=""`, which renders none, or it is read out each time the page finishes loading.
   - Never hand-write `<div class="alert …">`: it skips the default.
+- **A refusal is shown in its own words** (T213). A page puts a caught exception in its error `Alert` through
+  `RefusalText.Of(exception)` (Components/Shared), never `exception.Message` directly: a command's validator refuses
+  with a FluentValidation `ValidationException`, whose message is written for a log ("Validation failed: -- Members: …
+  Severity: Error"), and the helper shows each failure's message once instead. Every other refusal's message is a
+  sentence already and is shown as it is. The committee pages use it throughout; other pages still print
+  `exception.Message` and move to it when next touched.
 - **An alert already on the page when it loads is not reliably announced**, whatever its role. When a page reloads with
   a refusal and puts focus in a field (sign-in, link account), give the `Alert` an `Id` and have the field name it with
   `aria-describedby`, so the refusal is read with the field.
@@ -646,7 +652,8 @@ no Agenda card. The card holds:
 - A muted sentence naming the period ("2026 S1") and saying that a line marked Due must be staged or deferred before
   ratify.
 - A `.clinic-table` with five columns: EPA (the row header), window ("2026 S1" for a semester, "2026" for an annual EPA),
-  state, evidence count, and action. The caption counts the lines and the ones still to stage or defer. The state cell
+  state, evidence count, and action. The action column is the chair's alone (T213): anyone else reads four columns, not
+  an empty fifth. The caption counts the lines and the ones still to stage or defer. The state cell
   holds the badge and, under it, a `.muted` line saying what the state means for this sitting: the deferral's reason,
   the STAR a decided line names, or that an optional line is optional and why.
 - Each line offers only what its state allows. A Due line that is not staged offers Stage and Defer. Stage chooses the
@@ -689,6 +696,31 @@ would refuse with: the panel's seats before the agenda for Record, the decision'
 The agenda is read again after every action on the page. A failure is a warning `Alert` in the card, never red beside
 the action's success, and the agenda last read stays in view. Every sentence is built in C# (`CommitteeAgendaText`),
 which the scheduling form's preview shares.
+
+**The chair's controls** (T213). The review page offers each control to exactly the people its handler lets use it,
+in exactly the states its handler takes it, by what `GetCommitteeReviewByIdQuery` says the caller may do:
+`CallerChairs` and `CallerResolvesAppeals`, computed by the predicates the handlers demand
+(`CommitteeDecisionAuthorization.Chairs` and `ResolvesAppeals`), and `TraineeElsewhere`, the trainee check every chair's
+action and Start also demand (`CommitteeTraineeScope`). The chair alone is offered the decision form and Record decision
+(while the review is in progress), Ratify and its reason (once decided), Close review, the staging form, Remove, and the
+agenda's Stage, Defer and Reinstate. The appeal body alone (the chair or an external member) is offered the
+resolve-appeal form, and only while the review is under appeal: a form is never shown with empty fields and no button.
+These are hidden from everyone else, not disabled: T107's disabled button is for an action the reader may take but
+cannot complete yet, and nobody else may take these. Instead a `.muted` sentence in the Review card
+(`#chair-actions-note`) names the chair and what only the chair can do in the review's state ("Only the panel's chair,
+Thandi Zulu, can ratify the committee's decision."; on a decided review it also names removing a staged decision that no
+longer fits and deferring a line that keeps the review from being ratified, where either is open), and under appeal the
+Appeals card names who resolves it (`#appeal-body-note`: "Only the appeal body can resolve the appeal: the panel's
+chair, Thandi Zulu, and its external member, Anna Botha."). A Decision card with no decision and no form says "No
+decision has been recorded yet." (`#no-decision-note`) rather than stand as a bare heading. When the review's trainee no
+longer trains at the panel's institution, Start and the chair's controls are offered to nobody (a global Administrator
+excepted, whom the check does not refuse), no `#chair-actions-note` is shown, and a warning `Alert` with no role
+(`#trainee-elsewhere-note`) says what those actions would refuse with. What the review holds (its agenda, staged
+decisions, evidence and decisions) is shown to every reader as before. The remit form ticks and locks the chair and the
+caller, who is the resolver because only the appeal body is offered the form. A staged decision that names no evidence
+(only a row written some other way can) says, while the review is in progress, that the chair can remove it and stage it
+again; once the decision is recorded it says what the ratify refusal says, that it is fixed and an administrator must
+look into it (D46).
 
 **The trainee's own reviews** (`/committee/my-reviews`). A ratified review's detail shows its agenda read-only, as an
 `article.detail-card--compact` headed "Agenda": a muted sentence naming the period, then a `.clinic-table` of three

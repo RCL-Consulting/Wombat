@@ -646,12 +646,189 @@ public sealed class CommitteeQuorumHandlerTests
         review.QuorumShortfall.Should().Be("Nobody was recorded as present when this decision was recorded. " + CommitteeReview.QuorumRule);
     }
 
+    /// <summary>
+    /// T213: the review page offers the chair's controls, and the resolve-appeal form, by what the query says the caller
+    /// may do, and the query asks the predicates the handlers demand. Each principal below is let through, or refused, by
+    /// the handler exactly as its flag says: recording is the chair's, and resolving the appeal body's.
+    /// </summary>
+    public static TheoryData<string, bool, bool> WhoMayDoWhat => new()
+    {
+        { "chair", true, true },
+        { "member", false, false },
+        { "external", false, true },
+        { "administrator", false, false },
+        { "coordinator", false, false }
+    };
+
+    [Theory]
+    [MemberData(nameof(WhoMayDoWhat))]
+    public async Task TheReview_SaysWhatTheCallerMayDo_ByThePredicatesTheHandlersDemand(
+        string who, bool chairs, bool resolvesAppeals)
+    {
+        await using var db = await SeededDbAsync();
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Caller(who)), CancellationToken.None);
+
+        review.CallerChairs.Should().Be(chairs, who);
+        review.CallerResolvesAppeals.Should().Be(resolvesAppeals, who);
+        review.TraineeElsewhere.Should().BeNull($"{who}: the trainee trains at the panel's institution");
+
+        // The picker is the gate: the record handler lets through exactly those the flag offers the form to.
+        db.ChangeTracker.Clear();
+        var record = () => RecordAsync(db, Caller(who), "chair-1", "member-1");
+        if (chairs)
+        {
+            await record.Should().NotThrowAsync(who);
+        }
+        else
+        {
+            await record.Should().ThrowAsync<UnauthorizedAccessException>(who);
+        }
+    }
+
+    public static TheoryData<string, bool> WhoMayResolveAnAppeal => new()
+    {
+        { "chair", true },
+        { "member", false },
+        { "external", true },
+        { "administrator", false },
+        { "coordinator", false }
+    };
+
+    [Theory]
+    [MemberData(nameof(WhoMayResolveAnAppeal))]
+    public async Task TheResolveForm_IsOfferedToExactlyThoseTheResolveHandlerLetsThrough(string who, bool resolvesAppeals)
+    {
+        await using var db = await AppealedDbAsync();
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Caller(who)), CancellationToken.None);
+        review.CallerResolvesAppeals.Should().Be(resolvesAppeals, who);
+
+        db.ChangeTracker.Clear();
+        var dismiss = () => ResolveAsync(db, Caller(who), CommitteeAppealOutcome.Dismissed);
+        if (resolvesAppeals)
+        {
+            await dismiss.Should().NotThrowAsync(who);
+        }
+        else
+        {
+            await dismiss.Should().ThrowAsync<UnauthorizedAccessException>(who);
+        }
+    }
+
+    /// <summary>
+    /// T213 review. Starting a review and every chair's action also demand that its trainee still trains at the panel's
+    /// institution, a global Administrator excepted (<c>CommitteeTraineeScope</c>). The query says when that fails for the
+    /// caller, by the same predicate, so the page offers the chair none of the controls each click of which would refuse,
+    /// and shows the sentence they refuse with instead.
+    /// </summary>
+    public static TheoryData<string, bool> WhoIsToldTheTraineeHasMoved => new()
+    {
+        { "chair", true },
+        { "member", true },
+        { "coordinator", true },
+        { "administrator", false },
+        { "administrator in the chair", false }
+    };
+
+    [Theory]
+    [MemberData(nameof(WhoIsToldTheTraineeHasMoved))]
+    public async Task WhenTheTraineeHasMoved_TheReviewSaysThePanelCannotAct_ByThePredicateTheChairsActionsDemand(
+        string who, bool told)
+    {
+        await using var db = await SeededDbAsync();
+        await MoveTraineeAsync(db);
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Caller(who)), CancellationToken.None);
+
+        review.TraineeElsewhere.Should().Be(told ? TraineeMoved : null, who);
+    }
+
+    [Fact]
+    public async Task WhenTheTraineeHasMoved_TheChairsRecordIsRefused_WithTheSentenceTheReviewShows_AndNothingIsWritten()
+    {
+        await using var db = await SeededDbAsync();
+        await MoveTraineeAsync(db);
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
+        review.CallerChairs.Should().BeTrue("the chair still holds the seat");
+        var before = await SnapshotAsync();
+        db.ChangeTracker.Clear();
+
+        var record = () => RecordAsync(db, Chair(), "chair-1", "member-1");
+
+        (await record.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message.Should().Be(review.TraineeElsewhere);
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await SnapshotAsync()).Should().BeEquivalentTo(before);
+    }
+
+    [Fact]
+    public async Task WhenTheTraineeHasMoved_AnAdministratorInTheChair_IsToldNothing_AndMayRecord()
+    {
+        // The demand's bypass: a review stranded by a move is finished by an Administrator who takes the chair.
+        await using var db = await SeededDbAsync();
+        await MoveTraineeAsync(db);
+        var administratorInTheChair = Caller("administrator in the chair");
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, administratorInTheChair), CancellationToken.None);
+        review.CallerChairs.Should().BeTrue();
+        review.TraineeElsewhere.Should().BeNull();
+        db.ChangeTracker.Clear();
+
+        var record = () => RecordAsync(db, administratorInTheChair, "chair-1", "member-1");
+
+        await record.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task WhenTheTraineeHasMoved_ARatifiedReview_SaysNothing_ForNoActionItGatesIsOpen()
+    {
+        // An appeal is not gated by the trainee check (CommitteeTraineeScope), and nothing else can be done now.
+        await using var db = await RatifiedDbAsync();
+        await MoveTraineeAsync(db);
+
+        var review = await new GetCommitteeReviewByIdQueryHandler(db, Directory()).Handle(
+            new GetCommitteeReviewByIdQuery(ReviewId, Chair()), CancellationToken.None);
+
+        review.State.Should().Be(CommitteeReviewState.Ratified);
+        review.TraineeElsewhere.Should().BeNull();
+    }
+
+    private const string TraineeMoved =
+        "This review's trainee does not train at the panel's institution, so the panel cannot act on it.";
+
+    private static async Task MoveTraineeAsync(ApplicationDbContext db)
+    {
+        (await db.Set<TraineeProfile>().SingleAsync(profile => profile.UserId == Trainee)).InstitutionId = OtherInstitutionId;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+    }
+
+    private static ClaimsPrincipal Caller(string who) => who switch
+    {
+        "administrator in the chair" =>
+            TestPrincipals.InRoles([WombatRoles.Administrator, WombatRoles.CommitteeMember], "chair-1", InstitutionId),
+        "chair" => Chair(),
+        "member" => TestPrincipals.InRole(WombatRoles.CommitteeMember, "member-1", InstitutionId),
+        "external" => External(),
+        "administrator" => TestPrincipals.Administrator(),
+        "coordinator" => TestPrincipals.InRole(WombatRoles.Coordinator, "coordinator-1", InstitutionId),
+        _ => throw new ArgumentOutOfRangeException(nameof(who), who, null)
+    };
+
     [Fact]
     public void ACommandsAnswer_TakesItsNamesAndSeatsFromThePageItReplaces()
     {
         var loaded = Detail() with
         {
             TraineeName = "Lerato Molefe",
+            CallerChairs = true,
+            CallerResolvesAppeals = true,
+            TraineeElsewhere = "Moved.",
             PanelMembers =
             [
                 new CommitteePersonDto("chair-1", DecisionPanelMemberRole.Chair) { Name = "Thandi Zulu", MaySit = true },
@@ -684,6 +861,13 @@ public sealed class CommitteeQuorumHandlerTests
         named.Decisions.Single().Attendees.Select(person => person.Label).Should().Equal("Thandi Zulu (chair)", "Priya Naidoo");
         named.PanelMembers.Select(person => person.DisplayName).Should().Equal("Thandi Zulu", "Priya Naidoo");
         named.PanelMembers.Should().OnlyContain(person => person.MaySit);
+
+        // The mapper knows no caller, so what the caller may do is the loaded page's too (T213).
+        answered.CallerChairs.Should().BeFalse();
+        named.CallerChairs.Should().BeTrue();
+        named.CallerResolvesAppeals.Should().BeTrue();
+        answered.TraineeElsewhere.Should().BeNull();
+        named.TraineeElsewhere.Should().Be("Moved.", "the trainee's institution does not change with the action");
     }
 
     // ─── Commands ────────────────────────────────────────────────────────────

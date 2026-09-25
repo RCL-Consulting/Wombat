@@ -486,7 +486,11 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             IsFormative: formative)
         {
             AcademicYear = 2026,
-            Semester = 1
+            Semester = 1,
+            // The page offers the chair's controls by what the query says the caller may do (T213); these tests act as the
+            // chair.
+            CallerChairs = true,
+            CallerResolvesAppeals = true
         };
 
     private static RecordingSender ReviewSender(CommitteeReviewDetailDto review)

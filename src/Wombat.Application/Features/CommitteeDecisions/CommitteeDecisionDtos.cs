@@ -233,6 +233,34 @@ public sealed record CommitteeReviewDetailDto(
     public IReadOnlyList<CommitteePersonDto> PanelMembers { get; init; } = [];
 
     /// <summary>
+    /// Whether the caller holds the panel's Chair seat, and so may take the chair's actions at this review: record the
+    /// decision, ratify it, close a formative review, stage and remove entrustment decisions, and defer and reinstate
+    /// agenda lines (T213). Filled by <c>GetCommitteeReviewByIdQuery</c> with the predicate those handlers demand
+    /// (<c>CommitteeDecisionAuthorization.Chairs</c>), so the review page offers the chair's controls to the chair alone:
+    /// before T213 it offered them to every reader, and each refused on the click. False from everywhere else, so nobody
+    /// is offered them on the strength of a copy that never asked. Those handlers also demand the trainee check, so the
+    /// page offers the controls only while <see cref="TraineeElsewhere" /> is null as well.
+    /// </summary>
+    public bool CallerChairs { get; init; }
+
+    /// <summary>
+    /// Whether the caller sits on the panel's appeal body, as its chair or an external member, and so may resolve an
+    /// appeal (T213): the predicate resolving demands (<c>CommitteeDecisionAuthorization.ResolvesAppeals</c>). Filled by
+    /// <c>GetCommitteeReviewByIdQuery</c>; false from everywhere else.
+    /// </summary>
+    public bool CallerResolvesAppeals { get; init; }
+
+    /// <summary>
+    /// Why the panel cannot act on this review now, or null when it can: its trainee no longer trains at the panel's
+    /// institution, so starting it and every one of the chair's actions refuse (<c>CommitteeTraineeScope</c>, T182). The
+    /// sentence those handlers refuse with. Filled by <c>GetCommitteeReviewByIdQuery</c> for this caller, by the predicate
+    /// they demand, while the review is scheduled, in progress or decided; null for a global Administrator, whom they do
+    /// not refuse on it, and in every other state, where no action it gates is open. The review page offers the chair's
+    /// controls, and Start, only while it is null, and shows it instead (T213 review). An appeal is not gated by it.
+    /// </summary>
+    public string? TraineeElsewhere { get; init; }
+
+    /// <summary>
     /// Why this panel cannot take a decision now, or null when it can: its chair may not sit, or fewer than
     /// <see cref="CommitteeReview.Quorum" /> of its members may (T165, <c>PanelSeat</c>). The page disables Record, and
     /// the remit form's Resolve, and shows this as the reason, rather than let the server refuse after the chair has
@@ -293,10 +321,11 @@ public sealed record CommitteeReviewDetailDto(
 
     /// <summary>
     /// This review, named from an earlier copy of it: the trainee's name, the names of the panel and of those present at
-    /// each decision, and which panel members may sit.
+    /// each decision, which panel members may sit, and what the caller may do at it (T213).
     /// </summary>
     /// <remarks>
-    /// A command answers with the review from the lookup-free mapper, which names nobody and seats nobody (T142, T165).
+    /// A command answers with the review from the lookup-free mapper, which names nobody, seats nobody and knows no caller
+    /// (T142, T165, T213).
     /// The review page and the trainee's list keep what they loaded with instead of reading the review back. Everyone
     /// recorded as present at a decision the page has just taken was a panel member when it loaded, so their names are
     /// among the panel's.
@@ -328,6 +357,9 @@ public sealed record CommitteeReviewDetailDto(
         return this with
         {
             TraineeName = earlier.TraineeName,
+            CallerChairs = earlier.CallerChairs,
+            CallerResolvesAppeals = earlier.CallerResolvesAppeals,
+            TraineeElsewhere = earlier.TraineeElsewhere,
             PanelMembers = PanelMembers
                 .Select(Named)
                 .Select(member => member with { MaySit = member.MaySit || seated.Contains(member.UserId) })

@@ -104,6 +104,24 @@ public sealed class PanelEditSeatTests : TestContext
         Options(cut).Should().Equal("zulu", "naidoo");
     }
 
+    [Fact]
+    public void AMemberListRefusedByItsValidator_ShowsTheRefusalOnly_NotTheValidatorsLogFormat()
+    {
+        // T213 item 5: the page used to print ValidationException.Message, "Validation failed: -- Members: … Severity:
+        // Error".
+        SignInAs(WombatRoles.Administrator);
+        _sender.On<UpdateDecisionPanelCommand>(_ => throw new FluentValidation.ValidationException(
+            [new FluentValidation.Results.ValidationFailure("Members", DecisionPanelComposition.TooFewMembers)]));
+
+        var cut = RenderComponent<PanelEdit>(parameters => parameters.Add(page => page.PanelId, PanelId));
+        cut.WaitForState(() => cut.FindAll("#panel-chair").Count == 1);
+        cut.FindAll("form").Single(form => form.QuerySelector("#panel-chair") is not null).Submit();
+
+        cut.WaitForAssertion(() => System.Text.RegularExpressions.Regex.Replace(cut.Find(".alert-danger").TextContent, @"\s+", " ")
+            .Trim().Should().Be(DecisionPanelComposition.TooFewMembers));
+        cut.Markup.Should().NotContain("Validation failed").And.NotContain("Severity");
+    }
+
     private static IReadOnlyList<string?> Options(IRenderedComponent<PanelEdit> cut)
         => cut.Find("#panel-chair").QuerySelectorAll("option")
             .Select(option => option.GetAttribute("value"))

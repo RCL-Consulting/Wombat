@@ -110,7 +110,31 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
             DateTime.UtcNow,
             present);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        // Refused whole when the review changed after it was read above: its xmin token (CommitteeReviewConfiguration) is
+        // checked with the state this save changes. Staging, removing, deferring and reinstating each mark the review
+        // modified, so a decision recorded here fixes exactly the staged decisions and deferrals that were there when it
+        // was read (D46), and a second record of the same review is refused too.
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
+            // (T201). Before T213 the chair was shown EF's own message.
+            throw new InvalidOperationException(ReviewChanged, exception);
+        }
+
         return review.ToDetailDto();
     }
+
+    /// <summary>The refusal when the review changed between being read and the save. Nothing is recorded. (T213)</summary>
+    /// <remarks>
+    /// What changed can be this decision itself, recorded from another tab, after which the review is decided and takes
+    /// no second one; so the chair is told to record it again only if the review is still in progress (T213 review).
+    /// </remarks>
+    public const string ReviewChanged =
+        "This review changed while the decision was being recorded: " + CommitteeReviewChanged.WhatChanges + ". " +
+        "Nothing was recorded. Reload the review and check what is staged and deferred; if it is still in progress, " +
+        "record the decision again.";
 }

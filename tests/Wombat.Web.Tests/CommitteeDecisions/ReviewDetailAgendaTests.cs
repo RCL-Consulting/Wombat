@@ -295,6 +295,10 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         {
             AcademicYear = 2026,
             Semester = 1,
+            // The page offers the chair's controls by what the query says the caller may do (T213); these tests act as the
+            // chair.
+            CallerChairs = true,
+            CallerResolvesAppeals = true,
             Agenda = agenda,
             PanelMembers = seatsAQuorum
                 ?
