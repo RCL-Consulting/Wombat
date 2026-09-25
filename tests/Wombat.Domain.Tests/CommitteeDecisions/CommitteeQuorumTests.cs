@@ -37,7 +37,7 @@ public sealed class CommitteeQuorumTests
 
         review.RecordDecision(
             CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now,
-            [Chair(), Member("member-1"), external]);
+            [Chair(), Member("member-1"), external], [], []);
 
         Assert.Equal(CommitteeReviewState.Decided, review.State);
         var decision = Assert.Single(review.Decisions);
@@ -67,7 +67,7 @@ public sealed class CommitteeQuorumTests
         var members = present.Select(userId => userId == "chair-1" ? Chair() : Member(userId)).ToArray();
 
         Assert.Throws<InvalidOperationException>(() => review.RecordDecision(
-            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, members));
+            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, members, [], []));
 
         Assert.True(review.State == CommitteeReviewState.InProgress, because);
         Assert.Empty(review.Decisions);
@@ -81,7 +81,7 @@ public sealed class CommitteeQuorumTests
 
         var refusal = Assert.Throws<InvalidOperationException>(() => review.RecordDecision(
             CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-2", Now,
-            [Chair(), Member("member-1")]));
+            [Chair(), Member("member-1")], [], []));
 
         Assert.Contains("recording the decision must be recorded as present", refusal.Message, StringComparison.Ordinal);
         Assert.Empty(review.Decisions);
@@ -95,7 +95,7 @@ public sealed class CommitteeQuorumTests
         var review = StartedReview();
 
         Assert.Throws<InvalidOperationException>(() => review.RecordDecision(
-            CommitteeDecisionCategory.SatisfactoryProgress, " ", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember));
+            CommitteeDecisionCategory.SatisfactoryProgress, " ", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []));
 
         Assert.Empty(review.Decisions);
         Assert.Equal(CommitteeReviewState.InProgress, review.State);
@@ -278,7 +278,7 @@ public sealed class CommitteeQuorumTests
     {
         var review = StartedReview();
         review.RecordDecision(
-            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember);
+            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
         return review;
     }
 

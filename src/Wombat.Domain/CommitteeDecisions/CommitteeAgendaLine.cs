@@ -29,7 +29,14 @@ public enum CommitteeAgendaLineState
     Decided = 3,
 
     /// <summary>An optional line the review was ratified without. Never a closing line.</summary>
-    NotDecided = 4
+    NotDecided = 4,
+
+    /// <summary>
+    /// Another sitting had decided the EPA in this window when the review settled its agenda, so it was not decided here:
+    /// written when the committee's decision is recorded, or at ratify, for a line still due with nothing staged on it.
+    /// Until then it is read live, and names no STAR of its own. (T235)
+    /// </summary>
+    DecidedElsewhere = 5
 }
 
 /// <summary>
@@ -56,6 +63,13 @@ public enum CommitteeAgendaLineState
 /// (T167): the agenda says what the sitting was asked, whatever happens to the catalogue after. The curriculum item and
 /// the EPA are ids with no foreign key for the same reason. Lines are planned at schedule and at Start and then only
 /// change state; routing or curriculum changes after Start reach the next review.
+/// </para>
+/// <para>
+/// <b>Decided elsewhere</b> (T235). A line is planned because its window was undecided, and another sitting can decide it
+/// while this review is open: a late semester-1 review ratifying an annual EPA that the semester-2 review holds as closing.
+/// Such a line is optional, and does not block ratify (<see cref="BlocksRatify" />): whether another sitting has decided
+/// the window is read, by the one predicate the planner and the decisions-due page share, whenever the line is judged,
+/// and written as <see cref="CommitteeAgendaLineState.DecidedElsewhere" /> once the review settles its agenda.
 /// </para>
 /// <para>
 /// <b>No user id.</b> Who deferred a line is the audit row's, so erasure has nothing here to pseudonymise.
@@ -192,10 +206,17 @@ public sealed class CommitteeAgendaLine
         => Create(CommitteeAgendaLineOrigin.Chair, curriculumItemId, epaId, epaCode, epaTitle, window, isClosing: false);
 
     /// <summary>
-    /// Whether this line keeps the review from being ratified: still due, closing, and no decision is staged on it. The
-    /// predicate the ratify handler enforces and the page's disabled Ratify button says, so the two cannot disagree.
+    /// Whether this line keeps the review from being ratified: still due, closing, no decision is staged on it, and no other
+    /// sitting has decided its window. The predicate the record and ratify handlers enforce and the page's disabled Record
+    /// and Ratify buttons say, so they cannot disagree.
     /// </summary>
-    public bool BlocksRatify(bool staged) => State == CommitteeAgendaLineState.Due && IsClosing && !staged;
+    /// <param name="staged">Whether a decision on the EPA is staged at the review.</param>
+    /// <param name="decidedElsewhere">
+    /// Whether another sitting has decided the line's window since it was planned (T235): read by the caller, by the one
+    /// "is this window decided" predicate the planner and the decisions-due page share. Every caller states it.
+    /// </param>
+    public bool BlocksRatify(bool staged, bool decidedElsewhere)
+        => State == CommitteeAgendaLineState.Due && IsClosing && !staged && !decidedElsewhere;
 
     /// <summary>Puts the line off, with the reason the committee gives. Only a line still due can be deferred.</summary>
     public void Defer(string reason)
@@ -251,6 +272,20 @@ public sealed class CommitteeAgendaLine
         {
             EntrustmentDecisionId = decision.Id;
         }
+    }
+
+    /// <summary>
+    /// Another sitting decided the line's window, so the review settles it without deciding it here (T235): when the
+    /// committee's decision is recorded, or at ratify. Only a line still due.
+    /// </summary>
+    internal void SettleDecidedElsewhere()
+    {
+        if (State != CommitteeAgendaLineState.Due)
+        {
+            throw new InvalidOperationException($"{EpaCode} is not due at this review, so it cannot be settled as decided elsewhere.");
+        }
+
+        State = CommitteeAgendaLineState.DecidedElsewhere;
     }
 
     /// <summary>The review was ratified without deciding this optional line.</summary>

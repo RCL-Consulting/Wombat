@@ -73,7 +73,7 @@ public sealed class EntrustmentOnlyReviewTests
     {
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
 
-        var decision = review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember);
+        var decision = review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
         review.Ratify("chair-1", Now);
 
         Assert.Null(decision.Category);
@@ -86,7 +86,7 @@ public sealed class EntrustmentOnlyReviewTests
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
 
         var refusal = Assert.Throws<InvalidOperationException>(() => review.RecordDecision(
-            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember));
+            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []));
 
         Assert.Equal(CommitteeReview.EntrustmentOnlyRecordsNoCategory, refusal.Message);
         Assert.Empty(review.Decisions);
@@ -101,7 +101,7 @@ public sealed class EntrustmentOnlyReviewTests
         var review = StartedReview(type);
 
         var refusal = Assert.Throws<InvalidOperationException>(() => review.RecordDecision(
-            null, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember));
+            null, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []));
 
         Assert.Equal(CommitteeReview.ProgressionNeedsACategory, refusal.Message);
         Assert.Empty(review.Decisions);
@@ -114,7 +114,7 @@ public sealed class EntrustmentOnlyReviewTests
         var review = StartedReview(CommitteeReviewType.AnnualProgression);
 
         Assert.Throws<InvalidOperationException>(() => review.RecordDecision(
-            (CommitteeDecisionCategory)99, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember));
+            (CommitteeDecisionCategory)99, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []));
 
         Assert.Empty(review.Decisions);
     }
@@ -125,7 +125,7 @@ public sealed class EntrustmentOnlyReviewTests
         // Recording refuses it; a decision stored otherwise (a row written before this rule, or a review's type changed
         // under it) is what ratify's own branch is for.
         var review = StartedReview(CommitteeReviewType.AnnualProgression);
-        review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember);
+        review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
         ReplaceTheDecisionWith(review, category: null);
 
         var refusal = Assert.Throws<InvalidOperationException>(() => review.Ratify("chair-1", Now));
@@ -140,7 +140,7 @@ public sealed class EntrustmentOnlyReviewTests
     public void Ratify_RefusesAnEntrustmentOnlyReviewWhoseDecisionRecordsACategory_AndStampsNothing()
     {
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
-        review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember);
+        review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
         ReplaceTheDecisionWith(review, CommitteeDecisionCategory.SatisfactoryProgress);
 
         var refusal = Assert.Throws<InvalidOperationException>(() => review.Ratify("chair-1", Now));
@@ -216,7 +216,7 @@ public sealed class EntrustmentOnlyReviewTests
         // Its decision is what its agenda holds; with nothing on it, the decision would be a rationale about nothing.
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
 
-        var recording = Assert.Throws<InvalidOperationException>(() => review.EnsureAgendaSettled([]));
+        var recording = Assert.Throws<InvalidOperationException>(() => review.EnsureAgendaSettled([], []));
 
         Assert.Equal("The committee's decision cannot be recorded yet: " + CommitteeReview.NothingOnTheAgenda, recording.Message);
         Assert.Equal(CommitteeReview.NothingOnTheAgenda, review.EmptyAgendaRefusal());
@@ -229,9 +229,9 @@ public sealed class EntrustmentOnlyReviewTests
         // T167's exception can remove the one staged STAR, and its chair's line, after the decision is recorded. The review
         // cannot go back to stage another, so ratify does not ask again: it would leave the review decided for good.
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
-        review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember);
+        review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
 
-        review.EnsureAgendaClosable([]);
+        review.EnsureAgendaClosable([], []);
         review.Ratify("chair-1", Now);
 
         Assert.Equal(CommitteeReviewState.Ratified, review.State);
@@ -244,10 +244,10 @@ public sealed class EntrustmentOnlyReviewTests
         // refused, never an agenda whose lines were left.
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly, [OpportunisticLine()]);
 
-        review.EnsureAgendaSettled([]);
-        review.RecordDecision(null, "Nothing on PAED-009 this semester.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember);
+        review.EnsureAgendaSettled([], []);
+        review.RecordDecision(null, "Nothing on PAED-009 this semester.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
         review.Ratify("chair-1", Now);
-        review.CloseAgenda(new Dictionary<int, Wombat.Domain.EntrustmentDecisions.EntrustmentDecision>());
+        review.CloseAgenda(new Dictionary<int, Wombat.Domain.EntrustmentDecisions.EntrustmentDecision>(), []);
 
         Assert.Null(review.EmptyAgendaRefusal());
         Assert.Equal(CommitteeAgendaLineState.NotDecided, review.AgendaLines.Single().State);
@@ -261,7 +261,7 @@ public sealed class EntrustmentOnlyReviewTests
         // Its decision is its category.
         var review = StartedReview(type);
 
-        review.EnsureAgendaSettled([]);
+        review.EnsureAgendaSettled([], []);
 
         Assert.Null(review.EmptyAgendaRefusal());
     }
@@ -315,7 +315,7 @@ public sealed class EntrustmentOnlyReviewTests
         var review = StartedReview(type);
         review.RecordDecision(
             type == CommitteeReviewType.EntrustmentOnly ? null : CommitteeDecisionCategory.SatisfactoryProgress,
-            "Decided.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember);
+            "Decided.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
         review.Ratify("chair-1", Now);
         review.LodgeAppeal("The level understates my supervised practice.", "trainee-1", Now);
         return review;

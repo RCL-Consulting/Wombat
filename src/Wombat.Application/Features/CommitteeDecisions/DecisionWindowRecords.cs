@@ -139,6 +139,40 @@ internal sealed class DecisionWindowRecords
             .ToArray();
     }
 
+    /// <summary>
+    /// Whether the trainee's EPA is decided in the window: <see cref="CommitteeAgendaStatus.IsDecided" /> over the window's
+    /// agenda lines on any review and its STARs. What the planner skips an EPA for, and what an open review's own line is
+    /// read against (T215, T235).
+    /// </summary>
+    public bool IsDecided(string traineeUserId, int epaId, QuotaWindow window)
+        => CommitteeAgendaStatus.IsDecided(
+            LinesIn(traineeUserId, epaId, window).Select(line => Standing(line, window)),
+            StarStandingsIn(traineeUserId, epaId, window));
+
+    /// <summary>
+    /// Whether the trainee's EPA was decided in the window and has lost that decision
+    /// (<see cref="CommitteeAgendaStatus.HasLostItsDecision" />): the decisions-due page's "Revoked: re-decide". (T235)
+    /// </summary>
+    public bool HasLostItsDecision(string traineeUserId, int epaId, QuotaWindow window)
+        => CommitteeAgendaStatus.HasLostItsDecision(
+            LinesIn(traineeUserId, epaId, window).Select(line => Standing(line, window)),
+            StarStandingsIn(traineeUserId, epaId, window));
+
+    /// <summary>
+    /// The window an agenda line records, as these records read it: its semesters, the whole academic year for an annual
+    /// line (<see cref="CommitteeAgendaLine.WindowSemesters" />). Its status is the line's own, partial or counting; nothing
+    /// here reads the first counted period. (T235)
+    /// </summary>
+    public static QuotaWindow WindowOf(CommitteeAgendaLine line)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        return new QuotaWindow(
+            line.IsYearWindow ? QuotaPeriod.AcademicYear : QuotaPeriod.Semester,
+            line.WindowSemesters,
+            line.IsPartialPeriod ? QuotaWindowStatus.ExemptPartialPeriod : QuotaWindowStatus.Counting,
+            FirstCountedPeriod: null);
+    }
+
     /// <summary>Whether the STAR decides the window (<see cref="CommitteeAgendaStatus.StarDecides" />).</summary>
     public bool Decides(DecisionWindowStar star, QuotaWindow window)
         => CommitteeAgendaStatus.StarDecides(star, window, _starsById);

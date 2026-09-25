@@ -1,4 +1,5 @@
 using Wombat.Application.Features.CommitteeDecisions;
+using Wombat.Domain.CommitteeDecisions;
 
 namespace Wombat.Web.Components.Pages.CommitteeDecisions;
 
@@ -20,37 +21,65 @@ public static class CommitteeAgendaText
         CommitteeAgendaLineStatus.Decided => "Decided",
         CommitteeAgendaLineStatus.Deferred => "Deferred",
         CommitteeAgendaLineStatus.NotDecided => "Not decided",
+        CommitteeAgendaLineStatus.DecidedElsewhere => "Decided elsewhere",
         _ => status.ToString()
     };
 
     /// <summary>
     /// The badge a status wears (DESIGN.md § Badges, "Committee agenda"): the three shades of "still due" share the draft
-    /// badge and are told apart by their label.
+    /// badge and are told apart by their label, and so do the two of "decided".
     /// </summary>
     public static string BadgeClass(CommitteeAgendaLineStatus status) => status switch
     {
         CommitteeAgendaLineStatus.Staged => "badge-submitted",
         CommitteeAgendaLineStatus.Decided => "badge-completed",
+        CommitteeAgendaLineStatus.DecidedElsewhere => "badge-completed",
         CommitteeAgendaLineStatus.Deferred => "badge-accepted",
         CommitteeAgendaLineStatus.NotDecided => "badge-declined",
         _ => "badge-draft"
     };
 
     /// <summary>What a line's status means for this sitting, said under its badge; null where the badge says it all.</summary>
-    public static string? StatusDetail(CommitteeAgendaLineDto line) => line.Status switch
+    /// <param name="reviewState">
+    /// The review's state. A line decided elsewhere and still due is said to be open to staging only while the review is in
+    /// progress, the one state in which a decision can be staged (T235).
+    /// </param>
+    public static string? StatusDetail(CommitteeAgendaLineDto line, CommitteeReviewState reviewState) => line.Status switch
     {
         CommitteeAgendaLineStatus.Due => "Must be decided at this sitting, or deferred with a reason.",
         CommitteeAgendaLineStatus.DueByYearEnd => "Optional here; decided by the year's last sitting.",
         CommitteeAgendaLineStatus.PartialPeriod => "The trainee joined part-way through the window: optional, never missed.",
-        CommitteeAgendaLineStatus.AsOpportunityAllows => line.Origin == Wombat.Domain.CommitteeDecisions.CommitteeAgendaLineOrigin.Chair
+        CommitteeAgendaLineStatus.AsOpportunityAllows => line.Origin == CommitteeAgendaLineOrigin.Chair
             ? "Added by the chair."
             : "Decided as opportunity allows: optional.",
         CommitteeAgendaLineStatus.Staged => "A decision is staged below.",
         CommitteeAgendaLineStatus.Deferred => line.DeferralReason is null ? null : $"Reason: {line.DeferralReason}",
         CommitteeAgendaLineStatus.Decided => line.EntrustmentDecisionId is int starId ? $"STAR #{starId}." : null,
         CommitteeAgendaLineStatus.NotDecided => "The review was ratified without deciding it.",
+        CommitteeAgendaLineStatus.DecidedElsewhere => DecidedElsewhereDetail(line, reviewState),
         _ => null
     };
+
+    /// <summary>
+    /// A line another sitting has decided (T235). Once the review settled its agenda, the stored state says when. Still due,
+    /// it is optional; only a review in progress takes a decision staged on it, and a decided one settles it at ratify.
+    /// </summary>
+    private static string DecidedElsewhereDetail(CommitteeAgendaLineDto line, CommitteeReviewState reviewState)
+    {
+        const string Optional = "Another sitting has decided it in this window, so it need not be decided here.";
+
+        if (line.State != CommitteeAgendaLineState.Due)
+        {
+            return "Another sitting had decided it in this window when this review settled its agenda.";
+        }
+
+        return reviewState switch
+        {
+            CommitteeReviewState.InProgress => $"{Optional} A decision staged on it decides it again.",
+            CommitteeReviewState.Decided => $"{Optional} Ratifying the review records that.",
+            _ => Optional
+        };
+    }
 
     /// <summary>The opening of a ratified review's agenda on the trainee's own page (O6).</summary>
     public static string TraineeAgendaIntro(CommitteeAgendaDto agenda)
@@ -71,6 +100,7 @@ public static class CommitteeAgendaText
             CommitteeAgendaLineStatus.Deferred => line.DeferralReason is null ? null : $"The committee's reason: {line.DeferralReason}",
             CommitteeAgendaLineStatus.Decided => line.EntrustmentDecisionId is int starId ? $"STAR #{starId}." : null,
             CommitteeAgendaLineStatus.NotDecided => "Not decided at this review.",
+            CommitteeAgendaLineStatus.DecidedElsewhere => "Decided at another sitting in this window.",
             _ => null
         };
     }
@@ -198,5 +228,24 @@ public static class CommitteeAgendaText
     {
         ArgumentNullException.ThrowIfNull(codes);
         return codes.Count == 0 ? null : $"Already decided in this window, so not on the agenda: {Codes(codes)}.";
+    }
+
+    /// <summary>
+    /// The EPAs routed to the panel whose window lost its decision while the review sat, and which its agenda does not hold
+    /// (T235): an EPA Start left off because a STAR decided it, whose STAR has since been revoked. One sentence, in the
+    /// agenda card, so the chair can stage it. Null when there are none.
+    /// </summary>
+    public static string? NoLongerDecidedNote(IReadOnlyList<string> codes)
+    {
+        ArgumentNullException.ThrowIfNull(codes);
+
+        return codes.Count switch
+        {
+            0 => null,
+            1 => $"{codes[0]} is no longer decided in its window: the STAR that decided it has been revoked. It is not on " +
+                 "this agenda; stage a decision on it to decide it at this sitting.",
+            _ => $"{Codes(codes)} are no longer decided in their windows: the STARs that decided them have been revoked. " +
+                 "They are not on this agenda; stage a decision on each to decide it at this sitting."
+        };
     }
 }

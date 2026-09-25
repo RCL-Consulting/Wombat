@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
@@ -79,7 +80,14 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
         // quorum, and before the staged decisions themselves are judged: recording the decision demanded it too, so this
         // refuses only a review whose staged decision on a closing line has since been removed (T167's exception). The
         // page shows Ratify disabled with the same lines named (CommitteeAgendaDto.RatifyBlockedReason).
-        review.EnsureAgendaClosable(pending.Select(p => p.EpaId));
+        // T235: or decided elsewhere. Recording settled every line another sitting had decided by then; a line still due
+        // whose window another sitting has decided since is read now, by the window rule the agenda page reads, and is
+        // settled so when the agenda closes below. Read before the first mutation, so none of this review's STARs is
+        // among the records: the window is decided by another sitting's.
+        var decidedElsewhere = (await AgendaPlanner.PlanForReviewAsync(
+                _dbContext, review, ProgrammeCalendar.DateOf(utcNow), cancellationToken))
+            .DecidedElsewhere;
+        review.EnsureAgendaClosable(pending.Select(p => p.EpaId), decidedElsewhere);
 
         // T167: ratifying is what turns a staged decision into a STAR, so each is held to the trainee's curriculum again
         // here, not only when it was staged; the item, its ladder, its EPA or the trainee's curriculum may have changed
@@ -136,8 +144,9 @@ public sealed class RatifyCommitteeDecisionCommandHandler : IRequestHandler<Rati
         }
 
         // The agenda closes with the review: a staged line is Decided with its STAR (through the navigation, as the STAR has
-        // no id until the save below), an optional line nothing was staged on is NotDecided, a deferred one stays so.
-        review.CloseAgenda(issued.ToDictionary(pair => pair.Staged.EpaId, pair => pair.Decision));
+        // no id until the save below), a line another sitting has decided is DecidedElsewhere (T235), an optional line
+        // nothing was staged on is NotDecided, a deferred one stays so.
+        review.CloseAgenda(issued.ToDictionary(pair => pair.Staged.EpaId, pair => pair.Decision), decidedElsewhere);
 
         // Refused whole when the review or a staged row changed after it was read: the review's xmin token, and a staged
         // row that is no longer there to delete. So a decision staged, edited or removed meanwhile, or a second ratify,

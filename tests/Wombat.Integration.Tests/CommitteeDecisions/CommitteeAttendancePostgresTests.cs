@@ -132,7 +132,7 @@ public sealed class CommitteeAttendancePostgresTests : IAsyncLifetime
                     sitting);
                 review.RecordDecision(
                     CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", sitting,
-                    [members[0], members[1]]);
+                    [members[0], members[1]], [], []);
                 review.Ratify("chair-1", sitting);
 
                 // An appeal remits the decision; the appeal's own sitting takes the replacement. The chair sits for both,

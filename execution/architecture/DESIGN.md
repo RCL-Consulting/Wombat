@@ -799,11 +799,40 @@ no Agenda card. The card holds:
 
 - A muted sentence naming the period ("2026 S1") and saying that a line marked Due must be staged or deferred before
   ratify.
+- On a review in progress, the EPAs routed to this panel and due whose window lost its decision while the review sat,
+  and which the agenda does not hold (T235): an EPA Start left off because a STAR decided it, whose STAR has since been
+  revoked. They are named in one sentence of their own in a warning `Alert` (`#agenda-no-longer-decided`) directly
+  under the opening sentence, above the table: "PAED-003 is no longer decided in its window: the STAR that decided it
+  has been revoked. It is not on this agenda; stage a decision on it to decide it at this sitting." (plural: "PAED-003
+  and PAED-006 are no longer decided in their windows: the STARs that decided them have been revoked. They are not on
+  this agenda; stage a decision on each to decide it at this sitting."). The alert stands on the page until the chair
+  acts, so it takes `Role=""` and is not read out on every load. The chair gets one `.btn-outline.btn-sm` per EPA in an
+  `.actions-cell` row under the sentence, "Stage PAED-003", named by its own text (no `aria-label`, so the name holds the
+  visible words), which chooses the EPA in the staging form and moves the focus there, as a line's Stage does; staging it adds the chair's line, and
+  the EPA is named no longer. Anyone else reads the sentence alone. The EPA is never added to the agenda by itself: the
+  agenda was planned at Start and the decision recorded at this sitting settles it (D46). The sentence is not shown
+  before Start, which plans the EPA, nor once the decision is recorded, when nothing more can be staged and the
+  decisions-due page reads it as "Revoked: re-decide".
 - A `.clinic-table` with five columns: EPA (the row header), window ("2026 S1" for a semester, "2026" for an annual EPA),
   state, evidence count, and action. The action column is the chair's alone (T213): anyone else reads four columns, not
   an empty fifth. The caption counts the lines and the ones still to stage or defer. The state cell
   holds the badge and, under it, a `.muted` line saying what the state means for this sitting: the deferral's reason,
   the STAR a decided line names, or that an optional line is optional and why.
+- A line whose window another sitting has decided since it was planned reads "Decided elsewhere" (T235): a late
+  semester-1 sitting ratifying an annual EPA that the semester-2 review holds as closing. Whether the window is decided is
+  `CommitteeAgendaStatus.IsDecided`, the decisions-due page's and the planner's one predicate, read on the line's own
+  window whenever the agenda is read and when the decision is recorded and ratified. Such a line is optional: it is not
+  counted in the caption, and neither Record nor Ratify is disabled for it. While it is still due its muted line says
+  "Another sitting has decided it in this window, so it need not be decided here." On a review in progress, the one
+  state that takes a staged decision, it adds "A decision staged on it decides it again.", and the line offers Stage and
+  Defer as any line still due does. On a decided review awaiting ratify it adds "Ratifying the review records that.",
+  and on a scheduled review nothing. A review whose trainee has moved to another institution reads none of its lines
+  this way, since that would say what the new institution decided (T182); a speciality panel that no longer covers the
+  trainee at the same institution still does. Recording the decision settles it
+  (`DecidedElsewhere` is stored, D46), and so does ratify for one decided since; its muted line then says "Another sitting
+  had decided it in this window when this review settled its agenda." A settled line stays so if the other sitting's
+  STAR is later revoked: the decisions-due page shows that, and the next sitting plans the EPA again. The trainee's own
+  page says "Decided at another sitting in this window."
 - Each line offers only what its state allows. A Due line that is not staged offers Stage and Defer. Stage chooses the
   EPA in the staging form below and moves the focus there. A deferred line offers Reinstate. The others offer nothing.
   All of it only while the review is in progress: recording the decision fixes the agenda with the staged STARs (T165).
@@ -831,7 +860,7 @@ The badges. Each says the state in words, and the three kinds of "still due" sha
 |---|---|
 | Due, Due by year end, Partial period, As opportunity allows | `badge-draft` |
 | Staged | `badge-submitted` |
-| Decided | `badge-completed` |
+| Decided, Decided elsewhere | `badge-completed` |
 | Deferred | `badge-accepted` |
 | Not decided | `badge-declined` |
 
@@ -840,8 +869,8 @@ Another panel's decision uses the same badges: Not yet decided is `badge-draft`,
 is computed when the page is read, never stored. It means the window has ended with nothing decided, deferred, or on an
 open review's agenda. An EPA decided as opportunity allows, or in a partial period, is never missed.
 
-Record decision is a disabled button while a closing line is neither staged nor deferred (the T107 pattern above), and
-so is Ratify. Each one's `.workflow-action-reasons` line names the lines, in the refusal's own words
+Record decision is a disabled button while a closing line is neither staged, deferred nor decided elsewhere (the T107
+pattern above), and so is Ratify. Each one's `.workflow-action-reasons` line names the lines, in the refusal's own words
 (`CommitteeAgendaDto.RatifyBlockedReason`). Where more than one reason stands, the line gives the first the handler
 would refuse with: the panel's seats before the agenda for Record, the decision's quorum before the agenda for Ratify.
 The agenda is read again after every action on the page. A failure is a warning `Alert` in the card, never red beside
@@ -1040,7 +1069,9 @@ decision overtook reads "Revoked: re-decide". Missed is computed when the page i
 ended with nothing decided, deferred or on an open review's agenda, and an EPA decided as opportunity allows, or in a
 partial period, is never missed. The agenda planner, its "routed elsewhere" list and its "Already decided in this
 window" sentence read the same rule (`CommitteeAgendaStatus.IsDecided`), so a sitting never plans as due an EPA this page
-calls decided (T215).
+calls decided (T215). An open review's own lines are read against it too, so a line this page calls decided reads
+"Decided elsewhere" on the review and never holds back its Record or Ratify; and "Revoked: re-decide" is
+`CommitteeAgendaStatus.HasLostItsDecision`, the predicate a review in progress names an EPA off its agenda by (T235).
 
 ## Status dots
 

@@ -915,7 +915,7 @@ public sealed class CommitteeTraineeScopeTests
 
         if (command is "Ratify" or "ResolveAppeal")
         {
-            review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-a", now, PresentAtA);
+            review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-a", now, PresentAtA, [], []);
         }
 
         if (command == "ResolveAppeal")

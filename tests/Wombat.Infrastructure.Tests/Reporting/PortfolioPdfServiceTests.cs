@@ -512,7 +512,7 @@ public sealed class PortfolioPdfServiceTests
         review.Start([], "chair-1", sitting);
         review.RecordDecision(
             type == CommitteeReviewType.EntrustmentOnly ? null : CommitteeDecisionCategory.SatisfactoryProgress,
-            "On track.", null, "chair-1", sitting, members);
+            "On track.", null, "chair-1", sitting, members, [], []);
         review.Ratify("chair-1", sitting);
 
         db.Set<DecisionPanel>().Add(panel);

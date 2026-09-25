@@ -237,6 +237,133 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     }
 
     [Fact]
+    public void AnEpaNoLongerDecided_IsNamedInItsOwnSentence_AboveTheTable_AndTheChairCanStageIt()
+    {
+        // T235: Start left PAED-002 off because a STAR decided its window, and that STAR was revoked while the review sat.
+        // It is not added to the agenda (D46); the card names it so the chair can stage it.
+        var cut = Render(
+            CommitteeReviewState.InProgress,
+            Agenda(Due(1, "PAED-001")) with { NoLongerDecided = [new CommitteeAgendaEpaDto(2, "PAED-002", "EPA 2")] },
+            seatsAQuorum: true);
+
+        var note = cut.Find("#agenda-no-longer-decided");
+        note.ClassList.Should().Contain("alert-warning");
+        note.HasAttribute("role").Should().BeFalse("it stands on the page until acted on, so it is not read out on every load");
+        Text(note.QuerySelector("p")!).Should().Be(
+            "PAED-002 is no longer decided in its window: the STAR that decided it has been revoked. It is not on this " +
+            "agenda; stage a decision on it to decide it at this sitting.");
+        note.Closest("section")!.QuerySelector("h3")!.TextContent.Should().Be("Agenda");
+        cut.FindAll("#agenda-no-longer-decided ~ .table-container").Should().ContainSingle("it sits above the table");
+        cut.FindAll("#agenda-line-2").Should().BeEmpty("it is not on the agenda");
+        RecordButton(cut).HasAttribute("disabled").Should().BeTrue("guard: PAED-001 still blocks, and PAED-002 does not add to it");
+        Text(cut.Find("#record-reason")).Should().NotContain("PAED-002");
+
+        var stage = note.QuerySelectorAll("button").Should().ContainSingle().Subject;
+        Text(stage).Should().Be("Stage PAED-002");
+        stage.HasAttribute("aria-label").Should().BeFalse("its text names it, and a label without that text would break label-in-name");
+
+        stage.Click();
+
+        cut.Find("#pending-epa").GetAttribute("value").Should().Be("2", "Stage chooses the EPA in the staging form, as a line's Stage does");
+    }
+
+    [Fact]
+    public void TwoEpasNoLongerDecided_AreNamedInOneSentence_EachWithItsStageButton()
+    {
+        var cut = Render(
+            CommitteeReviewState.InProgress,
+            Agenda(Due(1, "PAED-001")) with
+            {
+                NoLongerDecided = [new CommitteeAgendaEpaDto(2, "PAED-002", "EPA 2"), new CommitteeAgendaEpaDto(3, "PAED-003", "EPA 3")]
+            });
+
+        var note = cut.Find("#agenda-no-longer-decided");
+        Text(note.QuerySelector("p")!).Should().Be(
+            "PAED-002 and PAED-003 are no longer decided in their windows: the STARs that decided them have been revoked. " +
+            "They are not on this agenda; stage a decision on each to decide it at this sitting.");
+        Buttons(note).Should().Equal("Stage PAED-002", "Stage PAED-003");
+    }
+
+    [Fact]
+    public void AnEpaNoLongerDecided_IsNamedToAReaderWhoIsNotTheChair_WithNoButton()
+    {
+        var cut = Render(
+            CommitteeReviewState.InProgress,
+            Agenda(Due(1, "PAED-001")) with { NoLongerDecided = [new CommitteeAgendaEpaDto(2, "PAED-002", "EPA 2")] },
+            callerChairs: false);
+
+        var note = cut.Find("#agenda-no-longer-decided");
+        Text(note).Should().StartWith("PAED-002 is no longer decided in its window");
+        note.QuerySelectorAll("button").Should().BeEmpty("staging is the chair's (T213)");
+    }
+
+    [Fact]
+    public void AnAgendaWithNothingNoLongerDecided_SaysNothingOfIt()
+    {
+        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
+
+        cut.FindAll("#agenda-no-longer-decided").Should().BeEmpty();
+        cut.Markup.Should().NotContain("no longer decided");
+    }
+
+    [Fact]
+    public void ALineDecidedElsewhere_SaysSo_AndDoesNotHoldBackRecord()
+    {
+        // T235: PAED-003's window was decided at another sitting after this review planned it. It is optional now: the
+        // chair may still stage it, and Record is offered with it neither staged nor deferred.
+        var cut = Render(
+            CommitteeReviewState.InProgress,
+            Agenda(
+                Staged(1, "PAED-001"),
+                Line(3, "PAED-003", CommitteeAgendaLineStatus.DecidedElsewhere, CommitteeAgendaLineState.Due, window: (2026, null), closing: true)),
+            seatsAQuorum: true);
+
+        var badge = Row(cut, 3).QuerySelector(".badge")!;
+        badge.TextContent.Should().Be("Decided elsewhere");
+        badge.ClassList.Should().Contain("badge-completed");
+        Text(Row(cut, 3)).Should().Contain(
+            "Another sitting has decided it in this window, so it need not be decided here. A decision staged on it decides it again.");
+        Buttons(Row(cut, 3)).Should().Equal("Stage", "Defer");
+        cut.Find("#agenda-heading ~ .table-container caption").TextContent.Should().Be("2 EPAs for 2026 S1");
+        RecordButton(cut).HasAttribute("disabled").Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(CommitteeReviewState.Scheduled, "")]
+    [InlineData(CommitteeReviewState.Decided, " Ratifying the review records that.")]
+    public void ALineDecidedElsewhere_OnAReviewNotInProgress_IsNotSaidToTakeAStagedDecision(CommitteeReviewState state, string rest)
+    {
+        // A decision can be staged only while the review is in progress: before Start staging is refused, and once the
+        // decision is recorded the staged decisions are fixed with it (D46). So the line's note offers no staging there; on
+        // a decided review, ratify settles the line (T235).
+        var cut = Render(
+            state,
+            Agenda(
+                Staged(1, "PAED-001"),
+                Line(3, "PAED-003", CommitteeAgendaLineStatus.DecidedElsewhere, CommitteeAgendaLineState.Due, window: (2026, null), closing: true)));
+
+        var detail = Text(Row(cut, 3).QuerySelector("td .muted")!);
+        detail.Should().Be("Another sitting has decided it in this window, so it need not be decided here." + rest);
+        detail.Should().NotContain("staged");
+        Buttons(Row(cut, 3)).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ALineSettledAsDecidedElsewhere_SaysWhenItWasSettled_AndOffersNothing()
+    {
+        var cut = Render(
+            CommitteeReviewState.Decided,
+            Agenda(
+                Staged(1, "PAED-001"),
+                Line(3, "PAED-003", CommitteeAgendaLineStatus.DecidedElsewhere, CommitteeAgendaLineState.DecidedElsewhere, window: (2026, null), closing: true)));
+
+        Text(Row(cut, 3)).Should().Contain("Decided elsewhere")
+            .And.Contain("Another sitting had decided it in this window when this review settled its agenda.");
+        Buttons(Row(cut, 3)).Should().BeEmpty();
+        RatifyButton(cut).HasAttribute("disabled").Should().BeFalse();
+    }
+
+    [Fact]
     public void AnAgendaWithNothingAlreadyDecided_SaysNothingOfIt()
     {
         var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
@@ -514,14 +641,16 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     /// review names no panel member.
     /// </param>
     /// <param name="pending">The staged decisions the page loads with; none unless given.</param>
+    /// <param name="callerChairs">Whether the reader holds the panel's Chair seat (T213); these tests act as the chair unless told otherwise.</param>
     private IRenderedComponent<ReviewDetail> Render(
         CommitteeReviewState state,
         CommitteeAgendaDto? agenda,
         bool formative = false,
         bool seatsAQuorum = false,
-        IReadOnlyList<PendingEntrustmentDecisionDto>? pending = null)
+        IReadOnlyList<PendingEntrustmentDecisionDto>? pending = null,
+        bool callerChairs = true)
     {
-        var review = Review(state, agenda, formative, seatsAQuorum);
+        var review = Review(state, agenda, formative, seatsAQuorum) with { CallerChairs = callerChairs };
 
         _sender
             .On<GetCommitteeReviewByIdQuery>(_ => review)

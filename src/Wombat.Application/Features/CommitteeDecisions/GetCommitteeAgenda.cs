@@ -87,18 +87,25 @@ internal static class CommitteeAgendaReader
             .ToDictionary(group => group.Key, group => group.Count());
 
         var sitting = review.Period;
+
+        // T235: the plan for the review's own sitting reads each line it still holds due against the window rule, as the
+        // record and ratify handlers do, so a line another sitting has decided reads as optional here and there.
+        var plan = await AgendaPlanner.PlanForReviewAsync(dbContext, review, today, cancellationToken);
+
         var lines = review.AgendaLines
             .OrderBy(line => line.EpaCode, StringComparer.Ordinal)
             .ThenBy(line => line.EpaId)
-            .Select(line => ToDto(line, sitting, staged.Contains(line.EpaId), evidenceByEpa.GetValueOrDefault(line.EpaId)))
+            .Select(line => ToDto(
+                line,
+                sitting,
+                staged.Contains(line.EpaId),
+                plan.DecidedElsewhere.Contains(line.EpaId),
+                evidenceByEpa.GetValueOrDefault(line.EpaId)))
             .ToArray();
 
-        var plan = review.IsFormative
-            ? AgendaPlan.Empty
-            : await AgendaPlanner.PlanAsync(dbContext, review.TraineeUserId, review.Panel, sitting, today, cancellationToken);
-
         // What a STAR already decided in its window, so the planner left it off (T215); an EPA this review holds a line
-        // for is not named: its line says what this sitting did with it.
+        // for is not named: its line says what this sitting did with it. The same holds the other way round (T235): an EPA
+        // whose decision was revoked is named only while the review sits and holds no line for it, for the chair to stage.
         var onAgenda = review.AgendaLines.Select(line => line.EpaId).ToHashSet();
 
         return new CommitteeAgendaDto(
@@ -111,12 +118,24 @@ internal static class CommitteeAgendaReader
             plan.RoutedElsewhere)
         {
             DecidesProgression = review.DecidesProgression,
-            DecidedInWindow = plan.DecidedInWindow.Where(epa => !onAgenda.Contains(epa.EpaId)).Select(epa => epa.Code).ToArray()
+            DecidedInWindow = plan.DecidedInWindow.Where(epa => !onAgenda.Contains(epa.EpaId)).Select(epa => epa.Code).ToArray(),
+            NoLongerDecided = review.State == CommitteeReviewState.InProgress
+                ? plan.NoLongerDecided.Where(epa => !onAgenda.Contains(epa.EpaId)).ToArray()
+                : []
         };
     }
 
     /// <summary>A line as the page shows it. <paramref name="evidenceCount" /> is the snapshot's lines about its EPA.</summary>
-    public static CommitteeAgendaLineDto ToDto(CommitteeAgendaLine line, AcademicPeriod sitting, bool staged, int evidenceCount)
+    /// <param name="decidedElsewhere">
+    /// Whether the line is still due and another sitting has decided its window (<see cref="AgendaPlan.DecidedElsewhere" />,
+    /// T235): false for a line the planner has just planned, which it plans only when the window is undecided.
+    /// </param>
+    public static CommitteeAgendaLineDto ToDto(
+        CommitteeAgendaLine line,
+        AcademicPeriod sitting,
+        bool staged,
+        bool decidedElsewhere,
+        int evidenceCount)
     {
         ArgumentNullException.ThrowIfNull(line);
 
@@ -132,18 +151,19 @@ internal static class CommitteeAgendaReader
             line.IsClosing,
             line.IsPartialPeriod,
             line.State,
-            StatusOf(line, sitting, staged),
+            StatusOf(line, sitting, staged, decidedElsewhere),
             staged && line.State == CommitteeAgendaLineState.Due,
-            line.BlocksRatify(staged),
+            line.BlocksRatify(staged, decidedElsewhere),
             line.DeferralReason,
             line.EntrustmentDecisionId,
             evidenceCount);
     }
 
     /// <summary>
-    /// How a line reads: its state, and for a line still due, whether it is staged, closing, or optional and why.
+    /// How a line reads: its state, and for a line still due, whether it is staged, decided at another sitting (T235),
+    /// closing, or optional and why.
     /// </summary>
-    public static CommitteeAgendaLineStatus StatusOf(CommitteeAgendaLine line, AcademicPeriod sitting, bool staged)
+    public static CommitteeAgendaLineStatus StatusOf(CommitteeAgendaLine line, AcademicPeriod sitting, bool staged, bool decidedElsewhere)
     {
         ArgumentNullException.ThrowIfNull(line);
 
@@ -152,7 +172,9 @@ internal static class CommitteeAgendaReader
             CommitteeAgendaLineState.Decided => CommitteeAgendaLineStatus.Decided,
             CommitteeAgendaLineState.Deferred => CommitteeAgendaLineStatus.Deferred,
             CommitteeAgendaLineState.NotDecided => CommitteeAgendaLineStatus.NotDecided,
+            CommitteeAgendaLineState.DecidedElsewhere => CommitteeAgendaLineStatus.DecidedElsewhere,
             _ when staged => CommitteeAgendaLineStatus.Staged,
+            _ when decidedElsewhere => CommitteeAgendaLineStatus.DecidedElsewhere,
             _ when line.IsClosing => CommitteeAgendaLineStatus.Due,
             _ when line.IsPartialPeriod => CommitteeAgendaLineStatus.PartialPeriod,
             _ when line.Origin == CommitteeAgendaLineOrigin.Cadence && line.WindowSemesters[^1] != sitting

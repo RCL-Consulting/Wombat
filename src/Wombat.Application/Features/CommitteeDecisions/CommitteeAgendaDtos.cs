@@ -32,7 +32,15 @@ public enum CommitteeAgendaLineStatus
     Deferred = 7,
 
     /// <summary>An optional line the review was ratified without.</summary>
-    NotDecided = 8
+    NotDecided = 8,
+
+    /// <summary>
+    /// Another sitting has decided the EPA in the line's window (T235): optional here, and never blocks ratify. Read live
+    /// while the line is still due on an open review, by the one predicate the planner and the decisions-due page share
+    /// (<see cref="CommitteeAgendaStatus.IsDecided" />), and stored once the review settles its agenda
+    /// (<see cref="CommitteeAgendaLineState.DecidedElsewhere" />).
+    /// </summary>
+    DecidedElsewhere = 9
 }
 
 /// <summary>One line of a review's agenda, as the page shows it. (T131 slice 4)</summary>
@@ -40,7 +48,7 @@ public enum CommitteeAgendaLineStatus
 /// <param name="IsStaged">Whether a decision on the EPA is staged at the review: read, never stored.</param>
 /// <param name="BlocksRatify">
 /// Whether the line keeps the review from being ratified: <see cref="CommitteeAgendaLine.BlocksRatify" />, the predicate
-/// the ratify handler enforces.
+/// the record and ratify handlers enforce, with whether another sitting has decided its window read as they read it (T235).
 /// </param>
 /// <param name="EvidenceCount">How many lines of the review's evidence snapshot are about the EPA.</param>
 public sealed record CommitteeAgendaLineDto(
@@ -100,6 +108,9 @@ public sealed record CommitteeAgendaElsewhereDto(
     string WindowLabel,
     CommitteeAgendaElsewhereStatus Status);
 
+/// <summary>An EPA named beside a review's agenda, off it: its id, so the chair can stage it, and its code and title. (T235)</summary>
+public sealed record CommitteeAgendaEpaDto(int EpaId, string EpaCode, string EpaTitle);
+
 /// <summary>A review's agenda. (T131 slice 4)</summary>
 /// <param name="PeriodLabel">The period the review sits for: "2026 S1".</param>
 /// <param name="RoutedElsewhere">EPAs due in the period that another panel decides, read live.</param>
@@ -133,6 +144,16 @@ public sealed record CommitteeAgendaDto(
     /// Empty for a formative review.
     /// </summary>
     public IReadOnlyList<string> DecidedInWindow { get; init; } = [];
+
+    /// <summary>
+    /// On a review in progress, the EPAs routed to this panel and due for the period whose window was decided and has lost
+    /// that decision (<see cref="CommitteeAgendaStatus.HasLostItsDecision" />, T235), and which the agenda does not hold, in
+    /// code order: an EPA Start left off because a STAR decided it, whose STAR has since been revoked. Named so the chair
+    /// can stage it, which adds the chair's line; never added by itself, since the agenda was planned at Start and the
+    /// decision recorded at this sitting settles it (D46). Empty in every other state: before Start, Start plans the EPA;
+    /// once the decision is recorded, nothing more is staged, and the decisions-due page reads it as revoked.
+    /// </summary>
+    public IReadOnlyList<CommitteeAgendaEpaDto> NoLongerDecided { get; init; } = [];
 
     /// <summary>Why the review cannot be ratified yet, in the ratify refusal's own words; null when nothing blocks it.</summary>
     public string? RatifyBlockedReason
@@ -248,7 +269,9 @@ public static class CommitteeAgendaStatus
     /// Whether the EPA's window is decided: a STAR from a sitting for a period in the window still decides it
     /// (<see cref="StarDecides" />), whether or not an agenda line records it, or a line Decided on such a STAR does. The
     /// one predicate the agenda planner, its report of what another panel decides, and the decisions-due page share, so
-    /// none of them can call due a window another calls decided (T215).
+    /// none of them can call due a window another calls decided (T215); and the one an open review's own lines are read
+    /// against, when its agenda is read, its decision recorded and it is ratified, so a line whose window another sitting
+    /// decided never blocks ratify (T235).
     /// </summary>
     /// <remarks>
     /// Agenda lines are the record of what a sitting did; the STAR is the fact. A STAR ratified before agendas existed, or
@@ -262,6 +285,27 @@ public static class CommitteeAgendaStatus
         ArgumentNullException.ThrowIfNull(lines);
         ArgumentNullException.ThrowIfNull(starsInWindow);
         return starsInWindow.Any(star => star.Decides) || lines.Any(line => line.Decides);
+    }
+
+    /// <summary>
+    /// Whether the EPA's window was decided and has lost that decision: <see cref="IsDecided" /> says no, and a STAR from a
+    /// sitting in the window, or a line Decided on one, says it was. What the decisions-due page reads as "Revoked:
+    /// re-decide", and what a review in progress names beside its agenda when the EPA is not on it (T235).
+    /// </summary>
+    /// <remarks>
+    /// Nothing deciding the window, every STAR of it is one the window has lost: revoked, or superseded inside the window by
+    /// one since revoked.
+    /// </remarks>
+    /// <param name="lines">The agenda lines about the EPA in the window, on any of the trainee's reviews.</param>
+    /// <param name="starsInWindow">Every STAR on the EPA from a sitting for a period in the window.</param>
+    public static bool HasLostItsDecision(IEnumerable<AgendaLineStanding> lines, IEnumerable<StarStanding> starsInWindow)
+    {
+        ArgumentNullException.ThrowIfNull(lines);
+        ArgumentNullException.ThrowIfNull(starsInWindow);
+
+        var lineStandings = lines.ToArray();
+        var stars = starsInWindow.ToArray();
+        return !IsDecided(lineStandings, stars) && (stars.Length > 0 || lineStandings.Any(line => line.Lapsed));
     }
 
     /// <summary>
@@ -409,8 +453,8 @@ public static class CommitteeAgendaStatus
         }
 
         // Nothing decides the window, so any STAR of it is one the window has lost: revoked, or superseded inside it by
-        // one since revoked.
-        if (stars.Length > 0 || lineStandings.Any(line => line.Lapsed))
+        // one since revoked. The predicate a review in progress names such an EPA by (T235).
+        if (HasLostItsDecision(lineStandings, stars))
         {
             return EntrustmentDecisionDueStatus.Revoked;
         }

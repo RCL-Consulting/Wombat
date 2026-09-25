@@ -32,6 +32,20 @@ internal sealed record AgendaPlan(
 
     /// <summary>The plan for a panel the trainee is no longer eligible for: nothing, and nothing about anyone else.</summary>
     public static readonly AgendaPlan Stranded = new(true, [], [], [], false);
+
+    /// <summary>
+    /// Of <see cref="Lines" />, the EPAs whose window was decided and has lost that decision
+    /// (<see cref="CommitteeAgendaStatus.HasLostItsDecision" />), in code order: what a review in progress names when its
+    /// agenda does not hold one (T235).
+    /// </summary>
+    public IReadOnlyList<CommitteeAgendaEpaDto> NoLongerDecided { get; init; } = [];
+
+    /// <summary>
+    /// The EPAs of the review's own lines still due whose window another sitting has decided
+    /// (<see cref="CommitteeAgendaStatus.IsDecided" /> on the line's own window): optional, and never blocking ratify (T235).
+    /// Filled only by <see cref="AgendaPlanner.PlanForReviewAsync" />; empty for a sitting not yet scheduled.
+    /// </summary>
+    public IReadOnlySet<int> DecidedElsewhere { get; init; } = new HashSet<int>();
 }
 
 /// <summary>An EPA the planner left off because a STAR already decided its window. (T215)</summary>
@@ -63,7 +77,10 @@ internal sealed record DecidedEpa(int EpaId, string Code);
 /// <para>
 /// <b>A review its trainee has left.</b> A panel plans, and reports, nothing for a trainee it is not eligible for
 /// (<see cref="DecisionRouting.IsEligible" />): a trainee who has moved to another institution strands their open review
-/// (T182), and its page must not show the new institution's panels or where its decisions stand.
+/// (T182), and its page must not show the new institution's panels or where its decisions stand. So such a review's own
+/// lines are not read against the window rule either (T235). A speciality panel at the trainee's own institution that no
+/// longer covers their speciality plans nothing more too, but its lines are still read, since nothing there is another
+/// institution's. With no profile at all, where the trainee trains is unknown, and nothing is read.
 /// </para>
 /// <para>
 /// <b>What another sitting already did.</b> A decision is the trainee's and goes with them. A window is decided by a STAR
@@ -78,6 +95,17 @@ internal sealed record DecidedEpa(int EpaId, string Code);
 /// decision stands here.
 /// </para>
 /// <para>
+/// <b>What changes while a review is open</b> (T235). An agenda is planned at schedule and at Start, and a window can be
+/// decided, or lose its decision, while the review is open. Each line the review still holds due is read against the same
+/// predicate, on its own window, whenever it is judged (<see cref="PlanForReviewAsync" />: the agenda read, recording the
+/// decision, ratify, and deferring after the recording): one another sitting has decided is optional, and never blocks
+/// ratify. The other way round, an EPA Start left off because a STAR decided its window, whose STAR has since been revoked,
+/// is named beside the agenda (<see cref="AgendaPlan.NoLongerDecided" />) and is not added to it. Adding it would change,
+/// under the chair, the agenda Start planned and the decision recorded at this sitting settles (D46); staging a decision
+/// on it adds the chair's line, as for any EPA that routes here, and otherwise the decisions-due page reads it as revoked
+/// and the next sitting plans it.
+/// </para>
+/// <para>
 /// Reads only. Every caller runs it before its first mutation.
 /// </para>
 /// </remarks>
@@ -85,12 +113,44 @@ internal static class AgendaPlanner
 {
     /// <summary>What a sitting of <paramref name="panel" /> for <paramref name="sitting" /> would put on its agenda.</summary>
     /// <param name="today">The programme's today (<see cref="ProgrammeCalendar.DateOf" />): only "missed" reads it.</param>
-    public static async Task<AgendaPlan> PlanAsync(
+    public static Task<AgendaPlan> PlanAsync(
         IApplicationDbContext dbContext,
         string traineeUserId,
         DecisionPanel panel,
         AcademicPeriod sitting,
         DateOnly today,
+        CancellationToken cancellationToken)
+        => PlanAsync(dbContext, traineeUserId, panel, sitting, today, held: [], cancellationToken);
+
+    /// <summary>
+    /// The plan for the review's own sitting, with each line it still holds due read against the window rule
+    /// (<see cref="AgendaPlan.DecidedElsewhere" />, T235): the one read the agenda, and the record, ratify and defer
+    /// handlers share, so the page's disabled Record and Ratify say what the handlers refuse. Nothing for a formative
+    /// review, which carries no agenda. Reads only.
+    /// </summary>
+    /// <param name="review">The review, with its <see cref="CommitteeReview.Panel" /> and agenda lines loaded.</param>
+    /// <param name="today">The programme's today: only "missed" reads it.</param>
+    public static Task<AgendaPlan> PlanForReviewAsync(
+        IApplicationDbContext dbContext,
+        CommitteeReview review,
+        DateOnly today,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(review);
+
+        return review.IsFormative
+            ? Task.FromResult(AgendaPlan.Empty)
+            : PlanAsync(dbContext, review.TraineeUserId, review.Panel, review.Period, today, review.AgendaLines.ToArray(), cancellationToken);
+    }
+
+    /// <param name="held">The lines the review already holds, each read against the window rule (T235); none for a preview.</param>
+    private static async Task<AgendaPlan> PlanAsync(
+        IApplicationDbContext dbContext,
+        string traineeUserId,
+        DecisionPanel panel,
+        AcademicPeriod sitting,
+        DateOnly today,
+        IReadOnlyCollection<CommitteeAgendaLine> held,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
@@ -105,7 +165,18 @@ internal static class AgendaPlanner
         // A panel the trainee has left (T182) decides nothing for them, and is told nothing of their new institution.
         if (!DecisionRouting.IsEligible(panel, context.Trainee))
         {
-            return AgendaPlan.Stranded;
+            // T235: a panel at the trainee's own institution that no longer covers their speciality plans nothing more, but
+            // the lines its review holds are still read against the window rule, or one another sitting decided would block
+            // Record and Ratify while the decisions-due page calls it decided. Not for a trainee who has moved institution:
+            // that another sitting decided a line would say what their new institution did (T182), and the panel can act on
+            // nothing there anyway (CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync).
+            if (held.Count == 0 || context.Trainee.InstitutionId != panel.InstitutionId)
+            {
+                return AgendaPlan.Stranded;
+            }
+
+            var heldRecords = await DecisionWindowRecords.LoadAsync(dbContext, [traineeUserId], sitting.Year, cancellationToken);
+            return AgendaPlan.Stranded with { DecidedElsewhere = DecidedElsewhereOf(held, heldRecords, traineeUserId) };
         }
 
         // Every admitted item, so the plan can say whether this panel decides anything for the trainee; only those with a
@@ -125,9 +196,12 @@ internal static class AgendaPlanner
         var records = await DecisionWindowRecords.LoadAsync(dbContext, [traineeUserId], sitting.Year, cancellationToken);
         var institutionId = context.Trainee.InstitutionId;
 
+        var decidedElsewhere = DecidedElsewhereOf(held, records, traineeUserId);
+
         var lines = new List<CommitteeAgendaLine>();
         var elsewhere = new List<CommitteeAgendaElsewhereDto>();
         var decided = new List<DecidedEpa>();
+        var noLongerDecided = new List<CommitteeAgendaEpaDto>();
 
         foreach (var item in items
                      .Where(item => item.Cadence is not null)
@@ -148,7 +222,7 @@ internal static class AgendaPlanner
 
             if (DecisionRouting.RoutesTo(item.BodyKey, panel, context.Trainee, context.Panels))
             {
-                if (CommitteeAgendaStatus.IsDecided(inWindow.Select(line => records.Standing(line, window)), starsInWindow))
+                if (records.IsDecided(traineeUserId, item.EpaId, window))
                 {
                     decided.Add(new DecidedEpa(item.EpaId, item.Code));
                 }
@@ -156,6 +230,12 @@ internal static class AgendaPlanner
                 {
                     lines.Add(CommitteeAgendaLine.ForCadence(
                         item.CurriculumItemId, item.EpaId, item.Code, item.Title, item.IsOpportunistic, window, sitting));
+
+                    // T235: planned because its window lost the decision a STAR gave it.
+                    if (records.HasLostItsDecision(traineeUserId, item.EpaId, window))
+                    {
+                        noLongerDecided.Add(new CommitteeAgendaEpaDto(item.EpaId, item.Code, item.Title));
+                    }
                 }
 
                 continue;
@@ -184,8 +264,27 @@ internal static class AgendaPlanner
             }
         }
 
-        return new AgendaPlan(true, lines, elsewhere, decided, panelDecidesAnything);
+        return new AgendaPlan(true, lines, elsewhere, decided, panelDecidesAnything)
+        {
+            NoLongerDecided = noLongerDecided,
+            DecidedElsewhere = decidedElsewhere
+        };
     }
+
+    /// <summary>
+    /// The EPAs of the lines the review still holds due whose window another sitting has decided (T235): each read on the
+    /// window it records, by the rule the planner skips an EPA by. A line's window holds its sitting, so it lies in the year
+    /// the records were read for.
+    /// </summary>
+    private static HashSet<int> DecidedElsewhereOf(
+        IEnumerable<CommitteeAgendaLine> held,
+        DecisionWindowRecords records,
+        string traineeUserId)
+        => held
+            .Where(line => line.State == CommitteeAgendaLineState.Due &&
+                           records.IsDecided(traineeUserId, line.EpaId, DecisionWindowRecords.WindowOf(line)))
+            .Select(line => line.EpaId)
+            .ToHashSet();
 
     /// <summary>
     /// The line the chair adds by staging a decision on an EPA the review's agenda does not hold, or why the panel may not

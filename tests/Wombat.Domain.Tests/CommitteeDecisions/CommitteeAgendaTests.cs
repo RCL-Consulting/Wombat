@@ -111,7 +111,7 @@ public sealed class CommitteeAgendaTests
         line.Defer("  Rotation moved.  ");
         Assert.Equal(CommitteeAgendaLineState.Deferred, line.State);
         Assert.Equal("Rotation moved.", line.DeferralReason);
-        Assert.False(line.BlocksRatify(staged: false), "a deferred line lets the review through");
+        Assert.False(line.BlocksRatify(staged: false, decidedElsewhere: false), "a deferred line lets the review through");
         Assert.Throws<InvalidOperationException>(() => line.Defer("Again."));
 
         line.Reinstate();
@@ -175,18 +175,18 @@ public sealed class CommitteeAgendaTests
     {
         var review = StartedReviewWithFourLines();
 
-        var refusal = Assert.Throws<InvalidOperationException>(() => review.EnsureAgendaClosable([]));
+        var refusal = Assert.Throws<InvalidOperationException>(() => review.EnsureAgendaClosable([], []));
         Assert.Equal(
             "This review cannot be ratified: PAED-001 and PAED-002 must be decided at this sitting. Stage a decision on " +
             "each, or defer it with a reason.",
             refusal.Message);
 
-        review.EnsureAgendaClosable([1, 2]);
+        review.EnsureAgendaClosable([1, 2], []);
         review.AgendaLineFor(2)!.Defer("Not observed this semester.");
-        review.EnsureAgendaClosable([1]);
+        review.EnsureAgendaClosable([1], []);
         Assert.Equal(
             "PAED-001 must be decided at this sitting. Stage a decision on it, or defer it with a reason.",
-            CommitteeReview.OutstandingClosingLinesReason(review.OutstandingClosingLines([]).Select(line => line.EpaCode).ToArray()));
+            CommitteeReview.OutstandingClosingLinesReason(review.OutstandingClosingLines([], []).Select(line => line.EpaCode).ToArray()));
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public sealed class CommitteeAgendaTests
             "trainee-1", 1, 3, new DateOnly(2026, 7, 2), null, 30, "chair-1", "Consistent.",
             [EntrustmentEvidenceLink.FromSnapshot(new CommitteeEvidence { Id = 7, SourceType = CommitteeEvidenceSourceType.Activity, ActivityId = 5, SourceLabel = "Mini-CEX #5", Summary = "State: completed." })]);
 
-        review.CloseAgenda(new Dictionary<int, EntrustmentDecision> { [1] = star });
+        review.CloseAgenda(new Dictionary<int, EntrustmentDecision> { [1] = star }, []);
 
         Assert.Equal(CommitteeAgendaLineState.Decided, review.AgendaLineFor(1)!.State);
         Assert.Same(star, review.AgendaLineFor(1)!.EntrustmentDecision);
@@ -212,8 +212,78 @@ public sealed class CommitteeAgendaTests
     {
         var review = StartedReviewWithFourLines();
 
-        Assert.Throws<InvalidOperationException>(() => review.CloseAgenda(new Dictionary<int, EntrustmentDecision>()));
+        Assert.Throws<InvalidOperationException>(() => review.CloseAgenda(new Dictionary<int, EntrustmentDecision>(), []));
         Assert.All(review.AgendaLines, line => Assert.Equal(CommitteeAgendaLineState.Due, line.State));
+    }
+
+    // ---- Decided elsewhere (T235) -------------------------------------------------------------------------------------
+
+    [Fact]
+    public void AClosingLineAnotherSittingHasDecided_DoesNotBlockRatify()
+    {
+        var review = StartedReviewWithFourLines();
+
+        Assert.True(review.AgendaLineFor(2)!.BlocksRatify(staged: false, decidedElsewhere: false));
+        Assert.False(review.AgendaLineFor(2)!.BlocksRatify(staged: false, decidedElsewhere: true));
+        Assert.Equal(new[] { "PAED-001" }, review.OutstandingClosingLines([], [2]).Select(line => line.EpaCode));
+
+        review.EnsureAgendaSettled([1], [2]);
+        review.EnsureAgendaClosable([1], [2]);
+        var refusal = Assert.Throws<InvalidOperationException>(() => review.EnsureAgendaClosable([], [2]));
+        Assert.Equal(
+            "This review cannot be ratified: PAED-001 must be decided at this sitting. Stage a decision on it, or defer it " +
+            "with a reason.",
+            refusal.Message);
+    }
+
+    [Fact]
+    public void RecordingTheDecision_SettlesTheLinesDecidedElsewhere_ButNotOneStagedOnOrDeferred()
+    {
+        // PAED-001 is staged, PAED-002 deferred, and another sitting has decided all four windows: recording settles the two
+        // lines still due with nothing staged on them, and only those.
+        var review = StartedReviewWithFourLines();
+        review.AgendaLineFor(2)!.Defer("Not observed this semester.");
+
+        review.RecordDecision(
+            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", DateTime.UtcNow,
+            CommitteeQuorumFixture.ChairAndMember, stagedEpaIds: [1], decidedElsewhereEpaIds: [1, 2, 3, 8]);
+
+        Assert.Equal(CommitteeReviewState.Decided, review.State);
+        Assert.Equal(CommitteeAgendaLineState.Due, review.AgendaLineFor(1)!.State);
+        Assert.Equal(CommitteeAgendaLineState.Deferred, review.AgendaLineFor(2)!.State);
+        Assert.Equal(CommitteeAgendaLineState.DecidedElsewhere, review.AgendaLineFor(3)!.State);
+        Assert.Equal(CommitteeAgendaLineState.DecidedElsewhere, review.AgendaLineFor(8)!.State);
+        Assert.False(review.AgendaLineFor(3)!.BlocksRatify(staged: false, decidedElsewhere: false), "settled, it is no longer due");
+    }
+
+    [Fact]
+    public void ARefusedRecording_SettlesNothing()
+    {
+        var review = StartedReviewWithFourLines();
+
+        Assert.Throws<InvalidOperationException>(() => review.RecordDecision(
+            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", DateTime.UtcNow,
+            [CommitteeQuorumFixture.ChairAndMember.First()], stagedEpaIds: [], decidedElsewhereEpaIds: [1, 2, 3, 8]));
+
+        Assert.Equal(CommitteeReviewState.InProgress, review.State);
+        Assert.All(review.AgendaLines, line => Assert.Equal(CommitteeAgendaLineState.Due, line.State));
+    }
+
+    [Fact]
+    public void ClosingTheAgenda_SettlesALineDecidedElsewhere_UnlessRatifyingDecidesItHere()
+    {
+        var review = StartedReviewWithFourLines();
+        var star = EntrustmentDecision.Issue(
+            "trainee-1", 1, 3, new DateOnly(2026, 7, 2), null, 30, "chair-1", "Consistent.",
+            [EntrustmentEvidenceLink.FromSnapshot(new CommitteeEvidence { Id = 7, SourceType = CommitteeEvidenceSourceType.Activity, ActivityId = 5, SourceLabel = "Mini-CEX #5", Summary = "State: completed." })]);
+
+        review.CloseAgenda(new Dictionary<int, EntrustmentDecision> { [1] = star }, [1, 2, 3]);
+
+        Assert.Equal(CommitteeAgendaLineState.Decided, review.AgendaLineFor(1)!.State);
+        Assert.Equal(CommitteeAgendaLineState.DecidedElsewhere, review.AgendaLineFor(2)!.State);
+        Assert.Equal(CommitteeAgendaLineState.DecidedElsewhere, review.AgendaLineFor(3)!.State);
+        Assert.Equal(CommitteeAgendaLineState.NotDecided, review.AgendaLineFor(8)!.State);
+        Assert.Null(review.AgendaLineFor(2)!.EntrustmentDecisionId);
     }
 
     // ---- Fixture ------------------------------------------------------------------------------------------------------

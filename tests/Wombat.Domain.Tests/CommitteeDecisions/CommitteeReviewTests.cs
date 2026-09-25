@@ -41,7 +41,7 @@ public sealed class CommitteeReviewTests
             null,
             "chair-1",
             DateTime.UtcNow,
-            CommitteeQuorumFixture.ChairAndMember);
+            CommitteeQuorumFixture.ChairAndMember, [], []);
         review.Ratify("chair-1", DateTime.UtcNow);
 
         Assert.Equal(CommitteeReviewState.Ratified, review.State);
@@ -83,7 +83,7 @@ public sealed class CommitteeReviewTests
             "Focus on feedback turnaround.",
             "chair-1",
             DateTime.UtcNow,
-            CommitteeQuorumFixture.ChairAndMember);
+            CommitteeQuorumFixture.ChairAndMember, [], []);
 
         Assert.Equal(CommitteeReviewState.Decided, review.State);
 
@@ -129,7 +129,7 @@ public sealed class CommitteeReviewTests
             null,
             "chair-1",
             DateTime.UtcNow,
-            CommitteeQuorumFixture.ChairAndMember);
+            CommitteeQuorumFixture.ChairAndMember, [], []);
         review.Ratify("chair-1", DateTime.UtcNow);
         review.LodgeAppeal("Evidence reflects start-of-year skill.", "trainee-1", DateTime.UtcNow);
 

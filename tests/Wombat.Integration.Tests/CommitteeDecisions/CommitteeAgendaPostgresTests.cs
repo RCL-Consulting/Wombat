@@ -146,6 +146,11 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
             await InsertLineAsync(connection, reviewId, epaId: 2, windowSemester: null, state: 2, reason: "Rotation moved.");
             await InsertLineAsync(connection, reviewId, epaId: 3, windowSemester: 1, state: 4, reason: null);
 
+            // T235: 5 is DecidedElsewhere. The STAR that decided the window is another sitting's, so the line names none,
+            // and it carries no reason.
+            await InsertLineAsync(connection, reviewId, epaId: 4, windowSemester: null, state: 5, reason: null);
+            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 14, null, 5, "Decided at the semester-1 sitting."), "CK_CommitteeAgendaLines_DeferredHasAReason");
+
             await RefusedAsync(() => InsertLineAsync(connection, reviewId, 10, 3, 1, null), "CK_CommitteeAgendaLines_WindowSemester");
             await RefusedAsync(() => InsertLineAsync(connection, reviewId, 11, 1, 3, null), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
             await RefusedAsync(() => InsertLineAsync(connection, reviewId, 12, 1, 2, null), "CK_CommitteeAgendaLines_DeferredHasAReason");
@@ -180,6 +185,7 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
             await RefusedAsync(() => InsertLineAsync(connection, reviewId, 20, 1, 1, null, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
             await RefusedAsync(() => InsertLineAsync(connection, reviewId, 21, 1, 2, "Later.", starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
             await RefusedAsync(() => InsertLineAsync(connection, reviewId, 22, 1, 4, null, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
+            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 24, null, 5, null, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
             var decided = await InsertLineAsync(connection, reviewId, 23, 1, 3, null, starId);
 
             // STARs are revoked, never deleted; the key restricts, so a Decided line never loses the STAR it names.

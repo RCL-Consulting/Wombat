@@ -65,7 +65,9 @@ public sealed class CommitteeReview
 
     /// <summary>
     /// The EPAs the review is there to decide (T131 slice 4). Planned when a binding review is scheduled and again when it
-    /// starts, which only adds; then each line only changes state. A formative review has none.
+    /// starts, which only adds; then each line only changes state. A formative review has none. A line whose window another
+    /// sitting decides while the review is open reads as decided elsewhere, and is settled so (T235). After Start nothing is
+    /// added but a chair's line, by staging.
     /// </summary>
     public ICollection<CommitteeAgendaLine> AgendaLines { get; private set; } = [];
 
@@ -190,28 +192,37 @@ public sealed class CommitteeReview
     public CommitteeAgendaLine? AgendaLineFor(int epaId) => AgendaLines.FirstOrDefault(line => line.EpaId == epaId);
 
     /// <summary>
-    /// The closing lines still neither staged nor deferred, in code order: what keeps the review from being ratified
-    /// (Decision 6). <paramref name="stagedEpaIds" /> are the EPAs with a decision staged at the review.
+    /// The closing lines still neither staged, deferred nor decided elsewhere, in code order: what keeps the review from
+    /// being ratified (Decision 6, T235). <paramref name="stagedEpaIds" /> are the EPAs with a decision staged at the
+    /// review.
     /// </summary>
-    public IReadOnlyList<CommitteeAgendaLine> OutstandingClosingLines(IEnumerable<int> stagedEpaIds)
+    /// <param name="decidedElsewhereEpaIds">
+    /// The EPAs whose line is still due and whose window another sitting has decided (T235), read by the caller by the one
+    /// predicate the planner and the decisions-due page share: such a line is optional.
+    /// </param>
+    public IReadOnlyList<CommitteeAgendaLine> OutstandingClosingLines(
+        IEnumerable<int> stagedEpaIds,
+        IEnumerable<int> decidedElsewhereEpaIds)
     {
         ArgumentNullException.ThrowIfNull(stagedEpaIds);
+        ArgumentNullException.ThrowIfNull(decidedElsewhereEpaIds);
 
         var staged = stagedEpaIds.ToHashSet();
+        var decidedElsewhere = decidedElsewhereEpaIds.ToHashSet();
         return AgendaLines
-            .Where(line => line.BlocksRatify(staged.Contains(line.EpaId)))
+            .Where(line => line.BlocksRatify(staged.Contains(line.EpaId), decidedElsewhere.Contains(line.EpaId)))
             .OrderBy(line => line.EpaCode, StringComparer.Ordinal)
             .ThenBy(line => line.EpaId)
             .ToArray();
     }
 
     /// <summary>
-    /// Refuses, without changing anything, while a closing line is neither staged nor deferred. The ratify handler runs it
-    /// before its first mutation; <see cref="CloseAgenda" /> runs it again.
+    /// Refuses, without changing anything, while a closing line is neither staged, deferred nor decided elsewhere. The
+    /// ratify handler runs it before its first mutation; <see cref="CloseAgenda" /> runs it again.
     /// </summary>
-    public void EnsureAgendaClosable(IEnumerable<int> stagedEpaIds)
+    public void EnsureAgendaClosable(IEnumerable<int> stagedEpaIds, IEnumerable<int> decidedElsewhereEpaIds)
     {
-        var outstanding = OutstandingClosingLines(stagedEpaIds);
+        var outstanding = OutstandingClosingLines(stagedEpaIds, decidedElsewhereEpaIds);
         if (outstanding.Count > 0)
         {
             throw new InvalidOperationException(
@@ -221,17 +232,17 @@ public sealed class CommitteeReview
     }
 
     /// <summary>
-    /// Refuses, without changing anything, while a closing line is neither staged nor deferred: the check recording the
-    /// committee's decision runs before its first mutation. (T131 slice 4, T165)
+    /// Refuses, without changing anything, while a closing line is neither staged, deferred nor decided elsewhere: the check
+    /// recording the committee's decision runs before its first mutation. (T131 slice 4, T165, T235)
     /// </summary>
     /// <remarks>
     /// The decision the panel records fixes what it decided with it: the staged decisions (T165) and the deferrals, each
     /// the committee's reasoning, so neither changes once it is recorded. A decision recorded with a closing line still
     /// open would leave a review nothing could ratify, so the agenda is settled first, by the predicate ratify enforces.
     /// </remarks>
-    public void EnsureAgendaSettled(IEnumerable<int> stagedEpaIds)
+    public void EnsureAgendaSettled(IEnumerable<int> stagedEpaIds, IEnumerable<int> decidedElsewhereEpaIds)
     {
-        var outstanding = OutstandingClosingLines(stagedEpaIds);
+        var outstanding = OutstandingClosingLines(stagedEpaIds, decidedElsewhereEpaIds);
         if (outstanding.Count > 0)
         {
             throw new InvalidOperationException(
@@ -302,21 +313,31 @@ public sealed class CommitteeReview
     }
 
     /// <summary>
-    /// Closes the agenda as the review is ratified: a staged line is Decided with the STAR issued on it, an optional line
-    /// nothing was staged on is NotDecided, and a deferred line stays deferred. <paramref name="issuedByEpa" /> are the
-    /// STARs ratifying issues, by EPA.
+    /// Closes the agenda as the review is ratified: a staged line is Decided with the STAR issued on it, a line another
+    /// sitting has decided in its window is DecidedElsewhere (T235), any other line nothing was staged on is NotDecided, and
+    /// a deferred line stays deferred. <paramref name="issuedByEpa" /> are the STARs ratifying issues, by EPA.
     /// </summary>
-    public void CloseAgenda(IReadOnlyDictionary<int, EntrustmentDecision> issuedByEpa)
+    /// <param name="decidedElsewhereEpaIds">
+    /// The EPAs whose line is still due and whose window another sitting has decided, read by the ratify handler before its
+    /// first mutation (<see cref="OutstandingClosingLines" />).
+    /// </param>
+    public void CloseAgenda(IReadOnlyDictionary<int, EntrustmentDecision> issuedByEpa, IEnumerable<int> decidedElsewhereEpaIds)
     {
         ArgumentNullException.ThrowIfNull(issuedByEpa);
+        ArgumentNullException.ThrowIfNull(decidedElsewhereEpaIds);
 
-        EnsureAgendaClosable(issuedByEpa.Keys);
+        var decidedElsewhere = decidedElsewhereEpaIds.ToHashSet();
+        EnsureAgendaClosable(issuedByEpa.Keys, decidedElsewhere);
 
         foreach (var line in AgendaLines.Where(line => line.State == CommitteeAgendaLineState.Due).ToArray())
         {
             if (issuedByEpa.TryGetValue(line.EpaId, out var decision))
             {
                 line.Decide(decision);
+            }
+            else if (decidedElsewhere.Contains(line.EpaId))
+            {
+                line.SettleDecidedElsewhere();
             }
             else
             {
@@ -387,13 +408,21 @@ public sealed class CommitteeReview
     }
 
     /// <summary>
-    /// Records the committee's decision, and who was present when it was taken. (T165)
+    /// Records the committee's decision, and who was present when it was taken (T165), and settles the agenda with it: a
+    /// line still due, with nothing staged on it, whose window another sitting has decided is written DecidedElsewhere
+    /// (T235), so what the decision was taken beside is fixed with it, as the staged decisions and the deferrals are (D46).
     /// </summary>
     /// <param name="present">
     /// The panel members who sat, as the panel holds them now: at least <see cref="Quorum" /> distinct members, the
     /// recording chair among them in the Chair role. Each is copied onto the decision
     /// (<see cref="CommitteeDecision.Attendees" />) with the role they held, so a later change to the panel does not
     /// rewrite who took it.
+    /// </param>
+    /// <param name="stagedEpaIds">The EPAs with a decision staged at the review.</param>
+    /// <param name="decidedElsewhereEpaIds">
+    /// The EPAs whose line is still due and whose window another sitting has decided, read by the record handler before
+    /// the first mutation, and given to <see cref="EnsureAgendaSettled" /> too. There is no overload without it: every
+    /// caller states what it read, so none records a decision that leaves such a line unsettled (T235).
     /// </param>
     /// <remarks>
     /// Every check runs before anything is changed. The audit pipeline saves the request's context from its catch, so
@@ -405,9 +434,13 @@ public sealed class CommitteeReview
         string? conditions,
         string actorUserId,
         DateTime utcNow,
-        IReadOnlyCollection<DecisionPanelMember> present)
+        IReadOnlyCollection<DecisionPanelMember> present,
+        IEnumerable<int> stagedEpaIds,
+        IEnumerable<int> decidedElsewhereEpaIds)
     {
         ArgumentNullException.ThrowIfNull(present);
+        ArgumentNullException.ThrowIfNull(stagedEpaIds);
+        ArgumentNullException.ThrowIfNull(decidedElsewhereEpaIds);
 
         if (IsFormative)
         {
@@ -430,8 +463,24 @@ public sealed class CommitteeReview
         // Built, and so validated, before the review is touched.
         var decision = CommitteeDecision.Create(category, rationale, conditions, actorUserId, utcNow, present, GetCurrentDecision()?.Id);
 
+        // T235: the lines another sitting has decided, chosen before anything changes: only a line still due with nothing
+        // staged on it, so settling it cannot refuse.
+        var staged = stagedEpaIds.ToHashSet();
+        var decidedElsewhere = decidedElsewhereEpaIds.ToHashSet();
+        var settledElsewhere = AgendaLines
+            .Where(line => line.State == CommitteeAgendaLineState.Due &&
+                           !staged.Contains(line.EpaId) &&
+                           decidedElsewhere.Contains(line.EpaId))
+            .ToArray();
+
         Decisions.Add(decision);
         State = CommitteeReviewState.Decided;
+
+        foreach (var line in settledElsewhere)
+        {
+            line.SettleDecidedElsewhere();
+        }
+
         return decision;
     }
 

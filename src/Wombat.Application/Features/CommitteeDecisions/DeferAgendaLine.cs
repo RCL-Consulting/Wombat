@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
@@ -69,10 +70,19 @@ public sealed class DeferAgendaLineCommandHandler : IRequestHandler<DeferAgendaL
             .AnyAsync(pending => pending.ReviewId == review.Id && pending.EpaId == line.EpaId, cancellationToken);
 
         // T165: fixed once the committee's decision is recorded, except a line that keeps the review from being ratified,
-        // which recording's own check leaves only when a staged decision was removed afterwards (see the remarks).
-        if (review.State != CommitteeReviewState.InProgress && !line.BlocksRatify(staged))
+        // which recording's own check leaves only when a staged decision was removed afterwards (see the remarks). T235: a
+        // line whose window another sitting has decided keeps nothing from being ratified, read as ratify reads it.
+        if (review.State != CommitteeReviewState.InProgress)
         {
-            throw new InvalidOperationException(FixedWhenDecided);
+            var decidedElsewhere = line.State == CommitteeAgendaLineState.Due &&
+                                   (await AgendaPlanner.PlanForReviewAsync(
+                                       _dbContext, review, ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken))
+                                   .DecidedElsewhere.Contains(line.EpaId);
+
+            if (!line.BlocksRatify(staged, decidedElsewhere))
+            {
+                throw new InvalidOperationException(FixedWhenDecided);
+            }
         }
 
         if (line.State != CommitteeAgendaLineState.Due)

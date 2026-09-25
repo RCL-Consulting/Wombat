@@ -548,7 +548,7 @@ public sealed class CommitteeReviewRacePostgresTests : IAsyncLifetime
                     [
                         new DecisionPanelMember { UserId = userId, Role = DecisionPanelMemberRole.Chair },
                         new DecisionPanelMember { UserId = "member-erasure", Role = DecisionPanelMemberRole.Member }
-                    ]);
+                    ], [], []);
                 review.Ratify(userId, DateTime.UtcNow);
                 db.CommitteeReviews.Add(review);
                 await db.SaveChangesAsync();

@@ -140,7 +140,7 @@ public sealed class EntrustmentOnlyReviewPostgresTests : IAsyncLifetime
                     ReviewType = CommitteeReviewType.EntrustmentOnly
                 };
                 review.Start([], "chair-n", sitting);
-                review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-n", sitting, members);
+                review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-n", sitting, members, [], []);
                 review.Ratify("chair-n", sitting);
                 db.CommitteeReviews.Add(review);
                 await db.SaveChangesAsync();

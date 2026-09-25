@@ -826,7 +826,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
                 [
                     new DecisionPanelMember { UserId = "chair-a", Role = DecisionPanelMemberRole.Chair },
                     new DecisionPanelMember { UserId = "member-a", Role = DecisionPanelMemberRole.Member }
-                ]);
+                ], [], []);
         }
 
         if (state is CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal)

@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Application.Audit;
 
@@ -92,23 +93,33 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
 
         // T131 slice 4: the decision fixes the agenda with the staged decisions (the deferrals are the committee's too), so
         // every closing line must be staged or deferred before it is recorded, by the predicate ratify enforces again.
-        // Asked of a review that can take a decision; RecordDecision refuses any other with its own reason.
+        // T235: or decided elsewhere. A line still due whose window another sitting has decided since it was planned is
+        // optional, read by the window rule the planner and the decisions-due page share, and recording settles it so.
+        // Asked of a review that can take a decision; RecordDecision refuses any other with its own reason. Reads only.
+        IReadOnlyCollection<int> stagedEpaIds = [];
+        IReadOnlySet<int> decidedElsewhere = new HashSet<int>();
         if (review is { IsFormative: false, State: CommitteeReviewState.InProgress })
         {
-            var stagedEpaIds = await _dbContext.Set<PendingEntrustmentDecision>()
+            stagedEpaIds = await _dbContext.Set<PendingEntrustmentDecision>()
                 .Where(pending => pending.ReviewId == review.Id)
                 .Select(pending => pending.EpaId)
                 .ToListAsync(cancellationToken);
-            review.EnsureAgendaSettled(stagedEpaIds);
+            decidedElsewhere = (await AgendaPlanner.PlanForReviewAsync(
+                    _dbContext, review, ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken))
+                .DecidedElsewhere;
+            review.EnsureAgendaSettled(stagedEpaIds, decidedElsewhere);
         }
 
+        // The first mutation. Every check above, and the domain's own, runs before it changes anything.
         review.RecordDecision(
             request.Category,
             request.Rationale,
             request.Conditions,
             CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal),
             DateTime.UtcNow,
-            present);
+            present,
+            stagedEpaIds,
+            decidedElsewhere);
 
         // Refused whole when the review changed after it was read above: its xmin token (CommitteeReviewConfiguration) is
         // checked with the state this save changes. Staging, removing, deferring and reinstating each mark the review

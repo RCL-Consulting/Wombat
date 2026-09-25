@@ -1468,10 +1468,16 @@
     => _review?.State is CommitteeReviewState.Decided && line.BlocksRatify;
 
   /// <summary>Chooses the line's EPA in the staging form below, and moves the focus to it.</summary>
-  private async Task StageFromAgendaAsync(CommitteeAgendaLineDto line)
+  private Task StageFromAgendaAsync(CommitteeAgendaLineDto line) => StageEpaAsync(line.EpaId);
+
+  /// <summary>
+  /// Chooses the EPA in the staging form below, and moves the focus to it: an agenda line's, or one the card names as no
+  /// longer decided (T235), whose staging adds the chair's line.
+  /// </summary>
+  private async Task StageEpaAsync(int epaId)
   {
     _deferral = null;
-    _pending.EpaId = line.EpaId;
+    _pending.EpaId = epaId;
     OnStarEpaChanged();
 
     if (_pendingEpaSelect?.Element is { } select)
@@ -1594,6 +1600,26 @@
       else
       {
         <p class="muted">@AgendaIntro(_agenda)</p>
+        @if (CommitteeAgendaText.NoLongerDecidedNote(_agenda.NoLongerDecided.Select(epa => epa.EpaCode).ToArray()) is { } noLongerDecided)
+        {
+          @* T235: an EPA Start left off because a STAR decided its window, whose STAR has since been revoked. Named in its own
+             sentence above the table, and never added to the agenda by itself (D46): the chair stages it. A warning that
+             stands on the page until it is acted on, so it carries no role and is not read out on every load. *@
+          <Alert Kind="warning" Role="" Id="agenda-no-longer-decided">
+            <p>@noLongerDecided</p>
+            @if (ChairMayAct && AgendaIsOpen)
+            {
+              <div class="actions-cell">
+                @* Named by its text: "Stage PAED-003" says what it does, and an aria-label that did not contain it would
+                   break label-in-name for a speech user. *@
+                @foreach (var epa in _agenda.NoLongerDecided)
+                {
+                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => StageEpaAsync(epa.EpaId)">Stage @epa.EpaCode</button>
+                }
+              </div>
+            }
+          </Alert>
+        }
         @if (_agenda.Lines.Count == 0)
         {
           <p>@AgendaEmpty(_review!.State)</p>
@@ -1619,7 +1645,7 @@
               <tbody>
                 @foreach (var line in _agenda.Lines)
                 {
-                  var detail = CommitteeAgendaText.StatusDetail(line);
+                  var detail = CommitteeAgendaText.StatusDetail(line, _review!.State);
                   <tr id="@($"agenda-line-{line.EpaId}")">
                     <th scope="row">@line.EpaCode — @line.EpaTitle</th>
                     <td>@line.WindowLabel</td>

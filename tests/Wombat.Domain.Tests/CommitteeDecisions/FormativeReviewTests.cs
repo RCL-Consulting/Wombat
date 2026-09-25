@@ -43,7 +43,7 @@ public sealed class FormativeReviewTests
         review.Start(Array.Empty<CommitteeEvidence>(), "chair-1", DateTime.UtcNow);
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "Any.", null, "chair-1", DateTime.UtcNow, CommitteeQuorumFixture.ChairAndMember));
+            review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "Any.", null, "chair-1", DateTime.UtcNow, CommitteeQuorumFixture.ChairAndMember, [], []));
 
         Assert.Contains("formative", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
