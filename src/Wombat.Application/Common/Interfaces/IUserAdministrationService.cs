@@ -38,6 +38,26 @@ public interface IUserAdministrationService
     }
 
     /// <summary>
+    /// Which of exactly the users asked about hold <paramref name="role" /> on an account that is not deactivated
+    /// (<see cref="UserIdentityDetails.IsDeactivated" />: an administrator's lock or an erasure, never a brute-force
+    /// lockout that lifts itself after minutes). A user who does not exist, does not hold the role, or is deactivated is
+    /// left out. The account half of a current trainee (<c>TraineeScopeResolver</c>, T238, T268). The default
+    /// implementation reads the role's whole listing; the real service overrides it with one query by id.
+    /// </summary>
+    async Task<IReadOnlySet<string>> WhichActivelyHoldRoleAsync(
+        IReadOnlyCollection<string> userIds,
+        string role,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        return (await ListUsersInRoleAsync(role, cancellationToken))
+            .Where(user => !user.IsDeactivated)
+            .Select(user => user.UserId)
+            .Where(wanted.Contains)
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
+    /// <summary>
     /// The name and email of exactly the users asked about, whatever roles they hold: what a picker labels a person by.
     /// A user who does not exist is left out. The default implementation reads every user; the real service overrides it
     /// with one query by id, so a picker of an institution's trainees reads only them. (T248)

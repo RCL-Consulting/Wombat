@@ -126,8 +126,9 @@ public static class MsfCampaignRules
     /// </para>
     /// <para>
     /// Anyone but an Administrator gets one refusal for every other subject the rule keeps out (an id that names nobody,
-    /// a trainee elsewhere, an erased trainee's pseudonym, a trainee whose programme has ended), so it confirms nothing
-    /// about the id. An Administrator runs campaigns at every institution, so the one reason left is said plainly. (T238)
+    /// a trainee elsewhere, an erased trainee's pseudonym, a trainee whose programme has ended, one who no longer holds
+    /// Trainee, and one whose account an administrator has locked, T268), so it confirms nothing about the id. An
+    /// Administrator runs campaigns at every institution, so the one reason left is said plainly. (T238)
     /// </para>
     /// </remarks>
     public static async Task EnsureSubjectIsInScopeAsync(
@@ -160,18 +161,18 @@ public static class MsfCampaignRules
 
     /// <summary>
     /// The refusal, at create, to an Administrator, of a subject who is not a current trainee: no active profile, or an
-    /// account that is gone or no longer holds Trainee. (T238)
+    /// account that is gone, no longer holds Trainee (T238), or is locked (T268).
     /// </summary>
     internal const string SubjectNotCurrentTrainee =
         "A multi-source feedback campaign can only be run for a trainee in a programme now: someone whose trainee " +
-        "profile is active and who still holds the Trainee role.";
+        "profile is active, who still holds the Trainee role, and who has not been locked out by an administrator.";
 
     /// <summary>
     /// Whether this caller may start a campaign about this trainee: they run campaigns for the trainee
     /// (<see cref="IsSubjectInScopeAsync" />), and the trainee is a current trainee
-    /// (<see cref="TraineeScopeResolver.ResolveCurrentAsync" />): an active profile, on an account that exists and still
-    /// holds Trainee. What create asks, and what the campaign form's picker offers by (<see cref="CampaignSubjectsAsync" />).
-    /// (T238)
+    /// (<see cref="TraineeScopeResolver.ResolveCurrentAsync" />): an active profile, on an account that exists, still
+    /// holds Trainee and has not been locked out by an administrator (T268). What create asks, and what the campaign
+    /// form's picker offers by (<see cref="CampaignSubjectsAsync" />). (T238)
     /// </summary>
     /// <remarks>
     /// <para>

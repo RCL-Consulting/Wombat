@@ -48,8 +48,8 @@ public sealed class ErasedTraineeScopePostgresTests : IAsyncLifetime
         "trainee at that institution whose programme you oversee.";
 
     private const string NotCurrentTrainee =
-        "Only a trainee in a programme now can be put before a panel: someone whose trainee profile is active and who " +
-        "still holds the Trainee role.";
+        "Only a trainee in a programme now can be put before a panel: someone whose trainee profile is active, who " +
+        "still holds the Trainee role, and who has not been locked out by an administrator.";
 
     private const string CampaignNotRunByCaller =
         "A multi-source feedback campaign can only be run for a trainee in a programme at your own institution.";

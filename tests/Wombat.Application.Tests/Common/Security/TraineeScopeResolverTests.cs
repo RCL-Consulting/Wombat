@@ -328,11 +328,14 @@ public sealed class TraineeScopeResolverTests
     // ─── Current trainees (T238) ─────────────────────────────────────────────
 
     [Fact]
-    public async Task ACurrentTrainee_IsAnActiveProfile_OnAnAccountThatStillHoldsTrainee_AndTheThreeFormsAgree()
+    public async Task ACurrentTrainee_IsAnActiveProfile_OnAnUnlockedAccountThatStillHoldsTrainee_AndTheFourFormsAgree()
     {
         // The rule committee scheduling and the lists of a programme's trainees read. Until T258 an erased trainee's
         // profile stayed active under a pseudonym no account holds (ErasureExecutor), and the rule holds whatever erasure
-        // leaves; a profile can outlive its user's Trainee role; a trainee who has left has no active profile. None of the three is current, and each form says so alike.
+        // leaves; a profile can outlive its user's Trainee role; a trainee who has left has no active profile; an
+        // administrator can lock a trainee's account, which means "not working here now", as it does for a panel seat
+        // (T268). None of the four is current, and each form says so alike. A brute-force lockout, which lifts itself
+        // after minutes, takes nobody off the programme.
         await using var db = CreateDb();
         SeedTree(db);
         AddProfile(db, id: 1, "current", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
@@ -343,28 +346,50 @@ public sealed class TraineeScopeResolverTests
         // A past profile elsewhere and a running one here: the running one is read.
         AddProfile(db, id: 6, "moved", OtherInstitution, isActive: false, start: new DateOnly(2022, 1, 1));
         AddProfile(db, id: 7, "moved", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
+        AddProfile(db, id: 8, "locked", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
+        AddProfile(db, id: 9, "locked-out-for-minutes", HostInstitution, isActive: true, start: new DateOnly(2025, 1, 1));
         await db.SaveChangesAsync();
         var users = FakeUserDirectory.Trainees("current", "left", "elsewhere", "moved")
             .With(new UserIdentityDetails(
-                "role-taken", "role-taken@test", "Rea", "Taken", HostInstitution, [], [], [WombatRoles.Assessor]));
-        string[] everyone = ["current", "left", "deleted_user_9f8e7d6c", "role-taken", "elsewhere", "moved", "no-profile"];
+                "role-taken", "role-taken@test", "Rea", "Taken", HostInstitution, [], [], [WombatRoles.Assessor]))
+            .With(new UserIdentityDetails(
+                "locked", "locked@test", "Lulu", "Locked", HostInstitution, [], [], [WombatRoles.Trainee],
+                IsLockedOut: true, IsDeactivated: true))
+            .With(new UserIdentityDetails(
+                "locked-out-for-minutes", "minutes@test", "Mo", "Minutes", HostInstitution, [], [], [WombatRoles.Trainee],
+                IsLockedOut: true, IsDeactivated: false));
+        string[] everyone =
+        [
+            "current", "left", "deleted_user_9f8e7d6c", "role-taken", "elsewhere", "moved", "locked", "locked-out-for-minutes",
+            "no-profile"
+        ];
 
         var atHost = await TraineeScopeResolver.ResolveAllCurrentAsync(db, users, HostInstitution, CancellationToken.None);
         var anywhere = await TraineeScopeResolver.ResolveAllCurrentAsync(db, users, null, CancellationToken.None);
         var which = await TraineeScopeResolver.WhichAreCurrentAsync(db, users, everyone, CancellationToken.None);
+        var kept = await TraineeScopeResolver.KeepCurrentAsync(
+            db, users, await db.Set<TraineeProfile>().ToListAsync(), CancellationToken.None);
 
-        atHost.Keys.Should().BeEquivalentTo(["current", "moved"]);
+        atHost.Keys.Should().BeEquivalentTo(["current", "moved", "locked-out-for-minutes"]);
         atHost["moved"].InstitutionId.Should().Be(HostInstitution);
-        anywhere.Keys.Should().BeEquivalentTo(["current", "moved", "elsewhere"]);
-        which.Should().BeEquivalentTo(["current", "moved", "elsewhere"]);
+        anywhere.Keys.Should().BeEquivalentTo(["current", "moved", "elsewhere", "locked-out-for-minutes"]);
+        which.Should().BeEquivalentTo(["current", "moved", "elsewhere", "locked-out-for-minutes"]);
+        kept.Select(profile => profile.Id).Should().BeEquivalentTo([1, 5, 7, 9], "each current trainee's active profile");
         foreach (var userId in everyone)
         {
             (await TraineeScopeResolver.ResolveCurrentAsync(db, users, userId, CancellationToken.None))
                 .Should().Be(anywhere.GetValueOrDefault(userId), userId);
         }
 
-        // Reading a record is not this rule: the one who left is still resolved where they trained.
+        // Reading a record is not this rule: the one who left, and the locked trainee, are still resolved where they
+        // train, so staff who oversee them still read their records.
         (await TraineeScopeResolver.ResolveAsync(db, "left", CancellationToken.None))!.InstitutionId.Should().Be(HostInstitution);
+        (await TraineeScopeResolver.ResolveAsync(db, "locked", CancellationToken.None))!.InstitutionId.Should().Be(HostInstitution);
+        (await TraineeScopeResolver.MayReadAsync(db, TestPrincipals.Coordinator(HostInstitution), "locked", CancellationToken.None))
+            .Should().BeTrue();
+
+        // The Trainee rung asked of other people is not this rule: a locked trainee still holds Trainee (PanelSeat, T237).
+        (await TraineeScopeResolver.HoldersAsync(users, ["locked"], CancellationToken.None)).Should().Equal("locked");
     }
 
     private static void SeedTree(ApplicationDbContext db)

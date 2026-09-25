@@ -57,9 +57,10 @@ public sealed class GetCommitteeMemberDashboardSummaryQueryHandler
             .ToListAsync(cancellationToken);
 
         // Current trainees only (T238): an active profile is not enough. An erased trainee's profile stayed active under a
-        // pseudonym no account holds until T258, and a profile can outlive its user's Trainee role; neither is a trainee for the
-        // committee to weigh, and each would be named here, the first by its bare pseudonym. The speciality and
-        // sub-speciality dashboards keep the same trainees, by the same call, since the three draw one card.
+        // pseudonym no account holds until T258, a profile can outlive its user's Trainee role, and an administrator can
+        // lock the account (T268); none is a trainee for the committee to weigh, and each would be named here, the first
+        // by its bare pseudonym. The speciality and sub-speciality dashboards keep the same trainees, by the same call,
+        // since the three draw one card.
         var traineeProfiles = await TraineeScopeResolver.KeepCurrentAsync(_dbContext, _users, activeProfiles, cancellationToken);
 
         var coverage = await CurriculumCoverageReader.ReadAsync(

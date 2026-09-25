@@ -108,10 +108,28 @@ public sealed class UserAdministrationService : IUserAdministrationService
     /// decision panel asks it of the committee members at one institution, and would otherwise load every trainee in the
     /// country with their scopes on each review page (T237).
     /// </summary>
-    public async Task<IReadOnlySet<string>> WhichHoldRoleAsync(
+    public Task<IReadOnlySet<string>> WhichHoldRoleAsync(
         IReadOnlyCollection<string> userIds,
         string role,
         CancellationToken cancellationToken = default)
+        => HoldersOfRoleAsync(userIds, role, activeOnly: false, cancellationToken);
+
+    /// <summary>
+    /// <see cref="WhichHoldRoleAsync" />, less every account an administrator has locked or an erasure has closed
+    /// (<see cref="UserDeactivation" />), in the same one query: a current trainee is asked of it (T268). A brute-force
+    /// lockout, which lifts itself after minutes, leaves an account in the answer.
+    /// </summary>
+    public Task<IReadOnlySet<string>> WhichActivelyHoldRoleAsync(
+        IReadOnlyCollection<string> userIds,
+        string role,
+        CancellationToken cancellationToken = default)
+        => HoldersOfRoleAsync(userIds, role, activeOnly: true, cancellationToken);
+
+    private async Task<IReadOnlySet<string>> HoldersOfRoleAsync(
+        IReadOnlyCollection<string> userIds,
+        string role,
+        bool activeOnly,
+        CancellationToken cancellationToken)
     {
         if (userIds.Count == 0)
         {
@@ -120,18 +138,27 @@ public sealed class UserAdministrationService : IUserAdministrationService
 
         var ids = userIds.Distinct(StringComparer.Ordinal).ToArray();
         var normalizedRole = _userManager.NormalizeName(role);
-        var holders = await _dbContext.UserRoles
+        var holders = _dbContext.UserRoles
             .AsNoTracking()
             .Where(link => ids.Contains(link.UserId))
             .Join(
                 _dbContext.Roles.Where(entity => entity.NormalizedName == normalizedRole),
                 link => link.RoleId,
                 entity => entity.Id,
-                (link, _) => link.UserId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
+                (link, _) => link.UserId);
 
-        return holders.ToHashSet(StringComparer.Ordinal);
+        if (activeOnly)
+        {
+            // The same threshold NomineeDirectory translates (UserDeactivation): a constant, so the SQL never changes.
+            holders = holders.Join(
+                _dbContext.Users.Where(entity =>
+                    entity.LockoutEnd == null || entity.LockoutEnd < UserDeactivation.Threshold),
+                userId => userId,
+                entity => entity.Id,
+                (userId, _) => userId);
+        }
+
+        return (await holders.Distinct().ToListAsync(cancellationToken)).ToHashSet(StringComparer.Ordinal);
     }
 
     public async Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)

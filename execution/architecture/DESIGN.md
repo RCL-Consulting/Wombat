@@ -696,10 +696,10 @@ or "targets start with": the targets did not start later, they stopped.
 
 The three staff dashboards' target cards (CommitteeMember, SpecialityAdmin and SubSpecialityAdmin, one
 `EpaTargetCoverageList`) count the same trainees: the current trainees in the caller's scope
-(`TraineeScopeResolver.KeepCurrentAsync`, T238), an active profile on an account that still holds Trainee. So an erased
-trainee's pseudonym and a profile that outlived its Trainee role are in no "n of m", and the admins' "Trainees in
-programme" tile counts as active the trainees their card reads. Neither is counted as inactive either; the admin
-trainees list is where such a profile is seen, and ended.
+(`TraineeScopeResolver.KeepCurrentAsync`, T238), an active profile on an account that still holds Trainee and that an
+administrator has not locked (T268). So an erased trainee's pseudonym, a profile that outlived its Trainee role and a
+locked trainee are in no "n of m", and the admins' "Trainees in programme" tile counts as active the trainees their card
+reads. None of them is counted as inactive either; the admin trainees list is where such a profile is seen, and ended.
 
 Each dashboard card is a `<DashboardCard>` — a shared component that wraps `.detail-card` and adds `Title`, `Icon` (Lucide name), `Href` (turns it into `.detail-card--interactive`), `Emphasis` / `Warning` (left stripe variants), and `Span` (1/2/3, the `.dashboard-span-*` modifiers). Reach for `<DashboardCard>` first; drop to raw `<div class="detail-card">` only when the card does not have a titled strip. Below `~900px` the `.dashboard-grid` auto-fit collapses everything to a single column.
 
@@ -878,10 +878,11 @@ programme, EPA and semester, how many of the programme's trainees were covered: 
 is a curriculum as one institution follows it (`MsfProgrammeCoverageText.ProgrammeName`, "Paediatric EPA Curriculum 11.1
 at Demo Institution"), so an Administrator sees one per institution. The trainees are those the caller may read about
 (`TraineeScopeResolver.ReadableAsync`, the set form of T113's ladder) who are on the programme now: current trainees
-(`TraineeScopeResolver.WhichAreCurrentAsync`, T238), an active profile on an account that still holds Trainee, so an
-erased trainee's pseudonym and a profile that outlived its Trainee role are not counted. The semesters are today's and
-the one before, as on the trainee's progress page. Each trainee is counted from their own card: the counts
-are read by `MsfSemesterCoverage`, the one rule `GetMsfCoverageForTraineeQuery` reads too. The page holds:
+(`TraineeScopeResolver.WhichAreCurrentAsync`, T238), an active profile on an account that still holds Trainee and that
+an administrator has not locked (T268), so an erased trainee's pseudonym, a profile that outlived its Trainee role and a
+locked trainee are not counted. The semesters are today's and the one before, as on the trainee's progress page. Each
+trainee is counted from their own card: the counts are read by `MsfSemesterCoverage`, the one rule
+`GetMsfCoverageForTraineeQuery` reads too. The page holds:
 
 - A `.muted` opening (`#msf-coverage-intro`, one C# string): what covered means in D9's words, that each trainee is
   counted from their own progress page, that MSF counts towards no target so an uncovered trainee is no shortfall, that a
@@ -982,17 +983,18 @@ campaign that exists already has its questionnaire, and its page reads no templa
   was not taken.
 
 Nobody runs a campaign about themselves, and nobody who holds Trainee runs one at all (T224, T185's trainee rung;
-`MsfCampaignRules.IsKeptFromCampaignsAbout`). The create form's Trainee picker never offers the caller. It offers exactly
-the trainees the create accepts (`ListMsfCampaignSubjectsQuery`, T238): the current trainees at the caller's
-institution, each once, by the rule committee scheduling reads (an active profile on an account that still holds
-Trainee). So it offers no graduate, no trainee who has withdrawn or moved away, no profile that outlived its Trainee
-role, and no erased trainee's pseudonym, and a crafted create for any of them is refused before anything is written, in
-the words a trainee elsewhere gets (an Administrator is told "…only be run for a trainee in a programme now…"). A
-campaign already created stays one its coordinator can close, release or withdraw after its trainee's programme ends.
-The picker and the create ask one predicate (`MsfCampaignRules.MayStartCampaignAbout`, T248), and the page lists no
-trainee on a campaign's own page, which has no create form. The campaign page answers a campaign about the caller as it
-answers an id that names nothing (its "Campaign unavailable" card), the campaign list leaves those campaigns out, and
-the report is theirs only as the released trainee's copy.
+`MsfCampaignRules.IsKeptFromCampaignsAbout`). The create form's Trainee picker never offers the caller. It offers
+exactly the trainees the create accepts (`ListMsfCampaignSubjectsQuery`, T238): the current trainees at the caller's
+institution, each once, by the rule committee scheduling reads (an active profile on an account that still holds Trainee
+and that an administrator has not locked, T268). So it offers no graduate, no trainee who has withdrawn or moved away,
+no profile that outlived its Trainee role, no trainee whose account an administrator has locked, and no erased trainee's
+pseudonym, and a crafted create for any of them is refused before anything is written, in the words a trainee elsewhere
+gets (an Administrator is told "…only be run for a trainee in a programme now…"). A campaign already created stays one
+its coordinator can close, release or withdraw after its trainee's programme ends. The picker and the create ask one
+predicate (`MsfCampaignRules.MayStartCampaignAbout`, T248), and the page lists no trainee on a campaign's own page,
+which has no create form. The campaign page answers a campaign about the caller as it answers an id that names nothing
+(its "Campaign unavailable" card), the campaign list leaves those campaigns out, and the report is theirs only as the
+released trainee's copy.
 
 Someone who holds Trainee is told so, whatever role brought them there (`MsfCampaignRules.RunsNoCampaigns`; § A row
 the caller cannot change). The campaign list and the campaign page open with a standing `Alert` (`Kind="warning"`,
@@ -1256,18 +1258,19 @@ the agenda. It says how many EPAs will be on it and which must be decided, lists
 says which EPAs another panel decides ("schedule them separately"), and says which are already decided in the window.
 Only the opening sentences sit in a `role="status"` region (`#agenda-preview-summary`), so a screen reader hears what a
 new choice changed, not every line again. Where a STAR already decided every EPA due, the opening sentence says so
-itself ("Every EPA this panel decides that is due for 2026 S2 is already decided in its window…"), not that none is
-due, since the note naming them is outside the live region (T215). The Trainee select offers exactly the trainees the
+itself ("Every EPA this panel decides that is due for 2026 S2 is already decided in its window…"), not that none is due,
+since the note naming them is outside the live region (T215). The Trainee select offers exactly the trainees the
 scheduling handler would accept on the chosen panel (T182), and the Panel select offers exactly the panels on which that
 list is not empty (`ListDecisionPanelsQuery` with `ForScheduling`, T194): not a panel the caller sits on at another
 institution, not a speciality panel of a speciality they do not administer, and not a panel whose only trainee in reach
 is not a current trainee. The Trainee select, the Panel select and the handler all read one rule for who that is
 (`TraineeScopeResolver.ResolveCurrentAsync` and its set form, T238): an active profile on an account that still holds
-Trainee. So an erased trainee's pseudonym, a trainee whose programme has ended and one who no longer holds Trainee are
-offered nowhere, and a typed or crafted request for one gets the scheduling refusal before anything is written (an
-Administrator is told "Only a trainee in a programme now can be put before a panel…"). When it offers none, its help
-text says so: "No panel has a trainee you can schedule a review for. A panel is listed once a trainee it reviews is in a
-programme you oversee."
+Trainee and that an administrator has not locked (T268; a lockout after wrong passwords, which lifts itself, does not
+count). So an erased trainee's pseudonym, a trainee whose programme has ended, one who no longer holds Trainee and one
+whose account an administrator has locked are offered nowhere, and a typed or crafted request for one gets the
+scheduling refusal before anything is written (an Administrator is told "Only a trainee in a programme now can be put
+before a panel…"). When it offers none, its help text says so: "No panel has a trainee you can schedule a review for. A
+panel is listed once a trainee it reviews is in a programme you oversee."
 
 **The panel form** (`/committee/panels/new`, T194). A new panel's Scope and Speciality selects offer what creating the
 panel would accept from the caller, read from `GetDecisionPanelFormOptionsQuery`, never from roles: an institutional
@@ -1397,11 +1400,11 @@ panel's semester-1 sitting may be one too. Every page says so in the same words,
 
 **Decisions due** (T131 slice 6). `/committee/decisions-due` is a list page for the roles that schedule reviews
 (Coordinator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Administrator). It lists, per current trainee the
-caller administers or coordinates at their institution (an active profile on an account that still holds Trainee, the
-rule scheduling reads, T238), each EPA due for an entrustment decision in a period and where the decision stands, so
-every Schedule link it offers is one the scheduling handler accepts. Every sentence is built in C# (`DecisionsDueText`).
-A caller who also holds Trainee is shown nobody's decisions, whatever other role admits them (T185's trainee rung): the
-page shows its empty card.
+caller administers or coordinates at their institution (an active profile on an account that still holds Trainee and
+that an administrator has not locked, the rule scheduling reads, T238, T268), each EPA due for an entrustment decision
+in a period and where the decision stands, so every Schedule link it offers is one the scheduling handler accepts. Every
+sentence is built in C# (`DecisionsDueText`). A caller who also holds Trainee is shown nobody's decisions, whatever
+other role admits them (T185's trainee rung): the page shows its empty card.
 
 - **Filters**, in the `search-container`: Institution (an Administrator only, who belongs to none: nothing is read until
   one is chosen, and `#due-choose-institution` says so), Period (the scheduling form's semesters, the current one by

@@ -349,13 +349,16 @@ public sealed class CurriculumCoverageTests
     {
         // T238. An erased trainee's profile stayed active under a pseudonym until T258 (ErasureExecutor), and hana's
         // profile outlived her Trainee role. Both have met PAED-001 three times this semester: listed, the card would name
-        // the first by its bare pseudonym, and read PAED-001 "3 of 5" of a programme with three trainees.
+        // the first by its bare pseudonym, and read PAED-001 "3 of 5" of a programme with three trainees. T268: ines's
+        // account is locked by an administrator, so she is not working here now, and is named no more than they are.
         await using var db = CreateDb();
         SeedProgramme(db);
         AddTrainee(db, "deleted_user_5e1f0a2b", curriculumId: 1, OnTime);
         AddTrainee(db, "hana", curriculumId: 1, OnTime);
+        AddTrainee(db, "ines", curriculumId: 1, OnTime);
         AddRow(db, 1, "deleted_user_5e1f0a2b", 2026, 2, counts: 3);
         AddRow(db, 1, "hana", 2026, 2, counts: 3);
+        AddRow(db, 1, "ines", 2026, 2, counts: 3);
         Commit(db);
 
         var result = await new GetCommitteeMemberDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
@@ -372,12 +375,15 @@ public sealed class CurriculumCoverageTests
         // (EpaTargetCoverageList). An erased trainee's profile stayed active under a pseudonym until T258, and hana's
         // outlived her Trainee role; both have met PAED-001. Until the review only the committee card left them out, so
         // the admins' cards read PAED-001 "3 of 4" beside the committee's "1 of 2", and their tiles counted six active.
+        // T268: ines, whose account an administrator has locked, has met it too, and is counted by none of the three.
         await using var db = CreateDb();
         SeedProgramme(db);
         AddTrainee(db, "deleted_user_5e1f0a2b", curriculumId: 1, OnTime);
         AddTrainee(db, "hana", curriculumId: 1, OnTime);
+        AddTrainee(db, "ines", curriculumId: 1, OnTime);
         AddRow(db, 1, "deleted_user_5e1f0a2b", 2026, 2, counts: 3);
         AddRow(db, 1, "hana", 2026, 2, counts: 3);
+        AddRow(db, 1, "ines", 2026, 2, counts: 3);
         Commit(db);
         var users = TraineeNames().Object;
 
@@ -392,8 +398,8 @@ public sealed class CurriculumCoverageTests
         speciality.CurriculumCoverage.Epas.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
         speciality.CurriculumCoverage.Trainees.Select(trainee => trainee.TraineeUserId)
             .Should().Equal(committee.TraineeTargets.Select(trainee => trainee.TraineeUserId));
-        speciality.ActiveTraineeCount.Should().Be(4, "amara, bongani, chen and dineo; not the pseudonym, not hana");
-        speciality.InactiveTraineeCount.Should().Be(1, "emeka, whose programme ended; neither of the two is counted here");
+        speciality.ActiveTraineeCount.Should().Be(4, "amara, bongani, chen and dineo; not the pseudonym, hana or ines");
+        speciality.InactiveTraineeCount.Should().Be(1, "emeka, whose programme ended; none of the three is counted here");
 
         subSpeciality.ActiveTraineeCount.Should().Be(3, "amara, bongani and dineo");
         subSpeciality.CurriculumCoverage.Epas.Single(epa => epa.EpaCode == "PAED-001").Should().Be(
@@ -915,7 +921,9 @@ public sealed class CurriculumCoverageTests
             Person("farai", "Farai", "Moyo"),
             Person("gugu", "Gugu", "Zulu"),
             // An account whose Trainee role was taken away while its profile ran on (T238).
-            Person("hana", "Hana", "Former") with { Roles = [WombatRoles.Assessor] }
+            Person("hana", "Hana", "Former") with { Roles = [WombatRoles.Assessor] },
+            // An account an administrator has locked while its profile runs on (T268).
+            Person("ines", "Ines", "Locked") with { IsLockedOut = true, IsDeactivated = true }
         };
 
         // Names are looked up for exactly the trainees listed, whatever roles they hold (the review of T130: the
@@ -928,14 +936,24 @@ public sealed class CurriculumCoverageTests
                     .Where(person => ids.Contains(person.UserId))
                     .ToDictionary(person => person.UserId, person => $"{person.FirstName} {person.LastName}", StringComparer.Ordinal));
 
-        // Who still holds Trainee, of exactly the people asked about: the account half of a current trainee (T238). An
-        // erased trainee's pseudonym names no account, so it is never among them.
+        // Who holds a role, of exactly the people asked about, whatever their lock: the Trainee rung (T237). An erased
+        // trainee's pseudonym names no account, so it is never among them.
         users
             .Setup(service => service.WhichHoldRoleAsync(
                 It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<string> ids, string role, CancellationToken _) =>
                 (IReadOnlySet<string>)people
                     .Where(person => ids.Contains(person.UserId) && person.Roles.Contains(role))
+                    .Select(person => person.UserId)
+                    .ToHashSet(StringComparer.Ordinal));
+
+        // Who still holds Trainee on an account that is not locked: the account half of a current trainee (T238, T268).
+        users
+            .Setup(service => service.WhichActivelyHoldRoleAsync(
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, string role, CancellationToken _) =>
+                (IReadOnlySet<string>)people
+                    .Where(person => ids.Contains(person.UserId) && person.Roles.Contains(role) && !person.IsDeactivated)
                     .Select(person => person.UserId)
                     .ToHashSet(StringComparer.Ordinal));
         return users;

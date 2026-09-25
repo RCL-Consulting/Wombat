@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
@@ -226,14 +227,19 @@ public sealed class GetMsfProgrammeCoverageTests
     public async Task AnErasedTraineesPseudonym_AndAProfileThatOutlivedItsTrainee_AreNotCounted()
     {
         // T238. An erasure left the profile active under a pseudonym until T258 (ErasureExecutor), and lia's
-        // profile outlived her Trainee role. Neither is a trainee on a programme now: counted, each would be a row, the
-        // first by its bare pseudonym, and every "n of m" would be out by two.
+        // profile outlived her Trainee role. T268: mo's account is locked by an administrator, so he is not working here
+        // now. None of the three is a trainee on a programme now: counted, each would be a row, the first by its bare
+        // pseudonym, and every "n of m" would be out by three.
         await using var db = await SeedAsync();
-        var directory = Directory().WithTrainees("ada", "ben", "cara", "dan", "eve", "fay", "gus", "hal", "ivy", "jo", "kim");
+        var directory = Directory()
+            .WithTrainees("ada", "ben", "cara", "dan", "eve", "fay", "gus", "hal", "ivy", "jo", "kim")
+            .With(new UserIdentityDetails(
+                "mo", "mo@test", "Mo", "Locked", Host, [], [], [WombatRoles.Trainee], IsLockedOut: true, IsDeactivated: true));
         var before = await PaediatricsAsync(db, directory);
 
         Profile(db, 12, "deleted_user_3b4c5d6e", Host, Paediatrics, new DateOnly(2025, 1, 1));
         Profile(db, 13, "lia", Host, Paediatrics, new DateOnly(2025, 1, 1));
+        Profile(db, 14, "mo", Host, Paediatrics, new DateOnly(2025, 1, 1));
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
@@ -246,7 +252,7 @@ public sealed class GetMsfProgrammeCoverageTests
             Counts(paediatrics, epa.EpaCode).Should().Equal(Counts(before, epa.EpaCode), epa.EpaCode);
         }
 
-        // As without them: both started in 2025, so counted they would have made these 6 and 9.
+        // As without them: all three started in 2025, so counted they would have made these 7 and 10.
         Counts(paediatrics, "PAED-001").Select(count => count.Trainees).Should().Equal(4, 7);
 
         static async Task<MsfProgrammeDto> PaediatricsAsync(ApplicationDbContext db, FakeUserDirectory directory)

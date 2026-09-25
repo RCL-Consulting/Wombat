@@ -28,9 +28,10 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// ladder): a Coordinator's own institution's, everyone's for a global Administrator. Someone who holds Trainee reads only
 /// their own record whatever other role they hold (T185's rung), and their own card is on My progress, so they are shown
 /// no programme. Of those, the trainees on a programme now: current trainees (<see cref="TraineeScopeResolver.WhichAreCurrentAsync" />,
-/// T238), whose profile is active and whose account still holds Trainee. A trainee who has completed or left is on no
-/// programme to plan a campaign for, and an erased trainee's pseudonym, whose profile stayed active under an id no
-/// account holds until T258 ended it, is no trainee to count in "n of m".
+/// T238), whose profile is active and whose account still holds Trainee and is not locked (T268). A trainee who has
+/// completed or left, or whose account an administrator has locked, is on no programme to plan a campaign for, and an
+/// erased trainee's pseudonym, whose profile stayed active under an id no account holds until T258 ended it, is no
+/// trainee to count in "n of m".
 /// </para>
 /// <para>
 /// <b>What a programme is.</b> A curriculum as one institution follows it: its trainees there, and its EPAs in force, the

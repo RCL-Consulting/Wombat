@@ -136,20 +136,25 @@ public sealed class EntrustmentDecisionsDueHandlerTests
     }
 
     [Fact]
-    public async Task AnErasedTraineesPseudonym_AndAProfileThatOutlivedItsTrainee_AreNotListed()
+    public async Task AnErasedTraineesPseudonym_AProfileThatOutlivedItsTrainee_AndALockedTrainee_AreNotListed()
     {
         // T238. An erasure left the profile active at A under a pseudonym until T258 (ErasureExecutor), and a
-        // profile can outlive its user's Trainee role. Listed, each would owe decisions, the first named by its bare
-        // pseudonym, and each would be offered a Schedule link the scheduling handler refuses.
+        // profile can outlive its user's Trainee role. T268: an administrator can lock a trainee's account, which means
+        // "not working here now". Listed, each would owe decisions, the first named by its bare pseudonym, and each would
+        // be offered a Schedule link the scheduling handler refuses.
         await using var db = await SeededDbAsync();
         db.TraineeProfiles.AddRange(
             Profile(7, "deleted_user_7c0ffee1", InstitutionA, new DateOnly(2025, 1, 15)),
-            Profile(8, "former-a", InstitutionA, new DateOnly(2025, 1, 15)));
+            Profile(8, "former-a", InstitutionA, new DateOnly(2025, 1, 15)),
+            Profile(9, "locked-a", InstitutionA, new DateOnly(2025, 1, 15)));
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
         var directory = Names()
             .WithTrainees(Trainee, LateStarter, FutureStarter, Leaver, SurgeryTrainee, TraineeAtB)
-            .With(new UserIdentityDetails("former-a", "former-a@test", "Fezile", "Former", InstitutionA, [], [], [WombatRoles.Assessor]));
+            .With(new UserIdentityDetails("former-a", "former-a@test", "Fezile", "Former", InstitutionA, [], [], [WombatRoles.Assessor]))
+            .With(new UserIdentityDetails(
+                "locked-a", "locked-a@test", "Lindo", "Locked", InstitutionA, [], [], [WombatRoles.Trainee],
+                IsLockedOut: true, IsDeactivated: true));
 
         var due = await new GetEntrustmentDecisionsDueQueryHandler(db, directory).Handle(
             new GetEntrustmentDecisionsDueQuery(2026, 2, null, TestPrincipals.Coordinator(InstitutionA), Today),

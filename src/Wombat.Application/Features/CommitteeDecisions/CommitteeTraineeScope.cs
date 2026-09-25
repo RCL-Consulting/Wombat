@@ -28,10 +28,11 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// Administrator must also oversee that trainee through a role that schedules reviews, which is T113's rule without its
 /// CommitteeMember arm (<see cref="TraineeScopeResolver.IsAdministeredOrCoordinatedBy" />): same institution, and for a
 /// SpecialityAdmin or SubSpecialityAdmin the trainee's own speciality or sub-speciality. The trainee must be a current
-/// trainee (<see cref="TraineeScopeResolver.ResolveCurrentAsync" />, T238): an active profile, on an account that exists
-/// and still holds Trainee. So an erased trainee's pseudonym, whose profile keeps its institution and programme, is
-/// refused, and so is a trainee whose programme has ended, or who no longer holds Trainee. An unknown trainee, a trainee
-/// with no profile, one who is not current and a trainee at another institution are refused alike, and so is an unknown
+/// trainee (<see cref="TraineeScopeResolver.ResolveCurrentAsync" />, T238): an active profile, on an account that
+/// exists, still holds Trainee and has not been locked out by an administrator (T268). So an erased trainee's
+/// pseudonym, whose profile keeps its institution and programme, is refused, and so is a trainee whose programme has
+/// ended, who no longer holds Trainee, or whose account an administrator has locked. An unknown trainee, a trainee with
+/// no profile, one who is not current and a trainee at another institution are refused alike, and so is an unknown
 /// panel, so the refusal never confirms that an id names someone. The scheduling page's picker
 /// (<see cref="ListSchedulableTraineesQuery" />) offers exactly the trainees this accepts, resolved by the set form of
 /// the same rule (<see cref="TraineeScopeResolver.ResolveAllCurrentAsync" />) and kept through <see cref="MayScheduleFor" />,
@@ -85,12 +86,12 @@ internal static class CommitteeTraineeScope
 
     /// <summary>
     /// The refusal a global Administrator gets for a trainee who is not a current trainee: no active profile, or an
-    /// account that is gone or no longer holds Trainee (T238). An Administrator may see who trains where, so it says what
-    /// is wrong.
+    /// account that is gone, no longer holds Trainee (T238), or is locked (T268). An Administrator may see who trains
+    /// where, so it says what is wrong.
     /// </summary>
     internal const string NotCurrentTrainee =
-        "Only a trainee in a programme now can be put before a panel: someone whose trainee profile is active and who " +
-        "still holds the Trainee role.";
+        "Only a trainee in a programme now can be put before a panel: someone whose trainee profile is active, who " +
+        "still holds the Trainee role, and who has not been locked out by an administrator.";
 
     /// <summary>The refusal to act on a review whose trainee does not train at the panel's institution.</summary>
     internal const string TraineeNotAtPanelInstitution =

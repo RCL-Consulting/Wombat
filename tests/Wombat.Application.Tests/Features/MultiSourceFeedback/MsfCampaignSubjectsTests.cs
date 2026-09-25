@@ -16,7 +16,8 @@ namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
 /// <summary>
 /// T238: a multi-source feedback campaign is started only about a current trainee (an active profile, on an account that
-/// exists and still holds Trainee), and the campaign form's trainee picker offers exactly the trainees the create accepts.
+/// exists, still holds Trainee and is not locked, T268), and the campaign form's trainee picker offers exactly the
+/// trainees the create accepts.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -56,10 +57,13 @@ public sealed class MsfCampaignSubjectsTests
     /// <summary>A trainee with an ended profile and a running one, both at the host: offered once, not twice.</summary>
     private const string RestartedAtHost = "restarted-host";
 
+    /// <summary>An active profile at the host on an account that holds Trainee and an administrator has locked. (T268)</summary>
+    private const string LockedAtHost = "locked-host";
+
     private static readonly string[] EveryId =
     [
         CurrentAtHost, CurrentElsewhere, ErasedAtHost, NoLongerTraineeAtHost, LeftHost, MovedToOther, RestartedAtHost,
-        "nobody-by-this-id"
+        LockedAtHost, "nobody-by-this-id"
     ];
 
     private const string NotRunByCaller =
@@ -67,7 +71,7 @@ public sealed class MsfCampaignSubjectsTests
 
     private const string NotCurrentTrainee =
         "A multi-source feedback campaign can only be run for a trainee in a programme now: someone whose trainee " +
-        "profile is active and who still holds the Trainee role.";
+        "profile is active, who still holds the Trainee role, and who has not been locked out by an administrator.";
 
     private readonly string _databaseName = Guid.NewGuid().ToString();
 
@@ -118,7 +122,7 @@ public sealed class MsfCampaignSubjectsTests
         var cases = new TheoryData<string, string>();
         foreach (var caller in new[] { "Coordinator of the host", "Administrator" })
         {
-            foreach (var trainee in new[] { ErasedAtHost, NoLongerTraineeAtHost, LeftHost, "nobody-by-this-id" })
+            foreach (var trainee in new[] { ErasedAtHost, NoLongerTraineeAtHost, LeftHost, LockedAtHost, "nobody-by-this-id" })
             {
                 cases.Add(caller, trainee);
             }
@@ -185,14 +189,17 @@ public sealed class MsfCampaignSubjectsTests
 
     /// <summary>
     /// Every trainee's account but the erased one's, which no account holds; the one whose profile outlived the role holds
-    /// Assessor only.
+    /// Assessor only; the locked one holds Trainee on a deactivated account (T268).
     /// </summary>
     private static FakeUserDirectory Directory()
         => FakeUserDirectory
             .Trainees(CurrentAtHost, CurrentElsewhere, LeftHost, MovedToOther, RestartedAtHost)
             .With(new UserIdentityDetails(
                 NoLongerTraineeAtHost, $"{NoLongerTraineeAtHost}@test", "Former", "Trainee", Host, [], [],
-                [WombatRoles.Assessor]));
+                [WombatRoles.Assessor]))
+            .With(new UserIdentityDetails(
+                LockedAtHost, $"{LockedAtHost}@test", "Locked", "Trainee", Host, [], [], [WombatRoles.Trainee],
+                IsLockedOut: true, IsDeactivated: true));
 
     private static Task<IReadOnlyList<Wombat.Application.Features.Trainees.TraineeProfileDto>> PickerAsync(
         ApplicationDbContext db, ClaimsPrincipal principal)
@@ -249,6 +256,7 @@ public sealed class MsfCampaignSubjectsTests
         AddProfile(db, 7, MovedToOther, Other, isActive: true);
         AddProfile(db, 8, RestartedAtHost, Host, isActive: false);
         AddProfile(db, 9, RestartedAtHost, Host, isActive: true);
+        AddProfile(db, 10, LockedAtHost, Host, isActive: true);
 
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();

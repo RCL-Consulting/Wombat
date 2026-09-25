@@ -70,16 +70,25 @@ public sealed class CommitteeTraineeScopeTests
     /// <summary>An active profile at A whose account no longer holds Trainee: it outlived its trainee. (T238)</summary>
     private const string NoLongerTraineeAtA = "no-longer-trainee-a";
 
+    /// <summary>
+    /// An active profile at A on an account that holds Trainee but an administrator has locked: not working here now, as
+    /// a locked member is not seated on a panel. (T268)
+    /// </summary>
+    private const string LockedAtA = "locked-a";
+
     private static readonly string[] EveryTrainee =
-        [PaedsAtA, NeonatologyAtA, SurgeryAtA, PaedsAtB, MovedFromAToB, LeftA, NoProfile, ErasedAtA, NoLongerTraineeAtA];
+    [
+        PaedsAtA, NeonatologyAtA, SurgeryAtA, PaedsAtB, MovedFromAToB, LeftA, NoProfile, ErasedAtA, NoLongerTraineeAtA,
+        LockedAtA
+    ];
 
     private const string NotSchedulable =
         "A review can only be scheduled on a panel of your institution that covers the trainee's programme, for a " +
         "trainee at that institution whose programme you oversee.";
 
     private const string NotCurrentTrainee =
-        "Only a trainee in a programme now can be put before a panel: someone whose trainee profile is active and who " +
-        "still holds the Trainee role.";
+        "Only a trainee in a programme now can be put before a panel: someone whose trainee profile is active, who " +
+        "still holds the Trainee role, and who has not been locked out by an administrator.";
 
     private readonly string _databaseName = Guid.NewGuid().ToString();
 
@@ -191,7 +200,7 @@ public sealed class CommitteeTraineeScopeTests
                      "Administrator"
                  })
         {
-            foreach (var trainee in new[] { ErasedAtA, NoLongerTraineeAtA, LeftA })
+            foreach (var trainee in new[] { ErasedAtA, NoLongerTraineeAtA, LeftA, LockedAtA })
             {
                 cases.Add(caller, trainee);
             }
@@ -207,7 +216,8 @@ public sealed class CommitteeTraineeScopeTests
     {
         // An erased trainee's profile stayed active at A under a pseudonym until T258 (ErasureExecutor), and a
         // profile can outlive its user's Trainee role: until T238 a crafted request put either before A's panel, since
-        // only the picker left them out. A trainee who left A has no active profile, and was accepted by both.
+        // only the picker left them out. A trainee who left A has no active profile, and was accepted by both. A trainee
+        // whose account an administrator has locked was accepted by both until T268.
         await using var db = await SeededDbAsync();
         var principal = Caller(caller);
 
@@ -1252,6 +1262,7 @@ public sealed class CommitteeTraineeScopeTests
         AddProfile(db, 7, LeftA, InstitutionA, 100, isActive: false);
         AddProfile(db, 8, ErasedAtA, InstitutionA, 100, isActive: true);
         AddProfile(db, 9, NoLongerTraineeAtA, InstitutionA, 100, isActive: true);
+        AddProfile(db, 10, LockedAtA, InstitutionA, 100, isActive: true);
 
         var paediatricsPanel = Panel(PaediatricsPanelA, InstitutionA, "chair-a", "member-a", "external-a");
         paediatricsPanel.Scope = DecisionPanelScope.Speciality;
@@ -1438,7 +1449,7 @@ public sealed class CommitteeTraineeScopeTests
 
     /// <summary>
     /// Names every trainee in the fixture, and no one else. Each holds Trainee but the one whose profile outlived the role;
-    /// the erased trainee's pseudonym names no account at all.
+    /// the erased trainee's pseudonym names no account at all; one trainee's account is locked (T268).
     /// </summary>
     private sealed class NamedUsers : IUserAdministrationService
     {
@@ -1451,7 +1462,8 @@ public sealed class CommitteeTraineeScopeTests
             User(MovedFromAToB, "Mpho", "Moved", InstitutionB),
             User(LeftA, "Lindiwe", "Left", InstitutionA),
             User(NoProfile, "Noma", "Profile", InstitutionA),
-            User(NoLongerTraineeAtA, "Nolwazi", "Former", InstitutionA, WombatRoles.Assessor)
+            User(NoLongerTraineeAtA, "Nolwazi", "Former", InstitutionA, WombatRoles.Assessor),
+            User(LockedAtA, "Lwazi", "Locked", InstitutionA) with { IsLockedOut = true, IsDeactivated = true }
         ];
 
         private static UserIdentityDetails User(

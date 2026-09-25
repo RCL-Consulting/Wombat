@@ -158,21 +158,25 @@ public static class TraineeScopeResolver
 
     // ─── Current trainees ───────────────────────────────────────────────────
     //
-    // A CURRENT trainee is one in a programme now: their profile is active, and their account exists and still holds
-    // Trainee. It is the trainee a committee may be asked to act on afresh, and the trainee a list of the programme's
-    // trainees shows. (T238)
+    // A CURRENT trainee is one in a programme now: their profile is active, and their account exists, still holds
+    // Trainee, and has not been locked out by an administrator. It is the trainee a committee may be asked to act on
+    // afresh, and the trainee a list of the programme's trainees shows. (T238, T268)
     //
     // The profile alone does not say so. An erasure (ErasureExecutor) rewrites the profile's user id to a pseudonym that
     // names no account. Until T258 it left the profile active, so the profile kept its institution and programme under
     // an id nobody holds; since T258 it ends it too, but the rule does not lean on that. Completing a programme ends the
     // profile and takes Trainee away; a withdrawal ends the profile and leaves the role; an administrator can take the
-    // role away and leave the profile running. Each of those is a profile that outlived its trainee, and none of them is
-    // someone to schedule a review of, or to list among the trainees.
+    // role away and leave the profile running, or lock the account and leave both. Each of those is a profile that
+    // outlived its trainee, and none of them is someone to schedule a review of, or to list among the trainees. "Locked"
+    // is an administrator's lock (UserIdentityDetails.IsDeactivated), never the lockout that wrong passwords start and
+    // that lifts itself after minutes, so nobody takes a trainee off the programme's lists by mistyping at their account.
     //
-    // The two halves live in two stores: the profile in the application's, the role in Identity's, which Application
-    // reaches only through IUserAdministrationService. So the rule is two reads, and these members are the only place
-    // they are put together: ResolveCurrentAsync for one trainee, ResolveAllCurrentAsync for an institution's, and
-    // WhichAreCurrentAsync for a list that has read the profiles it shows itself.
+    // The two halves live in two stores: the profile in the application's, the role and the lock in Identity's, which
+    // Application reaches only through IUserAdministrationService. So the rule is two reads, and these members are the
+    // only place they are put together: ResolveCurrentAsync for one trainee, ResolveAllCurrentAsync for an
+    // institution's, WhichAreCurrentAsync for a list of the trainees' ids, and KeepCurrentAsync for a list that has
+    // read the profiles it shows itself. Each reads the account half from CurrentAccountsAsync, so none can drift from
+    // the others.
     //
     // Reading someone's record is NOT this rule (MayReadAsync, ReadableAsync): a graduate's record is still theirs, and
     // their programme's, to read.
@@ -185,13 +189,23 @@ public static class TraineeScopeResolver
         => PreferredProfiles(dbContext).Where(profile => profile.IsActive);
 
     /// <summary>
-    /// Where this trainee trains, or null unless they are a current trainee: an active profile, on an account that exists
-    /// and still holds Trainee. What committee scheduling resolves the trainee it is given by. (T238)
+    /// Where this trainee trains, or null unless they are a current trainee: an active profile, on an account that exists,
+    /// still holds Trainee and is not locked. What committee scheduling resolves the trainee it is given by. (T238, T268)
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Null for an id that names nobody, for a trainee with no profile, for one whose programme has ended, for an erased
-    /// trainee's pseudonym, and for someone who no longer holds Trainee, alike: a caller that refuses on null confirms
-    /// nothing about which.
+    /// trainee's pseudonym, for someone who no longer holds Trainee, and for an account an administrator has locked,
+    /// alike: a caller that refuses on null confirms nothing about which.
+    /// </para>
+    /// <para>
+    /// A locked account is not current (T268, adopted 2026-09-25) for the reason a locked member sits on no panel
+    /// (<c>PanelSeat</c>, T165, D46): an administrator's lock means "not working here now". "Locked" is deactivated
+    /// (<see cref="UserIdentityDetails.IsDeactivated" />), never a brute-force lockout that lifts itself after minutes, so
+    /// nobody can take a trainee off the programme's lists by typing wrong passwords at their account. A locked trainee's
+    /// records stay readable to the staff who oversee them (<see cref="MayReadAsync" /> does not ask this rule), and a
+    /// review or campaign already under way is finished as before.
+    /// </para>
     /// </remarks>
     public static async Task<TraineeScope?> ResolveCurrentAsync(
         IApplicationDbContext dbContext,
@@ -279,13 +293,14 @@ public static class TraineeScopeResolver
 
         return withActiveProfile.Count == 0
             ? new HashSet<string>(StringComparer.Ordinal)
-            : await HoldersAsync(users, withActiveProfile, cancellationToken);
+            : await CurrentAccountsAsync(users, withActiveProfile, cancellationToken);
     }
 
     /// <summary>
     /// Of these profiles, the active profile of each current trainee (<see cref="WhichAreCurrentAsync" />): what a list
     /// that has read its own profiles reads its trainees from. The three staff dashboards' target cards read theirs through
-    /// this, so they count the same trainees. (T238)
+    /// this, so they count the same trainees. A locked trainee's profile is left out, as every form of the rule leaves it
+    /// out (<see cref="CurrentAccountsAsync" />, T268). (T238)
     /// </summary>
     public static async Task<IReadOnlyList<TraineeProfile>> KeepCurrentAsync(
         IApplicationDbContext dbContext,
@@ -303,8 +318,8 @@ public static class TraineeScopeResolver
     }
 
     /// <summary>
-    /// The account half of the rule: these scopes, less any whose trainee's account does not exist or no longer holds
-    /// Trainee (<see cref="HoldersAsync" />).
+    /// The account half of the rule: these scopes, less any whose trainee's account does not exist, no longer holds
+    /// Trainee, or is locked (<see cref="CurrentAccountsAsync" />).
     /// </summary>
     private static async Task<IReadOnlyDictionary<string, TraineeScope>> KeepHoldersAsync(
         IUserAdministrationService users,
@@ -316,12 +331,28 @@ public static class TraineeScopeResolver
             return scopes;
         }
 
-        var holders = await HoldersAsync(users, scopes.Keys.ToArray(), cancellationToken);
+        var current = await CurrentAccountsAsync(users, scopes.Keys.ToArray(), cancellationToken);
 
         return scopes
-            .Where(pair => holders.Contains(pair.Key))
+            .Where(pair => current.Contains(pair.Key))
             .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
     }
+
+    /// <summary>
+    /// Which of these users' accounts are a current trainee's: the account exists, holds Trainee, and is not locked
+    /// (<see cref="IUserAdministrationService.WhichActivelyHoldRoleAsync" />). The one account half every form of the rule
+    /// reads, <see cref="ResolveCurrentAsync" />, <see cref="ResolveAllCurrentAsync" />, <see cref="WhichAreCurrentAsync" />
+    /// and <see cref="KeepCurrentAsync" />, so they cannot drift apart. (T238, T268)
+    /// </summary>
+    /// <remarks>
+    /// Not <see cref="HoldersAsync" />, which is the Trainee rung asked of other people and so answers yes for a locked
+    /// trainee too: a locked trainee still holds Trainee, and still acts as one wherever they are asked about.
+    /// </remarks>
+    private static Task<IReadOnlySet<string>> CurrentAccountsAsync(
+        IUserAdministrationService users,
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken)
+        => users.WhichActivelyHoldRoleAsync(userIds, WombatRoles.Trainee, cancellationToken);
 
     /// <summary>
     /// The scope of each of these preferred profiles, keyed by user id: the one assembly every resolve reads, one
@@ -553,9 +584,10 @@ public static class TraineeScopeResolver
     /// or an appeal body that cannot act, and a quorum that counts someone who cannot. A user record from a role listing
     /// carries only the role it was listed by, never the user's others, so this asks the store's role links
     /// (<see cref="IUserAdministrationService.WhichHoldRoleAsync" />) rather than any record's
-    /// <see cref="UserIdentityDetails.Roles" />, and only about the people named, not every trainee in the country. It is
-    /// also the account half of a current trainee (<see cref="ResolveCurrentAsync" />, T238): an id that names no account
-    /// holds nothing, so an erased trainee's pseudonym is never among the answers.
+    /// <see cref="UserIdentityDetails.Roles" />, and only about the people named, not every trainee in the country. An id
+    /// that names no account holds nothing, so an erased trainee's pseudonym is never among the answers. It is not the
+    /// account half of a current trainee, which also leaves out a locked account (<see cref="CurrentAccountsAsync" />,
+    /// T268): a locked trainee still holds Trainee.
     /// </remarks>
     public static Task<IReadOnlySet<string>> HoldersAsync(
         IUserAdministrationService users,

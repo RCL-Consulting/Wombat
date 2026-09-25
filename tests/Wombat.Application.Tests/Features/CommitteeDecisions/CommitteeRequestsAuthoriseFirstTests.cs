@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Tests.TestHelpers;
@@ -749,9 +750,54 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
             .Should().Equal(SurgeryAtA);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task APanelWhoseOnlySchedulableTraineeIsLocked_IsNotOffered_AsItsPickerOffersNobody(
+        bool lockedByAnAdministrator)
+    {
+        // The locked twin of the erased case above (T268): an administrator's lock means "not working here now", as it
+        // does for a panel seat, so the Paediatrics panel, whose only trainee in reach is locked, is not offered, and its
+        // picker offers nobody. A lockout that wrong passwords started, which lifts itself after minutes, takes nobody
+        // off the form.
+        await using var db = await SeededDbAsync();
+        var admin = TestPrincipals.InstitutionalAdmin(InstitutionA);
+        var directory = WithPaedsAtALocked(lockedByAnAdministrator);
+
+        var offered = await PanelIdsAsync(db, admin, forScheduling: true, directory);
+        var paediatricsTrainees = (await TraineesOfferedAsync(db, admin, PaediatricsPanelA, directory))
+            .Select(trainee => trainee.UserId);
+        var panelATrainees = (await TraineesOfferedAsync(db, admin, PanelA, directory))
+            .Select(trainee => trainee.UserId);
+
+        if (lockedByAnAdministrator)
+        {
+            offered.Should().Equal(PanelA);
+            paediatricsTrainees.Should().BeEmpty();
+            panelATrainees.Should().Equal(SurgeryAtA);
+        }
+        else
+        {
+            offered.Should().BeEquivalentTo([PanelA, PaediatricsPanelA]);
+            paediatricsTrainees.Should().Equal(PaedsAtA);
+            panelATrainees.Should().BeEquivalentTo([PaedsAtA, SurgeryAtA]);
+        }
+    }
+
     private static FakeUserDirectory EveryoneNamed
         => new FakeUserDirectory((PaedsAtA, "Palesa Paeds"), (SurgeryAtA, "Sipho Surgery"), (PaedsAtB, "Bongani Paeds"))
             .WithTrainees(PaedsAtA, SurgeryAtA, PaedsAtB);
+
+    /// <summary>
+    /// A directory in which the paediatric trainee at A still holds Trainee on an account that is locked out: by an
+    /// administrator (deactivated, T268), or for minutes by wrong passwords.
+    /// </summary>
+    private static FakeUserDirectory WithPaedsAtALocked(bool byAnAdministrator)
+        => new FakeUserDirectory((PaedsAtA, "Palesa Paeds"), (SurgeryAtA, "Sipho Surgery"), (PaedsAtB, "Bongani Paeds"))
+            .WithTrainees(SurgeryAtA, PaedsAtB)
+            .With(new UserIdentityDetails(
+                PaedsAtA, $"{PaedsAtA}@test", "Palesa", "Paeds", InstitutionA, [], [], [WombatRoles.Trainee],
+                IsLockedOut: true, IsDeactivated: byAnAdministrator));
 
     /// <summary>A directory in which the paediatric trainee at A has no account: their profile was erased.</summary>
     private static FakeUserDirectory WithPaedsAtAErased

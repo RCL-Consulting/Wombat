@@ -59,11 +59,20 @@ public sealed class MsfCampaignSubjectPickerTests
     /// <summary>An account that holds Trainee, with no profile.</summary>
     private const string NotAdmitted = "not-admitted";
 
+    /// <summary>
+    /// An active profile at the host on an account that holds Trainee and an administrator has locked: not a current
+    /// trainee, as a locked member sits on no panel (T268).
+    /// </summary>
+    private const string Locked = "locked";
+
     /// <summary>A coordinator at the host who is also in training there; their sign-in carries no Trainee claim.</summary>
     private const string CoordinatorInTraining = "coordinator-in-training";
 
     private static readonly string[] EveryCandidate =
-        [CurrentAtHost, CurrentElsewhere, Moved, Completed, RoleRemoved, Pseudonym, NotAdmitted, CoordinatorInTraining, "nobody"];
+    [
+        CurrentAtHost, CurrentElsewhere, Moved, Completed, RoleRemoved, Pseudonym, NotAdmitted, Locked, CoordinatorInTraining,
+        "nobody"
+    ];
 
     private readonly string _databaseName = Guid.NewGuid().ToString();
 
@@ -122,8 +131,8 @@ public sealed class MsfCampaignSubjectPickerTests
 
     /// <summary>
     /// What each caller is offered, spelled out, so the parity above is not two empty lists agreeing. The host's
-    /// coordinator is offered the trainees in training there, never one who has moved away, completed, lost Trainee or
-    /// been erased; the other institution's coordinator the two in training there; an Administrator everyone in training;
+    /// coordinator is offered the trainees in training there, never one who has moved away, completed, lost Trainee, been
+    /// locked out by an administrator (T268) or been erased; the other institution's coordinator the two in training there; an Administrator everyone in training;
     /// a coordinator in training everyone the host's coordinator is offered but themselves; and nobody else anyone.
     /// </summary>
     [Fact]
@@ -280,7 +289,7 @@ public sealed class MsfCampaignSubjectPickerTests
 
     /// <summary>
     /// The accounts: everyone with a profile but the pseudonym, and the trainee with none. Each holds Trainee but the one
-    /// whose role was removed, who is an Assessor now.
+    /// whose role was removed, who is an Assessor now; the locked one's account is deactivated (T268).
     /// </summary>
     private static FakeUserDirectory Accounts()
         => new FakeUserDirectory()
@@ -290,7 +299,8 @@ public sealed class MsfCampaignSubjectPickerTests
             .With(Account(Moved, "Lerato", "Naidoo", Elsewhere, WombatRoles.Trainee))
             .With(Account(Completed, "Pieter", "Botha", Host, WombatRoles.Trainee))
             .With(Account(RoleRemoved, "Nomsa", "Zulu", Host, WombatRoles.Assessor))
-            .With(Account(NotAdmitted, "Kagiso", "Molefe", Host, WombatRoles.Trainee));
+            .With(Account(NotAdmitted, "Kagiso", "Molefe", Host, WombatRoles.Trainee))
+            .With(Account(Locked, "Lebo", "Khumalo", Host, WombatRoles.Trainee) with { IsLockedOut = true, IsDeactivated = true });
 
     private static UserIdentityDetails Account(string userId, string firstName, string lastName, int institutionId, params string[] roles)
         => new(userId, $"{userId}@test", firstName, lastName, institutionId, [], [], roles);
@@ -314,6 +324,7 @@ public sealed class MsfCampaignSubjectPickerTests
             Profile(Completed, Host, isActive: false),
             Profile(RoleRemoved, Host, isActive: true),
             Profile(Pseudonym, Host, isActive: true),
+            Profile(Locked, Host, isActive: true),
             Profile(CoordinatorInTraining, Host, isActive: true));
 
         db.Set<MsfTemplate>().Add(new MsfTemplate
