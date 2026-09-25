@@ -14,5 +14,6 @@ public sealed class CollegeConfiguration : IEntityTypeConfiguration<College>
         builder.Property(entity => entity.Description).HasMaxLength(1000);
         builder.HasIndex(entity => entity.Name).IsUnique();
         builder.HasIndex(entity => entity.ShortCode).IsUnique();
+        builder.HasSeedKey();
     }
 }

@@ -12,6 +12,7 @@ public sealed class SpecialityConfiguration : IEntityTypeConfiguration<Specialit
         builder.Property(entity => entity.Name).HasMaxLength(200).IsRequired();
         builder.Property(entity => entity.Description).HasMaxLength(2000);
         builder.HasIndex(entity => new { entity.CollegeId, entity.Name }).IsUnique();
+        builder.HasSeedKey();
 
         builder.HasOne(entity => entity.College)
             .WithMany(entity => entity.Specialities)

@@ -12,6 +12,7 @@ public sealed class EntrustmentScaleConfiguration : IEntityTypeConfiguration<Ent
         builder.Property(entity => entity.Name).HasMaxLength(200).IsRequired();
         builder.Property(entity => entity.Description).HasMaxLength(2000);
         builder.HasIndex(entity => entity.Name).IsUnique();
+        builder.HasSeedKey();
 
         builder.HasMany(entity => entity.Levels)
             .WithOne(entity => entity.Scale)

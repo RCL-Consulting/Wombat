@@ -254,6 +254,11 @@ Three things follow:
   the demo item's pin from T174's; the v11.1 pins were stamped by the boots before T174, and the Paediatrics default by
   the boots before T187. A later change to any of these values, or to `WbaToolKey`, reaches an existing database only
   through a new migration. The seeders log a warning where the stored value differs.
+- **`PaediatricCatalogueSeeder` finds its College, speciality, sub-speciality, v11.1 ladder, EPAs and curriculum by
+  their `SeedKey` column, never by a name an administrator can edit, and creates them only on a database that holds none
+  of them, in one save; a row missing by its key is warned about and skipped, never created again (T221).** So a new
+  catalogue EPA, or a new `catalogueVersion` (which changes the ladder's and the curriculum's keys), reaches an existing
+  database only through a migration, like every other seeded value; until then each boot announces it as missing.
 
 Read `execution/architecture/CUSTOMIZATION.md` for the full model.
 

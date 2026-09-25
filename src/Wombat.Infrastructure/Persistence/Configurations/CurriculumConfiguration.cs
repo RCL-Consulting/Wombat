@@ -14,6 +14,7 @@ public sealed class CurriculumConfiguration : IEntityTypeConfiguration<Curriculu
         builder.Property(entity => entity.EffectiveFrom).HasColumnType("date");
         builder.Property(entity => entity.EffectiveTo).HasColumnType("date");
         builder.HasIndex(entity => new { entity.SubSpecialityId, entity.Name, entity.Version }).IsUnique();
+        builder.HasSeedKey();
 
         builder.HasOne(entity => entity.SubSpeciality)
             .WithMany(entity => entity.Curricula)

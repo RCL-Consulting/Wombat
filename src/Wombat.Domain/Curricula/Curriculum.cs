@@ -6,6 +6,14 @@ public sealed class Curriculum
     public int SubSpecialityId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The key a seeder finds this row by, such as <c>cpsa:paediatrics:curriculum:v11.1</c>, or null for a curriculum an
+    /// administrator made (T221). Written when a seeder creates the row and never changed after: no command writes it, so
+    /// neither a new name or version nor a move to another sub-speciality can lose it. A clone never carries it.
+    /// </summary>
+    public string? SeedKey { get; init; }
+
     public DateOnly EffectiveFrom { get; set; }
     public DateOnly? EffectiveTo { get; set; }
     public bool IsActive { get; set; } = true;

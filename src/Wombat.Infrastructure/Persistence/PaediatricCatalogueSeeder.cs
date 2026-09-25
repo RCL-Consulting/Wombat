@@ -23,8 +23,12 @@ namespace Wombat.Infrastructure.Persistence;
 /// College"/"General Medicine" content exists only to make a fresh install explorable.
 /// </para>
 /// <para>
-/// Idempotent: every step is keyed on a stable identifier and skipped when already present, so
-/// this runs on every boot alongside the other seeders.
+/// Idempotent, so this runs on every boot alongside the other seeders. The College, its speciality and sub-speciality,
+/// the v11.1 ladder, the fifteen EPAs and the curriculum are each found by a seed key stored on the row (T221), never by a
+/// name, code or version an administrator can edit. The catalogue is created once, in one save, on a database that holds
+/// none of it; after that a row that cannot be found by its key is announced and skipped, never created again. Before
+/// T221 each was found by an editable name and created when the lookup missed, so renaming the sub-speciality duplicated
+/// the catalogue and changing CPSA's short code stopped startup on the College name's unique index.
 /// </para>
 /// <para>
 /// See <c>execution/tasks/done/T098-epa-v11-adoption.md</c> for the gap analysis behind this, including
@@ -33,6 +37,23 @@ namespace Wombat.Infrastructure.Persistence;
 /// </remarks>
 public sealed class PaediatricCatalogueSeeder
 {
+    // The seed keys (T221). Stored on each row when this seeder creates it, stamped on existing databases once by the T221
+    // migration, and written by nothing else. A change to any of them is a migration, like any other stored seed value.
+    internal const string CollegeSeedKey = "cpsa";
+    internal const string SpecialitySeedKey = "cpsa:paediatrics";
+    internal const string SubSpecialitySeedKey = "cpsa:paediatrics:paediatrics";
+
+    /// <summary>The v11.1 ladder's key, from the catalogue's own version: <c>cpsa:scale:v11.1</c>.</summary>
+    internal static string ScaleSeedKey(string catalogueVersion) => $"cpsa:scale:v{catalogueVersion}";
+
+    /// <summary>The curriculum's key, from the catalogue's own version: <c>cpsa:paediatrics:curriculum:v11.1</c>.</summary>
+    internal static string CurriculumSeedKey(string catalogueVersion) => $"cpsa:paediatrics:curriculum:v{catalogueVersion}";
+
+    /// <summary>An EPA's key, from the College's code for it: <c>cpsa:paediatrics:epa:PAED-001</c>.</summary>
+    internal static string EpaSeedKey(string code) => $"cpsa:paediatrics:epa:{code}";
+
+    // What the catalogue's rows are called when this seeder creates them. Never used to find one.
+    private const string CollegeName = "College of Paediatricians of South Africa";
     private const string CollegeShortCode = "CPSA";
     private const string SpecialityName = "Paediatrics";
     private const string SubSpecialityName = "Paediatrics";
@@ -62,13 +83,273 @@ public sealed class PaediatricCatalogueSeeder
         // Before the curriculum too, and for a harder reason: an item's DecisionBodyKey is a foreign key (T131).
         await EnsureDecisionBodiesAsync(catalogue.DecisionBodyVocabulary, cancellationToken);
 
-        // Before the discipline, so the sub-speciality can be created already defaulting to it (T187).
-        var scale = await EnsureScaleAsync(catalogue.Scale, cancellationToken);
-        var (specialityId, subSpecialityId) = await EnsureCollegeAndDisciplineAsync(scale.Id, cancellationToken);
-        await WarnWhereTheDefaultScaleDiffersAsync(subSpecialityId, scale, cancellationToken);
-        var epaIdsByCode = await EnsureEpasAsync(subSpecialityId, catalogue.Epas, cancellationToken);
-        await EnsureCurriculumAsync(subSpecialityId, scale.Id, catalogue, epaIdsByCode, cancellationToken);
-        await EnsureActivityTypesAsync(specialityId, cancellationToken);
+        // Each row by its seed key (T221). Created only when the database holds none of the catalogue.
+        var rows = await FindCatalogueAsync(catalogue, cancellationToken)
+            ?? await CreateCatalogueAsync(catalogue, cancellationToken);
+
+        if (rows.SubSpecialityId is int subSpecialityId && rows.Scale is not null)
+        {
+            await WarnWhereTheDefaultScaleDiffersAsync(subSpecialityId, rows.Scale, cancellationToken);
+        }
+
+        if (rows.Curriculum is not null)
+        {
+            await EnsureCurriculumItemsAsync(rows.Curriculum, rows.Scale, catalogue, rows.EpasByCode, cancellationToken);
+        }
+
+        await EnsureActivityTypesAsync(rows.SpecialityId, cancellationToken);
+    }
+
+    /// <summary>
+    /// The catalogue's rows, each found by its seed key, or null when the database holds none of them (T221).
+    /// </summary>
+    /// <remarks>
+    /// Each row is found on its own, not through its parent, so a sub-speciality moved to another speciality or an EPA
+    /// moved to another sub-speciality is still the catalogue's. A row that is missing while any other is present is
+    /// announced once and left missing: this seeder cannot tell a row that was never created from one an administrator
+    /// renamed before the T221 migration stamped the keys, or a ladder they deleted, and creating it again is the
+    /// duplicate this replaced. Everything that depends on a missing row is skipped with it.
+    /// <para>
+    /// So the catalogue file reaches a database only once. An EPA added to it later, or a new <c>catalogueVersion</c>
+    /// (whose ladder and curriculum keys are new), is announced here as missing at every boot and never created: like
+    /// every other seeded value, it reaches an existing database only through a migration.
+    /// </para>
+    /// </remarks>
+    private async Task<CatalogueRows?> FindCatalogueAsync(CatalogueSeed catalogue, CancellationToken cancellationToken)
+    {
+        var scaleKey = ScaleSeedKey(catalogue.CatalogueVersion);
+        var curriculumKey = CurriculumSeedKey(catalogue.CatalogueVersion);
+        var codesByEpaKey = catalogue.Epas.ToDictionary(seed => EpaSeedKey(seed.Code), seed => seed.Code, StringComparer.Ordinal);
+        var epaKeys = codesByEpaKey.Keys.ToArray();
+
+        var scale = await _dbContext.EntrustmentScales
+            .Include(entity => entity.Levels)
+            .SingleOrDefaultAsync(entity => entity.SeedKey == scaleKey, cancellationToken);
+        var collegeId = await _dbContext.Colleges
+            .Where(entity => entity.SeedKey == CollegeSeedKey)
+            .Select(entity => (int?)entity.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+        var specialityId = await _dbContext.Specialities
+            .Where(entity => entity.SeedKey == SpecialitySeedKey)
+            .Select(entity => (int?)entity.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+        var subSpecialityId = await _dbContext.SubSpecialities
+            .Where(entity => entity.SeedKey == SubSpecialitySeedKey)
+            .Select(entity => (int?)entity.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+        var curriculum = await _dbContext.Curricula
+            .Include(entity => entity.Items)
+            .SingleOrDefaultAsync(entity => entity.SeedKey == curriculumKey, cancellationToken);
+        var epas = await _dbContext.Epas
+            .Where(entity => entity.SeedKey != null && epaKeys.Contains(entity.SeedKey))
+            .ToListAsync(cancellationToken);
+
+        if (scale is null && collegeId is null && specialityId is null && subSpecialityId is null && curriculum is null && epas.Count == 0)
+        {
+            return null;
+        }
+
+        if (collegeId is null)
+        {
+            WarnMissing("College", CollegeSeedKey, "Nothing else this seeder does depends on it.");
+        }
+
+        if (specialityId is null)
+        {
+            WarnMissing("speciality", SpecialitySeedKey, "A CPSA activity type not yet in this database is not created, because each is scoped to the speciality.");
+        }
+
+        if (subSpecialityId is null)
+        {
+            WarnMissing("sub-speciality", SubSpecialitySeedKey, "Its default entrustment scale is not checked.");
+        }
+
+        if (scale is null)
+        {
+            WarnMissing("entrustment scale", scaleKey, "No curriculum item is created or checked against the ladder, and the sub-speciality's default scale is not checked.");
+        }
+
+        if (curriculum is null)
+        {
+            WarnMissing("curriculum", curriculumKey, "No curriculum item is created or checked.");
+        }
+
+        var epasByCode = epas.ToDictionary(entity => codesByEpaKey[entity.SeedKey!], StringComparer.Ordinal);
+        foreach (var seed in catalogue.Epas.Where(seed => !epasByCode.ContainsKey(seed.Code)))
+        {
+            WarnMissing($"EPA ({seed.Code})", EpaSeedKey(seed.Code), "Its curriculum item is not created or checked.");
+        }
+
+        return new CatalogueRows(scale, specialityId, subSpecialityId, curriculum, epasByCode);
+    }
+
+    private void WarnMissing(string row, string seedKey, string consequence)
+        => _logger.LogWarning(
+            "The paediatric EPA catalogue is in this database, but no {CatalogueRow} carries the seed key '{SeedKey}'. Not created: this seeder finds its rows by seed key, never by a name an administrator can edit, and creates the catalogue only on a database that holds none of it. Either the row lost its key (renamed before the T221 migration, or deleted), or the catalogue file added it after this database was seeded, which reaches an existing database only through a migration. {Consequence}",
+            row,
+            seedKey,
+            consequence);
+
+    /// <summary>
+    /// Creates the whole catalogue on a database that holds none of it, in one save: the v11.1 ladder, the College, its
+    /// speciality and sub-speciality, the fifteen EPAs and the curriculum with an item for each, every row carrying its
+    /// seed key (T221).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// One save, so the catalogue exists whole or not at all. A boot that stopped half way would otherwise leave rows that
+    /// no later boot completes, because once any row is there the seeder creates none (<see cref="FindCatalogueAsync" />).
+    /// </para>
+    /// <para>
+    /// Writes nothing, and says so, when a row it would create collides with one it did not make: a College of the same
+    /// name or short code, or a scale of the same name. Creating beside it would break a unique index and stop startup.
+    /// Adopting it would find a row by a name an administrator can edit, the defect T221 removed.
+    /// </para>
+    /// </remarks>
+    private async Task<CatalogueRows> CreateCatalogueAsync(CatalogueSeed catalogue, CancellationToken cancellationToken)
+    {
+        var collisions = new List<string>();
+        var collegeCollision = await _dbContext.Colleges
+            .AsNoTracking()
+            .Where(entity => entity.Name == CollegeName || entity.ShortCode == CollegeShortCode)
+            .Select(entity => new { entity.Id, entity.Name, entity.ShortCode })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (collegeCollision is not null)
+        {
+            collisions.Add($"College {collegeCollision.Id} ('{collegeCollision.Name}', {collegeCollision.ShortCode})");
+        }
+
+        var scaleCollision = await _dbContext.EntrustmentScales
+            .AsNoTracking()
+            .Where(entity => entity.Name == catalogue.Scale.Name)
+            .Select(entity => (int?)entity.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (scaleCollision is int scaleCollisionId)
+        {
+            collisions.Add($"entrustment scale {scaleCollisionId} ('{catalogue.Scale.Name}')");
+        }
+
+        if (collisions.Count > 0)
+        {
+            _logger.LogWarning(
+                "The paediatric EPA catalogue was not seeded, because a row it did not create already holds a name the catalogue needs: {Collisions}. Nothing was written: creating the catalogue beside it would break a unique index. Rename that row, or, if it is the catalogue's own, give it its seed key; the next startup then seeds or finds the catalogue.",
+                string.Join("; ", collisions));
+            return CatalogueRows.None;
+        }
+
+        // Order is the rank; Label is the rung as the College prints it. The two diverge from
+        // rung 3 onward because v11.1 splits level 3 into 3a and 3b — so Order 5 is labelled "4"
+        // and Order 6 is labelled "5". Everything that compares levels must use Order; everything
+        // shown to a clinician must use Label.
+        var scale = new EntrustmentScale
+        {
+            SeedKey = ScaleSeedKey(catalogue.CatalogueVersion),
+            Name = catalogue.Scale.Name,
+            Description = catalogue.Scale.Description,
+            Levels = catalogue.Scale.Levels
+                .OrderBy(level => level.Order)
+                .Select(level => new EntrustmentLevel
+                {
+                    Order = level.Order,
+                    Label = level.Label,
+                    Description = level.Description
+                })
+                .ToList()
+        };
+
+        var college = new College
+        {
+            SeedKey = CollegeSeedKey,
+            Name = CollegeName,
+            ShortCode = CollegeShortCode,
+            Description = "Constituent College of the Colleges of Medicine of South Africa; owns the national Paediatric EPA catalogue.",
+            CreatedOn = DateTime.UtcNow
+        };
+
+        var speciality = new Speciality
+        {
+            SeedKey = SpecialitySeedKey,
+            Name = SpecialityName,
+            Description = "Specialist training in Paediatrics.",
+            College = college
+        };
+
+        var subSpeciality = new SubSpeciality
+        {
+            SeedKey = SubSpecialitySeedKey,
+            Name = SubSpecialityName,
+            Description = "General paediatric specialist training programme.",
+            Speciality = speciality,
+            // Constrains committee STAR level pickers to this ladder for paediatric trainees (T076). On create only:
+            // an administrator may change it on the sub-speciality's edit page, and a later boot never reverts that
+            // (T187). Existing databases were stamped by the boots before T187.
+            DefaultEntrustmentScale = scale
+        };
+
+        var epas = catalogue.Epas.Select(seed => (Seed: seed, Epa: BuildEpa(seed, subSpeciality))).ToList();
+
+        var curriculum = new Curriculum
+        {
+            SeedKey = CurriculumSeedKey(catalogue.CatalogueVersion),
+            SubSpeciality = subSpeciality,
+            Name = CurriculumName,
+            Version = catalogue.CatalogueVersion,
+            EffectiveFrom = new DateOnly(2026, 1, 1),
+            IsActive = true,
+            // The provenance pin (T109) is stamped here, on create, and nowhere else (T174).
+            Items = epas.Select(pair => BuildCurriculumItem(pair.Epa, scale, pair.Seed, catalogue.DecisionBodyVocabulary)).ToList()
+        };
+
+        // Added in catalogue order, so the EPAs and items are numbered in it, as they were when each had its own save.
+        _dbContext.EntrustmentScales.Add(scale);
+        _dbContext.Colleges.Add(college);
+        _dbContext.Specialities.Add(speciality);
+        _dbContext.SubSpecialities.Add(subSpeciality);
+        _dbContext.Epas.AddRange(epas.Select(pair => pair.Epa));
+        _dbContext.Curricula.Add(curriculum);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return new CatalogueRows(
+            scale,
+            speciality.Id,
+            subSpeciality.Id,
+            curriculum,
+            epas.ToDictionary(pair => pair.Seed.Code, pair => pair.Epa, StringComparer.Ordinal));
+    }
+
+    private static Epa BuildEpa(EpaSeed seed, SubSpeciality subSpeciality) => new()
+    {
+        SeedKey = EpaSeedKey(seed.Code),
+        SubSpeciality = subSpeciality,
+        OwningInstitutionId = null, // national core — institutions adopt, never edit (T091)
+        Code = seed.Code,
+        Title = seed.Title,
+        Domain = seed.Domain,
+        Description = seed.Description,
+        // v11.1's descriptors have no first-class home in the model yet (T098 gap 3), so
+        // they are carried here to keep them visible to trainees and committees rather
+        // than living only in the repository. They are narrative here, not individually
+        // assessable.
+        RequiredKnowledgeSkills = seed.Descriptors.Count == 0
+            ? null
+            : string.Join(Environment.NewLine, seed.Descriptors),
+        IsActive = true,
+        CreatedOn = DateTime.UtcNow
+    };
+
+    /// <summary>
+    /// The rows <see cref="FindCatalogueAsync" /> found or <see cref="CreateCatalogueAsync" /> created. A null is a row
+    /// that is missing, already announced, and skipped by everything that needs it.
+    /// </summary>
+    private sealed record CatalogueRows(
+        EntrustmentScale? Scale,
+        int? SpecialityId,
+        int? SubSpecialityId,
+        Curriculum? Curriculum,
+        IReadOnlyDictionary<string, Epa> EpasByCode)
+    {
+        /// <summary>Nothing: the catalogue could not be created, and the warning says why.</summary>
+        public static CatalogueRows None { get; } = new(null, null, null, null, new Dictionary<string, Epa>(StringComparer.Ordinal));
     }
 
     /// <summary>
@@ -94,7 +375,12 @@ public sealed class PaediatricCatalogueSeeder
     /// </list>
     /// </para>
     /// </remarks>
-    private async Task EnsureActivityTypesAsync(int specialityId, CancellationToken cancellationToken)
+    /// <param name="specialityId">
+    /// The Paediatrics speciality, which a type this creates is scoped to, or null when it could not be found by its seed
+    /// key (T221). Then nothing is created, which the missing row's warning has already said, and the drift warnings still
+    /// run.
+    /// </param>
+    private async Task EnsureActivityTypesAsync(int? specialityId, CancellationToken cancellationToken)
     {
         var existingKeys = await _dbContext.ActivityTypes
             .Select(entity => entity.Key)
@@ -105,7 +391,7 @@ public sealed class PaediatricCatalogueSeeder
         // the refresher reproduces this seeder's own behaviour rather than guessing at it.
         foreach (var seed in ActivityTypeSeedCatalogue.For(ActivityTypeSeedSource.PaediatricCollege))
         {
-            if (existingKeys.Contains(seed.Key))
+            if (existingKeys.Contains(seed.Key) || specialityId is null)
             {
                 continue;
             }
@@ -121,7 +407,7 @@ public sealed class PaediatricCatalogueSeeder
                 Name = seed.Name,
                 Description = seed.Description,
                 Scope = seed.Scope,
-                ScopeId = specialityId,
+                ScopeId = specialityId.Value,
                 OwnerUserId = ActivityTypeSeedCatalogue.SeedActorUserId,
                 CreatedOn = DateTime.UtcNow,
                 IsActive = true,
@@ -240,102 +526,6 @@ public sealed class PaediatricCatalogueSeeder
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    /// <param name="scaleId">
-    /// The v11.1 ladder, which a sub-speciality this creates defaults to. An existing one is left as it is (T187).
-    /// </param>
-    private async Task<(int SpecialityId, int SubSpecialityId)> EnsureCollegeAndDisciplineAsync(int scaleId, CancellationToken cancellationToken)
-    {
-        var college = await _dbContext.Colleges
-            .SingleOrDefaultAsync(entity => entity.ShortCode == CollegeShortCode, cancellationToken);
-
-        if (college is null)
-        {
-            college = new College
-            {
-                Name = "College of Paediatricians of South Africa",
-                ShortCode = CollegeShortCode,
-                Description = "Constituent College of the Colleges of Medicine of South Africa; owns the national Paediatric EPA catalogue.",
-                CreatedOn = DateTime.UtcNow
-            };
-
-            _dbContext.Colleges.Add(college);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        var speciality = await _dbContext.Specialities
-            .SingleOrDefaultAsync(entity => entity.CollegeId == college.Id && entity.Name == SpecialityName, cancellationToken);
-
-        if (speciality is null)
-        {
-            speciality = new Speciality
-            {
-                Name = SpecialityName,
-                Description = "Specialist training in Paediatrics.",
-                CollegeId = college.Id
-            };
-
-            _dbContext.Specialities.Add(speciality);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        var subSpeciality = await _dbContext.SubSpecialities
-            .SingleOrDefaultAsync(entity => entity.SpecialityId == speciality.Id && entity.Name == SubSpecialityName, cancellationToken);
-
-        if (subSpeciality is null)
-        {
-            subSpeciality = new SubSpeciality
-            {
-                Name = SubSpecialityName,
-                Description = "General paediatric specialist training programme.",
-                SpecialityId = speciality.Id,
-                // Constrains committee STAR level pickers to this ladder for paediatric trainees (T076). On create only:
-                // an administrator may change it on the sub-speciality's edit page, and a later boot never reverts that
-                // (T187). Existing databases were stamped by the boots before T187.
-                DefaultEntrustmentScaleId = scaleId
-            };
-
-            _dbContext.SubSpecialities.Add(subSpeciality);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        return (speciality.Id, subSpeciality.Id);
-    }
-
-    private async Task<EntrustmentScale> EnsureScaleAsync(ScaleSeed seed, CancellationToken cancellationToken)
-    {
-        var scale = await _dbContext.EntrustmentScales
-            .Include(entity => entity.Levels)
-            .SingleOrDefaultAsync(entity => entity.Name == seed.Name, cancellationToken);
-
-        if (scale is not null)
-        {
-            return scale;
-        }
-
-        // Order is the rank; Label is the rung as the College prints it. The two diverge from
-        // rung 3 onward because v11.1 splits level 3 into 3a and 3b — so Order 5 is labelled "4"
-        // and Order 6 is labelled "5". Everything that compares levels must use Order; everything
-        // shown to a clinician must use Label.
-        scale = new EntrustmentScale
-        {
-            Name = seed.Name,
-            Description = seed.Description,
-            Levels = seed.Levels
-                .OrderBy(level => level.Order)
-                .Select(level => new EntrustmentLevel
-                {
-                    Order = level.Order,
-                    Label = level.Label,
-                    Description = level.Description
-                })
-                .ToList()
-        };
-
-        _dbContext.EntrustmentScales.Add(scale);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return scale;
-    }
-
     /// <summary>
     /// Logs, and never writes, when the Paediatrics sub-speciality does not default to the v11.1 ladder (T187).
     /// </summary>
@@ -343,8 +533,8 @@ public sealed class PaediatricCatalogueSeeder
     /// Before T187 every boot set the default back to v11.1, so an administrator's change on the sub-speciality's edit
     /// page was silently undone at the next restart. Null is a deliberate state too ("No default — offer every scale"),
     /// so a boot cannot tell a choice from a gap. The same contract as the target, tool-list and scale-pin passes: the
-    /// seeder sets the value when it creates the row (<see cref="EnsureCollegeAndDisciplineAsync" />), and a difference
-    /// is announced at every startup, never reverted.
+    /// seeder sets the value when it creates the row (<see cref="CreateCatalogueAsync" />), and a difference is announced
+    /// at every startup, never reverted.
     /// </remarks>
     private async Task WarnWhereTheDefaultScaleDiffersAsync(int subSpecialityId, EntrustmentScale scale, CancellationToken cancellationToken)
     {
@@ -381,95 +571,62 @@ public sealed class PaediatricCatalogueSeeder
             $"'{scale.Name}' (scale {scale.Id})");
     }
 
-    private async Task<IReadOnlyDictionary<string, int>> EnsureEpasAsync(
-        int subSpecialityId,
-        IReadOnlyList<EpaSeed> seeds,
-        CancellationToken cancellationToken)
-    {
-        var existing = await _dbContext.Epas
-            .Where(entity => entity.SubSpecialityId == subSpecialityId && entity.OwningInstitutionId == null)
-            .ToDictionaryAsync(entity => entity.Code, entity => entity.Id, StringComparer.Ordinal, cancellationToken);
-
-        foreach (var seed in seeds)
-        {
-            if (existing.ContainsKey(seed.Code))
-            {
-                continue;
-            }
-
-            var epa = new Epa
-            {
-                SubSpecialityId = subSpecialityId,
-                OwningInstitutionId = null, // national core — institutions adopt, never edit (T091)
-                Code = seed.Code,
-                Title = seed.Title,
-                Domain = seed.Domain,
-                Description = seed.Description,
-                // v11.1's descriptors have no first-class home in the model yet (T098 gap 3), so
-                // they are carried here to keep them visible to trainees and committees rather
-                // than living only in the repository. They are narrative here, not individually
-                // assessable.
-                RequiredKnowledgeSkills = seed.Descriptors.Count == 0
-                    ? null
-                    : string.Join(Environment.NewLine, seed.Descriptors),
-                IsActive = true,
-                CreatedOn = DateTime.UtcNow
-            };
-
-            _dbContext.Epas.Add(epa);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            existing[seed.Code] = epa.Id;
-        }
-
-        return existing;
-    }
-
-    private async Task EnsureCurriculumAsync(
-        int subSpecialityId,
-        int scaleId,
+    /// <summary>
+    /// Creates the item of every catalogue EPA the curriculum has lost, then announces, and never writes, every item that
+    /// differs from the catalogue.
+    /// </summary>
+    /// <param name="scale">
+    /// The v11.1 ladder, which a recreated item is pinned to, or null when it could not be found by its seed key (T221).
+    /// Then no item is created and no pin is checked, because this seeder would have no ladder to write the minima on.
+    /// </param>
+    /// <remarks>
+    /// An item an administrator removed comes back on the next boot, pinned (T174): it is found by the EPA it names, which
+    /// no rename changes, so this is not the T221 defect. An EPA is found by its seed key wherever it now is, though, and
+    /// one a CollegeAdmin has moved to another sub-speciality gets no new item here: a national item names a national EPA
+    /// of its curriculum's own sub-speciality (T195).
+    /// </remarks>
+    private async Task EnsureCurriculumItemsAsync(
+        Curriculum curriculum,
+        EntrustmentScale? scale,
         CatalogueSeed catalogue,
-        IReadOnlyDictionary<string, int> epaIdsByCode,
+        IReadOnlyDictionary<string, Epa> epasByCode,
         CancellationToken cancellationToken)
     {
-        var curriculum = await _dbContext.Curricula
-            .Include(entity => entity.Items)
-            .SingleOrDefaultAsync(
-                entity => entity.SubSpecialityId == subSpecialityId
-                       && entity.Name == CurriculumName
-                       && entity.Version == catalogue.CatalogueVersion,
-                cancellationToken);
-
-        if (curriculum is null)
+        if (scale is not null)
         {
-            curriculum = new Curriculum
+            foreach (var seed in catalogue.Epas)
             {
-                SubSpecialityId = subSpecialityId,
-                Name = CurriculumName,
-                Version = catalogue.CatalogueVersion,
-                EffectiveFrom = new DateOnly(2026, 1, 1),
-                IsActive = true
-            };
+                if (!epasByCode.TryGetValue(seed.Code, out var epa) ||
+                    curriculum.Items.Any(item => item.EpaId == epa.Id))
+                {
+                    continue;
+                }
 
-            _dbContext.Curricula.Add(curriculum);
-        }
+                if (epa.SubSpecialityId != curriculum.SubSpecialityId)
+                {
+                    _logger.LogWarning(
+                        "Curriculum {CurriculumId} has no item for EPA {EpaId} ({EpaCode}), which has moved to sub-speciality {EpaSubSpecialityId}. Not created: a national item names a national EPA of its curriculum's own sub-speciality.",
+                        curriculum.Id,
+                        epa.Id,
+                        seed.Code,
+                        epa.SubSpecialityId);
+                    continue;
+                }
 
-        foreach (var seed in catalogue.Epas)
-        {
-            if (!epaIdsByCode.TryGetValue(seed.Code, out var epaId) ||
-                curriculum.Items.Any(item => item.EpaId == epaId))
-            {
-                continue;
+                curriculum.Items.Add(BuildCurriculumItem(epa, scale, seed, catalogue.DecisionBodyVocabulary));
             }
 
-            // The provenance pin (T109) is stamped here, on create, and nowhere else (T174).
-            curriculum.Items.Add(BuildCurriculumItem(epaId, scaleId, seed, catalogue.DecisionBodyVocabulary));
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
+        var epaIdsByCode = epasByCode.ToDictionary(pair => pair.Key, pair => pair.Value.Id, StringComparer.Ordinal);
         WarnWhereTargetsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
         WarnWhereToolListsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
-        await WarnWhereScalePinsDifferFromTheCatalogueAsync(curriculum, catalogue, epaIdsByCode, scaleId, cancellationToken);
+        if (scale is not null)
+        {
+            await WarnWhereScalePinsDifferFromTheCatalogueAsync(curriculum, catalogue, epaIdsByCode, scale.Id, cancellationToken);
+        }
+
         WarnWhereDecisionsDifferFromTheCatalogue(curriculum, catalogue, epaIdsByCode);
     }
 
@@ -592,9 +749,9 @@ public sealed class PaediatricCatalogueSeeder
     /// <para>
     /// Scoped to the EPAs this catalogue declares, as those passes are. National core is not a synonym for seeded: a
     /// CollegeAdmin may add their own national item to this curriculum, on a ladder this seeder cannot know, and there
-    /// is nothing for it to differ from. The expected ladder is the one <see cref="EnsureScaleAsync" /> returned, and
-    /// deliberately NOT <c>SubSpeciality.DefaultEntrustmentScaleId</c>: that is a committee-picker default an
-    /// administrator may change at any time.
+    /// is nothing for it to differ from. The expected ladder is the one found by its seed key (T221), and deliberately
+    /// NOT <c>SubSpeciality.DefaultEntrustmentScaleId</c>: that is a committee-picker default an administrator may
+    /// change at any time.
     /// </para>
     /// </remarks>
     private async Task WarnWhereScalePinsDifferFromTheCatalogueAsync(
@@ -761,20 +918,22 @@ public sealed class PaediatricCatalogueSeeder
             ? (QuotaPeriod.Semester, perSemester)
             : (QuotaPeriod.AcademicYear, seed.ObservationsPerYear);
 
-    private static CurriculumItem BuildCurriculumItem(int epaId, int scaleId, EpaSeed seed, IReadOnlyList<DecisionBodySeed> decisionBodies)
+    /// <param name="epa">The EPA, by reference, so a catalogue created in one save can name one it has not saved yet.</param>
+    /// <param name="scale">The v11.1 ladder, by reference for the same reason.</param>
+    private static CurriculumItem BuildCurriculumItem(Epa epa, EntrustmentScale scale, EpaSeed seed, IReadOnlyList<DecisionBodySeed> decisionBodies)
     {
         var (quotaPeriod, requiredCount) = QuotaFor(seed);
         var decision = DecisionFor(seed, decisionBodies);
 
         return new CurriculumItem
         {
-            EpaId = epaId,
+            Epa = epa,
             OwningInstitutionId = null,
             // The ladder v11.1's minima are expressed on (T109). Pinned here, on create, and never by a later boot:
             // re-pinning an existing item would change what its stored minima mean (T174). Every minimum below is
-            // read straight out of EPA v11.1, whose rungs ARE the ladder EnsureScaleAsync seeds, so this seeder knows
-            // the ladder for certain, which nothing downstream does.
-            ScaleId = scaleId,
+            // read straight out of EPA v11.1, whose rungs ARE the ladder this seeder creates from the same file, so it
+            // knows the ladder for certain, which nothing downstream does.
+            Scale = scale,
             // The published target PER WINDOW (T130, D18): three per semester for PAED-001, one per academic
             // year for PAED-008. Before T130 this was the annual figure multiplied by four programme years,
             // stored as a lifetime total, and the progress page read "1 / 24" against a number the College

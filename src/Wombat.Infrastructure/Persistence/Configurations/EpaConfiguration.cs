@@ -25,6 +25,7 @@ public sealed class EpaConfiguration : IEntityTypeConfiguration<Epa>
         builder.HasIndex(entity => new { entity.SubSpecialityId, entity.OwningInstitutionId, entity.Code })
             .IsUnique()
             .HasFilter("\"OwningInstitutionId\" IS NOT NULL");
+        builder.HasSeedKey();
 
         builder.HasOne(entity => entity.SubSpeciality)
             .WithMany(entity => entity.Epas)

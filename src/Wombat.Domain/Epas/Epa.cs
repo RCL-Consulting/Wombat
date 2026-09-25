@@ -15,6 +15,13 @@ public sealed class Epa
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
+    /// The key a seeder finds this row by, such as <c>cpsa:paediatrics:epa:PAED-001</c>, or null for an EPA an
+    /// administrator made (T221). Written when a seeder creates the row and never changed after: no command writes it, so
+    /// neither a new code nor a move to another sub-speciality can lose it.
+    /// </summary>
+    public string? SeedKey { get; init; }
+
+    /// <summary>
     /// The practice domain this EPA belongs to, as published by the owning College — for example
     /// the College of Paediatricians' five domains: "Ambulatory, Emergency and Critical Care in
     /// Children", "Care for the Newborn", "Chronic, Developmental and Preventive Care",
