@@ -23,7 +23,8 @@
     @foreach (var decision in _decisions!)
     {
       <section class="detail-card">
-        <h3>@decision.EpaCode — @decision.EpaTitle</h3>
+        @* Deactivating an EPA leaves its STARs standing; the heading says the EPA is no longer in use (T255). *@
+        <h3><EpaLabel Code="@decision.EpaCode" Title="@decision.EpaTitle" InForce="@decision.EpaInForce" /></h3>
         <dl class="details-list">
           <div><dt>Authorised level</dt><dd>@decision.AuthorisedLevelLabel</dd></div>
           <div><dt>Issued</dt><dd>@decision.IssuedOn.ToString("d MMMM yyyy")</dd></div>

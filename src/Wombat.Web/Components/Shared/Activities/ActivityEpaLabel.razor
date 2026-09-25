@@ -3,18 +3,15 @@
 
    T231. An EPA that is not in force now is marked "(no longer in use)": the words the activity's own EPA picker uses
    (EpaOptionLabel, D48), for the same EPA, because the flag is the one that picker reads (Epa.IsActive, carried as
-   ActivitySummaryDto.EpaInForce). Muted, as the curriculum editor marks an inactive EPA beside its title. *@
+   ActivitySummaryDto.EpaInForce). The text and the mark are the shared EpaLabel's (T255), which the trajectory headings
+   and the entrustment decision lists use too. *@
 @if (string.IsNullOrWhiteSpace(Code))
 {
   <span>—</span>
 }
-else if (InForce == false)
-{
-  <span>@Label <span class="muted">@EpaOptionLabel.NoLongerInUse</span></span>
-}
 else
 {
-  <span>@Label</span>
+  <span><EpaLabel Code="@Code" Title="@Title" InForce="@(InForce != false)" /></span>
 }
 
 @code {
@@ -26,8 +23,4 @@ else
   /// Required, so a list that shows an activity's EPA cannot leave out that it is no longer in use.
   /// </summary>
   [Parameter, EditorRequired] public bool? InForce { get; set; }
-
-  // The picker's own text for an EPA in force (EpaOptionLabel.For), so the cell and the option cannot drift apart; the
-  // marker is added beside it in its own span rather than inside the string, so it can be muted.
-  private string Label => string.IsNullOrWhiteSpace(Title) ? Code! : EpaOptionLabel.For(Code!, Title, inForce: true);
 }

@@ -396,7 +396,7 @@ public sealed class TrajectoryChartTests : TestContext
     public void PointsOf_CarriesWhetherEachDateWasStated()
     {
         var trajectory = new Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee.EpaTrajectoryDto(
-            7, "EPA-07", "Emergency triage", null, null, [],
+            7, "EPA-07", "Emergency triage", true, null, null, [],
             [
                 new(1, new DateOnly(2026, 1, 15), ObservedOnDeclared: true, 2, "2", "Direct observation", "assessor-a"),
                 new(2, new DateOnly(2026, 3, 20), ObservedOnDeclared: false, 3, "3", "Direct observation", "assessor-a", OffLadder: true)

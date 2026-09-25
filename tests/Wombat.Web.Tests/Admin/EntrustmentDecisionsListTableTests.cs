@@ -118,7 +118,7 @@ public sealed partial class EntrustmentDecisionsListTableTests : TestContext
 
     private static EntrustmentDecisionDto Decision(int id, string code, EntrustmentDecisionStatus status)
         => new(
-            id, $"trainee-{id}", id, code, $"EPA {code}", 13, "3a", 3, new DateOnly(2026, 7, 2), null, 30, "chair-1",
+            id, $"trainee-{id}", id, code, $"EPA {code}", true, 13, "3a", 3, new DateOnly(2026, 7, 2), null, 30, "chair-1",
             "Consistent across the window.", status, null, null, null, null, [])
         {
             TraineeName = $"Trainee {id}"

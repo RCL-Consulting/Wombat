@@ -29,6 +29,7 @@ src/Wombat.Web/
         ├── ConfirmDialog.razor
         ├── ActionResult.razor                    ← .action-result region; takes the focus when an action is done (T234)
         ├── InFlight.cs                           ← aria-disabled for a button whose own action runs (T234 review)
+        ├── EpaLabel.razor                        ← "Code — Title", "(no longer in use)" muted beside it when not in force (T255)
         ├── PagerControls.razor                   ← .pager .pager-actions .pager-page-size
         ├── StatePanel.razor                      ← empty / loading / error state shells
         ├── DashboardCard.razor                   ← <DashboardCard Title=…> wraps .detail-card
@@ -392,8 +393,14 @@ its refusal moves to the `.action-result` region, which takes the focus; a refus
 refusal at the head of the empty state (§ Card system).
 
 **An EPA that is not in force** is marked beside its title in a `.muted` span, on the same line: "(inactive: not in
-force)" on the curriculum editor, which admins read, and "(no longer in use)" on an activity's EPA cell on My
-activities and the Inbox (`ActivityEpaLabel`, T231), the words the activity's own EPA picker uses (`EpaOptionLabel`).
+force)" on the curriculum editor, which admins read, and "(no longer in use)", the words the activity's own EPA
+picker uses (`EpaOptionLabel`), on the surfaces listed here. The shared `EpaLabel` prints it: an activity's EPA cell on
+My activities and the Inbox (through `ActivityEpaLabel`, T231), the rating trajectory headings on My progress and the
+committee review page, and the EPA on the admin's entrustment decisions list, its revoke confirmation and My
+authorisations (T255). It renders no element of its own, so a heading's text, and its accessible name, carries the
+mark. A page that names an EPA passes the flag its DTO carries (`EpaInForce`); the parameter is required. No other
+surface marks it yet: the committee review page's sampling concentration list, its staged STARs (which say "No longer
+fits" instead) and its evidence snapshot headings (frozen at Start) still print a bare "Code — Title".
 
 A grid whose every row is always a set of inputs, such as a scale's levels on `EntrustmentScaleEdit`, is a different
 pattern and keeps its controls in the cells. Each of them still needs an accessible name; a column header does not

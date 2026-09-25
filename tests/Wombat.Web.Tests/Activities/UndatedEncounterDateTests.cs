@@ -126,7 +126,7 @@ public sealed class UndatedEncounterDateTests : TestContext
 
     /// <summary>One EPA's trajectory: a rating with a stated encounter date, then one sitting on the day it was created.</summary>
     private static EpaTrajectoryDto OneDatedOneUndated() => new(
-        7, "EPA-07", "Emergency triage", null, null, [],
+        7, "EPA-07", "Emergency triage", true, null, null, [],
         [
             new(1, new DateOnly(2026, 1, 15), ObservedOnDeclared: true, 2, "2", "Direct observation", "assessor-a"),
             new(2, new DateOnly(2026, 3, 20), ObservedOnDeclared: false, 3, "3", "Direct observation", "assessor-a")

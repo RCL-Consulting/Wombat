@@ -458,7 +458,11 @@ as a target (`CurriculumItemsInForce.InForce`). It does not refuse filing, and i
 - **An activity already filed against it keeps its EPA**, shown as "(no longer in use)" in its option list
   (`EpaOptionLabel`), because the pickers offer only EPAs in force. My activities and the Inbox mark it the same way
   (T231): `ActivitySummaryDto.EpaInForce` carries the flag the picker reads (`Epa.IsActive`, judged now), and
-  `ActivityEpaLabel` prints `EpaOptionLabel.NoLongerInUse` after the title, muted.
+  `ActivityEpaLabel` prints `EpaOptionLabel.NoLongerInUse` after the title, muted. So do the rating trajectory headings
+  on My progress and the committee review page (`EpaTrajectoryDto.EpaInForce`), which still chart the EPA's ratings,
+  and the admin's entrustment decisions list and My authorisations (`EntrustmentDecisionDto.EpaInForce`, filled by the
+  shared `ToDto`), whose STARs deactivation leaves standing (T255). Each prints it through the shared `EpaLabel`. The
+  entrustment standing panel needs no mark: it reads only items in force (`.InForce()`).
 
 ## Rendering
 

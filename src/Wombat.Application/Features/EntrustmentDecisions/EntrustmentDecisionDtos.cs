@@ -15,12 +15,19 @@ public sealed record EntrustmentEvidenceLinkDto(
     DateTime? SourceRecordedOn,
     int? CommitteeEvidenceId = null);
 
+/// <param name="EpaInForce">
+/// Whether the decision's EPA is in force now (T255, D48): <c>Epa.IsActive</c>, the flag the EPA picker labels by
+/// (<see cref="Wombat.Application.Features.Epas.EpaOptionLabel" />), so the admin list and My authorisations mark
+/// "(no longer in use)" on exactly the EPA My activities marks. Judged now, not at issue: a STAR on an EPA deactivated
+/// since stays what it is, and the mark says the EPA it authorises is no longer in use.
+/// </param>
 public sealed record EntrustmentDecisionDto(
     int Id,
     string TraineeUserId,
     int EpaId,
     string EpaCode,
     string EpaTitle,
+    bool EpaInForce,
     int AuthorisedLevelId,
     string AuthorisedLevelLabel,
     int AuthorisedLevelOrder,

@@ -142,6 +142,36 @@ public sealed class EntrustmentDecisionHandlersTests
         active[0].EvidenceLinks.Should().ContainSingle().Which.CommitteeEvidenceId.Should().Be(EvidenceOnEpa8);
     }
 
+    /// <summary>
+    /// T255, D48. Both entrustment decision lists say whether each STAR's EPA is in force now, by the flag the EPA picker
+    /// labels by (<c>EpaOptionLabel</c>): My authorisations (<see cref="GetActiveDecisionsForTraineeQuery" />) and the
+    /// admin's list (<see cref="ListEntrustmentDecisionsForAdminQuery" />). Deactivating an EPA leaves its STAR standing.
+    /// </summary>
+    [Fact]
+    public async Task BothDecisionLists_SayWhetherEachStarsEpaIsInForceNow()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedRatifiedReviewAsync(dbContext);
+        await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        await SeedStarAsync(dbContext, review.Id, 8, 4, new DateOnly(2026, 4, 1), null);
+
+        (await dbContext.Epas.SingleAsync(epa => epa.Id == 8))
+            .Deactivate(new DateTime(2026, 5, 1, 8, 0, 0, DateTimeKind.Utc)).Should().BeTrue();
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        var mine = await new GetActiveDecisionsForTraineeQueryHandler(dbContext).Handle(
+            new GetActiveDecisionsForTraineeQuery("trainee-1", CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
+            CancellationToken.None);
+        var administered = await new ListEntrustmentDecisionsForAdminQueryHandler(dbContext, FakeUserDirectory.Empty).Handle(
+            new ListEntrustmentDecisionsForAdminQuery(null, null, CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
+            CancellationToken.None);
+
+        mine.Select(decision => (decision.EpaCode, decision.EpaInForce)).Should().Equal(("EPA-07", true), ("EPA-08", false));
+        administered.Select(decision => (decision.EpaCode, decision.EpaInForce))
+            .Should().BeEquivalentTo([("EPA-07", true), ("EPA-08", false)]);
+    }
+
     private static ApplicationDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

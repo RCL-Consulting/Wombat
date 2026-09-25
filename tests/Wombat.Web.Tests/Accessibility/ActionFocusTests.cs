@@ -391,7 +391,7 @@ public sealed class ActionFocusTests : TestContext
         => cut.FindAll(".detail-card button").ToList();
 
     private static EntrustmentDecisionDto Decision(int id, string epaCode)
-        => new(id, "admin-1", 100 + id, epaCode, $"{epaCode} title", 3, "3a", 3, new DateOnly(2026, 7, 1), null, 30,
+        => new(id, "admin-1", 100 + id, epaCode, $"{epaCode} title", true, 3, "3a", 3, new DateOnly(2026, 7, 1), null, 30,
             "chair-1", "Consistent across the period.", EntrustmentDecisionStatus.Active, null, null, null, null, []);
 
     // ---- scenarios ----

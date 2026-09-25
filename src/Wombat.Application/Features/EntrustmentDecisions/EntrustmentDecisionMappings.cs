@@ -4,6 +4,10 @@ namespace Wombat.Application.Features.EntrustmentDecisions;
 
 internal static class EntrustmentDecisionMappings
 {
+    /// <remarks>
+    /// Every producer includes <see cref="EntrustmentDecision.Epa" />. Without it the code and title are blank, and there
+    /// is no EPA to mark as out of force (T255), so it reads as in force.
+    /// </remarks>
     public static EntrustmentDecisionDto ToDto(this EntrustmentDecision decision)
         => new(
             decision.Id,
@@ -11,6 +15,7 @@ internal static class EntrustmentDecisionMappings
             decision.EpaId,
             decision.Epa?.Code ?? string.Empty,
             decision.Epa?.Title ?? string.Empty,
+            decision.Epa?.IsActive ?? true,
             decision.AuthorisedLevelId,
             decision.AuthorisedLevel?.Label ?? string.Empty,
             decision.AuthorisedLevel?.Order ?? 0,

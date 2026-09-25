@@ -75,7 +75,8 @@ else
         {
           <tr>
             <td>@decision.TraineeName</td>
-            <td>@decision.EpaCode — @decision.EpaTitle</td>
+            @* A STAR on an EPA deactivated since says the EPA is no longer in use (T255). *@
+            <td><EpaLabel Code="@decision.EpaCode" Title="@decision.EpaTitle" InForce="@decision.EpaInForce" /></td>
             <td>@decision.AuthorisedLevelLabel</td>
             <td class="col-fit">@decision.IssuedOn.ToString("yyyy-MM-dd")</td>
             <td class="col-fit">@(decision.ExpiresOn?.ToString("yyyy-MM-dd") ?? "—")</td>
@@ -102,7 +103,7 @@ else
     <h3>Revoke entrustment decision</h3>
     <p>
       You are about to revoke the entrustment decision for
-      <strong>@_revokingDecision.EpaCode — @_revokingDecision.EpaTitle</strong>
+      <strong><EpaLabel Code="@_revokingDecision.EpaCode" Title="@_revokingDecision.EpaTitle" InForce="@_revokingDecision.EpaInForce" /></strong>
       held by <strong>@_revokingDecision.TraineeName</strong>.
       Revocation is immediate and irreversible. The trainee is notified.
     </p>

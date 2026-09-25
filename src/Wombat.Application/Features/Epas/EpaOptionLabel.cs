@@ -8,7 +8,8 @@ namespace Wombat.Application.Features.Epas;
 /// activity already stores. It stays on the record, and says why it cannot be chosen again: a deactivated EPA pauses
 /// credit, so an activity filed against it counts once the EPA is reactivated, and until then the reader should know.
 /// My activities and the Inbox print <see cref="NoLongerInUse" /> after the same EPA, by the same flag
-/// (<c>ActivitySummaryDto.EpaInForce</c>, T231).
+/// (<c>ActivitySummaryDto.EpaInForce</c>, T231), and so do the rating trajectory headings and the entrustment decision
+/// lists (<c>EpaTrajectoryDto.EpaInForce</c>, <c>EntrustmentDecisionDto.EpaInForce</c>, T255).
 /// </remarks>
 public static class EpaOptionLabel
 {

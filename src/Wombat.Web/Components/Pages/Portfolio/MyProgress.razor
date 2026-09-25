@@ -159,7 +159,8 @@
         @foreach (var trajectory in _trajectories)
         {
           <section class="detail-card">
-            <h3>@trajectory.EpaCode — @trajectory.EpaTitle</h3>
+            @* An EPA no longer in force still charts what was recorded against it, and says it is no longer in use (T255). *@
+            <h3><EpaLabel Code="@trajectory.EpaCode" Title="@trajectory.EpaTitle" InForce="@trajectory.EpaInForce" /></h3>
             <p class="muted">
               @trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")
               from @trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() distinct assessor@(trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() == 1 ? string.Empty : "s").

@@ -211,6 +211,7 @@ public sealed class PeopleByNamePageTests : TestContext
         7,
         "PAED-001",
         "Resuscitate a critically ill child",
+        true,
         3,
         "Level 3",
         3,

@@ -677,7 +677,8 @@
           @foreach (var trajectory in _trajectories)
           {
             <article class="detail-card detail-card--compact">
-              <h4>@trajectory.EpaCode — @trajectory.EpaTitle</h4>
+              @* An EPA no longer in force still charts what was recorded against it, and says it is no longer in use (T255). *@
+              <h4><EpaLabel Code="@trajectory.EpaCode" Title="@trajectory.EpaTitle" InForce="@trajectory.EpaInForce" /></h4>
               <p class="muted">@trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")</p>
               <TrajectoryChart Points="@TrajectoryChart.PointsOf(trajectory)"
                                Rungs="@BuildRungs(trajectory)"

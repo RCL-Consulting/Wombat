@@ -370,7 +370,7 @@ public sealed class CallerPrincipalPageTests : TestContext
             "General Paediatrics", new DateOnly(2026, 1, 1), new DateOnly(2029, 12, 31), true);
 
     private static EntrustmentDecisionDto Decision(string traineeUserId)
-        => new(DecisionId, traineeUserId, 101, "PAED-001", "Resuscitate a critically ill child", 3, "3a", 3,
+        => new(DecisionId, traineeUserId, 101, "PAED-001", "Resuscitate a critically ill child", true, 3, "3a", 3,
             new DateOnly(2026, 7, 1), null, 30, "chair-1", "Consistent across the period.", EntrustmentDecisionStatus.Active,
             null, null, null, null, []);
 

@@ -83,6 +83,36 @@ public sealed class GetEpaTrajectoryForTraineeTests
         result.Select(dto => dto.EpaCode).Should().Equal("EPA-03", "EPA-07");
     }
 
+    /// <summary>
+    /// T255, D48. Each trajectory says whether its EPA is in force now, by the flag the activity's own picker labels by
+    /// (<c>EpaOptionLabel</c>), so the heading can mark it "(no longer in use)". A deactivated EPA still charts: its
+    /// ratings are evidence already recorded, and deactivating pauses credit, it erases nothing.
+    /// </summary>
+    [Fact]
+    public async Task EachTrajectory_SaysWhetherItsEpaIsInForceNow_AndADeactivatedOneStillCharts()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        dbContext.Epas.Add(new Epa { Id = 3, SubSpecialityId = 1, Code = "EPA-03", Title = "Ward round", IsActive = true });
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc));
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-b", 3, 4, new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        (await dbContext.Epas.SingleAsync(epa => epa.Id == 3))
+            .Deactivate(new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Utc)).Should().BeTrue();
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None);
+
+        result.Select(dto => (dto.EpaCode, dto.EpaInForce, dto.Points.Count)).Should().Equal(
+            ("EPA-03", false, 1),
+            ("EPA-07", true, 1));
+    }
+
     [Fact]
     public async Task IgnoresUnratedActivityTypes()
     {

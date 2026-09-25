@@ -1,0 +1,32 @@
+@* An EPA by name: "Code — Title", the form every EPA surface uses, and "(no longer in use)" after it when the EPA is not
+   in force now (T231, T255; D48). The text and the words are the activity's own EPA picker's (EpaOptionLabel), and the
+   flag is the one that picker reads (Epa.IsActive), so every page that names an EPA marks the same EPA the same way.
+   The marker sits in its own muted span beside the title, as the curriculum editor marks an inactive EPA.
+
+   It renders no element of its own, so it can sit in a table cell, a heading or a sentence: the heading's text, and so
+   its accessible name, carries the marker. *@
+@if (InForce)
+{
+  @Label
+}
+else
+{
+  <text>@Label <span class="muted">@EpaOptionLabel.NoLongerInUse</span></text>
+}
+
+@code {
+  [Parameter, EditorRequired] public string Code { get; set; } = string.Empty;
+  [Parameter] public string? Title { get; set; }
+
+  /// <summary>
+  /// Whether the EPA is in force now: the flag a DTO carries for it (<c>ActivitySummaryDto.EpaInForce</c>,
+  /// <c>EpaTrajectoryDto.EpaInForce</c>, <c>EntrustmentDecisionDto.EpaInForce</c>). Required, so a page that names an EPA
+  /// cannot leave out that it is no longer in use.
+  /// </summary>
+  [Parameter, EditorRequired] public bool InForce { get; set; }
+
+  // The picker's own text for an EPA in force (EpaOptionLabel.For), so the label and the option cannot drift apart; the
+  // marker is added beside it in its own span rather than inside the string, so it can be muted. A title that did not
+  // load leaves the code alone rather than a dangling dash.
+  private string Label => string.IsNullOrWhiteSpace(Title) ? Code : EpaOptionLabel.For(Code, Title, inForce: true);
+}

@@ -46,6 +46,14 @@ public sealed record EpaTrajectoryDto(
     string EpaCode,
     string EpaTitle,
     /// <summary>
+    /// Whether the EPA is in force now (T255, D48): <c>Epa.IsActive</c>, the flag its activities' EPA picker labels by
+    /// (<see cref="Wombat.Application.Features.Epas.EpaOptionLabel" />) and <c>ActivitySummaryDto.EpaInForce</c> carries,
+    /// so a trajectory heading marks "(no longer in use)" on exactly the EPA My activities marks. The chart still draws a
+    /// deactivated EPA's ratings: they are evidence already recorded, and deactivating pauses credit, it erases nothing.
+    /// No default, so a new producer cannot report every EPA as in force.
+    /// </summary>
+    bool EpaInForce,
+    /// <summary>
     /// The ladder this EPA's ratings are read against — the scale the trainee's curriculum item for it
     /// is pinned to (T109). Null when the item is unpinned, which is a permanent and meaningful state.
     /// </summary>
@@ -227,6 +235,8 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
                     epa.Id,
                     epa.Code,
                     epa.Title,
+                    // T255. In force now, by the rule the activity's own picker labels by (EpaOptionLabel).
+                    epa.IsActive,
                     scaleId,
                     scaleId.HasValue && ladders.ScaleNameById.TryGetValue(scaleId.Value, out var name)
                         ? name
