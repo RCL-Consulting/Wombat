@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
+using Wombat.Application.Common.Persistence;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Integration.Tests.CommitteeDecisions;
@@ -69,12 +70,12 @@ public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifet
 
                 var nowhere = async () => await InsertPanelAsync(connection, institutionId + 1000);
                 (await nowhere.Should().ThrowAsync<PostgresException>()).Which.SqlState
-                    .Should().Be(PostgresErrorCodes.ForeignKeyViolation);
+                    .Should().BeOneOf(PostgresErrors.ForeignKeyViolationStates);
 
                 var deleteTheInstitution = async () => await ExecuteAsync(
                     connection, """DELETE FROM "Institutions" WHERE "Id" = $1""", institutionId);
                 (await deleteTheInstitution.Should().ThrowAsync<PostgresException>()).Which.SqlState
-                    .Should().Be(PostgresErrorCodes.ForeignKeyViolation, "a panel's institution cannot vanish under it");
+                    .Should().BeOneOf(PostgresErrors.ForeignKeyViolationStates, "a panel's institution cannot vanish under it");
             }
         }
         finally

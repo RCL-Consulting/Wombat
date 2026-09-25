@@ -125,6 +125,12 @@ sudo -u postgres createdb -O wombat wombat
 > **Version matters for restores.** The live cluster is 18.x and backups are taken with
 > `pg_dump` 18. A dump from 18 will **not** restore into a 16 cluster, so a rebuild that
 > installs 16 fails at exactly the moment you need it to work.
+>
+> **It matters for error codes too (T243).** On 18, a delete refused by an `ON DELETE RESTRICT`
+> foreign key reports SQLSTATE `23001`, where 16 reports `23503`. The dev server was 16.10 on
+> 2026-09-25, so code and tests go through `PostgresErrors.IsForeignKeyViolation`, which accepts
+> both (ARCHITECTURE.md § Testing). `deploy/verify/drift-check.sh` prints the server's version
+> and counts a major other than 18 as drift.
 
 Connection string in `wombat.env` — note the name, which is what ASP.NET Core's
 `GetConnectionString("DefaultConnection")` actually reads:

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Wombat.Application.Audit;
+using Wombat.Application.Common.Persistence;
 using Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -108,7 +109,8 @@ public sealed class EntrustmentScaleDeletePostgresTests : IAsyncLifetime
                 var save = () => bypass.SaveChangesAsync();
                 var refused = (await save.Should().ThrowAsync<DbUpdateException>()).Which;
                 var postgres = refused.InnerException.Should().BeOfType<PostgresException>().Subject;
-                postgres.SqlState.Should().Be(PostgresErrorCodes.ForeignKeyViolation);
+                postgres.SqlState.Should().BeOneOf(PostgresErrors.ForeignKeyViolationStates, "23001 on PostgreSQL 18 (T243)");
+                PostgresErrors.IsForeignKeyViolation(refused).Should().BeTrue("a handler catching this save would ask so");
                 postgres.ConstraintName.Should().Be(ForeignKey);
             }
 

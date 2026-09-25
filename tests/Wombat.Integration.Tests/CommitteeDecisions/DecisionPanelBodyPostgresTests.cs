@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
+using Wombat.Application.Common.Persistence;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Domain.CommitteeDecisions;
@@ -139,11 +140,11 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
 
             var unknown = async () => await InsertPanelAsync(connection, a, null, "cardiac");
             (await unknown.Should().ThrowAsync<PostgresException>()).Which.SqlState
-                .Should().Be(PostgresErrorCodes.ForeignKeyViolation);
+                .Should().BeOneOf(PostgresErrors.ForeignKeyViolationStates);
 
             var deleteTheBody = async () => await ExecuteAsync(connection, """DELETE FROM "DecisionBodies" WHERE "Key" = 'neonatal'""");
             (await deleteTheBody.Should().ThrowAsync<PostgresException>()).Which.SqlState
-                .Should().Be(PostgresErrorCodes.ForeignKeyViolation, "a body a panel sits as cannot vanish under it");
+                .Should().BeOneOf(PostgresErrors.ForeignKeyViolationStates, "a body a panel sits as cannot vanish under it");
         }
         finally
         {

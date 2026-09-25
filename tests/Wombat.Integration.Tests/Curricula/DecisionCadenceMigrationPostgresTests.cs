@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Wombat.Application.Common.Persistence;
 using Wombat.Domain.Curricula;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Infrastructure.Persistence.Migrations;
@@ -121,14 +122,15 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
             (await badCadence.Should().ThrowAsync<PostgresException>()).Which.SqlState.Should().Be(PostgresErrorCodes.CheckViolation);
 
             var unknownBody = () => ExecuteAsync(schema, """UPDATE "CurriculumItems" SET "DecisionBodyKey" = 'paediatric_icu' WHERE "Id" = $1""", itemId);
-            (await unknownBody.Should().ThrowAsync<PostgresException>()).Which.SqlState.Should().Be(PostgresErrorCodes.ForeignKeyViolation);
+            (await unknownBody.Should().ThrowAsync<PostgresException>()).Which.SqlState.Should().BeOneOf(PostgresErrors.ForeignKeyViolationStates);
 
             var deleteInUse = async () =>
             {
                 await ExecuteAsync(schema, """UPDATE "CurriculumItems" SET "DecisionBodyKey" = 'neonatal' WHERE "Id" = $1""", itemId);
                 await ExecuteAsync(schema, """DELETE FROM "DecisionBodies" WHERE "Key" = 'neonatal'""");
             };
-            (await deleteInUse.Should().ThrowAsync<PostgresException>()).Which.SqlState.Should().Be(PostgresErrorCodes.ForeignKeyViolation);
+            (await deleteInUse.Should().ThrowAsync<PostgresException>()).Which.SqlState.Should().BeOneOf(
+                PostgresErrors.ForeignKeyViolationStates, "a RESTRICT key: 23001 on PostgreSQL 18 (T243)");
         }
         finally
         {

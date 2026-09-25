@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
+using Wombat.Application.Common.Persistence;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Domain.Identity;
@@ -192,7 +193,7 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
             // STARs are revoked, never deleted; the key restricts, so a Decided line never loses the STAR it names.
             var deleteTheStar = async () => await ExecuteAsync(connection, """DELETE FROM "EntrustmentDecisions" WHERE "Id" = $1""", starId);
             var refusal = (await deleteTheStar.Should().ThrowAsync<PostgresException>()).Which;
-            refusal.SqlState.Should().Be(PostgresErrorCodes.ForeignKeyViolation);
+            refusal.SqlState.Should().BeOneOf(PostgresErrors.ForeignKeyViolationStates, "23001 on PostgreSQL 18 (T243)");
             refusal.ConstraintName.Should().Be("FK_CommitteeAgendaLines_EntrustmentDecisions_EntrustmentDecisi~");
             (await InsertAsync(connection,
                     """SELECT COUNT(*) FROM "CommitteeAgendaLines" WHERE "Id" = $1 AND "EntrustmentDecisionId" = $2""", decided, starId))
