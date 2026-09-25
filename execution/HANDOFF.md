@@ -15,26 +15,32 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
   - T205 (the MSF respondent page), T206, T207, T163 and T214 (MSF privacy and links).
   - T160 (the D15 date bounds), T137, T135 (D44), T113, T182 and T183 (security), and 40-odd smaller tasks.
   - See `git log` and each task's "As built".
-- **2026-09-25, merged to master and closed after browser checks:**
-  - F1: T191, T197, T192, T189 and T193.
-  - F2: T187, T198, T211 and T217.
-  - G1: T145 (forms retired), T219, T221 and T196 (D48), each with a migration. A `pg_dump` was taken first:
-    `recovery/pre-g1-migrations.dump`.
-- **The committee chain is merged** (T215, T213, T212, T216, T194; `69da24d`..`225763e`). Its browser check is running.
-- **Master suites:** 4,993 at `e6d388b` (G1). The chain's tree was 5,233 (Domain 612, Application 2409,
-  Infrastructure 894, Architecture 33, Web 1135, Integration 150), all green.
+- **2026-09-25: merged, browser-checked, closed and pushed** (the operator: "push when they land and keep going"):
+  - F1, F2 and G1 (T145, T219, T221, T196).
+  - The committee chain (T215, T213, T212, T216, T194).
+  - G2 (T228, T224, T225, T210, T209, T220), G3 (T151, T227, T222, T223) and G4 (T229, T232, T231, T230).
+  - A `pg_dump` was taken before each migration batch (`recovery/pre-g{1,2,3,4}-*.dump`).
+- **Master `4776848` = origin.** Its code tree was 5,648 tests green: Domain 658, Application 2,595, Infrastructure
+  910, Architecture 35, Web 1,239 and Integration 211.
 - **Running:**
-  - G2: MSF T228, T224, T225 and T210; T220; T209 (D49).
-  - G3: T151 (D50) and T227; T222 and T223.
-  - G4: T229 (P2), T232, T231 and T230.
   - Committee chain 2: T235 (P2), T237 and T238.
+  - H1: T233, T178 and T244; T236, T234 and T226.
+  - MSF chain 2: T246 (P2), T249, T248 and T247.
+  - The jobs chain: T117 (P2), T240, T243 and T241.
+  - The scale chain: T253 (P2), T254 and T255.
 - **Next:**
-  - UI polish H: T226, T188, T190, T178, T199, T233, T234, T236 and T239.
-  - T218, if the chain's browser check shows it is still open.
-  - T159 (the runbook replay on a fresh dev database) goes last.
+  - T251 (P2: dropped MSF links) and T252.
+  - Committee chain 3: T218a, T239, T250 and T245.
+  - H2: T190, T188 and T199.
+  - T159 (the runbook replay on a fresh database) goes last.
+- **Workflow traps:**
+  - Run suites in the verify-master worktree while the dev app runs (it locks the per-project Release output).
+  - Regenerate every branch migration on master's snapshot at merge.
+  - Write commit messages to a file.
 - **Decisions adopted on recommendation**, all in EPA-PROGRAMME § 3; the operator may overrule any of them:
   - D33 part 1; D34 (a link); D35 (an MSF kind); D38(a); D44; D45; D46 (quorum 2, no Administrator bypass).
   - D47 (an interim 5-point MSF scale); D48, D49 and D50 (2026-09-25; T196, T209 and T151).
+  - T237: refuse a Trainee in any panel seat. T240: the draft reminder counts as a digest.
   - T131's O1–O8 defaults; T160's credit-bearing scope; T174 (seeds pin on create only).
 - **Left for the operator or the College:**
   - T139 (WindowMonths; § 3F question 10) and T170 (self-assessment; question 11). T209 is built to D49's
