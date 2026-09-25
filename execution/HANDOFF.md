@@ -2,69 +2,64 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## In progress 2026-09-24 (Opus) — finishing the EPA stream (the operator: "Not deploying yet")
+## Session 2026-09-24/25 (Opus): the EPA stream, built
 
-- Housekeeping committed (`47a9aad`, `54c9805`): T118 and T104 closed by finding, T158–T171 filed, and
-  `EPA-PROGRAMME.md` § 2 rewritten as the live queue, with § 4 "Order to finish the stream".
-- **Shipped on master since the morning (not pushed), each browser-verified on dev where reachable.** The core of the
-  EPA stream is done:
-  - T131 (all six slices: D38 evidence, cadence, routing, agenda, entrustment-only reviews, the decisions-due page).
-  - T165 (quorum, D46), T166 (year targets and exit readiness), T167 (the evidence snapshot names each line).
-  - T168 (MSF coverage) and T186 (coverage read from the evidence rows).
-  - T154 (clinical audit and portfolio review; D34 closed, D45) and T164 (learner feedback, D35 closed).
-  - T205 (the MSF respondent page), T206, T207, T163 and T214 (MSF privacy and links).
-  - T160 (the D15 date bounds), T137, T135 (D44), T113, T182 and T183 (security), and 40-odd smaller tasks.
-  - See `git log` and each task's "As built".
-- **2026-09-25: merged, browser-checked, closed and pushed** (the operator: "push when they land and keep going"):
-  - Committee: F1, F2, G1–G4, chains 1–2 (T215–T238).
-  - H1 (T233, T178, T244, T236, T234, T226).
-  - MSF chain 2 (T246–T249).
-  - The scale chain (T253–T255).
-  - The jobs chain (T117, T240, T243, T241).
-  - Each migration batch was preceded by a `pg_dump` in `recovery/`.
-- **Master = origin; the last full run was 6,255 tests green.** Dev's PostgreSQL is 16 and production's is 18 (T275).
-- **Running:** committee chain 3 (T256 P2, T218, T250, T239, T257, T245), lifecycle (T258 P2, T252, T262), MSF chain 3
-  (T251 P2, T268, T269, T267), account (T265 P2, T155 P2, T156) and H2 (T261, T263, T199; T266, T188).
-- **Next:** T190 (page titles), then the rest of the P3 queue.
-  - EPA-stream items still open: T259, T260, T270–T273 and T274.
-  - T159 (the runbook replay on a fresh database) goes last.
-- **Workflow traps:**
-  - Run suites in the verify-master worktree while the dev app runs (it locks the per-project Release output).
-  - Regenerate a branch migration whose timestamp sorts before master's.
-  - Take a lane's review fixes from any merge commit that holds them (use `git merge-tree` to compare).
-  - Write commit messages to a file.
+The operator: "Not deploying yet, we need to get the EPA stream completed", then "push when they land and keep going".
+
+### Done
+
+- **The stream as planned in EPA-PROGRAMME § 4 is built.** § 2A is re-baselined and lists only what is left.
+- **About 150 tasks were closed.** Each was implemented in a worktree, adversarially reviewed and fixed, squash-merged
+  (one commit per task), suite-green, browser-checked on dev with scripted Chrome and the seeded accounts, and pushed.
+- **Master = origin.** The last full run was 7,467 tests green.
+- **The last checks of the session** found one real defect: a release after a withdraw committed evidence. It was fixed
+  in `317670c`, test-first and mutation-checked.
+- **Written up:**
+  - the College message, drafted in `knowledge/college-message-2026-09.md` (12 questions, each with Wombat's interim
+    answer);
+  - STATE, rewritten;
+  - DOMAIN.md, HANDOVER.md and CLAUDE.md, each corrected where the work showed them wrong.
+- **T159:** the runbook is retargeted and merged. The replay of Acts 1–2 on a separate database (`wombat_t159`) is
+  running, and was approved by the operator.
+
+### For the operator
+
+- **T157, the deploy:**
+  - `pg_dump` production first.
+  - Confirm `Email__SmtpHost` is set; without it, mail bodies with links are logged (T157's note).
+  - Expect many migrations. T130, T219 and T281 empty the progress table, and the bootstrapper refills it.
+- **New P2s "before real users"** (neither is exploitable today; there is no SSO provider and no real user):
+  - T288: SSO group mappings across institutions;
+  - T289: the assessor-profile form.
+- **Defaults adopted on recommendation,** any of which can be overruled. All are in EPA-PROGRAMME § 3 or the task files:
+  - D33 part 1, D34, D35, D38(a), D44–D50;
+  - T131 O1–O8, T237, T240, T242 (c), T258, T268, T273, T281 and T284.
+  - T249 records one choice as the operator's: the PDF prints group counts.
+- **Waiting on the College:** T139 (§ 3F question 10) and T170 (question 11). Deferred: T146, T152, T153 and T171.
+- **T128:** the backup destination. It is still blocked on the operator.
+
+### Dev state
+
+- **The dev trainee (profile 1) is ended,** with a last day of 2026-09-20, from T281's browser check. The permission
+  classifier refused the agent's SQL restore. To restore it, run this, then restart the app so the bootstrapper refills
+  progress:
+  - `UPDATE "TraineeProfiles" SET "IsActive"=true,"DeactivatedOn"=NULL,"CompletedOn"=NULL WHERE "Id"=1;`
+  - `DELETE FROM "CurriculumItemProgresses";`
+- **Snapshots:** `recovery/pre-*.dump`, one before each migration batch; the newest is `pre-t283-t281-migrations`.
+- **Dev accounts:** trainee, assessor, committee, committee2, coordinator, instadmin and collegeadmin (DevUserSeeder).
+  The passwords of users created in the session are in `pwd_DO_NOT_COMMIT.txt` only.
+- **Dev runs PostgreSQL 16; production runs 18** (T275).
+
+### Traps
+
+- **Merging lanes:**
+  - Squash per task with `cherry-pick -n`, then compare HEAD with `git merge-tree --write-tree` of the branch.
+  - Review fixes often sit inside a lane's merge commits, so take the full merge's version of any file that conflicts.
+  - Regenerate a lane's migration whose timestamp sorts before master's newest.
+- **Tests and commits:**
+  - Run the suites in `.claude/worktrees/verify-master` while the dev app runs; it locks the per-project Release output.
+  - Write commit messages to a file (`git commit -F`).
   - Never commit on master while a merge agent works.
-- **Decisions adopted on recommendation**, all in EPA-PROGRAMME § 3; the operator may overrule any of them:
-  - D33 part 1; D34 (a link); D35 (an MSF kind); D38(a); D44; D45; D46 (quorum 2, no Administrator bypass).
-  - D47 (an interim 5-point MSF scale); D48, D49 and D50 (2026-09-25; T196, T209 and T151).
-  - T237: refuse a Trainee in any panel seat. T240: the draft reminder counts as a digest.
-  - T268: a locked account is not a current trainee. T273: frozen snapshots are not re-marked. T242: recommendation (c).
-  - T131's O1–O8 defaults; T160's credit-bearing scope; T174 (seeds pin on create only).
-- **Left for the operator or the College:**
-  - T139 (WindowMonths; § 3F question 10) and T170 (self-assessment; question 11). T209 is built to D49's
-    provisional default until question 4 is answered.
-  - T146, T152 and T171, which are not needed for v11.1.
-  - § 3F now holds 12 College questions.
-- **Browser checks:**
-  - The Playwright MCP server disconnected; agents drive a scripted Chrome instead (`npm i playwright`, channel
-    `chrome`).
-  - Agents may not read the admin credential, so the DevUserSeeder accounts are used: trainee, assessor, committee,
-    committee2, coordinator, instadmin and collegeadmin (added `6242208`).
-  - Email is caught by a local SMTP sink on port 25.
-- **Dev DB:**
-  - reviews 1–5 and panels 1–2 (Neonatal CCC);
-  - MSF campaigns 4–9;
-  - activities up to about 35;
-  - institution 2 and coordinator.t113b.
-
-## Earlier today (Opus) — T102, T105, T120, T149, T099 and W-007 shipped
-
-The full handoff is in `execution/log/2026-09-24-t102-t149-handoff.md`. These traps still apply:
-
-- **Label only what is STORED** (`ActivityForm.StoredDataJson`), because `GetUserOptionAsync` is unscoped by design.
-- **A new seed's transitions declare `validation`;** copy `mini_cex_cpsa`.
-- **Pinned seed lists live in five test files.** A new seed fails them by design; update them deliberately.
-- **Restoring a file with `cp -p` keeps its mtime**, so MSBuild skips the rebuild. Touch it after.
-- The audit trap, the `--no-build` rule, and "stop only `Wombat.Web.exe`" all still apply.
-- Suites at the start of this session: Domain 356, Application 895, Infrastructure 582, Architecture 28, Web 288
-  (2149). Integration: 22 of 23 (T140).
+- **Credentials:** agents may not read the admin credential; use the seeded accounts and say which steps need an
+  Administrator.
+- **The audit trap still bites.** A throw after staging commits the staged rows unless it is a refused save (T201).
