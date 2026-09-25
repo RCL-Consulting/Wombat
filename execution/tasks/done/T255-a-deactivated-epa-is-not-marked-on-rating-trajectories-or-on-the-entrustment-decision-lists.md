@@ -1,11 +1,12 @@
 ---
 id: T255
 title: A deactivated EPA is not marked on rating trajectories or on the entrustment decision lists
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T255 — A deactivated EPA is not marked on rating trajectories or on the entrustment decision lists
@@ -36,8 +37,24 @@ uses.
 
 ## Verification
 
-- [ ] Each surface marks a deactivated EPA. bUnit.
+- [x] Each surface marks a deactivated EPA. bUnit.
 
 ## Related
 
 T231, T196, D48.
+
+---
+
+## As built — 2026-09-25 (`ea649a3`)
+
+The trajectory headings (My progress and the committee review page), the admin entrustment decisions list and the
+trainee's authorisations mark an EPA that is no longer in force "(no longer in use)", through `EpaOptionLabel`, the rule
+T231 uses (D48). bUnit per surface.
+
+Browser on dev (scripted Chrome, master `36b0661`; `pg_dump -n public` first, at `recovery/pre-t253-migration.dump`): PAED-006 was deactivated by collegeadmin (the trainee has points 10 and 38 and STAR 2):
+- **Marked:** the My progress trajectory heading (its chart still drawn), review 15's "Rating trajectory by EPA", the
+  `/admin/entrustment-decisions` row and its Revoke confirmation, and `/portfolio/authorisations`. PAED-001 and PAED-011
+  were unmarked.
+- **Reactivated:** every mark was gone.
+
+**Filed from the review:** [T273] (the sampling list and staged lines; frozen snapshots stay unmarked).

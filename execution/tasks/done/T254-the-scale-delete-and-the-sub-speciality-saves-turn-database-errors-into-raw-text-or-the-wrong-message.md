@@ -1,11 +1,12 @@
 ---
 id: T254
 title: The scale delete and the sub-speciality saves turn database errors into raw text or the wrong message
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T254 — The scale delete and the sub-speciality saves turn database errors into raw text or the wrong message
@@ -35,8 +36,27 @@ created: 2026-09-25
 
 ## Verification
 
-- [ ] Each case gets its own message. Postgres tests with an interceptor forcing the race.
+- [x] Each case gets its own message. Postgres tests with an interceptor forcing the race.
 
 ## Related
 
 T232, T243, T223.
+
+---
+
+## As built — 2026-09-25 (`c28a349`)
+
+- **The scale delete.** A delete that loses a race catches the database refusal, re-reads the references, and names the
+  one that now applies. A failed read-back never lets the refused save commit.
+- **The sub-speciality saves.** Create and Update map only the unique violation on `(SpecialityId, Name)` to "A
+  sub-speciality with the same name already exists for this speciality."
+- Postgres race tests use a save interceptor.
+
+Browser on dev (scripted Chrome, master `36b0661`; `pg_dump -n public` first, at `recovery/pre-t253-migration.dump`): as collegeadmin under Paediatrics:
+- **A duplicate create** was refused with the message, and nothing was stored.
+- **A rename onto a sibling's name** was refused with the same message, and the old name was kept.
+- **A unique rename** saved.
+- Each refusal wrote one failed audit row.
+- **Not run:** the scale-delete race (Administrator-only; Postgres tests).
+
+**Filed from the review:** [T272] (save-failure wording across handlers; the MSF question scale foreign key).
