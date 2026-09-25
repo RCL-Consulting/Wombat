@@ -499,7 +499,9 @@ public sealed class ActionFocusTests : TestContext
             (test, hold) => test.Page<EntrustmentScaleEdit>(
                 new Sender(hold, request => request is UpdateEntrustmentScaleCommand, request => request switch
                 {
-                    GetEntrustmentScaleByIdQuery or UpdateEntrustmentScaleCommand => Scale(),
+                    GetEntrustmentScaleByIdQuery => Scale(),
+                    // T253: a save answers with the scale and any rename warning.
+                    UpdateEntrustmentScaleCommand => new UpdateEntrustmentScaleResult(Scale(), null),
                     _ => null
                 }),
                 parameters => parameters.Add(page => page.Id, 3)),
