@@ -168,6 +168,25 @@ public sealed class CampaignStatePageTests : TestContext
     }
 
     [Fact]
+    public void AddingAnInvitee_ClearsTheEmail_AndMovesTheFocusToItForTheNext()
+    {
+        // The browser check found the focus on the page body after an add: a new model made EditForm rebuild the form.
+        var sender = new CampaignSender(Setup(MsfCampaignState.Draft, Group(MsfRespondentCategory.PeerDoctor, 1, 0)));
+        var cut = Render(sender);
+
+        cut.Find("#msf-respondent-email").Change("nurse-1@example.test");
+        cut.Find("#msf-respondent-category").Change(nameof(MsfRespondentCategory.Nurse));
+        cut.Find("#msf-respondent-email").Closest("form")!.Submit();
+
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-success")).Should().Be("Invitee added."));
+        cut.Find("#msf-respondent-email").GetAttribute("value").Should().BeNullOrEmpty();
+        cut.Find("#msf-respondent-category").GetAttribute("value").Should().Be(nameof(MsfRespondentCategory.Nurse),
+            "the next invitee is usually from the same group");
+        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
+            .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.EmailInput!.Value.Id));
+    }
+
+    [Fact]
     public void AnAddRefusedBecauseTheCampaignWasOpenedElsewhere_ShowsItOpen_AndMovesTheFocusToTheRefusal()
     {
         // Opened in another tab: the refusal's re-read shows the campaign open, and the invitee form, with the submit

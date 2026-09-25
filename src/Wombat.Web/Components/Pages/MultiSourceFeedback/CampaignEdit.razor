@@ -226,7 +226,7 @@
               <ValidationSummary class="validation-summary-errors" />
               <div class="form-grid">
                 <FormField Label="Respondent email" InputId="msf-respondent-email" Required="true">
-                  <InputText id="msf-respondent-email" class="form-control" @bind-Value="_invitee.Email" />
+                  <InputText @ref="_emailInput" id="msf-respondent-email" class="form-control" @bind-Value="_invitee.Email" />
                 </FormField>
                 @* Only the categories this campaign's questionnaire accepts, which the invite command holds it to (T164),
                    each by its label (T191, T217). *@
@@ -332,6 +332,11 @@
 
   /// <summary>The region holding an action's result, which takes the focus once it has answered. For its tests.</summary>
   internal ElementReference ResultRegion => _result;
+
+  private InputText? _emailInput;
+  private bool _focusEmail;
+
+  internal ElementReference? EmailInput => _emailInput?.Element;
 
   /// <summary>An open or a withdraw is in flight, so nothing else may be sent. (T202, T217)</summary>
   private bool Busy => _opening || _withdrawing;
@@ -674,9 +679,12 @@
         await GetPrincipalAsync(),
         _invitee.Category == MsfRespondentCategory.Learner ? _invitee.TeachingContext : null));
 
-      // The next learner is usually from the same group, so the category and the context are kept for them.
-      _invitee = new() { Category = _invitee.Category, TeachingContext = _invitee.TeachingContext };
+      // The next learner is usually from the same group, so the category and the context are kept for them. The model
+      // is cleared in place: a new one would make EditForm rebuild its content, and the control that had the focus with
+      // it, leaving the focus on the page body (F2 browser check).
+      _invitee.Email = string.Empty;
       _status = "Invitee added.";
+      _focusEmail = true;
     }
     catch (Exception exception)
     {
@@ -687,8 +695,10 @@
     await LoadSetupAsync();
 
     // A campaign no longer a draft has no invitee form, so the submit button that had the focus is gone (T217 review).
-    // On a draft the form stays, and so does the focus, to add the next invitee or correct this one.
+    // On a draft the form stays. After an add the focus goes to the email, for the next invitee; after a refusal it
+    // stays where it was, to correct this one.
     _focusResult = _setup is not { State: MsfCampaignState.Draft };
+    _focusEmail &= !_focusResult;
   }
 
   /// <remarks>
@@ -807,6 +817,11 @@
     {
       _focusResult = false;
       await _result.FocusAsync();
+    }
+    else if (_focusEmail && _emailInput?.Element is { } email)
+    {
+      _focusEmail = false;
+      await email.FocusAsync();
     }
   }
 
