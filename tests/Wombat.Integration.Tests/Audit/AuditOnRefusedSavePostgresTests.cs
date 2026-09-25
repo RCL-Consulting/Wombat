@@ -318,7 +318,7 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
             db,
             sender,
             new InvitationTokenService(),
-            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")),
+            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")).WithTrainees("trainee-1"),
             Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
 
         await new AuditPipelineBehavior<OpenMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())
@@ -384,6 +384,7 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
     private async Task<int> SeedDraftCampaignAsync(string schema)
     {
         await using var db = NewContext(schema);
+        await CurrentTraineeSeed.AdmitAsync(db, "trainee-1");
         var campaign = new MsfCampaign
         {
             SubjectUserId = "trainee-1",

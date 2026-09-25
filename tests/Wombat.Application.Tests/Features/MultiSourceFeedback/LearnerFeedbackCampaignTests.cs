@@ -546,7 +546,7 @@ public sealed class LearnerFeedbackCampaignTests
             CancellationToken.None);
 
     private static Task<int> InviteAsync(ApplicationDbContext db, int campaignId, MsfRespondentCategory category, string? teachingContext)
-        => new AddMsfInvitationCommandHandler(db, new InvitationTokenService()).Handle(
+        => new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees(TraineeUserId)).Handle(
             new AddMsfInvitationCommand(campaignId, $"{Guid.NewGuid():N}@example.test", category, Coordinator(), teachingContext),
             CancellationToken.None);
 

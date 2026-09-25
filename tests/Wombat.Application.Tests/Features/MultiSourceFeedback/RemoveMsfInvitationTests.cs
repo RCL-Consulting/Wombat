@@ -11,6 +11,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
@@ -80,7 +81,7 @@ public sealed class RemoveMsfInvitationTests
 
         await using (var db = CreateDb())
         {
-            await new AddMsfInvitationCommandHandler(db, new InvitationTokenService()).Handle(
+            await new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees(SubjectUserId)).Handle(
                 new AddMsfInvitationCommand(campaignId, Peer, MsfRespondentCategory.Consultant, TestPrincipals.Coordinator(HostInstitution)),
                 CancellationToken.None);
         }

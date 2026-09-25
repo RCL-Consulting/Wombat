@@ -57,19 +57,25 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IInvitationTokenService _tokenService;
+    private readonly IUserAdministrationService _users;
 
-    public AddMsfInvitationCommandHandler(IApplicationDbContext dbContext, IInvitationTokenService tokenService)
+    public AddMsfInvitationCommandHandler(
+        IApplicationDbContext dbContext,
+        IInvitationTokenService tokenService,
+        IUserAdministrationService users)
     {
         _dbContext = dbContext;
         _tokenService = tokenService;
+        _users = users;
     }
 
     public async Task<int> Handle(AddMsfInvitationCommand request, CancellationToken cancellationToken)
     {
         // Before anything is loaded to be touched, and before the state checks, whose messages would describe another
-        // institution's campaign to someone who may not see it. (T113)
-        await MsfCampaignRules.EnsureCampaignIsInScopeAsync(
-            _dbContext, request.Principal, request.CampaignId, cancellationToken);
+        // institution's campaign to someone who may not see it. (T113) An invitee is added only to be mailed at the
+        // open, which is new work, so the trainee must still be current, as at create (T284).
+        await MsfCampaignRules.EnsureCampaignTakesNewWorkAsync(
+            _dbContext, _users, request.Principal, request.CampaignId, cancellationToken);
 
         var campaign = await _dbContext.Set<MsfCampaign>()
             .Include(candidate => candidate.Template)

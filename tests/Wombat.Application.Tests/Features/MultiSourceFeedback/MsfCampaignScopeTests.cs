@@ -522,7 +522,7 @@ public sealed class MsfCampaignScopeTests
                         db,
                         _emailSender,
                         new InvitationTokenService(),
-                        new FakeUserDirectory((SubjectUserId, "Thandi Nkosi")),
+                        new FakeUserDirectory((SubjectUserId, "Thandi Nkosi")).WithTrainees(SubjectUserId),
                         Options.Create(new WombatOptions { MsfRespondUrl = "https://wombat.example/msf/respond" }))
                     .Handle(new OpenMsfCampaignCommand(campaignId, principal), CancellationToken.None);
                 break;
@@ -535,7 +535,7 @@ public sealed class MsfCampaignScopeTests
                     .Handle(new WithdrawMsfCampaignCommand(campaignId, StateFor(command), principal), CancellationToken.None);
                 break;
             case "AddInvitation":
-                await new AddMsfInvitationCommandHandler(db, new InvitationTokenService())
+                await new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees(SubjectUserId))
                     .Handle(
                         new AddMsfInvitationCommand(campaignId, "peer-9@example.test", MsfRespondentCategory.PeerDoctor, principal),
                         CancellationToken.None);

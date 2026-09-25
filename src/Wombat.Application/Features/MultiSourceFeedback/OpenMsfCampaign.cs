@@ -47,9 +47,9 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         var respondUrl = _options.RequireMsfRespondUrl();
 
         // Before anything is loaded to be touched: opening rotates every invitation token and mails each respondent.
-        // (T113)
-        await MsfCampaignRules.EnsureCampaignIsInScopeAsync(
-            _dbContext, request.Principal, request.CampaignId, cancellationToken);
+        // (T113) Mailing them is new work, so the trainee must still be current, as at create (T284).
+        await MsfCampaignRules.EnsureCampaignTakesNewWorkAsync(
+            _dbContext, _users, request.Principal, request.CampaignId, cancellationToken);
 
         var campaign = await _dbContext.Set<MsfCampaign>()
             .Include(candidate => candidate.Template)

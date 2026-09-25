@@ -112,7 +112,18 @@
         }
         else if (CanLockoutUser)
         {
-          <p>Locking out the user prevents sign-in immediately. Reactivating clears the lockout.</p>
+          @* T284: what a lock does beyond sign-in, since T102, T165, T240, T268 and T284 made it mean "not working here
+             now" (PanelSeat, NomineeDirectory, ReminderRecipientPolicy, TraineeScopeResolver's current trainee).
+             UserDetailLockCardTests checks the card names each. The dashboards are named, not "the dashboards": the
+             institution dashboard's Users card counts accounts by role, locked or not (T284 review). *@
+          <p>Locking out the user prevents sign-in immediately. Until they are reactivated:</p>
+          <ul id="lockout-effects">
+            <li>They sit on no committee panel.</li>
+            <li>They are not a current trainee. No committee review or feedback campaign can be started about them, a draft feedback campaign about them cannot be opened, and the programme's lists of its trainees leave them out: the speciality, sub-speciality and committee dashboards' trainee targets and counts, feedback coverage, decisions due, and the weekly digest's inactive trainees.</li>
+            <li>They are sent no activity reminders or weekly digests.</li>
+            <li>They cannot be named as an activity's assessor.</li>
+          </ul>
+          <p>Their records stay as they are, and a review or feedback campaign already under way can still be finished. Reactivating clears the lockout.</p>
           <FormActions>
             <button type="button" class="btn btn-danger" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(true)">Lock out user</button>
           </FormActions>

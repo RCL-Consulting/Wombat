@@ -163,7 +163,7 @@ public sealed class MsfOpenCampaignSendFailureTests
             db,
             sender,
             new InvitationTokenService(),
-            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")),
+            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")).WithTrainees("trainee-1"),
             Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
 
         await new AuditPipelineBehavior<OpenMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())
@@ -188,6 +188,17 @@ public sealed class MsfOpenCampaignSendFailureTests
     private async Task<int> SeedCampaignAsync(MsfCampaignState state)
     {
         await using var db = CreateDb();
+        if (!await db.Set<Wombat.Domain.Identity.TraineeProfile>().AnyAsync(profile => profile.UserId == "trainee-1"))
+        {
+            // A current trainee (T284: opening a draft, or inviting to one, asks for one, as create does).
+            db.Set<Wombat.Domain.Identity.TraineeProfile>().Add(new Wombat.Domain.Identity.TraineeProfile
+            {
+                UserId = "trainee-1", InstitutionId = 1, CurriculumId = 1,
+                ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1),
+                IsActive = true
+            });
+        }
+
         var campaign = new MsfCampaign
         {
             SubjectUserId = "trainee-1",

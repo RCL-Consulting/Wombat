@@ -57,8 +57,10 @@ public static class MsfCampaignRules
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Invite, open, close, withdraw and release run this first; create runs <see cref="EnsureSubjectIsInScopeAsync" />
-    /// on the subject it is given. The rule is <see cref="IsSubjectInScopeAsync" />, asked of the campaign's subject.
+    /// Close, withdraw, release, resend and removing an invitee run this first; invite and open run it through
+    /// <see cref="EnsureCampaignTakesNewWorkAsync" />, which then asks for a current trainee (T284); create runs
+    /// <see cref="EnsureSubjectIsInScopeAsync" /> on the subject it is given. The rule is
+    /// <see cref="IsSubjectInScopeAsync" />, asked of the campaign's subject.
     /// </para>
     /// <para>
     /// The two refusals are one because the campaign editor prints the refusal: "could not be found" for a missing id
@@ -70,7 +72,60 @@ public static class MsfCampaignRules
     /// (<see cref="IsKeptFromCampaignsAbout" />), so they are told what anyone else is told. (T224)
     /// </para>
     /// </remarks>
-    public static async Task EnsureCampaignIsInScopeAsync(
+    public static Task EnsureCampaignIsInScopeAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        int campaignId,
+        CancellationToken cancellationToken)
+        => SubjectOfCampaignInScopeAsync(dbContext, principal, campaignId, cancellationToken);
+
+    /// <summary>
+    /// Refuses new work on a campaign: <see cref="EnsureCampaignIsInScopeAsync" />, then a refusal unless the campaign's
+    /// trainee is still a current trainee (<see cref="TraineeScopeResolver.ResolveCurrentAsync" />), in the words create
+    /// refuses a subject who is not (<see cref="SubjectNotCurrentTrainee" />). What adding an invitee and opening a draft
+    /// run first. (T284)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Opening a draft is new work: it mails every respondent a request for feedback about the trainee, as creating the
+    /// campaign would have. So it asks what create asks (<see cref="MayStartCampaignAboutAsync" />), and adding an invitee
+    /// to the draft does too, since an invitee is only ever added to be mailed at the open. Until T284 only create asked,
+    /// so a draft written before the trainee was locked, completed their programme, withdrew or lost the Trainee role could
+    /// still be opened, and mailed everyone on it about someone no longer in a programme.
+    /// </para>
+    /// <para>
+    /// The scope refusal comes first and is unchanged, so an outsider learns nothing about the trainee from this. Past it,
+    /// the caller runs the campaign and already knows whom it is about, so the reason is said plainly to a Coordinator as
+    /// to an Administrator: the one create gives an Administrator. Both checks only read, so the refusal leaves nothing for
+    /// the audit pipeline's save to commit.
+    /// </para>
+    /// <para>
+    /// A campaign already open carries on: its reminders (<c>MsfInvitationExpiryReminderJob</c>) and its Resend
+    /// (<see cref="ResendMsfLinksCommand" />) reach people already asked, and a close, release or withdraw finishes it, as
+    /// a review already scheduled stays one its panel can finish. Removing an invitee from a draft is not new work either.
+    /// </para>
+    /// </remarks>
+    public static async Task EnsureCampaignTakesNewWorkAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        ClaimsPrincipal principal,
+        int campaignId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(users);
+
+        var subjectUserId = await SubjectOfCampaignInScopeAsync(dbContext, principal, campaignId, cancellationToken);
+
+        if (await TraineeScopeResolver.ResolveCurrentAsync(dbContext, users, subjectUserId.Trim(), cancellationToken) is null)
+        {
+            throw new UnauthorizedAccessException(SubjectNotCurrentTrainee);
+        }
+    }
+
+    /// <summary>
+    /// <see cref="EnsureCampaignIsInScopeAsync" />'s rule, answering the campaign's subject once the caller is admitted.
+    /// </summary>
+    private static async Task<string> SubjectOfCampaignInScopeAsync(
         IApplicationDbContext dbContext,
         ClaimsPrincipal principal,
         int campaignId,
@@ -94,6 +149,8 @@ public static class MsfCampaignRules
         {
             throw new UnauthorizedAccessException(CampaignNotRunByCaller);
         }
+
+        return subjectUserId;
     }
 
     /// <summary>The one refusal for a campaign id the caller may not act on, whether or not it exists. (T113)</summary>
@@ -107,7 +164,8 @@ public static class MsfCampaignRules
     /// <remarks>
     /// <para>
     /// Every campaign command runs this rule before it touches anything: create through this method, and invite, open,
-    /// close, withdraw and release through <see cref="EnsureCampaignIsInScopeAsync" />. Release is where the
+    /// close, withdraw and release through <see cref="EnsureCampaignIsInScopeAsync" /> (invite and open through
+    /// <see cref="EnsureCampaignTakesNewWorkAsync" />, which asks for a current trainee too, T284). Release is where the
     /// consequence is (it writes activities scope-stamped from the SUBJECT's profile, so an out-of-scope release plants
     /// another institution's oversight trail permanently in that trainee's portfolio), but a close anonymises the
     /// respondents for good and an open mails every one of them, so none of the others is harmless either. The audit
@@ -161,7 +219,9 @@ public static class MsfCampaignRules
 
     /// <summary>
     /// The refusal, at create, to an Administrator, of a subject who is not a current trainee: no active profile, or an
-    /// account that is gone, no longer holds Trainee (T238), or is locked (T268).
+    /// account that is gone, no longer holds Trainee (T238), or is locked (T268). Also the refusal, to anyone who runs the
+    /// campaign, of adding an invitee to it or opening it once its trainee is not current
+    /// (<see cref="EnsureCampaignTakesNewWorkAsync" />, T284).
     /// </summary>
     internal const string SubjectNotCurrentTrainee =
         "A multi-source feedback campaign can only be run for a trainee in a programme now: someone whose trainee " +
@@ -176,16 +236,18 @@ public static class MsfCampaignRules
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Only a new campaign asks for a current trainee. Until T258 an erased trainee's profile stayed active under a
-    /// pseudonym no account holds (<c>ErasureExecutor</c>), so until T238 a crafted create could name it; and the form
-    /// offered graduates and trainees who had withdrawn. None of them is on a programme to plan feedback for, and the programme's coverage
-    /// page (<see cref="GetMsfProgrammeCoverageQuery" />) counts none of them.
+    /// New work asks for a current trainee: a new campaign, and since T284 an invitee added to a draft and the open that
+    /// mails them (<see cref="EnsureCampaignTakesNewWorkAsync" />). Until T258 an erased trainee's profile stayed active
+    /// under a pseudonym no account holds (<c>ErasureExecutor</c>), so until T238 a crafted create could name it; and the
+    /// form offered graduates and trainees who had withdrawn. None of them is on a programme to plan feedback for, and the
+    /// programme's coverage page (<see cref="GetMsfProgrammeCoverageQuery" />) counts none of them.
     /// </para>
     /// <para>
-    /// A campaign already created is acted on by <see cref="IsSubjectInScopeAsync" /> alone, which reads the trainee's
+    /// A campaign already open is acted on by <see cref="IsSubjectInScopeAsync" /> alone, which reads the trainee's
     /// preferred profile, active or not: a trainee who completes while their feedback is being collected leaves a
-    /// campaign their coordinator can still close, release or withdraw, as a review already scheduled stays one its panel
-    /// can finish (<c>CommitteeTraineeScope</c>).
+    /// campaign their coordinator can still resend, close, release or withdraw, and whose respondents are still reminded,
+    /// as a review already scheduled stays one its panel can finish (<c>CommitteeTraineeScope</c>). A draft about them can
+    /// be withdrawn, or have an invitee removed, but not opened (T284).
     /// </para>
     /// <para>
     /// A current trainee's active profile is their preferred one, so this is <see cref="IsSubjectInScopeAsync" />'s answer

@@ -84,6 +84,25 @@ public sealed class MsfInvitationExpiryReminderJobTests
     }
 
     /// <summary>
+    /// A campaign already open carries on when its trainee is locked (T284): the reminder reaches people the open already
+    /// asked, so it finishes work under way. Only opening a draft asks for a current trainee.
+    /// </summary>
+    [Fact]
+    public async Task AnOpenCampaign_AboutATraineeLockedSinceItOpened_StillRemindsItsRespondents()
+    {
+        var closesOn = Today.AddDays(4);
+        var reminders = new DatedEmailSender();
+        var locked = new FakeUserDirectory((TraineeId, TraineeName)).With(new UserIdentityDetails(
+            TraineeId, "thandi@example.test", "Thandi", "Nkosi", 1, [], [], ["Trainee"], IsLockedOut: true, IsDeactivated: true));
+        using var provider = BuildProvider(reminders, directory: locked);
+        await OpenCampaignAsync(provider, closesOn);
+
+        await RunReminderAsync(provider, closesOn.AddDays(-2));
+
+        reminders.Sent.Select(sent => sent.Message.To).Should().BeEquivalentTo(Respondents);
+    }
+
+    /// <summary>
     /// A learner is reminded as they were invited (T164): about the trainee's teaching, pooled with the other learners',
     /// never for multi-source feedback on a colleague.
     /// </summary>
@@ -340,7 +359,7 @@ public sealed class MsfInvitationExpiryReminderJobTests
                     db,
                     invitations,
                     new InvitationTokenService(),
-                    new FakeUserDirectory((TraineeId, TraineeName)),
+                    new FakeUserDirectory((TraineeId, TraineeName)).WithTrainees(TraineeId),
                     Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }))
                 .Handle(new OpenMsfCampaignCommand(campaignId, TestPrincipals.Administrator()), CancellationToken.None);
         }
@@ -364,6 +383,15 @@ public sealed class MsfInvitationExpiryReminderJobTests
         using (var scope = provider.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            // A current trainee: opening a draft, and inviting to one, asks for one (T284).
+            db.Set<Wombat.Domain.Identity.TraineeProfile>().Add(new Wombat.Domain.Identity.TraineeProfile
+            {
+                UserId = TraineeId, InstitutionId = 1, CurriculumId = 1,
+                ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1),
+                IsActive = true
+            });
+
             var campaign = new MsfCampaign
             {
                 SubjectUserId = TraineeId,
@@ -388,7 +416,7 @@ public sealed class MsfInvitationExpiryReminderJobTests
             await db.SaveChangesAsync();
             campaignId = campaign.Id;
 
-            var add = new AddMsfInvitationCommandHandler(db, new InvitationTokenService());
+            var add = new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees(TraineeId));
             foreach (var email in Respondents)
             {
                 await add.Handle(

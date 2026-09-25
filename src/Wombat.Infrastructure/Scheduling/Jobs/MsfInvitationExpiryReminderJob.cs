@@ -20,6 +20,12 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// <see cref="MsfCampaignAutoCloseJob" /> closes the campaign the day after the window does. So it could only ever have
 /// found a campaign that was already closed, and it never sent anything. The key is still named for the expiry: it is
 /// the scheduled job's stored identity.
+/// <para>
+/// It reminds whatever has become of the trainee since the open. A reminder reaches only someone the open already asked,
+/// so it finishes work under way; only opening a draft, which starts it, asks for a current trainee
+/// (<see cref="Wombat.Application.Features.MultiSourceFeedback.MsfCampaignRules.EnsureCampaignTakesNewWorkAsync" />,
+/// T284).
+/// </para>
 /// </remarks>
 public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
 {

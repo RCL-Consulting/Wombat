@@ -19,6 +19,11 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// No validator: carries a non-nullable int ID and the caller; the handler authorises the caller against the campaign's
 /// subject (T113) and refuses a campaign that is not open. It names nobody: the page is told how many links were not
 /// delivered, never whose, and the resend reaches exactly those (T217).
+/// <para>
+/// It does not ask whether the trainee is still current, as the open does
+/// (<see cref="MsfCampaignRules.EnsureCampaignTakesNewWorkAsync" />, T284): a resend reaches only people the open already
+/// asked, so it finishes work under way rather than starting any, as the reminders do.
+/// </para>
 /// </remarks>
 [NoValidator]
 public sealed record ResendMsfLinksCommand(int CampaignId, ClaimsPrincipal Principal) : IRequest<int>;

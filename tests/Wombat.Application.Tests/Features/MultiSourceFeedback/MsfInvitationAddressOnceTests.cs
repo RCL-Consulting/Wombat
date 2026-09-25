@@ -9,6 +9,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
@@ -181,7 +182,7 @@ public sealed class MsfInvitationAddressOnceTests
         ApplicationDbContext db, int campaignId, string address, MsfRespondentCategory category, ClaimsPrincipal? principal = null)
     {
         var command = new AddMsfInvitationCommand(campaignId, address, category, principal ?? TestPrincipals.Administrator());
-        var handler = new AddMsfInvitationCommandHandler(db, new InvitationTokenService());
+        var handler = new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees("trainee-1"));
 
         return new AuditPipelineBehavior<AddMsfInvitationCommand, int>(new AuditWriter(db), new FixedAuditContext())
             .Handle(command, () => handler.Handle(command, CancellationToken.None), CancellationToken.None);
@@ -198,14 +199,16 @@ public sealed class MsfInvitationAddressOnceTests
     }
 
     /// <summary>
-    /// A draft about trainee-1, who is admitted at <paramref name="subjectInstitution" /> when one is given (without a
-    /// profile only an Administrator runs the campaign).
+    /// A draft about trainee-1, a current trainee admitted at <paramref name="subjectInstitution" />, or at an institution
+    /// no test's coordinator runs when none is given (only an Administrator runs the campaign then). A current trainee,
+    /// because inviting to a draft asks for one (T284).
     /// </summary>
     private async Task<int> SeedDraftCampaignAsync(int erasedInvitations = 0, int? subjectInstitution = null)
     {
         await using var db = CreateDb();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        if (subjectInstitution is int institutionId)
+        var institutionId = subjectInstitution ?? 999;
+        if (!await db.Set<TraineeProfile>().AnyAsync(profile => profile.UserId == "trainee-1"))
         {
             db.Set<TraineeProfile>().Add(new TraineeProfile
             {

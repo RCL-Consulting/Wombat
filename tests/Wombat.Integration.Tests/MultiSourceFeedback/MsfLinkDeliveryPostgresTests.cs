@@ -421,7 +421,7 @@ public sealed class MsfLinkDeliveryPostgresTests : IAsyncLifetime
             db,
             sender,
             new InvitationTokenService(),
-            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")),
+            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")).WithTrainees("trainee-1"),
             Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
 
         await new AuditPipelineBehavior<OpenMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())
@@ -594,6 +594,7 @@ public sealed class MsfLinkDeliveryPostgresTests : IAsyncLifetime
     private async Task<int> SeedDraftAsync(string schema)
     {
         await using var db = NewContext(schema);
+        await CurrentTraineeSeed.AdmitAsync(db, "trainee-1");
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var campaign = new MsfCampaign
         {

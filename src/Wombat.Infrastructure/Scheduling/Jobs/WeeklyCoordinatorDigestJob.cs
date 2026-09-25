@@ -33,7 +33,8 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// </para>
 /// <list type="bullet">
 /// <item>trainees: those whose record the recipient may read (<see cref="TraineeScopeResolver.ReadableAsync" />, T113),
-/// keyed by where each trains (<c>TraineeProfile.InstitutionId</c> on the preferred profile);</item>
+/// keyed by where each trains (<c>TraineeProfile.InstitutionId</c> on the preferred profile); the inactive list is then
+/// held to current trainees (<see cref="TraineeScopeResolver.WhichAreCurrentAsync" />, T284);</item>
 /// <item>feedback campaigns: those the recipient runs (<see cref="MsfCampaignRules.WhereRunBy" />, the campaign list's
 /// rule, which also keeps a recipient off campaigns about themselves);</item>
 /// <item>committee reviews: those the recipient may open (<see cref="CommitteeReviewReadAccess.ReadableAsync" />,
@@ -46,6 +47,15 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// <see cref="TraineeScopeResolver.IsAdministeredOrCoordinatedBy" /> does not read speciality claims), so a coordinator's
 /// speciality or sub-speciality scopes neither narrow nor widen what they are sent; if that rule ever narrows, the digest
 /// follows it.
+/// </para>
+/// <para>
+/// <b>Only a current trainee is inactive.</b> The list names trainees who have logged nothing in 30 days, which is a
+/// prompt to follow them up, and only someone in a programme now can be followed up: an active profile, on an account that
+/// still holds Trainee and that no administrator has locked (<see cref="TraineeScopeResolver" />, T238, T268). Until T284 the
+/// list read every holder of Trainee the recipient may read, so a trainee who had withdrawn and kept the role, or whose
+/// account was locked, was listed as inactive every Monday for as long as the record stayed. A campaign about such a
+/// trainee still waits on its review, and a review of them already scheduled still happens, so the other two lists are
+/// not narrowed: a campaign or a review already under way is finished (<see cref="MsfCampaignRules.MayStartCampaignAboutAsync" />).
 /// </para>
 /// <para>
 /// Some coordinators are sent nothing, counted by reason in the run's one log line. First, whoever the shared reminder
@@ -80,6 +90,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
         var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>();
+        var users = scope.ServiceProvider.GetRequiredService<IUserAdministrationService>();
         var claimsFactory = scope.ServiceProvider.GetRequiredService<IUserClaimsPrincipalFactory<WombatIdentityUser>>();
 
         var outcome = new DigestOutcome();
@@ -87,7 +98,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
 
         if (coordinators.Count > 0)
         {
-            var facts = await ReadFactsAsync(dbContext, userManager, context.UtcNow, cancellationToken);
+            var facts = await ReadFactsAsync(dbContext, userManager, users, context.UtcNow, cancellationToken);
 
             foreach (var coordinator in coordinators)
             {
@@ -155,6 +166,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
     private static async Task<DigestFacts> ReadFactsAsync(
         IApplicationDbContext dbContext,
         UserManager<WombatIdentityUser> userManager,
+        IUserAdministrationService users,
         DateTime utcNow,
         CancellationToken cancellationToken)
     {
@@ -167,7 +179,12 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
             trainee => trainee.Id,
             trainee => $"{trainee.FirstName} {trainee.LastName}",
             StringComparer.Ordinal);
-        var traineeIds = traineeNames.Keys.ToArray();
+
+        // Which of them are current trainees, by the one rule every list of the programme's trainees reads (T284): see the
+        // class remarks. Only they can be inactive, so only their activities are asked about.
+        var currentTraineeIds = await TraineeScopeResolver.WhichAreCurrentAsync(
+            dbContext, users, traineeNames.Keys, cancellationToken);
+        var traineeIds = currentTraineeIds.ToArray();
 
         // Whether each trainee filed anything, and nothing else about the activities: see the class remarks.
         var activeTraineeIds = await dbContext.Set<Activity>()
@@ -194,6 +211,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
 
         return new DigestFacts(
             traineeNames,
+            currentTraineeIds,
             activeTraineeIds.ToHashSet(StringComparer.Ordinal),
             reviewsThisWeek,
             reviewTraineeNames);
@@ -219,6 +237,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
             .ToArray();
 
         var inactiveTrainees = roster
+            .Where(facts.CurrentTraineeIds.Contains)
             .Where(userId => !facts.ActiveTraineeIds.Contains(userId))
             .Select(userId => facts.TraineeNames.GetValueOrDefault(userId))
             .OfType<string>()
@@ -262,6 +281,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
 
     private sealed record DigestFacts(
         IReadOnlyDictionary<string, string> TraineeNames,
+        IReadOnlySet<string> CurrentTraineeIds,
         IReadOnlySet<string> ActiveTraineeIds,
         IReadOnlyList<CommitteeReview> ReviewsThisWeek,
         IReadOnlyDictionary<string, string> ReviewTraineeNames);

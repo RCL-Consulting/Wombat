@@ -183,7 +183,7 @@ public sealed class MsfInviteDuringOpenRacePostgresTests : IAsyncLifetime
             db,
             sender,
             new InvitationTokenService(),
-            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")),
+            new FakeUserDirectory(("trainee-1", "Thandi Nkosi")).WithTrainees("trainee-1"),
             Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
 
         await new AuditPipelineBehavior<OpenMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())
@@ -202,7 +202,7 @@ public sealed class MsfInviteDuringOpenRacePostgresTests : IAsyncLifetime
     {
         await using var db = NewContext(schema, interceptor);
         var command = new AddMsfInvitationCommand(campaignId, email, MsfRespondentCategory.PeerDoctor, Administrator());
-        var handler = new AddMsfInvitationCommandHandler(db, new InvitationTokenService());
+        var handler = new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees("trainee-1"));
 
         await new AuditPipelineBehavior<AddMsfInvitationCommand, int>(new AuditWriter(db), new FixedAuditContext())
             .Handle(command, () => handler.Handle(command, CancellationToken.None), CancellationToken.None);
@@ -225,6 +225,7 @@ public sealed class MsfInviteDuringOpenRacePostgresTests : IAsyncLifetime
     private async Task<int> SeedDraftCampaignAsync(string schema)
     {
         await using var db = NewContext(schema);
+        await CurrentTraineeSeed.AdmitAsync(db, "trainee-1");
         var campaign = new MsfCampaign
         {
             SubjectUserId = "trainee-1",

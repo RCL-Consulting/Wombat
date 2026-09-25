@@ -15,6 +15,7 @@ using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.MultiSourceFeedback;
 
@@ -246,7 +247,7 @@ public sealed class MsfWithdrawRacePostgresTests : IAsyncLifetime
     private async Task AddAsync(string schema, int campaignId, string email)
     {
         await using var db = NewContext(schema);
-        await new AddMsfInvitationCommandHandler(db, new InvitationTokenService()).Handle(
+        await new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees("trainee-1")).Handle(
             new AddMsfInvitationCommand(campaignId, email, MsfRespondentCategory.PeerDoctor, Administrator()),
             CancellationToken.None);
     }
@@ -269,6 +270,7 @@ public sealed class MsfWithdrawRacePostgresTests : IAsyncLifetime
     private async Task<int> SeedDraftCampaignAsync(string schema, MsfCampaignState state = MsfCampaignState.Draft)
     {
         await using var db = NewContext(schema);
+        await CurrentTraineeSeed.AdmitAsync(db, "trainee-1");
         var closed = state == MsfCampaignState.UnderReview;
         var campaign = new MsfCampaign
         {

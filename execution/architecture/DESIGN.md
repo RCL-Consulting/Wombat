@@ -1085,8 +1085,13 @@ institution, each once, by the rule committee scheduling reads (an active profil
 and that an administrator has not locked, T268). So it offers no graduate, no trainee who has withdrawn or moved away,
 no profile that outlived its Trainee role, no trainee whose account an administrator has locked, and no erased trainee's
 pseudonym, and a crafted create for any of them is refused before anything is written, in the words a trainee elsewhere
-gets (an Administrator is told "…only be run for a trainee in a programme now…"). A campaign already created stays one
-its coordinator can close, release or withdraw after its trainee's programme ends. The picker and the create ask one
+gets (an Administrator is told "…only be run for a trainee in a programme now…"). Adding an invitee to a draft and
+opening it are new work too, so each asks the same of the campaign's trainee (`MsfCampaignRules.EnsureCampaignTakesNewWorkAsync`,
+T284): once the trainee is no longer current, Add invitee and Open campaign are refused, after the scope check and before
+anything is written or mailed, with the "…only be run for a trainee in a programme now…" refusal, said plainly to a
+coordinator too since they already know whom the campaign is about. A draft about them can still lose an invitee or be
+withdrawn. A campaign already open stays one its coordinator can resend, close, release or withdraw after its trainee's
+programme ends, and its respondents are still reminded. The picker and the create ask one
 predicate (`MsfCampaignRules.MayStartCampaignAbout`, T248), and the page lists no trainee on a campaign's own page,
 which has no create form. The campaign page answers a campaign about the caller as it answers an id that names nothing
 (its "Campaign unavailable" card), the campaign list leaves those campaigns out, and the report is theirs only as the

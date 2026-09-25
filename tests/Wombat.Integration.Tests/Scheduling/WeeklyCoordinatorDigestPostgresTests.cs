@@ -66,6 +66,7 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddClaimsPrincipalFactory<WombatUserClaimsPrincipalFactory>();
+            services.AddScoped<IUserAdministrationService, UserAdministrationService>();
 
             await using var root = services.BuildServiceProvider();
 
@@ -107,6 +108,11 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
                 AddTrainee(db, "a-idle", "Aisha", "Idle", host, curriculumId);
                 AddTrainee(db, "a-busy", "Andile", "Busy", host, curriculumId);
                 AddTrainee(db, "b-idle", "Bongani", "Idle", elsewhere.Id, curriculumId);
+
+                // T284 on the server: idle, on A's roster, and not current, so neither is listed as inactive. The lock is
+                // what an administrator's writes, read back through Npgsql; the other withdrew and kept the role.
+                AddTrainee(db, "a-locked", "Lerato", "Locked", host, curriculumId).LockoutEnd = DateTimeOffset.MaxValue;
+                AddTrainee(db, "a-withdrew", "Wandile", "Withdrew", host, curriculumId, isActive: false);
 
                 var filed = now.AddDays(-3);
                 db.Activities.Add(new Activity
@@ -181,7 +187,8 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
         }
     }
 
-    private static void AddTrainee(ApplicationDbContext db, string userId, string firstName, string lastName, int institutionId, int curriculumId)
+    private static WombatIdentityUser AddTrainee(
+        ApplicationDbContext db, string userId, string firstName, string lastName, int institutionId, int curriculumId, bool isActive = true)
     {
         var trainee = NomineeSeed.AddUser(db, userId, institutionId, WombatRoles.Trainee);
         trainee.FirstName = firstName;
@@ -192,8 +199,10 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
             InstitutionId = institutionId,
             CurriculumId = curriculumId,
             ProgrammeStartDate = new DateOnly(2025, 1, 1),
-            ExpectedCompletionDate = new DateOnly(2029, 1, 1)
+            ExpectedCompletionDate = new DateOnly(2029, 1, 1),
+            IsActive = isActive
         });
+        return trainee;
     }
 
     private static MsfCampaign Campaign(MsfTemplate template, string subjectUserId, DateOnly today)

@@ -11,6 +11,7 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Audit;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
@@ -105,7 +106,7 @@ public sealed class MsfInvitationAuditRowTests
     {
         var command = new AddMsfInvitationCommand(
             campaignId, address, MsfRespondentCategory.PeerDoctor, TestPrincipals.Administrator());
-        var handler = new AddMsfInvitationCommandHandler(db, new InvitationTokenService());
+        var handler = new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees("trainee-1"));
 
         RequestHandlerDelegate<int> handle = () => handler.Handle(command, CancellationToken.None);
         RequestHandlerDelegate<int> inner = validate
@@ -120,6 +121,17 @@ public sealed class MsfInvitationAuditRowTests
     private async Task<int> SeedCampaignAsync(MsfCampaignState state)
     {
         await using var db = CreateDb();
+        if (!await db.Set<Wombat.Domain.Identity.TraineeProfile>().AnyAsync(profile => profile.UserId == "trainee-1"))
+        {
+            // A current trainee (T284: opening a draft, or inviting to one, asks for one, as create does).
+            db.Set<Wombat.Domain.Identity.TraineeProfile>().Add(new Wombat.Domain.Identity.TraineeProfile
+            {
+                UserId = "trainee-1", InstitutionId = 1, CurriculumId = 1,
+                ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1),
+                IsActive = true
+            });
+        }
+
         var campaign = new MsfCampaign
         {
             SubjectUserId = "trainee-1",

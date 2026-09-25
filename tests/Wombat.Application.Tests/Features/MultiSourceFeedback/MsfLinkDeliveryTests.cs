@@ -282,7 +282,7 @@ public sealed class MsfLinkDeliveryTests
             db,
             sender,
             new InvitationTokenService(),
-            new FakeUserDirectory((TraineeId, "Thandi Nkosi")),
+            new FakeUserDirectory((TraineeId, "Thandi Nkosi")).WithTrainees(TraineeId),
             Options.Create(new WombatOptions { MsfRespondUrl = RespondUrl }));
 
         await ThroughTheAuditPipelineAsync(db, command, () => handler.Handle(command, CancellationToken.None));
@@ -407,6 +407,17 @@ public sealed class MsfLinkDeliveryTests
     private async Task<int> SeedDraftAsync()
     {
         await using var db = CreateDb();
+        if (!await db.Set<Wombat.Domain.Identity.TraineeProfile>().AnyAsync(profile => profile.UserId == TraineeId))
+        {
+            // A current trainee (T284: opening a draft, or inviting to one, asks for one, as create does).
+            db.Set<Wombat.Domain.Identity.TraineeProfile>().Add(new Wombat.Domain.Identity.TraineeProfile
+            {
+                UserId = TraineeId, InstitutionId = 1, CurriculumId = 1,
+                ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1),
+                IsActive = true
+            });
+        }
+
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var campaign = new MsfCampaign
         {

@@ -40,7 +40,7 @@ public sealed class MsfInvitationEmailTests
         var campaignId = await SeedDraftAsync("trainee-1", OpensOn, ClosesOn);
         var sender = new CapturingEmailSender();
 
-        await OpenAsync(campaignId, sender, new FakeUserDirectory(("trainee-1", "Thandi Nkosi")));
+        await OpenAsync(campaignId, sender, new FakeUserDirectory(("trainee-1", "Thandi Nkosi")).WithTrainees("trainee-1"));
 
         var message = sender.Messages.Should().ContainSingle().Subject;
         message.To.Should().Be("nurse-1@example.test");
@@ -72,7 +72,8 @@ public sealed class MsfInvitationEmailTests
         var sameWindowOtherTrainee = await SeedDraftAsync("trainee-2", OpensOn, ClosesOn);
         var firstSemester = await SeedDraftAsync("trainee-1", OpensOn, ClosesOn);
         var secondSemester = await SeedDraftAsync("trainee-1", new DateOnly(2029, 9, 1), new DateOnly(2029, 9, 21));
-        var directory = new FakeUserDirectory(("trainee-1", "Thandi Nkosi"), ("trainee-2", "Pieter Botha"));
+        var directory = new FakeUserDirectory(("trainee-1", "Thandi Nkosi"), ("trainee-2", "Pieter Botha"))
+            .WithTrainees("trainee-1", "trainee-2");
         var sender = new CapturingEmailSender();
 
         await OpenAsync(sameWindowOtherTrainee, sender, directory);
@@ -92,7 +93,8 @@ public sealed class MsfInvitationEmailTests
     {
         var campaignId = await SeedDraftAsync("trainee-1", OpensOn, ClosesOn);
         var before = await ReadInvitationAsync(campaignId);
-        var directory = storedName is null ? FakeUserDirectory.Empty : new FakeUserDirectory(("trainee-1", storedName));
+        var directory = (storedName is null ? FakeUserDirectory.Empty : new FakeUserDirectory(("trainee-1", storedName)))
+            .WithTrainees("trainee-1");
         var sender = new CapturingEmailSender();
 
         await using (var db = CreateDb())
@@ -140,7 +142,7 @@ public sealed class MsfInvitationEmailTests
         var campaignId = await SeedDraftAsync("trainee-1", OpensOn, ClosesOn, withInvitation: false);
         await using (var db = CreateDb())
         {
-            await new AddMsfInvitationCommandHandler(db, new InvitationTokenService()).Handle(
+            await new AddMsfInvitationCommandHandler(db, new InvitationTokenService(), FakeUserDirectory.Trainees("trainee-1")).Handle(
                 new AddMsfInvitationCommand(
                     campaignId, "nurse-1@example.test", MsfRespondentCategory.Nurse, TestPrincipals.Administrator()),
                 CancellationToken.None);
@@ -150,7 +152,7 @@ public sealed class MsfInvitationEmailTests
             .Should().BeAfter(ClosesOn, "guard: the product writes an expiry later than the window's close");
 
         var sender = new CapturingEmailSender();
-        await OpenAsync(campaignId, sender, new FakeUserDirectory(("trainee-1", "Thandi Nkosi")));
+        await OpenAsync(campaignId, sender, new FakeUserDirectory(("trainee-1", "Thandi Nkosi")).WithTrainees("trainee-1"));
 
         var message = sender.Messages.Should().ContainSingle().Subject;
         message.TextBody.Should().Contain("The last day to respond is 2029-03-21.");
@@ -250,6 +252,17 @@ public sealed class MsfInvitationEmailTests
     private async Task<int> SeedDraftAsync(string subjectUserId, DateOnly opensOn, DateOnly closesOn, bool withInvitation = true)
     {
         await using var db = CreateDb();
+        if (!await db.Set<Wombat.Domain.Identity.TraineeProfile>().AnyAsync(profile => profile.UserId == subjectUserId))
+        {
+            // A current trainee (T284: opening a draft, or inviting to one, asks for one, as create does).
+            db.Set<Wombat.Domain.Identity.TraineeProfile>().Add(new Wombat.Domain.Identity.TraineeProfile
+            {
+                UserId = subjectUserId, InstitutionId = 1, CurriculumId = 1,
+                ProgrammeStartDate = new DateOnly(2025, 1, 1), ExpectedCompletionDate = new DateOnly(2029, 1, 1),
+                IsActive = true
+            });
+        }
+
         var template = await db.MsfTemplates.SingleOrDefaultAsync(entity => entity.Name == TemplateName)
             ?? new MsfTemplate { Name = TemplateName, IsActive = true };
 

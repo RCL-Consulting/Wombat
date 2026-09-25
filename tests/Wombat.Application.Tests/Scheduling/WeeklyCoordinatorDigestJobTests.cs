@@ -349,6 +349,42 @@ public sealed class WeeklyCoordinatorDigestJobTests
         Section(emailSender.To(CoordinatorA), MsfCampaigns).Should().Equal("Annual MSF (campaign #101)");
     }
 
+    // ---- T284: only a current trainee is inactive -------------------------------------------------------------
+
+    [Fact]
+    public async Task ATraineeWhoIsNotCurrent_IsNotListedAsInactive_ButTheirCampaignAndReviewUnderWayStillAre()
+    {
+        // Each has logged nothing in 30 days and is on A's roster (their record stays readable, T113). Before T284 the
+        // locked trainee and the one who withdrew, keeping the role, were listed as inactive every Monday. A campaign
+        // about one still waits on its review, and a review of the other already scheduled still happens.
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddCoordinators(db);
+            AddTrainee(db, "a-idle", "Aisha", "Idle", InstitutionA);
+
+            // An administrator's lock (UserAdministrationService.SetLockoutAsync writes this).
+            AddTrainee(db, "a-locked", "Lerato", "Locked", InstitutionA).LockoutEnd = UserDeactivation.IndefiniteLockoutEnd;
+
+            // Withdrew: the profile ended, the role kept.
+            AddTrainee(db, "a-withdrew", "Wandile", "Withdrew", InstitutionA, isActive: false);
+
+            // Locked out for minutes by wrong passwords: still a current trainee, so still followed up.
+            AddTrainee(db, "a-mistyped", "Mpho", "Mistyped", InstitutionA).LockoutEnd = Now.AddMinutes(15);
+
+            AddCampaign(db, 101, "a-locked");
+            AddPanels(db);
+            AddReview(db, 11, PanelA, "a-withdrew", inDays: 2);
+        });
+
+        await RunAsync(provider);
+
+        var toA = emailSender.To(CoordinatorA);
+        Section(toA, TraineesAtRisk).Should().Equal("Aisha Idle", "Mpho Mistyped");
+        Section(toA, MsfCampaigns).Should().Equal("Annual MSF (campaign #101)");
+        Section(toA, ReviewsThisWeek).Should().Equal($"Wandile Withdrew on {Today.AddDays(2):yyyy-MM-dd}");
+    }
+
     // ---- T240: the shared reminder policy -------------------------------------------------------------------
 
     [Fact]
@@ -461,6 +497,9 @@ public sealed class WeeklyCoordinatorDigestJobTests
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddClaimsPrincipalFactory<WombatUserClaimsPrincipalFactory>();
+
+        // The real user store, as the host registers it: whether a trainee is current is asked of it (T284).
+        services.AddScoped<IUserAdministrationService, UserAdministrationService>();
 
         return (services.BuildServiceProvider(), emailSender);
     }

@@ -4,6 +4,10 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Email;
+using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.MultiSourceFeedback;
@@ -193,6 +197,143 @@ public sealed class LockedTraineeScopePostgresTests : IAsyncLifetime
         finally
         {
             await _schemas.DropAllAsync();
+        }
+    }
+
+    /// <summary>
+    /// T284 on the server: a draft written while the trainee was current is neither invited to nor opened once an
+    /// administrator locks them, through the real store; lifted, the same draft opens and mails its respondent.
+    /// </summary>
+    [Fact]
+    public async Task OnPostgres_ADraftAboutATraineeLockedSince_IsNeitherInvitedToNorOpened_UntilUnlocked()
+    {
+        var schema = await _schemas.CreateAsync();
+
+        try
+        {
+            await using var root = await MigratedAndSeededServicesAsync(schema);
+
+            int hostId, templateId;
+            await using (var arrange = root.CreateAsyncScope())
+            {
+                var db = arrange.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                hostId = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
+                var curriculumId = await db.Curricula
+                    .Where(entity => entity.Name == "Paediatric EPA Curriculum" && entity.Version == "11.1")
+                    .Select(entity => entity.Id)
+                    .SingleAsync();
+
+                var trainee = NomineeSeed.AddUser(db, LockedUserId, hostId, WombatRoles.Trainee);
+                trainee.FirstName = "Lerato";
+                trainee.LastName = "Locked";
+                db.TraineeProfiles.Add(new TraineeProfile
+                {
+                    UserId = LockedUserId,
+                    InstitutionId = hostId,
+                    CurriculumId = curriculumId,
+                    ProgrammeStartDate = new DateOnly(2025, 1, 15),
+                    ExpectedCompletionDate = new DateOnly(2029, 1, 14)
+                });
+
+                var template = new MsfTemplate
+                {
+                    Name = "T284 MSF",
+                    Questions = [new MsfQuestion { Order = 1, Prompt = "Overall", Type = MsfQuestionType.Scale, Required = true }]
+                };
+                db.Set<MsfTemplate>().Add(template);
+                await db.SaveChangesAsync();
+                templateId = template.Id;
+            }
+
+            var coordinator = Coordinator(hostId);
+            var emailSender = new CapturingEmailSender();
+
+            // The draft and its first invitee, while the trainee is current.
+            int campaignId;
+            await using (var draft = root.CreateAsyncScope())
+            {
+                var context = draft.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var users = StoreIn(draft);
+                campaignId = (await CreateCampaignAsync(context, users, LockedUserId, templateId, coordinator)).Id;
+                await InviteAsync(context, users, campaignId, "nurse-t284@example.test", coordinator);
+            }
+
+            await using (var lockScope = root.CreateAsyncScope())
+            {
+                await StoreIn(lockScope).SetLockoutAsync(LockedUserId, locked: true);
+            }
+
+            await using (var act = root.CreateAsyncScope())
+            {
+                var context = act.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var users = StoreIn(act);
+
+                var invite = () => InviteAsync(context, users, campaignId, "peer-t284@example.test", coordinator);
+                (await invite.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message.Should().Be(CampaignSubjectNotCurrent);
+
+                var open = () => OpenAsync(context, users, emailSender, campaignId, coordinator);
+                (await open.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message.Should().Be(CampaignSubjectNotCurrent);
+
+                // As the audit pipeline would, from its catch: each refusal came before anything was touched.
+                await context.SaveChangesAsync();
+                context.ChangeTracker.Clear();
+            }
+
+            emailSender.Sent.Should().BeEmpty();
+            (await CampaignAsync(root, campaignId)).Should().Be((MsfCampaignState.Draft, 1, 0));
+
+            // The lock was the reason: lifted, the same draft opens and mails its one respondent.
+            await using (var reopen = root.CreateAsyncScope())
+            {
+                var context = reopen.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var users = StoreIn(reopen);
+                await users.SetLockoutAsync(LockedUserId, locked: false);
+                await OpenAsync(context, users, emailSender, campaignId, coordinator);
+            }
+
+            emailSender.Sent.Select(message => message.To).Should().Equal("nurse-t284@example.test");
+            (await CampaignAsync(root, campaignId)).Should().Be((MsfCampaignState.Open, 1, 1));
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    private static Task<int> InviteAsync(
+        ApplicationDbContext context, UserAdministrationService users, int campaignId, string email, ClaimsPrincipal caller)
+        => new AddMsfInvitationCommandHandler(context, new InvitationTokenService(), users).Handle(
+            new AddMsfInvitationCommand(campaignId, email, MsfRespondentCategory.Nurse, caller),
+            CancellationToken.None);
+
+    private static Task OpenAsync(
+        ApplicationDbContext context, UserAdministrationService users, IEmailSender emailSender, int campaignId, ClaimsPrincipal caller)
+        => new OpenMsfCampaignCommandHandler(
+                context,
+                emailSender,
+                new InvitationTokenService(),
+                users,
+                Options.Create(new WombatOptions { MsfRespondUrl = "https://wombat.example/msf/respond" }))
+            .Handle(new OpenMsfCampaignCommand(campaignId, caller), CancellationToken.None);
+
+    /// <summary>The campaign's state, its invitees, and how many hold a link, read through a scope of their own.</summary>
+    private static async Task<(MsfCampaignState State, int Invitees, int Linked)> CampaignAsync(ServiceProvider root, int campaignId)
+    {
+        await using var read = root.CreateAsyncScope();
+        var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var campaign = await db.MsfCampaigns.AsNoTracking().Include(entity => entity.Invitations)
+            .SingleAsync(entity => entity.Id == campaignId);
+        return (campaign.State, campaign.Invitations.Count, campaign.Invitations.Count(invitation => invitation.TokenSelector != null));
+    }
+
+    private sealed class CapturingEmailSender : IEmailSender
+    {
+        public List<EmailMessage> Sent { get; } = [];
+
+        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+        {
+            Sent.Add(message);
+            return Task.CompletedTask;
         }
     }
 
