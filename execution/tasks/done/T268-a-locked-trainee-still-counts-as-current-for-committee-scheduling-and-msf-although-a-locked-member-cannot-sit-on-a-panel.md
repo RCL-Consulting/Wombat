@@ -1,11 +1,12 @@
 ---
 id: T268
 title: A locked trainee still counts as current for committee scheduling and MSF, although a locked member cannot sit on a panel
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T268 — A locked trainee still counts as current for committee scheduling and MSF, although a locked member cannot sit on a panel
@@ -36,8 +37,26 @@ tests and to T238's.
 
 ## Verification
 
-- [ ] A locked trainee is offered to no picker, and scheduling and MSF create refuse them. Tests.
+- [x] A locked trainee is offered to no picker, and scheduling and MSF create refuse them. Tests.
 
 ## Related
 
 T238, T248, T165, D46.
+
+---
+
+## As built — 2026-09-25 (`d42d2db`, decision adopted)
+
+`TraineeScopeResolver.KeepCurrentAsync` excludes an account an administrator has locked (not a wrong-password lockout),
+as a locked member cannot sit on a panel. So pickers, scheduling, MSF create, decisions-due, coverage and dashboards leave
+them out. Tests pin a locked twin of each.
+
+Browser on dev (scripted Chrome, master `3f08b26`; `pg_dump -n public` first, at `recovery/pre-t251-migration.dump`):
+- **Locked by instadmin.** Stale schedule and MSF forms were refused with their exact sentences, and nothing was stored.
+  After a reload the pickers, decisions-due, coverage and the targets card left the trainee out. Their existing
+  campaigns and reviews still open.
+- **Reactivated:** every item came back.
+- **Five wrong passwords** (a lockout, not an admin's lock) left the trainee current everywhere.
+
+**Filed from the review:** [T284] (opening a draft about someone no longer current; the digest's inactive list; the lock
+card).

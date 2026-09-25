@@ -1,11 +1,12 @@
 ---
 id: T251
 title: Opening an MSF campaign while mail is down reports success and silently drops every invitation link
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T251 — Opening an MSF campaign while mail is down reports success and silently drops every invitation link
@@ -46,9 +47,32 @@ other mail has the same property (account invitations, nudges, digests), but a l
 
 ## Verification
 
-- [ ] With delivery failing, the campaign page names the undelivered count and Resend delivers once mail is back. Job
+- [x] With delivery failing, the campaign page names the undelivered count and Resend delivers once mail is back. Job
       and handler tests with a failing sender; browser with the sink stopped, then started.
 
 ## Related
 
 T225, T184, T202, T214, T205.
+
+---
+
+## As built — 2026-09-25 (`39f88b4`)
+
+`EmailWorker` reports each MSF link's outcome by the tags the message carries. The migration
+`T251_MsfInvitationDeliveryOutcome` records it on the invitation (`SentOn`, `DeliveryFailedOn`, `DeliveryLinkSelector`).
+- **The campaign page** counts links still being sent and links not delivered, never naming a respondent. It offers
+  "Resend N links", which issues new links as a reminder does.
+- **Open** says "Campaign opened; links are being sent."
+- **An anonymising save** always clears the outcome, and a link that may have arrived is never let go.
+
+Domain, worker, handler and Postgres race tests.
+
+Browser on dev (scripted Chrome, master `3f08b26`; `pg_dump -n public` first, at `recovery/pre-t251-migration.dump`):
+- **With the SMTP sink stopped,** campaign 23 opened with 3 invitees: "Campaign opened; links are being sent.". About 55 s
+  later it read "3 links were not delivered…" with "Resend 3 links", and no invitee address on the page.
+- **With the sink started,** Resend pressed twice sent exactly 3 mails, and the page read "3 new links are being sent.",
+  focused. Each link answers 200 at `/msf/respond`.
+- **A stale Resend** after a close in another tab was refused: "Links are sent again only while the campaign is open…".
+  The delivery columns were cleared by the close.
+
+**Filed from the review:** [T282] (P2: addresses in mail logs) and [T283] (outcomes for account invitations).

@@ -1,11 +1,12 @@
 ---
 id: T155
 title: SSO sign-in rewrites an account's email from an unverified claim, and can re-key it onto another person's address
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T155 — SSO sign-in rewrites an account's email from an unverified claim, and can re-key it onto another person's address
@@ -42,9 +43,24 @@ provisioning should require `email_verified` too.
 
 ## Verification
 
-- [ ] An SSO sign-in whose email claim is another user's address changes nothing on either account — test.
-- [ ] An unverified email claim is never written — test.
+- [x] An SSO sign-in whose email claim is another user's address changes nothing on either account — test.
+- [x] An unverified email claim is never written — test.
 
 ## Related
 
 T149, T027 (SSO), T102 (nominees are found by the stored identity).
+
+---
+
+## As built — 2026-09-25 (`3cc1139`)
+
+`ExternalLoginHandler` never writes an email or user name from an unverified claim. It syncs only when the provider
+asserts `email_verified`, through `SetEmailAsync`/`SetUserNameAsync` with results checked, before any other save, and
+never onto another account's address (refused and logged, both accounts unchanged). Provisioning and linking need a
+verified email, and an unverified one is refused before any lookup. Handler tests cover each case, including the audit
+trap on a failed `UpdateAsync`.
+
+**Browser:** not run. Dev has no SSO provider (no institutional button, no OIDC in the startup log, 0 external logins).
+The handler tests are the evidence.
+
+**Filed from the review:** [T286] (external logins cannot be listed or removed; emails are unique only by check).

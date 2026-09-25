@@ -43,3 +43,6 @@ T247, T249, T225, T266.
 Note, 2026-09-25 (the T269 review): `MyMsfReports.razor` shows a refusal twice: in the top danger alert (no `Role`) and
 again as the StatePanel's `LoadError`, which replaces the "Released reports" list. The wording ("…not available to the
 current trainee.") also reaches a Coordinator who types another report's id.
+
+Note, 2026-09-25 (the MSF chain 3 browser check): the trainee's learner-feedback report reads "Rates the trainee's
+teaching overall.: 4.00". The page adds a colon after question text that already ends in a full stop.

@@ -1,11 +1,12 @@
 ---
 id: T267
 title: One concurrent close makes the MSF auto-close job's whole batch fail, so every other expired campaign closes an hour late
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T267 — One concurrent close makes the MSF auto-close job's whole batch fail, so every other expired campaign closes an hour late
@@ -32,8 +33,19 @@ Postgres test with an interceptor forcing the race.
 
 ## Verification
 
-- [ ] One concurrent close leaves every other expired campaign closed in the same run. Test.
+- [x] One concurrent close leaves every other expired campaign closed in the same run. Test.
 
 ## Related
 
 T246, T214, T168.
+
+---
+
+## As built — 2026-09-25 (`26cc434`)
+
+`MsfCampaignAutoCloseJob` closes and saves each expired campaign on its own, so one concurrent close no longer fails the
+batch. A skip or a campaign left open is counted. Postgres race tests.
+
+Browser on dev (scripted Chrome, master `3f08b26`; `pg_dump -n public` first, at `recovery/pre-t251-migration.dump`): campaigns 23 and 26 had their dates moved back by SQL, and the job was triggered. Run 85 logged "auto-closed 2 of 2
+expired campaigns; skipped 0, left open 0, failed 0". Both read Under review with the same `ClosedOn`, and their
+invitations were anonymised. The race itself cannot be driven from a browser; the Postgres tests cover it.
