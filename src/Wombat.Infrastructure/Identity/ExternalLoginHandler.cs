@@ -60,6 +60,57 @@ public sealed class ExternalLoginHandler
     internal const string WrongInstitutionMessage =
         "This account is not registered at the institution this sign-in belongs to. Contact your administrator.";
 
+    /// <summary>
+    /// What a person is told when the provider did not verify the email: at the callback, whether or not an account holds
+    /// the address, and at the link. It reads the same in every case, so it says nothing about which addresses have
+    /// accounts. (T155)
+    /// </summary>
+    internal const string EmailNotVerifiedMessage =
+        "Your institution's sign-in did not confirm your email address, so Wombat cannot use it to find your account " +
+        "or create one. Sign in with your password if you have one, or ask your administrator for an invitation.";
+
+    /// <summary>The audit reason when a first sign-in or a link is refused because the email is unverified. (T155)</summary>
+    internal const string EmailNotVerifiedReason = "The provider did not assert the email as verified.";
+
+    /// <summary>The audit reason when a first sign-in is refused because another account holds the email. (T155)</summary>
+    internal const string EmailInUseReason = "Another account holds the provider's verified email.";
+
+    internal const string EmailInUseMessage =
+        "A Wombat account already uses this email address, so a new one cannot be created. Contact your administrator.";
+
+    /// <summary>The audit reason when the verified address is another account's. Neither account is changed. (T155)</summary>
+    internal const string EmailHeldByAnotherAccountReason =
+        "The provider's verified email is another account's address; neither account was changed.";
+
+    /// <summary>The audit reason when Identity refused the verified address. The account is left as it was. (T155)</summary>
+    internal const string EmailRefusedByValidationReason =
+        "Identity refused the provider's verified email; the account was left unchanged.";
+
+    /// <summary>
+    /// Whether the provider asserts that its email claim is verified: every <paramref name="claimType" /> claim it sent
+    /// reads as true, and there is at least one. Absent, false, or anything else is unverified.
+    /// </summary>
+    /// <remarks>
+    /// ID tokens carry the value as <c>true</c>, userinfo mapped through ClaimActions as <c>True</c>, and some providers
+    /// send the string <c>"true"</c>; <see cref="bool.TryParse(string, out bool)" /> reads all three. Entra ID's
+    /// <c>xms_edov</c> is documented as a boolean but has been seen as the string <c>"1"</c> (supabase/auth handles both
+    /// encodings), and a JSON number 1 becomes the claim value <c>1</c> too, so <c>1</c> also reads as true. Nothing
+    /// else does: an assertion the code cannot read fails closed. (T155)
+    /// </remarks>
+    internal static bool EmailIsVerified(ClaimsPrincipal principal, string? claimType)
+    {
+        if (string.IsNullOrWhiteSpace(claimType))
+        {
+            return false;
+        }
+
+        var values = principal.FindAll(claimType).Select(claim => claim.Value).ToList();
+        return values.Count > 0 && values.All(ReadsAsTrue);
+
+        static bool ReadsAsTrue(string value)
+            => (bool.TryParse(value, out var verified) && verified) || string.Equals(value, "1", StringComparison.Ordinal);
+    }
+
     public sealed class ExternalLoginResult
     {
         public bool Succeeded { get; init; }
@@ -101,16 +152,24 @@ public sealed class ExternalLoginHandler
             .Select(c => c.Value)
             .ToList();
 
+        var emailVerified = EmailIsVerified(loginInfo.Principal, providerConfig.EmailVerifiedClaim);
+
         // 1. Try to find user by existing external login link
         var user = await _userManager.FindByLoginAsync(providerKey, externalSubjectId);
 
         if (user is not null)
         {
-            return await SignInExistingUserAsync(user, providerConfig, groupIds, name, email, ipAddress, userAgent, cancellationToken);
+            return await SignInExistingUserAsync(
+                user, providerConfig, groupIds, name, email, emailVerified, ipAddress, userAgent, cancellationToken);
         }
 
-        // 2. Try to find user by email within the same institution
-        if (!string.IsNullOrWhiteSpace(email))
+        // 2. Try to find user by email within the same institution, but only by an email the provider verified. A link is
+        // a lasting credential: once made, it signs the account in through the provider after its password has changed.
+        // Matching an unverified email would let anyone who can set their own address at the provider, and has learnt
+        // the account's password once, keep a way in that no password change ends. It would also say, by offering the
+        // link page, which addresses have accounts here. An unverified email goes on to step 3, which refuses it with
+        // the same message whether or not an account holds the address. (T155)
+        if (emailVerified && !string.IsNullOrWhiteSpace(email))
         {
             var emailUser = await _userManager.FindByEmailAsync(email);
             if (emailUser is not null && emailUser.InstitutionId == providerConfig.InstitutionId)
@@ -134,7 +193,8 @@ public sealed class ExternalLoginHandler
 
         // 3. Provision a new user
         return await ProvisionNewUserAsync(
-            providerKey, externalSubjectId, providerConfig, email, name, groupIds, ipAddress, userAgent, cancellationToken);
+            providerKey, externalSubjectId, providerConfig, email, emailVerified, name, groupIds, ipAddress, userAgent,
+            cancellationToken);
     }
 
     /// <summary>
@@ -180,6 +240,18 @@ public sealed class ExternalLoginHandler
         if (string.IsNullOrWhiteSpace(email))
         {
             return new ExternalLoginResult { ErrorMessage = "The identity provider did not supply an email address." };
+        }
+
+        // The callback offers a link only for a verified email, but this endpoint is reachable with any external cookie
+        // the provider's handler has set, without passing through the callback. So it judges the email itself, before it
+        // looks up any account or checks any password: an unverified email names no account and costs none a failed
+        // attempt. (T155)
+        var emailVerified = EmailIsVerified(loginInfo.Principal, providerConfig.EmailVerifiedClaim);
+        if (!emailVerified)
+        {
+            await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user: null, ipAddress, userAgent,
+                EmailNotVerifiedReason);
+            return new ExternalLoginResult { ErrorMessage = EmailNotVerifiedMessage };
         }
 
         // Already linked: the callback signs that account in directly, so a link here can only be a replay.
@@ -245,9 +317,26 @@ public sealed class ExternalLoginHandler
         // existing local account. The institution's own admin is the one who would notice it. (T101)
         await WriteLinkAuditAsync("SsoAccountLinked", success: true, user, ipAddress, userAgent, errorMessage: null);
 
+        // The account was found by this email, so there is nothing for the sign-in to sync; it is still judged the same.
         var groupIds = loginInfo.Principal.FindAll(providerConfig.GroupsClaim).Select(c => c.Value).ToList();
-        return await SignInExistingUserAsync(user, providerConfig, groupIds, name, email, ipAddress, userAgent, cancellationToken);
+        return await SignInExistingUserAsync(
+            user, providerConfig, groupIds, name, email, emailVerified, ipAddress, userAgent, cancellationToken);
     }
+
+    /// <summary>
+    /// A refused first sign-in has no account to name. It is stamped with the provider's institution, whose
+    /// administrators run the provider, and carries no address. (T155)
+    /// </summary>
+    private Task WriteProvisioningRefusedAuditAsync(int institutionId, string? ipAddress, string? userAgent, string reason)
+        => _auditWriter.WriteAsync(AuditEntry.Create(
+            occurredAt: DateTime.UtcNow,
+            category: AuditCategory.Authentication,
+            action: "SsoProvisioningRefused",
+            success: false,
+            actorIpAddress: ipAddress,
+            actorUserAgent: userAgent,
+            institutionId: institutionId,
+            errorMessage: reason));
 
     private Task WriteLinkAuditAsync(
         string action,
@@ -281,6 +370,7 @@ public sealed class ExternalLoginHandler
     ///   roles. An admin moving a user to another institution removes their external logins
     ///   (<c>UserAdministrationService.UpdateScopeAsync</c>), so this refusal does not strand a moved user.</item>
     /// </list>
+    /// Then it syncs the email (<see cref="SyncEmailAsync" />) before anything else is saved, then the name, then the roles.
     /// </remarks>
     private async Task<ExternalLoginResult> SignInExistingUserAsync(
         WombatIdentityUser user,
@@ -288,6 +378,7 @@ public sealed class ExternalLoginHandler
         List<string> groupIds,
         string? name,
         string? email,
+        bool emailVerified,
         string? ipAddress,
         string? userAgent,
         CancellationToken cancellationToken)
@@ -314,8 +405,21 @@ public sealed class ExternalLoginHandler
             return new ExternalLoginResult { ErrorMessage = WrongInstitutionMessage };
         }
 
-        // Update profile from claims if changed
-        var changed = false;
+        if (!string.IsNullOrWhiteSpace(email) && !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
+        {
+            if (emailVerified)
+            {
+                await SyncEmailAsync(user, email, providerKey, ipAddress, userAgent, cancellationToken);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "SSO sign-in of user {UserId} through '{ProviderKey}' carried an email the provider does not assert as " +
+                    "verified; the account's email was left as it was.",
+                    user.Id, providerKey);
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(name))
         {
             var parts = name.Split(' ', 2);
@@ -325,18 +429,15 @@ public sealed class ExternalLoginHandler
             {
                 user.FirstName = firstName;
                 user.LastName = lastName;
-                changed = true;
+                var renamed = await _userManager.UpdateAsync(user);
+                if (!renamed.Succeeded)
+                {
+                    // A refused update stays tracked, and the group mapper's save below would commit it. (T155)
+                    await DiscardChangesAsync(user, cancellationToken);
+                    _logger.LogWarning("SSO sign-in could not update the name of user {UserId}: {Errors}",
+                        user.Id, string.Join("; ", renamed.Errors.Select(e => e.Code)));
+                }
             }
-        }
-        if (!string.IsNullOrWhiteSpace(email) && !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
-        {
-            user.Email = email;
-            user.UserName = email;
-            changed = true;
-        }
-        if (changed)
-        {
-            await _userManager.UpdateAsync(user);
         }
 
         // Sync roles from groups
@@ -358,11 +459,97 @@ public sealed class ExternalLoginHandler
         return new ExternalLoginResult { Succeeded = true, UserId = user.Id };
     }
 
+    /// <summary>
+    /// Writes the provider's verified email to the account as its email and user name, or leaves the account as it was.
+    /// Called only for an email the provider asserts as verified, and before anything else in the sign-in is saved. (T155)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Before T155 every SSO sign-in copied the email claim, verified or not, and ignored the result of the update. A claim
+    /// naming another account's address was refused by Identity as a duplicate user name, but the refused values stayed
+    /// on the tracked entity, and the group mapper's save committed them: the account took the other person's address,
+    /// with its normalised columns still the old ones.
+    /// </para>
+    /// <para>
+    /// An address another account holds, as its email or its user name, is refused before anything is changed. Identity
+    /// would catch only the user name: it is not configured to require unique emails, and the sign-in page's
+    /// <c>FindByEmailAsync</c> throws once two accounts share one.
+    /// </para>
+    /// <para>
+    /// The change is one validated write, not <c>SetUserNameAsync</c> then <c>SetEmailAsync</c>. Those are two saves, so a
+    /// refusal of the second would leave the user name on the new address and the email on the old one. The write does
+    /// what <c>SetEmailAsync</c> does, except that it marks the address confirmed, because the provider verified it:
+    /// <c>UpdateSecurityStampAsync</c> rotates the stamp, runs Identity's validators, sets both normalised columns and
+    /// saves. If it is refused, the account is reloaded before anything else can save it.
+    /// </para>
+    /// </remarks>
+    private async Task SyncEmailAsync(
+        WombatIdentityUser user,
+        string email,
+        string providerKey,
+        string? ipAddress,
+        string? userAgent,
+        CancellationToken cancellationToken)
+    {
+        if (await AddressHeldByAnotherAccountAsync(email, user.Id))
+        {
+            _logger.LogWarning(
+                "SSO sign-in of user {UserId} through '{ProviderKey}' asserted a verified email that another account holds. " +
+                "The email was not synced, and neither account was changed.",
+                user.Id, providerKey);
+            await WriteLinkAuditAsync("SsoEmailSyncRefused", success: false, user, ipAddress, userAgent,
+                EmailHeldByAnotherAccountReason);
+            return;
+        }
+
+        user.Email = email;
+        user.UserName = email;
+        user.EmailConfirmed = true;
+        var updated = await _userManager.UpdateSecurityStampAsync(user);
+        if (!updated.Succeeded)
+        {
+            await DiscardChangesAsync(user, cancellationToken);
+            _logger.LogWarning(
+                "SSO sign-in of user {UserId} through '{ProviderKey}' asserted a verified email that Identity refused: " +
+                "{Errors}. The account was left unchanged.",
+                user.Id, providerKey, string.Join("; ", updated.Errors.Select(e => e.Code)));
+            await WriteLinkAuditAsync("SsoEmailSyncRefused", success: false, user, ipAddress, userAgent,
+                EmailRefusedByValidationReason);
+            return;
+        }
+
+        // No address in the row: the audit log outlives an erasure, which pseudonymises the account but not free text.
+        await WriteLinkAuditAsync("SsoEmailChanged", success: true, user, ipAddress, userAgent, errorMessage: null);
+    }
+
+    /// <summary>Whether an account other than <paramref name="userId" /> holds the address as its email or user name.</summary>
+    private async Task<bool> AddressHeldByAnotherAccountAsync(string address, string? userId)
+    {
+        var byEmail = await _userManager.FindByEmailAsync(address);
+        if (byEmail is not null && byEmail.Id != userId)
+        {
+            return true;
+        }
+
+        var byUserName = await _userManager.FindByNameAsync(address);
+        return byUserName is not null && byUserName.Id != userId;
+    }
+
+    /// <summary>
+    /// Puts back what a refused Identity update left on the tracked account. <c>UserManager</c> sets the values before it
+    /// validates them, and a refusal returns without saving but without undoing them, so the next save in this scope (the
+    /// group mapper's, or the audit writer's) would commit them. Reloading also resets the object itself, which the
+    /// sign-in goes on to build its cookie from. (T155)
+    /// </summary>
+    private Task DiscardChangesAsync(WombatIdentityUser user, CancellationToken cancellationToken)
+        => _dbContext.Entry(user).ReloadAsync(cancellationToken);
+
     private async Task<ExternalLoginResult> ProvisionNewUserAsync(
         string providerKey,
         string externalSubjectId,
         SsoProviderOptions providerConfig,
         string? email,
+        bool emailVerified,
         string? name,
         List<string> groupIds,
         string? ipAddress,
@@ -374,6 +561,39 @@ public sealed class ExternalLoginHandler
             return new ExternalLoginResult { ErrorMessage = "The identity provider did not supply an email address." };
         }
 
+        // An account is created from the email the provider asserts, and the address becomes its user name, its sign-in
+        // match and where its mail goes. So it must be one the provider verified: otherwise anyone who can set their own
+        // email at the provider could take an address before its owner is invited, and InvitedUserProvisioner refuses an
+        // address that is taken. A provider that verifies nothing still signs in the accounts it is linked to. (T155)
+        //
+        // This comes before any lookup. An unverified email reaches this point whether or not an account holds it (the
+        // callback matches only verified ones), so asking who holds it first would answer that question for anyone who
+        // can type an address at their provider: "in use" for a held address, "not verified" for any other.
+        if (!emailVerified)
+        {
+            _logger.LogWarning(
+                "SSO first sign-in through '{ProviderKey}' carried an email the provider does not assert as verified; " +
+                "no account was created.",
+                providerKey);
+            await WriteProvisioningRefusedAuditAsync(providerConfig.InstitutionId, ipAddress, userAgent,
+                EmailNotVerifiedReason);
+            return new ExternalLoginResult { ErrorMessage = EmailNotVerifiedMessage };
+        }
+
+        // Reached with a verified email only when no account of this institution has it, so a holder is another
+        // institution's account, or one that holds the address only as its user name. Identity would refuse a duplicate
+        // user name but not a duplicate email, and two accounts sharing an email break the sign-in page's lookup for
+        // both. (T155)
+        if (await AddressHeldByAnotherAccountAsync(email, userId: null))
+        {
+            _logger.LogWarning(
+                "SSO first sign-in through '{ProviderKey}' asserted an email another account holds; no account was created.",
+                providerKey);
+            await WriteProvisioningRefusedAuditAsync(providerConfig.InstitutionId, ipAddress, userAgent,
+                EmailInUseReason);
+            return new ExternalLoginResult { ErrorMessage = EmailInUseMessage };
+        }
+
         var parts = (name ?? email).Split(' ', 2);
         var firstName = parts[0];
         var lastName = parts.Length > 1 ? parts[1] : string.Empty;
@@ -382,7 +602,7 @@ public sealed class ExternalLoginHandler
         {
             UserName = email,
             Email = email,
-            EmailConfirmed = true, // The provider asserted it
+            EmailConfirmed = true, // The provider verified it: nothing unverified reaches this point.
             FirstName = firstName,
             LastName = lastName,
             InstitutionId = providerConfig.InstitutionId,

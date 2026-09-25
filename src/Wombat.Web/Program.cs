@@ -61,6 +61,15 @@ if (ssoOptions?.Providers is { Count: > 0 } providers)
                 options.Scope.Add(scope);
             }
 
+            // The email's verification decides whether SSO may write the email or provision an account (T155). The ID
+            // token's claims reach the external login, but from the userinfo response the handler keeps only the
+            // claims ClaimActions names, and the defaults do not name this one. A provider that asserts it only there
+            // would otherwise never be seen to verify anything.
+            if (!string.IsNullOrWhiteSpace(provider.EmailVerifiedClaim))
+            {
+                options.ClaimActions.MapUniqueJsonKey(provider.EmailVerifiedClaim, provider.EmailVerifiedClaim);
+            }
+
             options.CallbackPath = $"/signin-oidc-{provider.Key}";
             options.SignedOutCallbackPath = $"/signout-oidc-{provider.Key}";
         });

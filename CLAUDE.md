@@ -149,6 +149,9 @@ it always requires explicit manual assignment — and an Administrator account c
 through SSO (T149). SSO sign-in also refuses a deactivated account (an admin's lock or an erasure, not a brute-force
 lockout) and an account outside the provider's institution; linking reads everything from the external cookie, checks
 the password with lockout, and is rate-limited. Moving a user to another institution drops their external logins.
+SSO writes an email only when the provider verifies it (`SsoProviderOptions.EmailVerifiedClaim`, default
+`email_verified`), never onto another account's address, provisions an account only from a verified email that no
+account holds, and matches an account for linking only by a verified email (T155).
 
 ### InstitutionalAdmin scope-aware powers (T056)
 

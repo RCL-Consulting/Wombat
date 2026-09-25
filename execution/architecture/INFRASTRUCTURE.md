@@ -327,7 +327,11 @@ Sso__Providers__0__GroupsClaim=groups
 Sso__Providers__0__Scopes__0=openid
 Sso__Providers__0__Scopes__1=profile
 Sso__Providers__0__Scopes__2=email
+Sso__Providers__0__EmailVerifiedClaim=email_verified
 ```
+
+`EmailVerifiedClaim` is the claim by which the provider says its `email` claim is verified. It defaults to
+`email_verified` (OIDC Core § 5.1), so it is needed only for a provider that says it another way; Entra ID's is below.
 
 **`Wombat__PseudonymSalt`** — used by the erasure executor (T026) to generate deterministic pseudonyms for erased users (`deleted_user_<hex>`). This is a deployment secret. **Do not rotate it** — rotating the salt breaks pseudonym stability across exports and makes previously-issued pseudonyms unlinkable to erasure records.
 
@@ -418,6 +422,7 @@ Wombat supports institutional single sign-on via OpenID Connect. Providers are c
       "ClientSecret": "<from environment variable>",
       "Scopes": ["openid", "profile", "email"],
       "GroupsClaim": "groups",
+      "EmailVerifiedClaim": "xms_edov",
       "EnableFederatedLogout": false
     }
   ]
@@ -438,7 +443,7 @@ The double-underscore `__` with array index `0` maps to `Sso:Providers[0]:Client
 
 | Provider | Notes |
 |----------|-------|
-| **Microsoft Entra ID** | Groups claim emits object IDs by default, not display names. Map by object ID in `SsoGroupRoleMappings`; keep display names for admin UX. Enable "Group claims" in the app registration's Token Configuration. |
+| **Microsoft Entra ID** | Groups claim emits object IDs by default, not display names. Map by object ID in `SsoGroupRoleMappings`; keep display names for admin UX. Enable "Group claims" in the app registration's Token Configuration. Entra sends no `email_verified`: add the `xms_edov` optional claim (email domain owner verified) in Token Configuration and set `EmailVerifiedClaim` to `xms_edov`. Without it no email from Entra counts as verified, so Entra can neither provision nor link (see the invariants below). `xms_edov` is documented as a boolean and has been seen as the string `"1"`; both read as verified. **Needs confirmation:** check one real Entra ID token's `xms_edov` before the first Entra institution goes live. |
 | **Google Workspace** | No native groups claim. Use Google Directory API to populate groups, or map by domain/OU. |
 | **Shibboleth** | SAML at the wire level. Point an OIDC bridge (Keycloak, Auth0, or a SAML-to-OIDC adapter) at the Shibboleth IdP. Wombat talks to the bridge over OIDC. Do not implement SAML directly. |
 
@@ -449,6 +454,23 @@ The double-underscore `__` with array index `0` maps to `Sso:Providers[0]:Client
 - Clock skew tolerance: 2 minutes.
 - **Administrator role cannot be assigned via SSO.** Even if the mapping table maps a group to Administrator, the `SsoGroupMapper` logs a warning and skips it. Administrator requires explicit manual assignment.
 - SSO-provisioned users have `AllowLocalPassword = false` — they cannot set a local password and are refused by the local login form.
+- **An email the provider does not verify is never written (T155).** The provider must assert its `EmailVerifiedClaim`
+  as true (`true` in any case, or `1`), in every such claim it sends. Only then does a sign-in copy a changed email to the account, as its email and user name, in one
+  validated write that rotates the security stamp. An address another account holds, as its email or its user name, is
+  refused before anything changes, and so is anything Identity's validators refuse. Both accounts stay as they were, the
+  sign-in goes ahead, and the refusal is logged and audited (`SsoEmailSyncRefused`). A change that is written is audited
+  as `SsoEmailChanged`. A refused Identity update is reloaded before anything else saves, because the audit writer's save
+  and the group mapper's would otherwise commit it.
+- **A first sign-in provisions an account only from a verified email that no account holds (T155).** Otherwise it is
+  refused (`SsoProvisioningRefused`, stamped with the provider's institution), and the person is told to ask for an
+  invitation. The unverified refusal comes before any lookup, so it reads the same whether or not an account holds the
+  address.
+- **Only a verified email is matched to an account for linking (T155).** A link outlives a password change, so matching
+  an unverified email would let anyone who can set their own address at the provider, and has learnt the account's
+  password once, keep a way in. The callback offers no link for an unverified email (it is refused as above), and the
+  link endpoint, which any external cookie reaches without the callback, refuses it before it looks up an account or
+  checks a password. A provider that verifies nothing therefore neither provisions nor links; it still signs in the
+  accounts already linked to it.
 - Break-glass: at least two local-password Administrator accounts must exist independent of SSO.
 
 ### Callback URLs
