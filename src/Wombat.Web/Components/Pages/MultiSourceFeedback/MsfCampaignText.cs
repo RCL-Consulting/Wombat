@@ -58,6 +58,29 @@ public static class MsfCampaignText
     public static string RowLinkName(string label, string describedCampaign)
         => $"{label}: the campaign for {describedCampaign}";
 
+    public const string RemoveInviteeTitle = "Remove this invitee?";
+
+    public const string RemoveInviteeConfirmLabel = "Remove invitee";
+
+    /// <summary>
+    /// A draft invitee as the Remove button, the dialog and the result name them: "peer-1@example.test (Peer doctor)".
+    /// (T247)
+    /// </summary>
+    public static string DescribeInvitee(string email, string group) => $"{email} ({group})";
+
+    /// <summary>
+    /// What removing a draft's invitee does, and how to undo it: add them again (T247). "No working link", not "no
+    /// link": an open that failed, or was refused at its save, may have mailed them one that does not work (T184, T247
+    /// review).
+    /// </summary>
+    public static string RemoveInviteeBody(string describedInvitee)
+        => $"Remove {describedInvitee} from this campaign? They hold no working link, and will not be sent one when the " +
+           "campaign opens. While the campaign is a draft, they can be added again.";
+
+    /// <summary>What a remove did. (T247)</summary>
+    public static string InviteeRemoved(string describedInvitee)
+        => $"{describedInvitee} has been removed from this campaign, and will not be emailed a link when it opens.";
+
     /// <summary>
     /// Why Open campaign is disabled on a draft that invites nobody (T225, the T107 pattern): opening mails each invitee
     /// a link, and the handler refuses a campaign with none.

@@ -242,7 +242,7 @@ public sealed class CampaignStatePageTests : WombatTestContext
     [Fact]
     public void AddingAnInvitee_CountsThemAtOnce()
     {
-        var sender = new CampaignSender(Setup(MsfCampaignState.Draft, Group(MsfRespondentCategory.PeerDoctor, 1, 0)));
+        var sender = new CampaignSender(DraftInviting(("peer-0@example.test", MsfRespondentCategory.PeerDoctor)));
         var cut = Render(sender);
 
         cut.Find("#msf-respondent-email").Change("nurse-1@example.test");
@@ -252,7 +252,11 @@ public sealed class CampaignStatePageTests : WombatTestContext
         cut.WaitForAssertion(() => Text(cut.Find(".alert-success")).Should().Be("Invitee added."));
         BodyRows(cut.Find("table")).Should().Equal("Peer doctor | 1", "Nurse | 1");
         FooterRow(cut.Find("table")).Should().Be("All groups | 2");
-        cut.Markup.Should().NotContain("nurse-1@example.test", "the page lists no address, the one just added included");
+
+        // A draft lists the addresses typed, the one just added included, for Remove (T247). Until T247 it listed none.
+        BodyRows(cut.Find("#msf-draft-invitees")).Should().Equal(
+            "peer-0@example.test | Peer doctor | Remove",
+            "nurse-1@example.test | Nurse | Remove");
     }
 
     [Fact]
@@ -447,7 +451,8 @@ public sealed class CampaignStatePageTests : WombatTestContext
             .And.Contain("Withdraw the campaign for Sipho Dlamini (Annual MSF, closing 2029-03-21)?")
             .And.Contain("withdrawing cannot be undone");
 
-        cut.FindAll("dialog button").Single(candidate => Text(candidate) == "Cancel").Click();
+        // The first dialog is the withdraw's; the page's second is a draft invitee's Remove (T247).
+        cut.Find("dialog").QuerySelectorAll("button").Single(candidate => Text(candidate) == "Cancel").Click();
         sender.Commands.Should().BeEmpty();
     }
 
@@ -571,6 +576,226 @@ public sealed class CampaignStatePageTests : WombatTestContext
         Text(cut.Find("#msf-campaign-report")).Should().Be("Review and release");
     }
 
+    // ─── Removing a draft's invitee (T247) ───────────────────────────────────
+
+    [Fact]
+    public void ADraft_ListsEachAddressTyped_EachWithARemoveNamingIt()
+    {
+        var cut = Render(new CampaignSender(DraftInviting(
+            ("peer-1@example.test", MsfRespondentCategory.PeerDoctor),
+            ("nurse-1@example.test", MsfRespondentCategory.Nurse))));
+
+        Text(cut.Find("#msf-draft-invitees-heading")).Should().Be("Addresses invited");
+        Text(cut.Find("#msf-draft-invitees-note")).Should().Be(
+            "Listed only while the campaign is a draft, so that an address added by mistake can be removed. No invitee " +
+            "holds a working link until the campaign opens.");
+        Text(cut.Find("#msf-invitees-note")).Should().Be(
+            "Counted by respondent group. Once the campaign opens, this page never lists who was invited or which of " +
+            "them responded.");
+
+        var table = cut.Find("#msf-draft-invitees");
+        table.GetAttribute("aria-labelledby").Should().Be("msf-draft-invitees-heading");
+        table.GetAttribute("aria-describedby").Should().Be("msf-draft-invitees-note");
+        HeaderCells(table).Should().Equal("Email address", "Respondent group", "Actions");
+        table.QuerySelector("thead th:last-child span")!.ClassList.Should().Contain("visually-hidden",
+            "an actions column's header names its cells without showing (DESIGN.md § Table system)");
+        BodyRows(table).Should().Equal(
+            "peer-1@example.test | Peer doctor | Remove",
+            "nurse-1@example.test | Nurse | Remove");
+        table.QuerySelectorAll("tbody th[scope=row]").Should().HaveCount(2, "each row is named by its address");
+
+        var buttons = table.QuerySelectorAll("tbody button");
+        buttons.Select(button => button.GetAttribute("aria-label")).Should().Equal(
+            "Remove peer-1@example.test (Peer doctor)",
+            "Remove nurse-1@example.test (Nurse)");
+        buttons.Should().OnlyContain(button =>
+            button.ClassList.Contains("btn") && button.ClassList.Contains("btn-sm") && button.ClassList.Contains("btn-outline") &&
+            !button.ClassList.Contains("btn-danger") && button.GetAttribute("type") == "button");
+
+        IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ALearnerFeedbackDraft_ListsWhereEachLearnerWasTaught()
+    {
+        var setup = Setup(MsfCampaignState.Draft) with
+        {
+            Kind = MsfTemplateKind.LearnerFeedback,
+            AcceptedCategories = [MsfRespondentCategory.Learner],
+            Invitees = [Group(MsfRespondentCategory.Learner, 1, 0)],
+            DraftInvitees = [new MsfDraftInviteeDto(1, "student-1@example.test", MsfRespondentCategory.Learner, "Ward round")]
+        };
+        var cut = Render(new CampaignSender(setup));
+
+        var table = cut.Find("#msf-draft-invitees");
+        HeaderCells(table).Should().Equal("Email address", "Respondent group", "Teaching context", "Actions");
+        BodyRows(table).Should().Equal("student-1@example.test | Learner | Ward round | Remove");
+    }
+
+    [Theory]
+    [MemberData(nameof(NotADraft))]
+    public void NoStateButADraft_ListsAnAddress_WhateverTheSetupCarries(MsfCampaignState state)
+    {
+        // The query lists no address once a campaign has opened; the page holds to it as well, since the counts are all
+        // it may show then (T217).
+        var setup = DraftInviting(("peer-1@example.test", MsfRespondentCategory.PeerDoctor)) with { State = state };
+        var cut = Render(new CampaignSender(setup));
+
+        cut.FindAll("#msf-draft-invitees, #msf-draft-invitees-heading").Should().BeEmpty();
+        cut.Markup.Should().NotContain("peer-1@example.test");
+        cut.FindAll("button").Select(Text).Should().NotContain("Remove");
+        Text(cut.Find("#msf-invitees-note")).Should().Be(
+            "Counted by respondent group. This page never lists who was invited or which of them responded.");
+    }
+
+    public static TheoryData<MsfCampaignState> NotADraft => new()
+    {
+        MsfCampaignState.Open,
+        MsfCampaignState.Closed,
+        MsfCampaignState.UnderReview,
+        MsfCampaignState.Released,
+        MsfCampaignState.Withdrawn
+    };
+
+    [Fact]
+    public void Remove_AsksFirst_NamingTheInvitee_AndSendsNothingUntilConfirmed()
+    {
+        var sender = new CampaignSender(DraftInviting(
+            ("peer-1@example.test", MsfRespondentCategory.PeerDoctor),
+            ("nurse-1@example.test", MsfRespondentCategory.Nurse)));
+        var cut = Render(sender);
+
+        RemoveButton(cut, "nurse-1@example.test").Click();
+
+        JSInterop.VerifyInvoke("wombatDialog.showModal");
+        sender.Commands.Should().BeEmpty();
+        var dialog = RemoveDialog(cut);
+        Text(dialog.QuerySelector("p")!).Should().Be(
+            "Remove nurse-1@example.test (Nurse) from this campaign? They hold no working link, and will not be sent one " +
+            "when the campaign opens. While the campaign is a draft, they can be added again.");
+        ConfirmRemoveButton(cut).ClassList.Should().Contain("btn-danger", "the red button belongs only in the dialog");
+
+        dialog.QuerySelectorAll("button").Single(candidate => Text(candidate) == "Cancel").Click();
+        sender.Commands.Should().BeEmpty();
+        BodyRows(cut.Find("#msf-draft-invitees")).Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void ConfirmingRemove_RemovesThatInvitee_AsTheCaller_RecountsAtOnce_AndTheResultTakesTheFocusAfterTheDialogCloses()
+    {
+        var sender = new CampaignSender(DraftInviting(
+            ("peer-1@example.test", MsfRespondentCategory.PeerDoctor),
+            ("nurse-1@example.test", MsfRespondentCategory.Nurse),
+            ("nurse-2@example.test", MsfRespondentCategory.Nurse)));
+        var cut = Render(sender);
+
+        RemoveButton(cut, "nurse-1@example.test").Click();
+        ConfirmRemoveButton(cut).Click();
+
+        var command = sender.Commands.Should().ContainSingle().Which.Should().BeOfType<RemoveMsfInvitationCommand>().Subject;
+        command.CampaignId.Should().Be(CampaignId);
+        command.InvitationId.Should().Be(2, "the row the dialog was opened from");
+        command.Principal.FindFirst(ClaimTypes.NameIdentifier)!.Value.Should().Be("coordinator-1");
+
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-success")).Should().Be(
+            "nurse-1@example.test (Nurse) has been removed from this campaign, and will not be emailed a link when it opens."));
+        cut.Find(".alert-success").GetAttribute("role").Should().Be("status");
+        BodyRows(cut.Find("#msf-draft-invitees")).Should().Equal(
+            "peer-1@example.test | Peer doctor | Remove",
+            "nurse-2@example.test | Nurse | Remove");
+        BodyRows(cut.Find("table")).Should().Equal("Peer doctor | 1", "Nurse | 1");
+        Text(cut.Find("#msf-campaign-state")).Should().Be("Draft");
+
+        // The row's Remove, which opened the dialog, is gone: the result takes the focus once the dialog has closed.
+        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
+            .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.ResultRegion.Id));
+        var calls = JSInterop.Invocations.Select(invocation => invocation.Identifier).ToList();
+        calls.IndexOf("wombatDialog.close").Should().BeGreaterThan(-1)
+            .And.BeLessThan(calls.IndexOf(FocusIdentifier), "the dialog closes before the result takes the focus");
+        IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void RemovingTheOnlyInvitee_LeavesNobodyInvited_AndOpenDisabledWithItsReason()
+    {
+        var sender = new CampaignSender(DraftInviting(("peer-1@example.test", MsfRespondentCategory.PeerDoctor)));
+        var cut = Render(sender);
+        cut.Find("#msf-open-campaign").HasAttribute("disabled").Should().BeFalse();
+
+        RemoveButton(cut, "peer-1@example.test").Click();
+        ConfirmRemoveButton(cut).Click();
+
+        cut.WaitForAssertion(() => Text(cut.Find("#msf-invitees-none")).Should().Be("Nobody has been invited yet."));
+        cut.FindAll("#msf-draft-invitees, table").Should().BeEmpty();
+        cut.Find("#msf-open-campaign").HasAttribute("disabled").Should().BeTrue("the handler refuses a campaign with no invitee");
+        cut.Find("#msf-open-reason");
+        IdReferences.Broken(cut).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ARemoveRefusedBecauseTheCampaignWasOpenedElsewhere_ShowsItOpen_ListsNoAddress_AndTheRefusalTakesTheFocus()
+    {
+        var sender = new CampaignSender(DraftInviting(
+            ("peer-1@example.test", MsfRespondentCategory.PeerDoctor),
+            ("nurse-1@example.test", MsfRespondentCategory.Nurse)))
+        {
+            Refusal = new InvalidOperationException(RemoveMsfInvitationCommandHandler.OnlyFromADraft),
+            StateAfterRefusal = MsfCampaignState.Open
+        };
+        var cut = Render(sender);
+
+        RemoveButton(cut, "peer-1@example.test").Click();
+        ConfirmRemoveButton(cut).Click();
+
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-danger")).Should().Be(RemoveMsfInvitationCommandHandler.OnlyFromADraft));
+        cut.Find(".alert-danger").GetAttribute("role").Should().Be("alert", "a refusal is read at once");
+        cut.FindAll(".alert-success").Should().BeEmpty();
+        Text(cut.Find("#msf-campaign-state")).Should().Be("Open", "the page reads the campaign again after a refusal");
+        cut.FindAll("#msf-draft-invitees").Should().BeEmpty();
+        cut.Markup.Should().NotContain("peer-1@example.test", "an open campaign's page lists no address");
+        BodyRows(cut.Find("table")).Should().Equal("Peer doctor | 1 | 0", "Nurse | 1 | 0");
+
+        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
+            .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.ResultRegion.Id));
+    }
+
+    [Fact]
+    public void WhileARemoveRuns_NothingElseIsSent_AndASecondConfirmSendsNothing()
+    {
+        // As the withdraw (T217): a second click can reach the circuit before the render that disables its button.
+        var sender = new CampaignSender(DraftInviting(
+            ("peer-1@example.test", MsfRespondentCategory.PeerDoctor),
+            ("nurse-1@example.test", MsfRespondentCategory.Nurse)))
+        {
+            Hold = true
+        };
+        var cut = Render(sender);
+
+        RemoveButton(cut, "peer-1@example.test").Click();
+        ConfirmRemoveButton(cut).Click();
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<RemoveMsfInvitationCommand>();
+
+        cut.Find("#msf-open-campaign").HasAttribute("disabled").Should().BeTrue("a remove is in flight");
+        cut.Find("#msf-withdraw-campaign").HasAttribute("disabled").Should().BeTrue("a remove is in flight");
+        AddInviteeButton(cut).HasAttribute("disabled").Should().BeTrue("a remove is in flight");
+        cut.FindAll("#msf-draft-invitees tbody button").Should().OnlyContain(button => button.HasAttribute("disabled"));
+
+        ConfirmRemoveButton(cut).Click();
+        cut.Find("#msf-open-campaign").Click();
+        SubmitInvitee(cut, "peer-4@example.test");
+
+        sender.Commands.Should().ContainSingle("one remove is in flight, and nothing may be sent beside it");
+        JSInterop.Invocations.Count(invocation => invocation.Identifier == "wombatDialog.showModal")
+            .Should().Be(1, "the dialog is not asked for again while the remove runs");
+
+        sender.Release();
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-success")).Should().StartWith("peer-1@example.test (Peer doctor) has been removed"));
+        sender.Commands.Should().ContainSingle();
+        cut.FindAll(".alert-danger").Should().BeEmpty();
+        BodyRows(cut.Find("#msf-draft-invitees")).Should().Equal("nurse-1@example.test | Nurse | Remove");
+        cut.Find("#msf-open-campaign").HasAttribute("disabled").Should().BeFalse("released once the remove has answered");
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     /// <summary>What <see cref="ElementReference" />.FocusAsync calls.</summary>
@@ -590,6 +815,19 @@ public sealed class CampaignStatePageTests : WombatTestContext
     private static IElement AddInviteeButton(IRenderedFragment cut)
         => cut.FindAll("button").Single(candidate => Text(candidate) == "Add invitee");
 
+    /// <summary>The draft list's Remove on the row of this address. (T247)</summary>
+    private static IElement RemoveButton(IRenderedFragment cut, string email)
+        => cut.FindAll("#msf-draft-invitees tbody tr")
+            .Single(row => Text(row.QuerySelector("th")!) == email)
+            .QuerySelector("button")!;
+
+    /// <summary>The page's second dialog: the remove's, after the withdraw's. (T247)</summary>
+    private static IElement RemoveDialog(IRenderedFragment cut)
+        => cut.FindAll("dialog").Single(dialog => Text(dialog.QuerySelector("h2")!) == "Remove this invitee?");
+
+    private static IElement ConfirmRemoveButton(IRenderedFragment cut)
+        => RemoveDialog(cut).QuerySelectorAll("button").Single(candidate => Text(candidate) == "Remove invitee");
+
     private static void SubmitInvitee(IRenderedFragment cut, string email)
     {
         cut.Find("#msf-respondent-email").Change(email);
@@ -608,6 +846,23 @@ public sealed class CampaignStatePageTests : WombatTestContext
 
     private static MsfInviteeCountDto Group(MsfRespondentCategory category, int invited, int responded)
         => new(category, invited, responded);
+
+    /// <summary>
+    /// A draft inviting these addresses, listed as the query lists a draft's (T247) and counted by group, invitation ids
+    /// from 1 in order.
+    /// </summary>
+    private static MsfCampaignSetupDto DraftInviting(params (string Email, MsfRespondentCategory Category)[] invitees)
+        => Setup(MsfCampaignState.Draft) with
+        {
+            Invitees = invitees
+                .GroupBy(invitee => invitee.Category)
+                .OrderBy(group => group.Key)
+                .Select(group => Group(group.Key, group.Count(), 0))
+                .ToList(),
+            DraftInvitees = invitees
+                .Select((invitee, index) => new MsfDraftInviteeDto(index + 1, invitee.Email, invitee.Category, null))
+                .ToList()
+        };
 
     /// <summary>The campaign's card: the section holding its state.</summary>
     private static IElement CampaignCard(IRenderedFragment cut)
@@ -635,10 +890,11 @@ public sealed class CampaignStatePageTests : WombatTestContext
     private sealed class CampaignSender(MsfCampaignSetupDto setup) : IScopedSender
     {
         private MsfCampaignSetupDto _setup = setup;
+        private int _nextInvitationId = 100;
         private TaskCompletionSource? _held;
         private bool _refused;
 
-        /// <summary>Every add, open and withdraw sent, in order.</summary>
+        /// <summary>Every add, remove, open and withdraw sent, in order.</summary>
         public List<object> Commands { get; } = [];
 
         /// <summary>The name of every query the page sent, in order. (T225)</summary>
@@ -682,7 +938,16 @@ public sealed class CampaignStatePageTests : WombatTestContext
                 groups[add.RespondentCategory] = groups.TryGetValue(add.RespondentCategory, out var group)
                     ? group with { Invited = group.Invited + 1 }
                     : new MsfInviteeCountDto(add.RespondentCategory, 1, 0);
-                _setup = _setup with { Invitees = groups.Values.OrderBy(entry => entry.Category).ToList() };
+                _setup = _setup with
+                {
+                    Invitees = groups.Values.OrderBy(entry => entry.Category).ToList(),
+                    // And listed by address, as the query lists a draft's (T247).
+                    DraftInvitees =
+                    [
+                        .. _setup.DraftInvitees,
+                        new MsfDraftInviteeDto(_nextInvitationId++, add.RespondentEmail, add.RespondentCategory, add.TeachingContext)
+                    ]
+                };
                 var added = (TResponse)(object)groups.Values.Sum(entry => entry.Invited);
                 if (Hold)
                 {
@@ -716,8 +981,9 @@ public sealed class CampaignStatePageTests : WombatTestContext
 
             _setup = request switch
             {
-                OpenMsfCampaignCommand => _setup with { State = MsfCampaignState.Open },
-                WithdrawMsfCampaignCommand => _setup with { State = MsfCampaignState.Withdrawn },
+                OpenMsfCampaignCommand => _setup with { State = MsfCampaignState.Open, DraftInvitees = [] },
+                WithdrawMsfCampaignCommand => _setup with { State = MsfCampaignState.Withdrawn, DraftInvitees = [] },
+                RemoveMsfInvitationCommand remove => Removed(remove.InvitationId),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 
@@ -741,8 +1007,27 @@ public sealed class CampaignStatePageTests : WombatTestContext
             _refused = true;
             if (StateAfterRefusal is { } state)
             {
-                _setup = _setup with { State = state };
+                // As the query answers: no state but a draft lists an address (T247).
+                _setup = _setup with
+                {
+                    State = state,
+                    DraftInvitees = state == MsfCampaignState.Draft ? _setup.DraftInvitees : []
+                };
             }
+        }
+
+        /// <summary>The campaign without that invitee: gone from the list, and one fewer in their group. (T247)</summary>
+        private MsfCampaignSetupDto Removed(int invitationId)
+        {
+            var invitee = _setup.DraftInvitees.Single(candidate => candidate.InvitationId == invitationId);
+            return _setup with
+            {
+                DraftInvitees = _setup.DraftInvitees.Where(candidate => candidate.InvitationId != invitationId).ToList(),
+                Invitees = _setup.Invitees
+                    .Select(group => group.Category == invitee.Category ? group with { Invited = group.Invited - 1 } : group)
+                    .Where(group => group.Invited > 0)
+                    .ToList()
+            };
         }
     }
 }

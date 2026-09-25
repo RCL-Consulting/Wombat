@@ -848,15 +848,33 @@ campaign that exists already has its questionnaire, and its page reads no templa
 - A `details-list`: Trainee (by name), Template (with its kind), State (a badge) and Response window. Then one sentence
   saying what the state means and what comes next: an open campaign names its respondents' last day to respond and says
   that Close campaign is on its report.
-- **Invitees, counted by respondent group, never listed.** An `<h4>`, a `.muted` line saying the page never lists who
-  was invited or which of them responded (and promising nothing more: a campaign whose category threshold is one shows
-  a one-person group's answers on its report), and a `.clinic-table` with a row header per group (by its label, "Peer
-  doctor", never the key) and Invited, then Responded once the campaign has opened, with an "All groups" `tfoot` row
-  when there are two groups or more. Not a row per invitee, even without its address: the coordinator added the rows and
-  knows which is whom, so a responded mark on one row names the author of the comment that has just appeared on the
-  report. A group's count adds little to the report, which already shows the total and a card for each group that has
-  responded. Until release it does add the exact count of a group below the category threshold, which the report hides;
-  that names nobody, and with one such group it is already the total less the others. (T217 review)
+- **Invitees, counted by respondent group, never listed once the campaign has opened.** An `<h4>`, a `.muted` line
+  saying the page never lists who was invited or which of them responded ("Once the campaign opens, …" on a draft), and
+  promising nothing more: a campaign whose category threshold is one shows a one-person group's answers on its report.
+  Then a `.clinic-table` with a row header per group (by its label, "Peer doctor", never the key) and Invited, then
+  Responded once the campaign has opened, with an "All groups" `tfoot` row when there are two groups or more. Not a row
+  per invitee, even without its address: the coordinator added the rows and knows which is whom, so a responded mark on
+  one row names the author of the comment that has just appeared on the report. A group's count adds little to the
+  report, which already shows the total and a card for each group that has responded. Until release it does add the
+  exact count of a group below the category threshold, which the report hides; that names nobody, and with one such group
+  it is already the total less the others. (T217 review)
+- **A draft's addresses, for Remove** (T247). On a draft that invites anyone, an `<h4>` "Addresses invited", a `.muted`
+  line saying they are listed only while the campaign is a draft, and a `.clinic-table` with a row per invitee in the
+  order they were added: the address as the row header (`.col-wrap`, so a long one wraps rather than widening the
+  table), the group by its label, the teaching context on learner feedback, and a `.visually-hidden` "Actions" header
+  over each row's Remove (`.btn .btn-sm .btn-outline`, `aria-label` "Remove peer-1@example.test (Peer doctor)"). This is
+  not the row per invitee the counts refuse to be: a draft's invitees hold no working link and have given no response,
+  so a row says nothing about anyone's answers. It does show the addresses to whoever runs the campaign, any coordinator
+  at the trainee's institution, not only the one who typed them; that is accepted (T247 review). The query lists them
+  only while the campaign row is a draft (`MsfCampaignSetupDto.DraftInvitees`), and the page asks the state too; once
+  the campaign opens, the list is gone. Remove opens the page's second `ConfirmDialog`, which names the invitee, says
+  that they hold no working link and will not be sent one, and that they can be added again while the campaign is a
+  draft. "No working link", never "no link": an open that failed or was refused at its save may have mailed one. Its result, done
+  (`Role="status"`) or refused (`Role="alert"`), takes the focus in the `.action-result` region once the dialog has
+  closed: the row's button is gone after a remove, and after a refusal the campaign is read again and may have opened
+  elsewhere. The counts and the list are read again with it, so a group loses the invitee at once, and removing the only
+  invitee disables Open campaign with its reason. While a remove is in flight, Open, Withdraw campaign, Add invitee and
+  every Remove are disabled (the focus is in the dialog), and a second confirm sends nothing.
 - The invitee form, only on a draft.
 - One `.form-actions` row, with nothing a state does not allow: a draft has Withdraw campaign and Open campaign; an
   open campaign has Withdraw campaign and a "View report" link, where it is closed; a closed one under review has a

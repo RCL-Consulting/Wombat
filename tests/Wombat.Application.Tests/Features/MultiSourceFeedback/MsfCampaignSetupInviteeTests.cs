@@ -101,6 +101,73 @@ public sealed class MsfCampaignSetupInviteeTests
         setup.SubjectName.Should().Be(SubjectUserId, "a trainee with no name on record is shown by id");
     }
 
+    // ─── A draft's addresses, for Remove (T247) ─────────────────────────────
+
+    [Fact]
+    public async Task ADraft_ListsEachInviteeByTheAddressTyped_InTheOrderAdded_BesideTheCounts()
+    {
+        await using var db = NewDb();
+        var campaignId = await SeedCampaignAsync(db, MsfCampaignState.Draft,
+            (MsfRespondentCategory.Nurse, false),
+            (MsfRespondentCategory.PeerDoctor, false),
+            (MsfRespondentCategory.Nurse, false));
+        var ids = await db.MsfInvitations.OrderBy(invitation => invitation.Id).Select(invitation => invitation.Id).ToListAsync();
+
+        var setup = await SetupAsync(db, FakeUserDirectory.Empty, campaignId);
+
+        setup!.DraftInvitees.Should().Equal(
+            new MsfDraftInviteeDto(ids[0], "respondent-1@example.test", MsfRespondentCategory.Nurse, null),
+            new MsfDraftInviteeDto(ids[1], "respondent-2@example.test", MsfRespondentCategory.PeerDoctor, null),
+            new MsfDraftInviteeDto(ids[2], "respondent-3@example.test", MsfRespondentCategory.Nurse, null));
+        setup.Invitees.Should().Equal(
+            new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 1, 0),
+            new MsfInviteeCountDto(MsfRespondentCategory.Nurse, 2, 0));
+    }
+
+    [Fact]
+    public async Task ALearnerFeedbackDraft_ListsWhereEachLearnerWasTaught()
+    {
+        await using var db = NewDb();
+        var campaignId = await SeedCampaignAsync(db, MsfCampaignState.Draft, (MsfRespondentCategory.Learner, false));
+        var invitation = await db.MsfInvitations.SingleAsync();
+        invitation.TeachingContext = "Ward round";
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var setup = await SetupAsync(db, FakeUserDirectory.Empty, campaignId);
+
+        setup!.DraftInvitees.Should().Equal(
+            new MsfDraftInviteeDto(invitation.Id, "respondent-1@example.test", MsfRespondentCategory.Learner, "Ward round"));
+    }
+
+    public static TheoryData<MsfCampaignState> NotADraft => new()
+    {
+        MsfCampaignState.Open,
+        MsfCampaignState.Closed,
+        MsfCampaignState.UnderReview,
+        MsfCampaignState.Released,
+        MsfCampaignState.Withdrawn
+    };
+
+    [Theory]
+    [MemberData(nameof(NotADraft))]
+    public async Task NoCampaignButADraft_ListsAnAddress_ThoughItsRowsStillHoldOne(MsfCampaignState state)
+    {
+        // Seeded with every address still held, which closing and withdrawing would have erased: the rule is the state,
+        // not whether an address happens to be left. Once a campaign opens, its invitees are counted by group only. (T217)
+        await using var db = NewDb();
+        var campaignId = await SeedCampaignAsync(db, state,
+            (MsfRespondentCategory.PeerDoctor, false),
+            (MsfRespondentCategory.Nurse, false));
+
+        var setup = await SetupAsync(db, FakeUserDirectory.Empty, campaignId);
+
+        setup!.State.Should().Be(state);
+        setup.DraftInvitees.Should().BeEmpty();
+        JsonSerializer.Serialize(setup).Should().NotContain("@example.test");
+        setup.Invitees.Sum(group => group.Invited).Should().Be(2, "the counts are there in every state");
+    }
+
     private static Task<MsfCampaignSetupDto?> SetupAsync(ApplicationDbContext db, FakeUserDirectory users, int campaignId)
         => new GetMsfCampaignSetupQueryHandler(db, users).Handle(
             new GetMsfCampaignSetupQuery(campaignId, TestPrincipals.Coordinator(HostInstitution)), CancellationToken.None);

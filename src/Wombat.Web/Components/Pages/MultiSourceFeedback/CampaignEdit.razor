@@ -182,9 +182,10 @@
             </dl>
             <p id="msf-campaign-state-note">@StateNote(setup)</p>
 
-            @* Counted by respondent group, never a row per invitee (MsfCampaignSetupDto.Invitees, T217): the coordinator
-               knows which row is whom, so a "responded" mark on one row would name the author of the comment that has
-               just appeared on the report. A draft has no responses, so it has no Responded column. *@
+            @* Counted by respondent group, never a row per invitee once the campaign has opened
+               (MsfCampaignSetupDto.Invitees, T217): the coordinator knows which row is whom, so a "responded" mark on one
+               row would name the author of the comment that has just appeared on the report. A draft has no responses, so
+               it has no Responded column, and its addresses are listed below the counts, for Remove (T247). *@
             <h4 id="msf-invitees-heading">Invitees</h4>
             @if (setup.Invitees.Count == 0)
             {
@@ -193,8 +194,9 @@
             else
             {
               @* Says what the page does, and no more (T217 review): it cannot promise that no answer is traceable, since a
-                 campaign may set its category threshold at one, and then its report shows a one-person group's answers. *@
-              <p id="msf-invitees-note" class="muted">Counted by respondent group. This page never lists who was invited or which of them responded.</p>
+                 campaign may set its category threshold at one, and then its report shows a one-person group's answers.
+                 On a draft it says when the addresses below stop being listed (T247). *@
+              <p id="msf-invitees-note" class="muted">@InviteesNote(setup)</p>
               <div class="table-container shadow">
                 <table class="clinic-table" aria-labelledby="msf-invitees-heading" aria-describedby="msf-invitees-note">
                   <thead>
@@ -237,6 +239,52 @@
               </div>
             }
 
+            @* A draft's invitees one by one, by the address typed, so that one added by mistake can be removed (T247).
+               Only on a draft, whose invitees hold no working link and have given no response, so a row here says
+               nothing about anyone's answers (MsfCampaignSetupDto.DraftInvitees); once the campaign opens the query lists
+               no address, and the counts above are all the page shows. "No working link", not "no link": an open that
+               failed, or was refused at its save, may have mailed one that does not work (T184, T247 review). *@
+            @if (setup.State == MsfCampaignState.Draft && setup.DraftInvitees.Count > 0)
+            {
+              <h4 id="msf-draft-invitees-heading">Addresses invited</h4>
+              <p id="msf-draft-invitees-note" class="muted">Listed only while the campaign is a draft, so that an address added by mistake can be removed. No invitee holds a working link until the campaign opens.</p>
+              <div class="table-container shadow">
+                <table id="msf-draft-invitees" class="clinic-table" aria-labelledby="msf-draft-invitees-heading" aria-describedby="msf-draft-invitees-note">
+                  <thead>
+                    <tr>
+                      <th scope="col" class="col-wrap col-wrap--wide">Email address</th>
+                      <th scope="col">Respondent group</th>
+                      @if (setup.Kind == MsfTemplateKind.LearnerFeedback)
+                      {
+                        <th scope="col" class="col-wrap">Teaching context</th>
+                      }
+                      <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach (var invitee in setup.DraftInvitees)
+                    {
+                      <tr>
+                        <th scope="row" class="col-wrap">@invitee.Email</th>
+                        <td>@MsfRespondentCategories.Describe(invitee.Category)</td>
+                        @if (setup.Kind == MsfTemplateKind.LearnerFeedback)
+                        {
+                          <td class="col-wrap">@invitee.TeachingContext</td>
+                        }
+                        <td>
+                          @* The accessible name starts with the visible label and names the row (DESIGN.md § Button
+                             system, T206). Disabled while any action is in flight. *@
+                          <button type="button" class="btn btn-sm btn-outline" disabled="@Busy"
+                                  aria-label="@($"Remove {DescribeInvitee(invitee)}")"
+                                  @onclick="() => AskRemoveAsync(invitee)">Remove</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
             @if (setup.State == MsfCampaignState.Draft)
             {
               <h4>Add an invitee</h4>
@@ -265,13 +313,13 @@
                     </FormField>
                   }
                 </div>
-                @* Disabled while an open or a withdraw is in flight (T202, T217). An invitee added mid-open would be left out
-                   of the mailing yet stored on a campaign that is now open. That covers this tab; an invitee added from
+                @* Disabled while an open, a withdraw or a remove is in flight (T202, T217, T247). An invitee added
+                   mid-open would be left out of the mailing yet stored on a campaign that is now open. That covers this tab; an invitee added from
                    another tab is refused, or refuses the open, at the save (T206). Not disabled by its own add: it may hold
                    the focus, which a refusal on a draft leaves where it was (T217); a second press while the add runs sends
                    nothing (AddInviteeAsync, T228 review). *@
                 <FormActions>
-                  <button type="submit" class="btn btn-outline" disabled="@(_opening || _withdrawing)">Add invitee</button>
+                  <button type="submit" class="btn btn-outline" disabled="@(_opening || _withdrawing || _removing)">Add invitee</button>
                 </FormActions>
               </EditForm>
             }
@@ -297,10 +345,10 @@
                 else if (setup.State == MsfCampaignState.Draft)
                 {
                   @* A second open would mail every respondent a second link (T202), so a click while one is in flight sends
-                     nothing (OpenCampaignAsync). Disabled while a withdraw or an add is in flight, but not while its own
-                     open runs (T225 review): it has the focus then, and a browser drops the focus of a button it disables,
+                     nothing (OpenCampaignAsync). Disabled while a withdraw, an add or a remove is in flight, but not
+                     while its own open runs (T225 review): it has the focus then, and a browser drops the focus of a button it disables,
                      to the page, where a refused open that leaves the button would leave it. *@
-                  <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@(_withdrawing || _adding)" @onclick="OpenCampaignAsync">
+                  <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@(_withdrawing || _adding || _removing)" @onclick="OpenCampaignAsync">
                     @(_opening ? "Opening campaign…" : "Open campaign")
                   </button>
                 }
@@ -332,6 +380,15 @@
                  ConfirmLabel="@MsfCampaignText.WithdrawConfirmLabel"
                  DangerAction="true"
                  OnConfirm="WithdrawAsync" />
+
+  @* One dialog for every draft invitee's Remove, naming the row it was opened from (DESIGN.md § Button system, T247). *@
+  <ConfirmDialog @ref="_confirmRemove"
+                 Title="@MsfCampaignText.RemoveInviteeTitle"
+                 Body="@RemoveBody"
+                 ConfirmLabel="@MsfCampaignText.RemoveInviteeConfirmLabel"
+                 DangerAction="true"
+                 OnConfirm="RemoveAsync"
+                 OnCancel="CancelRemove" />
 }
 
 @code {
@@ -362,7 +419,14 @@
   /// <summary>An invitee add has been sent and has not yet answered. (T228 review)</summary>
   private bool _adding;
 
+  /// <summary>An invitee remove has been sent and has not yet answered. (T247)</summary>
+  private bool _removing;
+
+  /// <summary>The draft invitee the remove dialog was opened for, until it is confirmed or cancelled. (T247)</summary>
+  private MsfDraftInviteeDto? _pendingRemove;
+
   private ConfirmDialog? _confirmWithdraw;
+  private ConfirmDialog? _confirmRemove;
   private ElementReference _result;
 
   /// <summary>
@@ -379,8 +443,11 @@
 
   internal ElementReference? EmailInput => _emailInput?.Element;
 
-  /// <summary>An open, a withdraw or an invitee add is in flight, so nothing else may be sent. (T202, T217, T228 review)</summary>
-  private bool Busy => _opening || _withdrawing || _adding;
+  /// <summary>
+  /// An open, a withdraw, an invitee add or an invitee remove is in flight, so nothing else may be sent. (T202, T217,
+  /// T228 review, T247)
+  /// </summary>
+  private bool Busy => _opening || _withdrawing || _adding || _removing;
 
   private TemplateFormModel _template = new();
   private CampaignFormModel _campaign = new();
@@ -473,6 +540,22 @@
 
   /// <summary>Whether the campaign has been opened, so that its responses are counted beside its invitees. (T217)</summary>
   private static bool ShowsResponses(MsfCampaignSetupDto setup) => setup.State != MsfCampaignState.Draft;
+
+  /// <summary>
+  /// What the counts show, and no more (T217 review). A draft says when its addresses stop being listed (T247); once the
+  /// campaign has opened, the page lists nobody.
+  /// </summary>
+  private static string InviteesNote(MsfCampaignSetupDto setup)
+    => setup.State == MsfCampaignState.Draft
+      ? "Counted by respondent group. Once the campaign opens, this page never lists who was invited or which of them responded."
+      : "Counted by respondent group. This page never lists who was invited or which of them responded.";
+
+  /// <summary>A draft invitee as the Remove button, the dialog and the result name them. (T247)</summary>
+  private static string DescribeInvitee(MsfDraftInviteeDto invitee)
+    => MsfCampaignText.DescribeInvitee(invitee.Email, MsfRespondentCategories.Describe(invitee.Category));
+
+  private string RemoveBody
+    => _pendingRemove is null ? string.Empty : MsfCampaignText.RemoveInviteeBody(DescribeInvitee(_pendingRemove));
 
   /// <summary>A draft or an open campaign, the two the campaign list offers Withdraw on (T206).</summary>
   private static bool CanWithdraw(MsfCampaignSetupDto setup)
@@ -902,6 +985,67 @@
     finally
     {
       _withdrawing = false;
+    }
+
+    _focusResult = true;
+  }
+
+  private async Task AskRemoveAsync(MsfDraftInviteeDto invitee)
+  {
+    if (Busy)
+    {
+      return;
+    }
+
+    _pendingRemove = invitee;
+    _status = null;
+    _error = null;
+
+    if (_confirmRemove is not null)
+    {
+      await _confirmRemove.ShowAsync();
+    }
+  }
+
+  private void CancelRemove() => _pendingRemove = null;
+
+  /// <remarks>
+  /// Sent at most once at a time, as the withdraw is (T217): the flag is set before the first await, so a second confirm
+  /// that reaches the circuit before the re-render does nothing. The campaign is read again whatever the answer, so its
+  /// counts and its list lose the invitee at once, and a refusal shows the campaign as it is now: opened elsewhere, it
+  /// lists nobody. The result takes the focus either way (T247): the row's Remove button is gone after a remove, and
+  /// after a refusal on a campaign opened elsewhere; the dialog closes before the focus moves.
+  /// </remarks>
+  private async Task RemoveAsync()
+  {
+    if (!CampaignId.HasValue || _pendingRemove is not { } invitee || Busy)
+    {
+      return;
+    }
+
+    _removing = true;
+    _status = null;
+    _error = null;
+
+    try
+    {
+      await Sender.Send(
+        new RemoveMsfInvitationCommand(CampaignId.Value, invitee.InvitationId, await GetPrincipalAsync()));
+      _status = MsfCampaignText.InviteeRemoved(DescribeInvitee(invitee));
+    }
+    catch (Exception exception)
+    {
+      _error = exception.Message;
+    }
+
+    try
+    {
+      await LoadSetupAsync();
+    }
+    finally
+    {
+      _pendingRemove = null;
+      _removing = false;
     }
 
     _focusResult = true;

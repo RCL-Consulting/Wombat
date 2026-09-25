@@ -16,8 +16,9 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// Null for both, as <see cref="GetCampaignAggregateReportQuery" /> answers (T113): the page is reached by a campaign id
 /// in the address bar. Who runs it is <see cref="MsfCampaignRules.IsSubjectInScopeAsync" />, so never the trainee it is
 /// about, whose own role would otherwise show them each group's responses coming in before release, and never anyone
-/// who holds Trainee (T224). Nothing that names a respondent is read: no address, and no row per invitee (see
-/// <see cref="MsfCampaignSetupDto.Invitees" />).
+/// who holds Trainee (T224). Once the campaign has opened, nothing that names a respondent is read: no address, and no
+/// row per invitee (see <see cref="MsfCampaignSetupDto.Invitees" />). A draft's addresses are read, so that one added by
+/// mistake can be removed (<see cref="MsfCampaignSetupDto.DraftInvitees" />, T247).
 /// </remarks>
 public sealed record GetMsfCampaignSetupQuery(int CampaignId, ClaimsPrincipal Principal) : IRequest<MsfCampaignSetupDto?>;
 
@@ -73,10 +74,48 @@ public sealed record MsfCampaignSetupDto(
     /// </para>
     /// </remarks>
     public IReadOnlyList<MsfInviteeCountDto> Invitees { get; init; } = [];
+
+    /// <summary>
+    /// A draft's invitees one by one, by the address the coordinator typed, in the order they were added; empty in every
+    /// other state. What the campaign page's Remove reaches an invitee through (<see cref="RemoveMsfInvitationCommand" />).
+    /// (T247)
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Not the re-identification oracle <see cref="Invitees" /> refuses to be. That is a row per invitee beside the
+    /// responses coming in; a draft's invitees hold no working link and have given no response, so a row here says
+    /// nothing about anyone's answers.
+    /// </para>
+    /// <para>
+    /// It does show the addresses to whoever runs the campaign (<see cref="MsfCampaignRules.IsSubjectInScopeAsync" />),
+    /// which is any coordinator at the trainee's institution and any Administrator, not only the one who typed them. That
+    /// is accepted (T247 review): whoever runs a campaign may add to it, open it and read its report, and knowing who was
+    /// invited is part of running it. It is not nothing: a second coordinator who saw the draft knows, as the one who
+    /// typed the addresses does, who a one-person group is, and a campaign whose category threshold is one shows that
+    /// group's answers on its report (T217 review).
+    /// </para>
+    /// <para>
+    /// Read by a statement of its own, sent only when the campaign was read as a draft, so no statement the page sends for
+    /// a campaign that has opened asks for an address (T217). That statement asks the campaign row again, so a campaign
+    /// opened between the two reads lists no address. Once it opens the list goes, and the page counts invitees by group
+    /// only; closing or withdrawing it then erases each address (<see cref="MsfInvitation.Anonymize" />).
+    /// </para>
+    /// </remarks>
+    public IReadOnlyList<MsfDraftInviteeDto> DraftInvitees { get; init; } = [];
 }
 
 /// <summary>One respondent group's invitees on a campaign: how many were invited, and how many have responded. (T217)</summary>
 public sealed record MsfInviteeCountDto(MsfRespondentCategory Category, int Invited, int Responded);
+
+/// <summary>
+/// One invitee of a draft campaign: the invitation's id, the address typed, the group, and where a learner was taught
+/// (null for anyone else). (T247)
+/// </summary>
+public sealed record MsfDraftInviteeDto(
+    int InvitationId,
+    string Email,
+    MsfRespondentCategory Category,
+    string? TeachingContext);
 
 public sealed class GetMsfCampaignSetupQueryHandler : IRequestHandler<GetMsfCampaignSetupQuery, MsfCampaignSetupDto?>
 {
@@ -112,6 +151,24 @@ public sealed class GetMsfCampaignSetupQueryHandler : IRequestHandler<GetMsfCamp
             .Select(invitation => new { invitation.RespondentCategory, Responses = invitation.Responses.Count })
             .ToListAsync(cancellationToken);
 
+        // A draft's addresses, for Remove (T247), and only a draft's. Not asked at all for a campaign read as anything
+        // else, so its page never sends a statement that names an address (T217); and the statement asks the campaign row
+        // again, so a campaign opened since the read above lists none. Nor for a draft that invites nobody: the counts
+        // above found no invitation, and the list is not to show one they do not count.
+        IReadOnlyList<MsfDraftInviteeDto> draftInvitees = [];
+        if (campaign.State == MsfCampaignState.Draft && invitations.Count > 0)
+        {
+            draftInvitees = await _dbContext.Set<MsfInvitation>()
+                .AsNoTracking()
+                .Where(invitation => invitation.CampaignId == campaign.Id &&
+                                     invitation.Campaign.State == MsfCampaignState.Draft &&
+                                     invitation.RespondentEmail != null)
+                .OrderBy(invitation => invitation.Id)
+                .Select(invitation => new MsfDraftInviteeDto(
+                    invitation.Id, invitation.RespondentEmail!, invitation.RespondentCategory, invitation.TeachingContext))
+                .ToListAsync(cancellationToken);
+        }
+
         var names = await UserDisplayNames.ResolveAsync(_users, [campaign.SubjectUserId], cancellationToken);
 
         return new MsfCampaignSetupDto(
@@ -128,7 +185,8 @@ public sealed class GetMsfCampaignSetupQueryHandler : IRequestHandler<GetMsfCamp
                 .GroupBy(invitation => invitation.RespondentCategory)
                 .OrderBy(group => group.Key)
                 .Select(group => new MsfInviteeCountDto(group.Key, group.Count(), group.Sum(invitation => invitation.Responses)))
-                .ToList()
+                .ToList(),
+            DraftInvitees = draftInvitees
         };
     }
 }

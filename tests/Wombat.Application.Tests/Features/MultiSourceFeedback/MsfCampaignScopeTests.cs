@@ -46,7 +46,7 @@ public sealed class MsfCampaignScopeTests
 
     // ─── The commands ────────────────────────────────────────────────────────
 
-    public static TheoryData<string> Commands => new() { "Open", "Close", "Withdraw", "AddInvitation" };
+    public static TheoryData<string> Commands => new() { "Open", "Close", "Withdraw", "AddInvitation", "RemoveInvitation" };
 
     [Theory]
     [MemberData(nameof(Commands))]
@@ -277,7 +277,7 @@ public sealed class MsfCampaignScopeTests
     public static TheoryData<string, string> CampaignIdCommandsBySubjectCaller()
     {
         var data = new TheoryData<string, string>();
-        foreach (var command in new[] { "Open", "Close", "Withdraw", "AddInvitation", "Release" })
+        foreach (var command in new[] { "Open", "Close", "Withdraw", "AddInvitation", "RemoveInvitation", "Release" })
         {
             foreach (var roles in new[] { "Coordinator", "Administrator", "Coordinator+Trainee" })
             {
@@ -497,7 +497,7 @@ public sealed class MsfCampaignScopeTests
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     /// <summary>Every command addressed by campaign id; Release is refused before its evidence setup is reached.</summary>
-    public static TheoryData<string> CampaignIdCommands => new() { "Open", "Close", "Withdraw", "AddInvitation", "Release" };
+    public static TheoryData<string> CampaignIdCommands => new() { "Open", "Close", "Withdraw", "AddInvitation", "RemoveInvitation", "Release" };
 
     private static MsfCampaignState StateFor(string command) => command switch
     {
@@ -539,6 +539,15 @@ public sealed class MsfCampaignScopeTests
                     .Handle(
                         new AddMsfInvitationCommand(campaignId, "peer-9@example.test", MsfRespondentCategory.PeerDoctor, principal),
                         CancellationToken.None);
+                break;
+            case "RemoveInvitation":
+                // The campaign's own invitee; for an id that names no campaign, whatever id: the scope check refuses first.
+                var invitationId = await db.MsfInvitations.AsNoTracking()
+                    .Where(invitation => invitation.CampaignId == campaignId)
+                    .Select(invitation => invitation.Id)
+                    .FirstOrDefaultAsync();
+                await new RemoveMsfInvitationCommandHandler(db)
+                    .Handle(new RemoveMsfInvitationCommand(campaignId, invitationId > 0 ? invitationId : 1, principal), CancellationToken.None);
                 break;
             case "Release":
                 await new ReleaseMsfCampaignCommandHandler(
