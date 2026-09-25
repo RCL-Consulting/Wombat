@@ -1,11 +1,12 @@
 ---
 id: T151
 title: The assessor nudge job emails deactivated and opted-out nominees
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-25
 ---
 
 # T151 — The assessor nudge job emails deactivated and opted-out nominees
@@ -32,10 +33,29 @@ no longer eligible should be nudged, or the trainee told instead.
 
 ## Verification
 
-- [ ] A deactivated or opted-out nominee gets no email — tests.
+- [x] A deactivated or opted-out nominee gets no email — tests.
 
 ## Related
 
 T102, T026 (data-subject rights, which added the opt-out flags).
 
 **Decision, 2026-09-25:** D50 adopted as a default (EPA-PROGRAMME § 3D). Build to it.
+
+---
+
+## As built — 2026-09-25 (`2eaf949`, D50)
+
+`AssessorPendingNudgeJob` skips a deactivated account and a user who opted out of digest emails. A nominee who lost the
+role or moved institution is still nudged. One run line counts the nudges and each skip reason ("assessors nudged N
+(activities N); nominees skipped: no such account N, deactivated N, opted out of digest emails N, no email address N").
+Job tests use a fake sender.
+
+Browser on dev (scripted Chrome, master `c6efc04`; `pg_dump` first, at `recovery/pre-g3-migration.dump`): Activity 39 was a Mini-CEX awaiting the assessor, aged by SQL. Each run was triggered by moving
+`ScheduledJobRuns."StartedAt"` back, and restored after.
+- Baseline: "assessors nudged 1 (activities 1)", and the mail reached the assessor.
+- **Opted out:** "nudged 0 … opted out of digest emails 1", and no mail.
+- **Locked by instadmin:** "nudged 0 … deactivated 1", and no mail. The lock was undone.
+- **Assessor role removed (D50):** still nudged, and the mail was sent. The role was restored.
+
+**Filed from the review:** [T240]. The weekly digest and the draft reminder still mail deactivated and opted-out
+accounts.

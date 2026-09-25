@@ -33,3 +33,7 @@ not hide a real race: first check each flaky test for an unawaited task in the c
 ## Related
 
 T227, T222, T194.
+
+Note, 2026-09-25 (the T210 run): `MsfInvitationAddressOnceTests.AnAddressTheCampaignAlreadyInvites_TypedAnyWay_IsRefused_AndNothingIsWritten(typed: "peer-9@example.test")`
+(T228, Application) failed once in seven full runs, and passed alone. The error was not captured. It is an Application
+test, not bUnit, so look for shared state.

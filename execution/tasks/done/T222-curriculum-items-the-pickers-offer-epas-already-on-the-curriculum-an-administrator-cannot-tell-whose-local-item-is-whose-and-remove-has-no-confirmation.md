@@ -1,11 +1,12 @@
 ---
 id: T222
 title: Curriculum items: the pickers offer EPAs already on the curriculum, an Administrator cannot tell whose local item is whose, and Remove has no confirmation
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T222 — Curriculum items: the pickers offer EPAs already on the curriculum, an Administrator cannot tell whose local item is whose, and Remove has no confirmation
@@ -39,11 +40,34 @@ created: 2026-09-25
 
 ## Verification
 
-- [ ] The Add picker on curriculum 2 offers only EPAs not yet on it, and says so when there are none. bUnit and handler
+- [x] The Add picker on curriculum 2 offers only EPAs not yet on it, and says so when there are none. bUnit and handler
       tests; browser.
-- [ ] An Administrator sees the owning institution on each local item. bUnit.
-- [ ] Remove asks for confirmation. Edit and Remove are named. bUnit.
+- [x] An Administrator sees the owning institution on each local item. bUnit.
+- [x] Remove asks for confirmation. Edit and Remove are named. bUnit.
 
 ## Related
 
 T211, T195, T198.
+
+---
+
+## As built — 2026-09-25 (`53febe1`)
+
+- **Pickers.** Both EPA pickers leave out any EPA the curriculum already holds for the same owner, apart from the
+  edited item's own. When nothing is left to add, the Add form is replaced by an empty state that says why. The pickers
+  are read again after each Add, Save or Remove, and after a refused one.
+- **Owners.** A local item names its institution for a caller who sees more than one institution's.
+- **Remove** asks through a ConfirmDialog that says whose trainees stop being measured.
+- **Row names.** Edit and Remove are named by the EPA, and the actions column has a hidden "Actions" header.
+
+bUnit and handler tests; T195's picker test was updated deliberately.
+
+Browser on dev (scripted Chrome, master `c6efc04`; `pg_dump` first, at `recovery/pre-g3-migration.dump`):
+- **collegeadmin.** Every row's buttons are named ("Edit PAED-001"). Editing PAED-003 offers only PAED-003. The Remove
+  dialog reads "…Trainees on this curriculum, in every institution that has adopted it, are no longer measured…", and
+  Cancel removed nothing.
+- **instadmin.** Adding DEMO-LOC-01 left the focused box reading "Curriculum item added. Every EPA your institution could
+  add is already on this curriculum…". Its Remove dialog says "Your institution's trainees…".
+- **Two tabs.** A stale Add, a stale Remove, a stale Save on a removed item and a stale Save on a taken EPA each gave the
+  refusal, re-read the page, and moved the focus as designed.
+- **Not run:** the Administrator's owner-named view, which needs the admin credential. It is covered by bUnit.
