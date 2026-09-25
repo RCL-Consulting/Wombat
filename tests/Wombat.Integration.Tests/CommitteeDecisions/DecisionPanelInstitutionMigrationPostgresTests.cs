@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -27,21 +26,14 @@ namespace Wombat.Integration.Tests.CommitteeDecisions;
 /// </remarks>
 public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-
     private const string T182Migration = "20260924145621_T182_DecisionPanelInstitutionRequired";
     private const string LastMigrationBeforeT182 = "20260924140337_T174_PinDemoCurriculumItemScale";
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task Migration_WithEveryPanelStamped_MakesTheInstitutionRequired_AndAForeignKey()
@@ -50,7 +42,7 @@ public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifet
         {
             var schema = await ArrangePreT182DatabaseAsync();
             int institutionId;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 institutionId = await InsertInstitutionAsync(connection, "KGK");
                 await InsertPanelAsync(connection, institutionId);
@@ -62,7 +54,7 @@ public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifet
                 (await db.Database.GetAppliedMigrationsAsync()).Should().Contain(T182Migration);
             }
 
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 var unstamped = async () => await InsertPanelAsync(connection, null);
                 (await unstamped.Should().ThrowAsync<PostgresException>()).Which.SqlState
@@ -80,7 +72,7 @@ public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifet
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -93,7 +85,7 @@ public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifet
         {
             var schema = await ArrangePreT182DatabaseAsync();
             int unstampedPanel;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 var institutionId = await InsertInstitutionAsync(connection, "KGK");
                 await InsertPanelAsync(connection, institutionId);
@@ -113,7 +105,7 @@ public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifet
                 (await db.Database.GetAppliedMigrationsAsync()).Should().NotContain(T182Migration);
             }
 
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 (await ScalarAsync<long>(connection, """SELECT COUNT(*) FROM "DecisionPanels" WHERE "InstitutionId" IS NULL"""))
                     .Should().Be(1, "nothing was stamped by guesswork");
@@ -121,13 +113,13 @@ public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifet
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
     private async Task<string> ArrangePreT182DatabaseAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using var db = NewContext(schema);
         await db.GetService<IMigrator>().MigrateAsync(LastMigrationBeforeT182);
@@ -180,92 +172,6 @@ public sealed class DecisionPanelInstitutionMigrationPostgresTests : IAsyncLifet
         return command;
     }
 
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    /// <summary>Drops every schema this test created. Called from each test's finally and again from DisposeAsync.</summary>
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
     private ApplicationDbContext NewContext(string schema)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema)).Options);
-
-    /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString)
-        {
-            SearchPath = schema,
-            Pooling = false
-        }.ConnectionString;
-
-    /// <summary>The same resolution order as <c>WbaToolAllowListPostgresTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
-    }
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema)).Options);
 }

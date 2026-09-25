@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -32,22 +31,16 @@ namespace Wombat.Integration.Tests.MultiSourceFeedback;
 /// </remarks>
 public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
     private const string T207MigrationSuffix = "_T207_DropMsfRespondentEmailHash";
 
     private const string ClosedByHand = "nurse.closed-by-hand@example.test";
     private const string Withdrawn = "nurse.withdrawn@example.TEST";
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task Migration_DropsTheRespondentHash_WithEveryHashAlreadyStored_AndLeavesTheRestOfTheInvitation()
@@ -58,7 +51,7 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
             var oldHash = OldUnsaltedHash(ClosedByHand);
 
             int anonymised, stillOpen;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 var template = await InsertAsync(connection,
                     """
@@ -84,7 +77,7 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
             // whole table, as T228's stored key column does, and that is no evidence about this one.
             await MigrateToT207Async(schema);
 
-            (await ColumnExistsAsync(schema, "MsfInvitations", "RespondentEmailHash")).Should().BeFalse();
+            (await Catalog.ColumnExistsAsync(schema, "MsfInvitations", "RespondentEmailHash")).Should().BeFalse();
             (await TracesAsync(schema, ClosedByHand)).Should().BeEmpty("no column the app can read holds the hash");
 
             // DROP COLUMN only hides a column: each value stays in its row on disk until the row is next written, and an
@@ -111,7 +104,7 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -121,7 +114,7 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
         try
         {
             var (schema, predecessor) = await ArrangePreT207SchemaAsync();
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 var template = await InsertAsync(connection,
                     """
@@ -134,14 +127,14 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
             }
 
             await MigrateToLatestAsync(schema);
-            (await ColumnExistsAsync(schema, "MsfInvitations", "RespondentEmailHash")).Should().BeFalse("guard: T207 applied");
+            (await Catalog.ColumnExistsAsync(schema, "MsfInvitations", "RespondentEmailHash")).Should().BeFalse("guard: T207 applied");
 
             await using (var db = NewContext(schema))
             {
                 await db.GetService<IMigrator>().MigrateAsync(predecessor);
             }
 
-            (await ColumnExistsAsync(schema, "MsfInvitations", "RespondentEmailHash")).Should().BeTrue();
+            (await Catalog.ColumnExistsAsync(schema, "MsfInvitations", "RespondentEmailHash")).Should().BeTrue();
             (await ScalarAsync<long>(schema, """SELECT COUNT(*) FROM "MsfInvitations" WHERE "RespondentEmailHash" IS NOT NULL"""))
                 .Should().Be(0, "a dropped hash is not recoverable, and Down invents none");
             (await ScalarAsync<long>(schema, """SELECT COUNT(*) FROM "MsfInvitations" """)).Should().Be(1);
@@ -149,19 +142,19 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
     // ---- the search ----------------------------------------------------------------------------------------------------
 
     private Task<List<string>> TracesAsync(string schema, string address)
-        => RespondentTraceSearch.TracesAsync(SchemaConnectionString(schema), address);
+        => RespondentTraceSearch.TracesAsync(TestDatabase.SchemaConnectionString(schema), address);
 
     /// <summary>The transaction that wrote the row's live version: it changes whenever the row is written anew.</summary>
     private async Task<string> RowVersionAsync(string schema, int invitationId)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(
             connection, """SELECT xmin::text FROM "MsfInvitations" WHERE "Id" = $1""", [invitationId]);
         return (string)(await command.ExecuteScalarAsync())!;
@@ -179,7 +172,7 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
     /// </summary>
     private async Task<(string Schema, string Predecessor)> ArrangePreT207SchemaAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using var db = NewContext(schema);
         var migrations = db.Database.GetMigrations().ToList();
@@ -222,13 +215,6 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
 
     // ---- reads -------------------------------------------------------------------------------------------------------
 
-    private Task<bool> ColumnExistsAsync(string schema, string table, string column)
-        => ScalarAsync<bool>(schema, $"""
-            SELECT EXISTS (
-                SELECT 1 FROM information_schema.columns
-                WHERE table_schema = current_schema() AND table_name = '{table}' AND column_name = '{column}')
-            """);
-
     // ---- schema lifecycle (as SystemManagedMigrationPostgresTests) ----------------------------------------------------
 
     /// <summary>Applies the T207 migration and nothing after it, found from the assembly as its predecessor is.</summary>
@@ -249,11 +235,7 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
     }
 
     private ApplicationDbContext NewContext(string schema)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema)).Options);
-
-    /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { SearchPath = schema, Pooling = false }.ConnectionString;
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema)).Options);
 
     private static async Task<int> InsertAsync(NpgsqlConnection connection, string sql, params object[] values)
     {
@@ -263,7 +245,7 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
 
     private async Task<T> ScalarAsync<T>(string schema, string sql)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = new NpgsqlCommand(sql, connection);
         var value = await command.ExecuteScalarAsync();
         return (T)Convert.ChangeType(value!, typeof(T), CultureInfo.InvariantCulture);
@@ -279,82 +261,5 @@ public sealed class MsfRespondentHashPostgresTests : IAsyncLifetime
         }
 
         return command;
-    }
-
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    /// <summary>The same resolution order as <c>WbaToolAllowListPostgresTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 }

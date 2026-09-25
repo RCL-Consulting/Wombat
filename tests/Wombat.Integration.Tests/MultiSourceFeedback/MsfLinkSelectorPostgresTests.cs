@@ -1,7 +1,6 @@
 using System.Data.Common;
 using System.Globalization;
 using System.Security.Claims;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -44,7 +43,6 @@ namespace Wombat.Integration.Tests.MultiSourceFeedback;
 /// </remarks>
 public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
     private const string T163MigrationSuffix = "_T163_MsfInvitationTokenSelector";
     private const string SelectorIndex = "IX_MsfInvitations_TokenSelector";
     private const string PreviousSelectorIndex = "IX_MsfInvitations_PreviousTokenSelector";
@@ -61,16 +59,11 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     private const int InvitationsWithNoLink = 500;
 
     private readonly InvitationTokenService _tokens = new();
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     /// <summary>
     /// One statement, which asks both selector columns (T214) and reads each by its own index: never a scan of the table.
@@ -80,7 +73,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
 
             var link = _tokens.GenerateSelectorToken();
@@ -93,7 +86,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
                 await arrange.SaveChangesAsync();
                 named = invitation.Id;
 
-                await using var connection = await OpenAsync(schema);
+                await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
                 await ExecuteAsync(connection,
                     """
                     INSERT INTO "MsfInvitations"
@@ -129,7 +122,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -138,7 +131,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
 
             var link = _tokens.GenerateSelectorToken();
@@ -158,7 +151,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -173,7 +166,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
 
             int campaignId;
@@ -191,7 +184,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
                     WHERE table_schema = current_schema() AND table_name = 'MsfInvitations' AND column_name = 'TokenSelector'
                     """))
                 .Should().Be($"character varying({InvitationTokenService.SelectorLength})");
-            (await IndexIsUniqueAsync(schema, SelectorIndex)).Should().BeTrue();
+            (await Catalog.IndexIsUniqueAsync(schema, SelectorIndex)).Should().BeTrue();
 
             const string withSelector =
                 """
@@ -208,7 +201,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
 
             var link = _tokens.GenerateSelectorToken();
             var nurse = (int)MsfRespondentCategory.Nurse;
-            await using var connection = await OpenAsync(schema);
+            await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
             await ExecuteAsync(connection, withSelector, campaignId, "first@example.test", nurse, link.Selector, link.Hash);
             await ExecuteAsync(connection, withNoSelector, campaignId, "draft-1@example.test", nurse, _tokens.GenerateSelectorToken().Hash);
             await ExecuteAsync(connection, withNoSelector, campaignId, "draft-2@example.test", nurse, _tokens.GenerateSelectorToken().Hash);
@@ -225,7 +218,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -238,7 +231,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             string predecessor;
             await using (var db = NewContext(schema))
             {
@@ -252,7 +245,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
             // A link as the product mailed it before T163: a 43-character token, only its hash stored.
             var oldToken = _tokens.GenerateToken();
             int invitationId;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 var template = await InsertAsync(connection,
                     """
@@ -278,12 +271,12 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
                     campaign, (int)MsfRespondentCategory.Nurse, _tokens.HashToken(oldToken));
             }
 
-            (await IndexesAsync(schema)).Should().Contain(OldHashIndex, "guard: the pre-T163 schema");
+            (await Catalog.IndexNamesAsync(schema, "MsfInvitations")).Should().Contain(OldHashIndex, "guard: the pre-T163 schema");
 
             await MigrateToLatestAsync(schema);
 
-            (await IndexesAsync(schema)).Should().Contain(SelectorIndex).And.NotContain(OldHashIndex);
-            (await IndexIsUniqueAsync(schema, SelectorIndex)).Should().BeTrue();
+            (await Catalog.IndexNamesAsync(schema, "MsfInvitations")).Should().Contain(SelectorIndex).And.NotContain(OldHashIndex);
+            (await Catalog.IndexIsUniqueAsync(schema, SelectorIndex)).Should().BeTrue();
             await using (var db = NewContext(schema))
             {
                 var stored = await db.MsfInvitations.AsNoTracking().SingleAsync();
@@ -299,8 +292,8 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
                 await db.GetService<IMigrator>().MigrateAsync(predecessor);
             }
 
-            (await IndexesAsync(schema)).Should().Contain(OldHashIndex).And.NotContain(SelectorIndex);
-            (await IndexIsUniqueAsync(schema, OldHashIndex)).Should().BeTrue("Down puts the pre-T163 index back as it was");
+            (await Catalog.IndexNamesAsync(schema, "MsfInvitations")).Should().Contain(OldHashIndex).And.NotContain(SelectorIndex);
+            (await Catalog.IndexIsUniqueAsync(schema, OldHashIndex)).Should().BeTrue("Down puts the pre-T163 index back as it was");
             (await ScalarAsync<bool>(schema,
                     """
                     SELECT EXISTS (SELECT 1 FROM information_schema.columns
@@ -311,7 +304,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -325,7 +318,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
 
             // The window closes in two days, so today is the first reminder day; the link was mailed three days ago, so it
@@ -390,7 +383,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -406,7 +399,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
 
             var opening = _tokens.GenerateSelectorToken();
@@ -446,7 +439,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -462,7 +455,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
             var (links, questionId) = await SeedDueRespondentsAsync(schema, "nurse@example.test", "peer@example.test");
 
@@ -496,7 +489,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -511,7 +504,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
             var (links, _) = await SeedDueRespondentsAsync(schema, "nurse@example.test", "peer@example.test");
 
@@ -540,7 +533,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -554,7 +547,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
             var (links, _) = await SeedDueRespondentsAsync(schema, "nurse@example.test", "peer@example.test");
 
@@ -581,7 +574,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -595,7 +588,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
             var (links, questionId) = await SeedDueRespondentsAsync(schema, "nurse@example.test");
             var opening = links["nurse@example.test"];
@@ -620,7 +613,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -634,7 +627,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
             var (links, _) = await SeedDueRespondentsAsync(schema, "nurse@example.test");
             var campaignId = await ScalarAsync<int>(schema, """SELECT "Id" FROM "MsfCampaigns" """);
@@ -671,7 +664,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -685,7 +678,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
 
             int campaignId;
@@ -697,9 +690,9 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
                 campaignId = campaign.Id;
             }
 
-            (await ColumnTypeAsync(schema, "PreviousTokenSelector")).Should().Be($"character varying({InvitationTokenService.SelectorLength})");
-            (await ColumnTypeAsync(schema, "PreviousTokenHash")).Should().Be("character varying(64)");
-            (await IndexIsUniqueAsync(schema, PreviousSelectorIndex)).Should().BeTrue();
+            (await Catalog.ColumnTypeAsync(schema, "MsfInvitations", "PreviousTokenSelector")).Should().Be($"character varying({InvitationTokenService.SelectorLength})");
+            (await Catalog.ColumnTypeAsync(schema, "MsfInvitations", "PreviousTokenHash")).Should().Be("character varying(64)");
+            (await Catalog.IndexIsUniqueAsync(schema, PreviousSelectorIndex)).Should().BeTrue();
 
             const string insert =
                 """
@@ -711,7 +704,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
             var nurse = (int)MsfRespondentCategory.Nurse;
             var current = _tokens.GenerateSelectorToken();
             var previous = _tokens.GenerateSelectorToken();
-            await using var connection = await OpenAsync(schema);
+            await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
             await ExecuteAsync(connection, insert, campaignId, "first@example.test", nurse, current.Selector, current.Hash, previous.Selector, previous.Hash);
 
             // Everything but the previous selector differs, so only its index can refuse the row.
@@ -765,7 +758,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
                 await db.GetService<IMigrator>().MigrateAsync(predecessor);
             }
 
-            (await IndexesAsync(schema)).Should().Contain(SelectorIndex).And.NotContain(PreviousSelectorIndex);
+            (await Catalog.IndexNamesAsync(schema, "MsfInvitations")).Should().Contain(SelectorIndex).And.NotContain(PreviousSelectorIndex);
             (await ScalarAsync<long>(schema,
                     """
                     SELECT COUNT(*) FROM information_schema.columns
@@ -778,7 +771,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -889,7 +882,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddDbContext<ApplicationDbContext>(options =>
         {
-            options.UseNpgsql(SchemaConnectionString(schema));
+            options.UseNpgsql(TestDatabase.SchemaConnectionString(schema));
             if (interceptors.Length > 0)
             {
                 options.AddInterceptors(interceptors);
@@ -967,7 +960,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
     /// <summary>The server's plan for a statement EF sent, with the parameter values it was sent with.</summary>
     private async Task<string> ExplainAsync(string schema, CapturedStatement statement)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = new NpgsqlCommand("EXPLAIN " + statement.Text, connection);
         command.Parameters.AddRange(statement.Parameters.ToArray());
 
@@ -981,54 +974,6 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         return string.Join('\n', lines);
     }
 
-    private async Task<List<string>> IndexesAsync(string schema)
-    {
-        await using var connection = await OpenAsync(schema);
-        await using var command = new NpgsqlCommand(
-            """SELECT indexname FROM pg_indexes WHERE schemaname = current_schema() AND tablename = 'MsfInvitations'""",
-            connection);
-
-        var names = new List<string>();
-        await using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            names.Add(reader.GetString(0));
-        }
-
-        return names;
-    }
-
-    /// <summary>The declared type of a column of <c>MsfInvitations</c>, in this schema, as <c>type(length)</c>.</summary>
-    private async Task<string> ColumnTypeAsync(string schema, string column)
-    {
-        await using var connection = await OpenAsync(schema);
-        await using var command = Command(connection,
-            """
-            SELECT data_type || '(' || character_maximum_length || ')' FROM information_schema.columns
-            WHERE table_schema = current_schema() AND table_name = 'MsfInvitations' AND column_name = $1
-            """,
-            [column]);
-        return (string)(await command.ExecuteScalarAsync())!;
-    }
-
-    /// <summary>Whether the server holds the named index of <c>MsfInvitations</c>, in this schema, as unique.</summary>
-    private async Task<bool> IndexIsUniqueAsync(string schema, string indexName)
-    {
-        await using var connection = await OpenAsync(schema);
-        await using var command = Command(connection,
-            """
-            SELECT i.indisunique
-            FROM pg_index AS i
-            JOIN pg_class AS c ON c.oid = i.indexrelid
-            WHERE c.relname = $1 AND c.relnamespace = current_schema()::regnamespace
-            """,
-            [indexName]);
-
-        var value = await command.ExecuteScalarAsync();
-        value.Should().NotBeNull($"guard: the index {indexName} exists in the schema");
-        return (bool)value!;
-    }
-
     // ---- schema lifecycle (as MsfRespondentHashPostgresTests) ---------------------------------------------------------
 
     private async Task MigrateToLatestAsync(string schema)
@@ -1040,7 +985,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
 
     private ApplicationDbContext NewContext(string schema, params IInterceptor[] interceptors)
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema));
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema));
         if (interceptors.Length > 0)
         {
             options.AddInterceptors(interceptors);
@@ -1048,10 +993,6 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
 
         return new ApplicationDbContext(options.Options);
     }
-
-    /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { SearchPath = schema, Pooling = false }.ConnectionString;
 
     private static async Task<int> InsertAsync(NpgsqlConnection connection, string sql, params object[] values)
     {
@@ -1067,7 +1008,7 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
 
     private async Task<T> ScalarAsync<T>(string schema, string sql)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = new NpgsqlCommand(sql, connection);
         var value = await command.ExecuteScalarAsync();
         return (T)Convert.ChangeType(value!, typeof(T), CultureInfo.InvariantCulture);
@@ -1083,83 +1024,6 @@ public sealed class MsfLinkSelectorPostgresTests : IAsyncLifetime
         }
 
         return command;
-    }
-
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    /// <summary>The same resolution order as <c>WbaToolAllowListPostgresTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 
     private sealed record CapturedStatement(string Text, IReadOnlyList<NpgsqlParameter> Parameters);

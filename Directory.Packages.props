@@ -7,7 +7,7 @@
 
   <!--
     Transitive security pins. These packages are not referenced directly by any Wombat
-    project — they arrive through Swashbuckle, Testcontainers and bUnit — but the versions
+    project — they arrive through Swashbuckle and bUnit — but the versions
     those parents resolve to carry published advisories, and NuGetAudit (warnings-as-errors
     in Release) fails the build on them. Each pin stays inside the parent's major version so
     the parent's API contract is unchanged.
@@ -18,8 +18,6 @@
   <ItemGroup Label="Transitive security pins">
     <!-- GHSA-v5pm-xwqc-g5wc (high). Via Swashbuckle.AspNetCore. Patched from 2.7.5. -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
-    <!-- GHSA-q939-rpr3-3284 (high). Via Testcontainers.PostgreSql, test-only. -->
-    <PackageVersion Include="SSH.NET" Version="2026.0.0" />
     <!-- GHSA-pgww-w46g-26qg (moderate). Via bunit, test-only. -->
     <PackageVersion Include="AngleSharp" Version="1.8.1" />
   </ItemGroup>
@@ -49,9 +47,7 @@
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageVersion Include="QuestPDF" Version="2026.2.4" />
-    <PackageVersion Include="Respawn" Version="7.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.4" />
-    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.10.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
   </ItemGroup>

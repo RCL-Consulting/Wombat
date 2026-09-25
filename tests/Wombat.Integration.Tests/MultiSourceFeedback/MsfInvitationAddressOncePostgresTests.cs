@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Security.Claims;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -39,22 +38,16 @@ namespace Wombat.Integration.Tests.MultiSourceFeedback;
 /// </remarks>
 public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
     private const string T228MigrationSuffix = "_T228_MsfInvitationAddressOnce";
     private const string UniqueViolation = "23505";
     private const string Invited = "peer-9@example.test";
 
-    private readonly List<string> _schemas = [];
+    private readonly TestSchemas _schemas = new();
     private readonly InvitationTokenService _tokens = new();
-    private string _baseConnectionString = null!;
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task TwoAddsOfOneAddress_RacingToTheSave_LeaveOneInvitation()
@@ -97,7 +90,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -114,7 +107,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
             var race = new RaceBeforeFirstSave();
             race.Arm(async () =>
             {
-                await using var connection = await OpenAsync(schema);
+                await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
                 await InsertInvitationAsync(connection, campaignId, "Peer-9@EXAMPLE.test");
             });
 
@@ -137,7 +130,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -150,7 +143,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
             var campaignId = await SeedDraftCampaignAsync(schema);
             var otherCampaignId = await SeedDraftCampaignAsync(schema);
 
-            await using var connection = await OpenAsync(schema);
+            await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
             var firstId = await InsertInvitationAsync(connection, campaignId, Invited);
 
             (await KeyOfAsync(schema, firstId)).Should().Be(Invited, "the key is the address, lower-cased by the database");
@@ -181,7 +174,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -190,7 +183,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             string predecessor;
             await using (var db = NewContext(schema))
             {
@@ -204,7 +197,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
             // As the product stored them before T228: dev campaign 11 held two addresses invited twice each.
             int campaign, other, unansweredCopy, answeredCopy, firstOfTwo, secondOfTwo, solo, erasedOne, erasedTwo, elsewhere, response;
             int firstAnswered, secondAnswered, firstAnsweredResponse, secondAnsweredResponse;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 campaign = await InsertCampaignAsync(connection);
                 other = await InsertCampaignAsync(connection);
@@ -246,7 +239,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
                 secondAnsweredResponse.Should().NotBe(firstAnsweredResponse, "guard: two responses were stored");
             }
 
-            (await IndexIsUniqueAsync(schema, MsfInvitationConfiguration.RespondentEmailKeyIndex)).Should().BeTrue();
+            (await Catalog.IndexIsUniqueAsync(schema, MsfInvitationConfiguration.RespondentEmailKeyIndex)).Should().BeTrue();
 
             await using (var db = NewContext(schema))
             {
@@ -263,7 +256,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -414,7 +407,7 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
 
     private async Task<object?> ScalarAsync(string schema, string sql, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = new NpgsqlCommand(sql, connection);
         foreach (var value in values)
         {
@@ -432,30 +425,11 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
             $"""SELECT "{MsfInvitationConfiguration.RespondentEmailKey}" FROM "MsfInvitations" WHERE "Id" = $1""",
             invitationId);
 
-    /// <summary>Whether the server holds the named index, in this schema, as unique.</summary>
-    private async Task<bool> IndexIsUniqueAsync(string schema, string indexName)
-    {
-        await using var connection = await OpenAsync(schema);
-        await using var command = new NpgsqlCommand(
-            """
-            SELECT i.indisunique
-            FROM pg_index AS i
-            JOIN pg_class AS c ON c.oid = i.indexrelid
-            WHERE c.relname = $1 AND c.relnamespace = current_schema()::regnamespace
-            """,
-            connection);
-        command.Parameters.Add(new NpgsqlParameter { Value = indexName });
-
-        var value = await command.ExecuteScalarAsync();
-        value.Should().NotBeNull($"guard: the index {indexName} exists in the schema");
-        return (bool)value!;
-    }
-
     // ─── Schema helpers (as MsfInviteDuringOpenRacePostgresTests) ────────────
 
     private async Task<string> MigratedSchemaAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
         await MigrateToLatestAsync(schema);
         return schema;
     }
@@ -467,100 +441,14 @@ public sealed class MsfInvitationAddressOncePostgresTests : IAsyncLifetime
         (await db.Database.GetPendingMigrationsAsync()).Should().BeEmpty();
     }
 
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    /// <summary>Drops every schema this test created. Called from the test's finally and again from DisposeAsync.</summary>
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
     private ApplicationDbContext NewContext(string schema, IInterceptor? interceptor = null)
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema));
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema));
         if (interceptor is not null)
         {
             options.AddInterceptors(interceptor);
         }
 
         return new ApplicationDbContext(options.Options);
-    }
-
-    /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString)
-        {
-            SearchPath = schema,
-            Pooling = false
-        }.ConnectionString;
-
-    /// <summary>The same resolution order as <c>MsfRespondEndpointFlowTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 }

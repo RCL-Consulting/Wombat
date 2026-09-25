@@ -47,8 +47,6 @@ namespace Wombat.Integration.Tests.Curricula;
 /// </remarks>
 public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-
     private const string T130Migration = "20260923082939_T130_AcademicPeriodQuota";
     private const string T219Migration = "20260925031231_T219_LastEncounterDeclared";
     private const string LastMigrationBeforeT130 = "20260921071752_T121_MsfEvidenceRecordedPerEpa";
@@ -85,38 +83,11 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         ("PAED-015", QuotaPeriod.Semester, 1),
     ];
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public async Task DisposeAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas)
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (!schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            await using var drop = connection.CreateCommand();
-            drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-            await drop.ExecuteNonQueryAsync();
-        }
-    }
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task MigrateAsync_OnAFreshDatabase_AppliesT130WithItsColumnsIndexAndChecks()
@@ -125,7 +96,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         // without its Designer file is skipped by MigrateAsync with no error, and a snapshot that drifted from
         // the model makes the next `dotnet ef migrations add` write the difference into somebody else's
         // migration. Both are caught here and nowhere else.
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using (var db = NewContext(schema))
         {
@@ -168,9 +139,9 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
                 ("CurriculumItems", "QuotaPeriod", "integer", "NO", "0"));
 
         List<(string Name, string Definition)> uniqueIndexes;
-        await using (var connection = await OpenAsync(schema))
+        await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
         {
-            uniqueIndexes = await UniqueIndexesOnProgressTableAsync(connection);
+            uniqueIndexes = await Catalog.UniqueIndexesAsync(connection, "CurriculumItemProgresses");
         }
 
         // Only the primary key and the period key. The old unique index on (item, trainee) would refuse the
@@ -206,19 +177,19 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         // T227: the moment that made the migration test above fail intermittently, held open. Another test's
         // DisposeAsync is part-way through dropping its schema, whose table has the same name. The drop has locked
         // that table and its indexes and has not committed yet.
-        var schema = await CreateSchemaAsync();
-        var otherTestsSchema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
+        var otherTestsSchema = await _schemas.CreateAsync();
         await ExecuteAsync(schema, """CREATE TABLE "CurriculumItemProgresses" ("Id" integer CONSTRAINT "PK_Own" PRIMARY KEY)""");
         await ExecuteAsync(otherTestsSchema, """CREATE TABLE "CurriculumItemProgresses" ("Id" integer CONSTRAINT "PK_Other" PRIMARY KEY)""");
 
-        await using var dropper = await OpenAsync(otherTestsSchema);
+        await using var dropper = await TestDatabase.OpenSchemaConnectionAsync(otherTestsSchema);
         await using var drop = await dropper.BeginTransactionAsync();
         await using (var dropSchema = new NpgsqlCommand($"DROP SCHEMA \"{otherTestsSchema}\" CASCADE", dropper, drop))
         {
             await dropSchema.ExecuteNonQueryAsync();
         }
 
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         // A query that touches the other schema's index now waits on the drop. The lock timeout turns that wait
         // into a failure within seconds. join_collapse_limit = 1 keeps each view's joins in their written order.
         // For the old pg_indexes query, that order applies the schema filter last, which the planner also chose on
@@ -227,7 +198,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         await ExecuteAsync(connection, "SET lock_timeout = '3s'");
         await ExecuteAsync(connection, "SET join_collapse_limit = 1");
 
-        var indexes = await UniqueIndexesOnProgressTableAsync(connection);
+        var indexes = await Catalog.UniqueIndexesAsync(connection, "CurriculumItemProgresses");
 
         indexes.Should().ContainSingle().Which.Name.Should().Be("PK_Own");
 
@@ -349,7 +320,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         // database, because the seeders run after migrations. The only databases they ever act on are existing
         // ones, dev and production, at startup, where a failure stops the app. So they are rehearsed here on a
         // schema stopped at the last pre-T130 migration and filled in the old shape by raw SQL.
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using (var db = NewContext(schema))
         {
@@ -369,7 +340,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             .Should().Be(0, "guard: the schema must really be in the pre-T130 shape");
 
         int paed001, paed008, paed002Edited, localItem, otherCurriculumItem;
-        await using (var connection = await OpenAsync(schema))
+        await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
         {
             var hospitalId = await InsertAsync(connection,
                 """INSERT INTO "Institutions" ("Name", "ShortCode", "CreatedOn", "IsActive") VALUES ('Legacy Hospital', 'LEGACY', TIMESTAMPTZ '2026-01-01 00:00:00+00', TRUE) RETURNING "Id" """);
@@ -528,7 +499,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         // acts only on an existing database, since a fresh one has no rows when migrations run, so it is rehearsed on a
         // schema stopped just before T219 and given a row in the old shape. The migration before it is looked up, not
         // named, so a migration merged later with an earlier timestamp cannot leave this test stopping short of it.
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using (var db = NewContext(schema))
         {
@@ -539,7 +510,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         }
 
         int itemId;
-        await using (var connection = await OpenAsync(schema))
+        await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
         {
             var collegeId = await InsertAsync(connection,
                 """INSERT INTO "Colleges" ("Name", "ShortCode", "CreatedOn", "IsActive") VALUES ('College of Paediatricians of South Africa', 'CPSA', TIMESTAMPTZ '2026-01-01 00:00:00+00', TRUE) RETURNING "Id" """);
@@ -1163,58 +1134,15 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         return await command.ExecuteNonQueryAsync();
     }
 
-    /// <summary>
-    /// The unique indexes on the connection's own <c>CurriculumItemProgresses</c>, each with its definition.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// T227. Every filter is on a plain catalog column, and the table is named by its own OID, which <c>::regclass</c>
-    /// resolves on the connection's search path: the test's schema, after the <c>pg_temp</c> and <c>pg_catalog</c>
-    /// that Postgres searches first when they are not listed, neither of which holds a table of that name.
-    /// <c>pg_get_indexdef</c> appears only in the select list, so it is only ever run on the rows the filters kept.
-    /// </para>
-    /// <para>
-    /// The query this replaces filtered <c>pg_indexes</c> on <c>indexdef LIKE 'CREATE UNIQUE INDEX%'</c>. SQL fixes no
-    /// order for a WHERE clause. Under load the planner tested that predicate on the indexes of every table called
-    /// CurriculumItemProgresses in every schema, and applied the schema filter last. Rendering an index in a schema
-    /// that another test's <see cref="DisposeAsync" /> was dropping waited on that drop's lock. When the drop
-    /// committed, the query failed with XX000 "could not open relation with OID". The rule for any catalog query in
-    /// this suite: a function that renders a definition (<c>pg_get_indexdef</c>, <c>pg_get_constraintdef</c>,
-    /// <c>pg_get_expr</c>) goes in the select list, never in the WHERE clause. ARCHITECTURE.md § Testing states it
-    /// for every class, with the one case where the select list is not enough.
-    /// </para>
-    /// </remarks>
-    private static async Task<List<(string Name, string Definition)>> UniqueIndexesOnProgressTableAsync(NpgsqlConnection connection)
-    {
-        await using var command = new NpgsqlCommand(
-            """
-            SELECT idx.relname, pg_get_indexdef(idx.oid)
-            FROM pg_index ix
-            JOIN pg_class idx ON idx.oid = ix.indexrelid
-            WHERE ix.indrelid = '"CurriculumItemProgresses"'::regclass AND ix.indisunique
-            ORDER BY idx.relname
-            """,
-            connection);
-        await using var reader = await command.ExecuteReaderAsync();
-
-        var indexes = new List<(string Name, string Definition)>();
-        while (await reader.ReadAsync())
-        {
-            indexes.Add((reader.GetString(0), reader.GetString(1)));
-        }
-
-        return indexes;
-    }
-
     private async Task<int> ExecuteAsync(string schema, string sql, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         return await ExecuteAsync(connection, sql, values);
     }
 
     private async Task<T> ScalarAsync<T>(string schema, string sql, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, sql, values);
         var value = await command.ExecuteScalarAsync();
         return (T)Convert.ChangeType(value!, typeof(T), CultureInfo.InvariantCulture);
@@ -1222,7 +1150,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
 
     private async Task<List<T>> QueryAsync<T>(string schema, string sql, Func<NpgsqlDataReader, T> map, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, sql, values);
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -1247,33 +1175,10 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         return command;
     }
 
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
     /// <summary>A fresh schema, migrated and seeded the way startup does it: DataSeeder, then the paediatric catalogue.</summary>
     private async Task<string> SeededSchemaAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using (var db = NewContext(schema))
         {
@@ -1295,48 +1200,8 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
 
     private ApplicationDbContext NewContext(string schema)
         => new(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(SchemaConnectionString(schema))
+            .UseNpgsql(TestDatabase.SchemaConnectionString(schema))
             .Options);
-
-    /// <summary>
-    /// The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.
-    /// </summary>
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString)
-        {
-            SearchPath = schema,
-            Pooling = false
-        }.ConnectionString;
-
-    /// <summary>The same resolution order as <c>MsfRespondEndpointFlowTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
-    }
 
     private sealed record CatalogueItem(int ItemId, int EpaId);
 

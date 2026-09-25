@@ -1,9 +1,7 @@
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.Institutions;
@@ -25,38 +23,22 @@ namespace Wombat.Integration.Tests.CommitteeDecisions;
 /// </remarks>
 public sealed class CommitteeAttendancePostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
+    private readonly TestSchemas _schemas = new();
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
-
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task EachDecisionsAttendance_IsStoredWithItsRoles_AndErasurePseudonymisesAMembersPresenceAndAssessments()
     {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
+        var schema = await _schemas.CreateAsync();
 
         try
         {
-            await using (var connection = new NpgsqlConnection(_baseConnectionString))
-            {
-                await connection.OpenAsync();
-                await using var command = connection.CreateCommand();
-                command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-                await command.ExecuteNonQueryAsync();
-            }
-
             var services = new ServiceCollection();
             services.AddLogging();
-            services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(SchemaConnectionString(schema)));
+            services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(TestDatabase.SchemaConnectionString(schema)));
             services.AddIdentity<WombatIdentityUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -196,63 +178,7 @@ public sealed class CommitteeAttendancePostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
-    }
-
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { SearchPath = schema, Pooling = false }.ConnectionString;
-
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    /// <summary>The same resolution order as the other PostgreSQL tests.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 }

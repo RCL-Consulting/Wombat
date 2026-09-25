@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Npgsql;
 using Wombat.Api.Endpoints;
 using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
@@ -51,8 +50,6 @@ namespace Wombat.Integration.Tests.MultiSourceFeedback;
 /// </remarks>
 public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-
     /// <summary>The College's v11.1 curriculum, as <c>PaediatricCatalogueSeeder</c> names it.</summary>
     private const string PaediatricCurriculumName = "Paediatric EPA Curriculum";
 
@@ -62,10 +59,9 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
     private const string SubjectFirstName = "Thandi";
     private const string SubjectLastName = "Nkosi";
 
-    private readonly string _schemaName = $"it_{Guid.NewGuid():N}";
+    private readonly string _schemaName = TestDatabase.NewSchemaName();
     private ApiFactory? _factory;
     private HttpClient? _client;
-    private string? _baseConnectionString;
 
     /// <summary>
     /// T121: the campaign now has to name EPAs from the subject's own curriculum, so the subject has to
@@ -81,30 +77,13 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
     private HttpClient Client
         => _client ?? throw new InvalidOperationException("The Api host is not running: InitializeAsync did not complete.");
 
-    private string BaseConnectionString
-        => _baseConnectionString ?? throw new InvalidOperationException("The base connection string was never resolved.");
-
-    private string SchemaConnectionString
-    {
-        get
-        {
-            var builder = new NpgsqlConnectionStringBuilder(BaseConnectionString)
-            {
-                SearchPath = _schemaName,
-                Pooling = false
-            };
-
-            return builder.ConnectionString;
-        }
-    }
+    private string SchemaConnectionString => TestDatabase.SchemaConnectionString(_schemaName);
 
     public async Task InitializeAsync()
     {
-        _baseConnectionString = ResolveBaseConnectionString();
-
         try
         {
-            await CreateSchemaAsync();
+            await TestDatabase.CreateSchemaAsync(_schemaName);
 
             _factory = new ApiFactory(SchemaConnectionString, "http://localhost/msf/respond");
 
@@ -156,33 +135,8 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemaAsync();
+            await TestDatabase.DropSchemaAsync(_schemaName);
         }
-    }
-
-    private async Task CreateSchemaAsync()
-    {
-        await using var connection = new NpgsqlConnection(BaseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{_schemaName}\"";
-        await command.ExecuteNonQueryAsync();
-    }
-
-    private async Task DropSchemaAsync()
-    {
-        if (string.IsNullOrWhiteSpace(_baseConnectionString))
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var drop = connection.CreateCommand();
-        drop.CommandText = $"DROP SCHEMA IF EXISTS \"{_schemaName}\" CASCADE";
-        await drop.ExecuteNonQueryAsync();
     }
 
     /// <summary>
@@ -993,35 +947,6 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         await using var scope = Factory.Services.CreateAsyncScope();
         var sender = scope.ServiceProvider.GetRequiredService<ISender>();
         await sender.Send(request);
-    }
-
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 
     private sealed class ApiFactory : WebApplicationFactory<Program>

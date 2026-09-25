@@ -45,45 +45,17 @@ namespace Wombat.Integration.Tests.Curricula;
 /// </remarks>
 public sealed class EpaCreditRacePostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
     private const string PaediatricCurriculumName = "Paediatric EPA Curriculum";
     private const string TraineeUserId = "trainee-t230";
 
     private static readonly DateTime DeactivatedAt = new(2026, 5, 1, 8, 0, 0, DateTimeKind.Utc);
     private static readonly TimeSpan Patience = TimeSpan.FromSeconds(20);
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public async Task DisposeAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas)
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (!schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            await using var drop = connection.CreateCommand();
-            drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-            await drop.ExecuteNonQueryAsync();
-        }
-    }
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     // ─── A reactivation racing a completion that read the EPA as inactive ────
 
@@ -434,8 +406,7 @@ public sealed class EpaCreditRacePostgresTests : IAsyncLifetime
     /// </summary>
     private async Task<bool> WaitsForALockAsync(Fixture fixture, string connection, Task request)
     {
-        await using var monitor = new NpgsqlConnection(_baseConnectionString);
-        await monitor.OpenAsync();
+        await using var monitor = await TestDatabase.OpenAdminConnectionAsync();
 
         var deadline = DateTime.UtcNow + Patience;
         while (DateTime.UtcNow < deadline)
@@ -725,26 +696,10 @@ public sealed class EpaCreditRacePostgresTests : IAsyncLifetime
 
     // ─── Postgres plumbing, as in EpaActivePeriodPostgresTests ────────────────
 
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
     /// <summary>A fresh schema, migrated and seeded the way startup does it: DataSeeder, then the paediatric catalogue.</summary>
     private async Task<string> SeededSchemaAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using (var db = NewContext(schema, applicationName: null, beforeSave: null))
         {
@@ -784,14 +739,9 @@ public sealed class EpaCreditRacePostgresTests : IAsyncLifetime
         return new ApplicationDbContext(options.Options);
     }
 
-    private string ConnectionString(string schema, string? applicationName)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString)
-        {
-            // The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.
-            SearchPath = schema,
-            Pooling = false,
-            ApplicationName = applicationName
-        }.ConnectionString;
+    /// <summary>The schema's connection string, named so that <see cref="WaitsForALockAsync" /> can find it.</summary>
+    private static string ConnectionString(string schema, string? applicationName)
+        => TestDatabase.SchemaConnectionString(schema, applicationName);
 
     private async Task<NpgsqlConnection> OpenAsync(Fixture fixture, string? applicationName)
     {
@@ -804,36 +754,6 @@ public sealed class EpaCreditRacePostgresTests : IAsyncLifetime
     {
         await using var command = new NpgsqlCommand(sql, connection);
         await command.ExecuteNonQueryAsync();
-    }
-
-    /// <summary>The same resolution order as <c>MsfRespondEndpointFlowTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 
     private const string CreditsTheEpa = """

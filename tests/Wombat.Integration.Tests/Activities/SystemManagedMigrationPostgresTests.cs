@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -27,22 +26,16 @@ namespace Wombat.Integration.Tests.Activities;
 /// </remarks>
 public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
     private const string LastMigrationBeforeT162 = "20260924153716_T167_CommitteeEvidenceNamesEachLine";
     private const string SeedOwnerUserId = "seed-system";
     private const string TraineeId = "trainee-1";
     private const string CoordinatorId = "coordinator-1";
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task Migration_FlagsTheSeededMsfType_AndNothingElse()
@@ -50,7 +43,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
         try
         {
             var schema = await ArrangePreT162SchemaAsync();
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 await InsertSeedTypeAsync(connection, "msf_cpsa", SeedOwnerUserId);
                 await InsertSeedTypeAsync(connection, "mini_cex_cpsa", SeedOwnerUserId);
@@ -64,7 +57,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -75,7 +68,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
         {
             var schema = await ArrangePreT162SchemaAsync();
             var activities = new Dictionary<string, int>(StringComparer.Ordinal);
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 var msf = await InsertSeedTypeAsync(connection, "msf_cpsa", SeedOwnerUserId);
                 var miniCex = await InsertSeedTypeAsync(connection, "mini_cex_cpsa", SeedOwnerUserId);
@@ -117,7 +110,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -129,7 +122,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
         {
             var schema = await ArrangePreT162SchemaAsync();
             int draft;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 var operatorMsf = await InsertSeedTypeAsync(connection, "msf_cpsa", "operator-1");
                 draft = await InsertActivityAsync(connection, operatorMsf, "draft", creator: TraineeId);
@@ -143,7 +136,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -153,25 +146,25 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
         try
         {
             var schema = await ArrangePreT162SchemaAsync();
-            (await TableExistsAsync(schema, "ActivityPermissionRules")).Should().BeTrue("guard: the table exists before T162");
+            (await Catalog.TableExistsAsync(schema, "ActivityPermissionRules")).Should().BeTrue("guard: the table exists before T162");
 
             await MigrateToLatestAsync(schema);
 
-            (await TableExistsAsync(schema, "ActivityPermissionRules")).Should().BeFalse();
-            (await ColumnExistsAsync(schema, "ActivityTypes", "SystemManaged")).Should().BeTrue();
+            (await Catalog.TableExistsAsync(schema, "ActivityPermissionRules")).Should().BeFalse();
+            (await Catalog.ColumnExistsAsync(schema, "ActivityTypes", "SystemManaged")).Should().BeTrue();
 
             await using (var db = NewContext(schema))
             {
                 await db.GetService<IMigrator>().MigrateAsync(LastMigrationBeforeT162);
             }
 
-            (await TableExistsAsync(schema, "ActivityPermissionRules")).Should().BeTrue();
+            (await Catalog.TableExistsAsync(schema, "ActivityPermissionRules")).Should().BeTrue();
             (await ScalarAsync<long>(schema, """SELECT COUNT(*) FROM "ActivityPermissionRules" """)).Should().Be(0);
-            (await ColumnExistsAsync(schema, "ActivityTypes", "SystemManaged")).Should().BeFalse();
+            (await Catalog.ColumnExistsAsync(schema, "ActivityTypes", "SystemManaged")).Should().BeFalse();
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -179,7 +172,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
 
     private async Task<string> ArrangePreT162SchemaAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using var db = NewContext(schema);
         await db.GetService<IMigrator>().MigrateAsync(LastMigrationBeforeT162);
@@ -240,18 +233,6 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
 
     // ---- reads ---------------------------------------------------------------------------------------------------------
 
-    private Task<bool> TableExistsAsync(string schema, string table)
-        => ScalarAsync<bool>(schema, $"""
-            SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '{table}')
-            """);
-
-    private Task<bool> ColumnExistsAsync(string schema, string table, string column)
-        => ScalarAsync<bool>(schema, $"""
-            SELECT EXISTS (
-                SELECT 1 FROM information_schema.columns
-                WHERE table_schema = current_schema() AND table_name = '{table}' AND column_name = '{column}')
-            """);
-
     // ---- schema lifecycle (as EvidenceEpaMigrationPostgresTests) --------------------------------------------------------
 
     private async Task MigrateToLatestAsync(string schema)
@@ -262,10 +243,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
     }
 
     private ApplicationDbContext NewContext(string schema)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema)).Options);
-
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { SearchPath = schema, Pooling = false }.ConnectionString;
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema)).Options);
 
     private static async Task<int> InsertAsync(NpgsqlConnection connection, string sql, params object[] values)
     {
@@ -281,7 +259,7 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
 
     private async Task<T> ScalarAsync<T>(string schema, string sql)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = new NpgsqlCommand(sql, connection);
         var value = await command.ExecuteScalarAsync();
         return (T)Convert.ChangeType(value!, typeof(T), CultureInfo.InvariantCulture);
@@ -297,81 +275,5 @@ public sealed class SystemManagedMigrationPostgresTests : IAsyncLifetime
         }
 
         return command;
-    }
-
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    /// <summary>The same resolution order as <c>WbaToolAllowListPostgresTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 }

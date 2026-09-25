@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -29,22 +28,15 @@ namespace Wombat.Integration.Tests.Curricula;
 /// </remarks>
 public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-
     private const string T174Migration = "20260924140337_T174_PinDemoCurriculumItemScale";
     // T160's migration, merged after T174 but timestamped before it, sorts between T137 and T174.
     private const string LastMigrationBeforeT174 = "20260924134441_T160_FilingDaysAfterEncounter";
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     /// <summary>
     /// A database in production's shape: the demo item unpinned since T109. The migration pins it to the O-R Scale and
@@ -72,7 +64,7 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -95,7 +87,7 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -124,7 +116,7 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -134,7 +126,7 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
     /// </summary>
     private async Task<PreT174Fixture> ArrangePreT174DatabaseAsync(bool withOrScale)
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using (var db = NewContext(schema))
         {
@@ -148,7 +140,7 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
         int? orScaleId = null;
         int demoItem;
 
-        await using (var connection = await OpenAsync(schema))
+        await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
         {
             // Another ladder first, so that a statement which lost its scale-name clause would have a wrong scale to
             // pin to, and the tests would see it.
@@ -207,7 +199,7 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
 
     private async Task<Dictionary<int, int?>> StoredScalesAsync(string schema)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, """SELECT "Id", "ScaleId" FROM "CurriculumItems" """, []);
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -267,14 +259,14 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
 
     private async Task<int> ExecuteAsync(string schema, string sql, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, sql, values);
         return await command.ExecuteNonQueryAsync();
     }
 
     private async Task<T> ScalarAsync<T>(string schema, string sql, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, sql, values);
         var value = await command.ExecuteScalarAsync();
         return (T)Convert.ChangeType(value!, typeof(T), CultureInfo.InvariantCulture);
@@ -292,94 +284,8 @@ public sealed class DemoCurriculumScalePinMigrationPostgresTests : IAsyncLifetim
         return command;
     }
 
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    /// <summary>Drops every schema this test created. Called from each test's finally and again from DisposeAsync.</summary>
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
     private ApplicationDbContext NewContext(string schema)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema)).Options);
-
-    /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString)
-        {
-            SearchPath = schema,
-            Pooling = false
-        }.ConnectionString;
-
-    /// <summary>The same resolution order as <see cref="WbaToolAllowListPostgresTests" />.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
-    }
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema)).Options);
 
     private sealed record PreT174Fixture(
         string Schema,

@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -34,7 +33,6 @@ namespace Wombat.Integration.Tests.Curricula;
 /// </remarks>
 public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
     private const string LastMigrationBeforeThis = "20260924173137_T131_EvidenceProvenance";
     private const string CurriculumName = "Paediatric EPA Curriculum";
     private const string CatalogueVersion = "11.1";
@@ -60,23 +58,18 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
         ("PAED-015", QuotaPeriod.AcademicYear, null, false),
     ];
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task MigrateAsync_OnAFreshDatabase_AddsTheColumnsTheBodiesTable_AndTheConstraintsThatGuardThem()
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
 
             var columns = await QueryAsync(
@@ -134,7 +127,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -143,7 +136,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await MigrateToLatestAsync(schema);
 
             var firstBoot = await BootAsync(schema);
@@ -162,7 +155,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -193,7 +186,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -219,7 +212,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -250,7 +243,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -260,7 +253,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
 
     private async Task<Fixture> ArrangePopulatedDatabaseAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using (var db = NewContext(schema))
         {
@@ -272,7 +265,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
         var catalogueItems = new Dictionary<string, int>(StringComparer.Ordinal);
         var decoys = new Dictionary<string, int>(StringComparer.Ordinal);
 
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
 
         var hospitalId = await InsertAsync(connection,
             """INSERT INTO "Institutions" ("Name", "ShortCode", "CreatedOn", "IsActive") VALUES ('Legacy Hospital', 'LEGACY', TIMESTAMPTZ '2026-06-19 00:00:00+00', TRUE) RETURNING "Id" """);
@@ -325,7 +318,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
     /// <summary>One valid national item on a fresh, migrated schema, to try the constraints against.</summary>
     private async Task<int> InsertBareCatalogueItemAsync(string schema)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         var collegeId = await InsertAsync(connection,
             """INSERT INTO "Colleges" ("Name", "ShortCode", "CreatedOn", "IsActive") VALUES ('CPSA', 'CPSA', TIMESTAMPTZ '2026-06-19 00:00:00+00', TRUE) RETURNING "Id" """);
         var specialityId = await InsertAsync(connection,
@@ -430,10 +423,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
     }
 
     private ApplicationDbContext NewContext(string schema)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema)).Options);
-
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { SearchPath = schema, Pooling = false }.ConnectionString;
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema)).Options);
 
     private static async Task<int> InsertAsync(NpgsqlConnection connection, string sql, params object[] values)
     {
@@ -443,14 +433,14 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
 
     private async Task<int> ExecuteAsync(string schema, string sql, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, sql, values);
         return await command.ExecuteNonQueryAsync();
     }
 
     private async Task<T> ScalarAsync<T>(string schema, string sql)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = new NpgsqlCommand(sql, connection);
         var value = await command.ExecuteScalarAsync();
         return (T)Convert.ChangeType(value!, typeof(T), CultureInfo.InvariantCulture);
@@ -458,7 +448,7 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
 
     private async Task<List<T>> QueryAsync<T>(string schema, string sql, Func<NpgsqlDataReader, T> map)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = new NpgsqlCommand(sql, connection);
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -481,81 +471,5 @@ public sealed class DecisionCadenceMigrationPostgresTests : IAsyncLifetime
         }
 
         return command;
-    }
-
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    /// <summary>The same resolution order as <c>WbaToolAllowListPostgresTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 }

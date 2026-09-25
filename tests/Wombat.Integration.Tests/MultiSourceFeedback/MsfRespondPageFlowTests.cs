@@ -3,7 +3,6 @@ extern alias WombatWeb;
 using System.Globalization;
 using System.Net;
 using System.Security.Claims;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
@@ -16,7 +15,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Npgsql;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
@@ -365,13 +363,11 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         public const string RespondUrl = "http://localhost/msf/respond";
         public const string TraineeName = "Thandi Nkosi";
 
-        private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
         private const string PaediatricCurriculumName = "Paediatric EPA Curriculum";
         private const string DemoInstitutionShortCode = "DEMO";
         private const string SubjectUserId = "trainee-web-1";
 
-        private readonly string _schemaName = $"it_{Guid.NewGuid():N}";
-        private string? _baseConnectionString;
+        private readonly string _schemaName = TestDatabase.NewSchemaName();
         private WebFactory? _factory;
         private HttpClient? _client;
         private int _coveredEpaId;
@@ -385,18 +381,10 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
 
         public async Task InitializeAsync()
         {
-            _baseConnectionString = ResolveBaseConnectionString();
-
             try
             {
-                await ExecuteAsync($"CREATE SCHEMA \"{_schemaName}\"");
-
-                var schemaConnectionString = new NpgsqlConnectionStringBuilder(_baseConnectionString)
-                {
-                    SearchPath = _schemaName,
-                    Pooling = false
-                }.ConnectionString;
-                _factory = new WebFactory(schemaConnectionString, RespondUrl);
+                await TestDatabase.CreateSchemaAsync(_schemaName);
+                _factory = new WebFactory(TestDatabase.SchemaConnectionString(_schemaName), RespondUrl);
 
                 // Starts the host: it migrates the schema and seeds the catalogue before it serves anything. Redirects
                 // are not followed, so a redirect to the sign-in page is seen as one; cookies are kept, as a browser keeps
@@ -440,10 +428,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
             }
             finally
             {
-                if (!string.IsNullOrWhiteSpace(_baseConnectionString))
-                {
-                    await ExecuteAsync($"DROP SCHEMA IF EXISTS \"{_schemaName}\" CASCADE");
-                }
+                await TestDatabase.DropSchemaAsync(_schemaName);
             }
         }
 
@@ -691,44 +676,6 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
                 "IntegrationTest",
                 ClaimTypes.Name,
                 ClaimTypes.Role));
-        }
-
-        private async Task ExecuteAsync(string sql)
-        {
-            await using var connection = new NpgsqlConnection(_baseConnectionString);
-            await connection.OpenAsync();
-            await using var command = connection.CreateCommand();
-            command.CommandText = sql;
-            await command.ExecuteNonQueryAsync();
-        }
-
-        private static string ResolveBaseConnectionString()
-        {
-            var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-            if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-            {
-                return environmentConnectionString;
-            }
-
-            var secretsPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Microsoft",
-                "UserSecrets",
-                WombatWebUserSecretsId,
-                "secrets.json");
-
-            if (File.Exists(secretsPath))
-            {
-                using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-                if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                    && property.ValueKind == JsonValueKind.String
-                    && !string.IsNullOrWhiteSpace(property.GetString()))
-                {
-                    return property.GetString()!;
-                }
-            }
-
-            return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
         }
     }
 

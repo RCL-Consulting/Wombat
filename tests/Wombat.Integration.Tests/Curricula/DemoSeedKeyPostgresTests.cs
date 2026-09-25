@@ -2,7 +2,6 @@ extern alias WombatWeb;
 
 using System.Data.Common;
 using System.Globalization;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
@@ -46,8 +45,6 @@ namespace Wombat.Integration.Tests.Curricula;
 /// </remarks>
 public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-
     private const string T229Migration = "20260925070536_T229_DemoSeedKeys";
 
     private const string InstitutionKey = "demo";
@@ -64,16 +61,11 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
     private static readonly string[] OrScaleRungs =
         ["Observe only", "Direct supervision", "Indirect supervision", "Independent", "Supervises others"];
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     // ---- a fresh database ------------------------------------------------------------------------------------------------
 
@@ -142,7 +134,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -167,7 +159,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -207,7 +199,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -279,7 +271,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -324,7 +316,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -358,7 +350,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -394,7 +386,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -444,7 +436,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -481,7 +473,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -535,7 +527,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -581,7 +573,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -605,7 +597,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -623,7 +615,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
 
             await StartTheWebAppAsync(schema);
             var census = await CensusAsync(schema);
@@ -641,7 +633,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -680,7 +672,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -690,7 +682,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
     /// </summary>
     private async Task StartTheWebAppAsync(string schema)
     {
-        await using var factory = new DemoWebFactory(SchemaConnectionString(schema));
+        await using var factory = new DemoWebFactory(TestDatabase.SchemaConnectionString(schema));
         using var client = factory.CreateClient();
 
         await using var scope = factory.Services.CreateAsyncScope();
@@ -740,7 +732,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
     /// <param name="collegeShortCode"><c>DEMO-C</c> as the seeder made it, or a short code changed before T229.</param>
     private async Task<PreT229Fixture> ArrangePreT229DatabaseAsync(string institutionShortCode, string collegeShortCode)
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
 
         await using (var db = NewContext(schema))
         {
@@ -748,7 +740,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
             (await db.Database.GetPendingMigrationsAsync()).First().Should().Be(T229Migration, "guard: the schema stops just before T229");
         }
 
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
 
         // Decoys under another College, first.
         var otherCollegeId = await InsertAsync(connection,
@@ -970,7 +962,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
 
     private async Task<string> MigratedSchemaAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
         await MigrateToLatestAsync(schema);
         return schema;
     }
@@ -986,7 +978,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
 
     private ApplicationDbContext NewContext(string schema, params IInterceptor[] interceptors)
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema));
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema));
         if (interceptors.Length > 0)
         {
             options.AddInterceptors(interceptors);
@@ -994,9 +986,6 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
 
         return new ApplicationDbContext(options.Options);
     }
-
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { SearchPath = schema, Pooling = false }.ConnectionString;
 
     private static async Task<int> InsertAsync(NpgsqlConnection connection, string sql, params object[] values)
     {
@@ -1006,14 +995,14 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
 
     private async Task<int> ExecuteAsync(string schema, string sql, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, sql, values);
         return await command.ExecuteNonQueryAsync();
     }
 
     private async Task<T> ScalarAsync<T>(string schema, string sql, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, sql, values);
         var value = await command.ExecuteScalarAsync();
         return (T)Convert.ChangeType(value!, typeof(T), CultureInfo.InvariantCulture);
@@ -1021,7 +1010,7 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
 
     private async Task<List<T>> QueryAsync<T>(string schema, string sql, Func<NpgsqlDataReader, T> map, params object[] values)
     {
-        await using var connection = await OpenAsync(schema);
+        await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
         await using var command = Command(connection, sql, values);
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -1044,82 +1033,6 @@ public sealed class DemoSeedKeyPostgresTests : IAsyncLifetime
         }
 
         return command;
-    }
-
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    /// <summary>The same resolution order as <c>WbaToolAllowListPostgresTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 
     /// <summary>

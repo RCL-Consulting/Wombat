@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Security.Claims;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -35,27 +34,20 @@ namespace Wombat.Integration.Tests.CommitteeDecisions;
 /// </remarks>
 public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-
     private const string ThisMigration = "20260924210830_T131_PanelBodies";
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task Migration_LeavesEveryExistingPanelAGeneralPanel()
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await using (var db = NewContext(schema))
             {
                 // The migration just before this one in the assembly, found rather than named: a migration merged in
@@ -67,7 +59,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
             }
 
             int panelId;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 var institutionId = await InsertInstitutionAsync(connection, "KGK");
                 panelId = await InsertAsync(connection,
@@ -84,7 +76,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -94,7 +86,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         try
         {
             var schema = await MigratedSchemaAsync();
-            await using var connection = await OpenAsync(schema);
+            await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
             var a = await InsertInstitutionAsync(connection, "A");
             var b = await InsertInstitutionAsync(connection, "B");
             var paediatrics = await InsertSpecialityAsync(connection);
@@ -124,7 +116,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -134,7 +126,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         try
         {
             var schema = await MigratedSchemaAsync();
-            await using var connection = await OpenAsync(schema);
+            await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
             var a = await InsertInstitutionAsync(connection, "A");
             await InsertPanelAsync(connection, a, null, "neonatal");
 
@@ -148,7 +140,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -159,7 +151,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         {
             var schema = await MigratedSchemaAsync();
             int a, b, panelA, panelB, secondAtA;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 a = await InsertInstitutionAsync(connection, "A");
                 b = await InsertInstitutionAsync(connection, "B");
@@ -193,7 +185,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -208,7 +200,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         {
             var schema = await MigratedSchemaAsync();
             int a, ours, rival;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 a = await InsertInstitutionAsync(connection, "A");
                 ours = await InsertPanelAsync(connection, a, null, null, "Our CCC");
@@ -234,7 +226,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -245,7 +237,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         {
             var schema = await MigratedSchemaAsync();
             int a, rival;
-            await using (var connection = await OpenAsync(schema))
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
             {
                 a = await InsertInstitutionAsync(connection, "A");
                 rival = await InsertPanelAsync(connection, a, null, null, "Rival CCC");
@@ -282,7 +274,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -295,7 +287,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         try
         {
             var schema = await MigratedSchemaAsync();
-            await using var connection = await OpenAsync(schema);
+            await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
             var a = await InsertInstitutionAsync(connection, "A");
             var paediatrics = await InsertSpecialityAsync(connection);
 
@@ -316,7 +308,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -324,7 +316,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
 
     private async Task<string> MigratedSchemaAsync()
     {
-        var schema = await CreateSchemaAsync();
+        var schema = await _schemas.CreateAsync();
         await using var db = NewContext(schema);
         await db.Database.MigrateAsync();
         (await db.Database.GetAppliedMigrationsAsync()).Should().Contain(ThisMigration);
@@ -425,54 +417,6 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
 
     // ---- schemas --------------------------------------------------------------------------------------------------------
 
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-        await command.ExecuteNonQueryAsync();
-
-        return schema;
-    }
-
-    /// <summary>Drops every schema this test created. Called from each test's finally and again from DisposeAsync.</summary>
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
     /// <param name="schema">The test's schema.</param>
     /// <param name="beforeFirstSave">
     /// Another request, run from start to commit just before this context's first save reaches the database: the
@@ -480,7 +424,7 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
     /// </param>
     private ApplicationDbContext NewContext(string schema, Func<Task>? beforeFirstSave = null)
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(SchemaConnectionString(schema));
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema));
         if (beforeFirstSave is not null)
         {
             options.AddInterceptors(new BeforeFirstSave(beforeFirstSave));
@@ -504,43 +448,5 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
 
             return result;
         }
-    }
-
-    /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString)
-        {
-            SearchPath = schema,
-            Pooling = false
-        }.ConnectionString;
-
-    /// <summary>The same resolution order as <c>WbaToolAllowListPostgresTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 }

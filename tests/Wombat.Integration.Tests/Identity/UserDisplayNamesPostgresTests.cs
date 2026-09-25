@@ -1,11 +1,9 @@
 using System.Data.Common;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using Wombat.Application.Common.Users;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
@@ -31,30 +29,22 @@ namespace Wombat.Integration.Tests.Identity;
 /// </remarks>
 public sealed class UserDisplayNamesPostgresTests : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-
     private const string Named = "user-named";
     private const string FirstNameOnly = "user-first-name-only";
     private const string Nameless = "user-nameless";
     private const string NotAskedAbout = "user-not-asked-about";
     private const string Nobody = "user-who-does-not-exist";
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public async Task GetDisplayNames_OnPostgres_NamesExactlyTheUsersAskedAbout_InOneStatement()
     {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
+        var schema = await _schemas.CreateAsync();
         var commands = new CommandLog();
 
         try
@@ -92,15 +82,14 @@ public sealed class UserDisplayNamesPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
     [Fact]
     public async Task ThroughUserDisplayNames_OnPostgres_APageShowsTheName_OrTheIdWhereThereIsNoName()
     {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
+        var schema = await _schemas.CreateAsync();
 
         try
         {
@@ -127,7 +116,7 @@ public sealed class UserDisplayNamesPostgresTests : IAsyncLifetime
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -139,18 +128,10 @@ public sealed class UserDisplayNamesPostgresTests : IAsyncLifetime
 
     private async Task<ServiceProvider> MigratedServicesAsync(string schema, CommandLog commands)
     {
-        await using (var connection = new NpgsqlConnection(_baseConnectionString))
-        {
-            await connection.OpenAsync();
-            await using var command = connection.CreateCommand();
-            command.CommandText = $"CREATE SCHEMA \"{schema}\"";
-            await command.ExecuteNonQueryAsync();
-        }
-
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddDbContext<ApplicationDbContext>(options => options
-            .UseNpgsql(SchemaConnectionString(schema))
+            .UseNpgsql(TestDatabase.SchemaConnectionString(schema))
             .AddInterceptors(commands));
         services.AddIdentity<WombatIdentityUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -164,62 +145,6 @@ public sealed class UserDisplayNamesPostgresTests : IAsyncLifetime
         }
 
         return root;
-    }
-
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { SearchPath = schema, Pooling = false }.ConnectionString;
-
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await using var drop = connection.CreateCommand();
-                drop.CommandText = $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE";
-                await drop.ExecuteNonQueryAsync();
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    /// <summary>The same resolution order as the other PostgreSQL tests.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 
     /// <summary>Every statement that reached the server, to count the lookup's round trips.</summary>

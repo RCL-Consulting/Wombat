@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -28,21 +27,14 @@ namespace Wombat.Integration.Tests.Persistence;
 /// </remarks>
 public sealed class ForeignKeySqlStatePostgresTests(ITestOutputHelper output) : IAsyncLifetime
 {
-    private const string WombatWebUserSecretsId = "fd2ea5f4-1ee7-4c92-87f8-4f9dc5f6d0d7";
-
     /// <summary>The first <c>server_version_num</c> that reports a RESTRICT refusal as <c>restrict_violation</c>.</summary>
     private const int FirstVersionWithRestrictViolation = 180000;
 
-    private readonly List<string> _schemas = [];
-    private string _baseConnectionString = null!;
+    private readonly TestSchemas _schemas = new();
 
-    public Task InitializeAsync()
-    {
-        _baseConnectionString = ResolveBaseConnectionString();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task DisposeAsync() => DropSchemasAsync();
+    public Task DisposeAsync() => _schemas.DropAllAsync();
 
     [Fact]
     public void TheHelpersCodes_AreNpgsqlsNamesForThem()
@@ -56,8 +48,8 @@ public sealed class ForeignKeySqlStatePostgresTests(ITestOutputHelper output) : 
     {
         try
         {
-            var schema = await CreateSchemaAsync();
-            await using var connection = await OpenAsync(schema);
+            var schema = await _schemas.CreateAsync();
+            await using var connection = await TestDatabase.OpenSchemaConnectionAsync(schema);
             await ExecuteAsync(connection, """
                 CREATE TABLE "Parents" ("Id" integer PRIMARY KEY);
                 CREATE TABLE "RestrictChildren" (
@@ -104,7 +96,7 @@ public sealed class ForeignKeySqlStatePostgresTests(ITestOutputHelper output) : 
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -113,7 +105,7 @@ public sealed class ForeignKeySqlStatePostgresTests(ITestOutputHelper output) : 
     {
         try
         {
-            var schema = await CreateSchemaAsync();
+            var schema = await _schemas.CreateAsync();
             await using (var create = NewContext(schema))
             {
                 var script = create.Database.GenerateCreateScript();
@@ -138,7 +130,7 @@ public sealed class ForeignKeySqlStatePostgresTests(ITestOutputHelper output) : 
         }
         finally
         {
-            await DropSchemasAsync();
+            await _schemas.DropAllAsync();
         }
     }
 
@@ -177,7 +169,7 @@ public sealed class ForeignKeySqlStatePostgresTests(ITestOutputHelper output) : 
     }
 
     private RestrictContext NewContext(string schema)
-        => new(new DbContextOptionsBuilder<RestrictContext>().UseNpgsql(SchemaConnectionString(schema)).Options);
+        => new(new DbContextOptionsBuilder<RestrictContext>().UseNpgsql(TestDatabase.SchemaConnectionString(schema)).Options);
 
     // ---- SQL ------------------------------------------------------------------------------------------------------------
 
@@ -206,88 +198,5 @@ public sealed class ForeignKeySqlStatePostgresTests(ITestOutputHelper output) : 
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         return (T)(await command.ExecuteScalarAsync())!;
-    }
-
-    // ---- schemas --------------------------------------------------------------------------------------------------------
-
-    private async Task<NpgsqlConnection> OpenAsync(string schema)
-    {
-        var connection = new NpgsqlConnection(SchemaConnectionString(schema));
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    /// <summary>A new, empty schema, registered for dropping before it exists so that no failure can leak it.</summary>
-    private async Task<string> CreateSchemaAsync()
-    {
-        var schema = $"it_{Guid.NewGuid():N}";
-        _schemas.Add(schema);
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-        await ExecuteAsync(connection, $"CREATE SCHEMA \"{schema}\"");
-
-        return schema;
-    }
-
-    /// <summary>Drops every schema this test created. Called from each test's finally and again from DisposeAsync.</summary>
-    private async Task DropSchemasAsync()
-    {
-        if (_schemas.Count == 0)
-        {
-            return;
-        }
-
-        await using var connection = new NpgsqlConnection(_baseConnectionString);
-        await connection.OpenAsync();
-
-        foreach (var schema in _schemas.ToList())
-        {
-            // Belt and braces: this class only ever drops a schema it named itself.
-            if (schema.StartsWith("it_", StringComparison.Ordinal))
-            {
-                await ExecuteAsync(connection, $"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE");
-            }
-
-            _schemas.Remove(schema);
-        }
-    }
-
-    /// <summary>The schema and nothing else on the search path, so an unqualified name can only ever resolve inside it.</summary>
-    private string SchemaConnectionString(string schema)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString)
-        {
-            SearchPath = schema,
-            Pooling = false
-        }.ConnectionString;
-
-    /// <summary>The same resolution order as <c>WbaToolAllowListPostgresTests</c>.</summary>
-    private static string ResolveBaseConnectionString()
-    {
-        var environmentConnectionString = Environment.GetEnvironmentVariable("WOMBAT_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(environmentConnectionString))
-        {
-            return environmentConnectionString;
-        }
-
-        var secretsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft",
-            "UserSecrets",
-            WombatWebUserSecretsId,
-            "secrets.json");
-
-        if (File.Exists(secretsPath))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(secretsPath));
-            if (document.RootElement.TryGetProperty("ConnectionStrings:DefaultConnection", out var property)
-                && property.ValueKind == JsonValueKind.String
-                && !string.IsNullOrWhiteSpace(property.GetString()))
-            {
-                return property.GetString()!;
-            }
-        }
-
-        return "Host=localhost;Port=5432;Database=wombat;Username=postgres;Password=postgres";
     }
 }
