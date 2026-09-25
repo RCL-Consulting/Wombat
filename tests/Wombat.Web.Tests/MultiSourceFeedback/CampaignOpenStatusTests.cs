@@ -72,6 +72,7 @@ public sealed class CampaignOpenStatusTests : TestContext
     private static AngleSharp.Dom.IElement OpenButton(IRenderedComponent<CampaignEdit> cut)
         => cut.FindAll("button").Single(button => button.TextContent.Trim() == "Open campaign");
 
+    /// <summary>Opens the campaign as the handler does, so the page reads it back open (T217), or refuses.</summary>
     private sealed class FakeSender(Exception? openFailure) : IScopedSender
     {
         public List<int> Opened { get; } = [];
@@ -83,7 +84,8 @@ public sealed class CampaignOpenStatusTests : TestContext
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
                 ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[],
                 GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
-                    setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
+                    setup.CampaignId, "Default MSF", MsfTemplateKind.Msf,
+                    Opened.Count > 0 ? MsfCampaignState.Open : MsfCampaignState.Draft,
                     [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse]),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

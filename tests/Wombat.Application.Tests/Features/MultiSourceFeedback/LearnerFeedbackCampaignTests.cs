@@ -14,6 +14,7 @@ using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
@@ -386,7 +387,7 @@ public sealed class LearnerFeedbackCampaignTests
         await using var db = CreateDb();
         Seed(db);
         var created = await CreateAsync(db, LearnerFeedbackTemplateId, [Paed015], minimumRespondentCategories: 1);
-        var handler = new GetMsfCampaignSetupQueryHandler(db);
+        var handler = new GetMsfCampaignSetupQueryHandler(db, FakeUserDirectory.Empty);
 
         var setup = await handler.Handle(new GetMsfCampaignSetupQuery(created.Id, Coordinator()), CancellationToken.None);
         setup.Should().NotBeNull();

@@ -169,7 +169,7 @@ public sealed class LearnerFeedbackPageTests : TestContext
         var cut = RenderComponent<CampaignEdit>(parameters => parameters.Add(page => page.CampaignId, 9));
         cut.WaitForState(() => cut.FindAll("#msf-respondent-category option").Count == 2);
 
-        cut.FindAll("#msf-respondent-category option").Select(option => option.TextContent.Trim()).Should().Equal("PeerDoctor", "Nurse");
+        cut.FindAll("#msf-respondent-category option").Select(option => option.TextContent.Trim()).Should().Equal("Peer doctor", "Nurse");
         cut.FindAll("#msf-teaching-context").Should().BeEmpty();
 
         cut.Find("#msf-respondent-email").Change("nurse-1@example.test");

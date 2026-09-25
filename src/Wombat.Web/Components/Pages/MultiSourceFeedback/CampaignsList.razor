@@ -42,7 +42,7 @@
       <tr>
         <td>@item.SubjectName</td>
         <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
-        <td>@item.State</td>
+        <td>@MsfCampaignText.State(item.State)</td>
         <td>@item.InvitationCount</td>
         <td>@item.ResponseCount</td>
         <td>@item.ClosesOn.ToString("yyyy-MM-dd")</td>
@@ -65,9 +65,9 @@
 @* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system): withdrawing kills every link a
    respondent holds and removes their addresses for good (MsfCampaign.Withdraw, T202). *@
 <ConfirmDialog @ref="_confirmWithdraw"
-               Title="Withdraw this campaign?"
+               Title="@MsfCampaignText.WithdrawTitle"
                Body="@WithdrawBody"
-               ConfirmLabel="Withdraw campaign"
+               ConfirmLabel="@MsfCampaignText.WithdrawConfirmLabel"
                DangerAction="true"
                OnConfirm="WithdrawAsync"
                OnCancel="CancelWithdraw" />
@@ -125,15 +125,12 @@
   private static bool CanWithdraw(MsfCampaignSummaryDto item)
     => item.State is MsfCampaignState.Draft or MsfCampaignState.Open;
 
+  /// <summary>The campaign as its row's button, the dialog and the result name it, in the campaign page's words (T217).</summary>
   private static string Describe(MsfCampaignSummaryDto item)
-    => $"{item.SubjectName ?? item.SubjectUserId} ({item.TemplateName}, closing {item.ClosesOn:yyyy-MM-dd})";
+    => MsfCampaignText.Describe(item.SubjectName ?? item.SubjectUserId, item.TemplateName, item.ClosesOn);
 
   private string WithdrawBody
-    => _pendingWithdraw is null
-      ? string.Empty
-      : $"Withdraw the campaign for {Describe(_pendingWithdraw)}? It will take no more responses: any link already sent " +
-        "stops working, and every respondent's email address is removed. A withdrawn campaign is never released to the " +
-        "trainee, and withdrawing cannot be undone.";
+    => _pendingWithdraw is null ? string.Empty : MsfCampaignText.WithdrawBody(Describe(_pendingWithdraw));
 
   private async Task AskWithdrawAsync(MsfCampaignSummaryDto item)
   {
@@ -173,7 +170,7 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await Sender.Send(new WithdrawMsfCampaignCommand(campaign.Id, authState.User));
-      _status = $"The campaign for {Describe(campaign)} has been withdrawn. Its respondents' links no longer work, and their email addresses have been removed.";
+      _status = MsfCampaignText.Withdrawn(Describe(campaign));
     }
     catch (Exception exception)
     {

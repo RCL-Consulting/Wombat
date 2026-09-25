@@ -597,6 +597,45 @@ campaign "about" it (D9). An uncovered semester that has ended is never worded a
 has been released"): a campaign is placed by the day it closed, so one closed in June and released in July covers
 semester 1 only from its release.
 
+**The MSF campaign page** (T217, `/msf/campaigns/{id}`). Its campaign card shows the campaign as it is now and offers
+only what its state allows. It is read again after every action on the page, refused or not: a refusal is likeliest
+because the campaign changed elsewhere. The card holds:
+
+- A `details-list`: Trainee (by name), Template (with its kind), State (a badge) and Response window. Then one sentence
+  saying what the state means and what comes next: an open campaign names its respondents' last day to respond and says
+  that Close campaign is on its report.
+- **Invitees, counted by respondent group, never listed.** An `<h4>`, a `.muted` line saying the page never lists who
+  was invited or which of them responded (and promising nothing more: a campaign whose category threshold is one shows
+  a one-person group's answers on its report), and a `.clinic-table` with a row header per group (by its label, "Peer
+  doctor", never the key) and Invited, then Responded once the campaign has opened, with an "All groups" `tfoot` row
+  when there are two groups or more. Not a row per invitee, even without its address: the coordinator added the rows and
+  knows which is whom, so a responded mark on one row names the author of the comment that has just appeared on the
+  report. A group's count adds little to the report, which already shows the total and a card for each group that has
+  responded. Until release it does add the exact count of a group below the category threshold, which the report hides;
+  that names nobody, and with one such group it is already the total less the others. (T217 review)
+- The invitee form, only on a draft.
+- One `.form-actions` row, with nothing a state does not allow: a draft has Withdraw campaign and Open campaign; an
+  open campaign has Withdraw campaign and a "View report" link, where it is closed; a closed one under review has a
+  "Review and release" link; a released one "View report"; a withdrawn one has no row. Withdraw is where the campaign
+  list offers it (T206), behind the same `ConfirmDialog` wording (`MsfCampaignText`).
+- An action's result is an `Alert` in an `.action-result` region that takes the focus once it has answered, whenever
+  the button that sent it is gone: after an open or a withdraw, and after an invitee add refused because the campaign
+  was opened or withdrawn elsewhere (its form is gone). A refused open on a campaign that is still a draft leaves the
+  focus on Open, for the retry; an add on a draft leaves it in the form. While an open or a withdraw is in flight, Open,
+  Withdraw campaign and Add invitee are disabled and a second click sends nothing. A refusal is kept when the campaign
+  cannot then be read again: the card says it could not be loaded, and the refusal says why the action was not taken.
+
+The state's words are `MsfCampaignText.State` ("Under review", never the enum's "UnderReview"), which the campaign list
+and the report print too. Its badge is `MsfCampaignText.StateBadge`:
+
+| Campaign state | Badge |
+|---|---|
+| Draft | `badge-draft` |
+| Open | `badge-submitted` |
+| Closed, Under review | `badge-accepted` |
+| Released | `badge-completed` |
+| Withdrawn | `badge-declined` |
+
 **Committee agenda** (T131 slice 4). The committee review page's Agenda card is full width, directly above the
 "Pending entrustment decisions" card, so a chair reads what is due and stages it in one place. A formative review has
 no Agenda card. The card holds:

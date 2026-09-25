@@ -117,6 +117,87 @@ public sealed class MsfCampaignScopePostgresTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// T217 on a real server: the campaign page's invitee counts are grouped by respondent group and count the responses
+    /// as the report does, and nothing sent to the server reads a respondent's address.
+    /// </summary>
+    [Fact]
+    public async Task TheCampaignPagesInviteeCounts_OnPostgres_AreByGroup_AndNeverReadAnAddress()
+    {
+        try
+        {
+            var schema = await SeededSchemaAsync();
+            int host, campaignId;
+
+            await using (var db = NewContext(schema))
+            {
+                host = await db.Institutions.Where(entity => entity.ShortCode == "DEMO").Select(entity => entity.Id).SingleAsync();
+                var curriculumId = await db.Curricula.OrderBy(entity => entity.Id).Select(entity => entity.Id).FirstAsync();
+                AddProfile(db, "trainee-host", host, curriculumId, new DateOnly(2025, 1, 1));
+
+                var template = new MsfTemplate { Name = "T217 MSF" };
+                db.MsfTemplates.Add(template);
+                await db.SaveChangesAsync();
+
+                campaignId = await AddCampaignAsync(db, template.Id, "trainee-host");
+                var campaign = await db.MsfCampaigns.SingleAsync(entity => entity.Id == campaignId);
+                campaign.State = MsfCampaignState.Open;
+                campaign.OpenedOn = DateTime.UtcNow;
+
+                var invitees = new[]
+                {
+                    (MsfRespondentCategory.Nurse, false),
+                    (MsfRespondentCategory.PeerDoctor, true),
+                    (MsfRespondentCategory.PeerDoctor, false)
+                };
+                var number = 0;
+                foreach (var (category, responded) in invitees)
+                {
+                    var invitation = new MsfInvitation
+                    {
+                        CampaignId = campaignId,
+                        RespondentEmail = $"t217-respondent-{++number}@example.test",
+                        RespondentCategory = category,
+                        TokenHash = Guid.NewGuid().ToString("N"),
+                        IssuedOn = DateTime.UtcNow,
+                        ExpiresOn = campaign.ClosesOn.AddDays(7)
+                    };
+
+                    if (responded)
+                    {
+                        invitation.RecordResponse(DateTime.UtcNow);
+                        invitation.Responses.Add(new MsfResponse { CampaignId = campaignId, SubmittedOn = DateTime.UtcNow });
+                    }
+
+                    db.MsfInvitations.Add(invitation);
+                }
+
+                await db.SaveChangesAsync();
+            }
+
+            var commands = new CommandLog();
+            await using (var db = NewContext(schema, commands))
+            {
+                var setup = await new GetMsfCampaignSetupQueryHandler(db, FakeUserDirectory.Empty)
+                    .Handle(new GetMsfCampaignSetupQuery(campaignId, Coordinator(host)), CancellationToken.None);
+
+                setup.Should().NotBeNull();
+                setup!.State.Should().Be(MsfCampaignState.Open);
+                setup.Invitees.Should().Equal(
+                    new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 2, 1),
+                    new MsfInviteeCountDto(MsfRespondentCategory.Nurse, 1, 0));
+            }
+
+            commands.Texts.Should().Contain(text => text.Contains("\"MsfInvitations\""), "the invitees are read on the server");
+            commands.Texts.Should().NotContain(text => text.Contains("RespondentEmail"),
+                "the page counts invitees and never reads who they are");
+        }
+        finally
+        {
+            await DropSchemasAsync();
+        }
+    }
+
     private static async Task<int[]> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
         => (await new ListMsfCampaignsForCoordinatorQueryHandler(db, FakeUserDirectory.Empty)
                 .Handle(new ListMsfCampaignsForCoordinatorQuery(principal), CancellationToken.None))

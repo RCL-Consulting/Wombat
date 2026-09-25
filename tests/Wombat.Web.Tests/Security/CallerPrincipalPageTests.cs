@@ -282,8 +282,10 @@ public sealed class CallerPrincipalPageTests : TestContext
         open.CampaignId.Should().Be(CampaignId);
         CallerOf(open.Principal).Should().Be(CoordinatorUserId);
 
-        // T164: whom the campaign may invite is asked as the signed-in coordinator too, and scoped by the handler.
-        CallerOf(_sender.Single<GetMsfCampaignSetupQuery>().Principal).Should().Be(CoordinatorUserId);
+        // T164: whom the campaign may invite is asked as the signed-in coordinator too, and scoped by the handler. T217
+        // reads it again after each action, as the same caller.
+        _sender.Received.OfType<GetMsfCampaignSetupQuery>().Should().HaveCount(3)
+            .And.OnlyContain(query => CallerOf(query.Principal) == CoordinatorUserId);
     }
 
     [Fact]

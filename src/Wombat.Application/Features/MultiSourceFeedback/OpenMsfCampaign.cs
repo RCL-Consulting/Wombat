@@ -156,12 +156,13 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
 
     /// <summary>
     /// The refusal when the campaign changed between being read and the save: an invitee was added, or it was opened or
-    /// withdrawn elsewhere. Nothing this attempt did is stored. (T206)
+    /// withdrawn elsewhere. Nothing this attempt did is stored. (T206) Shown on the campaign page, which reads the
+    /// campaign again and shows its state, so it names no other page (T217 review).
     /// </summary>
     public const string CampaignChanged =
         "The campaign changed while it was being opened: an invitee was added, or it was opened or withdrawn elsewhere. " +
-        "This attempt did not open it, and any link it sent will not work. If the campaign is still a draft on the " +
-        "campaigns list, open it again: every respondent, including anyone just added, is sent a new link.";
+        "This attempt did not open it, and any link it sent will not work. If the campaign is still a draft, open it " +
+        "again: every respondent, including anyone just added, is sent a new link.";
 
     /// <summary>The refusal when an invitation could not be sent. Nothing about the campaign has changed. (T184)</summary>
     public const string InvitationsNotSent =

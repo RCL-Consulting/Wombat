@@ -51,10 +51,11 @@ public sealed class CampaignOpenInFlightTests : TestContext
 
         sender.Release();
 
+        // Once it has opened, the campaign is read again and offers neither (T217): until then the page went on offering
+        // Open, and the draft's invitee form, on a campaign that was open.
         cut.WaitForAssertion(() => cut.FindAll(".alert-success").Should().ContainSingle());
-        OpenButton(cut).HasAttribute("disabled").Should().BeFalse();
-        OpenButton(cut).TextContent.Trim().Should().Be("Open campaign");
-        AddButton(cut).HasAttribute("disabled").Should().BeFalse();
+        cut.FindAll("#msf-open-campaign").Should().BeEmpty();
+        cut.FindAll("button").Should().NotContain(button => button.TextContent.Trim() == "Add invitee");
     }
 
     [Fact]
@@ -122,16 +123,25 @@ public sealed class CampaignOpenInFlightTests : TestContext
     private static AngleSharp.Dom.IElement AddButton(IRenderedComponent<CampaignEdit> cut)
         => cut.FindAll("button").Single(button => button.TextContent.Trim() == "Add invitee");
 
-    /// <summary>Holds every open until the test releases or refuses it, and counts the opens it is sent.</summary>
+    /// <summary>
+    /// Holds every open until the test releases or refuses it, and counts the opens it is sent. A released open leaves the
+    /// campaign open, as the handler does, and the page reads it back so (T217).
+    /// </summary>
     private sealed class HeldOpenSender : IScopedSender
     {
         private TaskCompletionSource? _inFlight;
+        private MsfCampaignState _state = MsfCampaignState.Draft;
 
         public int Opens { get; private set; }
 
         public int Invitations { get; private set; }
 
-        public void Release() => (_inFlight ?? throw new InvalidOperationException("No open was sent.")).SetResult();
+        public void Release()
+        {
+            var inFlight = _inFlight ?? throw new InvalidOperationException("No open was sent.");
+            _state = MsfCampaignState.Open;
+            inFlight.SetResult();
+        }
 
         public void Refuse(Exception refusal)
             => (_inFlight ?? throw new InvalidOperationException("No open was sent.")).SetException(refusal);
@@ -149,7 +159,7 @@ public sealed class CampaignOpenInFlightTests : TestContext
                 ListMsfTemplatesQuery => (IReadOnlyList<MsfTemplateDto>)[new MsfTemplateDto(1, "Default MSF", null, false, true, [])],
                 ListTraineesForSpecialityQuery => (IReadOnlyList<TraineeProfileDto>)[],
                 GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
-                    setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
+                    setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, _state,
                     [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse]),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

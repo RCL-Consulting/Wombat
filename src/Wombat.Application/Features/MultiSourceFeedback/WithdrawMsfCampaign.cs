@@ -57,11 +57,12 @@ public sealed class WithdrawMsfCampaignCommandHandler : IRequestHandler<Withdraw
 
     /// <summary>
     /// The refusal when the campaign changed between being read and the save: an invitee was added, or it was opened,
-    /// closed or withdrawn elsewhere. Nothing is stored. (T206 review)
+    /// closed or withdrawn elsewhere. Nothing is stored. (T206 review) Shown on the campaign list and on the campaign
+    /// page, both of which read the campaign again and show its state, so it names neither (T217 review).
     /// </summary>
     public const string CampaignChanged =
         "The campaign changed while it was being withdrawn: an invitee was added, or it was opened, closed or withdrawn " +
-        "elsewhere. It has not been withdrawn. If the campaigns list still shows it as a draft or open, withdraw it again.";
+        "elsewhere. It has not been withdrawn. If it is still a draft or open, withdraw it again.";
 
     /// <summary>The refusal of a campaign that is no longer a draft or open, saying what it is now. (T206 review)</summary>
     public static string NotWithdrawable(MsfCampaignState state)
