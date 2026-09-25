@@ -354,9 +354,9 @@ public sealed class MsfLinkDeliveryTests
     private static List<EmailMessage> Queued(EmailQueue queue)
     {
         var messages = new List<EmailMessage>();
-        while (queue.Reader.TryRead(out var message))
+        while (queue.Reader.TryRead(out var mail))
         {
-            messages.Add(message);
+            messages.Add(mail.Message);
         }
 
         return messages;

@@ -161,7 +161,7 @@ public sealed class DevUserSeeder
         };
 
         await CreateUserAsync(user, CollegeAdminPassword, WombatRoles.CollegeAdmin);
-        _logger.LogInformation("Seeded dev {Role} user {Email}.", WombatRoles.CollegeAdmin, CollegeAdminEmail);
+        _logger.LogInformation("Seeded dev {Role} user {UserId}.", WombatRoles.CollegeAdmin, user.Id);
     }
 
     private async Task EnsureTraineeAsync(
@@ -184,7 +184,7 @@ public sealed class DevUserSeeder
             };
 
             await CreateUserAsync(existingUser, TraineePassword, WombatRoles.Trainee);
-            _logger.LogInformation("Seeded dev trainee user {Email}.", TraineeEmail);
+            _logger.LogInformation("Seeded dev trainee user {UserId}.", existingUser.Id);
         }
 
         foreach (var (specialityId, subSpecialityId) in scopes)
@@ -212,7 +212,7 @@ public sealed class DevUserSeeder
                 // CreditApplier scopes by CurriculumId + InstitutionId, so credit still resolves correctly.
             });
             await _dbContext.SaveChangesAsync(cancellationToken);
-            _logger.LogInformation("Seeded TraineeProfile for {Email}.", TraineeEmail);
+            _logger.LogInformation("Seeded TraineeProfile for dev trainee user {UserId}.", existingUser.Id);
         }
     }
 
@@ -239,7 +239,7 @@ public sealed class DevUserSeeder
             };
 
             await CreateUserAsync(existingUser, password, role);
-            _logger.LogInformation("Seeded dev {Role} user {Email}.", role, email);
+            _logger.LogInformation("Seeded dev {Role} user {UserId}.", role, existingUser.Id);
         }
 
         foreach (var (specialityId, subSpecialityId) in scopes)

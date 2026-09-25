@@ -256,19 +256,34 @@ that mail was being sent).
   Resend. Only scenario data is affected (W-007). Resending mails each respondent a new link and keeps the old one
   working as the previous link, so a respondent who did receive it loses nothing.
 - **A deploy restarts the app.** Mail still queued at the restart is reported dropped, and its campaign offers Resend. The
-  log line is `Email (subject: …, tags: …) abandoned unsent: the app is shutting down.` The one mail being sent at that
-  moment is not reported (T251 review): it may have reached the mail server, so its link reads as still being sent for
-  an hour, then as not delivered, and a Resend keeps it working as the previous link. Its log line is `Email to … cut
-  off by the app's shutdown; whether it was sent is not known.`
+  log line is `Email 3f9a1c2b7d4e (tags: msf-invite, campaign:5) abandoned unsent: the app is shutting down.` The one
+  mail being sent at that moment is not reported (T251 review): it may have reached the mail server, so its link reads
+  as still being sent for an hour, then as not delivered, and a Resend keeps it working as the previous link. Its log
+  line is `Email … (tags: …) cut off by the app's shutdown; whether it was sent is not known.`
 - **A host with no `Email:SmtpHost`** (`appsettings.json`'s default) logs each mail instead of sending it
   (`LoggingEmailSender`) and runs no mail worker, so nothing is ever reported. Every MSF link there reads as still being
   sent for an hour, then as not delivered, and a Resend only logs another. That is true, since nobody was mailed. Dev
   sets `localhost` (the SMTP sink on port 25) and production sets its relay, so neither is affected; a host that
   should send mail and shows this has lost its `Email__SmtpHost`.
 - **An address that the mail server always refuses** (a mistyped domain) stays not delivered however often it is resent.
-  The page never says whose link it is, so the remedy is to withdraw the campaign and invite again. The worker's log names
-  the address: `Email to … failed after 3 attempts. Message dropped.`
+  The page never says whose link it is, so the remedy is to withdraw the campaign and invite again. Since T282 the log
+  does not name the address either: `Email … (tags: msf-invite, campaign:5) failed after 3 attempts. Message dropped.`,
+  with the server's reply beneath it as the exception and the address in it replaced by `[recipient]` (`5.1.2
+  <[recipient]>: Recipient address rejected: Domain not found`). The campaign tag and the reason are what to go on.
 - **Rolling back** (`Down`) drops the three columns and the check; nothing else reads them.
+
+### Reading the mail log (T282)
+
+Every line about a mail names it by a reference drawn for that mail (twelve hex digits) and its tags, never by its
+address or its subject. The same reference is on the line that queued it (`Debug`), on each failed attempt (`Warning`),
+and on its outcome: `Email … (tags: …) sent on attempt N.` (`Information`), `… failed after 3 attempts. Message
+dropped.` (`Error`), `… cut off by the app's shutdown`, `… abandoned after attempt N` or `… abandoned unsent`
+(`Warning`), or `The outcome of email … could not be recorded.` (`Error`). So `journalctl -u wombat | grep 3f9a1c2b7d4e`
+follows one mail, and `grep campaign:5` one campaign's mail. Two mails to one person carry two references, so the log
+cannot say that two mails went to the same person; that is the point, since an MSF reminder goes only to those who have
+not answered. An exception about a mail is logged with the mail's addresses replaced by `[recipient]`: each as given, with
+its domain in either form (an international domain goes to the server, and comes back quoted, as `xn--…`), and its local
+part where a server quotes that alone (`<[recipient]>... User unknown`).
 
 ## Environment file
 

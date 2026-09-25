@@ -732,8 +732,9 @@ public sealed class ExternalLoginHandler
 
         if (!addLoginResult.Succeeded)
         {
-            _logger.LogError("Failed to add external login for new user {UserId}: {Errors}",
-                user.Id, string.Join("; ", addLoginResult.Errors.Select(e => e.Description)));
+            // The codes, not the descriptions: Identity's describe the value they refused ("Email 'x' is already taken").
+            _logger.LogError("Failed to add external login for new user {UserId}: {ErrorCodes}",
+                user.Id, string.Join("; ", addLoginResult.Errors.Select(e => e.Code)));
         }
 
         // Apply group-to-role mappings
@@ -754,8 +755,8 @@ public sealed class ExternalLoginHandler
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
-                "SSO-provisioned user {UserId} ({Email}) has no matching group mappings — assigned PendingTrainee.",
-                user.Id, email);
+                "SSO-provisioned user {UserId} has no matching group mappings — assigned PendingTrainee.",
+                user.Id);
         }
 
         await _signInManager.SignInAsync(user, isPersistent: false);

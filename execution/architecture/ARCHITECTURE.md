@@ -88,13 +88,13 @@ Port the good parts of the current Wombat email setup:
 
 - `IEmailSender` interface in Application.
 - `MailKitEmailSender` implementation in Infrastructure.
-- An in-process channel queue (`System.Threading.Channels.Channel<EmailMessage>`) and a hosted `EmailWorker : BackgroundService` that drains it. Keeps web requests snappy.
+- An in-process channel queue (`System.Threading.Channels.Channel<QueuedEmail>`) and a hosted `EmailWorker : BackgroundService` that drains it. Keeps web requests snappy.
 - **A send is a hand-off, not a delivery** (T251). `QueuedEmailSender` never fails for want of a mail server, so a request
   cannot say whether its mail arrived. A mail that needs to know carries an `EmailMessage.DeliveryKey`, and the worker
   reports its outcome (sent on attempt N, or dropped after three attempts, or still queued as the host stops) to every
   `IEmailDeliveryObserver` on a scope of its own. A mail cut off mid-send by the host stopping is not reported: it may
-  have arrived (T251 review). The key is never a tag and never logged: every log line about a mail
-  names its recipient. An MSF link's key names its invitation and link (`MsfInvitation.DeliveryKey`), and
+  have arrived (T251 review). The key is never a tag and never logged, since it names the respondent's invitation.
+  An MSF link's key names its invitation and link (`MsfInvitation.DeliveryKey`), and
   `MsfLinkDeliveryRecorder` writes the outcome onto the invitation in one conditioned `UPDATE`, which may land before the
   request that sent the mail has stored the link, so it names the link it is about and touches no column the request
   writes. Account invitations, nudges and digests ask for nothing yet.
@@ -111,6 +111,41 @@ The current Wombat does not appear to generate PDFs heavily. Decide per task whe
 - Sinks: Console (always), File (rolling daily, in `/var/log/wombat/` on the server), and optionally Seq if a Seq instance is reachable.
 - Correlation IDs on every request.
 - No PII in logs. User IDs yes, email addresses no.
+- **A mail is logged by its tags and a reference, never by an address (T282).** `QueuedEmailSender` queues each mail as a
+  `QueuedEmail` under a reference drawn at random (`EmailLog.NewReference`, 12 hex digits), and the enqueue line and
+  every line the worker writes about it (sent on attempt N, retrying, dropped, cut off or abandoned at a stop, outcome
+  not recorded) carry the same reference and the mail's tags. The reference follows one mail, not one person: one
+  derived from the address, even a keyed hash, would join an MSF respondent's invitation and reminders to the mail the
+  same person gets as a user, and name them as surely as the address. The subject is not logged either (an MSF mail's
+  names the trainee). An exception about a mail is logged through `EmailLog.Redact`, which renders it as thrown, inner
+  exceptions and stack included, less every form of the mail's addresses: a mail server's refusal usually quotes the
+  address, and MailKit makes that reply the message. "Every form" is each address as given, with its domain in Unicode
+  and in the ASCII form MailKit sends to a server without UTF-8, and its local part where that stands alone (sendmail's
+  `<nurse-a>... User unknown`), if it has at least `EmailLog.ShortestRedactedLocalPart` (3) characters. A test sends
+  through the real `MailKitEmailSender` to a loopback server that refuses the recipient, so the redaction is proved on
+  MailKit's own `SmtpCommandException`. `MailKitEmailSender` logs nothing. `LoggingEmailSender`, the
+  no-SMTP fallback, prints the subject and text but not the address. The SSO path logs a failed Identity call by its
+  error codes, never their descriptions, which quote the value refused ("Email 'x' is already taken").
+- **Enforced by `Wombat.Architecture.Tests/NoAddressInLogsTests` (T282).** It reads the compiled IL of the five `src`
+  assemblies, so Razor components, async state machines, lambdas and `[LoggerMessage]` code are covered. Its log calls
+  are `LoggerExtensions.Log*`/`BeginScope` and `LoggerMessage.Define*`, whose templates it reads; a call to a
+  `[LoggerMessage]` method, or to the delegate a `Define*` returned, whose template it reads where it is declared; and a
+  direct `ILogger.Log`. It refuses:
+  - a template that names an address placeholder (`{To}`, `{Email}`, `{RespondentEmail}`, `{UserName}`, which Wombat
+    sets to the address) or quotes an address, in each arm of a template chosen by a conditional;
+  - anything a call's arguments evaluate, from the logger on, so the exception and event id as well as the values, that
+    reads an address-named property, field, parameter or local, calls a method whose name says it returns one
+    (`GetEmailAsync`, `GetUserName`), reads `IIdentity.Name` (the user name, which is the address) or looks up an
+    address claim (`ClaimTypes.Name`, `Email`, `Upn`, `email`, `preferred_username`, `upn`, `unique_name`), or passes
+    an address literal or a whole object with an address property;
+  - any call it cannot read: a template that is not a constant (an interpolated string, a `static readonly` field), values
+    in an array built before the call, or a direct `ILogger.Log`.
+
+  A value computed out of sight, in another method or before an `await` inside the call, is not seen; the template check
+  and review cover that. `LogAddressSpecimens` holds one bad call for each check, and seven clean ones it must pass:
+  counts and a date (`{NoEmailCount}`, a `DateOnly to`, a count per reason named `skippedRecipients`), a mail's tags and
+  subject, an exception, a claim type logged as a value, a template chosen between two clean ones, and a
+  `[LoggerMessage]` method and a `Define`'s delegate given a reference.
 
 ## Configuration
 

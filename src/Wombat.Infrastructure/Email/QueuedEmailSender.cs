@@ -9,6 +9,10 @@ namespace Wombat.Infrastructure.Email;
 /// Writes the message to the in-process channel and returns immediately;
 /// actual SMTP delivery is handled by <see cref="EmailWorker"/>.
 /// </summary>
+/// <remarks>
+/// Each mail is queued under a new reference, which this line and every line the worker writes about it print in place of
+/// its address (<see cref="EmailLog" />, T282).
+/// </remarks>
 public sealed class QueuedEmailSender : IEmailSender
 {
     private readonly EmailQueue _queue;
@@ -22,13 +26,14 @@ public sealed class QueuedEmailSender : IEmailSender
 
     public ValueTask SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug(
-            "Enqueuing email to {To} — subject: {Subject} — tags: {Tags}",
-            message.To,
-            message.Subject,
-            message.Tags is { Count: > 0 } ? string.Join(", ", message.Tags) : "(none)");
+        var mail = new QueuedEmail(message);
 
-        return _queue.Writer.WriteAsync(message, cancellationToken);
+        _logger.LogDebug(
+            "Email {Reference} (tags: {Tags}) queued.",
+            mail.Reference,
+            EmailLog.DescribeTags(message));
+
+        return _queue.Writer.WriteAsync(mail, cancellationToken);
     }
 
     Task IEmailSender.SendAsync(EmailMessage message, CancellationToken cancellationToken)

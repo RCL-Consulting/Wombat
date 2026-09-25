@@ -1,21 +1,23 @@
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Wombat.Application.Common.Email;
 
 namespace Wombat.Infrastructure.Email;
 
+/// <summary>Sends one mail over SMTP, and throws if it could not.</summary>
+/// <remarks>
+/// Logs nothing: the <see cref="EmailWorker" /> writes every line about a mail, under the mail's reference and never its
+/// address, including the one that says it was sent (T282).
+/// </remarks>
 public sealed class MailKitEmailSender : ISmtpSender
 {
     private readonly EmailSettings _settings;
-    private readonly ILogger<MailKitEmailSender> _logger;
 
-    public MailKitEmailSender(IOptions<EmailSettings> settings, ILogger<MailKitEmailSender> logger)
+    public MailKitEmailSender(IOptions<EmailSettings> settings)
     {
         _settings = settings.Value;
-        _logger = logger;
     }
 
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
@@ -38,12 +40,6 @@ public sealed class MailKitEmailSender : ISmtpSender
 
         await client.SendAsync(mimeMessage, cancellationToken);
         await client.DisconnectAsync(quit: true, cancellationToken);
-
-        _logger.LogInformation(
-            "Email sent to {To} — subject: {Subject} — tags: {Tags}",
-            message.To,
-            message.Subject,
-            message.Tags is { Count: > 0 } ? string.Join(", ", message.Tags) : "(none)");
     }
 
     private MimeMessage BuildMimeMessage(EmailMessage message)

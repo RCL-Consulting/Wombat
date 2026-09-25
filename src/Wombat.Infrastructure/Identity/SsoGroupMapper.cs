@@ -87,8 +87,10 @@ public sealed class SsoGroupMapper
                 var result = await _userManager.AddToRoleAsync(user, role);
                 if (!result.Succeeded)
                 {
-                    _logger.LogWarning("Failed to add role '{Role}' to user '{UserId}': {Errors}",
-                        role, user.Id, string.Join("; ", result.Errors.Select(e => e.Description)));
+                    // The codes, not the descriptions: Identity's describe the value they refused, and adding a role
+                    // re-validates the user, whose user name is their address.
+                    _logger.LogWarning("Failed to add role '{Role}' to user '{UserId}': {ErrorCodes}",
+                        role, user.Id, string.Join("; ", result.Errors.Select(e => e.Code)));
                     continue;
                 }
             }

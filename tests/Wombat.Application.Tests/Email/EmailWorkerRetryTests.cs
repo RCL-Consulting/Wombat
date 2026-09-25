@@ -30,7 +30,7 @@ public sealed class EmailWorkerRetryTests
             });
 
         var worker = BuildWorker(queue, smtpSender.Object);
-        await queue.Writer.WriteAsync(message);
+        await queue.Writer.WriteAsync(new QueuedEmail(message));
         queue.Writer.Complete();
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -56,7 +56,7 @@ public sealed class EmailWorkerRetryTests
             });
 
         var worker = BuildWorker(queue, smtpSender.Object);
-        await queue.Writer.WriteAsync(message);
+        await queue.Writer.WriteAsync(new QueuedEmail(message));
         queue.Writer.Complete();
 
         // Should complete without throwing — message dropped after MaxRetries
@@ -87,8 +87,8 @@ public sealed class EmailWorkerRetryTests
 
         var worker = BuildWorker(queue, smtpSender.Object);
 
-        await queue.Writer.WriteAsync(new EmailMessage("first@test", "S", "<p/>", "T"));
-        await queue.Writer.WriteAsync(new EmailMessage("second@test", "S", "<p/>", "T"));
+        await queue.Writer.WriteAsync(new QueuedEmail(new EmailMessage("first@test", "S", "<p/>", "T")));
+        await queue.Writer.WriteAsync(new QueuedEmail(new EmailMessage("second@test", "S", "<p/>", "T")));
         queue.Writer.Complete();
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));

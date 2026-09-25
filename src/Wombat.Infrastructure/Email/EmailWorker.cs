@@ -24,6 +24,11 @@ namespace Wombat.Infrastructure.Email;
 /// link its respondent may be answering through. Unreported, it counts as not delivered once the deadline passes and is
 /// kept as the previous link when resent. A host that crashes reports nothing, and the deadline covers that too.
 /// </para>
+/// <para>
+/// Every line it writes about a mail names the mail by its reference and its tags, never by an address, and an exception
+/// about a mail is logged with the mail's addresses taken out of its text (<see cref="EmailLog" />, T282). The line that
+/// says a mail was sent is written here too, on the attempt that sent it.
+/// </para>
 /// </remarks>
 public sealed class EmailWorker : BackgroundService
 {
@@ -66,19 +71,19 @@ public sealed class EmailWorker : BackgroundService
     {
         try
         {
-            await foreach (var message in _queue.Reader.ReadAllAsync(stoppingToken))
+            await foreach (var mail in _queue.Reader.ReadAllAsync(stoppingToken))
             {
                 // The reader goes on handing out what is already queued after a stop, without asking the token.
                 if (stoppingToken.IsCancellationRequested)
                 {
-                    await AbandonAsync(message);
+                    await AbandonAsync(mail);
                     break;
                 }
 
-                var outcome = await SendWithRetryAsync(message, stoppingToken);
+                var outcome = await SendWithRetryAsync(mail, stoppingToken);
                 if (outcome is not null)
                 {
-                    await ReportAsync(message, outcome);
+                    await ReportAsync(mail, outcome);
                 }
             }
         }
@@ -96,29 +101,29 @@ public sealed class EmailWorker : BackgroundService
     }
 
     /// <summary>A mail still queued as the host stops: never attempted, and reported dropped. (T251)</summary>
-    private async Task AbandonAsync(EmailMessage message)
+    private async Task AbandonAsync(QueuedEmail mail)
     {
         _logger.LogWarning(
-            "Email (subject: {Subject}, tags: {Tags}) abandoned unsent: the app is shutting down.",
-            message.Subject, DescribeTags(message));
-        await ReportAsync(message, EmailDeliveryOutcome.Dropped(0, UtcNow));
+            "Email {Reference} (tags: {Tags}) abandoned unsent: the app is shutting down.",
+            mail.Reference, EmailLog.DescribeTags(mail.Message));
+        await ReportAsync(mail, EmailDeliveryOutcome.Dropped(0, UtcNow));
     }
 
     /// <summary>
     /// Sends one mail, retrying, and answers what became of it: sent, or dropped; or null when the host stopped with the
     /// mail in flight, whose fate is not known. (T251)
     /// </summary>
-    private async Task<EmailDeliveryOutcome?> SendWithRetryAsync(EmailMessage message, CancellationToken stoppingToken)
+    private async Task<EmailDeliveryOutcome?> SendWithRetryAsync(QueuedEmail mail, CancellationToken stoppingToken)
     {
+        var message = mail.Message;
         for (var attempt = 1; ; attempt++)
         {
-            TimeSpan delay;
+            Exception? failed = null;
             try
             {
                 using var scope = _scopeFactory.CreateScope();
                 var sender = scope.ServiceProvider.GetRequiredService<ISmtpSender>();
                 await sender.SendAsync(message, stoppingToken);
-                return EmailDeliveryOutcome.Delivered(attempt, UtcNow);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -126,25 +131,39 @@ public sealed class EmailWorker : BackgroundService
                 // fate is not known and it is not reported (T251 review): a link reported dropped is let go when it is
                 // replaced, and this one may be in its respondent's hands.
                 _logger.LogWarning(
-                    "Email to {To} (subject: {Subject}) cut off by the app's shutdown; whether it was sent is not known.",
-                    message.To, message.Subject);
+                    "Email {Reference} (tags: {Tags}) cut off by the app's shutdown; whether it was sent is not known.",
+                    mail.Reference, EmailLog.DescribeTags(message));
                 return null;
             }
             catch (Exception ex)
             {
-                if (attempt == MaxRetries)
-                {
-                    _logger.LogError(ex,
-                        "Email to {To} (subject: {Subject}, tags: {Tags}) failed after {MaxRetries} attempts. Message dropped.",
-                        message.To, message.Subject, DescribeTags(message), MaxRetries);
-                    return EmailDeliveryOutcome.Dropped(attempt, UtcNow);
-                }
-
-                delay = _retryDelay(attempt);
-                _logger.LogWarning(ex,
-                    "Email to {To} failed (attempt {Attempt}/{MaxRetries}). Retrying in {Delay}s.",
-                    message.To, attempt, MaxRetries, delay.TotalSeconds);
+                failed = ex;
             }
+
+            // Each outcome is logged outside the send's try: a logger that threw in there would count a sent mail as a
+            // failed attempt, and send it again.
+            if (failed is null)
+            {
+                _logger.LogInformation(
+                    "Email {Reference} (tags: {Tags}) sent on attempt {Attempt}.",
+                    mail.Reference, EmailLog.DescribeTags(message), attempt);
+                return EmailDeliveryOutcome.Delivered(attempt, UtcNow);
+            }
+
+            // The server's reply, which MailKit makes the message, usually quotes the address it refused.
+            var failure = EmailLog.Redact(failed, message);
+            if (attempt == MaxRetries)
+            {
+                _logger.LogError(failure,
+                    "Email {Reference} (tags: {Tags}) failed after {MaxRetries} attempts. Message dropped.",
+                    mail.Reference, EmailLog.DescribeTags(message), MaxRetries);
+                return EmailDeliveryOutcome.Dropped(attempt, UtcNow);
+            }
+
+            var delay = _retryDelay(attempt);
+            _logger.LogWarning(failure,
+                "Email {Reference} (tags: {Tags}) failed (attempt {Attempt}/{MaxRetries}). Retrying in {Delay}s.",
+                mail.Reference, EmailLog.DescribeTags(message), attempt, MaxRetries, delay.TotalSeconds);
 
             try
             {
@@ -155,8 +174,8 @@ public sealed class EmailWorker : BackgroundService
                 // Until T251 a stop during the wait between attempts ended the worker with this mail neither sent nor
                 // logged. Its last attempt failed, so it is reported dropped, as after the last retry.
                 _logger.LogWarning(
-                    "Email to {To} (subject: {Subject}) abandoned — app shutdown.",
-                    message.To, message.Subject);
+                    "Email {Reference} (tags: {Tags}) abandoned after attempt {Attempt}: the app is shutting down.",
+                    mail.Reference, EmailLog.DescribeTags(message), attempt);
                 return EmailDeliveryOutcome.Dropped(attempt, UtcNow);
             }
         }
@@ -170,8 +189,9 @@ public sealed class EmailWorker : BackgroundService
     /// Not cancellable: the outcome is already known, and it is reported as the host stops too. The log names neither the
     /// recipient nor the key, which together would say whose invitation it was (<c>MsfInvitation.DeliveryKey</c>).
     /// </remarks>
-    private async Task ReportAsync(EmailMessage message, EmailDeliveryOutcome outcome)
+    private async Task ReportAsync(QueuedEmail mail, EmailDeliveryOutcome outcome)
     {
+        var message = mail.Message;
         if (message.DeliveryKey is null)
         {
             return;
@@ -187,14 +207,11 @@ public sealed class EmailWorker : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
-                "The outcome of an email (subject: {Subject}, tags: {Tags}, sent: {Sent}) could not be recorded.",
-                message.Subject, DescribeTags(message), outcome.Sent);
+            _logger.LogError(EmailLog.Redact(ex, message),
+                "The outcome of email {Reference} (tags: {Tags}, sent: {Sent}) could not be recorded.",
+                mail.Reference, EmailLog.DescribeTags(message), outcome.Sent);
         }
     }
 
     private DateTime UtcNow => _timeProvider.GetUtcNow().UtcDateTime;
-
-    private static string DescribeTags(EmailMessage message)
-        => message.Tags is { Count: > 0 } ? string.Join(", ", message.Tags) : "(none)";
 }

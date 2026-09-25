@@ -59,6 +59,6 @@ public sealed class AdminSeeder
             throw new InvalidOperationException($"Failed to assign seed administrator role: {errors}");
         }
 
-        _logger.LogInformation("Seeded administrator user {Email}.", adminUser.Email);
+        _logger.LogInformation("Seeded administrator user {UserId}.", adminUser.Id);
     }
 }

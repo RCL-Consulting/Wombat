@@ -26,7 +26,7 @@ public sealed class EmailWorkerDeliveryReportTests
         var observer = new RecordingObserver();
         var (worker, queue) = Build(smtp, observer);
 
-        await queue.Writer.WriteAsync(Keyed("nurse-1@example.test", "msf-link:1:first"));
+        await queue.Writer.WriteAsync(new QueuedEmail(Keyed("nurse-1@example.test", "msf-link:1:first")));
         queue.Writer.Complete();
         await worker.ExecutePublicAsync(FiveSeconds());
 
@@ -41,7 +41,7 @@ public sealed class EmailWorkerDeliveryReportTests
         var observer = new RecordingObserver();
         var (worker, queue) = Build(smtp, observer);
 
-        await queue.Writer.WriteAsync(Keyed("nurse-1@example.test", "msf-link:1:first"));
+        await queue.Writer.WriteAsync(new QueuedEmail(Keyed("nurse-1@example.test", "msf-link:1:first")));
         queue.Writer.Complete();
         await worker.ExecutePublicAsync(FiveSeconds());
 
@@ -56,8 +56,8 @@ public sealed class EmailWorkerDeliveryReportTests
         var observer = new RecordingObserver();
         var (worker, queue) = Build(new ScriptedSmtp(failures: int.MaxValue), observer);
 
-        await queue.Writer.WriteAsync(new EmailMessage("a@b.test", "Digest", "<p/>", "T", Tags: ["digest"]));
-        await queue.Writer.WriteAsync(new EmailMessage("c@d.test", "Digest", "<p/>", "T", Tags: ["digest"]));
+        await queue.Writer.WriteAsync(new QueuedEmail(new EmailMessage("a@b.test", "Digest", "<p/>", "T", Tags: ["digest"])));
+        await queue.Writer.WriteAsync(new QueuedEmail(new EmailMessage("c@d.test", "Digest", "<p/>", "T", Tags: ["digest"])));
         queue.Writer.Complete();
         await worker.ExecutePublicAsync(FiveSeconds());
 
@@ -78,9 +78,9 @@ public sealed class EmailWorkerDeliveryReportTests
         var (worker, queue) = Build(smtp, observer);
         using var stopping = new CancellationTokenSource();
 
-        await queue.Writer.WriteAsync(Keyed("nurse-1@example.test", "msf-link:1:first"));
-        await queue.Writer.WriteAsync(Keyed("nurse-2@example.test", "msf-link:2:second"));
-        await queue.Writer.WriteAsync(Keyed("nurse-3@example.test", "msf-link:3:third"));
+        await queue.Writer.WriteAsync(new QueuedEmail(Keyed("nurse-1@example.test", "msf-link:1:first")));
+        await queue.Writer.WriteAsync(new QueuedEmail(Keyed("nurse-2@example.test", "msf-link:2:second")));
+        await queue.Writer.WriteAsync(new QueuedEmail(Keyed("nurse-3@example.test", "msf-link:3:third")));
 
         var running = worker.ExecutePublicAsync(stopping.Token);
         await smtp.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -110,7 +110,7 @@ public sealed class EmailWorkerDeliveryReportTests
             return TimeSpan.FromMinutes(5);
         });
 
-        await queue.Writer.WriteAsync(Keyed("nurse-1@example.test", "msf-link:1:first"));
+        await queue.Writer.WriteAsync(new QueuedEmail(Keyed("nurse-1@example.test", "msf-link:1:first")));
         await worker.ExecutePublicAsync(stopping.Token).WaitAsync(TimeSpan.FromSeconds(5));
 
         observer.Reports.Should().ContainSingle()
@@ -124,8 +124,8 @@ public sealed class EmailWorkerDeliveryReportTests
         var observer = new RecordingObserver { ThrowFor = "msf-link:1:first" };
         var (worker, queue) = Build(smtp, observer);
 
-        await queue.Writer.WriteAsync(Keyed("nurse-1@example.test", "msf-link:1:first"));
-        await queue.Writer.WriteAsync(Keyed("nurse-2@example.test", "msf-link:2:second"));
+        await queue.Writer.WriteAsync(new QueuedEmail(Keyed("nurse-1@example.test", "msf-link:1:first")));
+        await queue.Writer.WriteAsync(new QueuedEmail(Keyed("nurse-2@example.test", "msf-link:2:second")));
         queue.Writer.Complete();
         await worker.ExecutePublicAsync(FiveSeconds());
 
