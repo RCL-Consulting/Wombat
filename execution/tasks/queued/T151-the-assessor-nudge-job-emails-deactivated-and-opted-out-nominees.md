@@ -37,3 +37,5 @@ no longer eligible should be nudged, or the trainee told instead.
 ## Related
 
 T102, T026 (data-subject rights, which added the opt-out flags).
+
+**Decision, 2026-09-25:** D50 adopted as a default (EPA-PROGRAMME § 3D). Build to it.

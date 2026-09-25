@@ -43,3 +43,5 @@ reactivation, for an admin who can reactivate. Fix the two EpaEdit gaps.
 ## Related
 
 T158, T122 (D20, D21).
+
+**Decision, 2026-09-25:** D48 adopted as a default (EPA-PROGRAMME § 3D). Build to it.

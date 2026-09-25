@@ -32,3 +32,5 @@ the programme ends in before its last month, mirroring D42's provisional start r
 ## Related
 
 T169, T130, D14, D42, § 3F question 4.
+
+**Decision, 2026-09-25:** D49 adopted as a default (EPA-PROGRAMME § 3D). Build to it.
