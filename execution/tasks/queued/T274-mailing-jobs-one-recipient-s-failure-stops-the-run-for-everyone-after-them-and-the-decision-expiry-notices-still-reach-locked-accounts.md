@@ -40,3 +40,9 @@ created: 2026-09-25
 ## Related
 
 T117, T240, T151.
+
+Notes, 2026-09-25 (the jobs chain check):
+- The draft reminder works out a draft's age in SQL as `CAST(date_part('epoch', now - UpdatedOn) / 86400.0 AS integer)`,
+  which rounds. The assessor nudge truncates in C#. Make both truncate, through one helper.
+- The digest opt-out checkbox has two `<label for>`s (FormField's "Digest emails" and the check's own), so its accessible
+  name is "Digest emails Opt out of digest emails". Other checkboxes are built the same way.

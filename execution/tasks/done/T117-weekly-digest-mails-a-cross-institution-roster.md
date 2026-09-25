@@ -1,9 +1,10 @@
 ---
 id: T117
 title: "The weekly coordinator digest emails every coordinator the same national roster"
-status: queued
+status: done
 priority: P2
 created: 2026-09-19
+completed: 2026-09-25
 ---
 # T117 — The weekly coordinator digest emails every coordinator the same national roster
 
@@ -48,3 +49,23 @@ recording that the boundary is per-recipient here, not per-principal.
 ## Related
 
 Same confidentiality class as [T101]; independent mechanism. See also [T112] (data rights) and [T113].
+
+---
+
+## As built — 2026-09-25 (`62ff084`)
+
+`WeeklyCoordinatorDigestJob` builds each digest for its recipient.
+- **Scope.** A digest holds the coordinator's institution's inactive trainees (T113's read rule, trainee first), the
+  under-review MSF campaigns about them, and the Scheduled reviews on their institution's panels in the next 7 days.
+- **Who gets none.** A coordinator who holds Trainee, has no institution, or has no email address gets no digest.
+- **The log.** One line per run counts the digests and each skip reason.
+
+Job tests (two institutions) and a Postgres test run the real claims factory.
+
+On dev (master `aa66ee3`; jobs triggered by moving `ScheduledJobRuns."StartedAt"` back, and restored after; mail read from the SMTP sink):
+- **Run 74:** "digests sent 2".
+- **coordinator@'s digest:** Demo Trainee (at risk), campaigns #4 and #5, and review #16 on 2026-09-28. This matches the
+  database exactly.
+- **coordinator.t113b's digest** (institution 2): "No items requiring attention this week", with none of institution 1's
+  names or numbers.
+- **Not exercised on dev:** the Trainee, no-institution and no-email skips (no such coordinator). Covered by tests.

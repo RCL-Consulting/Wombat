@@ -1,11 +1,12 @@
 ---
 id: T240
 title: The weekly coordinator digest and the draft reminder mail deactivated accounts and ignore the digest opt-out
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-09-25
 ---
 
 # T240 — The weekly coordinator digest and the draft reminder mail deactivated accounts and ignore the digest opt-out
@@ -34,8 +35,28 @@ unsolicited summary, like the others. Each job logs its skips as counts by reaso
 
 ## Verification
 
-- [ ] Each job skips deactivated and opted-out recipients. Job tests with a fake sender.
+- [x] Each job skips deactivated and opted-out recipients. Job tests with a fake sender.
 
 ## Related
 
 T151, D50, T117, T026.
+
+---
+
+## As built — 2026-09-25 (`691d030`)
+
+One recipient policy (`ReminderRecipientPolicy`) for the assessor nudge, the weekly digest and the draft reminder. It
+skips a deactivated account always, and a user who opted out of digest emails. Each job logs its skips as counts by
+reason. The data-rights checkbox names the three reminders it stops, and says one-off email is still sent. Job tests
+per job; bUnit for the help text.
+
+On dev (master `aa66ee3`; jobs triggered by moving `ScheduledJobRuns."StartedAt"` back, and restored after; mail read from the SMTP sink):
+- **The digest.** coordinator@ opted out: run 75 counted "opted out of digest emails 1" and sent only to t113b. Locked by
+  instadmin: run 80 counted "deactivated 1".
+- **The draft reminder** (draft 21 aged): the baseline reminded the trainee (run 76). Opted out: run 77 sent nothing
+  ("opted out 1"). Locked: run 78 ("deactivated 1"). Reactivated: run 79 reminded again.
+- **The assessor nudge** (activity 20 aged): run 81 nudged the assessor.
+
+Every opt-out, lock and aged row was restored.
+
+**Filed:** [T274] (one recipient's failure stops the run; expiry notices reach locked accounts; the draft age rounds).
