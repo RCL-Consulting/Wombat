@@ -148,7 +148,7 @@ The whole app lives inside a two-pane flex shell defined by `MainLayout.razor` +
 │ │ 250px        │ │ .top-row (user menu, sign-out)       ││    │
 │ │ sticky       │ │ sticky, 3.5rem                       ││    │
 │ │ full-height  │ ├──────────────────────────────────────┤│    │
-│ │ gradient     │ │ article.content.px-4                 ││    │
+│ │ gradient     │ │ article.content                      ││    │
 │ │              │ │   @Body                              ││    │
 │ │              │ │                                      ││    │
 │ └──────────────┴─────────────────────────────────────────┘    │
@@ -157,6 +157,10 @@ The whole app lives inside a two-pane flex shell defined by `MainLayout.razor` +
 
 - Above `641px`: flex-direction row, sidebar `250px` sticky full-height, top-row sticky.
 - At or below `640.98px`: flex-direction column, nav collapses behind a `.navbar-toggler` checkbox.
+- **The page has a side gutter at every width** (T226): `.top-row` and `article` pad their sides by `--space-md` (16px)
+  outside any media query, and the `min-width: 641px` rule widens that to 2rem and 1.5rem. Until T226 the phone width
+  had none, and a page's header and cards ran from the screen's edge to its edge (`/msf/campaigns/{id}` at 390px).
+  ClinicAssist gets its gutter from Bootstrap's `px-4`, which Wombat does not load. `Design/NarrowLayoutTests` pins it.
 - `top-row` right-aligns an "About" / profile / logout cluster. On narrow screens it justify-betweens.
 - Below the layout, a fixed `#blazor-error-ui` banner renders on hub errors with a Reload + dismiss affordance. Copy ClinicAssist verbatim.
 
@@ -305,6 +309,9 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 Two classes, two uses:
 
 - `.clinic-table` — the canonical list table. Header uses `--header-bg`, rows separate with `--border-color`, hover uses `--hover-bg`. Wrap every table in `<div class="table-container shadow">` for the rounded surface + horizontal scroll on narrow screens.
+  Every `<table>` is one, bar a data table only a screen reader reads (the trajectory chart's `.visually-hidden`), and
+  carries no class app.css does not define: the entrustment decisions list was `class="data-table"` until T226, unstyled
+  and 133px wider than the screen at 390px. `Design/NarrowLayoutTests` scans every page.
 - `.table` — do not use. It renders as Bootstrap defaults. Delete every existing occurrence.
 
 A list page is always:
@@ -349,6 +356,15 @@ item": an Administrator, T222), and says "Your institution's own item" to anyone
 their own. The query decides which (`CurriculumItemDto.OwningInstitutionName`, cut by
 `CurriculumAdminScope.NamesItemOwners`), never the page from the caller's roles.
 
+**A column of actions that no row offers is not rendered** (T226). The committee agenda's Action column is the chair's
+(T213), and it is shown while some line offers Stage, Defer or Reinstate (`ActionOn(line)`, the predicates the commands
+demand). A decided or ratified review's lines offer nothing, bar a Defer on a line that keeps it from being ratified, so
+the column was a row of blank cells there; now it is left out. A line with no action beside one that has is not left
+blank either, as above: its cell says why in a `.muted` span. In progress that is a staged line, "Staged below", where
+its decision is removed; on a decided review, "Fixed with the recorded decision" (T226 review). A cell's buttons sit in a
+`div.actions-cell` inside the `<td>`, never `td.actions-cell`: a table cell made a flex box is no longer a table cell,
+and its border no longer meets its row's.
+
 **Row actions on the curriculum items page** (T222) follow § Button system: Edit and Remove are `.btn .btn-sm
 .btn-outline`, named by the item's EPA (`aria-label="Edit PAED-001"`, `"Remove PAED-001"`), and, where the row names its
 owner, by whose item it is (`"Edit PAED-099 (Groote Schuur Hospital's own item)"`). Since T223 two institutions may each
@@ -391,6 +407,40 @@ buttons wrap, and the table scrolls only once they are stacked. The inputs share
 at 1% the column shrinks to its widest button and stacks them. And not buttons held on one line: the scale editor then
 scrolled sideways, with Remove out of view, at 390px and near 700 and 1000px (T198 review).
 
+**A narrow grid of inputs stacks its buttons** (T226). The 12rem is claimed before the inputs grow, so in a narrow table
+the inputs were left their headers' width: Label 39px and Description 83px on the scale editor at 390px, from 641 to
+700px and from 941 to 1000px. So the grid's `.table-container` is a size container (`container: inputs-grid /
+inline-size`, selected by `:has(> .clinic-table--inputs)`), and under 44rem its buttons' column is `width: 1%` after
+all, the buttons stacked, and its cells' sides pad by `--space-xs`, since the inputs' own padding spaces them. A container
+query, not a media query: the card's width is not the viewport's (two thirds of the row at 1000px, all of it at 900px).
+
+**Why 44rem.** The buttons go on one line only where each input then still has the buttons' own 12rem: Label is 201px
+in a 705px table, and 191px in a 688px one. The first threshold, 36rem, put them on one line at 1280px (a 581px table)
+with Label 131px, too narrow for "Indirect supervision", and narrower than stacking gives at 1100px (152px). It was also
+5px from the edge: a classic 15px scrollbar made the table 571px and stacked the buttons again (T226 review). At 44rem,
+1280, 1366 and 1440px stack with or without a scrollbar (tables 571 to 688px, 16px or more under), and 1536 and 1920px
+keep one line (742px and up, 38px or more over).
+
+The scale editor's Label and Description inputs, measured in headless Chrome on a static copy of the page. Headless
+Chrome draws no scrollbar; with a classic 15px one the table is about 10px narrower at two-column widths and 15px at
+one-column widths, and each input about 5 to 9px.
+
+| Width | Table | Buttons | Label / Description |
+|---|---|---|---|
+| 390px | 306px | stacked | 63 / 102 |
+| 641px | 283px | stacked | 50 / 92 |
+| 700px | 342px | stacked | 84 / 117 |
+| 800px | 442px | stacked | 141 / 160 |
+| 1000px | 395px | stacked | 114 / 140 |
+| 1280px | 581px | stacked | 220 / 220 |
+| 1440px | 688px | stacked | 274 / 274 |
+| 1536px | 752px | one line | 227 / 227 |
+| 1920px | 1008px | one line | 355 / 355 |
+
+The rows are three buttons high below 44rem. At 641px, the narrowest two-column width, Label is still only 50px (42px
+with a scrollbar): the table's narrowest is its headers' words and one button, which now fits the 283px the card has
+there, where it was 11px wider. Anything wider needs a stacked layout per level, which is a redesign.
+
 **Many columns.** A table's narrowest width is its columns' longest words plus 2 × `--space-md` of padding per column.
 Nine columns spend 288px on padding alone. The curriculum items table needed 1018px against the 907px its container has
 at 1280px, and nothing in it was too wide. `.clinic-table--compact` halves the cell padding (a spanning cell keeps the
@@ -426,6 +476,7 @@ Measure a table at 1280px against the longest real values before adding a column
 .col-wrap--wide        /* with .col-wrap on the th: asks for 20%, floor 5rem (T198) */
 .col-fit               /* th and td of a column as narrow as its content, on one line: an ordinal, a code (T198) */
 .col-actions           /* th and td of a row's buttons: asks for 12rem, one line of three; they wrap when short (T198) */
+@container inputs-grid /* under 44rem, a .clinic-table--inputs stacks its buttons (width 1%) and pads cells by xs (T226) */
 ```
 
 No inline `style="width:…"` on a table's cells. A column's width is one of the classes above.
@@ -439,8 +490,8 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 
 ```css
 .form-container   /* surface card with padding, border, shadow */
-.form-grid        /* grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap 1.5rem */
-.form-grid--wide  /* minmax(350px, 1fr) — wide sections that must not truncate */
+.form-grid        /* grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap 1.5rem */
+.form-grid--wide  /* minmax(min(350px, 100%), 1fr) — wide sections that must not truncate */
 .form-group       /* flex-column, gap .5rem, label on top of input */
 .full-width       /* grid-column: 1 / -1 */
 
@@ -459,6 +510,11 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 **Rules:**
 
 - Every form is inside a `.form-container`. Every form's submit/cancel cluster is a `.form-actions` row at the bottom.
+- **An auto-fit grid's column asks for its width or the whole container, whichever is less**: `minmax(min(350px,
+  100%), 1fr)`, never a bare `minmax(350px, 1fr)` (T226). A bare one is 350px in a container with less room: the scale
+  editor's Name input stuck out of its card at 390px, and out of the one-third column of `.details-grid` at every width
+  that has two columns, and the EPA page's fields ran 48px past its form's card at 641px. The same holds for
+  `.search-grid`, `.check-grid` and `.dashboard-grid`; `Design/NarrowLayoutTests` scans app.css for any other.
 - `<FormField>` wraps a `<label for="…">` + input slot + `.validation-message` target. Its help text carries the id
   `FieldHelp.Id(InputId)` (`{InputId}-help`). The input in the slot is the caller's markup, which a component cannot
   change, so **a caller that gives a field `HelpText` names it on the input**:
@@ -554,7 +610,7 @@ Dashboards use one shared grid so every role page looks like the same product.
 ```css
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: var(--space-lg);
   align-items: start;
 }
@@ -696,6 +752,11 @@ T019 introduces a small builder-specific extension to the shared system:
 
 Used on activity state indicators in dashboard list cards and activity tables. The class is the state's key and the
 text is its label (T220): `<span class="badge badge-submitted">Awaiting supervisor</span>`.
+
+A status that is not an activity state is mapped onto these five in C#, never written as `badge-{status}`: app.css
+defines no other. The entrustment decisions list did that, and all four of its STAR statuses were untinted pills (T226
+review). There, Active is `badge-completed`, Expired `badge-accepted` (the EPA wants deciding again), Revoked
+`badge-declined` and Superseded `badge-draft`.
 
 ```css
 .badge-standing-met    /* --success-bg ground, --success-color border, body text (T166) */
@@ -1475,7 +1536,7 @@ body, h1..h5, .page-subtitle
 .header-container, .search-container, .search-input, .search-grid, .search-field, .search-hint
 
 /* ── Tables ────────────────────────────────────────── */
-.table-container, .clinic-table, .clinic-table tr.is-editing, .clinic-table--compact, .col-wrap, .col-fit, .col-actions, .clinic-table--inputs, .actions-cell
+.table-container, .clinic-table, .clinic-table tr.is-editing, .clinic-table--compact, .col-wrap, .col-fit, .col-actions, .clinic-table--inputs (+ @container inputs-grid), .actions-cell
 
 /* ── Buttons ───────────────────────────────────────── */
 .btn, .btn-{variant}, .btn-sm, .btn-xs, .btn-outline

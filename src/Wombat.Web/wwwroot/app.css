@@ -145,7 +145,7 @@ h5 {
 .search-grid {
   display: grid;
   gap: var(--space-lg);
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
 }
 
 .search-field {
@@ -265,6 +265,34 @@ h5 {
   background-color: transparent;
 }
 
+/* Where a grid of inputs is narrow, its buttons stack and its inputs take the room (T226). The buttons' 12rem is claimed
+   before the inputs grow, so in a narrow table the inputs were left their headers' width: Label 39px and Description
+   83px on the scale editor (T198) at 390px, from 641 to 700px and from 941 to 1000px. Stacked, the column is as narrow
+   as its widest button, and the cells' sides pad by --space-xs, since the inputs' own padding spaces them. The buttons
+   go on one line only from 44rem, the narrowest table in which each input then still has the buttons' own 12rem (Label
+   201px in a 705px table; 191px at 688px). At 36rem, one line left Label 131px at 1280px, too narrow for "Indirect
+   supervision", and 5px from the edge: a 15px scrollbar stacked the buttons again (T226 review). Stacked, the inputs are
+   63px and 102px at 390px, 50px and 92px at 641px, 84px and 117px at 700px, 114px and 140px at 1000px, 220px at 1280px,
+   274px at 1440px; on one line, 227px at 1536px. The table no longer outgrows its card at 641px (by 11px). The rows are
+   three buttons high below 44rem. The container is the table's own, so the grid answers to the room its card gives it,
+   which the viewport does not say: at 1000px the card shares its row with the Scale details card, at 900px it has the
+   row to itself. Measured in Chrome on a static copy, with no scrollbar; DESIGN.md § Table system has both. */
+.table-container:has(> .clinic-table--inputs) {
+  container: inputs-grid / inline-size;
+}
+
+@container inputs-grid (width < 44rem) {
+  .clinic-table--inputs th,
+  .clinic-table--inputs td {
+    padding-left: var(--space-xs);
+    padding-right: var(--space-xs);
+  }
+
+  .clinic-table--inputs .col-actions {
+    width: 1%;
+  }
+}
+
 /* A list item open for editing (T176): its read-only row and, below it, the row whose one cell spans the table and
    holds the edit form. A stripe down the left ties the two together. They take no hover tint: neither is a list row
    while the edit is open, and tinting a whole form as the pointer crosses it is noise. */
@@ -378,14 +406,17 @@ h1[tabindex="-1"]:focus {
   padding: var(--space-xl);
 }
 
+/* An auto-fit grid's column asks for its width or the whole container, whichever is less (T226). A bare minmax(350px, 1fr)
+   is 350px in a card with less room than that: the Scale details card's Name input stuck out of its card at 390px, and
+   out of the 1fr column of .details-grid at every width that has two columns. So in every auto-fit grid below. */
 .form-grid {
   display: grid;
   gap: var(--space-lg);
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
 }
 
 .form-grid--wide {
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
 }
 
 .form-group {
@@ -446,7 +477,7 @@ h1[tabindex="-1"]:focus {
 .check-grid {
   display: grid;
   gap: var(--space-sm) var(--space-md);
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr));
 }
 
 /* The points of one rating scale, one radio (.form-check) per line, lowest first: an ordered scale reads down, not
@@ -753,7 +784,7 @@ textarea[aria-invalid="true"] {
   align-items: start;
   display: grid;
   gap: var(--space-lg);
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
 }
 
 .dashboard-span-2 {

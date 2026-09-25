@@ -1584,6 +1584,49 @@
   /// </summary>
   private bool AgendaIsOpen => _review?.State is CommitteeReviewState.InProgress;
 
+  /// <summary>What the chair may do on an agenda line now (T131 slice 4, T165, T213).</summary>
+  private enum AgendaLineAction
+  {
+    /// <summary>Nothing: the reader is not the chair, or the line is staged, decided, or fixed with a recorded decision.</summary>
+    None,
+
+    /// <summary>A line still due at a review in progress: stage a decision on it, or defer it with a reason.</summary>
+    StageOrDefer,
+
+    /// <summary>A line deferred at a review in progress: take the deferral back.</summary>
+    Reinstate,
+
+    /// <summary>A decided review's closing line that keeps it from being ratified (<see cref="MayDeferAfterRecording" />).</summary>
+    DeferAfterRecording
+  }
+
+  /// <summary>The one action the agenda offers on this line, by the predicates its commands demand.</summary>
+  private AgendaLineAction ActionOn(CommitteeAgendaLineDto line)
+    => !ChairMayAct ? AgendaLineAction.None
+      : AgendaIsOpen && line.State == CommitteeAgendaLineState.Due && !line.IsStaged ? AgendaLineAction.StageOrDefer
+      : AgendaIsOpen && line.State == CommitteeAgendaLineState.Deferred ? AgendaLineAction.Reinstate
+      : MayDeferAfterRecording(line) ? AgendaLineAction.DeferAfterRecording
+      : AgendaLineAction.None;
+
+  /// <summary>
+  /// Whether the agenda has its Action column: some line offers the chair something (T226). A decided or ratified
+  /// review's lines offer nothing but a Defer on a line that keeps it from being ratified, so the column was a row of
+  /// blank cells there. A line with no action beside one that has says why in its cell (<see cref="NoActionReason" />).
+  /// </summary>
+  private bool AgendaOffersActions => _agenda?.Lines.Any(line => ActionOn(line) != AgendaLineAction.None) == true;
+
+  /// <summary>
+  /// Why a line offers the chair nothing, said in its Action cell while another line offers something (T226 review;
+  /// DESIGN.md § Table system, T211: a row with no action is not left blank). The column is shown only to the chair, so
+  /// the reason is never "not yours". In progress, the one such line is a staged one, whose decision is changed in the
+  /// staged list below, as the curriculum items page says "Editing below". Once the decision is recorded, every line but
+  /// one that keeps the review from being ratified is fixed with it (T165).
+  /// </summary>
+  private string NoActionReason(CommitteeAgendaLineDto line)
+    => !AgendaIsOpen ? "Fixed with the recorded decision"
+      : line.IsStaged ? "Staged below"
+      : "Nothing to do at this sitting";
+
   /// <summary>
   /// A decided review's one open action: deferring a closing line that keeps it from being ratified, which recording's
   /// own check leaves only when the decision staged on it was removed afterwards because it no longer fits the trainee's
@@ -1787,8 +1830,10 @@
                   <th scope="col">Window</th>
                   <th scope="col">State</th>
                   <th scope="col">Evidence</th>
-                  @* T213: staging, deferring and reinstating are the chair's, so nobody else gets the column. *@
-                  @if (ChairMayAct)
+                  @* T213: staging, deferring and reinstating are the chair's, so nobody else gets the column. T226: nor does
+                     the chair once no line offers anything (a decided or ratified review, an agenda all staged), rather
+                     than a column of blank cells. *@
+                  @if (AgendaOffersActions)
                   {
                     <th scope="col">Action</th>
                   }
@@ -1809,33 +1854,38 @@
                       }
                     </td>
                     <td>@line.EvidenceCount item@(line.EvidenceCount == 1 ? string.Empty : "s")</td>
-                    @if (ChairMayAct)
+                    @if (AgendaOffersActions)
                     {
-                      <td class="actions-cell">
-                        @* Stage and Defer send nothing; each is disabled while an action runs, since what that action
-                           answers can change the line (T234 review). *@
-                        @if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Due && !line.IsStaged)
-                        {
-                          <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
-                                  @onclick="() => StageFromAgendaAsync(line)"
-                                  aria-label="@($"Stage a decision on {line.EpaCode}")">Stage</button>
-                          <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
-                                  @onclick="() => OpenDeferral(line)"
-                                  aria-label="@($"Defer {line.EpaCode}")">Defer</button>
-                        }
-                        else if (AgendaIsOpen && line.State == CommitteeAgendaLineState.Deferred)
-                        {
-                          <button type="button" class="btn btn-outline btn-sm" disabled="@OtherInFlight(ReinstateAction(line.Id))"
-                                  aria-disabled="@InFlight.AriaDisabled(Running(ReinstateAction(line.Id)))"
-                                  @onclick="() => ReinstateAsync(line)"
-                                  aria-label="@($"Reinstate {line.EpaCode}")">Reinstate</button>
-                        }
-                        else if (MayDeferAfterRecording(line))
-                        {
-                          <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
-                                  @onclick="() => OpenDeferral(line)"
-                                  aria-label="@($"Defer {line.EpaCode}")">Defer</button>
-                        }
+                      <td>
+                        <div class="actions-cell">
+                          @* Stage and Defer send nothing; each is disabled while an action runs, since what that action
+                             answers can change the line (T234 review). *@
+                          @switch (ActionOn(line))
+                          {
+                            case AgendaLineAction.StageOrDefer:
+                              <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
+                                      @onclick="() => StageFromAgendaAsync(line)"
+                                      aria-label="@($"Stage a decision on {line.EpaCode}")">Stage</button>
+                              <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
+                                      @onclick="() => OpenDeferral(line)"
+                                      aria-label="@($"Defer {line.EpaCode}")">Defer</button>
+                              break;
+                            case AgendaLineAction.Reinstate:
+                              <button type="button" class="btn btn-outline btn-sm" disabled="@OtherInFlight(ReinstateAction(line.Id))"
+                                      aria-disabled="@InFlight.AriaDisabled(Running(ReinstateAction(line.Id)))"
+                                      @onclick="() => ReinstateAsync(line)"
+                                      aria-label="@($"Reinstate {line.EpaCode}")">Reinstate</button>
+                              break;
+                            case AgendaLineAction.DeferAfterRecording:
+                              <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
+                                      @onclick="() => OpenDeferral(line)"
+                                      aria-label="@($"Defer {line.EpaCode}")">Defer</button>
+                              break;
+                            default:
+                              <span class="muted">@NoActionReason(line)</span>
+                              break;
+                          }
+                        </div>
                       </td>
                     }
                   </tr>

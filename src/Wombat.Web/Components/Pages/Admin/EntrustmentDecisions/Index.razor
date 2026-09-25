@@ -19,8 +19,10 @@
   <Alert Kind="danger">@_error</Alert>
 }
 
-<section class="detail-card">
-  <div class="form-grid">
+@* The list page's filter (DESIGN.md § Table system): a search-container, whose bottom margin keeps it off the table. It was
+   a detail-card, which has none, and the table touched it (T226 review). *@
+<section class="search-container shadow">
+  <div class="search-grid">
     <FormField Label="Trainee" InputId="filter-trainee">
       <input id="filter-trainee" class="form-control" @bind="_traineeFilter" @bind:event="oninput" placeholder="Filter by name" />
     </FormField>
@@ -51,17 +53,21 @@ else if (_decisions.Count == 0)
 }
 else
 {
-  <section class="detail-card">
-    <table class="data-table">
+  @* A list table (DESIGN.md § Table system): a clinic-table in its container, which scrolls sideways on a narrow screen
+     rather than widen the page. Until T226 it was class="data-table", which app.css does not define: the table was
+     unstyled and, at 390px, 133px wider than the screen. *@
+  <div class="table-container shadow">
+    <table class="clinic-table">
       <thead>
         <tr>
           <th>Trainee</th>
           <th>EPA</th>
           <th>Level</th>
-          <th>Issued</th>
-          <th>Expires</th>
+          @* A date on one line: at 1280px "2026-07-02" broke at its hyphen (T226 review). *@
+          <th class="col-fit">Issued</th>
+          <th class="col-fit">Expires</th>
           <th>Status</th>
-          <th>Actions</th>
+          <th><span class="visually-hidden">Actions</span></th>
         </tr>
       </thead>
       <tbody>
@@ -71,26 +77,28 @@ else
             <td>@decision.TraineeName</td>
             <td>@decision.EpaCode — @decision.EpaTitle</td>
             <td>@decision.AuthorisedLevelLabel</td>
-            <td>@decision.IssuedOn.ToString("yyyy-MM-dd")</td>
-            <td>@(decision.ExpiresOn?.ToString("yyyy-MM-dd") ?? "—")</td>
-            <td><span class="badge badge-@decision.Status.ToString().ToLowerInvariant()">@decision.Status</span></td>
+            <td class="col-fit">@decision.IssuedOn.ToString("yyyy-MM-dd")</td>
+            <td class="col-fit">@(decision.ExpiresOn?.ToString("yyyy-MM-dd") ?? "—")</td>
+            <td><span class="badge @StatusBadge(decision.Status)">@decision.Status</span></td>
             <td>
-              <button type="button" class="btn btn-sm btn-outline" @onclick="() => DownloadAsync(decision.Id)">Download</button>
-              @if (decision.Status == EntrustmentDecisionStatus.Active)
-              {
-                <button type="button" class="btn btn-sm btn-danger" @onclick="() => OpenRevokeDialog(decision)">Revoke</button>
-              }
+              <div class="actions-cell">
+                <button type="button" class="btn btn-sm btn-outline" @onclick="() => DownloadAsync(decision.Id)">Download</button>
+                @if (decision.Status == EntrustmentDecisionStatus.Active)
+                {
+                  <button type="button" class="btn btn-sm btn-danger" @onclick="() => OpenRevokeDialog(decision)">Revoke</button>
+                }
+              </div>
             </td>
           </tr>
         }
       </tbody>
     </table>
-  </section>
+  </div>
 }
 
 @if (_revokingDecision is not null)
 {
-  <section class="detail-card">
+  <section class="detail-card mt-3">
     <h3>Revoke entrustment decision</h3>
     <p>
       You are about to revoke the entrustment decision for
@@ -121,6 +129,20 @@ else
   {
     await LoadAsync();
   }
+
+  /// <summary>
+  /// A STAR's status as one of the badges app.css defines (DESIGN.md § Badges). It was <c>badge-{status}</c>, and app.css
+  /// defines none of <c>badge-active</c>, <c>-expired</c>, <c>-revoked</c> or <c>-superseded</c>, so every status was an
+  /// untinted pill (T226 review). In force is the completed tint; lapsed, the warning tint, since the EPA wants deciding
+  /// again; revoked, the declined tint; superseded by a later STAR, neutral. The word says which.
+  /// </summary>
+  private static string StatusBadge(EntrustmentDecisionStatus status) => status switch
+  {
+    EntrustmentDecisionStatus.Active => "badge-completed",
+    EntrustmentDecisionStatus.Expired => "badge-accepted",
+    EntrustmentDecisionStatus.Revoked => "badge-declined",
+    _ => "badge-draft"
+  };
 
   private async Task LoadAsync()
   {

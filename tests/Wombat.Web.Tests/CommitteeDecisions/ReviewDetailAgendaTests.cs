@@ -150,6 +150,70 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         Buttons(Row(cut, 4)).Should().BeEmpty("a deferral is not taken back after the decision is recorded");
     }
 
+    [Theory]
+    [InlineData(CommitteeReviewState.Decided)]
+    [InlineData(CommitteeReviewState.Ratified)]
+    public void AnAgendaWhoseLinesOfferNothing_HasNoActionColumn(CommitteeReviewState state)
+    {
+        // T226: once the decision is recorded the lines offer nothing, bar a Defer on a line that keeps the review from
+        // being ratified, so the chair's Action column was a column of blank cells (reviews 4, 6 and 7 on dev).
+        var cut = Render(state, Agenda(
+            Line(1, "PAED-001", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided),
+            Staged(2, "PAED-002"),
+            Line(3, "PAED-003", CommitteeAgendaLineStatus.DueByYearEnd, CommitteeAgendaLineState.Due, window: (2026, null)),
+            Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")));
+
+        AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence");
+        AgendaRows(cut).Should().HaveCount(4).And.OnlyContain(row => row.Children.Length == 4, "no line has a blank Action cell");
+    }
+
+    [Fact]
+    public void AnAgendaInProgress_WhoseEveryLineIsStaged_HasNoActionColumn()
+    {
+        var cut = Render(CommitteeReviewState.InProgress, Agenda(Staged(1, "PAED-001"), Staged(2, "PAED-002")));
+
+        AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence");
+        AgendaRows(cut).Should().OnlyContain(row => row.Children.Length == 4);
+    }
+
+    [Fact]
+    public void TheActionColumn_StaysWhileAnyLineOffersSomething_AndALineThatOffersNothingSaysWhy()
+    {
+        var cut = Render(CommitteeReviewState.Decided, Agenda(
+            Due(1, "PAED-001"),
+            Staged(2, "PAED-002"),
+            Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")));
+
+        AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence", "Action");
+        Buttons(Row(cut, 1)).Should().Equal("Defer");
+        ActionReason(Row(cut, 1)).Should().BeNull("a line that offers something needs no reason");
+
+        // DESIGN.md § Table system (T211): a row with no action is not left blank; its actions cell says why, muted.
+        foreach (var epaId in new[] { 2, 4 })
+        {
+            Row(cut, epaId).Children.Should().HaveCount(5);
+            Buttons(Row(cut, epaId)).Should().BeEmpty();
+            ActionReason(Row(cut, epaId)).Should().Be("Fixed with the recorded decision");
+        }
+
+        // The buttons are a cluster inside the cell: a <td> that is itself a flex box is no longer a table cell, and its
+        // border no longer meets its row's.
+        Row(cut, 1).QuerySelectorAll("td > .actions-cell > button").Should().ContainSingle();
+    }
+
+    [Fact]
+    public void InProgress_AStagedLineBesideOneThatIsDue_SaysItsDecisionIsStagedBelow()
+    {
+        // Its decision is changed in the staged list below, where its Remove is (as "Editing below" on the curriculum items
+        // page), not in the agenda.
+        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001"), Staged(2, "PAED-002")));
+
+        AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence", "Action");
+        Buttons(Row(cut, 1)).Should().Equal("Stage", "Defer");
+        Buttons(Row(cut, 2)).Should().BeEmpty();
+        ActionReason(Row(cut, 2)).Should().Be("Staged below");
+    }
+
     [Fact]
     public void Record_IsDisabled_WhileAClosingLineIsNeitherStagedNorDeferred_AndSaysWhich()
     {
@@ -758,10 +822,20 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             ObservedOn: new DateOnly(2026, 2, 10), ObservedOnDeclared: true, SourceState: "completed", SourceFinished: true,
             SourceStateLabel: "Completed");
 
+    private static IReadOnlyList<string> AgendaHeaders(IRenderedComponent<ReviewDetail> cut)
+        => cut.FindAll("#agenda-heading ~ .table-container thead th").Select(header => header.TextContent.Trim()).ToArray();
+
+    private static IReadOnlyList<AngleSharp.Dom.IElement> AgendaRows(IRenderedComponent<ReviewDetail> cut)
+        => cut.FindAll("#agenda-heading ~ .table-container tbody tr").ToArray();
+
     private static AngleSharp.Dom.IElement Row(IRenderedComponent<ReviewDetail> cut, int epaId) => cut.Find($"#agenda-line-{epaId}");
 
     private static IReadOnlyList<string> Buttons(AngleSharp.Dom.IElement row)
         => row.QuerySelectorAll("button").Select(button => button.TextContent.Trim()).ToArray();
+
+    /// <summary>The muted reason in a line's Action cell (the row's fifth cell), or null where it has none.</summary>
+    private static string? ActionReason(AngleSharp.Dom.IElement row)
+        => row.Children.Length < 5 ? null : row.Children[4].QuerySelector(".actions-cell > span.muted")?.TextContent.Trim();
 
     private static AngleSharp.Dom.IElement ButtonIn(AngleSharp.Dom.IElement row, string label)
         => row.QuerySelectorAll("button").Single(button => button.TextContent.Trim() == label);

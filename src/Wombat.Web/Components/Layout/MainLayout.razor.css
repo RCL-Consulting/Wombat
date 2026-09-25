@@ -21,6 +21,15 @@ main {
   justify-content: flex-end;
 }
 
+/* The side gutter at every width (T226). At 641px and up the rule below widens it; under 641px this is the only one, and
+   before it the page's header and cards ran from the screen's edge to its edge. ClinicAssist gets it from Bootstrap's
+   px-4, which Wombat does not load (T042 removed the class). */
+.top-row,
+article {
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
 .top-row ::deep a,
 .top-row ::deep .btn-link,
 .top-row ::deep form {
