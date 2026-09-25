@@ -122,7 +122,7 @@
         <div><dt>Evidence window</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
         <div><dt>Type</dt><dd id="review-type">@CommitteeDecisionWording.ReviewTypeLabel(_review.ReviewType)</dd></div>
         <div><dt>Mode</dt><dd>@(_review.IsFormative ? "Formative (interim check-in, no binding decision)" : "Summative")</dd></div>
-        <div><dt>State</dt><dd>@_review.State</dd></div>
+        <div><dt>State</dt><dd id="review-state">@_review.StateLabel</dd></div>
         @* T258: a withdrawn review says when and why, where its state is read. Nothing is offered at it: every action above
            and below asks for an open state. *@
         @if (_review.WithdrawnOn is { } withdrawnOn)

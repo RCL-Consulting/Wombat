@@ -30,7 +30,9 @@
             @foreach (var item in _vm.AcceptedActivities)
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                @* Whose it is, by name, as the coordinator's cards say it (T250). The link's name starts with its visible
+                   label and names the trainee, so three Mini-CEX links are not three links called "Mini-CEX". *@
+                <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
                 @* Every item here is in `accepted`, the badge's colour class; its words are the state's label, or that the
                    work is overdue (T220). *@
                 <span class="badge badge-accepted">@(item.IsOverdue ? "Overdue" : item.CurrentStateLabel)</span>
@@ -51,7 +53,7 @@
             @foreach (var item in _vm.RecentDecisions)
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
                 @* The badge's colour is the state's key; its words are the state's label (T220). *@
                 <span class="badge badge-@item.FinalState">@item.FinalStateLabel</span>
               </li>

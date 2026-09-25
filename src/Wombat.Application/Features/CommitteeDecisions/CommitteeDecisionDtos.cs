@@ -65,6 +65,9 @@ public sealed record CommitteeReviewListItemDto(
     /// <summary>The period the review sits for: "2026 S1".</summary>
     public string PeriodLabel => $"{AcademicYear} S{Semester}";
 
+    /// <summary>The review's state in words, "In progress", as every surface prints it (T250).</summary>
+    public string StateLabel => CommitteeDecisionWording.StateLabel(State);
+
     /// <summary>
     /// Whether the review's decision records a progression category: false for an entrustment-only review (T131 slice 5),
     /// whose <see cref="CurrentDecisionCategory" /> is null once decided as well as before.
@@ -213,6 +216,9 @@ public sealed record CommitteeReviewDetailDto(
 
     /// <summary>The period the review sits for: "2026 S1".</summary>
     public string PeriodLabel => $"{AcademicYear} S{Semester}";
+
+    /// <summary>The review's state in words, "Under appeal", as every surface prints it (T250).</summary>
+    public string StateLabel => CommitteeDecisionWording.StateLabel(State);
 
     /// <summary>
     /// Whether the review's decision records a progression category (T131 slice 5): false for an entrustment-only review,

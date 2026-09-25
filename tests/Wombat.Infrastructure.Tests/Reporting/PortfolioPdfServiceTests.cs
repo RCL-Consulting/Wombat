@@ -575,6 +575,31 @@ public sealed class PortfolioPdfServiceTests
         exported.PdfBytes.Should().NotBeEmpty();
     }
 
+    /// <summary>
+    /// The portfolio prints each review's status in words, the label the review pages print (T250). A review whose appeal
+    /// was resolved printed the enum's name, "Final"; it reads "Closed", and a ratified one "Ratified".
+    /// </summary>
+    [Fact]
+    public async Task EachReviewsStatus_IsPrintedInWords()
+    {
+        await using var db = SeededDb();
+        var review = SeedRatifiedReview(db);
+        var service = new PortfolioPdfService(db, new ThrowingMsfAggregationService());
+        var request = new PortfolioExportRequest("trainee-1", null, null, SubjectPrincipal("trainee-1"));
+
+        var ratified = string.Join("\f", PdfTextLayer.Pages((await service.GenerateAsync(request, CancellationToken.None)).PdfBytes));
+
+        var appealSitting = new DateTime(2029, 12, 9, 9, 0, 0, DateTimeKind.Utc);
+        review.LodgeAppeal("The conditions are disproportionate.", "trainee-1", appealSitting);
+        review.ResolveAppeal(CommitteeAppealOutcome.Dismissed, "chair-1", appealSitting);
+        await db.SaveChangesAsync();
+        var closed = string.Join("\f", PdfTextLayer.Pages((await service.GenerateAsync(request, CancellationToken.None)).PdfBytes));
+
+        // The label and its value are two spans, and the text layer reads each on its own line.
+        ratified.Should().MatchRegex(@"Status:\s*Ratified\s");
+        closed.Should().MatchRegex(@"Status:\s*Closed\s").And.NotMatchRegex(@"Status:\s*Final");
+    }
+
     private static CommitteeReview SeedRatifiedReview(
         ApplicationDbContext db, CommitteeReviewType type = CommitteeReviewType.AnnualProgression)
     {

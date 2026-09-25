@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
+using Wombat.Application.Common.Users;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 
@@ -15,13 +16,16 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
     : IRequestHandler<GetAssessorDashboardSummaryQuery, AssessorDashboardSummaryDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
     private readonly DashboardThresholds _thresholds;
 
     public GetAssessorDashboardSummaryQueryHandler(
         IApplicationDbContext dbContext,
+        IUserAdministrationService users,
         IOptions<DashboardThresholds> thresholds)
     {
         _dbContext = dbContext;
+        _users = users;
         _thresholds = thresholds.Value;
     }
 
@@ -77,24 +81,36 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
             .Where(a => a.CurrentState == "requested" && !IsFinished(a))
             .ToList();
 
-        var accepted = assessorActivities
+        var acceptedActivities = assessorActivities
             .Where(a => a.CurrentState == "accepted" && !IsFinished(a))
+            .ToList();
+        var decidedActivities = assessorActivities
+            .Where(a => IsFinished(a) || a.CurrentState is "declined" or "cancelled")
+            .Take(10)
+            .ToList();
+
+        // Whose each row is, by name, in one lookup for the rows the page lists (T142's rule). Until T250 each row carried
+        // the subject's user id in SubjectName.
+        var names = await UserDisplayNames.ResolveAsync(
+            _users,
+            acceptedActivities.Concat(decidedActivities).Select(a => a.SubjectUserId),
+            cancellationToken);
+
+        var accepted = acceptedActivities
             .Select(a => new AcceptedActivityItem(
                 a.Id,
                 a.ActivityType.Name,
-                a.SubjectUserId,
+                names.NameOf(a.SubjectUserId),
                 PinnedWorkflows.StateLabel(workflows[(a.ActivityTypeId, a.SchemaVersion)], a.CurrentState),
                 a.UpdatedOn,
                 a.UpdatedOn < dueCutoff))
             .ToList();
 
-        var recentDecisions = assessorActivities
-            .Where(a => IsFinished(a) || a.CurrentState is "declined" or "cancelled")
-            .Take(10)
+        var recentDecisions = decidedActivities
             .Select(a => new RecentDecisionItem(
                 a.Id,
                 a.ActivityType.Name,
-                a.SubjectUserId,
+                names.NameOf(a.SubjectUserId),
                 a.CurrentState,
                 PinnedWorkflows.StateLabel(workflows[(a.ActivityTypeId, a.SchemaVersion)], a.CurrentState),
                 a.UpdatedOn))

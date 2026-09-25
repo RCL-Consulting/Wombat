@@ -87,6 +87,35 @@ public static class CommitteeDecisionWording
     public const string WithdrawnDecisionNote =
         "Recorded, and never ratified: the review was withdrawn before it was, so this decision took no effect.";
 
+    /// <summary>
+    /// A review's state in words, wherever one is shown: the schedule, the review page, the trainee's own reviews and the
+    /// portfolio PDF, through <see cref="CommitteeReviewListItemDto.StateLabel" /> and
+    /// <see cref="CommitteeReviewDetailDto.StateLabel" /> (T250). "In progress", never <c>InProgress</c>.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="CommitteeReviewState.Final" /> reads "Closed": a review reaches it when a formative review is closed
+    /// (its button is Close review) or when an appeal is resolved, and either way nothing more happens to it.
+    /// </remarks>
+    public static string StateLabel(CommitteeReviewState state) => state switch
+    {
+        CommitteeReviewState.Scheduled => "Scheduled",
+        CommitteeReviewState.InProgress => "In progress",
+        CommitteeReviewState.Decided => "Decided",
+        CommitteeReviewState.Ratified => "Ratified",
+        CommitteeReviewState.UnderAppeal => "Under appeal",
+        CommitteeReviewState.Final => "Closed",
+        CommitteeReviewState.Withdrawn => "Withdrawn",
+        _ => state.ToString()
+    };
+
+    /// <summary>
+    /// A review's state as a refusal says it mid-sentence: <see cref="StateLabel" /> in lower case, except that a decided
+    /// review is "decided, not yet ratified", since those refusals turn on ratification (T250: one place for both).
+    /// </summary>
+    public static string StateInSentence(CommitteeReviewState state) => state == CommitteeReviewState.Decided
+        ? "decided, not yet ratified"
+        : StateLabel(state).ToLowerInvariant();
+
     /// <summary>The review's type as a heading or a detail line says it: "Entrustment-only review".</summary>
     public static string ReviewTypeLabel(CommitteeReviewType type) => type switch
     {

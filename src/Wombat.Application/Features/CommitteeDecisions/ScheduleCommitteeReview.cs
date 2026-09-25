@@ -232,17 +232,9 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
 
     internal static string AlreadyScheduled(OpenReview open, AcademicPeriod period)
         => $"Review #{open.Id} already puts this trainee before {open.PanelName} for {period} " +
-           $"({StateLabel(open.State)}, scheduled {open.ScheduledOn:yyyy-MM-dd}). A trainee has one binding review for " +
-           "each period before the panels that decide the same EPAs, until it is ratified: open that review, or ratify " +
-           "it before scheduling another.";
-
-    private static string StateLabel(CommitteeReviewState state) => state switch
-    {
-        CommitteeReviewState.Scheduled => "scheduled",
-        CommitteeReviewState.InProgress => "in progress",
-        CommitteeReviewState.Decided => "decided, not yet ratified",
-        _ => state.ToString()
-    };
+           $"({CommitteeDecisionWording.StateInSentence(open.State)}, scheduled {open.ScheduledOn:yyyy-MM-dd}). A trainee " +
+           "has one binding review for each period before the panels that decide the same EPAs, until it is ratified: " +
+           "open that review, or ratify it before scheduling another.";
 
     internal sealed record OpenReview(int Id, string PanelName, CommitteeReviewState State, DateOnly ScheduledOn);
 }

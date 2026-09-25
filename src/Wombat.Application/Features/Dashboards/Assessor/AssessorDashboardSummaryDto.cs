@@ -5,6 +5,10 @@ public sealed record AssessorDashboardSummaryDto(
     IReadOnlyList<AcceptedActivityItem> AcceptedActivities,
     IReadOnlyList<RecentDecisionItem> RecentDecisions);
 
+/// <param name="SubjectName">
+/// Whose activity it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />), the id only
+/// when that user has no name on record (T250).
+/// </param>
 /// <param name="CurrentStateLabel">
 /// The <c>accepted</c> state as the activity's pinned workflow labels it, the key only when that workflow does not declare
 /// it: the badge's text when the activity is not overdue (T220).
@@ -17,6 +21,10 @@ public sealed record AcceptedActivityItem(
     DateTime AcceptedOn,
     bool IsOverdue);
 
+/// <param name="SubjectName">
+/// Whose activity it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />), the id only
+/// when that user has no name on record (T250).
+/// </param>
 /// <param name="FinalState">The stored state key: the badge's colour class.</param>
 /// <param name="FinalStateLabel">
 /// The state as the activity's pinned workflow labels it, the key only when that workflow does not declare it: the

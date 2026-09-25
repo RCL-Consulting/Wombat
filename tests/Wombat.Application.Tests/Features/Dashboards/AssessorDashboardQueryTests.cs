@@ -7,6 +7,7 @@ using Wombat.Application.Features.Dashboards.Assessor;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Dashboards;
 
@@ -132,8 +133,36 @@ public sealed class AssessorDashboardQueryTests
             .Should().BeEquivalentTo([(1, "Accepted for observation"), (2, "Accepted")]);
     }
 
-    private static async Task<AssessorDashboardSummaryDto> Handle(ApplicationDbContext db, ClaimsPrincipal? principal = null)
-        => await new GetAssessorDashboardSummaryQueryHandler(db, Options.Create(new DashboardThresholds()))
+    /// <summary>
+    /// Each row says whose it is by name, looked up once for the page (T142's rule), and by the id only when that user has
+    /// no name on record. Until T250 both lists carried the subject's user id in <c>SubjectName</c>.
+    /// </summary>
+    [Fact]
+    public async Task EachRow_NamesItsSubject_InOneLookup_AndByTheIdOnlyWhenNoNameIsOnRecord()
+    {
+        await using var db = CreateDb();
+        SeedTypes(db);
+        AddActedOn(db, 1, WbaTypeId, version: 1, "accepted", subject: "trainee-1");
+        AddActedOn(db, 2, WbaTypeId, version: 1, "completed", subject: "trainee-2");
+        AddActedOn(db, 3, WbaTypeId, version: 1, "completed", subject: "trainee-1");
+        AddActedOn(db, 4, WbaTypeId, version: 1, "declined", subject: "trainee-gone");
+        await db.SaveChangesAsync();
+        var directory = new FakeUserDirectory(("trainee-1", "Thandi Nkosi"), ("trainee-2", "Sipho Dlamini"));
+
+        var result = await Handle(db, directory: directory);
+
+        result.AcceptedActivities.Select(item => (item.ActivityId, item.SubjectName))
+            .Should().Equal((1, "Thandi Nkosi"));
+        result.RecentDecisions.Select(item => (item.ActivityId, item.SubjectName))
+            .Should().BeEquivalentTo([(2, "Sipho Dlamini"), (3, "Thandi Nkosi"), (4, "trainee-gone")]);
+        directory.Lookups.Should().ContainSingle()
+            .Which.Should().BeEquivalentTo(["trainee-1", "trainee-2", "trainee-gone"]);
+    }
+
+    private static async Task<AssessorDashboardSummaryDto> Handle(
+        ApplicationDbContext db, ClaimsPrincipal? principal = null, FakeUserDirectory? directory = null)
+        => await new GetAssessorDashboardSummaryQueryHandler(
+                db, directory ?? FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()))
             .Handle(new GetAssessorDashboardSummaryQuery(principal ?? CreatePrincipal(AssessorId)), CancellationToken.None);
 
     /// <summary>An activity of the caller's own, created by them, as <c>ActivityService</c> writes one.</summary>
@@ -199,13 +228,14 @@ public sealed class AssessorDashboardQueryTests
     }
 
     /// <summary>An activity of another user's that the assessor has made a move on.</summary>
-    private static void AddActedOn(ApplicationDbContext db, int id, int typeId, int version, string state)
+    private static void AddActedOn(
+        ApplicationDbContext db, int id, int typeId, int version, string state, string subject = "trainee-1")
     {
         var now = DateTime.UtcNow;
         db.Activities.Add(new Activity
         {
             Id = id, ActivityTypeId = typeId, SchemaVersion = version,
-            SubjectUserId = "trainee-1", CreatedByUserId = "trainee-1", CurrentState = state, DataJson = "{}",
+            SubjectUserId = subject, CreatedByUserId = subject, CurrentState = state, DataJson = "{}",
             CreatedOn = now.AddDays(-2), UpdatedOn = now.AddMinutes(-id),
             Transitions =
             [

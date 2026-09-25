@@ -126,15 +126,7 @@ public sealed class SetDecisionPanelBodyCommandHandler : IRequestHandler<SetDeci
 
     /// <summary>The refusal naming the first open review before the panel. (T131 slice 5)</summary>
     internal static string ReviewStillOpen(int reviewId, AcademicPeriod period, CommitteeReviewState state)
-        => $"Review #{reviewId} ({period}, {StateLabel(state)}) still sits before this panel. What a review decides, and its " +
-           "agenda, follow the College committee the panel sat as when it was scheduled, so the panel keeps what it sits as " +
-           "until its open reviews are ratified, or closed if formative.";
-
-    private static string StateLabel(CommitteeReviewState state) => state switch
-    {
-        CommitteeReviewState.Scheduled => "scheduled",
-        CommitteeReviewState.InProgress => "in progress",
-        CommitteeReviewState.Decided => "decided, not yet ratified",
-        _ => state.ToString()
-    };
+        => $"Review #{reviewId} ({period}, {CommitteeDecisionWording.StateInSentence(state)}) still sits before this panel. " +
+           "What a review decides, and its agenda, follow the College committee the panel sat as when it was scheduled, so " +
+           "the panel keeps what it sits as until its open reviews are ratified, or closed if formative.";
 }

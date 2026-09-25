@@ -1457,6 +1457,13 @@ the label the query carried from the activity's pinned workflow (`CurrentStateLa
 out. The key appears only as a badge's colour class (`badge-@item.CurrentState`), and as text only where the pinned
 workflow cannot name it.
 
+**A committee review's state is shown by its label, never by the enum's name** (T250). The schedule, the review page,
+the trainee's own reviews and the portfolio PDF print one label per state, `CommitteeDecisionWording.StateLabel`, which
+the review DTOs carry as `StateLabel`: "Scheduled", "In progress", "Decided", "Ratified", "Under appeal" and "Closed".
+`Final` reads "Closed", since a review reaches it when a formative review is closed or when an appeal is resolved. A
+refusal that names a review's state mid-sentence uses `StateInSentence`, which is built from the same labels ("decided,
+not yet ratified"). The data-rights JSON export keeps the stored value, because it is the record.
+
 ### List page
 
 ```

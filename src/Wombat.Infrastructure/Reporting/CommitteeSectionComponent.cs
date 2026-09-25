@@ -97,7 +97,7 @@ internal static class CommitteeSectionComponent
             column.Item().Text(text =>
             {
                 text.Span("Status: ").FontSize(9).Bold();
-                text.Span(review.State.ToString()).FontSize(9);
+                text.Span(CommitteeDecisionWording.StateLabel(review.State)).FontSize(9);
             });
 
             var currentDecision = review.GetCurrentDecision();

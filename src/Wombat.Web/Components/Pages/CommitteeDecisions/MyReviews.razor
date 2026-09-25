@@ -36,7 +36,7 @@
            read the same for a year's two sittings, since a semester-2 sitting's window is the whole year. *@
         <td>@item.PeriodLabel <span class="muted">@($"· {Window(item.ReviewPeriodFrom, item.ReviewPeriodTo)}")</span></td>
         <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType)</td>
-        <td>@item.State</td>
+        <td>@item.StateLabel</td>
         @* T131 slice 5: an entrustment-only review's decision has no category, and is not "Pending" for that. *@
         <td>@CommitteeDecisionWording.OutcomeLabel(item)</td>
         <td class="actions-cell">
@@ -55,7 +55,7 @@
     <p id="my-review-period"><strong>Sits for:</strong> @_selectedReview.PeriodLabel</p>
     <p id="my-review-window"><strong>Evidence window:</strong> @Window(_selectedReview.ReviewPeriodFrom, _selectedReview.ReviewPeriodTo)</p>
     <p id="my-review-type"><strong>Type:</strong> @CommitteeDecisionWording.ReviewTypeLabel(_selectedReview.ReviewType)</p>
-    <p><strong>State:</strong> @_selectedReview.State</p>
+    <p id="my-review-state"><strong>State:</strong> @_selectedReview.StateLabel</p>
 
     @if (_selectedReview.Decisions.Count > 0)
     {
