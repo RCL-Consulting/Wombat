@@ -19,6 +19,7 @@ using Wombat.Infrastructure.Activities;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Shared.Activities;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.Design;
 
 namespace Wombat.Web.Tests.Activities;
 
@@ -203,6 +204,7 @@ public sealed class LateFilingWarningTests : TestContext
         // A predicted refusal marks the value itself as wrong, not only a note beside it.
         cut.Find("#observed_on").GetAttribute("aria-invalid").Should().Be("true");
         cut.Find("#observed_on").ClassList.Should().Contain("input-validation-error");
+        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#observed_on")).Should().BeTrue("the input shows it, not only the hint (T236)");
     }
 
     [Fact]
@@ -219,6 +221,7 @@ public sealed class LateFilingWarningTests : TestContext
         // A late filing is accepted, so the value is not marked invalid.
         cut.Find("#observed_on").HasAttribute("aria-invalid").Should().BeFalse();
         cut.Find("#observed_on").ClassList.Should().NotContain("input-validation-error");
+        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#observed_on")).Should().BeFalse();
     }
 
     [Fact]

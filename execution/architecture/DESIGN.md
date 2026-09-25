@@ -409,9 +409,11 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 .form-group       /* flex-column, gap .5rem, label on top of input */
 .full-width       /* grid-column: 1 / -1 */
 
-.form-control     /* padding .75rem, border --border-color, radius 6px */
+.form-control     /* padding .75rem, border --input-border, radius 6px */
 .form-select      /* native <select> styled with a chevron data-URI */
 .form-select-sm   /* compact variant */
+.form-control.invalid, .form-select.invalid, textarea.invalid, …[aria-invalid="true"]
+                  /* an invalid control: --danger-color border + a 4px left stripe (T236; with .input-validation-error) */
 
 .form-actions     /* flex, justify-end, gap .75rem, padded-top, top border */
 .scale-choices    /* one radio per line for a rating scale's points, lowest first (T205) */
@@ -438,6 +440,20 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
   the fieldset names. The same scan fails on help written into a slot (T193).
 - Inputs default to `.form-control`. Selects use `.form-select` (never native unstyled).
 - Validation summaries render as `.validation-summary-errors` (red panel) at the top of the form. Per-field errors render as `.validation-message` under the field.
+- **An invalid field shows it on the control**, not only in the message under it (T236). Blazor's inputs carry `.invalid`
+  and `aria-invalid="true"` while the `EditContext` holds a message for them. A control a page marks by hand, where the
+  page can tell the server will refuse what is typed (T192's encounter date, T125's rung picker, T205's MSF comment),
+  carries `.input-validation-error` and `aria-invalid="true"`. On a `.form-control`, a `.form-select` or a `textarea`,
+  `app.css` gives every one of them a `--danger-color` border and a 4px stripe down the left edge: the 1px border and a
+  3px inset shadow. The stripe is the cue that is not colour (WCAG 1.4.1); a shadow, not a wider border, so the text does
+  not move as a field turns invalid while it is typed in. In a contrast theme (`@media (forced-colors: active)`), which
+  drops shadows and paints every border one colour, the stripe is a 4px left border instead. The rule comes after
+  `.form-control` and `.form-select`, which are as specific as `.input-validation-error`. A checkbox or radio is not
+  marked, since a native one takes no border; its message says it. There is no field CSS class provider: Blazor's own
+  class names are the ones styled, so a page marks a field by giving it a validation message, and a hand-made control by
+  the two markers above, never by a style of its own. `Design/InvalidFieldStyleTests` pins the rule, and its
+  `ShowsInvalid(element)` matches a rendered control against the rule's own selectors, which a page test uses to show a
+  refused field is one the rule styles (the agenda deferral reason, the activity form's encounter date).
 - Multi-step forms get `<fieldset>` with a styled `<legend>` — both reset in the CSS.
 - Checkbox: `<div class="form-check">` wrapping a `.form-check-input` + `<label>`.
 - A group of checkboxes is a `<fieldset>` with a `<legend>`, the checkboxes inside a `.check-grid` (columns of
@@ -582,7 +598,7 @@ T019 introduces a small builder-specific extension to the shared system:
 
 .validation-message          /* inline field error, --danger-color, .85rem */
 .validation-summary-errors   /* form-level error panel */
-.input-validation-error      /* adds --danger-color border to an input */
+.input-validation-error      /* a hand-marked invalid input: --danger-color border + 4px left stripe, as Blazor's .invalid (§ Form system, T236) */
 .field-warning               /* inline NON-blocking warning under a field, input accepted as typed: --warning-bg, --warning-color left stripe, body text, .85rem (T160 late filing) */
 ```
 
@@ -1173,6 +1189,8 @@ Used in the Administrator dashboard system-health card to show service status at
 - Required fields show a visual `*` plus `aria-required="true"`.
 - `.visually-hidden` is available for screen-reader-only copy.
 - `:focus-visible` uses `--focus-ring`. Never remove focus outlines without replacing them.
+- An invalid field is marked by a stripe as well as the danger colour, and stays marked in a contrast theme (WCAG 1.4.1,
+  § Form system, T236). Its focus ring is the usual outline, outside the stripe.
 - Up/down reorder buttons (T019) are keyboard-focusable `<button type="button">` with `aria-label="Move field up"`.
 - `<fieldset>` is reset to no border/padding and its `<legend>` styled as a heading — this is the semantic grouping for multi-field clusters.
 
@@ -1426,7 +1444,7 @@ body, h1..h5, .page-subtitle
 .alert, .alert-{kind}, .error-summary
 
 /* ── Validation ────────────────────────────────────── */
-.validation-message, .validation-summary-errors, .input-validation-error, .field-warning
+.validation-message, .validation-summary-errors, .input-validation-error (+ .invalid, [aria-invalid="true"], forced colours), .field-warning
 
 /* ── Cards ─────────────────────────────────────────── */
 .detail-card, .detail-card--{variant}

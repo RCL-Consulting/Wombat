@@ -14,6 +14,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.Design;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
@@ -415,6 +416,7 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         var reason = cut.Find("#deferral-reason");
         reason.GetAttribute("aria-describedby").Should().Be("deferral-reason-help deferral-reason-message");
         Text(cut.Find("#deferral-reason-message")).Should().BeEmpty("nothing is refused before a submit");
+        InvalidFieldStyleTests.ShowsInvalid(reason).Should().BeFalse("nothing is refused before a submit");
         // Opening the form moves the focus to the reason (Defer_MovesTheFocusToTheReason).
         cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
             .Should().BeOfType<Microsoft.AspNetCore.Components.ElementReference>()
@@ -426,6 +428,8 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         var message = cut.Find("#deferral-reason-message .validation-message");
         message.TextContent.Should().Be("Say why the committee is deferring the decision.");
         cut.Find("#deferral-reason").GetAttribute("aria-invalid").Should().Be("true");
+        // T236: and the box itself shows it, not only the message under it. Blazor marks it; app.css styles the mark.
+        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#deferral-reason")).Should().BeTrue();
         _sender.Received.OfType<DeferAgendaLineCommand>().Should().BeEmpty();
 
         // The refused submit moves the focus back to the reason. Compared by the reference's id: once the box re-renders
