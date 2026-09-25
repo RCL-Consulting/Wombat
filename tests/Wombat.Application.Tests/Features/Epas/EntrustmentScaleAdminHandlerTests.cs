@@ -8,6 +8,7 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
+using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
 
 namespace Wombat.Application.Tests.Features.Epas;
@@ -191,6 +192,89 @@ public sealed class EntrustmentScaleAdminHandlerTests
 
         await action.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*progress*");
+    }
+
+    [Fact]
+    public async Task Delete_RejectsScaleThatIsASubSpecialitysDefault_NamingIt_AndCommitsNothing()
+    {
+        // SubSpecialities.DefaultEntrustmentScaleId is ON DELETE RESTRICT, and until T232 the handler never asked about
+        // it: the delete reached PostgreSQL and the administrator read a raw DbUpdateException.
+        await using var db = CreateDb();
+        var seeded = await SeedTwoLevelScaleAsync(db, "Neonatal ladder");
+        SeedSubSpeciality(db, specialityId: 40, "Paediatrics", subSpecialityId: 41, "Neonatology", seeded.Id);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var delete = new DeleteEntrustmentScaleCommandHandler(db);
+        var action = async () => await delete.Handle(
+            new DeleteEntrustmentScaleCommand(seeded.Id, TestPrincipals.Administrator()), CancellationToken.None);
+
+        var refusal = (await action.Should().ThrowAsync<InvalidOperationException>()).Which;
+        refusal.Message.Should().Be(
+            "This entrustment scale is the default scale of the sub-speciality \"Neonatology\" (Paediatrics), so it " +
+            "cannot be deleted. Change that sub-speciality's default entrustment scale to another scale, or to no " +
+            "default, first.");
+        refusal.InnerException.Should().BeNull("the refusal is the handler's own, made before any save");
+
+        // The audit trap: the failure row is saved through this same context, so whatever the handler tracked before
+        // it threw would be committed with it.
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var stored = await db.Set<EntrustmentScale>().Include(scale => scale.Levels).SingleAsync(scale => scale.Id == seeded.Id);
+        stored.Levels.Should().HaveCount(2, "no level was removed ahead of the refusal");
+        (await db.Set<SubSpeciality>().SingleAsync(entity => entity.Id == 41)).DefaultEntrustmentScaleId.Should().Be(seeded.Id);
+    }
+
+    [Fact]
+    public async Task Delete_RejectsScaleThatIsTheDefaultOfSeveralSubSpecialities_NamingEachWithItsSpeciality()
+    {
+        // A sub-speciality's name is unique only within its speciality, so each is named with its own.
+        await using var db = CreateDb();
+        var seeded = await SeedTwoLevelScaleAsync(db, "Shared ladder");
+        SeedSubSpeciality(db, specialityId: 50, "Surgery", subSpecialityId: 51, "General", seeded.Id);
+        SeedSubSpeciality(db, specialityId: 52, "Paediatrics", subSpecialityId: 53, "General", seeded.Id);
+        SeedSubSpeciality(db, specialityId: 54, "Internal Medicine", subSpecialityId: 55, "Cardiology", seeded.Id);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var delete = new DeleteEntrustmentScaleCommandHandler(db);
+        var action = async () => await delete.Handle(
+            new DeleteEntrustmentScaleCommand(seeded.Id, TestPrincipals.Administrator()), CancellationToken.None);
+
+        (await action.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(
+            "This entrustment scale is the default scale of the sub-specialities \"Cardiology\" (Internal Medicine), " +
+            "\"General\" (Paediatrics) and \"General\" (Surgery), so it cannot be deleted. Change each one's default " +
+            "entrustment scale to another scale, or to no default, first.");
+    }
+
+    [Fact]
+    public async Task Delete_RemovesScale_WhenTheOnlySubSpecialityDefaultIsAnotherScale()
+    {
+        await using var db = CreateDb();
+        var kept = await SeedTwoLevelScaleAsync(db, "Kept");
+        var removed = await SeedTwoLevelScaleAsync(db, "Removed");
+        SeedSubSpeciality(db, specialityId: 60, "Paediatrics", subSpecialityId: 61, "Paediatrics", kept.Id);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        await new DeleteEntrustmentScaleCommandHandler(db).Handle(
+            new DeleteEntrustmentScaleCommand(removed.Id, TestPrincipals.Administrator()), CancellationToken.None);
+
+        (await db.Set<EntrustmentScale>().Select(scale => scale.Id).ToListAsync()).Should().Equal(kept.Id);
+    }
+
+    private static void SeedSubSpeciality(
+        ApplicationDbContext db, int specialityId, string specialityName, int subSpecialityId, string name, int defaultScaleId)
+    {
+        db.Set<Speciality>().Add(new Speciality { Id = specialityId, CollegeId = 1, Name = specialityName });
+        db.Set<SubSpeciality>().Add(new SubSpeciality
+        {
+            Id = subSpecialityId,
+            SpecialityId = specialityId,
+            Name = name,
+            DefaultEntrustmentScaleId = defaultScaleId
+        });
     }
 
     [Fact]

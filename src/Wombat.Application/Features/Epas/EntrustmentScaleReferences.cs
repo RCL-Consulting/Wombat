@@ -3,14 +3,15 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Epas;
 
 /// <summary>
-/// The references to an entrustment scale that no foreign key protects (T109).
+/// The references to an entrustment scale that its rename and delete paths ask about before they write (T109, T232).
 /// </summary>
 /// <remarks>
-/// Two of the three ways a scale is depended on are invisible to the database:
+/// Two of the ways a scale is depended on are invisible to the database:
 /// <list type="bullet">
 ///   <item>An activity-type schema binds a field to a ladder by <c>scale_key</c>, which is a bare string
 ///   holding either an id or an exact scale NAME. Nothing constrains it.</item>
@@ -19,6 +20,10 @@ namespace Wombat.Application.Features.Epas;
 /// </list>
 /// Both are shared here rather than written twice, because the rename path and the delete path have to agree
 /// about them — a guard on one door and not the other is the same hole with an extra step.
+/// <para>
+/// A third, a sub-speciality's default scale, the database does protect, but only with a refusal the administrator
+/// cannot read; see <see cref="ThrowIfDefaultOfASubSpecialityAsync" />.
+/// </para>
 /// </remarks>
 internal static class EntrustmentScaleReferences
 {
@@ -111,5 +116,43 @@ internal static class EntrustmentScaleReferences
                     "Change that curriculum item's minimum first.");
             }
         }
+    }
+
+    /// <summary>
+    /// Throws when this scale is a sub-speciality's default entrustment scale, naming every such sub-speciality (T232).
+    /// </summary>
+    /// <remarks>
+    /// <c>SubSpecialities.DefaultEntrustmentScaleId</c> is ON DELETE RESTRICT, so a delete that reaches the database is
+    /// refused there. But that refusal is a raw <c>DbUpdateException</c>, which tells the administrator neither why nor
+    /// what to change. Asked here, before the handler removes anything, the refusal names the sub-speciality whose
+    /// default has to change first. Each is named with its speciality, because a sub-speciality's name is unique only
+    /// within its speciality.
+    /// </remarks>
+    public static async Task ThrowIfDefaultOfASubSpecialityAsync(
+        IApplicationDbContext dbContext,
+        int scaleId,
+        CancellationToken cancellationToken)
+    {
+        var defaults = await dbContext.Set<SubSpeciality>()
+            .AsNoTracking()
+            .Where(subSpeciality => subSpeciality.DefaultEntrustmentScaleId == scaleId)
+            .OrderBy(subSpeciality => subSpeciality.Speciality.Name)
+            .ThenBy(subSpeciality => subSpeciality.Name)
+            .Select(subSpeciality => new { subSpeciality.Name, Speciality = subSpeciality.Speciality.Name })
+            .ToListAsync(cancellationToken);
+
+        if (defaults.Count == 0)
+        {
+            return;
+        }
+
+        var named = defaults.Select(subSpeciality => $"\"{subSpeciality.Name}\" ({subSpeciality.Speciality})").ToList();
+        var list = named.Count == 1 ? named[0] : $"{string.Join(", ", named.Take(named.Count - 1))} and {named[^1]}";
+
+        throw new InvalidOperationException(named.Count == 1
+            ? $"This entrustment scale is the default scale of the sub-speciality {list}, so it cannot be deleted. " +
+              "Change that sub-speciality's default entrustment scale to another scale, or to no default, first."
+            : $"This entrustment scale is the default scale of the sub-specialities {list}, so it cannot be deleted. " +
+              "Change each one's default entrustment scale to another scale, or to no default, first.");
     }
 }

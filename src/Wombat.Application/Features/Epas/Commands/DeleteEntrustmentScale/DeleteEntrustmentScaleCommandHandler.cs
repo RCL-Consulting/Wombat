@@ -57,6 +57,10 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
                 "Trainee progress has been scored against this entrustment scale and it cannot be deleted.");
         }
 
+        // A sub-speciality's default scale is the third ON DELETE RESTRICT reference (T076), and until T232 the one
+        // this handler never asked about: the delete reached the database and came back as that same raw exception.
+        await EntrustmentScaleReferences.ThrowIfDefaultOfASubSpecialityAsync(_dbContext, request.Id, cancellationToken);
+
         // Deleting a scale a schema binds to by name does exactly what renaming one does — the key stops
         // resolving and the cross-scale refusal can never fire for that type again — so the same guard has
         // to stand on this door too (T109).
