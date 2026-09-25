@@ -76,7 +76,7 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
         // label read "Mini-CEX #101· 3a · …". Checked on the label's own text, not with Contain, which passed it.
         var (cut, _) = RenderPage();
 
-        LabelText(cut, 1).Should().Be("Mini-CEX #101 · 3a · 2026-02-10 · completed");
+        LabelText(cut, 1).Should().Be("Mini-CEX #101 · 3a · 2026-02-10 · Completed", "the state by its frozen label (T220)");
         LabelText(cut, 3).Should().Be("Annual MSF #50 · Released");
     }
 
