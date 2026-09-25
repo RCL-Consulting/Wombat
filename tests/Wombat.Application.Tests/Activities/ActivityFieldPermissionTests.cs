@@ -91,8 +91,10 @@ public sealed class ActivityFieldPermissionTests
             """{ "overall_level": 5, "strengths": "Clear history.", "epa_id": 5001 }""",
             null));
 
+        // Named by label, as the form names it, and the state likewise (T189). Be, not WithMessage: WithMessage ignores
+        // case, and the key "requested" differs from the label "Requested" only in case.
         (await act.Should().ThrowAsync<InvalidOperationException>())
-            .WithMessage("*epa_id*");
+            .Which.Message.Should().Be("EPA: you cannot change this while the activity is Requested.");
 
         var persisted = await dbContext.Activities.SingleAsync();
         persisted.CurrentState.Should().Be("requested");

@@ -359,7 +359,7 @@ public sealed class ActivityService : IActivityService
             string.Equals(candidate.Key, input.TransitionKey, StringComparison.Ordinal) &&
             candidate.From.Contains(activity.CurrentState, StringComparer.Ordinal))
             ?? throw new InvalidOperationException(
-                $"Transition '{input.TransitionKey}' is not available from state '{activity.CurrentState}'.");
+                WorkflowEvaluator.NotAvailableReason(workflow, input.TransitionKey, activity.CurrentState));
 
         var decision = _workflowEvaluator.Evaluate(workflow, activity, input.TransitionKey, input.Principal);
         if (!decision.Allowed)
@@ -369,7 +369,8 @@ public sealed class ActivityService : IActivityService
 
         if (transition.RequiresNote && string.IsNullOrWhiteSpace(input.Note))
         {
-            throw new InvalidOperationException($"Transition '{input.TransitionKey}' requires a note.");
+            // Named as its button is (T189): "Decline requires a note."
+            throw new InvalidOperationException($"{WorkflowTransition.LabelFor(transition.Key)} requires a note.");
         }
 
         // The writable set is computed AFTER the transition gate above and BEFORE the merge below,
@@ -386,6 +387,8 @@ public sealed class ActivityService : IActivityService
                 input.Principal);
 
             mergedDataJson = MergeWritableKeys(
+                schema,
+                workflow,
                 activity.DataJson,
                 input.DataPatchJson,
                 writableFieldKeys,
@@ -602,7 +605,7 @@ public sealed class ActivityService : IActivityService
             string.Equals(candidate.Key, input.TransitionKey, StringComparison.Ordinal) &&
             candidate.From.Contains(workflow.InitialState, StringComparer.Ordinal))
             ?? throw new InvalidOperationException(
-                $"Transition '{input.TransitionKey}' is not available from state '{workflow.InitialState}'.");
+                WorkflowEvaluator.NotAvailableReason(workflow, input.TransitionKey, workflow.InitialState));
 
         var subjectUserId = input.SubjectUserId.Trim();
         var subjectScope = await SubjectScopeResolver.ResolveAsync(_dbContext, subjectUserId, cancellationToken);
@@ -1414,6 +1417,11 @@ public sealed class ActivityService : IActivityService
     /// key. The refusal is read by a person, on the same page as the form, so it names the field as the form does (T172),
     /// through the same <see cref="FormSchema.FieldLabel" /> a disabled action's reason uses (T107). The schema passed in
     /// is the one the data was validated against, the version the activity is pinned to.
+    /// <para>
+    /// Each error is a sentence, "Presenting problem: A value is required.", and several are joined as sentences are,
+    /// with a space (T189). Every message the validator and the encounter-date gate write already ends in a full stop;
+    /// one that does not is given one, so the next error cannot run on into it.
+    /// </para>
     /// </remarks>
     private static void ThrowIfInvalid(FormSchema schema, IReadOnlyList<ActivityValidationErrorDto> validationErrors)
     {
@@ -1422,12 +1430,19 @@ public sealed class ActivityService : IActivityService
             return;
         }
 
-        var message = string.Join("; ", validationErrors.Select(error =>
+        var message = string.Join(" ", validationErrors.Select(error => AsSentence(
             error.FieldKey is null
                 ? error.Message
-                : $"{schema.FieldLabel(error.FieldKey)}: {error.Message}"));
+                : $"{schema.FieldLabel(error.FieldKey)}: {error.Message}")));
 
         throw new InvalidOperationException(message);
+    }
+
+    /// <summary>The text, trimmed, ending as a sentence does.</summary>
+    private static string AsSentence(string text)
+    {
+        var trimmed = text.Trim();
+        return trimmed.Length == 0 || trimmed[^1] is '.' or '!' or '?' ? trimmed : trimmed + ".";
     }
 
     /// <summary>
@@ -1490,9 +1505,13 @@ public sealed class ActivityService : IActivityService
     /// ones, and without that carve-out the rule would fire on untouched data. A key they may not
     /// write whose value actually differs throws: that is the case where an assessor's `complete`
     /// patch would otherwise rewrite <c>epa_id</c> or <c>assessor_user_id</c> and redirect which
-    /// curriculum item gets credited.
+    /// curriculum item gets credited. The page sends only the writable fields whose value changed
+    /// (<c>ActivityDataPatch</c>), so the refusal is met only by a hand-made request; it names the field and the state
+    /// by their labels all the same (T189).
     /// </remarks>
     private static string MergeWritableKeys(
+        FormSchema schema,
+        Workflow workflow,
         string currentJson,
         string patchJson,
         IReadOnlySet<string> writableFieldKeys,
@@ -1524,7 +1543,8 @@ public sealed class ActivityService : IActivityService
             if (!isUnchanged)
             {
                 throw new InvalidOperationException(
-                    $"Field '{property.Name}' cannot be written in state '{currentState}' by the current actor.");
+                    $"{schema.FieldLabel(property.Name)}: you cannot change this while the activity is " +
+                    $"{workflow.StateLabel(currentState)}.");
             }
         }
 

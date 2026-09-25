@@ -1,4 +1,5 @@
 using Wombat.Domain.Activities;
+using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Application.Features.Activities.Dtos;
 
@@ -122,8 +123,7 @@ public sealed record ActivityDto(
 
 /// <summary>
 /// A workflow transition the current actor is allowed to perform from the activity's current state,
-/// evaluated server-side against the real pinned <c>ActivityType</c> (T070). The display label is the
-/// caller's business — <c>ActivityWorkflowActions</c> title-cases the key.
+/// evaluated server-side against the real pinned <c>ActivityType</c> (T070).
 /// </summary>
 /// <param name="UnavailableReason">
 /// Null when the actor can take the action from this page. Otherwise the action is shown disabled with this text
@@ -136,6 +136,13 @@ public sealed record ActivityActionDto(
     string? UnavailableReason = null)
 {
     public bool IsAvailable => UnavailableReason is null;
+
+    /// <summary>
+    /// The action's name on its button, from <see cref="WorkflowTransition.LabelFor" />: the name a refusal of the same
+    /// move uses (T189), so a button and a refusal of its move call it the same thing. The workflow history table still
+    /// prints the stored transition key.
+    /// </summary>
+    public string Label => WorkflowTransition.LabelFor(TransitionKey);
 }
 
 /// <summary>

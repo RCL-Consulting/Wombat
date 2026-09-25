@@ -236,7 +236,7 @@ public sealed class RemainingWbaToolsTests
             { "supervisor_comments": "Fine.", "epa_id": {{ForbiddingEpaId}} }
             """);
         (await rewrite.Should().ThrowAsync<InvalidOperationException>())
-            .Which.Message.Should().Contain("Field 'epa_id' cannot be written");
+            .Which.Message.Should().Be("EPA: you cannot change this while the activity is Awaiting supervisor.");
     }
 
     /// <summary>
@@ -321,7 +321,7 @@ public sealed class RemainingWbaToolsTests
             { "review_comments": "Excellent throughout." }
             """);
         (await writeAtSubmit.Should().ThrowAsync<InvalidOperationException>())
-            .Which.Message.Should().Contain("Field 'review_comments' cannot be written");
+            .Which.Message.Should().Be("Review comments: you cannot change this while the activity is Draft.");
 
         await TransitionAsync(options, draft.Id, "submit", TraineeId);
         var selfSignOff = () => TransitionAsync(options, draft.Id, "sign_off", TraineeId, patch: ReviewPatch("2026-07-15"));

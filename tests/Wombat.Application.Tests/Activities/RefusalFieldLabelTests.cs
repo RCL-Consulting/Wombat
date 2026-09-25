@@ -41,14 +41,16 @@ public sealed class RefusalFieldLabelTests
     }
 
     [Fact]
-    public async Task ARefusalNamingSeveralFields_NamesEachByItsLabel_InTheFormsOrder()
+    public async Task ARefusalNamingSeveralFields_NamesEachByItsLabel_InTheFormsOrder_AsSentences()
     {
+        // T189: each error is a sentence, so they are joined as sentences are. Before, "; " after each full stop read
+        // "A value is required.; Case complexity: …".
         var options = await SeededAsync();
         var draft = await CreateAsync(options, CpsaRequest(without: ["complexity", "presenting_problem"]));
 
         var message = await RefusedSubmitAsync(options, draft.Id);
 
-        message.Should().Be("Presenting problem: A value is required.; Case complexity: A value is required.");
+        message.Should().Be("Presenting problem: A value is required. Case complexity: A value is required.");
     }
 
     [Fact]
@@ -91,13 +93,38 @@ public sealed class RefusalFieldLabelTests
             new CreateActivityInput(CpsaMiniCexTypeId, TraineeId, TraineeId, CpsaRequest(without: []), Principal(TraineeId)));
 
         (await attempt.Should().ThrowAsync<InvalidOperationException>())
-            .Which.Message.Should().Be("unlabelled_note: A value is required.; The data could not be read.");
+            .Which.Message.Should().Be("unlabelled_note: A value is required. The data could not be read.");
+    }
+
+    [Fact]
+    public async Task AnErrorThatDoesNotEndAsASentence_IsGivenAFullStop_SoTheNextDoesNotRunOnIntoIt()
+    {
+        // T189. Every message the shipped validator and the encounter-date gate write ends in a full stop; the joiner does
+        // not depend on it.
+        var options = await SeededAsync();
+        await using var db = new ApplicationDbContext(options);
+        var service = Service(db, new FixedErrorsValidator(
+            new ActivityValidationErrorDto("presenting_problem", "Say what brought the child in", "required"),
+            new ActivityValidationErrorDto(null, "  The data could not be read  ", "invalid_object"),
+            new ActivityValidationErrorDto("complexity", "Is this right?", "custom")));
+
+        var attempt = () => service.CreateDraftAsync(
+            new CreateActivityInput(CpsaMiniCexTypeId, TraineeId, TraineeId, CpsaRequest(without: []), Principal(TraineeId)));
+
+        (await attempt.Should().ThrowAsync<InvalidOperationException>())
+            .Which.Message.Should().Be(
+                "Presenting problem: Say what brought the child in. The data could not be read. Case complexity: Is this right?");
     }
 
     // ---- helpers -------------------------------------------------------------------------------------------------
 
     /// <summary>A validator whose one field error names a key the schema does not declare, and whose other names none.</summary>
-    private sealed class UnlabelledFieldValidator : ISchemaValidator
+    private sealed class UnlabelledFieldValidator() : FixedErrorsValidator(
+        new ActivityValidationErrorDto("unlabelled_note", "A value is required.", "required"),
+        new ActivityValidationErrorDto(null, "The data could not be read.", "invalid_object"));
+
+    /// <summary>A validator that reports the same errors whatever it is given.</summary>
+    private class FixedErrorsValidator(params ActivityValidationErrorDto[] errors) : ISchemaValidator
     {
         public IReadOnlyList<ActivityValidationErrorDto> Validate(
             FormSchema schema,
@@ -105,11 +132,7 @@ public sealed class RefusalFieldLabelTests
             SchemaValidationMode mode,
             IReadOnlyCollection<string>? additionallyRequiredFieldKeys = null,
             IReadOnlySet<string>? requiredFieldScope = null)
-            =>
-            [
-                new ActivityValidationErrorDto("unlabelled_note", "A value is required.", "required"),
-                new ActivityValidationErrorDto(null, "The data could not be read.", "invalid_object")
-            ];
+            => errors;
     }
 
     private static async Task<ActivityDto> CreateAsync(

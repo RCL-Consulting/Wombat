@@ -116,6 +116,25 @@ public sealed class WorkflowEvaluatorTests
             .Allowed.Should().BeFalse();
     }
 
+    /// <summary>
+    /// T189. The refusal of a move the state does not offer names the move as its button does and the state by its label,
+    /// the wording <c>ActivityService</c>'s own lookups share. A state the workflow does not declare keeps its key.
+    /// </summary>
+    [Fact]
+    public void Evaluate_AMoveTheStateDoesNotOffer_IsRefused_NamingTheMoveAndTheStateByTheirLabels()
+    {
+        var principal = CreatePrincipal("subject-1");
+        var activity = CreateActivity(ActivityScope.Global, 0);
+
+        var refused = _evaluator.Evaluate(CreateWorkflow("subject"), activity, "sign_off", principal);
+        refused.Allowed.Should().BeFalse();
+        refused.Reason.Should().Be("Sign Off is not available while the activity is Draft.");
+
+        activity.CurrentState = "archived";
+        _evaluator.Evaluate(CreateWorkflow("subject"), activity, "act", principal)
+            .Reason.Should().Be("Act is not available while the activity is archived.");
+    }
+
     private static Workflow CreateWorkflow(string actorRule)
         => new(
             1,

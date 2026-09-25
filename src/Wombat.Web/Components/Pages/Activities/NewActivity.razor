@@ -288,7 +288,7 @@
       // Nothing moves it on from here for this author, so the create was the filing. For a type born in `requested`
       // (the generic mini_cex, dops, cbd and acat) that is the submission itself, so no button may say it was not
       // submitted. Nor may either say "Submitted" when nothing moved (T148). The state's own name is true in every case.
-      return new ActivityNotice("success", $"Filed. It is now {StateLabel(workflow, created.CurrentState)}.");
+      return new ActivityNotice("success", $"Filed. It is now {workflow.StateLabel(created.CurrentState)}.");
     }
 
     if (!submit)
@@ -322,7 +322,7 @@
         $"Saved as a draft, but not submitted: {AsSentence(exception.Message)} Fix the fields below and submit again.");
     }
 
-    return new ActivityNotice("success", $"Submitted. It is now {StateLabel(workflow, moved.CurrentState)}.");
+    return new ActivityNotice("success", $"Submitted. It is now {workflow.StateLabel(moved.CurrentState)}.");
   }
 
   // The move that submits what the author has just created: the first of the moves the server offers them on it that
@@ -381,12 +381,6 @@
       return false;
     }
   }
-
-  private static string StateLabel(Workflow workflow, string stateKey)
-    => workflow.States.FirstOrDefault(state => string.Equals(state.Key, stateKey, StringComparison.Ordinal))?.Label
-         is { Length: > 0 } label
-      ? label
-      : stateKey;
 
   // A refusal is quoted mid-message, before more text, so it has to end as a sentence does. Most server refusals already
   // do ("Presenting problem: A value is required."); a few do not.

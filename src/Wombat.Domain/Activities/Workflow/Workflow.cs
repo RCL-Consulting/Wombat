@@ -7,6 +7,22 @@ public sealed record Workflow(
     IReadOnlyList<WorkflowTransition> Transitions)
 {
     /// <summary>
+    /// The label this workflow declares for a state, or the key itself when it declares none (T189).
+    /// </summary>
+    /// <remarks>
+    /// A refusal names a state by this, never by key, as <c>NewActivity</c>'s notices do. The activity's own page, the
+    /// activity lists and the workflow history still print the stored key, so on a type whose label is not its key in
+    /// words ("submitted", "Awaiting supervisor") a refusal and the page beside it name the state differently until they
+    /// read it from here too. The parser requires a label on every declared state, so the key is what a state this
+    /// workflow does not declare is called: an activity whose stored state its pinned version has lost.
+    /// </remarks>
+    public string StateLabel(string stateKey)
+        => States.FirstOrDefault(state => string.Equals(state.Key, stateKey, StringComparison.Ordinal))?.Label is { } label &&
+           !string.IsNullOrWhiteSpace(label)
+            ? label.Trim()
+            : stateKey;
+
+    /// <summary>
     /// Whether any transition leaves this state. A non-terminal state with none is a dead end.
     /// </summary>
     /// <remarks>
