@@ -9,8 +9,8 @@ namespace Wombat.Infrastructure.Identity;
 
 /// <summary>
 /// Seeds dev-only users so the GUI review (and other local browser verification)
-/// can sign in as a Trainee, either of two CommitteeMembers, an Assessor, a Coordinator, an InstitutionalAdmin or a
-/// CollegeAdmin without walking the full
+/// can sign in as a Trainee, either of two CommitteeMembers, an Assessor, a Coordinator, an InstitutionalAdmin, a
+/// CollegeAdmin or a global Administrator without walking the full
 /// invitation flow each time. Only invoked from Program.cs when
 /// <c>IHostEnvironment.IsDevelopment()</c> is true. Production deployments
 /// must never run this — the seed credentials are hardcoded by design.
@@ -26,6 +26,13 @@ namespace Wombat.Infrastructure.Identity;
 /// The trainee's programme starts on 1 January of the year they are seeded, which is a semester boundary.
 /// A start of "today" made the dev trainee exempt from every target under the College's D14 rule, so no
 /// target could be seen on dev at all.
+/// </para>
+/// <para>
+/// <c>devadmin@wombat.local</c> is a global Administrator, as <see cref="AdminSeeder" /> makes one: no institution, no
+/// College, no scope. Without it about fifteen Administrator jobs (colleges, institutions, scales, the audit detail, the
+/// progress rebuild, scheduled jobs, SSO mappings, erasure approval) could not be played by an agent on dev, and the
+/// runbook stood in for them with SQL (T292). T204's rule kept verification off the bootstrap credential, which is the
+/// kind of secret production uses; it never meant dev should have no Administrator an agent can sign in as.
 /// </para>
 /// </remarks>
 public sealed class DevUserSeeder
@@ -57,6 +64,10 @@ public sealed class DevUserSeeder
     private const string CollegeAdminEmail = "collegeadmin@wombat.local";
     private const string CollegeAdminPassword = "ChangeThisCollegeAdmin123!";
 
+    // A global Administrator, so an agent can play the Administrator's steps on dev without the bootstrap credential (T292).
+    private const string AdministratorEmail = "devadmin@wombat.local";
+    private const string AdministratorPassword = "ChangeThisDevAdmin123!";
+
     private readonly UserManager<WombatIdentityUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<DevUserSeeder> _logger;
@@ -73,6 +84,10 @@ public sealed class DevUserSeeder
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        // First, because an Administrator needs neither the demo curriculum nor the institution the early returns below
+        // wait for.
+        await EnsureAdministratorAsync();
+
         // The demo curriculum and institution are found by the seed keys DataSeeder gives them (T229), never by a name or
         // short code an administrator can edit. Before T229 the institution was a SingleAsync on ShortCode "DEMO", so
         // changing that short code stopped every later dev startup here.
@@ -134,6 +149,27 @@ public sealed class DevUserSeeder
         await EnsureStaffUserAsync(CoordinatorEmail, CoordinatorPassword, "Coordinator", WombatRoles.Coordinator, institutionId.Value, scopes, cancellationToken);
         await EnsureStaffUserAsync(InstitutionalAdminEmail, InstitutionalAdminPassword, "Institutional Admin", WombatRoles.InstitutionalAdmin, institutionId.Value, scopes, cancellationToken);
         await EnsureCollegeAdminAsync(cancellationToken);
+    }
+
+    private async Task EnsureAdministratorAsync()
+    {
+        if (await _userManager.FindByEmailAsync(AdministratorEmail) is not null)
+        {
+            return;
+        }
+
+        // Global, as AdminSeeder's bootstrap account is: no institution, no College and no scope.
+        var user = new WombatIdentityUser
+        {
+            UserName = AdministratorEmail,
+            Email = AdministratorEmail,
+            EmailConfirmed = true,
+            FirstName = "Demo",
+            LastName = "Administrator"
+        };
+
+        await CreateUserAsync(user, AdministratorPassword, WombatRoles.Administrator);
+        _logger.LogInformation("Seeded dev {Role} user {UserId}.", WombatRoles.Administrator, user.Id);
     }
 
     private async Task EnsureCollegeAdminAsync(CancellationToken cancellationToken)
