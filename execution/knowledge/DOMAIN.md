@@ -85,18 +85,19 @@ The PDF certificate ("STAR certificate") is produced by T030.
 
 ## Role hierarchy
 
-Wombat currently declares nine roles. In the rewrite, keep all nine but document what each one actually does. These become both Identity roles and claim policies.
+Wombat declares ten roles (`WombatRoles.All`). The rewrite kept the old nine and T093 added CollegeAdmin when the catalogue became national (T091). They are both Identity roles and claim policies.
 
 | Role | Scope | Can do |
 |---|---|---|
 | **Administrator** | Global | Everything. Single superuser, seeded on first run. |
-| **InstitutionalAdmin** | One institution | Manage users within their institution; approve Specialities and SubSpecialities for that institution. |
-| **SpecialityAdmin** | One speciality within an institution | Define curricula, approve STAR reflections for the speciality. |
+| **CollegeAdmin** | One national College (no institution) | Author the College's catalogue: specialities, sub-specialities, EPAs, curricula and their items (T093). |
+| **InstitutionalAdmin** | One institution | Invite and manage the institution's users, adopt a national curriculum version, admit trainees, keep assessor profiles, build activity types, form panels, read the audit log. |
+| **SpecialityAdmin** | One speciality within an institution | Committee work for the speciality: form panels, schedule reviews, see decisions due and entrustment decisions; the dashboard's pending reviews, trainees and curriculum coverage. |
 | **SubSpecialityAdmin** | One sub-speciality | Like SpecialityAdmin, scoped one level down. |
 | **Coordinator** | An institution or speciality | Operational role: schedule committee reviews, run MSF campaigns, follow up stalled requests. Does not invite users (an Administrator or InstitutionalAdmin does, T178). No curriculum editing. |
 | **CommitteeMember** | A speciality | Read-only oversight plus final sign-off on trainee progression. Cannot edit forms or curricula. |
 | **Assessor** | Their own assessments | Accept/decline/complete assessment requests addressed to them. |
-| **Trainee** | Their own record | Request assessments, submit STAR reflections, view their own progress. |
+| **Trainee** | Their own record | File activities and request assessments, view their own progress, reviews and STARs. After graduation a `trainee_record` claim keeps the record readable without the role (T252). |
 | **PendingTrainee** | None | Transitional role between accepting an invitation and being admitted to a programme. Can log in but can only view onboarding screens. |
 
 Role membership is **not** hierarchical — an InstitutionalAdmin is not automatically a SpecialityAdmin. If someone needs both, assign both. Policies use claim-based checks (`HasRole("SpecialityAdmin")` + institution claim + speciality claim) rather than role-hierarchy tricks.
@@ -118,7 +119,7 @@ The current Wombat has a `RegistrationInvitation` entity. Keep the flow but simp
 3. An email is sent containing a registration link with the token in the query string.
 4. The recipient clicks the link. If the token is valid and unused, they land on a registration form pre-populated from the invitation.
 5. On successful registration, the new user is assigned the invitation's target role, scope claims are written, the invitation is marked used, and they are redirected to their role-appropriate landing page.
-6. Trainees land as `PendingTrainee` until a SpecialityAdmin admits them to a curriculum, at which point they are promoted to `Trainee`.
+6. Trainees land as `PendingTrainee` until an InstitutionalAdmin (or an Administrator) admits them to a curriculum version the institution has adopted (`AdmitTraineeCommand`, T091), at which point they are promoted to `Trainee`.
 
 Invitations can be revoked (set `RevokedOn`) and re-issued (a new row with a new token; old row stays for audit).
 
@@ -160,7 +161,7 @@ This is a deliberate split. The platform is code; the content is data. Trying to
 - **WBA** — Work-Based Assessment. An observation of a trainee doing an EPA, scored on a form.
 - **Curriculum** — The training programme; a collection of EPAs with requirements.
 - **CurriculumItem** — One requirement row within a curriculum.
-- **STAR** — Situation-Task-Action-Result. A structured reflection framework.
+- **STAR** — Statement of Awarded Responsibility: a committee's formal entrustment of a trainee with an EPA at a level (T029). Before T028 it meant a Situation-Task-Action-Result reflection, now the `reflective_note` activity type.
 - **Entrustment level** — How much supervision is needed; 1 (observe only) to 5 (can supervise others).
 - **Form** — An activity type's form: its schema (`SchemaJson`), rendered at runtime. The legacy `AssessmentForm` was retired in T145.
 - **CriterionResponse** — One answer on a filled-in form.

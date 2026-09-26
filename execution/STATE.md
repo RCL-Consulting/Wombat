@@ -13,7 +13,7 @@ answers, and a P3 polish backlog.
 
 - **2026-09-24/25: about 150 tasks shipped.** Each was reviewed, fixed, merged, suite-green, browser-checked on dev and
   pushed. Master = origin; the last full run was 7,465 tests green.
-- **Open: 50 queued, 1 blocked.**
+- **Open: 39 queued, 1 blocked, 2 in progress (T293, T296) on 2026-09-26.**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, merged and in the final browser check:** T278, T279, T282 and T285.
   - **New P2s, "before real users":** T288 (SSO group mappings across institutions; no provider is configured) and T289

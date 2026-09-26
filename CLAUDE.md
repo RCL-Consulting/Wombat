@@ -52,7 +52,7 @@ evaluators, and renderers.
 | MediatR | v12.x maximum — **do not upgrade to paid v13** |
 | Clinical dates | `DateOnly` for calendar dates; `DateTime` only for timestamps and audit events |
 | PDF generation | QuestPDF (portfolio export in T023) |
-| Auth | ASP.NET Core Identity; 9 roles (see below); admin-controlled onboarding via invitations; institutional SSO via OIDC (T027) |
+| Auth | ASP.NET Core Identity; 10 roles (see below); admin-controlled onboarding via invitations; institutional SSO via OIDC (T027) |
 | Icons | Inline SVGs from Lucide via a shared `Icon.razor` component. **Bootstrap Icons font is not loaded** — `<i class="bi bi-*">` renders nothing |
 | Security | CSP with nonce-backed `script-src`; `X-Content-Type-Options: nosniff`; sign-in throttled on failed password checks per client address (`SignInThrottle`, T156); `X-Forwarded-*` believed from loopback only |
 | Dependency licensing | GPLv3-compatible additions only |
@@ -130,17 +130,22 @@ Web components may not reference Domain types directly in `.razor` files — onl
 
 ## Roles
 
-Wombat has 9 roles, checked via ASP.NET Core Identity:
+Wombat has 10 roles (`WombatRoles.All`), checked via ASP.NET Core Identity:
 
 1. **Administrator** — global; sees everything.
-2. **InstitutionalAdmin** — scoped to one institution.
-3. **SpecialityAdmin** — scoped to one speciality within an institution.
-4. **SubSpecialityAdmin** — scoped to one sub-speciality.
-5. **Coordinator** — administrative staff supporting a programme.
-6. **CommitteeMember** — sits on the annual review committee.
-7. **Assessor** — workplace supervisor who assesses trainees.
-8. **Trainee** — the learner working through a curriculum.
-9. **PendingTrainee** — invited but not yet admitted by admin.
+2. **CollegeAdmin** — scoped to one national College, not to an institution; authors that College's catalogue
+   (specialities, sub-specialities, EPAs, curricula) (T093).
+3. **InstitutionalAdmin** — scoped to one institution.
+4. **SpecialityAdmin** — scoped to one speciality within an institution.
+5. **SubSpecialityAdmin** — scoped to one sub-speciality.
+6. **Coordinator** — administrative staff supporting a programme.
+7. **CommitteeMember** — sits on the annual review committee.
+8. **Assessor** — workplace supervisor who assesses trainees.
+9. **Trainee** — the learner working through a curriculum.
+10. **PendingTrainee** — invited but not yet admitted by admin.
+
+A graduate holds no role for their old programme: a `trainee_record` claim keeps their record readable
+(`TraineeOrFormerTrainee`, T252).
 
 Users can hold multiple roles. Onboarding is admin-controlled via invitations or SSO
 provisioning. SSO-provisioned users get roles from group-to-role mappings; if no groups
