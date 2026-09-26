@@ -24,18 +24,23 @@ internal static class PageAccess
         .BuildServiceProvider();
 
     /// <summary>
+    /// Every routable component in Wombat.Web, once for each template its <c>@page</c> directives declare, as the router
+    /// finds them. The scenario runbook's check (T294) holds every one of them to a step.
+    /// </summary>
+    public static IReadOnlyList<(Type Page, string Template)> Pages { get; } = typeof(NavMenu).Assembly.GetTypes()
+        .SelectMany(t => t.GetCustomAttributes<RouteAttribute>().Select(r => (Page: t, r.Template)))
+        .ToList();
+
+    /// <summary>
     /// The routed page an href opens, or null when none answers it. A literal route wins over a parameterised one, as in
     /// the router: /activities/new is not /activities/{Id}.
     /// </summary>
     public static Type? PageFor(string href)
     {
         var path = "/" + href.TrimStart('/');
-        var pages = typeof(NavMenu).Assembly.GetTypes()
-            .SelectMany(t => t.GetCustomAttributes<RouteAttribute>().Select(r => (Page: t, r.Template)))
-            .ToList();
 
-        return pages.FirstOrDefault(p => string.Equals(p.Template, path, StringComparison.OrdinalIgnoreCase)).Page
-            ?? pages.FirstOrDefault(p => Matches(p.Template, path)).Page;
+        return Pages.FirstOrDefault(p => string.Equals(p.Template, path, StringComparison.OrdinalIgnoreCase)).Page
+            ?? Pages.FirstOrDefault(p => Matches(p.Template, path)).Page;
     }
 
     /// <summary>Null when the role gets in; otherwise why not.</summary>
