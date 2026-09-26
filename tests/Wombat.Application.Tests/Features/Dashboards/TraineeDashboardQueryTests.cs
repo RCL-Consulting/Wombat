@@ -9,7 +9,9 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Dashboards;
 
@@ -19,7 +21,7 @@ public sealed class TraineeDashboardQueryTests
     public async Task PendingTrainee_ReturnsEmptyDashboardWithFlag()
     {
         await using var db = CreateDb();
-        var handler = new GetTraineeDashboardSummaryQueryHandler(db);
+        var handler = new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty);
         var principal = CreatePrincipal("trainee-1", ["PendingTrainee"]);
 
         var result = await handler.Handle(
@@ -37,7 +39,7 @@ public sealed class TraineeDashboardQueryTests
     {
         await using var db = CreateDb();
         SeedTraineeData(db);
-        var handler = new GetTraineeDashboardSummaryQueryHandler(db);
+        var handler = new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty);
         var principal = CreatePrincipal("trainee-1", ["Trainee"]);
 
         var result = await handler.Handle(
@@ -66,7 +68,7 @@ public sealed class TraineeDashboardQueryTests
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
-        var result = await new GetTraineeDashboardSummaryQueryHandler(db).Handle(
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"]), AsOf: new DateOnly(2026, 9, 23)),
             CancellationToken.None);
 
@@ -79,7 +81,7 @@ public sealed class TraineeDashboardQueryTests
     public async Task Trainee_WithNoProfile_ReturnsEmptyProgress()
     {
         await using var db = CreateDb();
-        var handler = new GetTraineeDashboardSummaryQueryHandler(db);
+        var handler = new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty);
         var principal = CreatePrincipal("trainee-no-profile", ["Trainee"]);
 
         var result = await handler.Handle(
@@ -109,11 +111,62 @@ public sealed class TraineeDashboardQueryTests
         AddOwn(db, 7, ReflectiveTypeId, version: 2, "discussed", withDueDate);
         await db.SaveChangesAsync();
 
-        var result = await new GetTraineeDashboardSummaryQueryHandler(db).Handle(
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
 
+        // The inbox card is what the trainee can move (T297): she may cancel the accepted Mini-CEX and submit the draft. The
+        // version-2 discussion waits on its supervisor's sign-off, so it is still due but not hers to move.
         result.Inbox.Select(item => item.ActivityId).Should().BeEquivalentTo([5, 6]);
         result.UpcomingDeadlines.Select(item => item.ActivityId).Should().BeEquivalentTo([5, 6, 7]);
+    }
+
+    /// <summary>
+    /// T297, Steps 3.12 and 3.16: the card listed a declined request, which has no move left, and dropped a reflection
+    /// awaiting discussion, which she may still cancel, while the inbox it opens did the opposite. It lists what the inbox
+    /// lists. A declined request is shown, with its badge, on Recent activities and on My Activities. No mail announces it:
+    /// <c>AssessmentDeclinedEmail</c> has no sender (T320).
+    /// </summary>
+    [Fact]
+    public async Task ADeclinedCpsaRequest_IsNotOnTheInboxCard_AndASubmittedReflectiveExerciseIs()
+    {
+        await using var db = CreateDb();
+        ShippedSeeds.AddType(db, 21, "mini_cex_cpsa", "Mini-CEX (Paediatrics)");
+        ShippedSeeds.AddType(db, 22, "reflective_exercise_cpsa", "Reflective Exercise (Paediatrics)");
+        const string namesBotha = """{ "assessor_user_id": "assessor-botha" }""";
+        AddOwn(db, 1, 21, version: 1, "declined", namesBotha);
+        AddOwn(db, 2, 21, version: 1, "requested", namesBotha);
+        AddOwn(db, 3, 22, version: 1, "submitted", namesBotha);
+        await db.SaveChangesAsync();
+
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
+            new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
+
+        result.Inbox.Select(item => (item.ActivityId, item.CurrentStateLabel))
+            .Should().Equal((2, "Requested"), (3, "Awaiting discussion"));
+        result.RecentActivities.Select(item => item.ActivityId).Should().Contain(1, "the decline is shown with its badge there");
+    }
+
+    /// <summary>
+    /// The T297 review: for a trainee who is also an assessor the card lists other trainees' requests beside her own, and
+    /// a row that is someone else's says whose, as the inbox and the Assessor's card do (T250). Her own row names nobody.
+    /// </summary>
+    [Fact]
+    public async Task ARowThatIsAnotherTraineesWork_NamesTheTrainee_AndTheCallersOwnNamesNobody()
+    {
+        await using var db = CreateDb();
+        ShippedSeeds.AddType(db, 21, "mini_cex_cpsa", "Mini-CEX (Paediatrics)");
+        AddOwn(db, 1, 21, version: 1, "requested", """{ "assessor_user_id": "assessor-botha" }""");
+        AddOwn(db, 2, 21, version: 1, "requested", """{ "assessor_user_id": "trainee-1" }""", subjectUserId: "trainee-2");
+        await db.SaveChangesAsync();
+
+        var names = new FakeUserDirectory(("trainee-1", "Sipho Ndlovu"), ("trainee-2", "Nomsa Mahlangu"));
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), names).Handle(
+            new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", [WombatRoles.Trainee, WombatRoles.Assessor])),
+            CancellationToken.None);
+
+        result.Inbox.Select(item => (item.ActivityId, item.SubjectName)).Should().BeEquivalentTo(
+            [(1, (string?)null), (2, "Nomsa Mahlangu")]);
+        names.Lookups.Should().ContainSingle().Which.Should().Equal(["trainee-2"], "one lookup, for the rows that are not her own");
     }
 
     [Fact]
@@ -131,7 +184,7 @@ public sealed class TraineeDashboardQueryTests
         AddOwn(db, 5, WbaTypeId, version: 1, "declined", "{}");
         await db.SaveChangesAsync();
 
-        var result = await new GetTraineeDashboardSummaryQueryHandler(db).Handle(
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
 
         result.RecentActivities.Select(item => (item.ActivityId, item.IsFinished))
@@ -155,7 +208,7 @@ public sealed class TraineeDashboardQueryTests
         AddOwn(db, 4, WbaTypeId, version: 1, "declined", withDueDate, subjectUserId: "trainee-2");
         await db.SaveChangesAsync();
 
-        var result = await new GetTraineeDashboardSummaryQueryHandler(db).Handle(
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
 
         result.Inbox.Select(item => item.ActivityId).Should().Equal(1);
@@ -187,6 +240,7 @@ public sealed class TraineeDashboardQueryTests
                 Scope = ActivityScope.Global, Version = 1, WorkflowJson = FinishingWorkflows.Wba
             });
 
+        // Each with the version row a publish writes: a move on an activity is judged against it (T297).
         db.Set<ActivityTypeVersion>().AddRange(
             new ActivityTypeVersion
             {
@@ -196,7 +250,9 @@ public sealed class TraineeDashboardQueryTests
             {
                 Id = 2, ActivityTypeId = ReflectiveTypeId, Version = 2,
                 WorkflowJson = FinishingWorkflows.ReflectiveExerciseWithSignOff
-            });
+            },
+            new ActivityTypeVersion { Id = 3, ActivityTypeId = TeachingTypeId, Version = 1, WorkflowJson = FinishingWorkflows.TeachingSession },
+            new ActivityTypeVersion { Id = 4, ActivityTypeId = WbaTypeId, Version = 1, WorkflowJson = FinishingWorkflows.Wba });
     }
 
     private static void AddOwn(

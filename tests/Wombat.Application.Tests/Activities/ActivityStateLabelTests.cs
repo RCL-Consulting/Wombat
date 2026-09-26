@@ -109,7 +109,7 @@ public sealed class ActivityStateLabelTests
         var submitted = await SubmittedAuditAsync(options);
 
         await using var db = new ApplicationDbContext(options);
-        var summary = await new GetTraineeDashboardSummaryQueryHandler(db).Handle(
+        var summary = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(Principal(TraineeId, WombatRoles.Trainee), new DateOnly(2026, 3, 20)),
             CancellationToken.None);
 
@@ -125,7 +125,7 @@ public sealed class ActivityStateLabelTests
         var draft = await CreateAuditAsync(options);
 
         await using var db = new ApplicationDbContext(options);
-        var summary = await new GetTraineeDashboardSummaryQueryHandler(db).Handle(
+        var summary = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(Principal(TraineeId, WombatRoles.Trainee), new DateOnly(2026, 3, 20)),
             CancellationToken.None);
 
@@ -141,7 +141,7 @@ public sealed class ActivityStateLabelTests
         await TransitionAsync(options, submitted, "sign_off", AssessorId, """{ "supervisor_comments": "A complete cycle." }""");
 
         await using var db = new ApplicationDbContext(options);
-        var summary = await new GetAssessorDashboardSummaryQueryHandler(db, new FakeUserDirectory(), Options.Create(new DashboardThresholds()))
+        var summary = await new GetAssessorDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), new FakeUserDirectory(), Options.Create(new DashboardThresholds()))
             .Handle(new GetAssessorDashboardSummaryQuery(Principal(AssessorId)), CancellationToken.None);
 
         var decision = summary.RecentDecisions.Should().ContainSingle(item => item.ActivityId == submitted).Subject;

@@ -8,13 +8,12 @@
   @if (_vm is not null)
   {
     <div class="dashboard-grid">
+      @* The programme's backlog awaiting a reviewer, read from each activity's pinned workflow (T297). No link: the inbox
+         lists only what the caller can move, not this backlog, and no page lists the backlog yet. *@
       <DashboardCard Title="Pending reviews" Icon="inbox" Emphasis="true">
         <div class="dashboard-metric">
           <span class="dashboard-metric-value">@_vm.PendingReviewCount</span>
-          <span class="dashboard-metric-label">activities in review</span>
-        </div>
-        <div class="dashboard-card-footer">
-          <a href="/activities/inbox" class="btn btn-sm btn-primary">Review queue &rarr;</a>
+          <span class="dashboard-metric-label">@(_vm.PendingReviewCount == 1 ? "activity awaiting review" : "activities awaiting review")</span>
         </div>
       </DashboardCard>
 

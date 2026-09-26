@@ -6,7 +6,9 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Dashboards;
 
@@ -21,7 +23,7 @@ public sealed class TraineeStageOverrideTests
         await using var db = CreateDb();
         SeedWithStageOverrides(db, programmeStartDaysAgo: 365 * 2 + 30);
 
-        var handler = new GetTraineeDashboardSummaryQueryHandler(db);
+        var handler = new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty);
         var principal = CreatePrincipal("trainee-1", ["Trainee"]);
 
         var result = await handler.Handle(
@@ -39,7 +41,7 @@ public sealed class TraineeStageOverrideTests
         await using var db = CreateDb();
         SeedWithStageOverrides(db, programmeStartDaysAgo: 365 * 5);  // year 6 - not in overrides
 
-        var handler = new GetTraineeDashboardSummaryQueryHandler(db);
+        var handler = new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty);
         var principal = CreatePrincipal("trainee-1", ["Trainee"]);
 
         var result = await handler.Handle(

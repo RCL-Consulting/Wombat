@@ -447,12 +447,11 @@ public sealed class CurriculumCoverageTests
         // trainee counts beside it have conjoined the institution since T130; the tile now does too.
         await using var db = CreateDb();
         SeedProgramme(db);
-        db.ActivityTypes.Add(new Wombat.Domain.Activities.ActivityType
-        {
-            Id = 1, Key = "reflective_note", Name = "Reflective note", Scope = Wombat.Domain.Activities.ActivityScope.Global
-        });
+        // The shipped reflective note, whose "submitted" awaits the programme's SpecialityAdmin: pending is read from the
+        // pinned workflow since T297, not from the state's key.
+        Wombat.Application.Tests.TestHelpers.ShippedSeeds.AddType(db, 1, "reflective_note", "Reflective note");
         AddPending(db, 1, "submitted", OurInstitution, specialityId: 1, subSpecialityId: 1);    // counted
-        AddPending(db, 2, "in_review", OtherInstitution, specialityId: 1, subSpecialityId: 1);  // the national leak
+        AddPending(db, 2, "submitted", OtherInstitution, specialityId: 1, subSpecialityId: 1);  // the national leak
         AddPending(db, 3, "submitted", OurInstitution, specialityId: 2, subSpecialityId: 3);    // another speciality
         AddPending(db, 4, "draft", OurInstitution, specialityId: 1, subSpecialityId: 1);        // not pending
         AddPending(db, 5, "submitted", null, specialityId: null, subSpecialityId: null);        // unstamped: nobody's

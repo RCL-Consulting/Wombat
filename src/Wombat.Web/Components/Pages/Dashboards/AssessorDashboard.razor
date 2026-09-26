@@ -8,34 +8,36 @@
   @if (_vm is not null)
   {
     <div class="dashboard-grid">
+      @* What waits on the caller is read from each activity's pinned workflow, as the inbox this card links to reads it
+         (T297): the count is the inbox's rows less the caller's own portfolio, so the two cannot disagree. *@
       <DashboardCard Title="Pending requests" Icon="inbox" Emphasis="true">
         <div class="dashboard-metric">
           <span class="dashboard-metric-value">@_vm.PendingRequestCount</span>
-          <span class="dashboard-metric-label">assessments awaiting review</span>
+          <span class="dashboard-metric-label">@(_vm.PendingRequestCount == 1 ? "assessment awaiting review" : "assessments awaiting review")</span>
         </div>
         <div class="dashboard-card-footer">
           <a href="/activities/inbox" class="btn btn-sm btn-primary">Review inbox &rarr;</a>
         </div>
       </DashboardCard>
 
-      <DashboardCard Title="Accepted, needing action" Icon="alert-triangle"
-                     Warning="@_vm.AcceptedActivities.Any(a => a.IsOverdue)">
-        @if (_vm.AcceptedActivities.Count == 0)
+      <DashboardCard Title="Awaiting your review" Icon="alert-triangle"
+                     Warning="@_vm.AwaitingReview.Any(a => a.IsOverdue)">
+        @if (_vm.AwaitingReview.Count == 0)
         {
-          <p class="muted">No accepted assessments pending action.</p>
+          <p class="muted">Nothing is awaiting your review.</p>
         }
         else
         {
           <ul class="list-unstyled">
-            @foreach (var item in _vm.AcceptedActivities)
+            @foreach (var item in _vm.AwaitingReview)
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
                 @* Whose it is, by name, as the coordinator's cards say it (T250). The link's name starts with its visible
                    label and names the trainee, so three Mini-CEX links are not three links called "Mini-CEX". *@
                 <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
-                @* Every item here is in `accepted`, so its badge is the accepted one (BadgeFor, T266); its words are the
-                   state's label, or that the work is overdue (T220). *@
-                <span class="badge @BadgeFor.ActivityState("accepted", isFinished: false)">@(item.IsOverdue ? "Overdue" : item.CurrentStateLabel)</span>
+                @* The state's badge, coloured by its key and worded by its label (BadgeFor, T220, T266). Once it has waited
+                   past the assessor's due days it reads "Overdue", amber: wanting attention. *@
+                <span class="badge @(item.IsOverdue ? BadgeFor.State(BadgeState.Accepted) : BadgeFor.ActivityState(item.CurrentState, isFinished: false))">@(item.IsOverdue ? "Overdue" : item.CurrentStateLabel)</span>
               </li>
             }
           </ul>

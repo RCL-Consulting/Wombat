@@ -25,8 +25,8 @@ public sealed class AssessorDashboardSubjectNameTests : TestContext
         auth.SetRoles("Assessor");
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "assessor-1"));
         Services.AddSingleton<IScopedSender>(new Sender(new AssessorDashboardSummaryDto(
-            0,
-            [new AcceptedActivityItem(44, "Mini-CEX", "Thandi Nkosi", "Accepted", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false)],
+            1,
+            [new AwaitingReviewItem(44, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false)],
             [new RecentDecisionItem(43, "Mini-CEX", "Sipho Dlamini", "completed", "Completed", IsFinished: true, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))])));
     }
 
@@ -36,7 +36,7 @@ public sealed class AssessorDashboardSubjectNameTests : TestContext
         var cut = RenderComponent<AssessorDashboard>();
         cut.WaitForState(() => cut.FindAll(".badge").Count >= 2);
 
-        Text(RowFor(cut, 44)).Should().Be("Mini-CEX — Thandi Nkosi Accepted");
+        Text(RowFor(cut, 44)).Should().Be("Mini-CEX — Thandi Nkosi Requested");
         Text(RowFor(cut, 43)).Should().Be("Mini-CEX — Sipho Dlamini Completed");
     }
 

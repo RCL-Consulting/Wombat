@@ -6,7 +6,6 @@ using Wombat.Application.Common.Users;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
-using Wombat.Domain.Activities.Workflow;
 using Wombat.Domain.Epas;
 
 namespace Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
@@ -31,36 +30,12 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
 
     public async Task<IReadOnlyList<ActivitySummaryDto>> Handle(ListActivitiesByActorInboxQuery request, CancellationToken cancellationToken)
     {
-        var activities = await _dbContext.Set<Activity>()
-            .AsNoTracking()
-            .Include(activity => activity.ActivityType)
-                .ThenInclude(activityType => activityType.Versions)
-            .Include(activity => activity.Transitions)
-            .OrderByDescending(activity => activity.UpdatedOn)
-            .ToListAsync(cancellationToken);
-
-        // Each pinned workflow parsed once, and kept: it decides whether the caller can act, and it names the state the
-        // row shows (T220).
-        var workflowsByPin = new Dictionary<(int ActivityTypeId, int Version), Workflow?>();
-        Workflow? PinnedWorkflow(Activity activity)
-        {
-            var pin = (activity.ActivityTypeId, activity.SchemaVersion);
-            if (!workflowsByPin.TryGetValue(pin, out var workflow))
-            {
-                var pinnedVersion = activity.ActivityType.Versions.SingleOrDefault(version => version.Version == activity.SchemaVersion);
-                workflow = pinnedVersion is null ? null : WorkflowParser.Parse(pinnedVersion.WorkflowJson);
-                workflowsByPin[pin] = workflow;
-            }
-
-            return workflow;
-        }
-
-        var actionable = activities
-            .Select(activity => (Activity: activity, Workflow: PinnedWorkflow(activity)))
-            .Where(row => row.Workflow is { } workflow && workflow.Transitions.Any(transition =>
-                transition.From.Contains(row.Activity.CurrentState, StringComparer.Ordinal) &&
-                _workflowEvaluator.Evaluate(workflow, row.Activity, transition.Key, request.Principal).Allowed))
-            .ToList();
+        // The activities the caller can move now, each with its pinned workflow, which decided that and names the state the
+        // row shows (T220). The one reading the Assessor's and the Trainee's cards share, so neither can disagree with this
+        // page (T297); narrowed in SQL to the states that have a move out and the rows the caller could reach, where every
+        // activity used to be loaded. With the transitions, for the credit column below.
+        var actionable = await ActivityWaiting.LoadActionableAsync(
+            _dbContext.Set<Activity>(), _dbContext, _workflowEvaluator, request.Principal, withTransitions: true, cancellationToken);
 
         // T137. The EPA each row is about, from the stamped column, in one read for the rows that survived the act
         // gate. An assessor with three requests from one trainee used to see three rows that differed only by id.

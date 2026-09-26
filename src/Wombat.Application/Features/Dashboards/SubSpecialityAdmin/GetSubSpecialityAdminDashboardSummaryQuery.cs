@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
@@ -44,14 +45,21 @@ public sealed class GetSubSpecialityAdminDashboardSummaryQueryHandler
         // tile still counted every adopting institution's backlog in this sub-speciality until T185 conjoined the
         // institution stamp, as the trainee counts below do. A null stamp belongs to nobody's programme and is counted
         // by nobody.
-        var pendingReviewCount = !isAdministrator && institutionId is null
-            ? 0
-            : await _dbContext.Set<Activity>()
-                .AsNoTracking()
-                .Where(a => a.CurrentState == "submitted" || a.CurrentState == "in_review")
-                .Where(a => a.SubSpecialityId != null && subSpecialityIds.Contains(a.SubSpecialityId.Value))
-                .Where(a => isAdministrator || a.InstitutionId == institutionId)
-                .CountAsync(cancellationToken);
+        // T297: pending is awaiting a reviewer, read from each activity's pinned workflow (ActivityWaiting). Until T297 it
+        // was the states keyed "submitted" or "in_review": no seed has "in_review", and every rated CPSA instrument waits
+        // for its assessor in "requested", so a requested CBD was never pending (Step 3.54).
+        var pendingReviewCount = 0;
+        if (isAdministrator || institutionId is not null)
+        {
+            var awaitingReviewer = await ActivityWaiting.LoadAwaitingReviewerAsync(_dbContext, cancellationToken);
+            var candidates = await awaitingReviewer.Narrow(_dbContext.Set<Activity>()
+                    .AsNoTracking()
+                    .Where(a => a.SubSpecialityId != null && subSpecialityIds.Contains(a.SubSpecialityId.Value))
+                    .Where(a => isAdministrator || a.InstitutionId == institutionId))
+                .Select(a => new { a.ActivityTypeId, a.SchemaVersion, a.CurrentState })
+                .ToListAsync(cancellationToken);
+            pendingReviewCount = candidates.Count(a => awaitingReviewer.Waits(a.ActivityTypeId, a.SchemaVersion, a.CurrentState));
+        }
 
         var traineeProfiles = !isAdministrator && institutionId is null
             ? []

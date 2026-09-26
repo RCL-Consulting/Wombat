@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Workflow;
@@ -77,15 +78,15 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
                 continue;
             }
 
-            var currentState = workflow.States.FirstOrDefault(s => s.Key == activity.CurrentState);
-            if (currentState is null || currentState.Terminal)
+            // Awaiting a reviewer, by the predicate the Coordinator's stalled card and the programme admins' tile read
+            // (ActivityWaiting, T297), so a request this mails about is on the card once it has waited the stall days.
+            if (!ActivityWaiting.AwaitsReviewer(workflow, activity.CurrentState))
                 continue;
 
-            var outgoingTransitions = workflow.Transitions
+            // The nudge's own further need: a nominee named in a field, to mail. A move for a role (a SpecialityAdmin's
+            // review of a teaching session) awaits a reviewer too, but names nobody to write to.
+            var assessorFieldTransition = workflow.Transitions
                 .Where(t => t.From.Contains(activity.CurrentState))
-                .ToList();
-
-            var assessorFieldTransition = outgoingTransitions
                 .FirstOrDefault(t => HasFieldUserActor(t.Actor));
 
             if (assessorFieldTransition is null)

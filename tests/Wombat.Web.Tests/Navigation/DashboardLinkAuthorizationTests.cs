@@ -311,7 +311,7 @@ public sealed class DashboardLinkAuthorizationTests
                 [new ExpiringInvitationItem(1, "new.trainee@wombat.local", WombatRoles.Trainee, new DateOnly(2026, 3, 22))]),
             GetAssessorDashboardSummaryQuery => new AssessorDashboardSummaryDto(
                 2,
-                [new AcceptedActivityItem(52, "Mini-CEX", "Thandi Nkosi", "Accepted", When, IsOverdue: false)],
+                [new AwaitingReviewItem(52, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", When, IsOverdue: false)],
                 [new RecentDecisionItem(53, "Mini-CEX", "Thandi Nkosi", "completed", "Completed", IsFinished: true, When)]),
             GetTraineeDashboardSummaryQuery query => Trainee(
                 pending: query.Principal.IsInRole(WombatRoles.PendingTrainee) && !query.Principal.IsInRole(WombatRoles.Trainee)),

@@ -784,8 +784,9 @@ Gap: none
 Role: Coordinator — Mr Pieter Smit
 Route: / → /placeholder/{Feature}
 Do: Read the dashboard's "Stalled requests" card, then open Stalled Activities from the nav.
-Expect: Whatever the card lists, no row links anywhere, so there is no page to act on a stalled request from (Step
-  3.30). Stalled Activities is the "Coming soon" stub, headed "Stalled Activities".
+Expect: The card lists Dr du Plessis's portfolio review, still awaiting review since Step 3.30 aged it, and its row
+  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. Stalled
+  Activities is the "Coming soon" stub, headed "Stalled Activities".
 Note: Dr Mahlangu's request from A.2.7 has waited 6 days, under the card's 7, so it is not listed.
 Actual (2026-09-26, T295 replay, wombat_scenario): The Coordinator dashboard's "Stalled requests" card (a warning card)
   lists one row, "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis, 18 Sept" (activity 10, submitted),
@@ -948,7 +949,9 @@ Gap: none
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
-Expect: He lands on his Assessor dashboard, and Dr Dlamini's assessor list names him again (checked at A.7.1).
+Expect: He lands on his Assessor dashboard. Pending requests reads "1 assessment awaiting review", and Awaiting your
+  review lists Dr du Plessis's Portfolio and Logbook Review, badged Overdue, as his inbox lists it (T297). Dr Dlamini's
+  assessor list names him again (checked at A.7.1).
 Actual (2026-09-26, T295 replay, wombat_scenario): On the second browser, still on
   ?error=LockedOut&returnUrl=%2Factivities%2Finbox, his own password signed him in and returned him to his Activity
   Inbox (du Plessis's Portfolio and Logbook Review, Awaiting review). Signed in afresh from /account/login he lands on /

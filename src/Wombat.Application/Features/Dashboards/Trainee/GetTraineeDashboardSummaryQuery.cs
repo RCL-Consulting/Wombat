@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
@@ -17,11 +18,21 @@ public sealed record GetTraineeDashboardSummaryQuery(ClaimsPrincipal Principal, 
 public sealed class GetTraineeDashboardSummaryQueryHandler
     : IRequestHandler<GetTraineeDashboardSummaryQuery, TraineeDashboardSummaryDto>
 {
-    private readonly IApplicationDbContext _dbContext;
+    /// <summary>How many of the inbox's rows the Activity inbox card lists: its first, the newest.</summary>
+    public const int InboxListed = 5;
 
-    public GetTraineeDashboardSummaryQueryHandler(IApplicationDbContext dbContext)
+    private readonly IApplicationDbContext _dbContext;
+    private readonly IWorkflowEvaluator _workflowEvaluator;
+    private readonly IUserAdministrationService _users;
+
+    public GetTraineeDashboardSummaryQueryHandler(
+        IApplicationDbContext dbContext,
+        IWorkflowEvaluator workflowEvaluator,
+        IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _workflowEvaluator = workflowEvaluator;
+        _users = users;
     }
 
     public async Task<TraineeDashboardSummaryDto> Handle(
@@ -41,10 +52,38 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
         var curriculumTargets = await TraineeQuotaProgressReader.ReadAsync(
             _dbContext, userId, request.AsOf ?? QuotaCalendar.Today(), cancellationToken);
 
+        // T297: the Activity inbox card lists what /activities/inbox lists, read by the same code: the activities the
+        // caller can move now, newest first. Until T297 it listed the states keyed requested, accepted, declined or draft,
+        // so it kept a declined CPSA request, which has no move left, and dropped a reflection awaiting discussion, which
+        // the trainee may still cancel (Steps 3.12, 3.16). A declined request is shown, with its badge, on Recent
+        // activities (while it is among the five newest) and on My Activities. No mail announces it:
+        // AssessmentDeclinedEmail has no sender (T320).
+        var actionable = (await ActivityWaiting.LoadActionableAsync(
+                _dbContext.Set<Activity>(), _dbContext, _workflowEvaluator, request.Principal, cancellationToken: cancellationToken))
+            .Take(InboxListed)
+            .ToList();
+
+        // For a caller who is also an assessor the inbox holds other trainees' work, which the card names, as the inbox
+        // and the Assessor's card do (T250); the caller's own rows need no name. One lookup, and none for a trainee alone.
+        var names = await UserDisplayNames.ResolveAsync(
+            _users,
+            actionable.Select(row => row.Activity.SubjectUserId).Where(subject => subject != userId),
+            cancellationToken);
+
+        var inbox = actionable
+            .Select(row => new ActivityInboxItem(
+                row.Activity.Id,
+                row.Activity.ActivityType.Name,
+                row.Activity.CurrentState,
+                PinnedWorkflows.StateLabel(row.Workflow, row.Activity.CurrentState),
+                row.Activity.UpdatedOn,
+                row.Activity.SubjectUserId == userId ? null : names.NameOf(row.Activity.SubjectUserId)))
+            .ToList();
+
         // T203: an activity is finished in a terminal state of its PINNED workflow (D44, ActivityCompletion), not in the
         // literal "completed". A discussed reflective exercise, a recorded MSF row, a logged procedure and an accepted
-        // teaching session are all done, so none of them is waiting in the inbox or has a deadline still to meet. Read
-        // once, from the pins and states alone.
+        // teaching session are all done, so none of them has a deadline still to meet. Read once, from the pins and states
+        // alone.
         var activityStates = await _dbContext.Set<Activity>()
             .AsNoTracking()
             .Where(a => a.SubjectUserId == userId)
@@ -53,9 +92,7 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
                 a.Id,
                 a.ActivityTypeId,
                 a.SchemaVersion,
-                a.CurrentState,
-                a.UpdatedOn,
-                TypeName = a.ActivityType.Name
+                a.CurrentState
             })
             .ToListAsync(cancellationToken);
 
@@ -75,8 +112,9 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
             })
             .ToListAsync(cancellationToken);
 
-        // Each pin's workflow, read once for both lists: it says which states are finished (T203) and what each state is
-        // called, so a badge names the state as the activity's own page does (T220).
+        // Each pin's workflow, read once for Recent activities and the deadlines: it says which states are finished (T203),
+        // which have a move left, and what each state is called, so a badge names the state as the activity's own page
+        // does (T220).
         var workflows = await PinnedWorkflows.LoadAsync(
             _dbContext,
             activityStates.Select(a => (a.ActivityTypeId, a.SchemaVersion))
@@ -85,18 +123,6 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
         var finishedStates = workflows.ToDictionary(pair => pair.Key, pair => ActivityCompletion.FinishedStates(pair.Value));
         string StateLabel(int activityTypeId, int version, string state)
             => PinnedWorkflows.StateLabel(workflows[(activityTypeId, version)], state);
-
-        var unfinished = activityStates
-            .Where(a => !finishedStates[(a.ActivityTypeId, a.SchemaVersion)].Contains(a.CurrentState))
-            .ToList();
-
-        var inbox = unfinished
-            .Where(a => a.CurrentState is "requested" or "accepted" or "declined" or "draft")
-            .OrderByDescending(a => a.UpdatedOn)
-            .Take(5)
-            .Select(a => new ActivityInboxItem(
-                a.Id, a.TypeName, a.CurrentState, StateLabel(a.ActivityTypeId, a.SchemaVersion, a.CurrentState), a.UpdatedOn))
-            .ToList();
 
         var recentActivities = recent
             .Select(a => new RecentActivityItem(
@@ -113,8 +139,16 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
 
         // Upcoming deadlines: scan DataJson for fields with a "due_date" key
         // This is done client-side since jsonb path queries vary by provider
-        var deadlineCandidateIds = unfinished
-            .Where(a => a.CurrentState != "cancelled")
+        // Only work still open has a deadline to meet: not finished, and with a move left in its pinned workflow. A
+        // cancelled or declined request is a dead end (T297, where this read the literal "cancelled"). With no workflow
+        // there is no way to tell, so only the finished test applies.
+        var deadlineCandidateIds = activityStates
+            .Where(a =>
+            {
+                var workflow = workflows[(a.ActivityTypeId, a.SchemaVersion)];
+                return !finishedStates[(a.ActivityTypeId, a.SchemaVersion)].Contains(a.CurrentState) &&
+                       (workflow is null || workflow.HasOutgoingTransition(a.CurrentState));
+            })
             .Select(a => a.Id)
             .ToList();
         var candidateActivities = await _dbContext.Set<Activity>()

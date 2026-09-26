@@ -258,6 +258,23 @@ version cannot name it: a state or move it does not declare, or a type with no w
 a page otherwise, except as a badge's colour class. The subject-access report's JSON keeps the stored key, as it keeps
 `DataJson` raw.
 
+### What a state means is read from the workflow, never from its key (T203, T297)
+
+Each type names its own states, so no reader decides anything by comparing `CurrentState` with a literal. What a state
+means comes from the activity's **pinned** workflow, through two shared readers in `Features/Activities/Services`:
+
+- `ActivityCompletion`: finished is a terminal state (D44). `completed`, `discussed`, `signed_off`, `recorded` and a
+  teaching session's `accepted` are all finished; `declined` and `cancelled` are dead ends, not finished work.
+- `ActivityWaiting`: **actionable by the caller** is a state with a move out that the act gate lets the caller make
+  (`LoadActionableAsync`): the Activity Inbox's rows, which the Assessor's and the Trainee's dashboard cards list too.
+  **Awaiting a reviewer** is a non-terminal state with a move whose actor has a `field:` or `role:` arm, someone other
+  than the author (`AwaitsReviewer`): the Coordinator's stalled card, the programme admins' pending tile, and the
+  assessor nudge, which adds only its need for a nominee in a field to mail. A pin resolves to its published version's
+  row, the version a move is judged against, so a pin without one waits on nobody.
+
+`DashboardStateLiteralTests` fails on a literal state comparison under `Features/Dashboards`, where the class came back
+three times (T074, T203, T297).
+
 A field is the same (T172, T263). A refusal of an activity's data names each field by its label ("Presenting problem: A
 value is required."), and carries the fields' schema keys beside the message: `ActivityFieldsRefusedException`
 (Application, `Features/Activities/Services`), an `InvalidOperationException`, so every catch and the audit row are

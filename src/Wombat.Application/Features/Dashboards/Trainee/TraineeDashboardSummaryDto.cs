@@ -7,6 +7,10 @@ namespace Wombat.Application.Features.Dashboards.Trainee;
 /// trainee whose programme has ended, the one they ended on, marked as ended (T252). Null for a pending trainee or one
 /// with no profile at all.
 /// </param>
+/// <param name="Inbox">
+/// The first rows of the caller's Activity Inbox, newest first: what they can move now, read by the code the inbox reads
+/// it with (<c>ActivityWaiting.LoadActionableAsync</c>, T297).
+/// </param>
 public sealed record TraineeDashboardSummaryDto(
     TraineeCurriculumProgressSummaryDto? CurriculumTargets,
     IReadOnlyList<ActivityInboxItem> Inbox,
@@ -15,19 +19,25 @@ public sealed record TraineeDashboardSummaryDto(
     bool IsPendingTrainee);
 
 /// <param name="CurrentState">
-/// The stored state key: the badge's colour. Every item is unfinished (the inbox leaves finished work out), so the key
-/// alone decides it.
+/// The stored state key: the badge's colour. Every item has a move left (the inbox lists only what can be moved), so it
+/// is not finished and the key alone decides it.
 /// </param>
 /// <param name="CurrentStateLabel">
 /// The state as the activity's pinned workflow labels it, the key only when that workflow does not declare it: the
 /// badge's text (T220).
+/// </param>
+/// <param name="SubjectName">
+/// Whose activity it is, by name, when it is not the caller's own: a caller who is also an assessor finds other trainees'
+/// work in their inbox, and the row says whose, as the inbox and the Assessor's card do (T250, T297 review). Null for the
+/// caller's own.
 /// </param>
 public sealed record ActivityInboxItem(
     int ActivityId,
     string ActivityTypeName,
     string CurrentState,
     string CurrentStateLabel,
-    DateTime UpdatedOn);
+    DateTime UpdatedOn,
+    string? SubjectName = null);
 
 /// <param name="CurrentState">The stored state key: with <paramref name="IsFinished" />, the badge's colour.</param>
 /// <param name="CurrentStateLabel">

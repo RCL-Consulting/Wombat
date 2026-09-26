@@ -759,9 +759,9 @@ member can meet it. None is captured.
   and its refusals, and the SSO mappings page's Add mapping form, mapping rows and Delete. Each needs a configured
   identity provider (`Sso:Providers` is empty on dev; `coverage.md` § Flows and states not played). The refusal texts
   alone are reachable as typed codes on the sign-in page.
-- **Dashboard cards that nothing fills.** The Assessor's "Accepted, needing action" with a row (no CPSA or KGK workflow
-  has a state named `accepted`), and the Trainee's "Upcoming deadlines" with a row (it reads `due_date` keys no type
-  has).
+- **Dashboard cards that nothing fills.** The Trainee's "Upcoming deadlines" with a row (it reads `due_date` keys no
+  type has). The Assessor's "Accepted, needing action", which no CPSA or KGK workflow could fill, is now "Awaiting your
+  review", read from the inbox (T297), and Steps 3.24, 3.33, 3.51 and A.6.8 fill it.
 - **Trainee states the admissions never produce.** "No curriculum assigned yet" on Home and "No curriculum items assigned
   yet" on My progress (a Trainee with no profile: admission sets the role and the profile together), "Your programme
   starts on …" (every start is on or before `D`), "You started part-way through a period" (every start is 15 January,

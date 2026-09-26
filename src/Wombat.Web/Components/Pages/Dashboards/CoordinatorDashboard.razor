@@ -8,6 +8,8 @@
   @if (_vm is not null)
   {
     <div class="dashboard-grid">
+      @* Activities awaiting a reviewer that nobody has moved for the stall days, read from each activity's pinned workflow
+         (T297), so a request the assessor nudge writes about is on this card once it has waited this long. *@
       <DashboardCard Title="Stalled requests" Icon="alert-triangle" Warning="@(_vm.StalledRequests.Count > 0)">
         @if (_vm.StalledRequests.Count == 0)
         {
@@ -19,8 +21,10 @@
             @foreach (var item in _vm.StalledRequests)
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                <span>@item.ActivityTypeName &mdash; @item.SubjectName</span>
-                <span class="muted">@item.SubmittedOn.ToString("d MMM")</span>
+                @* Each row opens its activity (T297), which the read rule that chose the row lets the Coordinator read (T101).
+                   The link's name starts with its visible label and names the trainee, as the assessor's rows do (T250). *@
+                <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
+                <span class="muted">@item.LastMovedOn.ToString("d MMM")</span>
               </li>
             }
           </ul>

@@ -70,16 +70,16 @@ public class ActivityReadBoundaryTests
             "Reactivating an EPA credits the completions filed while it was inactive (T196, D48), as the rebuild would. Reads activities only on reactivation, after the EPA-owner check (CollegeAdmin or owning InstitutionalAdmin), and only completions that could hold paused credit: pinned to rules that credit, in a terminal state, with a transition since the pause began (ResumedEpaCredit.LoadCandidatesAsync). Returns the EPA and a count; no activity row reaches a caller.",
 
         ["Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox.ListActivitiesByActorInboxQueryHandler"] =
-            "Filters every row through IWorkflowEvaluator, i.e. the ACT gate, which IsReadableBy is a superset of. Narrower than the read rule by construction.",
+            "Filters every row through IWorkflowEvaluator, i.e. the ACT gate, which IsReadableBy is a superset of (ActivityWaiting.LoadActionableAsync, T297). Narrower than the read rule by construction.",
 
         ["Wombat.Application.Features.CommitteeDecisions.StartCommitteeReviewCommandHandler"] =
             "Builds the review evidence snapshot after CommitteeDecisionAuthorization.DemandStartableReview, which admits a member of this panel, a Coordinator of the institution this panel belongs to, or a global Administrator - it waived every Coordinator anywhere until T101 finding E, which is what made this reason worth stating - and after CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync, which refuses anyone but an Administrator a review whose trainee does not train at the panel's institution (T182). Stores labels and dates, never DataJson.",
 
         ["Wombat.Application.Features.Dashboards.Assessor.GetAssessorDashboardSummaryQueryHandler"] =
-            "Confined to rows the caller created or already transitioned - the creator and past-actor arms of IsReadableBy, which the list filter deliberately omits.",
+            "Its waiting card is the inbox's rows, filtered through IWorkflowEvaluator, the ACT gate, as ListActivitiesByActorInboxQueryHandler's are (ActivityWaiting.LoadActionableAsync, T297). Its decisions are rows the caller moved last - the past-actor arm of IsReadableBy, which the list filter deliberately omits.",
 
         ["Wombat.Application.Features.Dashboards.Trainee.GetTraineeDashboardSummaryQueryHandler"] =
-            "Confined to SubjectUserId == the signed-in user, which is the subject arm of the read rule.",
+            "Its own reads are confined to SubjectUserId == the signed-in user, which is the subject arm of the read rule. Its Activity inbox card is the inbox's rows, filtered through IWorkflowEvaluator, the ACT gate, as ListActivitiesByActorInboxQueryHandler's are (ActivityWaiting.LoadActionableAsync, T297).",
 
         ["Wombat.Application.Features.Dashboards.SpecialityAdmin.GetSpecialityAdminDashboardSummaryQueryHandler"] =
             "T101 REVIEW FINDING, not an approval: hand-rolls the SpecialityId stamp comparison instead of calling WhereReadableBy, making it a fourth copy of the oversight rule. It already differs - no Administrator arm, and no IsInRole(SpecialityAdmin) gate on the speciality claim - and is safe only because SpecialityAdminDashboard.razor is role-gated, which nothing here states. Replace the inline Where with WhereReadableBy and delete this entry.",

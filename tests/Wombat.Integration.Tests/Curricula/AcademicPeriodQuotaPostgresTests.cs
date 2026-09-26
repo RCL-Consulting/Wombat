@@ -22,6 +22,7 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.Curricula;
 
@@ -853,7 +854,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             late.Items.Should().HaveCount(15).And.OnlyContain(item => item.Current.IsExempt && item.Current.Count == 0);
 
             // The dashboard card reads the same model, plus the activity lists, which are SQL of their own.
-            var dashboard = await new GetTraineeDashboardSummaryQueryHandler(db)
+            var dashboard = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
                 .Handle(new GetTraineeDashboardSummaryQuery(TraineePrincipal(TraineeUserId), AsOf), CancellationToken.None);
 
             dashboard.CurriculumTargets.Should().NotBeNull();

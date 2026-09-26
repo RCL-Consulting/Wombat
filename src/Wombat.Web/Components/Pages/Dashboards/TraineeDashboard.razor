@@ -99,7 +99,16 @@
             @foreach (var item in _vm.Inbox)
             {
               <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                @* Another trainee's row, for a trainee who also assesses, says whose it is, as the Assessor's card does (T250,
+                   T297 review); the caller's own names nobody. *@
+                @if (item.SubjectName is { } subjectName)
+                {
+                  <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {subjectName}")">@item.ActivityTypeName</a> &mdash; @subjectName</span>
+                }
+                else
+                {
+                  <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
+                }
                 @* The badge's colour is the state's key, mapped onto a badge app.css defines (BadgeFor, T266); its words are
                    the state's label (T220). The inbox holds no finished work, so none of these is done. *@
                 <span class="badge @BadgeFor.ActivityState(item.CurrentState, isFinished: false)">@item.CurrentStateLabel</span>

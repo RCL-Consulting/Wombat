@@ -554,7 +554,7 @@ Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /account/logout → /account/login → / → /dashboard/switch/{role} → /
 Do: Choose Switch view: Assessor. Sign out and in again. Then type `/dashboard/switch/Administrator`.
 Expect: The page reads "Viewing as Assessor" and "You also act as CommitteeMember. Switch view: CommitteeMember". The
-  Assessor dashboard reads 0 "assessments awaiting review" with Review inbox, "No accepted assessments pending action.",
+  Assessor dashboard reads 0 "assessments awaiting review" with Review inbox, "Nothing is awaiting your review." (T297),
   "No decisions yet." and "Open my inbox →". The nav is unchanged. After signing in again she lands on the Assessor view,
   because the choice is remembered. The Administrator address brings her back to "Viewing as CommitteeMember": a role she
   does not hold is never shown.
@@ -610,7 +610,7 @@ Role: SpecialityAdmin and SubSpecialityAdmin — Dr Refilwe Mokoena and Dr Kabel
 Route: /
 Do: Each opens Home, now that the registrars are admitted.
 Expect: Each sees "Viewing as SpecialityAdmin" or "Viewing as SubSpecialityAdmin". Pending reviews reads 0 "activities
-  in review" with Review queue. Trainees in programme reads 5 active / 0 inactive. Curriculum coverage names the current
+  awaiting review", with no link (T297). Trainees in programme reads 5 active / 0 inactive. Curriculum coverage names the current
   semester and lists PAED-001 to PAED-015 at "0 of 5 met". The nav reads Programme Trainees, Decision Panels, Committee
   Reviews, STAR Review Queue and Decisions Due.
 Actual (2026-09-26, T295 replay, wombat_scenario): both as expected: Pending reviews 0 "activities in review" "Review

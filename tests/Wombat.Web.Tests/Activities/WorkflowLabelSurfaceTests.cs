@@ -176,29 +176,37 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     }
 
     /// <summary>
-    /// The "Accepted, needing action" card printed the key <c>accepted</c> as its badge's words (T220 review). It prints
-    /// the state's label, and says in words when the work is overdue.
+    /// The card of what waits on the assessor printed the key <c>accepted</c> as its badge's words (T220 review). It prints
+    /// the state's label, coloured by the state's key since T297 put every waiting state on it, and says in words when the
+    /// work is overdue.
     /// </summary>
     [Fact]
-    public void TheAssessorDashboard_BadgesAnAcceptedAssessmentByItsLabel_AndSaysWhenItIsOverdue()
+    public void TheAssessorDashboard_BadgesAWaitingAssessmentByItsLabel_AndSaysWhenItIsOverdue()
     {
         _auth.SetRoles("Assessor");
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "assessor-1"));
         Services.AddSingleton<IScopedSender>(new FakeSender().On<GetAssessorDashboardSummaryQuery>(_ => new AssessorDashboardSummaryDto(
-            0,
+            3,
             [
-                new AcceptedActivityItem(44, "Mini-CEX", "Thandi Nkosi", "Accepted for observation", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false),
-                new AcceptedActivityItem(45, "Mini-CEX", "Thandi Nkosi", "Accepted for observation", new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Utc), IsOverdue: true)
+                new AwaitingReviewItem(45, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Utc), IsOverdue: true),
+                new AwaitingReviewItem(44, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false),
+                new AwaitingReviewItem(46, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "submitted", "Awaiting supervisor", new DateTime(2026, 3, 22, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false)
             ],
             [])));
 
         var cut = RenderComponent<AssessorDashboard>();
-        cut.WaitForState(() => cut.FindAll(".badge").Count >= 2);
+        cut.WaitForState(() => cut.FindAll(".badge").Count >= 3);
 
         var onTime = BadgeFor(cut, 44);
-        Text(onTime).Should().Be("Accepted for observation");
-        onTime.ClassList.Should().Contain("badge-accepted", "every item on the card is in accepted");
-        Text(BadgeFor(cut, 45)).Should().Be("Overdue");
+        Text(onTime).Should().Be("Requested");
+        onTime.ClassList.Should().Contain("badge-submitted", "a request waiting on its assessor is blue");
+        var audit = BadgeFor(cut, 46);
+        Text(audit).Should().Be("Awaiting supervisor");
+        audit.ClassList.Should().Contain("badge-submitted");
+
+        var overdue = BadgeFor(cut, 45);
+        Text(overdue).Should().Be("Overdue");
+        overdue.ClassList.Should().Contain("badge-accepted", "overdue work wants attention");
     }
 
     // ---- helpers -----------------------------------------------------------------------------------------------------

@@ -33,7 +33,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/account/logout-confirm` | Account/Logout.razor | Any signed-in user | A.4.7 |
 | `/account/profile` | Account/Profile.razor | Any signed-in user | 2.19, 2.41, A.4.1, A.4.2, A.4.6, A.7.14 |
 | `/account/register` | Account/Register.razor | Anyone, signed in or not | 1.8, 1.9, 1.10, 2.8, 2.9, 2.10, 2.11, 2.17, 2.18, 2.27 |
-| `/activities/inbox` | Activities/ActivityInbox.razor | Any signed-in user | 3.4, 3.5, 3.11, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.33, 3.51, 3.53, 5.25, 6.18, A.4.3, A.7.2 |
+| `/activities/inbox` | Activities/ActivityInbox.razor | Any signed-in user | 3.4, 3.5, 3.11, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.33, 3.51, 5.25, 6.18, A.4.3, A.7.2 |
 | `/activities/mine` | Activities/MyActivities.razor | Any signed-in user | 2.19, 3.2, 3.6, 3.20, 3.25, 3.48, 5.28, 6.19, 6.24, 6.41, A.7.3 |
 | `/activities/new` | Activities/NewActivity.razor | Any signed-in user | 2.19, 2.42, 2.43, 3.1, 3.8, 3.9, 3.10, 3.12, 3.14, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.25, 3.27, 3.29, 5.22, 5.24, 6.16, 6.19, 6.20, 6.27, 6.37, A.2.7, A.6.6, A.7.1 |
 | `/activities/{ActivityId:int}` | Activities/ActivityView.razor | Any signed-in user; an activity opens only to its subject, its author, the people it names and their overseers, and reads "Activity unavailable" to anyone else | 3.2, 3.3, 3.4, 3.5, 3.6, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.24, 3.25, 3.26, 3.27, 3.28, 3.29, 3.33, 4.17, 5.24, 5.25, 6.16, 6.18, A.2.7, A.5.6, A.7.1, A.7.2 |
@@ -111,7 +111,7 @@ state, `states.md` is where it belongs.
 | Self-service password reset by emailed link | Not built. `/account/forgot-password` is a stub (A.4.4), and nothing sends the `PasswordResetEmail` template. The administrator's reset stands in (A.4.5). | Not built |
 | `/Error` reached through an unhandled exception | No exception handler is configured (`Program.cs` has no `UseExceptionHandler`). A.5.8 plays the page by its address. | Reported at A.5.8 |
 | The five "Coming soon" features: Recent Activities (Assessor), Stalled Activities (Coordinator), Programme Trainees (CommitteeMember, SpecialityAdmin, SubSpecialityAdmin), STAR Review Queue (SpecialityAdmin, SubSpecialityAdmin) and System (Administrator) | Not built. Only their shared stub at `/placeholder/{Feature}` is played (3.31, 3.51–3.53, A.5.9–A.5.13). | Not built |
-| The Coordinator's stalled-work triage: sending a reminder, or reassigning a request | No page offers it. The dashboard's "Stalled requests" rows link nowhere (3.30, A.5.10). | Not built |
+| The Coordinator's stalled-work triage: sending a reminder, or reassigning a request | No page offers it. The dashboard's "Stalled requests" rows link to each activity's page (T297), which offers neither (3.30, A.5.10). | Not built |
 | Applying and completing an approved data-rights rectification | No page calls `ApplyRectificationCommand` or `CompleteRectificationRequestCommand` (T112, Still open). A.1.8 rejects the request instead. | Not built |
 | An email when an activity is requested, completed, declined or returned | Nothing sends the `AssessmentRequested`, `AssessmentAccepted`, `AssessmentCompleted` or `AssessmentDeclined` templates. Steps 3.3, 5.24, A.2.7 and A.7.2 expect that nothing is sent. | Undecided |
 | An assessor's training status (`AssessorProfile.TrainingStatus`) changing an assessment | Nothing on the activity path reads it (2.14 records it). | Undecided |
@@ -127,7 +127,6 @@ state, `states.md` is where it belongs.
 | A re-submission after a return, on a type that credits | No seeded type both credits and returns. 3.14–3.17 play the return on a reflective exercise, where lateness is never recorded. | A seed that credits and returns |
 | A seeded procedure-log instrument | The CPSA catalogue has none; the generic `procedure_log` belongs to the Demo speciality. KGK's teaching log stands in (3.18, 3.19). | The College |
 | The Random Case Analysis, Chart-Stimulated Recall and Clinical Audit instruments, filed | Offered to a registrar (2.42) but never filed. | A later replay |
-| The Assessor dashboard's "Accepted, needing action" card with a row | No CPSA workflow has a state named `accepted` (3.51 plays it empty). | Reported at 3.51 |
 | The Trainee dashboard's "Upcoming deadlines" card with a row | It reads `DataJson` keys holding `due_date`, which no seeded or KGK type has (3.50 plays it empty). | Reported at 3.50 |
 | A learner-feedback campaign (`learner_feedback_cpsa` on PAED-015) | Outside every act's brief. | A later replay |
 | MSF patient respondents | `CreateMsfTemplateCommandValidator` requires patient responses to be off, so the Patient group is never offered (3.36). | By design |
@@ -272,7 +271,7 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation | 2.10 | `/account/register`, `/` |
 | Add a consultant to my programme's review panel | 2.23 | `/committee/panels`, `/committee/panels/{PanelId:int}` |
-| Read my programme's dashboard: trainees, work in review, target coverage | 2.38, 3.53 | `/`, `/activities/inbox` |
+| Read my programme's dashboard: trainees, work awaiting review, target coverage | 2.38, 3.53 | `/` |
 | See what the committee must decide in my speciality | 4.3 | `/committee/decisions-due` |
 | Schedule a registrar's review from what is due | 4.9 | `/committee/decisions-due`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Revoke a STAR issued in error | 4.36 | `/admin/entrustment-decisions` |
