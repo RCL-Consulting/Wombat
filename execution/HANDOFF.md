@@ -16,7 +16,7 @@ scenarios to exercise all the paths?", and "Nothing is live or in use, do it all
   new) and an appendix. It has 324 intent-and-outcome steps playing all 80 page templates, `coverage.md` (pages to
   steps, and every role's jobs as goals), and `states.md` (577 states and how to reach each). The old file is whole in
   `log/scenario-paediatrics-history-2026-09.md`.
-- **T294:** `Wombat.Web.Tests/Scenario` fails the build if a page has no step, a step names a route that does not exist,
+- **T294:** `tests/Wombat.Web.Tests/Scenario/` fails the build if a page has no step, a step names a route that does not exist,
   or a step breaks the format.
 - **T295:** replayed end to end on a fresh database (`wombat_scenario`): 324 of 324 steps played, and every outcome check
   matched. 109 more states were captured on scratch copies. The baseline is in `design/baseline/` (gitignored: 672
