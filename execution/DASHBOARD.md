@@ -8,12 +8,8 @@
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |
 | queued | [T288](tasks/queued/T288-an-institutionaladmin-can-create-an-sso-group-mapping-that-grants-roles-to-another-institution-s-users.md) | P2 | An InstitutionalAdmin can create an SSO group mapping that grants role |  |
 | queued | [T289](tasks/queued/T289-the-assessor-profile-form-lets-a-trainee-admin-move-a-panel-chair-and-lets-an-admin-pull-an-assessor-from-another-institution.md) | P2 | The assessor-profile form lets a trainee-admin move a panel chair, and |  |
-| queued | [T297](tasks/queued/T297-five-dashboard-cards-read-literal-state-keys-so-an-assessor-s-pending-requests-reads-0-beside-a-full-inbox-and-the-coordinator-s-stalled-requests-never-lists-a-stalled-cpsa-request.md) | P2 | Five dashboard cards read literal state keys, so an assessor's Pending |  |
-| queued | [T302](tasks/queued/T302-an-institutionaladmin-can-deactivate-her-own-institution-or-reactivate-one-an-administrator-deactivated-with-the-active-box-on-its-edit-page.md) | P2 | An InstitutionalAdmin can deactivate her own institution, or reactivat |  |
-| queued | [T303](tasks/queued/T303-add-role-offers-trainee-so-an-admin-can-make-a-pending-registrar-or-a-graduate-a-trainee-with-no-profile-bypassing-admission.md) | P2 | Add role offers Trainee, so an admin can make a pending registrar or a |  |
 | queued | [T304](tasks/queued/T304-a-trainee-profile-save-re-admits-the-registrar-one-left-on-a-superseded-curriculum-version-cannot-be-saved-at-all-and-one-moved-to-a-new-version-has-none-of-their-credit-replayed.md) | P2 | A trainee profile save re-admits the registrar: one left on a supersed |  |
 | queued | [T305](tasks/queued/T305-a-completed-or-withdrawn-trainee-s-profile-can-still-be-saved-re-pinning-and-re-dating-the-record-that-mark-complete-says-it-archives.md) | P2 | A completed or withdrawn trainee's profile can still be saved, re-pinn |  |
-| queued | [T307](tasks/queued/T307-resolving-an-appeal-takes-an-outcome-nobody-chose-the-outcome-select-opens-on-dismissed-upheld-leaves-the-decision-standing-like-dismissed-and-a-remit-cannot-record-conditions.md) | P2 | Resolving an appeal takes an outcome nobody chose: the Outcome select  |  |
 | queued | [T311](tasks/queued/T311-a-graduate-is-told-she-has-no-role-and-loses-her-star-certificates-and-her-export-link-and-the-graduation-email-claims-a-committee-ratification-that-mark-complete-never-checked.md) | P2 | A graduate is told she has no role and loses her STAR certificates and |  |
 | queued | [T312](tasks/queued/T312-a-completed-programme-s-record-and-the-portfolio-pdf-built-from-it-change-when-the-catalogue-changes-after-the-programme-ended.md) | P2 | A completed programme's record, and the portfolio PDF built from it, c |  |
 | queued | [T313](tasks/queued/T313-portfolio-verify-tells-a-verifier-that-a-genuine-wombat-pdf-was-not-produced-by-wombat-once-its-export-is-90-days-old-or-when-its-hash-is-typed-in-upper-case.md) | P2 | /portfolio/verify tells a verifier that a genuine Wombat PDF was not p |  |
@@ -23,6 +19,8 @@
 | queued | [T320](tasks/queued/T320-no-activity-move-and-no-committee-outcome-sends-mail-though-the-data-rights-page-says-a-request-to-assess-and-a-committee-decision-are-emailed-and-the-five-templates-for-them-have-no-caller.md) | P2 | No activity move and no committee outcome sends mail, though the data- |  |
 | queued | [T322](tasks/queued/T322-alerts-badges-validation-messages-the-danger-and-success-buttons-the-focus-ring-and-input-borders-fall-below-wcag-aa-contrast.md) | P2 | Alerts, badges, validation messages, the danger and success buttons, t |  |
 | queued | [T329](tasks/queued/T329-new-activity-and-new-msf-campaign-crash-the-circuit-when-a-read-fails-epas-committee-review-panels-and-the-builder-misstate-a-wait-or-a-failure.md) | P2 | New activity and New MSF campaign crash the circuit when a read fails; |  |
+| queued | [T333](tasks/queued/T333-sso-group-mappings-can-grant-or-remove-trainee-and-pendingtrainee-round-admission.md) | P2 | SSO group mappings can grant or remove Trainee and PendingTrainee, rou |  |
+| queued | [T334](tasks/queued/T334-the-builder-lets-the-college-edit-the-system-managed-msf-and-learner-feedback-types-whose-data-the-releases-write.md) | P2 | The builder lets the College edit the system-managed MSF and learner-f |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |
@@ -60,7 +58,6 @@
 | queued | [T291](tasks/queued/T291-admin-pages-offer-what-they-then-refuse-found-by-the-t159-replay-edit-on-national-epas-back-to-colleges-and-a-first-save-s-status.md) | P3 | Admin pages offer what they then refuse, found by the T159 replay: Edi |  |
 | queued | [T298](tasks/queued/T298-the-committee-s-targets-card-orders-tied-trainees-by-user-id-and-the-trainee-s-upcoming-deadlines-card-reads-a-field-no-instrument-has.md) | P3 | The committee's Targets card orders tied trainees by user id, and the  |  |
 | queued | [T299](tasks/queued/T299-the-activity-page-loses-a-move-s-outcome-a-refused-note-move-closes-its-panel-a-done-submit-or-complete-says-nothing-and-leaves-the-focus-on-the-body-and-a-date-typed-after-a-refusal-gets-no-late-filing-warning.md) | P3 | The activity page loses a move's outcome: a refused note move closes i |  |
-| queued | [T300](tasks/queued/T300-the-activity-type-builder-does-not-follow-activitytypescopeguard-an-institutionaladmin-is-offered-save-publish-and-a-global-scope-she-is-refused-and-the-college-the-guard-names-as-owner-cannot-open-it.md) | P3 | The activity-type builder does not follow ActivityTypeScopeGuard: an I |  |
 | queued | [T301](tasks/queued/T301-a-curriculum-version-is-held-back-from-adoption-only-by-its-active-flag-which-adoptcurriculumcommand-never-checks-and-every-new-or-cloned-version-is-created-with.md) | P3 | A curriculum version is held back from adoption only by its Active fla |  |
 | queued | [T306](tasks/queued/T306-the-training-year-is-shown-only-on-my-progress-the-trainees-list-the-profile-page-and-the-trainee-dashboard-show-none-though-t066-is-closed-as-having-added-them.md) | P3 | The training year is shown only on My Progress: the trainees list, the |  |
 | queued | [T308](tasks/queued/T308-my-committee-reviews-the-row-still-reads-ratified-after-an-appeal-is-lodged-and-the-trainee-never-sees-her-appeal-the-decision-it-replaced-or-any-decision-s-conditions.md) | P3 | My Committee Reviews: the row still reads Ratified after an appeal is  |  |
@@ -79,7 +76,7 @@
 | queued | [T330](tasks/queued/T330-the-reconnect-modal-shows-rejoining-the-server-and-rejoin-failed-at-once-while-retrying-and-resume-failed-says-retry-beside-a-resume-button.md) | P3 | The reconnect modal shows 'Rejoining the server' and 'Rejoin failed' a |  |
 | queued | [T331](tasks/queued/T331-the-nav-lights-no-item-on-pages-reached-from-it-a-collegeadmin-s-own-specialities-list-and-a-coordinator-s-msf-report-and-msf-coverage.md) | P3 | The nav lights no item on pages reached from it: a CollegeAdmin's own  |  |
 
-Done: 205 task(s).
+Done: 211 task(s).
 
 ## From STATE.md
 
@@ -87,17 +84,17 @@ Done: 205 task(s).
 Cap: 60 lines. `harness.py lint` enforces it; `harness.py trim` moves the overflow into `log/`.
 This is a reset point, not a diary.
 ## Focus
-Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, and since 2026-09-26
-the runbook is a replayed journey catalogue with a GUI screenshot baseline, the groundwork for a Claude Design
-redesign. Left: the operator's deploy, the College's answers, 17 P2s "before real users", and P3 polish.
+Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
+replayed journey catalogue with a screenshot baseline, and **the Claude Design brief is ready** (`design/BRIEF.md`, 18
+flow briefs). Left: the operator's redesign decision, the deploy, the College's answers, 15 P2s, and P3 polish.
 ## Now
 
 ## Recent commits
 
 ```
-0cf1f10c test(runbook): replay every step on a fresh database and capture the GUI's baseline (T295)
-dacbab33 docs(execution): file the T295 replay's findings as T297-T331, with notes on 15 open tasks
-19801cd9 docs: ten roles, not nine; STAR is the Statement of Awarded Responsibility (T296)
-adb1b9a9 test(runbook): every page is played by a scenario step, and every step's route exists (T294)
-c9f765fd docs(runbook): rewrite the scenario as intent-and-outcome steps that play every page and role (T293)
+14b7215d docs(design): re-sync the flow briefs' quoted runbook steps after the group-1 fixes
+04937aa1 docs(execution): close T300 and T307, browser-verified; refresh their baseline
+70ba7244 docs(execution): D52 (the College authors its disciplines' activity types, T300); file T334
+d03732db fix(appeals): the outcome opens empty, Upheld is gone, and a remit records conditions (T307)
+1e154abe fix(activity-types): the builder follows the guard's rule, and admits the College (T300)
 ```

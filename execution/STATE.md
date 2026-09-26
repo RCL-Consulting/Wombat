@@ -5,20 +5,21 @@ This is a reset point, not a diary.
 
 ## Focus
 
-Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, and since 2026-09-26
-the runbook is a replayed journey catalogue with a GUI screenshot baseline, the groundwork for a Claude Design
-redesign. Left: the operator's deploy, the College's answers, 17 P2s "before real users", and P3 polish.
+Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
+replayed journey catalogue with a screenshot baseline, and **the Claude Design brief is ready** (`design/BRIEF.md`, 18
+flow briefs). Left: the operator's redesign decision, the deploy, the College's answers, 15 P2s, and P3 polish.
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`, T293): 324 steps playing all 80 page templates; `coverage.md`
-  indexes every role's jobs, `states.md` 577 states; T294's test holds it to the routes. **Replayed** (T295,
-  `wombat_scenario`): all outcome checks matched; baseline in gitignored `design/baseline/` (1,250 screenshots).
-- **Open: 73 queued (1 P1, 17 P2, 55 P3), 1 blocked.**
+- **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps playing all 80 page templates, replayed end to end
+  (T295); `coverage.md` indexes every role's jobs, `states.md` 577 states; T294's test holds it to the routes. Baseline in
+  gitignored `design/baseline/` (1,250+ screenshots), refreshed after each fix.
+- **Group 1 fixed before designing** (the baseline showed them wrong): T297 dashboards, T300 builder (D52), T302
+  institution state, T303 Trainee role, T307 appeals (D51). Each browser-verified on a replay of its act.
+- **Open: 70 queued (1 P1, 15 P2, 54 P3), 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
-  - **P2, from the replay:** T297, T302–T305, T307, T311–T313, T315, T316, T319, T320, T322 and T329. **Earlier:** T288
-    and T289.
-  - **The rest are P3:** polish, accessibility, and design debt; T297–T331 added 20.
+  - **P2, before real users:** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T322, T329, T333, T334.
+  - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
 - **Gated on the College or the operator:** T139, T170, T146, T152, T153, T171 (`knowledge/college-message-2026-09.md`).
 
 ## Blockers
@@ -33,28 +34,27 @@ redesign. Left: the operator's deploy, the College's answers, 17 P2s "before rea
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign:** brief Claude Design from `coverage.md`'s journeys, `states.md` and `design/baseline/`, and decide
-  how much of `DESIGN.md`'s frozen structure may change (a reskin or a restructure). Fix the P2s before real users.
+- **The GUI redesign (operator):** decide reskin or restructure (BRIEF § 4 recommends restructuring the frame and
+  reskinning the pages), then run `/design` in this repo one flow at a time from `design/flows/`. Fix the P2s in parallel.
 
 ## Open questions
 
 - **Defaults adopted on recommendation (the operator may overrule).** All are in EPA-PROGRAMME § 3:
-  - D33 part 1, D34, D35, D38(a), D44–D47, and D48–D50;
+  - D33 part 1, D34, D35, D38(a), D44–D52 (D51: appeals are Dismissed or Remitted; D52: the College authors its types);
   - T131's O1–O8, T237 (no Trainee in any panel seat), T240 (the draft reminder is a digest);
   - T258 (erasure may be requested whatever the reviews' state), T268 (a locked account is not current);
   - T273, T281 (no credit after the last day) and T284 (opening a draft is new work).
-- **Dev database:** snapshots are in `recovery/pre-*.dump`; the replay's are `recovery/scenario-post-act*.dump`. Dev runs
-  PostgreSQL 16, production 18 (T275).
+- **Dev database:** snapshots `recovery/pre-*.dump`, the replay's `scenario-post-act*.dump`. Dev PG 16, production 18 (T275).
 
 ## Files to open first
 
 - `CLAUDE.md`: conventions, footguns, and the "nothing is live" section.
-- `execution/knowledge/EPA-PROGRAMME.md`: § 2A (what is left), § 3 (decisions D1–D50), and § 3F (College asks).
+- `execution/knowledge/EPA-PROGRAMME.md`: § 2A (what is left), § 3 (decisions D1–D52), and § 3F (College asks).
 - `execution/architecture/DESIGN.md`: mandatory before any Razor work.
-- `execution/knowledge/scenario-paediatrics/README.md` and `coverage.md`: the journeys, and how to replay them.
+- `design/BRIEF.md` and `execution/knowledge/scenario-paediatrics/coverage.md`: the redesign brief and the journeys.
 - `deploy/verify/drift-check.sh`: run before trusting any claim about the server.
 
 ## Recent
 
-- **2026-09-24/25:** the stream and its follow-ups shipped in about 20 batches. See `git log` and each "As built".
-- **2026-09-26:** T292–T296 (dev Administrator, runbook rewritten, guarded, replayed; docs); findings T297–T331.
+- **2026-09-26:** T292–T296 (runbook rewritten, guarded, replayed), T332 (the design brief), group 1 fixed; findings
+  T297–T334. Earlier: the stream shipped 2026-09-24/25 (see `git log` and each "As built").

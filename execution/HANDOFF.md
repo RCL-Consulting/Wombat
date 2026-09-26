@@ -2,63 +2,74 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-09-26 (Opus): the runbook as the GUI redesign's journey catalogue
+## Session 2026-09-26 (Opus): groundwork for a Claude Design GUI redesign
 
-The operator asked whether to brief Claude Design with an exhaustive workflow list, then: "Should we not update the
-scenarios to exercise all the paths?", and "Nothing is live or in use, do it all".
+The operator asked whether to brief Claude Design with a workflow list. The answer was yes, because Claude Design
+builds a design system from code but not an app's journeys. Then: "do it all" (the runbook covering every path), and
+"fix these defects first before designing?" → "yes, do both".
 
 ### Done
 
-- **The answer, researched:** Claude Design reads a design system (tokens, type, components) from a codebase, but does
-  not enumerate an app's journeys; `/design-sync` is React-only. So the flow list is ours to supply.
-- **T292:** `devadmin@wombat.local` (dev only) is a global Administrator, so agents can play Administrator steps.
-- **T293:** the runbook is now `knowledge/scenario-paediatrics/`: README, Acts 1–6 (Act 6, catalogue maintenance, is
-  new) and an appendix. It has 324 intent-and-outcome steps playing all 80 page templates, `coverage.md` (pages to
-  steps, and every role's jobs as goals), and `states.md` (577 states and how to reach each). The old file is whole in
-  `log/scenario-paediatrics-history-2026-09.md`.
-- **T294:** `tests/Wombat.Web.Tests/Scenario/` fails the build if a page has no step, a step names a route that does not exist,
-  or a step breaks the format.
-- **T295:** replayed end to end on a fresh database (`wombat_scenario`): 324 of 324 steps played, and every outcome check
-  matched. 109 more states were captured on scratch copies. The baseline is in `design/baseline/` (gitignored: 672
-  step and 578 state screenshots). The tool is `tools/scenario-replay.ps1`.
-- **Findings filed:** T297–T331 (15 P2, 20 P3), plus 46 notes on open tasks. Every Gap line cites its task.
-- **T296:** CLAUDE.md and DOMAIN.md now say ten roles, and give the STAR glossary.
-- Commits `0c1c110` … `0cf1f10`, pushed.
+- **The runbook as the journey catalogue.**
+  - T292: `devadmin@wombat.local` is a dev-only Administrator.
+  - T293: the runbook (`knowledge/scenario-paediatrics/`) now has 325 intent-and-outcome steps playing all 80 page
+    templates. `coverage.md` indexes every role's jobs and `states.md` lists 577 states.
+  - T294: a test holds the runbook to the routes.
+  - T295: replayed end to end, and every state captured on scratch copies.
+  - T296: docs corrected (ten roles).
+  - Replay tool: `tools/scenario-replay.ps1`.
+- **Findings, filed rather than fixed:** T297–T331, and T333–T334 from the fixes; 46+ notes on open tasks.
+- **The brief (T332):**
+  - `design/BRIEF.md`: how to run it, what to upload and never upload, the constraints, the requirements from the P3
+    backlog, the screens that do not exist yet, and the reskin-or-restructure decision (it recommends restructuring the
+    frame and reskinning the pages).
+  - 18 paste-ready `design/flows/*.md`.
+  - The research in `design/research/`, and the checks in `design/tools/`.
+- **Group 1 fixed before designing,** because the baseline showed these screens wrong. Each was built test-first in a
+  worktree, adversarially reviewed and fixed, squash-merged with all suites green (7,725 tests), and browser-verified on
+  a replay of its act, with its screenshots refreshed:
+  - T297: dashboards read what is waiting from the pinned workflow.
+  - T300: the builder follows its guard and admits the College (D52).
+  - T302: an institution's state belongs to the Administrator alone.
+  - T303: Trainee is system-managed.
+  - T307: appeals are Dismissed or Remitted (D51), with a migration.
 
 ### For the operator
 
-- **The Claude Design brief:**
-  - `coverage.md` § Journeys by role is the flow inventory; brief one flow at a time.
-  - `states.md` and `design/baseline/` are the visual baseline.
-  - Link only `src/Wombat.Web/wwwroot` (tokens, fonts, icons), never the whole working tree: it holds
-    `pwd_DO_NOT_COMMIT.txt` and `recovery/`.
-  - Decide first whether this is a reskin or a restructure, because `DESIGN.md` freezes the structure.
-- **P2s before real users:** T297, T302–T305, T307, T311–T313, T315, T316, T319, T320, T322 and T329, beside T288 and
-  T289. The worst are T302 (an InstitutionalAdmin can deactivate her own institution), T303 (Add role makes a Trainee
-  with no profile) and T320 (no activity or committee mail is ever sent).
-- **T157 (deploy), T128 (backup), the College questions:** unchanged; see STATE.
+- **The redesign:**
+  - Decide reskin or restructure (BRIEF § 4).
+  - Then run `/design` in this repo, one `design/flows/NN-*.md` at a time, attaching its listed screenshots. They are
+    in the gitignored `design/baseline/`, so they exist only on this machine.
+  - Upload tracked files only (BRIEF § 3). Crop invitation captures that show a registration link.
+  - A flow is done when its runbook steps replay; BRIEF § 9 says how.
+- **P2s before real users (15):** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T322, T329, T333, T334.
+  The worst:
+  - T320: no activity or committee mail is ever sent.
+  - T333: SSO can grant Trainee round admission.
+  - T334: the College can edit the system-managed MSF types.
+- **Decisions adopted on recommendation,** which you may overrule: D51 (Upheld removed) and D52 (the College authors
+  its disciplines' activity types). Open question on T290: a graduate has no way into a second programme.
+- **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now carries T307's migration.
 
-### Environment left running
+### Environment left
 
-- **The replay app** on `:5180` (database `wombat_scenario`, the story's end state), so the replay can be browsed.
-  Stop it with `tools/scenario-replay.ps1 stop 5180`, and restart it with `start wombat_scenario 5180`.
-- **Scratch databases, droppable:** `wombat_scenario_states`, `wombat_scenario_states4` and `wombat_scenario_t292`.
-  The script never drops a database.
-- **Snapshots:** `recovery/scenario-post-act{1..6,A}.dump`. The passwords of the cast registered in the replay are in
-  `pwd_DO_NOT_COMMIT.txt`.
-- **The dev app on `:5080` and its database were not touched.** Port 25's temporary SMTP sink is stopped.
+- **The replay app on `:5180`** (`wombat_scenario`, the story's end state, fixed build). Stop it with
+  `tools/scenario-replay.ps1 stop 5180`.
+- **Droppable scratch databases:** `wombat_scenario_states*`, `_rc*` and `_t292`. The tool never drops a database.
+- **Snapshots:** `recovery/scenario-post-act*.dump`. The cast's passwords are in `pwd_DO_NOT_COMMIT.txt`.
+- **The dev app on `:5080`** runs the build from before today's fixes, against its own database. The next restart
+  applies T307's migration there.
 
 ### Traps
 
-- **Dev mail settings.** `appsettings.Development.json` sends mail to `localhost:25` and links to `:5080`. The replay
-  tool overrides both; anything else run on another port needs the same overrides (`BaseUrl`, `MsfRespondUrl`,
-  `Email:SmtpHost`).
-- **Downloads.** The browser the agents drive has a download manager, which takes over downloads (saving them to
-  `Downloads\Compressed`). Check a download from inside the page.
-- **Quoting.** From bash, `powershell -File … sql` needs a `.sql` file, or the quotes of `"Table"` identifiers are
-  lost.
-- **Task titles.** The harness names the file after the title, so a title over about 150 characters breaks Windows'
-  path limit.
-- **Harness lint** warns that `done/` holds 205 tasks, over its 200 guide: move the oldest to `log/tasks/`.
-- **Earlier traps still hold:** the audit pipeline commits a failed handler's staged rows (T201), and merge lanes are
-  squashed per task.
+- **Dev settings.** They send mail to `localhost:25` and links to `:5080`. `tools/scenario-replay.ps1 start` overrides
+  both, plus `MsfRespondUrl`.
+- **Downloads.** A download manager (IDM) takes downloads into `Downloads\Compressed`; check them in the page.
+- **Quoting.** From bash, `… sql` needs a `.sql` file, or the quotes of `"Table"` identifiers are lost.
+- **Task titles.** Keep them under ~150 characters, or the harness's file name breaks Windows' path limit.
+- **The flow briefs quote runbook steps.** After changing a step, run `design/tools/sync_verbatim_steps.py`, then
+  `check_verbatim_steps.py`.
+- **Passwords.** `browser_run_code_unsafe` with a filename echoes the file into the transcript.
+- **Harness lint** warns that `done/` holds 211 tasks, over its 200 guide: move the oldest to `log/tasks/`.
+- **Earlier traps hold:** the audit pipeline commits a failed handler's staged rows (T201), and merges are squashed per
+  task.
