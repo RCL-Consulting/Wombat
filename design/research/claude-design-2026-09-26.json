@@ -1,0 +1,841 @@
+{
+ "made": "2026-09-26, two independent research sweeps (official Anthropic material; independent reports) and a skeptic that re-fetched every load-bearing source",
+ "verdict": {
+  "verified_claims": [
+   {
+    "claim": "Claude Design launched on 17 April 2026 as an Anthropic Labs research preview for Pro, Max, Team and Enterprise, powered by Claude Opus 4.7.",
+    "status": "confirmed",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "note": "Re-fetched. The release notes date the launch entry 16 April, which is a time-zone difference."
+   },
+   {
+    "claim": "During onboarding, Claude builds a design system by reading the codebase and design files, and later projects use its colors, typography and components.",
+    "status": "confirmed",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "note": "Verbatim: \"Claude builds a design system for your team by reading your codebase and design files.\""
+   },
+   {
+    "claim": "A generated design system contains a color palette, typography, components and layout patterns (\"Spacing, grid systems, and page structures\").",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "note": "\"Page structures\" appears as one bullet under layout patterns. It is not an inventory of the app's pages, and nothing on the page says so."
+   },
+   {
+    "claim": "A codebase can be linked or uploaded at claude.ai/design, and \"Claude reads the components and styles\". React is the only example given.",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "note": "Verified by fetching the article and by curl. React is the only framework it names."
+   },
+   {
+    "claim": "Design-system setup also accepts \"Prototypes: Screenshots, web flows, and existing design files\", and in chat it accepts \"connected apps, uploaded files, Figma files, decks, logos, and fonts\".",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "note": "Verified by curl. The article does not say what \"web flows\" means. Both sweeps listed Figma as an input, and it is confirmed here, though not on the get-started page."
+   },
+   {
+    "claim": "The Academy tutorial lists what Claude understands from a linked codebase: component structure, styling and theming, framework patterns (state management, hooks, data flow) and file organization. Styling approaches named: CSS modules, Tailwind, styled-components.",
+    "status": "confirmed",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "note": "Routes, pages, roles and journeys are not listed. The only framework implied is React, through the mention of hooks."
+   },
+   {
+    "claim": "User flows come from the user: \"Walk Claude through the journey and it will generate each screen in context.\"",
+    "status": "confirmed",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "note": "Verbatim. This is the strongest positive evidence that the user supplies the flow."
+   },
+   {
+    "claim": "For large repos, link the specific package or directory rather than the whole repo, and leave out .git and node_modules.",
+    "status": "confirmed",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "note": "Verbatim guidance. It is consistent with the April help-centre text and the aifordevelopers guide."
+   },
+   {
+    "claim": "Before handoff, ask Claude to show empty, error and loading states and different data volumes.",
+    "status": "confirmed",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "note": "Verbatim: \"Flag edge cases.\""
+   },
+   {
+    "claim": "The handoff bundle holds the project's design files, the chat and a README, and comes with a prompt carrying the bundle URL for local Claude Code or another agent.",
+    "status": "confirmed",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "note": "Verbatim. The format of the design files is not stated here. dev.to says HTML/CSS/JS."
+   },
+   {
+    "claim": "For a feature in an existing app, with GitHub connected or from a local codebase in Claude Code, \"Claude will fetch your components and existing screens and use them as a starting point\" and \"can recreate your existing designs with pretty high fidelity\".",
+    "status": "confirmed",
+    "source_url": "https://claude.com/blog/how-the-product-designer-who-built-claude-design-uses-it-to-explore-ideas-before-building-them",
+    "note": "Nate Parrott, 24 July 2026. The scope is a feature the user names, and the screens come from code, not from a running app. This is the only Anthropic statement about reading screens, and Sweep B missed it."
+   },
+   {
+    "claim": "Anthropic positions Claude Design for ideation and buy-in and Claude Code for production: \"If you're shipping production software, stick with Claude Code.\"",
+    "status": "confirmed",
+    "source_url": "https://claude.com/blog/how-the-product-designer-who-built-claude-design-uses-it-to-explore-ideas-before-building-them",
+    "note": "The same post says \"Left undirected, Claude picks one of its favorite aesthetics\" and \"Wireframe first when fidelity doesn't matter.\""
+   },
+   {
+    "claim": "The documented workflow is: attach a design system, \"Add any relevant context (screenshots, a codebase)\", then \"Describe what you want to build.\"",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "note": "Exact wording confirmed by curl."
+   },
+   {
+    "claim": "A good prompt gives the goal, layout, content and audience, and Claude asks clarifying questions when needed. The example prompts name their screens, for example \"onboarding flow with 4 screens\".",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "note": "The clarifying questions are about one brief, not an inventory of the app."
+   },
+   {
+    "claim": "The help centre says to upload screenshots of existing designs and to link a repository \"so Claude understands your existing components, architecture, and styling patterns\".",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "note": "Verbatim. \"Architecture\" is not defined, and nothing on the page mentions routes or pages."
+   },
+   {
+    "claim": "Design systems can be imported from a GitHub repo, design files, raw uploads, or a local codebase through /design-sync. From Claude Code, /design imports a design, exports code as a live prototype, or builds the whole thing.",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "note": "Verbatim on the current (September 2026) version of the article."
+   },
+   {
+    "claim": "Current large-repo advice is \"Consider linking very large repositories from Claude Code to avoid lag or browser issues\", and \"Design system import is only as good as its source.\"",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "note": "The same article adds: \"Complex projects with large codebases or many iterations consume more usage.\" It also says there is no version history."
+   },
+   {
+    "claim": "At launch, the help centre said: \"Link specific subdirectories rather than entire monorepos.\"",
+    "status": "confirmed",
+    "source_url": "http://web.archive.org/web/20260430033115/https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "note": "WebFetch was blocked on archive.org, so the snapshot was fetched with curl. The exact text is present."
+   },
+   {
+    "claim": "Export options: .zip, PDF, PPTX, Google Slides (claude.ai/design only), standalone HTML, a list of partner tools, and handoff to Claude Code (\"Send to local coding agent\" or \"Send to Claude Code Web\").",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "note": "Confirmed by fetch and curl. The partner list includes Canva, Lovable, Replit, v0, Vercel, Netlify and others."
+   },
+   {
+    "claim": "/design-sync is for design systems that \"already exist as React components\".",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "note": "Verbatim: \"If your design system already exists as React components, run /design-sync in Claude Code.\""
+   },
+   {
+    "claim": "The command reference says /design-sync will \"Convert your repo's React design system and upload it to Claude Design\", that a first sync \"can take a few hours on a large repo\", and that it needs claude.ai.",
+    "status": "confirmed",
+    "source_url": "https://code.claude.com/docs/en/commands",
+    "note": "The same page lists /design-login: \"Authorize design-system access for /design-sync\"."
+   },
+   {
+    "claim": "The installed Claude Code 2.1.282 binary describes /design-sync as: \"Push a React design system to claude.ai/design. This runs a converter that bundles the real component code (from Storybook or a bare package)\".",
+    "status": "confirmed",
+    "source_url": "local: C:\\Users\\Renier\\.local\\bin\\claude.exe",
+    "note": "`claude --version` returns 2.1.282, and the embedded string was found with grep -a."
+   },
+   {
+    "claim": "GitHub issue #71523 says design-sync (v2.1.193) imports only React libraries and that Svelte cannot render in Claude Design's React runtime. A bot closed it as inactive in August 2026.",
+    "status": "confirmed",
+    "source_url": "https://github.com/anthropics/claude-code/issues/71523",
+    "note": "Per the GitHub API, github-actions[bot] closed it on 2026-08-12, state_reason not_planned, with the comment \"Closing for now — inactive for too long\". A later comment asks for it to be reopened. It is a user's feature request, not an Anthropic statement about the design."
+   },
+   {
+    "claim": "wmedia.es says Vue, Angular, Svelte, Blade, Twig and server-side templates cannot be synced, and that \"the application never travels\". For non-React stacks it suggests designing in Claude Design, pulling the .dc.html artboard, and having Claude Code implement it.",
+    "status": "confirmed",
+    "source_url": "https://wmedia.es/en/tips/claude-code-design-sync-your-components",
+    "note": "25 August 2026. Blazor and Razor are not named, so excluding them is an inference."
+   },
+   {
+    "claim": "/design in Claude Code drafts UI mockups and screen flows as artboards on one canvas, published as a Design artifact, with PNG or PDF export per artboard.",
+    "status": "confirmed",
+    "source_url": "https://code.claude.com/docs/en/commands",
+    "note": "The version floor is inconsistent: the commands and artifacts docs say v2.1.265 or later, the week-34 note says v2.1.234 or later. The installed 2.1.282 meets both."
+   },
+   {
+    "claim": "The /design launch example is \"/design redesign the composer based on what people actually use it for\", followed by \"pick an artboard, and tell Claude which option to implement\".",
+    "status": "confirmed",
+    "source_url": "https://code.claude.com/docs/en/whats-new/2026-w34",
+    "note": "It is a brief the user writes. Nothing says /design discovers screens."
+   },
+   {
+    "claim": "The artifact design skill in Claude Code looks for an existing design system in the project, such as tokens in CLAUDE.md or a theme file, and ranks it above its own choices. The prompt ranks above both.",
+    "status": "confirmed",
+    "source_url": "https://code.claude.com/docs/en/artifacts",
+    "note": "This is stated for artifacts in general. The doc does not say explicitly that the /design canvas runs the same lookup, so assuming it does is an inference."
+   },
+   {
+    "claim": "An artifact is \"one self-contained page with no backend, so it can't serve multiple routes\" and \"can't authenticate viewers itself\".",
+    "status": "confirmed",
+    "source_url": "https://code.claude.com/docs/en/artifacts",
+    "note": "This describes the output page. It says nothing either way about reading a customer's running app."
+   },
+   {
+    "claim": "Claude Design previews run \"inside a sandboxed iframe on a separate content domain that Anthropic operates\" and \"can't reach your Claude account, your login, or the editor\".",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604406-claude-design-admin-guide-for-team-and-enterprise-plans",
+    "note": "The text is verbatim, but Sweep A overreads it. \"Your login\" means the user's Claude login, so the passage is about isolating the preview. It is not evidence about reaching pages behind an app's own login. That claim rests only on the absence of any statement."
+   },
+   {
+    "claim": "Turning Claude Design on without a design system gives \"functional but generic output\". An experienced designer should set up the system first, and on Enterprise the feature is off by default.",
+    "status": "confirmed",
+    "source_url": "https://support.claude.com/en/articles/14604406-claude-design-admin-guide-for-team-and-enterprise-plans",
+    "note": "Verbatim. The recommended rollout is phased, with 2 to 4 lead designers first."
+   },
+   {
+    "claim": "Since September 2026, Claude Design works inside any conversation, including Claude Code and the Artifacts tab, in beta on paid plans.",
+    "status": "confirmed",
+    "source_url": "https://claude.com/blog/claude-design-stays-on-brand-for-daily-work",
+    "note": "The release notes confirm it (16 September 2026). Sweep A's addition that claude.ai/design stays a standalone experience did not appear in the fetched text, so that part is unsupported."
+   },
+   {
+    "claim": "The June 2026 update says Claude Code \"continues from your existing work instead of starting over from a screenshot\".",
+    "status": "confirmed",
+    "source_url": "https://claude.com/blog/claude-design-stays-on-brand-for-daily-work",
+    "note": "Dated 17 June 2026. The post's /design-sync line does not name React."
+   },
+   {
+    "claim": "The launch post frames flows as something the user brings: \"Product Managers can sketch out feature flows and hand them off to Claude Code\".",
+    "status": "confirmed",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "note": "Verbatim. The flows are authored by the PM, not discovered by the tool."
+   },
+   {
+    "claim": "A web capture tool grabs \"elements directly from your website\".",
+    "status": "confirmed",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "note": "Only the April launch post mentions it. The current get-started article does not (checked with curl), and no source says whether it works on authenticated pages."
+   },
+   {
+    "claim": "Claude Design enumerates, infers or maps an app's user flows, screens, routes or roles on its own when given a repo.",
+    "status": "unsupported",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "note": "None of the re-fetched Anthropic sources say this. The Academy tutorial, the help centre and the launch post all have the user describe the journey."
+   },
+   {
+    "claim": "Linking a repo makes Claude read \"Existing pages as structural reference\" and Vue and Svelte component libraries.",
+    "status": "unsupported",
+    "source_url": "https://www.digitalapplied.com/blog/claude-design-anthropic-labs-ai-native-design-tool",
+    "note": "The page does say this (19 April 2026), but it cites no Anthropic source. The Vue and Svelte part conflicts with Anthropic's React-only /design-sync documentation."
+   },
+   {
+    "claim": "Builder.io (a competitor): \"Claude uses the code as context, but it doesn't actually work inside your repo or run your app to look at the rendered state\", with fidelity of \"maybe 50%-75% at best\".",
+    "status": "confirmed",
+    "source_url": "https://www.builder.io/blog/claude-design",
+    "note": "Alice Moore, 29 April 2026, before the June update. It conflicts with Anthropic's July \"pretty high fidelity\"."
+   },
+   {
+    "claim": "Hands-on, four repos: extraction crawled the Tailwind config, global CSS, logos, font declarations and a few hero sections, taking 15 to 20 minutes. The user then prompts \"for the section or screen\". A live URL can be captured at DOM level, and the handoff was about 80% right.",
+    "status": "confirmed",
+    "source_url": "https://www.mejba.me/blog/claude-design-visual-workflow-claude-code",
+    "note": "18 April 2026. All the repos were Tailwind, so it shows global CSS being read but says nothing about Razor."
+   },
+   {
+    "claim": "A codebase yielded \"colors, typography, spacing, radius, and components\" in about 5 minutes, but \"Claude Design is not built for iterating on an existing codebase.\"",
+    "status": "confirmed",
+    "source_url": "https://kay-zhang.com/blog/honest-review-on-claude-design/",
+    "note": "21 April 2026, before the June two-way sync."
+   },
+   {
+    "claim": "Reviewer workflow: \"Prompt for new screens. 'I need a checkout flow ... 3 screens.'\" Google Stitch wins on multi-screen flow generation.",
+    "status": "confirmed",
+    "source_url": "https://justinmckelvey.com/blog/claude-design-review",
+    "note": "Both are verbatim. This is independent evidence that the user names the screens."
+   },
+   {
+    "claim": "A tutorial writes out every step of the flow. The repo is \"read-only context\", and the bundle holds HTML/CSS/JS, screenshots of each state, and a README naming the target stack.",
+    "status": "confirmed",
+    "source_url": "https://dev.to/bilelsalemdev/from-prompt-to-pull-request-using-claude-design-claude-code-and-github-together-3m00",
+    "note": "6 May 2026."
+   },
+   {
+    "claim": "Link a subdirectory, not the whole monorepo, because large repos lag.",
+    "status": "confirmed",
+    "source_url": "https://aifordevelopers.substack.com/p/how-to-actually-use-claude-design",
+    "note": "20 April 2026. Consistent with the archived help article."
+   },
+   {
+    "claim": "A design-system import is a snapshot and does not track later repo changes until /design-sync is run again.",
+    "status": "unsupported",
+    "source_url": "https://blog.vibecoder.me/claude-design-system-sync-code-handoff",
+    "note": "The blog says this in its own voice without citing Anthropic. It is plausible, but no official page confirms it."
+   },
+   {
+    "claim": "The help article dropped /design for an MCP server plus /design-login in August 2026, then restored /design on 18 September.",
+    "status": "unsupported",
+    "source_url": "https://aicatchup.com/news/claude-design-sync-claude-code-two-way",
+    "note": "Only this secondary page says so. /design-login exists in today's command reference, but for /design-sync authorization. I did not verify the August help-article version."
+   },
+   {
+    "claim": "UX Planet advises asking Claude to design the entire experience rather than single screens.",
+    "status": "unsupported",
+    "source_url": "https://uxplanet.org/claude-design-for-ux-how-to-design-complete-user-flows-not-just-ui-screens-094d6b8a7855",
+    "note": "The page returned HTTP 403, so the claim rests on a search snippet alone."
+   },
+   {
+    "claim": "WebGrabber is a third-party extension (\"NOT AFFILIATED WITH ANTHROPIC\") that captures CSS custom properties, outerHTML and element screenshots as a <web-capture> payload.",
+    "status": "confirmed",
+    "source_url": "https://chromewebstore.google.com/detail/webgrabber-for-claude-des/cmadhofpfmppekfaogbgdppigfipeche",
+    "note": "It says nothing about logged-in pages. That it would work there because it runs in the user's browser is inference only."
+   },
+   {
+    "claim": "This session's DesignSync tool schema limits it to /design-sync keeping a local component library in sync with a design-system project, and says \"Never use it to make a design, deck or prototype\".",
+    "status": "confirmed",
+    "source_url": "local: DesignSync tool schema loaded via ToolSearch in this session",
+    "note": "Seen verbatim in the loaded schema. It is a sync channel for component libraries, not a design or discovery tool."
+   },
+   {
+    "claim": "The Wombat repo has 68 routable .razor files (80 @page directives) and a 1,406-line app.css.",
+    "status": "confirmed",
+    "source_url": "local: C:\\Users\\Renier\\Wombat\\src\\Wombat.Web",
+    "note": "Counted with grep and wc. There are 112 .razor files in total and 3 .razor.css isolation files. execution/architecture/DESIGN.md is 2,103 lines."
+   },
+   {
+    "claim": "Task premise: Wombat has 9 roles.",
+    "status": "refuted",
+    "source_url": "local: C:\\Users\\Renier\\Wombat\\src\\Wombat.Domain\\Identity\\WombatRoles.cs",
+    "note": "WombatRoles.cs defines 10 roles, adding CollegeAdmin (T093). The AdministratorOrCollegeAdmin policy and NationalCatalogueAccess gate 10 pages. The 9-role list in CLAUDE.md is stale, so a flow inventory needs 10 roles."
+   }
+  ],
+  "reads_codebase_for": "Supported by the fetched sources:\n\n- **The design system.** Colors, typography (families, sizes, weights), components (\\\"Buttons, cards, navigation elements, and other reusable UI patterns\\\") and layout patterns (\\\"Spacing, grid systems, and page structures\\\"). Sources: support 14604397 and the launch post.\n- **General context.** A linked repo helps \\\"Claude understand your existing components, architecture, and styling patterns\\\" (support 14604416). The Academy tutorial lists component structure, styling and theming (it names CSS modules, Tailwind and styled-components), framework patterns (\\\"state management, hooks, data flow\\\") and file organization.\n- **Existing screens, for one feature.** For a feature in an existing app, with GitHub connected or from a local codebase in Claude Code, Claude \\\"will fetch your components and existing screens and use them as a starting point\\\" (Anthropic product-designer blog, July 2026). This is scoped to the feature the user names.\n- **/design-sync**, the high-fidelity route, converts a React design system (Storybook or a bare package) only. The command reference, the setup article and the local 2.1.282 binary text all say so.\n\nNot supported by any Anthropic source: reading routes or @page directives, building a page inventory, mapping navigation or roles, inferring journeys, or running the app. Builder.io, a competitor, says it does not run the app. One launch-week blog, digitalapplied, claims it reads \\\"existing pages as structural reference\\\", but cites no source.\n\nNo source says anything about Blazor or Razor. For Wombat, the only reasonably grounded expectation is that Claude Design can pull tokens out of app.css, which holds 267 custom-property lines under :root. Hands-on reviewers saw it read global CSS, though in Tailwind repos. How well it reads .razor markup, with its interleaved @code, @if and @foreach, is unknown.",
+  "enumerates_user_flows": "no",
+  "flows_reasoning": "Both sweeps concluded \\\"no\\\", and the re-fetches support it. The absence of any statement is the weaker half of the evidence. The positive statements carry more weight:\n\n- The Academy tutorial says \\\"Walk Claude through the journey and it will generate each screen in context.\\\"\n- The help centre workflow is \\\"Add any relevant context (screenshots, a codebase). Describe what you want to build.\\\" Its example prompts name the screens (\\\"onboarding flow with 4 screens\\\").\n- The launch post has PMs \\\"sketch out feature flows\\\".\n- /design in Claude Code drafts \\\"screen flows\\\" from a brief the user writes.\n- Independent hands-on reports (mejba, McKelvey, dev.to) all prompt screen by screen, or write the flow out themselves. McKelvey adds that Google Stitch is stronger at multi-screen flow generation.\n\nThe nearest counterpoint is Anthropic's July blog: Claude \\\"will fetch your components and existing screens\\\" for a feature. That is retrieval of screens relevant to a named feature, not enumeration. Clarifying questions are questions about one brief.\n\nSo the flow list will not be built for you. It is also worth more for Wombat than for a typical app, for three reasons:\n\n- There are 10 roles, not 9.\n- There are 80 @page routes behind 60+ [Authorize] attributes, with institution-scope filtering.\n- The central trainee and assessor screens (ActivityForm and ActivityView) are drawn at runtime from 22 seeded jsonb schemas. Neither a code read nor a design-system extraction can see them.\n\nThis does not argue for exhaustive coverage. Official guidance is to start simple and layer complexity, one brief at a time. A prioritised inventory is enough: role by task, ranked, with routes and states.",
+  "blazor_specific_risks": [
+   "The component library cannot be synced. /design-sync is React-only (command reference: \"Convert your repo's React design system\"; installed 2.1.282: \"Push a React design system\"; issue #71523: non-React \"can never render in Claude Design's React runtime\"). Claude Design therefore cannot build with or self-check against Wombat's real Razor components (PageHeader, DataTable, FormField, StatePanel, Skeleton, Icon, ConfirmDialog, and others under src/Wombat.Web/Components/Shared). The official promise that it \"builds with your real design system components\" and \"checks its own output\" does not apply.",
+   "No framework limit is documented for the link or upload route, but the only framework named is React, and the only styling approaches named are CSS modules, Tailwind and styled-components. Reading .razor files, which mix markup with @code, @if, @foreach, RenderFragments and directives, is undocumented. Expect tokens pulled from app.css (inferred from reviewers who saw global CSS read) and weaker extraction of component structure.",
+   "Much of the markup the design must style is written by the framework, not by the source. It does not appear in any .razor file a design tool reads: EditForm and InputBase validation classes (valid, invalid, modified), ValidationMessage and ValidationSummary output (18 files use EditForm), NavLink's active class, AuthorizeView's NotAuthorized content, and the Blazor Server reconnect dialog (components-reconnect-* in Components/Layout/ReconnectModal.razor). A redesign that ignores these ships unstyled states.",
+   "Two render modes. App.razor serves unauthenticated or non-interactive-routing pages (sign-in, invitation, account, and the anonymous MSF respondent page) as static SSR, and everything else as InteractiveServer through PageRenderMode. A design that assumes SPA-style live behaviour on static pages cannot be built without JS. On interactive pages every keystroke-level interaction (typeahead, drag, live filtering) is a SignalR round trip, so rich client-side micro-interactions in a React prototype may not carry over cheaply.",
+   "The most-used screens are data-driven. ActivityForm.razor and ActivityDetail.razor render forms from jsonb SchemaJson stored in the database (22 seeded activity types under src/Wombat.Infrastructure/Activities/Seeds), and the builder (Admin/ActivityTypes/ActivityTypeEdit.razor) authors them. Reading the repo reveals the renderer, not the forms a trainee or assessor sees. Claude Design has no documented way to run the app, so those screens exist for it only if screenshots or schema JSON are supplied.",
+   "Role- and scope-dependent UI cannot be seen in code alone. Wombat has 10 roles in WombatRoles.cs (CollegeAdmin included, contrary to the 9 in CLAUDE.md). There are 60+ @attribute [Authorize] directives across policies and role lists, a role-gated NavMenu, and InstitutionalAdmin scope filtering, where out-of-scope ids return 404. No source documents Claude Design logging in or rendering authenticated pages. The admin-guide sandbox text concerns isolating previews, not reaching your app, and web capture on authenticated pages is undocumented.",
+   "CSP conflicts on the handoff path. Wombat sends font-src 'self', script-src 'self' 'nonce-…' and style-src 'self' 'unsafe-inline' (src/Wombat.Web/Security/SecurityHeadersMiddleware.cs). Claude's artifact and design output is allowed Google Fonts and CDN scripts, including the Tailwind CDN and jQuery (artifacts doc). A prototype that relies on Google-hosted fonts, CDN JS or Tailwind utilities breaks under Wombat's CSP, or violates DESIGN.md. Fonts must stay self-hosted (wwwroot/fonts/fraunces-var.woff2).",
+   "Design-contract drift. DESIGN.md's non-negotiables are: no Bootstrap, no raw hex outside :root, no inline <style> in page .razor files, Lucide icons only through Icon.razor (local SVGs in wwwroot/icons), and no jQuery. Handoff bundles are HTML/CSS/JS (dev.to), and Claude \"picks one of its favorite aesthetics\" when left undirected. Without explicit constraints, expect hex literals, a different icon set, utility classes and inline styles, all of which Claude Code must translate back into tokens and Razor.",
+   "Fidelity will probably be at the lower end. Anthropic claims \"pretty high fidelity\" when it can fetch your components and screens. Builder.io measured 50–75% when it could not use real components. Wombat can use neither design-sync nor a runnable preview, so the lower figure is the likelier expectation (inferred).",
+   "Uploading the local folder is a data-exposure hazard. The working tree holds gitignored files that a folder upload to claude.ai/design would send to Anthropic: pwd_DO_NOT_COMMIT.txt (session passwords), recovery/ (7 MB of pg_dump snapshots), publish/, .vs, .dotnet, and the EPA .docx and book. Linking the GitHub repo sends tracked files only. Linking only src/Wombat.Web plus DESIGN.md follows the official \"link the specific package or directory\" advice and also cuts usage (\"large codebases ... consume more usage\").",
+   "Snapshot staleness. Wombat's app.css and DESIGN.md change often. Imported design systems are reportedly snapshots (low-confidence secondary source), so re-import after token changes or the designs will drift from the live CSS."
+  ],
+  "best_inputs_for_existing_app_redesign": [
+   "The design system first, as the admin guide advises (\"functional but generic output\" without one). Link or upload only src/Wombat.Web/wwwroot/app.css, which has the :root tokens at line 11, plus wwwroot/fonts, wwwroot/brand (wombat-mark.svg, wombat-tile.svg) and wwwroot/icons (Lucide SVGs). The setup article accepts \"Brand guideline assets (logos, color palettes, typography specs)\" and a codebase, and says to \"Include real examples, not just specs.\"",
+   "execution/architecture/DESIGN.md as the design contract, uploaded as a document or pasted into the brief. It already defines tokens, typography, the shell grid, NavMenu, and the button, table, form, card, badge, alert, empty-state and skeleton systems. It also has page-level patterns (List, Detail, Form, Dashboard, Account/auth, Anonymous static) and the non-negotiables. Tell Claude these are constraints. The help centre says to \"reference your design system\" components by name.",
+   "Screenshots of real pages, per role, from the dev app. Screenshots are a documented input, and the data is scenario-only, so screenshots are safe to share. Cover all 10 seeded dev accounts (trainee, assessor, committee, coordinator, instadmin, collegeadmin, and so on) and an Administrator view. Screenshots are the only documented way to show pages behind login, and to show the runtime-rendered activity forms.",
+   "Screenshots of framework-owned states: validation errors on an EditForm, the Blazor reconnect dialog, access denied and not found (scope 404), empty lists, skeleton loading, and ConfirmDialog. The Academy tutorial says to ask for empty, error and loading states and different data volumes before handoff.",
+   "A prioritised flow inventory rather than an exhaustive one. For each role and task, give the route or routes, the purpose, the data shown, the states, and frequency or risk. Claude Code can draft it from the @page and @attribute [Authorize] directives (80 routes) and NavMenu.razor, then a person ranks it. Brief Claude Design one flow at a time, using the goal, layout, content and audience structure. This matches \"Walk Claude through the journey\" and \"Start simple, then layer in complexity.\"",
+   "Representative activity-type schemas for the data-driven forms: a few seed schema JSON files from src/Wombat.Infrastructure/Activities/Seeds, alongside screenshots of each rendered state. The builder screen should be treated as its own flow.",
+   "Explicit implementation constraints in every brief: Blazor Server with Razor components; tokens only, no hex; Lucide icons; self-hosted fonts; no CDN scripts; no Bootstrap, Tailwind or jQuery; the static-SSR pages (sign-in, invitation, MSF respondent) cannot rely on client interactivity. The product-designer post says to \"Tell Claude what it should look like\" and to \"Do the thinking before you prompt.\"",
+   "Possibly the Claude Code route instead of claude.ai/design. Run /design in a Claude Code session in the repo. That session can read app.css, DESIGN.md and CLAUDE.md, and the artifact design skill \"looks for an existing design system in your project\" (artifacts doc). This avoids the React-only sync and the large-repo browser lag the help centre warns about. The official claim applies to artifacts in general; that /design inherits the lookup is an inference.",
+   "Wireframes before fidelity for structural changes, such as navigation and dashboard layout per role (\"Wireframe first when fidelity doesn't matter\"). Ask for 2–3 variations per flow, as the help centre advises."
+  ],
+  "handoff_to_code": "Verified: from claude.ai/design, Export offers \\\"Handoff to Claude Code\\\", either \\\"Send to local coding agent\\\" or \\\"Send to Claude Code Web\\\". The bundle holds the project's design files, the chat, and a README telling the model how to read the designs, plus a prompt carrying the bundle URL (Academy tutorial). A secondary source (dev.to) says the bundle is HTML/CSS/JS with screenshots of each state and a README naming the target stack.\n\nFrom Claude Code, /design can import a design into the codebase, export the code as a live prototype, or build the whole thing (help centre). The /design canvas publishes artboards, and you tell Claude which one to implement (week-34 note). Other exports are .zip, PDF, PPTX, standalone HTML, Google Slides (claude.ai/design only) and partner tools.\n\nAnthropic's \\\"continues from your existing work instead of starting over from a screenshot\\\" assumes the component library was synced. For Wombat it cannot be, because /design-sync is React-only, so the handoff is effectively a visual spec.\n\nClaude Code must translate the HTML/React output into Razor components and app.css tokens under DESIGN.md's rules:\n\n- no hex outside :root;\n- Lucide icons through Icon.razor;\n- no inline <style> in page .razor files;\n- no Bootstrap, Tailwind or jQuery;\n- self-hosted fonts, to satisfy CSP font-src 'self';\n- the static-SSR versus InteractiveServer split;\n- the framework-generated validation and reconnect markup.\n\nwmedia.es describes this path for non-React stacks: design in Claude Design, pull the artboard, have Claude Code implement it against the repo. Verify each implemented flow with the bUnit tests and a browser check per role, as the repo's existing definition of done requires.",
+  "disagreements_between_sweeps": "The sweeps agree on the verdict: Claude Design does not enumerate flows, and /design-sync is React-only. They differ in these places:\n\n1. **Existing screens.** Sweep B says no Anthropic source mentions reading screens, and that every official description treats the codebase as design-system source or context. Sweep A found, and I confirmed, the Anthropic product-designer blog (24 July 2026): \\\"Claude will fetch your components and existing screens ... can recreate your existing designs with pretty high fidelity\\\". B is slightly overstated. A's reading is right that this is feature-scoped retrieval, not enumeration.\n2. **Fidelity.** B leans on Builder.io's 50–75% (a competitor, April, before the June update). A leans on Anthropic's \\\"pretty high fidelity\\\" (July). The two conflict, and neither measured a non-React stack.\n3. **Login access.** A cites the admin guide's sandbox text (\\\"can't reach your Claude account, your login\\\") as bearing on authenticated pages. That misreads it: it refers to the user's Claude login and preview isolation. Both sweeps' underlying point, that there is no documented way to reach pages behind the app's login, rests only on silence in the sources, and I found no counter-evidence.\n4. **/design version floor.** A reports v2.1.234 (week-34 note) against v2.1.265 (artifacts doc). B cites only v2.1.265. Both figures are real, and the docs are inconsistent.\n5. **Issue #71523.** B says a bot closed it as inactive. Confirmed: github-actions[bot], 2026-08-12, not_planned, \\\"inactive for too long\\\", and a later request to reopen. It is a user's feature request, not Anthropic confirmation.\n6. **Low-confidence items B included.** digitalapplied's \\\"existing pages as structural reference\\\" has no Anthropic backing. aicatchup's account of the August help-article reversal is unverified. UX Planet returned 403. vibecoder's snapshot claim is uncited. I marked all four unsupported.\n7. **Sweep A's September claim.** A said claude.ai/design stays as a standalone experience. That was not in the fetched text; the in-conversation part is confirmed.\n8. **The web capture tool.** Neither sweep noted that it appears only in the April launch post and is absent from the current get-started article, so its current status is unclear.\n9. **The task premise.** Both sweeps and the task accept \\\"9 roles\\\". The code defines 10 (CollegeAdmin in src/Wombat.Domain/Identity/WombatRoles.cs), so CLAUDE.md's role list is stale."
+ },
+ "sweep_official": {
+  "summary": "Short answer: Claude Design does not map your app's workflows for you. Build the list, but treat it as a prioritised brief for each role, not an exhaustive catalogue.\n\nWhat the official sources say Claude Design does with a repo: it \"builds a design system for your team by reading your codebase and design files\", extracting \"colors, typography, and components\" (launch post). The help centre adds \"layout patterns: spacing, grid systems, and page structures\". The Academy tutorial says it understands \"component structure\", \"styling and theming\", \"framework patterns\" and \"file organization\". The closest any source comes to reading screens is one line in a product designer's blog post. It says that for \"a feature for an existing app\", Claude \"will fetch your components and existing screens and use them as a starting point\" and \"can recreate your existing designs with pretty high fidelity\". No source says it enumerates routes, pages, roles or user journeys. Every flow example is prompted by the user, and the Academy tutorial's instruction for flows is \"Walk Claude through the journey and it will generate each screen in context.\" So the workflow list is an input you supply, and it is where the value will come from.\n\nThree findings specific to Wombat change the plan.\n\n1. **/design-sync will not take Blazor.** The Claude Code command that syncs a code design system is React-only. Official docs say it is for design systems that \"already exist as React components\". The skill text inside the installed Claude Code 2.1.282 binary says: \"Push a React design system to claude.ai/design. This runs a converter that bundles the real component code (from Storybook or a bare package).\" For a Blazor app with a single app.css, the options are:\n   - link or upload the repo at claude.ai/design (\"Claude reads the components and styles\"; no source says how well it reads .razor files);\n   - bring tokens in through uploads or chat;\n   - run /design inside a Claude Code session in the repo, where the session can read the code and execution/architecture/DESIGN.md. That last route is my inference; no source states it.\n2. **Claude Design cannot run or log into the live app.** Nothing documents it running an app or rendering pages behind a login. Previews are sandboxed iframes on an Anthropic domain, and artifacts are \"one self-contained page with no backend\". The \"web capture tool\" grabs \"elements directly from your website\", and no official source says whether it works on authenticated pages. Screenshots are a documented input, so screenshots of real pages for each role are the practical way to show it the existing screens.\n3. **The repo is at the size where guidance suggests scoping.** It has 68 routable .razor files (80 @page routes) and a 1,406-line app.css. For \"very large repositories\", guidance is to link from Claude Code, or to link only the relevant directory without .git, node_modules and similar.\n\nSuggested approach (my recommendation, not sourced):\n- Set up the design system first, as the admin guide advises.\n- Write a role-by-task flow inventory, ranked by frequency and risk, each flow with the screens it touches and the states it needs (empty, error, loading, permission-denied).\n- Brief Claude Design one flow at a time, with screenshots.\n- Hand each finished flow to Claude Code, which has to translate React/HTML designs into Razor plus app.css.\n\nA code-reading pass by Claude Code, not Claude Design, can draft the route and role inventory from the @page and [Authorize] attributes.",
+  "claims": [
+   {
+    "claim": "Claude Design launched on 17 April 2026 as an Anthropic Labs research preview for Pro, Max, Team and Enterprise, for creating designs, prototypes, slides and one-pagers.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "high",
+    "quote": "Today, we're launching Claude Design, a new Anthropic Labs product that lets you collaborate with Claude to create polished visual work like designs, prototypes, slides, one-pagers, and more."
+   },
+   {
+    "claim": "During onboarding it builds a design system by reading the codebase and design files, extracting colors, typography and components.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "high",
+    "quote": "During onboarding, Claude builds a design system for your team by reading your codebase and design files. Every project after that uses your colors, typography, and components automatically."
+   },
+   {
+    "claim": "The generated design system typically contains a color palette, typography, components and layout patterns ('page structures' here means layout patterns, not an inventory of the app's pages).",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "confidence": "high",
+    "quote": "Color palette ... Typography: Font families, sizes, and weights. Components: Buttons, cards, navigation elements, and other reusable UI patterns. Layout patterns: Spacing, grid systems, and page structures."
+   },
+   {
+    "claim": "You can link or upload a repository at claude.ai/design, and Claude reads the components and styles. The example given is a React component library.",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "confidence": "high",
+    "quote": "Codebases: If your design system lives in code, like a React component library, link or upload the repository. Claude reads the components and styles."
+   },
+   {
+    "claim": "What Claude understands from a linked codebase is listed as component structure, styling and theming, framework patterns, and file organization. Routes, pages and user journeys are not listed.",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "confidence": "high",
+    "quote": "Claude analyzes your linked codebase to understand: Component structure ... Styling and theming ... Framework patterns — State management, hooks, data flow, and other conventions. File organization"
+   },
+   {
+    "claim": "The closest official statement about reading screens: for a feature in an existing app, Claude fetches your components and existing screens as a starting point and can recreate existing designs with fairly high fidelity. It is scoped to a feature you ask for, not a full inventory.",
+    "source_url": "https://claude.com/blog/how-the-product-designer-who-built-claude-design-uses-it-to-explore-ideas-before-building-them",
+    "confidence": "high",
+    "quote": "If you're designing a feature for an existing app or website, connect GitHub, or work from your local codebase in Claude Code: Claude will fetch your components and existing screens and use them as a starting point, and with a few tries it can recreate your existing designs with pretty high fidelity."
+   },
+   {
+    "claim": "User flows are designed when the user describes the journey. The official guidance is to walk Claude through it, not to have Claude discover it.",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "confidence": "high",
+    "quote": "You can use Claude Design to prototype complete user flows, not just individual screens. Walk Claude through the journey and it will generate each screen in context."
+   },
+   {
+    "claim": "The official typical flow has the user add context and describe what to build. A good prompt names goal, layout, content and audience, and Claude asks clarifying questions when needed.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "A good prompt includes the goal (what you're building), the layout (how things should be arranged), the content (what information to display), and the audience (who will use it). Claude will also ask clarifying questions if it needs more information."
+   },
+   {
+    "claim": "Accepted inputs include text prompts, images, DOCX/PPTX/XLSX documents, a codebase, and a web capture tool that grabs elements from your website.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "high",
+    "quote": "Start from a text prompt, upload images and documents (DOCX, PPTX, XLSX), or point Claude at your codebase. You can also use the web capture tool to grab elements directly from your website so prototypes look like the real product."
+   },
+   {
+    "claim": "Screenshots of existing designs, wireframes and inspiration are an explicit input, as is a linked code repository.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Upload screenshots of existing designs, competitor products, wireframes, or visual inspiration... Link a code repository so Claude understands your existing components, architecture, and styling patterns."
+   },
+   {
+    "claim": "Design systems can be imported from a GitHub repo, design files, raw uploads, or a local codebase through /design-sync in Claude Code. Claude checks its output against the design system.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Bring in one or several design systems from a GitHub repo, design files, raw uploads, or your local codebase using the /design-sync command in Claude Code. Claude builds with your real design system components, checks its own output against your design system, and makes corrections before you see them."
+   },
+   {
+    "claim": "The /design-sync route is described officially as being for React component design systems.",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "confidence": "high",
+    "quote": "If your design system already exists as React components, run /design-sync in Claude Code. It reads your tokens and components directly, and works best for product design systems in code."
+   },
+   {
+    "claim": "The installed Claude Code (2.1.282) describes /design-sync as a converter that bundles React components from Storybook or a bare package. It cannot take a Blazor/Razor component library. The skill is user-invocable only.",
+    "source_url": "local: C:\\Users\\Renier\\.local\\bin\\claude.exe (Claude Code 2.1.282, embedded skill text)",
+    "confidence": "medium",
+    "quote": "Push a React design system to claude.ai/design. This runs a converter that bundles the real component code (from Storybook or a bare package) and uploads it."
+   },
+   {
+    "claim": "A secondary source says Vue, Angular, Svelte and server-side templates cannot be synced with /design-sync because the Claude Design renderer runs React.",
+    "source_url": "https://wmedia.es/en/tips/claude-code-design-sync-your-components",
+    "confidence": "medium",
+    "quote": "A React package with a published dist/, or a Storybook, gets in. Vue, Angular and Svelte do not... Blade, Twig or server-side templates: No"
+   },
+   {
+    "claim": "In Claude Code, /design drafts a design as editable artboards on one canvas published as a Design artifact, for UI mockups and screen flows, from a brief. Artboards export as PNG or PDF.",
+    "source_url": "https://code.claude.com/docs/en/artifacts",
+    "confidence": "high",
+    "quote": "To mock up a UI, a screen flow, a landing page, or a poster rather than build a page, run `/design` with a brief. Claude drafts the design as artboards on one canvas and publishes the canvas as a Design artifact."
+   },
+   {
+    "claim": "The /design launch note's example is a redesign brief grounded in usage ('redesign the composer based on what people actually use it for'). The user supplies the target, then picks an artboard for Claude to implement.",
+    "source_url": "https://code.claude.com/docs/en/whats-new/2026-w34",
+    "confidence": "high",
+    "quote": "> /design redesign the composer based on what people actually use it for ... Open it, pick an artboard, and tell Claude which option to implement."
+   },
+   {
+    "claim": "The artifact design skill in Claude Code looks for an existing design system in the project, for example tokens recorded in CLAUDE.md or a theme file, and gives it precedence over its own choices.",
+    "source_url": "https://code.claude.com/docs/en/artifacts",
+    "confidence": "high",
+    "quote": "That skill also looks for an existing design system in your project before choosing its own... record them where Claude can find them, such as the project's CLAUDE.md or a theme file in your repository"
+   },
+   {
+    "claim": "Export formats are .zip, PDF, PPTX, Google Slides (standalone only), standalone HTML, a list of partner tools, and handoff to Claude Code (local agent or Claude Code Web).",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Download as .zip / Export as PDF / Export as PPTX / Export to Google Slides (available only at claude.ai/design) / Export as standalone HTML / ... Handoff to Claude Code: Send to local coding agent / Send to Claude Code Web"
+   },
+   {
+    "claim": "The Claude Code handoff bundles the project's design files, the chat and a README, and gives a prompt with the bundle URL for local Claude Code or another coding agent.",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "confidence": "high",
+    "quote": "By default, we bundle the project's design files, chat, and a README which tells the model to interpret the designs for download, and give you a prompt you can paste into local Claude Code (or coding agent of your choice) that includes the bundle's URL."
+   },
+   {
+    "claim": "From Claude Code, /design can import a design into the codebase or export code as a live prototype.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "From Claude Code, use /design to import a design into your codebase, export your code as a live prototype, or let Claude build the whole thing from start to finish."
+   },
+   {
+    "claim": "The guidance for very large repositories is to link them from Claude Code. Design system import quality depends on the source.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Large codebases: Consider linking very large repositories from Claude Code to avoid lag or browser issues... Design system import is only as good as its source. A messy codebase or an incomplete file will show up in the output."
+   },
+   {
+    "claim": "For large repos, link only the relevant package or directory and exclude .git, node_modules and similar, because Chrome handles huge file trees poorly.",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "confidence": "high",
+    "quote": "we recommend linking the specific package or directory that contains the relevant components rather than the entire repo... attaching folders within your repo, such that you do not include the .git folder, node_modules/ folder, etc."
+   },
+   {
+    "claim": "Other known limits: no version history yet, basic multi-person editing, and usage counted against the plan's shared limits, with large codebases using more.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Version history: Claude Design doesn't have version history yet... Complex projects with large codebases or many iterations consume more usage."
+   },
+   {
+    "claim": "Previews run in a sandboxed iframe on a separate Anthropic content domain. No source describes Claude Design running a customer's app or reaching pages behind the app's login.",
+    "source_url": "https://support.claude.com/en/articles/14604406-claude-design-admin-guide-for-team-and-enterprise-plans",
+    "confidence": "medium",
+    "quote": "Claude Design project previews run inside a sandboxed iframe on a separate content domain that Anthropic operates... The code in a preview can't reach your Claude account, your login, or the editor."
+   },
+   {
+    "claim": "An artifact, the vehicle for Claude Design in conversations and Claude Code, is a single self-contained page with no backend that cannot serve multiple routes.",
+    "source_url": "https://code.claude.com/docs/en/artifacts",
+    "confidence": "high",
+    "quote": "An artifact is a capture of work: one self-contained page with no backend, so it can't serve multiple routes."
+   },
+   {
+    "claim": "Whether the official web capture tool works on authenticated pages is not documented. The one extension found that describes capture in detail (WebGrabber) is third-party, not affiliated with Anthropic, and does not address logins.",
+    "source_url": "https://chromewebstore.google.com/detail/webgrabber-for-claude-des/cmadhofpfmppekfaogbgdppigfipeche",
+    "confidence": "low",
+    "quote": "NOT AFFILIATED WITH ANTHROPIC ... A single 'Copy' click produces a <web-capture>…</web-capture> payload that Claude's Design composer understands out of the box."
+   },
+   {
+    "claim": "Official rollout guidance: set up the design system first, with designers from brand and product. Without one, output is 'functional but generic'.",
+    "source_url": "https://support.claude.com/en/articles/14604406-claude-design-admin-guide-for-team-and-enterprise-plans",
+    "confidence": "high",
+    "quote": "Turning on Claude Design without a design system in place means your team gets functional but generic output."
+   },
+   {
+    "claim": "Official briefing tips: start simple and layer complexity, reference design system components by name, state responsiveness early, ask for 2–3 variations, and ask Claude to review accessibility and hierarchy.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Start simple, then layer in complexity... Reference your design system... Think about responsiveness early... Ask for variations... Ask Claude for feedback."
+   },
+   {
+    "claim": "Before handoff, ask Claude to show empty, error and loading states and different data volumes, and record design decisions in the chat so they carry into implementation.",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "confidence": "high",
+    "quote": "Flag edge cases. Before handing off, ask Claude to show how the design handles empty states, error states, loading states, and different data volumes."
+   },
+   {
+    "claim": "The product designer's advice: do the thinking before prompting, specify the look or Claude defaults to its favourite aesthetics, wireframe first, and give Claude your real context.",
+    "source_url": "https://claude.com/blog/how-the-product-designer-who-built-claude-design-uses-it-to-explore-ideas-before-building-them",
+    "confidence": "high",
+    "quote": "Do the thinking before you prompt... Tell Claude what it should look like. Left undirected, Claude picks one of its favorite aesthetics... Wireframe first when fidelity doesn't matter."
+   },
+   {
+    "claim": "Since September 2026, Claude Design also works inside any Claude conversation, Claude Code and the Artifacts tab, in beta. claude.ai/design stays as a standalone experience.",
+    "source_url": "https://claude.com/blog/claude-design-stays-on-brand-for-daily-work",
+    "confidence": "high",
+    "quote": "Update, September 2026: Claude Design now works inside any conversation with Claude, including Claude Code and the Artifacts tab, in beta on paid plans."
+   },
+   {
+    "claim": "Anthropic positions Claude Design for ideation and alignment, and Claude Code for production software.",
+    "source_url": "https://claude.com/blog/how-the-product-designer-who-built-claude-design-uses-it-to-explore-ideas-before-building-them",
+    "confidence": "high",
+    "quote": "And if you're shipping production software, stick with Claude Code. Claude Code is for coding; Claude Design is for the other parts of the design work"
+   },
+   {
+    "claim": "No official source says how well Claude Design reads Blazor/Razor (.razor) files or plain CSS custom-property token files. The only frameworks and styling approaches named are React, CSS modules, Tailwind and styled-components.",
+    "source_url": "https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux",
+    "confidence": "low",
+    "quote": "Claude analyzes your styling patterns (CSS modules, Tailwind, styled-components, etc.), spacing scale, color system, and layout conventions."
+   }
+  ],
+  "reads_codebase_for": "Official sources say a linked or uploaded codebase is read for its design system: colors, typography (families, sizes, weights), components (buttons, cards, navigation and other reusable UI patterns) and layout patterns (spacing, grid, \"page structures\"). The Academy tutorial also lists component structure and composition, styling and theming (color system, spacing scale, CSS approach), framework patterns (state management, hooks, data flow) and file organization.\n\nThe codebase then becomes project context, so a prompt can name a component or \"the same layout pattern as the settings page\". One product-designer blog post says that for a feature in an existing app, Claude \"will fetch your components and existing screens and use them as a starting point\". No source says it extracts a route table, a role or permission model, or user journeys.\n\n/design-sync, the high-fidelity code route, compiles React components (Storybook or a bare package) only. A Blazor app cannot use it and falls back to the link/upload path at claude.ai/design, whose Razor support is undocumented, or to working in Claude Code.",
+  "enumerates_user_flows": "no",
+  "flows_evidence": "Nothing in the official material says Claude Design enumerates, infers or maps an app's workflows, screens or journeys.\n\n- Every flow example is user-specified, for example \"Design a mobile app onboarding flow with 4 screens\" or \"Map out the flow for a user who wants to upgrade... Start from the dashboard... through the plan comparison page, payment form, confirmation\".\n- The Academy tutorial's instruction is \"Walk Claude through the journey and it will generate each screen in context\" (https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux).\n- Claude \"will also ask clarifying questions if it needs more information\" (get-started article). That is prompt clarification, not discovery.\n- The strongest statement about existing screens is the product-designer blog's \"Claude will fetch your components and existing screens and use them as a starting point\" for \"a feature for an existing app\". It is scoped to a feature you name.\n\nSo \"builds a design system from your codebase\" is documented; \"maps every workflow in your app\" is not. The rating \"no\" rests on that absence plus the explicit \"walk Claude through the journey\" guidance.",
+  "accepted_inputs": [
+   "Text prompt / brief (typed or dictated)",
+   "Images and screenshots (existing designs, competitor products, wireframes, photos of paper sketches, moodboards)",
+   "Documents: DOCX, PPTX, XLSX; PDFs and slide decks as style references for design-system extraction",
+   "Codebase: GitHub repo link, or upload or attach a local directory with the Import button at claude.ai/design",
+   "Local codebase through Claude Code: /design-sync for React design systems (Storybook or a bare package); /design to create, edit, import and export design projects",
+   "Figma files and other design files (named as design-system sources in chat)",
+   "Brand assets: logos, color palette files, typography specimens, fonts",
+   "Web capture tool: grabs elements from your website (behaviour on login-protected pages is undocumented)",
+   "In a conversation: files and analysis already in the chat, memory, projects, skills, connectors and web search"
+  ],
+  "limits": [
+   "No documented ability to run your application or render pages behind its login. Previews are sandboxed iframes on an Anthropic content domain, and artifacts are single self-contained pages with no backend that cannot serve multiple routes.",
+   "/design-sync (code design-system sync) is React-only: it bundles React components from Storybook or a bare package. A Blazor/Razor component library cannot use it (installed Claude Code binary text plus a secondary source; the official docs only say it is for React components).",
+   "No official statement on reading Blazor/Razor or plain-CSS-token codebases. Named frameworks and approaches are React, CSS modules, Tailwind and styled-components (low confidence either way).",
+   "Large repositories can cause lag or browser instability. Link them from Claude Code, or link only the relevant package or directory without .git and node_modules. No numeric repo-size or file-count limit is published.",
+   "Design system import is only as good as its source: a messy codebase or an incomplete file shows up in the output.",
+   "Usage counts against the plan's shared limits (including Claude Code). Large codebases and many iterations use more. No separate allowance since the June 2026 change.",
+   "No version history. Multi-person simultaneous editing is basic. Inline comments intermittently disappear (workaround: paste into chat). 'chat upstream error' means start a new chat tab.",
+   "Beta or research preview. On Enterprise it is off by default until an owner enables it. Standalone claude.ai/design and in-conversation Design have separate settings.",
+   "No image-generation model: poor for logos; bring existing assets.",
+   "/design in Claude Code requires v2.1.234 (week-34 note) or v2.1.265 (artifacts doc; the sources disagree). The installed version is 2.1.282, so either is met.",
+   "No published context-window figure specific to Claude Design (not sourced)."
+  ],
+  "handoff_to_code": "From claude.ai/design or a Design artifact, \"Export\" then \"Hand off to Claude Code\" packages the project's design files, the chat, and a README telling the model how to interpret the designs. You get a prompt containing the bundle URL to paste into local Claude Code (or any coding agent), or you can send it to Claude Code Web. The Academy tutorial and the get-started article both describe this.\n\nIn Claude Code, /design can import a design project's files into the working directory, export the working directory as a live prototype project, or have Claude implement a chosen artboard. The /design canvas skill publishes artboards and you tell Claude which to implement.\n\nOther exports: .zip, PDF, PPTX, standalone HTML, Google Slides (standalone only), and partner tools (Canva, Figma-adjacent and deploy tools such as Vercel, Netlify, Lovable, Replit and v0).\n\nFor Wombat, the design output is HTML/React-style prototype code, so Claude Code must translate it into Razor components and the token-driven app.css. It must keep DESIGN.md's rules: no Bootstrap, no raw hex outside :root, and Lucide icons through Icon.razor. Anthropic's \"continues from your existing work\" claim assumes the linked-codebase or design-sync path, which is weaker here because design-sync cannot ingest Blazor."
+ },
+ "sweep_independent": {
+  "summary": "Short answer: yes, write the workflow list. Claude Design will not produce one from a repo. No Anthropic source says it enumerates, maps or infers an app's user flows, screens, routes or journeys. Every official description treats the codebase in one of two ways. It is the source of a design system: colors, typography, components, and layout patterns including \"page structures\". Or it is background context (\"so Claude understands your existing components, architecture, and styling patterns\"). Designs themselves are made one brief at a time: \"Describe what you want to build.\" Anthropic's own example prompts name the screens (\"an onboarding flow with 4 screens\"). The launch post frames flows as something the user brings: \"Product Managers can sketch out feature flows\". Independent hands-on reports match this. Mejba Ahmed pointed it at four real repos: extraction took 15–20 minutes and produced brand tokens, then he had to \"Prompt for the section or screen\". Justin McKelvey says \"Prompt for new screens … 3 screens\". A dev.to tutorial writes out the flow steps itself. Builder.io, a competitor, says it \"doesn't actually work inside your repo or run your app to look at the rendered state\". wmedia.es says /design-sync \"syncs your component library … the application never travels\".\n\nCaveats that matter for Wombat:\n(1) /design-sync is React-only. Anthropic's command reference says it converts \"your repo's React design system\". A GitHub issue (#71523) and wmedia.es confirm that Vue, Svelte and server-side templates cannot render in its React runtime. Blazor/Razor is not named anywhere; inferring from those sources, it is excluded.\n(2) The claude.ai/design route of linking or uploading a repo \"reads the components and styles\". Anthropic names no framework limit for it. Reviewers report it pulled tokens from global CSS and font declarations, so Wombat's app.css tokens are probably extractable. That is inferred, not confirmed.\n(3) I found nothing saying Claude Design can sign in to an app or render pages behind a login. The web capture tool is documented only as grabbing \"elements directly from your website\". For Wombat's gated pages, screenshots (an accepted input) are the practical route.\n(4) Anthropic gives no numeric repo-size or context limit. At launch it said \"Link specific subdirectories rather than entire monorepos\". Since the September 2026 rewrite it says \"Consider linking very large repositories from Claude Code\".\n(5) Anthropic's rollout advice is to set up the design system before anything else. Without one the output is \"functional but generic\".\n\nA practical split: Claude Design supplies the look and the per-screen designs. The workflow inventory (routes, roles, states) has to come from you, or from Claude Code reading the Razor @page directives (my suggestion, not a documented feature). Then brief Claude Design one workflow at a time, using the help centre's goal/layout/content/audience structure.",
+  "claims": [
+   {
+    "claim": "Claude Design launched on April 17, 2026 as an Anthropic Labs research preview powered by Opus 4.7, for Pro, Max, Team and Enterprise.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "high",
+    "quote": "Claude Design is powered by our most capable vision model, Claude Opus 4.7, and is available in research preview for Claude Pro, Max, Team, and Enterprise subscribers."
+   },
+   {
+    "claim": "The official use of a codebase is to build a design system (colors, typography, components) that later projects apply automatically.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "high",
+    "quote": "During onboarding, Claude builds a design system for your team by reading your codebase and design files. Every project after that uses your colors, typography, and components automatically."
+   },
+   {
+    "claim": "Accepted inputs at launch: text prompt, images, DOCX/PPTX/XLSX, a codebase, and a web capture tool for grabbing elements from your website.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "high",
+    "quote": "Start from a text prompt, upload images and documents (DOCX, PPTX, XLSX), or point Claude at your codebase. You can also use the web capture tool to grab elements directly from your website so prototypes look like the real product."
+   },
+   {
+    "claim": "The launch post presents feature flows as something the user sketches, not something Claude Design discovers.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "high",
+    "quote": "Product Managers can sketch out feature flows and hand them off to Claude Code for implementation, or share them with designers to refine further."
+   },
+   {
+    "claim": "Anthropic's documented workflow is: attach a design system, add context (screenshots, a codebase), then describe what to build. Designs are made per request.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Attach or import the design system you want Claude to build with. Add any relevant context (screenshots, a codebase). Describe what you want to build."
+   },
+   {
+    "claim": "A linked repository serves as context about components, architecture and styling. The docs make no mention of routes, page inventories or user journeys.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Link a code repository so Claude understands your existing components, architecture, and styling patterns. This makes prototypes more production-ready from the start."
+   },
+   {
+    "claim": "A generated design system typically contains a color palette, typography, components, and layout patterns. The layout patterns cover spacing, grids and 'page structures'.",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "confidence": "high",
+    "quote": "Layout patterns: Spacing, grid systems, and page structures."
+   },
+   {
+    "claim": "At claude.ai/design you can link or upload a repository that holds your design system, and Claude reads its components and styles. 'Web flows' are listed as an input you upload.",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "confidence": "high",
+    "quote": "Codebases: If your design system lives in code, like a React component library, link or upload the repository. Claude reads the components and styles. Prototypes: Screenshots, web flows, and existing design files."
+   },
+   {
+    "claim": "Anthropic positions /design-sync in Claude Code for design systems that already exist as React components.",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "confidence": "high",
+    "quote": "If your design system already exists as React components, run /design-sync in Claude Code. It reads your tokens and components directly, and works best for product design systems in code."
+   },
+   {
+    "claim": "The Claude Code command reference describes /design-sync as converting a React design system. A first sync can take hours on a large repo, and the command needs claude.ai.",
+    "source_url": "https://code.claude.com/docs/en/commands",
+    "confidence": "high",
+    "quote": "Convert your repo's React design system and upload it to Claude Design, so designs it produces use your real components. ... A first-time sync verifies every component and can take a few hours on a large repo."
+   },
+   {
+    "claim": "/design in Claude Code drafts UI mockups or screen flows from a brief, as artboards on one canvas published as a Design artifact. Each artboard exports as PNG or PDF.",
+    "source_url": "https://code.claude.com/docs/en/commands",
+    "confidence": "high",
+    "quote": "Draft UI mockups, screen flows, landing pages, or posters as artboards on one canvas, published as a Design artifact, for example `/design a settings screen for a mobile banking app`."
+   },
+   {
+    "claim": "/design (research preview, Week 34 of 2026) takes a brief, publishes editable artboards, and implements the one you pick. Anthropic's example asks for a redesign of an existing UI.",
+    "source_url": "https://code.claude.com/docs/en/whats-new/2026-w34",
+    "confidence": "high",
+    "quote": "Run it with a brief and Claude publishes a canvas of editable artboards for your UI. Pick one, tweak it, then have Claude implement it. ... > /design redesign the composer based on what people actually use it for"
+   },
+   {
+    "claim": "From Claude Code, /design can import a design into your codebase or export your code as a live prototype.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "From Claude Code, use /design to import a design into your codebase, export your code as a live prototype, or let Claude build the whole thing from start to finish."
+   },
+   {
+    "claim": "Official prompting guidance: give the goal, layout, content and audience. Claude asks clarifying questions, and the example prompts name the screens explicitly.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "A good prompt includes the goal (what you're building), the layout (how things should be arranged), the content (what information to display), and the audience (who will use it). Claude will also ask clarifying questions if it needs more information. ... \"Design a mobile app onboarding flow with 4 screens that walks users through our core features.\""
+   },
+   {
+    "claim": "Official tips: import a complete design system, start simple and add complexity step by step, name existing components, state responsiveness targets, ask for 2–3 variations, and ask Claude to review accessibility and usability.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Start simple, then layer in complexity. Begin with the core layout and content, then add interactions, edge cases, and polish. Claude responds well to incremental requests. ... Reference your design system. If you know a component exists in your brand's system, mention it by name"
+   },
+   {
+    "claim": "Known limitations: very large repos can cause lag or browser problems (link them from Claude Code instead), and import quality depends on how clean the source is.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Large codebases: Consider linking very large repositories from Claude Code to avoid lag or browser issues. ... Design system import is only as good as its source. A messy codebase or an incomplete file will show up in the output."
+   },
+   {
+    "claim": "At launch, the help centre's large-repo advice was to link subdirectories rather than whole monorepos. The current article (rewritten in September 2026) says to link from Claude Code instead.",
+    "source_url": "http://web.archive.org/web/20260430033115/https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Large codebases: Linking very large repositories may cause lag or browser issues. Link specific subdirectories rather than entire monorepos."
+   },
+   {
+    "claim": "Large codebases use more of your plan's shared limits. Anthropic publishes no numeric repo-size or context limit.",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Complex projects with large codebases or many iterations consume more usage."
+   },
+   {
+    "claim": "Export options: .zip, PDF, PPTX, Google Slides (standalone app only), standalone HTML, partner tools, and a handoff to Claude Code (local agent or Claude Code Web).",
+    "source_url": "https://support.claude.com/en/articles/14604416-get-started-with-claude-design",
+    "confidence": "high",
+    "quote": "Handoff to Claude Code: Send to local coding agent; Send to Claude Code Web"
+   },
+   {
+    "claim": "The handoff is a bundle passed to Claude Code with a single instruction.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "high",
+    "quote": "When a design is ready to build, Claude packages everything into a handoff bundle that you can pass to Claude Code with a single instruction."
+   },
+   {
+    "claim": "Anthropic's rollout advice: have experienced brand and product designers set up the design system first. Without one, output is generic.",
+    "source_url": "https://support.claude.com/en/articles/14604406-claude-design-admin-guide-for-team-and-enterprise-plans",
+    "confidence": "high",
+    "quote": "Turning on Claude Design without a design system in place means your team gets functional but generic output. ... The single most important thing you can do before rolling out Claude Design is have an experienced designer set up your organization's design system."
+   },
+   {
+    "claim": "Design-system setup advice: real finished examples say more than specs, and iterate with different assets if the first extraction misses.",
+    "source_url": "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "confidence": "high",
+    "quote": "Include real examples, not just specs. A finished landing page or marketing site tells Claude more about your brand's feel than a color palette alone."
+   },
+   {
+    "claim": "The June 17, 2026 update added importing design systems from a GitHub repo, design files or raw uploads, plus /design-sync and a handoff that builds on existing work.",
+    "source_url": "https://claude.com/blog/claude-design-stays-on-brand-for-daily-work",
+    "confidence": "high",
+    "quote": "Bring in one or several design systems from a GitHub repo, design files, or raw uploads. ... hand it off to Claude Code, which continues from your existing work instead of starting over from a screenshot."
+   },
+   {
+    "claim": "Since September 16, 2026, Claude Design runs inside any conversation (including Claude Code and the Artifacts tab), with on-canvas editing and design-system import.",
+    "source_url": "https://support.claude.com/en/articles/12138966-release-notes",
+    "confidence": "high",
+    "quote": "Claude Design works inside your conversations with all of its features, including on-canvas editing and importing your design system."
+   },
+   {
+    "claim": "In Claude Code, the built-in design skill looks for an existing design system in the project, for example tokens written in CLAUDE.md or a theme file. This is a documented route that works without React.",
+    "source_url": "https://code.claude.com/docs/en/artifacts",
+    "confidence": "high",
+    "quote": "That skill also looks for an existing design system in your project before choosing its own. ... record them where Claude can find them, such as the project's CLAUDE.md or a theme file in your repository"
+   },
+   {
+    "claim": "The output artifact is a static page with no backend that cannot authenticate viewers. This describes the output, not the ability to render your own app.",
+    "source_url": "https://code.claude.com/docs/en/artifacts",
+    "confidence": "high",
+    "quote": "No backend: An artifact is a static page. It can't authenticate viewers itself."
+   },
+   {
+    "claim": "Independent write-up (Aug 25, 2026): /design-sync compiles a React library (a dist/ package or Storybook). Vue, Angular, Svelte and server-side templates are not supported, and it syncs only the component library, not the application.",
+    "source_url": "https://wmedia.es/en/tips/claude-code-design-sync-your-components",
+    "confidence": "medium",
+    "quote": "It syncs your component library. Whether your product is Nuxt, Laravel or a PHP monolith makes no difference, because the application never travels. ... Blade, Twig or server-side templates: No"
+   },
+   {
+    "claim": "A user-filed GitHub issue confirms design-sync is React-only: a Svelte system could not render in Claude Design's React runtime. The bot closed it as inactive in August 2026.",
+    "source_url": "https://github.com/anthropics/claude-code/issues/71523",
+    "confidence": "medium",
+    "quote": "The `design-sync` skill (v2.1.193) can only import React component libraries. ... the compiled Svelte components can never render in Claude Design's React runtime, so the whole high-fidelity import path is unavailable."
+   },
+   {
+    "claim": "Hands-on (Apr 18, 2026): across four repos, extraction pulled Tailwind config, global CSS, fonts, logos and a few existing sections, taking 15–20 minutes each. Screens were then prompted one by one. Inputs also include a live URL captured at the DOM level.",
+    "source_url": "https://www.mejba.me/blog/claude-design-visual-workflow-claude-code",
+    "confidence": "medium",
+    "quote": "it crawled the project, picked out the relevant files, the Tailwind config, global CSS, logo assets, font declarations, a few existing hero sections, and started extracting tokens. ... Point Claude Design at the project repo and let the extraction finish. Prompt for the section or screen"
+   },
+   {
+    "claim": "Competitor review (Builder.io, Apr 29, 2026): the code is used only as context, the app is never run, and fidelity to the real product was about 50–75%.",
+    "source_url": "https://www.builder.io/blog/claude-design",
+    "confidence": "medium",
+    "quote": "Claude uses the code as context, but it doesn't actually work inside your repo or run your app to look at the rendered state. ... The fidelity was maybe 50%-75% at best"
+   },
+   {
+    "claim": "Hands-on (Apr 21, 2026): a design system built from a portfolio codebase captured colors, type, spacing, radius and components in about 5 minutes. Before June's two-way sync, the author said it was not built for iterating on an existing codebase.",
+    "source_url": "https://kay-zhang.com/blog/honest-review-on-claude-design/",
+    "confidence": "medium",
+    "quote": "colors, typography, spacing, radius, and components were all captured from my codebase. ... Claude Design is not built for iterating on an existing codebase."
+   },
+   {
+    "claim": "Review workflow: the codebase builds the system, then the user prompts for specific screens and flows. The reviewer says Google Stitch is stronger at multi-screen flow generation.",
+    "source_url": "https://justinmckelvey.com/blog/claude-design-review",
+    "confidence": "medium",
+    "quote": "Point Claude at your codebase. It builds your design system. Takes 5-15 minutes. Prompt for new screens. \"I need a checkout flow for our subscription product, 3 screens.\""
+   },
+   {
+    "claim": "Tutorial (May 6, 2026): the user writes out each step of the flow in the prompt. The linked repo is read-only context, and the handoff bundle holds HTML/CSS/JS, screenshots of each state, and a README.",
+    "source_url": "https://dev.to/bilelsalemdev/from-prompt-to-pull-request-using-claude-design-claude-code-and-github-together-3m00",
+    "confidence": "medium",
+    "quote": "\"Map out the flow for a user upgrading from free to paid: dashboard upgrade prompt → plan comparison → payment form → confirmation → updated dashboard with premium features unlocked. Generate each screen in context.\""
+   },
+   {
+    "claim": "Guide (Apr 20, 2026): link a relevant subdirectory rather than the monorepo root, because large repos lag.",
+    "source_url": "https://aifordevelopers.substack.com/p/how-to-actually-use-claude-design",
+    "confidence": "medium",
+    "quote": "Link a subdirectory, not your whole monorepo. If you're working in a large codebase, don't link the root. ... Large repos cause lag and occasional browser issues."
+   },
+   {
+    "claim": "A design-system import is a snapshot. It does not watch the repo, so you re-run /design-sync after changes.",
+    "source_url": "https://blog.vibecoder.me/claude-design-system-sync-code-handoff",
+    "confidence": "low",
+    "quote": "Claude Design imports a snapshot at the time you run /design-sync or import from GitHub. Changes to your components or tokens after that point are not reflected until you re-run /design-sync."
+   },
+   {
+    "claim": "The Claude Code guidance changed during 2026. In August the help article pointed to an MCP server plus /design-login; after the Sept 16–18 rewrite it documents /design and /design-sync again.",
+    "source_url": "https://aicatchup.com/news/claude-design-sync-claude-code-two-way",
+    "confidence": "low",
+    "quote": "By August 20, 2026 it had dropped /design and told Claude Code users to add a Claude Design MCP server and sign in with /design-login. The version updated on September 18, 2026 describes /design again"
+   },
+   {
+    "claim": "One launch-week blog says Claude reads 'existing pages as structural reference' and Vue/Svelte components. No Anthropic source says this, so treat it as unverified.",
+    "source_url": "https://www.digitalapplied.com/blog/claude-design-anthropic-labs-ai-native-design-tool",
+    "confidence": "low",
+    "quote": "Link a GitHub or GitLab repo and Claude reads: Your component library (React, Vue, Svelte, others) ... Existing pages as structural reference"
+   },
+   {
+    "claim": "WebGrabber is a third-party Chrome extension, not affiliated with Anthropic, that captures elements from your own browser as web-capture payloads (styles, tokens, HTML, screenshot). Whether it works on logged-in pages is not stated; it runs in the user's browser, so it plausibly does.",
+    "source_url": "https://chromewebstore.google.com/detail/webgrabber-for-claude-des/cmadhofpfmppekfaogbgdppigfipeche",
+    "confidence": "low",
+    "quote": "NOT AFFILIATED WITH ANTHROPIC. This is an independent developer tool. ... Resolved CSS custom properties (design tokens) ... The element's outerHTML and inner text"
+   },
+   {
+    "claim": "A UX Planet article (Aug 2026) advises asking for the whole experience rather than single screens. I could not open it (HTTP 403); this is from the search snippet only.",
+    "source_url": "https://uxplanet.org/claude-design-for-ux-how-to-design-complete-user-flows-not-just-ui-screens-094d6b8a7855",
+    "confidence": "low",
+    "quote": "It's much better to ask Claude to design the entire experience, not just individual screens."
+   },
+   {
+    "claim": "The DesignSync tool schema in this Claude Code session describes /design-sync as keeping a local component library in sync with a claude.ai/design design-system project, and says it must never be used to make a design.",
+    "source_url": "local: Claude Code DesignSync tool schema (this session)",
+    "confidence": "medium",
+    "quote": "Use this only with the /design-sync skill, which the user starts, to keep a local component library in sync with one of those projects — incrementally, one component at a time ... Never use it to make a design, deck or prototype"
+   },
+   {
+    "claim": "UNSOURCED: I found no source saying Claude Design can sign in to an app, render pages behind authentication, or crawl an app's routes. Web capture is documented only as grabbing elements from 'your website'.",
+    "source_url": "https://www.anthropic.com/news/claude-design-anthropic-labs",
+    "confidence": "low",
+    "quote": "You can also use the web capture tool to grab elements directly from your website so prototypes look like the real product."
+   }
+  ],
+  "reads_codebase_for": "Documented: a design system. That means colors and tokens, typography (families, sizes, weights), components (\"Buttons, cards, navigation elements, and other reusable UI patterns\") and layout patterns (\"Spacing, grid systems, and page structures\"). A linked repo is also general context \"so Claude understands your existing components, architecture, and styling patterns\" (support.claude.com 14604397 and 14604416).\n\n/design-sync in Claude Code is narrower. It compiles a React component library (dist/ or Storybook) together with its CSS, tokens and fonts, and uploads it so designs use the real components (code.claude.com/docs/en/commands; wmedia.es). Hands-on reports show extraction reading the Tailwind config, global CSS, font declarations, logo assets and a few existing sections (mejba.me).\n\nNot documented anywhere official: reading routes or @page directives, building a page or screen inventory, mapping navigation, inferring user journeys, or running the app. Builder.io says it does not run the app or look at rendered state. wmedia.es says \"the application never travels\". Only one low-confidence launch blog (digitalapplied) claims it reads \"existing pages as structural reference\".",
+  "enumerates_user_flows": "no",
+  "flows_evidence": "No Anthropic source says Claude Design enumerates or infers an app's workflows, screens or routes. That is an absence of evidence, but the positive evidence points the same way.\n\nOfficial:\n- The documented flow is \"Add any relevant context (screenshots, a codebase). Describe what you want to build.\"\n- Example prompts name their screens (\"onboarding flow with 4 screens\").\n- The launch post has PMs \"sketch out feature flows\".\n- The /design command drafts \"screen flows\" from a brief you write.\n\nIndependent:\n- mejba.me: \"Prompt for the section or screen\".\n- McKelvey: \"Prompt for new screens … 3 screens\".\n- dev.to: the author writes out every step of the flow.\n- Builder.io: code is \"context\", and the app is never run.\n- wmedia.es: design-sync moves only the component library.\n\nWhat it does do on its own is ask clarifying questions when a brief is ambiguous (help centre; mejba.me). That is questioning about one brief, not an inventory of the app. So an exhaustive list of workflows (per role: route, purpose, states such as empty, error and permission-denied, and the key data shown) would be the brief it needs, and nothing in the sources says it would build that list itself.",
+  "accepted_inputs": [
+   "Text prompt / brief (official)",
+   "Images and screenshots of existing designs, competitor products, wireframes (official)",
+   "Documents: DOCX, PPTX, XLSX; slide decks and PDFs as style references (official)",
+   "Codebase: linked GitHub repo or uploaded/local repository at claude.ai/design (official; one reviewer reports dragging a folder onto the canvas)",
+   "Local codebase design system via /design-sync in Claude Code, React component libraries only (official command reference plus secondary confirmation)",
+   "Design files, including Figma files, when building a design system from chat (official)",
+   "Web capture tool for grabbing elements from your website (official); one reviewer reports live-URL capture at the DOM level",
+   "Connected apps, logos, fonts, color palette files, typography specimens (official)",
+   "'Web flows' listed as prototype inputs for design-system setup (official, not elaborated)",
+   "Third-party: WebGrabber Chrome extension producing web-capture payloads from the user's own browser (not Anthropic)"
+  ],
+  "limits": [
+   "/design-sync accepts React design systems only (official command reference: 'Convert your repo's React design system'). Vue, Angular, Svelte and server-side templates are reported unsupported (wmedia.es; GitHub issue #71523). Blazor/Razor is not named anywhere, but by the same reasoning it cannot mount in the React runtime (inferred).",
+   "No framework limit is documented for the claude.ai/design repo-linking route. Reviewers report it extracted tokens from Tailwind config and global CSS, so a plain token-driven app.css is probably usable (inferred, not confirmed).",
+   "Large repos: the current official advice is to link very large repositories from Claude Code to avoid lag or browser issues. The April 2026 advice was to link subdirectories rather than whole monorepos. Anthropic publishes no numeric size limit.",
+   "A first /design-sync 'verifies every component and can take a few hours on a large repo' (official). Reviewers report claude.ai/design extraction taking about 5–20 minutes.",
+   "Large codebases use more of the plan's shared usage pool (official). Anthropic documents no context-window figure for Claude Design.",
+   "Import quality depends on the source: 'A messy codebase or an incomplete file will show up in the output' (official).",
+   "I found no documented ability to sign in to an app or render pages behind a login. Builder.io says it does not run your app or look at rendered state. For a login-gated app like Wombat, screenshots are the documented fallback.",
+   "A design-system import is a snapshot: re-run the sync after changes (secondary, low confidence).",
+   "Beta limitations (official): comments can go missing, multi-person editing is basic, there is no version history, and mobile is view-only.",
+   "/design and /design-sync need a claude.ai login. They are unavailable on Bedrock, Vertex/Agent Platform, Foundry, Claude Platform on AWS, or through a Claude apps gateway (official).",
+   "One reviewer at Builder.io, a competitor, rated fidelity to the existing product at 50–75% and said output does not use your real components unless they are synced."
+  ],
+  "handoff_to_code": "Official: Export → 'Handoff to Claude Code', with 'Send to local coding agent' or 'Send to Claude Code Web'. Claude 'packages everything into a handoff bundle that you can pass to Claude Code with a single instruction'. Anthropic says Claude Code then 'continues from your existing work instead of starting over from a screenshot'.\n\nFrom Claude Code, /design can 'import a design into your codebase, export your code as a live prototype, or let Claude build the whole thing'. The Claude Code /design skill drafts artboards from a brief and implements the one you pick.\n\nOther exports: .zip, PDF, PPTX, standalone HTML, Google Slides (standalone only), and partner tools (Canva, Figma-adjacent tools, Vercel, v0, Lovable and others).\n\nSecondary reports on bundle contents:\n- dev.to: HTML/CSS/JS, screenshots of each state, and a README naming the target stack.\n- mejba.me: design spec, tokens, component structure, and implementation notes. About 80% right on arrival in a Tailwind codebase.\n\nFor non-React stacks, wmedia.es suggests designing in Claude Design, pulling the artboard down, and having Claude Code implement it against the repo's own components. For Wombat that means a Claude Code session translating the HTML/CSS into Razor components and app.css tokens. This is inferred: no source covers Blazor."
+ }
+}

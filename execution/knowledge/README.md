@@ -16,7 +16,8 @@ the project *knows*: the domain, the programme, the runbooks, the closed plans.
 3. **Adding a project reference or a handler?** `../architecture/ARCHITECTURE.md` — the
    boundaries are test-enforced.
 4. **Operating the live service?** `HANDOVER.md`, then `../architecture/INFRASTRUCTURE.md`.
-5. **Replaying a scenario, or briefing a GUI change?** `scenario-paediatrics/README.md`. Its `coverage.md` maps every
+5. **Replaying a scenario, or briefing a GUI change?** `scenario-paediatrics/README.md`; for the Claude Design redesign,
+   `../../design/BRIEF.md` and `design/flows/` (T332). Its `coverage.md` maps every
    page to the steps that play it and indexes every role's jobs. The pre-T293 single file, with its recorded history,
    is `../log/scenario-paediatrics-history-2026-09.md`.
 6. **Wondering why something is the way it is?** Product decisions `D1`–`D50` are in

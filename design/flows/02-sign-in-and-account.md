@@ -1,0 +1,517 @@
+# F02 Getting in, staying in, and managing one's own account
+
+**Who and why:** everyone signs in every session, and every refusal on the way in is access control. The account pages
+are where a person corrects their name and changes their password. Most of these pages are static HTML with no
+interactivity, so what can be designed is narrower than it looks (DESIGN.md:1887–1933).
+
+| | |
+|---|---|
+| Mode | **Straight to fidelity** on the F01 tokens: the page shapes stay (BRIEF.md § 4, the Account and Anonymous shapes). 2–3 variations of the sign-in card. |
+| Viewports | Desktop 1280×800 and phone 390×844 |
+| Variations | 2–3 (of the sign-in card; the account pages follow the chosen one) |
+| People | Everyone, and anonymous visitors. Cast: devadmin; Dr Fatima Khumalo (changes her password); Dr Pieter du Plessis (given a password by an administrator); Dr Mohammed Patel (locked out); Mr Pieter Smit (signs out); Dr Sarah Botha (edits her profile) |
+| Runbook steps | 19, pasted verbatim in § 8 |
+| Pages (`coverage.md` templates) | `/account/login`, `/account/logout-confirm`, `/account/profile`, `/account/change-password`, `/account/forgot-password`, `/account/link-external`. Endpoints: `/account/login/submit`, `/account/logout`, `/account/session-ended`, `/account/sso-challenge/{providerKey}`, `/account/sso-callback`, `/account/change-password/submit`, `/account/link-external/submit` (not played: it needs an identity provider) |
+| Held | None: no group-1 task changes these pages |
+| Depends on | F01's tokens, alerts, focus ring and validation styles |
+
+**How to run this thread** (BRIEF.md § 2.3):
+1. Brief F01 first; this flow uses its tokens. Open a new Claude Design thread for this flow alone.
+2. Paste § 1, and attach the key screenshots in § 4 with it.
+3. Paste § 8, the runbook steps, as the next message.
+4. Attach the state screenshots in § 4 as the chat asks for them.
+5. Pick a sign-in card, then ask for the account pages in the same language.
+6. Answer § 6's questions in the chat, one sentence per decision. Export the chosen artboards into
+   `design/flows/02-sign-in-and-account/`.
+
+---
+
+## 1. The ask (paste this first)
+
+```text
+FLOW 02 — Get in, be told plainly why when I cannot, and keep my own account right
+
+GOAL: A person signs in, and is told clearly why when they are refused, throttled, locked out, or signed out by the
+  system. Signed in, they correct their name and change their password.
+  What is wrong today (the attached screenshots show each):
+  - The password Show toggle is 45×23 px and sits at the input's top edge. On the sign-in page it does nothing at all:
+    the page is static HTML, and the toggle needs a live connection.
+  - Change password has three toggles, all named "Show".
+  - Validation reads "The LastName field is required." (the model's property name, not the field's label).
+  - The password-rules refusal is one run-on paragraph of framework text ("non alphanumeric character",
+    "('0'-'9')").
+  - My account prints roles by their codes ("CommitteeMember, Assessor").
+  - Forgot password is a stub: "Password reset is not wired yet in the rewrite. Ask an administrator to issue a new
+    invitation or reset the account directly."
+  - The danger and success alerts and the validation text fail WCAG AA contrast.
+
+AUDIENCE: everyone, and anonymous visitors; desktop 1280×800 and phone 390×844. Clinicians sign in between patients,
+  often on a phone. Cast: devadmin (the platform operator); Dr Fatima Khumalo (changes her password, getting it wrong
+  first); Dr Pieter du Plessis (forgot his password; an administrator sets one, then he chooses his own); Dr Mohammed
+  Patel (locked out by an administrator, then let back in); Mr Pieter Smit (signs out through the confirmation page);
+  Dr Sarah Botha (edits her name).
+
+SCREENS, in order:
+  1. Sign in (static): blank; each refusal below; at 1280 and at 390 px. The form is Email, Password, Remember me,
+     Sign in, and "Forgotten your password? Reset it."
+  2. Sign in when an institution signs its people in (SSO): an "or" divider and one "Sign in with <institution>"
+     button per provider. No provider is configured on dev, so there is no screenshot; design it from this text.
+  3. Sign out confirmation: a page with no nav, one button that ends the session, and Cancel.
+  4. My account: an account summary (email, roles, Change password) and the profile form (email read-only, first
+     name, last name, Save). States: loaded, saved ("Profile saved.", which takes the focus), invalid, a pending
+     trainee (whose roles read PendingTrainee today), loading, load error.
+  5. Change password: current, new and confirm, each with a show/hide toggle. States: blank; "Incorrect password.";
+     "The password confirmation does not match."; the rules not met (one sentence per rule broken: at least 12
+     characters, a digit, an upper-case letter, a lower-case letter, a symbol); "Password updated."; locked; throttled.
+     After a refusal the page reloads with empty fields, the tab title starts "Error:", and the refusal takes the focus.
+  6. Forgot password: see question 2.
+  7. Link an institutional sign-in to an existing account (needs SSO). Only the expired state can be captured: "Your
+     institutional sign-in has expired. Start again from the sign-in page." with Back to sign in. Also design, from
+     this text, the live state: "A Wombat account with the email <email> already exists. Enter your current password
+     to link your institutional sign-in.", a Password field with its toggle, "Link & sign in" and Cancel, and a
+     refusal slot above the field (a wrong password, a lockout, a failure).
+
+  The sign-in page's words, by state (from the code; the runbook quotes them):
+  - refused: "Invalid email or password." With SSO offered: "Invalid email or password. If your institution signs you
+    in, use its sign-in button below."
+  - too many attempts (from this network): "Too many failed sign-in attempts from this network. Please wait a few
+    minutes and try again."
+  - locked out: "Too many failed sign-in attempts. Please try again later or reset your password."
+  - fields missing: "Email and password are required."
+  - session ended: "Your session has ended. Please sign in again."
+  - password changed elsewhere: "Your password was changed. Please sign in with your new password."
+  - external sign-in unavailable: "External login information was not available."
+  - external sign-in expired: "External login session expired. Please try again."
+  - unknown provider: "Unknown SSO provider."
+  - anything else: "Sign-in could not be completed. Please try again."
+  - plus twelve institutional sign-in refusals (no email, email not verified, account locked, administrator, wrong
+    institution, email in use, account not created, already linked, link refused, link locked out, link failed, SSO
+    failed): design one refusal slot that holds a sentence of up to about 25 words.
+
+STEPS: 1.1, 2.8, 2.31, 2.41, A.3.2, A.3.3, A.4.1, A.4.2, A.4.3, A.4.4, A.4.5, A.4.6, A.4.7, A.6.5, A.6.8, A.1.13,
+  A.7.12, A.7.14, 5.19. Pasted verbatim in the next message (Role / Route / Do / Expect). Where an Expect quotes today's
+  wording, that is today's page, not a requirement on the new one.
+
+STATES TO SHOW:
+  Sign in: blank, refused, too many attempts, locked out, fields missing, session ended, password changed, external
+    unavailable, external expired, unknown provider, general refusal, the SSO variant, narrow.
+  Sign out confirmation: default, narrow.
+  My account: loaded (two roles), saved, invalid, pending trainee, loading, load error, narrow.
+  Change password: blank, incorrect, confirmation, rules, updated, locked, throttled, narrow.
+  Forgot password: the chosen answer to question 2, narrow.
+  Link an institutional sign-in: expired, the live form (described), narrow.
+  Data volumes: a long email (up to about 40 characters) in the summary and the top row; four roles on one account.
+
+REQUIREMENTS FROM KNOWN DEFECTS:
+  - T328: every button and link is at least 24 px tall. The password toggle is centred on its input, exposes
+    aria-pressed, and names the input it controls ("Show current password", not three buttons named "Show").
+  - T322: the sign-in card's danger and success alerts and the validation text reach 4.5:1.
+  - T324: validation messages use the field's own label ("Last name is required."), never the model's property name.
+    Roles are named by label.
+  - T317: typing /account/logout while signed in answers 405 today; design what it shows. (The administrator's reset
+    form, which enables at 8 characters, is F12's page.)
+  - T287: the lockout reply must not tell a locked account apart from a wrong password. Today an account an
+    administrator deactivated is told "Too many failed sign-in attempts…" on its first try, and an unknown address
+    never is. The recommendation is one generic refusal for all, with the lockout explained by email.
+  - T286: nothing lists or removes an account's institutional sign-in links; My account shows Change password even to
+    an account that has no local password.
+  - Static pages: sign-in, forgot password and link are plain server-posted forms: no live validation and no
+    client-side reveal logic. The password toggle there must be a tiny script module (see CONSTRAINTS) or be dropped.
+    Sign-in, sign-out, change password and link stay real <form method="post"> elements: the sign-in cookie is written
+    only by an HTTP POST.
+
+QUESTIONS THE DESIGN MUST ANSWER:
+  1. What does the sign-in page say about the product: a line of purpose, the College's and the institution's names?
+     Do the SSO buttons sit above or below the password form?
+  2. Forgot password: design a self-service reset by emailed link (not built), or replace the stub with plain "Ask
+     your administrator" copy?
+  3. Is a sign-out confirmation page wanted at all? Today it is reached only by typing its address.
+  4. Should My account show the person's roles, institution and institutional sign-ins?
+
+CONSTRAINTS:
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
+  over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
+Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
+  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
+  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
+  Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
+  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
+  2xl 48 px.
+Icons: Lucide line icons only, named by their Lucide name.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
+  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
+  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
+  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
+  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
+Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
+  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
+  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
+Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
+  record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
+  moves to an action's result; every page works at 390 px with no sideways scroll.
+Viewports: 1280×800 and 390×844.
+
+ASK:
+  - 2–3 variations of the sign-in card at full fidelity on the tokens from flow 01, at 1280 and 390 px, each showing
+    blank, refused and session ended. After I pick one, the other screens in the same language.
+  - Name every design-system component you use, and mark anything else NEW. Say which DESIGN.md rule a variation
+    breaks.
+  - Mark which pages are static (no live behaviour) and keep every interaction on them to links and form posts.
+  - Flag edge cases: a long email, a refusal sentence of 25 words, four roles, the SSO variant with three providers.
+  - Run an accessibility review against WCAG 2.1 AA: contrast, 24 px targets, the toggle's name and state, and where
+    the focus lands after each refusal.
+
+ATTACHED: states/login--blank.png, states/login--locked-out.png, states/login--session-ended.png,
+  act-A/A.7.14-1-signin-contrast.png, states/change-password--rules.png, states/profile--saved.png,
+  states/profile--invalid.png, states/forgot-password--stub.png, states/logout-confirm--default.png,
+  states/login--narrow.png, act-A/A.7.14-3-change-password-mismatch-danger-alert.png
+```
+
+---
+
+## 2. The journey
+
+| Step | Page | The person does | They must be able to see |
+|---|---|---|---|
+| 1.1 | `/account/login` → `/` | devadmin signs in | the sign-in card, then Home |
+| 2.8 | `/account/register` → `/` → `/account/logout` → `/account/login` | Mr Smit registers from his link, lands on Home, signs out | that sign-out returns him to the sign-in page (registration itself is F11's) |
+| 2.31 | `/` → `/account/session-ended` → `/account/login` → `/` | Dr Mahlangu's open tab is signed out when her role changes at admission | "Your session has ended. Please sign in again.", then her new Trainee Home |
+| 2.41 | `/account/profile` | each person reviews My account; Dr Khumalo corrects "Fatma" to "Fatima" | the email (read-only), the roles held, Change password; "Profile saved." |
+| A.3.2 | `/account/login` → `/account/sso-challenge/{providerKey}` → `/account/login` | a consultant looks for an institutional button, gets a password wrong, opens a challenge for an unknown provider | no SSO button when none is configured; "Invalid email or password."; "Unknown SSO provider." |
+| A.3.3 | `/account/sso-callback` → `/account/login`; `/account/link-external` | opens the callback and the link page directly | "External login information was not available."; the link page's expired state with Back to sign in |
+| A.4.1 | `/` → `/account/profile` | Dr Botha opens My account from the top row, clears her last name, saves, restores it | a required-field message beside the field, nothing saved; then "Profile saved." with the focus on it |
+| A.4.2 | `/account/profile` → `/account/change-password` | Dr Khumalo tries four times | each refusal in its own words, the focus on it, the tab title "Error: …"; then "Password updated." |
+| A.4.3 | `/activities/inbox` → `/account/session-ended` → `/account/login` | her other browser is signed out; she tries the old password, then the new | the session-ended notice; the old password refused; back to her inbox after signing in |
+| A.4.4 | `/account/login` → `/account/forgot-password` | Dr du Plessis follows "Forgotten your password?" | what to do instead (today, the stub) |
+| A.4.5 | `/admin/users/{UserId}` | Prof Mbatha sets his password (F12's page) | that the user is not emailed |
+| A.4.6 | `/account/login` → `/` → `/account/profile` → `/account/change-password` | he signs in with it, then chooses his own | "Password updated." |
+| A.4.7 | `/account/logout-confirm` → `/account/logout` → `/account/login` | Mr Smit opens the sign-out confirmation, cancels, signs out, then opens a page by its address | the confirmation with no nav; Cancel returns him signed in; after signing in he is brought back to the page he asked for |
+| A.6.5 | `/account/session-ended` → `/account/login` | Dr Patel, locked out by an administrator, is signed out and cannot sign in | the session-ended notice; the lockout refusal (question: T287) |
+| A.6.8 | `/account/login` → `/` | Dr Patel signs in again after reactivation | his Assessor Home |
+| A.1.13 | `/account/session-ended` → `/account/login` | Dr Ndlovu, erased, is signed out and cannot sign in | the session-ended notice; "Invalid email or password.", with no mention of erasure |
+| A.7.12 | `/account/login`, `/account/forgot-password` | a verifier on a phone | the sign-in card fits 390 px; its fields and buttons are easy to tap |
+| A.7.14 | `/account/login`, `/account/profile`, `/account/change-password` | Prof Mbatha checks contrast | the sign-in card, the success and danger alerts, the focus ring and the input border meet AA |
+| 5.19 | `/portfolio/progress` → `/account/session-ended` → `/account/login` | Dr Molefe's tab is signed out when her Trainee role is removed at graduation | the session-ended notice |
+
+## 3. States to design
+
+Each screenshot is under `design/baseline/`. How to reach each is in `states.md` § Account and sign-in.
+
+| Page | State | Screenshot | Words on the page |
+|---|---|---|---|
+| Sign in | Blank | `states/login--blank.png` | no SSO button (no provider) |
+| Sign in | Refused | `states/login--refused.png` | "Invalid email or password." |
+| Sign in | Session ended | `states/login--session-ended.png` | "Your session has ended. Please sign in again." |
+| Sign in | Locked out | `states/login--locked-out.png` | "Too many failed sign-in attempts. Please try again later or reset your password." |
+| Sign in | Throttled | `states/login--too-many-attempts.png` | "Too many failed sign-in attempts from this network. …" |
+| Sign in | Fields missing | `states/login--fields-missing.png` | "Email and password are required." |
+| Sign in | Password changed elsewhere | `states/login--password-changed.png` | "Your password was changed. Please sign in with your new password." |
+| Sign in | External sign-in unavailable | `states/login--external-unavailable.png` | "External login information was not available." |
+| Sign in | External sign-in expired | `states/login--external-expired.png` | "External login session expired. Please try again." |
+| Sign in | Unknown provider | `states/login--sso-unknown-provider.png` | "Unknown SSO provider." |
+| Sign in | General refusal | `states/login--general-refusal.png` | "Sign-in could not be completed. Please try again." |
+| Sign in | Narrow | `states/login--narrow.png` | the 45×23 px toggle at the field's top edge (T328) |
+| Sign out | Confirmation | `states/logout-confirm--default.png` | |
+| Sign out | Narrow | `states/logout-confirm--narrow.png` | |
+| My account | Two roles | `states/profile--loaded.png` | |
+| My account | Saved | `states/profile--saved.png` | "Profile saved." |
+| My account | Invalid | `states/profile--invalid.png` | "The LastName field is required." twice: summary and field (T324) |
+| My account | Pending trainee | `states/profile--pending-trainee.png` | Roles reads PendingTrainee |
+| My account | Loading | `states/profile--loading.png` | |
+| My account | Load error | `states/profile--load-error.png` | |
+| My account | Narrow | `states/profile--narrow.png` | |
+| Change password | Blank | `states/change-password--blank.png` | |
+| Change password | Incorrect | `states/change-password--incorrect.png` | "Incorrect password." |
+| Change password | Confirmation | `states/change-password--confirmation.png` | "The password confirmation does not match." |
+| Change password | Rules | `states/change-password--rules.png` | one run-on paragraph today; the step asks for one sentence per rule |
+| Change password | Updated | `states/change-password--updated.png` | "Password updated." |
+| Change password | Locked | `states/change-password--locked.png` | |
+| Change password | Narrow | `states/change-password--narrow.png` | |
+| Forgot password | Stub | `states/forgot-password--stub.png` | "Password reset is not wired yet in the rewrite. …" |
+| Forgot password | Narrow | `states/forgot-password--narrow.png` | |
+| Link an institutional sign-in | Expired | `states/link-external-login--expired.png` | "Your institutional sign-in has expired. Start again from the sign-in page." |
+| Link an institutional sign-in | Narrow | `states/link-external-login--narrow.png` | |
+
+Not captured, so describe them in words:
+- **Change password, throttled.** `states.md` names `change-password--throttled.png`, but no such file was captured.
+  Its words: "Too many attempts from this network. Please wait a few minutes and try again."
+  (`src/Wombat.Web/Security/ChangePasswordOutcome.cs:67`).
+- **Change password for an institutional-only account.** Its words: "This account signs in through your institution,
+  so it has no password to change here." (`ChangePasswordOutcome.cs:70–71`). T286 would hide the link to the page for
+  such an account instead.
+- **Everything that needs an identity provider** (`states.md` § States no local replay reaches): the sign-in page's
+  "or" divider and "Sign in with …" buttons, the link page's password form and its refusals, and the twelve
+  institutional refusal texts as they would appear after a real attempt. The texts themselves can be shown with typed
+  codes (`states.md` § Typed codes on the account pages).
+
+## 4. Attach
+
+Paths are relative to `design/baseline/`. Every one below was checked with `ls` on 2026-09-26.
+
+**Key screenshots (attach these first, with § 1):**
+1. `states/login--blank.png`
+2. `states/login--locked-out.png`
+3. `states/login--session-ended.png`
+4. `act-A/A.7.14-1-signin-contrast.png`
+5. `states/change-password--rules.png`
+6. `states/profile--saved.png`
+7. `states/profile--invalid.png`
+8. `states/forgot-password--stub.png`
+9. `states/logout-confirm--default.png`
+10. `states/login--narrow.png`
+11. `act-A/A.7.14-3-change-password-mismatch-danger-alert.png`
+
+**States (attach as the chat asks):**
+- Sign in: `states/login--refused.png`, `states/login--too-many-attempts.png`, `states/login--fields-missing.png`,
+  `states/login--password-changed.png`, `states/login--external-unavailable.png`, `states/login--external-expired.png`,
+  `states/login--sso-unknown-provider.png`, `states/login--general-refusal.png`
+- Sign out: `states/logout-confirm--narrow.png`
+- My account: `states/profile--loaded.png`, `states/profile--pending-trainee.png`, `states/profile--loading.png`,
+  `states/profile--load-error.png`, `states/profile--narrow.png`
+- Change password: `states/change-password--blank.png`, `states/change-password--incorrect.png`,
+  `states/change-password--confirmation.png`, `states/change-password--updated.png`,
+  `states/change-password--locked.png`, `states/change-password--narrow.png`
+- Forgot password: `states/forgot-password--narrow.png`
+- Link: `states/link-external-login--expired.png`, `states/link-external-login--narrow.png`
+
+**Held:** none. **Never attach** the register captures from the invitation flow here: an invitation link may be
+visible in them (BRIEF.md § 3.3).
+
+## 5. Known problems this design must solve
+
+The evidence column is for the operator and for Claude Code. Attach only what § 4 lists.
+
+| Task | What it means for the design | Evidence (under `design/baseline/`) |
+|---|---|---|
+| **T328** | Every target is at least 24 px. The password toggle is centred on its input, exposes `aria-pressed`, and is named for the input it controls, so Change password's three are distinct. | `states/login--narrow.png`, `states/change-password--rules.png` |
+| **Static pages** (DESIGN.md:1887–1891, 1919–1921) | Sign-in, forgot password and link have no live connection. `PasswordToggleButton` uses `@onclick`, so on the sign-in page it has never worked. A toggle there is a `wwwroot/wombat.js` handler (which already holds `togglePasswordVisibility`) wired without an inline `onclick`, or it goes. Change password is interactive, so its toggles work. | `states/login--blank.png` |
+| **Form posts** (DESIGN.md:1925–1933) | Sign-in, sign-out, change password and link each post a real form to an endpoint, which writes the cookie and redirects with a code (`?error=…`, `?status=updated`). The page picks its words from the code, so the design's refusal slot holds one of a fixed set of sentences, never free text from the address. | `src/Wombat.Web/Security/SignInOutcome.cs`, `ChangePasswordOutcome.cs` |
+| **T322** | The danger and success alerts and the validation text on the sign-in card and account pages reach 4.5:1 (the tokens are F01's). | `act-A/A.7.14-1-signin-contrast.png`, `act-A/A.7.14-2-profile-saved-success-alert.png`, `act-A/A.7.14-3-change-password-mismatch-danger-alert.png` |
+| **T324** | Validation names the field by its label; roles by their labels; the password rules as short sentences in plain words. | `states/profile--invalid.png`, `states/change-password--rules.png` |
+| **T317** | A typed `GET /account/logout` gets a page, not a 405. | T317's symptom (Steps 2.8, A.4.7) |
+| **T287** | One refusal for a wrong password, an unknown address and a locked account, unless the operator decides a locked person is told (question for the operator, not the design). The design keeps one refusal slot either way. | `states/login--locked-out.png` (Step A.6.5) |
+| **T286** | If My account lists institutional sign-ins (question 4), each has Remove. Change password is not offered to an account without a local password. | T286's symptom |
+| **T190** | The tab titles of these pages follow F01's pattern ("Sign in - Wombat" today). | T190's symptom |
+| **T329** | My account's loading and load-error states use F01's shared states. | `states/profile--loading.png`, `states/profile--load-error.png` |
+
+## 6. Questions the design must answer
+
+1. **What does the sign-in page say about the product?** A line of purpose, the College's and the institution's
+   names? And do the SSO buttons sit above or below the password form? Consultants at a hospital that has SSO would
+   use it daily (inference); no provider is configured anywhere yet.
+2. **Forgot password.** Design a self-service reset by emailed link? It is not built: nothing sends the
+   `PasswordResetEmail` template (`coverage.md` § Flows and states not played). Or replace the stub with copy that
+   says an administrator resets passwords, which is how Step A.4.5 does it today? BRIEF.md § 7 B10 says to show a
+   not-built feature as future, or leave it out.
+3. **Is a sign-out confirmation page wanted at all?** `/account/logout-confirm` is reached only by typing its address
+   (`coverage.md` § Reached only by address). F01's question 4 decides where the one Sign out lives; this decides
+   whether it confirms first.
+4. **Should My account show the person's roles, institution and institutional sign-ins?** It shows roles today
+   (`states/profile--loaded.png`). T286 asks for the sign-ins to be listed and removable.
+
+## 7. Acceptance
+
+A flow is done when BRIEF.md § 9's four checks hold. For this flow:
+
+- **Replay the 19 steps** on a fresh database, in act order: 1.1, 2.8, 2.31, 2.41, 5.19, then the appendix's A.1.13,
+  A.3.2, A.3.3, A.4.1–A.4.7, A.6.5, A.6.8, A.7.12 and A.7.14. Every Expect must hold. Steps A.3.2, A.4.2, A.4.4 and
+  A.6.5 quote the page's words: update them in the same task if the wording changes (BRIEF.md § 9 item 7).
+- **The tests pass** (`dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj`, never with `--no-build`). They
+  must include `Account/ChangePasswordPageTests`, `Accessibility/AccessibleNamesTests` (the toggles' names),
+  `Accessibility/ActionFocusTests`, `Design/AlertRoleTests`, `Design/InvalidFieldStyleTests`,
+  `Design/PageShapeSmokeTests` (the Account and Anonymous shapes), `Design/DefinedClassTests`,
+  `Hosting/AppAssetUrlTests` (any new script), `Security/` and `Scenario/`.
+- **Re-capture** the 32 states in § 3 into `design/baseline/`, and compare them with the chosen artboards. Add
+  `states/change-password--throttled.png`, which was never captured.
+- **Browser check** at 1280 and 390 px, signed out and signed in. Check that the sign-in page still works with
+  JavaScript blocked, and that the toggle on the sign-in page works (or is gone).
+
+## 8. The runbook steps, verbatim (paste this second)
+
+These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Each Expect
+describes the product as it is today. `pwd_DO_NOT_COMMIT.txt`, where it appears, is only the name of the file the
+replay writes passwords to; no password is in these steps.
+
+```text
+Step 1.1 — The Administrator signs in (act-1-setup.md:50)
+Role: Administrator — the platform operator (`devadmin@wombat.local`)
+Route: /account/login → /
+Do: Sign in with `devadmin@wombat.local` and the dev password that `DevUserSeeder` gives it.
+Expect: Home reads "Welcome, devadmin@wombat.local" and "Viewing as Administrator". It has no "You also act as" line,
+  since devadmin holds one role. The dashboard has three cards:
+  - System health, which shows the database connection as healthy;
+  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists);
+  - Maintenance, which links to Activity types, Users, Institutions and Curriculum progress.
+  The nav reads Home, My Account, Data Rights, Colleges, EPAs, Curricula, Institutions, Invitations, Users, Activity
+  Types, Entrustment Scales, Scheduled Jobs, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due,
+  Data Rights Requests, System, then Logout (DESIGN.md § The NavMenu).
+
+Step 2.8 — Mr Smit registers from his link (act-2-onboarding.md:143)
+Role: Anonymous — Mr Pieter Smit, holding his invitation link
+Route: /account/register → / → /account/logout → /account/login
+Do: Open the link and enter first name Pieter, last name Smit and a password that meets the rules. Confirm it and
+  register. Read the landing page, then sign out.
+Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with the email filled in and not editable.
+  The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home: "Welcome,
+  smit@kgk.wombat.local", "Viewing as Coordinator". Signing out returns him to the sign-in page.
+
+Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:508)
+Role: Trainee — Dr Nomsa Mahlangu
+Route: / → /account/session-ended → /account/login → /
+Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
+Expect: Within a minute of her admission the tab moves to the sign-in page, which reads "Your session has ended. Please
+  sign in again." Admission changes her role, and a role change ends open sessions (T279). Signed in again, she sees
+  "Viewing as Trainee" and the trainee dashboard of Step 2.39.
+
+Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:648)
+Role: Every role in this act — each person onboarded here, signed in as themselves
+Route: /account/profile
+Do: Each opens My Account. Dr Khumalo changes her first name from "Fatma" to "Fatima" and saves the profile.
+Expect: The page reads "My account" and "Update your name and review your assigned roles.". The summary shows the email,
+  the roles held (both roles for Zulu, Naidoo and Botha; Trainee for the registrars) and a Change password link. The
+  email field is not editable. Khumalo's save reads "Profile saved." (checked on Mbatha's lists in Step 2.44).
+
+Step A.3.2 — The sign-in page offers no institutional sign-in (appendix-cross-cutting.md:495)
+Role: Anonymous — a KGK consultant
+Route: /account/login → /account/sso-challenge/{providerKey} → /account/login
+Do: Look for an institutional sign-in button. Sign in with a wrong password. Then open the challenge address for a
+  provider called `kgk`.
+Expect: The page offers only an email, a password, Remember me and the "Forgotten your password?" link. There is no
+  "or" divider and no "Sign in with …" button. The wrong password reads "Invalid email or password." and points to no
+  institutional button (T156). The challenge for a provider that is not configured returns to the sign-in page, which
+  says "Unknown SSO provider."
+
+Step A.3.3 — The callback and link pages with no institutional sign-in in progress (appendix-cross-cutting.md:510)
+Role: Anonymous — a KGK consultant
+Route: /account/sso-callback → /account/login → /account/link-external
+Do: Open the callback address, then the link-your-account page, directly.
+Expect: The callback returns to the sign-in page, which says "External login information was not available." The link
+  page says "Your institutional sign-in has expired. Start again from the sign-in page." It offers Back to sign in and
+  no password field (T149).
+
+Step A.4.1 — Dr Botha reviews and edits her account (appendix-cross-cutting.md:525)
+Role: CommitteeMember — Dr Sarah Botha
+Route: / → /account/profile
+Do: Open My Account from her address in the top row. Clear her last name and save. Then put "Botha" back and save.
+Expect: The account summary shows her address, both her roles (CommitteeMember and Assessor) and a Change password
+  link. The email field cannot be edited. The cleared last name is refused, with a required-field message beside it,
+  and nothing is saved. Restored, the page says "Profile saved." and the focus moves to that message (T234).
+
+Step A.4.2 — Dr Khumalo changes her password, getting it wrong first (appendix-cross-cutting.md:541)
+Role: Assessor — Dr Fatima Khumalo
+Route: /account/profile → /account/change-password
+Do: From My Account's Change password, try four times, and record the password (d) sets in `pwd_DO_NOT_COMMIT.txt`:
+  - (a) a wrong current password;
+  - (b) the right current password, with a new password and a confirmation that differ;
+  - (c) the right current password, with a new one of 8 different lower-case letters;
+  - (d) the right current password, with a new one that meets every rule.
+Expect: Each refusal reloads the page with empty fields. The tab's title starts "Error:", the refusal takes the focus,
+  and each field names the refusal (T265, T193).
+  - (a) reads "Incorrect password."
+  - (b) reads "The password confirmation does not match."
+  - (c) gives one sentence for each rule it breaks: at least 12 characters, a digit, an upper-case letter and a
+    symbol. It says nothing of lower-case letters, a rule it keeps.
+  - (d) reads "Password updated.", and she stays signed in in this browser.
+
+Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:572)
+Role: Assessor — Dr Fatima Khumalo (the second browser)
+Route: /activities/inbox → /account/session-ended → /account/login → /activities/inbox
+Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
+Expect: The tab leaves for the sign-in page by a full page load, which says "Your session has ended. Please sign in
+  again." (T279). The old password is refused ("Invalid email or password."). The new one brings her back to her
+  Activity Inbox.
+
+Step A.4.4 — Dr du Plessis has forgotten his password (appendix-cross-cutting.md:585)
+Role: Anonymous — Dr Pieter du Plessis
+Route: /account/login → /account/forgot-password → /account/login
+Do: Follow "Forgotten your password? Reset it" from the sign-in page.
+Expect: A "Reset password" page, saying exactly: "Password reset is not wired yet in the rewrite. Ask an administrator
+  to issue a new invitation or reset the account directly." It offers Back to sign in, and nothing else: no field, and
+  no email is sent.
+
+Step A.4.5 — Prof Mbatha resets his password (appendix-cross-cutting.md:602)
+Role: InstitutionalAdmin — Prof Nolwazi Mbatha
+Route: /admin/users → /admin/users/{UserId}
+Do: Open Dr du Plessis's account. Set a new password of 10 characters, then one that meets every rule. Record the
+  second in `pwd_DO_NOT_COMMIT.txt`, as the password to give him out of band.
+Expect: The Reset password card says it sets a password directly and that the user is not emailed. The 10-character
+  password is refused with the rules it breaks. The second is accepted, and the field is cleared. The audit log
+  records the reset with the password redacted (T101).
+
+Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:625)
+Role: Trainee — Dr Pieter du Plessis
+Route: /account/login → / → /account/profile → /account/change-password
+Do: Sign in with the password Prof Mbatha set. Then change it, from My Account, to one of his own. Record it in
+  `pwd_DO_NOT_COMMIT.txt`.
+Expect: He lands on his Trainee dashboard, which still says that his programme ended (Step 5.28). The change reads
+  "Password updated."
+
+Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:639)
+Role: Coordinator — Mr Pieter Smit
+Route: /account/logout-confirm → / → /account/logout-confirm → /account/logout → /account/login → /msf/campaigns → /account/login → /msf/campaigns
+Do: Open the sign-out confirmation by its address and press Cancel. Open it again and sign out. Then open MSF
+  Campaigns by its address.
+Expect: A "Sign out" page, with no nav, says to use its button to end the session. Cancel returns him to his
+  dashboard, still signed in. Sign out lands on the sign-in page. MSF Campaigns then asks him to sign in, and after
+  signing in he is brought back to it. The audit log records a Logout.
+
+Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:911)
+Role: Assessor — Dr Mohammed Patel
+Route: /account/session-ended → /account/login
+Do: Wait up to a minute on the page he had open, then sign in.
+Expect: The tab leaves for the sign-in page, which says "Your session has ended. Please sign in again." Signing in is
+  refused: "Too many failed sign-in attempts. Please try again later or reset your password."
+
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:947)
+Role: Assessor — Dr Mohammed Patel
+Route: /account/login → /
+Do: Sign in with his own password.
+Expect: He lands on his Assessor dashboard, and Dr Dlamini's assessor list names him again (checked at A.7.1).
+
+Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appendix-cross-cutting.md:253)
+Role: Trainee — Dr Sipho Ndlovu (the browser left signed in at A.1.11)
+Route: /account/session-ended → /account/login
+Do: Wait on any page for up to a minute. Then sign in with his old address and password.
+Expect: The tab leaves for the sign-in page by itself, which says "Your session has ended. Please sign in again."
+  (T279). Signing in is refused in the words an unknown address gets, "Invalid email or password.", with no mention
+  of an erasure (T156). No email is sent to him.
+
+Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1241)
+Role: Anonymous — a verifier
+Route: /account/login → /account/forgot-password → /portfolio/verify
+Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
+  its hash.
+Expect: The sign-in card fits the width, and its fields and buttons are easy to tap. The verify page's result fits
+  the width.
+
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1291)
+Role: InstitutionalAdmin — Prof Nolwazi Mbatha
+Route: /account/login → / → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
+Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
+  - the sign-in card;
+  - the nav on its gradient;
+  - muted text on the page background;
+  - the status badges on a committee review opened from Committee Reviews (Dr Molefe's review 7; the list itself shows
+    each state as plain text);
+  - a success alert (save My Account unchanged: "Profile saved.") and a danger alert (Change password with a
+    confirmation that differs, which checks no password and changes nothing);
+  - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
+    not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
+  - the focus ring on white and on the page background;
+  - an input's border.
+Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus
+  ring. Muted text passes on the page background since T086.
+
+Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:461)
+Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
+Route: /portfolio/progress → /account/session-ended → /account/login
+Do: Go back to the tab left open at Step 5.15 and wait up to a minute.
+Expect: Removing her role changed her account's security stamp. The session check, which runs once a minute, ends the
+  session: the tab reloads to the sign-in page, which says "Your session has ended. Please sign in again." Nothing
+  she had open still acts as a Trainee.
+```
