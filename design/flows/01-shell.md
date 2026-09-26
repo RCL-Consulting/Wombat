@@ -371,7 +371,7 @@ describes the product as it is today. Steps 2.34 and 3.33 describe the Assessor 
 (re-pasted on 2026-09-26 after it landed); F04 designs them.
 
 ```text
-Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:537)
+Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:580)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
@@ -381,7 +381,7 @@ Expect: The page reads "Viewing as CommitteeMember" and "You also act as Assesso
   each "0 of 5 met" (T130's count, never a percentage). The nav reads Activity Inbox, Recent Activities, Programme
   Trainees, Decision Panels and Committee Reviews, each once (T178).
 
-Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:552)
+Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:595)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /account/logout → /account/login → / → /dashboard/switch/{role} → /
 Do: Choose Switch view: Assessor. Sign out and in again. Then type `/dashboard/switch/Administrator`.
@@ -391,7 +391,7 @@ Expect: The page reads "Viewing as Assessor" and "You also act as CommitteeMembe
   because the choice is remembered. The Administrator address brings her back to "Viewing as CommitteeMember": a role she
   does not hold is never shown.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:580)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:611)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her dashboard opens as a CommitteeMember; switch the view to Assessor. From "Review inbox", open Dr Mahlangu's
@@ -400,10 +400,9 @@ Expect: Home first reads "Viewing as CommitteeMember" and "You also act as Asses
   switch it reads "Viewing as Assessor", and "Pending requests" counts 1 assessment awaiting review: this Mini-CEX.
   Awaiting your review lists it, "Mini-CEX (Paediatrics) — Nomsa Mahlangu", badged Overdue: it has waited past the
   assessor's seven days since Step 3.30 aged it. After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's
-  minimum on PAED-004 is 3a. Nothing of
-  Dr Mahlangu's is stalled any more.
+  minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
 
-Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:908)
+Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:952)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /dashboard/switch/{role} → / → /placeholder/{Feature}
 Do: Switch the view back to CommitteeMember and read the dashboard. Then choose Programme Trainees in the nav.
@@ -415,7 +414,7 @@ Expect:
   - Neither card holds a link.
   - Programme Trainees is "Coming soon".
 
-Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:550)
+Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:577)
 Role: Coordinator — Mr Pieter Smit
 Route: /placeholder/{Feature}
 Do: Choose Stalled Activities in the nav (`/placeholder/stalled-activities`). Then open a mistyped address,
@@ -424,38 +423,38 @@ Expect: Stalled Activities reads "This page is not built yet." with a "Coming so
   chase a stalled request: no reminder and no reassignment. The mistyped address is "Page not found" with status 404,
   not a "Coming soon" (T178).
 
-Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:681)
+Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:693)
 Role: Trainee — Dr Anele Dlamini
 Route: /dashboard/switch/{role} → /
 Do: Open `/dashboard/switch/Administrator`.
 Expect: She is back on her own dashboard, viewing it as a Trainee. A switch to a role she does not hold changes
   nothing, and no other view is offered to her.
 
-Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:659)
+Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:671)
 Role: Trainee — Dr Anele Dlamini
 Route: /admin/users → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Users page, then that of Scheduled Jobs.
 Expect: Each time, the "Access denied" page: she does not have permission to view the page, her role does not allow
   access to the area, and "Back to home" takes her home. Nothing of the page she asked for is shown.
 
-Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:671)
+Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:683)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Institutions list, then that of Scheduled Jobs.
 Expect: Access denied for both. They are the Administrator's alone, and her nav offers neither.
 
-Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:864)
+Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:887)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /access-denied
+Route: /admin/institutions/{Id:int} → /
 Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
-  `hod.paediatrics@kgk.wombat.local` and save. Press Deactivate. Untick Active and save. Then press Back to
-  institutions.
-Expect: The contact email saves ("Institution saved."). Deactivate is refused: "Only global administrators may
-  deactivate institutions." Unticking Active is refused as Deactivate is, and KGK stays Active. Back to institutions
-  and Cancel lead to the Institutions list, which is the Administrator's alone, so she lands on Access denied
-  (reported).
+  `hod.paediatrics@kgk.wombat.local` and save. Read Status, then look at Back to home and Cancel.
+Expect: "Institution saved." takes the focus. Status reads "Active" as text, with "Set by a global administrator."
+  beneath: there is no Active box and no Deactivate, because an institution's state is the Administrator's alone
+  (T302). "Back to home" and Cancel both lead to `/`. SQL:
+  `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
+  `2|hod.paediatrics@kgk.wombat.local|t`.
 
-Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:693)
+Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:705)
 Role: Trainee — Dr Anele Dlamini
 Route: /not-found → /placeholder/{Feature} → /account/login → /not-found
 Do: Type the following addresses:
@@ -467,7 +466,7 @@ Expect: For each, the "Page not found" page: the page asked for does not exist o
   - `/placeholder/reports` is Page not found too, not a "Coming soon" (T178).
   - Signed out, the unknown address first asks her to sign in, then shows Page not found.
 
-Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:712)
+Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:724)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
@@ -475,67 +474,68 @@ Do: Open the Demo Institution's page by its id. Then open the page of the dev tr
 Expect: The institution shows Page not found, not Access denied. The user shows "User unavailable" ("The user could not
   be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not 403).
 
-Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:728)
+Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:740)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Open the address of Dr Mahlangu's submitted Mini-CEX from A.2.7.
 Expect: "Activity unavailable": the requested activity could not be loaded. Nothing of it is shown, and nothing on the
   page speaks of permission.
 
-Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:739)
+Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:751)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights/{Id:guid}
 Do: Open the address of Dr Mahlangu's request with its last digit changed.
 Expect: The refusal "You are not authorized to access this data-rights request." and the empty state "Not found". An
   unknown id and another institution's request read the same, so the page does not tell them apart (T112).
 
-Step A.5.8 — The error page (appendix-cross-cutting.md:754)
+Step A.5.8 — The error page (appendix-cross-cutting.md:766)
 Role: Trainee — Dr Anele Dlamini
 Route: /Error
 Do: Type `/Error`.
 Expect: "Something went wrong": an unexpected error interrupted the request. If it keeps happening, she is to contact
   her administrator, quoting the request ID the page gives. Signed out, `/Error` asks her to sign in first.
 
-Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:772)
+Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:784)
 Role: Assessor — Dr Mohammed Patel
 Route: /placeholder/{Feature}
 Do: Open Recent Activities from the nav.
 Expect: A page headed "Recent Activities" says it is not built yet. Its "Coming soon" card says the menu links to it so
   that the role's navigation is complete. Nothing else is offered.
 
-Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:783)
+Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:795)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /placeholder/{Feature}
 Do: Read the dashboard's "Stalled requests" card, then open Stalled Activities from the nav.
-Expect: Whatever the card lists, no row links anywhere, so there is no page to act on a stalled request from (Step
-  3.30). Stalled Activities is the "Coming soon" stub, headed "Stalled Activities".
+Expect: The card lists Dr du Plessis's portfolio review, still awaiting review since Step 3.30 aged it, and its row
+  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. Stalled
+  Activities is the "Coming soon" stub, headed "Stalled Activities".
 
-Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:799)
+Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:815)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /placeholder/{Feature}
 Do: Open Programme Trainees from the nav.
 Expect: The "Coming soon" stub, headed "Programme Trainees".
 
-Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:808)
+Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:824)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /placeholder/{Feature} → /placeholder/{Feature}
 Do: Open Programme Trainees, then STAR Review Queue, from the nav.
 Expect: Both are the "Coming soon" stub, each under its own heading.
 
-Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:818)
+Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:834)
 Role: Administrator — devadmin
 Route: /placeholder/{Feature}
 Do: Open System from the nav.
 Expect: The "Coming soon" stub, headed "System".
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1062)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1107)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My Progress, My Activities and Data Rights from the folded nav.
 Expect: The dashboard's cards stack. On My Progress, each EPA's figures and trajectory fit the width. The tables of My
   Activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1291)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1359)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

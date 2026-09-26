@@ -360,7 +360,7 @@ Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with
   The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home: "Welcome,
   smit@kgk.wombat.local", "Viewing as Coordinator". Signing out returns him to the sign-in page.
 
-Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:508)
+Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:551)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: / → /account/session-ended → /account/login → /
 Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
@@ -368,7 +368,7 @@ Expect: Within a minute of her admission the tab moves to the sign-in page, whic
   sign in again." Admission changes her role, and a role change ends open sessions (T279). Signed in again, she sees
   "Viewing as Trainee" and the trainee dashboard of Step 2.39.
 
-Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:648)
+Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:703)
 Role: Every role in this act — each person onboarded here, signed in as themselves
 Route: /account/profile
 Do: Each opens My Account. Dr Khumalo changes her first name from "Fatma" to "Fatima" and saves the profile.
@@ -443,7 +443,7 @@ Expect: The Reset password card says it sets a password directly and that the us
   password is refused with the rules it breaks. The second is accepted, and the field is cleared. The audit log
   records the reset with the password redacted (T101).
 
-Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:625)
+Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:631)
 Role: Trainee — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password
 Do: Sign in with the password Prof Mbatha set. Then change it, from My Account, to one of his own. Record it in
@@ -451,7 +451,7 @@ Do: Sign in with the password Prof Mbatha set. Then change it, from My Account, 
 Expect: He lands on his Trainee dashboard, which still says that his programme ended (Step 5.28). The change reads
   "Password updated."
 
-Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:639)
+Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:648)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/logout-confirm → / → /account/logout-confirm → /account/logout → /account/login → /msf/campaigns → /account/login → /msf/campaigns
 Do: Open the sign-out confirmation by its address and press Cancel. Open it again and sign out. Then open MSF
@@ -460,18 +460,20 @@ Expect: A "Sign out" page, with no nav, says to use its button to end the sessio
   dashboard, still signed in. Sign out lands on the sign-in page. MSF Campaigns then asks him to sign in, and after
   signing in he is brought back to it. The audit log records a Logout.
 
-Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:911)
+Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:944)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/session-ended → /account/login
 Do: Wait up to a minute on the page he had open, then sign in.
 Expect: The tab leaves for the sign-in page, which says "Your session has ended. Please sign in again." Signing in is
   refused: "Too many failed sign-in attempts. Please try again later or reset your password."
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:947)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:983)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
-Expect: He lands on his Assessor dashboard, and Dr Dlamini's assessor list names him again (checked at A.7.1).
+Expect: He lands on his Assessor dashboard. Pending requests reads "1 assessment awaiting review", and Awaiting your
+  review lists Dr du Plessis's Portfolio and Logbook Review, badged Overdue, as his inbox lists it (T297). Dr Dlamini's
+  assessor list names him again (checked at A.7.1).
 
 Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appendix-cross-cutting.md:253)
 Role: Trainee — Dr Sipho Ndlovu (the browser left signed in at A.1.11)
@@ -481,7 +483,7 @@ Expect: The tab leaves for the sign-in page by itself, which says "Your session 
   (T279). Signing in is refused in the words an unknown address gets, "Invalid email or password.", with no mention
   of an erasure (T156). No email is sent to him.
 
-Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1241)
+Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1309)
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
 Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
@@ -489,7 +491,7 @@ Do: At 390 px, open the sign-in page and the forgot-password page. Then verify D
 Expect: The sign-in card fits the width, and its fields and buttons are easy to tap. The verify page's result fits
   the width.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1291)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1359)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
@@ -507,7 +509,7 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus
   ring. Muted text passes on the page background since T086.
 
-Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:461)
+Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:471)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /account/session-ended → /account/login
 Do: Go back to the tab left open at Step 5.15 and wait up to a minute.

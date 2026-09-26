@@ -444,6 +444,8 @@ Route: /admin/users → /admin/users/{UserId}
 Do: For each of the three, open Manage, choose Assessor under Add role and press Add role.
 Expect: Before the change, Roles lists CommitteeMember with Remove. Add role offers InstitutionalAdmin, SpecialityAdmin,
   SubSpecialityAdmin, Coordinator and Assessor, never Administrator, CollegeAdmin, PendingTrainee or Trainee (T303).
+  Its help reads "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to
+  curriculum'.", on every user's page.
   A Lockout card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for
   this email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
   Assessor. The users list's Roles column shows both.

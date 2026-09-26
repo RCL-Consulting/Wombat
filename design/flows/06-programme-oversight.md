@@ -234,7 +234,7 @@ Role: SpecialityAdmin and SubSpecialityAdmin — Dr Refilwe Mokoena and Dr Kabel
 Route: /
 Do: Each opens Home, now that the registrars are admitted.
 Expect: Each sees "Viewing as SpecialityAdmin" or "Viewing as SubSpecialityAdmin". Pending reviews reads 0 "activities
-  in review" with Review queue. Trainees in programme reads 5 active / 0 inactive. Curriculum coverage names the current
+  awaiting review", with no link (T297). Trainees in programme reads 5 active / 0 inactive. Curriculum coverage names the current
   semester and lists PAED-001 to PAED-015 at "0 of 5 met". The nav reads Programme Trainees, Decision Panels, Committee
   Reviews, STAR Review Queue and Decisions Due.
 
@@ -249,8 +249,8 @@ Expect: "Stalled requests" is marked as a warning and lists both, oldest first, 
   last moved:
   - Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis
   - Mini-CEX (Paediatrics) — Nomsa Mahlangu
-  Neither row links anywhere. "Invitations nearing expiry" reads "No invitations expiring soon." The Quick action card
-  offers "Start an MSF campaign".
+  Each row's type links to the activity's page, `/activities/{id}` (T297). "Invitations nearing expiry" reads "No
+  invitations expiring soon." The Quick action card offers "Start an MSF campaign".
 
 ### Step 3.31 — Mr Smit opens Stalled Activities
 Role: Coordinator — Mr Pieter Smit
@@ -286,22 +286,22 @@ Expect:
 
 ### Step 3.53 — Dr Mokoena's dashboard, its review queue, and STAR Review Queue
 Role: SpecialityAdmin — Dr Refilwe Mokoena
-Route: / → /activities/inbox → /placeholder/{Feature}
-Do: Read the dashboard and follow "Review queue". Then choose STAR Review Queue in the nav.
+Route: / → /placeholder/{Feature}
+Do: Read the dashboard. Then choose STAR Review Queue in the nav.
 Expect:
-  - Pending reviews: 1 activity in review, Dr du Plessis's portfolio review.
+  - Pending reviews: "2 activities awaiting review", Dr du Plessis's Requested CBD and his portfolio review awaiting
+    review. The card has no link (T297).
   - Trainees in programme: "5 active / 0 inactive".
   - Curriculum coverage — Semester 2, 2026: the 15 EPAs with their targets. PAED-001 reads "2 of 5 met", and the rest
     "0 of 5 met", the same figures as Dr Zulu's.
-  - "Review queue" opens an inbox that reads "Inbox clear", because she acts on no one's activity.
   - STAR Review Queue is "Coming soon".
 
 ### Step 3.54 — Dr Sithole's dashboard
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /
 Do: Read the dashboard.
-Expect: The same three cards and figures as Dr Mokoena's: 1 activity in review, "5 active / 0 inactive", and PAED-001
-  "2 of 5 met". His nav offers the same Programme Trainees and STAR Review Queue placeholders.
+Expect: The same three cards and figures as Dr Mokoena's: "2 activities awaiting review" with no link, "5 active / 0
+  inactive", and PAED-001 "2 of 5 met". His nav offers the same Programme Trainees and STAR Review Queue placeholders.
 
 --- from execution/knowledge/scenario-paediatrics/appendix-cross-cutting.md ---
 
@@ -319,8 +319,9 @@ Expect: The log holds a stub mail "You have draft activities waiting" beginning 
 Role: Coordinator — Mr Pieter Smit
 Route: / → /placeholder/{Feature}
 Do: Read the dashboard's "Stalled requests" card, then open Stalled Activities from the nav.
-Expect: Whatever the card lists, no row links anywhere, so there is no page to act on a stalled request from (Step
-  3.30). Stalled Activities is the "Coming soon" stub, headed "Stalled Activities".
+Expect: The card lists Dr du Plessis's portfolio review, still awaiting review since Step 3.30 aged it, and its row
+  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. Stalled
+  Activities is the "Coming soon" stub, headed "Stalled Activities".
 
 ### Step A.5.11 — Dr Botha's Programme Trainees
 Role: CommitteeMember — Dr Sarah Botha
