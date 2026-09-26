@@ -13,8 +13,9 @@ T294's test (`tests/Wombat.Web.Tests/Scenario/`) enforces the first two sections
 - `## Pages` names every template, and only real ones.
 
 The other sections are an index, kept by hand. The step lists below were generated from the `Route:` lines of the seven
-act and appendix files on 2026-09-26: 324 steps, 68 page files, 80 templates, all 80 played. Of the 11 endpoints
-Wombat.Web maps outside the router, steps name 9.
+act and appendix files on 2026-09-26: 324 steps, 68 page files, 80 templates, all 80 played. Step 6.14a (T300) was
+added by hand afterwards, so the files now hold 325. Of the 11 endpoints Wombat.Web maps outside the router, steps name
+9.
 
 ## Pages
 
@@ -37,8 +38,8 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/activities/mine` | Activities/MyActivities.razor | Any signed-in user | 2.19, 3.2, 3.6, 3.20, 3.25, 3.48, 5.28, 6.19, 6.24, 6.41, A.7.3 |
 | `/activities/new` | Activities/NewActivity.razor | Any signed-in user | 2.19, 2.42, 2.43, 3.1, 3.8, 3.9, 3.10, 3.12, 3.14, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.25, 3.27, 3.29, 5.22, 5.24, 6.16, 6.19, 6.20, 6.27, 6.37, A.2.7, A.6.6, A.7.1 |
 | `/activities/{ActivityId:int}` | Activities/ActivityView.razor | Any signed-in user; an activity opens only to its subject, its author, the people it names and their overseers, and reads "Activity unavailable" to anyone else | 3.2, 3.3, 3.4, 3.5, 3.6, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.24, 3.25, 3.26, 3.27, 3.28, 3.29, 3.33, 4.17, 5.24, 5.25, 6.16, 6.18, A.2.7, A.5.6, A.7.1, A.7.2 |
-| `/admin/activity-types` | Admin/ActivityTypes/ActivityTypesList.razor | Administrator, InstitutionalAdmin | 1.24, 1.26, 1.31 |
-| `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` | Admin/ActivityTypes/ActivityTypeEdit.razor | Administrator, InstitutionalAdmin | 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, A.7.9, A.7.14 |
+| `/admin/activity-types` | Admin/ActivityTypes/ActivityTypesList.razor | Administrator, CollegeAdmin, InstitutionalAdmin; each row offers Edit where the caller may write the type and View elsewhere, and New activity type only to a caller with a scope to create in (T300) | 1.24, 1.26, 1.31, 6.14a |
+| `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` | Admin/ActivityTypes/ActivityTypeEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin; a type the caller may not write opens read-only, and Scope offers only the scopes the caller may write: an InstitutionalAdmin her institution, a CollegeAdmin his College's specialities and sub-specialities (T300, D52) | 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 6.14a, A.7.9, A.7.14 |
 | `/admin/adoptions` | Admin/Adoptions/AdoptionsList.razor | Administrator, InstitutionalAdmin | 1.20, 6.32 |
 | `/admin/assessors` | Admin/Assessors/AssessorsList.razor | Administrator, InstitutionalAdmin | 2.14, 2.15, 2.44 |
 | `/admin/assessors/edit` | Admin/Assessors/AssessorProfileEdit.razor | Administrator, InstitutionalAdmin | 2.14 |
@@ -117,7 +118,7 @@ state, `states.md` is where it belongs.
 | An assessor's training status (`AssessorProfile.TrainingStatus`) changing an assessment | Nothing on the activity path reads it (2.14 records it). | Undecided |
 | An invitation's Delivery reading "Sent", or "check the address" after a second failure | The replay logs mail (`Email__SmtpHost` unset), so nothing reports a delivery or a refusal. Rows read "Being sent", then "Not delivered." | `states.md`, with an SMTP sink |
 | The Administrator adopting for an institution through the institution picker on `/admin/adoptions` | The story's InstitutionalAdmin adopts for her own institution (1.20, 6.32). | `states.md` |
-| Discard draft in the activity-type builder | The story publishes every draft it saves (1.30). | `states.md` |
+| Discard draft in the activity-type builder | The story publishes KGK's draft (1.30) and keeps the College's unpublished (6.14a), discarding neither. | `states.md` |
 | Deactivating a College, speciality or sub-speciality | Nothing in Application or Infrastructure reads their `IsActive`, no decision says what it should stop, and the button does not ask first (T264). | A decision first |
 | Removing a curriculum item (its ConfirmDialog, T222) | Every item measures registrars still in training. | `states.md`, on a scratch curriculum |
 | An InstitutionalAdmin deactivating and reactivating a local EPA | The story pauses a national EPA (6.17, 6.23); the local variant was browser-checked in T196. | `states.md` |
@@ -224,6 +225,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Add a sub-speciality, with its default ladder | 6.12 | `/admin/colleges/{CollegeId:int}/specialities/{Id:int}`, `/admin/specialities/{SpecialityId:int}/sub-specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
 | Start a curriculum for a new sub-speciality and hold it back from adoption | 6.13 | `/admin/curricula`, `/admin/curricula/new`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items` |
 | Correct an EPA's wording | 6.14 | `/admin/epas`, `/admin/epas/{Id:int}` |
+| Draft an activity type for a College discipline, and read the College's instruments as their author | 6.14a | `/admin/activity-types`, `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` |
 | Take an EPA out of use while the College revises it, then restore it | 6.17, 6.23 | `/admin/epas`, `/admin/epas/{Id:int}`, `/admin/curricula`, `/admin/curricula/{Id:int}/items` |
 | Add a new national EPA | 6.28 | `/admin/epas`, `/admin/epas/new`, `/admin/epas/{Id:int}` |
 | Publish a new curriculum version: clone the current one, change its items, release it | 6.29, 6.30, 6.31 | `/admin/curricula`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items` |

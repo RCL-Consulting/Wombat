@@ -7,23 +7,22 @@ drawn at runtime from a type built on this page (BRIEF § 5.2; `Components/Share
 | | |
 |---|---|
 | **Mode** | **Wireframe first** (BRIEF § 2.3 step 3). This is the most complex UI in the product, and its output becomes every F03 and F04 form. The research advises treating the builder as a flow of its own, with seed schema JSON supplied (research `best_inputs_for_existing_app_redesign[5]`). BRIEF § 4 names it one of three dense pages to lay out deliberately inside its shape. |
-| **People** | InstitutionalAdmin Prof Nolwazi Mbatha; the Administrator (devadmin). After T300, the CollegeAdmin Dr Anton Kruger as well (BRIEF § 7 B11). |
+| **People** | InstitutionalAdmin Prof Nolwazi Mbatha; the Administrator (devadmin); since T300, the CollegeAdmin Dr Anton Kruger (BRIEF § 7 B11; D52; Step 6.14a). |
 | **Frequency and stakes** | Rare: a type is built once and republished seldom. Stakes are medium-high, because it defines every form. |
 | **Pages** | `/admin/activity-types` (`Admin/ActivityTypes/ActivityTypesList.razor`); `/admin/activity-types/new` and `/admin/activity-types/{ActivityTypeId:int}` (`ActivityTypeEdit.razor`) (`coverage.md` § Pages) |
-| **Runbook steps** | 10: `act-1-setup.md` 1.24–1.31; `appendix-cross-cutting.md` A.7.9 and A.7.14 |
-| **Held** | T300 (group 1): 22 images, listed in § 5.4. |
+| **Runbook steps** | 11: `act-1-setup.md` 1.24–1.31; `act-6-catalogue.md` 6.14a; `appendix-cross-cutting.md` A.7.9 and A.7.14 |
+| **Held** | Nothing. T300 (group 1) landed in 1e154ab, and its 22 images were re-captured on 2026-09-26 (§ 5.4), with six new ones of Step 6.14a. |
 
 ## 1. Before you paste
 
-1. **T300 has not landed.** It changes four things (BRIEF § 10):
+1. **T300 has landed (1e154ab, D52).** It changed four things (BRIEF § 10):
    - the list offers View or Edit per row;
-   - a College instrument opens read-only;
-   - the Scope picker is narrowed;
-   - the CollegeAdmin gets Activity Types in the nav.
+   - a College instrument opens read-only, under a standing notice;
+   - the Scope picker offers only the scopes the caller may write, and a new type starts in the first of them;
+   - the CollegeAdmin has Activity Types in the nav, and writes his College's types.
 
-   You can run the wireframe round now from the key screenshots in § 5.1. They show Mbatha's own type, which T300
-   leaves writable (inference from T300 § What to build). Attach the § 5.4 images only after T300 lands and they are
-   re-captured.
+   The key screenshots in § 5.1 show Mbatha's own type, which stays writable (observed on 2026-09-26). The § 5.4 images
+   were re-captured on 2026-09-26 and may be attached.
 2. **Open every image before you upload it** (BRIEF § 3.3). None of this flow's images is an invitation capture. These
    were opened for this brief and show no link or password:
    - `states/activity-type-edit--user-field.png`, `--field-rule.png`, `--published.png`, `--publish-warnings.png` and
@@ -66,14 +65,14 @@ GOAL: Let an institution's administrator do seven things:
   7. see what a publish will change, publish version 1, and find the type in the list.
   A live preview shows the form a registrar will fill.
   What is wrong today:
-  - the builder offers Save draft, Publish and a Global scope that its own guard then refuses (T300, being fixed);
   - the field list prints key and code name ("epa_id · Epa", "objectives · LongText");
   - the tabs do not tell a screen reader which tab is selected;
   - Workflow and Credit are raw JSON text boxes;
   - the field editor opens below every section, far from the Edit that opened it.
 AUDIENCE: Mainly an InstitutionalAdmin, Prof Nolwazi Mbatha, at Kgosi Kgari Teaching Hospital (KGK). She is at ease
   with forms, not with JSON, and uses the builder rarely, for a high-stakes job. Also the Administrator (the platform
-  operator), and after T300 the College's administrator, Dr Anton Kruger (CPSA). Each writes a different set of scopes.
+  operator), and the College's administrator, Dr Anton Kruger (CPSA; T300, D52). Each writes a different set of
+  scopes.
   Desktop 1280×800 and phone 390×844.
 CONTENT (what the builder edits; the attached seed JSON shows each part):
   - Metadata: Key (fixed once published), Name, Scope (Global, Institution, Speciality or Sub-speciality, plus which
@@ -109,7 +108,7 @@ SCREENS, in order:
      - a discarded draft;
      - an unknown id (not found);
      - the builder at 390 px.
-STEPS: 1.24, 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 1.31, A.7.9, A.7.14, pasted verbatim at the end.
+STEPS: 1.24, 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 1.31, 6.14a, A.7.9, A.7.14, pasted verbatim at the end.
 STATES TO SHOW:
   - Loading: the header shows at once, and there is no Save draft until the type has loaded.
   - Load error: the alert only, with no actions.
@@ -123,7 +122,7 @@ STATES TO SHOW:
     - heavy: Mini-CEX (Paediatrics), with 3 sections, 10 fields, 5 states, 4 moves and 1 credit directive.
   - Today's captures of these states are listed under ATTACHED.
 REQUIREMENTS FROM KNOWN DEFECTS:
-  - T300 (being fixed):
+  - T300 (landed; keep what it built):
     - A caller who cannot write a type gets it read-only. A standing notice says whose it is: the College's for a
       Speciality or Sub-speciality type, the platform's for a Global one. No Save draft, Discard draft, Publish, Add,
       Up, Down or Delete is shown. The field editor still opens for reading.
@@ -139,11 +138,11 @@ REQUIREMENTS FROM KNOWN DEFECTS:
   - T324: types are shown by label. The field list reads "EPA" and "Long text", not "epa_id · Epa" and
     "objectives · LongText". Scope reads "Sub-speciality", not "SubSpeciality". A key may be shown as a secondary,
     monospace detail.
-  - T291 item 5: a scope names its speciality or institution, never "Speciality · #1".
+  - T291 item 5 (landed with T300): a scope names its speciality or institution, never "Speciality · #1".
   - T326: a search that matches nothing says so ('No activity types match "zzz".'). It is not the empty-catalogue
     state "No activity types. Create the first activity type to start the builder."
   - T280 and T190 (accessible names): the tab bar tells a screen reader which tab is selected. The browser tab's title
-    follows the page heading and is never empty (on /new it is empty today).
+    follows the page heading and is never empty (on /new it reads "New activity type" since T300).
   - T291 item 3: the first Save draft of a new type shows "Draft saved." and moves the focus to it. Today the page moves
     to the type's address and shows nothing.
   - T271: a Scale field bound to the College's ladder shows "CPSA Paediatric Entrustment Scale v11.1", not "Select…",
@@ -225,10 +224,9 @@ ATTACHED: the screenshots below (paths under design/baseline/), in this order:
   More state captures follow when you ask for a state.
 
 RUNBOOK STEPS, verbatim (Role / Route / Do / Expect). Where an Expect describes today's behaviour and a requirement
-above says otherwise, the requirement wins:
-- 1.24's "each offers Edit" becomes View for the College rows (T300);
-- 1.26's "the browser tab reading 'Activity Type'" follows the heading instead (T190).
-A.7.14 checks contrast across several pages; for this flow, only its builder part applies (the Publish button).
+above says otherwise, the requirement wins. 1.24, 1.25, 1.26 and 1.31 were updated for T300 on 2026-09-26, and 6.14a
+was added then. A.7.14 checks contrast across several pages; for this flow, only its builder part applies (the Publish
+button).
 
 [act-1-setup.md]
 ### Step 1.24 — The twelve CPSA instruments are published
@@ -236,8 +234,11 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types
 Do: Open Activity Types, search `cpsa` and read the list. Then clear the search.
 Expect: The search leaves the 12 rows in the table below. Each reads Scope `Speciality · Paediatrics`, Published `v1`,
-  Draft `None` and Active, and each offers Edit. With the search cleared there are 22 rows: these twelve and the ten
-  Demo types.
+  Draft `None` and Active, and each offers View, named for its row ("View Mini-CEX (Paediatrics)"), not Edit: the
+  College's instruments are the College's, and she may not write them (T300, D52; T239 names each row's action). With
+  the search cleared there are 22 rows: these twelve and the ten Demo types, which also offer View and whose Scope
+  names the Demo speciality, `Speciality · General Medicine` (T291 item 5). New activity type is still offered, since
+  she may create a type in her own institution.
   Two of the twelve are system-managed (T162, T164): `msf_cpsa` and `learner_feedback_cpsa`. A released MSF or
   learner-feedback campaign writes them, and nobody is offered them when filing an activity.
 
@@ -245,24 +246,27 @@ Expect: The search leaves the 12 rows in the table below. Each reads Scope `Spec
 ### Step 1.25 — A College instrument is read-only to KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types/{ActivityTypeId:int}
-Do: Open `Mini-CEX (Paediatrics)` and read each tab, opening the `overall_level` field in the field editor. Change
-  nothing, save nothing, and leave by Back to list.
-Expect: The page is headed "Edit Mini-CEX (Paediatrics)" and opens on the Form tab.
-  - **Form settings** read Encounter date field `observed_on`, Entrustment rating field `overall_level` and EPA field
-    `epa_id`.
+Do: Open `Mini-CEX (Paediatrics)` from its View and read each tab, opening the `overall_level` field to read its
+  settings. Change nothing, save nothing, and leave by Back to list.
+Expect: The page is headed "Mini-CEX (Paediatrics)", not "Edit …", and the browser tab reads the same. It opens on the
+  Form tab, under a standing information notice that is there on every visit (no alert role): "Set by the College that
+  owns Paediatrics. You can read this activity type here, but not change it." (T300; the wording is a product
+  decision.)
+  - **Form settings** read, as text, Encounter date field `observed_on`, Entrustment rating field `overall_level` and
+    EPA field `epa_id`.
   - **Sections.** Request holds the EPA, the Assessor (a User field), the date observed, the clinical setting, the
-    presenting problem and the case complexity. Entrustment holds the `overall_level` rating; in the field editor its
-    Entrustment scale reads `CPSA Paediatric Entrustment Scale v11.1`, the ladder its seed key binds (T271). Feedback
-    holds three long-text fields.
-  - **Metadata.** The key `mini_cex_cpsa` cannot be changed, because the type is published. Scope reads Speciality,
-    `Paediatrics`, and This tool is reads `Mini-CEX`.
-  - **Workflow.** Draft → Requested → Completed, with Declined and Cancelled. The named assessor
+    presenting problem and the case complexity. Entrustment holds the `overall_level` rating. Feedback holds three
+    long-text fields. Each section and field offers View, which shows its settings as text; `overall_level`'s
+    Entrustment scale reads `CPSA Paediatric Entrustment Scale v11.1`, the ladder its seed key binds (T271).
+  - **Metadata**, as text: Key `mini_cex_cpsa`, Name, Scope `Speciality · Paediatrics`, This tool is `Mini-CEX`, the
+    description, and Status Active.
+  - **Workflow**, as a code block. Draft → Requested → Completed, with Declined and Cancelled. The named assessor
     (`field:assessor_user_id`) completes or declines.
-  - **Credit.** One directive: it matches on the EPA field, counts 1, and judges the level reached by what
-    `overall_level` records.
-  She is offered nothing that would change the type, no Save draft and no Publish: the College's instruments are the
-  College's (T211's rule). Any save or publish she sent would be refused by `ActivityTypeScopeGuard`: "You do not have
-  permission to modify activity types in that speciality."
+  - **Credit**, as a code block. One directive: it matches on the EPA field, counts 1, and judges the level reached by
+    what `overall_level` records.
+  She is offered nothing that would change the type: no Save draft, Discard draft or Publish, and no Add, Up, Down or
+  Delete. The College's instruments are the College's (T211's rule; T300, D52). Any save or publish she sent would be
+  refused by `ActivityTypeScopeGuard`: "You do not have permission to modify activity types in that speciality."
 
 [act-1-setup.md]
 ### Step 1.26 — Start KGK's teaching log
@@ -270,18 +274,19 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types → /admin/activity-types/new → /admin/activity-types/{ActivityTypeId:int}
 Do: Press New activity type, open the Metadata tab and enter:
   - Key `kgk_teaching_log` and Name `KGK Teaching Session Log`;
-  - Scope Institution, with `Kgosi Kgari Teaching Hospital`;
+  - Scope Institution, with `Kgosi Kgari Teaching Hospital`, which is how it opens: leave it untouched;
   - This tool is `Not a WBA instrument`;
   - Description `A registrar's log of a teaching session they delivered at KGK. Not rated, and credits nothing.`;
   - Active on.
   Press Save draft. Record the type's id as `{ActivityTypeId}`.
-Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "Activity Type". It
-  starts with a default draft:
+Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "New activity
+  type" too (T300, T190). It starts with a default draft:
   - one Details section holding a required Title text field;
   - a workflow from draft to submitted;
   - the credit rules `{"counts_for": []}`.
-  Scope offers her only what she may save: Institution, with KGK the only institution. (DESIGN.md: a picker offers
-  exactly what its command accepts.) This tool is offers `Not a WBA instrument` and the twelve instruments.
+  Scope offers her only what she may save: Institution, with KGK the only institution, and a new type starts there,
+  never Global (T300, D52; DESIGN.md: a picker offers exactly what its command accepts). So the first Save draft is
+  accepted without Scope being touched. This tool is offers `Not a WBA instrument` and the twelve instruments.
   Save draft moves the page to the type's own address and reads "Draft saved." (T291 item 3). The page is then headed
   "Edit KGK Teaching Session Log", and the browser tab reads `KGK Teaching Session Log`.
 
@@ -354,7 +359,41 @@ Expect: The list has 23 rows, and no two share a name:
   - the twelve `*_cpsa` types;
   - `KGK Teaching Session Log`, whose Scope reads `Institution · Kgosi Kgari Teaching Hospital`, with `v1`, `None` and
     Active.
-  The search leaves that last row only. Which of these types a KGK registrar is offered is checked in Act 2.
+  Her own type's row offers Edit, and every other row View (T300). The search leaves that last row only. Which of these
+  types a KGK registrar is offered is checked in Act 2.
+
+[act-6-catalogue.md]
+### Step 6.14a — Dr Kruger drafts a College activity type
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/activity-types → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types → /admin/activity-types/new → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types
+Do: Open Activity Types from his menu and read the list. Open `Multi-Source Feedback (Paediatrics)` and change nothing.
+  Back in the list, press New activity type, open the Metadata tab and read what Scope offers, under Sub-speciality
+  too. Then enter:
+  - Key `cpsa_case_presentation_log` and Name `CPSA Case Presentation Log`;
+  - Scope Speciality, with `Paediatrics`;
+  - This tool is `Not a WBA instrument`;
+  - Description `A registrar's log of a case they presented at a departmental meeting. Not rated, and credits
+    nothing.`;
+  - Active on.
+  Press Save draft, publish nothing, and go back to the list.
+Expect:
+  - **The list.** Activity Types is in his menu (T300, D52). The list has 22 rows: the twelve `*_cpsa` instruments and
+    the ten Demo types. The College writes its disciplines' types, so each `*_cpsa` row offers Edit, named for its row
+    ("Edit Mini-CEX (Paediatrics)"). The exceptions are `msf_cpsa` and `learner_feedback_cpsa`: the MSF and
+    learner-feedback releases write their data, so they offer View (T334). The Demo types belong to the Demo College, so
+    they offer View. KGK Teaching Session Log is not listed, because it is an institution's own type. New activity type
+    is offered.
+  - **A system-managed type.** Multi-Source Feedback (Paediatrics) opens read-only, with a notice that the system writes
+    it, and no Save draft, Discard draft, Publish or editor controls (T334).
+  - **The new type.** It opens headed "New activity type", on Form, with the default draft. Scope offers Speciality and
+    Sub-speciality only, never Global or Institution. It starts on Speciality with `Paediatrics`, the College's one
+    speciality; CNSA's Neurology is not offered. Sub-speciality offers `Paediatrics / Neonatology` (Step 6.12) and
+    `Paediatrics / Paediatrics`.
+  - **The save.** Save draft is accepted. The page moves to the type's own address, headed "Edit CPSA Case
+    Presentation Log", and reads "Draft saved." (T291 item 3). In the list the type reads `Speciality · Paediatrics`,
+    with no published version, Draft "Draft saved", Active and Edit.
+  - **Who sees the draft.** It is unpublished, so no registrar is offered it. Prof Mbatha's list leaves it out, and its
+    address reads "could not be found" to her: a type she may neither write nor open is not listed (T300, T211).
 
 [appendix-cross-cutting.md]
 ### Step A.7.9 — Prof Mbatha on her phone
@@ -407,7 +446,7 @@ The workflow Step 1.28 pastes (act-1-setup.md, after Step 1.28):
 
 | # | Step | Page template | What she does | What she must be able to see |
 |---|---|---|---|---|
-| 1 | 1.24 | `/admin/activity-types` | Searches `cpsa`, then clears the search | The twelve College instruments, each with its scope, version, draft state and status. After T300 each offers View, not Edit. |
+| 1 | 1.24 | `/admin/activity-types` | Searches `cpsa`, then clears the search | The twelve College instruments, each with its scope, version, draft state and status. Each offers View, not Edit (T300). |
 | 2 | 1.25 | `/admin/activity-types/{ActivityTypeId:int}` | Opens Mini-CEX (Paediatrics), reads each tab, and opens `overall_level` in the field editor | That the type is the College's and she can only read it; the scale its rating is bound to (T271); its workflow and credit rule |
 | 3 | 1.26 | `/admin/activity-types` → `/new` → `/{ActivityTypeId:int}` | Presses New activity type, fills Metadata and saves a draft | Only Institution and KGK under Scope; "Draft saved."; the page moving to the type's own address and title |
 | 4 | 1.27 | `/admin/activity-types/{ActivityTypeId:int}` | Builds the form, with a duplicate key refused and then fixed, and sets the Form settings | A refusal naming both fields; field types by label; the live preview with six inputs |
@@ -415,25 +454,26 @@ The workflow Step 1.28 pastes (act-1-setup.md, after Step 1.28):
 | 6 | 1.29 | same | Opens Credit and leaves it empty | That the type credits nothing, and what follows from that (only the "not after today" date rule applies) |
 | 7 | 1.30 | same | Presses Publish | "Published version 1."; the key locked; no warnings (there is no earlier version to compare with) |
 | 8 | 1.31 | `/admin/activity-types` | Goes back to the list and searches `KGK` | Her type: Institution · Kgosi Kgari Teaching Hospital, v1, no draft, Active. A search that finds nothing says so. |
-| 9 | A.7.9 | `/admin/activity-types/{ActivityTypeId:int}` at 390 px | Opens the builder on her phone | The editor and preview stacked in one column; a usable tab bar; no sideways scroll |
-| 10 | A.7.14 | same | Checks contrast | Publish (white on green) and the success alert meeting 4.5:1 |
+| 9 | 6.14a | `/admin/activity-types` → `/{ActivityTypeId:int}` → `/new` → `/{ActivityTypeId:int}` | Dr Kruger (CollegeAdmin) reads the list, opens `msf_cpsa`, and saves a draft of a new Paediatrics type, `CPSA Case Presentation Log` | Edit on the College's instruments and View on the rest; Scope offering only Speciality and Sub-speciality of his College; the saved draft. `msf_cpsa` read-only once T334 lands |
+| 10 | A.7.9 | `/admin/activity-types/{ActivityTypeId:int}` at 390 px | Opens the builder on her phone | The editor and preview stacked in one column; a usable tab bar; no sideways scroll |
+| 11 | A.7.14 | same | Checks contrast | Publish (white on green) and the success alert meeting 4.5:1 |
 
 ## 4. States to design
 
-From `states.md` § Institution administration, rows 604–622. "Held" means T300 changes the page, so re-capture before
-attaching.
+From `states.md` § Institution administration, rows 604–622. "T300" in the Held column marks a capture T300 changed;
+each was re-captured on 2026-09-26, after T300 landed (1e154ab), and none is held now.
 
 | Page | State | Capture (under `design/baseline/`) | Held | How it is reached |
 |---|---|---|---|---|
-| `/admin/activity-types` | All | `states/activity-types-list--all.png` | T300 | At Step 1.31 |
-| | Searched | `states/activity-types-list--search.png` | T300 | At Step 1.24: `cpsa` |
-| | A draft in the list | `states/activity-types-list--draft.png` | T300 | Between Steps 1.26 and 1.30: Draft reads "Draft saved" |
-| | No match | `states/activity-types-list--no-match.png` | T300 | At Step 1.31, search `zzz` |
-| | Loading | `states/activity-types-list--loading.png` | T300 | Hold a read (`states.md` § Holding a read) |
-| | Narrow | `states/activity-types-list--narrow.png` | T300 | At Step 1.31, at 390 px |
-| `/admin/activity-types/{id}` | A College instrument, seen by an institution | `states/activity-type-edit--college-instrument.png` | T300 | At Step 1.25, the Form tab |
-| `/admin/activity-types/new` | New, the default draft | `states/activity-type-edit--new.png` | T300 | At Step 1.26, before typing |
-| `/admin/activity-types/{id}` | Metadata tab | `states/activity-type-edit--metadata.png` | T300 | At Step 1.26, after Save draft |
+| `/admin/activity-types` | All | `states/activity-types-list--all.png` | T300, re-captured | At Step 1.31 |
+| | Searched | `states/activity-types-list--search.png` | T300, re-captured | At Step 1.24: `cpsa` |
+| | A draft in the list | `states/activity-types-list--draft.png` | T300, re-captured | Between Steps 1.26 and 1.30: Draft reads "Draft saved" |
+| | No match | `states/activity-types-list--no-match.png` | T300, re-captured | At Step 1.31, search `zzz` |
+| | Loading | `states/activity-types-list--loading.png` | T300, re-captured | Hold a read (`states.md` § Holding a read) |
+| | Narrow | `states/activity-types-list--narrow.png` | T300, re-captured | At Step 1.31, at 390 px |
+| `/admin/activity-types/{id}` | A College instrument, seen by an institution | `states/activity-type-edit--college-instrument.png` | T300, re-captured | At Step 1.25, the Form tab |
+| `/admin/activity-types/new` | New, the default draft | `states/activity-type-edit--new.png` | T300, re-captured | At Step 1.26, before typing |
+| `/admin/activity-types/{id}` | Metadata tab | `states/activity-type-edit--metadata.png` | T300, re-captured | At Step 1.26, after Save draft |
 | | The field editor, a User field | `states/activity-type-edit--user-field.png` | — | At Step 1.27 |
 | | Duplicate key refused | `states/activity-type-edit--duplicate-key.png` | — | At Step 1.27 |
 | | A `field:` rule refused | `states/activity-type-edit--field-rule.png` | — | At Step 1.28 |
@@ -441,17 +481,25 @@ attaching.
 | | Published | `states/activity-type-edit--published.png` | — | At Step 1.30 |
 | | Publish warnings | `states/activity-type-edit--publish-warnings.png` | — | On a scratch database: delete Audience, then Save draft |
 | | Draft discarded | `states/activity-type-edit--discarded.png` | — | On a scratch database, after the warnings: Discard draft |
-| | Unknown id | `states/activity-type-edit--not-found.png` | T300 | Typed: `/admin/activity-types/999999` |
-| | Loading | `states/activity-type-edit--loading.png` | T300 | Hold a read, then Edit on a row |
+| | Unknown id | `states/activity-type-edit--not-found.png` | T300, re-captured | Typed: `/admin/activity-types/999999` |
+| | Loading | `states/activity-type-edit--loading.png` | T300, re-captured | Hold a read, then Edit on a row |
 | | Narrow | `states/activity-type-edit--narrow.png` | — | At Step A.7.9 |
 
+**States T300 built, now captured (2026-09-26):**
+- A College instrument read-only, with its notice: `states/activity-type-edit--college-instrument.png`, and the act-1
+  `1.25-*` captures.
+- The CollegeAdmin's builder, Scope offering Speciality and Sub-speciality of his College: act-6
+  `6.14a-3-new-type-scope.png` and `6.14a-4-sub-speciality-targets.png`.
+- A View row beside an Edit row: `states/activity-types-list--all.png` (Prof Mbatha: Edit on her type only) and act-6
+  `6.14a-1-kruger-activity-types.png` (Dr Kruger: Edit on the College's twelve).
+- The loading and not-found states with neither "New activity type" nor Save draft: `states/activity-type-edit--loading.png`
+  and `--not-found.png`, both headed "Activity type".
+
 **States with no capture, which the design must draw:**
-- A College instrument read-only, with its notice (T300).
-- The CollegeAdmin's builder: Scope offers Speciality and Sub-speciality of his College (T300).
-- A View row beside an Edit row (T300).
 - The no-match search state, distinct from the empty catalogue (T326).
 - Publish unavailable, with its reason in text.
-- The loading and not-found states without "New activity type" or Save draft (T300, T329).
+- A system-managed type read-only to everyone, with a notice that the system writes it (T334; today `msf_cpsa` opens
+  editable to the College, act-6 `6.14a-2-kruger-msf-cpsa-open.png`).
 
 No builder state is on `states.md`'s list of states a replay cannot reach.
 
@@ -485,7 +533,7 @@ The nine files under `src/Wombat.Infrastructure/Activities/Seeds/`:
 
 All nine are tracked (`git ls-files`).
 
-### 5.4 Held until T300 lands and they are re-captured
+### 5.4 Re-captured after T300 landed (1e154ab, 2026-09-26), so no longer held
 
 - act-1:
   - `act-1/1.24-1-types-search-cpsa.png`;
@@ -499,18 +547,31 @@ All nine are tracked (`git ls-files`).
     `--metadata.png`;
   - `states/activity-types-list--all.png`, `--search.png`, `--draft.png`, `--narrow.png`, `--no-match.png` and
     `--loading.png`.
+- New, Step 6.14a as Dr Kruger: `act-6/6.14a-1-kruger-activity-types.png`, `6.14a-2-kruger-msf-cpsa-open.png`,
+  `6.14a-3-new-type-scope.png`, `6.14a-4-sub-speciality-targets.png`, `6.14a-5-draft-saved.png` and
+  `6.14a-6-list-with-draft.png`.
+
+The act-1 and state captures come from a copy of the end-of-Act-1 snapshot, where KGK Teaching Session Log already
+exists and is published. So `1.24-1`, `1.31-1`, `1.31-2`, `--search`, `--all`, `--no-match` and `--narrow` show 23 rows
+(Step 1.31's moment), and Step 1.26 was replayed with a second type, `KGK Teaching Session Log (T300 re-check)`: its
+name is in `1.26-2`, `--metadata` and the `--draft` row, where the story has KGK's own. `1.26-1` and `--new` are taken
+before typing, so they are the story's. The loading states are held reads (`states.md` § Holding a read): the list's
+header offers no New activity type until it has loaded, and the editor's reads "Activity type" with Back to list only.
+The act-6 captures come from a copy of the end-of-Act-6 snapshot; `6.14a-2` shows `msf_cpsa` editable to the College,
+which T334 will make read-only. Still visible and still open: no "Draft saved." after a first save (T291 item 3;
+`1.26-2`, `6.14a-5`), and the raw seed key "seed:cpsa:scale:v11.1" in the read-only field view (T271; `1.25-5`).
 
 ## 6. Known problems this design must solve
 
 | Task | Lane | What it means for the design | Evidence |
 |---|---|---|---|
-| T300 | queued; group 1, being fixed (BRIEF § 10) | Adds a read-only mode with a standing notice. Each list row offers View or Edit. New activity type shows only to a caller who can write somewhere. Scope offers exactly the writable scopes (an InstitutionalAdmin sees Institution and KGK only). The title comes from the address. No Save draft appears until the editor has loaded. The CollegeAdmin gets Activity Types in the nav (BRIEF § 7 B11). | Steps 1.25, 1.26; `ActivityTypeEdit.razor:21-26, :81`; `ActivityTypesList.razor:15, :53` |
-| T329 | queued, P2 | While loading, or on an unknown id, the editor is not titled "New activity type" and does not offer Save draft (BRIEF § 6 A6). | `states/activity-type-edit--loading.png`, `--not-found.png` (held) |
+| T300 | landed in 1e154ab (D52); group 1, re-captured 2026-09-26 (BRIEF § 10) | Built: a read-only mode with a standing notice ("Set by the College that owns Paediatrics. You can read this activity type here, but not change it."). Each list row offers View or Edit. New activity type shows only to a caller who can write somewhere. Scope offers exactly the writable scopes (an InstitutionalAdmin sees Institution and KGK only; the CollegeAdmin Speciality and Sub-speciality of his College). The title comes from the address. No Save draft appears until the editor has loaded. The CollegeAdmin has Activity Types in the nav (BRIEF § 7 B11). The redesign keeps all of it. | Steps 1.24–1.26, 6.14a; § 5.4 |
+| T329 | queued, P2 | While loading, or on an unknown id, the editor is not titled "New activity type" and does not offer Save draft (BRIEF § 6 A6). T300 already did both for this page: the re-captured states read "Activity type" with Back to list only. | `states/activity-type-edit--loading.png`, `--not-found.png` |
 | T324 | queued | Labels, not keys or code names: "EPA" and "Long text" in the field list (`ActivityTypeEdit.razor:218` prints the enum, though `FieldTypeLabel` exists at :870); "Sub-speciality" in Scope. The publish warning for a change of type also prints code names (`BuilderModels.cs:209`; from the code, not captured). (A8) | `act-1/1.27-2-form-saved-preview.png` |
-| T326 | queued | A no-match search is its own state, not "Create the first activity type" (A10). | `states/activity-types-list--no-match.png` (held) |
+| T326 | queued | A no-match search is its own state, not "Create the first activity type" (A10). | `states/activity-types-list--no-match.png` |
 | T190, T280 | queued | The tab bar exposes the selected tab: the tabs pattern, or `aria-current` on the active button. DESIGN.md § Builder layout says nothing on this yet. The page title follows the heading and is never empty. (A14) | `act-A/A.7.9-5-builder-top.png`; `ActivityTypeEdit.razor:14, :62-66` |
-| T271 | queued | A field bound to a scale by seed key shows that scale, not "Select…". This includes the read-only mode, where Step 1.25 reads it. | `act-1/1.25-5-overall-level-field-editor.png` (held) |
-| T291 items 3, 5, 6 | queued | Item 3: the first save shows "Draft saved." and takes the focus. Item 5: a scope label is never "#1". Item 6: the preview's EPA picker lists what the real form would (the 15 PAED EPAs, not the Demo EPA-001). | `act-1/1.26-2-first-save-no-status.png`, `1.31-1-types-all.png` (held); `1.27-2-form-saved-preview.png` |
+| T271 | queued | A field bound to a scale by seed key shows that scale, not "Select…". This includes the read-only mode, where Step 1.25 reads it and today sees the raw key "seed:cpsa:scale:v11.1". | `act-1/1.25-5-overall-level-field-editor.png` |
+| T291 items 3, 6 | queued (item 5 landed with T300) | Item 3: the first save shows "Draft saved." and takes the focus. Item 5, done: a scope label is never "#1". Item 6: the preview's EPA picker lists what the real form would (the 15 PAED EPAs, not the Demo EPA-001). | `act-1/1.26-2-first-save-no-status.png`, `act-6/6.14a-5-draft-saved.png`; `1.27-2-form-saved-preview.png` |
 | T264, A5 | queued | Section and field Delete are red filled buttons (`ActivityTypeEdit.razor:207, :225`). DESIGN.md:245–267 keeps `.btn-danger` for a dialog footer (BRIEF § 5.4). Discard draft has no confirmation (`:22-25`; observed in code, not filed). | `states/activity-type-edit--user-field.png` |
 | T322, A1 | queued, P2 | Publish is `.btn-success`: white on it is 2.87:1. The success alert is 2.55:1. | `act-A/A.7.14-5-builder-publish-disabled.png`; Step A.7.14 Actual |
 | T323, A3 | queued | At 390 px the tabs wrap to two rows, and the preview starts about 4,250 px down the page (Step A.7.9 Actual). The columns stack by the card's width (DESIGN.md § Builder layout, T266). | `act-A/A.7.9-5-builder-top.png`, `states/activity-type-edit--narrow.png` |
@@ -538,14 +599,12 @@ Write each answer as a sentence in the Claude Design chat, since the chat travel
 
 After Claude Code builds it (BRIEF § 9):
 
-1. **Replay the steps** on a fresh database, as BRIEF § 9 says: 1.24, 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 1.31, A.7.9
-   and A.7.14.
-   - Play Act 1 up to and through 1.31. Play the appendix steps after Act 6, on the same database.
-   - Add T300's new step as Dr Kruger: the builder opens, and he saves a draft of a new Paediatrics-scoped type (not a
-     seeded one) (T300 § Verification).
+1. **Replay the steps** on a fresh database, as BRIEF § 9 says: 1.24, 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 1.31, 6.14a,
+   A.7.9 and A.7.14.
+   - Play Act 1 up to and through 1.31. Play 6.14a in Act 6, and the appendix steps after Act 6, on the same database.
+   - Step 6.14a is Dr Kruger's: the builder opens, and he saves a draft of a new Paediatrics-scoped type (not a seeded
+     one) (T300 § Verification).
 2. **Update the Expects** whose wording changes, in the same task (BRIEF § 9 item 7):
-   - 1.24: View on the College rows;
-   - 1.26: the browser tab's title;
    - 1.30: Publish's reason, if it becomes on-page text;
    - 1.31: the no-match wording.
 3. **Run the tests.** `tests/Wombat.Web.Tests` must be green without `--no-build`, including:
@@ -558,4 +617,4 @@ After Claude Code builds it (BRIEF § 9):
    If the tabs or the two-column rule change, amend DESIGN.md § Builder layout in the same task.
 4. **Re-capture** the 19 states in § 4 and this flow's step captures into `design/baseline/`, and compare them with the
    chosen artboards.
-5. **Check it in a browser** at 1280 and 390, as Prof Mbatha, as devadmin and, after T300, as Dr Kruger.
+5. **Check it in a browser** at 1280 and 390, as Prof Mbatha, as devadmin and as Dr Kruger.

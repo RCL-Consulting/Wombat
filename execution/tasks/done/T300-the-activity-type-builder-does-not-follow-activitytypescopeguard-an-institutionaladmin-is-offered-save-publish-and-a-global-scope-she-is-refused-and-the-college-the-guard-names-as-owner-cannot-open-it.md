@@ -1,12 +1,13 @@
 ---
 id: T300
 title: The activity-type builder does not follow ActivityTypeScopeGuard: an InstitutionalAdmin is offered Save, Publish and a Global scope she is refused, and the College the guard names as owner cannot open it
-status: in_progress
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-26
 started: 2026-09-26
+completed: 2026-09-26
 ---
 
 # T300 — The activity-type builder does not follow ActivityTypeScopeGuard: an InstitutionalAdmin is offered Save, Publish and a Global scope she is refused, and the College the guard names as owner cannot open it
@@ -49,12 +50,41 @@ Compatibility is not a constraint: change the DTOs and the policy outright.
 
 ## Verification
 
-- [ ] `ActivityTypeScopeGuardTests` becomes a table (Application test). Callers: an Administrator; an InstitutionalAdmin of A, judged on A and on B; a CollegeAdmin of CPSA, judged on his own College's speciality and sub-speciality and on another College's. Scopes: Global, Institution, Speciality and SubSpeciality. In every cell, the editor's and the list's `CanWrite` equal the guard's verdict.
-- [ ] bUnit: the builder on a Speciality-scoped type as an InstitutionalAdmin renders no Save draft, Discard draft, Publish, Add, Up, Down or Delete, and shows the standing alert. The same type as the owning CollegeAdmin renders them.
-- [ ] bUnit: New activity type as an InstitutionalAdmin offers Scope Institution only, defaulting to her institution. As a CollegeAdmin it offers Speciality and SubSpeciality of his College, and as an Administrator all four. An Application test shows the InstitutionalAdmin's Save draft succeeds without Scope being touched.
-- [ ] bUnit: the list shows Edit only on writable rows and View on the rest, and hides New activity type from a caller with no writable scope.
-- [ ] Policy and nav test: a CollegeAdmin is admitted to `/admin/activity-types` and `/admin/activity-types/{id}`, and is offered Activity Types in the nav.
-- [ ] Browser, runbook Steps 1.24 to 1.26 as Prof Mbatha: the College rows read View, `mini_cex_cpsa` opens read-only with the alert, and the new type's Scope offers Institution with KGK only, with the first Save draft accepted. Then a new Act 6 step as Dr Kruger: the builder opens, and he saves a draft of a new Paediatrics-scoped type (not a seeded one).
+- [x] The guard, the editor and the list give one verdict in every cell —
+  `ActivityTypeScopeGuardTests.TheGuard_TheEditor_AndTheList_GiveOneVerdict` (21 cells: Administrator, InstitutionalAdmin
+  of A, CollegeAdmin of CPSA carrying an institution claim, × Global, Institution A and B, Speciality and SubSpeciality of
+  CPSA and of another College); 11 refused cells failed before. On PostgreSQL: `ActivityTypeAdminScopePostgresTests`.
+- [x] bUnit: a College instrument opens read-only to an InstitutionalAdmin, with the standing alert, and fully editable
+  to its College — `ActivityTypeBuilderAccessTests`.
+- [x] bUnit: a new type's Scope offers exactly what the caller may write, and her Save draft succeeds untouched —
+  `ActivityTypeBuilderAccessTests.ANewType_To*`, `AnInstitutionalAdminsNewType_SavesAsItIsOffered_WithoutScopeBeingTouched`
+  (refused "Only global administrators may edit a globally-scoped activity type." before).
+- [x] bUnit: Edit only on writable rows, View elsewhere, New activity type only with a writable scope —
+  `ActivityTypesListAccessTests`.
+- [x] Policy and nav: the CollegeAdmin is admitted to both builder pages and offered Activity Types —
+  `NavMenuAuthorizationTests.ACollegeAdmin_IsAdmittedToTheActivityTypeBuilder`, `ACollegeAdmin_IsOfferedActivityTypes`,
+  and DESIGN.md's nav table test.
+- [x] Browser, 2026-09-26: Steps 1.24–1.26 and 1.31 as Prof Mbatha on a post-Act-1 copy: View on the College and Demo
+  rows, Mini-CEX read-only with its notice, and a new type whose Scope offers only KGK, saved untouched. New Step 6.14a
+  as Dr Kruger on a post-Act-6 copy: Activity Types in his nav, Edit on the `*_cpsa` rows, a draft of a new Paediatrics
+  type saved.
+
+## As built — 2026-09-26 (`1e154ab`)
+
+- `ActivityTypeAdminScope` (Application) is the one rule: `MayWrite` (pure, given the owning College), `MayWriteAsync`,
+  `WritableScopesAsync` and the scope targets' names. `ActivityTypeScopeGuard` now throws on its `false`, with the old
+  messages. Each role is judged by its own claim only (T113).
+- The editor DTO carries `CanWrite`, `WritableScopes` and `ScopeTargetName`; a type the caller may not write opens
+  read-only (metadata as text, workflow and credit as code blocks, sections and fields as View). The list returns
+  `CanCreate` and Edit or View per row, judged with one read of the rows' Colleges.
+- The College is admitted (**D52**, adopted on recommendation): both builder pages sit under `NationalCatalogueAccess`,
+  and the CollegeAdmin's nav offers Activity Types (DESIGN.md's nav table updated).
+- After review: refusals and load errors through `RefusalText.Of`; `/admin/activity-types/0` is not found, not new;
+  the filing page's read skips builder-only data; T291 item 5 closed (every row names its scope target).
+- Filed from it: **T334** (P2): the guard does not exempt the system-managed `msf_cpsa` and `learner_feedback_cpsa`, so
+  the College can now edit them. Noted on T271: the read-only field view prints a seed-key scale binding raw.
+- Runbook: Steps 1.8, 1.24–1.26 and 1.31 restated; new Step 6.14a (numbered so no other step moves); coverage.md's
+  builder rows and a CollegeAdmin journey. Baseline: 26 captures re-taken, 6 new.
 
 ## Related
 

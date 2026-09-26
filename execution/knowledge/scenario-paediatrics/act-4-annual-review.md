@@ -991,10 +991,23 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Committee Reviews lists the p
   empty option. Remitted reveals Replacement category ("Select a category…"), Replacement rationale and Present, with
   Thandi Zulu (chair) and John van Rensburg (external) ticked and disabled; there is no Replacement conditions field. He
   left without resolving; the appeal is still open (no outcome, not resolved) and the review Under appeal.
-Gap: [F-4.45a, T307] The appeal Outcome select opens on Dismissed with no "Select…" option, so submitting without choosing
-  dismisses the appeal; every category select opens on "Select a category…" (DESIGN.md). [F-4.45b, T307] The remit form has no
-  Replacement conditions field, though the command and domain take conditions; a remit to Satisfactory with Observations
-  cannot carry its observation.
+  Re-checked after T307 (2026-09-26, wombat_scenario_rc307a, a copy of the end-of-Act-3 snapshot with Steps 4.1 to 4.44
+  replayed on it): Committee Reviews lists the panel's five reviews, Mahlangu's Under appeal. Her Appeals card offers him
+  the form. Outcome opens on "Select an outcome…", then "Dismissed: the decision stands" and "Remitted: the appeal body
+  replaces the decision"; there is no Upheld. Its help reads "Dismissed leaves the committee's decision in force.
+  Remitted replaces it with a decision the appeal body takes now, recorded below with who sat for it. Either closes the
+  review, and nothing reopens it." Resolve appeal with no outcome put "Choose an outcome." under the select, marked the
+  select invalid (it names the message after its help) and moved the focus to it; nothing was sent (no
+  ResolveAppealCommand audit row) and the appeal stayed open. Remitted revealed Replacement category ("Select a
+  category…"), Replacement rationale, Replacement conditions (not marked required) and Present, with Thandi Zulu (chair)
+  and John van Rensburg (external) ticked and disabled; Dismissed reveals none of them. He left without resolving: SQL
+  reads the appeal open (no outcome) and the review Under appeal.
+Gap: [F-4.45a, T307] fixed by T307 (d03732d): the Outcome opens on "Select an outcome…", names each outcome in words with
+  help, and a submit without one is refused in the form with "Choose an outcome." and sends nothing. [F-4.45b, T307] fixed
+  by T307 (d03732d): Remitted reveals an optional Replacement conditions box, and Step 4.47's conditions reach the
+  replacement decision. [F-4.45c, T323] At 1280 px, once Remitted opens the form's second column, the Outcome select is 278 px
+  wide and shows its choice clipped, "Remitted: the appeal body replac…" (`4.45-1`): T307's longer option wording does not
+  fit the half-width column. The help under it wraps to five lines in the same column.
 
 ### Step 4.46 — A remit without a quorum is refused
 Role: CommitteeMember (chair) — Dr Thandi Zulu
@@ -1007,7 +1020,18 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Remitted, Satisfactory with O
   Thandi Zulu (chair) ticked and locked (van Rensburg unticked for her): Resolve appeal refused with "A committee
   decision needs at least two panel members present: the chair and at least one other." The review stays Under appeal
   and the form keeps its values.
-Gap: none
+  Re-checked after T307 (2026-09-26, wombat_scenario_rc307a): the Outcome opened on "Select an outcome…" for her too.
+  Remitted, Satisfactory with Observations and Step 4.47's rationale, with only Thandi Zulu (chair) ticked and disabled
+  (van Rensburg unticked for her): Resolve appeal refused with "A committee decision needs at least two panel members
+  present: the chair and at least one other." The review stays Under appeal, the form keeps its outcome, category and
+  rationale, and the audit holds one FAILED ResolveAppealCommand. The refusal's alert is at the head of the page, about
+  6,400 px above the Appeals card at 1280 px, and the focus stays on Resolve appeal, so nothing changes in view where she
+  pressed it.
+Gap: [F-4.46a, T299] The remit's refusal is shown only at the head of the review page, out of view of the Appeals card, which is
+  the page's last card: a sighted chair who presses Resolve appeal sees nothing happen (`4.46-1` is taken after the
+  refusal). A screen reader hears it, as DESIGN.md requires: the alert has role="alert" and the focus stays on the
+  button. The Decision form's refusals (Steps 4.23, 4.24) land near their card, which is the page's first. Unsure: the
+  rule is met; this is a usability point, older than T307.
 
 ### Step 4.47 — Dr Zulu remits the decision
 Role: CommitteeMember (chair) — Dr Thandi Zulu
@@ -1026,6 +1050,14 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Sarah Botha ticked: "Appeal r
   Progress — Additional Training", "Replaced on appeal by the decision above.", with its first Present line. Appeals
   card: the appeal "(Remitted)"; no form left. STARs still 5 in total; the review issued none. No mail sent to Dr
   Mahlangu.
+  Re-checked after T307 (2026-09-26, wombat_scenario_rc307a): kept Remitted, Satisfactory with Observations and the
+  rationale, wrote the Replacement conditions "Two observed Mini-CEX and one DOPS before the next review." and ticked
+  Sarah Botha: "Appeal resolved.", which takes the focus; State Closed. Decision card: "Satisfactory with Observations",
+  the rationale, "Conditions: Two observed Mini-CEX and one DOPS before the next review." and "Present: Thandi Zulu
+  (chair), Sarah Botha"; below it "Inadequate Progress — Additional Training", "Replaced on appeal by the decision
+  above.", with its first Present line. Appeals card: the appeal "(Remitted)"; no form left. SQL: the appeal resolved
+  with Outcome 3 (Remitted); the replacement (category 2) supersedes decision 4, holds the conditions and records 2
+  present; the review is State 6 (Closed); STARs still 5; ResolveAppealCommand has one FAILED row (Step 4.46) and one OK.
 Gap: none
 
 ### Step 4.48 — Dr Mahlangu reads the outcome
@@ -1040,9 +1072,15 @@ Actual (2026-09-26, T295 replay, wombat_scenario): My Committee Reviews row: Sta
   decision was taken: Thandi Zulu (chair), Sarah Botha"; the agenda's twelve deferrals and three not decided. No appeal
   form. The page says nothing of her appeal or its outcome: no "Remitted", no first decision, no "replaced on appeal"
   (the subtitle promises "appeal status").
+  Re-checked after T307 (2026-09-26, wombat_scenario_rc307a): the row reads State Closed, Decision Satisfactory with
+  Observations; the detail's current decision is the replacement, with its rationale and "Present when this decision
+  was taken: Thandi Zulu (chair), Sarah Botha"; no appeal form. The page still says nothing of her appeal, its outcome
+  or the first decision, and it does not show the replacement's conditions, which Step 4.47 now records.
 Gap: [F-4.48a, T308] After her appeal is resolved, the trainee's review shows no trace of it: not her appeal, its outcome
   (Remitted), nor that the decision was replaced, although the page's subtitle reads "Ratified decisions, appeal status,
-  and final outcomes." Unsure: no decision says what she must see; the committee's page shows it all.
+  and final outcomes." Unsure: no decision says what she must see; the committee's page shows it all. Re-checked after
+  T307, still open. The remit's conditions, which T307 now records, are one more thing she does not see (T308 item 3:
+  the trainee's detail prints no decision's Conditions).
 
 ## Phase 4.I — A formative check-in
 

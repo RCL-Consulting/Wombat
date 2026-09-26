@@ -1,12 +1,13 @@
 ---
 id: T307
 title: Resolving an appeal takes an outcome nobody chose: the Outcome select opens on Dismissed, Upheld leaves the decision standing like Dismissed, and a remit cannot record conditions
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
 started: 2026-09-26
+completed: 2026-09-26
 ---
 
 # T307 — Resolving an appeal takes an outcome nobody chose: the Outcome select opens on Dismissed, Upheld leaves the decision standing like Dismissed, and a remit cannot record conditions
@@ -43,12 +44,37 @@ Found in code while verifying, not by the replay: "Upheld" and "Dismissed" both 
 
 ## Verification
 
-- [ ] bUnit (new ReviewDetailAppealFormTests): the Outcome select's first, selected option is "Select an outcome…"; submitting it shows "Choose an outcome." and sends no ResolveAppealCommand.
-- [ ] bUnit: choosing Remitted shows #appeal-conditions, and its text reaches ResolveAppealCommand.RemittedConditions; choosing Dismissed sends none.
-- [ ] Application test (CommitteeDecisionHandlersTests): a remit with conditions stores them on the replacement decision, and GetCommitteeReviewByIdQuery returns them.
-- [ ] Validator test: an undefined Outcome value is refused, and nothing is resolved.
-- [ ] The Upheld decision is recorded in EPA-PROGRAMME § 3, with a domain test pinning what the chosen outcomes do to the current decision.
-- [ ] Browser, replaying Steps 4.45-4.47 on the scenario database: 4.45's Outcome opens on "Select an outcome…" and Remitted reveals Replacement conditions; 4.47's remit with conditions shows "Conditions: …" on the replacement's card on /committee/reviews/{id}.
+- [x] bUnit: the Outcome opens on "Select an outcome…" and an empty resolve says "Choose an outcome." and sends nothing —
+  `ReviewDetailAppealFormTests.TheOutcome_OpensOnSelectAnOutcome_AndSaysEachOutcomeInWords`,
+  `ResolvingWithoutAnOutcome_SaysChooseAnOutcome_AndSendsNothing` (mutation: the Dismissed default restored, caught); the
+  focus moves to the select only after the message renders (after review).
+- [x] bUnit: Remitted shows Replacement conditions and sends them; Dismissed sends none —
+  `Remitting_OffersReplacementConditions_AndSendsWhatIsWritten`, `Dismissing_SendsNoReplacement_EvenWhatWasWrittenForARemit`.
+- [x] Application: a remit's conditions are stored on the replacement and read back —
+  `ResolveAppeal_ARemitWithConditions_StoresThemOnTheReplacement_AndTheReviewReturnsThem`.
+- [x] Validator and handler: an undefined outcome is refused and nothing is resolved —
+  `ValidationBehaviorTests.Handle_AnUndefinedOutcome_IsRefused_AndTheHandlerIsNotCalled`,
+  `CommitteeQuorumHandlerTests.AnUndefinedOutcome_IsRefused_AndNothingIsResolved`.
+- [x] D51 in EPA-PROGRAMME § 3D; `AppealOutcomeTests` pins what each outcome does; `AppealOutcomeMigrationPostgresTests`
+  rehearses the migration on PostgreSQL (an Upheld row becomes Dismissed; the check constraint refuses the old value).
+- [x] Browser, 2026-09-26: Act 4 replayed from the post-Act-3 snapshot (`wombat_scenario_rc307a`). At 4.45 the Outcome
+  opens on "Select an outcome…" with no Upheld, and Remitted reveals Replacement conditions; at 4.47 the remit with
+  conditions closes the review and the replacement's card reads its conditions and who sat (SQL confirms). A Dismissed
+  appeal played on a post-Act-4 copy. The migration ran on the replay corpus at start-up.
+
+## As built — 2026-09-26 (`d03732d`)
+
+- `AppealOutcome` is Dismissed (2) and Remitted (3); Upheld is gone (**D51**, adopted on recommendation). Migration
+  `20260926191415_T307_AppealOutcomesDismissedOrRemitted` rewrites stored Upheld as Dismissed, what the engine had done
+  with them, then adds `CK_CommitteeAppeals_Outcome`. An undefined outcome is refused by the validator, by
+  `CommitteeReview.ResolveAppeal` before any change (the audit trap) and by `CommitteeAppeal.Resolve`.
+- The form opens on "Select an outcome…", says each outcome in words, shows Replacement conditions with Remitted, sends
+  a remit's fields only with Remitted, and puts its one message under the select. The Appeals list names outcomes
+  through `CommitteeDecisionWording`.
+- Runbook: 4.45 and 4.47 restated for the new form; the re-check's lines on 4.45–4.48. Baseline: 9 captures re-taken;
+  `review-detail--appeal-upheld` no longer exists (kept on disk, marked in the brief).
+- Seen in the re-check, noted: the clipped Outcome select (F-4.45c, T323); a refusal shown far from its card (F-4.46a,
+  T299).
 
 ## Related
 

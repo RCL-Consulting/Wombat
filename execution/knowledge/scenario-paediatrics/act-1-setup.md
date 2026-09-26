@@ -202,12 +202,17 @@ Do: In a fresh browser session, open the link from the CollegeAdmin stub email i
 Expect: The page reads "Registering kruger@cmsa.wombat.local as CollegeAdmin.", and the address is shown but cannot be
   edited. Register signs Kruger in and lands on Home, which reads "Welcome, kruger@cmsa.wombat.local" and "Viewing as
   CollegeAdmin". The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The nav reads
-  Home, My Account, Data Rights, Specialities, EPAs, Curricula, Logout.
+  Home, My Account, Data Rights, Specialities, EPAs, Curricula, Activity Types, Logout: the College writes its
+  disciplines' activity types in the builder (T300, D52).
 Actual (2026-09-26, T295 replay, wombat_scenario): As expected: "Registering kruger@cmsa.wombat.local as CollegeAdmin.",
   Email disabled. Register landed on Home: "Welcome, kruger@cmsa.wombat.local", "Viewing as CollegeAdmin", one National
   catalogue card linking Specialities, EPAs, Curricula; nav Home, My Account, Data Rights, Specialities, EPAs,
   Curricula, Logout. Password noted in pwd_DO_NOT_COMMIT.txt.
-Gap: none
+  Re-checked after T300 (2026-09-26, wombat_scenario_rc300a, a copy of the end-of-Act-1 snapshot): signed in (not
+  registered again), Home is unchanged, one National catalogue card linking Specialities, EPAs and Curricula, and the
+  nav now reads Home, My Account, Data Rights, Specialities, EPAs, Curricula, Activity Types, Logout.
+Gap: none. The Expect's nav line is updated for T300 (1e154ab), which added Activity Types to the CollegeAdmin's
+  section.
 
 ### Step 1.9 — A used link is refused
 Role: Anonymous — anyone who holds Kruger's link
@@ -519,15 +524,19 @@ Gap: [F-1.23a, T291] fixed by T302 (41be531), which landed T291 item 7: she is o
 
 Each activity type bundles three things: a form schema, a workflow and credit rules (CUSTOMIZATION.md). The College's
 instruments are seeded as the twelve `*_cpsa` types, scoped to the Paediatrics speciality. Prof Mbatha reads them and
-changes none. KGK's own type is built in the builder, whose tabs are Metadata, Form, Workflow and Credit.
+changes none: they open read-only to her, because the College writes them (T300, D52; Dr Kruger does so in Step
+6.14a). KGK's own type is built in the builder, whose tabs are Metadata, Form, Workflow and Credit.
 
 ### Step 1.24 — The twelve CPSA instruments are published
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types
 Do: Open Activity Types, search `cpsa` and read the list. Then clear the search.
 Expect: The search leaves the 12 rows in the table below. Each reads Scope `Speciality · Paediatrics`, Published `v1`,
-  Draft `None` and Active, and each offers Edit. With the search cleared there are 22 rows: these twelve and the ten
-  Demo types.
+  Draft `None` and Active, and each offers View, named for its row ("View Mini-CEX (Paediatrics)"), not Edit: the
+  College's instruments are the College's, and she may not write them (T300, D52; T239 names each row's action). With
+  the search cleared there are 22 rows: these twelve and the ten Demo types, which also offer View and whose Scope
+  names the Demo speciality, `Speciality · General Medicine` (T291 item 5). New activity type is still offered, since
+  she may create a type in her own institution.
   Two of the twelve are system-managed (T162, T164): `msf_cpsa` and `learner_feedback_cpsa`. A released MSF or
   learner-feedback campaign writes them, and nobody is offered them when filing an activity.
 Actual (2026-09-26, T295 replay, wombat_scenario): As expected: `cpsa` leaves the 12 rows of the table, each
@@ -535,7 +544,13 @@ Actual (2026-09-26, T295 replay, wombat_scenario): As expected: `cpsa` leaves th
   (T291 item 5). Ids: mini_cex_cpsa 11, dops_cpsa 12, cbd_cpsa 13, direct_observation_cpsa 14, cca_cpsa 15, rca_cpsa 16,
   chart_stimulated_recall_cpsa 17, reflective_exercise_cpsa 18, clinical_audit_cpsa 19, portfolio_review_cpsa 20,
   msf_cpsa 21, learner_feedback_cpsa 22.
-Gap: [F-1.24a, T291] Known, T291 item 5, still open: the Demo types' Scope reads "Speciality · #1" to an InstitutionalAdmin.
+  Re-checked after T300 (2026-09-26, wombat_scenario_rc300a, a copy of the end-of-Act-1 snapshot): Activity Types from
+  her nav; `cpsa` leaves the 12 rows, each "Speciality · Paediatrics", v1, None, Active and View, with the accessible
+  name "View <name>" ("View Mini-CEX (Paediatrics)"). Cleared, the list holds the ten Demo rows too, each View and
+  "Speciality · General Medicine", and New activity type is offered. (The copy is the end of Act 1, so KGK Teaching
+  Session Log is also listed, 23 rows, and it alone offers Edit.)
+Gap: [F-1.24a, T291] fixed by T300 (1e154ab), which landed T291 item 5: the Demo types' Scope names their speciality,
+  "Speciality · General Medicine", not "Speciality · #1". Each College row offers View, not Edit (T300).
 
 The twelve instruments come from `ActivityTypeSeedCatalogue`, which sets each one's key, name and instrument. No two
 seeded types share a name: the ten Demo types are named without "(Paediatrics)".
@@ -558,53 +573,69 @@ seeded types share a name: the ten Demo types are named without "(Paediatrics)".
 ### Step 1.25 — A College instrument is read-only to KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types/{ActivityTypeId:int}
-Do: Open `Mini-CEX (Paediatrics)` and read each tab, opening the `overall_level` field in the field editor. Change
-  nothing, save nothing, and leave by Back to list.
-Expect: The page is headed "Edit Mini-CEX (Paediatrics)" and opens on the Form tab.
-  - **Form settings** read Encounter date field `observed_on`, Entrustment rating field `overall_level` and EPA field
-    `epa_id`.
+Do: Open `Mini-CEX (Paediatrics)` from its View and read each tab, opening the `overall_level` field to read its
+  settings. Change nothing, save nothing, and leave by Back to list.
+Expect: The page is headed "Mini-CEX (Paediatrics)", not "Edit …", and the browser tab reads the same. It opens on the
+  Form tab, under a standing information notice that is there on every visit (no alert role): "Set by the College that
+  owns Paediatrics. You can read this activity type here, but not change it." (T300; the wording is a product
+  decision.)
+  - **Form settings** read, as text, Encounter date field `observed_on`, Entrustment rating field `overall_level` and
+    EPA field `epa_id`.
   - **Sections.** Request holds the EPA, the Assessor (a User field), the date observed, the clinical setting, the
-    presenting problem and the case complexity. Entrustment holds the `overall_level` rating; in the field editor its
-    Entrustment scale reads `CPSA Paediatric Entrustment Scale v11.1`, the ladder its seed key binds (T271). Feedback
-    holds three long-text fields.
-  - **Metadata.** The key `mini_cex_cpsa` cannot be changed, because the type is published. Scope reads Speciality,
-    `Paediatrics`, and This tool is reads `Mini-CEX`.
-  - **Workflow.** Draft → Requested → Completed, with Declined and Cancelled. The named assessor
+    presenting problem and the case complexity. Entrustment holds the `overall_level` rating. Feedback holds three
+    long-text fields. Each section and field offers View, which shows its settings as text; `overall_level`'s
+    Entrustment scale reads `CPSA Paediatric Entrustment Scale v11.1`, the ladder its seed key binds (T271).
+  - **Metadata**, as text: Key `mini_cex_cpsa`, Name, Scope `Speciality · Paediatrics`, This tool is `Mini-CEX`, the
+    description, and Status Active.
+  - **Workflow**, as a code block. Draft → Requested → Completed, with Declined and Cancelled. The named assessor
     (`field:assessor_user_id`) completes or declines.
-  - **Credit.** One directive: it matches on the EPA field, counts 1, and judges the level reached by what
-    `overall_level` records.
-  She is offered nothing that would change the type, no Save draft and no Publish: the College's instruments are the
-  College's (T211's rule). Any save or publish she sent would be refused by `ActivityTypeScopeGuard`: "You do not have
-  permission to modify activity types in that speciality."
-Note: Do not save a draft on a seeded type, even as an Administrator: a seeded type with an operator's draft stops
-  receiving seed updates (T103).
+  - **Credit**, as a code block. One directive: it matches on the EPA field, counts 1, and judges the level reached by
+    what `overall_level` records.
+  She is offered nothing that would change the type: no Save draft, Discard draft or Publish, and no Add, Up, Down or
+  Delete. The College's instruments are the College's (T211's rule; T300, D52). Any save or publish she sent would be
+  refused by `ActivityTypeScopeGuard`: "You do not have permission to modify activity types in that speciality."
+Note: Do not save a draft on a seeded type, even as an Administrator or the College (D52): a seeded type with an
+  operator's draft stops receiving seed updates (T103).
 Actual (2026-09-26, T295 replay, wombat_scenario): /admin/activity-types/11, "Edit Mini-CEX (Paediatrics)", opens on
   Form. Form settings observed_on / overall_level / epa_id; sections Request (EPA, Assessor User, Date observed,
   Clinical setting, Presenting problem, Case complexity), Entrustment (overall_level, Scale), Feedback (three long
   texts). overall_level's Entrustment scale reads "Select…". Metadata: key disabled, Scope Speciality / Paediatrics,
   This tool is Mini-CEX. Workflow and Credit as expected. The header offers Save draft (enabled) and Publish (disabled),
   and every section and field editor is live. Nothing was saved; Back to list.
-Gap: [F-1.25a, T300] A College instrument offers an InstitutionalAdmin Save draft, Publish and every editor, though
-  ActivityTypeScopeGuard refuses her any save on a Speciality-scoped type (T211's rule). [F-1.25b, T271] Known, T271, still
-  open: the seed-key scale binding shows as "Select…", so the field editor does not show the CPSA ladder.
+  Re-checked after T300 (2026-09-26, wombat_scenario_rc300a): View on the row opened /admin/activity-types/11, headed
+  "Mini-CEX (Paediatrics)", tab "Mini-CEX (Paediatrics)", on Form, under the info notice "Set by the College that owns
+  Paediatrics. You can read this activity type here, but not change it." The header offers only Back to list; the page
+  has no Save draft, Discard draft, Publish, Add section, Add field, Edit, Up, Down or Delete. Form settings read as
+  text observed_on / overall_level / epa_id; the three sections and ten fields each offer View ("View field EPA"), and
+  Section details and Field details show the chosen one as text. View on "Supervision required for this encounter"
+  (overall_level) reads Type Scale, Required Yes, and Entrustment scale "seed:cpsa:scale:v11.1". Metadata reads Key
+  mini_cex_cpsa, Name, Scope "Speciality · Paediatrics", This tool is "Mini-CEX", the description, Status Active.
+  Workflow and Credit are code blocks of the stored JSON (the credit's one directive, amount 1, epa_field epa_id,
+  minimum_level_field overall_level). The live preview is unchanged. Nothing was saved (the row has no draft); Back to
+  list.
+Gap: [F-1.25a, T300] fixed by T300 (1e154ab): the College instrument opens read-only to her, with the standing notice
+  and no save, publish or editor control. [F-1.25b, T271] Re-checked, still open: the read-only field view prints the
+  raw seed key "seed:cpsa:scale:v11.1" where the ladder's name belongs (it read "Select…" in the editable editor before
+  T300; T271's note of 2026-09-26 covers the reader view too).
 
 ### Step 1.26 — Start KGK's teaching log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types → /admin/activity-types/new → /admin/activity-types/{ActivityTypeId:int}
 Do: Press New activity type, open the Metadata tab and enter:
   - Key `kgk_teaching_log` and Name `KGK Teaching Session Log`;
-  - Scope Institution, with `Kgosi Kgari Teaching Hospital`;
+  - Scope Institution, with `Kgosi Kgari Teaching Hospital`, which is how it opens: leave it untouched;
   - This tool is `Not a WBA instrument`;
   - Description `A registrar's log of a teaching session they delivered at KGK. Not rated, and credits nothing.`;
   - Active on.
   Press Save draft. Record the type's id as `{ActivityTypeId}`.
-Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "Activity Type". It
-  starts with a default draft:
+Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "New activity
+  type" too (T300, T190). It starts with a default draft:
   - one Details section holding a required Title text field;
   - a workflow from draft to submitted;
   - the credit rules `{"counts_for": []}`.
-  Scope offers her only what she may save: Institution, with KGK the only institution. (DESIGN.md: a picker offers
-  exactly what its command accepts.) This tool is offers `Not a WBA instrument` and the twelve instruments.
+  Scope offers her only what she may save: Institution, with KGK the only institution, and a new type starts there,
+  never Global (T300, D52; DESIGN.md: a picker offers exactly what its command accepts). So the first Save draft is
+  accepted without Scope being touched. This tool is offers `Not a WBA instrument` and the twelve instruments.
   Save draft moves the page to the type's own address and reads "Draft saved." (T291 item 3). The page is then headed
   "Edit KGK Teaching Session Log", and the browser tab reads `KGK Teaching Session Log`.
 Note: The key and name cannot collide with a seed, since every seeded key is a bare family or ends `_cpsa`. The type
@@ -615,10 +646,19 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Opens on Form, "New activity 
   Institution offers KGK only. This tool is offers "Not a WBA instrument" and the twelve. Save draft moved to
   /admin/activity-types/23, "Edit KGK Teaching Session Log", tab "KGK Teaching Session Log", Metadata tab still shown,
   Discard draft and Publish offered, and no "Draft saved.". `{ActivityTypeId}` = 23.
-Gap: [F-1.26a, T300] The Scope picker offers an InstitutionalAdmin Global, Speciality and SubSpeciality, which
-  ActivityTypeScopeGuard refuses her, and a new type defaults to Global (DESIGN.md: a picker offers exactly what its
-  command accepts). [F-1.26b, T190] On /admin/activity-types/new the browser tab title is empty, not "Activity Type" (Name is
-  "", not null). [F-1.26c, T291] Known, T291 item 3, still open: the first Save draft shows no "Draft saved.".
+  Re-checked after T300 (2026-09-26, wombat_scenario_rc300a): KGK Teaching Session Log already exists on the
+  end-of-Act-1 copy, so she started a second type, key `kgk_teaching_log_rc300`, Name `KGK Teaching Session Log (T300
+  re-check)`, with the rest as the Do says. New activity type opened /admin/activity-types/new on Form, headed and
+  tabbed "New activity type", with the same default draft. Metadata's Scope offers Institution only, already chosen,
+  and Institution offers "Kgosi Kgari Teaching Hospital" only, preselected; This tool is offers "Not a WBA instrument"
+  and the twelve. With Scope untouched, the first Save draft was accepted: /admin/activity-types/24, "Edit KGK Teaching
+  Session Log (T300 re-check)", tab the type's name, Metadata still shown, Save draft, Discard draft and Publish
+  offered, and no "Draft saved.". The row holds Scope Institution, ScopeId 2 (KGK), no published version and a draft.
+  Back to list shows it as "Institution · Kgosi Kgari Teaching Hospital", v0, "Draft saved", Active, Edit.
+Gap: [F-1.26a, T300] fixed by T300 (1e154ab): Scope offers her Institution with KGK only, a new type starts there, and
+  the first save is accepted untouched. [F-1.26b, T190] fixed by T300 (1e154ab): the tab on /admin/activity-types/new
+  reads "New activity type". [F-1.26c, T291] Re-checked, still open (T291 item 3): the first Save draft shows no "Draft
+  saved.".
 
 ### Step 1.27 — The form, and a duplicate key refused
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -725,14 +765,21 @@ Expect: The list has 23 rows, and no two share a name:
   - the twelve `*_cpsa` types;
   - `KGK Teaching Session Log`, whose Scope reads `Institution · Kgosi Kgari Teaching Hospital`, with `v1`, `None` and
     Active.
-  The search leaves that last row only. Which of these types a KGK registrar is offered is checked in Act 2.
+  Her own type's row offers Edit, and every other row View (T300). The search leaves that last row only. Which of these
+  types a KGK registrar is offered is checked in Act 2.
 Actual (2026-09-26, T295 replay, wombat_scenario): 23 rows, no two names alike: the ten Demo types (Scope "Speciality ·
   #1"), the twelve `*_cpsa`, and KGK Teaching Session Log, "Institution · Kgosi Kgari Teaching Hospital", v1, None,
   Active. `KGK` leaves that row only. A search for `zzz` (states.md) reads "No activity types" and "Create the first
   activity type to start the builder." At 390 px there is no horizontal page scroll.
-Gap: [F-1.31a, T291] Known, T291 item 5 (as F-1.24a): the Demo types' Scope reads "Speciality · #1", not "Speciality ·
-  General Medicine". [F-1.31b, T326] A search that matches nothing shows the empty-catalogue state, "No activity types …
-  Create the first activity type", though 23 types exist; it should say that nothing matches the search.
+  Re-checked after T300 (2026-09-26, wombat_scenario_rc300a, before Step 1.26's re-check added a row): 23 rows, no two
+  names alike; the ten Demo types read "Speciality · General Medicine"; KGK Teaching Session Log reads "Institution ·
+  Kgosi Kgari Teaching Hospital", v1, None, Active, and alone offers Edit ("Edit KGK Teaching Session Log"); the other
+  22 offer View. `KGK` leaves that row only. `zzz` still reads "No activity types" and "Create the first activity type
+  to start the builder." At 390 px the page is 375 px wide with no sideways scroll.
+Gap: [F-1.31a, T291] fixed by T300 (1e154ab), which landed T291 item 5 (as F-1.24a): the Demo types' Scope reads
+  "Speciality · General Medicine". [F-1.31b, T326] Re-checked, still open: a search that matches nothing shows the
+  empty-catalogue state, "No activity types … Create the first activity type", though 23 types exist; it should say
+  that nothing matches the search.
 
 ## Act 1 outcome state
 

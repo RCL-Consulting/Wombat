@@ -15,7 +15,7 @@ Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screen
 | Steps | 26: 4.14–4.32, 4.50, 5.3–5.6, A.7.6, A.7.13. Forty steps touch the review page in all (`coverage.md:80`); the others are F08's (scheduling) and F09's (appeals). |
 | Frequency and stakes | Each semester or academic year for each registrar, by the EPA's decision cadence (`act-1-setup.md:382-396`). The highest stakes in the product: a STAR is a medico-legal record (`DOMAIN.md:78`). |
 | Mode | **Wireframe first, in three parts:** before the sitting; staging; record and ratify. Then fidelity. This is the densest page: 38 state captures (`design/baseline/states/review-detail--*`, from `states.md` § Committee). |
-| Held | **Nothing held.** No group-1 task changes this flow's states. T307 (group 1) changes the page's Appeals card, whose states (`review-detail--appeal-*`) are F09's: do not use them here (BRIEF § 10). |
+| Held | **Nothing held.** No group-1 task changes this flow's states. T307 (group 1) changed the page's Appeals card; it landed in d03732d and those states (`review-detail--appeal-*`) were re-captured on 2026-09-26. They are F09's: do not use them here (BRIEF § 10). |
 
 ---
 
@@ -690,7 +690,8 @@ From `execution/knowledge/scenario-paediatrics/states.md` § Committee. Each fil
 **Belongs to other flows:**
 - F08: the scheduled review with no Start (`--scheduled-no-start`) and the formative review as scheduled
   (`--formative`).
-- F09: the appeal card's states (`--appeal-*`, `--remit-refused`, `--remitted`), held by T307.
+- F09: the appeal card's states (`--appeal-*`, `--remit-refused`, `--remitted`), re-captured after T307 (2026-09-26);
+  `--appeal-upheld` no longer exists (D51).
 - F14: a review withdrawn by an erasure (`--withdrawn`).
 
 ## 5. Attach

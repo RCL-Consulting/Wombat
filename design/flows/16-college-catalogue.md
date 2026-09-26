@@ -12,7 +12,7 @@ Part of the GUI redesign briefed in `design/BRIEF.md` (T332). Written 2026-09-26
 | **Frequency and stakes** | A few times a year; about one catalogue version a year. High: "a target and its period are read live, in every institution that has adopted the curriculum, including periods that have already closed" (Step 1.18's Expect, `act-1-setup.md:360-362`) |
 | **Mode** | **Straight to fidelity, in two parts** (the List and Form page shapes hold: BRIEF § 4): part 1, the Colleges, specialities, sub-specialities and scales; part 2, the EPAs and curricula, where the curriculum item editor needs a narrow-width layout |
 | **Pages** (`coverage.md` templates, 21) | `/admin/colleges`, `/admin/colleges/new`, `/admin/colleges/{Id:int}`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/colleges/{CollegeId:int}/specialities/new`, `/admin/colleges/{CollegeId:int}/specialities/{Id:int}`, `/admin/specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}`, `/admin/entrustment-scales`, `/admin/entrustment-scales/new`, `/admin/entrustment-scales/{Id:int}`, `/admin/epas`, `/admin/epas/new`, `/admin/epas/{Id:int}`, `/admin/curricula`, `/admin/curricula/new`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items`, `/access-denied` |
-| **Held screenshots** | Dr Kruger's dashboard, under T300 (§ Attach). T300 also adds Activity Types to his nav (flow 17), so **the sidebar in every capture of Dr Kruger is pre-fix**: brief from the page, not the nav |
+| **Held screenshots** | None. T300 landed in 1e154ab and Dr Kruger's dashboard was re-captured on 2026-09-26 (§ Attach). T300 added Activity Types to his nav (flow 17), and only the dashboard captures were retaken, so **the sidebar in every other 1280 px capture of Dr Kruger is pre-fix**: brief from the page, not the nav |
 
 **How to run this thread** (BRIEF § 2.3, step 3; source keys are BRIEF § 2.0's):
 1. Open a new thread in the Wombat design system. Attach the KEY SCREENSHOTS (§ Attach, first list).
@@ -125,8 +125,8 @@ REQUIREMENTS FROM KNOWN DEFECTS (each is testable):
     effect (a decision is pending).
   - T329: the EPA list's load error replaces its skeleton; the alert shows with no empty state under it.
   - T291: a College's administrator is never offered "Back to colleges"; a page offers only what its target admits.
-  - T300: Activity Types joins the College's administrator's nav section, beside Specialities, EPAs and Curricula (the
-    builder itself is flow 17). Draw his sidebar with it.
+  - T300 (landed in 1e154ab): Activity Types is in the College's administrator's nav section, after Specialities, EPAs
+    and Curricula (the builder itself is flow 17). Draw his sidebar with it; only the re-captured dashboard shows it.
   - T301: a curriculum version's box reads "Open for adoption" and the list column "Open" / "Held back", with the help
     "An institution can adopt this version only while it is open. Closing it does not affect an institution that has
     already adopted it." A new or cloned version starts held back.
@@ -237,8 +237,8 @@ section.
 
 | Page slug | State | Screenshot (`design/baseline/…`) | Who | How it is reached (`states.md` line) |
 |---|---|---|---|---|
-| `home` | CollegeAdmin | `states/home--college-admin.png` **HELD (T300)** | Dr Kruger | At Step 1.8: the one National catalogue card. (:115) |
-| `home` | Narrow: college admin | `states/home--narrow-college-admin.png` **HELD (T300)** | Dr Kruger | At Step A.7.10. (:147) |
+| `home` | CollegeAdmin | `states/home--college-admin.png` (re-captured after T300) | Dr Kruger | At Step 1.8: the one National catalogue card. (:115) |
+| `home` | Narrow: college admin | `states/home--narrow-college-admin.png` (re-captured after T300) | Dr Kruger | At Step A.7.10. (:147) |
 | `colleges-list` | Two Colleges | `states/colleges-list--two.png` | devadmin | At Step 1.2. (:481) |
 | `colleges-list` | Three Colleges | `states/colleges-list--three.png` | devadmin | At Step 6.1. (:482) |
 | `colleges-list` | Loading | `states/colleges-list--loading.png` | devadmin | Hold a read, then Colleges in the nav. No change. (:483) |
@@ -411,10 +411,12 @@ not in this flow.
   `act-6/6.17-3-items-paused.png`, `act-6/6.30-1-add-paed016-form.png`, `act-6/6.30-3-paed011-edit-row.png`,
   `act-6/6.30-4-paed011-saved.png`, `act-A/A.7.10-3b-kruger-items.png`.
 
-**HELD: do not attach until re-captured after T300 lands** (BRIEF § 10): `states/home--college-admin.png`,
-`states/home--narrow-college-admin.png`, and the same dashboard in `act-6/6.10-1-kruger-dashboard.png` and
-`act-A/A.7.10-1-kruger-home.png` (BRIEF § 10 holds Dr Kruger's dashboard). Brief screen 1 from Step 6.10's Expect.
-The 390 px `A.7.10-4` and `A.7.10-5` attached above fold the nav, so T300 does not change them.
+**Re-captured after T300 landed (1e154ab, 2026-09-26), so no longer held:** `states/home--college-admin.png` (from a
+post-act1 copy), `act-6/6.10-1-kruger-dashboard.png` (post-act6), and `states/home--narrow-college-admin.png` and
+`act-A/A.7.10-1-kruger-home.png` (post-actA). The dashboard itself did not change: one National catalogue card. At
+1280 px the sidebar now reads Home, My Account, Data Rights, Specialities, EPAs, Curricula, Activity Types; at 390 px
+the nav is folded, so the two narrow captures look as before. The 390 px `A.7.10-4` and `A.7.10-5` attached above fold
+the nav too. Every other 1280 px capture of Dr Kruger in this flow still shows the sidebar without Activity Types.
 
 ## Known problems this design must solve
 
@@ -427,7 +429,7 @@ The 390 px `A.7.10-4` and `A.7.10-5` attached above fold the nav, so T300 does n
 | T264 | P3 | Deactivate on the College, speciality and sub-speciality pages, and Delete on the scales list, are red in-row or form buttons with no ConfirmDialog (F-6.8a). A deactivation's effect is undecided: nothing in Application or Infrastructure reads their `IsActive` (`coverage.md` § Flows and states not played) | `act-6/6.8-1-delete-refused.png`, `states/college-edit--deactivated.png` |
 | T329 | P2 | The EPA list keeps its skeleton beside the load error | `states/epas-list--load-error.png` |
 | T291 | P3 | Item 2: `SpecialitiesList.razor:10` shows "Back to colleges" to every caller; show it only to an Administrator (F-1.12a, F-6.11a) | `act-1/1.12-1-kruger-specialities.png`, `act-6/6.11-1-cpsa-specialities.png` |
-| T300 | P3, group 1 | Activity Types joins the CollegeAdmin's nav section (`NavMenu.razor:160` today has none), and the builder gets a read-only mode, a narrowed Scope and View or Edit per row (flow 17; BRIEF § 10). Every Dr Kruger sidebar in this flow's captures is pre-fix | `states/home--college-admin.png` (held) |
+| T300 | P3, group 1, landed in 1e154ab | Activity Types is in the CollegeAdmin's nav section, and the builder has a read-only mode, a narrowed Scope and View or Edit per row (flow 17; BRIEF § 10; D52). The dashboard captures were re-taken on 2026-09-26; every other Dr Kruger sidebar in this flow's captures is pre-fix | `states/home--college-admin.png` (re-captured) |
 | T301 | P3 | "Open for adoption" and "Open" / "Held back"; a new or cloned version starts held back (6.29 today: "a clone is adoptable the moment it exists"); adoption refuses a held-back version | `states/curriculum-edit--clone.png`, `states/curricula-list--versions.png` |
 | T272 | P3 | Only a real unique violation reads "already exists"; other failures read "could not be saved; try again"; no raw EF text | `states/college-edit--duplicate.png` |
 | T271 | P3 | A scale delete and a publish that binds the scale can race (a lock, not a screen); the builder labels a scale bound by seed key (flow 17) | none in this flow |
@@ -449,7 +451,7 @@ The 390 px `A.7.10-4` and `A.7.10-5` attached above fold the nav, so T300 does n
 
 - **The Administrator's pages must say so before the College's administrator meets Access denied** (steps 1.15 and
   6.10). His nav offers neither the scales nor the Colleges (DESIGN.md:203, the CollegeAdmin row: "Specialities, EPAs,
-  Curricula"). He reads a ladder by name where the College uses it: the sub-speciality's default (1.14) and each item's
+  Curricula, Activity Types" since T300). He reads a ladder by name where the College uses it: the sub-speciality's default (1.14) and each item's
   Scale column (1.18).
 - **A rung's label is not its rank** (D32; Step 1.4). The scale editor is the only page that shows the rank. Everywhere
   else, including a refusal, a rung is named by its label.

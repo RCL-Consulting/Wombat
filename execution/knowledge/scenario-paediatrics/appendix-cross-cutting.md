@@ -1257,6 +1257,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home's three cards
   Assessor, no Trainee, and the T303 help wraps to three lines inside the card (41 to 334 px). Add role, Reset password
   and Lock out user each sit on a line of their own; the "Show" toggle is still 23 px tall (act-A/A.7.9-3 and
   states/user-detail--narrow.png re-taken).
+  Re-checked after T300 (2026-09-26, wombat_scenario_rc300c, a post-actA copy), the builder only: at 390 px
+  /admin/activity-types/23, her own type, is still "Edit KGK Teaching Session Log" with Save draft and Publish. The
+  editor and Live preview cards stack at 49 to 326 (the preview at y 4251, the page 5,166 px tall); the tab bar still
+  wraps Credit to a second row; nothing scrolls sideways (act-A/A.7.9-6 re-taken).
 Gap: The Trainee's Remove, and Trainee under Add role (F-2.28a), are fixed by T303 (4824d62); the role name touching
   what follows it is [F-2.28b, T323]. [F-A.7.9a, T280] The builder's tab bar marks the active tab only by the .is-active
   class. Its tabs are plain buttons with no role="tab", aria-selected, aria-pressed or aria-current, so a screen reader
@@ -1278,6 +1282,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home shows one car
   colspan=9, 796 px). Its inputs are 370 px wide, two to a row, and the container scrolls 490 px sideways to show it, so
   each field and its help text is cut off at the screen's edge. Cancel ("Cancel editing PAED-001") closed it, and
   nothing was saved. The page never scrolls sideways.
+  Re-checked after T300 (2026-09-26, wombat_scenario_rc300c, a post-actA copy), Home only: at 390 px it still shows the
+  one National catalogue card with the nav folded, 390 px wide. Opened, the nav reads Home, My Account, Data Rights,
+  Specialities, EPAs, Curricula, Activity Types (act-A/A.7.10-1 and states/home--narrow-college-admin re-taken, nav
+  folded).
 Gap: [F-A.7.10a, T323] At 390 px, the curriculum item editor is not usable without sideways scrolling. It renders as a colspan
   row inside the items table's scroll container, so it takes the table's 796 px width. Its two-column form (370 px
   inputs) and help text spill off the phone's 291 px column, and the user must scroll the table sideways to read and

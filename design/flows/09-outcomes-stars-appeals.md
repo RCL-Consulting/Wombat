@@ -8,7 +8,7 @@ is flow 09 of 18 (`design/BRIEF.md` § 8).
 |---|---|
 | **Mode** | Straight to fidelity for the STAR register (screen 4) and My authorisations (screen 1). Wireframe first for the trainee's review page (screen 2), whose decision history and Appeals block are new (BRIEF § 7 B5), and for the committee's Appeals card (screen 3), which shares that history. |
 | **Viewports** | Desktop 1280×800 and phone 390×844. |
-| **Held** | T307 (group 1) is being fixed. Its nine appeal captures wait for re-capture (§ Attach). Brief screens 1, 2 and 4 now, and screen 3 once the captures are retaken. |
+| **Held** | Nothing held. T307 landed in d03732d (D51), and its appeal captures were re-taken on 2026-09-26 (§ Attach; BRIEF § 10). `states/review-detail--appeal-upheld.png` shows an outcome that no longer exists: do not attach it. |
 | **Frequency** | After each sitting, which is a review each semester or year (BRIEF § 8). Appeals are rare. |
 | **Stakes** | High. Resolving an appeal is irreversible: "the review goes Final and nothing reopens it" (T307). The certificate is the medico-legal record, and it leaves Wombat (T310, citing DOMAIN.md:78). |
 | **People** | Trainees: Dr Lerato Molefe, Dr Anele Dlamini, Dr Nomsa Mahlangu and Dr Sipho Ndlovu. The committee: Dr Thandi Zulu (chair), Dr David Naidoo and Dr John van Rensburg (external). Dr Refilwe Mokoena (SpecialityAdmin) revokes. Dr Kabelo Sithole (SubSpecialityAdmin) and Prof Nolwazi Mbatha (InstitutionalAdmin) read the register (`scenario-paediatrics/README.md` § Cast). |
@@ -43,8 +43,8 @@ GOAL: Registrars read their committee decision, their STARs (Statements of Award
   - The appellant never sees her appeal, the decision it replaced, or any decision's conditions.
   - After she lodges an appeal, the list row still reads Ratified while the detail reads Under appeal.
   - A revoked STAR vanishes from the trainee's page. The revoke confirmation promises a notice that nobody sends.
-  - The appeal's Outcome select opens on Dismissed, so resolving without choosing dismisses the appeal. This is being
-    fixed.
+  - The appeal's Outcome select opened on Dismissed, so resolving without choosing dismissed the appeal. T307 fixed it:
+    it opens on "Select an outcome…", a remit records its conditions, and there is no Upheld (D51).
   - No nav item leads to the register. Only the InstitutionalAdmin's dashboard links to it.
 
 AUDIENCE:
@@ -94,17 +94,18 @@ SCREENS, in order:
      - A member's read-only view: "Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu, and
        its external member, John van Rensburg."
      - The appeal body's resolve form:
-       - Outcome, opening on "Select an outcome…". Each outcome is named in words, with help that says what it does
-         to the decision.
-       - Remitted reveals Replacement category ("Select a category…"), Replacement rationale, NEW Replacement
-         conditions, and Present, with the chair and the resolver ticked and locked.
+       - Outcome, opening on "Select an outcome…", then "Dismissed: the decision stands" and "Remitted: the appeal
+         body replaces the decision", with help that says what each does to the decision. There is no Upheld (D51).
+       - Resolving with no outcome says "Choose an outcome." under the select.
+       - Remitted reveals Replacement category ("Select a category…"), Replacement rationale, Replacement conditions
+         (optional), and Present, with the chair and the resolver ticked and locked.
      - States:
        - the form;
+       - no outcome chosen: "Choose an outcome.";
        - the member's view;
        - a remit refused for want of a quorum;
        - remitted: the replacement heads the history, with its conditions;
-       - dismissed;
-       - upheld (this outcome may be removed).
+       - dismissed.
   4. /admin/entrustment-decisions: the STAR register (SpecialityAdmin, SubSpecialityAdmin, InstitutionalAdmin).
      - Filters: Trainee name and Status, with Apply.
      - A table: Trainee, EPA, Level, Issued, Expires and Status, and the actions Download and Revoke. Each action is
@@ -130,14 +131,18 @@ STATES TO SHOW:
     - heavy: 15 STARs plus a superseded one, 15 agenda lines, and two reviews in one period.
 
 REQUIREMENTS FROM KNOWN DEFECTS:
-  - T307:
+  - T307 (built, d03732d; keep it):
     - The Outcome select opens on "Select an outcome…". Nothing is resolved until an outcome is chosen ("Choose an
       outcome.").
     - Each outcome is named in words, with help text.
     - Remitted reveals "Replacement conditions".
-    - "Upheld" is probably removed, leaving "Dismissed: the decision stands" and "Remitted: the appeal body replaces
-      the decision". A recorded decision will settle this.
+    - There are two outcomes, "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision".
+      Upheld is gone (D51).
     - A remit's conditions show as "Conditions: …" on the replacement.
+    - The chosen outcome must be readable in full: today it is clipped at 1280 px once Remitted opens the second column
+      (F-4.45c).
+    - A refusal of Resolve appeal (the quorum) must be seen where the button was pressed; today it shows only at the
+      head of the page (F-4.46a).
   - T308:
     - After she lodges an appeal, her list row reads Under appeal at once.
     - She sees every decision, with its conditions and who was present.
@@ -235,9 +240,9 @@ Each row is one runbook step. The Route column gives the step's page templates (
 | 4.42 | `/` → `/portfolio/authorisations` → `/committee/my-reviews` | Dr Dlamini reads what stands after the revocation. | One card, PAED-001. PAED-002 has simply gone (T319). Her agenda still reads PAED-002 Decided "STAR #5.", because it records what the sitting did. |
 | 4.43 | `/committee/my-reviews` | Dr Mahlangu reads her Inadequate Progress decision and lodges an appeal. | Who was present; twelve lines Deferred and three Not decided; the Appeal reason form. Then "Appeal lodged." and Under appeal, in the list row too (T308). |
 | 4.44 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Naidoo, a member, reads the appeal. | The Appeals card: the date, the reason and "(Open)", and who may resolve it. No form. |
-| 4.45 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr van Rensburg, the external member, reads the resolve form, chooses Remitted, and leaves. | The Outcome select and the remit's fields. Present, with the chair and himself locked. Nothing changes until he submits (T307). |
+| 4.45 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr van Rensburg, the external member, reads the resolve form, presses Resolve appeal with no outcome, chooses Remitted, and leaves. | The Outcome select, opening on "Select an outcome…" (Dismissed and Remitted, in words). "Choose an outcome." under it when none is chosen. The remit's fields, with an optional Replacement conditions. Present, with the chair and himself locked. Nothing changes until he submits (T307). |
 | 4.46 | `/committee/reviews/{ReviewId:int}` | Dr Zulu remits with only herself present. | The quorum refusal. The review stays Under appeal, and the form keeps its values. |
-| 4.47 | `/committee/reviews/{ReviewId:int}` | Dr Zulu remits with Dr Botha present. | "Appeal resolved." and Closed. The replacement heads the history. The first decision reads "Replaced on appeal by the decision above.", and the appeal "(Remitted)". |
+| 4.47 | `/committee/reviews/{ReviewId:int}` | Dr Zulu remits with conditions and Dr Botha present. | "Appeal resolved." and Closed. The replacement heads the history, with "Conditions: …" (T307). The first decision reads "Replaced on appeal by the decision above.", and the appeal "(Remitted)". |
 | 4.48 | `/committee/my-reviews` | Dr Mahlangu reads the outcome. | Closed; Satisfactory with Observations; who was present. After T308, also her appeal, as Remitted, and the decision it replaced. |
 | 4.51 | `/committee/my-reviews` | Dr Ndlovu reads both of his reviews. | Two rows for the period: Ratified, "Outcome Deferred"; and the check-in, Closed, "No binding decision". |
 | 5.7 | `/` → `/admin/entrustment-decisions` | Prof Mbatha filters by Molefe, first with status Active and then All. | Fifteen Active rows, each with Download and Revoke. With All, Act 4's PAED-010 STAR reads Superseded and offers Download only. |
@@ -275,12 +280,13 @@ The states are from `scenario-paediatrics/states.md` § Portfolio, § Committee 
 | | Pre-graduation | `my-reviews--pre-graduation` | Dr Molefe, Step 5.8 |
 | | Loading | `my-reviews--loading` | Held read |
 | | Narrow | `my-reviews--narrow` | Step 4.41 at 390 px |
-| `/committee/reviews/{ReviewId:int}`, Appeals card (**held: T307**) | Under appeal, a member | `review-detail--appeal-member` | Dr Naidoo, Step 4.44 |
+| `/committee/reviews/{ReviewId:int}`, Appeals card (re-captured after T307) | Under appeal, a member | `review-detail--appeal-member` | Dr Naidoo, Step 4.44 |
+| | No outcome chosen: "Choose an outcome." (a step capture) | `act-4/4.45-2-vanrensburg-choose-an-outcome` | Dr van Rensburg, Step 4.45 |
 | | The resolve form, Remitted chosen | `review-detail--appeal-form` | Dr van Rensburg, Step 4.45 |
 | | Remit without a quorum | `review-detail--remit-refused` | Dr Zulu, Step 4.46 |
 | | Closed after a remit | `review-detail--remitted` | Step 4.47 |
 | | Appeal dismissed | `review-detail--appeal-dismissed` | Scratch database (post-act 4) |
-| | Appeal upheld (may cease to exist, T307) | `review-detail--appeal-upheld` | Scratch database (post-act 4) |
+| | ~~Appeal upheld~~: no longer exists (T307, D51). The file is kept on disk; do not design it | `review-detail--appeal-upheld` | — |
 | `/admin/entrustment-decisions` | None issued: "No entrustment decisions" | `entrustment-decisions--empty` | Prof Mbatha, at Step 4.2 |
 | | Issued | `entrustment-decisions--issued` | Step 4.35 |
 | | Filtered | `entrustment-decisions--filtered` | Step 4.35, "Molefe" |
@@ -291,8 +297,9 @@ The states are from `scenario-paediatrics/states.md` § Portfolio, § Committee 
 | | Loading | `entrustment-decisions--loading` | Held read |
 | | Narrow | `entrustment-decisions--narrow` | Dr Mokoena, Step A.7.7 |
 
-That is 30 captures. Three states are **new**, with no capture: My authorisations' "No longer in force" (T319), the
-trainee's Appeals block (T308), and the Outcome select's empty first option (T307). Two related captures belong to
+That is 29 state captures and one step capture (`4.45-2`); `review-detail--appeal-upheld` no longer counts. Two states
+are **new**, with no capture: My authorisations' "No longer in force" (T319) and the trainee's Appeals block (T308). The
+Outcome select's empty first option (T307) is built now: `4.45-2` shows it, refused. Two related captures belong to
 other flows: `decisions-due--revoked` (flow 08, Step 4.37) and the shell's access-denied page (flow 01;
 `act-4/4.41-2-molefe-committee-page-denied.png`). The Coordinator is refused the register too (`states.md` § Access
 denied, by page).
@@ -327,6 +334,17 @@ registration link or a password. The key screenshots listed first were opened; o
   - `states/my-reviews--loading.png`
   - `states/my-reviews--narrow.png`
   - `act-4/4.48-1-mahlangu-remitted-outcome.png`
+- **Screen 3** (re-captured on 2026-09-26 after T307 landed, d03732d; BRIEF § 10):
+  - `act-4/4.45-1-vanrensburg-remit-form.png`
+  - `act-4/4.45-2-vanrensburg-choose-an-outcome.png`
+  - `act-4/4.46-1-zulu-remit-quorum-refused.png`
+  - `act-4/4.47-1-zulu-appeal-remitted.png`
+  - `act-4/4.44-1-naidoo-appeal-body-note.png`
+  - `states/review-detail--appeal-form.png`
+  - `states/review-detail--appeal-member.png`
+  - `states/review-detail--remit-refused.png`
+  - `states/review-detail--remitted.png`
+  - `states/review-detail--appeal-dismissed.png`
 - **Screen 4:**
   - `states/entrustment-decisions--empty.png`
   - `states/entrustment-decisions--issued.png`
@@ -336,27 +354,16 @@ registration link or a password. The key screenshots listed first were opened; o
   - `states/entrustment-decisions--loading.png`
   - `states/entrustment-decisions--narrow.png`
 
-**Hold until re-captured after T307 lands; do not brief from these:**
-- `act-4/4.45-1-vanrensburg-remit-form.png`
-- `act-4/4.46-1-zulu-remit-quorum-refused.png`
-- `act-4/4.47-1-zulu-appeal-remitted.png`
-- `states/review-detail--appeal-form.png`
-- `states/review-detail--appeal-member.png`
-- `states/review-detail--remit-refused.png`
-- `states/review-detail--remitted.png`
-- `states/review-detail--appeal-dismissed.png`
-- `states/review-detail--appeal-upheld.png`
-- Hold `act-4/4.44-1-naidoo-appeal-body-note.png` too. It is the member's view, like `review-detail--appeal-member`,
-  which BRIEF § 10 holds (inference).
-
 **Do not attach:**
 - `act-A/A.7.7-1-mokoena-home.png`: a SpecialityAdmin home, F06's (re-captured after T297 on 2026-09-26; BRIEF § 10).
+- `states/review-detail--appeal-upheld.png`: an outcome that no longer exists (T307, D51). It is kept on disk as the
+  record of the old form.
 
 ## Known problems this design must solve
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T307** (group 1, being fixed) | **Outcome.** It opens on "Select an outcome…". Each option is a word with help text. Resolving without a choice is refused with "Choose an outcome.". **Remit.** Remitted reveals an optional "Replacement conditions" box. **Upheld.** Probably removed: the recommended default is "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision", to be recorded as a D-number (T307, What to build, item 3). **Replacement card.** A remit's conditions show there as "Conditions: …". | Step 4.45 Gap F-4.45a, F-4.45b; the held captures above |
+| **T307** (group 1, landed in d03732d; D51) | Built; keep it. **Outcome.** It opens on "Select an outcome…", then "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision", with help saying what each does. Resolving without a choice is refused in the form with "Choose an outcome.". **Remit.** Remitted reveals an optional "Replacement conditions" box. **Upheld.** Removed (D51): it closed the review with the decision in force, as Dismissed does. **Replacement card.** A remit's conditions show there as "Conditions: …". **Still to design:** the chosen outcome is clipped at 1280 px in the half-width select once Remitted opens the second column (F-4.45c), and the quorum refusal shows only at the head of the page, out of view of the card (F-4.46a). | Steps 4.45–4.47 (re-checked 2026-09-26); `act-4/4.45-1`, `4.45-2`, `4.46-1`, `4.47-1`; the screen 3 states above |
 | **T308** | **The list row.** It reads Under appeal as soon as she lodges. **The detail.** It shows every decision as the committee's page does (newest first, "Replaced on appeal by the decision above.", rationale, Conditions and Present), from one shared component (T308 item 2). **Appeals block.** It gives the date lodged, the reason, the outcome in words and the date resolved. | `states/my-reviews--appealed.png`, `states/my-reviews--remitted.png`; Steps 4.43, 4.48 |
 | **T319** (backend P2) | **No longer in force.** A section on My authorisations lists revoked and expired STARs, each with its status, date and a named Download; superseded STARs stay off (T319's recommendation). **The notice.** Revoking now sends a mail. The confirmation says so only once that mail exists. | `states/my-authorisations--after-revocation.png`; Step 4.36 Gap F-4.36a |
 | **T264**, **T260** | **Revoke.** The trigger is an outline button with a per-row name, and a `ConfirmDialog` names the trainee and the EPA; today it is a red in-row button that opens an inline section. **Confirm revocation** is enabled as the reason is typed. | `states/entrustment-decisions--revoke-form.png` (observed); Step 4.36 note |
@@ -393,15 +400,15 @@ The flow is done when BRIEF § 9's checks hold:
   - Every Expect holds. Expect lines as amended by T307, T308 and T319 (Steps 4.36, 4.42, 4.43 and 4.45–4.48) replace
     the ones pasted here. Change any other Expect whose on-screen wording the redesign changes, in the same task (BRIEF
     § 9, item 7).
-- **The 30 states are re-captured** into `design/baseline/states/`, together with the steps' captures:
+- **The 29 states are re-captured** into `design/baseline/states/`, together with the steps' captures:
   - Act 4: `4.35-1`, `4.36-1`, `4.37-1`, `4.39-1`, `4.41-1`, `4.41-2`, `4.42-1`, `4.43-1`, `4.44-1`, `4.45-1`,
-    `4.46-1`, `4.47-1`, `4.48-1` and `4.51-1`;
+    `4.45-2`, `4.46-1`, `4.47-1`, `4.48-1` and `4.51-1`;
   - Act 5: `5.7-1`, `5.7-2`, `5.8-1`, `5.8-2` and `5.8-3`;
   - Act 6: `6.22-3`;
   - Appendix: `A.7.7-4`.
 
-  Compare them with the chosen artboards. `review-detail--appeal-dismissed` and `--appeal-upheld` need the scratch
-  database in `states.md`, and `--appeal-upheld` goes if T307 removes Upheld.
+  Compare them with the chosen artboards. `review-detail--appeal-dismissed` needs the scratch database in `states.md`.
+  There is no `--appeal-upheld` to re-capture: T307 removed Upheld (D51).
 - **`dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj` is green,** without `--no-build`. That run includes:
   - T307's `ReviewDetailAppealFormTests`;
   - T308's `MyReviewsAppealTests`;
@@ -520,14 +527,19 @@ Expect: The list shows her review Under appeal. The Appeals card lists the appea
 Step 4.45 — Dr van Rensburg, the external member, is offered the appeal
 Role: CommitteeMember (external) — Dr John van Rensburg
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews, then Dr Mahlangu's review. Read the resolve form, choose Remitted to see what it asks, and
-  leave without resolving.
+Do: Open Committee Reviews, then Dr Mahlangu's review. Read the resolve form, and press Resolve appeal without choosing
+  an outcome. Then choose Remitted to see what it asks, and leave without resolving.
 Expect:
   - **The list:** the panel's five reviews.
-  - **The Appeals card** offers him the resolve form with an Outcome select: Upheld, Dismissed or Remitted.
+  - **The Appeals card** offers him the resolve form with an Outcome select opening on "Select an outcome…", then
+    "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision" (T307, D51: there is no
+    Upheld). Its help text says Dismissed leaves the decision in force, Remitted replaces it, and either closes the
+    review.
+  - **Resolve appeal with no outcome** says "Choose an outcome." under the select, and resolves nothing.
   - **Remitted** reveals:
     - Replacement category, opening on "Select a category…";
     - Replacement rationale;
+    - Replacement conditions, optional;
     - Present, with both Thandi Zulu (chair) and himself ticked and locked.
   - **Nothing changes** until he submits.
 
@@ -543,10 +555,12 @@ Step 4.47 — Dr Zulu remits the decision
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Keep Remitted, Satisfactory with Observations, and the rationale "The stalled Mini-CEX was the assessor's delay;
-  progress is adequate, with observed assessments to follow." Tick Sarah Botha as present, and resolve the appeal.
+  progress is adequate, with observed assessments to follow." Write the Replacement conditions "Two observed Mini-CEX
+  and one DOPS before the next review." Tick Sarah Botha as present, and resolve the appeal.
 Expect: "Appeal resolved." The state reads Closed (T250).
-  - **Decision card:** the replacement heads it, "Satisfactory with Observations" with "Present: Thandi Zulu (chair),
-    Sarah Botha". The first decision stays below it, marked "Replaced on appeal by the decision above.".
+  - **Decision card:** the replacement heads it, "Satisfactory with Observations" with "Conditions: Two observed
+    Mini-CEX and one DOPS before the next review." (T307) and "Present: Thandi Zulu (chair), Sarah Botha". The first
+    decision stays below it, marked "Replaced on appeal by the decision above.".
   - **Appeals card:** the appeal reads "(Remitted)".
   - **No STAR changed:** the review issued none.
 

@@ -42,6 +42,7 @@ An institution then adopts the new version when it chooses, and keeps its own ad
 **Goal.** Every catalogue page is played by the role that owns it, and each change is followed to the pages it changes:
 - a College, a speciality, two sub-specialities and a scale are created;
 - CPSA's record, a speciality and an EPA's wording are corrected;
+- the College drafts an activity type of its own in the builder (T300, D52), and leaves it unpublished;
 - an EPA is paused and restored, and the credit earned in the pause is counted (D48);
 - KGK adds an EPA and a curriculum item of its own;
 - the College drafts, edits and publishes curriculum 11.2 with a new EPA, and KGK adopts it;
@@ -233,6 +234,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Signed in through the login f
   Account, Data Rights, Specialities, EPAs, Curricula, Logout (no Colleges, no Entrustment scales). /admin/colleges/2
   and /admin/entrustment-scales/new each landed on /access-denied?ReturnUrl=…: "Access denied", "You do not have
   permission to view this page.", with Back to home. Nothing changed (3 scales; CPSA's description as Step 6.2 left it).
+  Re-checked after T300 (2026-09-26, wombat_scenario_rc300b, a copy of the end-of-Act-6 snapshot): the dashboard still
+  has the one National catalogue card; his menu now reads Home, My Account, Data Rights, Specialities, EPAs, Curricula,
+  Activity Types, Logout (T300, D52), still with no Colleges and no Entrustment Scales. /admin/colleges/2 and
+  /admin/entrustment-scales/new each land on /access-denied?ReturnUrl=…, "Access denied".
 Gap: none
 
 ### Step 6.11 — Dr Kruger edits the Paediatrics speciality
@@ -318,6 +323,60 @@ Actual (2026-09-26, T295 replay, wombat_scenario): PAED-006 is /admin/epas/7. Wi
   and 11.1's items (/admin/curricula/2/items) name it "PAED-006 - Managing long-term health conditions (LTHCs) in
   children". Pickers and progress are checked in Steps 6.15-6.16. The restart claim was not played, as in Step 6.2.
 Gap: none
+
+### Step 6.14a — Dr Kruger drafts a College activity type
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/activity-types → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types → /admin/activity-types/new → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types
+Do: Open Activity Types from his menu and read the list. Open `Multi-Source Feedback (Paediatrics)` and change nothing.
+  Back in the list, press New activity type, open the Metadata tab and read what Scope offers, under Sub-speciality
+  too. Then enter:
+  - Key `cpsa_case_presentation_log` and Name `CPSA Case Presentation Log`;
+  - Scope Speciality, with `Paediatrics`;
+  - This tool is `Not a WBA instrument`;
+  - Description `A registrar's log of a case they presented at a departmental meeting. Not rated, and credits
+    nothing.`;
+  - Active on.
+  Press Save draft, publish nothing, and go back to the list.
+Expect:
+  - **The list.** Activity Types is in his menu (T300, D52). The list has 22 rows: the twelve `*_cpsa` instruments and
+    the ten Demo types. The College writes its disciplines' types, so each `*_cpsa` row offers Edit, named for its row
+    ("Edit Mini-CEX (Paediatrics)"). The exceptions are `msf_cpsa` and `learner_feedback_cpsa`: the MSF and
+    learner-feedback releases write their data, so they offer View (T334). The Demo types belong to the Demo College, so
+    they offer View. KGK Teaching Session Log is not listed, because it is an institution's own type. New activity type
+    is offered.
+  - **A system-managed type.** Multi-Source Feedback (Paediatrics) opens read-only, with a notice that the system writes
+    it, and no Save draft, Discard draft, Publish or editor controls (T334).
+  - **The new type.** It opens headed "New activity type", on Form, with the default draft. Scope offers Speciality and
+    Sub-speciality only, never Global or Institution. It starts on Speciality with `Paediatrics`, the College's one
+    speciality; CNSA's Neurology is not offered. Sub-speciality offers `Paediatrics / Neonatology` (Step 6.12) and
+    `Paediatrics / Paediatrics`.
+  - **The save.** Save draft is accepted. The page moves to the type's own address, headed "Edit CPSA Case
+    Presentation Log", and reads "Draft saved." (T291 item 3). In the list the type reads `Speciality · Paediatrics`,
+    with no published version, Draft "Draft saved", Active and Edit.
+  - **Who sees the draft.** It is unpublished, so no registrar is offered it. Prof Mbatha's list leaves it out, and its
+    address reads "could not be found" to her: a type she may neither write nor open is not listed (T300, T211).
+Note: A College's CollegeAdmin, or an Administrator (`ActivityTypeScopeGuard`, D52). Save no draft on a seeded `*_cpsa`
+  type. A seeded type with an operator's draft stops receiving seed updates until the draft is published or discarded.
+  Once anyone but the seeder publishes one, the seed refresher leaves it for good (T103, D52).
+Actual (2026-09-26, T300 re-check, wombat_scenario_rc300b, a copy of the end-of-Act-6 snapshot): Activity Types is last
+  in his menu. The list has 22 rows. The twelve `*_cpsa` rows each read "Speciality · Paediatrics", v1, None, Active and
+  offer Edit ("Edit Mini-CEX (Paediatrics)"), msf_cpsa and learner_feedback_cpsa included. The ten Demo rows read
+  "Speciality · General Medicine" and offer View. KGK Teaching Session Log is not listed, and New activity type is
+  offered. "Edit Multi-Source Feedback (Paediatrics)" opened /admin/activity-types/21, headed "Edit Multi-Source
+  Feedback (Paediatrics)", with no notice. It offers Save draft, Publish (disabled: no draft), Add section, and Edit,
+  Up, Down and Delete on every section and field. Nothing was pressed, and the row has no draft. New activity type
+  opened /admin/activity-types/new, headed and tabbed "New activity type", on Form. Metadata's Scope offers Speciality and
+  Sub-speciality and starts on Speciality with Paediatrics, the only speciality offered. Sub-speciality offers
+  "Paediatrics / Neonatology" (preselected) and "Paediatrics / Paediatrics". With Speciality · Paediatrics chosen again
+  and the rest as the Do says, Save draft was accepted: /admin/activity-types/24, "Edit CPSA Case Presentation Log",
+  with Save draft, Discard draft and Publish, and no "Draft saved.". The row holds Scope Speciality, ScopeId 2
+  (Paediatrics), no published version, a draft and no tool key. It is the only draft in the database, so no seeded type
+  has one. The list then has 23 rows, the new one "Speciality · Paediatrics", v0, "Draft saved", Active, Edit. Signed
+  in as Prof Mbatha on the same copy: her list has 23 rows without it, and /admin/activity-types/24 reads "The activity
+  type could not be found."
+Gap: [F-6.14aa, T291] Known, T291 item 3, still open (as F-1.26c): the first Save draft shows no "Draft saved.".
+  [F-6.14ab, T334] Known, T334 (P2, filed with D52), still open. msf_cpsa and learner_feedback_cpsa offer the College
+  Edit, and msf_cpsa opens with every editor live, though the releases write their data. Not saved.
 
 ## Phase 6.D — An EPA paused and restored
 
@@ -917,6 +976,11 @@ Replay check (2026-09-26, T295, wombat_scenario): match. All 13 checks read as w
     | Paediatric EPA Curriculum 11.2 | Active | 16 national (PAED-011 at 2 per academic year), plus KGK's own |
     | Neonatology EPA Curriculum 1.0 | Inactive | none |
 
+  - one activity type of the College's own, `CPSA Case Presentation Log` (`cpsa_case_presentation_log`), scoped to the
+    Paediatrics speciality, a draft with no published version (Step 6.14a). The twelve `*_cpsa` instruments are as
+    seeded, and none has a draft. (Added with Step 6.14a on 2026-09-26, after the T295 replay, so the
+    `scenario-post-act6` snapshot does not hold it.)
+
 **KGK:**
 - **Its own EPA:** KGK-001, with an item of KGK's own on each Paediatric version.
 - **Adoptions:** 11.2 Active and 11.1 Superseded.
@@ -998,7 +1062,8 @@ WHERE u."Email" = 'duplessis@kgk.wombat.local' AND a."ObservedOn" > p."Deactivat
   - the CNSA scale is in use as Adult Neurology's default.
 - **What Act 6 leaves deliberately incomplete:**
   - the Neonatology curriculum is inactive and empty;
-  - CNSA has no CollegeAdmin and no curriculum.
+  - CNSA has no CollegeAdmin and no curriculum;
+  - the College's `CPSA Case Presentation Log` is a draft, never published, so no registrar is offered it (Step 6.14a).
 - **What the appendix inherits:**
   - two Paediatric versions in use at KGK: Dr Ndlovu on 11.2, Dr Dlamini and Dr Mahlangu on 11.1, whose profiles
     cannot be saved while 11.2 is KGK's active adoption (Step 6.34);

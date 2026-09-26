@@ -65,7 +65,7 @@ NAV CONTENT PER ROLE (today's order; * = a "Coming soon" stub today):
   CommitteeMember: Programme Trainees*, Decision Panels, Committee Reviews
   SpecialityAdmin, SubSpecialityAdmin: Programme Trainees*, Decision Panels, Committee Reviews, STAR Review Queue*,
     Decisions Due
-  CollegeAdmin: Specialities, EPAs, Curricula
+  CollegeAdmin: Specialities, EPAs, Curricula, Activity Types (T300)
   InstitutionalAdmin: Curriculum Adoptions, EPAs, Curricula, Activity Types, Entrustment Scales, Trainees, Assessors,
     Invitations, Users, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due
   Administrator: Colleges, EPAs, Curricula, Institutions, Invitations, Users, Activity Types, Entrustment Scales,

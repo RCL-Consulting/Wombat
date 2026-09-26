@@ -471,7 +471,8 @@ Do: In a fresh browser session, open the link from the CollegeAdmin stub email i
 Expect: The page reads "Registering kruger@cmsa.wombat.local as CollegeAdmin.", and the address is shown but cannot be
   edited. Register signs Kruger in and lands on Home, which reads "Welcome, kruger@cmsa.wombat.local" and "Viewing as
   CollegeAdmin". The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The nav reads
-  Home, My Account, Data Rights, Specialities, EPAs, Curricula, Logout.
+  Home, My Account, Data Rights, Specialities, EPAs, Curricula, Activity Types, Logout: the College writes its
+  disciplines' activity types in the builder (T300, D52).
 
 Step 1.9 — A used link is refused
 Role: Anonymous — anyone who holds Kruger's link
