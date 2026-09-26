@@ -27,6 +27,18 @@ public sealed class AdmitTraineeCommandValidator : AbstractValidator<AdmitTraine
 
 public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCommand, TraineeProfileDto>
 {
+    /// <summary>
+    /// The refusal to admit a registrar who already holds the Trainee role beside PendingTrainee. (T303 review)
+    /// </summary>
+    /// <remarks>
+    /// Admission is what grants Trainee, and <c>PromotePendingTraineeAsync</c> fails on a role already held. It runs last,
+    /// after the profile and the scope are saved, so until the T303 review such an admission was committed part-way under
+    /// a refusal. The Users page no longer adds Trainee (T303); an SSO group mapping to Trainee still can.
+    /// </remarks>
+    public const string AlreadyHoldsTrainee =
+        "This registrar already holds the Trainee role, which only admission should grant, so they cannot be admitted " +
+        "until it is taken away. An SSO group mapping to Trainee is the one way the role is given outside admission.";
+
     private readonly IApplicationDbContext _dbContext;
     private readonly IUserAdministrationService _userAdministrationService;
 
@@ -50,6 +62,12 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
         if (user.InstitutionId.HasValue && !request.Principal.CanAccessInstitution(user.InstitutionId.Value))
         {
             throw new UnauthorizedAccessException("You do not have permission to admit this trainee.");
+        }
+
+        // Before anything is written: the role promotion below would fail on it after the profile and the scope are saved.
+        if (user.Roles.Contains(WombatRoles.Trainee, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException(AlreadyHoldsTrainee);
         }
 
         var existingActiveProfile = await _dbContext.Set<TraineeProfile>()

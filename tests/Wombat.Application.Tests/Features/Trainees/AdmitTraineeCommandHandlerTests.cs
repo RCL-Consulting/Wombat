@@ -101,6 +101,47 @@ public sealed class AdmitTraineeCommandHandlerTests
         userAdministrationService.Verify(service => service.PromotePendingTraineeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// T303 review: a registrar who holds Trainee beside PendingTrainee (the state an SSO group mapping to Trainee still
+    /// makes) is refused before anything is written. Until then the handler saved the profile and the scope, and the
+    /// promotion then failed on "User already in role 'Trainee'", so the admission was committed under a refusal.
+    /// </summary>
+    [Fact]
+    public async Task Handle_WhenThePendingRegistrarAlreadyHoldsTrainee_RefusesBeforeAnyWrite()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        await using var dbContext = new ApplicationDbContext(options);
+        SeedCurriculum(dbContext);
+
+        var userAdministrationService = new Mock<IUserAdministrationService>(MockBehavior.Strict);
+        userAdministrationService
+            .Setup(service => service.GetByIdAsync("user-3", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserIdentityDetails(
+                "user-3", "sso@example.test", "Mapped", "Registrar", 10, [], [],
+                [WombatRoles.PendingTrainee, WombatRoles.Trainee]));
+
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object);
+
+        foreach (var caller in new[] { TestPrincipals.Administrator(), TestPrincipals.InstitutionalAdmin(10) })
+        {
+            var act = () => handler.Handle(
+                new AdmitTraineeCommand("user-3", 3000, new DateOnly(2026, 1, 15), null, caller),
+                CancellationToken.None);
+
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage(
+                "This registrar already holds the Trainee role, which only admission should grant, so they cannot be " +
+                "admitted until it is taken away. An SSO group mapping to Trainee is the one way the role is given outside " +
+                "admission.");
+        }
+
+        // The strict mock refuses any call but the lookup: no scope written, no role changed.
+        dbContext.ChangeTracker.HasChanges().Should().BeFalse("the audit pipeline's save would commit anything staged");
+        dbContext.TraineeProfiles.Should().BeEmpty();
+    }
+
     private static void SeedCurriculum(ApplicationDbContext dbContext)
     {
         dbContext.Institutions.Add(new Institution

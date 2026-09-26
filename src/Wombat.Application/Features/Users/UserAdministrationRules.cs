@@ -8,9 +8,11 @@ namespace Wombat.Application.Features.Users;
 public static class UserAdministrationRules
 {
     /// <summary>
-    /// Roles that may be added or removed via the admin Users surface. Excludes:
+    /// Roles that may be added or removed via the admin Users surface, in the order the user page offers them. Excludes:
     /// - Administrator: must remain DB-direct (per CLAUDE.md, also cannot be assigned via SSO).
     /// - PendingTrainee: system-managed by the invitation acceptance pipeline.
+    /// - Trainee: system-managed by admission (T303). <c>AdmitTrainee</c> grants it, with the profile and the adoption pin,
+    ///   and <c>CompleteTraineeProfile</c> takes it away (<see cref="TraineeRoleByAdmissionOnly" />).
     /// </summary>
     public static readonly IReadOnlyCollection<string> AssignableRoles =
     [
@@ -19,11 +21,52 @@ public static class UserAdministrationRules
         WombatRoles.SubSpecialityAdmin,
         WombatRoles.Coordinator,
         WombatRoles.CommitteeMember,
-        WombatRoles.Assessor,
-        WombatRoles.Trainee
+        WombatRoles.Assessor
     ];
 
     public static bool IsAssignableRole(string role) => AssignableRoles.Contains(role);
+
+    /// <summary>
+    /// The refusal to add or remove the Trainee role on the Users surface, and where a registrar is made a trainee
+    /// instead. (T303)
+    /// </summary>
+    /// <remarks>
+    /// Until T303 Add role offered Trainee. For a pending registrar it gave the role without a profile or an adoption pin,
+    /// beside PendingTrainee, and a later admission saved the profile and then failed on the role it found already held;
+    /// for a graduate it gave the role back against a completed profile. Remove role took it from a running programme,
+    /// whose trainee could then open none of their own pages. Admission grants it and Mark complete takes it away, so the
+    /// role always travels with a profile. Asked of the role alone, before the user is looked up, so nothing is written
+    /// before it.
+    /// </remarks>
+    public const string TraineeRoleByAdmissionOnly =
+        "The Trainee role cannot be added or removed here. A registrar becomes a trainee when admitted to a curriculum: " +
+        "open Trainees and choose 'Admit to curriculum'. Marking their programme complete takes the role away.";
+
+    /// <summary>
+    /// What the user page's Add role field says: that Trainee is not offered, and where a registrar is made one. (T303)
+    /// </summary>
+    public const string TraineeRoleNotOffered =
+        "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'.";
+
+    /// <summary>
+    /// Refuses the Trainee role (<see cref="TraineeRoleByAdmissionOnly" />), then any other role the surface does not
+    /// manage (<see cref="AssignableRoles" />) in the words of <paramref name="refusedWith" />, which names what was asked.
+    /// Asked of the role alone, so Add role and Remove role ask it before the user is looked up. (T303)
+    /// </summary>
+    public static void DemandAssignableRole(string role, Func<string, string> refusedWith)
+    {
+        ArgumentNullException.ThrowIfNull(refusedWith);
+
+        if (string.Equals(role, WombatRoles.Trainee, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(TraineeRoleByAdmissionOnly);
+        }
+
+        if (!IsAssignableRole(role))
+        {
+            throw new InvalidOperationException(refusedWith(role));
+        }
+    }
 
     // ─── Who administers users (T278) ───────────────────────────────────────
 

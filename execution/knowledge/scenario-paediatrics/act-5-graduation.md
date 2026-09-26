@@ -428,7 +428,7 @@ Expect: The page says "Trainee marked complete. The Trainee role has been remove
   - The last-day field, Deactivate and Mark complete are gone.
   - On Trainees she is no longer under Active profiles. She is listed under Completed & closed profiles with the outcome
     "Completed `D`".
-  - Her user page says "This user has no roles."
+  - Her user page says "This user has no roles.", and its Add role offers no Trainee (T303).
   - No credit is taken back, because nothing of hers is observed after `D` (T281; Step 5.27 shows a take-back).
 Note: The completion runs under the trainee credit lock (T281), so any completion of hers that is in flight is waited
   for first.

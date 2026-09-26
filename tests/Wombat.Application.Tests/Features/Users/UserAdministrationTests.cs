@@ -297,12 +297,14 @@ public sealed class UserAdministrationTests
     }
 
     [Fact]
-    public void AssignableRoles_ExcludesAdministratorAndPendingTrainee()
+    public void AssignableRoles_ExcludesAdministratorPendingTraineeAndTrainee()
     {
         UserAdministrationRules.AssignableRoles.Should().NotContain(WombatRoles.Administrator);
         UserAdministrationRules.AssignableRoles.Should().NotContain(WombatRoles.PendingTrainee);
         UserAdministrationRules.AssignableRoles.Should().Contain(WombatRoles.Assessor);
-        UserAdministrationRules.AssignableRoles.Should().Contain(WombatRoles.Trainee);
+
+        // T303: admission grants Trainee and Mark complete takes it away (TraineeRoleSystemManagedTests).
+        UserAdministrationRules.AssignableRoles.Should().NotContain(WombatRoles.Trainee);
     }
 
     private static ApplicationDbContext NewDb()

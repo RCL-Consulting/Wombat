@@ -1512,6 +1512,13 @@ standing info `Alert` (`#user-own-account-note`) that ends in a link, "Change yo
 and pending invitations.". Revoking the pending invitations to their own email is still offered: an invitation to an
 email that has an account cannot be accepted. Both pages show a refusal or a failed load through `RefusalText.Of`.
 
+**Trainee is system-managed on the user page, as PendingTrainee is** (T303). Admission (`AdmitTrainee`) grants it, with
+the profile and the adoption pin, and Mark complete (`CompleteTraineeProfile`) takes it away, so Add role never offers
+it (`UserAdministrationRules.AssignableRoles`: InstitutionalAdmin to Assessor) and a held Trainee reads "System-managed"
+with no Remove. The Add role field's help text (`TraineeRoleNotOffered`, named by the select's `aria-describedby`) says
+where a registrar is made a trainee: Trainees, "Admit to curriculum". Add role and Remove role refuse Trainee before the
+user is looked up (`DemandAssignableRole`, `TraineeRoleByAdmissionOnly`).
+
 **Who is offered scheduling** (T216). The page reads it from `GetCommitteeReviewsAccessQuery`, never from the caller's
 roles: `MaySchedule` is the rule the scheduling command and the agenda preview demand first. A caller it refuses, a
 committee member or anyone who also holds Trainee, is not offered "Schedule review", and a link that names a panel

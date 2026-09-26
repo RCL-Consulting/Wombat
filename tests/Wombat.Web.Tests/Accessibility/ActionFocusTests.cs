@@ -357,15 +357,18 @@ public sealed class ActionFocusTests : TestContext
             .Should().Equal("Download certificate for PAED-001", "Download certificate for PAED-002"));
     }
 
-    /// <summary>T239. Each of a user's roles had a "Remove" button, and a screen reader read "Remove" for every one.</summary>
+    /// <summary>
+    /// T239. Each of a user's roles had a "Remove" button, and a screen reader read "Remove" for every one. (Trainee has no
+    /// Remove since T303: admission grants it and Mark complete takes it away, UserDetailTraineeRoleTests.)
+    /// </summary>
     [Fact]
     public void EachRolesRemove_IsNamedByTheRoleItRemoves()
     {
-        var cut = UserDetailPage(new Hold(), _ => false, User() with { Roles = [WombatRoles.Trainee, WombatRoles.Assessor] });
+        var cut = UserDetailPage(new Hold(), _ => false, User() with { Roles = [WombatRoles.Coordinator, WombatRoles.Assessor] });
 
         cut.FindAll("button").Where(button => button.TextContent.Trim() == "Remove")
             .Select(button => AccessibleNames.NameOf(cut, button))
-            .Should().Equal("Remove the Trainee role", "Remove the Assessor role");
+            .Should().Equal("Remove the Coordinator role", "Remove the Assessor role");
     }
 
     /// <summary>T239. A review stages one decision an EPA, and each staged decision's Remove is named by it.</summary>
@@ -1087,9 +1090,13 @@ public sealed class ActionFocusTests : TestContext
             }),
             parameters => parameters.Add(page => page.UserId, "user-9"));
 
+    /// <remarks>
+    /// A committee member, so the one role has a Remove: until T303 the user was a trainee, whose role the page no longer
+    /// offers to remove.
+    /// </remarks>
     private static UserDetailDto User() => new(
         "user-9", "registrar@hospital.test", "Rene", "Registrar", 4, "Groote Schuur Hospital", [], [],
-        [WombatRoles.Trainee], false, []);
+        [WombatRoles.CommitteeMember], false, []);
 
     /// <summary>
     /// The committee review page, read by the panel's chair, who is also its appeal body. Each command answers with the

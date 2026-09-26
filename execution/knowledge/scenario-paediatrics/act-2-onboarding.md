@@ -226,9 +226,9 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
 Do: For each of the three, open Manage, choose Assessor under Add role and press Add role.
 Expect: Before the change, Roles lists CommitteeMember with Remove. Add role offers InstitutionalAdmin, SpecialityAdmin,
-  SubSpecialityAdmin, Coordinator, Assessor and Trainee, never Administrator, CollegeAdmin or PendingTrainee. A Lockout
-  card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for this
-  email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
+  SubSpecialityAdmin, Coordinator and Assessor, never Administrator, CollegeAdmin, PendingTrainee or Trainee (T303).
+  A Lockout card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for
+  this email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
   Assessor. The users list's Roles column shows both.
 Note: A role change ends any session the account still has open within a minute (T279). Step 2.10 signed everyone out.
 Actual (2026-09-26, T295 replay, wombat_scenario): Before: Roles CommitteeMember with "Remove the CommitteeMember role";
@@ -469,7 +469,10 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/invitations → /admin/users → /admin/users/{UserId} → /admin/trainees
 Do: Open Invitations. Read the users list and open Dr Molefe's page. Then open Trainees.
 Expect: Active invitations reads "No active invitations". Users lists 15, with the five registrars as PendingTrainee. On
-  Molefe's page, PendingTrainee reads "System-managed" and has no Remove. Trainees' Pending admission lists the five with their emails and KGK, each with an
+  Molefe's page, PendingTrainee reads "System-managed" and has no Remove. Add role offers InstitutionalAdmin,
+  SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember and Assessor, not Trainee, and its help reads "Trainee
+  is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'." (T303).
+  Trainees' Pending admission lists the five with their emails and KGK, each with an
   "Admit to curriculum" named for the registrar. Active profiles reads "No active trainee profiles found."
 Actual (2026-09-26, T295 replay, wombat_scenario): "No active invitations". Users lists 15, the five registrars as
   PendingTrainee. Molefe's page: PendingTrainee "System-managed", no Remove; Add role offers InstitutionalAdmin,

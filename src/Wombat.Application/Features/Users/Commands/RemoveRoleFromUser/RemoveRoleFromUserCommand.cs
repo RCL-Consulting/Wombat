@@ -31,18 +31,16 @@ public sealed class RemoveRoleFromUserCommandHandler : IRequestHandler<RemoveRol
     /// Every refusal comes before the role is removed (T278): who the caller is (<see cref="UserAdministrationRules.DemandUserAdministration" />,
     /// then <see cref="UserAdministrationRules.DemandNotCaller" />) before anything is looked up, then the role, then the
     /// user's scope. Until T278 a Trainee who also held InstitutionalAdmin could remove their own Trainee role here, and
-    /// with it every trainee-first refusal (T185, T256).
+    /// with it every trainee-first refusal (T185, T256). Nobody removes Trainee here, from anyone (T303): only marking the
+    /// programme complete takes it away, and a trainee whose programme runs on without it could open none of their own
+    /// pages.
     /// </remarks>
     public async Task Handle(RemoveRoleFromUserCommand request, CancellationToken cancellationToken)
     {
         UserAdministrationRules.DemandUserAdministration(request.Principal);
         UserAdministrationRules.DemandNotCaller(request.Principal, request.UserId, UserAdministrationRules.OwnRolesNotChangeable);
-
-        if (!UserAdministrationRules.IsAssignableRole(request.Role))
-        {
-            throw new InvalidOperationException(
-                $"The role '{request.Role}' cannot be removed via the Users admin surface.");
-        }
+        UserAdministrationRules.DemandAssignableRole(
+            request.Role, role => $"The role '{role}' cannot be removed via the Users admin surface.");
 
         var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("The user could not be found.");

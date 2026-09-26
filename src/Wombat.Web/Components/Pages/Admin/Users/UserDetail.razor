@@ -93,9 +93,11 @@ else
           @if (!IsOwnAccount)
           {
             <h4 style="margin-top: 1.5rem;">Add role</h4>
+            @* T303. Trainee is system-managed, as PendingTrainee is: admission grants it and Mark complete takes it away, so
+               it is neither offered here nor removable above. The help says where a registrar is made a trainee. *@
             <div class="form-grid form-grid--wide">
-              <FormField Label="Role" InputId="add-role-select">
-                <select id="add-role-select" class="form-select" @bind="_addRoleSelection">
+              <FormField Label="Role" InputId="add-role-select" HelpText="@UserAdministrationRules.TraineeRoleNotOffered">
+                <select id="add-role-select" class="form-select" aria-describedby="@FieldHelp.Id("add-role-select")" @bind="_addRoleSelection">
                   <option value="">Select role</option>
                   @foreach (var role in AddableRoles)
                   {
