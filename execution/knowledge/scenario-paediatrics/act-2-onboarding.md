@@ -168,6 +168,10 @@ Expect: The first attempt returns to the form with "Passwords must be at least 1
 Actual (2026-09-26, T295 replay, wombat_scenario): 10 characters: back with `&error=PasswordTooShort`, "Passwords must be
   at least 12 characters.", First name focused, no account (SQL count 0). Mismatch: "The password confirmation does not
   match.". Each refusal also emptied First and Last name. The third landed on "Viewing as Assessor"; signed out.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297b2, the end-of-Act-2 snapshot): his Home, "Viewing as
+  Assessor", reads Pending requests 0 "assessments awaiting review" with "Review inbox →", "Awaiting your review" with
+  "Nothing is awaiting your review." (in place of "No accepted assessments pending action."), "No decisions yet." and
+  "Open my inbox →".
 Gap: [F-2.9a, T317] A refused registration drops the first and last name the registrar typed, so each retry retypes them
   (unsure: the refusal travels as a code on a static page by design, T285, but nothing there requires losing the names).
 
@@ -182,6 +186,10 @@ Expect: Each page names the address and the invited role. Each person lands on H
 Actual (2026-09-26, T295 replay, wombat_scenario): Each page read "Registering <address> as <role>." and each landed on
   "Welcome, <address>": Zulu, Naidoo, Botha and van Rensburg "Viewing as CommitteeMember", Khumalo (typed "Fatma")
   "Viewing as Assessor", Mokoena "Viewing as SpecialityAdmin", Sithole "Viewing as SubSpecialityAdmin". All signed out.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297b2, the end-of-Act-2 snapshot, so after the registrars'
+  admission): Dr Khumalo's Home reads as Dr Patel's does in Step 2.9. Dr Mokoena's and Dr Sithole's read Pending
+  reviews 0 "activities awaiting review", with no link (in place of "activities in review" and "Review queue →"),
+  beside Trainees in programme 5 "active / 0 inactive" (none was admitted yet at this step's own moment).
 Gap: none
 
 ### Step 2.11 — A used link cannot be used again
@@ -562,6 +570,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): "Viewing as Assessor", "You a
   CommitteeMember"; Pending requests 0 "assessments awaiting review" "Review inbox →", the two empty lines, "Open my
   inbox →"; nav unchanged. Nav Logout (POST /account/logout), sign-in lands on the Assessor view; the Administrator
   switch returns to / "Viewing as CommitteeMember".
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297b2): after the switch, "Viewing as Assessor" with the
+  CommitteeMember switch line; Pending requests 0 "assessments awaiting review" with "Review inbox →", "Awaiting your
+  review" reading "Nothing is awaiting your review.", "No decisions yet." and "Open my inbox →", as the Expect
+  (rewritten by T297) says.
 Gap: [F-2.34a, T317] The remembered view is a 30-day browser cookie (`wombat_preferred_dashboard_role`), not the account's:
   it survives sign-out, so Naidoo, signing in next in the same browser, landed on "Viewing as Assessor" (Zulu's choice).
 
@@ -585,7 +597,12 @@ Expect: Each sees "Viewing as Assessor" with no Switch view line and the empty A
 Actual (2026-09-26, T295 replay, wombat_scenario): each: "Viewing as Assessor", no switch line, Pending requests 0,
   "No accepted assessments pending action.", "No decisions yet.", "Open my inbox →". Nav: Home, My Account, Data
   Rights, Activity Inbox, Recent Activities, Logout.
-Gap: none
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297b2): each reads Pending requests 0 with "Review inbox →",
+  "Awaiting your review" with "Nothing is awaiting your review." (the pre-fix "No accepted assessments pending action."
+  is gone), "No decisions yet." and "Open my inbox →": the empty dashboard of Step 2.34.
+Gap: [F-2.36a, T328] The "Awaiting your review" card, new with T297, always carries the alert-triangle icon
+  (AssessorDashboard.razor:23), so it heads "Nothing is awaiting your review." with a warning sign; only its Warning
+  styling waits for an overdue item. Unsure: the icon may be meant as the card's emblem.
 
 ### Step 2.37 — Dr van Rensburg, external committee member
 Role: CommitteeMember — Dr John van Rensburg
@@ -616,6 +633,9 @@ Expect: Each sees "Viewing as SpecialityAdmin" or "Viewing as SubSpecialityAdmin
 Actual (2026-09-26, T295 replay, wombat_scenario): both as expected: Pending reviews 0 "activities in review" "Review
   queue →"; 5 "active / 0 inactive"; "Curriculum coverage — Semester 2, 2026" over "Semester 2, 2026 · July to
   November", PAED-001 to 015 at "0 of 5 met". Nav: Home, My Account, Data Rights, the five named, Logout.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297b2): both read Pending reviews 0 "activities awaiting
+  review", with no link, as the Expect (rewritten by T297) says; "activities in review" and "Review queue →" are gone.
+  Trainees in programme and Curriculum coverage as before.
 Gap: none
 
 ### Step 2.39 — Dr Molefe, final-year registrar

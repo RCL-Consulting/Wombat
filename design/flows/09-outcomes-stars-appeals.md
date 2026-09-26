@@ -350,7 +350,7 @@ registration link or a password. The key screenshots listed first were opened; o
   which BRIEF § 10 holds (inference).
 
 **Do not attach:**
-- `act-A/A.7.7-1-mokoena-home.png`: a SpecialityAdmin home, held for T297 (BRIEF § 10).
+- `act-A/A.7.7-1-mokoena-home.png`: a SpecialityAdmin home, F06's (re-captured after T297 on 2026-09-26; BRIEF § 10).
 
 ## Known problems this design must solve
 

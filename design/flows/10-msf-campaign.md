@@ -8,7 +8,7 @@ see. It is flow 10 of 18 (`design/BRIEF.md` § 8).
 |---|---|
 | **Mode** | Straight to fidelity. The List, Form and Detail shapes hold (BRIEF § 4). Design the respondent's page, `/msf/respond`, on its own card: it is static and anonymous (DESIGN.md § Anonymous static page). |
 | **Viewports** | Desktop 1280×800 and phone 390×844. |
-| **Held** | None of this flow's pages is changed by a group-1 task. Two step captures land on the Coordinator's dashboard, which T297 changes, and are left out (§ Attach). |
+| **Held** | None of this flow's pages is changed by a group-1 task. Two step captures land on the Coordinator's dashboard, F06's (re-captured after T297 on 2026-09-26), and are left out (§ Attach). |
 | **Frequency** | One campaign per registrar per period: about 16 returned questionnaires per registrar a year (EPA-PROGRAMME.md:203–205, D9). |
 | **Stakes** | Medium. Anonymity must hold, and a released report becomes evidence on the registrar's portfolio. |
 | **People** | Mr Pieter Smit (Coordinator). Anonymous respondents: Sister Grace Mokwena, Sister Palesa Tau, Dr Kagiso Motsepe, Dr Fatima Khumalo, Dr Sarah Botha and Ms Naledi Sebego; Dr Lindiwe Khoza never answers (Steps 3.36, 3.39, 3.42). Dr Lerato Molefe (Trainee). |
@@ -343,7 +343,7 @@ Items 13 and 14 are a pair: the same release on two clocks (T325).
 
 **Do not attach:**
 - `act-A/A.4.7-1-cancel-back-on-dashboard.png` and `act-A/A.7.5-1-smit-home.png`: both show the Coordinator's
-  dashboard, which T297 changes (BRIEF § 10).
+  dashboard, F06's (re-captured after T297 on 2026-09-26; BRIEF § 10).
 - `act-3/3.43-0-all-links-delivered-to-sink.png`: a replay artefact of the mail sink, not a product state (Step 3.43's
   note).
 

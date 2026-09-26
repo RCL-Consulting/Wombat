@@ -11,14 +11,16 @@ trail; and to rebuild progress. Prof Mbatha reads her own institution's audit tr
 | **Frequency and stakes** | Rare, for the operator. The stakes are medium: the health card is his only warning that mail is not configured. With `Email__SmtpHost` unset, every mail is logged and not sent (T157, T327). |
 | **Pages** | `/`, `/admin/institutions`, `/admin/institutions/new`, `/admin/institutions/{Id:int}`, `/admin/jobs`, `/admin/jobs/runs`, `/admin/audit`, `/admin/audit/{Id:guid}`, `/admin/curriculum-progress`, `/admin/users/{UserId}`, `/placeholder/{Feature}`; also `/health`, the public health check (`coverage.md` § Pages, § Endpoints) |
 | **Runbook steps** | 23. `act-1-setup.md`: 1.1, 1.6, 1.11. `act-3-operations.md`: 3.32, 3.55, 3.56, 3.57. `act-4-annual-review.md`: 4.38. `act-6-catalogue.md`: 6.38. `appendix-cross-cutting.md`: A.2.1, A.2.2, A.2.4, A.2.6, A.2.8, A.2.9, A.2.10, A.5.2, A.5.13, A.6.1, A.6.2, A.6.9, A.6.10, A.7.11. |
-| **Held** | T302 (group 1, in progress): the Administrator's institution page. The images are listed in § 5.3. |
+| **Held** | Nothing. T302 (group 1) landed in 41be531, and the Administrator's institution page was re-captured on 2026-09-26 (§ 5.3). |
 
 ## 1. Before you paste
 
-1. **T302 is in progress** (`execution/tasks/in_progress/T302-…`). After it lands, the Administrator's institution page
-   shows Status and offers Deactivate or Reactivate as separate commands, in place of an Active box saved with the form.
-   - The dashboard, jobs and audit screens are unaffected, so brief them now.
-   - Attach the institution-edit images in § 5.3 only after T302 lands and they are re-captured.
+1. **T302 has landed** (41be531). Deactivate and Reactivate are separate Administrator-only commands, but the page
+   keeps an Active box for the Administrator: Save sends a changed box as the state's own command, unticking asks
+   first, and an active institution also offers Deactivate, an outline button behind a dialog naming it (T264). There
+   is no Reactivate button: an Administrator ticks Active and saves ("Institution saved and reactivated."). Everyone
+   else reads Status as text.
+   - The institution-edit images in § 5.3 were re-captured on 2026-09-26; attach them.
 2. **Open every image before you upload it** (BRIEF § 3.3).
    - Opened for this brief, showing no link or password:
      - `act-A/A.6.2-1-system-health.png`, `A.2.10-2-partial-key-nothing.png`;
@@ -152,8 +154,9 @@ REQUIREMENTS FROM KNOWN DEFECTS:
     - Home greets by name, not by email (observed, not filed).
   - T326: the Institutions subtitle says what the page does. It promises "drill into their speciality structure", but
     each row offers only Edit.
-  - T302 (in progress): the Administrator's institution page shows Status, and Deactivate or Reactivate as separate
-    commands. An InstitutionalAdmin sees Status as text.
+  - T302 (landed): Deactivate and Reactivate are separate Administrator commands. Today the page sends them from an
+    Active box on Save and from a Deactivate button; the design may show Status with Deactivate or Reactivate as its
+    own actions instead. An InstitutionalAdmin sees Status as text.
   - Destructive actions (T264):
     - Deactivate asks first in a dialog that names the institution. Its trigger is an outline button, and it is not
       offered again once the institution is inactive.
@@ -234,7 +237,7 @@ above says otherwise, the requirement wins:
 - A.6.2's Expect describes today's stub health lines; they are replaced;
 - A.2.1's "next run in the server's local time" becomes SAST, labelled;
 - A.2.10's "'digest' alone matches nothing" and "never by user id" become a select and a name;
-- 1.6 and A.6.1's Active box becomes Status with Deactivate or Reactivate (T302);
+- 1.6 and A.6.1's Active box may become Status with Deactivate or Reactivate (T302 kept the box; see § 1);
 - A.5.13's "Coming soon" stub becomes a page or goes;
 - 1.1's nav list loses System if the page is dropped, and its "Welcome, devadmin@wombat.local" greets him by name.
 A.2.8 ages two rows by SQL, as a stand-in for time passing; nothing about that is on screen.
@@ -547,10 +550,10 @@ From `states.md` § Home and the role dashboards (rows 114, 148), § System page
 | | Narrow | `states/institutions-list--narrow.png` | — | At Step A.7.11 |
 | `/admin/institutions/new` | Create | `states/institution-edit--create.png` | — | At Step 1.6, before typing |
 | | Required fields empty | `states/institution-edit--invalid.png` | — | At Step 1.6, Save with the form empty |
-| `/admin/institutions/{Id:int}` | An administrator's edit | `states/institution-edit--administrator.png` | T302 | At Step 1.6, after Save |
-| | Saved | `states/institution-edit--saved.png` | T302 | At Step A.6.1 |
-| | Deactivated | `states/institution-edit--deactivated.png` | T302 | On a scratch database: Deactivate on the Demo Institution |
-| | Narrow | `states/institution-edit--narrow.png` | T302 | At Step A.6.1, at 390 px |
+| `/admin/institutions/{Id:int}` | An administrator's edit | `states/institution-edit--administrator.png` | T302 (re-captured) | At Step 1.6, after Save |
+| | Saved | `states/institution-edit--saved.png` | T302 (re-captured) | At Step A.6.1 |
+| | Deactivated | `states/institution-edit--deactivated.png` | T302 (re-captured) | On a scratch database: Deactivate on the Demo Institution, confirmed in the dialog |
+| | Narrow | `states/institution-edit--narrow.png` | T302 (re-captured) | At Step A.6.1, at 390 px |
 | `/admin/jobs` | Nine jobs | `states/scheduled-jobs-list--loaded.png` | — | At Step A.2.1 |
 | | A job disabled | `states/scheduled-jobs-list--disabled.png` | — | At Step A.2.2 |
 | | Dispatched | `states/scheduled-jobs-list--dispatched.png` | — | At Step A.2.4 |
@@ -578,7 +581,9 @@ From `states.md` § Home and the role dashboards (rows 114, 148), § System page
   line must show the same failure in words.
 - Each health line failing (T327): database down; mail not configured; a mail dropped in 24 hours; a job failed, never
   run, disabled or overdue. This has no capture, because the lines are stubs today.
-- A deactivated institution offering Reactivate, and no Deactivate (T302, T264).
+- A deactivated institution offering a Reactivate action, and no Deactivate (T302, T264). The replay now reaches a
+  deactivated institution (`states/institution-edit--deactivated.png`): it offers no Deactivate, and an unticked Active
+  box is its only way back; there is no Reactivate button.
 - Run history paged past 50 (T327). This has no capture, since the replay had 23 runs.
 
 **Curriculum progress** (Step 6.38) is in this flow's journey. Its five state captures
@@ -630,14 +635,18 @@ Every path below is relative to `design/baseline/` and was checked with `ls` on 
   `A.5.13-1-system.png`, `A.6.1-1-institutions-list.png`, `A.6.9-1-own-account.png`, `A.7.11-1-devadmin-home.png`,
   `A.7.11-2-devadmin-jobs.png`, `A.7.11-3-devadmin-runs.png`, `A.7.11-4-devadmin-institutions.png`
 
-### 5.3 Held until T302 lands and they are re-captured
+### 5.3 Re-captured after T302 (formerly held)
 
-- **Listed by the planner:**
-  - `states/institution-edit--administrator.png`, `--deactivated.png`, `--saved.png` and `--narrow.png`;
-  - `act-A/A.6.3-5-devadmin-reactivates-kgk.png`.
-- **Also hold these two,** which show the same page with the Active box:
-  - `act-1/1.6-2-kgk-created.png` (observed: it shows the Status box, Cancel, Deactivate and Save);
-  - `act-A/A.6.1-2-kgk-saved.png` (the same page and state as `institution-edit--saved`; inference).
+Re-captured on 2026-09-26 after T302 landed (41be531); attach them:
+- `states/institution-edit--administrator.png` and `act-1/1.6-2-kgk-created.png` (a copy of the end-of-Act-1 snapshot:
+  the Active box ticked with its help, Cancel, Deactivate and Save);
+- `states/institution-edit--saved.png`, `act-A/A.6.1-2-kgk-saved.png` and `states/institution-edit--narrow.png` (Step
+  A.6.1 on a copy of the end-of-Act-6 snapshot);
+- `states/institution-edit--deactivated.png` (the Demo Institution on the same copy: "Institution deactivated.", the
+  box unticked, no Deactivate).
+
+`act-A/A.6.3-5-devadmin-reactivates-kgk.png` is no longer this flow's: Step A.6.3 no longer has devadmin reactivate KGK,
+and the file now holds Prof Mbatha's Home (flow 12; BRIEF § 10).
 
 ## 6. Known problems this design must solve
 
@@ -647,8 +656,8 @@ Every path below is relative to `design/baseline/` and was checked with `ls` on 
 | T325 | queued | One clock, labelled SAST, across the jobs and run history; schedules in the same zone. The audit may keep labelled UTC. (A9) | `act-3/3.32-1-nudge-run.png`, `states/scheduled-jobs-list--loaded.png` |
 | T324 | queued | "Triggered by" is a name (`ScheduledJobRunsList.razor:70`). Required-field messages name the field ("Short code"). Home greets by name (observed; not filed, BRIEF § 6 A8). | `states/scheduled-job-runs-list--loaded.png`, `states/institution-edit--invalid.png` |
 | T326 | queued | The Institutions subtitle drops the speciality drill-down that T091 removed. (A10) | `act-1/1.6-1-institutions-one.png`, `states/institutions-list--two.png` |
-| T302 | in progress, P2 | Deactivate and Reactivate are separate Administrator commands. The Active box leaves the form. | `states/institution-edit--administrator.png` (held); `InstitutionEdit.razor:54-69` |
-| T264 | queued | Deactivate confirms in a ConfirmDialog naming the institution, and is not offered on an inactive record. The audit pager keeps the focus. (A5) | `states/institution-edit--deactivated.png` (held) |
+| T302 | landed (41be531), P2 | Deactivate and Reactivate are separate Administrator commands. The page still sends them from the Active box on Save (and from Deactivate); the design decides whether the box gives way to Status with the two actions. | `states/institution-edit--administrator.png` (re-captured 2026-09-26); `InstitutionEdit.razor` |
+| T264 | queued | Deactivate confirms in a ConfirmDialog naming the institution, and is not offered on an inactive record: on this page, landed with T302. The audit pager keeps the focus. (A5) | `states/institution-edit--deactivated.png` (re-captured 2026-09-26) |
 | T277 | queued | The audit window is fixed at load or apply, and paging is stable. "Back to log" keeps the filters (F-3.56b). | Steps 3.55, 3.56 |
 | T286 | queued | One name per person in the audit log and on its Actor card. | Steps 3.55, 3.56; `states/audit-list--failures.png` |
 | T328 | queued | Apply filters after the filters (`AuditList.razor:8-15`). (A4) | `states/audit-list--failures.png` |
@@ -685,7 +694,7 @@ After Claude Code builds it (BRIEF § 9):
    - Also check a health line failing: stop the mail sink and send a mail (T327 § Verification).
 2. **Update the Expects** whose wording changes, in the same task (BRIEF § 9 item 7):
    - 1.1: the health lines, and the nav if System goes;
-   - 1.6 and A.6.1: Status, Deactivate and Reactivate (T302);
+   - 1.6 and A.6.1: Status, Deactivate and Reactivate, if the design replaces T302's Active box;
    - 1.11: the user count's label;
    - A.2.1: times in SAST;
    - A.2.10: the key select, and Triggered by as a name;

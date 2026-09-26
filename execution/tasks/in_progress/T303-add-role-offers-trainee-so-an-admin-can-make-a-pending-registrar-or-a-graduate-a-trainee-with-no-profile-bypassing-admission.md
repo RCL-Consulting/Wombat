@@ -1,11 +1,12 @@
 ---
 id: T303
 title: Add role offers Trainee, so an admin can make a pending registrar or a graduate a Trainee with no profile, bypassing admission
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-09-26
 ---
 
 # T303 — Add role offers Trainee, so an admin can make a pending registrar or a graduate a Trainee with no profile, bypassing admission

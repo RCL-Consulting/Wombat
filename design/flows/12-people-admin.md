@@ -8,7 +8,7 @@ nobody else's. Role grants and locks are access control. It is flow 12 of 18 (`d
 |---|---|
 | **Mode** | Straight to fidelity for the lists (Users, Assessors). Wireframe first for the user page, which brings roles, scope, invitations, lock and reset into one place, and for the InstitutionalAdmin dashboard. |
 | **Viewports** | Desktop 1280×800 and phone 390×844. |
-| **Held** | T303 (Add role offers Trainee) and T302 (the institution's Active box) are being fixed. Their images wait for re-capture (§ Attach). Brief the lists, the dashboard and the assessor pages now. Brief the user page's role section and the institution record once the captures are retaken. |
+| **Held** | T303 (Add role offers Trainee) is being fixed; its images wait for re-capture (§ Attach). Brief the lists, the dashboard, the assessor pages and the institution record now (T302 landed in 41be531 and its captures were retaken on 2026-09-26). Brief the user page's role section once T303's captures are retaken. |
 | **Frequency** | Monthly: rotations, staff joining, lockouts. |
 | **Stakes** | High. A role grant or a lock decides who can see and do what. |
 | **People** | Prof Nolwazi Mbatha (InstitutionalAdmin, KGK). Her subjects: Dr Thandi Zulu (gains Assessor), Dr Mohammed Patel (locked out, then reactivated) and Dr Pieter du Plessis (password reset). Also Dr Anele Dlamini, whose account she opens on her phone (Step A.7.9), and Dr Sipho Ndlovu, whose data was erased (Step A.1.14). |
@@ -119,7 +119,7 @@ STEPS: 1.23, 2.12–2.15, 2.44, A.1.14, A.3.1, A.4.5, A.5.5, A.6.3, A.6.4, A.6.7
   - They are pasted verbatim after this block (Role / Route / Do / Expect).
   - The Expect lines describe the product as replayed on 2026-09-26. Where a requirement below differs, the
     requirement wins.
-  - Step A.6.3's Deactivate and untick-Active refusals cease to exist (T302).
+  - Step A.6.3's Deactivate and untick-Active refusals ceased to exist with T302; its Expect was rewritten for it.
 
 STATES TO SHOW:
   - Every state listed under SCREENS.
@@ -130,8 +130,9 @@ STATES TO SHOW:
     - heavy: 200 users with pagination ("Showing 1–50 of N"), a person with four roles, and an email of 60 characters.
 
 REQUIREMENTS FROM KNOWN DEFECTS:
-  - T302: an InstitutionalAdmin sees her institution's Status as text, with no Active box and no Deactivate. The
-    "deactivate refused" and "untick and save" states cease to exist.
+  - T302 (landed): an InstitutionalAdmin sees her institution's Status as text, "Set by a global administrator.", with
+    no Active box and no Deactivate, whether it is active or not. The "deactivate refused" and "untick and save" states
+    no longer exist.
   - T303: Trainee reads "System-managed" on the user page and is never offered under Add role.
   - T264:
     - Lock out asks first, in a confirmation that names the person.
@@ -233,7 +234,7 @@ ATTACHED (key screenshots first):
 | A.3.1 | `/admin/sso/group-mappings` | She opens SSO Mappings; no provider is configured. | That no provider is configured; no form; "No group mappings". Nothing can be changed (T326 for the copy). |
 | A.4.5 | `/admin/users` → `/admin/users/{UserId}` | She resets Dr du Plessis's password: 10 characters, then a valid one. | That the user is not emailed. The rules a password breaks. The field cleared on success. |
 | A.5.5 | `/admin/institutions/{Id:int}` → `/not-found` → `/admin/users/{UserId}` | She opens another institution's record, then another institution's user, by id. | Page not found; then "User unavailable". Neither page confirms that the record exists. |
-| A.6.3 | `/admin/institutions/{Id:int}` → `/access-denied` | She changes KGK's contact email. Today she can also press Deactivate, untick Active, and press Back to institutions. | "Institution saved.". After T302 there is no Deactivate and no Active box. Back to institutions leads to Access denied, drawn inside a second layout (T321; T291 item 7). |
+| A.6.3 | `/admin/institutions/{Id:int}` → `/` | She changes KGK's contact email, reads Status, and looks at Back to home and Cancel. | "Institution saved.", with the focus. Status as text, "Active" and "Set by a global administrator.": no Active box and no Deactivate (T302). "Back to home" and Cancel both lead to `/` (T291 item 7, landed with T302; re-checked 2026-09-26). |
 | A.6.4 | `/admin/users` → `/admin/users/{UserId}` | She locks Dr Patel out while he is signed in elsewhere. | What a lock does. "Locked out", and Reactivate user, with the focus on the result. Today nothing asks first (T264). |
 | A.6.7 | `/admin/users/{UserId}` | She reactivates Dr Patel. | Active again, and Lock out user offered again. The focus on the result. |
 | A.7.9 | `/` → `/admin/users` → `/admin/users/{UserId}` → `/admin/trainees` → `/admin/trainees/edit` → `/admin/activity-types/{ActivityTypeId:int}` | She works on her phone. | The user page's cards stacked, and its buttons wrapped. The trainee profile and the builder belong to flows 11 and 17. |
@@ -251,7 +252,7 @@ The states are from `scenario-paediatrics/states.md` § Home and § Institution 
 | `/admin/users/{UserId}` | `user-detail--own` (Step 2.12); `--other` and `--role-added` (Step 2.13, **held: T303**); `--no-roles` (Step 5.17, **held**); `--reset-refused` and `--reset` (Step A.4.5, **held**); `--locked` (Step A.6.4); `--reactivated` (Step A.6.7); `--unavailable` (Step A.5.5); `--pending-invitations` (scratch: Dr Botha invited again); `--loading`; `--narrow` (Step A.7.9, **held**) |
 | `/admin/assessors` | `assessors-list--empty` (Step 2.14); `--five` (Step 2.15); `--loading`; `--narrow` |
 | `/admin/assessors/edit` | `assessor-profile-edit--new`, `--provisional`, `--invalid`, `--saved` (Step 2.14); `--not-found` (typed `?id=999999`); `--narrow` |
-| `/admin/institutions/{Id:int}` | `institution-edit--own` (Step 1.23, **held: T302**); `--deactivate-refused` (Step A.6.3, **held; ceases to exist**); `--not-found` (Step 1.23, the Demo Institution) |
+| `/admin/institutions/{Id:int}` | `institution-edit--own` (Step 1.23, re-captured after T302); `--deactivate-refused` (Step A.6.3: that state ceased with T302, and the file now holds her page after the save, Status as text); `--not-found` (Step 1.23, the Demo Institution) |
 | `/admin/sso/group-mappings` | `group-mappings--no-provider` (Step A.3.1); `--narrow` |
 
 That is 34 captures. Two users-list states belong to other flows and are useful here too: `users-list--pending`
@@ -304,8 +305,14 @@ upload it (BRIEF § 3.3).
 - **Screen 5:**
   - `states/institution-edit--not-found.png`
   - `act-A/A.5.5-1-demo-institution-not-found.png`
-  - `act-A/A.6.3-4-back-to-institutions-denied.png`: T321's second layout. The link it follows may go with T302 and
-    T291 item 7.
+  - `act-A/A.6.3-4-back-to-institutions-denied.png`: T321's second layout, as evidence of T321 only. The link it
+    followed went with T302 (T291 item 7): her Back and Cancel now lead home, so no step reaches this image.
+  - The re-captured institution record (T302, 2026-09-26): `states/institution-edit--own.png`,
+    `act-1/1.23-1-kgk-own-record.png` (Step 1.23, before any change), `act-A/A.6.3-1-contact-saved.png` and
+    `states/institution-edit--deactivate-refused.png` (after her save), `act-A/A.6.3-2-deactivate-refused.png` (the
+    form alone: Status as text, Cancel and Save), `act-A/A.6.3-3-untick-active-saved.png` ("Back to home" focused) and
+    `act-A/A.6.3-5-devadmin-reactivates-kgk.png` (her Home, where Back to home and Cancel lead). The ceased states kept
+    their file names (BRIEF § 10).
 - **Screen 6:**
   - `states/group-mappings--narrow.png`
 
@@ -318,13 +325,8 @@ upload it (BRIEF § 3.3).
   - `states/user-detail--other.png`
   - `states/user-detail--role-added.png`
   - `act-A/A.7.9-3-mbatha-dlamini-account.png`
-- T302:
-  - `states/institution-edit--own.png`
-  - `states/institution-edit--deactivate-refused.png`
-  - `act-1/1.23-1-kgk-own-record.png`
-  - `act-A/A.6.3-1-contact-saved.png`
-  - `act-A/A.6.3-2-deactivate-refused.png`
-  - `act-A/A.6.3-3-untick-active-saved.png`
+
+T302's six held captures were re-captured on 2026-09-26 after it landed (41be531) and are listed under Screen 5 above.
 
 `states/user-detail--reset-refused.png` is also T323's evidence of an address clipped at 1280 px. Until it is
 re-captured, `states/user-detail--pending-invitations.png` shows the same clip (observed: "botha@kgk.wombat.loca").
@@ -333,7 +335,7 @@ re-captured, `states/user-detail--pending-invitations.png` shows the same clip (
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T302** (group 1, being fixed) | **Her own institution.** She sees Status as text, with no Active box and no Deactivate. The deactivate-refused and untick-and-save states cease to exist. **Related, T291 item 7.** Back to institutions and Cancel go to Home for her, not to the Administrator's list; **item 8:** she is never shown the create form. | Held captures; `act-1/1.23-2-back-link-access-denied.png`, `act-1/1.23-4-institutional-admin-create-form.png` |
+| **T302** (group 1, landed in 41be531) | **Her own institution.** She sees Status as text, with no Active box and no Deactivate. The deactivate-refused and untick-and-save states no longer exist. **Related, T291 item 7, landed with T302.** "Back to home" and Cancel go to Home for her, not to the Administrator's list. **Item 8, still open:** she is still shown the create form if she types its address; she should never be. | Screen 5's re-captured captures; `act-1/1.23-4-institutional-admin-create-form.png` (re-captured 2026-09-26: the form, now with "Back to home"). `act-1/1.23-2-back-link-access-denied.png` shows a link that no longer exists |
 | **T303** (group 1, being fixed) | **Trainee.** It is "System-managed" on the user page, with no Remove, and never offered under Add role. | Held captures; Step 2.13 |
 | **T264** | **Lock out user.** It asks first, naming the person, and its trigger is an outline button; today it is red and acts at once. **In-row destructive buttons.** A role's Remove and "Revoke all pending invitations" are red today (observed). They become outline buttons with per-row names. **Inactive records.** A destructive button is not offered on a record that is already inactive. | `act-A/A.7.14-4-patel-lockout-button-focused.png`, `states/user-detail--locked.png`, `states/user-detail--pending-invitations.png`; Step A.6.4 |
 | **T323** (A3) | **Long values.** Emails and GUIDs wrap inside their card at 1280 px (`overflow-wrap: anywhere` on the details list). **Pending invitations.** The table fits its card or moves to a wider column. **Remove.** Each role's button has a gap before it; today "Assessor" runs into it (observed). | `states/user-detail--reset-refused.png` (held), `states/user-detail--pending-invitations.png`; Step A.4.5 Gap F-A.4.5c |
@@ -381,7 +383,8 @@ The flow is done when BRIEF § 9's checks hold:
   - Every Expect holds, with A.6.3's rewritten by T302 and 2.13's Add role list by T303. Change any Expect whose
     on-screen wording the redesign changes, in the same task (BRIEF § 9, item 7). Record the reset password only in
     `pwd_DO_NOT_COMMIT.txt`.
-- **The 34 states are re-captured,** without `institution-edit--deactivate-refused`, which ceases to exist.
+- **The 34 states are re-captured.** `institution-edit--deactivate-refused` names a state that no longer exists; its
+  file holds her page after the save (BRIEF § 10).
   - Take the steps' captures too:
     - Act 1: `1.23-1` and `1.23-3`;
     - Act 2: `2.12-2`, `2.12-3`, `2.13-1`, `2.13-2`, `2.14-1` to `2.14-4`, `2.15-1`, `2.44-1`, `2.44-2` and `2.44-3`;
@@ -506,14 +509,14 @@ Expect: The institution shows Page not found, not Access denied. The user shows 
 
 Step A.6.3 — Prof Mbatha edits her own institution
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /access-denied
+Route: /admin/institutions/{Id:int} → /
 Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
-  `hod.paediatrics@kgk.wombat.local` and save. Press Deactivate. Untick Active and save. Then press Back to
-  institutions.
-Expect: The contact email saves ("Institution saved."). Deactivate is refused: "Only global administrators may
-  deactivate institutions." Unticking Active is refused as Deactivate is, and KGK stays Active. Back to institutions
-  and Cancel lead to the Institutions list, which is the Administrator's alone, so she lands on Access denied
-  (reported).
+  `hod.paediatrics@kgk.wombat.local` and save. Read Status, then look at Back to home and Cancel.
+Expect: "Institution saved." takes the focus. Status reads "Active" as text, with "Set by a global administrator."
+  beneath: there is no Active box and no Deactivate, because an institution's state is the Administrator's alone
+  (T302). "Back to home" and Cancel both lead to `/`. SQL:
+  `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
+  `2|hod.paediatrics@kgk.wombat.local|t`.
 
 Step A.6.4 — Prof Mbatha locks Dr Patel out
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

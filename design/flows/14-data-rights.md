@@ -11,7 +11,7 @@ Part of the GUI redesign briefed in `design/BRIEF.md` (T332). Written 2026-09-26
 | **Frequency and stakes** | Rare. High: legal rights (POPIA, per CUSTOMIZATION.md § 5), and an erasure is irreversible |
 | **Mode** | **Straight to fidelity** for the requester's page and the queue (the Form, List and Detail page shapes hold: BRIEF § 4). **Wireframe first** for the new Correction card on a request (BRIEF § 7 B3) |
 | **Pages** (`coverage.md` templates) | `/account/data-rights`, `/admin/data-rights`, `/admin/data-rights/{Id:guid}`, `/not-found`, `/account/login`, `/admin/users`, `/admin/trainees`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}`; endpoints `/account/data-rights/download/{id:guid}` and `/account/session-ended` |
-| **Held screenshots** | None of this flow's pages is changed by a group-1 task. Two Home captures from its phone steps are held under T297 (§ Attach) |
+| **Held screenshots** | None. No group-1 task changes this flow's pages. Two Home captures from its phone steps, formerly held under T297, were re-captured on 2026-09-26 (§ Attach) |
 
 **How to run this thread** (BRIEF § 2.3, step 3; source keys are BRIEF § 2.0's):
 1. **Decide T316's question first** and write the answer into the chat: who carries an approved correction through. The
@@ -291,8 +291,8 @@ Every path is under `design/baseline/` and was checked to exist on 2026-09-26. O
   `act-A/A.1.13-2-ndlovu-signin-refused.png`, `act-A/A.1.14-1-users-no-ndlovu.png`,
   `act-A/A.1.14-2-reviews-pseudonym.png`, `act-A/A.1.14-3-checkin-withdrawn.png`.
 
-**HELD: do not attach** (BRIEF § 10, T297): `act-A/A.7.3-1-dlamini-home.png` and `act-A/A.7.5-1-smit-home.png`. They are
-Home captures from this flow's phone steps, not pages this flow designs.
+**Do not attach** `act-A/A.7.3-1-dlamini-home.png` or `act-A/A.7.5-1-smit-home.png`. They are Home captures from this
+flow's phone steps, not pages this flow designs (re-captured after T297 on 2026-09-26; BRIEF § 10).
 
 ## Known problems this design must solve
 

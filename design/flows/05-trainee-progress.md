@@ -13,15 +13,14 @@ Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screen
 | Steps | 17: 2.39, 2.40, 3.6, 3.7, 3.48, 3.50, 4.40, 5.15, 5.26, 6.15, 6.19, 6.24, 6.27, 6.35, 6.37, 6.39, A.7.3 |
 | Frequency and stakes | Weekly. Medium-high: a registrar short of a target learns it here or at her review. |
 | Mode | **Wireframe first** for the Trainee dashboard and My progress (what leads each), then fidelity (BRIEF § 2.3, step 3). Charts must stay readable at 390 px. |
-| Held | **The dashboard half, by T297.** T297 (group 1, in progress) changes the Trainee dashboard's Activity inbox card, so its ten captures are held until re-captured (§ 5.3; BRIEF § 10). My progress and My activities are not changed by any group-1 task. |
+| Held | **Nothing.** T297 (group 1, landed in 7bf8ea7) changed the Trainee dashboard's Activity inbox card; all ten of its captures were re-captured on 2026-09-26 (§ 5.3; BRIEF § 10). My progress and My activities are not changed by any group-1 task. |
 
 ---
 
 ## 1. How to run this thread
 
 1. Run F01 (the shell) first; this flow sits inside its frame (BRIEF § 2.3, step 2).
-2. Wait for T297 to land and the ten held captures (§ 5.3) to be re-taken. If you must start sooner, run screens 2–4
-   only and add screen 1 afterwards. (My progress does not depend on T297; that it can go first is an inference.)
+2. T297 has landed and the ten dashboard captures (§ 5.3) were re-taken on 2026-09-26, so all four screens can run.
 3. Start a new thread. Attach the key screenshots in § 5.1, then paste § 2.1 as one message.
 4. Pick a wireframe for screens 1 and 2. Then paste § 2.2 for fidelity.
 5. Attach the state captures in § 5.2 as the chat asks for them.
@@ -189,7 +188,7 @@ and heavy data volumes. Review the result for accessibility against WCAG 2.1 AA.
 
 ATTACHED: states/my-progress--first.png, act-3/3.7-2-dlamini-progress-full.png, states/my-progress--standing.png,
 states/my-progress--paused-epa.png, states/my-progress--after-rebuild.png, states/my-progress--narrow.png,
-act-A/A.7.6-2-zulu-trajectory.png, act-2/2.39-2-molefe-progress.png; after T297 lands, the re-captured
+act-A/A.7.6-2-zulu-trajectory.png, act-2/2.39-2-molefe-progress.png, and the post-T297
 states/home--trainee-first.png, states/home--trainee.png and states/home--narrow-trainee.png.
 
 RUNBOOK STEPS, VERBATIM:
@@ -420,9 +419,9 @@ Each file is `design/baseline/states/<page>--<state>.png`.
 
 | Page | State | Capture | Reached at |
 |---|---|---|---|
-| `/` | Admitted, nothing filed | `home--trainee-first.png` (**held**, T297) | Step 2.39 |
-| `/` | With activity | `home--trainee.png` (**held**, T297) | Step 3.50 |
-| `/` | 390 px | `home--narrow-trainee.png` (**held**, T297) | Step A.7.3 |
+| `/` | Admitted, nothing filed | `home--trainee-first.png` (re-captured after T297) | Step 2.39 |
+| `/` | With activity | `home--trainee.png` (re-captured after T297) | Step 3.50 |
+| `/` | 390 px | `home--narrow-trainee.png` (re-captured after T297) | Step A.7.3 |
 | `/portfolio/progress` | Admitted, nothing counted | `my-progress--first.png` | Step 2.39 |
 | `/portfolio/progress` | One encounter counted | `my-progress--counting.png` | Step 3.7 |
 | `/portfolio/progress` | Target met, with MSF coverage | `my-progress--msf.png` | Step 3.48 |
@@ -493,26 +492,30 @@ Every path below is under `design/baseline/` and was checked with `ls` on 2026-0
   - `act-A/A.7.3-3-dlamini-activities.png`
   - `act-3/3.6-1-my-activities-completed.png`
 
-### 5.3 Held: do not attach until re-captured after T297
+### 5.3 Re-captured after T297 (formerly held)
 
-T297 changes the Trainee dashboard's Activity inbox card (BRIEF § 10). Re-take these after it lands (`states.md` § How
-to capture), then attach the three state captures:
+T297 changed the Trainee dashboard's Activity inbox card (BRIEF § 10). Every capture below was re-taken on 2026-09-26
+after it landed, so none is held; attach the three state captures:
 
 `states/home--trainee-first.png`, `states/home--trainee.png`, `states/home--narrow-trainee.png`,
-`act-A/A.7.3-1-dlamini-home.png`, `act-2/2.39-1-molefe-home.png`, `act-3/3.50-1-dlamini-dashboard.png`,
+`act-A/A.7.3-1-dlamini-home.png`, `act-2/2.39-1-molefe-home.png`,
 `act-2/2.40-1-dlamini-home.png`, `act-2/2.40-3-duplessis-home.png`, `act-2/2.40-5-mahlangu-home.png`,
 `act-2/2.40-7-ndlovu-home.png`
+
+Each was taken from the end of its act, not the step's own moment. `act-3/3.50-1-dlamini-dashboard.png` was re-captured
+from a fresh replay (Step 3.50: the Activity inbox card reads "No pending items." beside an inbox reading "Inbox
+clear").
 
 ## 6. Known problems this design must solve
 
 | Task | Problem today | What it means for the design | Evidence |
 |---|---|---|---|
-| T306 (P3; BRIEF B4) | The training year is on My progress only. `TraineeDashboard.razor:26` (Curriculum targets) shows none. | The Curriculum targets card names "Training year N". Word it "training year N" (DESIGN.md:738, D17). | `act-2/2.39-2-molefe-progress.png`; the dashboard in `act-2/2.39-1-molefe-home.png` (held) |
+| T306 (P3; BRIEF B4) | The training year is on My progress only. `TraineeDashboard.razor:26` (Curriculum targets) shows none. | The Curriculum targets card names "Training year N". Word it "training year N" (DESIGN.md:738, D17). | `act-2/2.39-2-molefe-progress.png`; the dashboard in `act-2/2.39-1-molefe-home.png` (re-captured after T297) |
 | T323 (P3; BRIEF A3) | `TrajectoryChart.razor` draws a 600×200 viewBox with 11 px labels. At 260–293 px they render at 5–6 px. The companion table is `.visually-hidden` at every width. | Chart text is at least 11 px at 390 px, or the table is visible under each chart below 641 px (T323 recommends the table). Record the choice in DESIGN. | `act-A/A.7.6-2-zulu-trajectory.png`; Step A.7.3's Actual (charts 293 px wide in a 341 px column) |
-| T298 (P3; BRIEF B13) | "Upcoming deadlines" scans each activity's data for a `due_date` key that no seeded or KGK type has (`GetTraineeDashboardSummaryQuery.cs:111-148`). It always reads "No deadlines in the next 14 days." | Remove the card, or give it one of these sources: the current window's end for an unmet target, a committee review scheduled for her, or a STAR nearing expiry. A card that can never fill is not acceptable. | `act-3/3.50-1-dlamini-dashboard.png` (held) |
-| T328 (P3; BRIEF A4) | Dashboard rows are inline `display:flex` (`TraineeDashboard.razor:101,125`), so a badge takes the row's height when the link wraps. Form controls use the browser's font. | A `.list-row` pattern: the badge keeps its pill (`align-self: center`, no wrap). Controls use the body font. | `states/home--narrow-trainee.png` (held) |
-| T280 (P3; BRIEF A14) | Inbox, recent and deadline links are named only by the instrument: "Mini-CEX (Paediatrics)" twice on one card. | Each link carries the EPA or the encounter date, so its name is unique. | `act-3/3.50-1-dlamini-dashboard.png` (held) |
-| T297 (group 1, in progress) | The Activity inbox card lists "requested, accepted, declined or draft". So it shows a declined request, which has no move left, and misses work waiting in "submitted". | The card lists exactly what `/activities/inbox` lists for her. A declined request is on Recent activities with its badge. | BRIEF § 10 |
+| T298 (P3; BRIEF B13) | "Upcoming deadlines" scans each activity's data for a `due_date` key that no seeded or KGK type has (`GetTraineeDashboardSummaryQuery.cs:111-148`). It always reads "No deadlines in the next 14 days." | Remove the card, or give it one of these sources: the current window's end for an unmet target, a committee review scheduled for her, or a STAR nearing expiry. A card that can never fill is not acceptable. | `act-3/3.50-1-dlamini-dashboard.png` (re-captured after T297) |
+| T328 (P3; BRIEF A4) | Dashboard rows are inline `display:flex` (`TraineeDashboard.razor:101,125`), so a badge takes the row's height when the link wraps. Form controls use the browser's font. | A `.list-row` pattern: the badge keeps its pill (`align-self: center`, no wrap). Controls use the body font. | `states/home--narrow-trainee.png` (re-captured after T297; the badges still stretch) |
+| T280 (P3; BRIEF A14) | Inbox, recent and deadline links are named only by the instrument: "Mini-CEX (Paediatrics)" twice on one card. | Each link carries the EPA or the encounter date, so its name is unique. | `act-3/3.50-1-dlamini-dashboard.png` (re-captured after T297) |
+| T297 (group 1, landed in 7bf8ea7) | Before the fix, the Activity inbox card listed "requested, accepted, declined or draft", so it showed a declined request, which has no move left, and missed work waiting in "submitted". | The card lists exactly what `/activities/inbox` lists for her. A declined request is on Recent activities with its badge. | BRIEF § 10; § 5.3, re-captured 2026-09-26 |
 | T312 (P2, backend) | An ended record reads today's catalogue, so a paused EPA vanishes from a graduate's record. | After T312, an ended record keeps a paused EPA's card, headed "(no longer in use)" (`EpaLabel`, T255). A running trainee still loses the card (T158) but keeps the trajectory with the mark (Step 6.19). Design the mark for card headings and chart headings. The ended record itself is F13's. | `act-6/6.21-1-molefe-record-paused.png` (F13) |
 | T304 (P2, backend) | Moving a registrar to 11.2 replays none of his credit. His cards read 0 until the Administrator's global rebuild, and nothing says why (Step 6.37, F-6.37a). | T304's plan replays credit in the same save as the move, so the before-rebuild zeros go away. Design the after-rebuild state as the normal one. Do not design a "counts await a rebuild" notice unless T304 is rejected (inference from T304's plan). | `states/my-progress--before-rebuild.png` |
 | T329 (P2; BRIEF A6) | My progress already shows its header and a skeleton. The load error prints the driver's text, "An exception has been raised that is likely due to a transient failure." | Keep the header and skeleton. The error is one plain sentence under the header, with nothing empty drawn beneath it; the wording is T272's (queued). | `states/my-progress--loading.png`, `states/my-progress--load-error.png` |

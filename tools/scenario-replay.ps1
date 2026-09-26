@@ -111,6 +111,9 @@ switch ($Command) {
         if (-not (Test-Path $dll)) { throw "Not published yet: run tools\scenario-replay.ps1 publish" }
         $parts = Get-Connection
         $log = Join-Path $appDir "$Arg1.log"
+        # A restart must not truncate the log a replay read its mail from: keep the old one beside it.
+        if (Test-Path $log) { Move-Item $log (Join-Path $appDir ("$Arg1-" + (Get-Date -Format 'yyyyMMdd-HHmmss') + ".log")) }
+        if (Test-Path "$log.err") { Remove-Item "$log.err" }
         $env:ASPNETCORE_ENVIRONMENT = 'Development'
         $env:ConnectionStrings__DefaultConnection = Get-ConnectionString $parts $Arg1
         $env:ASPNETCORE_URLS = "http://localhost:$port"

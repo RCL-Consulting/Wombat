@@ -11,7 +11,7 @@ Part of the GUI redesign briefed in `design/BRIEF.md` (T332). Written 2026-09-26
 | **Frequency and stakes** | Once per registrar after four years, plus leavers. Very high: the PDF and the STAR certificates are the record that leaves Wombat (T310, citing DOMAIN.md:78) |
 | **Mode** | **Wireframe first** for the former trainee's home and nav (a new dashboard, BRIEF § 7 B1) and for the staff export's entry points (B2). **Fidelity** for Export, Verify and the completion dialogs |
 | **Pages** (`coverage.md` templates) | `/portfolio/export`, `/portfolio/export/{TraineeUserId}`, `/portfolio/verify`, `/admin/trainees`, `/admin/trainees/edit`, `/admin/users/{UserId}`, `/portfolio/progress`, `/`, `/committee/my-reviews`, `/portfolio/authorisations`, `/msf/my-reports`, `/activities/new`, `/activities/mine`, `/activities/{ActivityId:int}`, `/committee/reviews` |
-| **Held screenshots** | Five, under T303 and T297 (§ Attach). Brief from the step text for those screens until they are re-captured |
+| **Held screenshots** | Two, under T303 (§ Attach). Brief from the step text for those screens until they are re-captured. T297's three were re-captured on 2026-09-26 |
 
 **How to run this thread** (BRIEF § 2.3, step 3; source keys are BRIEF § 2.0's):
 1. Open a new thread in the Wombat design system. Attach the KEY SCREENSHOTS (§ Attach, first list).
@@ -239,7 +239,7 @@ section.
 | `pending-trainees-list` | Completed and closed | `states/pending-trainees-list--closed.png` | Prof Mbatha | At Step 5.27. (:671) |
 | `user-detail` | No roles | `states/user-detail--no-roles.png` **HELD (T303)** | Prof Mbatha | At Step 5.17. (:648) |
 | `home` | No role assigned | `states/home--no-role.png` | Dr Molefe (former trainee) | At Step 5.21: the code shows the "No role assigned" card (the step's expectation is the decided wording; see its note). (:136) |
-| `home` | Trainee whose programme ended | `states/home--trainee-ended.png` **HELD (T297, inferred)** | Dr du Plessis | At Step 5.28: "Your programme ended on …, so no target applies to you any more." (:135) |
+| `home` | Trainee whose programme ended | `states/home--trainee-ended.png` (re-captured after T297, 2026-09-26) | Dr du Plessis | At Step 5.28: "Your programme ended on …, so no target applies to you any more." (:135) |
 | `home` | Narrow: former trainee | `states/home--narrow-former-trainee.png` | Dr Molefe | At Step A.7.4. (:140) |
 | `my-progress` | Exit rule met | `states/my-progress--exit-met.png` | Dr Molefe | At Step 5.15. (:292) |
 | `my-progress` | Completed programme, read-only | `states/my-progress--completed.png` | Dr Molefe (former trainee) | At Step 5.20. (:293) |
@@ -298,8 +298,12 @@ Every path is under `design/baseline/` and was checked to exist on 2026-09-26. O
 
 **HELD: do not attach until re-captured after the group-1 fix lands** (BRIEF § 10):
 - T303 (Add role offers Trainee): `act-5/5.17-3-mbatha-user-no-roles.png`, `states/user-detail--no-roles.png`.
-- T297 (inferred: the ended trainee still gets the trainee dashboard): `states/home--trainee-ended.png`,
-  `act-5/5.28-1-duplessis-home-ended.png`, `act-A/A.4.6-1-trainee-dashboard-ended.png`.
+
+**Re-captured after T297 landed (2026-09-26), so no longer held:** `states/home--trainee-ended.png`,
+`act-5/5.28-1-duplessis-home-ended.png` (both from the end-of-Act-5 snapshot) and
+`act-A/A.4.6-1-trainee-dashboard-ended.png` (the end of the appendix). The ended trainee does get the trainee dashboard,
+and T297 changed it: its Activity inbox card now lists his requested CBD and his portfolio review awaiting review, the
+two rows his inbox lists (Step 5.28's re-check).
 
 ## Known problems this design must solve
 

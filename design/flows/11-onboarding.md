@@ -8,7 +8,7 @@ once, and it is their first impression. It is flow 11 of 18 (`design/BRIEF.md` �
 |---|---|
 | **Mode** | Straight to fidelity for Invitations (screen 1) and Register (screen 2). Wireframe first for the pending registrar's pages (screen 3) and the admission form (screen 4), which gains the training year (T306) and a curriculum picker that offers only the adopted version (T304). |
 | **Viewports** | Desktop 1280×800 and phone 390×844. |
-| **Held** | T303 (Add role offers Trainee) and T297 (dashboard cards). Their images wait for re-capture (§ Attach). |
+| **Held** | T303 (Add role offers Trainee): its images wait for re-capture (§ Attach). T297's (dashboard cards) were re-captured on 2026-09-26. |
 | **Frequency** | Each January intake of two registrars, and each staff join (`scenario-paediatrics/README.md` § The world). Every user meets it once. |
 | **Stakes** | High. It is every user's first impression, and a role and scope are access control. |
 | **People** | Administrator `devadmin`, who invites the CollegeAdmin and the first InstitutionalAdmin. InstitutionalAdmin Prof Nolwazi Mbatha, who invites the staff and registrars and admits the registrars. Anonymous invitees: Dr Anton Kruger, Prof Mbatha, all the staff and all five registrars. PendingTrainee: each registrar between registering and admission. |
@@ -244,7 +244,7 @@ ATTACHED (key screenshots first):
 | 2.5 | `/admin/invitations` | She invites Dr van Rensburg, the external member. | Issued with no speciality. |
 | 2.6 | `/admin/invitations` | She invites Dr Mokoena with no speciality, then with one. | "Speciality administrators must be scoped to a speciality.", and no link. Today the previous link stays on screen (F-2.6a, T264). |
 | 2.7 | `/admin/invitations` | She invites Dr Sithole without a sub-speciality, then with one. | "The selected role requires speciality and sub-speciality scope." Then nine rows. |
-| 2.8 | `/account/register` → `/` → `/account/logout` → `/account/login` | Mr Smit registers, then signs out. | His address and role named. The token cleared from the address bar (T315). His Home (held, T297). |
+| 2.8 | `/account/register` → `/` → `/account/logout` → `/account/login` | Mr Smit registers, then signs out. | His address and role named. The token cleared from the address bar (T315). His Home (re-captured after T297). |
 | 2.9 | `/account/register` → `/` → `/account/logout` | Dr Patel's first two attempts are refused. | "Passwords must be at least 12 characters.", with the focus on the first field; then "The password confirmation does not match."; then his Home. |
 | 2.10 | `/account/register` → `/` → `/account/logout` | The other seven staff register. | Each lands on Home, viewing as their role. |
 | 2.11 | `/account/register` | Mr Smit opens his used link again. | "This invitation has already been used." |
@@ -257,8 +257,8 @@ ATTACHED (key screenshots first):
 | 2.28 | `/admin/invitations` → `/admin/users` → `/admin/users/{UserId}` → `/admin/trainees` | Prof Mbatha reviews the pending registrars. | Users lists 15. PendingTrainee reads "System-managed" (held, T303). Five registrars under Pending admission; "No active trainee profiles found." |
 | 2.29 | `/admin/trainees` → `/admin/trainees/edit` → `/admin/trainees` | She admits four registrars with their start and completion dates. | Only the adopted curriculum offered (T091). The start date pre-filled. No training year today (T306). Each admission moves to the profile page. |
 | 2.30 | `/admin/trainees` → `/admin/trainees/edit` → `/admin/trainees` | She admits Dr Ndlovu with no completion date, then corrects it. | The derived date and its help. "Trainee profile saved." "No pending trainees found." |
-| 2.31 | `/` → `/account/session-ended` → `/account/login` → `/` | Dr Mahlangu's open tab ends; she signs in again. | "Your session has ended. Please sign in again." (T279). Then her Trainee Home (held, T297). |
-| 2.32 | `/account/login` → `/` → `/admin/invitations` → `/access-denied` → `/committee/panels` → `/committee/panels/new` → `/access-denied` | Mr Smit learns what his role offers. | His dashboard (held, T297). Access denied on Invitations (T178). Decision Panels, read-only, with no nav link to it. Access denied on New panel. |
+| 2.31 | `/` → `/account/session-ended` → `/account/login` → `/` | Dr Mahlangu's open tab ends; she signs in again. | "Your session has ended. Please sign in again." (T279). Then her Trainee Home (re-captured after T297). |
+| 2.32 | `/account/login` → `/` → `/admin/invitations` → `/access-denied` → `/committee/panels` → `/committee/panels/new` → `/access-denied` | Mr Smit learns what his role offers. | His dashboard (re-captured after T297). Access denied on Invitations (T178). Decision Panels, read-only, with no nav link to it. Access denied on New panel. |
 | 2.44 | `/` → `/admin/users` → `/admin/assessors` | Prof Mbatha reads her dashboard after onboarding. | Users by role, with no PendingTrainee line. Quick links. Fatima Khumalo's corrected name. The dashboard is designed in flow 12. |
 
 ## States to design
@@ -351,10 +351,11 @@ link left on screen (F-2.6a). Treat each as showing a link unless you have opene
 - T303:
   - `act-2/2.28-3-molefe-user.png`
   - `states/user-detail--pending-trainee.png`
-- T297:
-  - `act-2/2.31-2-mahlangu-trainee-home.png`
-  - the other first-Home captures of the five affected roles, which BRIEF § 10 lists: `2.8-2`, `2.9-3`, `2.10-4`,
-    `2.10-6`, `2.10-7` and `2.32-1`.
+
+**Re-captured after T297 landed (2026-09-26), so no longer held:** `act-2/2.31-2-mahlangu-trainee-home.png` and the
+other first-Home captures of the five affected roles, `2.8-2`, `2.9-3`, `2.10-4`, `2.10-6`, `2.10-7` and `2.32-1`. Each
+was taken from the end-of-Act-2 snapshot, not the step's own moment: Dr Mokoena's and Dr Sithole's Homes (`2.10-6`,
+`2.10-7`) already count the five registrars admitted later in the act (BRIEF § 10).
 
 ## Known problems this design must solve
 

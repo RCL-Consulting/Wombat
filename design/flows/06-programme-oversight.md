@@ -14,7 +14,7 @@ Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screen
 | Steps | 18: 2.33, 2.35, 2.37, 2.38, 3.30, 3.31, 3.32, 3.52, 3.53, 3.54, A.2.8, A.5.10, A.5.11, A.5.12, A.7.5, A.7.6, A.7.7, A.7.8. Steps 3.32 and A.2.8 are the Administrator running the reminder jobs on `/admin/jobs` (F18's page), seen here for what they chase. |
 | Frequency and stakes | Weekly. Medium-high: this is where a registrar falling behind, or a request nobody has answered, is caught before the committee sits. |
 | Mode | **Wireframe first.** Four role dashboards and three of the five "Coming soon" pages live here; decide them before fidelity (BRIEF § 2.3, step 3; § 7 B7). |
-| Held | **By T297.** T297 (group 1, in progress) changes the Coordinator's, SpecialityAdmin's and SubSpecialityAdmin's cards, so their 24 captures are held until re-captured (§ 5.3; BRIEF § 10). The CommitteeMember's dashboard and the placeholders are not held. |
+| Held | **Nothing.** T297 (group 1, landed in 7bf8ea7) changed the Coordinator's, SpecialityAdmin's and SubSpecialityAdmin's cards. 23 of their 24 captures were re-captured on 2026-09-26, and one (`3.53-2`) no longer has a step (§ 5.3; BRIEF § 10). The CommitteeMember's dashboard and the placeholders were never held. |
 
 ---
 
@@ -22,8 +22,7 @@ Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screen
 
 1. Run F01 (the shell and the nav) first. Whether each "Coming soon" item keeps its nav slot is decided here, but the
    nav's grouping is F01's (BRIEF § 2.3, step 2).
-2. Wait for T297 to land and the held captures (§ 5.3) to be re-taken. The CommitteeMember dashboard and the three
-   placeholder pages can be briefed before then (inference: T297 does not touch them).
+2. T297 has landed and the captures in § 5.3 were re-taken on 2026-09-26, so every screen can be briefed.
 3. Start a new thread. Attach the key screenshots in § 5.1, then paste § 2.1 as one message.
 4. Pick a wireframe. Record in the chat, one sentence each, whether each placeholder is designed or dropped and whether
    triage is in scope. Then paste § 2.2 for fidelity.
@@ -196,8 +195,8 @@ edge cases and draw the none, typical and heavy data volumes. Review the result 
 ATTACHED: states/home--committee-member-figures.png, act-3/3.52-1-zulu-committee-dashboard.png,
 states/placeholder--programme-trainees.png, states/placeholder--star-review-queue.png,
 act-A/A.7.8-4-sithole-trainees-stub.png, act-A/A.5.10-2-stalled-activities-stub.png,
-act-A/A.7.5-3-decisions-due-summary-scrolled.png. After T297 lands, the re-captured Coordinator, SpecialityAdmin and
-SubSpecialityAdmin dashboards.
+act-A/A.7.5-3-decisions-due-summary-scrolled.png, and the Coordinator, SpecialityAdmin and SubSpecialityAdmin
+dashboards re-captured after T297 (§ 5.3).
 
 RUNBOOK STEPS, VERBATIM:
 
@@ -387,11 +386,11 @@ One line per step: what the person does, and what they must be able to see. The 
 | 2.35 | `/account/login` → `/` → `/committee/panels` | Dr Naidoo, Dr Botha | The same dashboard. The panel they sit on, with no New panel and no Edit (the panel page is F08's). |
 | 2.37 | `/account/login` → `/` → `/committee/panels` | Dr van Rensburg | The external member: "No trainees have targets this period." He should see the institution's registrars (T290). |
 | 2.38 | `/` | Dr Mokoena, Dr Sithole | Pending reviews 0 with "Review queue", "5 active / 0 inactive", coverage "0 of 5 met" per EPA, and two placeholder items in the nav. |
-| 3.30 | `/` | Mr Smit | Stalled requests should list two requests, oldest first, and it lists one: the Mini-CEX waiting in "requested" is missing (T297). Neither row is a link. |
+| 3.30 | `/` | Mr Smit | Stalled requests lists both requests, oldest first, each a link to its activity naming the trainee, with the day it last moved (after T297, re-checked 2026-09-26). |
 | 3.31 | `/placeholder/{Feature}` | Mr Smit | Stalled Activities is "Coming soon": there is nowhere to chase a request. A mistyped placeholder address is Page not found (404). |
 | 3.32 | `/admin/jobs` | devadmin (F18) | The nightly reminder runs: "Hi Thandi" and "Hi Mohammed", each listing the request that has waited 8 days. This is the only chase today. |
 | 3.52 | `/dashboard/switch/{role}` → `/` → `/placeholder/{Feature}` | Dr Zulu | Back to CommitteeMember. Registrars fewest met first: Ndlovu, Mahlangu and du Plessis at 0/10, then Dlamini and Molefe at 1/10. PAED-001 "2 of 5 met"; no link in either card. Programme Trainees is "Coming soon". |
-| 3.53 | `/` → `/activities/inbox` → `/placeholder/{Feature}` | Dr Mokoena | "1 activities in review" counts the portfolio review but not the requested CBD. "Review queue" opens "Inbox clear". STAR Review Queue is "Coming soon". |
+| 3.53 | `/` → `/placeholder/{Feature}` | Dr Mokoena | "2 activities awaiting review" counts the requested CBD and the portfolio review, in a card with no link (after T297, re-checked 2026-09-26). STAR Review Queue is "Coming soon". |
 | 3.54 | `/` | Dr Sithole | The same three cards and figures, and the same two stubs. |
 | A.2.8 | `/admin/jobs` | devadmin (F18) | The draft reminder ("Hi Nomsa, … draft for 15 days") and the assessor reminder (6 days) run; each job logs whom it reminded and skipped. |
 | A.5.10 | `/` → `/placeholder/{Feature}` | Mr Smit | The card's rows link nowhere, and Stalled Activities is the stub. |
@@ -411,16 +410,16 @@ From `execution/knowledge/scenario-paediatrics/states.md` § Home and the role d
 |---|---|---|---|
 | `/` | CommitteeMember, nobody to show | `home--committee-member-empty.png` | Step 2.37 (a defect: T290) |
 | `/` | CommitteeMember with figures | `home--committee-member-figures.png` | Step 3.52 |
-| `/` | SpecialityAdmin | `home--speciality-admin.png` (**held**, T297) | Step 2.38 |
-| `/` | SpecialityAdmin with figures | `home--speciality-admin-figures.png` (**held**) | Step 3.53 |
-| `/` | SubSpecialityAdmin | `home--sub-speciality-admin.png` (**held**) | Step 3.54 |
-| `/` | Coordinator, nothing waiting | `home--coordinator-empty.png` (**held**) | Step 2.32 |
-| `/` | Coordinator, stalled requests | `home--coordinator-stalled.png` (**held**) | Step 3.30, after its ageing SQL |
-| `/` | Coordinator, invitations nearing expiry | `home--coordinator-expiring.png` (**held**) | Scratch database (`states.md`) |
+| `/` | SpecialityAdmin | `home--speciality-admin.png` (re-captured after T297) | Step 2.38 |
+| `/` | SpecialityAdmin with figures | `home--speciality-admin-figures.png` (re-captured) | Step 3.53 |
+| `/` | SubSpecialityAdmin | `home--sub-speciality-admin.png` (re-captured) | Step 3.54 |
+| `/` | Coordinator, nothing waiting | `home--coordinator-empty.png` (re-captured) | Step 2.32 |
+| `/` | Coordinator, stalled requests | `home--coordinator-stalled.png` (re-captured) | Step 3.30, after its ageing SQL |
+| `/` | Coordinator, invitations nearing expiry | `home--coordinator-expiring.png` (re-captured) | Scratch database (`states.md`) |
 | `/` | 390 px, CommitteeMember | `home--narrow-committee-member.png` | Step A.7.6 |
-| `/` | 390 px, Coordinator | `home--narrow-coordinator.png` (**held**) | Step A.7.5 |
-| `/` | 390 px, SpecialityAdmin | `home--narrow-speciality-admin.png` (**held**) | Step A.7.7 |
-| `/` | 390 px, SubSpecialityAdmin | `home--narrow-sub-speciality-admin.png` (**held**) | Step A.7.8 |
+| `/` | 390 px, Coordinator | `home--narrow-coordinator.png` (re-captured) | Step A.7.5 |
+| `/` | 390 px, SpecialityAdmin | `home--narrow-speciality-admin.png` (re-captured) | Step A.7.7 |
+| `/` | 390 px, SubSpecialityAdmin | `home--narrow-sub-speciality-admin.png` (re-captured) | Step A.7.8 |
 | `/placeholder/{Feature}` | Programme Trainees | `placeholder--programme-trainees.png` | Step A.5.11 |
 | `/placeholder/{Feature}` | STAR Review Queue | `placeholder--star-review-queue.png` | Step A.5.12 |
 | `/placeholder/{Feature}` | Stalled Activities | `placeholder--stalled-activities.png` | Step 3.31 |
@@ -471,26 +470,34 @@ Every path below is under `design/baseline/` and was checked with `ls` on 2026-0
   - `act-A/A.7.8-5-sithole-star-queue-stub.png`
   - `act-A/A.7.7-4-mokoena-entrustment-decisions.png` (the list STAR Review Queue could become)
 
-### 5.3 Held: do not attach until re-captured after T297
+### 5.3 Re-captured after T297 (formerly held)
 
-T297 changes these pages' cards (BRIEF § 10). Re-take them after it lands (`states.md` § How to capture), then attach:
+T297 changed these pages' cards (BRIEF § 10). Every capture below was re-taken on 2026-09-26 after it landed, each from
+the end of its act rather than the step's own moment, so none is held; attach them with § 5.1. At Step 2.10 Dr
+Mokoena's and Dr Sithole's Homes already count the five admitted registrars, and `home--coordinator-stalled` lists both
+stalled requests, as Step 3.30 now does (an SQL stand-in for the mid-act moment, BRIEF § 10):
 
 `states/home--speciality-admin.png`, `states/home--speciality-admin-figures.png`,
 `states/home--sub-speciality-admin.png`, `states/home--coordinator-empty.png`, `states/home--coordinator-stalled.png`,
 `states/home--coordinator-expiring.png`, `states/home--narrow-coordinator.png`,
 `states/home--narrow-speciality-admin.png`, `states/home--narrow-sub-speciality-admin.png`,
-`act-3/3.30-1-smit-stalled-requests.png`, `act-3/3.53-1-mokoena-dashboard.png`,
-`act-3/3.53-2-review-queue-inbox-clear.png`, `act-3/3.54-1-sithole-dashboard.png`, `act-2/2.38-1-mokoena-home.png`,
+`act-2/2.38-1-mokoena-home.png`,
 `act-2/2.38-2-sithole-home.png`, `act-A/A.5.10-1-stalled-requests-card.png`, `act-A/A.7.5-1-smit-home.png`,
 `act-A/A.7.7-1-mokoena-home.png`, `act-A/A.7.8-1-sithole-home.png`, `act-2/2.8-2-smit-home.png`,
 `act-2/2.32-1-smit-home.png`, `act-2/2.10-6-mokoena-home.png`, `act-2/2.10-7-sithole-home.png`,
 `act-4/4.3-1-mokoena-dashboard-nav.png`
 
+Re-captured from a fresh replay of Act 3 (2026-09-26); attach them with § 5.1 too:
+`act-3/3.30-1-smit-stalled-requests.png` (both stalled requests, oldest first, each a link naming the trainee),
+`act-3/3.53-1-mokoena-dashboard.png` and `act-3/3.54-1-sithole-dashboard.png` ("2 activities awaiting review", no
+link). Not re-captured, and not to be attached: `act-3/3.53-2-review-queue-inbox-clear.png`, since the Pending reviews
+card no longer links to the inbox it shows, so no step reaches it.
+
 ## 6. Known problems this design must solve
 
 | Task | Problem today | What it means for the design | Evidence |
 |---|---|---|---|
-| T297 (group 1, P2, in progress) | The cards select activities by literal state keys. The Coordinator's reads `submitted` only (`GetCoordinatorDashboardSummaryQuery.cs:44`), so every CPSA WBA waiting in `requested` is missed, and its rows are text (`CoordinatorDashboard.razor:22`). The speciality admins' tiles read `submitted` or `in_review`, say "activities in review" with no singular, and link to `/activities/inbox`, which lists only what the caller can move. | Stalled requests: linked rows naming the trainee, oldest first, for everything waiting on a reviewer for 7 days. Pending reviews: a singular label, and a link only to a page that lists what it counts. | Held captures (§ 5.3); Steps 3.30, 3.53, 3.54 |
+| T297 (group 1, P2, landed in 7bf8ea7) | Before the fix, the cards selected activities by literal state keys. The Coordinator's reads `submitted` only (`GetCoordinatorDashboardSummaryQuery.cs:44`), so every CPSA WBA waiting in `requested` is missed, and its rows are text (`CoordinatorDashboard.razor:22`). The speciality admins' tiles read `submitted` or `in_review`, say "activities in review" with no singular, and link to `/activities/inbox`, which lists only what the caller can move. | Stalled requests: linked rows naming the trainee, oldest first, for everything waiting on a reviewer for 7 days. Pending reviews: a singular label, and a link only to a page that lists what it counts. | § 5.3 (all re-captured after the fix, 2026-09-26); Steps 3.30, 3.53, 3.54 |
 | T298 (P3) | Tied registrars are ordered by user id, a GUID (`CurriculumCoverage.cs:241-244`): "Ndlovu, Mahlangu, du Plessis" at 0/10, then "Dlamini, Molefe" at 1/10. | Fewest met first, then surname and first name. At 2.33 all five read Dlamini, du Plessis, Mahlangu, Molefe, Ndlovu. | `states/home--committee-member-figures.png` |
 | T290 (P3; the committee item is Medium) | The committee card lists only trainees in the member's sub-speciality claims (`GetCommitteeMemberDashboardSummaryQuery.cs:34,55`). The external member holds none, so his card is empty. | The card reads the institution's current registrars. Design "nobody to show" only for an institution with none. | `states/home--committee-member-empty.png`; Step 2.37 |
 | B7 (BRIEF § 7) | Programme Trainees, Stalled Activities and STAR Review Queue open `PlaceholderPage.razor`'s "Coming soon" card. `PlaceholderPage.Headings` must list exactly the features the nav links there (`NavMenuAuthorizationTests.ThePlaceholderPage_KnowsExactlyTheFeaturesTheNavLinksToIt`). | Design each, or drop its nav item. A nav change is a DESIGN.md change: `NavMenuAuthorizationTests` parses DESIGN.md's nav table (DESIGN.md:192-205; BRIEF § 4). Their contents are inferred: no intent document exists for any of them (searched `execution/knowledge`, `execution/architecture`, `DECISIONS.md`). | § 5.1 |

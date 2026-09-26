@@ -1,11 +1,13 @@
 ---
 id: T297
 title: Five dashboard cards read literal state keys, so an assessor's Pending requests reads 0 beside a full inbox and the coordinator's Stalled requests never lists a stalled CPSA request
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-09-26
+completed: 2026-09-26
 ---
 
 # T297 — Five dashboard cards read literal state keys, so an assessor's Pending requests reads 0 beside a full inbox and the coordinator's Stalled requests never lists a stalled CPSA request
@@ -50,14 +52,47 @@ Every 'waiting' card is read from the activity's pinned workflow, as T203 did fo
 
 ## Verification
 
-- [ ] AssessorDashboardQueryTests: a mini_cex_cpsa that a trainee filed and submitted naming the assessor, with no transition by him, counts 1. A portfolio_review_cpsa in 'submitted' naming him counts. His own draft does not.
-- [ ] Parity test: for each seeded workflow and caller, the Assessor and Trainee cards' rows equal ListActivitiesByActorInboxQuery's rows, less the assessor's own portfolio.
-- [ ] TraineeDashboardQueryTests: a declined mini_cex_cpsa is not on the Activity inbox card, and a submitted reflective_exercise_cpsa is.
-- [ ] CoordinatorDashboardQueryTests: a mini_cex_cpsa in 'requested' untouched for 8 days is listed, and a draft and a declined request are not. A shared-predicate test shows that an activity AssessorPendingNudgeJob would mail about is on the card.
-- [ ] Speciality and SubSpeciality admin handler tests: a requested CPSA WBA in the caller's programme and institution is counted, and one at another institution is not. The label reads '1 activity'.
-- [ ] The guard test fails when a literal state comparison is put back under Features/Dashboards (mutation-checked by reintroducing Coordinator :44).
-- [ ] bUnit: the Coordinator's stalled rows link to /activities/{id}, and DashboardLinkAuthorizationTests stays green.
-- [ ] Browser: replay Steps 3.12, 3.16, 3.24, 3.30, 3.33, 3.51, 3.53, 3.54 and A.6.8 on a fresh database. Each card's figure matches the page it opens, and the 3.30 card lists the Mini-CEX the nudge mailed about. Re-capture the baseline screenshots.
+- [x] AssessorDashboardQueryTests: a trainee-filed, submitted mini_cex_cpsa naming the assessor counts, as does a
+  portfolio review awaiting him, and his own draft does not —
+  `ARequestATraineeFiledAndSubmittedNamingHim_Counts_AsDoesAPortfolioReviewAwaitingHim_ButNotHisOwnDraft`; failed before.
+- [x] Parity test over every seeded workflow and caller — `DashboardInboxParityTests` (22 shipped seeds × 5 callers); 22
+  cases failed before, and again under a mutation restoring the old "created or moved" confinement.
+- [x] A declined mini_cex_cpsa is not on the Trainee's Activity inbox card; a submitted reflective exercise is —
+  `ADeclinedCpsaRequest_IsNotOnTheInboxCard_AndASubmittedReflectiveExerciseIs`.
+- [x] The Coordinator's card lists an 8-day-old requested Mini-CEX and not a draft or a declined request, and lists what
+  the nudge mails about — `ARequestedCpsaMiniCex_UntouchedForEightDays_IsListed_AndADraftAndADeclinedRequestAreNot`,
+  `AnActivityTheAssessorNudgeMailsAbout_IsOnTheCard` (runs the job, then the card).
+- [x] Speciality and SubSpeciality admin tiles count a requested CPSA WBA in scope and not another institution's; the
+  label reads "1 activity" — `ProgrammeAdminPendingReviewTests`, `WaitingCardsTests`.
+- [x] The guard fails when a literal state comparison returns under Features/Dashboards — `DashboardStateLiteralTests`
+  (mutation: Coordinator `CurrentState == "submitted"` reintroduced, caught at `:54`); after review it also catches a
+  seed state key held in a const, an array or `.Equals`.
+- [x] bUnit: the Coordinator's stalled rows link to `/activities/{id}`; DashboardLinkAuthorizationTests green —
+  `WaitingCardsTests`.
+- [x] Browser, 2026-09-26: Act 3 replayed from Step 3.1 on `wombat_scenario_rc3` (post-Act-2 snapshot, fixed build);
+  at 3.12, 3.16, 3.24, 3.30, 3.33, 3.51, 3.53 and 3.54 every card's figure matched the page it opens, and 3.30's card
+  listed the two stalled requests the nudge then mailed about (3.32). A.6.8 on a post-appendix copy: Patel's card 1 =
+  his inbox 1. Each step's Actual records it; each F-id is marked "fixed by T297".
+
+## As built — 2026-09-26 (`7bf8ea7`)
+
+- **One reading of "waiting":** `ActivityWaiting` (Application, beside `ActivityCompletion`) holds the inbox's act-gate
+  rule, moved out of `ListActivitiesByActorInboxQuery`, and "awaiting a reviewer" (a non-terminal state with a move
+  whose actor has a `field:` or `role:` arm). A pin resolves to its published version.
+- **Every card reads it:** the Assessor's Pending requests and "Awaiting your review" (formerly "Accepted, needing
+  action") and Recent decisions; the Trainee's Activity inbox and Upcoming deadlines; the Coordinator's Stalled requests
+  (rows now link to the activity); the Speciality and SubSpeciality admins' Pending reviews (no inbox link, since no
+  page lists that backlog). The assessor nudge job shares the predicate.
+- **Performance, after review:** the actionable read is narrowed in SQL to a superset of the act gate's arms, pinned by
+  a superset test on InMemory and PostgreSQL (`DashboardWaitingPostgresTests`).
+- **Tests:** Application 3,329, Web 2,081, Architecture 49, Infrastructure 981, Domain 770, Integration 401 on merged
+  master.
+- **Runbook:** Step 3.12's Expect no longer claims the decline is mailed (nothing sends it: T320). Step 3.30's Note
+  says the nudge waits 5 days and the stalled card 7.
+- **Baseline:** 10 Act 3 captures re-taken in the replay, plus 46 more Home captures across the acts (end-of-act
+  states); 3.53-2 is retired (no step reaches it). BRIEF § 10 records it.
+- **Seen in the re-check, noted elsewhere:** links nested inside a card link (F-3.12b, T280); a wrapping date and the
+  cards' fixed alert icon (F-3.30b, F-2.36a, T328).
 
 ## Related
 

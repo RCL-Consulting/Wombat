@@ -12,7 +12,7 @@ step 2).
 | People | All 10 roles (`src/Wombat.Domain/Identity/WombatRoles.cs`), a former trainee with no role, and signed-out visitors |
 | Runbook steps | 21, pasted verbatim in § 8 |
 | Pages (`coverage.md` templates) | `/`, `/access-denied`, `/not-found`, `/Error`, `/placeholder/{Feature}`; the endpoint `/dashboard/switch/{role}`; `Components/Layout/MainLayout.razor`, `NavMenu.razor`, `ReconnectModal.razor`; `#blazor-error-ui` (`MainLayout.razor:30`) |
-| Held | T297: 3 images, listed in § 4 (do not attach) |
+| Held | Nothing. T297's 3 images were re-captured on 2026-09-26 (§ 4) |
 
 **How to run this thread** (BRIEF.md § 2.3):
 1. Set up the design system first (BRIEF.md § 2.3 step 1). Then open a new Claude Design thread for this flow alone.
@@ -236,7 +236,7 @@ pages).
 | Shell | Reconnect: resume failed | `states/shell--reconnect-resume-failed.png` | "retry" above a Resume button (T330) |
 | Shell | In-app error bar | `states/shell--error-banner.png` | "An unhandled error has occurred. Reload" in `lightyellow`, over New activity left with an empty type picker (T329) |
 | Home | Two-role user | `states/home--committee-member.png` | "Welcome, zulu@…", "Viewing as CommitteeMember", "You also act as Assessor. Switch view: Assessor" |
-| Home | After a switch | `states/home--assessor-switched.png` | **Held (T297)**: do not brief from it |
+| Home | After a switch | `states/home--assessor-switched.png` | "Viewing as Assessor", the CommitteeMember switch line, Pending requests 0, "Nothing is awaiting your review." (re-captured after T297, 2026-09-26) |
 | Home | Loading | `states/home--loading.png` | the skeleton |
 | Home | Load error | `states/home--load-error.png` | the danger alert with the raw timeout text |
 | Access denied | Signed in | `states/access-denied--signed-in.png` | heading, reason, warning alert, Back to home |
@@ -298,10 +298,11 @@ Paths are relative to `design/baseline/`. Every one below was checked with `ls` 
   `states/placeholder--unknown-feature.png`, `states/placeholder--narrow.png`
 - `act-A/A.5.8-2-error-signed-out.png` (the signed-out redirect)
 
-**Held until re-captured after T297 lands. Do not attach, and do not brief from them:**
-- `states/home--assessor-switched.png`
-- `act-2/2.34-1-zulu-assessor-view.png`
-- `act-A/A.5.3-1-forged-switch-trainee-view.png`
+**Re-captured after T297 landed (2026-09-26), so no longer held; attach as the chat asks.** Each is from the end of its
+act, not the step's own moment (BRIEF § 10):
+- `states/home--assessor-switched.png` and `act-2/2.34-1-zulu-assessor-view.png` (Step 2.34: the empty Assessor view
+  after the switch)
+- `act-A/A.5.3-1-forged-switch-trainee-view.png` (Step A.5.3: still "Viewing as Trainee")
 
 ## 5. Known problems this design must solve
 
@@ -313,7 +314,7 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 | **T321** | Design the error page for signed-in and signed-out visitors, with the request id as quotable text. Access denied is one page with one frame, whether it is reached by a typed address or an in-app link. | `act-A/A.6.3-4-back-to-institutions-denied.png`, `states/error--signed-in.png`, `act-A/A.5.8-2-error-signed-out.png` |
 | **T330** | One message per reconnect state, and a button whose label matches the message. Keep the `components-reconnect-*` class names (`Layout/ReconnectModal.razor.css`). | `states/shell--reconnect-retrying.png`, `states/shell--reconnect-resume-failed.png` |
 | **T331** | The active item is designed, and a rule says which item a sub-page lights. Never two at once. | `states/specialities-list--loading.png`, `states/campaign-report--loading.png` (both F16/F10 pages, shown here for the unlit nav) |
-| **T328** | Controls in the body font; the design's focus ring on a focusable scroll region; badges that stay pills in a flex row; header actions of one height; a top-row account link at least 24 px tall. | `states/home--narrow-trainee.png` (the stretched badge; held by T297), `act-A/A.7.5-3-decisions-due-summary-scrolled.png` |
+| **T328** | Controls in the body font; the design's focus ring on a focusable scroll region; badges that stay pills in a flex row; header actions of one height; a top-row account link at least 24 px tall. | `states/home--narrow-trainee.png` (the stretched badge; re-captured after T297, and still stretched), `act-A/A.7.5-3-decisions-due-summary-scrolled.png` |
 | **T329** | The shared loading and load-error states: the header from the first render, a skeleton while the first read runs, an alert (not an alert above an empty state) when it fails, and no action before the record loads. The in-app error bar must not be the way a failed read ends. | `states/home--loading.png`, `states/home--load-error.png`, `states/shell--error-banner.png` |
 | **T325** | Wherever the frame prints a time, it is South African time with its zone. | BRIEF.md § 6, A9 |
 | **T324** | Home greets by name, and the switch line names roles by label ("Committee member"). | `states/home--committee-member.png` |
@@ -366,8 +367,8 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
 ## 8. The runbook steps, verbatim (paste this second)
 
 These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Each Expect
-describes the product as it is today. Steps 2.34 and 3.33 describe today's Assessor dashboard cards, which T297
-replaces; F04 designs the new ones.
+describes the product as it is today. Steps 2.34 and 3.33 describe the Assessor dashboard cards as T297 left them
+(re-pasted on 2026-09-26 after it landed); F04 designs them.
 
 ```text
 Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:537)
@@ -385,7 +386,7 @@ Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /account/logout → /account/login → / → /dashboard/switch/{role} → /
 Do: Choose Switch view: Assessor. Sign out and in again. Then type `/dashboard/switch/Administrator`.
 Expect: The page reads "Viewing as Assessor" and "You also act as CommitteeMember. Switch view: CommitteeMember". The
-  Assessor dashboard reads 0 "assessments awaiting review" with Review inbox, "No accepted assessments pending action.",
+  Assessor dashboard reads 0 "assessments awaiting review" with Review inbox, "Nothing is awaiting your review." (T297),
   "No decisions yet." and "Open my inbox →". The nav is unchanged. After signing in again she lands on the Assessor view,
   because the choice is remembered. The Administrator address brings her back to "Viewing as CommitteeMember": a role she
   does not hold is never shown.
@@ -397,7 +398,9 @@ Do: Her dashboard opens as a CommitteeMember; switch the view to Assessor. From 
   Mini-CEX, rate it 3a with feedback, and complete it.
 Expect: Home first reads "Viewing as CommitteeMember" and "You also act as Assessor. Switch view: Assessor". After the
   switch it reads "Viewing as Assessor", and "Pending requests" counts 1 assessment awaiting review: this Mini-CEX.
-  After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of
+  Awaiting your review lists it, "Mini-CEX (Paediatrics) — Nomsa Mahlangu", badged Overdue: it has waited past the
+  assessor's seven days since Step 3.30 aged it. After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's
+  minimum on PAED-004 is 3a. Nothing of
   Dr Mahlangu's is stalled any more.
 
 Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:908)

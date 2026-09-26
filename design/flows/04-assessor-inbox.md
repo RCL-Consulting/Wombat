@@ -14,7 +14,7 @@ arrives (T320), so the dashboard and the inbox are the only notice. An unseen re
 | Runbook steps | 17, pasted verbatim in § 8 |
 | Pages (`coverage.md` templates) | `/`, `/activities/inbox`, `/activities/{ActivityId:int}`, `/placeholder/{Feature}`; the endpoint `/dashboard/switch/{role}` (a two-role consultant switches to the Assessor view) |
 | Components | `Components/Pages/Dashboards/AssessorDashboard.razor`, `Pages/Activities/ActivityInbox.razor`, `Pages/Activities/ActivityView.razor` with `Shared/Activities/ActivityForm.razor` and `ActivityWorkflowActions.razor` |
-| Held | T297: 12 images, including every Assessor Home capture (§ 4) |
+| Held | Nothing. T297's 12 images, the four Assessor Home state captures among them, were re-captured on 2026-09-26 (§ 4) |
 | Depends on | F01 (the shell and the role switch) and F03 (the activity page's vocabulary) |
 
 **How to run this thread** (BRIEF.md § 2.3):
@@ -22,9 +22,8 @@ arrives (T320), so the dashboard and the inbox are the only notice. An unseen re
    F03's chosen artboards (`design/flows/03-trainee-files-activity/`) as the activity page to extend.
 2. Paste § 1, and attach the key screenshots in § 4 with it.
 3. Paste § 8, the runbook steps, as the next message.
-4. Attach the state screenshots in § 4 as the chat asks for them. **Do not attach any Assessor Home capture until
-   T297 has landed and the Home captures have been taken again** (§ 4, held). Brief the dashboard from the words in
-   § 1.
+4. Attach the state screenshots in § 4 as the chat asks for them. Every Assessor Home capture § 4 lists was
+   re-captured after T297 (2026-09-26). Brief the dashboard from the words in § 1.
 5. Pick one dashboard wireframe and one Recent Activities answer, then ask for fidelity.
 6. Answer § 6's questions in the chat, one sentence per decision. Export the chosen artboards into
    `design/flows/04-assessor-inbox/`.
@@ -203,10 +202,10 @@ Each screenshot is under `design/baseline/`. How to reach each is in `states.md`
 
 | Page | State | Screenshot | What it shows |
 |---|---|---|---|
-| Home | Assessor, first sign-in | `states/home--assessor-empty.png` | **Held (T297)** |
-| Home | A request waiting | `states/home--assessor-pending.png` | **Held (T297)** |
-| Home | Recent decisions | `states/home--assessor-decisions.png` | **Held (T297)** |
-| Home | Narrow | `states/home--narrow-assessor.png` | **Held (T297)** |
+| Home | Assessor, first sign-in | `states/home--assessor-empty.png` | 0 awaiting, "Nothing is awaiting your review.", "No decisions yet." (re-captured after T297) |
+| Home | A request waiting | `states/home--assessor-pending.png` | Dr Zulu after the switch: 1 awaiting, the Mini-CEX badged Overdue (re-captured after T297) |
+| Home | Recent decisions | `states/home--assessor-decisions.png` | Dr Khumalo: 1 awaiting; Completed in green, Declined in red (re-captured after T297) |
+| Home | Narrow | `states/home--narrow-assessor.png` | Dr Patel at 390 px: 1 awaiting, Overdue; four decisions (re-captured after T297) |
 | Inbox | Inbox clear | `states/activity-inbox--empty.png` | "Inbox clear. There are no activities waiting for your action." |
 | Inbox | Requests | `states/activity-inbox--assessor.png` | Type, Subject, EPA, Encounter date, State, Updated, Open |
 | Inbox | A paused EPA | `states/activity-inbox--paused-epa.png` | "(no longer in use)" on the EPA |
@@ -221,8 +220,8 @@ Each screenshot is under `design/baseline/`. How to reach each is in `states.md`
 | Coming soon | Recent Activities | `states/placeholder--recent-activities.png` | the stub |
 
 Not captured, so describe them in words:
-- **The dashboard after T297.** Every Assessor Home capture is held. Design from § 1's description; the captures are
-  taken again once T297 lands (BRIEF.md § 10).
+- **The dashboard after T297.** The four Assessor Home state captures above, and the step captures of Home in § 4,
+  were re-taken after T297 landed (2026-09-26) and show its cards (BRIEF.md § 10). Design from § 1's description.
 - **"Accepted, needing action" with a row.** No CPSA workflow has a state named `accepted`, so the replay only ever
   shows the card empty (`coverage.md` § Flows and states not played; Step 3.51). T297 replaces the card with the
   actionable items, oldest first, flagged overdue past `DashboardThresholds.AssessorDueDays`, 7 days
@@ -252,13 +251,15 @@ Also attach **F03's chosen activity-page artboards** from `design/flows/03-train
 `states/activity-inbox--loading.png`, `states/activity-inbox--narrow.png`, `states/placeholder--recent-activities.png`;
 and, for the completed state, `act-3/3.5-2-naidoo-completed.png` and `act-3/3.24-3-dops-completed.png`.
 
-**Held until re-captured after T297 lands. Do not attach, and do not brief from them:**
-- `act-3/3.24-1-patel-home.png`, `act-3/3.33-2-zulu-home-assessor-view.png`, `act-3/3.51-1-khumalo-dashboard.png`
+**Re-captured after T297 landed (2026-09-26); attach as the chat asks for the dashboard:**
+`act-3/3.24-1-patel-home.png` (two waiting, oldest first), `act-3/3.33-2-zulu-home-assessor-view.png` (one waiting,
+badged Overdue, after the switch), `act-3/3.51-1-khumalo-dashboard.png` (one waiting, and Recent decisions in green and
+red) and `act-A/A.6.8-2-assessor-dashboard.png` (the overdue portfolio review). Also re-captured on 2026-09-26, each
+from the end of its act rather than the step's own moment (BRIEF § 10), so none is held any more:
 - `act-2/2.36-1-patel-home.png`, `act-2/2.36-2-khumalo-home.png`, `act-2/2.9-3-patel-home.png`,
-  `act-2/2.10-4-khumalo-home.png`
-- `act-A/A.6.8-2-assessor-dashboard.png`
+  `act-2/2.10-4-khumalo-home.png` (the empty dashboard: "Nothing is awaiting your review.")
 - `states/home--assessor-empty.png`, `states/home--assessor-pending.png`, `states/home--assessor-decisions.png`,
-  `states/home--narrow-assessor.png`
+  `states/home--narrow-assessor.png` (§ 3)
 
 ## 5. Known problems this design must solve
 
@@ -266,14 +267,14 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 
 | Task | What it means for the design | Evidence (under `design/baseline/`) |
 |---|---|---|
-| **T297** (group 1, being fixed) | The dashboard's cards are redefined (§ 1): a count that matches the inbox, the actionable items oldest first with an overdue flag, and recent decisions as "finished or no move left". Brief the dashboard from those words; re-capture before checking the design against Home. | held captures in § 4; T297's symptom (Steps 3.24, 3.33, 3.51, A.6.8) |
+| **T297** (group 1, landed in 7bf8ea7) | The dashboard's cards are redefined (§ 1): a count that matches the inbox, the actionable items oldest first with an overdue flag, and recent decisions as "finished or no move left". Brief the dashboard from those words; re-capture before checking the design against Home. | § 4's re-captured Home captures (Steps 3.24, 3.33, 3.51, A.6.8, re-checked 2026-09-26) and the four Home state captures, re-captured the same day |
 | **T299** | The same result region, note panel and focus rules as F03, from the assessor's side: Complete, Decline, Return and Record Discussion. | `states/activity-view--decline-refused.png`, `act-A/A.7.1-3-submitted-requested.png` |
 | **T323** | The rating form at 390 px: one card deep, full-width inputs, the history table reflowed. | `act-A/A.7.2-1-patel-completes-on-phone.png`, `states/activity-view--narrow.png` |
 | **T322** | Badges in the inbox and on Recent decisions from F01's tokens. | `act-A/A.7.14-6-reviews-badges.png` |
 | **T320** | The dashboard and inbox are the only notice. Their counts, their order and the overdue flag are the product's whole reminder system, apart from the daily nudge email (Step 3.32). | T320's symptom |
 | **T280** | Row actions and dashboard links carry the registrar and the EPA or date. Today Recent decisions names links "<instrument> for <trainee>", so several rows can share a name. | T280's notes |
 | **T325** | "Updated" and every history time in SAST, with the zone. | `states/activity-inbox--assessor.png` |
-| **T328** | Body font in the feedback fields; badges that keep their shape beside a wrapping link. | `act-A/A.7.2-1-patel-completes-on-phone.png`, `states/home--narrow-assessor.png` (held; evidence only) |
+| **T328** | Body font in the feedback fields; badges that keep their shape beside a wrapping link. | `act-A/A.7.2-1-patel-completes-on-phone.png`, `states/home--narrow-assessor.png` (re-captured after T297; the badges still stretch) |
 | **T329** | The inbox's loading state from F01's shared states. | `states/activity-inbox--loading.png` |
 | Observed, not filed | The activity page never names the registrar: its summary lists Type, Encounter date, State and Version (`ActivityView.razor:73–79`). The inbox's subtitle reads "Activities that the current user can act on." | `states/activity-view--to-rate.png`, `states/activity-inbox--assessor.png` |
 
@@ -294,8 +295,8 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 
 A flow is done when BRIEF.md § 9's four checks hold. For this flow:
 
-- **T297 lands first.** Its fix rewrites the Expect lines of Steps 3.24, 3.33, 3.51 and A.6.8 (and others outside this
-  flow). Replay against those.
+- **T297 has landed** (7bf8ea7). It rewrote the Expect lines of Steps 3.24, 3.33, 3.51 and A.6.8 (and others outside
+  this flow), re-pasted in § 8. Replay against those.
 - **Replay the 17 steps** on a fresh database, playing the acts up to each one: 2.36; Act 3's 3.4–3.33 and 3.51; 5.25;
   6.18; and the appendix's A.4.3, A.6.8 and A.7.2. Every Expect must hold. Steps 3.4, 3.11 and 3.51 quote the page's
   words: update them in the same task if the wording changes (BRIEF.md § 9 item 7).
@@ -308,7 +309,7 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
   - `Accessibility/ActionFocusTests` and `RowNamesTests`; `Design/RowActionMarkupTests`, `NarrowLayoutTests` and
     `DefinedClassTests`;
   - `Scenario/`.
-- **Re-capture** the 16 states in § 3 (the four Home captures after T297) and the steps' own captures. Compare them
+- **Re-capture** the 16 states in § 3 and the steps' own captures. Compare them
   with the chosen artboards.
 - **Browser check** at 1280 and 390 px as Dr Patel (Assessor only) and as Dr Zulu (two roles): each dashboard figure
   matches the page it opens.
@@ -316,8 +317,8 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
 ## 8. The runbook steps, verbatim (paste this second)
 
 These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Each Expect
-describes the product as it is today. The dashboard wording in 2.36, 3.24, 3.33, 3.51 and A.6.8 is the pre-fix card
-set, which T297 replaces. `D` is the replay day (`act-3-operations.md` § The clock in this act).
+describes the product as it is today. The Expects of 3.24, 3.33, 3.51 and A.6.8 were re-pasted on 2026-09-26, after
+T297 rewrote them; 2.36 refers to Step 2.34's empty dashboard, which T297 also changed. `D` is the replay day (`act-3-operations.md` § The clock in this act).
 
 ```text
 Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:579)
@@ -382,9 +383,11 @@ Step 3.24 — Dr Patel completes Dr Mahlangu's DOPS (act-3-operations.md:429)
 Role: Assessor — Dr Mohammed Patel
 Route: / → /activities/inbox → /activities/{ActivityId:int}
 Do: From the dashboard, open the inbox, then the DOPS. Rate it 3a with feedback, and complete it.
-Expect: The inbox holds two rows: Nomsa Mahlangu's DOPS (Requested) and Pieter du Plessis's portfolio review (Awaiting
-  review). After Complete, the DOPS is Completed, credited "1 item". Year 1's minimum on PAED-002 is 3a, so it counts at
-  the minimum. The portfolio review stays in his inbox.
+Expect: Home (Assessor view) reads "2 assessments awaiting review", and Awaiting your review lists the same two rows as
+  the inbox, oldest first: Pieter du Plessis's portfolio review (Awaiting review), then Nomsa Mahlangu's DOPS
+  (Requested) (T297). The inbox holds those two rows. After Complete, the DOPS is Completed, credited "1 item". Year 1's
+  minimum on PAED-002 is 3a, so it counts at the minimum. The portfolio review stays in his inbox, Home then reads
+  "1 assessment awaiting review", and Recent decisions lists the DOPS as Completed.
 
 Step 3.26 — The consultants complete Dr Molefe's six (act-3-operations.md:467)
 Role: Assessor — Dr Thandi Zulu, Dr David Naidoo, Dr Mohammed Patel, Dr Sarah Botha and Dr Fatima Khumalo
@@ -415,8 +418,9 @@ Do: Her dashboard opens as a CommitteeMember; switch the view to Assessor. From 
   Mini-CEX, rate it 3a with feedback, and complete it.
 Expect: Home first reads "Viewing as CommitteeMember" and "You also act as Assessor. Switch view: Assessor". After the
   switch it reads "Viewing as Assessor", and "Pending requests" counts 1 assessment awaiting review: this Mini-CEX.
-  After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of
-  Dr Mahlangu's is stalled any more.
+  Awaiting your review lists it, "Mini-CEX (Paediatrics) — Nomsa Mahlangu", badged Overdue: it has waited past the
+  assessor's seven days since Step 3.30 aged it. After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's
+  minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
 
 Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:891)
 Role: Assessor — Dr Fatima Khumalo
@@ -424,9 +428,10 @@ Route: / → /activities/inbox → /placeholder/{Feature}
 Do: Read the dashboard, then follow "Review inbox". Then choose Recent Activities in the nav.
 Expect:
   - Pending requests: 1 assessment awaiting review, Dr du Plessis's CBD. The inbox lists it as Requested.
-  - "Accepted, needing action": "No accepted assessments pending action."
-  - Recent decisions: Mini-CEX (Paediatrics) — Anele Dlamini, Completed, in green; Case-Based Discussion (Paediatrics)
-    — Lerato Molefe, Completed; Mini-CEX (Paediatrics) — Sipho Ndlovu, Declined, in red.
+  - Awaiting your review: "Case-Based Discussion (Paediatrics) — Pieter du Plessis", Requested (T297).
+  - Recent decisions, the activities she moved last, newest first: Mini-CEX (Paediatrics) — Anele Dlamini, Completed,
+    in green; Case-Based Discussion (Paediatrics) — Lerato Molefe, Completed; Mini-CEX (Paediatrics) — Sipho Ndlovu,
+    Declined, in red.
   - Recent Activities (`/placeholder/recent-activities`) is "Coming soon".
 
 Step 5.25 — Dr Naidoo rates it (act-5-graduation.md:586)
@@ -461,7 +466,9 @@ Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:947)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
-Expect: He lands on his Assessor dashboard, and Dr Dlamini's assessor list names him again (checked at A.7.1).
+Expect: He lands on his Assessor dashboard. Pending requests reads "1 assessment awaiting review", and Awaiting your
+  review lists Dr du Plessis's Portfolio and Logbook Review, badged Overdue, as his inbox lists it (T297). Dr Dlamini's
+  assessor list names him again (checked at A.7.1).
 
 Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1037)
 Role: Assessor — Dr Mohammed Patel

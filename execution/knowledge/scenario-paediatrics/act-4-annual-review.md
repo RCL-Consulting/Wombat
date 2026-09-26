@@ -124,6 +124,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Nav: Home, My Account, Data R
   Panels, Committee Reviews, STAR Review Queue, Decisions Due, Logout. Dashboard (Viewing as SpecialityAdmin): Pending
   reviews, Trainees in programme 5, Curriculum coverage; no Entrustment Decisions in nav or dashboard. Decisions Due:
   "the 5 trainees you oversee…", 75 of 75, every row with Schedule.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297b4, the end-of-Act-4 snapshot): the dashboard's Pending
+  reviews reads 2 "activities awaiting review", with no link: Dr du Plessis's requested CBD (activity 9) and his
+  portfolio review awaiting review (10), the two open reviews SQL finds. Trainees in programme 5 "active / 0 inactive"
+  and Curriculum coverage as before; no Entrustment Decisions.
 Gap: none
 
 ### Step 4.4 — Dr Sithole reads what is due in his sub-speciality

@@ -14,7 +14,7 @@ Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screen
 | Steps | 30: 2.20–2.25, 2.32, 4.1–4.13, 4.33, 4.34, 4.37, 4.49, 5.1, 5.2, 5.29, A.1.10, A.7.5, A.7.8 |
 | Frequency and stakes | Each semester. Weekly for the Coordinator around a sitting. Medium-high: a registrar whose EPA is not decided in its window shows as Missed (Step 4.2). |
 | Mode | **Straight to fidelity** for the panels and the schedule: their List and Form shapes hold (BRIEF § 4, recommendation). **Wireframe first** for Decisions Due, a summary plus a long list in a scroll region. |
-| Held | **Nothing held.** No group-1 task changes these pages. Two of the steps' Home captures, `act-2/2.32-1-smit-home.png` and `act-4/4.3-1-mokoena-dashboard-nav.png`, are held by T297, but they are F06's dashboards and are not used here (BRIEF § 10). |
+| Held | **Nothing held.** No group-1 task changes these pages. Two of the steps' Home captures, `act-2/2.32-1-smit-home.png` and `act-4/4.3-1-mokoena-dashboard-nav.png`, were re-captured after T297 on 2026-09-26; they are F06's dashboards and are not used here (BRIEF § 10). |
 
 ---
 
@@ -721,8 +721,8 @@ not the invitations list.
 
 ### 5.3 Held
 
-None for this flow's pages. Do not use `act-2/2.32-1-smit-home.png` or `act-4/4.3-1-mokoena-dashboard-nav.png`: they are
-F06's dashboards, held by T297.
+None for this flow's pages. Do not use `act-2/2.32-1-smit-home.png` or `act-4/4.3-1-mokoena-dashboard-nav.png` here:
+they are F06's dashboards (re-captured after T297 on 2026-09-26).
 
 ## 6. Known problems this design must solve
 

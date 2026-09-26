@@ -270,10 +270,15 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Home's Activity inbox card: "
   form warned "This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the
   encounter is recorded as late." Submitted as activity 3 (R3), Requested, Submit row "Filed 20 days after the
   encounter". Afterwards /activities/inbox lists only activity 3, while the Home card lists 3 (Requested) and 2 (Declined).
-Gap: [F-3.12a, T297] The trainee dashboard's "Activity inbox" card lists the Declined request, which has no move left, while
-  the inbox page it opens does not. Unsure: the step expects the card to show it (a trainee should learn of a
-  decline), but the card and the page it links to disagree. Its selection is literal states
-  (GetTraineeDashboardSummaryQuery: requested, accepted, declined, draft).
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): after the decline, Home's Activity inbox card read "No
+  pending items." and /activities/inbox "Inbox clear"; Recent activities listed the Mini-CEX with a red Declined badge,
+  linking to /activities/2, which reads State: Declined, offers no action and shows Dr Khumalo's note. The new form
+  warned as `D−20` was typed; activity 3 ended Requested with "Filed 20 days after the encounter", and the card then
+  listed only "Mini-CEX (Paediatrics) Requested", the inbox's one row.
+Gap: [F-3.12a, T297] fixed by T297 (7bf8ea7): the card lists what the inbox lists, and the Expect (rewritten by T297)
+  finds the decline on Recent activities. [F-3.12b, T280] The Activity inbox card is itself a link to /activities/inbox that
+  wraps its row links and "Open inbox →" (My authorisations wraps "View authorisations →" the same way): a link nested
+  in a link, announced as one link (DashboardCard's Href, since T011; not new with T297).
 
 ### Step 3.13 — Dr Botha completes Dr Ndlovu's Mini-CEX
 Role: Assessor — Dr Sarah Botha
@@ -332,8 +337,11 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Home card: Reflective Exercis
   the reflection only. His eight Reflection fields open, with Submit and Cancel. Re-submitted: Awaiting discussion;
   history Create, Submit, Return, Submit, no lateness note. Afterwards the inbox still lists the reflection (he may
   cancel it), but the Home card lists only the Declined Mini-CEX.
-Gap: [F-3.16a, T297] Same root as F-3.12a: after the re-submit, the Home "Activity inbox" card drops the reflection awaiting
-  discussion that /activities/inbox lists, and keeps the Declined request that the inbox does not.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): Home's card listed only "Reflective Exercise (Paediatrics)
+  Draft", not the Declined Mini-CEX (which Recent activities still shows), and "Open inbox →" opened /activities/inbox
+  with that one row. Re-submitted: Awaiting discussion; history Create, Submit, Return, Submit, no lateness note. The
+  card and the inbox then each listed the reflection alone, Awaiting discussion.
+Gap: [F-3.16a, T297] fixed by T297 (7bf8ea7).
 
 ### Step 3.17 — Dr Botha records the discussion
 Role: Assessor — Dr Sarah Botha
@@ -442,9 +450,13 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Home (Assessor view) read "Pe
   review" and "No decisions yet." while the inbox held two rows: Nomsa Mahlangu's DOPS (Requested) and Pieter du
   Plessis's portfolio review (Awaiting review). DOPS rated 3a: Completed, Mohammed Patel, "1 item"; progress Mahlangu
   PAED-002 2026 S2 count 1, at minimum 1. The inbox then held only the portfolio review.
-Gap: [F-3.24a, T297] The Assessor dashboard's "Pending requests" reads 0 beside an inbox of two: it counts only 'requested'
-  activities the assessor created or already moved, so a trainee's request naming him never counts, and the awaiting
-  portfolio review is not a 'requested' state (GetAssessorDashboardSummaryQuery; confirms the 3.33/3.51 suspect).
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): Home (Assessor view) read "2 assessments awaiting review",
+  and Awaiting your review listed "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis" (Awaiting review),
+  then "DOPS (Paediatrics) — Nomsa Mahlangu" (Requested), each linking to its activity. "Review inbox →" opened the
+  inbox holding the same two rows (newest first there). DOPS 11 rated 3a: Completed, "1 item". Home then read "1
+  assessment awaiting review" (the portfolio review), and Recent decisions "DOPS (Paediatrics) — Nomsa Mahlangu",
+  Completed, in green. The "Awaiting review" badge wraps onto two lines beside the long type name (T328's class).
+Gap: [F-3.24a, T297] fixed by T297 (7bf8ea7).
 
 ## Phase 3.E — Evidence for the annual review
 
@@ -553,8 +565,14 @@ Actual (2026-09-26, T295 replay, wombat_scenario): The ageing SQL touched 2 rows
   requests" is a detail-card--warning with one row only, "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis
   · 18 Sept", no link. Mahlangu's Mini-CEX (21, requested) is missing. Invitations: "No invitations expiring soon.";
   Quick action "Start an MSF campaign".
-Gap: [F-3.30a, T297] The Coordinator's "Stalled requests" leaves out Dr Mahlangu's Mini-CEX, stalled eight days in
-  `requested`: the card reads only the literal state `submitted`, so no stalled CPSA WBA request ever reaches it.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): the ageing SQL touched 2 rows (10 and 21). "Stalled
+  requests" (detail-card--warning) listed both, oldest first: "Portfolio and Logbook Review (Paediatrics) — Pieter du
+  Plessis · 18 Sept", then "Mini-CEX (Paediatrics) — Nomsa Mahlangu · 18 Sept". Each type links to /activities/10 and
+  /activities/21 (named "… for <trainee>"), and each opens read-only for him. Invitations "No invitations expiring
+  soon."; Quick action "Start an MSF campaign". Step 3.32's run then mailed Dr Zulu about this same Mini-CEX.
+Gap: [F-3.30a, T297] fixed by T297 (7bf8ea7): the card lists the Mini-CEX the nudge mails about, and each row links.
+  [F-3.30b, T328] The row's date is not kept on one line: beside "Portfolio and Logbook Review (Paediatrics) — Pieter du
+  Plessis" at 1280 px it breaks into "18" over "Sept".
 
 ### Step 3.31 — Mr Smit opens Stalled Activities
 Role: Coordinator — Mr Pieter Smit
@@ -584,6 +602,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Last run moved 11:03 → 12:4
   (activities 2); nominees skipped: … 0" and "sent 2, not delivered 0", no address. This replay's app has a local SMTP
   sink, so the two "Activities awaiting your assessment" mails landed there, not in the log: "Hi Thandi" (Mini-CEX from
   Nomsa Mahlangu, waiting 8 days) and "Hi Mohammed" (Portfolio and Logbook Review from Pieter du Plessis, 8 days).
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3), which moved the job onto the cards' shared predicate: with
+  no mail server, the log held the two "Activities awaiting your assessment" stub emails, "Hi Mohammed" (Portfolio and
+  Logbook Review from Pieter du Plessis, waiting 8 days) and "Hi Thandi" (Mini-CEX from Nomsa Mahlangu, 8 days), no
+  address, and "assessors nudged 2 (activities 2)", nobody skipped: the two activities Step 3.30's card lists.
 Gap: none
 
 ### Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX
@@ -602,8 +624,12 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Home read "Viewing as Committ
   Switch view: Assessor". After the switch, "Viewing as Assessor", but Pending requests read "0 assessments awaiting
   review" while Review inbox listed activity 21 (Requested). Rated 3a with feedback, Complete: State Completed, the
   history's Complete row credited "1 item". Mahlangu's PAED-004 2026 S2 reads 1 counted, 1 at minimum.
-Gap: [F-3.33a, T297] The Assessor dashboard's "Pending requests" reads 0 beside an inbox holding Dr Mahlangu's Mini-CEX: it
-  counts only requests the assessor has already moved or created, so a trainee-filed request is never counted.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): Home first read "Viewing as CommitteeMember" and "You also
+  act as Assessor. Switch view: Assessor"; after the switch, "Viewing as Assessor", Pending requests "1 assessment
+  awaiting review", and Awaiting your review (now a warning card) listed "Mini-CEX (Paediatrics) — Nomsa Mahlangu"
+  badged Overdue. "Review inbox →" held that one row, Requested, updated 2026-09-18. Completed at 3a, "1 item"; Home
+  then read 0 and "Nothing is awaiting your review.", and Mr Smit's Stalled requests listed only the portfolio review.
+Gap: [F-3.33a, T297] fixed by T297 (7bf8ea7).
 
 ## Phase 3.G — Multi-source feedback for Dr Molefe
 
@@ -894,6 +920,9 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Every card as expected: 1 / 1
   012 "0 of 3 this semester"; "No pending items."; activities 20, 19, 18, 1 green; "No deadlines…"; links to
   /portfolio/authorisations and /activities/new. State capture: /msf/my-reports/1 reads "The selected report is not
   available to the current trainee." twice (a danger alert, and in place of her list).
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): every card as before, 1 / 10 and 0 / 5 with PAED-002, 003,
+  005, 010 and 012 "0 of 3 this semester"; Activity inbox "No pending items." beside an inbox reading "Inbox clear";
+  Recent activities 20, 19, 18 and 1, Completed, in green; "No deadlines in the next 14 days.".
 Gap: [F-3.50a, T270] My MSF Reports with another trainee's campaign id shows the refusal twice, as a danger alert and as the
   list's load error, and hides her (empty) list, where states.md expects "her empty list, nothing selected".
 
@@ -913,7 +942,12 @@ Note: "Pending requests" and Awaiting your review are read as in Step 3.33, from
 Actual (2026-09-26, T295 replay, wombat_scenario): Pending requests "0 assessments awaiting review", while Review inbox
   lists du Plessis's CBD (9), Requested. "No accepted assessments pending action." Recent decisions: Dlamini Mini-CEX
   and Molefe CBD Completed (green), Ndlovu Mini-CEX Declined (red). Recent Activities is "Coming soon".
-Gap: [F-3.51a, T297] Pending requests reads 0 beside an inbox holding Dr du Plessis's CBD: the same defect as F-3.33a.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): Pending requests "1 assessment awaiting review"; Awaiting
+  your review "Case-Based Discussion (Paediatrics) — Pieter du Plessis", Requested (filed on `D`, so not overdue);
+  "Review inbox →" listed that CBD alone, Requested. Recent decisions, newest first: Mini-CEX (Paediatrics) — Anele
+  Dlamini and Case-Based Discussion (Paediatrics) — Lerato Molefe, Completed in green, then Mini-CEX (Paediatrics) —
+  Sipho Ndlovu, Declined in red. Recent Activities is "Coming soon".
+Gap: [F-3.51a, T297] fixed by T297 (7bf8ea7).
 
 ### Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees
 Role: CommitteeMember — Dr Thandi Zulu
@@ -951,8 +985,13 @@ Note: The count is the programme's backlog awaiting a reviewer at KGK, read from
 Actual (2026-09-26, T295 replay, wombat_scenario): Pending reviews "1 activities in review" (the portfolio review; the
   Requested CBD not counted); "5 active / 0 inactive"; PAED-001 "2 of 5 met", 14 others "0 of 5 met". Review queue →
   /activities/inbox: "Inbox clear". STAR Review Queue is "Coming soon".
-Gap: [F-3.53a, T297] The tile counts literal states (`submitted`, `in_review`), so no Requested CPSA WBA is ever a pending
-  review, and its "Review queue →" opens an inbox that reads "Inbox clear" beside a count of 1. Also "1 activities".
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): Pending reviews "2 activities awaiting review" (the
+  Requested CBD and the portfolio review) in a card with no link; nothing on the page links to /activities/inbox, and
+  her nav does not offer it. "5 active / 0 inactive"; PAED-001 "2 of 5 met", 14 others "0 of 5 met". On a post-actA
+  copy (wombat_scenario_rc3a), after two of its three were completed or cancelled, the tile read "1 activity awaiting
+  review".
+Gap: [F-3.53a, T297] fixed by T297 (7bf8ea7): the Requested CBD is counted, the label has a singular, and the card no
+  longer opens an inbox reading "Inbox clear" (its capture 3.53-2 has no step now).
 
 ### Step 3.54 — Dr Sithole's dashboard
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
@@ -963,8 +1002,9 @@ Expect: The same three cards and figures as Dr Mokoena's: "2 activities awaiting
 Actual (2026-09-26, T295 replay, wombat_scenario): "Viewing as SubSpecialityAdmin": "1 activities in review" with
   Review queue → /activities/inbox, "5 active / 0 inactive", PAED-001 "2 of 5 met" and 14 "0 of 5 met". Nav: Programme
   Trainees and STAR Review Queue placeholders, Decision Panels, Committee Reviews, Decisions Due.
-Gap: [F-3.54a, T297] The same literal-state tile as F-3.53a: the Requested CBD is not counted, and Review queue leads to an
-  inbox where he can act on nothing counted.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3): "Viewing as SubSpecialityAdmin": "2 activities awaiting
+  review" with no link, "5 active / 0 inactive", PAED-001 "2 of 5 met" and 14 "0 of 5 met"; the nav as before.
+Gap: [F-3.54a, T297] fixed by T297 (7bf8ea7).
 
 ## Phase 3.I — The audit trail
 

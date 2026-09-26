@@ -162,6 +162,12 @@ Actual (2026-09-26, T295 replay, wombat_scenario): As expected: one row, Demo In
   "Edit Institution", Active ticked, Deactivate offered; the list then shows KGK Active, created 2026-09-26 11:13.
   `{InstitutionId}` = 2. The list's subtitle reads "Maintain institution records and drill into their speciality
   structure." An empty Save (states.md) reads "The Name field is required." and "The ShortCode field is required."
+  Re-checked after T302 (2026-09-26, wombat_scenario_rc302a1, a copy of the end-of-Act-1 snapshot, KGK as created
+  here): KGK's page, headed by "Back to institutions", shows Status with the Active box ticked and its help text, then
+  Cancel, Deactivate (an outline button) and Save. Deactivate opened a dialog, "Deactivate Kgosi Kgari Teaching
+  Hospital?", "No new invitation can be issued for it until it is reactivated. …", with Cancel (focused) and a red
+  Deactivate. Cancel closed it and gave the focus back to Deactivate. Unticking Active and pressing Save opened the same
+  dialog; Cancel left the box unticked and unsaved. After a reload, KGK was still active (SQL `t`).
 Gap: [F-1.6a, T326] The Institutions list's subtitle promises a speciality drill-down that has not existed since T091 (each
   row offers Edit only). [F-1.6b, T324] The create form's empty-save message names the code property: "The ShortCode field is
   required." rather than "Short code".
@@ -497,13 +503,17 @@ Actual (2026-09-26, T295 replay, wombat_scenario): /admin/institutions/2 is head
   `KGK`, the contact email and Active ticked, and offers Save. It also offers "Back to institutions" and Cancel (both
   /admin/institutions, which shows her Access denied), Deactivate, and an Active checkbox she can untick. Nothing was
   saved. /admin/institutions/1 lands on /not-found, "Page not found".
-Gap: [F-1.23a, T291] KGK's own record offers an InstitutionalAdmin Deactivate (whose command refuses her) and Back and Cancel
-  links to the Administrator-only Institutions list (DESIGN.md T211 rule). [F-1.23b, T302] It also shows her an editable
-  Active checkbox, and UpdateInstitutionCommandHandler checks only CanAccessInstitution before setting IsActive, so
-  unticking it and saving would deactivate KGK, which DeactivateInstitutionCommand reserves to an Administrator (seen
-  in the code and the page; not saved here, because the story needs KGK active). [F-1.23c, T291] Typed by her,
-  /admin/institutions/new renders the "Create institution" form, which CreateInstitutionCommand always refuses her (not
-  submitted).
+  Re-checked after T302 (2026-09-26, wombat_scenario_rc302a1, a copy of the end-of-Act-1 snapshot): /admin/institutions/2
+  is headed "Edit institution", with "Back to home" beside the heading, KGK's name, `KGK` and the contact email, then
+  Status as text, "Active" and "Set by a global administrator.", and Cancel and Save. There is no checkbox and no
+  Deactivate or Reactivate on the page. "Back to home" and Cancel each lead to / ("Viewing as InstitutionalAdmin").
+  Nothing was saved. /admin/institutions/1 lands on /not-found, "Page not found". Typed, /admin/institutions/new still
+  renders "Create institution" (Name, Short code, Contact email, Cancel, Save), now headed by "Back to home".
+Gap: [F-1.23a, T291] fixed by T302 (41be531), which landed T291 item 7: she is offered no Deactivate, and "Back to
+  home" and Cancel lead to `/`, not to the Administrator-only Institutions list. [F-1.23b, T302] fixed by T302
+  (41be531): the Active box is gone for her, and UpdateInstitutionCommand no longer carries IsActive. [F-1.23c, T291]
+  Re-checked, still so: typed by her, /admin/institutions/new renders the "Create institution" form, which
+  CreateInstitutionCommand always refuses her (not submitted).
 
 ## Phase 1.F — The College's instruments, and one KGK type from the builder
 

@@ -14,7 +14,7 @@ progress, reviews and STARs all rest on it. This flow designs the activity rende
 | Runbook steps | 30, pasted verbatim in § 8 |
 | Pages (`coverage.md` templates) | `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine`, `/activities/inbox`. It ends on `/portfolio/progress` (F05) and the trainee's Activity inbox card on `/` (F05 owns the dashboard). |
 | Components drawn at runtime | `Components/Shared/Activities/ActivityForm.razor`, `ActivityDetail.razor`, `ActivityWorkflowActions.razor`; pages `Components/Pages/Activities/NewActivity.razor`, `ActivityView.razor`, `MyActivities.razor`, `ActivityInbox.razor` |
-| Held | T297: 3 images (§ 4) |
+| Held | Nothing. T297's 3 images were re-captured on 2026-09-26 (§ 4) |
 | Depends on | F01's tokens, the shell, and its loading, load-error and validation styles |
 
 **How to run this thread** (BRIEF.md § 2.3):
@@ -266,7 +266,7 @@ Each screenshot is under `design/baseline/`. How to reach each is in `states.md`
 | My activities | Load error | `states/my-activities--load-error.png` | |
 | My activities | Narrow | `states/my-activities--narrow.png` | |
 | Activity inbox | A registrar's returned work | `states/activity-inbox--trainee.png` | |
-| Home | Work returned | `states/home--trainee-returned.png` | **Held (T297)**: do not brief from it |
+| Home | Work returned | `states/home--trainee-returned.png` | the Activity inbox card lists the reflection as Draft, as `/activities/inbox` does (re-captured after T297, 2026-09-26) |
 
 Not captured, so describe them in words:
 - **A move shown disabled with its reason** (T107). No seeded or KGK workflow leaves a required field its mover cannot
@@ -320,12 +320,12 @@ Paths are relative to `design/baseline/`. Every one below was checked with `ls` 
     registrar or whoever filed it. Logged is final.
   ```
 
-**States (attach as the chat asks):** every row of § 3 not already attached above, except the held one.
+**States (attach as the chat asks):** every row of § 3 not already attached above.
 
-**Held until re-captured after T297 lands. Do not attach, and do not brief from them:**
-- `states/home--trainee-returned.png`
-- `act-3/3.12-1-ndlovu-home-declined.png`
-- `act-3/3.16-1-ndlovu-home-returned.png`
+**Re-captured after T297 landed (2026-09-26); attach as the chat asks:** `act-3/3.12-1-ndlovu-home-declined.png` (the
+Activity inbox card empty beside the declined request on Recent activities) and `act-3/3.16-1-ndlovu-home-returned.png`
+(the card listing the returned reflection as Draft). `states/home--trainee-returned.png` too: it was taken from the
+end-of-Act-3 snapshot with the reflection set back to Draft by SQL, and shows the same cards as `3.16-1` (BRIEF § 10).
 
 **Also available** (step captures): every instrument in the picker, `act-2/2.42-2-…` to `act-2/2.42-12-…`; the
 decline and return from the registrar's side, `act-3/3.12-2-declined-view.png` and `act-3/3.16-3-returned-view.png`.
@@ -345,7 +345,7 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 | **T324** | Labels, not codes, everywhere on the page. | BRIEF.md § 6 A8 |
 | **T190** | The tab title names the activity type. | T190's symptom |
 | **T280** | Links to an activity named by instrument plus EPA or date, so two rows never share a name. | T280's symptom |
-| **T297** (group 1, being fixed) | The Home inbox card and `/activities/inbox` list the same things. Do not brief the card from the held captures. | § 4, held |
+| **T297** (group 1, landed in 7bf8ea7) | The Home inbox card and `/activities/inbox` list the same things. | § 4: `act-3/3.12-1-…`, `act-3/3.16-1-…` and `states/home--trainee-returned.png`, all re-captured after the fix |
 | **T322** | Alert, badge and validation colours from F01's tokens. | `act-A/A.7.14-3-change-password-mismatch-danger-alert.png` |
 | Observed, not filed | The summary card lists Type, Encounter date, State and Version (`ActivityView.razor:73–79`), not the registrar or the assessor. "Version" is the pinned form's schema version. The Trainee's nav item that opens New activity is labelled "Activities" (DESIGN.md:196; `NavMenu.razor:101`). | `states/activity-view--to-rate.png`, `states/new-activity--mini-cex.png` |
 
@@ -382,7 +382,7 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
   - `Design/InvalidFieldStyleTests`, `FieldGroupTests`, `NarrowLayoutTests`, `RowActionMarkupTests` and
     `DefinedClassTests`;
   - `Scenario/`.
-- **Re-capture** the 34 states in § 3 (the held one after T297 lands) and the steps' own captures. Compare them with
+- **Re-capture** the 34 states in § 3 and the steps' own captures. Compare them with
   the chosen artboards.
 - **Browser check** at 1280 and 390 px as a registrar: file a Mini-CEX, a Reflective Exercise and a Teaching Session
   Log with the keyboard alone (Step A.7.1's checks), and read each outcome with a screen reader.

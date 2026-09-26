@@ -1,11 +1,13 @@
 ---
 id: T302
 title: An InstitutionalAdmin can deactivate her own institution, or reactivate one an Administrator deactivated, with the Active box on its edit page
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-09-26
+completed: 2026-09-26
 ---
 
 # T302 — An InstitutionalAdmin can deactivate her own institution, or reactivate one an Administrator deactivated, with the Active box on its edit page
@@ -47,11 +49,35 @@ Prof Mbatha (InstitutionalAdmin, KGK) opens KGK's record at /admin/institutions/
 
 ## Verification
 
-- [ ] Handler test: an InstitutionalAdmin of KGK who sends KGK's update with IsActive false is refused. After the audit pipeline's save, KGK is still active and its name, short code and contact email are unchanged.
-- [ ] Handler test: an InstitutionalAdmin cannot reactivate her inactive institution. An Administrator can deactivate and reactivate it.
-- [ ] Handler test: an InstitutionalAdmin still saves her own institution's name, short code and contact email.
-- [ ] bUnit: InstitutionEdit shows an InstitutionalAdmin Status as text, with no Active box and no Deactivate. It shows an Administrator both.
-- [ ] Browser, runbook Step A.6.3 replayed as Prof Mbatha: nothing on the page lets her change KGK's status, and SQL shows KGK IsActive true afterwards. Step 1.23: no Active box is offered.
+- [x] An InstitutionalAdmin cannot change KGK's state through the update — met by construction: the update carries no
+  state (`TheUpdate_CarriesNoActiveState_SoNoUpdateCanChangeIt`, by reflection), and
+  `HerUpdateOfTheInstitutionAnAdministratorDeactivated_LeavesItInactive`. The audit-trap check is
+  `AnInstitutionalAdminWhoDeactivatesHerOwnInstitution_IsRefused_AndAfterTheAuditSave_ItIsUnchanged`.
+- [x] She cannot reactivate; an Administrator can deactivate and reactivate —
+  `AnInstitutionalAdmin_CannotReactivateHerInactiveInstitution`, `AnAdministrator_DeactivatesAndReactivatesIt`.
+- [x] She still saves her institution's name, short code and contact email —
+  `AnInstitutionalAdmin_StillSavesHerOwnInstitutionsNameShortCodeAndContactEmail`.
+- [x] bUnit: Status as text for her, the Active box and Deactivate for an Administrator — `InstitutionEditStatusTests`
+  (12 cases, 11 failed before), with the policy, not the role, deciding (after review).
+- [x] Browser, 2026-09-26: Step A.6.3 (rewritten for the new page) as Prof Mbatha on a post-Act-6 copy: "Institution
+  saved.", Status "Active" as text, no box, no Deactivate, Back to home and Cancel to `/`, and SQL
+  `2|hod.paediatrics@kgk.wombat.local|t`. Step 1.23 on a post-Act-1 copy: no Active box. As devadmin (Step 1.6's
+  Expect), the box and Deactivate remain, behind a dialog that names KGK.
+
+## As built — 2026-09-26 (`41be531`)
+
+- `IsActive` is out of `UpdateInstitutionCommand`; an Administrator-only `ReactivateInstitutionCommand` sits beside
+  `DeactivateInstitutionCommand`, so each state change is one command with one rule.
+- The page decides by the `Administrator` policy through `IAuthorizationService` (T211). An Administrator keeps the
+  Active box: Save sends the update, then Deactivate or Reactivate only if the user changed the box (after review, so a
+  concurrent change is not undone), and unticking asks first. Everyone else sees Status as text, "Set by a global
+  administrator.".
+- Landed with it, on the same page: T291 item 7 (Back and Cancel lead home for a non-Administrator; Deactivate only for
+  an Administrator) and T264's institution part (Deactivate as an outline button behind a named ConfirmDialog). Both
+  tasks carry a note of what remains.
+- Refusals use `RefusalText.Of`. No migration.
+- Runbook: Step A.6.3 rewritten for the new page; its stale SQL comment dropped. Baseline: 11 captures re-taken, and the
+  ones whose state no longer exists hold the new page under the same names (BRIEF § 10).
 
 ## Related
 

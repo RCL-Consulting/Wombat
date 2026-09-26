@@ -653,6 +653,11 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Home (Viewing as Trainee): th
   no bars. My Activities: the Mini-CEX, 2026-09-25, Completed, credited "None". Its page (/activities/24) warns "This
   activity is complete, but it counted towards no curriculum requirement. … or the encounter is dated after the
   trainee's programme ended. …", and its Complete row reads credit None.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297b5, the end-of-Act-5 snapshot): Home's Curriculum targets
+  card reads as above. Its Activity inbox card lists "Case-Based Discussion (Paediatrics)" Requested (activity 9) and
+  "Portfolio and Logbook Review (Paediatrics)" Awaiting review (10), exactly the two rows /activities/inbox lists for
+  him. Before T297 the card would have left out the one awaiting review (inferred from its old selection: requested,
+  accepted, declined, draft).
 Gap: none
 
 ### Step 5.29 — Neither ended programme can be put before the panel

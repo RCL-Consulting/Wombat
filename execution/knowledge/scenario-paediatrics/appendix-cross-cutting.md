@@ -634,6 +634,9 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Signed in with the password P
   you any more. Your progress in each period is kept on My progress, read-only." My Account → Change password, from the
   set password to his own: "Password updated.". At 390 px the change-password page has no horizontal scroll (scrollWidth
   390). Recorded in pwd_DO_NOT_COMMIT.txt (the A.4 password).
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297ba, the end-of-appendix snapshot): his Home reads the same
+  Curriculum targets card, and its Activity inbox card lists the requested CBD and the portfolio review awaiting
+  review, as in Step 5.28's re-check.
 Gap: none
 
 ### Step A.4.7 — Mr Smit signs out through the confirmation page
@@ -650,6 +653,9 @@ Actual (2026-09-26, T295 replay, wombat_scenario): /account/logout-confirm, titl
   "Viewing as Coordinator", still signed in. At 390 px, no horizontal scroll. Sign out landed on /account/login.
   /msf/campaigns then went to /account/login?ReturnUrl=%2Fmsf%2Fcampaigns, and signing in brought him back to MSF
   Campaigns. The audit holds Logout (smit@kgk.wombat.local, 13:53:55 UTC) and then Login.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297ba): Cancel returned him to "Viewing as Coordinator", whose
+  Stalled requests row, "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis · 18 Sept", now links to
+  /activities/10.
 Gap: [F-A.4.7a, T317] This confirms the suspect "/account/logout-confirm is linked from nowhere": no page or component refers
   to it (grep), and the nav's Logout and the top row's Sign out post to /account/logout at once, as the Note says.
   Unsure: the Note records it as known, so it may be a page kept on purpose.
@@ -792,10 +798,13 @@ Actual (2026-09-26, T295 replay, wombat_scenario): The Coordinator dashboard's "
   lists one row, "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis, 18 Sept" (activity 10, submitted),
   with no link in the card. Mahlangu's requested Mini-CEX (activity 27, 6 days) is not listed. Stalled Activities from
   the nav is /placeholder/stalled-activities, headed "Stalled Activities", the Coming soon stub.
-Gap: none. The suspect "the Stalled requests card matches only activities in a state keyed 'submitted'" is not
-  observable here: the only waiting request, activity 27, is under the 7 days either way. The one row listed is the one
-  open activity in "submitted", which fits the suspect, and the code (GetCoordinatorDashboardSummaryQuery.cs:44) filters
-  on "submitted" alone.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297ba): the card lists the same one row, "Portfolio and Logbook
+  Review (Paediatrics) — Pieter du Plessis · 18 Sept", now a link to /activities/10, as the Expect (rewritten by T297)
+  says. Mahlangu's Mini-CEX (27, requested, last moved 2026-09-20) is still not listed: 6 days, under the 7.
+Gap: none. The suspect "the Stalled requests card matches only activities in a state keyed 'submitted'" held in the
+  code (GetCoordinatorDashboardSummaryQuery.cs:44) and is fixed by T297 (7bf8ea7), which reads the pinned workflow. It
+  is not observable here, since activity 27 is under the 7 days either way; Step 3.30's re-check shows a stalled
+  `requested` Mini-CEX listed.
 
 ### Step A.5.11 — Dr Botha's Programme Trainees
 Role: CommitteeMember — Dr Sarah Botha
@@ -841,6 +850,13 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Institutions, from the dashbo
   Active, 11:13), each with "Edit <name>". KGK's edit page offers Name, Short code, Contact email, the Status box
   (Active, ticked), Cancel, Deactivate and Save. Contact email set to paediatrics@kgk.wombat.local and saved:
   "Institution saved.", which takes the focus. At 390 px, no horizontal scroll.
+  Re-checked after T302 (2026-09-26, wombat_scenario_rc302a6, a copy of the end-of-Act-6 snapshot): KGK's page, headed
+  by "Back to institutions", offers Name, Short code, Contact email, Status with the Active box (ticked) and its help
+  "An inactive institution cannot be named on a new invitation. …", then Cancel, Deactivate and Save. At 390 px, before
+  saving, nothing scrolls sideways. Contact email set to paediatrics@kgk.wombat.local and saved: "Institution saved.",
+  which takes the focus. On the same copy (states.md's scratch), Deactivate on the Demo Institution opened "Deactivate
+  Demo Institution?"; confirmed, "Institution deactivated." took the focus, the box was unticked and Deactivate gone.
+  Ticking Active and saving read "Institution saved and reactivated." (audited Deactivate, then Reactivate).
 Gap: [F-A.6.1a, T326] The list's subtitle promises to "drill into their speciality structure", but a row offers only Edit, and
   specialities are the College's, not an institution's (the national catalogue).
 
@@ -864,16 +880,14 @@ Gap: [F-A.6.2a, T327] This confirms the suspect "Two of the three lines on the A
 
 ### Step A.6.3 — Prof Mbatha edits her own institution
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /access-denied
+Route: /admin/institutions/{Id:int} → /
 Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
-  `hod.paediatrics@kgk.wombat.local` and save. Press Deactivate. Untick Active and save. Then press Back to
-  institutions.
-Expect: The contact email saves ("Institution saved."). Deactivate is refused: "Only global administrators may
-  deactivate institutions." Unticking Active is refused as Deactivate is, and KGK stays Active. Back to institutions
-  and Cancel lead to the Institutions list, which is the Administrator's alone, so she lands on Access denied
-  (reported).
-Note: The code lets her save KGK inactive through the Status box (reported). If it does, devadmin ticks Active on KGK
-  again before going on, since an inactive KGK can issue no invitations.
+  `hod.paediatrics@kgk.wombat.local` and save. Read Status, then look at Back to home and Cancel.
+Expect: "Institution saved." takes the focus. Status reads "Active" as text, with "Set by a global administrator."
+  beneath: there is no Active box and no Deactivate, because an institution's state is the Administrator's alone
+  (T302). "Back to home" and Cancel both lead to `/`. SQL:
+  `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
+  `2|hod.paediatrics@kgk.wombat.local|t`.
 Actual (2026-09-26, T295 replay, wombat_scenario): KGK's page by its address. Contact email set to
   hod.paediatrics@kgk.wombat.local and saved: "Institution saved." Deactivate: the alert "Only global administrators may
   deactivate institutions." (DeactivateInstitutionCommand, audited as failed); KGK stays Active. Active unticked and
@@ -881,13 +895,21 @@ Actual (2026-09-26, T295 replay, wombat_scenario): KGK's page by its address. Co
   renders Access denied in place, drawn inside a second copy of the layout (two sidebars, two top rows, two Sign out
   buttons). As the Note directs, devadmin then ticked Active on KGK and saved ("Institution saved."); KGK is Active with
   Prof Mbatha's contact email.
-Gap: [F-A.6.3a, T302] This confirms the suspect "An InstitutionalAdmin can deactivate her own institution by unticking Active
-  and saving": UpdateInstitutionCommand wrote IsActive = false for her, while Deactivate refuses her. [F-A.6.3b, T291] This
-  confirms the suspect "'Back to institutions' and 'Cancel' send an InstitutionalAdmin to a page that refuses her".
-  [F-A.6.3c, T321] Access denied reached by an in-app link is nested in a second MainLayout: Routes.razor wraps the
-  AccessDenied component in a LayoutView of MainLayout inside AuthorizeRouteView, which already applies the layout. A
-  typed address goes to /access-denied and is drawn once (A.5.1), so this shows on every link to a page the role may not
-  open.
+  Re-checked after T302 (2026-09-26, wombat_scenario_rc302a6, a copy of the end-of-Act-6 snapshot, after Step A.6.1):
+  KGK's page by its address, headed by "Back to home", offers Name, Short code, Contact email, Status as text ("Active",
+  then "Set by a global administrator."), Cancel and Save: no checkbox, and no Deactivate or Reactivate anywhere on the
+  page. Contact email set to hod.paediatrics@kgk.wombat.local and saved: "Institution saved.", which takes the focus.
+  Back to home and Cancel each lead to / ("Viewing as InstitutionalAdmin"). SQL gives
+  `2|hod.paediatrics@kgk.wombat.local|t`; the audit's row is her UpdateInstitutionCommand, succeeded. Then devadmin
+  deactivated KGK on the same copy: her page read Status "Inactive", still with no control, and her Save ("Institution
+  saved.") left KGK IsActive false. devadmin's tick-and-Save ("Institution saved and reactivated.") restored it.
+Gap: [F-A.6.3a, T302] fixed by T302 (41be531): the update carries no state, and she reads Status as text with nothing to
+  change it, whether KGK is active or not. [F-A.6.3b, T291] fixed by T302 (41be531), which landed T291 item 7: "Back to
+  home" and Cancel lead her to `/`. [F-A.6.3c, T321] no longer reached from this step, since no link on her page now
+  leads to a page she may not open. The defect itself is T321's and is not re-checked here: Access denied reached by an
+  in-app link is nested in a second MainLayout (Routes.razor wraps the AccessDenied component in a LayoutView of
+  MainLayout inside AuthorizeRouteView, which already applies the layout), while a typed address is drawn once (A.5.1).
+  The Do and Expect, rewritten for T302 before this re-check, hold as written.
 
 ### Step A.6.4 — Prof Mbatha locks Dr Patel out
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -957,9 +979,12 @@ Actual (2026-09-26, T295 replay, wombat_scenario): On the second browser, still 
   Inbox (du Plessis's Portfolio and Logbook Review, Awaiting review). Signed in afresh from /account/login he lands on /
   "Viewing as Assessor". Its Pending requests card reads "0 assessments awaiting review" while his inbox lists that
   review. Dlamini's assessor list is left to A.7.1, as the Expect says.
-Gap: [F-A.6.8a, T297] The Assessor dashboard's Pending requests counts only activities in a state keyed "requested"
-  (GetAssessorDashboardSummaryQuery.cs:41 and :81). A Portfolio and Logbook Review waits in "submitted" ("Awaiting
-  review"), so Dr Patel reads 0 pending with one in his inbox. It is the Coordinator card's suspect (A.5.10) in reverse.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc3a, restored from scenario-post-actA): signed in from
+  /account/login he lands on / "Viewing as Assessor". Pending requests reads "1 assessment awaiting review", and
+  Awaiting your review (a warning card) lists "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis" badged
+  Overdue; "Review inbox →" holds that review alone (Awaiting review, updated 2026-09-18). The snapshot is taken after
+  A.7.2, so Recent decisions also lists Dr Dlamini's Mini-CEX 28.
+Gap: [F-A.6.8a, T297] fixed by T297 (7bf8ea7).
 
 ### Step A.6.9 — devadmin opens his own account
 Role: Administrator — devadmin
@@ -1055,6 +1080,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home (captured) re
   fields, and completed it: "State: Completed", every field read-only, and no action but Sign out. History: "Complete
   Requested -> Completed Mohammed Patel ... 1 item". The DB shows completed, overall_level 4 (3b), CreditedItemCount 1.
   The mail sink is still 96 files. The focus was on BODY after Complete (as F-A.7.1a).
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297ba, the end-of-appendix snapshot, so after activity 28 was
+  completed): Home at 390 px reads Pending requests 1 "assessment awaiting review", and Awaiting your review lists
+  "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis", badged Overdue (activity 10, which names him). The
+  count follows what waits on him, so F-A.6.8a is fixed by T297 (7bf8ea7). Recent decisions lists his four, Completed.
 Gap: [F-A.7.2a, T328] The top row's account-address link is 21 px tall on every page at 390 px, against this section's rule
   "Every button and link is at least 24px tall (T086)". T086 named this very link and lifted only .btn. Unsure: it
   stands clear of other targets, so WCAG 2.5.8's spacing exception may excuse it. [F-A.7.2b, T323] The activity form sits
@@ -1123,6 +1152,8 @@ Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home's three cards
   in a card above the 4-row table (628 px, scrolls in its container), with the pager below; "Apply filters" sits in the
   page header, above both. The page never scrolls sideways. The erased requester still reads ndlovu@kgk.wombat.local
   (F-A.1.12a).
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297ba): Home at 390 px stacks the same three cards, and the
+  Stalled requests row, du Plessis's portfolio review, now links to /activities/10.
 Gap: runbook corrected: the Expect called the campaign page's table an "address table", but a released campaign counts
   invitees by respondent group and the page says it never lists who was invited. The Expect now says "invitee table
   (counts by respondent group...)". [F-A.7.5a, T328] Decisions Due's summary region (.table-container[tabindex="0"]) has no
@@ -1165,6 +1196,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home ("Viewing as 
   Decisions Due is as at A.7.5: a focusable "By EPA" region (685 px in 291 px), and a second table scrolling in its
   container. /admin/entrustment-decisions, opened by address: 18 rows; the table (783 px) scrolls in its container, with
   its Trainee and Status filters above. No page scrolls sideways, and the gutter is 16 px throughout.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297ba): Home at 390 px reads Pending reviews 3 "activities
+  awaiting review", with no link, where it read 1: Dr du Plessis's requested CBD (9) and portfolio review (10), and Dr
+  Mahlangu's requested Mini-CEX (27), the three open reviews SQL finds. Before T297 the tile counted only `submitted`
+  and `in_review`. The other two cards as before.
 Gap: none
 
 ### Step A.7.8 — Dr Sithole on his phone
@@ -1181,6 +1216,8 @@ Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home ("Viewing as 
   container. His nav offers the same two stubs as hers. Programme Trainees and STAR Review Queue each show one card,
   "This page is not built yet. Coming soon. The menu links here so that your role's navigation is complete. The page
   itself is still to be built.", which fits the width. No page scrolls sideways.
+  Re-checked after T297 (2026-09-26, wombat_scenario_rc297ba): Home at 390 px reads Pending reviews 3 "activities
+  awaiting review", with no link, where it read 1, the same three as Dr Mokoena's (Step A.7.7).
 Gap: none
 
 ### Step A.7.9 — Prof Mbatha on her phone
@@ -1402,8 +1439,7 @@ WHERE "OccurredAt" >= '<appendix start>'
     'SetUserLockoutCommand', 'ResetUserPasswordCommand')
 GROUP BY 1, 2 ORDER BY 1, 2;
 -- Submit 4, Withdraw 1, Approve 2, Reject 1, RunScheduledJobNow 10, SetUserLockout 2 (all true);
--- ResetUserPassword one false (the 10-character password) and one true. If A.6.3 saved KGK inactive, devadmin's
--- repair adds nothing here.
+-- ResetUserPassword one false (the 10-character password) and one true.
 SELECT count(*) FROM "AuditEntries"
 WHERE "Action" = 'SubmitDataRightsRequestCommand' AND "SummaryJson"::text NOT LIKE '%[REDACTED]%';     -- 0
 ```

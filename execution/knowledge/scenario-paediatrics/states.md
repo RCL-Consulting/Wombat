@@ -589,8 +589,8 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/institutions/{Id:int}` | An administrator's edit | `states/institution-edit--administrator.png` | devadmin | At Step 1.6, after Save. |
 | `/admin/institutions/{Id:int}` | Saved | `states/institution-edit--saved.png` | devadmin | At Step A.6.1: "Institution saved." |
 | `/admin/institutions/{Id:int}` | Her own institution | `states/institution-edit--own.png` | Prof Mbatha | At Step 1.23. |
-| `/admin/institutions/{Id:int}` | Deactivate refused | `states/institution-edit--deactivate-refused.png` | Prof Mbatha | At Step A.6.3. |
-| `/admin/institutions/{Id:int}` | Deactivated | `states/institution-edit--deactivated.png` | devadmin | Scratch (post-appendix): Deactivate on the Demo Institution: "Institution deactivated." |
+| `/admin/institutions/{Id:int}` | Her own institution, saved (the "Deactivate refused" state ceased with T302; the file keeps its name) | `states/institution-edit--deactivate-refused.png` | Prof Mbatha | At Step A.6.3, after Save: "Institution saved.", Status as text, no Deactivate. |
+| `/admin/institutions/{Id:int}` | Deactivated | `states/institution-edit--deactivated.png` | devadmin | Scratch (post-appendix): Deactivate on the Demo Institution, confirm the dialog: "Institution deactivated." |
 | `/admin/institutions/{Id:int}` | Out of scope | `states/institution-edit--not-found.png` | Prof Mbatha | At Step 1.23, the Demo Institution's id. |
 | `/admin/institutions/{Id:int}` | Narrow | `states/institution-edit--narrow.png` | devadmin | At Step A.6.1, at 390 px, before saving. No change. |
 | `/admin/adoptions` | Nothing adopted | `states/adoptions-list--empty.png` | Prof Mbatha | At Step 1.20, before Adopt. |
