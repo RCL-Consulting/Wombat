@@ -421,3 +421,7 @@ deploy/.remote/
 # tell whether task state changed this session. Per-machine, not shared state.
 execution/.session
 .claude/worktrees/
+
+# The scenario replay's published app and logs (tools/scenario-replay.ps1) and its screenshot baseline (T295)
+.scenario-app/
+/design/baseline/

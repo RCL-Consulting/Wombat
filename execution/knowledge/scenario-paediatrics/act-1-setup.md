@@ -60,8 +60,12 @@ Expect: Home reads "Welcome, devadmin@wombat.local" and "Viewing as Administrato
   Types, Entrustment Scales, Scheduled Jobs, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due,
   Data Rights Requests, System, then Logout (DESIGN.md § The NavMenu).
 Note: The sign-in page offers no institutional sign-in, because dev configures no SSO provider (appendix).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: "Welcome, devadmin@wombat.local", "Viewing as
+  Administrator", no switch line, 9 registered users (the bootstrap admin@wombat.local exists), the three cards and the
+  19-link nav then Logout. Sign-in had no SSO button. System health: Database connection green; Email queue (T012) and
+  Last nightly job (T024) each with a fixed amber dot.
+Gap: [F-1.1a, T327] System health shows "Email queue (T012)" and "Last nightly job (T024)" with a hard-coded warning dot that
+  reads no data, and prints internal task ids to the operator; both features shipped in the rewrite.
 
 ### Step 1.2 — The CPSA is among the Colleges
 Role: Administrator — the platform operator
@@ -72,8 +76,9 @@ Expect: The list has two rows, each Active and each offering Edit and Specialiti
   - `College of Paediatricians of South Africa` (`CPSA`), described as "Constituent College of the Colleges of Medicine
     of South Africa; owns the national Paediatric EPA catalogue."
   The header offers Create college. No College is named "College of Paediatricians" alone.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: two rows, CPSA (id 2) first then Demo College (id 1),
+  each Active with Edit and Specialities; the CPSA description matches word for word. Create college in the header.
+Gap: none
 
 ### Step 1.3 — The CPSA's own record
 Role: Administrator — the platform operator
@@ -83,8 +88,10 @@ Do: Open the CPSA's Edit and read the record. Leave by Back to colleges without 
 Expect: The page is headed "Edit college", and the browser tab reads "Edit College". Name, Short code and Description
   hold Step 1.2's values, and Active is ticked. Deactivate and Save are offered. Leaving saves nothing, and the list is
   unchanged.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: /admin/colleges/2, heading "Edit college", tab "Edit
+  College", the three fields hold Step 1.2's values, Active ticked; Cancel, Deactivate and Save offered. Back to
+  colleges left the list unchanged. `{CollegeId}` = 2.
+Gap: none
 
 ### Step 1.4 — The CPSA ladder has six rungs
 Role: Administrator — the platform operator
@@ -99,8 +106,10 @@ Expect: The list has two scales: `CPSA Paediatric Entrustment Scale v11.1` at 6 
   that shows the rank, in its own Order column (D32).
 Note: Scales are platform records (T057). Only an Administrator opens one. An InstitutionalAdmin reads the list
   (Step 1.22), and a CollegeAdmin is admitted to neither page (Step 1.15).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: two rows, CPSA ladder 6 levels and O-R Scale 5, Create
+  scale, Edit and Delete on each. /admin/entrustment-scales/2 lists Order 1-6 labelled 1, 2, 3a, 3b, 4, 5, from "Not
+  entrusted to act…" to "Supervises others…". Cancel returned to the list unsaved. `{ScaleId}` = 2.
+Gap: none
 
 ### Step 1.5 — Invite Dr Kruger as the CPSA's CollegeAdmin
 Role: Administrator — the platform operator
@@ -122,8 +131,15 @@ Expect: Before the issue, Active invitations reads "No active invitations".
 Note: Only an Administrator is offered the CollegeAdmin role (T093). With `Email__SmtpHost` unset, nothing ever reports
   the mail as sent. After an hour the row reads "Not delivered." and offers Resend (T283). That state belongs to
   `states.md`.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: "No active invitations"; eight roles, no Administrator;
+  CollegeAdmin swaps in a College picker (CPSA, Demo College), Speciality/Sub-speciality disabled; first press refused
+  with the quoted text; second press shows T283's wording, the link and "expires in 14 days". Row: CollegeAdmin, CPSA,
+  no institution, expires 2026-10-10 (D+14), "Being sent", then "Sent" on reload. The log reads "Email f0c96476a76a
+  (tags: invitation, role:CollegeAdmin) sent on attempt 1." with no address; the body (role, link, expiry) reached the
+  SMTP sink.
+Gap: none. Environment, not product: the replay app runs Development, whose appsettings set Email:SmtpHost=localhost
+  (a local SMTP sink answers on port 25) and Wombat:BaseUrl=http://localhost:5080, so mail is "sent" rather than
+  stubbed, and the link names port 5080; it was opened on 5180. README § How to play should unset both.
 
 ## Phase 1.B — The Administrator creates KGK and invites Prof Mbatha
 
@@ -141,8 +157,14 @@ Expect: The list holds one row, the `Demo Institution` (`DEMO`), Active, offerin
   on the list, KGK is a second row: Active, and created today.
 Note: This step used to be an SQL stand-in (T159). Played through the page, the save now writes KGK's audit row, which
   the stand-in never did.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: one row, Demo Institution (DEMO), Active, Edit only; the
+  form asks Name, Short code, Contact email, no Status. Save landed on /admin/institutions/2, "Edit institution", tab
+  "Edit Institution", Active ticked, Deactivate offered; the list then shows KGK Active, created 2026-09-26 11:13.
+  `{InstitutionId}` = 2. The list's subtitle reads "Maintain institution records and drill into their speciality
+  structure." An empty Save (states.md) reads "The Name field is required." and "The ShortCode field is required."
+Gap: [F-1.6a, T326] The Institutions list's subtitle promises a speciality drill-down that has not existed since T091 (each
+  row offers Edit only). [F-1.6b, T324] The create form's empty-save message names the code property: "The ShortCode field is
+  required." rather than "Short code".
 
 ### Step 1.7 — Invite Prof Mbatha as KGK's InstitutionalAdmin
 Role: Administrator — the platform operator
@@ -153,8 +175,12 @@ Expect: InstitutionalAdmin is the form's default role. The Institution picker of
   Active invitations now holds two rows: Kruger's, and Mbatha's, which reads InstitutionalAdmin at `Kgosi Kgari Teaching
   Hospital` with no College. The log holds a second stub email, tagged `role:InstitutionalAdmin`, which invites the
   reader to register as InstitutionalAdmin.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: InstitutionalAdmin preselected; Institution offers Demo
+  Institution and KGK; Speciality/Sub-speciality disabled; same status line and link. Two rows: Mbatha
+  (InstitutionalAdmin, KGK, no College, expires 2026-10-10, "Being sent") and Kruger ("Sent"). Log: "Email ab30fb67f100
+  (tags: invitation, role:InstitutionalAdmin) sent on attempt 1."; the sink holds the body inviting her as
+  InstitutionalAdmin.
+Gap: none (mail went to the local SMTP sink, as in Step 1.5).
 
 ## Phase 1.C — Dr Kruger and Prof Mbatha register
 
@@ -171,8 +197,11 @@ Expect: The page reads "Registering kruger@cmsa.wombat.local as CollegeAdmin.", 
   edited. Register signs Kruger in and lands on Home, which reads "Welcome, kruger@cmsa.wombat.local" and "Viewing as
   CollegeAdmin". The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The nav reads
   Home, My Account, Data Rights, Specialities, EPAs, Curricula, Logout.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: "Registering kruger@cmsa.wombat.local as CollegeAdmin.",
+  Email disabled. Register landed on Home: "Welcome, kruger@cmsa.wombat.local", "Viewing as CollegeAdmin", one National
+  catalogue card linking Specialities, EPAs, Curricula; nav Home, My Account, Data Rights, Specialities, EPAs,
+  Curricula, Logout. Password noted in pwd_DO_NOT_COMMIT.txt.
+Gap: none
 
 ### Step 1.9 — A used link is refused
 Role: Anonymous — anyone who holds Kruger's link
@@ -180,8 +209,9 @@ Route: /account/register
 Do: In another fresh session, open Kruger's link again.
 Expect: The page reads "This invitation has already been used." and offers no form. The page refuses up front whatever
   no input could put right (T285).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: signed out, the link shows "Complete registration" and
+  the alert "This invitation has already been used.", with no form.
+Gap: none
 
 ### Step 1.10 — Prof Mbatha registers
 Role: Anonymous — Prof Nolwazi Mbatha, invited
@@ -198,8 +228,11 @@ Expect: The page reads "Registering mbatha@kgk.wombat.local as InstitutionalAdmi
   Decisions Due, Logout.
 Note: The specialities card is meant to count what the institution has adopted (T291 item 4). Until that fix lands, it
   counts the whole national catalogue: 2 and 2.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): "Registering mbatha@kgk.wombat.local as InstitutionalAdmin.";
+  Register landed on Home, "Viewing as InstitutionalAdmin". Users lists InstitutionalAdmin 1; Specialities &
+  sub-specialities reads 2 and 2; Quick links as expected; the nav matches the 17 links then Logout.
+Gap: [F-1.10a, T291] Known, T291 item 4, still open: the specialities card counts the national catalogue (2 and 2), not KGK's
+  adoptions (0 and 0).
 
 ### Step 1.11 — Both invitations are spent
 Role: Administrator — the platform operator
@@ -207,8 +240,9 @@ Route: /admin/invitations → /
 Do: Reload the invitations list, then go Home.
 Expect: Active invitations reads "No active invitations", because a used invitation leaves the list. The dashboard's
   count of registered users is two higher than in Step 1.1.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: Active invitations reads "No active invitations"; Home's
+  Users across institutions reads 11 (9 in Step 1.1).
+Gap: none
 
 ## Phase 1.D — Dr Kruger checks the national catalogue
 
@@ -223,8 +257,12 @@ Expect: He is redirected to his own College's specialities, subtitled "College: 
   Africa (CPSA)". The page has one row: `Paediatrics`, "Specialist training in Paediatrics.", Active, offering Edit and
   Sub-specialities. The Demo College's speciality is not listed. The header offers Create speciality. It offers no link
   to the Colleges list, which does not admit him (T291 item 2).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): Specialities in the nav redirected to /admin/colleges/2/specialities,
+  subtitled "College: College of Paediatricians of South Africa (CPSA)"; one row, Paediatrics, "Specialist training in
+  Paediatrics.", Active, Edit and Sub-specialities; no Demo speciality; Create speciality. The header also offers "Back
+  to colleges" (/admin/colleges). `{SpecialityId}` = 2.
+Gap: [F-1.12a, T291] Known, T291 item 2, still open: "Back to colleges" is shown to a CollegeAdmin, whom /admin/colleges does
+  not admit.
 
 ### Step 1.13 — The Paediatrics sub-speciality
 Role: CollegeAdmin — Dr Anton Kruger
@@ -233,8 +271,10 @@ Do: Open Sub-specialities on the Paediatrics row. Record the sub-speciality's id
 Expect: The page is subtitled "Speciality: Paediatrics". It has one row: `Paediatrics`, "General paediatric specialist
   training programme.", Active, offering Edit. The header offers Back to specialities and Create sub-speciality. The
   sub-speciality shares its speciality's name, and there is no "General Paediatrics".
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: subtitled "Speciality: Paediatrics"; one row,
+  Paediatrics, "General paediatric specialist training programme.", Active, Edit; Back to specialities and Create
+  sub-speciality. `{SubSpecialityId}` = 2.
+Gap: none
 
 ### Step 1.14 — The sub-speciality defaults to the CPSA ladder
 Role: CollegeAdmin — Dr Anton Kruger
@@ -247,8 +287,10 @@ Expect: The page is headed "Edit sub-speciality" and subtitled "Speciality: Paed
   - Active is ticked, and Deactivate and Save are offered.
   The seeder set this default when it created the sub-speciality, and never resets it (T187). So Act 4's STAR picker
   offers the six rungs only (T076).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: "Edit sub-speciality", "Speciality: Paediatrics";
+  Default entrustment scale selected on the CPSA ladder, with "No default — offer every scale" and O-R Scale; the help
+  text as quoted; Active ticked; Cancel, Deactivate, Save. Cancel returned to the list unsaved.
+Gap: none
 
 ### Step 1.15 — The College does not open the scale pages
 Role: CollegeAdmin — Dr Anton Kruger
@@ -258,8 +300,10 @@ Expect: The page reads "Access denied" and "You do not have permission to view t
   The scales list admits only an Administrator or an InstitutionalAdmin, and Kruger's nav offers no Entrustment Scales.
   He reads the ladder by name where the College uses it: the sub-speciality's default (Step 1.14) and each item's Scale
   column (Step 1.18).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: /access-denied?ReturnUrl=%2Fadmin%2Fentrustment-scales
+  reads "Access denied", "You do not have permission to view this page.", with Back to home (/). His nav has no
+  Entrustment Scales.
+Gap: none
 
 ### Step 1.16 — The 15 v11.1 EPAs
 Role: CollegeAdmin — Dr Anton Kruger
@@ -271,8 +315,9 @@ Expect: The list has exactly 15 rows, PAED-001 to PAED-015, with the titles in t
   - Active, with Edit.
   The Demo `EPA-001` is not listed, because a CollegeAdmin reads only his own College's EPAs. The header offers Create
   EPA.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: exactly 15 rows, PAED-001 to PAED-015 with the table's
+  titles word for word, each CPSA, Paediatrics / Paediatrics, Active, Edit; no EPA-001; Create EPA in the header.
+Gap: none
 
 **The 15 EPAs** (`src/Wombat.Infrastructure/Persistence/Seeds/paediatric-epa-v11.1.json`; the list does not show the
 domain, which is given here for reference):
@@ -302,8 +347,10 @@ Do: Open Curricula and read the list. Record the curriculum's id as `{Curriculum
 Expect: The list has one row: `Paediatric EPA Curriculum`, version `11.1`, College `College of Paediatricians of South
   Africa`, Speciality and Sub-speciality `Paediatrics`, effective `2026-01-01`, 15 items, Active, offering Edit and
   Items. The header offers Create curriculum. The Demo `IM Core Curriculum` is not listed.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: one row, Paediatric EPA Curriculum, 11.1, CPSA,
+  Paediatrics / Paediatrics, 2026-01-01, 15 items, Active, Edit and Items; Create curriculum; no IM Core Curriculum.
+  `{CurriculumId}` = 2.
+Gap: none
 
 ### Step 1.18 — The 15 items and their targets
 Role: CollegeAdmin — Dr Anton Kruger
@@ -320,8 +367,12 @@ Expect: The page is subtitled "Paediatric EPA Curriculum (11.1)" and offers Back
     semester".
   - The Add item form offers no EPA. It says "Every national EPA of Paediatrics is already on this curriculum, …", and
     explains how an EPA would be freed.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: subtitled "Paediatric EPA Curriculum (11.1)", Back to
+  curricula and Back to curriculum; the live-target and tool-list warning; 15 rows matching the table in target,
+  decision, minimum, minimum by year and tools, each on the CPSA ladder, window 12, weight "—", Edit and Remove. Add
+  item offers no EPA and reads "Every national EPA of Paediatrics is already on this curriculum, …" with how to free
+  one.
+Gap: none
 
 **The 15 curriculum items.** The targets are from Annexure B (T130, D39), the minima and tools from Annexure A (T122),
 and the decisions from T131:
@@ -368,8 +419,13 @@ Expect: Curricula shows the empty state "No curricula yet": "Your institution ha
   one on the Curriculum Adoptions page before admitting trainees." It offers no Create curriculum (T211).
   EPAs shows "No EPAs yet". An InstitutionalAdmin reads the national EPAs of the disciplines her institution has
   adopted, plus its own EPAs, and there are none of either.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): Curricula as expected: "No curricula yet" with the quoted text, no
+  Create curriculum. EPAs reads "No EPAs yet" with "Create the first EPA to start building curricula and assessment
+  forms.", and the header offers Create EPA. Its form (/admin/epas/new, opened and left unsaved) has an empty
+  Sub-speciality picker, so it cannot be completed.
+Gap: [F-1.19a, T291] Before any adoption the EPAs page offers an InstitutionalAdmin Create EPA, and its empty state invites
+  her to "Create the first EPA", but the create form's Sub-speciality picker offers nothing (it lists only adopted
+  sub-specialities), so the page links to a form she cannot complete (T211's rule).
 
 ### Step 1.20 — Adopt curriculum 11.1 for KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -385,8 +441,12 @@ Expect: The page has no institution picker, because hers is KGK. Current adoptio
     Paediatrics, Paediatrics, `Paediatric EPA Curriculum`, `11.1`, adopted on `D`, Active.
   - The second Adopt is refused: "This institution has already adopted this curriculum version."
   The page notes that re-adopting a newer version would supersede this adoption.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: no institution picker; "No curriculum adoptions yet for
+  this institution."; the picker offers the CPSA curriculum and the Demo IM Core Curriculum (2026.1); Adopt disabled
+  until chosen. First Adopt: "Curriculum adopted.", row CPSA / Paediatrics / Paediatrics / Paediatric EPA Curriculum /
+  11.1 / 2026-09-26 / Active. Second Adopt refused: "This institution has already adopted this curriculum version." The
+  supersede note is shown.
+Gap: none
 
 ### Step 1.21 — What the adoption opens to KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -401,8 +461,12 @@ Expect: Each page now shows the adopted catalogue:
   - The form below the items is headed "Add your institution's own item". It says every EPA KGK could add is already on
     the curriculum: to add an item of its own, KGK must first create a local EPA of Paediatrics.
   - Home's Specialities & sub-specialities card reads 1 and 1 (T291 item 4).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): EPAs lists the 15 PAED EPAs only, but every row still offers Edit.
+  Curricula: one row with Items only, no Edit, no Create curriculum. Items: the College-sets-national-items warning, 15
+  rows matching Step 1.18, each "Set by the College"; the form is headed "Add your institution's own item" and says
+  every EPA KGK could add is on the curriculum, so first create a local EPA of Paediatrics. Home's card reads 2 and 2.
+Gap: [F-1.21a, T291] Known, T291 item 1, still open: /admin/epas offers Edit on all 15 national EPAs to an InstitutionalAdmin,
+  whose save UpdateEpa refuses. [F-1.21b, T291] Known, T291 item 4 (as F-1.10a): the card reads 2 and 2, not 1 and 1.
 
 ### Step 1.22 — The ladder, read-only to KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -411,8 +475,11 @@ Do: Open Entrustment Scales and read the list.
 Expect: The list shows `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and `O-R Scale` at 5, each with its
   description. It offers no Create scale and has no actions column, because only an Administrator changes a scale
   (T057, T239).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: two rows (CPSA ladder 6, O-R Scale 5) with
+  descriptions; no Create scale and no Actions column. The subtitle still reads "Define and maintain the rating ladders
+  used by assessment forms and committee reviews."
+Gap: [F-1.22a, T326] The read-only scales list tells an InstitutionalAdmin to "Define and maintain" ladders she cannot change;
+  unsure whether copy counts, since T239 removed the actions but kept the Administrator's subtitle.
 
 ### Step 1.23 — KGK's own record
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -426,8 +493,17 @@ Expect: KGK's page is headed "Edit institution" and shows KGK's name, the short 
   alone (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
   The Demo Institution's id sends her to Page not found, not Access denied. The product never confirms that a record
   outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): /admin/institutions/2 is headed "Edit institution" with KGK's name,
+  `KGK`, the contact email and Active ticked, and offers Save. It also offers "Back to institutions" and Cancel (both
+  /admin/institutions, which shows her Access denied), Deactivate, and an Active checkbox she can untick. Nothing was
+  saved. /admin/institutions/1 lands on /not-found, "Page not found".
+Gap: [F-1.23a, T291] KGK's own record offers an InstitutionalAdmin Deactivate (whose command refuses her) and Back and Cancel
+  links to the Administrator-only Institutions list (DESIGN.md T211 rule). [F-1.23b, T302] It also shows her an editable
+  Active checkbox, and UpdateInstitutionCommandHandler checks only CanAccessInstitution before setting IsActive, so
+  unticking it and saving would deactivate KGK, which DeactivateInstitutionCommand reserves to an Administrator (seen
+  in the code and the page; not saved here, because the story needs KGK active). [F-1.23c, T291] Typed by her,
+  /admin/institutions/new renders the "Create institution" form, which CreateInstitutionCommand always refuses her (not
+  submitted).
 
 ## Phase 1.F — The College's instruments, and one KGK type from the builder
 
@@ -444,8 +520,12 @@ Expect: The search leaves the 12 rows in the table below. Each reads Scope `Spec
   Demo types.
   Two of the twelve are system-managed (T162, T164): `msf_cpsa` and `learner_feedback_cpsa`. A released MSF or
   learner-feedback campaign writes them, and nobody is offered them when filing an activity.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: `cpsa` leaves the 12 rows of the table, each
+  "Speciality · Paediatrics", v1, None, Active, Edit; cleared, 22 rows. The ten Demo rows' Scope reads "Speciality · #1"
+  (T291 item 5). Ids: mini_cex_cpsa 11, dops_cpsa 12, cbd_cpsa 13, direct_observation_cpsa 14, cca_cpsa 15, rca_cpsa 16,
+  chart_stimulated_recall_cpsa 17, reflective_exercise_cpsa 18, clinical_audit_cpsa 19, portfolio_review_cpsa 20,
+  msf_cpsa 21, learner_feedback_cpsa 22.
+Gap: [F-1.24a, T291] Known, T291 item 5, still open: the Demo types' Scope reads "Speciality · #1" to an InstitutionalAdmin.
 
 The twelve instruments come from `ActivityTypeSeedCatalogue`, which sets each one's key, name and instrument. No two
 seeded types share a name: the ten Demo types are named without "(Paediatrics)".
@@ -488,8 +568,15 @@ Expect: The page is headed "Edit Mini-CEX (Paediatrics)" and opens on the Form t
   permission to modify activity types in that speciality."
 Note: Do not save a draft on a seeded type, even as an Administrator: a seeded type with an operator's draft stops
   receiving seed updates (T103).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): /admin/activity-types/11, "Edit Mini-CEX (Paediatrics)", opens on
+  Form. Form settings observed_on / overall_level / epa_id; sections Request (EPA, Assessor User, Date observed,
+  Clinical setting, Presenting problem, Case complexity), Entrustment (overall_level, Scale), Feedback (three long
+  texts). overall_level's Entrustment scale reads "Select…". Metadata: key disabled, Scope Speciality / Paediatrics,
+  This tool is Mini-CEX. Workflow and Credit as expected. The header offers Save draft (enabled) and Publish (disabled),
+  and every section and field editor is live. Nothing was saved; Back to list.
+Gap: [F-1.25a, T300] A College instrument offers an InstitutionalAdmin Save draft, Publish and every editor, though
+  ActivityTypeScopeGuard refuses her any save on a Speciality-scoped type (T211's rule). [F-1.25b, T271] Known, T271, still
+  open: the seed-key scale binding shows as "Select…", so the field editor does not show the CPSA ladder.
 
 ### Step 1.26 — Start KGK's teaching log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -512,8 +599,16 @@ Expect: The builder opens on the Form tab, headed "New activity type", with the 
   "Edit KGK Teaching Session Log", and the browser tab reads `KGK Teaching Session Log`.
 Note: The key and name cannot collide with a seed, since every seeded key is a bare family or ends `_cpsa`. The type
   has no instrument key, so no tool list restricts which EPA it is filed against (D21, D45).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): Opens on Form, "New activity type", with the default draft (Details
+  section, required Title text field; draft → submitted; `{ "counts_for": [] }`). The browser tab title is empty. Scope
+  defaults to Global and offers Global, Institution, Speciality and SubSpeciality (Speciality then offers Paediatrics);
+  Institution offers KGK only. This tool is offers "Not a WBA instrument" and the twelve. Save draft moved to
+  /admin/activity-types/23, "Edit KGK Teaching Session Log", tab "KGK Teaching Session Log", Metadata tab still shown,
+  Discard draft and Publish offered, and no "Draft saved.". `{ActivityTypeId}` = 23.
+Gap: [F-1.26a, T300] The Scope picker offers an InstitutionalAdmin Global, Speciality and SubSpeciality, which
+  ActivityTypeScopeGuard refuses her, and a new type defaults to Global (DESIGN.md: a picker offers exactly what its
+  command accepts). [F-1.26b, T190] On /admin/activity-types/new the browser tab title is empty, not "Activity Type" (Name is
+  "", not null). [F-1.26c, T291] Known, T291 item 3, still open: the first Save draft shows no "Draft saved.".
 
 ### Step 1.27 — The form, and a duplicate key refused
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -541,8 +636,16 @@ Expect: The field types offered are Text, Long text, Number, Date, Choice, Multi
   - **The EPA picker** offers the 15 PAED EPAs and not the Demo `EPA-001`, following the form's own rule (T291 item 6).
   - **The person picker** offers nobody in the preview. Whom it offers depends on the registrar filing it: an active
     Assessor at their institution, never the registrar themselves.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): The Type picker offers the thirteen types listed. The User field
+  shows "Names a" in place of Options: "Assessor (default)", InstitutionalAdmin, Coordinator, CommitteeMember,
+  Trainee. The mistaken save was refused with the quoted text word for word. The corrected save read "Draft saved.";
+  Encounter date offered only delivered_on, Entrustment rating only None, EPA field only epa_id. The preview shows one
+  group, Teaching session, with the six inputs, the first five required. Its EPA picker lists the Demo EPA-001 above
+  the 15 PAED EPAs. Supervising consultant offers only "Select…". The field list labels types by enum name
+  ("· Epa", "· LongText"), while the Type picker says "EPA" and "Long text".
+Gap: [F-1.27a, T291] Known, T291 item 6, still open: the preview's EPA picker lists the Demo EPA-001 beside the PAED EPAs.
+  [F-1.27b, T324] The builder's field list prints raw enum names ("Epa", "LongText") where its own Type picker reads "EPA"
+  and "Long text" (low).
 
 ### Step 1.28 — The workflow, and a `field:` rule refused
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -554,8 +657,10 @@ Expect: The first save is refused: "Transition 'cancel' actor names 'field:topic
   field: rule must name a User field." (T102). The second save reads "Draft saved."
   In the saved workflow, the registrar, or whoever filed the log for them, either logs the session or cancels the
   draft. Logging checks the whole form (`validation: all`), and cancelling checks formats only (`draft`, T105).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: the first save was refused with the quoted text word
+  for word; with the actor restored to `subject|creator` the second read "Draft saved.", and the Workflow JSON holds
+  draft → logged (log, all) and draft → cancelled (cancel, draft), both `subject|creator`.
+Gap: none
 
 The workflow for Step 1.28. The DSL, including `editable_by` and the actor grammar (`subject`, `creator`, `role:`,
 `scope:`, `field:`), is described in CUSTOMIZATION.md:
@@ -584,8 +689,10 @@ Expect: The type credits nothing. The save accepts an EPA field with no credit d
   `EvidenceEpa.EnsureCreditAgrees`). Each log is stamped with its EPA, which activity lists show.
   A type that credits nothing is held to one encounter-date rule only: the date may not be after today (T160). It is
   not held to the programme start, and it gets no 14-day late-filing warning (`EncounterDatePolicy.CanCredit`, D15).
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): The Credit tab reads `{"counts_for": []}`, left unchanged. The saves
+  of Steps 1.27 and 1.28 were accepted with the EPA field set and no credit directive. The encounter-date behaviour is
+  for Act 2 onward to observe.
+Gap: none
 
 ### Step 1.30 — Publish version 1
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -594,8 +701,10 @@ Do: Press Publish.
 Expect: The page reads "Published version 1." Discard draft disappears, and Publish is disabled, with the hint "Save a
   draft to publish." The Key can no longer be changed. There are no publish warnings, since there is no earlier version
   to compare against.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): As expected: "Published version 1."; Discard draft gone; Publish
+  disabled, its hint "Save a draft to publish." carried as the button's title (tooltip), not on-page text; Key disabled
+  on Metadata; no publish warnings. Save draft stays offered.
+Gap: none
 
 ### Step 1.31 — KGK's type in the list
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -607,10 +716,17 @@ Expect: The list has 23 rows, and no two share a name:
   - `KGK Teaching Session Log`, whose Scope reads `Institution · Kgosi Kgari Teaching Hospital`, with `v1`, `None` and
     Active.
   The search leaves that last row only. Which of these types a KGK registrar is offered is checked in Act 2.
-Actual:
-Gap:
+Actual (2026-09-26, T295 replay, wombat_scenario): 23 rows, no two names alike: the ten Demo types (Scope "Speciality ·
+  #1"), the twelve `*_cpsa`, and KGK Teaching Session Log, "Institution · Kgosi Kgari Teaching Hospital", v1, None,
+  Active. `KGK` leaves that row only. A search for `zzz` (states.md) reads "No activity types" and "Create the first
+  activity type to start the builder." At 390 px there is no horizontal page scroll.
+Gap: [F-1.31a, T291] Known, T291 item 5 (as F-1.24a): the Demo types' Scope reads "Speciality · #1", not "Speciality ·
+  General Medicine". [F-1.31b, T326] A search that matches nothing shows the empty-catalogue state, "No activity types …
+  Create the first activity type", though 23 types exist; it should say that nothing matches the search.
 
 ## Act 1 outcome state
+
+Replay check (2026-09-26, T295, wombat_scenario): match; all 14 queries as expected, 3 successful Save drafts.
 
 Beside the ignored Demo College, Demo Institution and their catalogue, the database now holds:
 - **The CPSA's seeded catalogue, unchanged:**

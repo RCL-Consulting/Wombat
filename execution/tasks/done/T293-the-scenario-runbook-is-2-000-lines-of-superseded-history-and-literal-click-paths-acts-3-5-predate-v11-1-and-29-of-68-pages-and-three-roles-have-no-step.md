@@ -1,12 +1,13 @@
 ---
 id: T293
 title: The scenario runbook is 2,000 lines of superseded history and literal click paths, Acts 3-5 predate v11.1, and 29 of 68 pages and three roles have no step
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
 started: 2026-09-26
+completed: 2026-09-26
 ---
 
 # T293 — The scenario runbook is 2,000 lines of superseded history and literal click paths, Acts 3–5 predate v11.1, and 29 of 68 pages and three roles have no step
@@ -61,13 +62,29 @@ The old file moves whole to `execution/log/scenario-paediatrics-history-2026-09.
 
 ## Verification
 
-- [ ] Every one of the 68 routable page files is played by a step or listed as not played with a reason — T294's guard
-  test.
-- [ ] Every route a step names is a real page template or endpoint — T294's guard test.
-- [ ] Every role (10, plus the anonymous visitor and the former trainee) has at least one journey in `coverage.md`'s index.
-- [ ] Each act's expectations were checked against the code by an independent reviewer; corrections applied.
-- [ ] References to the old path are updated (CLAUDE.md, knowledge/README.md, HANDOVER.md, EPA-PROGRAMME.md).
-- [ ] The rewrite is replayed end to end — T295.
+- [x] Every one of the 68 routable page files is played by a step or listed as not played with a reason — T294's guard
+  test, 2026-09-26: all 80 templates played, none excused.
+- [x] Every route a step names is a real page template or endpoint — T294's guard test.
+- [x] Every role (10, plus the anonymous visitor and the former trainee) has at least one journey in `coverage.md`'s index
+  — read: twelve role sections, none empty.
+- [x] Each act's expectations were checked against the code by an independent reviewer; corrections applied — 108
+  corrections across the seven files (10, 11, 16, 17, 19, 11, 24), then eight cross-file continuity fixes.
+- [x] References to the old path are updated (CLAUDE.md, knowledge/README.md, HANDOVER.md, EPA-PROGRAMME.md) — `c9f765f`.
+- [x] The rewrite is replayed end to end — T295, 2026-09-26: 324 of 324 steps, every outcome check matched.
+
+## As built — 2026-09-26 (`c9f765f`)
+
+- `execution/knowledge/scenario-paediatrics/`: README, six acts and the appendix (324 steps: 31, 44, 57, 51, 29, 41 and
+  71), `coverage.md` (68 page files, 80 templates, all played; 11 mapped endpoints, 9 named; a journey index for twelve
+  roles) and `states.md` (578 named states, 21 unreachable locally, and an access-denied index).
+- Made by a workflow: one author per file from the code, the decisions and the old runbook; one adversarial reviewer per
+  file against the code, who corrected it in place; an integrator for coverage and continuity (it moved Act 5 to
+  December 2026, the last month of a 15 January 2023 intake, and anchored the intakes on `J`, the latest 15 January);
+  and a states author.
+- The authors and reviewers suspected 116 application defects from reading the code (many duplicates, several already
+  filed on T291, T271, T264 and T287). They are not filed here: the replay (T295) confirms or refutes each, and its
+  triage files what holds.
+- The old file is `execution/log/scenario-paediatrics-history-2026-09.md`, unchanged.
 
 ## Related
 

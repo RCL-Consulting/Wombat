@@ -41,10 +41,22 @@ Rewritten 2026-09-26 (T293) from the single file that T091 and T159 had re-basel
     this runbook signs in as on dev (T292).
   - `AdminSeeder` creates the bootstrap Administrator, but only where it is configured.
 
-  The Demo College, the Demo Institution and their dev accounts are ignored throughout. When the dev app already runs
-  on port 5080, run the replay's instance on another port (`--urls http://localhost:5180`).
-- **Mail.** With `Email__SmtpHost` unset, each email's body is written to the application log. That is where the
-  registration links and the MSF respondents' links come from, and where a step's "is emailed" expectation is checked.
+  The Demo College, the Demo Institution and their dev accounts are ignored throughout.
+- **`tools/scenario-replay.ps1`** does all of this beside the dev app without printing the database password: `create`
+  an empty `wombat_scenario*` database, `publish` the app away from the dev app's locked output, `start` it on its own
+  port (5180 by default), run `sql` checks, and `dump` or `restore` a snapshot.
+- **Mail.** `appsettings.Development.json` sends mail to an SMTP server on `localhost:25` and builds every emailed link
+  from `Wombat:BaseUrl`, `http://localhost:5080`. So `start` overrides both on the command line: `Email:SmtpHost` to
+  empty, which writes each email's body to the log (`.scenario-app/<db>.log`, a "Stub email" line with the subject and
+  the text), and `Wombat:BaseUrl` to the replay's own address. That is where the registration and MSF links come from,
+  and where a step's "is emailed" is checked. The log sender is also what lets an invitation read "Not delivered" and
+  be resent (Step 2.26); an SMTP server that accepts the mail never gets there.
+- **Downloads.** The browser a replay drives may be the operator's own, where a download manager can take over a
+  download before it reaches the browser, so a missing file proves nothing. Check a download from inside the page
+  instead: `fetch` its link with the page's cookies and read the status, the `Content-Type`, the
+  `Content-Disposition` and the size; for a hash, run `crypto.subtle.digest('SHA-256', …)` over the body. Only a bad
+  response is a finding. On the operator's machine the download manager saves to `%USERPROFILE%\Downloads\Compressed`,
+  where a file's contents can be checked afterwards.
 - **Passwords.** Accounts the cast registers get passwords chosen at replay time. They are written to the gitignored
   `pwd_DO_NOT_COMMIT.txt` and nowhere else, never into this runbook: the same steps are played on the production host.
 - **The clock.** Wombat reads the real clock. The story's dates are narrative only. The current semester, a registrar's
