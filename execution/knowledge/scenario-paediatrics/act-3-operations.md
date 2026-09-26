@@ -1,0 +1,924 @@
+# Act 3 — Months 1–6: operational rhythm
+
+**Scenario date.** Monday 2 February to Tuesday 30 June 2026: the first semester of Dr Mahlangu's and Dr Ndlovu's first
+year. The dates are narrative only. The steps are played on one replay day, `D`, and every date they type is written
+relative to it (see "The clock in this act").
+
+**Who acts.** The five registrars file workplace-based assessments. The five consultants rate, decline, return and
+complete them. Mr Smit runs an MSF campaign for Dr Molefe and watches for stalled work. Seven colleagues are asked to
+answer that campaign anonymously, and six do. devadmin runs the assessor nudge. Every staff role reads its dashboard,
+and Prof Mbatha and devadmin read the audit trail.
+
+**Why.** Acts 1 and 2 built the skeleton. This act runs the loop the product exists for: file, rate, complete, credit.
+It also runs the loop's detours: a refusal, a decline, a return, an abandoned draft, a stall and a withdrawn campaign.
+Credit (`CreditApplier`) is what fills the progress pages and the staff dashboards. The evidence it leaves is what Act 4's
+committee decides on.
+
+**Starting state (after Act 2).**
+- KGK has adopted `Paediatric EPA Curriculum` 11.1. The ten hand-filed `*_cpsa` instruments and Act 1's `KGK Teaching
+  Session Log` (`kgk_teaching_log`) are published. `msf_cpsa` and `learner_feedback_cpsa` are written by the system and
+  offered to nobody.
+- Everyone in the cast is registered and has their roles:
+  - Dr Zulu, Dr Naidoo and Dr Botha hold CommitteeMember and Assessor.
+  - Dr Patel and Dr Khumalo hold Assessor.
+  - Dr van Rensburg holds CommitteeMember only.
+  - Mr Smit is the Coordinator.
+  - Dr Mokoena is the SpecialityAdmin and Dr Sithole the SubSpecialityAdmin, both for Paediatrics.
+- The five registrars are admitted to curriculum 11.1 at KGK. Their programmes started on `J−3y` (Molefe), `J−2y`
+  (Dlamini), `J−1y` (du Plessis) and `J` (Mahlangu and Ndlovu), Act 2's anchor: `J` is the latest 15 January on or
+  before `D`. On a replay in 2026 those are 15 January 2023, 2024, 2025 and 2026.
+- The review panel exists. No activity, MSF questionnaire, MSF campaign or curriculum progress row exists.
+
+**Goal.**
+1. A Mini-CEX goes from draft to requested to completed, credits PAED-001 for Dr Dlamini, and shows on My Activities
+   and My progress.
+2. Filing is refused for a future date and for a date before the programme started. A late filing is warned about and
+   recorded. The EPA and assessor pickers offer only what the write path accepts.
+3. A request is declined and filed again. A reflection is returned and submitted again.
+4. A self-logged record (KGK's teaching log) and a DOPS are filed, and a draft is abandoned.
+5. Stalled work reaches the coordinator, and the assessors are nudged.
+6. One MSF campaign runs from questionnaire to release and coverage, and one is withdrawn.
+7. Dr Molefe and Dr Dlamini hold enough completed evidence for Act 4 to stage STARs.
+8. Every staff dashboard reads real figures, and the audit trail records the act.
+
+## The clock in this act
+
+- **`D` is the day the act is played**, in one sitting. Every encounter date typed is `D−1` to `D−20`, apart from
+  three: `D+1` and `J−1d`, which must be refused (Steps 3.8 and 3.9), and `J−1y−56d`, a teaching session from before
+  Dr du Plessis's programme, which is accepted (Step 3.19).
+- **The expectations are written for `D` between 21 July and 30 November.** In that window `J` is 15 January of `D`'s
+  year, and:
+  - every encounter falls in the semester containing `D`, semester 2 (July to November, nominal end 30 November). The
+    previous semester is semester 1. The names below are for a replay in 2026 ("Semester 2, 2026"); in a later year,
+    read `D`'s year wherever 2026 is written.
+  - The training years read 4 (Dr Molefe), 3 (Dr Dlamini), 2 (Dr du Plessis) and 1 (Dr Mahlangu and Dr Ndlovu), since
+    Act 2 wrote every programme start from `J`.
+  - No page shows December's "academic year ended" notice.
+  - Outside the window, read the semester names off the page, and record a Gap only where a count differs.
+- **Two waits are real:**
+  - The MSF campaign page counts a link as not delivered one hour after it was sent (Step 3.43).
+  - Stalled work needs a request left untouched for more than seven days. Step 3.30 says how to age it in SQL when the
+    act is played in one sitting.
+- **The nudge job also runs on its own**, daily at 09:00 UTC. If the sitting crosses that time, its mail may arrive
+  before Step 3.32.
+
+## Records this act creates
+
+| Ref | Registrar | Instrument | EPA | Named | Encounter | Step | Ends Act 3 as |
+|---|---|---|---|---|---|---|---|
+| R1 | Dlamini | Mini-CEX | PAED-001 | Naidoo | D−10 | 3.1–3.5 | Completed, rung 4 |
+| R2 | Ndlovu | Mini-CEX | PAED-002 | Khumalo | D−20 | 3.8–3.11 | Declined |
+| R3 | Ndlovu | Mini-CEX | PAED-002 | Botha | D−20 | 3.12–3.13 | Completed, 3a |
+| R4 | Ndlovu | Reflective Exercise | PAED-001 | Botha | D−20 | 3.14–3.17 | Discussed |
+| R5–R7 | du Plessis | KGK Teaching Session Log | PAED-015, 004, 015 | — | D−6, D−13, J−1y−56d | 3.18–3.19 | Logged |
+| R8 | du Plessis | DOPS | PAED-002 | — | — | 3.20 | Cancelled |
+| R9 | du Plessis | CBD | PAED-002 | Khumalo | D−5 | 3.21 | Requested (open) |
+| R10 | du Plessis | Portfolio and Logbook Review | PAED-015 | Patel | D−1 | 3.22 | Awaiting review (open) |
+| R11 | Mahlangu | DOPS | PAED-002 | Patel | D−8 | 3.23–3.24 | Completed, 3a |
+| R12–R17 | Molefe | six WBAs | PAED-001 ×3, 012 ×2, 010 | five consultants | D−12 to D−4 | 3.25–3.26 | Completed |
+| R18–R20 | Dlamini | CBD, CCA, Mini-CEX | PAED-001 ×2, 004 | Zulu, Botha, Khumalo | D−9, D−6, D−2 | 3.27–3.28 | Completed |
+| R21 | Mahlangu | Mini-CEX | PAED-004 | Zulu | D−3 | 3.29–3.33 | Completed, 3a, after a stall |
+| R22–R23 | Molefe | Multi-Source Feedback (system) | PAED-010, 012 | — | D (the close) | 3.46 | Recorded |
+
+## Phase 3.A — Dr Dlamini's Mini-CEX, from draft to credit
+
+### Step 3.1 — Dr Dlamini starts a Mini-CEX and saves it as a draft
+Role: Trainee — Dr Anele Dlamini
+Route: / → /activities/new
+Do: From the dashboard, log an activity and choose Mini-CEX (Paediatrics). Fill in the EPA PAED-001, the assessor Dr
+  David Naidoo, the date observed `D−10`, the setting Emergency unit and the complexity Moderate. Leave the presenting
+  problem empty, and save the draft.
+Expect: The type select offers eleven types, and no name appears twice: the ten hand-filed `*_cpsa` instruments and KGK
+  Teaching Session Log. Multi-Source Feedback and Learner Feedback are not offered (T162). The form has three sections:
+  Request, Entrustment and Feedback. Only Request can be filled in; the other two are locked. The EPA picker offers the
+  nine EPAs whose list names the Mini-CEX: PAED-001 to 004, 006 to 008, 012 and 013. It does not offer PAED-010 (T122).
+  The Assessor picker offers exactly KGK's active Assessors, by name and address: Dr Botha, Dr Khumalo, Dr Naidoo,
+  Dr Patel and Dr Zulu. It never offers Dr Dlamini or another registrar, nor Prof Mbatha, Mr Smit, Dr Mokoena,
+  Dr Sithole or Dr van Rensburg (T102). No lateness warning shows for `D−10`. Saving opens the activity's page, State:
+  Draft, with "Draft saved. It has not been submitted." (T127).
+Actual:
+Gap:
+
+### Step 3.2 — Dr Dlamini reopens the draft, and a submit with a field missing is refused
+Role: Trainee — Dr Anele Dlamini
+Route: /activities/mine → /activities/{ActivityId:int}
+Do: Find the draft in My Activities and open it. Press Submit without filling in the presenting problem.
+Expect: My Activities lists the draft as Mini-CEX (Paediatrics), PAED-001 with its title, encounter date `D−10`, Draft,
+  credited "—". On the draft's page, the Request fields are open. The page offers Submit and Cancel, and Discard changes
+  stays disabled until something is typed. The history has one row: Create (Draft → Draft), by Dr Dlamini. The submit
+  is refused with "Presenting problem: A value is required.", the field is marked (T263), and the activity stays a
+  draft.
+Actual:
+Gap:
+
+### Step 3.3 — Dr Dlamini completes the request and submits it
+Role: Trainee — Dr Anele Dlamini
+Route: /activities/{ActivityId:int}
+Do: Type the presenting problem "Two-year-old with bronchiolitis and rising work of breathing" and submit.
+Expect: State: Requested. The page is now read-only to her, and Cancel is the only action. The history adds Submit
+  (Draft → Requested). It carries no lateness note, because ten days is on time (D15). No email is sent: Wombat mails
+  nobody when an activity moves, so Dr Naidoo learns of the request from his inbox.
+Note: The AssessmentRequested, AssessmentCompleted and AssessmentDeclined email templates exist, but nothing in the
+  product sends them.
+Actual:
+Gap:
+
+### Step 3.4 — An assessor who was not named cannot open the request
+Role: Assessor — Dr Mohammed Patel
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: Look for Dr Dlamini's Mini-CEX in the inbox, then open its address directly, using the id from Step 3.1.
+Expect: The inbox reads "Inbox clear", because no request names him yet. The activity's page reads "Activity
+  unavailable", exactly as it does for an id that does not exist, so walking ids discloses nothing (T101).
+Actual:
+Gap:
+
+### Step 3.5 — Dr Naidoo rates the Mini-CEX and completes it
+Role: Assessor — Dr David Naidoo
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: From Activity Inbox, open Dr Dlamini's Mini-CEX. Rate the supervision the encounter required at rung 4, write what
+  was done well, the areas for development and the agreed plan, and complete it.
+Expect: The inbox row names Anele Dlamini, PAED-001, `D−10` and Requested. On the page, only Entrustment and Feedback
+  can be filled in, and Complete and Decline are offered. The rating offers the six rungs by the College's labels, 1, 2,
+  3a, 3b, 4 and 5 (D32). After Complete, the state is Completed and the page is read-only. The history's Complete row
+  reads Requested → Completed, by David Naidoo, credited "1 item". Year 3's minimum on PAED-001 is rung 4, so the
+  encounter counts at the minimum.
+Note: Dr Naidoo also holds CommitteeMember, so his dashboard opens as a CommitteeMember. Activity Inbox is his Assessor
+  link in the nav.
+Actual:
+Gap:
+
+### Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My Activities
+Role: Trainee — Dr Anele Dlamini
+Route: /activities/mine → /activities/{ActivityId:int}
+Do: Open My Activities, then the Mini-CEX.
+Expect: The row reads Completed, credited "1 item". The page is read-only. It shows rung 4 and Dr Naidoo's feedback, and
+  offers no action. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete.
+Actual:
+Gap:
+
+### Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target
+Role: Trainee — Dr Anele Dlamini
+Route: /portfolio/progress
+Do: Open My Progress.
+Expect: The "This period" card reads:
+  - "Semester 2, 2026 · July to November";
+  - semester targets "0 of 10 EPAs met this semester" and yearly targets "0 of 5 EPAs met in 2026";
+  - training year 3;
+  - multi-source feedback "0 of 15 EPAs covered…".
+  The PAED-001 card reads "1 of 3 this semester", with a bar, then "2 more by 30 November 2026. At the minimum level when
+  observed: 1 of 1. Last encounter date: `D−10`." Below that come "Target: 3 per semester (6 a year). Minimum now 4."
+  and "Semester 1, 2026: 0 of 3, 3 short". The Entrustment section shows no STAR yet. The trajectory charts PAED-001:
+  1 observation from 1 distinct assessor.
+Note: A figure is always "n of m" for a named window, never a lifetime total (T130, DESIGN.md § progress figures).
+Actual:
+Gap:
+
+## Phase 3.B — Filing rules, a decline and a re-filing
+
+### Step 3.8 — A future encounter date is refused
+Role: Trainee — Dr Sipho Ndlovu
+Route: /activities/new
+Do: Start a Mini-CEX (Paediatrics) for an encounter on the ward. Fill in the EPA PAED-002, the assessor Dr Fatima
+  Khumalo, the setting Ward, the presenting problem "Nine-month-old with gastroenteritis and moderate dehydration" and
+  the complexity Low. By mistake, type the date observed as `D+1`. Submit.
+Expect: The submit is refused with "Nothing was saved. Date observed: The date cannot be after today (`D`)." The date
+  field is marked and names the alert, and everything typed is kept (T160, T263). No activity exists.
+Actual:
+Gap:
+
+### Step 3.9 — A date before the programme started is refused
+Role: Trainee — Dr Sipho Ndlovu
+Route: /activities/new
+Do: Change the date observed to `J−1d`, the day before his programme started (2026-01-14 on a replay in 2026), and
+  submit again.
+Expect: As the date is typed, the field is marked, and below it reads "This date is before the trainee's programme
+  started (`J`), and will not be accepted." The submit is refused with "Nothing was saved. Date observed: The date
+  cannot be before the trainee's programme started (`J`)." A Mini-CEX can credit, so its date is held to the programme
+  start (T160, T192). No activity exists.
+Actual:
+Gap:
+
+### Step 3.10 — A late filing is warned about and recorded, never refused
+Role: Trainee — Dr Sipho Ndlovu
+Route: /activities/new → /activities/{ActivityId:int}
+Do: Change the date observed to `D−20`, the day the encounter happened, and submit.
+Expect: No lateness warning shows yet. The field still carries the last refusal's mark, which stays until the next action
+  (T263), and a refused date is never called fileable. Step 3.12's fresh form shows the warning. The submit succeeds:
+  "Submitted. It is now Requested." In the history, the Submit row's time carries "Filed 20 days after the encounter"
+  (D15, T160).
+Actual:
+Gap:
+
+### Step 3.11 — Dr Khumalo declines the request, with a reason
+Role: Assessor — Dr Fatima Khumalo
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: Open Dr Ndlovu's Mini-CEX. Press Decline and apply it with the note left empty. Then apply it with the note "I was
+  not on the ward that day; Dr Botha observed this encounter. Please send it to her."
+Expect: Decline opens a transition note. Applied with the note empty, it is refused with "Decline requires a note."
+  Applied with the note, the state is Declined. The page is read-only, with no action left. The history's Decline row
+  shows her note, credited "—". Her inbox no longer lists the request.
+Actual:
+Gap:
+
+### Step 3.12 — Dr Ndlovu reads the decline and files the encounter again, naming Dr Botha
+Role: Trainee — Dr Sipho Ndlovu
+Route: / → /activities/{ActivityId:int} → /activities/new → /activities/{ActivityId:int}
+Do: Open the declined Mini-CEX from the dashboard. Then file the same encounter as a new Mini-CEX, `D−20`, PAED-002,
+  naming Dr Sarah Botha, and submit.
+Expect: The dashboard's Activity inbox card lists the Mini-CEX as Declined. Its page reads State: Declined, offers no
+  action, and shows Dr Khumalo's note in the history. Nothing can move a declined request on, so the re-filing is a new
+  activity. As `D−20` is typed, the field warns: "This encounter was 20 days ago. It can still be filed, but a filing
+  more than 14 days after the encounter is recorded as late." Its own Submit row records "Filed 20 days after the
+  encounter". It ends Requested.
+Note: Declined is a dead end by design: the seed's workflow has no move out of it. The declined record is kept.
+Actual:
+Gap:
+
+### Step 3.13 — Dr Botha completes Dr Ndlovu's Mini-CEX
+Role: Assessor — Dr Sarah Botha
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: Open Dr Ndlovu's re-filed Mini-CEX, rate it 3a with feedback, and complete it.
+Expect: The Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-002 is 3a, so it counts at the minimum.
+  The declined request stays Declined and credits nothing.
+Actual:
+Gap:
+
+## Phase 3.C — A reflection returned for more detail
+
+### Step 3.14 — Dr Ndlovu submits a reflective exercise to Dr Botha
+Role: Trainee — Dr Sipho Ndlovu
+Route: /activities/new → /activities/{ActivityId:int}
+Do: File a Reflective Exercise (Paediatrics) on a critical incident. Fill in the EPA PAED-001, the supervisor
+  Dr Botha and the date of the incident `D−20`. For what happened, write "A three-year-old in septic shock waited
+  90 minutes for antibiotics after triage". Add the analysis, what he learned and a one-line plan, then submit.
+Expect: The EPA picker offers only PAED-001, 003, 008 and 014, the EPAs whose list names the reflective exercise (D45).
+  The form has no Entrustment section, because the exercise is unrated (D6), and its Discussion section is locked. No
+  lateness warning shows for `D−20`: a reflective exercise credits nothing, so its filing is late for nobody (T160).
+  The submit reads "Submitted. It is now Awaiting discussion.", and the Submit row carries no lateness note.
+Actual:
+Gap:
+
+### Step 3.15 — Dr Botha returns the reflection for more detail
+Role: Assessor — Dr Sarah Botha
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: Open Dr Ndlovu's reflection. Return it with the note "Please say what you would do differently at triage, and what
+  you will read before your next take."
+Expect: The inbox lists the reflection as Awaiting discussion. The page offers Record Discussion and Return, and only the
+  Discussion field is open. Return asks for a note. Once it is returned, the state is Draft and the page offers
+  Dr Botha nothing. The history's Return row (Awaiting discussion → Draft) carries her note.
+Actual:
+Gap:
+
+### Step 3.16 — Dr Ndlovu finds the returned reflection in his inbox and submits it again
+Role: Trainee — Dr Sipho Ndlovu
+Route: / → /activities/inbox → /activities/{ActivityId:int}
+Do: From the dashboard's Activity inbox card, open the inbox, then the reflection. Expand "What I will do differently":
+  "Start the sepsis bundle at triage; read the paediatric sepsis guideline before my next take". Submit again.
+Expect: The dashboard card lists the reflection as Draft. The inbox page lists it and nothing else of his. His fields are
+  open again, with Submit and Cancel. After the submit, the state is Awaiting discussion. The history reads Create,
+  Submit, Return and Submit, and neither Submit row carries a lateness note.
+Note: A re-submission after a return is not a new filing (`Workflow.LeftInitialStateLeadingOn`, `ActivityService.IsTheFiling`).
+  On this type nothing shows it, because a reflective exercise records no lateness at all.
+Actual:
+Gap:
+
+### Step 3.17 — Dr Botha records the discussion
+Role: Assessor — Dr Sarah Botha
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: Open the re-submitted reflection, write the discussion notes, and record the discussion.
+Expect: The state is Discussed, finished and read-only to both of them. The Record Discussion row is credited "—":
+  the exercise credits nothing (D7), and no "counted towards no curriculum requirement" banner shows (T108). Dr Ndlovu's
+  progress does not change.
+Actual:
+Gap:
+
+## Phase 3.D — Logs, a DOPS and work left open
+
+### Step 3.18 — Dr du Plessis logs a teaching session
+Role: Trainee — Dr Pieter du Plessis
+Route: /activities/new → /activities/{ActivityId:int}
+Do: Choose KGK Teaching Session Log. Fill in the topic "Recognising the sick child: a triage refresher", the EPA
+  PAED-015, the date delivered `D−6`, the audience Interns and the learning objectives. Submit.
+Expect: The form is Act 1's: one section, Teaching session, with six fields, the first five required and Supervising
+  consultant optional, and no rating. The EPA picker offers all 15 PAED EPAs: the type is not a College instrument, so
+  no tool list binds it (D21). The submit reads "Submitted. It is now Logged." The Log row is credited "—", and no
+  lateness is recorded.
+Note: No seeded CPSA instrument is a procedure log; the generic `procedure_log` belongs to the Demo speciality. KGK's
+  own self-logged type stands in for procedure-style logging.
+Actual:
+Gap:
+
+### Step 3.19 — Dr du Plessis logs two more sessions, one from before his programme
+Role: Trainee — Dr Pieter du Plessis
+Route: /activities/new → /activities/{ActivityId:int}
+Do: Log two more sessions:
+  - "Neonatal jaundice for fourth-year students": PAED-004, `D−13`, Medical students.
+  - "Oral rehydration for nursing staff", taught as a medical officer before admission: PAED-015, `J−1y−56d`
+    (20 November 2024 on a replay in 2026), Nursing staff.
+Expect: Both sessions are Logged. `J−1y−56d` is before his programme started (`J−1y`), and it is accepted with no
+  hint. A type that credits nothing is held only to "not after today" (T160).
+Actual:
+Gap:
+
+### Step 3.20 — Dr du Plessis abandons a draft started on the wrong instrument
+Role: Trainee — Dr Pieter du Plessis
+Route: /activities/new → /activities/{ActivityId:int} → /activities/mine
+Do: Start a DOPS (Paediatrics) by mistake. Choose only the EPA PAED-002 and save the draft. Then cancel it from its page.
+Expect: The draft saves with its other required fields empty, because saving a draft checks formats only (T105). Cancel
+  asks for no note and moves the draft to Cancelled, with nothing offered after it. My Activities lists it as Cancelled,
+  credited "—", beside the three Logged sessions.
+Actual:
+Gap:
+
+### Step 3.21 — Dr du Plessis asks Dr Khumalo for a CBD
+Role: Trainee — Dr Pieter du Plessis
+Route: /activities/new → /activities/{ActivityId:int}
+Do: File a Case-Based Discussion (Paediatrics). Fill in the EPA PAED-002, the assessor Dr Khumalo, the date `D−5`, the
+  case discussed (a toddler with a first febrile seizure) and the focus Clinical reasoning. Submit.
+Expect: The CBD ends Requested. It stays that way to the end of the act; Step 3.51 reads it from Dr Khumalo's side.
+Actual:
+Gap:
+
+### Step 3.22 — Dr du Plessis asks Dr Patel to review his portfolio
+Role: Trainee — Dr Pieter du Plessis
+Route: /activities/new → /activities/{ActivityId:int}
+Do: File a Portfolio and Logbook Review (Paediatrics). Fill in the EPA PAED-015, the reviewer Dr Patel, the review
+  period `D−60` to `D−1`, and the note for the reviewer "Three teaching sessions logged; please review them with my
+  logbook". Leave the export's file name empty, since it is optional. Submit.
+Expect: The EPA picker offers PAED-015 only, the one EPA whose list names the portfolio review (D45). The form has no
+  rating, and its Review section is locked. The submit reads "Submitted. It is now Awaiting review." The encounter date
+  is the period's last day, `D−1`. The review stays Awaiting review to the end of the act.
+Actual:
+Gap:
+
+### Step 3.23 — Dr Mahlangu files a DOPS, and the EPA picker follows the tool lists
+Role: Trainee — Dr Nomsa Mahlangu
+Route: /activities/new → /activities/{ActivityId:int}
+Do: File a DOPS (Paediatrics) for a lumbar puncture on a four-month-old with suspected meningitis. First look for
+  PAED-010 in the EPA picker. Then choose PAED-002, the assessor Dr Patel, the date `D−8`, the procedure "Lumbar
+  puncture", the setting Ward and the complexity Moderate. Submit.
+Expect: The EPA picker offers the eight EPAs whose list names the DOPS, PAED-001 to PAED-008. It does not offer
+  PAED-010, whose list is Direct observation and MSF only (T122); the old runbook filed this DOPS there. The DOPS ends
+  Requested.
+Actual:
+Gap:
+
+### Step 3.24 — Dr Patel completes Dr Mahlangu's DOPS
+Role: Assessor — Dr Mohammed Patel
+Route: / → /activities/inbox → /activities/{ActivityId:int}
+Do: From the dashboard, open the inbox, then the DOPS. Rate it 3a with feedback, and complete it.
+Expect: The inbox holds two rows: Nomsa Mahlangu's DOPS (Requested) and Pieter du Plessis's portfolio review (Awaiting
+  review). After Complete, the DOPS is Completed, credited "1 item". Year 1's minimum on PAED-002 is 3a, so it counts at
+  the minimum. The portfolio review stays in his inbox.
+Actual:
+Gap:
+
+## Phase 3.E — Evidence for the annual review
+
+### Step 3.25 — Dr Molefe files six workplace-based assessments
+Role: Trainee — Dr Lerato Molefe
+Route: /activities/new → /activities/{ActivityId:int} → /activities/mine
+Do: File and submit each of these, filling in every Request field. The clinical context below is the presenting
+  problem, the procedure, the case discussed or the context:
+  - Mini-CEX, PAED-001, Dr Zulu, `D−12`, Emergency unit, complexity High: status epilepticus in a five-year-old.
+  - CBD, PAED-001, Dr Naidoo, `D−11`, focus Escalation and safety: a febrile neutropenic child.
+  - DOPS, PAED-001, Dr Patel, `D−9`, Emergency unit, complexity High: intraosseous access in a shocked infant.
+  - Mini-CEX, PAED-012, Dr Botha, `D−7`, Ward, complexity Moderate: telling parents of a new diagnosis of type 1
+    diabetes.
+  - CBD, PAED-012, Dr Khumalo, `D−5`, focus Ethics and consent: a transfusion refused on religious grounds.
+  - Direct Observation, PAED-010, Dr Zulu, `D−4`, activity observed Ward round: leading the Monday ward round.
+Expect: Each ends Requested, with no lateness warning, since all six are within 14 days. My Activities lists the six as
+  Requested, credited "—". The Direct Observation's EPA picker offers PAED-010, because its list names Direct
+  observation. The Mini-CEX and DOPS pickers do not offer it.
+Actual:
+Gap:
+
+### Step 3.26 — The consultants complete Dr Molefe's six
+Role: Assessor — Dr Thandi Zulu, Dr David Naidoo, Dr Mohammed Patel, Dr Sarah Botha and Dr Fatima Khumalo
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: Each consultant opens their own requests from the inbox and completes them with feedback, rating:
+  - Dr Zulu: rung 5 on the PAED-001 Mini-CEX and rung 5 on the PAED-010 observation;
+  - Dr Naidoo: rung 5;
+  - Dr Patel: rung 4;
+  - Dr Botha: rung 5;
+  - Dr Khumalo: rung 5.
+Expect: Each inbox holds only that assessor's own requests. All six end Completed, each credited "1 item". Year 4's
+  minimum is rung 5 on PAED-001, PAED-010 and PAED-012. So Dr Patel's rung 4 counts towards the target, but not at the
+  minimum.
+Actual:
+Gap:
+
+### Step 3.27 — Dr Dlamini files three more
+Role: Trainee — Dr Anele Dlamini
+Route: /activities/new → /activities/{ActivityId:int}
+Do: File and submit:
+  - CBD, PAED-001, Dr Zulu, `D−9`, focus Management plan: diabetic ketoacidosis in a nine-year-old.
+  - Clinical Case Analysis, PAED-001, Dr Botha, `D−6`, case "Anaphylaxis, 7-year-old, emergency unit", documents
+    reviewed Admission notes and Progress notes, setting Emergency unit, and the reasoning discussed: why adrenaline
+    was repeated before the second-line drugs.
+  - Mini-CEX, PAED-004, Dr Khumalo, `D−2`, Neonatal unit, complexity Moderate: a term neonate with respiratory
+    distress.
+Expect: Each ends Requested.
+Actual:
+Gap:
+
+### Step 3.28 — The consultants complete Dr Dlamini's three
+Role: Assessor — Dr Thandi Zulu, Dr Sarah Botha and Dr Fatima Khumalo
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: Each completes their own with feedback, rating: Dr Zulu 3b on the CBD, Dr Botha 4 on the CCA, and Dr Khumalo 4 on
+  the Mini-CEX.
+Expect: All three end Completed, each credited "1 item". Dr Dlamini's PAED-001 now holds three encounters this semester.
+  Two are at year 3's minimum of rung 4; the CBD at 3b counts towards the target only. Her PAED-004 holds one, at the
+  minimum.
+Actual:
+Gap:
+
+## Phase 3.F — Stalled work
+
+### Step 3.29 — Dr Mahlangu asks Dr Zulu for a Mini-CEX, which is left unrated
+Role: Trainee — Dr Nomsa Mahlangu
+Route: /activities/new → /activities/{ActivityId:int}
+Do: File a Mini-CEX (Paediatrics): PAED-004, Dr Zulu, `D−3`, Neonatal unit, "Term neonate with jaundice on day three",
+  complexity Low. Submit. Dr Zulu does not act on it.
+Expect: The Mini-CEX ends Requested.
+Actual:
+Gap:
+
+### Step 3.30 — Mr Smit's dashboard shows the stalled requests
+Role: Coordinator — Mr Pieter Smit
+Route: /
+Do: Once Dr Mahlangu's Mini-CEX and Dr du Plessis's portfolio review have waited more than seven days, open the
+  dashboard.
+Expect: "Stalled requests" is marked as a warning and lists both, oldest first, each by type, trainee and the day it
+  last moved:
+  - Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis
+  - Mini-CEX (Paediatrics) — Nomsa Mahlangu
+  Neither row links anywhere. "Invitations nearing expiry" reads "No invitations expiring soon." The Quick action card
+  offers "Start an MSF campaign".
+Note: To play this in one sitting, age both requests by eight days (the statement touches 2 rows):
+  `UPDATE "Activities" a SET "UpdatedOn" = a."UpdatedOn" - interval '8 days' FROM "ActivityTypes" t, "AspNetUsers" u
+  WHERE t."Id" = a."ActivityTypeId" AND u."Id" = a."SubjectUserId" AND ((t."Key" = 'mini_cex_cpsa' AND u."Email" =
+  'mahlangu@kgk.wombat.local' AND a."CurrentState" = 'requested') OR (t."Key" = 'portfolio_review_cpsa' AND u."Email" =
+  'duplessis@kgk.wombat.local'));`
+  The card reads only the state key `submitted` (`GetCoordinatorDashboardSummaryQuery`), so it leaves out the Mini-CEX,
+  whose waiting state is `requested`, as it does every CPSA WBA. If it lists the portfolio review alone, that is a Gap.
+Actual:
+Gap:
+
+### Step 3.31 — Mr Smit opens Stalled Activities
+Role: Coordinator — Mr Pieter Smit
+Route: /placeholder/{Feature}
+Do: Choose Stalled Activities in the nav (`/placeholder/stalled-activities`). Then open a mistyped address,
+  `/placeholder/stalled-work`.
+Expect: Stalled Activities reads "This page is not built yet." with a "Coming soon" card. There is no page from which to
+  chase a stalled request: no reminder and no reassignment. The mistyped address is "Page not found" with status 404,
+  not a "Coming soon" (T178).
+Actual:
+Gap:
+
+### Step 3.32 — The daily nudge reminds the assessors
+Role: Administrator — devadmin@wombat.local
+Route: /admin/jobs
+Do: Run `assessor-pending-nudge` now.
+Expect: The job's last run updates. The application log holds two stub emails, "Activities awaiting your assessment".
+  The log names no address (T282); each greets its assessor by first name:
+  - "Hi Thandi", listing Mini-CEX (Paediatrics) from Nomsa Mahlangu, waiting 8 days;
+  - "Hi Mohammed", listing Portfolio and Logbook Review (Paediatrics) from Pieter du Plessis, waiting 8 days.
+  The run's summary line reads "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days,
+  so nobody else is nudged.
+Note: The job reads each activity's pinned workflow and nudges on anything untouched for five days in a state whose
+  next move belongs to a `field:` nominee (`AssessorPendingNudgeJob`). D50 decides whom it skips.
+Actual:
+Gap:
+
+### Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX
+Role: Assessor — Dr Thandi Zulu
+Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
+Do: Her dashboard opens as a CommitteeMember; switch the view to Assessor. From "Review inbox", open Dr Mahlangu's
+  Mini-CEX, rate it 3a with feedback, and complete it.
+Expect: Home first reads "Viewing as CommitteeMember" and "You also act as Assessor. Switch view: Assessor". After the
+  switch it reads "Viewing as Assessor", and "Pending requests" counts 1 assessment awaiting review: this Mini-CEX.
+  After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of
+  Dr Mahlangu's is stalled any more.
+Note: `GetAssessorDashboardSummaryQuery` counts only requests the assessor has already moved or created, and nobody
+  moves a CPSA request before completing or declining it. If the card reads 0 beside an inbox holding one, that is a
+  Gap.
+Actual:
+Gap:
+
+## Phase 3.G — Multi-source feedback for Dr Molefe
+
+### Step 3.34 — Mr Smit creates the MSF questionnaire
+Role: Coordinator — Mr Pieter Smit
+Route: / → /msf/campaigns → /msf/campaigns/new
+Do: Open MSF Campaigns and start a new campaign. The Template select is empty, so add the Quick template as it stands:
+  kind Multi-source feedback, name "Default MSF", with its scale question and its comment question.
+Expect: The list reads "No MSF campaigns", with MSF coverage and New campaign in its header. The create page shows a
+  Quick template card and a Create campaign card. Adding the template reads "Template created.", and the Template
+  select now offers Default MSF.
+Actual:
+Gap:
+
+### Step 3.35 — Mr Smit creates a campaign for Dr Molefe
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/campaigns/new → /msf/campaigns/{CampaignId:int}
+Do: Fill in the campaign:
+  - trainee Dr Lerato Molefe and template Default MSF;
+  - opens on `D` and closes on `D+14`, the defaults;
+  - minimum responses 5, minimum category responses 2 and minimum reporting categories 2;
+  - evidence for PAED-010 and PAED-012.
+  Create it.
+Expect: The Trainee select offers KGK's five current trainees by name and address, and nobody else. Once a trainee is
+  chosen, "Evidence for these EPAs" lists all 15 EPAs of her curriculum, since MSF is on every one (D37). The help
+  beside the reporting categories says that two is the College's answer (D11). Creating it opens the campaign: Draft,
+  Lerato Molefe, Default MSF (Multi-source feedback), window `D` to `D+14`, and "Nobody has been invited yet." Open
+  campaign is shown disabled, with "Open campaign: add at least one invitee first…" below it (T225).
+Actual:
+Gap:
+
+### Step 3.36 — Mr Smit invites seven colleagues, and removes one added under the wrong group
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/campaigns/{CampaignId:int}
+Do: Add each colleague by address and respondent group:
+  - Sister Grace Mokwena, `grace.mokwena@kgk.wombat.local`, as a Nurse;
+  - Sister Palesa Tau, `palesa.tau@kgk.wombat.local`, by mistake as an Allied health professional;
+  - the registrars Dr Kagiso Motsepe, `kagiso.motsepe@kgk.wombat.local`, and Dr Lindiwe Khoza,
+    `lindiwe.khoza@kgk.wombat.local`, as Peer doctors;
+  - Dr Khumalo, `khumalo@kgk.wombat.local`, and Dr Botha, `botha@kgk.wombat.local`, as Consultants;
+  - the physiotherapist Ms Naledi Sebego, `naledi.sebego@kgk.wombat.local`, as an Allied health professional.
+  Then remove Sister Tau's row and add her again as a Nurse.
+Expect: Each add reads "Invitee added." and clears the address for the next one. The group select offers Peer doctor,
+  Consultant, Nurse, Allied health professional and Other; it offers no Patient and no Learner. Remove asks "Remove this
+  invitee?", naming the address and group. Confirmed, it says she "has been removed from this campaign, and will not be
+  emailed a link when it opens." In the end the counts read Peer doctor 2, Consultant 2, Nurse 2, Allied health
+  professional 1 and All groups 7, with no Responded column. "Addresses invited" lists the seven, each with Remove, and
+  Open campaign is enabled.
+Actual:
+Gap:
+
+### Step 3.37 — Mr Smit opens the campaign
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/campaigns/{CampaignId:int}
+Do: Open the campaign.
+Expect: The page reads "Campaign opened; links are being sent." and State: Open. The note names `D+14` as the
+  respondents' last day, and says the campaign can be closed sooner from its report. "7 links are still being sent.
+  Reload this page to see whether they were delivered." The invitees are now counted only, with a Responded column
+  reading 0, and no address is listed (T217, T247). The actions are Withdraw campaign and View report. The application
+  log holds seven "Feedback request: Lerato Molefe (Default MSF, …)" emails, each with a `/msf/respond` link.
+Actual:
+Gap:
+
+### Step 3.38 — Mr Smit withdraws a campaign started in error
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/campaigns/new → /msf/campaigns/{CampaignId:int} → /msf/campaigns
+Do: Create a second campaign, for Dr Pieter du Plessis: Default MSF, the defaults, evidence for PAED-015. Then
+  Dr Mokoena says his MSF belongs to next semester, so withdraw it from the campaign list.
+Expect: The list shows two rows, each with links named by its state (T225):
+  - Lerato Molefe, Open: "Manage", "View report" and Withdraw;
+  - Pieter du Plessis, Draft: "Manage" and Withdraw.
+  Withdraw asks "Withdraw this campaign?", names "Pieter du Plessis (Default MSF, closing `D+14`)", and says withdrawing
+  cannot be undone. Confirmed, it reads "The campaign for Pieter du Plessis (…) has been withdrawn. Its respondents'
+  links no longer work, and their email addresses have been removed." The row then reads Withdrawn, with only "View
+  campaign".
+Actual:
+Gap:
+
+### Step 3.39 — Three respondents answer from their links
+Role: Anonymous — Sister Grace Mokwena, Sister Palesa Tau and Dr Kagiso Motsepe (MSF respondents)
+Route: /msf/respond
+Do: Each respondent opens their own link from the log, in a browser signed in to nothing, and answers:
+  - Sister Mokwena: Above expectations, "Calm and kind with parents at night; hands over clearly".
+  - Sister Tau: Well above expectations, "Leads neonatal resuscitations and explains her decisions to the nurses".
+  - Dr Motsepe: Meets expectations, "A supportive senior; could delegate more".
+Expect: The page reads "Feedback on Lerato Molefe", Default MSF, and last day to respond `D+14`. It says their name and
+  address are never shown to her, and that she sees the feedback only after it has closed and been released, grouped by
+  respondent role. The rating offers five points, from Well below expectations to Well above expectations (D47), and is
+  required. The comment is optional, with help warning that it may reach her word for word. Each submit ends on "Thank
+  you" and "Your feedback on Lerato Molefe has been recorded."
+Note: The stub emails name no address (T282), and a link's group decides where its answer is counted. Match each link
+  to its invitee before handing it out: its `token=` begins with the `TokenSelector` of its row in
+  `SELECT "RespondentEmail", "RespondentCategory", "TokenSelector" FROM "MsfInvitations"
+  WHERE "CampaignId" = <the campaign's id>;`.
+Actual:
+Gap:
+
+### Step 3.40 — A used link is refused
+Role: Anonymous — Dr Kagiso Motsepe (MSF respondent)
+Route: /msf/respond
+Do: Open the same link again.
+Expect: The page reads "Feedback link already used" and shows no questionnaire.
+Actual:
+Gap:
+
+### Step 3.41 — Mr Smit reads the report while the campaign is open
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/campaigns → /msf/reports/{CampaignId:int}
+Do: Open Dr Molefe's report from the campaign list.
+Expect: The report reads State Open, total responses 3, minimum responses 5, minimum category responses 2, and
+  reporting categories 1 of 2 required. "Evidence for" lists PAED-010 and PAED-012, and says one record per EPA is
+  written when the report is released. A Nurse card gives the rating's average, 4.50 from 2 responses, and both
+  comments. A Peer doctor card reads "Insufficient responses in this category. Results are suppressed." A group that
+  has not answered has no card. Close campaign is offered; Release is not.
+Actual:
+Gap:
+
+### Step 3.42 — Three more respondents answer, and one never does
+Role: Anonymous — Dr Fatima Khumalo, Dr Sarah Botha and Ms Naledi Sebego (MSF respondents)
+Route: /msf/respond
+Do: The three answer; Dr Khoza does not open her link.
+  - Dr Khumalo: Above expectations, "Sound judgement in clinic; teaches the interns well".
+  - Dr Botha: Above expectations, "Ready to run a ward; should document escalation decisions more fully".
+  - Ms Sebego: Above expectations, "Refers early and listens to the therapists".
+Expect: Each submit ends on "Thank you" and "Your feedback on Lerato Molefe has been recorded." Six of the seven links
+  have now been used; Step 3.43 reads the counts.
+Actual:
+Gap:
+
+### Step 3.43 — Mr Smit resends the undelivered link
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/campaigns/{CampaignId:int}
+Do: At least an hour after the open, open the campaign and resend.
+Expect: The counts read Responded: Peer doctor 1, Consultant 2, Nurse 2 and Allied health professional 1, and All
+  groups 7 invited, 6 responded. A warning reads "1 link was not delivered. Resend sends each of these respondents a new
+  link; this page never says who they are.", with a "Resend 1 link" button. After the resend, the page reads "1 new link
+  is being sent." and "1 link is still being sent…", and the warning is gone. The log holds one more "Feedback request:
+  Lerato Molefe …" stub email. It names no address; it is Dr Khoza's, the only link not answered.
+Note: With `Email__SmtpHost` unset, nothing reports a delivery, so an hour after the open every unanswered link reads as
+  not delivered (INFRASTRUCTURE.md § After T251).
+Actual:
+Gap:
+
+### Step 3.44 — Mr Smit closes the campaign
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/reports/{CampaignId:int} → /msf/campaigns/{CampaignId:int}
+Do: On the report, close the campaign. Then open its campaign page.
+Expect: The report reads "Campaign closed and anonymised for review." and State: Under review:
+  - total responses 6; reporting categories 2 of 2 required;
+  - the Nurse card (4.50 from 2) and the Consultant card (4.00 from 2) show their comments;
+  - Peer doctor and Allied health professional are suppressed.
+  Release to trainee is enabled. Beside it are the narrative and the optional "Supervision level this feedback
+  supports", which offers Not stated and the six rungs (D10). The campaign page says the campaign is closed to
+  responses and every respondent's address has been removed. It offers Withdraw campaign and "Review and release".
+Actual:
+Gap:
+
+### Step 3.45 — A link opened after the close is refused
+Role: Anonymous — Dr Lindiwe Khoza (MSF respondent)
+Route: /msf/respond
+Do: Open the resent link.
+Expect: The page reads "Feedback request closed" and shows no questionnaire.
+Actual:
+Gap:
+
+### Step 3.46 — Mr Smit releases the report to Dr Molefe
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/reports/{CampaignId:int} → /msf/campaigns
+Do: Write the narrative "Consistently strong feedback from nursing and consultant colleagues; keep documenting
+  escalation decisions". Leave the supervision level Not stated, since he is not a clinician. Release.
+Expect: The report reads "Report released to the trainee." and State Released. The actions card shows the narrative
+  and "Not stated" as stored, with no form (T246). "Evidence for" lists PAED-010 and PAED-012, with the time they were
+  recorded on the portfolio. In the list, the row reads Released, with "View campaign" and "View report" and no
+  Withdraw.
+Actual:
+Gap:
+
+### Step 3.47 — Dr Molefe reads her released report
+Role: Trainee — Dr Lerato Molefe
+Route: /msf/my-reports → /msf/my-reports/{CampaignId:int}
+Do: Open MSF Reports, then view the report.
+Expect: One row: Default MSF (Multi-source feedback), released just now, 6 responses. The report shows the narrative
+  and two groups only, Nurse (4.50) and Consultant (4.00), each with its comments. It shows nothing of the peer doctor
+  or the physiotherapist, not even that they answered, and no group's count (T249).
+Actual:
+Gap:
+
+### Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback
+Role: Trainee — Dr Lerato Molefe
+Route: /activities/mine → /portfolio/progress
+Do: Open My Activities, then My Progress.
+Expect: My Activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My Progress
+  reads:
+  - semester targets "1 of 10 EPAs met this semester", and training year 4;
+  - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
+    own and counts towards no target.";
+  - PAED-001: "3 of 3 this semester", "Target met for Semester 2, 2026. At the minimum level when observed: 2 of 3.",
+    minimum now 5;
+  - PAED-012 "2 of 3" and PAED-010 "1 of 3", each with "MSF in Semester 2, 2026: covered by a released campaign that
+    closed on …".
+  The trajectory charts PAED-001 (3 observations from 3 distinct assessors), PAED-010 and PAED-012, and plots no MSF
+  point (D36).
+Actual:
+Gap:
+
+### Step 3.49 — Mr Smit reads the programme's MSF coverage
+Role: Coordinator — Mr Pieter Smit
+Route: /msf/campaigns → /msf/coverage
+Do: Open MSF coverage from the campaign list.
+Expect: One programme: "Paediatric EPA Curriculum 11.1 at Kgosi Kgari Teaching Hospital".
+  - Semester 1, 2026 reads "5 trainees, whose programme had started by 30 June 2026". Semester 2, 2026 reads
+    "5 trainees, whose programme had started by 31 December 2026".
+  - By EPA, in Semester 2, 2026: PAED-010 and PAED-012 read "1 of 5 trainees covered", in bold. Every other cell reads
+    "0 of 5 trainees covered".
+  - By trainee: Lerato Molefe reads "2 of 15 EPAs covered" in Semester 2, 2026; everyone else reads 0 of 15.
+  There is no badge, tint or bar, because coverage is not a target (D8, D9). The withdrawn campaign counts for nothing.
+Actual:
+Gap:
+
+## Phase 3.H — Dashboards with data
+
+### Step 3.50 — Dr Dlamini's dashboard
+Role: Trainee — Dr Anele Dlamini
+Route: /
+Do: Open the dashboard and read each card.
+Expect:
+  - Curriculum targets, "Semester 2, 2026 · July to November": "1 / 10" semester targets met and "0 / 5" yearly targets
+    met (2026). Below them are the five EPAs furthest short, largest shortfall first: PAED-002, PAED-003, PAED-005,
+    PAED-010 and PAED-012, each "0 of 3 this semester".
+  - Activity inbox: "No pending items."
+  - Recent activities: her four WBAs, each Completed, in green.
+  - Upcoming deadlines: "No deadlines in the next 14 days."
+  - My authorisations and Actions link to their pages.
+Actual:
+Gap:
+
+### Step 3.51 — Dr Khumalo's dashboard, and Recent Activities
+Role: Assessor — Dr Fatima Khumalo
+Route: / → /activities/inbox → /placeholder/{Feature}
+Do: Read the dashboard, then follow "Review inbox". Then choose Recent Activities in the nav.
+Expect:
+  - Pending requests: 1 assessment awaiting review, Dr du Plessis's CBD. The inbox lists it as Requested.
+  - "Accepted, needing action": "No accepted assessments pending action."
+  - Recent decisions: Mini-CEX (Paediatrics) — Anele Dlamini, Completed, in green; Case-Based Discussion (Paediatrics)
+    — Lerato Molefe, Completed; Mini-CEX (Paediatrics) — Sipho Ndlovu, Declined, in red.
+  - Recent Activities (`/placeholder/recent-activities`) is "Coming soon".
+Note: No CPSA workflow has a state named `accepted`, so the second card is always empty. "Pending requests" is read as
+  in Step 3.33: 0 beside an inbox holding the CBD is a Gap.
+Actual:
+Gap:
+
+### Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees
+Role: CommitteeMember — Dr Thandi Zulu
+Route: /dashboard/switch/{role} → / → /placeholder/{Feature}
+Do: Switch the view back to CommitteeMember and read the dashboard. Then choose Programme Trainees in the nav.
+Expect:
+  - Targets this period, "Semester 2, 2026 · July to November": KGK's five current trainees, fewest met first.
+    Pieter du Plessis, Nomsa Mahlangu and Sipho Ndlovu read "semester 0/10 · yearly 0/5". Anele Dlamini and Lerato
+    Molefe read "semester 1/10 · yearly 0/5".
+  - Targets met by EPA: PAED-001 (3 per semester) reads "2 of 5 met", and every other EPA "0 of 5 met".
+  - Neither card holds a link.
+  - Programme Trainees is "Coming soon".
+Note: The card reads the trainees in the member's sub-speciality scopes (`GetCommitteeMemberDashboardSummaryQuery`).
+  Dr Zulu's invitation carried none; her Paediatrics sub-speciality came with her assessor profile (Step 2.14).
+Actual:
+Gap:
+
+### Step 3.53 — Dr Mokoena's dashboard, its review queue, and STAR Review Queue
+Role: SpecialityAdmin — Dr Refilwe Mokoena
+Route: / → /activities/inbox → /placeholder/{Feature}
+Do: Read the dashboard and follow "Review queue". Then choose STAR Review Queue in the nav.
+Expect:
+  - Pending reviews: 1 activity in review, Dr du Plessis's portfolio review.
+  - Trainees in programme: "5 active / 0 inactive".
+  - Curriculum coverage — Semester 2, 2026: the 15 EPAs with their targets. PAED-001 reads "2 of 5 met", and the rest
+    "0 of 5 met", the same figures as Dr Zulu's.
+  - "Review queue" opens an inbox that reads "Inbox clear", because she acts on no one's activity.
+  - STAR Review Queue is "Coming soon".
+Note: The count reads only the states named `submitted` and `in_review`, so Dr du Plessis's Requested CBD is not in it.
+Actual:
+Gap:
+
+### Step 3.54 — Dr Sithole's dashboard
+Role: SubSpecialityAdmin — Dr Kabelo Sithole
+Route: /
+Do: Read the dashboard.
+Expect: The same three cards and figures as Dr Mokoena's: 1 activity in review, "5 active / 0 inactive", and PAED-001
+  "2 of 5 met". His nav offers the same Programme Trainees and STAR Review Queue placeholders.
+Actual:
+Gap:
+
+## Phase 3.I — The audit trail
+
+### Step 3.55 — Prof Mbatha reads KGK's audit log
+Role: InstitutionalAdmin — Prof Nolwazi Mbatha
+Route: /admin/audit
+Do: Open the Audit Log, which shows the last 24 hours by default. Set From (UTC) to the start of this act's sitting, so
+  that no earlier act's rows are counted, and apply. Filter by Result: Failures only. Then clear that and filter by
+  Action "Msf".
+Expect:
+  - Every row is KGK's, newest first, 50 to a page. The rows include CreateActivityCommand and
+    TransitionActivityCommand by each registrar and consultant, and Mr Smit's MSF commands, each with its actor and OK.
+  - Failures only leaves four rows, each FAILED: Dr Ndlovu's two refused creates (the future date and the date before
+    his programme started), Dr Dlamini's refused submit, and Dr Khumalo's decline without a note.
+  - "Msf" leaves Mr Smit's seventeen commands: the template, two campaigns, eight invitations, one removal, the open,
+    the withdrawal, the resend, the close and the release.
+  - No respondent's submission and no devadmin row is listed, because those carry no institution (T101, T205).
+Actual:
+Gap:
+
+### Step 3.56 — Prof Mbatha opens one entry
+Role: InstitutionalAdmin — Prof Nolwazi Mbatha
+Route: /admin/audit → /admin/audit/{Id:guid}
+Do: Under Failures only, open Dr Ndlovu's future-date create.
+Expect: The Event card shows the time to the millisecond, category Command, action CreateActivityCommand, and result
+  Failed with "Date observed: The date cannot be after today (…)." The Actor card shows Dr Ndlovu's user id, display
+  name and IP address. There is no Payload card: only an Administrator reads the raw JSON. "Back to log" returns to the
+  list.
+Actual:
+Gap:
+
+### Step 3.57 — devadmin reads the log across institutions
+Role: Administrator — devadmin@wombat.local
+Route: /admin/audit → /admin/audit/{Id:guid}
+Do: Open the Audit Log, with From (UTC) set to the start of this act's sitting as in Step 3.55. Open one respondent's
+  submission (SubmitMsfResponseCommand), then one of Dr Naidoo's TransitionActivityCommand rows.
+Expect: The log holds every institution's rows and the rows with no institution. Among them are six
+  SubmitMsfResponseCommand rows whose actor is "system", and devadmin's own RunScheduledJobNowCommand. The submission's
+  detail names no user and no display name, only a truncated address. Its payload shows the token and the answers as
+  "[REDACTED]" (T101, T205). Dr Naidoo's payload shows the principal as "[PRINCIPAL]", and the data patch and note as
+  "[REDACTED]".
+Actual:
+Gap:
+
+## Act 3 outcome state
+
+- **23 activities**:
+  - 13 WBAs Completed;
+  - 2 system-written MSF records;
+  - 3 teaching sessions Logged;
+  - 1 Declined, 1 Discussed and 1 Cancelled;
+  - two left open: Dr du Plessis's CBD (Requested, Dr Khumalo) and his portfolio review (Awaiting review, Dr Patel,
+    aged).
+- **8 curriculum progress rows**, all in the semester containing `D`.
+- **15 filings that record their lateness.** Two of them are late: Dr Ndlovu's two Mini-CEX filings, 20 days each.
+  Neither of the reflective exercise's two submissions records one.
+- **MSF:**
+  - one questionnaire, Default MSF;
+  - Dr Molefe's campaign Released, with 6 responses from 7 invitations whose addresses were removed at the close;
+  - Dr du Plessis's draft Withdrawn.
+- **The audit trail:** four failed commands in this act.
+- **Mail:** the MSF invitations (seven, plus one resent) and two nudge digests. Nothing about any activity's moves.
+
+```sql
+-- 1. Activities by instrument and state: 23 in 12 groups
+SELECT t."Key", a."CurrentState", count(*)
+FROM "Activities" a JOIN "ActivityTypes" t ON t."Id" = a."ActivityTypeId"
+GROUP BY 1, 2 ORDER BY 1, 2;
+-- cbd_cpsa completed 3 · cbd_cpsa requested 1 · cca_cpsa completed 1 · direct_observation_cpsa completed 1
+-- dops_cpsa cancelled 1 · dops_cpsa completed 2 · kgk_teaching_log logged 3 · mini_cex_cpsa completed 6
+-- mini_cex_cpsa declined 1 · msf_cpsa recorded 2 · portfolio_review_cpsa submitted 1
+-- reflective_exercise_cpsa discussed 1
+
+-- 2. Credit: 8 rows, each in the academic year and semester containing D (2026, 2 in the window)
+SELECT u."Email", e."Code", p."AcademicYear", p."Semester", p."CountsSoFar", p."MinimumLevelReachedCount"
+FROM "CurriculumItemProgresses" p
+JOIN "CurriculumItems" i ON i."Id" = p."CurriculumItemId"
+JOIN "Epas" e ON e."Id" = i."EpaId"
+JOIN "AspNetUsers" u ON u."Id" = p."TraineeUserId"
+ORDER BY 1, 2;
+-- dlamini PAED-001 3 2 · dlamini PAED-004 1 1 · mahlangu PAED-002 1 1 · mahlangu PAED-004 1 1
+-- molefe PAED-001 3 2 · molefe PAED-010 1 1 · molefe PAED-012 2 2 · ndlovu PAED-002 1 1
+
+-- 3. Lateness (D15, T160): recorded on every filing of a type that can credit, late on two
+SELECT count(*) FILTER (WHERE "DaysAfterEncounter" IS NOT NULL) AS recorded,
+       count(*) FILTER (WHERE "DaysAfterEncounter" > 14) AS late
+FROM "ActivityTransitions";
+-- recorded 15, late 2
+
+-- 4. MSF
+SELECT "State", count(*) FROM "MsfCampaigns" GROUP BY 1 ORDER BY 1;   -- 4 (Released) 1 · 5 (Withdrawn) 1
+SELECT count(*) FROM "MsfResponses";                                   -- 6
+SELECT count(*), count("RespondentEmail") FROM "MsfInvitations";       -- 7, 0
+SELECT count(*) FROM "MsfTemplates";                                   -- 1
+
+-- 5. The act's refused commands
+SELECT "Action", count(*) FROM "AuditEntries"
+WHERE NOT "Success" AND "OccurredAt" >= '<the sitting''s start, UTC>'
+GROUP BY 1 ORDER BY 1;
+-- CreateActivityCommand 2 · TransitionActivityCommand 2
+```
+
+Snapshot the database to `recovery/scenario-post-act3.dump`.
+
+## Handoff to Act 4
+
+Act 4's committee sits on this evidence. Every encounter above is dated inside the semester containing `D`, and so is
+the MSF campaign's close. A review whose period is that semester therefore freezes all of it, and D38 requires each
+staged STAR to name at least one item of that snapshot.
+
+- **Dr Molefe (year 4)** is the case for STARs:
+  - PAED-001: three completed WBAs from three assessors, two at year 4's minimum (rung 5). The target is met.
+  - PAED-012: two completed WBAs, both at rung 5.
+  - PAED-010: one Direct Observation at rung 5.
+  - A released MSF campaign covering PAED-010 and PAED-012, with no level stated.
+- **Dr Dlamini (year 3)** can support at least one STAR:
+  - PAED-001: three completed WBAs, two at year 3's minimum (rung 4). The target is met.
+  - PAED-004: one completed WBA, at rung 4.
+- **Dr du Plessis (year 2)** has credited nothing. He has three logged teaching sessions, a CBD still Requested, and a
+  portfolio review still Awaiting review. He is the natural case for deferral.
+- **Dr Mahlangu (year 1)** has PAED-002 and PAED-004 once each, at the minimum. The PAED-004 Mini-CEX stalled for eight
+  days before it was rated.
+- **Dr Ndlovu (year 1)** has PAED-002 once, a declined request that credited nothing, and a discussed reflection on
+  PAED-001.
+- Dr Patel and Dr Khumalo have not acted on the two open requests. Act 4 may leave them open or close them; nothing
+  here depends on either.

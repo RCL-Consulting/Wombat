@@ -16,8 +16,9 @@ the project *knows*: the domain, the programme, the runbooks, the closed plans.
 3. **Adding a project reference or a handler?** `../architecture/ARCHITECTURE.md` — the
    boundaries are test-enforced.
 4. **Operating the live service?** `HANDOVER.md`, then `../architecture/INFRASTRUCTURE.md`.
-5. **Replaying a scenario?** `scenario-paediatrics.md`; its findings sections are superseded
-   history and say so.
+5. **Replaying a scenario, or briefing a GUI change?** `scenario-paediatrics/README.md`. Its `coverage.md` maps every
+   page to the steps that play it and indexes every role's jobs. The pre-T293 single file, with its recorded history,
+   is `../log/scenario-paediatrics-history-2026-09.md`.
 6. **Wondering why something is the way it is?** Product decisions `D1`–`D38` are in
    `EPA-PROGRAMME.md` § 3; process decisions `W-nnn` are in `../DECISIONS.md`.
 
@@ -30,7 +31,7 @@ the project *knows*: the domain, the programme, the runbooks, the closed plans.
 | `HANDOVER.md` | Running the live service: what is deployed, config, deploys, backups, logs, known limitations. The T016 deliverable. |
 | `WORKFLOW.md` | Git branching and verification levels. **Its session-handoff protocol is superseded** by the harness — see the banner at the top of that file. |
 | `PLAN.md` | The original rewrite plan. T001–T027, complete June 2026. Historical. |
-| `scenario-*.md` | Replay runbooks that produce the scenario test corpus. |
+| `scenario-paediatrics/` | The replay runbook: the scenario test corpus, and the journey catalogue a GUI change is briefed from (T293). `tools/scenario-replay.ps1` runs it beside dev. |
 | `practical-plan.md`, `gui-review-plan.md` | Closed post-rewrite plans, kept as record. |
 | `book-fidelity-plan.md` | Superseded by `practical-plan.md`; kept only because `EPA Book/critique.md` cites it. **Do not execute tasks from it.** |
 

@@ -474,7 +474,7 @@ a seed key or a name, a migration rewrote every stored name binding to a seed ke
 warns if a published form still binds by the old name. A scale any published schema binds cannot be deleted.
 The ⚠ below is spent: [T110] and [T123] d1 both shipped. The question as it stood:
 `DataSeeder.cs:123-127` seeds O-R as Observe only / Direct supervision / Indirect supervision / Independent
-/ Supervises others; the browser-made scale in `scenario-paediatrics.md:160-166` is the same five rungs.
+/ Supervises others; the browser-made scale in `../log/scenario-paediatrics-history-2026-09.md:160-166` is the same five rungs.
 Two ids, one ten-Cate ladder — and the second is **operator data**, so the repo cannot confirm it.
 *Options:* merge (re-point every reference, delete one) before pinning anything to either · leave both and
 bind the four generic seeds to whichever the curriculum uses · leave it all alone.

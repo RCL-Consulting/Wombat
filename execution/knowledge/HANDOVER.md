@@ -14,7 +14,7 @@ wrong, and what to do first.
 
 **Wombat is deployed but not in service.** `wombat.rcl.co.za` is reachable and the local
 dev database is populated, but both hold **scenario-execution data only** — rows produced
-by replaying the `execution/knowledge/scenario-*.md` runbooks. There are no real trainees, no real
+by replaying the `execution/knowledge/scenario-paediatrics/` runbook. There are no real trainees, no real
 assessors and no real clinical records anywhere.
 
 Two consequences:

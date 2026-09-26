@@ -102,7 +102,7 @@ Wombat/
 │   │   ├── HANDOVER.md            ← running the live service (T016 deliverable)
 │   │   ├── WORKFLOW.md            ← git branching; session protocol superseded by the harness
 │   │   ├── PLAN.md                ← the original rewrite plan; T001–T027, complete
-│   │   ├── scenario-*.md          ← the replay runbooks that produce the test corpus
+│   │   ├── scenario-paediatrics/  ← the replay runbook: the test corpus and every role's journeys (T293)
 │   │   └── *-plan.md              ← closed post-rewrite plans, kept as record
 │   └── log/                       ← trimmed overflow + the pre-harness handoff archive
 ├── Directory.Build.props
@@ -391,7 +391,7 @@ development. Production startup fails fast if it is missing.
 ### 🚨 Nothing is live — compatibility is not a constraint
 
 `wombat.rcl.co.za` is **deployed and reachable, not in service**. It and the local dev database hold
-**scenario-execution data only** — rows produced by replaying the `execution/knowledge/scenario-*.md` runbooks. There
+**scenario-execution data only** — rows produced by replaying the `execution/knowledge/scenario-paediatrics/` runbook. There
 are no real trainees, no real assessors, and no real clinical records anywhere.
 
 **Therefore backward compatibility is not a design constraint.** Prefer the correct end state over the
