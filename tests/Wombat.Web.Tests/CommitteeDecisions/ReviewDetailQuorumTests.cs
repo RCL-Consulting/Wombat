@@ -253,6 +253,8 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
         var sender = new FakeSender(Review(CommitteeReviewState.UnderAppeal));
         var (cut, _) = Render(sender);
 
+        // The Outcome opens on none (T307): dismissing is chosen, as remitting is.
+        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Dismissed.ToString());
         cut.FindAll("fieldset").Should().NotContain(set => set.QuerySelector("#remit-present-help") != null);
         cut.FindAll("button").Single(button => button.TextContent.Trim() == "Resolve appeal").Click();
         cut.WaitForState(() => sender.Resolved.Count == 1);

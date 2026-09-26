@@ -1583,6 +1583,17 @@ panel's semester-1 sitting may be one too. Every page says so in the same words,
 - **Every category select opens on "Select a category…"**, the first-time decision's as well as a remitted appeal's
   replacement, so the page never shows a category the chair did not choose. Leaving it there on a progression review is
   refused by the handler, whose reason the page shows ("… records a progression category. Choose one.").
+- **The appeal's Outcome select opens on "Select an outcome…"** by the same rule (T307): resolving closes the review for
+  good, so the form never offers an outcome nobody chose. Resolve appeal with none chosen is refused on the page, with
+  "Choose an outcome." under the select (`#appeal-outcome-message`, which the select names after its help), the focus
+  moves to the select, and nothing is sent. Each option is the outcome in words with what it does to the decision,
+  "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision"
+  (`CommitteeDecisionWording.AppealOutcomeLabel`), never the enum's name, and the help text says what each does and that
+  either closes the review (D51: there is no Upheld).
+- **A remitted appeal's replacement records conditions** (T307), as the Decision form's does: an optional "Replacement
+  conditions" box (`#appeal-conditions`) after Replacement rationale, on a progression and an entrustment-only review
+  alike, shown on the replacement's card as "Conditions: …". What was typed for a replacement is sent only with
+  Remitted: a resolver who turns back to Dismissed sends no category, rationale, conditions or attendance.
 - **A remitted appeal** on an entrustment-only review has no Replacement category either. A `.muted` line
   (`#remit-entrustment-only-note`) says why, and says what the remit does not do: the replacement changes no entrustment
   decision, the STARs the review issued stand, and one is changed by revoking it and re-deciding the EPA at a new review.

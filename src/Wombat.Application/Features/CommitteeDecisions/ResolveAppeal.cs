@@ -22,6 +22,10 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// <c>RemittedCategory</c> is read only for a remitted appeal, and follows the review's type as a recorded decision's
 /// category does (T131 slice 5): required on a progression review, refused on an entrustment-only one.
 /// </para>
+/// <para>
+/// <c>RemittedConditions</c> is read only for a remitted appeal, and is optional on either type of review, as a recorded
+/// decision's conditions are: they are the replacement's (T307).
+/// </para>
 /// </remarks>
 public sealed record ResolveAppealCommand(
     int ReviewId,
@@ -38,6 +42,8 @@ public sealed class ResolveAppealCommandValidator : AbstractValidator<ResolveApp
     {
         RuleFor(command => command.ReviewId).GreaterThan(0);
         RuleFor(command => command.Principal).NotNull();
+        // T307: Dismissed or Remitted, never a cast integer; 1 was Upheld, which is gone (D51). The domain refuses one too.
+        RuleFor(command => command.Outcome).IsInEnum();
         // Whether a remitted replacement takes a category is its review's type (T131 slice 5), which the validator cannot
         // see: CommitteeReview.ResolveAppeal refuses a progression review's replacement without one, and an
         // entrustment-only review's with one, before anything changes.

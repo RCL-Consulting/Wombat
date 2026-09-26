@@ -134,7 +134,7 @@ state, `states.md` is where it belongs.
 | The MSF auto-close and expiry-reminder jobs acting on a campaign | The appendix runs both with no open campaign (A.2.9). | `states.md` |
 | An entrustment-only review; a panel sitting as the neonatal CCC; "Decided by another panel"; the sitting-order warning (T131 slice 5) | KGK has no neonatal panel, so PAED-004 and 005 fall back to the general panel (2.24, 4.14). | `states.md`, with a second panel |
 | Agenda lines "Decided elsewhere" and "no longer decided", Defer after recording, and Remove of a STAR that no longer fits (T235) | Each needs two sittings in one window, a STAR revoked mid-review, or a curriculum change between recording and ratifying. | `states.md` |
-| Appeal outcomes Upheld and Dismissed | The story's one appeal is remitted (4.47); 4.45 reads the other outcomes on the form. | `states.md` |
+| Appeal outcome Dismissed | The story's one appeal is remitted (4.47); 4.45 reads the other outcome on the form. There is no Upheld (T307, D51). | `states.md` |
 | The review page's notes for a chair who can no longer act (T256), and for a trainee now elsewhere (T182, T213) | Nobody in the story loses the role, moves or is deactivated mid-review. | `states.md` |
 | The Administrator on Decisions Due and on a review (no ratify or appeal bypass, D46) | The Administrator acts only in Act 1, Act 6 and the appendix. | `states.md` |
 | A graduate filing an activity about herself | Undecided. 5.22 opens the page, which admits her, and files nothing. | A decision first |

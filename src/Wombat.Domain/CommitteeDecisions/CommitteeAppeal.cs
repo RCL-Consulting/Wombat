@@ -37,8 +37,17 @@ public sealed class CommitteeAppeal
         };
     }
 
+    /// <summary>The refusal of an outcome <see cref="CommitteeAppealOutcome" /> does not define (T307).</summary>
+    public const string UndefinedOutcome = "An appeal is resolved as dismissed or remitted.";
+
     public void Resolve(CommitteeAppealOutcome outcome, string actorUserId, DateTime utcNow)
     {
+        // T307: an outcome is one the enum defines, not any integer a caller casts: 1 was Upheld, which is gone (D51).
+        if (!Enum.IsDefined(outcome))
+        {
+            throw new InvalidOperationException(UndefinedOutcome);
+        }
+
         if (ResolvedOn.HasValue)
         {
             throw new InvalidOperationException("This appeal has already been resolved.");

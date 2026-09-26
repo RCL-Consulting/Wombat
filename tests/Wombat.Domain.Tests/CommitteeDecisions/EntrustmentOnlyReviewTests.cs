@@ -195,14 +195,12 @@ public sealed class EntrustmentOnlyReviewTests
         AssertAppealStillOpen(review);
     }
 
-    [Theory]
-    [InlineData(CommitteeAppealOutcome.Upheld)]
-    [InlineData(CommitteeAppealOutcome.Dismissed)]
-    public void UpholdingOrDismissingAnEntrustmentOnlyReviewsAppeal_LeavesItsDecisionStanding(CommitteeAppealOutcome outcome)
+    [Fact]
+    public void DismissingAnEntrustmentOnlyReviewsAppeal_LeavesItsDecisionStanding()
     {
         var review = AppealedReview(CommitteeReviewType.EntrustmentOnly);
 
-        review.ResolveAppeal(outcome, "chair-1", Now);
+        review.ResolveAppeal(CommitteeAppealOutcome.Dismissed, "chair-1", Now);
 
         Assert.Equal(CommitteeReviewState.Final, review.State);
         Assert.Null(Assert.Single(review.Decisions).Category);

@@ -336,6 +336,63 @@ public sealed class CommitteeDecisionHandlersTests
         resolved.Decisions[1].Attendees.Select(person => person.UserId).Should().Equal("chair-1", "member-1");
     }
 
+    /// <summary>
+    /// A remit replaces the decision, and the replacement records conditions as a first-time decision does: a remit to
+    /// Satisfactory with Observations carries its observations (T307). The review's read returns them on the replacement,
+    /// and the appealed decision keeps its own.
+    /// </summary>
+    [Fact]
+    public async Task ResolveAppeal_ARemitWithConditions_StoresThemOnTheReplacement_AndTheReviewReturnsThem()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewAsync(dbContext);
+        var committee = FakeUserDirectory.CommitteeMembersAt(1, "chair-1", "member-1", "external-1");
+        var chair = CreatePrincipal("chair-1", [WombatRoles.CommitteeMember]);
+
+        await new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
+            new StartCommitteeReviewCommand(review.Id, chair), CancellationToken.None);
+        await new RecordCommitteeDecisionCommandHandler(dbContext, committee).Handle(
+            new RecordCommitteeDecisionCommand(
+                review.Id,
+                CommitteeDecisionCategory.InadequateProgressAdditionalTraining,
+                "Not enough observed evidence yet this year.",
+                "Repeat the semester's observed assessments.",
+                ["chair-1", "member-1"],
+                chair),
+            CancellationToken.None);
+        await new RatifyCommitteeDecisionCommandHandler(dbContext, committee).Handle(
+            new RatifyCommitteeDecisionCommand(review.Id, chair), CancellationToken.None);
+        await new LodgeAppealCommandHandler(dbContext).Handle(
+            new LodgeAppealCommand(review.Id, "The Mini-CEX waited on the assessor.", CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
+            CancellationToken.None);
+
+        await new ResolveAppealCommandHandler(dbContext, committee).Handle(
+            new ResolveAppealCommand(
+                review.Id,
+                CommitteeAppealOutcome.Remitted,
+                CommitteeDecisionCategory.SatisfactoryWithObservations,
+                "Progress is adequate, with observed assessments to follow.",
+                "Two observed Mini-CEX and one DOPS before the next review.",
+                ["chair-1", "external-1"],
+                CreatePrincipal("external-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+        var stored = await dbContext.Set<CommitteeDecision>()
+            .AsNoTracking()
+            .Where(decision => decision.ReviewId == review.Id)
+            .ToListAsync();
+        stored.Should().ContainSingle(decision => decision.SupersedesDecisionId != null)
+            .Which.Conditions.Should().Be("Two observed Mini-CEX and one DOPS before the next review.");
+
+        var read = await new GetCommitteeReviewByIdQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
+            new GetCommitteeReviewByIdQuery(review.Id, chair), CancellationToken.None);
+
+        read.Appeals.Should().ContainSingle().Which.Outcome.Should().Be(CommitteeAppealOutcome.Remitted);
+        read.Decisions.Select(decision => (decision.Category, decision.Conditions)).Should().Equal(
+            (CommitteeDecisionCategory.SatisfactoryWithObservations, "Two observed Mini-CEX and one DOPS before the next review."),
+            (CommitteeDecisionCategory.InadequateProgressAdditionalTraining, "Repeat the semester's observed assessments."));
+    }
+
     private static Task<CommitteeReviewDetailDto> StartAsync(ApplicationDbContext dbContext, CommitteeReview review)
         => new StartCommitteeReviewCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext)).Handle(
             new StartCommitteeReviewCommand(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),

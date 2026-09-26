@@ -148,6 +148,36 @@ public static class CommitteeDecisionWording
     };
 
     /// <summary>
+    /// A resolved appeal's outcome as the review's Appeals list names it (T307, D51): "Dismissed" or "Remitted". The one
+    /// source for the word, which <see cref="AppealOutcomeLabel" /> also starts with. Never the enum's name.
+    /// </summary>
+    public static string AppealOutcomeName(CommitteeAppealOutcome outcome) => outcome switch
+    {
+        CommitteeAppealOutcome.Dismissed => "Dismissed",
+        CommitteeAppealOutcome.Remitted => "Remitted",
+        _ => outcome.ToString()
+    };
+
+    /// <summary>
+    /// An appeal's outcome in words, with what it does to the appealed decision (T307, D51): "Dismissed: the decision
+    /// stands", "Remitted: the appeal body replaces the decision". Never the enum's name.
+    /// </summary>
+    public static string AppealOutcomeLabel(CommitteeAppealOutcome outcome) => outcome switch
+    {
+        CommitteeAppealOutcome.Dismissed => $"{AppealOutcomeName(outcome)}: the decision stands",
+        CommitteeAppealOutcome.Remitted => $"{AppealOutcomeName(outcome)}: the appeal body replaces the decision",
+        _ => outcome.ToString()
+    };
+
+    /// <summary>
+    /// Said with the appeal body's Outcome select (T307): what each outcome does to the committee's decision, and that
+    /// either one closes the review for good.
+    /// </summary>
+    public const string AppealOutcomeHelp =
+        "Dismissed leaves the committee's decision in force. Remitted replaces it with a decision the appeal body takes " +
+        "now, recorded below with who sat for it. Either closes the review, and nothing reopens it.";
+
+    /// <summary>
     /// A recorded decision's outcome: its progression category, or, on an entrustment-only review's decision, which
     /// records none, <see cref="EntrustmentOnlyOutcome" />.
     /// </summary>

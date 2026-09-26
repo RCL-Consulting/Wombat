@@ -1010,7 +1010,12 @@ public sealed class ActionFocusTests : TestContext
             (test, hold) => test.ReviewPage(hold, request => request is ResolveAppealCommand,
                 Review(CommitteeReviewState.UnderAppeal), Review(CommitteeReviewState.Final)),
             cut => Named(cut, "Resolve appeal"),
-            cut => cut.Find("#appeal-outcome").Closest("form")!.Submit()),
+            cut =>
+            {
+                // The Outcome opens on none (T307), so one is chosen, as a resolver must.
+                cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Dismissed.ToString());
+                cut.Find("#appeal-outcome").Closest("form")!.Submit();
+            }),
 
         ["ReviewDetail Stage pending decision"] = new(
             (test, hold) => test.ReviewPage(hold, request => request is StagePendingEntrustmentDecisionCommand,

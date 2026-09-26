@@ -495,7 +495,7 @@ public sealed class CommitteeQuorumHandlerTests
         "The committee review could not be found among the reviews whose appeals you resolve.";
 
     /// <summary>
-    /// Dismissing, upholding and remitting (with the chair present) are each refused with the seat's refusal, or with
+    /// Dismissing and remitting (with the chair present) are each refused with the seat's refusal, or with
     /// <paramref name="expectedRefusal" /> where one is given, and after the save the audit pipeline makes from its catch
     /// the store is as it was: the appeal open, the review under appeal.
     /// </summary>
@@ -509,7 +509,7 @@ public sealed class CommitteeQuorumHandlerTests
         var before = await SnapshotAsync();
         var userId = caller.FindFirst(ClaimTypes.NameIdentifier)!.Value;
 
-        foreach (var outcome in new[] { CommitteeAppealOutcome.Dismissed, CommitteeAppealOutcome.Upheld, CommitteeAppealOutcome.Remitted })
+        foreach (var outcome in new[] { CommitteeAppealOutcome.Dismissed, CommitteeAppealOutcome.Remitted })
         {
             db.ChangeTracker.Clear();
             var resolve = () => new ResolveAppealCommandHandler(db, directory ?? Directory()).Handle(
@@ -831,7 +831,6 @@ public sealed class CommitteeQuorumHandlerTests
 
     [Theory]
     [InlineData(CommitteeAppealOutcome.Dismissed)]
-    [InlineData(CommitteeAppealOutcome.Upheld)]
     [InlineData(CommitteeAppealOutcome.Remitted)]
     public async Task AnAdministratorNotOnThePanel_CannotResolveAnAppeal_AndNothingIsWritten(CommitteeAppealOutcome outcome)
     {
@@ -907,6 +906,32 @@ public sealed class CommitteeQuorumHandlerTests
         validator.Validate(new ResolveAppealCommand(
                 ReviewId, CommitteeAppealOutcome.Dismissed, null, null, null, null, External()))
             .IsValid.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// An outcome the enum does not define, 1 among them (Upheld's old value, removed by T307, D51), is refused by the
+    /// validator; and one that reaches the handler anyway is refused by the domain before anything changes, so the save
+    /// the audit pipeline makes from its catch writes nothing.
+    /// </summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(99)]
+    public async Task AnUndefinedOutcome_IsRefused_AndNothingIsResolved(int outcome)
+    {
+        new ResolveAppealCommandValidator()
+            .Validate(new ResolveAppealCommand(ReviewId, (CommitteeAppealOutcome)outcome, null, null, null, null, External()))
+            .Errors.Should().ContainSingle(error => error.PropertyName == nameof(ResolveAppealCommand.Outcome));
+
+        await using var db = await AppealedDbAsync();
+        var before = await SnapshotAsync();
+
+        var act = () => ResolveAsync(db, External(), (CommitteeAppealOutcome)outcome);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>())
+            .Which.Message.Should().Be("An appeal is resolved as dismissed or remitted.");
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        (await SnapshotAsync()).Should().BeEquivalentTo(before);
+        before.Appeals.Should().ContainSingle().Which.Should().EndWith("::", "the appeal is still open");
     }
 
     // ─── The review page's read ──────────────────────────────────────────────

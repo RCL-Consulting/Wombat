@@ -40,6 +40,38 @@ public sealed class ValidationBehaviorTests
         handlerCalled.Should().BeFalse();
     }
 
+    /// <summary>
+    /// An outcome the enum does not define is refused before the handler, so nothing is resolved (T307). 1 was Upheld,
+    /// which T307 removed (D51): a caller still sending it resolves nothing.
+    /// </summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(99)]
+    public async Task Handle_AnUndefinedOutcome_IsRefused_AndTheHandlerIsNotCalled(int outcome)
+    {
+        var behavior = CreateBehavior();
+        var handlerCalled = false;
+
+        var command = new ResolveAppealCommand(
+            ReviewId: 1,
+            Outcome: (CommitteeAppealOutcome)outcome,
+            RemittedCategory: null,
+            RemittedRationale: null,
+            RemittedConditions: null,
+            PresentUserIds: null,
+            Principal: new ClaimsPrincipal(new ClaimsIdentity()));
+
+        var act = async () => await behavior.Handle(
+            command,
+            () => { handlerCalled = true; return Task.FromResult<CommitteeReviewDetailDto>(null!); },
+            CancellationToken.None);
+
+        (await act.Should().ThrowAsync<ValidationException>())
+            .Which.Errors.Should().ContainSingle(error => error.PropertyName == nameof(ResolveAppealCommand.Outcome));
+        handlerCalled.Should().BeFalse();
+    }
+
     [Fact]
     public async Task Handle_ValidCommand_CallsHandler()
     {

@@ -8,7 +8,11 @@ public sealed class CommitteeAppealConfiguration : IEntityTypeConfiguration<Comm
 {
     public void Configure(EntityTypeBuilder<CommitteeAppeal> builder)
     {
-        builder.ToTable("CommitteeAppeals");
+        // An open appeal has no outcome; a resolved one was Dismissed (2) or Remitted (3). 1 was Upheld, which did what
+        // Dismissed does under a name that says the appeal succeeded; T307 rewrote the stored ones as Dismissed and removed
+        // it (D51), and the domain and the validator refuse it.
+        builder.ToTable("CommitteeAppeals", table => table.HasCheckConstraint(
+            "CK_CommitteeAppeals_Outcome", "\"Outcome\" IS NULL OR \"Outcome\" IN (2, 3)"));
         builder.Property(entity => entity.LodgedByUserId).HasMaxLength(450).IsRequired();
         builder.Property(entity => entity.ResolvedByUserId).HasMaxLength(450);
         builder.Property(entity => entity.Reason).HasMaxLength(4000).IsRequired();

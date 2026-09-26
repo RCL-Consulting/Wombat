@@ -971,14 +971,19 @@ Gap: none
 ### Step 4.45 — Dr van Rensburg, the external member, is offered the appeal
 Role: CommitteeMember (external) — Dr John van Rensburg
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews, then Dr Mahlangu's review. Read the resolve form, choose Remitted to see what it asks, and
-  leave without resolving.
+Do: Open Committee Reviews, then Dr Mahlangu's review. Read the resolve form, and press Resolve appeal without choosing
+  an outcome. Then choose Remitted to see what it asks, and leave without resolving.
 Expect:
   - **The list:** the panel's five reviews.
-  - **The Appeals card** offers him the resolve form with an Outcome select: Upheld, Dismissed or Remitted.
+  - **The Appeals card** offers him the resolve form with an Outcome select opening on "Select an outcome…", then
+    "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision" (T307, D51: there is no
+    Upheld). Its help text says Dismissed leaves the decision in force, Remitted replaces it, and either closes the
+    review.
+  - **Resolve appeal with no outcome** says "Choose an outcome." under the select, and resolves nothing.
   - **Remitted** reveals:
     - Replacement category, opening on "Select a category…";
     - Replacement rationale;
+    - Replacement conditions, optional;
     - Present, with both Thandi Zulu (chair) and himself ticked and locked.
   - **Nothing changes** until he submits.
 Actual (2026-09-26, T295 replay, wombat_scenario): Committee Reviews lists the panel's five reviews. Mahlangu's Appeals
@@ -1008,10 +1013,12 @@ Gap: none
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Keep Remitted, Satisfactory with Observations, and the rationale "The stalled Mini-CEX was the assessor's delay;
-  progress is adequate, with observed assessments to follow." Tick Sarah Botha as present, and resolve the appeal.
+  progress is adequate, with observed assessments to follow." Write the Replacement conditions "Two observed Mini-CEX
+  and one DOPS before the next review." Tick Sarah Botha as present, and resolve the appeal.
 Expect: "Appeal resolved." The state reads Closed (T250).
-  - **Decision card:** the replacement heads it, "Satisfactory with Observations" with "Present: Thandi Zulu (chair),
-    Sarah Botha". The first decision stays below it, marked "Replaced on appeal by the decision above.".
+  - **Decision card:** the replacement heads it, "Satisfactory with Observations" with "Conditions: Two observed
+    Mini-CEX and one DOPS before the next review." (T307) and "Present: Thandi Zulu (chair), Sarah Botha". The first
+    decision stays below it, marked "Replaced on appeal by the decision above.".
   - **Appeals card:** the appeal reads "(Remitted)".
   - **No STAR changed:** the review issued none.
 Actual (2026-09-26, T295 replay, wombat_scenario): Sarah Botha ticked: "Appeal resolved."; State Closed. Decision card:

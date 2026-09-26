@@ -210,15 +210,13 @@ public sealed class CommitteeQuorumTests
         Assert.Null(review.Appeals.Single().Outcome);
     }
 
-    [Theory]
-    [InlineData(CommitteeAppealOutcome.Upheld)]
-    [InlineData(CommitteeAppealOutcome.Dismissed)]
-    public void AnAppealThatLeavesTheDecisionStanding_TakesNoAttendance(CommitteeAppealOutcome outcome)
+    [Fact]
+    public void DismissingAnAppeal_TakesNoAttendance()
     {
-        // Only a remittal takes a decision; upholding or dismissing leaves the quorate one standing.
+        // Only a remittal takes a decision; dismissing leaves the quorate one standing.
         var review = AppealedReview();
 
-        review.ResolveAppeal(outcome, "chair-1", Now);
+        review.ResolveAppeal(CommitteeAppealOutcome.Dismissed, "chair-1", Now);
 
         Assert.Equal(CommitteeReviewState.Final, review.State);
         Assert.Equal(["chair-1:Chair", "member-1:Member"], Sitting(Assert.Single(review.Decisions)));

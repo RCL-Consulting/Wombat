@@ -711,10 +711,11 @@ public sealed class CommitteeReview
     }
 
     /// <summary>
-    /// Resolves the open appeal. Upheld and Dismissed leave the committee's decision standing; Remitted replaces it with
-    /// a decision the appeal body takes, and like every committee decision that one records who was present (T165) and is
-    /// the kind the review's type takes: a progression category on a progression review, none on an entrustment-only one
-    /// (T131 slice 5).
+    /// Resolves the open appeal, and closes the review for good. Dismissed leaves the committee's decision standing;
+    /// Remitted replaces it with a decision the appeal body takes, and like every committee decision that one records who
+    /// was present (T165), may record conditions, and is the kind the review's type takes: a progression category on a
+    /// progression review, none on an entrustment-only one (T131 slice 5). There is no third outcome (T307, D51): Upheld
+    /// did what Dismissed does, under a name that says the appeal succeeded.
     /// </summary>
     /// <param name="present">
     /// Remitted only: the panel members who sat for the replacement decision, held to the quorum the review's own
@@ -731,6 +732,12 @@ public sealed class CommitteeReview
         string? remittedConditions = null,
         IReadOnlyCollection<DecisionPanelMember>? present = null)
     {
+        // T307: refused before anything else is asked or changed, as every precondition below is.
+        if (!Enum.IsDefined(outcome))
+        {
+            throw new InvalidOperationException(CommitteeAppeal.UndefinedOutcome);
+        }
+
         if (State != CommitteeReviewState.UnderAppeal)
         {
             throw new InvalidOperationException("Only reviews under appeal can resolve an appeal.");

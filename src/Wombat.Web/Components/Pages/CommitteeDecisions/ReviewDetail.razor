@@ -735,17 +735,29 @@
            review: before it, the body was shown a required Outcome with no button on every other review). *@
         @if (_review.CallerResolvesAppeals && _review.State == CommitteeReviewState.UnderAppeal)
         {
-          <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" FormName="committee-appeal-resolution">
+          <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" OnInvalidSubmit="FocusAppealOutcome" FormName="committee-appeal-resolution">
             <DataAnnotationsValidator />
-            <ValidationSummary class="validation-summary-errors" />
             <div class="form-grid">
-              <FormField Label="Outcome" InputId="appeal-outcome" Required="true">
-                <InputSelect id="appeal-outcome" class="form-select" @bind-Value="_appeal.Outcome">
-                  @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
-                  {
-                    <option value="@outcome">@outcome</option>
-                  }
-                </InputSelect>
+              @* T307. Resolving closes the review for good, so the Outcome opens on none, as every category select does
+                 (DESIGN.md § Entrustment-only reviews): Resolve appeal with none chosen says "Choose an outcome." under
+                 the select and sends nothing. Each outcome is said in words, with what it does to the decision (D51). *@
+              <FormField Label="Outcome" InputId="appeal-outcome" Required="true" HelpText="@CommitteeDecisionWording.AppealOutcomeHelp">
+                <ChildContent>
+                  <InputSelect id="appeal-outcome" class="form-select"
+                               aria-describedby="@FieldHelp.DescribedBy("appeal-outcome", CommitteeDecisionWording.AppealOutcomeHelp, AppealOutcomeMessageId)"
+                               @bind-Value="_appeal.Outcome" @ref="_appealOutcomeSelect">
+                    <option value="">Select an outcome…</option>
+                    @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
+                    {
+                      <option value="@outcome">@CommitteeDecisionWording.AppealOutcomeLabel(outcome)</option>
+                    }
+                  </InputSelect>
+                </ChildContent>
+                <ValidationContent>
+                  <div id="@AppealOutcomeMessageId">
+                    <ValidationMessage For="() => _appeal.Outcome" />
+                  </div>
+                </ValidationContent>
               </FormField>
               @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
               {
@@ -769,6 +781,11 @@
                 }
                 <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
                   <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
+                </FormField>
+                @* T307. The replacement is a committee decision, so it records conditions as the Decision form's does, on
+                   either type of review: a remit to Satisfactory with Observations carries its observations. *@
+                <FormField Label="Replacement conditions" InputId="appeal-conditions">
+                  <InputTextArea id="appeal-conditions" class="form-control" @bind-Value="_appeal.RemittedConditions" />
                 </FormField>
                 @* T165. The replacement is a committee decision, so it records who sat for it, held to the same quorum. The
                    chair and the caller are ticked and locked, since both must have sat (CommitteeReview.ResolveAppeal):
@@ -807,10 +824,11 @@
         }
         else
         {
+          @* T307: an outcome is named by CommitteeDecisionWording, as the resolve form's options are, never the enum's name. *@
           <ul class="list-unstyled">
             @foreach (var appeal in _review.Appeals)
             {
-              <li><strong>@appeal.LodgedOn.ToString("yyyy-MM-dd")</strong> @appeal.Reason (@(appeal.Outcome?.ToString() ?? "Open"))</li>
+              <li><strong>@appeal.LodgedOn.ToString("yyyy-MM-dd")</strong> @appeal.Reason (@(appeal.Outcome is { } resolvedAs ? CommitteeDecisionWording.AppealOutcomeName(resolvedAs) : "Open"))</li>
             }
           </ul>
         }
@@ -871,9 +889,14 @@
   private DeferralFormModel? _deferral;
   private InputSelect<int>? _pendingEpaSelect;
   private InputTextArea? _deferralReason;
+  private InputSelect<CommitteeAppealOutcome?>? _appealOutcomeSelect;
 
   // Set when a deferral form opens: the reason box exists only after the next render, so the focus moves there then.
   private bool _focusDeferralReason;
+
+  // Set when Resolve appeal is refused for want of an outcome (T307): the message under the select is in the DOM only
+  // after the next render, so the focus moves there then, and a screen reader reads the message with the select.
+  private bool _focusAppealOutcome;
 
   /// <summary>
   /// Why Ratify is refused now, or null when it is not: the first reason the ratify handler would give, in its order. The
@@ -1252,20 +1275,41 @@
 
   private async Task ResolveAppealAsync()
   {
+    // The form submits only once an outcome is chosen ([Required]); this covers a submit that reaches here without one.
+    if (_appeal.Outcome is not { } outcome)
+    {
+      return;
+    }
+
+    // Only a remit takes a decision (T165, T307): what was typed for a replacement before the outcome changed to
+    // Dismissed is not sent with the dismissal.
+    var remitted = outcome == CommitteeAppealOutcome.Remitted;
     await ExecuteAsync(
       ResolveAction,
       user => Sender.Send(new ResolveAppealCommand(
         ReviewId,
-        _appeal.Outcome,
+        outcome,
         // Only a remitted progression review's replacement takes a category (T131 slice 5).
-        _appeal.Outcome == CommitteeAppealOutcome.Remitted && _review?.DecidesProgression == true ? _appeal.RemittedCategory : null,
-        _appeal.RemittedRationale,
-        _appeal.RemittedConditions,
-        // T165: a remitted appeal's replacement records who sat for it; the other outcomes take no decision.
-        _appeal.Outcome == CommitteeAppealOutcome.Remitted ? PresentUserIds(_appeal.PresentUserIds, _currentUserId) : null,
+        remitted && _review?.DecidesProgression == true ? _appeal.RemittedCategory : null,
+        remitted ? _appeal.RemittedRationale : null,
+        // T307: the replacement's conditions, on either type of review, as a recorded decision's.
+        remitted ? _appeal.RemittedConditions : null,
+        // T165: a remitted appeal's replacement records who sat for it; a dismissal takes no decision.
+        remitted ? PresentUserIds(_appeal.PresentUserIds, _currentUserId) : null,
         user)),
       "Appeal resolved.");
   }
+
+  /// <summary>The region under the appeal's Outcome that holds its validation message; the select names it (T307).</summary>
+  private const string AppealOutcomeMessageId = "appeal-outcome-message";
+
+  /// <summary>
+  /// A Resolve appeal the form refused (no outcome chosen, T307) moves the focus to the Outcome, whose description now
+  /// includes the message saying why, as a refused deferral does (T212). Only once the render that puts the message in
+  /// the DOM is done (<see cref="OnAfterRenderAsync" />): focused from this handler, the select would be read before its
+  /// message exists, since the renderer holds the validation message's render until the handler yields.
+  /// </summary>
+  private void FocusAppealOutcome() => _focusAppealOutcome = true;
 
   private async Task StagePendingAsync()
   {
@@ -1735,6 +1779,24 @@
         // Focus is a convenience; the form is open either way.
       }
     }
+
+    // Cleared on the first render after it is set, whatever that render holds: the select was on the page when its form
+    // refused the submit, so a later render must not move the focus back to it.
+    if (_focusAppealOutcome)
+    {
+      _focusAppealOutcome = false;
+      if (_appealOutcomeSelect?.Element is { } outcome)
+      {
+        try
+        {
+          await outcome.FocusAsync();
+        }
+        catch (Exception)
+        {
+          // Focus is a convenience; the message is shown either way.
+        }
+      }
+    }
   }
 
   private const string DeferralReasonHelp =
@@ -2047,8 +2109,12 @@
 
   private sealed class AppealResolutionModel
   {
-    [Required]
-    public CommitteeAppealOutcome Outcome { get; set; } = CommitteeAppealOutcome.Dismissed;
+    /// <summary>
+    /// Null until the resolver chooses one (T307): resolving closes the review for good, so the form never offers an
+    /// outcome nobody chose. Before T307 it opened on Dismissed, and Resolve appeal pressed untouched dismissed the appeal.
+    /// </summary>
+    [Required(ErrorMessage = "Choose an outcome.")]
+    public CommitteeAppealOutcome? Outcome { get; set; }
 
     public CommitteeDecisionCategory? RemittedCategory { get; set; }
     public string? RemittedRationale { get; set; }
