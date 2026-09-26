@@ -2,65 +2,63 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-09-24/25 (Opus): the EPA stream, built
+## Session 2026-09-26 (Opus): the runbook as the GUI redesign's journey catalogue
 
-The operator: "Not deploying yet, we need to get the EPA stream completed", then "push when they land and keep going".
+The operator asked whether to brief Claude Design with an exhaustive workflow list, then: "Should we not update the
+scenarios to exercise all the paths?", and "Nothing is live or in use, do it all".
 
 ### Done
 
-- **The stream as planned in EPA-PROGRAMME § 4 is built.** § 2A is re-baselined and lists only what is left.
-- **About 150 tasks were closed.** Each was implemented in a worktree, adversarially reviewed and fixed, squash-merged
-  (one commit per task), suite-green, browser-checked on dev with scripted Chrome and the seeded accounts, and pushed.
-- **Master = origin.** The last full run was 7,467 tests green.
-- **The last checks of the session** found one real defect: a release after a withdraw committed evidence. It was fixed
-  in `317670c`, test-first and mutation-checked.
-- **Written up:**
-  - the College message, drafted in `knowledge/college-message-2026-09.md` (12 questions, each with Wombat's interim
-    answer);
-  - STATE, rewritten;
-  - DOMAIN.md, HANDOVER.md and CLAUDE.md, each corrected where the work showed them wrong.
-- **T159 done:** the runbook is retargeted, and Acts 1–2 replayed cleanly on a fresh, separate database (`wombat_t159`,
-  operator-approved). The snapshot is `recovery/t159-post-act2.dump`, and the replay's small gaps are filed as T291.
+- **The answer, researched:** Claude Design reads a design system (tokens, type, components) from a codebase, but does
+  not enumerate an app's journeys; `/design-sync` is React-only. So the flow list is ours to supply.
+- **T292:** `devadmin@wombat.local` (dev only) is a global Administrator, so agents can play Administrator steps.
+- **T293:** the runbook is now `knowledge/scenario-paediatrics/`: README, Acts 1–6 (Act 6, catalogue maintenance, is
+  new) and an appendix. It has 324 intent-and-outcome steps playing all 80 page templates, `coverage.md` (pages to
+  steps, and every role's jobs as goals), and `states.md` (577 states and how to reach each). The old file is whole in
+  `log/scenario-paediatrics-history-2026-09.md`.
+- **T294:** `Wombat.Web.Tests/Scenario` fails the build if a page has no step, a step names a route that does not exist,
+  or a step breaks the format.
+- **T295:** replayed end to end on a fresh database (`wombat_scenario`): 324 of 324 steps played, and every outcome check
+  matched. 109 more states were captured on scratch copies. The baseline is in `design/baseline/` (gitignored: 672
+  step and 578 state screenshots). The tool is `tools/scenario-replay.ps1`.
+- **Findings filed:** T297–T331 (15 P2, 20 P3), plus 46 notes on open tasks. Every Gap line cites its task.
+- **T296:** CLAUDE.md and DOMAIN.md now say ten roles, and give the STAR glossary.
+- Commits `0c1c110` … `0cf1f10`, pushed.
 
 ### For the operator
 
-- **T157, the deploy:**
-  - `pg_dump` production first.
-  - Confirm `Email__SmtpHost` is set; without it, mail bodies with links are logged (T157's note).
-  - Expect many migrations. T130, T219 and T281 empty the progress table, and the bootstrapper refills it.
-- **New P2s "before real users"** (neither is exploitable today; there is no SSO provider and no real user):
-  - T288: SSO group mappings across institutions;
-  - T289: the assessor-profile form.
-- **Defaults adopted on recommendation,** any of which can be overruled. All are in EPA-PROGRAMME § 3 or the task files:
-  - D33 part 1, D34, D35, D38(a), D44–D50;
-  - T131 O1–O8, T237, T240, T242 (c), T258, T268, T273, T281 and T284.
-  - T249 records one choice as the operator's: the PDF prints group counts.
-- **Waiting on the College:** T139 (§ 3F question 10) and T170 (question 11). Deferred: T146, T152, T153 and T171.
-- **T128:** the backup destination. It is still blocked on the operator.
+- **The Claude Design brief:**
+  - `coverage.md` § Journeys by role is the flow inventory; brief one flow at a time.
+  - `states.md` and `design/baseline/` are the visual baseline.
+  - Link only `src/Wombat.Web/wwwroot` (tokens, fonts, icons), never the whole working tree: it holds
+    `pwd_DO_NOT_COMMIT.txt` and `recovery/`.
+  - Decide first whether this is a reskin or a restructure, because `DESIGN.md` freezes the structure.
+- **P2s before real users:** T297, T302–T305, T307, T311–T313, T315, T316, T319, T320, T322 and T329, beside T288 and
+  T289. The worst are T302 (an InstitutionalAdmin can deactivate her own institution), T303 (Add role makes a Trainee
+  with no profile) and T320 (no activity or committee mail is ever sent).
+- **T157 (deploy), T128 (backup), the College questions:** unchanged; see STATE.
 
-### Dev state
+### Environment left running
 
-- **The dev trainee (profile 1) is ended,** with a last day of 2026-09-20, from T281's browser check. The permission
-  classifier refused the agent's SQL restore. To restore it, run this, then restart the app so the bootstrapper refills
-  progress:
-  - `UPDATE "TraineeProfiles" SET "IsActive"=true,"DeactivatedOn"=NULL,"CompletedOn"=NULL WHERE "Id"=1;`
-  - `DELETE FROM "CurriculumItemProgresses";`
-- **Snapshots:** `recovery/pre-*.dump`, one before each migration batch, and `t159-post-act2.dump`. The dev app runs on
-  its own database; `wombat_t159` holds the replay.
-- **Dev accounts:** trainee, assessor, committee, committee2, coordinator, instadmin and collegeadmin (DevUserSeeder).
-  The passwords of users created in the session are in `pwd_DO_NOT_COMMIT.txt` only.
-- **Dev runs PostgreSQL 16; production runs 18** (T275).
+- **The replay app** on `:5180` (database `wombat_scenario`, the story's end state), so the replay can be browsed.
+  Stop it with `tools/scenario-replay.ps1 stop 5180`, and restart it with `start wombat_scenario 5180`.
+- **Scratch databases, droppable:** `wombat_scenario_states`, `wombat_scenario_states4` and `wombat_scenario_t292`.
+  The script never drops a database.
+- **Snapshots:** `recovery/scenario-post-act{1..6,A}.dump`. The passwords of the cast registered in the replay are in
+  `pwd_DO_NOT_COMMIT.txt`.
+- **The dev app on `:5080` and its database were not touched.** Port 25's temporary SMTP sink is stopped.
 
 ### Traps
 
-- **Merging lanes:**
-  - Squash per task with `cherry-pick -n`, then compare HEAD with `git merge-tree --write-tree` of the branch.
-  - Review fixes often sit inside a lane's merge commits, so take the full merge's version of any file that conflicts.
-  - Regenerate a lane's migration whose timestamp sorts before master's newest.
-- **Tests and commits:**
-  - Run the suites in `.claude/worktrees/verify-master` while the dev app runs; it locks the per-project Release output.
-  - Write commit messages to a file (`git commit -F`).
-  - Never commit on master while a merge agent works.
-- **Credentials:** agents may not read the admin credential; use the seeded accounts and say which steps need an
-  Administrator.
-- **The audit trap still bites.** A throw after staging commits the staged rows unless it is a refused save (T201).
+- **Dev mail settings.** `appsettings.Development.json` sends mail to `localhost:25` and links to `:5080`. The replay
+  tool overrides both; anything else run on another port needs the same overrides (`BaseUrl`, `MsfRespondUrl`,
+  `Email:SmtpHost`).
+- **Downloads.** The browser the agents drive has a download manager, which takes over downloads (saving them to
+  `Downloads\Compressed`). Check a download from inside the page.
+- **Quoting.** From bash, `powershell -File … sql` needs a `.sql` file, or the quotes of `"Table"` identifiers are
+  lost.
+- **Task titles.** The harness names the file after the title, so a title over about 150 characters breaks Windows'
+  path limit.
+- **Harness lint** warns that `done/` holds 205 tasks, over its 200 guide: move the oldest to `log/tasks/`.
+- **Earlier traps still hold:** the audit pipeline commits a failed handler's staged rows (T201), and merge lanes are
+  squashed per task.
