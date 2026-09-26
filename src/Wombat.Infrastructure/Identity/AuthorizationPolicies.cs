@@ -16,9 +16,10 @@ public static class AuthorizationPolicies
     public const string AdministratorOrCollegeAdmin = nameof(AdministratorOrCollegeAdmin);
 
     /// <summary>
-    /// National EPA/curriculum catalogue pages. A CollegeAdmin authors the national core, an
-    /// InstitutionalAdmin views the adopted catalogue and manages institution-local extras, an
-    /// Administrator sees everything. Handlers enforce the fine-grained per-row scope (T091).
+    /// National EPA/curriculum catalogue pages, and the activity-type builder (T300). A CollegeAdmin authors the national
+    /// core and its disciplines' activity types, an InstitutionalAdmin views the adopted catalogue and manages
+    /// institution-local extras and types, an Administrator sees everything. Handlers enforce the fine-grained per-row
+    /// scope (T091; <c>ActivityTypeAdminScope</c> for activity types).
     /// </summary>
     public const string NationalCatalogueAccess = nameof(NationalCatalogueAccess);
 

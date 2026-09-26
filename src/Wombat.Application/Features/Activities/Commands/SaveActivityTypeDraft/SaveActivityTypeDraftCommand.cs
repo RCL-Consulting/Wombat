@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Application.Features.Activities.Commands.PublishActivityTypeDraft;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
 using Wombat.Domain.Activities;
@@ -125,7 +124,7 @@ public sealed class SaveActivityTypeDraftCommandHandler : IRequestHandler<SaveAc
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return GetActivityTypeEditorQueryHandler.Map(activityType);
+        return await GetActivityTypeEditorQueryHandler.ForCallerAsync(_dbContext, request.Principal, activityType, cancellationToken);
     }
 
     /// <summary>

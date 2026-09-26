@@ -268,6 +268,38 @@ public sealed class NavMenuAuthorizationTests : TestContext
         (await RefusalOf(PageFor("/committee/decisions-due")!, role)).Should().NotBeNull();
     }
 
+    // T300: the guard names the College as the author of its disciplines' activity types (T091), so the builder admits a
+    // CollegeAdmin and the nav offers it to him. Until T300 both pages refused him and his nav had no Activity Types.
+    [Theory]
+    [InlineData("/admin/activity-types")]
+    [InlineData("/admin/activity-types/new")]
+    [InlineData("/admin/activity-types/11")]
+    public async Task ACollegeAdmin_IsAdmittedToTheActivityTypeBuilder(string href)
+    {
+        (await RefusalOf(PageFor(href)!, WombatRoles.CollegeAdmin)).Should().BeNull($"a CollegeAdmin writes his College's types at {href}");
+    }
+
+    [Fact]
+    public void ACollegeAdmin_IsOfferedActivityTypes()
+    {
+        var link = RenderFor(WombatRoles.CollegeAdmin).FindAll("a.nav-link").SingleOrDefault(a => a.TextContent.Trim() == "Activity Types");
+
+        link.Should().NotBeNull("the College keeps its instruments in the builder");
+        link!.GetAttribute("href").Should().Be("/admin/activity-types");
+    }
+
+    // The builder's policy still refuses the roles that write no activity type.
+    [Theory]
+    [InlineData(WombatRoles.Coordinator)]
+    [InlineData(WombatRoles.SpecialityAdmin)]
+    [InlineData(WombatRoles.Assessor)]
+    [InlineData(WombatRoles.Trainee)]
+    public async Task ARoleThatWritesNoActivityType_IsNotAdmittedToTheBuilder(string role)
+    {
+        (await RefusalOf(PageFor("/admin/activity-types")!, role)).Should().NotBeNull();
+        (await RefusalOf(PageFor("/admin/activity-types/11")!, role)).Should().NotBeNull();
+    }
+
     // T145: the legacy assessment-forms screen let an administrator link a form to EPAs and said "EPA linked", but
     // nothing read the link. Which instrument may assess an EPA is the curriculum item's permitted-tools list (T122), so
     // the screen is retired: no role is offered it, and no page answers its routes.

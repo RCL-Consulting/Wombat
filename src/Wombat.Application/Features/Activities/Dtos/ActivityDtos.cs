@@ -12,6 +12,24 @@ public sealed record ActivityTypeListItemDto(
     int Version,
     bool IsActive);
 
+/// <summary>
+/// The builder's list as the caller sees it (T300): the types they may open, and whether they may start a new one, which
+/// is whether <c>ActivityTypeAdminScope.WritableScopesAsync</c> offers them any scope at all.
+/// </summary>
+public sealed record ActivityTypeAdminListDto(
+    IReadOnlyList<ActivityTypeAdminListItemDto> Items,
+    bool CanCreate);
+
+/// <param name="CanWrite">
+/// Whether the caller may save, discard and publish this type: <c>ActivityTypeAdminScope.MayWrite</c>, the rule the
+/// commands' guard refuses by (T300). The list offers Edit where it is true and View elsewhere.
+/// </param>
+/// <param name="ScopeTargetName">
+/// The scope's target as a reader sees it, as the editor names it ("Kalafong", "Paediatrics", "Paediatrics /
+/// Neonatology"); null for Global, or for a target that no longer exists. The query names every row's target, so the page
+/// resolves no names of its own: it did, from the caller's own institutions and disciplines, and every other College's
+/// row read "Speciality · #1" (T291 item 5; the T300 review, once the College was admitted).
+/// </param>
 public sealed record ActivityTypeAdminListItemDto(
     int Id,
     string Key,
@@ -22,7 +40,21 @@ public sealed record ActivityTypeAdminListItemDto(
     int PublishedVersion,
     bool IsActive,
     bool HasDraft,
-    DateTime? DraftUpdatedOn);
+    DateTime? DraftUpdatedOn,
+    bool CanWrite,
+    string? ScopeTargetName);
+
+/// <summary>
+/// One scope a caller may put an activity type in, with every target they may put it at (T300): none for Global, their
+/// institution for an InstitutionalAdmin, their College's disciplines for a CollegeAdmin, and all of them for an
+/// Administrator. The builder's Scope picker offers exactly these.
+/// </summary>
+public sealed record ActivityTypeScopeChoiceDto(
+    ActivityScope Scope,
+    IReadOnlyList<ActivityTypeScopeTargetDto> Targets);
+
+/// <summary>An institution, a speciality, or a sub-speciality ("Paediatrics / Neonatology") a type may be scoped to.</summary>
+public sealed record ActivityTypeScopeTargetDto(int Id, string Name);
 
 public sealed record ActivityTypeVersionDto(
     int Version,
@@ -53,7 +85,16 @@ public sealed record ActivityTypeEditorDto(
     string OwnerUserId,
     string? StagingUpdatedByUserId,
     DateTime? StagingUpdatedOn,
-    IReadOnlyList<ActivityTypeVersionDto> Versions);
+    IReadOnlyList<ActivityTypeVersionDto> Versions,
+    // T300. Whether the caller may save, discard and publish this type (ActivityTypeAdminScope.MayWrite, the rule the
+    // commands' guard refuses by); for a new type, whether they may create one anywhere. The builder is read-only without.
+    // Not judged for the filing page, which asks with ForBuilder false: there it and the next two are false, empty, null.
+    bool CanWrite,
+    // The scopes and targets the caller may save this type in, in the order the Scope picker offers them; empty unless
+    // CanWrite. A new type starts in the first of them.
+    IReadOnlyList<ActivityTypeScopeChoiceDto> WritableScopes,
+    // The stored scope's target as a reader sees it ("Kalafong", "Paediatrics / Neonatology"), or null for Global.
+    string? ScopeTargetName);
 
 /// <summary>
 /// One recorded workflow move. <paramref name="CreditedItemCount" /> is the T108 signal: <c>null</c>

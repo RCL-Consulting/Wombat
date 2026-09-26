@@ -200,7 +200,7 @@ differ, so a change to the nav is a change to this table (T178).
 | CommitteeMember      | Programme Trainees, Decision Panels, Committee Reviews |
 | SpecialityAdmin      | Programme Trainees, Decision Panels, Committee Reviews, STAR Review Queue, Decisions Due |
 | SubSpecialityAdmin   | Programme Trainees, Decision Panels, Committee Reviews, STAR Review Queue, Decisions Due |
-| CollegeAdmin         | Specialities, EPAs, Curricula |
+| CollegeAdmin         | Specialities, EPAs, Curricula, Activity Types |
 | InstitutionalAdmin   | Curriculum Adoptions, EPAs, Curricula, Activity Types, Entrustment Scales, Trainees, Assessors, Invitations, Users, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due |
 | Administrator        | Colleges, EPAs, Curricula, Institutions, Invitations, Users, Activity Types, Entrustment Scales, Scheduled Jobs, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due, Data Rights Requests, System |
 
@@ -784,6 +784,20 @@ T019 introduces a small builder-specific extension to the shared system:
   `ActivityTypeBuilderLayoutTests` the columns' place as the card's child.
 - The left column uses stacked `.detail-card` sections and field rows. The right column is always the live preview rendered by the shared `ActivityForm.razor`.
 - New builder affordances still reuse the existing button, card, form, alert, and validation classes. The builder does not get its own parallel design language.
+- **The builder follows the rule its commands refuse by** (T300, § Table system's T211 paragraph). The editor carries
+  `CanWrite` and `WritableScopes` (`ActivityTypeAdminScope`: an Administrator writes every type, a Global type is
+  theirs alone, an Institution type its InstitutionalAdmin's, a Speciality or SubSpeciality type the owning College's
+  CollegeAdmin's). The Scope picker lists exactly `WritableScopes` with no empty target, and a new type starts on the
+  first of them (Institution with her own institution, for an InstitutionalAdmin). Where `CanWrite` is false the page
+  is a reader's: no Save draft, Discard draft or Publish, no Add, Up, Down or Delete; the metadata, the form settings,
+  a section's and a field's settings, the workflow and the credit rules are text (`dl.form-group`, the JSON in a
+  `pre.code-block`); each section and field offers View ("View field Overall level"), so a field can still be read; and a
+  standing `Alert` (`Kind="info"`, `Role=""`, `#activity-type-read-only`) at the top says whose type it is ("Set by the
+  College that owns Paediatrics.") and that the reader can read it but not change it. The header offers nothing to save
+  until the editor has loaded, and nothing after it failed to; its title comes from the address, so a page with an id
+  never reads "New activity type". The list offers Edit where `CanWrite`, View elsewhere, both to the builder, and New
+  activity type only where `ActivityTypeAdminListDto.CanCreate`. `ActivityTypeBuilderAccessTests` and
+  `ActivityTypesListAccessTests` hold both pages to it.
 
 ## Alerts, validation, empty states
 

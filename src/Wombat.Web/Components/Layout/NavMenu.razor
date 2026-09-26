@@ -157,7 +157,8 @@
     // Not Curricula: the national catalogue admits an Administrator, a CollegeAdmin or an InstitutionalAdmin (T178).
     new([WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin], [StarReviewQueue, DecisionsDue]),
 
-    new([WombatRoles.CollegeAdmin], [Specialities, Epas, Curricula]),
+    // T300: the College writes its disciplines' activity types (T091), and the builder admits it.
+    new([WombatRoles.CollegeAdmin], [Specialities, Epas, Curricula, ActivityTypes]),
 
     new(
       [WombatRoles.InstitutionalAdmin],

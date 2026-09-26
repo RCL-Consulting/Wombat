@@ -135,6 +135,23 @@ public sealed class WbaToolKeyThreadingTests : TestContext
         CreditedScopes().Select(scope => scope.WbaToolKey).Should().Equal("mini_cex", "dops");
     }
 
+    /// <summary>
+    /// T300 review: the page reads the selected type's definition, and not what the builder would let the caller change
+    /// (<c>CanWrite</c>, <c>WritableScopes</c>, <c>ScopeTargetName</c>): for an Administrator the writable scopes read every
+    /// institution, speciality and sub-speciality, on every selection.
+    /// </summary>
+    [Fact]
+    public void NewActivity_ReadsTheSelectedTypesDefinition_NotWhatTheBuilderWouldOfferTheCaller()
+    {
+        var sender = new NewActivitySender(Type(2, "mini_cex_cpsa", "Mini-CEX (CPSA)", "mini_cex"));
+        Services.AddSingleton<IScopedSender>(sender);
+
+        var cut = RenderComponent<NewActivity>();
+        Select(cut, 2);
+
+        sender.EditorQueries.Should().ContainSingle().Which.ForBuilder.Should().BeFalse();
+    }
+
     // ---- /activities/{id} ----
 
     [Fact]
@@ -230,7 +247,10 @@ public sealed class WbaToolKeyThreadingTests : TestContext
             "admin-1",
             null,
             null,
-            []);
+            [],
+            false,
+            [],
+            null);
 
     private static ActivityDetailDto Detail(
         string state,
@@ -288,6 +308,8 @@ public sealed class WbaToolKeyThreadingTests : TestContext
 
         public NewActivitySender(params ActivityTypeEditorDto[] types) => _types = types;
 
+        public List<GetActivityTypeEditorQuery> EditorQueries { get; } = [];
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             switch (request)
@@ -299,6 +321,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
                     return Task.FromResult((TResponse)(object)items);
 
                 case GetActivityTypeEditorQuery query:
+                    EditorQueries.Add(query);
                     return Task.FromResult((TResponse)(object)_types.Single(type => type.Id == query.ActivityTypeId));
 
                 default:

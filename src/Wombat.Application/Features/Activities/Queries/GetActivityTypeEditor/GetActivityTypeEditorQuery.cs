@@ -1,15 +1,22 @@
 using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Domain.Activities;
-using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
 
-public sealed record GetActivityTypeEditorQuery(int? ActivityTypeId, ClaimsPrincipal Principal) : IRequest<ActivityTypeEditorDto>;
+/// <param name="ActivityTypeId">The type to open; null for a new one. Any other id that names no type is not found.</param>
+/// <param name="ForBuilder">
+/// Whether to judge what the caller may do with the type in the builder: <c>CanWrite</c>, <c>WritableScopes</c> and
+/// <c>ScopeTargetName</c> (T300). The filing page (<c>/activities/new</c>) reads only the type's definition, so it passes
+/// false and pays for none of it: the scopes an Administrator may write read every institution, speciality and
+/// sub-speciality (the T300 review). With false those three are false, empty and null, and mean nothing. Whether the
+/// caller may open the type at all is judged either way.
+/// </param>
+public sealed record GetActivityTypeEditorQuery(int? ActivityTypeId, ClaimsPrincipal Principal, bool ForBuilder = true)
+    : IRequest<ActivityTypeEditorDto>;
 
 public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActivityTypeEditorQuery, ActivityTypeEditorDto>
 {
@@ -62,101 +69,117 @@ public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActiv
 
     public async Task<ActivityTypeEditorDto> Handle(GetActivityTypeEditorQuery request, CancellationToken cancellationToken)
     {
-        if (request.ActivityTypeId is null or <= 0)
+        // Only no id is a new type. /admin/activity-types/0 matches the builder's {ActivityTypeId:int} route, and it read
+        // "Edit " over a new type's form, or a reader's notice, before the T300 review: an id is found or it is not.
+        if (request.ActivityTypeId is not int activityTypeId)
         {
-            return new ActivityTypeEditorDto(
-                0,
-                string.Empty,
-                string.Empty,
-                null,
-                ActivityScope.Global,
-                null,
-                true,
-                // A new type is "Not a WBA instrument" until an administrator says otherwise (D21).
-                null,
-                0,
-                false,
-                DefaultSchemaJson,
-                DefaultWorkflowJson,
-                DefaultCreditRulesJson,
-                "[]",
-                null,
-                null,
-                null,
-                "[]",
-                string.Empty,
-                null,
-                null,
-                []);
+            return await NewTypeAsync(request.Principal, cancellationToken);
         }
 
         var activityType = await _dbContext.Set<ActivityType>()
             .AsNoTracking()
             .Include(entity => entity.Versions)
-            .SingleOrDefaultAsync(entity => entity.Id == request.ActivityTypeId.Value, cancellationToken)
+            .SingleOrDefaultAsync(entity => entity.Id == activityTypeId, cancellationToken)
             ?? throw new InvalidOperationException("The activity type could not be found.");
 
-        if (!await CanReadAsync(request.Principal, activityType, cancellationToken))
+        if (!await CanReadAsync(_dbContext, request.Principal, activityType, cancellationToken))
         {
             throw new InvalidOperationException("The activity type could not be found.");
         }
 
-        return Map(activityType);
+        return request.ForBuilder
+            ? await ForCallerAsync(_dbContext, request.Principal, activityType, cancellationToken)
+            : Map(activityType, canWrite: false, writableScopes: [], scopeTargetName: null);
     }
 
-    internal static async Task<bool> CanReadAsync(ClaimsPrincipal principal, ActivityType activityType, CancellationToken cancellationToken, IApplicationDbContext? dbContext = null)
+    /// <summary>
+    /// A type not yet saved, in the first scope the caller may write and at its first target (T300): Institution with her
+    /// own institution for an InstitutionalAdmin, the College's first speciality for a CollegeAdmin, Global for an
+    /// Administrator. Before T300 every new type started Global, which the guard refuses from anyone but an Administrator,
+    /// so an InstitutionalAdmin's first Save draft was refused unless she changed Scope. A caller with no scope to write in
+    /// gets it with <c>CanWrite</c> false, and the page offers them nothing to save.
+    /// </summary>
+    private async Task<ActivityTypeEditorDto> NewTypeAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        // A published, active activity type is a form template any authenticated user must be
-        // able to read in order to log an activity against it (e.g. a trainee on /activities/new).
-        // Drafts and inactive types remain admin-only below.
-        if (activityType.IsActive && activityType.Version > 0)
-        {
-            return true;
-        }
+        var writableScopes = await ActivityTypeAdminScope.WritableScopesAsync(_dbContext, principal, cancellationToken);
+        var scope = writableScopes.Count > 0 ? writableScopes[0].Scope : ActivityScope.Global;
+        var target = writableScopes.Count > 0 ? writableScopes[0].Targets.FirstOrDefault() : null;
 
-        if (principal.IsAdministrator())
-        {
-            return true;
-        }
-
-        switch (activityType.Scope)
-        {
-            case ActivityScope.Global:
-                return true;
-            case ActivityScope.Institution:
-                var callerInstitutionId = principal.GetInstitutionId();
-                return principal.IsInstitutionalAdmin() && callerInstitutionId.HasValue && activityType.ScopeId == callerInstitutionId.Value;
-            case ActivityScope.Speciality:
-                // National discipline (T091): readable by the owning College's CollegeAdmin.
-                if (dbContext is null || !activityType.ScopeId.HasValue)
-                {
-                    return false;
-                }
-                var specialityCollegeId = await dbContext.Set<Speciality>()
-                    .Where(entity => entity.Id == activityType.ScopeId.Value)
-                    .Select(entity => (int?)entity.CollegeId)
-                    .SingleOrDefaultAsync(cancellationToken);
-                return specialityCollegeId.HasValue && principal.CanAccessCollege(specialityCollegeId.Value);
-            case ActivityScope.SubSpeciality:
-                if (dbContext is null || !activityType.ScopeId.HasValue)
-                {
-                    return false;
-                }
-                var subSpecialityCollegeId = await dbContext.Set<SubSpeciality>()
-                    .Where(entity => entity.Id == activityType.ScopeId.Value)
-                    .Select(entity => (int?)entity.Speciality.CollegeId)
-                    .SingleOrDefaultAsync(cancellationToken);
-                return subSpecialityCollegeId.HasValue && principal.CanAccessCollege(subSpecialityCollegeId.Value);
-            default:
-                return false;
-        }
+        return new ActivityTypeEditorDto(
+            0,
+            string.Empty,
+            string.Empty,
+            null,
+            scope,
+            target?.Id,
+            true,
+            // A new type is "Not a WBA instrument" until an administrator says otherwise (D21).
+            null,
+            0,
+            false,
+            DefaultSchemaJson,
+            DefaultWorkflowJson,
+            DefaultCreditRulesJson,
+            "[]",
+            null,
+            null,
+            null,
+            "[]",
+            string.Empty,
+            null,
+            null,
+            [],
+            writableScopes.Count > 0,
+            writableScopes,
+            target?.Name);
     }
 
-    // Wrapper kept for callsites that already have the dbContext handy.
-    public Task<bool> CanReadAsync(ClaimsPrincipal principal, ActivityType activityType, CancellationToken cancellationToken)
-        => CanReadAsync(principal, activityType, cancellationToken, _dbContext);
+    /// <summary>
+    /// The editor as the caller sees it (T300): whether they may write the type (<see cref="ActivityTypeAdminScope.MayWriteAsync" />,
+    /// the rule the commands refuse by), the scopes they may save it in, and its scope's target by name. Every path that
+    /// hands an <see cref="ActivityTypeEditorDto" /> to the builder goes through here, the commands' returned editors
+    /// included: the page redraws from them.
+    /// </summary>
+    internal static async Task<ActivityTypeEditorDto> ForCallerAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        ActivityType activityType,
+        CancellationToken cancellationToken)
+    {
+        var canWrite = await ActivityTypeAdminScope.MayWriteAsync(dbContext, principal, activityType.Scope, activityType.ScopeId, cancellationToken);
 
-    internal static ActivityTypeEditorDto Map(ActivityType activityType)
+        // The scopes offered are the ones this type may be saved in, so none to a caller who may not save it.
+        IReadOnlyList<ActivityTypeScopeChoiceDto> writableScopes = canWrite
+            ? await ActivityTypeAdminScope.WritableScopesAsync(dbContext, principal, cancellationToken)
+            : [];
+
+        return Map(
+            activityType,
+            canWrite,
+            writableScopes,
+            await ActivityTypeAdminScope.ScopeTargetNameAsync(dbContext, activityType.Scope, activityType.ScopeId, cancellationToken));
+    }
+
+    /// <summary>
+    /// Whether the caller may open the type in the editor. A published, active type is a form template any authenticated
+    /// user must be able to read in order to log an activity against it (a trainee on /activities/new). Anything else, a
+    /// draft or an inactive type, is read by whoever may write it (<see cref="ActivityTypeAdminScope.MayWriteAsync" />, the
+    /// one rule, T300), and a Global one by anyone.
+    /// </summary>
+    internal static async Task<bool> CanReadAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        ActivityType activityType,
+        CancellationToken cancellationToken)
+        => (activityType.IsActive && activityType.Version > 0)
+           || activityType.Scope == ActivityScope.Global
+           || await ActivityTypeAdminScope.MayWriteAsync(dbContext, principal, activityType.Scope, activityType.ScopeId, cancellationToken);
+
+    private static ActivityTypeEditorDto Map(
+        ActivityType activityType,
+        bool canWrite,
+        IReadOnlyList<ActivityTypeScopeChoiceDto> writableScopes,
+        string? scopeTargetName)
     {
         return new ActivityTypeEditorDto(
             activityType.Id,
@@ -186,6 +209,9 @@ public sealed class GetActivityTypeEditorQueryHandler : IRequestHandler<GetActiv
                     version.Version,
                     version.PublishedOn,
                     version.PublishedByUserId))
-                .ToList());
+                .ToList(),
+            canWrite,
+            writableScopes,
+            scopeTargetName);
     }
 }

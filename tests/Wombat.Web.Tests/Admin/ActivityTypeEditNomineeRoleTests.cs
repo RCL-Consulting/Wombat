@@ -300,7 +300,10 @@ public sealed class ActivityTypeEditNomineeRoleTests : TestContext
                 "admin-1",
                 null,
                 null,
-                []);
+                [],
+                true,
+                [new ActivityTypeScopeChoiceDto(ActivityScope.Global, [])],
+                null);
         }
 
         public List<SaveActivityTypeDraftCommand> Saves { get; } = [];

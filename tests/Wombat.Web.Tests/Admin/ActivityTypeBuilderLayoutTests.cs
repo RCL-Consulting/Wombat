@@ -78,7 +78,7 @@ public sealed class ActivityTypeBuilderLayoutTests : TestContext
             4, "probe", "Probe", null, ActivityScope.Global, null, true, null, 1, false,
             SchemaJson, WorkflowJson, """{ "counts_for": [] }""", "[]",
             SchemaJson, WorkflowJson, """{ "counts_for": [] }""", "[]",
-            "admin-1", null, null, []);
+            "admin-1", null, null, [], true, [new ActivityTypeScopeChoiceDto(ActivityScope.Global, [])], null);
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {

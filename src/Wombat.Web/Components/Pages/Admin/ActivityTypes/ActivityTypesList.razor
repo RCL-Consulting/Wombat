@@ -1,10 +1,8 @@
 @page "/admin/activity-types"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@* T300: the College writes its disciplines' types (T091), so the list admits a CollegeAdmin beside an Administrator and
+   an InstitutionalAdmin. Each row says what the caller may do with it. *@
+@attribute [Authorize(Policy = "NationalCatalogueAccess")]
 @using Wombat.Domain.Activities
-@using Wombat.Application.Features.Institutions
-@using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList
-@using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList
-@using Wombat.Application.Features.Institutions.Queries.GetSubSpecialitiesList
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -12,7 +10,11 @@
 
 <PageHeader Title="Activity types" Subtitle="Manage draft and published activity-type definitions.">
   <Actions>
-    <a class="btn btn-primary" href="/admin/activity-types/new">New activity type</a>
+    @* T300: offered only to a caller with a scope to create a type in (ActivityTypeAdminListDto.CanCreate). *@
+    @if (_canCreate)
+    {
+      <a class="btn btn-primary" href="/admin/activity-types/new">New activity type</a>
+    }
   </Actions>
 </PageHeader>
 
@@ -26,7 +28,7 @@
 </div>
 
 @{ var rowNames = RowNames.Distinct(FilteredItems, type => type.Id, type => type.Name, type => $" ({type.Key})"); }
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && FilteredItems.Count == 0)" EmptyTitle="No activity types" EmptyBody="Create the first activity type to start the builder.">
+<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && FilteredItems.Count == 0)" EmptyTitle="No activity types" EmptyBody="@(_canCreate ? "Create the first activity type to start the builder." : "No activity type is open to you yet.")">
   <DataTable Items="FilteredItems" Caption="Configured activity types">
     <HeaderRow>
       <tr>
@@ -48,9 +50,18 @@
         <td>@(item.HasDraft ? "Draft saved" : "None")</td>
         <td>@(item.IsActive ? "Active" : "Inactive")</td>
         <td>
-          @* T239: named by its row, the type's name, and its key where two types share a name. *@
+          @* T239: named by its row, the type's name, and its key where two types share a name. T300: Edit where the caller
+             may write the type (CanWrite, the rule the commands refuse by), View where they may only read it; both open
+             the builder, which is read-only to a reader. *@
           <div class="actions-cell">
-            <a class="btn btn-outline btn-sm" href="@($"/admin/activity-types/{item.Id}")" aria-label="@($"Edit {rowNames[item.Id]}")">Edit</a>
+            @if (item.CanWrite)
+            {
+              <a class="btn btn-outline btn-sm" href="@($"/admin/activity-types/{item.Id}")" aria-label="@($"Edit {rowNames[item.Id]}")">Edit</a>
+            }
+            else
+            {
+              <a class="btn btn-outline btn-sm" href="@($"/admin/activity-types/{item.Id}")" aria-label="@($"View {rowNames[item.Id]}")">View</a>
+            }
           </div>
         </td>
       </tr>
@@ -65,10 +76,8 @@
 
 @code {
   private readonly List<ActivityTypeAdminListItemDto> _items = [];
-  private IReadOnlyList<InstitutionDto> _institutions = [];
-  private IReadOnlyList<SpecialityDto> _specialities = [];
-  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
   private bool _loading = true;
+  private bool _canCreate;
   private string? _error;
   private string? _search;
 
@@ -85,14 +94,13 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypesAdmin.ListActivityTypesAdminQuery(authState.User)));
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
+      var list = await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypesAdmin.ListActivityTypesAdminQuery(authState.User));
+      _items.AddRange(list.Items);
+      _canCreate = list.CanCreate;
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      _error = RefusalText.Of(exception);
     }
     finally
     {
@@ -100,39 +108,24 @@
     }
   }
 
-  private string FormatScope(ActivityTypeAdminListItemDto item) => item.Scope switch
+  /// <summary>
+  /// The scope and its target as the query names it, as the editor reads a stored scope: "Speciality · Paediatrics",
+  /// "Sub-speciality · Paediatrics / Neonatology", "Institution · Kalafong". The page resolves no names of its own: it
+  /// did, from the caller's own institutions and disciplines, so every other College's row read "Speciality · #1" (T291
+  /// item 5). Only a target that no longer exists still reads by its id.
+  /// </summary>
+  private static string FormatScope(ActivityTypeAdminListItemDto item)
   {
-    ActivityScope.Global => "Global",
-    ActivityScope.Institution => InstitutionLabel(item.ScopeId),
-    ActivityScope.Speciality => SpecialityLabel(item.ScopeId),
-    ActivityScope.SubSpeciality => SubSpecialityLabel(item.ScopeId),
-    _ => item.Scope.ToString()
-  };
+    var scope = item.Scope switch
+    {
+      ActivityScope.Global => "Global",
+      ActivityScope.Institution => "Institution",
+      ActivityScope.Speciality => "Speciality",
+      ActivityScope.SubSpeciality => "Sub-speciality",
+      _ => item.Scope.ToString()
+    };
 
-  private string InstitutionLabel(int? institutionId)
-  {
-    if (!institutionId.HasValue) return "Institution";
-    var institution = _institutions.FirstOrDefault(i => i.Id == institutionId.Value);
-    return institution is null ? $"Institution · #{institutionId}" : $"Institution · {institution.Name}";
-  }
-
-  private string SpecialityLabel(int? specialityId)
-  {
-    if (!specialityId.HasValue) return "Speciality";
-    var speciality = _specialities.FirstOrDefault(s => s.Id == specialityId.Value);
-    if (speciality is null) return $"Speciality · #{specialityId}";
-    // Specialities are national now (T091); College prefix lands with the Phase 5 admin rework.
-    return $"Speciality · {speciality.Name}";
-  }
-
-  private string SubSpecialityLabel(int? subSpecialityId)
-  {
-    if (!subSpecialityId.HasValue) return "Sub-speciality";
-    var subSpeciality = _subSpecialities.FirstOrDefault(s => s.Id == subSpecialityId.Value);
-    if (subSpeciality is null) return $"Sub-speciality · #{subSpecialityId}";
-    var speciality = _specialities.FirstOrDefault(s => s.Id == subSpeciality.SpecialityId);
-    if (speciality is null) return $"Sub-speciality · {subSpeciality.Name}";
-    // Specialities are national now (T091); College prefix lands with the Phase 5 admin rework.
-    return $"Sub-speciality · {speciality.Name} / {subSpeciality.Name}";
+    var target = item.ScopeTargetName ?? (item.ScopeId is int id ? $"#{id}" : null);
+    return target is null ? scope : $"{scope} · {target}";
   }
 }

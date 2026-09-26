@@ -27,7 +27,12 @@ Admin-defined catalogue entry.
 - `Id`
 - `Key` — stable short code (`mini_cex`, `dops`, `reflective_note`, `research_output`). Immutable once used.
 - `Name`, `Description`
-- `Scope` — global / institution / speciality / sub-speciality. Determines who sees it in their pickers.
+- `Scope` — global / institution / speciality / sub-speciality. Determines who sees it in their pickers, and who may
+  change it (`ActivityTypeAdminScope`, T300): a Global type only an Administrator; an Institution type that
+  institution's InstitutionalAdmin; a Speciality or SubSpeciality type the CollegeAdmin of the College that owns the
+  discipline (T091); an Administrator every type. The builder's commands refuse by it (`ActivityTypeScopeGuard`), and
+  its pages offer by it: Edit or View on the list, a read-only builder, and a Scope picker listing only what the caller
+  may save in.
 - `FormSchema` — jsonb. The form definition (see below).
 - `Workflow` — jsonb. The state machine definition (see below).
 - `CreditRules` — jsonb. How a completed activity contributes to curriculum progress.

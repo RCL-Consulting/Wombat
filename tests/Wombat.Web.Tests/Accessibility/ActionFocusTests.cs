@@ -1208,7 +1208,7 @@ public sealed class ActionFocusTests : TestContext
 
     private static ActivityTypeEditorDto Editor(bool hasDraft) => new(
         4, "reflection", "Reflection", null, ActivityScope.Global, null, true, null, 1, hasDraft,
-        TypeSchemaJson, TypeWorkflowJson, "{}", "[]", TypeSchemaJson, TypeWorkflowJson, "{}", "[]", "admin-1", null, null, []);
+        TypeSchemaJson, TypeWorkflowJson, "{}", "[]", TypeSchemaJson, TypeWorkflowJson, "{}", "[]", "admin-1", null, null, [], true, [new ActivityTypeScopeChoiceDto(ActivityScope.Global, [])], null);
 
     private static CommitteeReviewDetailDto Review(CommitteeReviewState state, bool formative = false)
         => new CommitteeReviewDetailDto(

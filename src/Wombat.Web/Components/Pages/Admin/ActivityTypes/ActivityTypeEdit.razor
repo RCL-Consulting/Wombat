@@ -1,29 +1,34 @@
 @page "/admin/activity-types/new"
 @page "/admin/activity-types/{ActivityTypeId:int}"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@* T300: the College writes its disciplines' types (T091), so the builder admits a CollegeAdmin beside an Administrator
+   and an InstitutionalAdmin. What each may change there is the editor's CanWrite, the rule the commands refuse by. *@
+@attribute [Authorize(Policy = "NationalCatalogueAccess")]
 @using Wombat.Domain.Activities
-@using Wombat.Application.Features.Institutions.Queries.GetInstitutionsList
-@using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList
-@using Wombat.Application.Features.Institutions.Queries.GetSubSpecialitiesList
 @using Wombat.Application.Features.Activities.Services
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IActivityReferenceDataService ReferenceData
 @inject NavigationManager Navigation
 
-<PageTitle>@(_editor?.Name ?? "Activity Type")</PageTitle>
+<PageTitle>@DocumentTitle</PageTitle>
 
-<PageHeader Title="@PageTitleText" Subtitle="Build the form, workflow, and credit definition for this activity type.">
+<PageHeader Title="@PageTitleText" Subtitle="@PageSubtitle">
   <Actions>
     <a class="btn btn-outline" href="/admin/activity-types">Back to list</a>
-    @* While one of these runs the others are disabled, and the one pressed is not (T234): it has the focus, and a browser
-       drops the focus of a button it disables, to the page. A second press sends nothing. *@
-    <button type="button" class="btn btn-primary" disabled="@OtherInFlight(SaveAction)" aria-disabled="@InFlight.AriaDisabled(Running(SaveAction))" @onclick="SaveDraftAsync">Save draft</button>
-    @if ((_editor?.Id ?? 0) > 0 && _editor?.HasDraft == true)
+    @* T300: offered only where the caller may write the type (the editor's CanWrite, ActivityTypeAdminScope, the rule the
+       commands refuse by), and not before the editor has loaded or after it failed to: a Save draft there sent a create
+       with an empty key and workflow (the T295 sweep). *@
+    @if (CanWrite)
     {
-      <button type="button" class="btn btn-outline" disabled="@OtherInFlight(DiscardAction)" aria-disabled="@InFlight.AriaDisabled(Running(DiscardAction))" @onclick="DiscardDraftAsync">Discard draft</button>
+      @* While one of these runs the others are disabled, and the one pressed is not (T234): it has the focus, and a
+         browser drops the focus of a button it disables, to the page. A second press sends nothing. *@
+      <button type="button" class="btn btn-primary" disabled="@OtherInFlight(SaveAction)" aria-disabled="@InFlight.AriaDisabled(Running(SaveAction))" @onclick="SaveDraftAsync">Save draft</button>
+      @if ((_editor?.Id ?? 0) > 0 && _editor?.HasDraft == true)
+      {
+        <button type="button" class="btn btn-outline" disabled="@OtherInFlight(DiscardAction)" aria-disabled="@InFlight.AriaDisabled(Running(DiscardAction))" @onclick="DiscardDraftAsync">Discard draft</button>
+      }
+      <button type="button" class="btn btn-success" disabled="@(OtherInFlight(PublishAction) || !CanPublish)" aria-disabled="@InFlight.AriaDisabled(Running(PublishAction))" title="@(CanPublish ? null : "Save a draft to publish.")" @onclick="PublishAsync">Publish</button>
     }
-    <button type="button" class="btn btn-success" disabled="@(OtherInFlight(PublishAction) || !CanPublish)" aria-disabled="@InFlight.AriaDisabled(Running(PublishAction))" title="@(CanPublish ? null : "Save a draft to publish.")" @onclick="PublishAsync">Publish</button>
   </Actions>
 </PageHeader>
 
@@ -42,7 +47,7 @@
   }
 </ActionResult>
 
-@if (_publishWarnings.Count > 0)
+@if (CanWrite && _publishWarnings.Count > 0)
 {
   <Alert Kind="warning">
     <strong>Publish warnings:</strong>
@@ -56,8 +61,23 @@
 }
 
 <StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _editor is null)" EmptyTitle="Editor unavailable" EmptyBody="The activity type editor could not be loaded.">
-  @if (_editor is not null)
+  @if (_editor is not null && IsNewRoute && !_editor.CanWrite)
   {
+    @* T300: a caller admitted to the builder with no scope to create in (a College with no discipline yet). *@
+    <Alert Kind="info" Role="" Id="activity-type-no-scope">
+      You have no scope to create an activity type in. An institution's administrators create their institution's types,
+      and a College's administrators the types of its specialities and sub-specialities.
+    </Alert>
+  }
+  else if (_editor is not null)
+  {
+    @if (!_editor.CanWrite)
+    {
+      @* T300: standing content, there on every visit, so no role (DESIGN.md § Alerts). Whose type it is, and that the
+         caller reads it here and changes nothing: the page offers no save, discard, publish or edit. *@
+      <Alert Kind="info" Role="" Id="activity-type-read-only">@ReadOnlyNotice</Alert>
+    }
+
     <div class="form-container">
       <div class="tab-bar mb-3">
         @foreach (var tab in Tabs)
@@ -66,7 +86,37 @@
         }
       </div>
 
-      @if (_activeTab == "metadata")
+      @if (_activeTab == "metadata" && !_editor.CanWrite)
+      {
+        @* T300: what is stored, as text (DESIGN.md § Form system, T302). The standing alert says who sets it. *@
+        <div class="form-grid">
+          <dl class="form-group">
+            <dt>Key</dt>
+            <dd><code>@_key</code></dd>
+          </dl>
+          <dl class="form-group">
+            <dt>Name</dt>
+            <dd>@_name</dd>
+          </dl>
+          <dl class="form-group">
+            <dt>Scope</dt>
+            <dd>@StoredScopeText</dd>
+          </dl>
+          <dl class="form-group">
+            <dt>This tool is</dt>
+            <dd>@WbaToolText</dd>
+          </dl>
+          <dl class="form-group full-width">
+            <dt>Description</dt>
+            <dd>@(string.IsNullOrWhiteSpace(_description) ? "None" : _description)</dd>
+          </dl>
+          <dl class="form-group">
+            <dt>Status</dt>
+            <dd>@(_isActive ? "Active" : "Inactive")</dd>
+          </dl>
+        </div>
+      }
+      else if (_activeTab == "metadata")
       {
         <div class="form-grid">
           <FormField Label="Key" InputId="type-key" Required="true">
@@ -75,22 +125,24 @@
           <FormField Label="Name" InputId="type-name" Required="true">
             <input id="type-name" class="form-control" @bind="_name" />
           </FormField>
+          @* T300: exactly the scopes and targets the caller may save in (the editor's WritableScopes, the rule the save
+             refuses by; DESIGN.md: a picker offers exactly what the command it feeds accepts). Before T300 it offered every
+             scope, and a new type started Global, which the save refuses from anyone but an Administrator. *@
           <FormField Label="Scope" InputId="type-scope" Required="true">
             <select id="type-scope" class="form-select" value="@_scope" @onchange="OnScopeChanged">
-              @foreach (var scope in Enum.GetValues<ActivityScope>())
+              @foreach (var choice in _editor.WritableScopes)
               {
-                <option value="@scope">@scope</option>
+                <option value="@choice.Scope">@ScopeLabel(choice.Scope)</option>
               }
             </select>
           </FormField>
           @if (_scope != ActivityScope.Global)
           {
-            <FormField Label="@ScopeIdLabel" InputId="type-scope-id" Required="true">
+            <FormField Label="@ScopeLabel(_scope)" InputId="type-scope-id" Required="true">
               <select id="type-scope-id" class="form-select" @bind="_scopeIdText">
-                <option value="">@ScopeIdPlaceholder</option>
-                @foreach (var option in ScopeIdOptions)
+                @foreach (var target in ScopeTargets)
                 {
-                  <option value="@option.Id">@option.Label</option>
+                  <option value="@target.Id">@target.Name</option>
                 }
               </select>
             </FormField>
@@ -129,44 +181,64 @@
               <p class="page-subtitle">Which field carries the encounter date, which carries the entrustment rating, and which names the EPA.</p>
             </div>
           </div>
-          <div class="form-grid">
-            <FormField Label="Encounter date field" InputId="observation-date-field">
-              <select id="observation-date-field" class="form-select"
-                      value="@(_builderSchema.ObservationDateField ?? string.Empty)"
-                      @onchange="OnObservationDateFieldChanged">
-                <option value="">None — this form has no single encounter date</option>
-                @foreach (var key in EligibleFieldKeys(FieldType.Date))
-                {
-                  <option value="@key" selected="@(key == _builderSchema.ObservationDateField)">@key</option>
-                }
-              </select>
-            </FormField>
-            <FormField Label="Entrustment rating field" InputId="rated-level-field">
-              <select id="rated-level-field" class="form-select"
-                      value="@(_builderSchema.RatedLevelField ?? string.Empty)"
-                      @onchange="OnRatedLevelFieldChanged">
-                <option value="">None — this form asserts no entrustment level</option>
-                @foreach (var key in EligibleFieldKeys(FieldType.Scale))
-                {
-                  <option value="@key" selected="@(key == _builderSchema.RatedLevelField)">@key</option>
-                }
-              </select>
-            </FormField>
-            @* T137. Which EPA an activity is evidence for: it is stamped on every activity and shown on every list.
-               Credit that reads an EPA field must read this one, and a save says so if it does not. *@
-            <FormField Label="EPA field" InputId="evidence-epa-field"
-                       HelpText="The field naming the EPA this activity is evidence for. It is shown on activity lists, and credit rules that match on an EPA field must use this one.">
-              <select id="evidence-epa-field" class="form-select" aria-describedby="@FieldHelp.Id("evidence-epa-field")"
-                      value="@(_builderSchema.EvidenceEpaField ?? string.Empty)"
-                      @onchange="OnEvidenceEpaFieldChanged">
-                <option value="">None — this form is about no single EPA</option>
-                @foreach (var key in EligibleFieldKeys(FieldType.Epa))
-                {
-                  <option value="@key" selected="@(key == _builderSchema.EvidenceEpaField)">@key</option>
-                }
-              </select>
-            </FormField>
-          </div>
+          @if (!_editor.CanWrite)
+          {
+            <div class="form-grid">
+              <dl class="form-group">
+                <dt>Encounter date field</dt>
+                <dd>@(_builderSchema.ObservationDateField ?? "None — this form has no single encounter date")</dd>
+              </dl>
+              <dl class="form-group">
+                <dt>Entrustment rating field</dt>
+                <dd>@(_builderSchema.RatedLevelField ?? "None — this form asserts no entrustment level")</dd>
+              </dl>
+              <dl class="form-group">
+                <dt>EPA field</dt>
+                <dd>@(_builderSchema.EvidenceEpaField ?? "None — this form is about no single EPA")</dd>
+              </dl>
+            </div>
+          }
+          else
+          {
+            <div class="form-grid">
+              <FormField Label="Encounter date field" InputId="observation-date-field">
+                <select id="observation-date-field" class="form-select"
+                        value="@(_builderSchema.ObservationDateField ?? string.Empty)"
+                        @onchange="OnObservationDateFieldChanged">
+                  <option value="">None — this form has no single encounter date</option>
+                  @foreach (var key in EligibleFieldKeys(FieldType.Date))
+                  {
+                    <option value="@key" selected="@(key == _builderSchema.ObservationDateField)">@key</option>
+                  }
+                </select>
+              </FormField>
+              <FormField Label="Entrustment rating field" InputId="rated-level-field">
+                <select id="rated-level-field" class="form-select"
+                        value="@(_builderSchema.RatedLevelField ?? string.Empty)"
+                        @onchange="OnRatedLevelFieldChanged">
+                  <option value="">None — this form asserts no entrustment level</option>
+                  @foreach (var key in EligibleFieldKeys(FieldType.Scale))
+                  {
+                    <option value="@key" selected="@(key == _builderSchema.RatedLevelField)">@key</option>
+                  }
+                </select>
+              </FormField>
+              @* T137. Which EPA an activity is evidence for: it is stamped on every activity and shown on every list.
+                 Credit that reads an EPA field must read this one, and a save says so if it does not. *@
+              <FormField Label="EPA field" InputId="evidence-epa-field"
+                         HelpText="The field naming the EPA this activity is evidence for. It is shown on activity lists, and credit rules that match on an EPA field must use this one.">
+                <select id="evidence-epa-field" class="form-select" aria-describedby="@FieldHelp.Id("evidence-epa-field")"
+                        value="@(_builderSchema.EvidenceEpaField ?? string.Empty)"
+                        @onchange="OnEvidenceEpaFieldChanged">
+                  <option value="">None — this form is about no single EPA</option>
+                  @foreach (var key in EligibleFieldKeys(FieldType.Epa))
+                  {
+                    <option value="@key" selected="@(key == _builderSchema.EvidenceEpaField)">@key</option>
+                  }
+                </select>
+              </FormField>
+            </div>
+          }
         </div>
 
         <div class="builder-two-col">
@@ -174,11 +246,14 @@
             <div class="header-container">
               <div>
                 <h3>Sections</h3>
-                <p class="page-subtitle">Build the schema visually and keep the preview in sync.</p>
+                <p class="page-subtitle">@(_editor.CanWrite ? "Build the schema visually and keep the preview in sync." : "The form's sections and fields. View one to read its settings.")</p>
               </div>
-              <div class="actions-cell">
-                <button type="button" class="btn btn-outline btn-sm" @onclick="AddSection">Add section</button>
-              </div>
+              @if (_editor.CanWrite)
+              {
+                <div class="actions-cell">
+                  <button type="button" class="btn btn-outline btn-sm" @onclick="AddSection">Add section</button>
+                </div>
+              }
             </div>
 
             @if (_builderSchema.Sections.Count == 0)
@@ -201,10 +276,18 @@
                     </div>
                     <div class="actions-cell">
                       @{ var sectionName = sectionNames[capturedSectionIndex]; }
-                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Edit section {sectionName}")" @onclick="() => SelectSection(capturedSectionIndex)">Edit</button>
-                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move section {sectionName} up")" disabled="@(capturedSectionIndex == 0)" @onclick="() => MoveSection(capturedSectionIndex, -1)">Up</button>
-                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move section {sectionName} down")" disabled="@(capturedSectionIndex == _builderSchema.Sections.Count - 1)" @onclick="() => MoveSection(capturedSectionIndex, 1)">Down</button>
-                      <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete section {sectionName}")" @onclick="() => DeleteSection(capturedSectionIndex)">Delete</button>
+                      @if (_editor.CanWrite)
+                      {
+                        <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Edit section {sectionName}")" @onclick="() => SelectSection(capturedSectionIndex)">Edit</button>
+                        <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move section {sectionName} up")" disabled="@(capturedSectionIndex == 0)" @onclick="() => MoveSection(capturedSectionIndex, -1)">Up</button>
+                        <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move section {sectionName} down")" disabled="@(capturedSectionIndex == _builderSchema.Sections.Count - 1)" @onclick="() => MoveSection(capturedSectionIndex, 1)">Down</button>
+                        <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete section {sectionName}")" @onclick="() => DeleteSection(capturedSectionIndex)">Delete</button>
+                      }
+                      else
+                      {
+                        @* T300: a reader still opens a section and a field, to read them (Step 1.25 reads a field's scale). *@
+                        <button type="button" class="btn btn-outline btn-sm" aria-label="@($"View section {sectionName}")" @onclick="() => SelectSection(capturedSectionIndex)">View</button>
+                      }
                     </div>
                   </div>
 
@@ -219,23 +302,121 @@
                         </div>
                         <div class="actions-cell">
                           @{ var fieldName = fieldNames[field.value]; }
-                          <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Edit field {fieldName}")" @onclick="() => SelectField(capturedSectionIndex, capturedFieldIndex)">Edit</button>
-                          <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move field {fieldName} up")" disabled="@(capturedFieldIndex == 0)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, -1)">Up</button>
-                          <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move field {fieldName} down")" disabled="@(capturedFieldIndex == formSection.Fields.Count - 1)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, 1)">Down</button>
-                          <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete field {fieldName}")" @onclick="() => DeleteField(capturedSectionIndex, capturedFieldIndex)">Delete</button>
+                          @if (_editor.CanWrite)
+                          {
+                            <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Edit field {fieldName}")" @onclick="() => SelectField(capturedSectionIndex, capturedFieldIndex)">Edit</button>
+                            <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move field {fieldName} up")" disabled="@(capturedFieldIndex == 0)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, -1)">Up</button>
+                            <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move field {fieldName} down")" disabled="@(capturedFieldIndex == formSection.Fields.Count - 1)" @onclick="() => MoveField(capturedSectionIndex, capturedFieldIndex, 1)">Down</button>
+                            <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete field {fieldName}")" @onclick="() => DeleteField(capturedSectionIndex, capturedFieldIndex)">Delete</button>
+                          }
+                          else
+                          {
+                            <button type="button" class="btn btn-outline btn-sm" aria-label="@($"View field {fieldName}")" @onclick="() => SelectField(capturedSectionIndex, capturedFieldIndex)">View</button>
+                          }
                         </div>
                       </div>
                     </div>
                   }
 
-                  @* T239 review: every section's Add field read the same. *@
-                  <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Add field to section {sectionNames[capturedSectionIndex]}")"
-                          @onclick="() => AddField(capturedSectionIndex)">Add field</button>
+                  @if (_editor.CanWrite)
+                  {
+                    @* T239 review: every section's Add field read the same. *@
+                    <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Add field to section {sectionNames[capturedSectionIndex]}")"
+                            @onclick="() => AddField(capturedSectionIndex)">Add field</button>
+                  }
                 </div>
               }
             }
 
-            @if (_selectedSectionIndex >= 0)
+            @if (_selectedSectionIndex >= 0 && !_editor.CanWrite)
+            {
+              @* T300: a reader's section and field are text, not controls (DESIGN.md § Form system, T302). *@
+              var readSection = _builderSchema.Sections[_selectedSectionIndex];
+              <div class="detail-card" id="section-details">
+                <h4>Section details</h4>
+                <div class="form-grid">
+                  <dl class="form-group">
+                    <dt>Section key</dt>
+                    <dd><code>@readSection.Key</code></dd>
+                  </dl>
+                  <dl class="form-group">
+                    <dt>Title</dt>
+                    <dd>@readSection.Title</dd>
+                  </dl>
+                </div>
+              </div>
+
+              @if (_selectedFieldIndex >= 0)
+              {
+                var readField = readSection.Fields[_selectedFieldIndex];
+                <div class="detail-card" id="field-details">
+                  <h4>Field details</h4>
+                  <div class="form-grid">
+                    <dl class="form-group">
+                      <dt>Field key</dt>
+                      <dd><code>@readField.Key</code></dd>
+                    </dl>
+                    <dl class="form-group">
+                      <dt>Label</dt>
+                      <dd>@readField.Label</dd>
+                    </dl>
+                    <dl class="form-group">
+                      <dt>Type</dt>
+                      <dd>@FieldTypeLabel(readField.Type)</dd>
+                    </dl>
+                    <dl class="form-group">
+                      <dt>Help text</dt>
+                      <dd>@(string.IsNullOrWhiteSpace(readField.HelpText) ? "None" : readField.HelpText)</dd>
+                    </dl>
+                    @if (readField.Type == FieldType.User)
+                    {
+                      <dl class="form-group">
+                        <dt>Names a</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(readField.NomineeRole) ? "Assessor (default)" : readField.NomineeRole)</dd>
+                      </dl>
+                    }
+                    else
+                    {
+                      var optionLines = OptionLines(readField.OptionsText);
+                      <dl class="form-group full-width">
+                        <dt>Options</dt>
+                        @if (optionLines.Count == 0)
+                        {
+                          <dd>None</dd>
+                        }
+                        else
+                        {
+                          <dd>
+                            <ul class="list-unstyled">
+                              @foreach (var line in optionLines)
+                              {
+                                <li>@line</li>
+                              }
+                            </ul>
+                          </dd>
+                        }
+                      </dl>
+                      <dl class="form-group">
+                        <dt>Catalogue key</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(readField.CatalogueKey) ? "None" : readField.CatalogueKey)</dd>
+                      </dl>
+                    }
+                    @if (readField.Type == FieldType.Scale)
+                    {
+                      <dl class="form-group">
+                        <dt>Entrustment scale</dt>
+                        <dd>@ScaleText(readField.ScaleKey)</dd>
+                      </dl>
+                    }
+                    <dl class="form-group">
+                      <dt>Required</dt>
+                      <dd>@(readField.Required ? "Yes" : "No")</dd>
+                    </dl>
+                  </div>
+                </div>
+              }
+            }
+            else if (_selectedSectionIndex >= 0)
             {
               var selectedSection = _builderSchema.Sections[_selectedSectionIndex];
               <div class="detail-card">
@@ -251,7 +432,7 @@
               </div>
             }
 
-            @if (_selectedSectionIndex >= 0 && _selectedFieldIndex >= 0)
+            @if (_editor.CanWrite && _selectedSectionIndex >= 0 && _selectedFieldIndex >= 0)
             {
               var selectedField = _builderSchema.Sections[_selectedSectionIndex].Fields[_selectedFieldIndex];
               <div class="detail-card">
@@ -327,11 +508,25 @@
           </div>
         </div>
       }
+      else if (_activeTab == "workflow" && !_editor.CanWrite)
+      {
+        <dl class="form-group">
+          <dt>Workflow JSON</dt>
+          <dd><pre class="code-block">@_workflowJson</pre></dd>
+        </dl>
+      }
       else if (_activeTab == "workflow")
       {
         <FormField Label="Workflow JSON" InputId="workflow-json" FullWidth="true">
           <textarea id="workflow-json" class="form-control font-mono" rows="18" @bind="_workflowJson"></textarea>
         </FormField>
+      }
+      else if (!_editor.CanWrite)
+      {
+        <dl class="form-group">
+          <dt>Credit rules JSON</dt>
+          <dd><pre class="code-block">@_creditRulesJson</pre></dd>
+        </dl>
       }
       else
       {
@@ -393,9 +588,6 @@
       field => $" ({field.Key})");
 
   private static string TitleOrKey(string title, string key) => string.IsNullOrWhiteSpace(title) ? key : title.Trim();
-  private IReadOnlyList<InstitutionDto> _institutions = [];
-  private IReadOnlyList<SpecialityDto> _specialities = [];
-  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
   private IReadOnlyList<ActivityCatalogueOption> _entrustmentScales = [];
   private bool _loading = true;
   private ActionResult? _result;
@@ -431,46 +623,110 @@
 
   private bool IsPublished => (_editor?.PublishedVersion ?? 0) > 0;
   private bool CanPublish => (_editor?.Id ?? 0) > 0 && _editor?.HasDraft == true;
-  private string PageTitleText => (_editor?.Id ?? 0) > 0 ? $"Edit {_name}" : "New activity type";
   private string CurrentDraftSchemaJson => _builderSchema.ToJson();
 
-  private string ScopeIdLabel => _scope switch
+  /// <summary>
+  /// Whether the caller may save, discard and publish what the page shows (T300): the editor's <c>CanWrite</c>, the rule
+  /// the commands refuse by (<c>ActivityTypeAdminScope</c>). False until the editor has loaded, and after it failed to.
+  /// </summary>
+  private bool CanWrite => _editor?.CanWrite == true;
+
+  /// <summary>The page's own address says whether it is a new type, never a missing editor (the T295 sweep).</summary>
+  private bool IsNewRoute => ActivityTypeId is null;
+
+  private string PageTitleText => IsNewRoute
+    ? "New activity type"
+    : _editor is null
+      ? "Activity type"
+      : _editor.CanWrite ? $"Edit {_name}" : _editor.Name;
+
+  private string DocumentTitle => IsNewRoute
+    ? "New activity type"
+    : string.IsNullOrWhiteSpace(_editor?.Name) ? "Activity type" : _editor.Name;
+
+  private string PageSubtitle => CanWrite
+    ? "Build the form, workflow, and credit definition for this activity type."
+    : "The form, workflow, and credit definition of this activity type.";
+
+  /// <summary>
+  /// Whose type a reader is looking at, and that they read it here and change nothing (T300). A Speciality or
+  /// SubSpeciality type is its College's (T091), a Global one the Administrator's, an Institution one its institution's.
+  /// </summary>
+  private string ReadOnlyNotice
   {
+    get
+    {
+      var target = _editor?.ScopeTargetName;
+      var whose = _editor?.Scope switch
+      {
+        ActivityScope.Speciality or ActivityScope.SubSpeciality => target is null
+          ? "Set by the College."
+          : $"Set by the College that owns {target}.",
+        ActivityScope.Institution => target is null ? "Set by its institution." : $"Set by {target}.",
+        _ => "Set by a global administrator."
+      };
+
+      return $"{whose} You can read this activity type here, but not change it.";
+    }
+  }
+
+  private static string ScopeLabel(ActivityScope scope) => scope switch
+  {
+    ActivityScope.Global => "Global",
     ActivityScope.Institution => "Institution",
     ActivityScope.Speciality => "Speciality",
     ActivityScope.SubSpeciality => "Sub-speciality",
-    _ => "Scope target"
+    _ => scope.ToString()
   };
 
-  private string ScopeIdPlaceholder => _scope switch
+  /// <summary>The stored scope, and its target by name, as a reader sees it: "Speciality · Paediatrics".</summary>
+  private string StoredScopeText
   {
-    ActivityScope.Institution => "Select institution",
-    ActivityScope.Speciality => "Select speciality",
-    ActivityScope.SubSpeciality => "Select sub-speciality",
-    _ => "Select"
-  };
+    get
+    {
+      if (_editor is null)
+      {
+        return string.Empty;
+      }
 
-  private IEnumerable<ScopeIdOption> ScopeIdOptions => _scope switch
-  {
-    ActivityScope.Institution => _institutions
-      .OrderBy(institution => institution.Name)
-      .Select(institution => new ScopeIdOption(institution.Id, institution.Name)),
-    ActivityScope.Speciality => from speciality in _specialities
-      orderby speciality.Name
-      select new ScopeIdOption(speciality.Id, speciality.Name),
-    ActivityScope.SubSpeciality => from subSpeciality in _subSpecialities
-      join speciality in _specialities on subSpeciality.SpecialityId equals speciality.Id
-      orderby speciality.Name, subSpeciality.Name
-      select new ScopeIdOption(subSpeciality.Id, $"{speciality.Name} / {subSpeciality.Name}"),
-    _ => []
-  };
+      var target = _editor.ScopeTargetName ?? (_editor.ScopeId is int id ? $"#{id}" : null);
+      return target is null ? ScopeLabel(_editor.Scope) : $"{ScopeLabel(_editor.Scope)} · {target}";
+    }
+  }
 
-  private sealed record ScopeIdOption(int Id, string Label);
+  private string WbaToolText => string.IsNullOrEmpty(_wbaToolKey)
+    ? "Not a WBA instrument"
+    : _wbaTools.FirstOrDefault(tool => tool.Key == _wbaToolKey)?.Name ?? $"{_wbaToolKey} (not a known instrument)";
 
+  private string ScaleText(string? scaleKey) => string.IsNullOrWhiteSpace(scaleKey)
+    ? "None"
+    : _entrustmentScales.FirstOrDefault(scale => scale.Value == scaleKey)?.Label ?? scaleKey;
+
+  private static IReadOnlyList<string> OptionLines(string? optionsText) => (optionsText ?? string.Empty)
+    .Split('\n')
+    .Select(line => line.Trim())
+    .Where(line => line.Length > 0)
+    .ToList();
+
+  /// <summary>The targets the caller may save a type at in the chosen scope (the editor's WritableScopes, T300).</summary>
+  private IReadOnlyList<ActivityTypeScopeTargetDto> ScopeTargets
+    => _editor?.WritableScopes.FirstOrDefault(choice => choice.Scope == _scope)?.Targets ?? [];
+
+  /// <summary>
+  /// A scope the picker offers, and a target the caller may save at in it: the type's own where it is stored in this
+  /// scope, else the scope's first. Never none, so a save is never sent without a target (T300).
+  /// </summary>
   private void OnScopeChanged(ChangeEventArgs args)
   {
-    _scope = Enum.TryParse<ActivityScope>(args.Value?.ToString(), out var parsed) ? parsed : ActivityScope.Global;
-    _scopeIdText = string.Empty;
+    var choice = _editor?.WritableScopes.FirstOrDefault(offered => offered.Scope.ToString() == args.Value?.ToString());
+    if (choice is null)
+    {
+      return;
+    }
+
+    _scope = choice.Scope;
+    var stored = choice.Scope == _editor!.Scope ? choice.Targets.FirstOrDefault(target => target.Id == _editor.ScopeId) : null;
+    _scopeIdText = (stored ?? choice.Targets.FirstOrDefault())?.Id.ToString() ?? string.Empty;
   }
 
   /// <summary>
@@ -536,6 +792,9 @@
 
   protected override async Task OnParametersSetAsync()
   {
+    // T300: the editor of the address before this one is not this address's; until this one loads, the page offers
+    // nothing to save (the T295 sweep: a Save draft while loading sent a create).
+    _editor = null;
     _loading = true;
     _loadError = null;
     _actionError = null;
@@ -544,18 +803,18 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _editor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(ActivityTypeId, authState.User));
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
+      var editor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(ActivityTypeId, authState.User));
       _entrustmentScales = await ReferenceData.GetEntrustmentScaleOptionsAsync();
       _wbaTools = await Sender.Send(new GetWbaToolsQuery());
-      LoadEditorState(_editor);
+
+      // Held back until everything has loaded, so a failed load leaves no editor, and so no Save draft (T300).
+      _editor = editor;
+      LoadEditorState(editor);
       RefreshWarnings();
     }
     catch (Exception exception)
     {
-      _loadError = exception.Message;
+      _loadError = RefusalText.Of(exception);
     }
     finally
     {
@@ -587,7 +846,8 @@
   /// </remarks>
   private async Task SaveDraftAsync()
   {
-    if (_inFlight is not null)
+    // Not offered where the caller may not write (T300); the command refuses it all the same.
+    if (_inFlight is not null || !CanWrite)
     {
       return;
     }
@@ -646,14 +906,14 @@
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
+      _actionError = RefusalText.Of(exception);
       return false;
     }
   }
 
   private async Task PublishAsync()
   {
-    if (_inFlight is not null)
+    if (_inFlight is not null || !CanWrite)
     {
       return;
     }
@@ -697,13 +957,13 @@
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
+      _actionError = RefusalText.Of(exception);
     }
   }
 
   private async Task DiscardDraftAsync()
   {
-    if (_editor is null || _editor.Id <= 0 || _inFlight is not null)
+    if (_editor is null || _editor.Id <= 0 || _inFlight is not null || !CanWrite)
     {
       return;
     }
@@ -722,7 +982,7 @@
     }
     catch (Exception exception)
     {
-      _actionError = exception.Message;
+      _actionError = RefusalText.Of(exception);
     }
     finally
     {

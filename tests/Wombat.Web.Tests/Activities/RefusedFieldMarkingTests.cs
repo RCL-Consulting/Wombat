@@ -683,7 +683,10 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
                         "admin-1",
                         null,
                         null,
-                        []);
+                        [],
+                        false,
+                        [],
+                        null);
                     return Task.FromResult((TResponse)(object)editor);
 
                 case CreateActivityCommand:

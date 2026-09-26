@@ -801,7 +801,7 @@ public sealed class LateFilingWarningTests : TestContext
                         2, "mini_cex_cpsa", "Mini-CEX", null, ActivityScope.Global, null, true, "mini_cex", 1, false,
                         SchemaJson, DraftBornWorkflow, CreditingRules, "[]",
                         SchemaJson, DraftBornWorkflow, CreditingRules, "[]",
-                        "admin-1", null, null, []);
+                        "admin-1", null, null, [], false, [], null);
                     return Task.FromResult((TResponse)(object)editor);
 
                 case GetProgrammeStartForTraineeQuery query when programmeStart is not null:

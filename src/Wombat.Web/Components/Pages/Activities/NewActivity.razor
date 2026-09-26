@@ -189,7 +189,8 @@
     }
 
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(_selectedActivityTypeId, authState.User));
+    // Only the type's definition: what the builder would let the caller change is not this page's to know (T300 review).
+    _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(_selectedActivityTypeId, authState.User, ForBuilder: false));
     _dataJson = "{}";
     _editableFieldKeys = ResolveEditableFieldKeys(authState.User);
     _createIsTheFiling = PredictCreateIsTheFiling(authState.User);
