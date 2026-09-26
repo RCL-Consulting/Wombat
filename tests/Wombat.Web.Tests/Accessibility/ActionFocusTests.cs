@@ -488,16 +488,31 @@ public sealed class ActionFocusTests : TestContext
             SubmitButton,
             Submit),
 
+        // T302, T264: Deactivate is offered to those the Administrator policy admits, and asks first. The dialog's confirm
+        // button has the focus while the deactivation runs, so it is the button held to the rule; the page's Deactivate,
+        // which the deactivation removes, is disabled then, as every button that would race it is.
         ["InstitutionEdit Deactivate"] = new(
-            (test, hold) => test.Page<InstitutionEdit>(
-                new Sender(hold, request => request is DeactivateInstitutionCommand, request => request switch
+            (test, hold) =>
+            {
+                test._auth.SetPolicies("Administrator");
+                return test.Page<InstitutionEdit>(
+                    new Sender(hold, request => request is DeactivateInstitutionCommand, request => request switch
+                    {
+                        GetInstitutionByIdQuery => Institution(),
+                        _ => null
+                    }),
+                    parameters => parameters.Add(page => page.Id, 4));
+            },
+            cut => cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Deactivate"),
+            cut =>
+            {
+                if (Named(cut, "Deactivate") is { } opener && !opener.HasAttribute("disabled"))
                 {
-                    GetInstitutionByIdQuery => Institution(),
-                    _ => null
-                }),
-                parameters => parameters.Add(page => page.Id, 4)),
-            cut => Named(cut, "Deactivate"),
-            cut => Named(cut, "Deactivate").Click()),
+                    opener.Click();
+                }
+
+                cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Deactivate").Click();
+            }),
 
         ["SpecialityEdit Save"] = new(
             (test, hold) => test.Page<SpecialityEdit>(

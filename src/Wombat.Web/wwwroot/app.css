@@ -438,6 +438,14 @@ h1[tabindex="-1"]:focus {
   align-self: flex-start;
 }
 
+/* A field the caller may read but not change, as text among the inputs (T302: an institution's Status to its
+   InstitutionalAdmin). A <dl> laid out as a form group: its term stands where a field's label does, and the group's gap
+   spaces its value and the note under it. */
+dl.form-group,
+dl.form-group > dd {
+  margin: 0;
+}
+
 .full-width {
   grid-column: 1 / -1;
 }

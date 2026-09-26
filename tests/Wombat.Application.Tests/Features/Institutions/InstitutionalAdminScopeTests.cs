@@ -190,7 +190,7 @@ public sealed class InstitutionalAdminScopeTests : IAsyncLifetime
     {
         var handler = new UpdateInstitutionCommandHandler(_dbContext);
         var act = () => handler.Handle(
-            new UpdateInstitutionCommand(_institutionBId, "Renamed", "REN", null, true, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            new UpdateInstitutionCommand(_institutionBId, "Renamed", "REN", null, TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }

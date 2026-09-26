@@ -4,17 +4,26 @@
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuthorizationService AuthorizationService
 
 <PageTitle>@(IsNew ? "Create Institution" : "Edit Institution")</PageTitle>
 
 <PageHeader Title="@(IsNew ? "Create institution" : "Edit institution")" Subtitle="Maintain the institution record used for scoping and onboarding.">
   <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>
+    @* T291 item 7. The institutions list admits only an Administrator (InstitutionsList.razor), so Back leads there only
+       for those its policy admits; an InstitutionalAdmin's leads home, not to Access denied. Rendered once that is
+       known, so no one is shown a link that then changes. *@
+    @if (_accessKnown)
+    {
+      <a class="btn btn-outline btn-sm" href="@LeaveHref">@(_isAdministrator ? "Back to institutions" : "Back to home")</a>
+    }
   </Actions>
 </PageHeader>
 
-@* What a Save or a Deactivate did. It takes the focus once either is done (T234; DESIGN.md § Button system). A refusal
-   leaves the focus where it was: it is an alert, read at once. *@
+@* What a Save or a Deactivate did. It takes the focus once either is done (T234; DESIGN.md § Button system), after the
+   dialog that sent a deactivation has closed: the Deactivate button that had the focus is gone by then. A refusal leaves
+   the focus where it was: it is an alert, read at once, and a refused deactivation leaves Deactivate, to which the
+   dialog hands the focus back. *@
 <ActionResult @ref="_result">
   @if (!string.IsNullOrWhiteSpace(_statusMessage))
   {
@@ -49,64 +58,122 @@
           <ValidationMessage For="() => _model.ContactEmail" />
         </FormField>
 
-        @if (!IsNew)
+        @if (!IsNew && _isAdministrator)
         {
-          <FormField Label="Status" InputId="institution-active">
+          @* T302. Whether an institution is active is the Administrator's alone: Deactivate and Reactivate refuse anyone
+             else, and the update carries no state. A changed box is sent on Save as the state's own command, and
+             unticking it asks first, as Deactivate does. *@
+          <FormField Label="Status" InputId="institution-active" HelpText="@ActiveHelpText">
             <div class="form-check">
-              <InputCheckbox id="institution-active" class="form-check-input" @bind-Value="_model.IsActive" />
+              <InputCheckbox id="institution-active" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="@FieldHelp.Id("institution-active")" />
               <label for="institution-active">Active</label>
             </div>
           </FormField>
         }
+        else if (!IsNew)
+        {
+          @* T302. Everyone else reads the state as it is stored. Until T302 an InstitutionalAdmin was shown the box, and the
+             update wrote it: she saved her own institution inactive beside a Deactivate that refused her. *@
+          <dl class="form-group">
+            <dt>Status</dt>
+            <dd id="institution-status">@(_storedIsActive ? "Active" : "Inactive")</dd>
+            <dd class="muted text-sm">Set by a global administrator.</dd>
+          </dl>
+        }
       </div>
 
       <FormActions>
-        <a class="btn btn-outline" href="/admin/institutions">Cancel</a>
-        @* Neither is disabled while its own action runs (T234): the one pressed has the focus, and a browser drops the focus
-           of a button it disables, to the page. A second press sends nothing. *@
-        @if (!IsNew)
+        <a class="btn btn-outline" href="@LeaveHref">Cancel</a>
+        @* Offered to an Administrator, on an institution that is active as stored (T302, T291 item 7; T264, following the
+           EPA page, T196). An inactive one is reactivated by ticking Active and saving. It opens the dialog, whose confirm
+           button has the focus while the deactivation runs; this one is disabled then, as Save is (T234). *@
+        @if (!IsNew && _isAdministrator && _storedIsActive)
         {
-          <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving" aria-disabled="@InFlight.AriaDisabled(_deactivating)">Deactivate</button>
+          <button type="button" class="btn btn-outline" @onclick="AskDeactivateAsync" disabled="@Busy">Deactivate</button>
         }
+        @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of a button it
+           disables, to the page. A second press sends nothing. *@
         <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
       </FormActions>
     </EditForm>
   </div>
 </StatePanel>
 
+@* A destructive action opens a ConfirmDialog first, naming its target (DESIGN.md § Button system; T264). Two actions
+   deactivate, the Deactivate button and saving with Active unticked, and both open this dialog. *@
+@if (!IsNew && _isAdministrator)
+{
+  <ConfirmDialog @ref="_confirmDeactivate"
+                 Title="@($"Deactivate {_storedName}?")"
+                 Body="No new invitation can be issued for it until it is reactivated. Its people, their records and the invitations already sent are kept. You can reactivate it on this page."
+                 ConfirmLabel="Deactivate"
+                 DangerAction="true"
+                 OnConfirm="ConfirmDeactivationAsync"
+                 OnCancel="CancelDeactivation" />
+}
+
 @code {
+  /// <summary>
+  /// The policy of the institutions list, and the rule of <see cref="DeactivateInstitutionCommand" /> and
+  /// <see cref="ReactivateInstitutionCommand" />: the controls that lead there or send them are offered to those it admits
+  /// (DESIGN.md § Table system, T211).
+  /// </summary>
+  private const string AdministratorPolicy = "Administrator";
+
+  private const string ActiveHelpText =
+    "An inactive institution cannot be named on a new invitation. Its people, their records and the invitations " +
+    "already sent are kept.";
+
   [Parameter]
   public int? Id { get; set; }
 
   private InstitutionFormModel _model = new();
+  private ConfirmDialog? _confirmDeactivate;
   private string? _errorMessage;
   private string? _statusMessage;
-  private bool _loading;
+  private bool _loading = true;
   private bool _saving;
   private bool _deactivating;
   private ActionResult? _result;
+
+  // Whether the Administrator policy admits the caller, and whether that has been asked yet.
+  private bool _isAdministrator;
+  private bool _accessKnown;
+
+  // What the database says, as against the form, which the user can change without saving.
+  private bool _storedIsActive = true;
+  private string _storedName = string.Empty;
+
+  // Whether the open dialog was opened by Save (with Active unticked) rather than by the Deactivate button: confirming it
+  // then saves every edit on the form as well as the deactivation.
+  private bool _saveOnConfirm;
 
   /// <summary>A save or a deactivation has been sent and has not answered, so nothing else may be sent. (T234)</summary>
   private bool Busy => _saving || _deactivating;
 
   private bool IsNew => !Id.HasValue;
 
+  /// <summary>Where Back and Cancel lead: the institutions list for those it admits, and home for everyone else.</summary>
+  private string LeaveHref => _isAdministrator ? "/admin/institutions" : "/";
+
   protected override async Task OnParametersSetAsync()
   {
+    _loading = true;
     _errorMessage = null;
     _statusMessage = null;
-
-    if (IsNew)
-    {
-      _model = new InstitutionFormModel { IsActive = true };
-      return;
-    }
-
-    _loading = true;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _isAdministrator = (await AuthorizationService.AuthorizeAsync(authState.User, AdministratorPolicy)).Succeeded;
+      _accessKnown = true;
+
+      if (IsNew)
+      {
+        _model = new InstitutionFormModel { IsActive = true };
+        return;
+      }
+
       var institution = await Sender.Send(new GetInstitutionByIdQuery(Id!.Value, authState.User));
 
       if (institution is null)
@@ -122,10 +189,12 @@
         ContactEmail = institution.ContactEmail,
         IsActive = institution.IsActive
       };
+      _storedIsActive = institution.IsActive;
+      _storedName = institution.Name;
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _errorMessage = RefusalText.Of(exception);
     }
     finally
     {
@@ -133,6 +202,14 @@
     }
   }
 
+  /// <summary>
+  /// Save, unless it would deactivate the institution: unticking Active and saving is the same action as the Deactivate
+  /// button, so it asks the same question first, and the dialog's confirm saves.
+  /// </summary>
+  /// <remarks>
+  /// A press while something is in flight sends nothing (T234). Save is not disabled while its own save runs, so a second
+  /// Enter or click reaches here, and the flag, set before the first await, turns it away.
+  /// </remarks>
   private async Task SaveAsync()
   {
     if (Busy)
@@ -140,30 +217,87 @@
       return;
     }
 
+    if (!IsNew && _isAdministrator && _storedIsActive && !_model.IsActive && _confirmDeactivate is not null)
+    {
+      _saveOnConfirm = true;
+      await _confirmDeactivate.ShowAsync();
+      return;
+    }
+
+    await SaveCoreAsync();
+  }
+
+  /// <remarks>
+  /// <para>
+  /// T302. The update carries the name, short code and contact email, and no state. An Administrator's changed Active box
+  /// is then sent as the state's own command, once the fields have saved, so a refused update changes nothing. The two
+  /// commands' rule is the Administrator policy's, which is also what shows the box.
+  /// </para>
+  /// <para>
+  /// A state command is sent only for what the user did: the box changed from the state it was shown with, which is the
+  /// state <see cref="SaveAsync" /> asked about. Another Administrator may have changed the state since the page loaded,
+  /// and the update answers with it as stored; a box left alone then takes that state, and sends nothing. Compared with
+  /// the fresh state instead, an untouched box would undo her change, and a deactivation would go without its question.
+  /// </para>
+  /// </remarks>
+  private async Task SaveCoreAsync()
+  {
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
 
+    // Once the update has landed, what the state command that follows it was to do; a refusal of that command then says
+    // the fields saved, in one line, rather than a success beside a refusal.
+    string? stateChange = null;
+
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      InstitutionDto institution;
 
       if (IsNew)
       {
-        institution = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), authState.User));
-        Navigation.NavigateTo($"/admin/institutions/{institution.Id}", forceLoad: true);
+        var created = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), authState.User));
+        Navigation.NavigateTo($"/admin/institutions/{created.Id}", forceLoad: true);
         return;
       }
 
-      institution = await Sender.Send(new UpdateInstitutionCommand(Id!.Value, _model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), _model.IsActive, authState.User));
-      _model.IsActive = institution.IsActive;
-      _statusMessage = "Institution saved.";
+      var shownIsActive = _storedIsActive;
+      var institution = await Sender.Send(new UpdateInstitutionCommand(Id!.Value, _model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), authState.User));
+      _storedName = institution.Name;
+      _storedIsActive = institution.IsActive;
+
+      var boxChanged = _isAdministrator && _model.IsActive != shownIsActive;
+      if (boxChanged && _model.IsActive != institution.IsActive)
+      {
+        if (_model.IsActive)
+        {
+          stateChange = "reactivated";
+          await Sender.Send(new ReactivateInstitutionCommand(Id.Value, authState.User));
+        }
+        else
+        {
+          stateChange = "deactivated";
+          await Sender.Send(new DeactivateInstitutionCommand(Id.Value, authState.User));
+        }
+
+        _storedIsActive = _model.IsActive;
+        _statusMessage = $"Institution saved and {stateChange}.";
+      }
+      else
+      {
+        _statusMessage = "Institution saved.";
+      }
+
+      _model.IsActive = _storedIsActive;
       _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      // A refused state command leaves the box as the user set it, unsaved, as cancelling the question does; Save asks
+      // again.
+      _errorMessage = stateChange is null
+        ? RefusalText.Of(exception)
+        : $"Institution saved, but not {stateChange}: {RefusalText.Of(exception)}";
     }
     finally
     {
@@ -171,13 +305,42 @@
     }
   }
 
-  private async Task DeactivateAsync()
+  private async Task AskDeactivateAsync()
   {
     if (Busy)
     {
       return;
     }
 
+    _saveOnConfirm = false;
+    if (_confirmDeactivate is not null)
+    {
+      await _confirmDeactivate.ShowAsync();
+    }
+  }
+
+  private async Task ConfirmDeactivationAsync()
+  {
+    if (Busy)
+    {
+      return;
+    }
+
+    if (_saveOnConfirm)
+    {
+      _saveOnConfirm = false;
+      await SaveCoreAsync();
+      return;
+    }
+
+    await DeactivateAsync();
+  }
+
+  // Cancelling leaves Active unticked on the form, unsaved; Save asks again.
+  private void CancelDeactivation() => _saveOnConfirm = false;
+
+  private async Task DeactivateAsync()
+  {
     _deactivating = true;
     _errorMessage = null;
     _statusMessage = null;
@@ -187,12 +350,13 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await Sender.Send(new DeactivateInstitutionCommand(Id!.Value, authState.User));
       _model.IsActive = false;
+      _storedIsActive = false;
       _statusMessage = "Institution deactivated.";
       _result?.FocusAfterRender();
     }
     catch (Exception exception)
     {
-      _errorMessage = exception.Message;
+      _errorMessage = RefusalText.Of(exception);
     }
     finally
     {

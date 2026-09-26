@@ -549,6 +549,7 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 .form-group       /* flex-column, gap .5rem, label on top of input; a field-level fieldset too (T188) */
 .form-group > p   /* no margin: the group's gap spaces a group's help and status lines (T188) */
 .form-group > .btn /* keeps its own width in the column: Add year (T188) */
+dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a caller who may not change it (T302) */
 .full-width       /* grid-column: 1 / -1 */
 
 .form-control     /* padding .75rem, border --input-border, radius 6px */
@@ -660,6 +661,12 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
   own id and `<label for>`, a point's description as a `<small>` in its label (T205, the MSF questionnaire). A list, not
   a `<select>`: every point's label stays in view. Not a `.check-grid`: an ordered scale reads down, not in columns.
 - Sensitive inputs (password, passphrase): wrap in `.password-wrapper` and use `PasswordToggleButton.razor` to show/hide.
+- **A field the caller may read but not change is text, not a control** (T302). Where the command behind a field
+  refuses the caller, the form does not offer its control (§ Table system, T211: read from the policy the command's
+  rule is, with `IAuthorizationService`). The field stays in the grid as a `dl.form-group`: its `<dt>` where a label
+  stands, the stored value in a `<dd>`, and a `.muted .text-sm` `<dd>` saying who sets it ("Set by a global
+  administrator."). The institution page shows an InstitutionalAdmin its Status so; an Administrator gets the Active box,
+  and Deactivate behind a `ConfirmDialog` (§ Button system).
 - A workflow action the actor may take but cannot complete (T107) is a **disabled** button, never a hidden one. Its
   reason is visible text in a `.workflow-action-reasons` list below the row, starting with the action's name, and the
   button points at it with `aria-describedby`. A tooltip alone is not enough.
@@ -2021,7 +2028,7 @@ body, h1..h5, .page-subtitle
 .btn, .btn-{variant}, .btn-sm, .btn-xs, .btn-outline
 
 /* ── Forms ─────────────────────────────────────────── */
-.form-container, .form-grid, .form-group (+ > p, > .btn), .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .scale-choices, .form-actions, .account-form-container(--wide)
+.form-container, .form-grid, .form-group (+ > p, > .btn), dl.form-group (+ > dd), .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .scale-choices, .form-actions, .account-form-container(--wide)
 
 /* ── Alerts ────────────────────────────────────────── */
 .alert, .alert-{kind}, .error-summary

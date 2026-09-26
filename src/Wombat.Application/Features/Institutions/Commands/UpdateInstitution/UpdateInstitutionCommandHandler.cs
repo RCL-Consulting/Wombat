@@ -28,7 +28,6 @@ public sealed class UpdateInstitutionCommandHandler : IRequestHandler<UpdateInst
         institution.Name = request.Name.Trim();
         institution.ShortCode = request.ShortCode.Trim();
         institution.ContactEmail = string.IsNullOrWhiteSpace(request.ContactEmail) ? null : request.ContactEmail.Trim();
-        institution.IsActive = request.IsActive;
 
         try
         {
