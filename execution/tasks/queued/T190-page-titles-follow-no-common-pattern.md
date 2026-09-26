@@ -35,3 +35,7 @@ One rule in DESIGN.md (e.g. "<page> — Wombat", sentence case), and a `PageTitl
 ## Related
 
 T180.
+
+## Notes
+
+- **T295 replay, 2026-09-26 (C16).** Note, 2026-09-26 (the T295 replay, Step 1.26): on `/admin/activity-types/new`, `document.title` is empty. `ActivityTypeEdit.razor:14` is `<PageTitle>@(_editor?.Name ?? "Activity Type")</PageTitle>`, and `GetActivityTypeEditorQuery.cs:67-69` returns a new type's Name as `string.Empty`, so the `??` applies only while the page loads. The title also comes from the stored name, not from what the header says (`PageTitleText`, `:434`: "New activity type" or "Edit {name}"), and it is in Title Case. Under this task's rule, the title should follow the header. The every-page title test should fail on an empty title after the load, not only on the rendered markup before it, or this page passes it. Step 1.26's Expect ("the browser tab reading 'Activity Type'") needs updating to the rule when it lands.

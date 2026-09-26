@@ -49,3 +49,7 @@ T258, T238, T026, T207.
 Notes, 2026-09-25 (the lifecycle browser check): erasure also leaves the person's address in two places:
 - `Invitations.Email`, on the invitation addressed to them. The executor rewrites only invitations the person issued.
 - `DataRightsRequests.RequesterDisplayName`, which `/admin/data-rights` shows after completion.
+
+## Notes
+
+- **T295 replay, 2026-09-26 (C55).** Notes, 2026-09-26 (the T295 replay, Step A.1.12; re-observed at A.7.5): the replay confirms the `RequesterDisplayName` leftover in the note above. devadmin approved Dr Ndlovu's erasure, and the account became `deleted_user_622063bc` with no email. Request 01a0dde5-… still reads `ndlovu@kgk.wombat.local` in the Administrator's and KGK's queues (RequestsList.razor:60, and each row's Review label at :68) and on the request itself (RequestDetail.razor:39) (F-A.1.12a; `design/baseline/act-A/A.1.12-3-queue-after-erasure.png`). ErasureExecutor.cs:395-396 calls keeping it deliberate ("stays for auditability"), and runbook Step A.1.12's Expect repeats that. The fix therefore also rewrites that comment and the Expect. Accountability does not need the address: the request keeps `RequesterUserId`, which points at the pseudonymised account, and the erasure record lists what was retained. Rewrite the display name to the pseudonym in the executor's one save. This does not widen the task.

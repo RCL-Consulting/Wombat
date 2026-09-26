@@ -41,3 +41,7 @@ silently incomplete.
 ## Related
 
 T262, T026.
+
+## Notes
+
+- **T295 replay, 2026-09-26 (C65).** Note, 2026-09-26 (T295 replay, step 3.56): 'Back to log' on an audit entry drops the list's filters. The replay filtered on From 10:13 UTC and Result Failures only, opened an entry, and pressed Back to log. It landed on /admin/audit with From empty and Result All: 50 rows from the last 24 hours (design/baseline/act-3/3.56-1-audit-failure-detail.png). The cause is that AuditDetail.razor:10 links to a bare `/admin/audit`, and AuditList.razor:141-150 keeps its filters and page in component fields, so nothing survives the navigation. This widens the task to the detail page, and it gives the window fix a home. Put the filters, the resolved From/To window and the page number in the list's query string (`[SupplyParameterFromQuery]`). Have each Detail link carry that URL as its return, and make Back to log go back to it. The list then pages a fixed window, and the reader returns to the rows they left. Verify by replaying 3.55-3.56: filter, open an entry, press Back to log, and the same rows and filters are shown. Add a bUnit test that the Detail link carries the filtered URL.
