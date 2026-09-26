@@ -20,7 +20,7 @@ the project *knows*: the domain, the programme, the runbooks, the closed plans.
    `../../design/BRIEF.md` and `design/flows/` (T332). Its `coverage.md` maps every
    page to the steps that play it and indexes every role's jobs. The pre-T293 single file, with its recorded history,
    is `../log/scenario-paediatrics-history-2026-09.md`.
-6. **Wondering why something is the way it is?** Product decisions `D1`–`D50` are in
+6. **Wondering why something is the way it is?** Product decisions `D1`–`D52` are in
    `EPA-PROGRAMME.md` § 3; process decisions `W-nnn` are in `../DECISIONS.md`.
 
 ## Document map
@@ -28,7 +28,7 @@ the project *knows*: the domain, the programme, the runbooks, the closed plans.
 | File | Purpose |
 |---|---|
 | `DOMAIN.md` | What EPAs, WBAs, STAR and the role hierarchy actually mean. |
-| `EPA-PROGRAMME.md` | The CPSA Paediatric v11.1 catalogue programme, its phases, and product decisions **D1–D50**. |
+| `EPA-PROGRAMME.md` | The CPSA Paediatric v11.1 catalogue programme, its phases, and product decisions **D1–D52**. |
 | `HANDOVER.md` | Running the live service: what is deployed, config, deploys, backups, logs, known limitations. The T016 deliverable. |
 | `WORKFLOW.md` | Git branching and verification levels. **Its session-handoff protocol is superseded** by the harness — see the banner at the top of that file. |
 | `PLAN.md` | The original rewrite plan. T001–T027, complete June 2026. Historical. |
