@@ -11,7 +11,7 @@ Part of the GUI redesign briefed in `design/BRIEF.md` (T332). Written 2026-09-26
 | **Frequency and stakes** | Once per registrar after four years, plus leavers. Very high: the PDF and the STAR certificates are the record that leaves Wombat (T310, citing DOMAIN.md:78) |
 | **Mode** | **Wireframe first** for the former trainee's home and nav (a new dashboard, BRIEF § 7 B1) and for the staff export's entry points (B2). **Fidelity** for Export, Verify and the completion dialogs |
 | **Pages** (`coverage.md` templates) | `/portfolio/export`, `/portfolio/export/{TraineeUserId}`, `/portfolio/verify`, `/admin/trainees`, `/admin/trainees/edit`, `/admin/users/{UserId}`, `/portfolio/progress`, `/`, `/committee/my-reviews`, `/portfolio/authorisations`, `/msf/my-reports`, `/activities/new`, `/activities/mine`, `/activities/{ActivityId:int}`, `/committee/reviews` |
-| **Held screenshots** | Two, under T303 (§ Attach). Brief from the step text for those screens until they are re-captured. T297's three were re-captured on 2026-09-26 |
+| **Held screenshots** | None. T303's two were re-captured on 2026-09-26 after it landed (4824d62), and T297's three the same day (§ Attach) |
 
 **How to run this thread** (BRIEF § 2.3, step 3; source keys are BRIEF § 2.0's):
 1. Open a new thread in the Wombat design system. Attach the KEY SCREENSHOTS (§ Attach, first list).
@@ -237,7 +237,7 @@ section.
 | `trainee-profile-edit` | Deactivate dialog | `states/trainee-profile-edit--deactivate-dialog.png` | Prof Mbatha | At Step 5.27. (:680) |
 | `trainee-profile-edit` | Deactivated | `states/trainee-profile-edit--deactivated.png` | Prof Mbatha | At Step 5.27. (:681) |
 | `pending-trainees-list` | Completed and closed | `states/pending-trainees-list--closed.png` | Prof Mbatha | At Step 5.27. (:671) |
-| `user-detail` | No roles | `states/user-detail--no-roles.png` **HELD (T303)** | Prof Mbatha | At Step 5.17. (:648) |
+| `user-detail` | No roles | `states/user-detail--no-roles.png` (re-captured after T303) | Prof Mbatha | At Step 5.17. (:648) |
 | `home` | No role assigned | `states/home--no-role.png` | Dr Molefe (former trainee) | At Step 5.21: the code shows the "No role assigned" card (the step's expectation is the decided wording; see its note). (:136) |
 | `home` | Trainee whose programme ended | `states/home--trainee-ended.png` (re-captured after T297, 2026-09-26) | Dr du Plessis | At Step 5.28: "Your programme ended on …, so no target applies to you any more." (:135) |
 | `home` | Narrow: former trainee | `states/home--narrow-former-trainee.png` | Dr Molefe | At Step A.7.4. (:140) |
@@ -296,8 +296,11 @@ Every path is under `design/baseline/` and was checked to exist on 2026-09-26. O
 - Only as evidence of T312's drift, never as a target: `act-6/6.21-1-molefe-record-paused.png`,
   `act-6/6.40-2-molefe-kgk001-card.png`, `act-6/6.41-1-duplessis-record-after-rebuild.png`.
 
-**HELD: do not attach until re-captured after the group-1 fix lands** (BRIEF § 10):
-- T303 (Add role offers Trainee): `act-5/5.17-3-mbatha-user-no-roles.png`, `states/user-detail--no-roles.png`.
+**Re-captured after T303 landed (4824d62, 2026-09-26), so no longer held** (BRIEF § 10):
+- T303 (Add role offered Trainee): `act-5/5.17-3-mbatha-user-no-roles.png`, `states/user-detail--no-roles.png`, both
+  from the end-of-Act-5 snapshot. Her page reads "This user has no roles."; Add role offers the six staff roles, no
+  Trainee, under a help line that points to Trainees' "Admit to curriculum", which a graduate is not offered (T303's
+  open question of a second programme).
 
 **Re-captured after T297 landed (2026-09-26), so no longer held:** `states/home--trainee-ended.png`,
 `act-5/5.28-1-duplessis-home-ended.png` (both from the end-of-Act-5 snapshot) and
@@ -470,7 +473,7 @@ Expect: The page says "Trainee marked complete. The Trainee role has been remove
   - The last-day field, Deactivate and Mark complete are gone.
   - On Trainees she is no longer under Active profiles. She is listed under Completed & closed profiles with the outcome
     "Completed `D`".
-  - Her user page says "This user has no roles."
+  - Her user page says "This user has no roles.", and its Add role offers no Trainee (T303).
   - No credit is taken back, because nothing of hers is observed after `D` (T281; Step 5.27 shows a take-back).
 
 Step 5.18 — Dr Molefe is emailed (act-5-graduation.md)

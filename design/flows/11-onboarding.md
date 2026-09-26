@@ -8,7 +8,7 @@ once, and it is their first impression. It is flow 11 of 18 (`design/BRIEF.md` �
 |---|---|
 | **Mode** | Straight to fidelity for Invitations (screen 1) and Register (screen 2). Wireframe first for the pending registrar's pages (screen 3) and the admission form (screen 4), which gains the training year (T306) and a curriculum picker that offers only the adopted version (T304). |
 | **Viewports** | Desktop 1280×800 and phone 390×844. |
-| **Held** | T303 (Add role offers Trainee): its images wait for re-capture (§ Attach). T297's (dashboard cards) were re-captured on 2026-09-26. |
+| **Held** | Nothing. T303's images (Add role offered Trainee) were re-captured on 2026-09-26 after it landed (4824d62), and T297's (dashboard cards) on the same day (§ Attach). |
 | **Frequency** | Each January intake of two registrars, and each staff join (`scenario-paediatrics/README.md` § The world). Every user meets it once. |
 | **Stakes** | High. It is every user's first impression, and a role and scope are access control. |
 | **People** | Administrator `devadmin`, who invites the CollegeAdmin and the first InstitutionalAdmin. InstitutionalAdmin Prof Nolwazi Mbatha, who invites the staff and registrars and admits the registrars. Anonymous invitees: Dr Anton Kruger, Prof Mbatha, all the staff and all five registrars. PendingTrainee: each registrar between registering and admission. |
@@ -46,7 +46,6 @@ GOAL: An admin invites each person with the right role and scope, and can revoke
   - After a refused issue or a revoke, the previous invitee's one-time link stays on screen.
   - A refused registration drops the names typed.
   - The training year is shown nowhere in admission.
-  - Add role offers Trainee. This is being fixed.
 
 AUDIENCE:
   - Administrator: the platform operator. Invites the CollegeAdmin and the first InstitutionalAdmin.
@@ -254,7 +253,7 @@ ATTACHED (key screenshots first):
 | 2.19 | `/` → `/account/profile` → `/activities/mine` → `/activities/new` → `/portfolio/progress` → `/access-denied` → `/` | Dr Mahlangu explores before her admission. | The pending nav (T141); her role, PendingTrainee; "No activities yet"; the type picker with 11 instruments; Access denied on My Progress. |
 | 2.26 | `/admin/invitations` | An hour on, Prof Mbatha resends Dr du Plessis's invitation. | "Not delivered. Resend emails a new link in place of the current one, which then stops working." Resend before Revoke. The new link, shown once. |
 | 2.27 | `/account/register` → `/` → `/account/logout` | Dr du Plessis opens the old link, then registers from the new one. | "This invitation is invalid.", then the Awaiting admission card. |
-| 2.28 | `/admin/invitations` → `/admin/users` → `/admin/users/{UserId}` → `/admin/trainees` | Prof Mbatha reviews the pending registrars. | Users lists 15. PendingTrainee reads "System-managed" (held, T303). Five registrars under Pending admission; "No active trainee profiles found." |
+| 2.28 | `/admin/invitations` → `/admin/users` → `/admin/users/{UserId}` → `/admin/trainees` | Prof Mbatha reviews the pending registrars. | Users lists 15. PendingTrainee reads "System-managed"; Add role offers no Trainee, with a help line saying why (T303, re-captured). Five registrars under Pending admission; "No active trainee profiles found." |
 | 2.29 | `/admin/trainees` → `/admin/trainees/edit` → `/admin/trainees` | She admits four registrars with their start and completion dates. | Only the adopted curriculum offered (T091). The start date pre-filled. No training year today (T306). Each admission moves to the profile page. |
 | 2.30 | `/admin/trainees` → `/admin/trainees/edit` → `/admin/trainees` | She admits Dr Ndlovu with no completion date, then corrects it. | The derived date and its help. "Trainee profile saved." "No pending trainees found." |
 | 2.31 | `/` → `/account/session-ended` → `/account/login` → `/` | Dr Mahlangu's open tab ends; she signs in again. | "Your session has ended. Please sign in again." (T279). Then her Trainee Home (re-captured after T297). |
@@ -273,7 +272,7 @@ describes.
 | `/account/register` | `register--token-missing`; `--form` (Step 1.8); `--password-short` and `--confirmation` (Step 2.9); `--details-invalid`; `--used` (Step 1.9); `--revoked` (Step 2.17); `--invalid` (Step 2.27); `--expired` and `--account-exists` (scratch); `--general-refusal` (held read); `--narrow` |
 | `/` | `home--awaiting-admission` (Step 2.18); `home--institutional-admin-first` (Step 1.10) |
 | `/account/profile`, `/activities/new`, `/activities/mine` | `profile--pending-trainee`; `new-activity--pending-trainee`; `my-activities--empty` (all at Step 2.19) |
-| `/admin/users`, `/admin/users/{UserId}` | `users-list--pending` (Step 2.28); `user-detail--pending-trainee` (Step 2.28, **held: T303**) |
+| `/admin/users`, `/admin/users/{UserId}` | `users-list--pending` (Step 2.28); `user-detail--pending-trainee` (Step 2.28, re-captured after T303) |
 | `/admin/trainees` | `pending-trainees-list--pending` (Step 2.28); `--admitted` (Step 2.29); `--none-pending` (Step 2.30); `--loading`; `--narrow` |
 | `/admin/trainees/edit` | `trainee-profile-edit--admission` (Step 2.29, before saving); `--active` (after it); `--saved` (Step 2.30); `--not-found` (typed `?id=999999`); `--narrow` |
 | `/account/login` | `login--session-ended` (Step 2.31) |
@@ -347,10 +346,15 @@ Do not attach the act-1 and act-2 invitation step captures either (`1.5-2`, `1.7
 `2.5-1`, `2.6-*`, `2.7-*`, `2.16-1`, `2.17-*`, `2.26-*`). They were taken just after an issue or a resend, or under a
 link left on screen (F-2.6a). Treat each as showing a link unless you have opened it (BRIEF § 3.3).
 
-**Hold until re-captured after the group-1 fix lands; do not brief from these:**
+**Re-captured after T303 landed (4824d62, 2026-09-26), so no longer held:**
 - T303:
   - `act-2/2.28-3-molefe-user.png`
   - `states/user-detail--pending-trainee.png`
+
+Both come from a fresh replay of Act 2, Steps 2.1 to 2.28, from `scenario-post-act1`, so they show the step's own
+moment. Add role offers no Trainee, and a help line under it says a registrar becomes a trainee only when admitted. The
+Roles row still runs "PendingTrainee" into "System-managed" with no gap (F-2.28b, observed; T323 lays the row out):
+do not copy that.
 
 **Re-captured after T297 landed (2026-09-26), so no longer held:** `act-2/2.31-2-mahlangu-trainee-home.png` and the
 other first-Home captures of the five affected roles, `2.8-2`, `2.9-3`, `2.10-4`, `2.10-6`, `2.10-7` and `2.32-1`. Each
@@ -361,7 +365,7 @@ was taken from the end-of-Act-2 snapshot, not the step's own moment: Dr Mokoena'
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T303** (group 1, being fixed) | **The user page.** Trainee reads "System-managed", with no Remove, beside PendingTrainee. **Add role.** It never offers Trainee. Admission is the only way in. | Held captures above; Step 2.28 |
+| **T303** (group 1, landed in 4824d62) | **The user page.** Trainee reads "System-managed", with no Remove, beside PendingTrainee. **Add role.** It never offers Trainee. Admission is the only way in. | The re-captured images above; Step 2.28 |
 | **T323** (A3) | **The table at 1280 px.** Delivery and the row actions show without sideways scrolling, and no word breaks. Today the card is about 630 px wide beside the form, and the table scrolls to hide Email and Role. "Not delivered" breaks as "delivere / d." and the check-address text runs one word per line (observed). | `states/invitations-list--check-address.png`, `states/invitations-list--not-delivered.png` |
 | **T306** (BRIEF § 7 B4) | **Admission form.** A read-only "Training year N (from the programme start)", recomputed as the start date is typed. **Active profiles.** A Training year column. | `act-2/2.29-2-four-admitted.png`, `states/trainee-profile-edit--admission.png` |
 | **T304** (P2) | **The Curriculum picker.** It offers only the version the institution has adopted; after a re-adoption today, it offers the old one too. **Saving.** A profile save never re-admits the registrar, and it reports any credit it replays (BRIEF § 10). | T304; Step 2.29's note |
@@ -402,8 +406,8 @@ The flow is done when BRIEF § 9's checks hold:
 - **The steps replay on a fresh database** (`tools/scenario-replay.ps1`):
   - Play Act 1 through Step 1.11, the flow's steps 1.5 and 1.7–1.11 included.
   - Play Act 2 through Step 2.44.
-  - Every Expect holds, including 2.28's "System-managed" once T303 lands. Change any Expect whose on-screen wording
-    the redesign changes, in the same task (BRIEF § 9, item 7). Record the passwords chosen only in
+  - Every Expect holds, including 2.28's Add role list and help, which hold since T303 landed. Change any Expect whose
+    on-screen wording the redesign changes, in the same task (BRIEF § 9, item 7). Record the passwords chosen only in
     `pwd_DO_NOT_COMMIT.txt` (README § Passwords).
 - **The 44 states are re-captured,** with the steps' captures, into `design/baseline/`:
   - Crop or mask the one-time link in every capture taken just after an issue or a resend.
@@ -655,7 +659,10 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/invitations → /admin/users → /admin/users/{UserId} → /admin/trainees
 Do: Open Invitations. Read the users list and open Dr Molefe's page. Then open Trainees.
 Expect: Active invitations reads "No active invitations". Users lists 15, with the five registrars as PendingTrainee. On
-  Molefe's page, PendingTrainee reads "System-managed" and has no Remove. Trainees' Pending admission lists the five with their emails and KGK, each with an
+  Molefe's page, PendingTrainee reads "System-managed" and has no Remove. Add role offers InstitutionalAdmin,
+  SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember and Assessor, not Trainee, and its help reads "Trainee
+  is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'." (T303).
+  Trainees' Pending admission lists the five with their emails and KGK, each with an
   "Admit to curriculum" named for the registrar. Active profiles reads "No active trainee profiles found."
 
 Step 2.29 — Mbatha admits four registrars

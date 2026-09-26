@@ -8,7 +8,7 @@ nobody else's. Role grants and locks are access control. It is flow 12 of 18 (`d
 |---|---|
 | **Mode** | Straight to fidelity for the lists (Users, Assessors). Wireframe first for the user page, which brings roles, scope, invitations, lock and reset into one place, and for the InstitutionalAdmin dashboard. |
 | **Viewports** | Desktop 1280×800 and phone 390×844. |
-| **Held** | T303 (Add role offers Trainee) is being fixed; its images wait for re-capture (§ Attach). Brief the lists, the dashboard, the assessor pages and the institution record now (T302 landed in 41be531 and its captures were retaken on 2026-09-26). Brief the user page's role section once T303's captures are retaken. |
+| **Held** | Nothing. T303 (Add role offered Trainee) landed in 4824d62 and its captures were retaken on 2026-09-26 (§ Attach), as were T302's after 41be531. Brief every screen, the user page's role section included. |
 | **Frequency** | Monthly: rotations, staff joining, lockouts. |
 | **Stakes** | High. A role grant or a lock decides who can see and do what. |
 | **People** | Prof Nolwazi Mbatha (InstitutionalAdmin, KGK). Her subjects: Dr Thandi Zulu (gains Assessor), Dr Mohammed Patel (locked out, then reactivated) and Dr Pieter du Plessis (password reset). Also Dr Anele Dlamini, whose account she opens on her phone (Step A.7.9), and Dr Sipho Ndlovu, whose data was erased (Step A.1.14). |
@@ -47,7 +47,6 @@ GOAL: The InstitutionalAdmin:
   - Lock out user is a red button that acts at once, with no confirmation. The Remove buttons beside each role are red
     too, and sit against the role's name.
   - At 1280 px, the Account summary clips a long email, and the Pending invitations table clips inside its narrow card.
-  - Add role offers Trainee (being fixed).
   - On her own institution's record she can untick Active and press Deactivate (being fixed).
   - The assessors' empty state claims that a profile makes an assessor selectable.
   - The SSO page tells her to edit application settings, and points at a form that is not there.
@@ -133,7 +132,7 @@ REQUIREMENTS FROM KNOWN DEFECTS:
   - T302 (landed): an InstitutionalAdmin sees her institution's Status as text, "Set by a global administrator.", with
     no Active box and no Deactivate, whether it is active or not. The "deactivate refused" and "untick and save" states
     no longer exist.
-  - T303: Trainee reads "System-managed" on the user page and is never offered under Add role.
+  - T303 (landed): Trainee reads "System-managed" on the user page and is never offered under Add role.
   - T264:
     - Lock out asks first, in a confirmation that names the person.
     - Destructive triggers in a row or card (a role's Remove, Revoke all pending invitations) are outline buttons,
@@ -226,7 +225,7 @@ ATTACHED (key screenshots first):
 |---|---|---|---|
 | 1.23 | `/admin/institutions/{Id:int}` → `/not-found` | Prof Mbatha opens KGK's record by typing its address, then the Demo Institution's id. | KGK's name, short code, contact email and status. Save, and nothing that would deactivate KGK. No link to the Institutions list. The other id: Page not found. |
 | 2.12 | `/admin/invitations` → `/admin/users` → `/admin/users/{UserId}` | She reviews KGK's users and opens her own account. | Ten rows, KGK's only (T056). The filter. Her own page: roles with no Remove, the own-account note, and "Change your password" (T278). |
-| 2.13 | `/admin/users` → `/admin/users/{UserId}` | She adds Assessor to Dr Zulu, Dr Naidoo and Dr Botha. | Add role's offer (held, T303). The Lockout card's list (T284). "Role 'Assessor' added." Both roles in the list. |
+| 2.13 | `/admin/users` → `/admin/users/{UserId}` | She adds Assessor to Dr Zulu, Dr Naidoo and Dr Botha. | Add role's offer: no Trainee, with a help line saying why (T303, re-captured). The Lockout card's list (T284). "Role 'Assessor' added." Both roles in the list. |
 | 2.14 | `/admin/assessors` → `/admin/assessors/edit` → `/admin/assessors` | She creates five assessor profiles. | "No assessor profiles". KGK's five Assessors offered, and KGK alone. The date asked only for Provisional or Trained. "Assessor profile saved." |
 | 2.15 | `/admin/assessors` | She reads the list. | Five rows, with statuses and dates ("Not recorded" where none). Edit named per assessor. Dr van Rensburg absent: he is not an Assessor. |
 | 2.44 | `/` → `/admin/users` → `/admin/assessors` | She reads her dashboard after onboarding. | Users per role, and the adopted count, which is wrong until T291 item 4 lands. Quick links. Dr Khumalo's corrected name. |
@@ -249,7 +248,7 @@ The states are from `scenario-paediatrics/states.md` § Home and § Institution 
 |---|---|
 | `/` | `home--institutional-admin` (Step 2.44); `home--narrow-institutional-admin` (Step A.7.9) |
 | `/admin/users` | `users-list--staff`, `--filtered`, `--no-match` (Step 2.12); `--loading`; `--narrow` (Step A.7.9) |
-| `/admin/users/{UserId}` | `user-detail--own` (Step 2.12); `--other` and `--role-added` (Step 2.13, **held: T303**); `--no-roles` (Step 5.17, **held**); `--reset-refused` and `--reset` (Step A.4.5, **held**); `--locked` (Step A.6.4); `--reactivated` (Step A.6.7); `--unavailable` (Step A.5.5); `--pending-invitations` (scratch: Dr Botha invited again); `--loading`; `--narrow` (Step A.7.9, **held**) |
+| `/admin/users/{UserId}` | `user-detail--own` (Step 2.12); `--other` and `--role-added` (Step 2.13); `--no-roles` (Step 5.17); `--reset-refused` and `--reset` (Step A.4.5); `--locked` (Step A.6.4); `--reactivated` (Step A.6.7); `--unavailable` (Step A.5.5); `--pending-invitations` (scratch: Dr Botha invited again); `--loading`; `--narrow` (Step A.7.9). Every one with an Add role card was re-captured after T303 (2026-09-26) |
 | `/admin/assessors` | `assessors-list--empty` (Step 2.14); `--five` (Step 2.15); `--loading`; `--narrow` |
 | `/admin/assessors/edit` | `assessor-profile-edit--new`, `--provisional`, `--invalid`, `--saved` (Step 2.14); `--not-found` (typed `?id=999999`); `--narrow` |
 | `/admin/institutions/{Id:int}` | `institution-edit--own` (Step 1.23, re-captured after T302); `--deactivate-refused` (Step A.6.3: that state ceased with T302, and the file now holds her page after the save, Status as text); `--not-found` (Step 1.23, the Demo Institution) |
@@ -316,7 +315,7 @@ upload it (BRIEF § 3.3).
 - **Screen 6:**
   - `states/group-mappings--narrow.png`
 
-**Hold until re-captured after the group-1 fix lands; do not brief from these:**
+**Re-captured after T303 landed (4824d62, 2026-09-26), so no longer held:**
 - T303:
   - `states/user-detail--no-roles.png`
   - `states/user-detail--reset-refused.png`
@@ -325,20 +324,28 @@ upload it (BRIEF § 3.3).
   - `states/user-detail--other.png`
   - `states/user-detail--role-added.png`
   - `act-A/A.7.9-3-mbatha-dlamini-account.png`
+  - also, because T303's help line under Add role changed them: `states/user-detail--locked.png`, `--reactivated.png`
+    and `--pending-invitations.png`, and `act-A/A.6.4-1`, `A.6.4-2`, `A.6.7-1`, `A.4.5-1` and `A.4.5-2`.
+
+`--other` and `--role-added` come from a fresh replay of Act 2, so they show Step 2.13's own moment; `--no-roles` is
+from the end of Act 5; the rest are from a post-actA copy (BRIEF § 10). A held Trainee now reads "System-managed" with no
+Remove (`--reset`, `--narrow`). Every Roles row still runs the role's name into its note or its Remove with no gap
+("TraineeSystem-managed", F-2.28b, observed): T323's Remove item, below, covers both.
 
 T302's six held captures were re-captured on 2026-09-26 after it landed (41be531) and are listed under Screen 5 above.
 
-`states/user-detail--reset-refused.png` is also T323's evidence of an address clipped at 1280 px. Until it is
-re-captured, `states/user-detail--pending-invitations.png` shows the same clip (observed: "botha@kgk.wombat.loca").
+`states/user-detail--reset-refused.png` is also T323's evidence of an address clipped at 1280 px, and still shows it
+after the re-capture ("duplessis@kgk.wombat.l", observed). `states/user-detail--pending-invitations.png` shows the same
+clip.
 
 ## Known problems this design must solve
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
 | **T302** (group 1, landed in 41be531) | **Her own institution.** She sees Status as text, with no Active box and no Deactivate. The deactivate-refused and untick-and-save states no longer exist. **Related, T291 item 7, landed with T302.** "Back to home" and Cancel go to Home for her, not to the Administrator's list. **Item 8, still open:** she is still shown the create form if she types its address; she should never be. | Screen 5's re-captured captures; `act-1/1.23-4-institutional-admin-create-form.png` (re-captured 2026-09-26: the form, now with "Back to home"). `act-1/1.23-2-back-link-access-denied.png` shows a link that no longer exists |
-| **T303** (group 1, being fixed) | **Trainee.** It is "System-managed" on the user page, with no Remove, and never offered under Add role. | Held captures; Step 2.13 |
+| **T303** (group 1, landed in 4824d62) | **Trainee.** It is "System-managed" on the user page, with no Remove, and never offered under Add role. | The re-captured images above; Steps 2.13 and 2.28 |
 | **T264** | **Lock out user.** It asks first, naming the person, and its trigger is an outline button; today it is red and acts at once. **In-row destructive buttons.** A role's Remove and "Revoke all pending invitations" are red today (observed). They become outline buttons with per-row names. **Inactive records.** A destructive button is not offered on a record that is already inactive. | `act-A/A.7.14-4-patel-lockout-button-focused.png`, `states/user-detail--locked.png`, `states/user-detail--pending-invitations.png`; Step A.6.4 |
-| **T323** (A3) | **Long values.** Emails and GUIDs wrap inside their card at 1280 px (`overflow-wrap: anywhere` on the details list). **Pending invitations.** The table fits its card or moves to a wider column. **Remove.** Each role's button has a gap before it; today "Assessor" runs into it (observed). | `states/user-detail--reset-refused.png` (held), `states/user-detail--pending-invitations.png`; Step A.4.5 Gap F-A.4.5c |
+| **T323** (A3) | **Long values.** Emails and GUIDs wrap inside their card at 1280 px (`overflow-wrap: anywhere` on the details list). **Pending invitations.** The table fits its card or moves to a wider column. **Remove.** Each role's button, and the "System-managed" note, has a gap before it; today "Assessor" runs into its button and "Trainee" into its note (observed; F-2.28b). | `states/user-detail--reset-refused.png`, `states/user-detail--pending-invitations.png`; Step A.4.5 Gap F-A.4.5c |
 | **T326** (A10) | **Assessors' empty state.** It says what a profile records (training status and date, qualifications); the nominee picker needs only the role. **SSO page.** With no provider, it does not point at a form ("Add a mapping above…"), and it tells an InstitutionalAdmin to ask a Wombat administrator instead of naming `Sso:Providers`. | `states/assessors-list--empty.png`, `states/group-mappings--no-provider.png`; Step 2.14 Gap F-2.14c |
 | **T289** (P2) | **The assessor profile.** It refuses anyone who holds Trainee, and requires the user to be at her institution. **After a save.** The page moves to the saved profile (`?id=`), and the new form's picker offers only assessors without a profile (Step 2.14 Gap F-2.14a, F-2.14b). | T289; Step 2.14 |
 | **T288** (P2) | **SSO mappings, once a provider exists.** A mapping grants roles only at the provider's institution, which is also hers. There is no free choice of institution for her. Not reachable on the replay. | T288; `coverage.md` § Flows and states not played |
@@ -436,9 +443,9 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
 Do: For each of the three, open Manage, choose Assessor under Add role and press Add role.
 Expect: Before the change, Roles lists CommitteeMember with Remove. Add role offers InstitutionalAdmin, SpecialityAdmin,
-  SubSpecialityAdmin, Coordinator, Assessor and Trainee, never Administrator, CollegeAdmin or PendingTrainee. A Lockout
-  card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for this
-  email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
+  SubSpecialityAdmin, Coordinator and Assessor, never Administrator, CollegeAdmin, PendingTrainee or Trainee (T303).
+  A Lockout card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for
+  this email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
   Assessor. The users list's Roles column shows both.
 
 Step 2.14 — Mbatha creates five assessor profiles

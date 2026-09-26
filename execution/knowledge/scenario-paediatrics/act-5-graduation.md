@@ -439,10 +439,20 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Last day 2026-09-26 → Mark 
   profiles lists Dlamini, du Plessis, Mahlangu and Ndlovu; "Completed & closed profiles" lists Lerato Molefe, "Completed
   2026-09-26". /admin/users/59ba7d01-…: "This user has no roles." (Status Active; Add role now offers Trainee). Progress
   unchanged (PAED-001 3, 010 1, 012 2 in 2026 S2): nothing taken back.
-Gap: [F-5.17a, T305] A completed profile still offers Save profile, with the curriculum, programme start and expected
-  completion editable. So a graduate's archived record, and the PDF built from it, can still be re-pinned or re-dated,
-  although the help and the dialog say Mark complete "archives the profile". This confirms the suspect "A completed
-  ('archived') profile still offers Save profile"; not pressed.
+  Re-checked after T303 (2026-09-26, wombat_scenario_rc303b, restored from scenario-post-act5): her user page reads
+  "This user has no roles." (Status Active), and Add role offers exactly InstitutionalAdmin, SpecialityAdmin,
+  SubSpecialityAdmin, Coordinator, CommitteeMember and Assessor, no Trainee, with the help "Trainee is not offered: a
+  registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'." Her record is otherwise as
+  expected: Trainees lists her under Completed & closed profiles, "Completed 2026-09-26" (beside du Plessis, withdrawn
+  later in Act 5), with no Admit to curriculum for her; her profile reads Status Completed, "Completed: 2026-09-26",
+  with no last-day field, Deactivate or Mark complete, and Save profile still offered (F-5.17a). The help's pointer to
+  Admit to curriculum has no entry for a graduate: T303's recorded question of a second programme
+  (act-5/5.17-3-mbatha-user-no-roles.png, states/user-detail--no-roles.png re-taken).
+Gap: The Trainee offered on her page after Mark complete (F-2.28a) is fixed by T303 (4824d62). [F-5.17a, T305] A
+  completed profile still offers Save profile, with the curriculum, programme start and expected completion editable. So
+  a graduate's archived record, and the PDF built from it, can still be re-pinned or re-dated, although the help and the
+  dialog say Mark complete "archives the profile". This confirms the suspect "A completed ('archived') profile still
+  offers Save profile"; not pressed.
 
 ### Step 5.18 — Dr Molefe is emailed
 Role: System — the graduation email sent by Mark complete

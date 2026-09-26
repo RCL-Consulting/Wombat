@@ -616,11 +616,17 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Users → "Manage Pieter du P
   "Password reset. Share the new password with the user out-of-band.", the field cleared. The audit holds
   ResetUserPasswordCommand false then true, each with newPassword "[REDACTED]". The password is recorded in
   pwd_DO_NOT_COMMIT.txt.
-Gap: [F-A.4.5a, T317] This confirms the suspect "The administrator's Reset password form enables its button at 8 characters":
-  Identity wants 12, so a short password is refused only after the press, as the Note reports. [F-A.4.5b, T317] The refusal
-  joins Identity's sentences with "; " after their own full stops ("12 characters.; Passwords …"); the change-password
-  page joins the same sentences with spaces. [F-A.4.5c, T323] At 1280 px the Account summary card clips his address at its
-  right edge ("duplessis@kgk.wombat.l"), the overflow F-A.1.3c saw on the data-rights request.
+  Re-checked after T303 (2026-09-26, wombat_scenario_rc303c, a post-actA copy; the second password was his current
+  one, so no new password was made): the refusal and the reset read as above, the refusal's alert taking the focus and
+  both emptying the field. His Roles card now reads Trainee "System-managed" with no Remove, and Add role offers
+  InstitutionalAdmin to Assessor without Trainee, with the T303 help (act-A/A.4.5-1, A.4.5-2 and
+  states/user-detail--reset-refused.png, --reset.png re-taken).
+Gap: The Trainee offer and its Remove (F-2.28a) are fixed by T303 (4824d62). [F-A.4.5a, T317] This confirms the suspect
+  "The administrator's Reset password form enables its button at 8 characters": Identity wants 12, so a short password
+  is refused only after the press, as the Note reports. [F-A.4.5b, T317] The refusal joins Identity's sentences with
+  "; " after their own full stops ("12 characters.; Passwords …"); the change-password page joins the same sentences
+  with spaces. [F-A.4.5c, T323] At 1280 px the Account summary card clips his address at its right edge
+  ("duplessis@kgk.wombat.l"), the overflow F-A.1.3c saw on the data-rights request.
 
 ### Step A.4.6 — Dr du Plessis signs in with it and chooses his own
 Role: Trainee — Dr Pieter du Plessis
@@ -929,7 +935,11 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Dr Patel was first signed in 
   records stay as they are, and a review or feedback campaign already under way can still be finished. Reactivating
   clears the lockout." Lock out user, pressed at 14:04:37 UTC, asked nothing first: "User locked out." takes the focus,
   Status reads "Locked out", and the card offers only Reactivate user.
-Gap: none
+  Re-checked after T303 (2026-09-26, wombat_scenario_rc303c, a post-actA copy, so without Patel's second browser): the
+  lock reads as above; the page changed only in the Roles card, whose Add role no longer offers Trainee and carries the
+  help "Trainee is not offered: …" under the select (act-A/A.6.4-1, A.6.4-2 and states/user-detail--locked.png
+  re-taken).
+Gap: none (the Trainee offer was F-2.28a, fixed by T303 (4824d62))
 
 ### Step A.6.5 — Dr Patel's session ends, and he cannot sign in
 Role: Assessor — Dr Mohammed Patel
@@ -965,7 +975,10 @@ Do: Reactivate Dr Patel.
 Expect: His status reads Active, the card offers Lock out user again, and the focus moves to the result.
 Actual (2026-09-26, T295 replay, wombat_scenario): His page opened with Status "Locked out". Reactivate user, asked
   nothing first: "User reactivated." takes the focus, Status reads Active, and the card offers Lock out user again.
-Gap: none
+  Re-checked after T303 (2026-09-26, wombat_scenario_rc303c): the same, and Add role offers InstitutionalAdmin,
+  SpecialityAdmin, SubSpecialityAdmin, Coordinator and CommitteeMember with the T303 help, no Trainee
+  (act-A/A.6.7-1 and states/user-detail--reactivated.png re-taken).
+Gap: none (the Trainee offer was F-2.28a, fixed by T303 (4824d62))
 
 ### Step A.6.8 — Dr Patel signs in again
 Role: Assessor — Dr Mohammed Patel
@@ -1238,11 +1251,18 @@ Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home's three cards
   (/admin/activity-types/23, "Edit KGK Teaching Session Log"): the editor and Live preview cards stack in one column
   (both at 49 to 326; the preview starts at y 4251). The tab bar wraps to two rows (Metadata, Form, Workflow; then
   Credit), each tab 33 px tall. No page scrolls sideways.
-Gap: [F-A.7.9a, T280] The builder's tab bar marks the active tab only by the .is-active class. Its tabs are plain buttons with
-  no role="tab", aria-selected, aria-pressed or aria-current, so a screen reader cannot tell which of Metadata, Form,
-  Workflow and Credit is showing (WCAG 4.1.2). DESIGN.md's .tab-bar entry says nothing on this. [F-A.7.9b, T328] The Reset
-  password field's "Show" toggle is 23 px tall, under this section's 24px rule (T086). F-A.7.2a's 21 px account-address
-  link recurs on every page here.
+  Re-checked after T303 (2026-09-26, wombat_scenario_rc303c, a post-actA copy): Dr Dlamini's account at 390 px still
+  stacks its five cards at 16 to 359, and nothing scrolls sideways. Her Roles card reads Trainee "System-managed", so it
+  has no Remove; the note too touches the name ("TraineeSystem-managed", F-2.28b). Add role offers InstitutionalAdmin to
+  Assessor, no Trainee, and the T303 help wraps to three lines inside the card (41 to 334 px). Add role, Reset password
+  and Lock out user each sit on a line of their own; the "Show" toggle is still 23 px tall (act-A/A.7.9-3 and
+  states/user-detail--narrow.png re-taken).
+Gap: The Trainee's Remove, and Trainee under Add role (F-2.28a), are fixed by T303 (4824d62); the role name touching
+  what follows it is [F-2.28b, T323]. [F-A.7.9a, T280] The builder's tab bar marks the active tab only by the .is-active
+  class. Its tabs are plain buttons with no role="tab", aria-selected, aria-pressed or aria-current, so a screen reader
+  cannot tell which of Metadata, Form, Workflow and Credit is showing (WCAG 4.1.2). DESIGN.md's .tab-bar entry says
+  nothing on this. [F-A.7.9b, T328] The Reset password field's "Show" toggle is 23 px tall, under this section's 24px
+  rule (T086). F-A.7.2a's 21 px account-address link recurs on every page here.
 
 ### Step A.7.10 — Dr Kruger on his phone
 Role: CollegeAdmin — Dr Anton Kruger

@@ -227,6 +227,8 @@ Route: /admin/users → /admin/users/{UserId}
 Do: For each of the three, open Manage, choose Assessor under Add role and press Add role.
 Expect: Before the change, Roles lists CommitteeMember with Remove. Add role offers InstitutionalAdmin, SpecialityAdmin,
   SubSpecialityAdmin, Coordinator and Assessor, never Administrator, CollegeAdmin, PendingTrainee or Trainee (T303).
+  Its help reads "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to
+  curriculum'.", on every user's page.
   A Lockout card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for
   this email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
   Assessor. The users list's Roles column shows both.
@@ -235,8 +237,16 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Before: Roles CommitteeMember
   Add role offers the six named (no Administrator, CollegeAdmin or PendingTrainee); Lockout card lists four effects;
   "No active invitations are outstanding for this email.". After: "Role 'Assessor' added.", both roles listed, Assessor
   gone from Add role. Same for Naidoo and Botha; the list's Roles reads "CommitteeMember, Assessor" for all three.
-Gap: [F-2.13a, T290] The app log records three "fail: … Unhandled exception in circuit" (TaskCanceledException, "Navigation
-  failed when changing the location to /account/session-ended") here, one per account changed a minute or two after it
+  Re-checked after T303 (2026-09-26, wombat_scenario_rc303a, Act 2 replayed from scenario-post-act1): before the change
+  each of the three pages' Add role offers exactly InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Coordinator
+  and Assessor, with no Trainee, and under the select the help (the select's aria-describedby) reads "Trainee is not
+  offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'."; CommitteeMember
+  keeps its Remove. After: "Role 'Assessor' added." takes the focus and Add role offers the other four
+  (states/user-detail--other.png, --role-added.png, act-2/2.13-1 and 2.13-2 re-taken). The Expect does not yet name
+  the help line.
+Gap: The Trainee offered before the fix (F-2.28a) is fixed by T303 (4824d62). [F-2.13a, T290] The app log records
+  three "fail: … Unhandled exception in circuit" (TaskCanceledException, "Navigation failed when changing the location
+  to /account/session-ended") here, one per account changed a minute or two after it
   signed out: the session end navigates a disconnected circuit (once more at Step 2.29, inferred du Plessis).
   Unsure: likely harmless, but logged as a failure it hides real ones.
 
@@ -303,7 +313,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): The button is named "Revoke t
   ndlvou@kgk.wombat.local"; pressing it (no confirmation) showed "Invitation revoked." and the row went. No link was on
   screen, but the page had been reloaded since the issue, so Step 2.6's suspicion was not tested here. The ndlovu@ row
   was added. The revoked link, in a separate browser context, read "This invitation has been revoked." with no form.
-Gap: none
+  Replayed in the T303 re-check (2026-09-26, wombat_scenario_rc303a), with no reload between the issue and the revoke:
+  under "Invitation revoked." the "Share this registration link…" box still showed the revoked ndlvou@ link.
+Gap: [F-2.6a, T264] The revoke half of Step 2.6's suspicion holds: a revoke leaves the revoked invitation's link on
+  screen (InvitationsList.RevokeAsync never clears it). The link itself is dead ("This invitation has been revoked.").
 
 ## Phase 2.E — The registrars register and wait
 
@@ -445,6 +458,10 @@ Actual (2026-09-26, T295 replay, wombat_scenario): The story's row read "Sent": 
   "Not delivered. Resend emails a new link in place of the current one, which then stops working." with Resend before
   Revoke. Resend gave the expected message word for word, a new link, and a row reading "Being sent", with no Resend,
   expiring 2026-10-10 (act-2/2.26-3-scratch-not-delivered.png, 2.26-4-scratch-resent.png).
+  Played in the story in the T303 re-check (2026-09-26, wombat_scenario_rc303a, log sender), with his invitation's
+  IssuedOn set back 61 minutes by SQL in place of the wait: his row alone read the "Not delivered." sentence with Resend
+  before Revoke; Resend gave the expected message and a row reading "Being sent", with no Resend. His first link then
+  read "This invitation is invalid." and he registered from the new one (Step 2.27). No capture was taken.
 Gap: runbook corrected: README § Mail. The Development settings send mail to localhost:25, so only the log sender
   (which `tools/scenario-replay.ps1 start` now forces) ever reaches "Not delivered"; played on the scratch copy.
 
@@ -478,8 +495,23 @@ Actual (2026-09-26, T295 replay, wombat_scenario): "No active invitations". User
   PendingTrainee. Molefe's page: PendingTrainee "System-managed", no Remove; Add role offers InstitutionalAdmin,
   SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember, Assessor and Trainee. Trainees: Pending admission
   lists the five with emails and KGK, each "Admit to curriculum: <name>"; "No active trainee profiles found."
-Gap: [F-2.28a, T303] Add role offers Trainee to a PendingTrainee, a path round admission (no profile, no adoption pin, and
-  PendingTrainee kept, per the code); seen offered, not pressed.
+  Re-checked after T303 (2026-09-26, wombat_scenario_rc303a, Act 2 replayed from scenario-post-act1 through this step,
+  so on the story's own state): "No active invitations"; Users lists 15, the five registrars as PendingTrainee. Molefe's
+  page: Roles lists PendingTrainee with "System-managed" and no button; Add role offers exactly InstitutionalAdmin,
+  SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember and Assessor, never Trainee, with the T303 help
+  quoted in the Expect under it (the select's aria-describedby names it). Trainees as before. Admitting Molefe (Step
+  2.29's first, `J−3y` to `J+1y−1d`) still works: it moved to `?id=2`, Status Active; SQL shows her roles Trainee alone
+  and profile 2 pinned to adoption 1; her page then reads Trainee "System-managed", no Remove, and no Trainee under Add
+  role. A Trainee option forged into the select on a graduate's page (Molefe, on wombat_scenario_rc303c, a post-actA
+  copy) is refused by the command: "The Trainee role cannot be added or removed here. A registrar becomes a trainee when
+  admitted to a curriculum: open Trainees and choose 'Admit to curriculum'. Marking their programme complete takes the
+  role away.", her roles unchanged (act-2/2.28-3-molefe-user.png, states/user-detail--pending-trainee.png re-taken).
+Gap: [F-2.28a, T303] Add role offered Trainee to a PendingTrainee, a path round admission: fixed by T303 (4824d62).
+  [F-2.28b, T323] Each Roles row runs the role's name into the "System-managed" note, with no space or gap:
+  "PendingTraineeSystem-managed" (and "TraineeSystem-managed" on every admitted trainee's page since T303), both on
+  screen and as the list item's accessible text. T323 already has the Remove button touching the name (same cause: an
+  unstyled `li`, and Razor drops the whitespace between the two spans); this widens it to the note and its accessible
+  text.
 
 ### Step 2.29 — Mbatha admits four registrars
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

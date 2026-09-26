@@ -1,11 +1,12 @@
 ---
 id: T307
 title: Resolving an appeal takes an outcome nobody chose: the Outcome select opens on Dismissed, Upheld leaves the decision standing like Dismissed, and a remit cannot record conditions
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-09-26
 ---
 
 # T307 — Resolving an appeal takes an outcome nobody chose: the Outcome select opens on Dismissed, Upheld leaves the decision standing like Dismissed, and a remit cannot record conditions

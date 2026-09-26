@@ -1,12 +1,13 @@
 ---
 id: T303
 title: Add role offers Trainee, so an admin can make a pending registrar or a graduate a Trainee with no profile, bypassing admission
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
 started: 2026-09-26
+completed: 2026-09-26
 ---
 
 # T303 — Add role offers Trainee, so an admin can make a pending registrar or a graduate a Trainee with no profile, bypassing admission
@@ -48,10 +49,31 @@ Trainee is system-managed, like PendingTrainee.
 
 ## Verification
 
-- [ ] Handler tests: AddRoleToUser and RemoveRoleFromUser refuse Trainee to an Administrator and to an InstitutionalAdmin. After the audit pipeline's save, the user's roles are unchanged.
-- [ ] bUnit: UserDetail never offers Trainee under Add role, and shows a held Trainee as 'System-managed' with no Remove.
-- [ ] The existing admission tests still pass: PendingTrainee becomes Trainee, with the profile and the adoption pin.
-- [ ] Browser, runbook Step 2.28: Molefe's Add role lists InstitutionalAdmin to Assessor and not Trainee. Step 5.17: after Mark complete, her page offers no Trainee.
+- [x] Handler tests: Add role and Remove role refuse Trainee to an Administrator and an InstitutionalAdmin, and the
+  roles are unchanged after the audit pipeline's save — `TraineeRoleSystemManagedTests` (9 cases) and, on PostgreSQL
+  through the real audit pipeline, `TraineeRoleSystemManagedPostgresTests` (6 refusals, 6 failure rows, no role
+  changed).
+- [x] bUnit: Add role never offers Trainee; a held Trainee reads "System-managed" with no Remove —
+  `UserDetailTraineeRoleTests` (8 cases, all failing before).
+- [x] Admission still works — `AdmitTraineeCommandHandlerTests` and `CompleteTraineeProfileCommandHandlerTests` green;
+  after review, admission also refuses an account already holding Trainee, before any write.
+- [x] Browser, 2026-09-26: Act 2 replayed from the post-Act-1 snapshot (`wombat_scenario_rc303a`). At 2.13 and 2.28 Add
+  role offers the six staff roles, never Trainee, with its help line; Molefe's PendingTrainee reads "System-managed";
+  admitting her still works, and her Trainee then reads "System-managed". Step 5.17 on a post-Act-5 copy: the graduate's
+  page offers no Trainee. A forged "Trainee" option is refused by the server, and she keeps no role.
+
+## As built — 2026-09-26 (`4824d62`)
+
+- `UserAdministrationRules` treats Trainee as system-managed beside PendingTrainee: Add role and Remove role refuse it
+  before any lookup, and the page's Add role lists InstitutionalAdmin to Assessor with a help line naming where a
+  registrar becomes a trainee (Trainees, "Admit to curriculum").
+- After review (`6697b3d` in the lane): admission refuses, before any write, an account that already holds Trainee, so a
+  refusal cannot leave a committed half-admission.
+- Filed from it: T333 (P2), SSO group mappings can still grant or remove Trainee, the one path round admission. Recorded
+  on T290: a graduate has no way into a second programme.
+- Runbook: the Expects of 2.13, 2.28 and 5.17 name the new list and help; the re-check's lines are in their Actuals.
+  Steps 2.26–2.27 were also played on the story's own state for the first time. Baseline: 20 captures re-taken.
+- Seen in the re-check: the role name and "System-managed" run together (F-2.28b, noted on T323).
 
 ## Related
 

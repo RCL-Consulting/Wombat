@@ -1,11 +1,12 @@
 ---
 id: T300
 title: The activity-type builder does not follow ActivityTypeScopeGuard: an InstitutionalAdmin is offered Save, Publish and a Global scope she is refused, and the College the guard names as owner cannot open it
-status: queued
+status: in_progress
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-09-26
 ---
 
 # T300 — The activity-type builder does not follow ActivityTypeScopeGuard: an InstitutionalAdmin is offered Save, Publish and a Global scope she is refused, and the College the guard names as owner cannot open it
