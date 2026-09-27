@@ -44,7 +44,10 @@ every page uses:
   a done-signal, and a critic ran every command it names; flow 01 asks first for 2–3 structural wireframes;
   `design/tools/stage_upload.ps1 -Flow 01` stages 78 files (3.4 MB) from tracked files and the listed screenshots,
   holding back the one capture that shows a registration link.
-- [ ] A chosen design for the shell, with its states — the Claude Design artifact's link recorded here.
+- [x] A chosen design for the shell, with its states — the Claude Design artifact's link recorded here — 2026-09-27:
+  https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD ("Wombat · Flow 01 · The shell"), variation A with C's breadcrumbs,
+  round 3 accepted after the round-2 review's 30 fixes and D1–D11 (W-010, W-011). The boards are tracked in
+  `design/flows/01-shell/round-3/`, and the record is `design/flows/01-shell/README.md`.
 - [ ] Implemented; suites green; `DESIGN.md` amended with a dated note — commit.
 - [ ] Flow 01's runbook steps replay green on a fresh database; baseline re-captured — the replay's Actual lines.
 - [ ] `BRIEF.md` corrected by the pilot's lessons — a dated "Pilot findings" section.

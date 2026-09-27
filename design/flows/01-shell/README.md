@@ -31,6 +31,29 @@ The pilot's design (T335), kept beside its brief (`../01-shell.md`) so that it o
 - **The round-2 review** (`round-2-review.md`) is a verdict of accept with changes: 22 should-fixes, the decisions
   D1–D11 for the operator, the round-3 message for the canvas, and the build plan for step F.
 
+- **Decisions D1–D11** (2026-09-27): the operator accepted every recommendation ("accept all"). Two are recorded as
+  project rules: W-010 (the GET role switch) and W-011 (OFL fonts; dark mode later). The rest shape the design:
+  - D1: the role is remembered per account, stored with the account.
+  - D3: the brand cell stays at the head of the sidebar.
+  - D4: the active item's alpha is .32.
+  - D5: breadcrumbs follow the owning list.
+  - D6: access denied renders in place and names neither the page nor who may open it.
+  - D7: the error bar's Dismiss is kept, with no reference.
+  - D8: no "Acting as" heading without a role; My progress is a personal link.
+  - D9: the phone menu's account row sits at its foot.
+  - D10: "Page · Wombat" in sentence case on every page.
+- **Round 3** (the same canvas, round-2 boards revised, seven added: `R2-Rules`, `R2-Sidebar-Scroll`,
+  `R2-Phone-Zulu-Open`, `R2-Phone-Bars`, `R2-Error-Typed`, `R2-Reconnect-Narrow`, `R2-ErrorBar-Narrow`) applies the
+  review's 30 fixes; `round-3/` holds it.
+- **Round 3 accepted** (2026-09-27): every one of the 30 fixes is on the boards, checked on the text and the markup. It
+  is the design step F builds. The canvas also corrected the review: #62779F was the blend at the old alpha (.37); at .32
+  the swatch is #556C98, and white on it is 5.27:1. Three small things carry into the build, not into another round:
+  - Rows 4 px apart with a 2 px ring at a 2 px offset make the ring touch the next row's box without overlapping it.
+    That holds, because no row but the current one has a fill.
+  - The reconnect and error-bar boards list their rules but not the runbook wording they change. The build rewrites
+    those runbook steps anyway.
+  - `R2-Rules` is headed "round 2". Its content is round 3's.
+
 These files are HTML mockups written by the design tool. They load Google Fonts, which Wombat's CSP forbids, so they are
 a picture of the design, not code to copy. The build (pilot step F) implements them in Razor and `app.css` under
 `DESIGN.md`, as amended.

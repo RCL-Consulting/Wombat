@@ -1,0 +1,628 @@
+{
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "A-Admin.dc.html": {
+   "h": 800,
+   "page": "a",
+   "title": "A · Administrator, Home (17 links)",
+   "w": 1280,
+   "x": 0,
+   "y": 3000
+  },
+  "A-Phone-folded.dc.html": {
+   "h": 844,
+   "page": "a",
+   "title": "A · 390 · Trainee, nav folded",
+   "w": 390,
+   "x": 4080,
+   "y": 3000
+  },
+  "A-Phone-open.dc.html": {
+   "h": 844,
+   "page": "a",
+   "title": "A · 390 · Trainee, nav open",
+   "w": 390,
+   "x": 4550,
+   "y": 3000
+  },
+  "A-Spec.dc.html": {
+   "h": 1960,
+   "page": "a",
+   "title": "A · Navigation per role, switching, clicks",
+   "w": 1280,
+   "x": 5020,
+   "y": 3000
+  },
+  "A-Zulu-Assessor.dc.html": {
+   "h": 800,
+   "page": "a",
+   "title": "A · Dr Zulu after switching to Assessor",
+   "w": 1280,
+   "x": 2720,
+   "y": 3000
+  },
+  "A-Zulu-CM.dc.html": {
+   "h": 800,
+   "page": "a",
+   "title": "A · Dr Zulu acting as Committee member",
+   "w": 1280,
+   "x": 1360,
+   "y": 3000
+  },
+  "B-Admin.dc.html": {
+   "h": 800,
+   "page": "b",
+   "title": "B · Administrator, Platform › Scheduled Jobs",
+   "w": 1280,
+   "x": 0,
+   "y": 5400
+  },
+  "B-Phone-folded.dc.html": {
+   "h": 844,
+   "page": "b",
+   "title": "B · 390 · Trainee, nav folded",
+   "w": 390,
+   "x": 4080,
+   "y": 5400
+  },
+  "B-Phone-open.dc.html": {
+   "h": 844,
+   "page": "b",
+   "title": "B · 390 · Trainee, nav open",
+   "w": 390,
+   "x": 4550,
+   "y": 5400
+  },
+  "B-Spec.dc.html": {
+   "h": 1960,
+   "page": "b",
+   "title": "B · Navigation per role, roles, clicks",
+   "w": 1280,
+   "x": 5020,
+   "y": 5400
+  },
+  "B-Zulu-Home.dc.html": {
+   "h": 800,
+   "page": "b",
+   "title": "B · Dr Zulu, Home (both roles)",
+   "w": 1280,
+   "x": 1360,
+   "y": 5400
+  },
+  "B-Zulu-Inbox.dc.html": {
+   "h": 800,
+   "page": "b",
+   "title": "B · Dr Zulu, Activity Inbox (page names its role)",
+   "w": 1280,
+   "x": 2720,
+   "y": 5400
+  },
+  "C-Admin-Home.dc.html": {
+   "h": 800,
+   "page": "c",
+   "title": "C · Administrator, Home (the map)",
+   "w": 1280,
+   "x": 0,
+   "y": 7800
+  },
+  "C-Admin-Page.dc.html": {
+   "h": 800,
+   "page": "c",
+   "title": "C · Administrator, Audit Log (breadcrumbs)",
+   "w": 1280,
+   "x": 1360,
+   "y": 7800
+  },
+  "C-Phone-folded.dc.html": {
+   "h": 844,
+   "page": "c",
+   "title": "C · 390 · Trainee, Home, menu folded",
+   "w": 390,
+   "x": 4080,
+   "y": 7800
+  },
+  "C-Phone-open.dc.html": {
+   "h": 844,
+   "page": "c",
+   "title": "C · 390 · Trainee, menu open",
+   "w": 390,
+   "x": 4550,
+   "y": 7800
+  },
+  "C-Spec.dc.html": {
+   "h": 1960,
+   "page": "c",
+   "title": "C · Home per role, roles, clicks",
+   "w": 1280,
+   "x": 5020,
+   "y": 7800
+  },
+  "C-Zulu.dc.html": {
+   "h": 800,
+   "page": "c",
+   "title": "C · Dr Zulu, Home, switch open",
+   "w": 1280,
+   "x": 2720,
+   "y": 7800
+  },
+  "Main.dc.html": {
+   "h": 2440,
+   "page": "overview",
+   "title": "Round 1 · Overview and decisions",
+   "w": 1280,
+   "x": 0,
+   "y": 0
+  },
+  "R2-Denied-In.dc.html": {
+   "h": 800,
+   "page": "s4",
+   "title": "4 · Access denied · signed in",
+   "w": 1280,
+   "x": 0,
+   "y": 16800
+  },
+  "R2-Denied-Narrow.dc.html": {
+   "h": 844,
+   "page": "s4",
+   "title": "4 · Access denied · 390",
+   "w": 390,
+   "x": 2720,
+   "y": 17800
+  },
+  "R2-Denied-Out.dc.html": {
+   "h": 800,
+   "page": "s4",
+   "title": "4 · Access denied · signed out",
+   "w": 1280,
+   "x": 1360,
+   "y": 16800
+  },
+  "R2-Detail-Email.dc.html": {
+   "h": 800,
+   "page": "s3",
+   "title": "3 · Detail with breadcrumbs · reached from an email link",
+   "w": 1280,
+   "x": 1360,
+   "y": 15400
+  },
+  "R2-Detail-Inbox.dc.html": {
+   "h": 800,
+   "page": "s3",
+   "title": "3 · Detail with breadcrumbs · activity from the inbox",
+   "w": 1280,
+   "x": 0,
+   "y": 15400
+  },
+  "R2-Detail-Phone.dc.html": {
+   "h": 844,
+   "page": "s3",
+   "title": "3 · Detail at 390 · a committee review",
+   "w": 390,
+   "x": 2720,
+   "y": 15400
+  },
+  "R2-Error-In.dc.html": {
+   "h": 800,
+   "page": "s4",
+   "title": "4 · Error · signed in, with reference",
+   "w": 1280,
+   "x": 0,
+   "y": 17800
+  },
+  "R2-Error-Narrow.dc.html": {
+   "h": 844,
+   "page": "s4",
+   "title": "4 · Error · 390",
+   "w": 390,
+   "x": 3660,
+   "y": 17800
+  },
+  "R2-Error-Out.dc.html": {
+   "h": 800,
+   "page": "s4",
+   "title": "4 · Error · signed out",
+   "w": 1280,
+   "x": 1360,
+   "y": 17800
+  },
+  "R2-ErrorBar.dc.html": {
+   "h": 800,
+   "page": "s6",
+   "title": "6 · In-app error bar",
+   "w": 1280,
+   "x": 1360,
+   "y": 19200
+  },
+  "R2-Landing-Assessor.dc.html": {
+   "h": 800,
+   "page": "s3",
+   "title": "3 · Landing · the same user after switching",
+   "w": 1280,
+   "x": 1360,
+   "y": 14400
+  },
+  "R2-Landing-CM.dc.html": {
+   "h": 800,
+   "page": "s3",
+   "title": "3 · Landing · Thandi Zulu as Committee member",
+   "w": 1280,
+   "x": 0,
+   "y": 14400
+  },
+  "R2-Landing-Error.dc.html": {
+   "h": 800,
+   "page": "s3",
+   "title": "3 · Landing · load error",
+   "w": 1280,
+   "x": 4080,
+   "y": 14400
+  },
+  "R2-Landing-Loading.dc.html": {
+   "h": 800,
+   "page": "s3",
+   "title": "3 · Landing · loading (skeleton)",
+   "w": 1280,
+   "x": 2720,
+   "y": 14400
+  },
+  "R2-NotFound-In.dc.html": {
+   "h": 800,
+   "page": "s4",
+   "title": "4 · Page not found · signed in",
+   "w": 1280,
+   "x": 2720,
+   "y": 16800
+  },
+  "R2-NotFound-Narrow.dc.html": {
+   "h": 844,
+   "page": "s4",
+   "title": "4 · Page not found · 390",
+   "w": 390,
+   "x": 3190,
+   "y": 17800
+  },
+  "R2-NotFound-Out.dc.html": {
+   "h": 800,
+   "page": "s4",
+   "title": "4 · Page not found · signed out",
+   "w": 1280,
+   "x": 4080,
+   "y": 16800
+  },
+  "R2-Phone-Admin-Open.dc.html": {
+   "h": 844,
+   "page": "s1",
+   "title": "2 · Shell 390 · nav open (Administrator, scrolls)",
+   "w": 390,
+   "x": 3660,
+   "y": 13000
+  },
+  "R2-Phone-Folded.dc.html": {
+   "h": 844,
+   "page": "s1",
+   "title": "2 · Shell 390 · nav folded (Trainee)",
+   "w": 390,
+   "x": 2720,
+   "y": 13000
+  },
+  "R2-Phone-Open.dc.html": {
+   "h": 844,
+   "page": "s1",
+   "title": "2 · Shell 390 · nav open (Trainee)",
+   "w": 390,
+   "x": 3190,
+   "y": 13000
+  },
+  "R2-Reconnect.dc.html": {
+   "h": 1140,
+   "page": "s6",
+   "title": "6 · Reconnect dialog · seven states",
+   "w": 1280,
+   "x": 0,
+   "y": 19200
+  },
+  "R2-Shell-Admin.dc.html": {
+   "h": 800,
+   "page": "s1",
+   "title": "1 · Shell 1280 · Administrator (17 links)",
+   "w": 1280,
+   "x": 0,
+   "y": 13000
+  },
+  "R2-Shell-Assessor.dc.html": {
+   "h": 800,
+   "page": "s1",
+   "title": "1 · Shell 1280 · Assessor (3 links)",
+   "w": 1280,
+   "x": 1360,
+   "y": 13000
+  },
+  "R2-Tokens.dc.html": {
+   "h": 4700,
+   "page": "s7",
+   "title": "7 · Token sheet",
+   "w": 1280,
+   "x": 0,
+   "y": 20600
+  },
+  "S-Failures.dc.html": {
+   "h": 1640,
+   "page": "states",
+   "title": "States · Access denied, not found, error",
+   "w": 1280,
+   "x": 1360,
+   "y": 10200
+  },
+  "S-Outcomes.dc.html": {
+   "h": 1180,
+   "page": "states",
+   "title": "States · Outcomes, refusals, loading",
+   "w": 1280,
+   "x": 0,
+   "y": 10200
+  },
+  "S-Overlays.dc.html": {
+   "h": 1080,
+   "page": "states",
+   "title": "States · Reconnect, error bar, session",
+   "w": 1280,
+   "x": 2720,
+   "y": 10200
+  },
+  "R2-Phone-Zulu-Open.dc.html": {
+   "x": 4130,
+   "y": 13000,
+   "w": 390,
+   "h": 844,
+   "title": "2 · Shell 390 · nav open (Thandi Zulu, switch)",
+   "page": "s1"
+  },
+  "R2-Phone-Bars.dc.html": {
+   "x": 4600,
+   "y": 13000,
+   "w": 390,
+   "h": 1060,
+   "title": "2 · Phone bar states (focus, long role, no role)",
+   "page": "s1"
+  },
+  "R2-Sidebar-Scroll.dc.html": {
+   "x": 0,
+   "y": 14160,
+   "w": 1280,
+   "h": 780,
+   "title": "1 · Sidebar at a 700 px viewport, scrolling",
+   "page": "s1"
+  },
+  "R2-Rules.dc.html": {
+   "x": 1360,
+   "y": 14160,
+   "w": 1280,
+   "h": 2140,
+   "title": "Rules · roles, switching, owner table",
+   "page": "s1"
+  },
+  "R2-Error-Typed.dc.html": {
+   "x": 4130,
+   "y": 17800,
+   "w": 1280,
+   "h": 800,
+   "title": "4 · Error · typed /Error (nothing failed)",
+   "page": "s4"
+  },
+  "R2-Reconnect-Narrow.dc.html": {
+   "x": 2720,
+   "y": 19200,
+   "w": 390,
+   "h": 844,
+   "title": "6 · Reconnect dialog · 390",
+   "page": "s6"
+  },
+  "R2-ErrorBar-Narrow.dc.html": {
+   "x": 3190,
+   "y": 19200,
+   "w": 390,
+   "h": 844,
+   "title": "6 · In-app error bar · 390",
+   "page": "s6"
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-09-27T05:31:16Z",
+  "v": 1
+ },
+ "designSystems": [
+  {
+   "artifact": "https://claude.ai/code/artifact/c96bff42-69c1-4e3c-925a-95bb2292870f",
+   "copiedAt": "2026-09-27T05:31:16Z",
+   "namespace": "wombat",
+   "title": "Wombat",
+   "version": null
+  }
+ ],
+ "launch": {
+  "page": "s1",
+  "view": "canvas"
+ },
+ "notes": {
+  "r1": {
+   "kind": "title1",
+   "maxW": 4990,
+   "page": "s1",
+   "text": "Round 2 · 1–2 · The shell at 1280 and 390",
+   "w": 240,
+   "x": 0,
+   "y": 12700
+  },
+  "r3": {
+   "kind": "title1",
+   "maxW": 5360,
+   "page": "s3",
+   "text": "Round 2 · 3 · The landing frame and detail pages with breadcrumbs",
+   "w": 240,
+   "x": 0,
+   "y": 14100
+  },
+  "r4": {
+   "kind": "title1",
+   "maxW": 5360,
+   "page": "s4",
+   "text": "Round 2 · 4 · Access denied, not found and the error page",
+   "w": 240,
+   "x": 0,
+   "y": 16500
+  },
+  "r6": {
+   "kind": "title1",
+   "maxW": 2640,
+   "page": "s6",
+   "text": "Round 2 · 6 · Framework overlays",
+   "w": 240,
+   "x": 0,
+   "y": 18900
+  },
+  "r7": {
+   "kind": "title1",
+   "maxW": 1280,
+   "page": "s7",
+   "text": "Round 2 · 7 · Token sheet",
+   "w": 240,
+   "x": 0,
+   "y": 20300
+  },
+  "tA": {
+   "kind": "title1",
+   "maxW": 6300,
+   "page": "a",
+   "text": "A · Grouped sidebar, one role at a time",
+   "w": 240,
+   "x": 0,
+   "y": 2700
+  },
+  "tB": {
+   "kind": "title1",
+   "maxW": 6300,
+   "page": "b",
+   "text": "B · Top-bar sections, all your roles at once",
+   "w": 240,
+   "x": 0,
+   "y": 5100
+  },
+  "tC": {
+   "kind": "title1",
+   "maxW": 6300,
+   "page": "c",
+   "text": "C · Home is the map, breadcrumbs everywhere",
+   "w": 240,
+   "x": 0,
+   "y": 7500
+  },
+  "tS": {
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "states",
+   "text": "Shared by A, B and C · outcomes and failure states",
+   "w": 240,
+   "x": 0,
+   "y": 9900
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "A-Admin.dc.html",
+  "A-Zulu-CM.dc.html",
+  "A-Zulu-Assessor.dc.html",
+  "A-Phone-folded.dc.html",
+  "A-Phone-open.dc.html",
+  "A-Spec.dc.html",
+  "B-Admin.dc.html",
+  "B-Zulu-Home.dc.html",
+  "B-Zulu-Inbox.dc.html",
+  "B-Phone-folded.dc.html",
+  "B-Phone-open.dc.html",
+  "B-Spec.dc.html",
+  "C-Admin-Home.dc.html",
+  "C-Admin-Page.dc.html",
+  "C-Zulu.dc.html",
+  "C-Phone-folded.dc.html",
+  "C-Phone-open.dc.html",
+  "C-Spec.dc.html",
+  "S-Outcomes.dc.html",
+  "S-Failures.dc.html",
+  "S-Overlays.dc.html",
+  "R2-Shell-Admin.dc.html",
+  "R2-Shell-Assessor.dc.html",
+  "R2-Phone-Folded.dc.html",
+  "R2-Phone-Open.dc.html",
+  "R2-Phone-Admin-Open.dc.html",
+  "R2-Landing-CM.dc.html",
+  "R2-Landing-Assessor.dc.html",
+  "R2-Landing-Loading.dc.html",
+  "R2-Landing-Error.dc.html",
+  "R2-Detail-Inbox.dc.html",
+  "R2-Detail-Email.dc.html",
+  "R2-Detail-Phone.dc.html",
+  "R2-Denied-In.dc.html",
+  "R2-Denied-Out.dc.html",
+  "R2-NotFound-In.dc.html",
+  "R2-NotFound-Out.dc.html",
+  "R2-Error-In.dc.html",
+  "R2-Error-Out.dc.html",
+  "R2-Denied-Narrow.dc.html",
+  "R2-NotFound-Narrow.dc.html",
+  "R2-Error-Narrow.dc.html",
+  "R2-Reconnect.dc.html",
+  "R2-ErrorBar.dc.html",
+  "R2-Tokens.dc.html",
+  "R2-Phone-Zulu-Open.dc.html",
+  "R2-Phone-Bars.dc.html",
+  "R2-Sidebar-Scroll.dc.html",
+  "R2-Rules.dc.html",
+  "R2-Error-Typed.dc.html",
+  "R2-Reconnect-Narrow.dc.html",
+  "R2-ErrorBar-Narrow.dc.html"
+ ],
+ "pages": [
+  {
+   "id": "s1",
+   "name": "R2 · 1–2 Shell"
+  },
+  {
+   "id": "s3",
+   "name": "R2 · 3 Landing and detail"
+  },
+  {
+   "id": "s4",
+   "name": "R2 · 4 Failure pages"
+  },
+  {
+   "id": "s6",
+   "name": "R2 · 6 Overlays"
+  },
+  {
+   "id": "s7",
+   "name": "R2 · 7 Tokens"
+  },
+  {
+   "id": "overview",
+   "name": "R1 · Overview"
+  },
+  {
+   "id": "a",
+   "name": "R1 · A Grouped sidebar"
+  },
+  {
+   "id": "b",
+   "name": "R1 · B Top-bar sections"
+  },
+  {
+   "id": "c",
+   "name": "R1 · C Home is the map"
+  },
+  {
+   "id": "states",
+   "name": "R1 · Shared states"
+  }
+ ],
+ "title": "Wombat · Flow 01 · The shell"
+}

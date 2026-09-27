@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home · Wombat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.bar{height:56px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;background:#052767;color:#ffffff}
+.brand{display:flex;align-items:center;gap:8px;min-height:44px;color:#ffffff;text-decoration:none}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.4rem;line-height:1;font-variation-settings:"SOFT" 0,"WONK" 1}
+.mk{width:28px;height:28px;border-radius:50%;background:#2d6cdf;box-shadow:inset 0 -9px 0 #1b2f52;flex:none}
+.tog{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;font-weight:600;background:rgba(255,255,255,.1)}
+.panel{flex:1 1 auto;min-height:0;background:linear-gradient(180deg,#052767 0%,#3a0647 70%);color:#d7d7d7;display:flex;flex-direction:column}
+.head{flex:none;padding:12px 16px 14px;border-bottom:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;gap:2px}
+.rl{font-size:.8125rem;font-weight:600;color:#b9c3e0}
+.rn{color:#ffffff;font-weight:600;font-size:1.125rem}
+.sw{display:flex;align-items:center;gap:10px;min-height:44px;margin-top:8px;padding:0 12px;border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;text-decoration:none}
+.list{flex:1 1 auto;min-height:0;overflow-y:auto;padding:8px}
+.nv{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.nv a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:4px;color:#d7d7d7;text-decoration:none}
+.nv a.on{background:rgba(255,255,255,.32);color:#ffffff;font-weight:600;box-shadow:inset 3px 0 0 #ffffff}
+.dv{border-top:1px solid rgba(255,255,255,.18);margin-top:6px;padding-top:6px}
+.foot{flex:none;display:flex;align-items:center;gap:8px;padding:10px 16px 12px;border-top:1px solid rgba(255,255,255,.18);background:#3a0647}
+.foot a{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:#ffffff;text-decoration:none;font-weight:600;flex:1 1 auto;min-width:0}
+.so{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;background:transparent;font:inherit;font-weight:600;flex:none}
+</style>
+</helmet>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;overflow:hidden">
+<header class="bar">
+<a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a>
+<span style="flex-grow:1"></span>
+<label class="tog" for="nav-toggle"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Close</label>
+</header>
+<nav class="panel" aria-label="Main">
+<div class="head"><span class="rl">Acting as</span><span class="rn">Committee member</span>
+<a class="sw" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>Switch to Assessor</a></div>
+<div class="list">
+<ul class="nv">
+<li><a href="#" class="on" aria-current="page"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Committee reviews</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>Decision panels</a></li>
+</ul>
+<ul class="nv dv">
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My data rights</a></li>
+</ul>
+</div>
+<div class="foot"><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Thandi Zulu</a><button type="button" class="so"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>Sign out</button></div>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

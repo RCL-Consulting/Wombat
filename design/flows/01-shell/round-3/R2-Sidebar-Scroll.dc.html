@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sidebar at a 700 px viewport</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+h1,h2{margin:0;font-weight:600;line-height:1.25}
+p{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.side{width:250px;height:700px;flex:none;background:linear-gradient(180deg,#052767 0%,#3a0647 70%);color:#d7d7d7;display:flex;flex-direction:column;border-radius:4px;overflow:hidden}
+.brand{height:56px;flex:none;display:flex;align-items:center;gap:10px;padding:0 16px;background:rgba(0,0,0,.4);color:#ffffff;text-decoration:none}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.6rem;line-height:1;font-variation-settings:"SOFT" 0,"WONK" 1}
+.mk{width:32px;height:32px;border-radius:50%;background:#2d6cdf;box-shadow:inset 0 -10px 0 #1b2f52;flex:none}
+.role{flex:none;padding:10px 16px 12px;border-bottom:1px solid rgba(255,255,255,.18);display:flex;align-items:baseline;gap:8px}
+.rl{font-size:.8125rem;font-weight:600;color:#b9c3e0}
+.rn{color:#ffffff;font-weight:600;font-size:1.0625rem;line-height:1.3}
+.list{flex:1 1 auto;min-height:0;overflow:hidden;position:relative}
+.inner{padding:4px 8px 8px}
+.nv{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.nv a{display:flex;align-items:center;gap:10px;min-height:28px;padding:0 10px;border-radius:4px;color:#d7d7d7;text-decoration:none;font-size:.9375rem;line-height:1.2}
+.nv a.on{background:rgba(255,255,255,.32);color:#ffffff;font-weight:600;box-shadow:inset 3px 0 0 #ffffff}
+.nf{outline:2px solid #ffffff;outline-offset:2px}
+.gh{font-size:.8125rem;font-weight:600;color:#b9c3e0;padding:8px 10px 2px}
+.dv{border-top:1px solid rgba(255,255,255,.18);margin-top:6px;padding-top:6px}
+.bar{position:absolute;right:2px;width:4px;border-radius:2px;background:rgba(255,255,255,.45)}
+.cap{font-size:.875rem;font-weight:600}
+ul.b{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.9375rem}
+.code{font-family:Consolas,"Courier New",monospace;font-size:.8125rem;background:#f1f3f5;border-radius:4px;padding:10px 12px;white-space:pre-wrap}
+</style>
+</helmet>
+<div style="width:1280px;height:780px;box-sizing:border-box;padding:24px 40px;display:flex;gap:40px">
+<div style="display:flex;flex-direction:column;gap:8px"><span class="cap">Scrolled to the top · first item focused</span>
+<nav class="side" aria-label="Main">
+<a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a>
+<div class="role"><span class="rl">Acting as</span><span class="rn">Administrator</span></div>
+<div class="list"><span class="bar" style="top:4px;height:480px"></span><div class="inner">
+<ul class="nv"><li><a href="#" class="on nf" aria-current="page">Home</a></li></ul>
+<div class="gh">Platform</div>
+<ul class="nv"><li><a href="#">Scheduled jobs</a></li><li><a href="#">Audit log</a></li><li><a href="#">SSO mappings</a></li><li><a href="#">Data rights requests</a></li></ul>
+<div class="gh">Organisations</div>
+<ul class="nv"><li><a href="#">Institutions</a></li><li><a href="#">Colleges</a></li></ul>
+<div class="gh">People</div>
+<ul class="nv"><li><a href="#">Users</a></li><li><a href="#">Invitations</a></li></ul>
+<div class="gh">Catalogue</div>
+<ul class="nv"><li><a href="#">EPAs</a></li><li><a href="#">Curricula</a></li><li><a href="#">Activity types</a></li><li><a href="#">Entrustment scales</a></li></ul>
+<div class="gh">Reviews</div>
+<ul class="nv"><li><a href="#">Decisions due</a></li><li><a href="#">Committee reviews</a></li><li><a href="#">Decision panels</a></li></ul>
+<ul class="nv dv"><li><a href="#">My data rights</a></li></ul>
+</div></div>
+</nav></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><span class="cap">Scrolled to the end · last item focused</span>
+<nav class="side" aria-label="Main">
+<a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a>
+<div class="role"><span class="rl">Acting as</span><span class="rn">Administrator</span></div>
+<div class="list"><span class="bar" style="bottom:4px;height:480px"></span><div class="inner" style="margin-top:-96px">
+<ul class="nv"><li><a href="#" class="on" aria-current="page">Home</a></li></ul>
+<div class="gh">Platform</div>
+<ul class="nv"><li><a href="#">Scheduled jobs</a></li><li><a href="#">Audit log</a></li><li><a href="#">SSO mappings</a></li><li><a href="#">Data rights requests</a></li></ul>
+<div class="gh">Organisations</div>
+<ul class="nv"><li><a href="#">Institutions</a></li><li><a href="#">Colleges</a></li></ul>
+<div class="gh">People</div>
+<ul class="nv"><li><a href="#">Users</a></li><li><a href="#">Invitations</a></li></ul>
+<div class="gh">Catalogue</div>
+<ul class="nv"><li><a href="#">EPAs</a></li><li><a href="#">Curricula</a></li><li><a href="#">Activity types</a></li><li><a href="#">Entrustment scales</a></li></ul>
+<div class="gh">Reviews</div>
+<ul class="nv"><li><a href="#">Decisions due</a></li><li><a href="#">Committee reviews</a></li><li><a href="#">Decision panels</a></li></ul>
+<ul class="nv dv"><li><a href="#" class="nf">My data rights</a></li></ul>
+</div></div>
+</nav></div>
+
+<div style="flex:1 1 auto;display:flex;flex-direction:column;gap:14px;padding-top:28px">
+<h2 style="font-size:1.25rem">The Administrator's list at a 1280 × 700 viewport</h2>
+<ul class="b">
+<li>The brand cell (56 px) and the role head stay fixed; only the list below them scrolls. At 700 px the list needs about 680 px and has about 600, so it scrolls by about 90 px.</li>
+<li>Rows are 28 px with 4 px between them. The 2 px ring sits 2 px outside the row, so it never meets the next row.</li>
+<li>The list pads 4 px at the top and 8 px at the sides and foot, so the first and last rings are not clipped by the scroll edge.</li>
+<li>The list takes no tabindex. Tab moves through the links, and the browser scrolls each focused link into view.</li>
+<li>The current item is scrolled into view on load (scroll-margin-block: 8px).</li>
+<li>Hover and the scrollbar (drawn here as a thumb) are the browser's; the thumb is canvas-only.</li>
+</ul>
+<pre class="code">.nav-list { flex: 1 1 auto; min-height: 0;
+  overflow-y: auto; padding: 4px 8px 8px; }
+.nav-list ul { display: flex; flex-direction: column; gap: 4px; }
+.nav-list a:focus-visible {
+  outline: 2px solid var(--nav-focus-ring); outline-offset: 2px; }</pre>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":780}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

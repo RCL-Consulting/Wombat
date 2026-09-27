@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone bar states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+p{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cap{font-size:.875rem;font-weight:600;padding:0 16px}
+.txt{font-size:.8125rem;color:#686f77;padding:0 16px}
+.bar{height:56px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;background:#052767;color:#ffffff}
+.bar.tall{height:auto;min-height:56px;padding-top:6px;padding-bottom:6px}
+.sbar{background:linear-gradient(90deg,#052767,#3a0647)}
+.brand{display:flex;align-items:center;gap:8px;min-height:44px;color:#ffffff;text-decoration:none;flex:none}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.4rem;line-height:1;font-variation-settings:"SOFT" 0,"WONK" 1}
+.mk{width:28px;height:28px;border-radius:50%;background:#2d6cdf;box-shadow:inset 0 -9px 0 #1b2f52;flex:none}
+.who{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:.9rem;text-align:right;min-width:0}
+.who small{font-size:.75rem;color:#b9c3e0;font-weight:600}
+.tog{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;font-weight:600;flex:none}
+.nf{outline:2px solid #ffffff;outline-offset:2px}
+.st{display:flex;flex-direction:column;gap:6px}
+.code{font-family:Consolas,"Courier New",monospace;font-size:.75rem;background:#f1f3f5;border-radius:4px;padding:8px 10px;margin:0 16px;white-space:pre-wrap;color:#333333}
+</style>
+</helmet>
+<div style="width:390px;height:1060px;box-sizing:border-box;padding:16px 0 24px;display:flex;flex-direction:column;gap:18px;overflow:hidden">
+<div class="st"><p class="cap">1 · Folded, Menu focused</p>
+<header class="bar"><a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a><span style="flex-grow:1"></span><span class="who"><small>Acting as</small>Trainee</span><label class="tog nf" for="nav-toggle"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>Menu</label></header>
+<p class="txt">The ring sits on the label, driven by the hidden checkbox. The label carries no aria-expanded; the checkbox is the control and its checked state is what a screen reader hears.</p>
+<pre class="code">#nav-toggle:focus-visible + label.tog {
+  outline: 2px solid var(--nav-focus-ring);
+  outline-offset: 2px; }</pre></div>
+
+<div class="st"><p class="cap">2 · A role label that wraps</p>
+<header class="bar tall"><a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a><span style="flex-grow:1"></span><span class="who" style="max-width:120px"><small>Acting as</small>Sub-speciality admin</span><label class="tog" for="nav-toggle"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>Menu</label></header>
+<p class="txt">The role takes two lines at most 120 px wide; the bar grows to fit. The role is never truncated.</p></div>
+
+<div class="st"><p class="cap">3 · Pending trainee</p>
+<header class="bar"><a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a><span style="flex-grow:1"></span><span class="who"><small>Acting as</small>Pending trainee</span><label class="tog" for="nav-toggle"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>Menu</label></header>
+<p class="txt">The head reads "Acting as · Pending trainee", the role's label, like any other role; one role, so no switch.</p></div>
+
+<div class="st"><p class="cap">4 · No role (a former trainee)</p>
+<header class="bar"><a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a><span style="flex-grow:1"></span><label class="tog" for="nav-toggle"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>Menu</label></header>
+<p class="txt">No "Acting as" in the bar or the menu. Her menu: Home, then My progress and My data rights.</p></div>
+
+<div class="st"><p class="cap">5 · Open: Close focused, brand focused</p>
+<header class="bar"><a class="brand nf" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a><span style="flex-grow:1"></span><label class="tog nf" for="nav-toggle" style="background:rgba(255,255,255,.1)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Close</label></header>
+<p class="txt">Two states drawn together to show the ring on both controls; only one has focus at a time.</p></div>
+
+<div class="st"><p class="cap">6 · Signed out (static pages)</p>
+<header class="bar sbar"><a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a><span style="flex-grow:1"></span><a class="tog nf" href="#" style="text-decoration:none">Sign in</a></header>
+<p class="txt">The same white ring on the signed-out gradient bar: 14.07 at its start, 16.19 at its end.</p></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1060}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

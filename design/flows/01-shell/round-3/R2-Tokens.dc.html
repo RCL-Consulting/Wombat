@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wombat token sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+a{color:#0b5cab}
+h1,h2,h3,h4,h5{margin:0;font-weight:600;line-height:1.25}
+p{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.sec{display:flex;flex-direction:column;gap:14px}
+.sec>h2{font-size:1.25rem;border-bottom:2px solid #2d6cdf;padding-bottom:6px}
+.card{background:#ffffff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:20px 24px}
+.tbl{width:100%;border-collapse:collapse;font-size:.875rem}
+.tbl th{text-align:left;font-weight:600;background:#f1f3f5;padding:6px 10px;border-bottom:1px solid #dee2e6}
+.tbl td{padding:5px 10px;border-bottom:1px solid #dee2e6;vertical-align:middle}
+.sw{display:inline-block;width:28px;height:20px;border-radius:4px;border:1px solid #7b848d;vertical-align:middle}
+.mono{font-family:Consolas,"Courier New",monospace;font-size:.8125rem}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;border-radius:999px;padding:0 8px;border:1px solid #7b848d;background:#f1f3f5;white-space:nowrap}
+.tag.chg{border-color:#9a5400;background:#fff8e1}
+.tag.new{border-color:#2d6cdf;background:#f3f8ff}
+.tag.no{border-color:#b8322a;background:#fff5f5}
+.pass{font-weight:600;color:#1a7340}
+.fail{font-weight:600;color:#b8322a}
+.mute{color:#686f77}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.btn-primary{background:#2d6cdf;color:#ffffff}
+.btn-outline{background:#ffffff;color:#2d6cdf}
+.btn-danger{background:#b8322a;border-color:#b8322a;color:#ffffff}
+.btn-success{background:#1a7340;border-color:#1a7340;color:#ffffff}
+.btn-sm{min-height:28px;padding:0 10px;font-size:.85rem}
+.badge{display:inline-flex;align-items:center;white-space:nowrap;flex:none;border-radius:999px;padding:1px 10px;font-size:.75rem;font-weight:600;line-height:1.5;border:1px solid;color:#333333}
+.b-neutral{background:#f1f3f5;border-color:#7b848d}.b-info{background:#f3f8ff;border-color:#2d6cdf}.b-success{background:#e8f5e9;border-color:#1a7340}.b-warning{background:#fff8e1;border-color:#9a5400}.b-danger{background:#fff5f5;border-color:#b8322a}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-radius:6px;border:1px solid;border-left-width:4px;color:#333333}
+.alert .ico{margin-top:2px}
+.a-success{background:#e8f5e9;border-color:#1a7340}.a-success .ico{color:#1a7340}
+.a-info{background:#f3f8ff;border-color:#2d6cdf}.a-info .ico{color:#2d6cdf}
+.a-warning{background:#fff8e1;border-color:#9a5400}.a-warning .ico{color:#9a5400}
+.a-danger{background:#fff5f5;border-color:#b8322a}.a-danger .ico{color:#b8322a}
+.ring{outline:2px solid #2d6cdf;outline-offset:2px}
+.nf{outline:2px solid #ffffff;outline-offset:2px}
+.inp{height:38px;border:1px solid #7b848d;border-radius:6px;background:#ffffff;padding:0 12px;display:flex;align-items:center;font:inherit;box-sizing:border-box}
+.inp.bad{border-color:#b8322a;box-shadow:inset 4px 0 0 #b8322a;padding-left:16px}
+.lab{font-weight:600;font-size:.9375rem}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dark{background:linear-gradient(180deg,#052767 0%,#3a0647 70%);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;color:#d7d7d7}
+.dk{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 10px;border-radius:4px;color:#d7d7d7;text-decoration:none;font-size:.9375rem}
+.code{font-family:Consolas,"Courier New",monospace;font-size:.8125rem;background:#f1f3f5;border-radius:4px;padding:10px 12px;white-space:pre-wrap}
+</style>
+</helmet>
+<div style="width:1280px;height:4700px;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:36px">
+<div><div class="mute" style="font-size:.875rem;font-weight:600">Wombat · flow 01 · round 2, revised</div><h1 style="font-size:2rem">Token sheet</h1><p class="mute" style="max-width:980px">Names are app.css's :root custom properties. <span class="tag chg">changed</span> keeps the name with a new value (T322); <span class="tag new">new</span> is added to :root. <strong>Method:</strong> WCAG 2.1 relative luminance on the values shown. A translucent colour is blended over the ground it actually sits on before measuring. A gradient is sampled at its start (#052767), middle (#201657) and end (#3A0647), and the worst sample is the one that must pass. Text needs 4.5:1; control edges, focus rings and meaningful graphics 3:1.</p></div>
+
+<div class="sec"><h2>Palette: page</h2>
+<div class="card" style="padding:8px 0;overflow:hidden"><table class="tbl">
+<thead><tr><th style="padding-left:20px"></th><th>Token</th><th>Value</th><th>Use</th><th></th></tr></thead><tbody>
+<tr><td style="padding-left:20px" class="mute">—</td><td class="mono">color-scheme</td><td class="mono">light</td><td>Declared on :root. Dark mode is a later flow, not this one.</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#2c3e50"></span></td><td class="mono">--primary-color</td><td class="mono">#2C3E50</td><td>Emphasis ink, dashboard figure</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#2d6cdf"></span></td><td class="mono">--secondary-color</td><td class="mono">#2D6CDF</td><td>The one action colour; header rule; info edge</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#ffffff"></span></td><td class="mono">--on-fill</td><td class="mono">#FFFFFF</td><td>Text and icons on filled buttons (primary, danger, success)</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#f8f9fa"></span></td><td class="mono">--background-color</td><td class="mono">#F8F9FA</td><td>Page</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#ffffff"></span></td><td class="mono">--surface-color</td><td class="mono">#FFFFFF</td><td>Cards, tables, dialogs, and .btn-outline's fill</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#333333"></span></td><td class="mono">--text-color</td><td class="mono">#333333</td><td>Body, and text on every tint</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#686f77"></span></td><td class="mono">--muted-text</td><td class="mono">#686F77</td><td>Help, labels, subtitles</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#0b5cab"></span></td><td class="mono">--link-color</td><td class="mono">#0B5CAB</td><td>Links, breadcrumbs</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#084a8a"></span></td><td class="mono">--link-hover</td><td class="mono">#084A8A</td><td>Link on hover (was a literal)</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#dee2e6"></span></td><td class="mono">--border-color</td><td class="mono">#DEE2E6</td><td>Hairlines only (decorative)</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#7b848d"></span></td><td class="mono">--input-border</td><td class="mono">#7B848D</td><td>Control edges (was #CED4DA)</td><td><span class="tag chg">changed</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#2d6cdf"></span></td><td class="mono">--focus-ring</td><td class="mono">#2D6CDF</td><td>Ring on light ground (was #3498DB)</td><td><span class="tag chg">changed</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#f1f3f5"></span></td><td class="mono">--header-bg</td><td class="mono">#F1F3F5</td><td>Table heads, skeleton, code, reference block</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#f8f9fa"></span></td><td class="mono">--hover-bg</td><td class="mono">#F8F9FA</td><td>Row hover, progress track</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#1a7340"></span></td><td class="mono">--success-color / --success-bg</td><td class="mono">#1A7340 / #E8F5E9</td><td>Edge, icon, dot, button / tint (was #27AE60)</td><td><span class="tag chg">changed</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#9a5400"></span></td><td class="mono">--warning-color / --warning-bg</td><td class="mono">#9A5400 / #FFF8E1</td><td>Edge, icon, dot / tint; the error bar (was #FD7E14)</td><td><span class="tag chg">changed</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#b8322a"></span></td><td class="mono">--danger-color / --danger-bg</td><td class="mono">#B8322A / #FFF5F5</td><td>Edge, icon, button, validation text (was #E74C3C)</td><td><span class="tag chg">changed</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#f3f8ff"></span></td><td class="mono">--info-bg</td><td class="mono">#F3F8FF</td><td>Tint (edge: secondary)</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#a6a6a6"></span></td><td class="mono">--scrim</td><td class="mono">rgb(0 0 0 / .35)</td><td>Dialog backdrop</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px" class="mute">—</td><td class="mono">--accent-color, --info-color</td><td class="mono">#3498DB</td><td>Read by nothing</td><td><span class="tag">removed</span></td></tr>
+</tbody></table></div></div>
+
+<div class="sec"><h2>Palette: dark chrome (sidebar, phone bar, signed-out bar)</h2>
+<div class="card" style="padding:8px 0;overflow:hidden"><table class="tbl">
+<thead><tr><th style="padding-left:20px"></th><th>Token</th><th>Value</th><th>Use</th><th></th></tr></thead><tbody>
+<tr><td style="padding-left:20px"><span class="sw" style="background:linear-gradient(90deg,#052767,#3a0647)"></span></td><td class="mono">--sidebar-gradient-start / -end</td><td class="mono">#052767 → #3A0647</td><td>Sidebar 180deg, end at 70%, full height; phone bar = start, solid; signed-out bar 90deg; phone menu foot = end, solid</td><td></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#d7d7d7"></span></td><td class="mono">--nav-text</td><td class="mono">#D7D7D7</td><td>Nav items at rest</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#ffffff"></span></td><td class="mono">--nav-text-strong</td><td class="mono">#FFFFFF</td><td>The current and hovered item, the role name, the brand, the bar's controls</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#b9c3e0"></span></td><td class="mono">--nav-group-label</td><td class="mono">#B9C3E0</td><td>Group headings, "Acting as", the switch and toggle edges</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#556c98"></span></td><td class="mono">--nav-active-bg</td><td class="mono">rgb(255 255 255 / .32)</td><td>Current item. Translucent: valid only over the gradient. Swatch = its blend at the gradient start, #556C98. The recorded state cue is the 3 px white bar and weight 600, not the fill.</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#1e3b73"></span></td><td class="mono">--nav-hover-bg</td><td class="mono">rgb(255 255 255 / .10)</td><td>Hovered item</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#03173e"></span></td><td class="mono">--nav-brand-bg</td><td class="mono">rgb(0 0 0 / .40)</td><td>Brand cell at the head of the sidebar</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#3a5286"></span></td><td class="mono">--nav-divider</td><td class="mono">rgb(255 255 255 / .18)</td><td>Rules under the role head, above the personal links and the menu foot</td><td><span class="tag new">new</span></td></tr>
+<tr><td style="padding-left:20px"><span class="sw" style="background:#ffffff"></span></td><td class="mono">--nav-focus-ring</td><td class="mono">#FFFFFF</td><td>Every focusable control on dark chrome (list below)</td><td><span class="tag new">new</span></td></tr>
+</tbody></table></div>
+<p class="mute" style="font-size:.875rem">Note: #62779F, the swatch in the review, is the blend at .37 (the old alpha). At .32 the blend at the start is #556C98; the figures below use .32.</p></div>
+
+<div class="sec"><h2>Contrast: page</h2>
+<div class="card" style="padding:8px 0;overflow:hidden"><table class="tbl">
+<thead><tr><th style="padding-left:20px">Foreground / ground</th><th>Needs</th><th>Ratio</th><th>Today</th></tr></thead><tbody>
+<tr><td style="padding-left:20px">text-color / surface · background · header-bg</td><td>4.5</td><td class="pass">12.63 · 11.99 · 11.36</td><td class="mute">same</td></tr>
+<tr><td style="padding-left:20px">text-color / success · warning · danger · info tint</td><td>4.5</td><td class="pass">11.23 · 11.89 · 11.81 · 11.84</td><td class="mute">2.55 · 2.42 · 3.57 · 4.55 (semantic on tint)</td></tr>
+<tr><td style="padding-left:20px">muted-text / surface · background · header-bg</td><td>4.5</td><td class="pass">5.09 · 4.83 · 4.57</td><td class="mute">same</td></tr>
+<tr><td style="padding-left:20px">muted-text / success · warning · danger · info tint</td><td>4.5</td><td class="pass">4.52 · 4.79 · 4.75 · 4.77</td><td class="mute">same</td></tr>
+<tr><td style="padding-left:20px">link-color / surface · background · header-bg</td><td>4.5</td><td class="pass">6.70 · 6.36 · 6.03</td><td class="mute">same</td></tr>
+<tr><td style="padding-left:20px">link-color / success · warning · danger · info tint</td><td>4.5</td><td class="pass">5.96 · 6.31 · 6.27 · 6.28</td><td class="mute">same</td></tr>
+<tr><td style="padding-left:20px">link-hover / surface</td><td>4.5</td><td class="pass">8.91</td><td class="mute">new</td></tr>
+<tr><td style="padding-left:20px">primary-color / surface</td><td>4.5</td><td class="pass">10.98</td><td class="mute">same</td></tr>
+<tr><td style="padding-left:20px">on-fill on secondary · success · danger</td><td>4.5</td><td class="pass">4.86 · 5.88 · 5.95</td><td class="mute">4.86 · 2.87 · 3.82</td></tr>
+<tr><td style="padding-left:20px">secondary (outline label and edge) / surface · background</td><td>4.5</td><td class="pass">4.86 · 4.61</td><td class="mute">same</td></tr>
+<tr><td style="padding-left:20px">danger (validation text) / surface · background</td><td>4.5</td><td class="pass">5.95 · 5.65</td><td class="mute">3.82 · 3.62</td></tr>
+<tr><td style="padding-left:20px">input-border / surface · background · header-bg</td><td>3</td><td class="pass">3.80 · 3.60 · 3.42</td><td class="mute">1.49 · 1.42 · —</td></tr>
+<tr><td style="padding-left:20px">input-border / success · warning · danger · info tint</td><td>3</td><td class="pass">3.38 · 3.58 · 3.55 · 3.56</td><td class="mute">—</td></tr>
+<tr><td style="padding-left:20px">focus-ring / surface · background · header-bg</td><td>3</td><td class="pass">4.86 · 4.61 · 4.37</td><td class="mute">3.15 · 2.99 · —</td></tr>
+<tr><td style="padding-left:20px">focus-ring / success · warning · danger · info tint</td><td>3</td><td class="pass">4.32 · 4.57 · 4.54 · 4.55</td><td class="mute">—</td></tr>
+<tr><td style="padding-left:20px">tint edges: success · warning · danger · info (secondary)</td><td>3</td><td class="pass">5.23 · 5.43 · 5.56 · 4.55</td><td class="mute">—</td></tr>
+<tr><td style="padding-left:20px">neutral badge: text · edge on header-bg</td><td>4.5 · 3</td><td class="pass">11.36 · 3.42</td><td class="mute">new</td></tr>
+<tr><td style="padding-left:20px">status dots on surface: success · warning · danger</td><td>3</td><td class="pass">5.88 · 5.77 · 5.95</td><td class="mute">2.87 · 2.57 · 3.82</td></tr>
+<tr><td style="padding-left:20px">progress fill on the hover-bg track: secondary · success (complete)</td><td>3</td><td class="pass">4.61 · 5.58</td><td class="mute">— · 2.73</td></tr>
+<tr><td style="padding-left:20px">reconnect bar: secondary on header-bg track</td><td>3</td><td class="pass">4.37</td><td class="mute">new</td></tr>
+<tr><td style="padding-left:20px">error bar: text · warning edge and icon on warning-bg</td><td>4.5 · 3</td><td class="pass">11.89 · 5.43</td><td class="mute">new</td></tr>
+<tr><td style="padding-left:20px">border-color / surface (hairline, not a control)</td><td>—</td><td>1.30</td><td class="mute">decorative</td></tr>
+</tbody></table></div></div>
+
+<div class="sec"><h2>Contrast: dark chrome</h2>
+<div class="card" style="padding:8px 0;overflow:hidden"><table class="tbl">
+<thead><tr><th style="padding-left:20px">Foreground / ground (start · middle · end)</th><th>Needs</th><th>Ratio</th></tr></thead><tbody>
+<tr><td style="padding-left:20px">nav-text / gradient</td><td>4.5</td><td class="pass">9.78 · 11.11 · 11.25</td></tr>
+<tr><td style="padding-left:20px">nav-group-label / gradient</td><td>4.5</td><td class="pass">8.00 · 9.09 · 9.21</td></tr>
+<tr><td style="padding-left:20px">nav-text-strong on nav-active-bg (.32 blended over the gradient)</td><td>4.5</td><td class="pass">5.27 · 5.72 · 6.06</td></tr>
+<tr><td style="padding-left:20px"><strong>nav-text on nav-active-bg</strong></td><td>4.5</td><td class="fail">3.66 · 3.97 · 4.21 · <span class="tag no">forbidden</span></td></tr>
+<tr><td style="padding-left:20px">nav-text-strong on nav-hover-bg</td><td>4.5</td><td class="pass">10.58 · 12.12 · 12.62</td></tr>
+<tr><td style="padding-left:20px">nav-focus-ring / gradient</td><td>3</td><td class="pass">14.07 · 15.98 · 16.19</td></tr>
+<tr><td style="padding-left:20px">nav-focus-ring / the current item (active blend)</td><td>3</td><td class="pass">5.27 · 5.72 · 6.06</td></tr>
+<tr><td style="padding-left:20px">switch and toggle edge (nav-group-label) / gradient</td><td>3</td><td class="pass">8.00 · 9.09 · 9.21</td></tr>
+<tr><td style="padding-left:20px">nav-text-strong on nav-brand-bg (blend #03173E)</td><td>4.5</td><td class="pass">17.56</td></tr>
+<tr><td style="padding-left:20px">phone bar (#052767): nav-text-strong · "Acting as" label · toggle edge · ring</td><td>4.5 · 4.5 · 3 · 3</td><td class="pass">14.07 · 8.00 · 8.00 · 14.07</td></tr>
+<tr><td style="padding-left:20px">signed-out bar (90deg gradient): text · Sign in edge · ring, start · end</td><td>4.5 · 3 · 3</td><td class="pass">14.07·16.19 · 8.00·9.21 · 14.07·16.19</td></tr>
+<tr><td style="padding-left:20px">phone menu foot (#3A0647): name · Sign out edge · ring</td><td>4.5 · 3 · 3</td><td class="pass">16.19 · 9.21 · 16.19</td></tr>
+</tbody></table></div></div>
+
+<div class="sec"><h2>Focus: page ring and dark-chrome ring</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="card" style="display:flex;flex-direction:column;gap:16px"><p class="mute">--focus-ring, 2 px solid, 2 px offset, on :focus-visible, on light ground</p>
+<div class="row"><button type="button" class="btn btn-primary ring">Save</button><button type="button" class="btn btn-outline ring">Cancel</button><a href="#" class="ring" style="padding:2px">Activity inbox</a></div>
+<div style="display:flex;flex-direction:column;gap:6px;max-width:340px"><label class="lab">Display name</label><span class="inp ring">Anele Dlamini</span></div>
+<div class="ring" style="border:1px solid #dee2e6;border-radius:12px;padding:10px 12px;background:#ffffff;font-size:.875rem" tabindex="0">A focusable scroll region (a wide table's container) shows the same ring (T328).</div>
+<p class="mute" style="font-size:.875rem">At 1280 the top bar is light: the account link and Sign out take this ring.</p>
+</div>
+<div class="dark">
+<p style="color:#ffffff;font-weight:600">--nav-focus-ring, 2 px solid, 2 px offset, on every focusable control on dark chrome</p>
+<div class="row"><a href="#" class="dk nf" style="color:#ffffff;font-weight:600">Brand link</a><span class="dk nf" style="border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;min-height:44px">Menu toggle (label)</span></div>
+<div class="row"><a href="#" class="dk nf">Nav link</a><a href="#" class="dk nf" style="background:rgba(255,255,255,.32);color:#ffffff;font-weight:600;box-shadow:inset 3px 0 0 #ffffff">Current item</a></div>
+<div class="row"><a href="#" class="dk nf" style="border:1px solid #b9c3e0;border-radius:6px;color:#ffffff">Switch to Assessor</a><a href="#" class="dk nf" style="color:#ffffff;font-weight:600">Account link (menu foot)</a><span class="dk nf" style="border:1px solid #b9c3e0;border-radius:6px;color:#ffffff">Sign out (menu foot)</span></div>
+<p style="font-size:.875rem">1280: brand link, nav links, switch, Change role. 390: brand link, Menu toggle, nav links, switch, account link, Sign out. Signed out: brand link, Sign in. Rows sit 4 px apart so the ring never meets the next row.</p>
+</div>
+</div></div>
+
+<div class="sec"><h2>Type</h2>
+<div class="card" style="display:grid;grid-template-columns:260px minmax(0,1fr);gap:10px 24px;align-items:baseline">
+<div class="mute">Body face</div><div>Source Sans 3, self-hosted woff2 (400, 600, 700; SIL OFL 1.1, the licence Fraunces ships under). Stack: "Source Sans 3", "Segoe UI", system-ui, sans-serif. Line height 1.5 body, 1.25 headings. Controls take font: inherit (T328). Sentence case throughout; a nav label, its page's h1, its breadcrumb and its tab title stem are the same words ("Activity inbox · Wombat").</div>
+<div class="mute">wordmark · Fraunces 500, 1.6rem</div><div style="font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.6rem;font-variation-settings:'SOFT' 0,'WONK' 1">Wombat</div>
+<div class="mute">h1 · 1.5rem / 600</div><h1 style="font-size:1.5rem">Decisions due</h1>
+<div class="mute">h2 · 1.25rem / 600</div><h2 style="font-size:1.25rem">Scale details</h2>
+<div class="mute">h3 · 1.1rem / 600 · card titles</div><h3 style="font-size:1.1rem">Curriculum targets</h3>
+<div class="mute">h4 · 1rem / 600</div><h4 style="font-size:1rem">By EPA</h4>
+<div class="mute">h5 · 0.9rem / 600</div><h5 style="font-size:.9rem">Semester 2, 2026</h5>
+<div class="mute">body · 1rem</div><p>Encounters observed after the day count towards nothing.</p>
+<div class="mute">nav label · 0.9375rem; 600 when current</div><p style="font-size:.9375rem">Activity inbox</p>
+<div class="mute">group label · 0.8125rem / 600, sentence case</div><p style="font-size:.8125rem;font-weight:600">Catalogue</p>
+<div class="mute">subtitle · 0.9rem · muted</div><p style="font-size:.9rem;color:#686f77">Showing 1–20 of 137</p>
+<div class="mute">small · 0.875rem</div><p style="font-size:.875rem">Set by the College.</p>
+<div class="mute">badge · 0.75rem / 600</div><p><span class="badge b-info">Awaiting supervisor</span></p>
+<div class="mute">button · 0.95rem / 600 · sm 0.85rem</div><p style="font-size:.95rem;font-weight:600">Save</p>
+<div class="mute">metric · 2rem / 700 · primary</div><p style="font-size:2rem;font-weight:700;color:#2c3e50;line-height:1">4 of 9</p>
+<div class="mute">code · Consolas 0.875rem</div><p class="mono" style="font-size:.875rem">4bf92f3577b34da6a3ce929d0e0e4736</p>
+<div class="mute">time · always with its zone</div><p>2026-09-26 15:14 SAST</p>
+</div></div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="sec"><h2>Spacing</h2><div class="card" style="display:flex;flex-direction:column;gap:10px">
+<div class="row"><span class="mono" style="width:130px">--space-xs 4</span><span style="width:4px;height:16px;background:#2d6cdf"></span></div>
+<div class="row"><span class="mono" style="width:130px">--space-sm 8</span><span style="width:8px;height:16px;background:#2d6cdf"></span></div>
+<div class="row"><span class="mono" style="width:130px">--space-md 16</span><span style="width:16px;height:16px;background:#2d6cdf"></span></div>
+<div class="row"><span class="mono" style="width:130px">--space-lg 24</span><span style="width:24px;height:16px;background:#2d6cdf"></span></div>
+<div class="row"><span class="mono" style="width:130px">--space-xl 32</span><span style="width:32px;height:16px;background:#2d6cdf"></span></div>
+<div class="row"><span class="mono" style="width:130px">--space-2xl 48</span><span style="width:48px;height:16px;background:#2d6cdf"></span></div>
+<p class="mute" style="font-size:.875rem">Shell: top bar 56; sidebar 250; nav row 28 with 4 between (44 with 4 at 390); gutter 32 left, 24 right (16 at 390); card padding 24; grid gap 24; dialog 400 (358 at 390).</p>
+</div></div>
+<div class="sec"><h2>Radii</h2><div class="card" style="display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:64px;height:48px;border:2px solid #2c3e50;border-radius:4px"></span><span class="mono">--radius-sm 4</span><span class="mute" style="font-size:.75rem">nav rows, skeleton</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:64px;height:48px;border:2px solid #2c3e50;border-radius:6px"></span><span class="mono">--radius-md 6</span><span class="mute" style="font-size:.75rem">controls, alerts</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:64px;height:48px;border:2px solid #2c3e50;border-radius:8px"></span><span class="mono">--radius-lg 8</span><span class="mute" style="font-size:.75rem">cards</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:64px;height:48px;border:2px solid #2c3e50;border-radius:12px"></span><span class="mono">--radius-xl 12</span><span class="mute" style="font-size:.75rem">tables, dialogs</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:64px;height:28px;border:2px solid #2c3e50;border-radius:999px"></span><span class="mono">--radius-pill</span><span class="mute" style="font-size:.75rem">badges</span></div>
+<p class="mute" style="font-size:.875rem;width:100%">Status dots stay 50%. The invalid stripe is not a token: inset 4px 0 0 var(--danger-color).</p>
+</div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="sec"><h2>Shadows</h2><div class="card" style="display:flex;flex-direction:column;gap:14px">
+<div class="row"><span style="width:72px;height:44px;background:#ffffff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);border:1px solid #dee2e6"></span><span><span class="mono">--shadow-raised</span> 0 1px 3px var(--shadow-color) · cards, tables, signed-out cards</span></div>
+<div class="row"><span style="width:72px;height:44px;background:#ffffff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.25)"></span><span><span class="mono">--shadow-dialog</span> 0 10px 25px rgb(0 0 0 / .25) · reconnect and confirm dialogs</span></div>
+<div class="row"><span style="width:72px;height:44px;background:#fff8e1;box-shadow:0 -1px 2px rgba(0,0,0,.2);border-top:3px solid #9a5400"></span><span><span class="mono">--shadow-bar</span> 0 -1px 2px rgb(0 0 0 / .2) · the error bar</span></div>
+<p class="mute" style="font-size:.875rem">--shadow-color rgb(0 0 0 / .1) stays; the three shadows are new.</p>
+</div></div>
+<div class="sec"><h2>Motion</h2><div class="card" style="display:flex;flex-direction:column;gap:10px;font-size:.9375rem">
+<p><span class="mono">--motion-fast</span> 150 ms: button dim, card lift, nav hover.</p>
+<p>Skeleton pulse 1.2 s. Reconnect spinner, progress bar, dialog slide and fade.</p>
+<p><strong>Under prefers-reduced-motion:</strong> the skeleton is a still header-bg block; the reconnect spinner, bar, slide and fade stop; every transition goes to 0.</p>
+<pre class="code">@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important;
+    animation: none !important; } }</pre>
+</div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="sec"><h2>Badges, five tints</h2><div class="card" style="display:flex;flex-direction:column;gap:12px">
+<div class="row"><span class="badge b-neutral">Draft</span><span class="badge b-info">Awaiting supervisor</span><span class="badge b-success">Completed</span><span class="badge b-warning">Accepted</span><span class="badge b-danger">Declined</span></div>
+<div class="row" style="flex-wrap:nowrap;background:#f1f3f5;padding:8px;border-radius:6px;font-size:.875rem"><span style="white-space:nowrap">In a flex row:</span><span class="badge b-info">Awaiting supervisor</span><span style="min-width:0">the pill keeps its shape (flex: none, T328).</span></div>
+</div></div>
+<div class="sec"><h2>Buttons</h2><div class="card" style="display:flex;flex-direction:column;gap:12px">
+<div class="row"><button type="button" class="btn btn-primary">Primary</button><button type="button" class="btn btn-outline">Outline</button><button type="button" class="btn btn-danger">Danger</button><button type="button" class="btn btn-success">Success</button><button type="button" class="btn btn-outline btn-sm">Small</button></div>
+<div class="row"><button type="button" class="btn btn-primary" style="opacity:.65" disabled="">Disabled</button><button type="button" class="btn btn-primary" aria-disabled="true" style="cursor:progress">Saving…</button></div>
+<p class="mute" style="font-size:.875rem">Filled buttons use --on-fill. .btn-outline's background is var(--surface-color), never transparent: a transparent outline button fails on header-bg and success-bg. Header actions share one height, 36 px.</p>
+<div class="row" style="background:#e8f5e9;padding:10px;border-radius:6px"><button type="button" class="btn btn-outline btn-sm">Outline on a success tint</button><span class="mute" style="font-size:.8125rem">keeps its white fill</span></div>
+</div></div>
+</div>
+
+<div class="sec"><h2>Alerts, four kinds</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div class="alert a-success"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span><strong>Saved.</strong> Your profile was updated at 2026-09-26 15:14 SAST.</span></div>
+<div class="alert a-info"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>You are now acting as Assessor.</span></div>
+<div class="alert a-warning"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span><strong>This invitation expires on 2026-10-01.</strong> Resend it if the person still needs it.</span></div>
+<div class="alert a-danger"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span><strong>Not saved.</strong> Another account already uses this email address.</span></div>
+</div></div>
+
+<div class="sec"><h2>Field validation</h2>
+<div class="card" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px"><label class="lab">Email</label><span class="inp bad" aria-invalid="true">anele@</span><span style="font-size:.875rem;color:#b8322a;display:flex;gap:6px;align-items:center"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>Enter a full email address, like name@hospital.co.za.</span></div>
+<div class="alert a-danger" role="alert"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span><strong>Fix 1 field before saving:</strong> <a href="#">Email</a></span></div>
+<p class="mute" style="font-size:.875rem;grid-column:span 2">Invalid: the danger edge, the stripe (inset 4px 0 0 var(--danger-color)) and a message with an icon under the field; the summary sits above the action row.</p>
+</div></div>
+
+<div class="sec"><h2>Canvas-only (not tokens, not shipped)</h2>
+<div class="card"><ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.9375rem">
+<li>#5B6068 and #E6E8EB: the grey sheet and its text behind the reconnect dialogs.</li>
+<li>The .slot stripes (background to header-bg, 45deg) that mark a placeholder card.</li>
+<li>The scroll fade at the foot of the Administrator's phone list, and the drawn scrollbar thumb.</li>
+<li>The disc drawn for the mark: the product uses /brand/wombat-mark.svg at 32 px (28 px on a phone), as an &lt;img&gt;, never recoloured.</li>
+</ul></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4700}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

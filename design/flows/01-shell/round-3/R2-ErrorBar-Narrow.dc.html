@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Activity inbox · Wombat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+h1{margin:0;font-weight:600;line-height:1.25}
+p{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.bar{height:56px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;background:#052767;color:#ffffff}
+.brand{display:flex;align-items:center;gap:8px;min-height:44px;color:#ffffff;text-decoration:none;flex:none}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.4rem;line-height:1;font-variation-settings:"SOFT" 0,"WONK" 1}
+.mk{width:28px;height:28px;border-radius:50%;background:#2d6cdf;box-shadow:inset 0 -9px 0 #1b2f52;flex:none}
+.who{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:.9rem;text-align:right}
+.who small{font-size:.75rem;color:#b9c3e0;font-weight:600}
+.tog{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;font-weight:600;flex:none}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-weight:600;flex:1 1 0}
+.btn-primary{background:#2d6cdf;color:#ffffff}
+.btn-outline{background:#ffffff;color:#2d6cdf}
+.ebar{position:absolute;left:0;right:0;bottom:0;display:block;background:#fff8e1;border-top:3px solid #9a5400;box-shadow:0 -1px 2px rgba(0,0,0,.2)}
+.ebar-row{display:flex;flex-direction:column;gap:10px;padding:12px 16px 16px}
+</style>
+</helmet>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;overflow:hidden;position:relative">
+<header class="bar"><a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a><span style="flex-grow:1"></span><span class="who"><small>Acting as</small>Assessor</span><label class="tog" for="nav-toggle">Menu</label></header>
+<main style="flex-grow:1;padding:16px"><h1 style="font-size:1.375rem;border-bottom:2px solid #2d6cdf;padding-bottom:10px">Activity inbox</h1></main>
+<div id="blazor-error-ui" class="ebar" role="alert"><div class="ebar-row">
+<p style="display:flex;gap:10px"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" style="color:#9a5400;margin-top:2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>This page no longer responds; copy anything you need, then reload.</span></p>
+<div style="display:flex;gap:8px"><button type="button" class="btn btn-primary reload">Reload</button><button type="button" class="btn btn-outline dismiss">Dismiss</button></div>
+</div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
