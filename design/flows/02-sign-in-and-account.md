@@ -342,14 +342,17 @@ Step 1.1 — The Administrator signs in (act-1-setup.md:50)
 Role: Administrator — the platform operator (`devadmin@wombat.local`)
 Route: /account/login → /
 Do: Sign in with `devadmin@wombat.local` and the dev password that `DevUserSeeder` gives it.
-Expect: Home reads "Welcome, devadmin@wombat.local" and "Viewing as Administrator". It has no "You also act as" line,
-  since devadmin holds one role. The dashboard has three cards:
+Expect: Home is headed "Home", with "Administrator · Semester N, YYYY" under it, naming the current semester, and its
+  header offers no action. No switch is offered, in the sidebar or on Home, since devadmin holds one role. The dashboard
+  has two cards:
   - System health, which shows the database connection as healthy;
-  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists);
-  - Maintenance, which links to Activity types, Users, Institutions and Curriculum progress.
-  The nav reads Home, My Account, Data Rights, Colleges, EPAs, Curricula, Institutions, Invitations, Users, Activity
-  Types, Entrustment Scales, Scheduled Jobs, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due,
-  Data Rights Requests, System, then Logout (DESIGN.md § The NavMenu).
+  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists).
+  There is no Maintenance card: Curriculum progress is linked from the Curricula page's header (T335).
+  The sidebar reads "Acting as Administrator", with no switch, over his menu, grouped: Home; Platform: Scheduled jobs,
+  Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations;
+  Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision
+  panels; then My data rights under a rule (DESIGN.md § The NavMenu). Home is lit. The top bar names him "Demo
+  Administrator", with Sign out beside it.
 
 Step 2.8 — Mr Smit registers from his link (act-2-onboarding.md:143)
 Role: Anonymous — Mr Pieter Smit, holding his invitation link
@@ -357,26 +360,28 @@ Route: /account/register → / → /account/logout → /account/login
 Do: Open the link and enter first name Pieter, last name Smit and a password that meets the rules. Confirm it and
   register. Read the landing page, then sign out.
 Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with the email filled in and not editable.
-  The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home: "Welcome,
-  smit@kgk.wombat.local", "Viewing as Coordinator". Signing out returns him to the sign-in page.
+  The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home, headed
+  "Home" with "Coordinator · Semester N, YYYY" under it. Signing out returns him to the sign-in page.
 
-Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:551)
+Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:552)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: / → /account/session-ended → /account/login → /
 Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
 Expect: Within a minute of her admission the tab moves to the sign-in page, which reads "Your session has ended. Please
   sign in again." Admission changes her role, and a role change ends open sessions (T279). Signed in again, she sees
-  "Viewing as Trainee" and the trainee dashboard of Step 2.39.
+  "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 
-Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:703)
+Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:717)
 Role: Every role in this act — each person onboarded here, signed in as themselves
-Route: /account/profile
-Do: Each opens My Account. Dr Khumalo changes her first name from "Fatma" to "Fatima" and saves the profile.
+Route: /account/profile → /account/profile/submit → /account/profile
+Do: Each opens My account (the name in the top bar). Dr Khumalo changes her first name from "Fatma" to "Fatima" and
+  saves the profile.
 Expect: The page reads "My account" and "Update your name and review your assigned roles.". The summary shows the email,
   the roles held (both roles for Zulu, Naidoo and Botha; Trainee for the registrars) and a Change password link. The
-  email field is not editable. Khumalo's save reads "Profile saved." (checked on Mbatha's lists in Step 2.44).
+  email field is not editable. Khumalo's save reloads the page with "Profile saved.", which takes the focus, and the
+  top bar's account row now reads "Fatima Khumalo" (the lists are checked on Mbatha's in Step 2.44).
 
-Step A.3.2 — The sign-in page offers no institutional sign-in (appendix-cross-cutting.md:495)
+Step A.3.2 — The sign-in page offers no institutional sign-in (appendix-cross-cutting.md:498)
 Role: Anonymous — a KGK consultant
 Route: /account/login → /account/sso-challenge/{providerKey} → /account/login
 Do: Look for an institutional sign-in button. Sign in with a wrong password. Then open the challenge address for a
@@ -386,7 +391,7 @@ Expect: The page offers only an email, a password, Remember me and the "Forgotte
   institutional button (T156). The challenge for a provider that is not configured returns to the sign-in page, which
   says "Unknown SSO provider."
 
-Step A.3.3 — The callback and link pages with no institutional sign-in in progress (appendix-cross-cutting.md:510)
+Step A.3.3 — The callback and link pages with no institutional sign-in in progress (appendix-cross-cutting.md:513)
 Role: Anonymous — a KGK consultant
 Route: /account/sso-callback → /account/login → /account/link-external
 Do: Open the callback address, then the link-your-account page, directly.
@@ -394,18 +399,24 @@ Expect: The callback returns to the sign-in page, which says "External login inf
   page says "Your institutional sign-in has expired. Start again from the sign-in page." It offers Back to sign in and
   no password field (T149).
 
-Step A.4.1 — Dr Botha reviews and edits her account (appendix-cross-cutting.md:525)
+Step A.4.1 — Dr Botha reviews and edits her account (appendix-cross-cutting.md:528)
 Role: CommitteeMember — Dr Sarah Botha
-Route: / → /account/profile
-Do: Open My Account from her address in the top row. Clear her last name and save. Then put "Botha" back and save.
-Expect: The account summary shows her address, both her roles (CommitteeMember and Assessor) and a Change password
-  link. The email field cannot be edited. The cleared last name is refused, with a required-field message beside it,
-  and nothing is saved. Restored, the page says "Profile saved." and the focus moves to that message (T234).
+Route: / → /account/profile → /account/profile/submit → /account/profile → /account/profile/submit → /account/profile
+Do: Open My account from her name in the top bar. Clear her last name and save. Then type a single space as her last
+  name and save. Then put "Botha" back and save.
+Expect: On My account her name in the top bar is the current page (underlined), and nothing in the menu is lit. The
+  account summary shows her address, both her roles (CommitteeMember and Assessor) and a Change password link. The
+  email field cannot be edited. The cleared last name is stopped by the browser's own required-field check, and nothing
+  is sent. The space is sent and refused: the page reloads with the alert "Enter your first name and your last name.",
+  which takes the focus and which each name field names, the tab's title starts "Error:", the fields show her name as
+  stored, and nothing is saved. Restored, the save reloads the page with "Profile saved.", which takes the focus
+  (T234), and the top bar's account row names her as saved, "Sarah Botha".
 
-Step A.4.2 — Dr Khumalo changes her password, getting it wrong first (appendix-cross-cutting.md:541)
+Step A.4.2 — Dr Khumalo changes her password, getting it wrong first (appendix-cross-cutting.md:549)
 Role: Assessor — Dr Fatima Khumalo
 Route: /account/profile → /account/change-password
-Do: From My Account's Change password, try four times, and record the password (d) sets in `pwd_DO_NOT_COMMIT.txt`:
+Do: Open My account (the name in the top bar), then its Change password. Try four times, and record the password (d)
+  sets in `pwd_DO_NOT_COMMIT.txt`:
   - (a) a wrong current password;
   - (b) the right current password, with a new password and a confirmation that differ;
   - (c) the right current password, with a new one of 8 different lower-case letters;
@@ -418,15 +429,15 @@ Expect: Each refusal reloads the page with empty fields. The tab's title starts 
     symbol. It says nothing of lower-case letters, a rule it keeps.
   - (d) reads "Password updated.", and she stays signed in in this browser.
 
-Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:572)
+Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:581)
 Role: Assessor — Dr Fatima Khumalo (the second browser)
 Route: /activities/inbox → /account/session-ended → /account/login → /activities/inbox
 Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
 Expect: The tab leaves for the sign-in page by a full page load, which says "Your session has ended. Please sign in
   again." (T279). The old password is refused ("Invalid email or password."). The new one brings her back to her
-  Activity Inbox.
+  Activity inbox.
 
-Step A.4.4 — Dr du Plessis has forgotten his password (appendix-cross-cutting.md:585)
+Step A.4.4 — Dr du Plessis has forgotten his password (appendix-cross-cutting.md:594)
 Role: Anonymous — Dr Pieter du Plessis
 Route: /account/login → /account/forgot-password → /account/login
 Do: Follow "Forgotten your password? Reset it" from the sign-in page.
@@ -434,7 +445,7 @@ Expect: A "Reset password" page, saying exactly: "Password reset is not wired ye
   to issue a new invitation or reset the account directly." It offers Back to sign in, and nothing else: no field, and
   no email is sent.
 
-Step A.4.5 — Prof Mbatha resets his password (appendix-cross-cutting.md:602)
+Step A.4.5 — Prof Mbatha resets his password (appendix-cross-cutting.md:611)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
 Do: Open Dr du Plessis's account. Set a new password of 10 characters, then one that meets every rule. Record the
@@ -443,39 +454,39 @@ Expect: The Reset password card says it sets a password directly and that the us
   password is refused with the rules it breaks. The second is accepted, and the field is cleared. The audit log
   records the reset with the password redacted (T101).
 
-Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:631)
+Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:640)
 Role: Trainee — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password
-Do: Sign in with the password Prof Mbatha set. Then change it, from My Account, to one of his own. Record it in
-  `pwd_DO_NOT_COMMIT.txt`.
+Do: Sign in with the password Prof Mbatha set. Then change it, from My account (the name in the top bar), to one of
+  his own. Record it in `pwd_DO_NOT_COMMIT.txt`.
 Expect: He lands on his Trainee dashboard, which still says that his programme ended (Step 5.28). The change reads
   "Password updated."
 
-Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:648)
+Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:657)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/logout-confirm → / → /account/logout-confirm → /account/logout → /account/login → /msf/campaigns → /account/login → /msf/campaigns
 Do: Open the sign-out confirmation by its address and press Cancel. Open it again and sign out. Then open MSF
-  Campaigns by its address.
+  campaigns by its address.
 Expect: A "Sign out" page, with no nav, says to use its button to end the session. Cancel returns him to his
-  dashboard, still signed in. Sign out lands on the sign-in page. MSF Campaigns then asks him to sign in, and after
+  dashboard, still signed in. Sign out lands on the sign-in page. MSF campaigns then asks him to sign in, and after
   signing in he is brought back to it. The audit log records a Logout.
 
-Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:944)
+Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:967)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/session-ended → /account/login
 Do: Wait up to a minute on the page he had open, then sign in.
 Expect: The tab leaves for the sign-in page, which says "Your session has ended. Please sign in again." Signing in is
   refused: "Too many failed sign-in attempts. Please try again later or reset your password."
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:983)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:1006)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
-Expect: He lands on his Assessor dashboard. Pending requests reads "1 assessment awaiting review", and Awaiting your
-  review lists Dr du Plessis's Portfolio and Logbook Review, badged Overdue, as his inbox lists it (T297). Dr Dlamini's
+Expect: He lands on his Assessor dashboard. "Waiting for your rating" is badged 1 and lists Dr du Plessis's Portfolio
+  and Logbook Review, badged Overdue, as his inbox lists it (T297, T335). Dr Dlamini's
   assessor list names him again (checked at A.7.1).
 
-Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appendix-cross-cutting.md:253)
+Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appendix-cross-cutting.md:256)
 Role: Trainee — Dr Sipho Ndlovu (the browser left signed in at A.1.11)
 Route: /account/session-ended → /account/login
 Do: Wait on any page for up to a minute. Then sign in with his old address and password.
@@ -483,7 +494,7 @@ Expect: The tab leaves for the sign-in page by itself, which says "Your session 
   (T279). Signing in is refused in the words an unknown address gets, "Invalid email or password.", with no mention
   of an erasure (T156). No email is sent to him.
 
-Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1309)
+Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1336)
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
 Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
@@ -491,17 +502,17 @@ Do: At 390 px, open the sign-in page and the forgot-password page. Then verify D
 Expect: The sign-in card fits the width, and its fields and buttons are easy to tap. The verify page's result fits
   the width.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1359)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1386)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /account/login → / → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
+Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
   - the sign-in card;
-  - the nav on its gradient;
+  - the nav on its gradient, and its current item (white on the .32 fill);
   - muted text on the page background;
-  - the status badges on a committee review opened from Committee Reviews (Dr Molefe's review 7; the list itself shows
+  - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
     each state as plain text);
-  - a success alert (save My Account unchanged: "Profile saved.") and a danger alert (Change password with a
-    confirmation that differs, which checks no password and changes nothing);
+  - a success alert (save My account, the name in the top bar, unchanged: "Profile saved.") and a danger alert (Change
+    password with a confirmation that differs, which checks no password and changes nothing);
   - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
     not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
   - the focus ring on white and on the page background;
@@ -509,7 +520,7 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus
   ring. Muted text passes on the page background since T086.
 
-Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:471)
+Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:472)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /account/session-ended → /account/login
 Do: Go back to the tab left open at Step 5.15 and wait up to a minute.

@@ -352,14 +352,14 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/curricula → /admin/epas
 Do: Open Curricula, then EPAs, before adopting anything.
 Expect: Curricula shows the empty state "No curricula yet": "Your institution has not adopted a curriculum yet. Adopt
-  one on the Curriculum Adoptions page before admitting trainees." It offers no Create curriculum (T211).
+  one on the Curriculum adoptions page before admitting trainees." It offers no Create curriculum (T211).
   EPAs shows "No EPAs yet". An InstitutionalAdmin reads the national EPAs of the disciplines her institution has
   adopted, plus its own EPAs, and there are none of either.
 
 Step 1.20 — Adopt curriculum 11.1 for KGK (act-1-setup.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/adoptions
-Do: Open Curriculum Adoptions. Under Adopt a curriculum, choose `College of Paediatricians of South Africa —
+Do: Open Curriculum adoptions. Under Adopt a curriculum, choose `College of Paediatricians of South Africa —
   Paediatrics / Paediatrics: Paediatric EPA Curriculum (11.1)` and press Adopt. Then choose the same curriculum again
   and press Adopt a second time.
 Expect: The page has no institution picker, because hers is KGK. Current adoptions first reads "No curriculum adoptions
@@ -388,7 +388,7 @@ Expect: Each page now shows the adopted catalogue:
 Step 1.22 — The ladder, read-only to KGK (act-1-setup.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/entrustment-scales
-Do: Open Entrustment Scales and read the list.
+Do: Open Entrustment scales and read the list.
 Expect: The list shows `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and `O-R Scale` at 5, each with its
   description. It offers no Create scale and has no actions column, because only an Administrator changes a scale
   (T057, T239).
@@ -509,9 +509,13 @@ Expect:
 
 Step 6.38 — devadmin rebuilds curriculum progress (act-6-catalogue.md)
 Role: Administrator — devadmin
-Route: / → /admin/curriculum-progress
-Do: From the dashboard's Maintenance card, open Curriculum progress and read it. Press Rebuild progress, and confirm.
+Route: /admin/curricula → /admin/curriculum-progress
+Do: From Curricula in the menu, open Curriculum progress from the header and read it. Press Rebuild progress, and
+  confirm.
 Expect:
+  - **The way in.** Curricula offers the Administrator an outline "Curriculum progress" in its header, where Home's
+    Maintenance card used to link it (T335, flow 01). On the page Curricula stays lit, and the trail reads Home ›
+    Curricula › Curriculum progress.
   - **The page.** It says that a rebuild credits every completed activity again against today's curriculum, judges only
     whether an EPA was active as of each completion, and runs as one transaction.
   - **The question.** The button asks first: "Rebuild curriculum progress?".

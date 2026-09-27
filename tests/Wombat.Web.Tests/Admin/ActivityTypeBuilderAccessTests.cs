@@ -21,6 +21,7 @@ using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Admin.ActivityTypes;
 using Wombat.Web.Services;
 using Wombat.Web.Tests.Activities;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Admin;
 
@@ -111,6 +112,7 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
         alert.TextContent.Should().Contain("Set by the College").And.Contain("Paediatrics").And.Contain("not change it");
 
         cut.Find("h1").TextContent.Should().Be("Mini-CEX (Paediatrics)", "she is not editing it");
+        TabTitle.Of(this, cut).Should().Be("Mini-CEX (Paediatrics) · Wombat", "the tab says what the heading says (T190)");
     }
 
     [Fact]
@@ -123,6 +125,7 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
             .Should().BeEquivalentTo(EditLabels, "the College writes its disciplines' types (T091)");
         cut.FindAll("#activity-type-read-only").Should().BeEmpty();
         cut.Find("h1").TextContent.Should().Be("Edit Mini-CEX (Paediatrics)");
+        TabTitle.Of(this, cut).Should().Be("Edit Mini-CEX (Paediatrics) · Wombat", "the tab says what the heading says (T190)");
     }
 
     /// <summary>
@@ -217,6 +220,8 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
             .Should().Equal("Global", "Institution", "Speciality", "Sub-speciality");
         cut.FindAll("#type-scope-id").Should().BeEmpty("a Global type has no target");
         cut.Find("h1").TextContent.Should().Be("New activity type");
+        TabTitle.Of(this, cut).Should().Be("New activity type · Wombat",
+            "the editor has loaded, and the tab still names the page (T190's note: it was empty)");
     }
 
     [Fact]
@@ -243,6 +248,7 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
         cut.Markup.Should().NotContain("New activity type");
         EditButtons(cut).Should().BeEmpty();
         cut.Find("h1").TextContent.Should().Be("Activity type");
+        TabTitle.Of(this, cut).Should().Be("Activity type · Wombat");
     }
 
     [Fact]

@@ -1,96 +1,72 @@
+@using System.Security.Claims
+@using MediatR
 @using Wombat.Application.Features.Dashboards.Assessor
 @attribute [Authorize(Roles = "Assessor")]
 @rendermode InteractiveServer
-@inject IScopedSender Sender
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits RoleDashboard<AssessorDashboardSummaryDto>
 
-<StatePanel IsLoading="_loading" LoadError="@_error">
-  @if (_vm is not null)
-  {
-    <div class="dashboard-grid">
-      @* What waits on the caller is read from each activity's pinned workflow, as the inbox this card links to reads it
-         (T297): the count is the inbox's rows less the caller's own portfolio, so the two cannot disagree. *@
-      <DashboardCard Title="Pending requests" Icon="inbox" Emphasis="true">
-        <div class="dashboard-metric">
-          <span class="dashboard-metric-value">@_vm.PendingRequestCount</span>
-          <span class="dashboard-metric-label">@(_vm.PendingRequestCount == 1 ? "assessment awaiting review" : "assessments awaiting review")</span>
-        </div>
-        <div class="dashboard-card-footer">
-          <a href="/activities/inbox" class="btn btn-sm btn-primary">Review inbox &rarr;</a>
-        </div>
-      </DashboardCard>
+<DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
+  @* What waits on the caller, as one card with its count as its badge (R2-Landing-Assessor; T335, flow 01, S20). Until
+     T335 "Pending requests" counted these and "Awaiting your review" listed them, and an Actions card linked the inbox a
+     third time. The count and the rows are read from each activity's pinned workflow, as the inbox reads it (T297): the
+     count is the inbox's rows less the caller's own portfolio, so the two cannot disagree. The card lists the first
+     AwaitingReviewListed; the inbox holds them all. *@
+  <DashboardCard Title="Waiting for your rating" Icon="inbox" Emphasis="true" Span="2" IsLoading="IsLoading"
+                 Count="@(Summary?.PendingRequestCount)" Warning="@(Summary?.AwaitingReview.Any(a => a.IsOverdue) == true)">
+    @if (Summary is { } summary)
+    {
+      if (summary.AwaitingReview.Count == 0)
+      {
+        <p class="muted">Nothing is waiting for your rating.</p>
+      }
+      else
+      {
+        <ul class="list-unstyled">
+          @foreach (var item in summary.AwaitingReview)
+          {
+            <li class="list-row">
+              @* Whose it is, by name, as the coordinator's cards say it (T250). The link's name starts with its visible
+                 label and names the trainee, so three Mini-CEX links are not three links called "Mini-CEX". *@
+              <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
+              @* The state's badge, coloured by its key and worded by its label (BadgeFor, T220, T266). Once it has waited
+                 past the assessor's due days it reads "Overdue", amber: wanting attention. *@
+              <span class="badge @(item.IsOverdue ? BadgeFor.State(BadgeState.Accepted) : BadgeFor.ActivityState(item.CurrentState, isFinished: false))">@(item.IsOverdue ? "Overdue" : item.CurrentStateLabel)</span>
+            </li>
+          }
+        </ul>
+      }
+      <div class="dashboard-card-footer">
+        <a href="/activities/inbox" class="btn btn-sm btn-outline">Open inbox &rarr;</a>
+      </div>
+    }
+  </DashboardCard>
 
-      <DashboardCard Title="Awaiting your review" Icon="alert-triangle"
-                     Warning="@_vm.AwaitingReview.Any(a => a.IsOverdue)">
-        @if (_vm.AwaitingReview.Count == 0)
-        {
-          <p class="muted">Nothing is awaiting your review.</p>
-        }
-        else
-        {
-          <ul class="list-unstyled">
-            @foreach (var item in _vm.AwaitingReview)
-            {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                @* Whose it is, by name, as the coordinator's cards say it (T250). The link's name starts with its visible
-                   label and names the trainee, so three Mini-CEX links are not three links called "Mini-CEX". *@
-                <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
-                @* The state's badge, coloured by its key and worded by its label (BadgeFor, T220, T266). Once it has waited
-                   past the assessor's due days it reads "Overdue", amber: wanting attention. *@
-                <span class="badge @(item.IsOverdue ? BadgeFor.State(BadgeState.Accepted) : BadgeFor.ActivityState(item.CurrentState, isFinished: false))">@(item.IsOverdue ? "Overdue" : item.CurrentStateLabel)</span>
-              </li>
-            }
-          </ul>
-        }
-      </DashboardCard>
-
-      <DashboardCard Title="Recent decisions" Icon="check">
-        @if (_vm.RecentDecisions.Count == 0)
-        {
-          <p class="muted">No decisions yet.</p>
-        }
-        else
-        {
-          <ul class="list-unstyled">
-            @foreach (var item in _vm.RecentDecisions)
-            {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
-                @* Green when the pinned workflow is finished, whatever its last state is called (D44), red when declined or
-                   cancelled (BadgeFor, T266); its words are the state's label (T220). *@
-                <span class="badge @BadgeFor.ActivityState(item.FinalState, item.IsFinished)">@item.FinalStateLabel</span>
-              </li>
-            }
-          </ul>
-        }
-      </DashboardCard>
-
-      <DashboardCard Title="Actions" Icon="plus">
-        <a href="/activities/inbox" class="btn btn-outline">Open my inbox &rarr;</a>
-      </DashboardCard>
-    </div>
-  }
-</StatePanel>
+  <DashboardCard Title="Recent decisions" Icon="check" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      if (summary.RecentDecisions.Count == 0)
+      {
+        <p class="muted">No decisions yet.</p>
+      }
+      else
+      {
+        <ul class="list-unstyled">
+          @foreach (var item in summary.RecentDecisions)
+          {
+            <li class="list-row">
+              <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
+              @* Green when the pinned workflow is finished, whatever its last state is called (D44), red when declined or
+                 cancelled (BadgeFor, T266); its words are the state's label (T220). *@
+              <span class="badge @BadgeFor.ActivityState(item.FinalState, item.IsFinished)">@item.FinalStateLabel</span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </DashboardCard>
+</DashboardFrame>
 
 @code {
-  private AssessorDashboardSummaryDto? _vm;
-  private bool _loading = true;
-  private string? _error;
-
-  protected override async Task OnInitializedAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _vm = await Sender.Send(new GetAssessorDashboardSummaryQuery(authState.User));
-    }
-    catch (Exception ex)
-    {
-      _error = ex.Message;
-    }
-    finally
-    {
-      _loading = false;
-    }
-  }
+  protected override IRequest<AssessorDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
+    => new GetAssessorDashboardSummaryQuery(user);
 }

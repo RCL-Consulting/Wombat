@@ -14,7 +14,7 @@
 >   that pin what it changes (`design/BRIEF.md` § 9). It then adds itself to the list below, with its date and commit.
 > - **The invariants in `design/BRIEF.md` § 4.4 bind every redesign.** For example, every nav link opens a page that
 >   admits the role, and there is one `<h1>` per page.
-> - **Redesigned so far:** none. The pilot, flow 01 (the shell), is first (T335).
+> - **Redesigned so far:** flow 01, the shell (2026-09-27, T335).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -28,18 +28,27 @@ Read this once at the start of any task that renders HTML (T010, T011, T019, and
 src/Wombat.Web/
 ├── wwwroot/
 │   ├── app.css                                   ← global design system (sections below)
+│   ├── fonts/                                    ← the two self-hosted faces, each beside its OFL text (W-011)
+│   │   ├── SourceSans3VF-Upright.ttf.woff2       ← body face, Adobe's release 3.052R, unmodified
+│   │   ├── SourceSans3VF-Italic.ttf.woff2
+│   │   ├── SourceSans3-OFL.txt                   ← Adobe's LICENSE.md at 3.052R, whole
+│   │   ├── fraunces-var.woff2                    ← the wordmark's display face (T089)
+│   │   └── Fraunces-OFL.txt                      ← the Fraunces project's OFL.txt
 │   ├── icons/                                    ← inline-SVG sprite files, one per icon
 │   └── lib/…                                     ← bootstrap grid only, if needed; no Bootstrap components
 └── Components/
     ├── Layout/
-    │   ├── MainLayout.razor                      ← .page > .sidebar/main shell
-    │   ├── MainLayout.razor.css                  ← sidebar width, top-row, stickiness
-    │   ├── NavMenu.razor                         ← brand + AuthorizeView nav items
-    │   └── NavMenu.razor.css                     ← sidebar-gradient, nav-link hover/active
+    │   ├── MainLayout.razor                      ← the shell: toggle, one <header> (brand, NavMenu, account row), main (T335)
+    │   ├── MainLayout.razor.css                  ← the shell's grid at both widths, the phone bar and menu, the error bar
+    │   ├── NavMenu.razor                         ← the role head and switch, the acting role's links, the personal links
+    │   ├── NavMenu.razor.css                     ← the panel, the role head, the scrolling list, the group headings
+    │   ├── NavItemLink.razor                     ← one nav row; lit (class active, aria-current) as NavOwners says
+    │   └── NavItemLink.razor.css                 ← the row: 28px, 44px on a phone; hover, current, the nav ring
     └── Shared/
         ├── Icon.razor                            ← <Icon Name="check" /> renders inline SVG
-        ├── PageHeader.razor                      ← <h1> + subtitle + right-hand action slot
-        ├── Breadcrumbs.razor
+        ├── PageHeader.razor                      ← trail + <h1> (an Icon before it, optional) + subtitle + action slot; renders ActingRoleSwitchAlert
+        ├── ActingRoleSwitchAlert.razor           ← "You are now acting as …" once, after a switch (§ Acting role, T335)
+        ├── Breadcrumbs.razor                     ← the trail PageHeader draws (§ Page-level patterns, T335)
         ├── DataTable.razor                       ← generic list shell using .clinic-table
         ├── FormField.razor                       ← <label> + input slot + validation message
         ├── ConfirmDialog.razor
@@ -48,55 +57,114 @@ src/Wombat.Web/
         ├── EpaLabel.razor                        ← "Code — Title", "(no longer in use)" muted beside it when not in force (T255)
         ├── PagerControls.razor                   ← .pager .pager-actions .pager-page-size
         ├── StatePanel.razor                      ← empty / loading / error state shells
-        ├── DashboardCard.razor                   ← <DashboardCard Title=…> wraps .detail-card
+        ├── DashboardCard.razor                   ← <DashboardCard Title=…> wraps .detail-card; its title an <h2>, IsLoading, Count
+        ├── DashboardFrame.razor                  ← a dashboard's grid, busy while it reads; one alert + Try again if it fails (T335)
+        ├── RoleDashboard.cs                      ← base of a dashboard that reads one summary: the read, the retry, the log (T335)
+        ├── ReferenceBlock.razor                  ← "Reference" + the trace id + the time in SAST, on the error page (T335)
         └── Skeleton.razor                        ← <div class="skeleton" />
 ```
 
-`app.css` is the one global stylesheet. Component-scoped `.razor.css` files exist where a component has styles that do not belong in `app.css` (`MainLayout.razor.css`, `NavMenu.razor.css`). **No other CSS framework.** No MudBlazor, no Radzen, no Bootstrap components (the grid file is optional — `.form-grid` below is native CSS grid and does not need it).
+`app.css` is the one global stylesheet. Component-scoped `.razor.css` files exist where a component has styles that do not belong in `app.css` (`MainLayout.razor.css`, `NavMenu.razor.css`, `NavItemLink.razor.css`, `ReconnectModal.razor.css`).
+
+**The navigation is written in C#, not in Razor** (2026-09-27, T335, flow 01). `src/Wombat.Web/Navigation/NavItems.cs`
+declares every nav item and which the acting role is offered (§ The NavMenu); `Navigation/NavOwners.cs` is the owner
+table, the item a page is under, which lights the nav and draws the trail; `Navigation/ActingRole*.cs` is the acting
+role (§ Acting role). `wwwroot/wombat.js` scrolls the lit item into the sidebar's view. **No other CSS framework.** No MudBlazor, no Radzen, no Bootstrap components (the grid file is optional — `.form-grid` below is native CSS grid and does not need it).
 
 `Components/App.razor` links every first-party stylesheet and script through `@Assets["…"]` (`href="@Assets["app.css"]"`), which resolves to the content-hashed URL (`app.<hash>.css`) that `MapStaticAssets` serves with an immutable year-long cache. An edit changes the URL, so a deploy never pairs a new page with a cached old stylesheet. A new stylesheet or script is linked the same way, never by a bare path; `Hosting/AppAssetUrlTests` fails on a bare one (T175).
 
+**The fonts (2026-09-27, T335, flow 01).** `app.css`'s `@font-face` rules load them from `/fonts/…`, which the CSP's
+`font-src 'self'` admits; nothing is fetched from a font host. Both faces are under the SIL Open Font License 1.1 and are
+served as files beside the application, never compiled into it: W-011 accepts that as aggregation. The rules for
+vendoring them:
+- **Source Sans 3** is Adobe's release 3.052R (github.com/adobe-fonts/source-sans, the latest release on 2026-09-27),
+  the variable upright and italic files from `WOFF2/VF/` in its WOFF2 zip, byte for byte. They are identical to the
+  repository's `WOFF2/VF/` files at the tag. They carry weights 200 to 900. The TrueType-flavoured ones are used, not
+  the CFF2 ones.
+- **Its licence reserves a name.** Upstream's `LICENSE.md` reads "Copyright 2010-2022 Adobe (http://www.adobe.com/), with
+  Reserved Font Name 'Source'". Under the OFL's Reserved Font Name clause, a subset, converted or otherwise changed file
+  is a Modified Version and may not be served as "Source Sans 3". So never trim or convert these files; vendor a newer
+  release whole. `Design/TypographyTests` pins each file's SHA-256 to the release's. `SourceSans3-OFL.txt` is that
+  `LICENSE.md`, whole.
+- **Fraunces** (T089's wordmark face) reserves no name. `Fraunces-OFL.txt` is the project's own `OFL.txt`
+  (github.com/undercasetype/Fraunces), identical at its master branch and its 1.000 release tag.
+- A new face comes with its licence file in the same folder. `Design/TypographyTests` fails on a `.woff2` with no
+  licence beside it.
+
 ## Design tokens
 
-Defined at `:root` in `app.css`. These are the **only** colours and spacings allowed — no raw hex in component files except inside SVG data URIs.
+> **Amended 2026-09-27, T335, flow 01:** the round-3 token sheet (`design/flows/01-shell/round-3/R2-Tokens.dc.html`),
+> which also closes T322's contrast faults. Changed: the success, warning and danger colours, the input border and the
+> focus ring. New: `color-scheme`, `--on-fill`, `--link-hover`, `--scrim`, the three shadows, the `--nav-*` set, the
+> radii, `--motion-fast`, `--font-body` and `--font-mono`. Removed: `--accent-color` and `--info-color`, which nothing
+> read. Every colour is now written in one notation (N3).
+
+Defined at `:root` in `app.css`. These are the **only** colours, radii, shadows and durations allowed: no colour is
+written anywhere else in `app.css`, except inside a quoted SVG data URI (the select's chevron, the alert icons' masks)
+and a system colour under `@media (forced-colors: active)`. `Design/StylesheetRuleTests` fails on any other.
 
 ```css
 :root {
-  /* ── Brand palette (Wombat) ──────────────────────────
-     Refined navy/blue identity (T089). Swapping the palette means editing
-     this one block — no other file encodes a raw colour. */
-  --primary-color:    #2c3e50;   /* deep slate-navy ink (headings, sidebar-safe) */
-  --secondary-color:  #2d6cdf;   /* action / link / focus ring — 4.86:1 white-on-button (AA) */
-  --accent-color:     #3498db;   /* lighter brand blue for soft accents / highlights */
-  --success-color:    #27ae60;   /* semantic, rarely tweaked */
-  --danger-color:     #e74c3c;
-  --warning-color:    #fd7e14;
-  --info-color:       #3498db;
+  color-scheme: light;                              /* dark mode is later (W-011) */
 
-  /* Surfaces */
-  --background-color: #f8f9fa;
-  --surface-color:    #ffffff;
-  --text-color:       #333333;
-  --muted-text:       #6c757d;
-  --link-color:       #0b5cab;
-  --border-color:     #dee2e6;
-  --input-border:     #ced4da;
-  --shadow-color:     rgba(0, 0, 0, 0.1);
-  --focus-ring:       #3498db;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: Consolas, "Courier New", monospace;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;  /* the wordmark only */
+  --font-display-settings: "SOFT" 0, "WONK" 1;
 
-  /* Semantic backgrounds (for alerts / rows) */
-  --danger-bg:        #fff5f5;
-  --success-bg:       #e8f5e9;
-  --warning-bg:       #fff8e1;
-  --info-bg:          #f3f8ff;
-  --hover-bg:         #f8f9fa;
-  --header-bg:        #f1f3f5;
+  /* Page */
+  --primary-color:    rgb(44 62 80);                /* #2C3E50 emphasis ink, a dashboard's figure */
+  --secondary-color:  rgb(45 108 223);              /* #2D6CDF the one action colour; the header rule; info's edge */
+  --on-fill:          rgb(255 255 255);             /* text and icons on a filled button */
+  --background-color: rgb(248 249 250);             /* #F8F9FA the page */
+  --surface-color:    rgb(255 255 255);             /* cards, tables, dialogs, and .btn-outline's fill */
+  --text-color:       rgb(51 51 51);                /* #333333 body, and the words on every tint */
+  --muted-text:       rgb(104 111 119);             /* #686F77 help, labels, subtitles */
+  --link-color:       rgb(11 92 171);               /* #0B5CAB links, breadcrumbs */
+  --link-hover:       rgb(8 74 138);                /* #084A8A a link under the pointer */
+  --border-color:     rgb(222 226 230);             /* #DEE2E6 hairlines only, never a control's edge */
+  --input-border:     rgb(123 132 141);             /* #7B848D a control's edge (was #CED4DA) */
+  --focus-ring:       rgb(45 108 223);              /* #2D6CDF the ring on a light ground (was #3498DB) */
+  --header-bg:        rgb(241 243 245);             /* #F1F3F5 table heads, skeleton, code, the reference block */
+  --hover-bg:         rgb(248 249 250);             /* row hover, the progress track */
 
-  /* Sidebar gradient (navy → violet) */
-  --sidebar-gradient-start: rgb(5, 39, 103);
-  --sidebar-gradient-end:   #3a0647;
+  /* Semantic: an edge, an icon, a dot, a fill or a button, never words on its own tint */
+  --success-color:    rgb(26 115 64);               /* #1A7340 (was #27AE60) */
+  --success-bg:       rgb(232 245 233);             /* #E8F5E9 */
+  --warning-color:    rgb(154 84 0);                /* #9A5400 (was #FD7E14); the error bar's edge */
+  --warning-bg:       rgb(255 248 225);             /* #FFF8E1 */
+  --danger-color:     rgb(184 50 42);               /* #B8322A (was #E74C3C); validation text too */
+  --danger-bg:        rgb(255 245 245);             /* #FFF5F5 */
+  --info-bg:          rgb(243 248 255);             /* #F3F8FF; its edge is --secondary-color */
 
-  /* Spacing scale ── use these, not raw rem values */
+  /* Overlay and shadows */
+  --scrim:            rgb(0 0 0 / 0.35);            /* a dialog's backdrop */
+  --shadow-color:     rgb(0 0 0 / 0.1);
+  --shadow-raised:    0 1px 3px var(--shadow-color);   /* cards, tables, forms, the signed-out cards */
+  --shadow-dialog:    0 10px 25px rgb(0 0 0 / 0.25);   /* the reconnect and confirm dialogs */
+  --shadow-bar:       0 -1px 2px rgb(0 0 0 / 0.2);     /* the error bar */
+
+  /* Dark chrome: the sidebar, the phone bar, the signed-out bar */
+  --sidebar-gradient-start: rgb(5 39 103);          /* #052767 */
+  --sidebar-gradient-end:   rgb(58 6 71);           /* #3A0647 */
+  --nav-text:         rgb(215 215 215);             /* #D7D7D7 an item at rest */
+  --nav-text-strong:  rgb(255 255 255);             /* the current and hovered item, the role's name, the brand, the bar's controls */
+  --nav-group-label:  rgb(185 195 224);             /* #B9C3E0 group headings, "Acting as", the switch's and toggle's edges */
+  --nav-active-bg:    rgb(255 255 255 / 0.32);      /* the current item; #556C98 at the gradient's start */
+  --nav-hover-bg:     rgb(255 255 255 / 0.1);       /* a hovered item */
+  --nav-brand-bg:     rgb(0 0 0 / 0.4);             /* the brand cell at the sidebar's head */
+  --nav-divider:      rgb(255 255 255 / 0.18);      /* the rules under the role head, above the personal links and the menu's foot */
+  --nav-focus-ring:   rgb(255 255 255);             /* every focusable control on dark chrome */
+
+  /* Shape and motion */
+  --radius-sm: 4px;     /* nav rows, skeleton, a field's warning */
+  --radius-md: 6px;     /* controls, buttons, alerts */
+  --radius-lg: 8px;     /* cards */
+  --radius-xl: 12px;    /* tables, forms, dialogs */
+  --radius-pill: 999px; /* badges, tabs */
+  --motion-fast: 150ms; /* a button's dim, a card's lift, a nav item's hover */
+
+  /* Spacing scale: use these, not raw rem values */
   --space-xs:  0.25rem;
   --space-sm:  0.5rem;
   --space-md:  1rem;
@@ -108,10 +176,105 @@ Defined at `:root` in `app.css`. These are the **only** colours and spacings all
 
 **Rules:**
 
-- Add a new token before hard-coding a colour or a spacing value anywhere else.
-- `primary-color` is ink / heading accent. `secondary-color` is for actions — buttons, links, focus rings. Do not mix them up.
-- The sidebar gradient tokens are used by `NavMenu.razor.css` only.
-- If the brand palette changes, only `:root` changes.
+- Add a new token before hard-coding a colour, a radius, a shadow or a duration anywhere else.
+- `primary-color` is ink / heading accent. `secondary-color` is for actions: buttons, links, the focus ring. Do not mix
+  them up.
+- **A semantic colour is never words on its own tint.** An alert's and a badge's words are `--text-color` on the tint,
+  and the kind's colour is the edge, the icon or the dot (T322). The one semantic colour used as text is
+  `--danger-color`, for a refusal or an error on a light ground (`.validation-message`, `.text-danger`).
+- **Text on a filled button is `--on-fill`**, never `--surface-color`. Dark mode will change one and not the other.
+- **A translucent token is valid only over the ground it was measured on.** `--nav-active-bg`, `--nav-hover-bg`,
+  `--nav-brand-bg` and `--nav-divider` are for the sidebar's gradient; `--scrim` is for a dialog's backdrop.
+- **`--nav-text` on `--nav-active-bg` is forbidden** (3.66:1 at the gradient's start). The current item's words are
+  `--nav-text-strong`, and its cue is the 3px white bar and weight 600, not the fill (D4): at 0.32 the fill is 2.67:1
+  against a plain item.
+- **The two rings.** `--focus-ring` is 2.90:1 on the gradient's start, so every focusable control on dark chrome (the
+  brand link, the menu toggle, nav links, the switch, the account link and Sign out at 390px, the signed-out bar's Sign
+  in) takes `--nav-focus-ring`, set in that chrome's own stylesheet.
+- The sidebar gradient tokens and the `--nav-*` set are read by the shell's stylesheets (`NavMenu.razor.css`,
+  `MainLayout.razor.css`) only.
+- `--hover-bg` equals `--background-color`, so a row's hover shows only on a surface (N3).
+- The invalid-field stripe is not a token: `inset 4px 0 0 var(--danger-color)` (§ Form system).
+- Radii are the five tokens, and a status dot's 50%. Shadows are the three tokens, except `.detail-card--interactive`'s
+  lift under the pointer, `0 4px 12px var(--shadow-color)`, which the sheet does not name.
+- If the palette changes, only `:root` changes, and the tables below are recomputed.
+- Not tokens, never shipped: the sheet's canvas-only colours (#5B6068 and #E6E8EB behind the reconnect boards, the
+  `.slot` stripes of a placeholder card, the phone list's scroll fade and drawn scrollbar, the disc drawn for the mark).
+  The mark is `/brand/wombat-mark.svg`, an `<img>`, never recoloured.
+
+### Contrast
+
+Every pair the design system paints meets WCAG 2.1 AA: text 4.5:1; a control's edge, the focus ring and a meaningful
+mark 3:1 (1.4.3, 1.4.11). `Design/ContrastTests` computes every figure below from `app.css`'s `:root`, and fails when a
+pair falls short or a figure here differs from its computation. So change a token, then correct this table from the
+test's message.
+
+**The method.** WCAG 2.1 relative luminance on the token values. A translucent colour is blended over the ground it
+actually sits on, unrounded, before it is measured. The sidebar's gradient is interpolated in sRGB, as a browser
+interpolates a gradient of `rgb()` colours, and sampled at 21 points from its start (#052767) to its end (#3A0647); the
+worst sample is the one that must pass, and the table prints the start, the middle and the end. The worst is the start
+in every row.
+
+**Where these differ from the token sheet.** The sheet rounded each blend, and the gradient's middle, to whole channels
+(#03173E, #201657) before measuring; this table does not. So the brand cell is 17.52 (sheet 17.56), a hovered item at
+the start 10.62 (10.58) and `--nav-text` at the middle 11.09 (11.11): the three the round-2 review named (N2). Several
+other middle and end figures move in the second decimal. Every verdict is the same.
+
+Page (each pair on a solid ground):
+
+| Foreground / ground | Needs | Ratio |
+|---|---|---|
+| `--text-color` on surface · background · header-bg | 4.5 | 12.63 · 11.99 · 11.36 |
+| `--text-color` on the success · warning · danger · info tints | 4.5 | 11.23 · 11.89 · 11.81 · 11.84 |
+| `--muted-text` on surface · background · header-bg | 4.5 | 5.09 · 4.83 · 4.57 |
+| `--muted-text` on the success · warning · danger · info tints | 4.5 | 4.52 · 4.79 · 4.75 · 4.77 |
+| `--link-color` on surface · background · header-bg | 4.5 | 6.70 · 6.36 · 6.03 |
+| `--link-color` on the success · warning · danger · info tints | 4.5 | 5.96 · 6.31 · 6.27 · 6.28 |
+| `--link-hover` on surface | 4.5 | 8.91 |
+| `--primary-color` on surface | 4.5 | 10.98 |
+| `--on-fill` on secondary · success · danger (the filled buttons) | 4.5 | 4.86 · 5.88 · 5.95 |
+| `--secondary-color` (an outline button's label and edge) on surface · background | 4.5 | 4.86 · 4.61 |
+| `--danger-color` (validation text) on surface · background | 4.5 | 5.95 · 5.65 |
+| `--input-border` on surface · background · header-bg | 3 | 3.80 · 3.60 · 3.42 |
+| `--input-border` on the success · warning · danger · info tints | 3 | 3.38 · 3.58 · 3.55 · 3.56 |
+| `--focus-ring` on surface · background · header-bg | 3 | 4.86 · 4.61 · 4.37 |
+| `--focus-ring` on the success · warning · danger · info tints | 3 | 4.32 · 4.57 · 4.54 · 4.55 |
+| Tint edges and icons: success · warning · danger · info (`--secondary-color`) on their tints | 3 | 5.23 · 5.43 · 5.56 · 4.55 |
+| Neutral badge: text · edge on header-bg | 4.5 · 3 | 11.36 · 3.42 |
+| Status dots on surface: success · warning · danger | 3 | 5.88 · 5.77 · 5.95 |
+| Progress fill on its hover-bg track: secondary · success (complete) | 3 | 4.61 · 5.58 |
+| Reconnect bar: secondary on its header-bg track | 3 | 4.37 |
+| Error bar: text · the warning edge and icon on warning-bg | 4.5 · 3 | 11.89 · 5.43 |
+| `--border-color` on surface (a hairline, never a control's edge) | none | 1.30 |
+
+Before T322: the semantic colours as text on their tints were 2.55 (success), 2.42 (warning) and 3.57 (danger); white
+on the success and danger buttons 2.87 and 3.82; validation text 3.82 on white; the ring 3.15 on white and 2.99 on the
+page; an input's edge 1.49 on white; the ok and warn dots 2.87 and 2.57; a complete progress bar 2.73.
+
+Dark chrome (the gradient's start · middle · end; a translucent token blended over it first). The phone bar is the
+gradient's start as a solid, the phone menu's foot its end, and the signed-out bar the same gradient laid at 90deg, so
+the gradient rows hold for it too:
+
+| Foreground / ground | Needs | Ratio |
+|---|---|---|
+| `--nav-text` on the gradient | 4.5 | 9.78 · 11.09 · 11.25 |
+| `--nav-text-strong` on the gradient (the brand, the role name, the signed-out bar's text) | 4.5 | 14.07 · 15.96 · 16.19 |
+| `--nav-group-label` on the gradient (group headings, "Acting as", the switch's and the toggle's edges) | 4.5 | 8.00 · 9.08 · 9.21 |
+| `--nav-text-strong` on `--nav-active-bg` over the gradient (the current item) | 4.5 | 5.27 · 5.73 · 6.08 |
+| `--nav-text` on `--nav-active-bg` over the gradient | 4.5 | 3.66 · 3.98 · 4.22 (forbidden) |
+| `--nav-text-strong` on `--nav-hover-bg` over the gradient (a hovered item) | 4.5 | 10.62 · 12.06 · 12.64 |
+| `--nav-focus-ring` on the gradient | 3 | 14.07 · 15.96 · 16.19 |
+| `--nav-focus-ring` on the current item (`--nav-active-bg` over the gradient) | 3 | 5.27 · 5.73 · 6.08 |
+| `--nav-text-strong` on `--nav-brand-bg` over the gradient's start (the brand cell) | 4.5 | 17.52 |
+| Phone bar (the gradient's start, solid): `--nav-text-strong` · `--nav-group-label` · `--nav-focus-ring` | 4.5 · 4.5 · 3 | 14.07 · 8.00 · 14.07 |
+| Phone menu foot (the gradient's end, solid): `--nav-text-strong` · `--nav-group-label` · `--nav-focus-ring` | 4.5 · 3 · 3 | 16.19 · 9.21 · 16.19 |
+
+The tables measure the tokens. `Design/ContrastTests` also reads the rules the shell's scoped stylesheets paint with
+(`NavItemLink.razor.css`, `NavMenu.razor.css`, `MainLayout.razor.css`) and measures each pair on the ground it sits on:
+the current item's words and bar on its fill, an item at rest and hovered, over the whole gradient; the switch, its edge,
+Change role's options and the role head; the phone bar's brand, role and toggle on the gradient's start; the open menu's
+name, Sign out and its edge on the gradient's end. So a rule that pairs the wrong tokens fails, not only a token that
+changes (2026-09-27, T335, flow 01; the review of the t335 branch).
 
 ## Logo & brand assets (T089)
 
@@ -128,152 +291,343 @@ Raster fallbacks (generated from `wombat-tile.svg`, in `wwwroot/`): `favicon.ico
 `apple-touch-icon.png` (180), `icon-192.png` / `icon-512.png` (PWA, `purpose: any maskable`). The head links
 + `site.webmanifest` + `theme-color` (`#2c3e50`) are wired in `Components/App.razor`.
 
-**Lockup:** mark + `Wombat` wordmark, `font-weight: 700`, `letter-spacing: -0.01em`. White on the sidebar
-gradient (`.navbar-brand`); `--primary-color` on light (`.account-brand`). To re-skin, regenerate the four
-raster files from the tile SVG and keep the mark/tile colours in sync with `:root`.
+**Lockup:** mark + `Wombat` wordmark in Fraunces 500 (§ Typography). White on dark chrome (`.brand`, in
+`MainLayout.razor`); `--primary-color` on light (`.account-brand`). To re-skin, regenerate the four raster files from the
+tile SVG and keep the mark/tile colours in sync with `:root`.
+
+**The brand cell** (2026-09-27, T335, flow 01; D3, R2-Shell-*). The sidebar's head is a 56px cell on `--nav-brand-bg`,
+the full sidebar's width, that is itself the link home: the mark as a 32px `<img alt="">` and the wordmark at 1.6rem,
+which names the link. On a phone the same link starts the phone bar, the mark at 28px and the wordmark at 1.4rem, and on
+the signed-out bar it is the mark at 32px. The mark is never recoloured and never an `Icon.razor` glyph.
 
 ## Typography
+
+> **Amended 2026-09-27, T335, flow 01:** the body face is Source Sans 3 (W-011, § Files that own the design system),
+> with line heights, inherited control fonts (T328) and tabular figures in tables.
 
 ```css
 body {
   background-color: var(--background-color);
   color: var(--text-color);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-body);   /* "Source Sans 3", "Segoe UI", system-ui, sans-serif */
+  line-height: 1.5;
 }
 
-h1 { font-size: 1.5rem;  font-weight: 600; margin-bottom: var(--space-md); }
-h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-sm); }
-h3 { font-size: 1.1rem;  font-weight: 600; margin-bottom: var(--space-sm); }
-h4 { font-size: 1rem;    font-weight: 600; margin-bottom: var(--space-xs); }
-h5 { font-size: 0.9rem;  font-weight: 600; margin-bottom: var(--space-xs); }
+button, input, select, textarea { font: inherit; }   /* T328 */
 
+h1 { font-size: 1.5rem;  font-weight: 600; line-height: 1.25; margin-bottom: var(--space-md); }
+h2 { font-size: 1.25rem; font-weight: 600; line-height: 1.25; margin-bottom: var(--space-sm); }
+h3 { font-size: 1.1rem;  font-weight: 600; line-height: 1.25; margin-bottom: var(--space-sm); }
+h4 { font-size: 1rem;    font-weight: 600; line-height: 1.25; margin-bottom: var(--space-xs); }
+h5 { font-size: 0.9rem;  font-weight: 600; line-height: 1.25; margin-bottom: var(--space-xs); }
+@media (max-width: 640.98px) { h1 { font-size: 1.375rem; } }
+
+.header-container    { …; margin-bottom: var(--space-lg); padding-bottom: 0.75rem; }  /* the page header, below */
+.header-container h1 { margin: 0; }
 .page-subtitle { font-size: 0.9rem; color: var(--muted-text); margin: var(--space-xs) 0 0; }
+.dashboard-card-title { …; margin-top: 0; margin-bottom: var(--space-sm); }
+.clinic-table  { font-variant-numeric: tabular-nums; }
+.font-mono, .code-block { font-family: var(--font-mono); }
 ```
 
-Page `<h1>` is `1.5rem`, not bigger. Pages use `PageHeader` (section below) to keep the subtitle + action slot consistent. Do not render a lone `<h1>` in a page — reach for `PageHeader`.
+Page `<h1>` is `1.5rem`, not bigger, and `1.375rem` below 641px, as every 390px board sets it. Pages use `PageHeader` (section below) to keep the subtitle + action slot consistent. Do not render a lone `<h1>` in a page — reach for `PageHeader`.
+
+**The page header is spaced as the boards draw it** (2026-09-27, T335, flow 01; the review of the t335 branch; R2-Shell-*,
+R2-Landing-*, R2-Detail-*, R2-Error-*). The heading has no margin of its own in the header, the subtitle keeps its own
+0.25rem under it, the rule (2px `--secondary-color`) is 0.75rem under them, and the page begins `--space-lg` (24px) under
+the rule. A dashboard card's title (`.dashboard-card-title`, an `<h2>`) has no top margin. Until the review the heading
+kept the browser's top margin (0.67em) and 1rem under it, the rule sat 1rem under the subtitle, and the page began 2rem
+under the rule. **This reflows every page**: every header loses the heading's two margins and 4px of padding, and the
+page begins 8px closer to the rule.
+`Design/StylesheetRuleTests` and `Design/NarrowLayoutTests` hold it. The phone boards draw the rule 10px under the
+heading and the page 16px under it; the build keeps 12px and 24px at every width.
+
+The scale, from the token sheet:
+
+| Use | Size / weight |
+|---|---|
+| The wordmark | Fraunces 500, 1.6rem in the sidebar (2.4rem on the sign-in card) |
+| h1 · h2 · h3 (card titles) · h4 · h5 | 1.5 · 1.25 · 1.1 · 1 · 0.9rem, all 600; h1 1.375rem below 641px |
+| Body | 1rem, line height 1.5 |
+| A nav label | 0.9375rem; 600 when it is the current item |
+| A nav group's label | 0.8125rem, 600, sentence case |
+| A subtitle | 0.9rem, `--muted-text` |
+| Small text | 0.875rem |
+| A badge | 0.75rem, 600 |
+| A button | 0.95rem, 600; `.btn-sm` 0.85rem |
+| A dashboard's figure | 2rem, 700, `--primary-color`, line height 1 |
+| Code | `--font-mono`, 0.875rem |
+| A time | always with its zone: "2026-09-26 15:14 SAST" |
+
+- **Sentence case throughout.** A nav label, its page's `<h1>`, its breadcrumb and the stem of its tab title are the same
+  words ("Activity inbox · Wombat").
+- **Controls take the body's font** (T328). Before, a textarea rendered in the browser's monospace and a select in
+  Arial, and a `<button class="btn">` stood shorter than an `<a class="btn">` beside it. `font: inherit` carries the
+  family, the size and the line height, and a class that sets its own size (`.form-control`, `.btn`) still does. The
+  builder's JSON textareas keep their own monospace.
+- **Tables set their figures in columns.** Source Sans 3's default figures are tabular already (every digit is 472
+  units wide in 3.052R); `tabular-nums` holds the fallback faces to the same.
+- **A control is 38px tall**: a 24px line between 6px of padding and its 1px edge (`.form-control`, `.form-select`,
+  `.search-input`; `min-height: 2.375rem`). With the old 12px padding, the body's 1.5 line height would have made it
+  50px; before T335 it was about 44px.
+- **The type change reflows every page** (the round-2 review, S22(d)). Source Sans 3 sets narrower than Segoe UI, and
+  the 1.5 line height is taller than `normal`: a table row, a card and a list grow a few pixels, and a label may fit on
+  one line where it wrapped.
 
 ## Layout grid (the shell)
 
-The whole app lives inside a two-pane flex shell defined by `MainLayout.razor` + `MainLayout.razor.css`.
+> **Rewritten 2026-09-27, T335, flow 01** (R2-Shell-*, R2-Phone-*, R2-Sidebar-Scroll, R2-Tokens' shell figures; review
+> S11, S12, D3, D9). Until then the shell was ClinicAssist's: a `.top-row` over the page and a `.navbar-toggler` menu.
+
+`MainLayout.razor` is the whole frame, one DOM at every width, and `MainLayout.razor.css` lays it out. The shell reads no
+database: the name is the `display_name` claim and the role the cascaded acting role, so a page drawn in a database
+outage, the error page's, still has its frame (S7); signed out, when the rerun could not check the sign-in (§ System
+pages). `Navigation/MainLayoutTests` holds it, and reads every component the rendered shell holds for what it has
+injected, `@inject` and `[Inject]` alike: only `NavigationManager` and `IJSRuntime` (the review of the t335 branch; the
+scan had read the three files' `@inject` lines alone).
+
+**The chrome is one `<header>`, the page's banner** (2026-09-27, T335, flow 01; the review of the t335 branch): the brand,
+the phone bar's acting role and Menu toggle, the navigation (`<nav aria-label="Main">`) and the account row. Until the
+review the brand and the account row sat outside every landmark. The header is `.sidebar`, a real box at both widths, so
+no landmark relies on `display: contents`, which some screen readers drop a landmark for; `<main>` is its sibling.
 
 ```
-┌───────────────────────────────────────────────────────────────┐
-│ .page                                                         │
-│ ┌──────────────┬─────────────────────────────────────────┐    │
-│ │ .sidebar     │ main                                    │    │
-│ │ (NavMenu)    │ ┌──────────────────────────────────────┐│    │
-│ │ 250px        │ │ .top-row (user menu, sign-out)       ││    │
-│ │ sticky       │ │ sticky, 3.5rem                       ││    │
-│ │ full-height  │ ├──────────────────────────────────────┤│    │
-│ │ gradient     │ │ article.content                      ││    │
-│ │              │ │   @Body                              ││    │
-│ │              │ │                                      ││    │
-│ └──────────────┴─────────────────────────────────────────┘    │
-└───────────────────────────────────────────────────────────────┘
+from 641px                                          below 641px, folded        below 641px, open
++--------------+-----------------------------+      +------------------------+ +------------------------+
+| .brand 56px  | .account-row, the top bar   |      | brand  Acting as [Menu]| | brand           [Close]|
++--------------+   name  [Sign out]  56px    |      |        Trainee         | +------------------------+
+| role head    +-----------------------------+      +------------------------+ | role head, switch      |
++--------------+ main > article              |      | main > article         | | .nav-list (scrolls)    |
+| .nav-list    |   trail, PageHeader, @Body  |      |   trail folded to its  | |                        |
+| (scrolls)    |                             |      |   parent, PageHeader,  | +------------------------+
+| 250px, full  |                             |      |   @Body                | | .account-row: name,    |
+| height       |                             |      |                        | | Sign out (pinned foot) |
++--------------+-----------------------------+      +------------------------+ +------------------------+
 ```
 
-- Above `641px`: flex-direction row, sidebar `250px` sticky full-height, top-row sticky.
-- At or below `640.98px`: flex-direction column, nav collapses behind a `.navbar-toggler` checkbox.
-- **The page has a side gutter at every width** (T226): `.top-row` and `article` pad their sides by `--space-md` (16px)
-  outside any media query, and the `min-width: 641px` rule widens that to 2rem and 1.5rem. Until T226 the phone width
-  had none, and a page's header and cards ran from the screen's edge to its edge (`/msf/campaigns/{id}` at 390px).
-  ClinicAssist gets its gutter from Bootstrap's `px-4`, which Wombat does not load. `Design/NarrowLayoutTests` pins it.
-- `top-row` right-aligns an "About" / profile / logout cluster. On narrow screens it justify-betweens.
-- Below the layout, a fixed `#blazor-error-ui` banner renders on hub errors with a Reload + dismiss affordance. Copy ClinicAssist verbatim.
-
-Copy `MainLayout.razor.css` from ClinicAssist with the class names unchanged. Only the gradient tokens differ.
+- **From 641px** `.page` is a grid: `var(--sidebar-width)` (250px, written once in `:root`) beside `minmax(0, 1fr)`, and
+  a first row of 56px, the top bar's, over the page.
+  - **The sidebar** (the header) is a sticky, full-height flex column (`height: 100vh`), so its gradient (180deg,
+    `--sidebar-gradient-start` to `-end` at 70%) runs the window's height whatever the list's length (S12). In it: the
+    brand cell (§ Logo & brand assets), the role head, and the list, which alone scrolls (§ The NavMenu).
+  - **The top bar** is the account row, the header's last child, `position: fixed` over the grid's first row, from
+    `var(--sidebar-width)` to the window's right edge: in the banner, and where it was when it was a sticky row of the
+    grid (until the review of the t335 branch). Light (`--surface-color`), 56px, over the page. Right-aligned: the
+    person's name, a link to My account at least 32px tall (T328: it was 21px), then one Sign out, an outline small
+    button with its icon. The name is the display-name claim, the whole of it in the link, so it is the link's
+    accessible name and its title; the bar cuts it at 28 characters (`max-width: 28ch`) with an ellipsis. An account
+    with no name shows its email, cut the same way. On My account the name is the current page: `aria-current="page"`
+    and a 3px `--secondary-color` underline (R2-Rules § 3).
+- **Below 641px** the header is a grid of its own: the bar's row (brand, role, toggle), the panel's and the foot's.
+  - **The phone bar**, on `--sidebar-gradient-start`, solid (the header's ground): the brand, "Acting as" over the role's
+    label (right-aligned, at most 120px wide, two lines at most, never cut: the bar grows), and the Menu toggle.
+  - **The toggle is CSS only** (S11). A visually hidden checkbox, `#nav-toggle`, is the first child of `.page`, so every
+    part of the shell is its later sibling or inside one. It is keyed by a count of the circuit's navigations (`@key`,
+    bumped on every `LocationChanged`): every navigation replaces it, unchecked, so the next page does not open under the
+    menu, a navigation to the page shown included (the lit item tapped, the brand tapped on Home), which a key by path
+    kept open (the review of the t335 branch). Its `<label>`, in the header, is the 44px target, "Menu", or "Close" with
+    the menu open. It carries no `aria-expanded`: the checkbox is the control, and its checked state is what a screen
+    reader hears. The ring goes on the label, through `#nav-toggle:focus-visible ~ .sidebar .nav-toggle-label`. From
+    641px both are `display: none`, so the checkbox is no tab stop.
+  - **Open**, the menu takes the page's place: the bar shows the brand and Close, then the panel (the role head, the
+    switch at 44px, the list with 44px rows, which scrolls), then **the account row pinned at its foot** on
+    `--sidebar-gradient-end` (D9), the name whole and wrapping, and Sign out at 44px. It is the same element and the
+    same Sign out form as the desktop top bar, placed by CSS: there is one Sign out in the DOM. The header takes the
+    window's height (`100dvh`), so the list scrolls between the head and the foot, and `:has()` lets the page shrink to
+    it (without `:has()` the page keeps its `100vh`, a little more on a phone whose address bar shows).
+- **Signed out** (the static pages a visitor reaches): a gradient bar only (90deg), with the brand and a Sign in link
+  (32px, 44px on a phone), and no navigation.
+- **The page has a side gutter at every width** (T226): the account row and `article` pad their sides by `--space-md`
+  (16px) outside any media query, and from 641px by `--space-xl` (32px) on the left and `--space-lg` (24px) on the right.
+  Until T226 the phone width had none, and a page's header and cards ran from the screen's edge to its edge.
+  `Design/NarrowLayoutTests` pins it.
+- **The page begins under the bar by the article's own padding** (2026-09-27, T335, flow 01; the review of the t335
+  branch), `main > article`: 16px, 24px from 641px, as every board's content column. Until then the heading's browser top
+  margin was the only space above a page; the heading has none in the header now (§ Typography). A trail stands at the
+  article's top, 16px above the header (§ Breadcrumbs), and the signed-out system card keeps its 80px under the bar
+  (`.system-card-page` pads 56px and the article 24px; below 641px the article's 16px alone).
+- **Every focusable control on dark chrome takes `--nav-focus-ring`** (S13): the brand, the toggle's label, the nav
+  rows, the switch and Change role, the phone menu's name and Sign out, and Sign in. The page's ring is 2.90:1 on the
+  gradient's start. The brand cell's ring is inset (`outline-offset: -4px`), since the cell runs to the window's edge.
+- Below the layout, outside its `AuthorizeView`, a fixed `#blazor-error-ui` bar shows when a page's circuit fails, with
+  Reload and Dismiss; from 641px it starts at `var(--sidebar-width)`, beside the sidebar, and below it spans the width.
+  It is § The reconnect dialog and the error bar (2026-09-27, T335, flow 01); until then it was ClinicAssist's, copied
+  verbatim.
+- **In a Windows contrast theme** (`@media (forced-colors: active)`; the review of the t335 branch) a box-shadow is not
+  painted, and both of the shell's current-page cues were box-shadows. The lit nav item's 3px bar is a 3px `CanvasText`
+  left border, the row's left padding giving back its width (`NavItemLink.razor.css`), and My account's underline is a
+  3px `CanvasText` text underline (`MainLayout.razor.css`). `Navigation/MainLayoutTests` holds both.
 
 ## The NavMenu
 
-- Brand row at the top: the mark (`/brand/wombat-mark.svg`, an `<img>`, § Logo & brand assets) and the `Wombat`
-  wordmark.
-- Nav items are `<NavLink class="nav-link">` inside `<div class="nav-item">`. Home, My Account, Data Rights and
-  Logout are written out; the role links come from `Sections` in `NavMenu.razor`'s `@code`, a list of (roles, links)
-  rendered inside the signed-in `<AuthorizeView>` (T178). Each page is declared once there, so it has one label and one
-  icon wherever it is offered.
-- Active and hover states are in `NavMenu.razor.css`: `rgba(255,255,255,0.37)` for active, `rgba(255,255,255,0.1)` for hover, `#d7d7d7` default text.
-- Each item's icon is the shared `<Icon Name="…" />` (§ Icons), sized and spaced by `NavMenu.razor.css`'s
-  `.nav-item ::deep .icon` rule — **no Bootstrap Icons font**. A role link names its icon in its `Sections` entry.
-- Logout is a `<form action="/account/logout" method="post">` with an `AntiforgeryToken`, rendered as a full-width `.nav-logout-button`.
-- Mobile: a checkbox-backed `.navbar-toggler` controls visibility. No JavaScript.
-- Every class in `NavMenu.razor` is `NavMenu.razor.css`'s or app.css's (T266). The Blazor template's Bootstrap classes
-  (`ps-3`, `navbar`, `navbar-dark` and a `container-fluid` wrapper on the brand row, `flex-column` on the nav, `px-3` on
-  each item) styled nothing, since Wombat loads no Bootstrap, and are gone. Measured on a static copy, the items are where
-  they were; the brand is 2px lower, now centred in its 68px row, as its wrapper's line box no longer holds it up.
+> **Rewritten 2026-09-27, T335, flow 01** (the pick, variation A with C's breadcrumbs; R2-Rules; A-Spec; review S7–S12,
+> S21, D3–D5, D8; T331). Until then the nav was the union of every role held, in Title Case, with My Account, Data Rights
+> and Logout written out and five `/placeholder/` stubs.
 
-The nav item list is role-driven. Each row is what that role alone sees, in menu order; `…` in the "Everyone signed in"
-row is where the role's own links go. `NavMenuAuthorizationTests` renders the nav for every row and fails when the two
-differ, so a change to the nav is a change to this table (T178).
+`NavMenu.razor` renders one `<nav aria-label="Main">`: the role head, then the acting role's links, then the personal
+links under a rule. What it offers is `Navigation/NavItems.For(acting role, claims)`, which `MainLayout` builds and
+cascades; it is declared once, in `NavItems.cs`, so a page has one label and one icon wherever it is offered (T178).
 
-| Role                 | Items |
-|----------------------|-------|
-| Signed out           | Home, Sign in |
-| Everyone signed in   | Home, My Account, Data Rights, …, Logout |
-| Trainee              | Activities, My Activities, MSF Reports, My Committee Reviews, My Progress, Export Portfolio |
-| PendingTrainee       | Activities, My Activities |
-| Assessor             | Activity Inbox, Recent Activities |
-| Coordinator          | Data Rights Requests, MSF Campaigns, Committee Reviews, Decisions Due, Stalled Activities |
-| CommitteeMember      | Programme Trainees, Decision Panels, Committee Reviews |
-| SpecialityAdmin      | Programme Trainees, Decision Panels, Committee Reviews, STAR Review Queue, Decisions Due |
-| SubSpecialityAdmin   | Programme Trainees, Decision Panels, Committee Reviews, STAR Review Queue, Decisions Due |
-| CollegeAdmin         | Specialities, EPAs, Curricula, Activity Types |
-| InstitutionalAdmin   | Curriculum Adoptions, EPAs, Curricula, Activity Types, Entrustment Scales, Trainees, Assessors, Invitations, Users, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due |
-| Administrator        | Colleges, EPAs, Curricula, Institutions, Invitations, Users, Activity Types, Entrustment Scales, Scheduled Jobs, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due, Data Rights Requests, System |
+**One acting role at a time, never the union.** The links are the acting role's (§ Acting role). Access is the union of
+the roles held and never changes: a page outside the acting role's links still opens, with nothing lit, and following a
+link never switches the role (R2-Rules § 1).
 
-Every link opens a page that admits the role offering it. `NavMenuAuthorizationTests` judges each rendered link against
-its page's `[Authorize]` through the app's own policies, for every role in `WombatRoles.All`. So the Coordinator is not
-offered Invitations and the speciality admins are not offered Curricula: those pages refuse them (T178).
+**The role head** (R2-Rules § 4, R2-Phone-Bars). "Acting as" and the role's label (`WombatRoleLabels`), one layout that
+wraps: the label and the role on one line where they fit, the role under it where not, never cut.
+- **Two roles held:** one "Switch to {label}" link under it.
+- **Three or more:** a native `<details>` "Change role" that lists "Switch to {label}" for each other role held, in
+  `DashboardPriority.Order`. No script, so it works on a static page too.
+- Every switch is `ActingRoleSwitch.Url(role)` with no return address, so it lands on the new role's Home, and carries
+  `data-enhance-nav="false"`: a full page load (§ Acting role). Only held roles are offered.
+- **No role** (a former trainee, D8): no head and no switch; the list starts under the brand. A Pending trainee reads
+  "Acting as Pending trainee", like any role.
+- The phone bar shows "Acting as" and the role too, while the menu is folded (§ Layout grid).
+- `RoleSwitchTests` holds the head.
 
-A user holding several roles sees each of their roles' rows in the table's order, and a page an earlier row already
-offered is not repeated. `NavMenuAuthorizationTests` checks that for every pair of roles and for all of them at once.
-No two links share a label, so the union never shows the same name twice. That is why the trainee's own reviews are
-"My Committee Reviews" beside the staff's "Committee Reviews", and the queue of other people's requests is "Data Rights
-Requests" beside everyone's own "Data Rights".
+**The links.** Home first. A label is its page's `<h1>` and the stem of its tab, in sentence case (D10);
+`NavMenuAuthorizationTests` holds each label to its page's `<PageTitle>`. Up to 8 links, Home and the personal links
+counted, the list is flat; more than 8, it is grouped under headings that are not links. A heading is a `<p>`, not a
+heading element (the page's `<h1>` is its first heading), and names its `<ul>` through `aria-labelledby`. Only the
+Administrator's (17) and the Institutional admin's (16) are grouped.
 
-Recent Activities, Stalled Activities, Programme Trainees, STAR Review Queue and System still open the
-`/placeholder/{Feature}` stub. `PlaceholderPage.Headings` lists exactly the features the nav links there, so a feature
-that gains a real page loses its placeholder entry when its link moves. Any other `/placeholder/…` address is Page not
-found, with status 404 (`NavigationManager.NotFound()`), not a "Coming soon" for a page that exists.
+Each row is what that acting role is offered, in menu order: "Heading: links" for a group, `;` between groups.
+`NavMenuAuthorizationTests` builds the menu for every row and fails when the two differ, so a change to the nav is a
+change to this table.
 
-Decisions Due (`/committee/decisions-due`, T131 slice 6) is offered to the roles that schedule committee reviews and to
-no other: a CommitteeMember is not offered it, and its page does not admit one. `NavMenuAuthorizationTests` checks both.
+| Acting role | Links |
+|---|---|
+| Administrator | Home; Platform: Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels |
+| InstitutionalAdmin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log |
+| CollegeAdmin | Home, Specialities, EPAs, Curricula, Activity types |
+| SpecialityAdmin | Home, Decisions due, Committee reviews, Decision panels |
+| SubSpecialityAdmin | Home, Decisions due, Committee reviews, Decision panels |
+| CommitteeMember | Home, Committee reviews, Decision panels |
+| Coordinator | Home, Decisions due, MSF campaigns, Committee reviews, Data rights requests |
+| Assessor | Home, Activity inbox |
+| Trainee | Home, Log an activity, My activities, MSF reports, My committee reviews, Export portfolio |
+| PendingTrainee | Home, Log an activity, My activities |
+| No role | Home |
 
-MSF Reports, My Committee Reviews, My Progress and Export Portfolio sit in their own Trainee-only section, apart from
-the one shared with PendingTrainee, because their pages do not admit a pending trainee (T141). A link goes in the
-shared section only if its page admits PendingTrainee.
+**The personal links**, last, under a rule, are the person's rather than the role's, so they are offered whatever the
+acting role (D8):
 
-My Progress is also offered to someone who holds a trainee profile without the Trainee role (T252): completing a
-programme removes the role, and a graduate still reads their own record, as their portfolio export prints it. That
-section is keyed on a claim, not a role, so it is not a row of the table: `trainee_record`
-(`WombatClaimTypes.TraineeRecord`), which sign-in issues to anyone holding a trainee profile, current or ended. It sits
-straight after the Trainee section, so a Trainee, who holds the claim too, sees My Progress once, where their row puts
-it. The page's policy, `TraineeOrFormerTrainee`, admits the same two: the role or the claim. `NavMenuAuthorizationTests`
-checks that a holder of the claim alone is offered the link and admitted, and that a PendingTrainee without it is
-neither. The graduate's other trainee pages (MSF Reports, My Committee Reviews) still require the role.
+| Personal link | Offered to |
+|---|---|
+| My progress | a holder of the Trainee role or of a trainee record (the `trainee_record` claim, current or ended, T252): exactly whom its page's policy, `TraineeOrFormerTrainee`, admits. A graduate acting as Assessor sees it. |
+| My data rights | everyone signed in |
 
-MSF coverage (`/msf/coverage`, T210) is not a nav item. It is a planning aid for the campaigns, so it is reached from
-the MSF campaign list's header, an outline "MSF coverage" link (`#msf-coverage-link`) beside New campaign, and its own
-header links back ("Back to campaigns"). The link is not offered to someone who holds Trainee, whom the page shows no
+**What the nav never holds.**
+- **No link to an unbuilt page.** The placeholder page and its five stubs are gone (the review's S22e): Recent
+  activities and System were dropped, Stalled activities and Programme trainees are flow 06's, and the STAR review queue
+  is flow 09's. `NavMenuAuthorizationTests` fails on a `/placeholder/` link and on a page that answers one.
+- **No Sign out and no My account:** the account row carries both (§ Layout grid).
+- **No link the acting role cannot open.** `NavMenuAuthorizationTests` judges every rendered link against its page's
+  `[Authorize]`, through the app's own policies, for every acting role. So the Coordinator is not offered Invitations,
+  the speciality admins are not offered Curricula, a Committee member is not offered Decisions due (T131 slice 6), and a
+  Pending trainee is offered only what admits one (T141).
+- **No page twice, and no two links with one name,** for any acting role, personal links included (T178). That is why the
+  trainee's own reviews are "My committee reviews" beside the staff's "Committee reviews", and the queue of other
+  people's requests is "Data rights requests" beside everyone's own "My data rights".
+
+**The current item** (R2-Rules § 3; S9; T331). At most one item is lit. `NavItemLink` is a plain link, not `NavLink`, so
+no address prefix lights anything: `Navigation/NavOwners.Lit` decides, from the page `Routes` cascades (its `RouteData`),
+the acting role and the menu.
+- **A list lights itself**, with `aria-current="page"`: the page shown is the page of an item the menu offers.
+- **A page under a list lights its owner** for the acting role, with `aria-current="true"`: the first row of the owner
+  table below naming the role, when the menu offers that item.
+- **Where the acting role has no owner, nothing is lit.** "Lights Home" is retired.
+- **My account, Change password, the sign-in pages, the anonymous static pages and the failure pages light nothing**
+  (`NavOwners.Outside`). On My account the account row's name carries `aria-current="page"`.
+- Lit, the row takes the class `active`: the `--nav-active-bg` fill (.32, D4), `--nav-text-strong`, weight 600 and a 3px
+  inset bar on its left. The bar and the weight are the state's cue; the fill is 2.67:1 against a plain row.
+- **An owner is named only for a role its page admits.** So Access denied, drawn at the address of a page that refused
+  (D6), has no owner for the acting role, and the refusal lights nothing. `ActiveNavItemTests` holds every row to its
+  page's `[Authorize]` and to the role's menu, renders every routable page for every acting role, and fails on a page
+  that is neither an item's page, in the table, nor outside the rule. It also renders the real `Routes`, signed in,
+  across navigations in the circuit (Home lit; Change password lighting nothing under Home › My account; Home lit again),
+  which fails without the `RouteData` cascade `Routes.razor` wraps the page in (the review of the t335 branch).
+
+The owner table (`NavOwners.Table`): a page, and the item it is under for each acting role. A role not named has no owner
+there, and its trail is Home › the page (§ Page-level patterns).
+
+| Page | Lit item, by acting role |
+|---|---|
+| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee, Pending trainee: My activities |
+| A committee review | Committee member, Coordinator, Speciality and Sub-speciality admin, Institutional admin, Administrator: Committee reviews (the trainee reads theirs on My committee reviews; the page does not admit them) |
+| A decision panel | Administrator, Institutional admin, Speciality and Sub-speciality admin: Decision panels |
+| An MSF campaign, `/msf/reports/{id}`, `/msf/coverage` | Coordinator: MSF campaigns (T331) |
+| A data-rights request | Coordinator, Administrator: Data rights requests. Its crumb is the request's id once loaded (R2-Rules § 3). R2-Rules also names the requester, under My data rights: that row was dropped, since the page admits only Administrator and Coordinator, so the owner table may not name the requester's role (the review of the t335 branch) |
+| A College's specialities and sub-specialities, and their edit pages | College admin: Specialities · Administrator: Colleges (T331) |
+| A College | Administrator: Colleges |
+| An institution | Administrator: Institutions |
+| An EPA, an activity type, a curriculum's items | Administrator, College admin, Institutional admin: EPAs, Activity types, Curricula |
+| A curriculum | Administrator, College admin: Curricula |
+| `/admin/curriculum-progress` | Administrator: Curricula (a link on Curricula, now that Home's Maintenance card is dropped) |
+| An entrustment scale | Administrator: Entrustment scales |
+| A user | Administrator, Institutional admin: Users |
+| A trainee's profile, an assessor's profile | Institutional admin: Trainees, Assessors |
+| An audit entry | Administrator, Institutional admin: Audit log |
+| The job run history | Administrator: Scheduled jobs |
+| My authorisations | Trainee: My progress |
+| Entrustment decisions | none: under no list until flow 09 places it |
+
+MSF coverage (`/msf/coverage`, T210) is reached from the MSF campaign list's header, an outline "MSF coverage" link
+(`#msf-coverage-link`) beside New campaign. The link is not offered to someone who holds Trainee, whom the page shows no
 programme (`GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo`).
 
-New items go in this table and then in `NavMenu.razor`'s `Sections`, not anywhere else.
+**The list scrolls** (S12, R2-Sidebar-Scroll): `.nav-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px
+8px 8px }` under the fixed brand cell and role head, rows 28px (44px on a phone) and 4px apart, so a 2px ring at a 2px
+offset never meets the next row, and the padding keeps the first and last rings inside the scroll edge. It takes no
+tabindex: Tab walks its links and the browser brings each into view. The lit item is scrolled into view
+(`wombat.revealCurrentNavItem`, in `wombat.js`, keeping 8px of the list around it, the rows' `scroll-margin-block`): as a
+static page loads, after an enhanced navigation, when the phone menu opens, and from `NavMenu` after the circuit's first
+render, which replaces the prerendered list, or when a navigation lights another item. Only the list scrolls, never the
+page. The scroll is decoration: `NavMenu` catches its call failing whatever the cause (the circuit gone, a script error,
+the call cancelled), since a failure left to the renderer would end the circuit (2026-09-27, T335, flow 01; the review
+of the t335 branch; `ActiveNavItemTests`).
+
+**Styles.** Every colour is a `--nav-*` token (R2-Tokens: text at rest `--nav-text`; the current and hovered item, the
+role's name and the bar's controls `--nav-text-strong`; headings, "Acting as" and the switch's edge `--nav-group-label`;
+rules `--nav-divider`), and every control's ring is `--nav-focus-ring`. Each item's icon is the shared
+`<Icon Name="…" />` (§ Icons), a Lucide glyph named in `NavItems.cs`. Every class in `NavMenu.razor` and
+`NavItemLink.razor` is theirs or app.css's (T266).
+
+New items go in `NavItems.cs` and in this table, and a new page that is not an item's goes in the owner table
+(`NavOwners`), not anywhere else.
 
 ## Button system
+
+> **Amended 2026-09-27, T335, flow 01:** every button is at least 36px with a 1px edge, filled ones take `--on-fill`,
+> and `.btn-outline` is filled with the surface (S16).
 
 Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing comes before the variant.
 
 ```css
-.btn            /* padding .5rem 1rem, radius 6px, cursor pointer, hover filter:brightness(.95) */
-.btn:focus-visible /* 2px --focus-ring outline, offset 2px */
+.btn            /* border-box, 1px solid transparent edge, min-height 2.25rem (36px), padding --space-xs --space-md,
+                   radius --radius-md, 0.95rem / 600, hover filter:brightness(.95) over --motion-fast */
+:focus-visible  /* 2px --focus-ring outline, offset 2px: every focusable element's (§ Accessibility) */
 
-.btn-primary    /* bg --secondary-color, white text */
-.btn-success    /* bg --success-color, white text */
-.btn-danger     /* bg --danger-color, white text */
-.btn-outline    /* transparent bg, border+color --secondary-color */
+.btn-primary    /* bg and edge --secondary-color, text --on-fill (4.86:1) */
+.btn-success    /* bg and edge --success-color, text --on-fill (5.88:1) */
+.btn-danger     /* bg and edge --danger-color, text --on-fill (5.95:1) */
+.btn-outline    /* bg --surface-color, edge and text --secondary-color (4.86:1) */
 
-.btn-sm         /* padding .2rem .6rem, font .8rem */
-.btn-xs         /* padding .15rem .4rem, font .7rem */
+.btn-sm         /* min-height 1.75rem (28px), padding .125rem .625rem, font .85rem */
+.btn-xs         /* min-height 1.75rem (28px), padding .15rem .4rem, font .7rem */
 ```
+
+- **One height for the header's actions.** Every `.btn` carries a 1px edge, transparent unless its variant colours it,
+  and is at least 36px, so a filled button and an outline one stand the same height, whether each is a `<button>` or an
+  `<a>`. T328 measured them apart: the `<button>` kept the browser's control font and its `normal` line height, the
+  outline button's 1px border made it 2px taller than a filled one, and an `<a class="btn">` sized its content box, not
+  its border box as a `<button>` does, so its padding and edge stood on top of the minimum height. A long label may wrap; the padding keeps it clear of
+  the edge.
+- **`.btn-outline` is filled with `--surface-color`, never transparent.** Transparent, its label fell to 4.37:1 on
+  header-bg and 4.32:1 on a success tint, and passed by 0.07 on the error bar's warning tint. With its own ground it is
+  4.86:1 wherever it sits (the round-2 review, S16). `Design/ContrastTests` pins the fill.
+- **Text and icons on a filled button are `--on-fill`**, never `--surface-color` (T322 made the success and danger
+  fills dark enough for it: they were 2.87 and 3.82:1 under white).
+- A small button (`.btn-sm`, `.btn-xs`) is at least 28px, over WCAG 2.5.8's 24px (T086).
 
 **Rules:**
 
@@ -568,11 +922,11 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a caller who may not change it (T302) */
 .full-width       /* grid-column: 1 / -1 */
 
-.form-control     /* padding .75rem, border --input-border, radius 6px */
+.form-control     /* 38px: min-height 2.375rem, padding .375rem .75rem, border --input-border, radius --radius-md (T335) */
 .form-select      /* native <select> styled with a chevron data-URI */
 .form-select-sm   /* compact variant */
 .form-control.invalid, .form-select.invalid, textarea.invalid, …[aria-invalid="true"]
-                  /* an invalid control: --danger-color border + a 4px left stripe (T236; with .input-validation-error) */
+                  /* an invalid control: --danger-color border + a 5px left stripe (T236, T335; with .input-validation-error) */
 
 .form-actions     /* flex, justify-end, gap .75rem, padded-top, top border */
 .scale-choices    /* one radio per line for a rating scale's points, lowest first (T205) */
@@ -613,10 +967,11 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   and `aria-invalid="true"` while the `EditContext` holds a message for them. A control a page marks by hand, where the
   page can tell the server will refuse what is typed (T192's encounter date, T125's rung picker, T205's MSF comment),
   carries `.input-validation-error` and `aria-invalid="true"`. On a `.form-control`, a `.form-select` or a `textarea`,
-  `app.css` gives every one of them a `--danger-color` border and a 4px stripe down the left edge: the 1px border and a
-  3px inset shadow. The stripe is the cue that is not colour (WCAG 1.4.1); a shadow, not a wider border, so the text does
+  `app.css` gives every one of them a `--danger-color` border and a 5px stripe down the left edge: the 1px border and a
+  4px inset shadow, `inset 4px 0 0 var(--danger-color)` (the round-3 token sheet's; 3px until 2026-09-27, T335, flow
+  01). The stripe is the cue that is not colour (WCAG 1.4.1); a shadow, not a wider border, so the text does
   not move as a field turns invalid while it is typed in. In a contrast theme (`@media (forced-colors: active)`), which
-  drops shadows and paints every border one colour, the stripe is a 4px left border instead. The rule comes after
+  drops shadows and paints every border one colour, the stripe is a 5px left border instead. The rule comes after
   `.form-control` and `.form-select`, which are as specific as `.input-validation-error`. A checkbox or radio is not
   marked, since a native one takes no border; its message says it. There is no field CSS class provider: Blazor's own
   class names are the ones styled, so a page marks a field by giving it a validation message, and a hand-made control by
@@ -677,6 +1032,10 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   own id and `<label for>`, a point's description as a `<small>` in its label (T205, the MSF questionnaire). A list, not
   a `<select>`: every point's label stays in view. Not a `.check-grid`: an ordered scale reads down, not in columns.
 - Sensitive inputs (password, passphrase): wrap in `.password-wrapper` and use `PasswordToggleButton.razor` to show/hide.
+  The toggle is a 28px target inside the field's right end, placed from the wrapper's foot, so it is centred on the 38px
+  field even where the wrapper also holds the label (the sign-in, registration and link pages); the wrapper is as tall
+  as what it holds, even as a grid's item. So the field must be the last thing in the wrapper (2026-09-27, T335, flow 01;
+  T328 found the toggle 23px and on the field's top edge).
 - **A field the caller may read but not change is text, not a control** (T302). Where the command behind a field
   refuses the caller, the form does not offer its control (§ Table system, T211: read from the policy the command's
   rule is, with `IAuthorizationService`). The field stays in the grid as a `dl.form-group`: its `<dt>` where a label
@@ -720,19 +1079,34 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
 
 ## Dashboard layout grid
 
+> **Amended 2026-09-27, T335, flow 01:** three counted tracks, not auto-fit (the round-2 review, S22(b)); a card's title is
+> an `<h2>`, and its rows are `.list-row` (T328).
+
 Dashboards use one shared grid so every role page looks like the same product.
 
 ```css
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));   /* three tracks from 1100px */
   gap: var(--space-lg);
   align-items: start;
 }
+.dashboard-grid > * { min-width: 0; }                  /* a card's content never widens its track */
 
 .dashboard-span-2 { grid-column: span 2; }
-.dashboard-span-3 { grid-column: span 3; }
+.dashboard-span-3 { grid-column: 1 / -1; }             /* the whole row, at every width */
+
+@media (max-width: 1099.98px) { .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px)     { .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+                                .dashboard-span-2, .dashboard-span-3 { grid-column: auto; } }
 ```
+
+**Three tracks at 1280px.** Until T335 the grid was `repeat(auto-fit, minmax(min(320px, 100%), 1fr))`. Three 320px
+tracks and two gaps need 1,008px, and at 1280px the content column is 974px (1280 less the 250px sidebar and the article's
+32px and 24px sides): Home had two tracks there, and a card spanning three added a third the grid had no room for. So the
+tracks are counted: three from 1100px (a 794px column, 249px tracks), two from 901px to 1099px, and one at 900px and
+below. A card spanning three takes the whole row at every width, so it never adds a track. `Design/NarrowLayoutTests`
+pins the three rules.
 
 Dashboard widget classes (added in T011):
 
@@ -772,7 +1146,17 @@ administrator has not locked (T268). So an erased trainee's pseudonym, a profile
 locked trainee are in no "n of m", and the admins' "Trainees in programme" tile counts as active the trainees their card
 reads. None of them is counted as inactive either; the admin trainees list is where such a profile is seen, and ended.
 
-Each dashboard card is a `<DashboardCard>` — a shared component that wraps `.detail-card` and adds `Title`, `Icon` (Lucide name), `Href` (turns it into `.detail-card--interactive`), `Emphasis` / `Warning` (left stripe variants), and `Span` (1/2/3, the `.dashboard-span-*` modifiers). Reach for `<DashboardCard>` first; drop to raw `<div class="detail-card">` only when the card does not have a titled strip. Below `~900px` the `.dashboard-grid` auto-fit collapses everything to a single column.
+Each dashboard card is a `<DashboardCard>` — a shared component that wraps `.detail-card` and adds `Title`, `Icon` (Lucide name), `Href` (turns it into `.detail-card--interactive`), `Emphasis` / `Warning` (left stripe variants), and `Span` (1/2/3, the `.dashboard-span-*` modifiers). Reach for `<DashboardCard>` first; drop to raw `<div class="detail-card">` only when the card does not have a titled strip. At 900px and below the `.dashboard-grid` is a single column.
+
+- **Its title is an `<h2 class="dashboard-card-title">`** (2026-09-27, T335, flow 01): the icon, the words and, where the
+  card counts something, the count as a `badge-submitted` badge (`Count`: "Waiting for your rating 2",
+  R2-Landing-Assessor). Home's `<h1>` is the page's one; until T335 the cards' `<h3>` skipped a level.
+- **`IsLoading`** draws the card as its title and a skeleton (`.dashboard-card-skeleton`, three lines, `aria-hidden`),
+  and not its content. A card that links is not a link while it loads, and a count is not shown: nothing is offered
+  before the read returns (R2-Landing-Loading).
+- **A row of a card's list is `li.list-row`**: flex, space-between, baseline, a small gap and `--space-xs` above and below;
+  a badge keeps its pill. A row of buttons is `.actions-cell`, and figures side by side `.dashboard-metric-row`. Until
+  T335 (T328) each dashboard wrote its rows as inline `display:flex` styles; `WaitingCardsTests` finds none left.
 
 T011 mandates this grid for every role dashboard — do not hand-roll a different one per role.
 
@@ -817,18 +1201,39 @@ T019 introduces a small builder-specific extension to the shared system:
 
 ## Alerts, validation, empty states
 
-```css
-.alert                       /* padding 1rem, radius 6px, margin-bottom 1.5rem */
-.alert-danger                /* bg --danger-bg, text --danger-color, border --danger-color */
-.alert-success               /* bg --success-bg */
-.alert-warning               /* bg --warning-bg */
-.alert-info                  /* bg --info-bg */
+> **Amended 2026-09-27, T335, flow 01:** an alert's words are body text on its tint, with the kind's colour on the edge
+> and the icon (T322); a field's refusal carries the danger icon, and the validation summary reads as a danger alert. An
+> alert may carry its own action (`.alert-row`), and a load error offers the read again.
 
-.validation-message          /* inline field error, --danger-color, .85rem */
-.validation-summary-errors   /* form-level error panel */
-.input-validation-error      /* a hand-marked invalid input: --danger-color border + 4px left stripe, as Blazor's .invalid (§ Form system, T236) */
+```css
+.alert                       /* body text (--text-color) on the tint; 1px edge in the kind's colour, 4px down the left;
+                                padding .75rem 1rem .75rem 3rem, radius --radius-md, margin-bottom 1.5rem */
+.alert::before               /* the kind's Lucide icon, 20px on the first line, 1rem in: a mask filled with the kind's colour */
+.alert-success               /* --success-bg, edge and icon --success-color, circle-check */
+.alert-info                  /* --info-bg, edge and icon --secondary-color, info */
+.alert-warning               /* --warning-bg, edge and icon --warning-color, triangle-alert */
+.alert-danger                /* --danger-bg, edge and icon --danger-color, circle-alert */
+.alert-row                   /* inside an alert: its words, then its own action at the right (flex, wrap, centred) */
+.alert-row-text              /* the words: flex 1 1 16rem, so the action wraps under them where they need the width */
+
+.validation-message          /* a field's refusal: --danger-color (5.95:1 on white), .875rem, the circle-alert icon
+                                (16px, in the text's own colour) hung in a 1.375rem left padding */
+.validation-summary-errors   /* Blazor's <ValidationSummary>: read as a danger alert (body text, the stripe, the icon);
+                                its <li class="validation-message">s take its colour and no icon of their own */
+.input-validation-error      /* a hand-marked invalid input: --danger-color border + 5px left stripe, as Blazor's .invalid (§ Form system, T236) */
 .field-warning               /* inline NON-blocking warning under a field, input accepted as typed: --warning-bg, --warning-color left stripe, body text, .85rem (T160 late filing) */
 ```
+
+- **A semantic colour is never an alert's words** (T322). Until 2026-09-27 each alert was its kind's colour on its own
+  tint: success 2.55:1, warning 2.42:1, danger 3.57:1. Now every alert is `--text-color` on the tint (11.2:1 or more),
+  and the kind is told three ways: the tint, the edge (3:1 or more, a 4px stripe down the left) and the icon.
+  `Design/ContrastTests` holds each kind's rule to that.
+- **The icon is the stylesheet's, not the markup's.** `app.css` draws it as a `::before` masked with an inline Lucide
+  glyph (a quoted SVG data URI, § Icons) and filled with the kind's colour, so every `<Alert>` has it and no page writes
+  one. The words keep a 3rem left padding, clear of it. In a contrast theme the mask is filled with `CanvasText`, as the
+  theme would otherwise paint it the colour of the ground.
+- **A field's refusal has the icon too**, so a refusal is not told by colour alone. It hangs in the message's left
+  padding, so a message that wraps keeps its edge.
 
 - `<Alert>` is announced by its kind unless the caller names a `Role` (T193). `danger` is `role="alert"`, so a refusal
   that appears after Submit is read at once; `warning` and `success` are `role="status"`, because nearly every one
@@ -848,6 +1253,15 @@ T019 introduces a small builder-specific extension to the shared system:
   a refusal and puts focus in a field (sign-in, link account), give the `Alert` an `Id` and have the field name it with
   `aria-describedby`, so the refusal is read with the field. A refusal that names fields gives its `Alert` an `Id` the
   same way, and every field it names points at it (the activity pages, T263, § Form system).
+- **An alert that carries its own action** lays its words and the action out in `.alert-row`: the words
+  (`.alert-row-text`) take the room, and the button or link sits at the right, wrapping under the words where they need
+  the width (2026-09-27, T335, flow 01). Home's load error and its Try again, and the switch's result and its Switch back
+  (R2-Landing-Error, R2-Landing-Assessor, R2-Detail-Email).
+- **A load error says that nothing changed, and offers the read again** (2026-09-27, T335, flow 01; R2-Landing-Error;
+  T329). When the read a page is built on fails, the page shows one `danger` alert with fixed words, the failure's own
+  text going to the log, and a Try again that reads again, and draws nothing the read would have filled: no empty state,
+  no skeleton, no card. Home's is "**Could not load your Home.** Nothing has changed. Try again, or come back in a few
+  minutes." (§ Dashboard page). The wording of a database failure on other pages is T272's.
 - `StatePanel.razor` renders three canonical states: loading (skeletons), error (`.alert .alert-danger`), empty (`.detail-card--empty` + optional CTA).
 - Every list page handles all three states explicitly. **No more "Loading…" plain text** — that pattern is dead. The
   entrustment decisions list and an audit entry were its last uses, until T266; `PageShapeSmokeTests` scans every page
@@ -869,8 +1283,12 @@ T019 introduces a small builder-specific extension to the shared system:
   background: linear-gradient(90deg, var(--hover-bg), var(--border-color), var(--hover-bg));
   background-size: 200% 100%;
   animation: skeleton-pulse 1.2s ease-in-out infinite;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   min-height: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background: var(--header-bg); }
 }
 
 @keyframes skeleton-pulse {
@@ -881,16 +1299,30 @@ T019 introduces a small builder-specific extension to the shared system:
 
 `Skeleton.razor` renders `<div class="skeleton" style="width:@Width;height:@Height">`. Dashboards and list pages render a handful of skeletons while `IScopedSender.Send(...)` resolves. The viewport should not shift when real data lands.
 
+**Reduced motion** (2026-09-27, T335, flow 01; the round-2 review, S17): with the reader's "reduce motion" setting the
+skeleton does not pulse; it is a still `--header-bg` block, the same size (§ Accessibility).
+
 ## Badges
 
+> **Amended 2026-09-27, T335, flow 01:** five tints, body text on each and the tint's colour on the edge (T322); a pill
+> keeps its shape in a flex row (T328).
+
 ```css
-.badge           /* inline pill, 0.75rem, bold, 999px radius */
-.badge-draft     /* --hover-bg bg, --muted-text text */
-.badge-submitted /* --info-bg bg, --secondary-color text */
-.badge-accepted  /* --warning-bg bg, --warning-color text */
-.badge-completed /* --success-bg bg, --success-color text */
-.badge-declined  /* --danger-bg bg, --danger-color text */
+.badge           /* inline-flex pill: 0.75rem / 600, line height 1.5, padding 1px 10px, --radius-pill, 1px edge,
+                    --text-color words, white-space nowrap; flex: none and align-self: center in a flex row */
+.badge-draft     /* neutral: --header-bg ground, --input-border edge */
+.badge-submitted /* info: --info-bg ground, --secondary-color edge */
+.badge-accepted  /* warning: --warning-bg ground, --warning-color edge */
+.badge-completed /* success: --success-bg ground, --success-color edge */
+.badge-declined  /* danger: --danger-bg ground, --danger-color edge */
 ```
+
+- **A badge's words are body text on its tint**, 11.2:1 or more (T322). Until 2026-09-27 a state badge was its state's
+  colour on its own tint: Completed 2.55:1, Accepted 2.42:1, Declined 3.57:1. T166's standing badges had already taken
+  body text for that reason; now every badge does, and a standing badge is the state badge of its tint.
+- **A pill keeps its shape in a flex row** (T328). On the dashboards' Recent activities and Recent decisions, a badge
+  beside a link that wrapped took the row's height, a tall pill: a flex item stretches by default. `align-self: center`
+  and `flex: none` keep it one line tall and its own width, and `white-space: nowrap` keeps its words on one line.
 
 Used on activity state indicators in dashboard list cards and activity tables. The state picks the class and the text is
 its label (T220, T266): `<span class="badge @BadgeFor.ActivityState(item.CurrentState, item.IsFinished)">@item.CurrentStateLabel</span>`
@@ -927,15 +1359,15 @@ review). There, Active is `badge-completed`, Expired `badge-accepted` (the EPA w
 `badge-declined` and Superseded `badge-draft`.
 
 ```css
-.badge-standing-met    /* --success-bg ground, --success-color border, body text (T166) */
-.badge-standing-below  /* --warning-bg ground, --warning-color border, body text */
-.badge-standing-none   /* --hover-bg ground, --border-color border, body text: no decision, or not comparable */
+.badge-standing-met    /* success: as .badge-completed (T166) */
+.badge-standing-below  /* warning: as .badge-accepted */
+.badge-standing-none   /* neutral: as .badge-draft; no decision, or not comparable */
 ```
 
 A verdict of a level against a target: `EntrustmentStandingPanel`'s "At or above", "Below", "No decision" and "Not
-comparable" (T166). The words are the verdict and the tint repeats it. The text is body colour, not the semantic
-colour on its own tint, which falls short of 4.5:1 at 0.75rem. Every badge above is a state; these are the only ones
-that are a comparison.
+comparable" (T166). The words are the verdict and the tint repeats it. Every badge above is a state; these are the only
+ones that are a comparison. They keep their own class names, so a verdict and a state stay apart in the markup, though
+since T335 each is painted as the state badge of its tint.
 
 **Entrustment standing** (T166). `Components/Shared/EntrustmentStandingPanel.razor` is the one rendering of
 `GetEntrustmentStandingForTraineeQuery`. The committee review page shows it as a full-width card (`.detail-card
@@ -1146,7 +1578,7 @@ stayed, since a template is about no trainee, and the command took no caller to 
 institution (an Administrator can add the role to such an account) runs no campaign either
 (`MsfCampaignRules.RunsCampaigns`): the campaign page gives them the same standing alert in the words the create and
 template commands refuse them in (`MsfCampaignRules.RunsCampaignsRoles`), and neither form (T248 review). The MSF
-Campaigns nav link stays, as Committee Reviews and Decisions due stay for the same people (T185); the page it opens
+campaigns nav link stays, as Committee reviews and Decisions due stay for the same people (T185); the page it opens
 now says why nothing is there. (T224 review)
 
 **The invitations list** (T283, `/admin/invitations`). Each active invitation's row says what became of the email
@@ -1234,7 +1666,7 @@ covers it and `SubjectReadsOwnReportTests` the circuit. Whether a copy is the ca
 trainee's page shows only a copy marked that way, so neither page names a context to the subject. The flag says which
 page shows a copy, never what a copy may name: the portfolio PDF's copy is not marked, and the trainee reads it. The
 trainee's page admits Coordinator as well as Trainee and Administrator, so that every role this page admits can open the
-page it is sent to. The nav still offers MSF Reports to Trainee alone.
+page it is sent to. The nav still offers MSF reports to Trainee alone.
 
 The state's words are `MsfCampaignText.State` ("Under review", never the enum's "UnderReview"), which the campaign list
 and the report print too. Its badge is `BadgeFor.MsfCampaign`:
@@ -1691,12 +2123,14 @@ calls decided (T215). An open review's own lines are read against it too, so a l
 
 ```css
 .status-dot      /* 0.6rem circle, inline-block, margin-right sm */
-.status-dot.ok   /* --success-color */
-.status-dot.warn /* --warning-color */
-.status-dot.err  /* --danger-color */
+.status-dot.ok   /* --success-color, 5.88:1 on white */
+.status-dot.warn /* --warning-color, 5.77:1 */
+.status-dot.err  /* --danger-color, 5.95:1 */
 ```
 
-Used in the Administrator dashboard system-health card to show service status at a glance.
+Used in the Administrator dashboard system-health card to show service status at a glance. A dot is a meaningful mark,
+so it needs 3:1 against its ground; the ok and warn dots were 2.87 and 2.57:1 until the semantic colours darkened
+(2026-09-27, T335, flow 01; T322).
 
 ## Pager
 
@@ -1710,6 +2144,108 @@ Used in the Administrator dashboard system-health card to show service status at
 ```
 
 `PagerControls.razor` is the one component for pagination. Use it on every list that can grow.
+
+## The reconnect dialog and the error bar
+
+2026-09-27, T335, flow 01: round 3's `R2-Reconnect`, `R2-Reconnect-Narrow`, `R2-ErrorBar` and `R2-ErrorBar-Narrow`
+(`design/flows/01-shell/round-3/`), the round-2 review's S18, S19 and D7, and T330. What the Blazor runtime does was read
+in the source of the `blazor.web.js` the app serves (10.0.12: `UserSpecifiedDisplay`, `DefaultReconnectionHandler`,
+`BootErrors`). `Design/ReconnectModalTests` and `Design/ErrorBarTests` hold that file to the names both are built on, so a
+runtime that changes them fails the suite.
+
+### The reconnect dialog
+
+`Components/Layout/ReconnectModal.razor`, `.razor.css` and `.razor.js`; `App.razor` renders it, statically, on every page.
+The runtime finds it by its id, `components-reconnect-modal`. As the connection drops it puts a class on it for the state
+and raises `components-reconnect-state-changed`: `show`, then `retrying` once a second while it counts down to its next
+attempt (`detail.secondsToNextAttempt`) and once with 0 as the attempt starts, and at the end `hide`, `failed` or
+`rejected`; or `show` and at once `paused`. By default it makes 30 attempts: ten at once, ten 5 s apart, ten 30 s apart.
+It opens nothing and, with this dialog in the page, never reloads by itself; the script does both.
+
+| State | When | Heading and icon | Sentence | Button | Role |
+|---|---|---|---|---|---|
+| Rejoining | `-show`; also the runtime's first ten attempts, made at once | Reconnecting, loader-circle turning | "The connection to Wombat dropped. Reconnecting now.", and the bar | none | dialog |
+| Retrying | `-show -retrying`: from the second attempt that has to wait its turn | Could not reconnect, clock | One line, which `data-attempt` picks: `"waiting"`, the count to the next attempt, "Trying again in N seconds." (the script writes N a second at a time; "1 second"); `"started"`, "Trying again now.", and the bar | none | dialog |
+| Failed | `-failed`: the attempts are spent | Connection lost, circle-alert | "Wombat cannot be reached. Try again when your connection is back. If the page cannot be restored, it reloads, and anything not yet saved on it is lost." | Try again (refresh-cw): the template's `retry()` | alertdialog |
+| Paused | `-paused`: `Blazor.pauseCircuit()` | Page paused, pause | "This page is paused. Resume to carry on." | Resume: `resume()` | dialog |
+| Resume failed | `-resume-failed`, put on by the script when `resume()` cannot reach the server | Could not resume, circle-alert | Failed's sentence | Try again (refresh-cw): `resume()` | alertdialog |
+| Rejected | `-rejected`: the server answered but holds neither the circuit nor a state to resume it from | Reloading, loader-circle turning | "Reloading the page…" | none | dialog |
+
+- **One state at a time.** Each state is its own element, carrying one `-visible` class, and the stylesheet shows it under
+  one rule. The runtime adds `-retrying` beside `-show` and never takes `-show` away while it retries, so a rule under
+  `-retrying` hides the first attempt's state (T330: before it, "Rejoining the server..." stood above the retry's line).
+  `ReconnectModalTests` evaluates the rules on the served markup for every class the runtime sets, down to the line and
+  the bar each shows.
+- **Could not reconnect is one state, its line replaced** (2026-09-27, T335, flow 01; R2-Reconnect's states 2 and 3,
+  "The same line, replaced when the attempt starts"). The script sets `data-attempt` on every `retrying` event:
+  `"waiting"` while the runtime counts down, `"started"` as the attempt starts. It picks the state's line
+  (`data-reconnect-line`), not the state: the count, or "Trying again now." and the bar, in the one sentence the dialog is
+  described by. Until then waiting and started were two elements, each with its own "Could not reconnect", and since the
+  focus follows the shown state's heading (below), in an outage it moved between the two on every attempt and a screen
+  reader read the heading again every few seconds. Now the heading keeps the focus from the first retry to the last;
+  `ReconnectModalTests` holds that waiting, started and waiting again show one and the same element.
+- **No "Try now".** The runtime has no call that skips its countdown, and `Blazor.reconnect()` from a button would race
+  the attempt it makes itself. `Blazor.reconnect()` runs only under Connection lost's Try again.
+- **What the buttons call.** `Blazor.reconnect()` resolves true once reconnected, false when the server answers but no
+  longer holds the circuit, and throws when the server cannot be reached. `Blazor.resumeCircuit()` resolves true once it
+  has started a new circuit from the state the server kept, and false when there is none; it throws when the server
+  cannot be reached. So Try again reconnects, else resumes, else reloads, and on a throw stays on Connection lost and
+  tries again when the tab is next shown, as the template does. Resume resumes, else reloads, and on a throw moves to
+  Could not resume. A reload shows Reloading first.
+- **The buttons** are `.btn .btn-primary`, found by `data-reconnect-action` (`retry` or `resume`). While an attempt runs
+  the button carries `aria-disabled="true"` and a second press sends nothing (§ Button system). If its state has gone
+  when the attempt ends, the focus moves to the button of the state that took its place (Resume, then Could not
+  resume's Try again).
+- **Focus, name and role.** The heading (`tabindex="-1"`, no ring) takes the focus when the dialog opens, and again
+  whenever the shown state does not hold the focus (2026-09-27, T335, flow 01; the review of the t335 branch): as the
+  runtime begins to retry, Reconnecting hides, and a hidden element's focus falls to the body inside the modal, where
+  Connection lost, an alertdialog, never took it. So each move to a new state's element moves the focus to its heading,
+  and its sentence is still said by the live region, since a move inside the dialog reads the heading alone. A new
+  attempt is not a new state: Could not reconnect's line changes under a heading that keeps the focus. The dialog
+  is named by the shown state's heading and described by its sentence, and its role is `alertdialog` for Connection lost
+  and Could not resume, the `<dialog>`'s own elsewhere. The script sets all three after each event and any the runtime
+  raises with it, before it moves the focus, so Paused, which follows `show` at once, is the state that takes the focus.
+  A button's own state going while its attempt runs still hands the focus on to the button that took its place (below).
+- **The live region.** One `aria-live="polite"` region, inside the dialog: while it is modal the page behind it is inert,
+  and so is any live region there. It is written only when the state changes, with that state's sentence
+  (`data-announce`) and never the count; Could not reconnect's two lines are one sentence to it, "Could not reconnect.
+  Trying again.", so each attempt does not repeat it. As
+  the dialog opens it stays silent, since the focused heading reads the name and the description.
+- **It cannot be dismissed.** Esc is refused: nothing behind it answers until the connection is back.
+- **The look.** A native `<dialog>` opened modal, on `--scrim`. 400px wide (`25rem`), and never closer than
+  `--space-md` to the screen's sides, so 358px at 390. `--radius-xl`, `--shadow-dialog`, padding `--space-lg` (1.25rem
+  below 641px), and 12.5rem high at least from 641px, so it does not jump between states. The heading is 1.25rem, with a
+  20px Lucide icon: loader-circle and pause in `--secondary-color`, clock in `--warning-color`, circle-alert in
+  `--danger-color`. The bar is 4px, `--secondary-color` running on a `--header-bg` track. The button sits at the right;
+  below 641px it fills the dialog's width at 44px. The icons are inlined (§ Icons).
+- **Motion.** It arrives after 0.3s, so a connection that drops and comes straight back shows nothing, then slides up and
+  fades in. Under `prefers-reduced-motion: reduce` the spinner, the bar, the slide and the fade stop, and the words carry
+  the state. The dialog is opaque at rest: only its animation starts it transparent, so with the animations off it is
+  still there (the template's started at opacity 0).
+
+### The error bar
+
+`#blazor-error-ui`, at the foot of `MainLayout.razor`; its rules are in `MainLayout.razor.css`. The runtime shows it when a
+page's circuit fails (an exception in a component, or a connection that cannot start) by setting an inline
+`display: block` on it, and wires its buttons by their classes: `.reload` reloads the page and `.dismiss` hides the bar.
+Both are `onclick` properties set from the runtime's own script, so the CSP has nothing to refuse, and they work on a
+`<button>` as on the template's link.
+
+- **Markup.** `<div id="blazor-error-ui" role="alert" data-nosnippet>`, outside the layout's `AuthorizeView`, so on every
+  page, holding one `.error-bar-row`: a 20px triangle-alert icon, `<p class="error-bar-text">` "This page no longer
+  responds; copy anything you need, then reload.", `<button class="btn btn-sm btn-primary reload">` Reload with the
+  refresh-cw icon and `<button class="btn btn-sm btn-outline dismiss">` Dismiss with the x icon (R2-ErrorBar; the icons
+  carry `.error-bar-button-icon`; 2026-09-27, T335, flow 01, the review of the t335 branch). The row is on the wrapper
+  because the runtime's inline `display: block` on the outer element would beat a flex row there. No reference (D7): a
+  per-circuit reference is new code, for a later task.
+- **The look.** Fixed at the foot, `--warning-bg` with a 3px `--warning-color` top edge, `--shadow-bar`, `--text-color`,
+  the icon in `--warning-color`. From 641px it starts beside the 250px sidebar, with the page's own gutters (32px left,
+  24px right), its buttons small. Below 641px the sentence comes first, then Reload and Dismiss side by side, each half
+  the row at 44px, at a full button's 0.95rem and without their icons (R2-ErrorBar-Narrow).
+- `Design/ErrorBarTests` renders `MainLayout`, signed in and signed out, and reads the bar from it (until the review it
+  read the source, on the claim that the layout could not be rendered there).
+- `.reload` and `.dismiss` are the runtime's classes and nothing styles them (§ Non-negotiables); the buttons look like
+  buttons by `.btn`.
 
 ## Accessibility
 
@@ -1725,7 +2261,43 @@ Used in the Administrator dashboard system-health card to show service status at
   focus in the first name (T285).
 - Required fields show a visual `*` plus `aria-required="true"`.
 - `.visually-hidden` is available for screen-reader-only copy.
-- `:focus-visible` uses `--focus-ring`. Never remove focus outlines without replacing them.
+- **The focus ring** (2026-09-27, T335, flow 01; T322, T328): every element a keyboard focuses shows a 2px solid
+  `--focus-ring` outline at a 2px offset, from one `:focus-visible` rule for every element. Until T328 the rule was a list
+  of classes, so a focusable scroll region (Decisions due's summary, `.table-container[tabindex="0"]`), a tab and a
+  checkbox showed the browser's own 1px ring. The ring is 4.86:1 on white and 4.61:1 on the page (T322: the old one was
+  2.99:1 there). On dark chrome it is `--nav-focus-ring`, set by that chrome's own stylesheet, since `--focus-ring` is
+  2.90:1 on the gradient's start (§ Design tokens). Never remove a focus outline without replacing it: the only rule
+  that does is `h1[tabindex="-1"]:focus`, the heading `FocusOnNavigate` focuses for the screen reader, which no keyboard
+  reaches. `Design/StylesheetRuleTests` holds both.
+- **Reduced motion** (2026-09-27, T335, flow 01; S17). Under `@media (prefers-reduced-motion: reduce)` nothing slides,
+  fades or pulses: every transition's duration and delay go to 0, and every animation runs for 0.01ms, once, with no
+  delay, so it jumps to its last frame. That `app.css` rule is a general safety, for any animation that has no
+  reduced-motion rule of its own. The reconnect dialog has one: the dialog is opaque at rest (only its fade keyframes
+  change its opacity), and `ReconnectModal.razor.css` sets `animation: none` and `transition: none` on it, its backdrop,
+  the spinner and the bar's fill. So it shows at once and still, the bar's fill standing where the design draws it, and
+  its words carry the state. The skeleton is a still `--header-bg` block (§ Skeleton loaders). Every transition in
+  `app.css` runs at `--motion-fast` (150ms), which `Design/StylesheetRuleTests` holds.
+- **The shell** (2026-09-27, T335, flow 01; § Layout grid, § The NavMenu).
+  - **The nav ring:** every focusable control on dark chrome (the sidebar, the phone bar, the open menu's foot, the
+    signed-out bar) takes `--nav-focus-ring`, 2px at a 2px offset, set by `MainLayout.razor.css`, `NavMenu.razor.css`
+    and `NavItemLink.razor.css` over the page's ring. `Navigation/MainLayoutTests` holds each.
+  - **One current item:** at most one nav item is lit, and only it carries `aria-current`: `"page"` on a list, `"true"`
+    on the owner of a page under it. On My account the account row's name carries `aria-current="page"`, and the trail's
+    last crumb does on a page that has one. `Navigation/ActiveNavItemTests` renders every routable page for every acting
+    role.
+  - **Target sizes:** a nav row is 28px at a pointer's width and 44px on a phone, 4px apart; the account link 32px, 44px
+    on a phone; the switch 32px, 44px on a phone; the Menu toggle, Sign in on a phone, the phone menu's Sign out and the
+    folded trail's link 44px.
+  - **The scroll list:** only the nav list scrolls, and it takes no tabindex, so it adds no tab stop to every page; the
+    browser brings each focused link into view, and the lit item is scrolled into view as the page loads.
+  - **The phone toggle** is a real checkbox, visually hidden and focusable, named by its label ("Menu" or "Close"); its
+    checked state is what a screen reader hears, so nothing carries `aria-expanded`. Every navigation closes it.
+  - **A contrast theme** keeps the current-page cues: the lit item's bar and My account's underline are drawn again as a
+    border and a text underline in `CanvasText` (§ Layout grid).
+  - **Landmarks:** one `<header>`, the banner, holding the brand, the navigation and the account row (the review of the
+    t335 branch: the brand and the account row were outside every landmark); in it one `<nav aria-label="Main">`; one
+    `<nav aria-label="Breadcrumb">` for a trail; and the page in `<main>`. A nav group's heading is a `<p>` that names its
+    list, so the page's `<h1>` stays its first heading.
 - Never leave the focus on the page body. A button is not disabled by its own action, and says it is unavailable with
   `aria-disabled` while that action runs; an action that is done moves the focus to its result, and one whose button is
   gone does too (§ Button system, T234).
@@ -1737,13 +2309,44 @@ Used in the Administrator dashboard system-health card to show service status at
 ## Icons
 
 - One `Icon.razor` wraps `<svg>` + `<use href="/icons/{name}.svg#i" />` or inline path data.
+- The reconnect dialog inlines its Lucide paths instead (`ReconnectModal.razor`): it shows when the server cannot be
+  reached, so it cannot fetch an `/icons/` file then (2026-09-27, T335, flow 01; § The reconnect dialog and the error
+  bar).
 - Icons live under `src/Wombat.Web/wwwroot/icons/` as individual SVG files, copied from Lucide (MIT licensed, compatible with AGPL-3.0).
-- The nav uses the same `Icon.razor`; `NavMenu.razor.css` only sizes and spaces it (§ The NavMenu).
+- The nav uses the same `Icon.razor`, 20px, each item naming its glyph in `Navigation/NavItems.cs`;
+  `NavItemLink.razor.css` only spaces it (§ The NavMenu). Every name must be a file under `wwwroot/icons/`, which
+  `NavMenuAuthorizationTests` checks.
 - **Do not load a Bootstrap Icons font.** ClinicAssist tried and the `<i class="bi bi-*">` approach renders nothing without the font, silently. Repeating that mistake is not on the table.
 
 ## Page-level patterns
 
 Every page in `Wombat.Web` follows one of these shapes. Pick one at the top of the file and stick to it.
+
+**A page is named once, in the same words, wherever it is named** (T190; D10 of the flow 01 review; 2026-09-27, T335,
+flow 01). Its nav label, its heading, its breadcrumb and its tab are the same words, in sentence case.
+
+- **The tab is "<Stem> · Wombat"** on every routable page: `<PageTitle>Audit log · Wombat</PageTitle>`, the separator
+  U+00B7 with a space each side. Until T190 the tabs read "Dashboard — Wombat", "Sign in - Wombat", or the page alone.
+- **Sentence case.** The first word is capitalised, and after it only acronyms and proper nouns: EPA, EPAs, MSF, SSO,
+  STAR, CPSA, PDF, Mini-CEX, DOPS, CbD, and College where it names the College. "Activity inbox", "Sub-specialities",
+  "Create college". A name that comes from data (an activity type's, a person's) is printed as it is stored.
+- **The stem is the page's heading**: its `PageHeader` Title, or on an account page the card's `<h2>`. A page the nav
+  opens is headed by its nav label: "Log an activity" (`/activities/new`), "MSF reports", "My data rights", "SSO
+  mappings", "My account" (`/account/profile`).
+- **A heading that changes is one expression, which the title and the header share**: a member
+  (`<PageTitle>@Heading · Wombat</PageTitle>` beside `<PageHeader Title="@Heading" …>`) or a choice of two literals
+  (`@(IsNew ? "Create EPA" : "Edit EPA")`). Until it has loaded the member says what the page is ("Activity",
+  "Activity type"), never nothing. An activity's page is named for its type ("Mini-CEX (Paediatrics) · Wombat").
+- **After a refused post the title starts "Error: "** (WCAG technique G88): the change password page, the MSF respondent
+  page.
+
+`Hosting/PageTitleTests` reads every routable component's source, found by reflection over `[Route]`, and fails on a
+page with no title, a title without the suffix, a stem not in sentence case, or a stem that is not the heading (a
+literal is compared with a literal, an expression with the same expression). A page whose heading it cannot read says
+why in the test: the specialities redirect has none, and the MSF respondent page's states are held by
+`MsfRespondPageHostingTests`. `TestSupport/TabTitle` reads a rendered page's tab in bUnit, which renders no
+`HeadOutlet`; a page whose title is computed checks it after its load there, as the builder's tests do (its tab was empty
+once the editor had loaded, T190's note).
 
 **A person is shown by name, never by user id** (T142). The name is a field on the page's DTO, filled by the query
 that serves the page with one `UserDisplayNames.ResolveAsync` call for every id it lists. Razor never looks a name up,
@@ -1771,10 +2374,39 @@ the review DTOs carry as `StateLabel`: "Scheduled", "In progress", "Decided", "R
 refusal that names a review's state mid-sentence uses `StateInSentence`, which is built from the same labels ("decided,
 not yet ratified"). The data-rights JSON export keeps the stored value, because it is the record.
 
+### Breadcrumbs
+
+(2026-09-27, T335, flow 01; D5; R2-Rules § 3, R2-Detail-*.) `PageHeader` draws the page's trail above its header, from
+the owner table (`NavOwners.TrailTo`), so a page gets it by having a header; `Breadcrumbs.razor` renders it.
+
+- **Under an owner:** Home › the owner › the page. The owner is the nav item the page lights for the acting role (§ The
+  NavMenu), so the trail follows the owning list, not the page the person came from (D5: an activity opened from a
+  committee review is under the inbox for an Assessor; flow 07 decides whether evidence gets a context trail).
+- **With no owner for the acting role**, on a page in the owner table or on a list the acting role's menu does not
+  offer: Home › the page.
+- **None** on Home, on a list the acting role's menu offers (its own "Home › the list" is the trail its pages inherit,
+  R2-ErrorBar), on My account and the sign-in pages, and on the failure pages.
+- **Change password:** Home › My account › Change password.
+- **The page's own crumb** is its title, a `<span aria-current="page">` in body text at weight 600; the others are links,
+  separated by a 14px chevron. A header whose crumb is not its title passes `CurrentCrumb`: a data-rights request's is
+  its id, once it has loaded (the review of the t335 branch; `ActiveNavItemTests`).
+- **A crumb between the owner and the page**, where the owner table names one, is passed by the page as `Trail`: the
+  College on a College's specialities, for the Administrator (Home › Colleges › the College › Specialities). For the
+  College admin the College is the page's own crumb (Home › Specialities › the College).
+- **A page drawn in place of another** names itself: Access denied, drawn at the address of the page that refused (D6),
+  passes `Page="typeof(AccessDenied)"`, so its trail is its own (none), not the refused page's.
+- **Below 641px** the trail folds to one 44px link to its parent, the crumb before the page's own, led by a back chevron
+  (R2-Detail-Phone): `.breadcrumb-ancestor`, `.breadcrumb-current` and the separators are hidden there.
+- **Its place:** at the top of the article, whose padding spaces it from the bar, and 16px above the header
+  (`.breadcrumbs { margin: 0 0 var(--space-md) }`, R2-Detail-*). Until the review of the t335 branch it stood 16px under
+  the bar, and the heading's browser margin kept the header off it.
+
+`Navigation/ActiveNavItemTests` holds the trail.
+
 ### List page
 
 ```
-<PageTitle>…</PageTitle>
+<PageTitle>… · Wombat</PageTitle>
 
 <PageHeader Title="…" Subtitle="…">
   <Actions>
@@ -1855,15 +2487,69 @@ when a report is selected.
 
 ### Dashboard page
 
+> **Amended 2026-09-27, T335, flow 01** (R2-Landing-Assessor, -CM, -Loading, -Error, R2-Shell-Admin, -Assessor,
+> R2-Phone-Folded; the round-2 review, S20 and S22(c); T329's Home half): Home is headed "Home", with no "Welcome" and no
+> "Viewing as"; it has one header action per role, a loading frame and a load error; the switch line is gone to the
+> sidebar. The cards are kept as they were, less the duplicates the boards drop, and belong to later flows.
+
 Dashboards are a composition, not a standalone page pattern.
 
-- **`Home.razor`** is the one routed page at `/`. It owns the `<PageHeader Title="Welcome, {name}" Subtitle="Viewing as {role}" />`, resolves the active role (via a cookie plus `DashboardPriority.Order`), renders the "You also act as … Switch view:" link row if the user holds multiple roles, and picks one of the role dashboards to render inside.
+- **`Home.razor`** is the one routed page at `/`: the frame, then the acting role's dashboard (the `ActingRole` Routes
+  cascades, § Acting role).
+  - **Its heading is "Home"**, its nav label, and its tab "Home · Wombat" (D10). Until T335 it was "Welcome, {email}",
+    under "Dashboard — Wombat": the top bar now names the person.
+  - **Its subtitle is "{acting role's label} · Semester N, YYYY"** (`Navigation/HomeFrame.Subtitle`): "Assessor ·
+    Semester 2, 2026". The semester is `AcademicPeriod.Containing` of today on the South African calendar
+    (`QuotaCalendar.Today`, from the injected `TimeProvider`), the same "Semester 2, 2026" the progress pages and the
+    committee's card name that day. It replaced "Viewing as {role key}". Someone with no role has no subtitle (D8).
+  - **One header action for a role whose main job starts from Home** (A-Spec § e; `HomeFrame.ActionFor`), a primary
+    button with its icon: the Trainee's "Log an activity" (`/activities/new`) and the Institutional admin's "Invite a
+    person" (`/admin/invitations`, where the invitation form is). Every other role has none: its main job is a card's row
+    or a nav link, and a pending trainee can file nothing yet. The action is a link Home offers, so it too opens a page
+    that admits the role. At phone width it is its own row **below the header's rule**, 44px tall and the page's width
+    (`.home-action`), as R2-Phone-Folded draws it: the rule is drawn under the heading block instead of under the header
+    (`.header-container:has(> .actions-cell > .home-action)`), so the action falls below it. Until the review of the t335
+    branch it sat under the heading but above the rule, which this passage attributed to the same board.
+  - **A header's actions stand on the heading's baseline** (`.header-container`'s `align-items: baseline`, every page):
+    at `flex-start` they sat at the header's top, 16px above the heading, which kept the browser's own top margin (the
+    heading has none in the header since the review of the t335 branch, § Typography).
+  - **No switch.** The "You also act as … Switch view" line is gone: the sidebar's head offers the switch on every page
+    (§ Acting role). A switch's one-time result still shows under Home's header (`ActingRoleSwitchAlert`, through
+    `PageHeader`).
 - **Role dashboards** live under `Components/Pages/Dashboards/` (`AdministratorDashboard`, `CollegeAdminDashboard`, `InstitutionalAdminDashboard`, `SpecialityAdminDashboard`, `SubSpecialityAdminDashboard`, `CommitteeMemberDashboard`, `CoordinatorDashboard`, `AssessorDashboard`, `TraineeDashboard`). Each one is a child component — **no `@page` directive**, **no `<PageTitle>`**, **no `<PageHeader>`**. Adding any of those would duplicate Home's header.
+- **The frame while a dashboard reads, and when its read fails** (R2-Landing-Loading, R2-Landing-Error; T329). A
+  dashboard that reads inherits `RoleDashboard<TSummary>` and draws its cards inside a `DashboardFrame`:
+  - **Loading:** the header, the grid (`aria-busy="true"`) and every card's title render at once, each card a skeleton
+    (`DashboardCard`'s `IsLoading`). Nothing is offered until the read returns: no card's content, no card that links.
+    Until T335 the page showed a column of bare skeletons. A dashboard with two frames (the trainee's, pending or not)
+    draws the acting role's until its summary says which.
+  - **Failed:** one `danger` `Alert`, "**Could not load your Home.** Nothing has changed. Try again, or come back in a
+    few minutes.", with a Try again button (outline, small, the `refresh-cw` icon) that reads again, and **no cards**: a
+    card drawn empty says there is nothing, and a skeleton says it is still coming. The exception is logged, never shown
+    (until T335 each dashboard printed its message, which for a database failure is EF's text, T272). Try again's button
+    goes with the alert, so the answer (the cards, or the alert again) takes the focus once it has come: the frame is an
+    `ActionResult` (§ Button system, T234).
+  - **Guard the eager reads.** The frame renders before the summary, so a card's parameters are read while it is null: a
+    title, stripe or count that reads it is written `Summary?.…` (the Coordinator's warning stripe, the admins' coverage
+    title, which is "Curriculum coverage" until it knows the semester), and a card's content only
+    `@if (Summary is { } summary)`. `HomeFrameTests` renders every role's Home with a read that never returns, and with
+    one that fails.
+- **The cards** belong to later flows (S20); today's are kept, less the duplicates the boards drop:
+  - the Assessor's work waiting is one card, "Waiting for your rating", its count (`PendingRequestCount`) as its badge,
+    its rows under it and "Open inbox →" at its foot. "Pending requests", "Awaiting your review" and the Actions card,
+    three ways to one inbox, are gone;
+  - the Administrator's job status is in System health only (spanning two), beside Users across institutions. The
+    Maintenance card, four nav links over again, is gone; its fifth, Curriculum progress, is a header link on Curricula,
+    the page that owns it, for the Administrator its page admits;
+  - the Trainee's Actions card is gone: its Log an activity and Request an assessment both opened `/activities/new`,
+    which the header now offers.
 - **Every role has its own case in Home's switch**, and the dashboard it picks admits the role (T261). Until then a
   CollegeAdmin fell through to the trainee's dashboard: "No curriculum assigned yet", beside links to pages that refuse
   a CollegeAdmin. PendingTrainee shares the trainee's dashboard, which branches on it. A signed-in user who holds **no
-  role** (an administrator removed the last one) is not given a role's dashboard either: Home shows no "Viewing as"
-  subtitle and one "No role assigned" card with no link, since no page is theirs to open.
+  role** is not given a role's dashboard either, and Home shows no subtitle. A graduate (the `trainee_record` claim, T252)
+  gets one card, "Your training record", pointing to My progress, which `TraineeOrFormerTrainee` admits (A-Spec § e:
+  "her record, not No role assigned"). Anyone else with no role (an administrator removed the last one) gets one "No role
+  assigned" card with no link, since no page is theirs to open.
 - **Each dashboard names the roles it is for in `[Authorize(Roles = …)]`.** Blazor enforces `[Authorize]` on a routed
   page only, so on a dashboard it is a statement the test reads, not a gate. A dashboard with none, or a bare
   `[Authorize]`, would be judged as admitting every signed-in user; the test refuses both.
@@ -1878,35 +2564,94 @@ Dashboards are a composition, not a standalone page pattern.
   link to a page the role cannot open is removed or pointed at one it can: the Coordinator starts an MSF campaign rather
   than issuing an invitation, and the InstitutionalAdmin's quick links are Users, Invitations, Curriculum adoptions and
   Entrustment decisions, not the Administrator's Institutions or the College's Specialities.
-- **`/dashboard/switch/{role}`** (defined in `Program.cs`) is a minimal-API endpoint that writes the preferred-role cookie and 302s back to `/`. It never renders UI directly. Every way a user reaches a dashboard goes through Home.
+- **`/dashboard/switch/{role}`** (`ActingRoleSwitch`, mapped in `Program.cs`) stores the acting role with the account and 302s to its return address or `/` (§ Acting role). It never renders UI directly. Every way a user reaches a dashboard goes through Home.
 
 So a dashboard `.razor` file looks like this:
 
 ```razor
+@using System.Security.Claims
+@using MediatR
 @using Wombat.Application.Features.Dashboards.{RoleName}
 @attribute [Authorize(Roles = "{RoleName}")]
 @rendermode InteractiveServer
-@inject IScopedSender Sender
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits RoleDashboard<{RoleName}DashboardSummaryDto>
 
-<StatePanel IsLoading="_loading" LoadError="@_error">
-  @if (_vm is not null)
-  {
-    <div class="dashboard-grid">
-      <DashboardCard Title="…" Icon="…"> … </DashboardCard>
-      <DashboardCard Title="…" Icon="…" Emphasis="true"> … </DashboardCard>
-      <DashboardCard Title="…" Icon="…" Span="2"> … </DashboardCard>
-    </div>
-  }
-</StatePanel>
+<DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
+  <DashboardCard Title="…" Icon="…" IsLoading="IsLoading">
+    @if (Summary is { } summary) { … }
+  </DashboardCard>
+  <DashboardCard Title="…" Icon="…" Emphasis="true" IsLoading="IsLoading" Count="@(Summary?.…)"> … </DashboardCard>
+  <DashboardCard Title="…" Icon="…" Span="2" IsLoading="IsLoading"> … </DashboardCard>
+</DashboardFrame>
+
+@code {
+  protected override IRequest<{RoleName}DashboardSummaryDto> QueryFor(ClaimsPrincipal user) => new Get{RoleName}DashboardSummaryQuery(user);
+}
 ```
 
-Inline `style="..."` is acceptable inside a dashboard's list items — `style="display:flex;justify-content:space-between;padding:var(--space-xs) 0"` for a badge-row, `style="width:@percent%"` for a progress bar fill — because these are per-instance layout values, not a reusable utility. Keep them token-backed (`var(--space-*)`, never raw px). If the same inline-style pattern starts appearing in four or more dashboards, promote it to a named utility in `app.css`.
+Inline `style="..."` is acceptable inside a dashboard for a per-instance value — `style="width:@percent%"` for a progress
+bar fill — never for layout a class names: a row is `.list-row`, a row of buttons `.actions-cell` and a row of figures
+`.dashboard-metric-row` (T328; 2026-09-27, T335, flow 01, which promoted the badge-row that had spread to four
+dashboards).
 
 Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metric` / `.progress-bar` / `.status-dot` primitives. Role-specific content lives inside the cards; the grid and card shapes do not.
 
 A dashboard that reads nothing (the CollegeAdmin's, a card of links to the national catalogue it authors) has no query,
-no `StatePanel` and no `@rendermode`: the grid and its cards are the whole file.
+no `DashboardFrame` and no `@rendermode`: the grid and its cards are the whole file.
+
+### Acting role
+
+(2026-09-27, T335, flow 01; R2-Rules § 1–2; D1, W-010; T317.) A person who holds several roles acts as one of them at a
+time. **The acting role chooses only what the frame shows**: the navigation, the landing (Home's dashboard) and the head.
+Access is the union of the roles held and never changes with it: a page any held role admits opens whatever the acting
+role, and following a link inside Wombat never switches it.
+
+- **The rule.** The role stored with the account (`WombatIdentityUser.ActingRole`) while the person holds it; else the
+  first role they hold in `DashboardPriority.Order` (Administrator, College admin, Institutional admin, Speciality admin,
+  Sub-speciality admin, Committee member, Coordinator, Assessor, Trainee, Pending trainee); else none, and a person with
+  none gets no "Acting as" head and no switch. It is **remembered per account, across sign-ins**, never in the browser:
+  the next person to sign in on the same browser lands by the precedence (T317).
+- **The resolver.** `Navigation/ActingRoleResolver` is the one implementation, a pure function of the stored choice and
+  the roles held, which returns an `ActingRole` (the role, and every role held in precedence order). The choice reaches
+  it as the sign-in cookie's `acting_role` claim (`WombatClaimTypes.ActingRole`, issued by
+  `WombatUserClaimsPrincipalFactory`), so **the shell reads no database**. `App.razor` resolves it once per request from
+  `HttpContext.User` and passes it to `Routes` as a parameter; `Routes` cascades it with `IsFixed`. Components take
+  `[CascadingParameter] ActingRole`; nothing reads a cookie or `IHttpContextAccessor` for it inside a circuit.
+- **The endpoint.** `GET /dashboard/switch/{role}?returnUrl=<local path>` (`Navigation/ActingRoleSwitch`), a GET so an
+  email's link can use it (W-010), for a signed-in user only. A role the person holds is written through `UserManager`
+  and the cookie issued again (`RefreshSignInAsync`); an unknown or unheld role writes nothing and says nothing. The
+  return address is followed only when `LocalUrl.OrNull` passes it (one slash, not `//` or `/\`, no control
+  character); anything else lands on `/`, the new role's Home. A character above U+007E is percent-encoded as UTF-8, as a
+  browser sends it: as it arrived, decoded from the query, it went into the `Location` header, which Kestrel refuses
+  outside printable ASCII, and the answer was a 500 (2026-09-27, T335, flow 01; the review of the t335 branch). Every
+  caller of `LocalUrl` shares it: the sign-in, the institutional sign-in's callback, the link page, the session's end.
+  The sidebar's switch is the same link without a return address. A session whose security stamp has changed is signed out, never given a new cookie. Not audited: it grants
+  nothing.
+- **Every switch link is a full page load:** `data-enhance-nav="false"`, `ActingRoleSwitch.Url(role, returnUrl)` for its
+  address. On a static page (`/portfolio/verify`, `/msf/respond`, `/Error`) enhanced navigation would otherwise fetch
+  the landing page and patch it in place, where `autofocus` does not apply, `FocusOnNavigate` takes the h1, and no fresh
+  circuit starts. In a circuit the router cannot route the address, so it loads in full anyway.
+- **The result.** After a switch that changes the frame, the page it lands on says so once, under its header:
+  `ActingRoleSwitchAlert`, which `PageHeader` renders, shows an `info` `Alert` with `role="status"` inside an
+  `ActionResult` with `FocusOnLoad`: "You are now acting as Assessor." Away from Home it adds an outline small link,
+  "Switch back to {previous role}", to the same endpoint with this page (path and query) as the return address. The
+  words and the link are an `.alert-row`: the words grow, so the link sits at the right (R2-Detail-Email).
+  - The word travels as a short-lived HttpOnly, SameSite=Lax cookie, protected with Data Protection, bound to the
+    account and taken once (`ActingRoleSwitchResults`). `App.razor` takes it and passes it to `Routes`, which cascades
+    it; a forged, expired, replayed or someone else's word shows nothing, and so does one whose new role is not the
+    acting role. Sign-out deletes it.
+  - The first in-circuit navigation leaves the page, and the word with it.
+  - Its focus wins over `FocusOnNavigate`'s h1: `FocusOnNavigate` sits beside `AuthorizeRouteView`, so it renders, and
+    sends its focus, before any component of the page (`ActingRoleSwitchAlertTests`).
+  - It works on an interactive page (the prerender and the circuit each show it) and on a static one.
+  - **Said by one circuit** (2026-09-27, T335, flow 01; the review of the t335 branch). `Blazor.resumeCircuit()` starts a
+    new circuit from the page's own descriptor, `Routes`' parameters and the word included, so a resumed page said it
+    again. The word carries the switch's nonce, and the first circuit to render it records it with
+    `ActingRoleSwitchResults.SayInCircuit` (for eight hours, longer than a circuit's state is kept to be resumed); a later
+    circuit given the same word says nothing (`ActingRoleSwitchAlertTests`).
+- **Names.** A role is shown by its sentence-case label, `WombatRoleLabels.For` (Domain): "Committee member", never
+  "CommitteeMember". The signed-in person is shown by `ClaimsPrincipal.GetDisplayName()`, the `display_name` claim
+  ("FirstName LastName", or the email when the account has no name), never read from the database by the shell.
 
 ### Account / auth page
 
@@ -1978,14 +2723,24 @@ always refused an anonymous circuit. `/portfolio/verify`'s Verify button was the
 is made as the page renders, the same for every visitor. A check that fails says so on the page.
 
 **The sign-in cookie is written only in an HTTP request** (T265). A circuit's response started when the page first
-loaded, so `SignInManager` there throws "Headers are read-only". Sign-in, register, link-account, sign-out and change
-password each post a form to an endpoint in `Program.cs`, which writes the cookie and redirects. Change password stays
+loaded, so `SignInManager` there throws "Headers are read-only". Sign-in, register, link-account, sign-out, change
+password and My account's name each post a form to an endpoint in `Program.cs`, which writes the cookie and redirects. Change password stays
 an interactive page, for its Show buttons. Its form, a plain `<form method="post" action="/account/change-password/submit">`
 with `<AntiforgeryToken />`, is posted by the browser, which the circuit does not intercept. The endpoint changes the
 password and issues the cookie again with the new security stamp, in one request. A separate "refresh the cookie"
 endpoint would hand the new stamp to any cookie still inside the stamp validator's interval, a stolen one included. The
 redirect back carries `?status=updated`, or a code for each refusal (`?error=PasswordMismatch`), never the words.
 The page chooses the words (`ChangePasswordOutcome`), so a crafted link cannot put its own text in the page's alert.
+
+**My account's name is saved the same way** (2026-09-27, T335, flow 01; the review of the t335 branch). The shell names
+the person from the cookie's `display_name` claim and reads no database, so a name saved in the page's circuit left the
+account row on the old name, in that circuit and in the cookie, until the stamp validator next rebuilt it. The page's form,
+a plain `<form method="post" action="/account/profile/submit">` with `<AntiforgeryToken />`, the two names `required` and
+`maxlength="100"`, posts to an endpoint that checks the session, saves the name (`UpdateCurrentUserProfileCommand`, for
+the request's caller) and issues the cookie again in one request, then redirects to `?status=saved`, or `?error=` with a
+code (`ProfileOutcome`: `NameMissing`, `NameTooLong`, `Failed`); the page chooses the words, takes the focus on the result
+as it loads, and its title starts "Error: " after a refusal. The page loads in full, and its circuit starts from the new
+cookie. `Account/ProfilePageTests` holds the page, `Hosting/ProfileFlowTests` the post, to the account row's new name.
 
 An endpoint that issues the cookie again checks the session first (T265 review). The stamp validator looks at a cookie
 once a minute (`SessionRevalidation`, T279; thirty minutes before it), so until then a session that has already ended
@@ -2011,7 +2766,7 @@ in or not:
 @attribute [RequireAntiforgeryToken(required: false)]  @* the link is the post's authority *@
 @layout Layout.AuthLayout
 
-<PageTitle>@PageTitleText</PageTitle>                   @* one per state; "Error: …" after a refused post *@
+<PageTitle>@PageTitleText · Wombat</PageTitle>          @* one per state, its <h2>'s words; "Error: …" after a refused post *@
 <div class="account-form-container account-form-container--wide shadow">
   brand lockup, <h2>, the state's Alert
   <div id="msf-error" class="error-summary" tabindex="-1" autofocus>  @* only after a refused post *@
@@ -2035,9 +2790,10 @@ in or not:
 - `data-submit-once` (`wombat.js`) drops a second submit while the first is on its way: the link takes one response.
 - A refusal is the page's own state, with the status the Api would answer (`MsfResponseRefusals.Describe`), set as the
   response starts: .NET 10 writes no body for a page that ends its render at 404.
-- Every state has its own `<PageTitle>` ("Feedback link expired - Wombat", "Thank you - Wombat"), and a refused post's
-  starts "Error:". A refused post reloads the whole page, so its summary is an `.error-summary` that takes the focus as
-  the page loads (`tabindex="-1"` + `autofocus`), and the question the refusal names points at it: the rating's
+- Every state has its own `<PageTitle>`, its `<h2>` in the same words ("Feedback link expired · Wombat", "Thank you ·
+  Wombat", "Feedback on Nomsa Mahlangu · Wombat"; T190), and a refused post's starts "Error:". A refused post
+  reloads the whole page, so its summary is an `.error-summary` that takes the focus as the page loads
+  (`tabindex="-1"` + `autofocus`), and the question the refusal names points at it: the rating's
   fieldset with `aria-describedby`, a comment box with `aria-invalid`, `.input-validation-error` and
   `aria-describedby` (its help text, then the summary). Only that question.
 - No antiforgery check and no token in the form: whoever holds the link can post without a browser, so the check
@@ -2055,31 +2811,119 @@ in or not:
 .error-summary                 /* a refused post's summary, focused on load; a focus ring when focused (T205) */
 ```
 
+### System pages
+
+(2026-09-27, T335, flow 01: R2-Denied-*, R2-NotFound-*, R2-Error-*; the round-2 review, S1 to S6 and D6; T321.) Access
+denied, Page not found and the error page tell a person that the page they wanted is not theirs, not there, or failed,
+and give them the way on. They share one shape, and none of them, nor its shell, reads the database: each is what a
+person sees when something else has gone wrong. The one read on their way is the pipeline's, not theirs: the sign-in
+cookie's check reads the account once the cookie is over a minute old (T279). In the error page's rerun a check that
+throws draws the page signed out (below; the review of the t335 branch, 2026-09-27, T335, flow 01).
+
+- **Signed in:** a `PageHeader` with its icon (`Icon`, `IconTone`), and one `.system-panel` under it, at most 40rem
+  wide: what happened, what to do, and the way on (`.actions-cell`, the first button primary). **Signed out:** the same
+  header, in a `.system-card` centred under the signed-out bar, its icon above the heading and no rule. At 390px the
+  buttons stand one under another, each the panel's width and 44px tall.
+- **The icon** says the kind of page: `ban` in the danger colour for a refusal, `lock` for "sign in", `search` for not
+  found, `triangle-alert` in the warning colour for a failure, `info` for "nothing went wrong". It is aria-hidden: the
+  heading is named by its words.
+- **"Go to Home"** is the way back, everywhere (until T335 "Back to home"). The tab and the heading are the same words.
+- **No page names more than the person may know.** Access denied never names the page or the roles that would open it,
+  and Page not found never echoes the address (a crafted link would put its words on a Wombat page, T285's class) or
+  says anything about another institution's records, which are answered 404 so as not to be known to exist.
+
+| Page | Heading | What it says | The way on |
+|---|---|---|---|
+| Access denied, signed in (`/access-denied`, or in place) | You cannot open this page | "Your role (Trainee) does not open this page." or "None of your roles (Committee member, Assessor) opens this page." (`SystemPageText.Refusal`, from the claims); then "If you need it for your work, ask your institution's Wombat administrator." ("… ask the platform administrator." for an Institutional admin, a College admin or an Administrator: their institution's administrator is themselves or nobody, S1) | Go to Home |
+| Access denied, signed out | Sign in to open this page | "After you sign in, Wombat brings you back to the page you asked for." when `ReturnUrl` is a path on this site (`LocalUrl`) other than `/access-denied`; else "Sign in to carry on." | Sign in: `/account/login?ReturnUrl=<it>`, or `/account/login` |
+| Page not found, signed in | Page not found | "There is no page at this address." "Check the address, or start again from Home." | Go to Home |
+| Page not found, signed out | Page not found | "There is no page at this address." | Go to Home |
+| The error page, after a failure (500) | Something went wrong | "Wombat could not finish this request. Try again. If it keeps happening, send this reference to your institution's Wombat administrator." (signed out: "… to whoever sent you the link, or to your Wombat administrator.", since an MSF respondent has no account); the reference block | Try again (the failed address), Go to Home |
+| The error page, typed as `/Error` | Nothing went wrong | "This is Wombat's error page, opened directly. No request failed, so there is nothing to report." | Go to Home |
+
+- **Access denied is drawn in place, once** (D6, T321). A full load of a page the person may not open is sent to
+  `/access-denied` by the sign-in cookie's `AccessDeniedPath`; in-app navigation to one renders `<AccessDenied />` at
+  the page's own address, from `AuthorizeRouteView`'s `NotAuthorized`, which is already drawn in the default layout.
+  Until T335 `Routes.razor` wrapped it in a `LayoutView` of `MainLayout` as well: two sidebars, two top rows and two Sign
+  out buttons. No switch of role is offered: access is the union of the roles held, so none could open it (S1).
+- **The error page** (`Pages/Error.razor`) is static (`[ExcludeFromInteractiveRouting]`) and anonymous: it renders once,
+  inside the failed request, so its reference is that request's, and a visitor who has not signed in sees it, not a
+  sign-in form. `Navigation/ErrorPages` wires `UseExceptionHandler("/Error")`, with a scope of its own for the rerun,
+  outside Development, for a browser's page load only (a GET that accepts HTML): a failed post or `fetch` keeps its bare
+  500. The handler sits **before** `SecurityHeadersMiddleware` and the 404 rerun: it clears the failed response, headers
+  and all, so behind them the page lost its CSP header (`ErrorPageFlowTests` holds the nonce).
+  - **The reference** is the request's W3C trace id, 32 hexadecimal characters (`Activity.TraceId`), never the
+    55-character traceparent, which wrapped at 390px and which no one searches a journal for; the request's own id where
+    there is no trace. `ErrorPages.ReferenceLog` logs the failure once, with the exception and that reference, before the
+    page renders; the middleware's own line, which names none, is suppressed when the page answered.
+  - **The reference block** (`ReferenceBlock.razor`, `dl.reference-block`): the label "Reference" and "Time" muted, the
+    trace id in `--font-mono`, wrapping anywhere, and the time with its zone, "2026-09-26 15:14 SAST", on `--header-bg`.
+  - **Try again** is the failed address, its path and query from `IExceptionHandlerPathFeature`, when `LocalUrl` passes
+    it, and a full page load (`data-enhance-nav="false"`). With none, Go to Home is the primary button. Signed in, the
+    buttons carry their icons; signed out, in both states, none, as the signed-out Page not found and Access denied
+    (R2-Error-Out).
+  - **In a database outage** (2026-09-27, T335, flow 01; the review of the t335 branch). The rerun runs authentication
+    again, and with the database down the cookie's check throws there as it did in the failed pass. Until the review
+    nothing caught the second, so a signed-in person got the server's bare 500, T321's defect.
+    `ErrorPages.GuardTheSignInCheck` wraps the check (`ConfigureApplicationCookie` in `Program.cs`): in the rerun only
+    (`IExceptionHandlerFeature` present), a check that throws rejects the principal, so the page is drawn signed out, and
+    it signs nothing out: the cookie is left as it was, as `SessionEnd` leaves a session it could not check, and is good
+    again once the account can be read. The fault is logged as a warning; the failure itself is the request's, logged
+    once with its reference.
+  - **Sign out is a link on the error page** (the same review). The page is drawn in the rerun, where a form's token would
+    be the failed pass's, whose antiforgery cookie the handler cleared with that pass's response, so the post could be
+    refused. `MainLayout` draws Sign out there as a link to `/account/logout-confirm`, which draws its own form and
+    token, with the button's classes.
+- **Tests:** `Navigation/SystemPagesTests` (the words from the claims, one role, several, an administrator of anything,
+  none; signed out with and without a page to return to; Not found signed in and out; the error page's states, and its
+  icons signed in and none signed out; Access denied in the real `Routes`, drawn once), `Navigation/MainLayoutTests`
+  (Sign out a link on the error page), `Hosting/ErrorPageFlowTests` in the integration suite (the 500, the page, its
+  nonce, the reference logged once, counting every error line that carries the exception; signed out; the sign-in check
+  throwing in the rerun, drawn signed out with the cookie kept; no page for a post or a non-HTML request; the typed
+  state), and
+  `Hosting/SignInReturnAddressFlowTests` (the sign-in's return address is followed only when `LocalUrl` passes it, and
+  one outside ASCII percent-encoded, at the sign-in, the institutional sign-in's callback and the link page, the raw
+  `Location` held to Kestrel's rule; `ActingRoleFlowTests` the switch's, `Security/LocalUrlTests` the rule itself).
+
+```css
+.page-title-with-icon          /* the h1 with its icon: flex, centred, a 12px gap */
+.page-title-icon(--warning|--danger)  /* the icon's colour: the action blue, or the kind's */
+.system-panel                  /* the signed-in panel: a card, a 12px column gap, at most 40rem */
+.system-card-page, .system-card  /* the signed-out card, centred 80px under the bar, 580px, --radius-xl */
+.reference-block               /* dl: label | value, --header-bg, the id in --font-mono; below 641px one column, label
+                                  over value, padded 0.75rem, in a panel padded 16px (R2-Error-Narrow) */
+```
+
 ## app.css section order
 
 `app.css` is one file, but it has mandatory sections and section headers. Keep them in this order so two sessions don't re-sort and conflict.
 
 ```css
+/* ── Fonts ─────────────────────────────────────────── */
+@font-face (Source Sans 3 upright and italic, Fraunces)
+
 /* ── Design tokens ─────────────────────────────────── */
 :root { … }
 
+body, button/input/select/textarea (font: inherit), .auth-page-shell, a, a:where(:hover), main
+
 /* ── Base ──────────────────────────────────────────── */
-body, h1..h5, .page-subtitle
+h1..h5, .page-subtitle
 
 /* ── Header + search ──────────────────────────────── */
-.header-container, .search-container, .search-input, .search-grid, .search-field, .search-hint
+.header-container (actions on the heading's baseline), .header-container h1 (no margin), .page-title-with-icon, .page-title-icon(--warning|--danger), .search-container, .search-input, .search-grid, .search-field, .search-hint
 
 /* ── Tables ────────────────────────────────────────── */
 .table-container, .clinic-table, .clinic-table tr.is-editing, .clinic-table--compact, .col-wrap, .col-fit, .col-actions, .clinic-table--inputs (+ @container inputs-grid), .actions-cell
 
 /* ── Buttons ───────────────────────────────────────── */
-.btn, .btn-{variant}, .btn-sm, .btn-xs, .btn-outline
+.btn, :focus-visible (every element's ring), h1[tabindex="-1"]:focus, .btn-{variant}, .btn-outline, .btn-sm, .btn-xs
 
 /* ── Forms ─────────────────────────────────────────── */
 .form-container, .form-grid, .form-group (+ > p, > .btn), dl.form-group (+ > dd), .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .scale-choices, .form-actions, .account-form-container(--wide)
 
 /* ── Alerts ────────────────────────────────────────── */
-.alert, .alert-{kind}, .error-summary
+.alert, .alert-{kind}, .alert-row, .alert-row-text, .error-summary
 
 /* ── Validation ────────────────────────────────────── */
 .validation-message, .validation-summary-errors, .input-validation-error (+ .invalid, [aria-invalid="true"], forced colours), .field-warning
@@ -2088,10 +2932,13 @@ body, h1..h5, .page-subtitle
 .detail-card, .detail-card--{variant}
 
 /* ── Dashboard grid ───────────────────────────────── */
-.dashboard-grid, .dashboard-span-{N}
+.dashboard-grid (+ > *, three/two/one tracks), .dashboard-span-{N}, .dashboard-card-title, .dashboard-card-skeleton, .list-row, .home-action (≤640px)
 
 /* ── Details grid ─────────────────────────────────── */
 .details-grid (+ responsive)
+
+/* ── System pages ─────────────────────────────────── */
+.system-panel, .system-card-page, .system-card, .reference-block (+ ≤640px)
 
 /* ── Pager ─────────────────────────────────────────── */
 .pager, .pager-info, .pager-actions, .pager-page-size, .pager-page-size-label, .pager-page-size-select
@@ -2106,7 +2953,8 @@ body, h1..h5, .page-subtitle
 .shadow, .text-center, .mb-3, .font-mono, .code-block (a stored text block shown verbatim, T266), .visually-hidden
 
 /* ── Accessibility ────────────────────────────────── */
-fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fieldset.form-group (+ > legend)
+fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fieldset.form-group (+ > legend),
+@media (prefers-reduced-motion: reduce)
 ```
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
@@ -2115,10 +2963,13 @@ When a new section is needed (say `/* ── Badges ── */`), add its heading
 
 - One `app.css`. One design system. Component-scoped `.razor.css` only for the layout shell and NavMenu.
 - **Every class a page names is defined** (T266): by app.css, or by the component's own `.razor.css`, or it is `reload`
-  on the error banner, which blazor.web.js reads and nothing styles. A class the framework puts on at run time
-  (`NavLink`'s `active`, an input's `invalid`) is not in a page's markup; a page that wrote one itself would be styling by
-  it, so it must be defined. A class nothing defines styles nothing, silently. `Design/DefinedClassTests` reads every
-  `class="…"` in every `.razor` file as Razor writes it (the words written out, the literals an `@(…)` can put there, and a
+  or `dismiss` on the error bar's buttons, which blazor.web.js reads and nothing styles (2026-09-27, T335, flow 01:
+  `dismiss` joined `reload` when the bar's 🗙 became a Dismiss button styled by `.btn` alone; `Design/ErrorBarTests`
+  holds that no rule names either). A class the framework puts on at run time
+  (an input's `invalid`) is not in a page's markup; a page that wrote one itself would be styling by it, so it must be
+  defined. `NavItemLink` writes `active` itself, so `NavItemLink.razor.css` defines it. A class nothing defines styles
+  nothing, silently. `Design/DefinedClassTests` reads every `class="…"` in every `.razor` file as Razor writes it (the
+  words written out, the literals an `@(…)` can put there, and a
   word glued to an expression or an interpolation hole as the start of a class) and fails on any other. The start of a
   class passes only when it is a whole class itself (`form-select{InvalidClass}`), or in the one file whose expression a
   test holds to app.css (`Alert.razor`'s `alert-@Kind`, by the Alert-kind test, which reads a written-out `Kind` and the
@@ -2133,6 +2984,10 @@ When a new section is needed (say `/* ── Badges ── */`), add its heading
 - `IScopedSender` only in interactive components.
 - No Bootstrap Icons font. Inline SVG or CSS background-image data URIs.
 - No MudBlazor, no Radzen, no jQuery. If a component needs JS, write a 10-line module under `wwwroot/js/` and import it with `IJSRuntime`.
+  - **One exemption: the reconnect dialog's script** (`Components/Layout/ReconnectModal.razor.js`, 2026-09-27, T335,
+    flow 01). It is the .NET template's collocated module, rewritten, and it must run when the circuit is gone, so it
+    cannot be imported through `IJSRuntime`: `ReconnectModal.razor` loads it with a `<script type="module">` through
+    `@Assets`. It is as long as the runtime's states make it (§ The reconnect dialog and the error bar).
 - **Ask before widening the contract.** New component classes and new tokens are fine; silently deleting or renaming existing ones is not.
 
 ## Where this lives in the task graph

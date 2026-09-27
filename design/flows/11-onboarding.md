@@ -469,10 +469,10 @@ Do: In a fresh browser session, open the link from the CollegeAdmin stub email i
     digit and a symbol.
   Press Register. Write the password to `pwd_DO_NOT_COMMIT.txt`.
 Expect: The page reads "Registering kruger@cmsa.wombat.local as CollegeAdmin.", and the address is shown but cannot be
-  edited. Register signs Kruger in and lands on Home, which reads "Welcome, kruger@cmsa.wombat.local" and "Viewing as
-  CollegeAdmin". The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The nav reads
-  Home, My Account, Data Rights, Specialities, EPAs, Curricula, Activity Types, Logout: the College writes its
-  disciplines' activity types in the builder (T300, D52).
+  edited. Register signs Kruger in and lands on Home, with "College admin · Semester N, YYYY" under its heading. The
+  dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The sidebar reads "Acting as College
+  admin" over Home, Specialities, EPAs, Curricula and Activity types, then My data rights: the College writes its
+  disciplines' activity types in the builder (T300, D52). The top bar names him "Anton Kruger".
 
 Step 1.9 — A used link is refused
 Role: Anonymous — anyone who holds Kruger's link
@@ -486,14 +486,15 @@ Role: Anonymous — Prof Nolwazi Mbatha, invited
 Route: /account/register → /
 Do: Register as in Step 1.8, from the InstitutionalAdmin stub email in the log, with First name `Nolwazi` and Last name
   `Mbatha`. Write her password to `pwd_DO_NOT_COMMIT.txt`.
-Expect: The page reads "Registering mbatha@kgk.wombat.local as InstitutionalAdmin." Register lands her on Home, which
-  reads "Viewing as InstitutionalAdmin". The dashboard has three cards:
+Expect: The page reads "Registering mbatha@kgk.wombat.local as InstitutionalAdmin." Register lands her on Home, with
+  "Institutional admin · Semester N, YYYY" under its heading and "Invite a person" in its header, which opens the
+  invitations page. The dashboard has three cards:
   - Users, which lists InstitutionalAdmin 1;
   - Specialities & sub-specialities, which reads 0 and 0, because KGK has adopted nothing yet;
   - Quick links: Users, Invitations, Curriculum adoptions and Entrustment decisions.
-  The nav reads Home, My Account, Data Rights, Curriculum Adoptions, EPAs, Curricula, Activity Types, Entrustment
-  Scales, Trainees, Assessors, Invitations, Users, SSO Mappings, Audit Log, Decision Panels, Committee Reviews,
-  Decisions Due, Logout.
+  The sidebar reads "Acting as Institutional admin" over her menu, grouped: Home; People: Invitations, Trainees,
+  Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews:
+  Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log; then My data rights.
 
 Step 1.11 — Both invitations are spent
 Role: Administrator — the platform operator
@@ -571,8 +572,8 @@ Route: /account/register → / → /account/logout → /account/login
 Do: Open the link and enter first name Pieter, last name Smit and a password that meets the rules. Confirm it and
   register. Read the landing page, then sign out.
 Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with the email filled in and not editable.
-  The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home: "Welcome,
-  smit@kgk.wombat.local", "Viewing as Coordinator". Signing out returns him to the sign-in page.
+  The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home, headed
+  "Home" with "Coordinator · Semester N, YYYY" under it. Signing out returns him to the sign-in page.
 
 Step 2.9 — Dr Patel's first two attempts are refused
 Role: Anonymous — Dr Mohammed Patel, holding his invitation link
@@ -581,7 +582,7 @@ Do: Register with a 10-character password that mixes upper case, lower case, a d
   12-character password with a different confirmation. Then use a 12-character password confirmed correctly. Sign out.
 Expect: The first attempt returns to the form with "Passwords must be at least 12 characters." The first field takes the
   focus and no account is created (T285). The second returns with "The password confirmation does not match." The
-  third registers him and lands on "Viewing as Assessor".
+  third registers him and lands on Home, "Assessor · Semester N, YYYY".
 
 Step 2.10 — The other seven staff register
 Role: Anonymous — Dr Zulu, Dr Naidoo, Dr Botha, Dr Khumalo, Dr van Rensburg, Dr Mokoena and Dr Sithole
@@ -621,22 +622,23 @@ Role: Anonymous — Dr Molefe, Dr Dlamini, Dr Mahlangu and Dr Ndlovu
 Route: /account/register → / → /account/logout
 Do: Each registers from their own link. Molefe, Dlamini and Ndlovu sign out. Dr Mahlangu stays signed in with Home open
   in her tab, which Step 2.31 uses. Dr du Plessis cannot register: he says no email reached him.
-Expect: Each page reads "Registering <address> as Trainee." Each registrar lands on "Viewing as PendingTrainee", because
-  a Trainee invitation registers as PendingTrainee until admission. Home shows one card, "Awaiting admission": "You are
-  registered and waiting to be admitted to a curriculum by your programme administrator." It has a "Review your account
-  →" link.
+Expect: Each page reads "Registering <address> as Trainee." Each registrar lands on Home, "Pending trainee · Semester N,
+  YYYY", because a Trainee invitation registers as PendingTrainee until admission. Home shows one card, "Awaiting
+  admission": "You are registered and waiting to be admitted to a curriculum by your programme administrator." It has a
+  "Review your account →" link, and the header offers no action.
 
 Step 2.19 — What a registrar sees before admission
 Role: PendingTrainee — Dr Nomsa Mahlangu
 Route: / → /account/profile → /activities/mine → /activities/new → /portfolio/progress → /access-denied → /
-Do: Read the nav. Follow Review your account, then open My Activities and Activities, and file nothing. Type the My
-  Progress address.
-Expect: The nav reads Home, My Account, Data Rights, Activities, My Activities and Logout. It has no MSF Reports, My
-  Committee Reviews, My Progress or Export Portfolio, because those pages do not admit a pending trainee (T141). My
-  account lists her role as PendingTrainee. My Activities reads "No activities yet". Activities opens the type picker
+Do: Read the menu. Follow Review your account, then open My activities and Log an activity, and file nothing. Type the
+  My progress address.
+Expect: The sidebar reads "Acting as Pending trainee" over Home, Log an activity and My activities, then My data rights
+  under the rule. It has no MSF reports, My committee reviews, My progress or Export portfolio, because those pages do
+  not admit a pending trainee (T141). My account lists her role as PendingTrainee. My activities reads "No activities
+  yet". Log an activity opens the type picker
   with the eleven instruments of Step 2.42: her invitation's Paediatrics scope selects them, and with no curriculum yet
-  no ladder narrows them. My Progress shows Access denied ("You do not have permission to view this page.") with Back
-  to home.
+  no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee) does not open this
+  page.") with Go to Home (T335).
 
 Step 2.26 — Mbatha resends Dr du Plessis's invitation
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -652,8 +654,8 @@ Role: Anonymous — Dr Pieter du Plessis
 Route: /account/register → / → /account/logout
 Do: Open the first link, then the resent one. Register from the resent link and sign out.
 Expect: The first link shows no form, only "This invitation is invalid.": the resend replaced the link's hash, so the old
-  token matches no invitation. The resent link registers him and lands on "Viewing as PendingTrainee" with the Awaiting
-  admission card.
+  token matches no invitation. The resent link registers him and lands on Home, "Pending trainee · Semester N, YYYY",
+  with the Awaiting admission card.
 
 Step 2.28 — The pending registrars, as Mbatha sees them
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -694,24 +696,28 @@ Route: / → /account/session-ended → /account/login → /
 Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
 Expect: Within a minute of her admission the tab moves to the sign-in page, which reads "Your session has ended. Please
   sign in again." Admission changes her role, and a role change ends open sessions (T279). Signed in again, she sees
-  "Viewing as Trainee" and the trainee dashboard of Step 2.39.
+  "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 
 Step 2.32 — Mr Smit, Coordinator
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
-Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision Panels address, then the
+Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision panels address, then the
   new-panel address.
 Expect: The dashboard reads "No stalled requests.", "No invitations expiring soon." and a Quick action, "Start an MSF
-  campaign". The nav adds Data Rights Requests, MSF Campaigns, Committee Reviews, Decisions Due and Stalled Activities.
-  It has no Invitations, and the invitations page shows Access denied (T178). It has no Decision Panels either, though
-  that page admits him: it lists the panel with no New panel and no Edit column. The panel form shows Access denied.
+  campaign". The sidebar reads "Acting as Coordinator" over Home, Decisions due, MSF campaigns, Committee reviews and
+  Data rights requests, then My data rights. It has no Invitations, and the invitations page reads "You cannot
+  open this page", "Your role (Coordinator) does not open this page." and "If you need it for your work, ask your
+  institution's Wombat administrator.", with Go to Home (T178, T335). It has no Decision panels either, though that page
+  admits him: it lists the panel with no New panel and no Edit column, and nothing in his menu is lit there. The panel
+  form reads "You cannot open this page" in the same words.
 
 Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/assessors
 Do: Open Home. Then open Users and Assessors.
-Expect: The page reads "Viewing as InstitutionalAdmin". Users reads InstitutionalAdmin 1, SpecialityAdmin 1,
-  SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no PendingTrainee line.
+Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person". Users reads InstitutionalAdmin
+  1, SpecialityAdmin 1, SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no
+  PendingTrainee line.
   Specialities & sub-specialities reads 1 and 1, what KGK has adopted. Quick links reads Users, Invitations, Curriculum
   adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
 ```

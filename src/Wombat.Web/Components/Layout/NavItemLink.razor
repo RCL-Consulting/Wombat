@@ -1,0 +1,23 @@
+@*
+  One item of the navigation (T335, flow 01; review S9; T331). A plain link, not NavLink: whether it is lit is the owner
+  table's decision (NavOwners), which NavMenu passes in, so nothing matches by address prefix and at most one item is lit.
+  Lit, it carries the class active and aria-current: "page" on the list itself, "true" on the owner of a page under it.
+*@
+<a class="@(Current == NavCurrent.None ? "nav-link" : "nav-link active")" href="@Item.Href" aria-current="@AriaCurrent">
+  <Icon Name="@Item.Icon" Size="20" />
+  <span class="nav-label">@Item.Label</span>
+</a>
+
+@code {
+  [Parameter, EditorRequired] public NavItem Item { get; set; } = default!;
+
+  /// <summary>Whether this item is lit, and how.</summary>
+  [Parameter] public NavCurrent Current { get; set; }
+
+  private string? AriaCurrent => Current switch
+  {
+    NavCurrent.Page => "page",
+    NavCurrent.Owner => "true",
+    _ => null,
+  };
+}

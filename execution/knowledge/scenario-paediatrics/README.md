@@ -113,7 +113,8 @@ next act. It carries no findings section: findings become tasks.
   the step in place and say so in `Gap`.
 - **The application is wrong**: record it in `Gap` and file a task (`harness.py task new`), or add it to an open task
   it belongs to. Never fix application code during a replay. The replay's job is to find, not to fix.
-- **Not built**: a page that is a placeholder, or a flow that needs something the environment lacks (an SSO provider),
+- **Not built**: a feature no page offers yet (the nav links to no unbuilt page), or a flow that needs something the
+  environment lacks (an SSO provider),
   is listed in `coverage.md` with its reason. It is not played.
 
 ## Cast

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.MultiSourceFeedback;
 using Wombat.Web.Components;
+using Wombat.Web.Navigation;
 using Wombat.Web.Security;
 using Wombat.Web.Services;
 
@@ -94,6 +95,9 @@ internal sealed class AppTestHost : IAsyncDisposable
         // The circuit's own services, as Program.cs registers them: Routes.razor renders LeaveEndedSession, which injects
         // EndedSessionExit, on every page (the T279 review).
         builder.Services.AddWombatCircuitServices();
+
+        // App resolves the acting role and takes a switch's one-time word as it renders (T335, flow 01).
+        builder.Services.AddActingRoleSwitch();
 
         // The real policies, fallback included: every endpoint requires a signed-in user unless it opts out. The cookie
         // scheme stands in for Identity's (AddInfrastructure needs a database) and challenges the way it does, with a

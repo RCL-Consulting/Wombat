@@ -1,23 +1,24 @@
+@*
+  One card of a role dashboard on Home (DESIGN.md § Dashboard layout grid). Its title is an <h2>, under Home's <h1>.
+
+  While the dashboard's read runs (IsLoading) the card is drawn with its title and a skeleton in place of its content, so
+  the frame is there at once (R2-Landing-Loading; T335, flow 01, S22(c)). It offers nothing while it loads: its content
+  is not rendered, and a card that links (Href) is not a link until the read returns.
+*@
 @{
+    var linked = !string.IsNullOrEmpty(Href) && !IsLoading;
     var css = "detail-card";
     if (Emphasis) css += " detail-card--emphasis";
     if (Warning) css += " detail-card--warning";
-    if (!string.IsNullOrEmpty(Href)) css += " detail-card--interactive";
+    if (linked) css += " detail-card--interactive";
     if (Span == 2) css += " dashboard-span-2";
     if (Span == 3) css += " dashboard-span-3";
 }
 
-@if (!string.IsNullOrEmpty(Href))
+@if (linked)
 {
   <a href="@Href" class="@css" style="text-decoration:none;color:inherit;">
-    <h3>
-      @if (!string.IsNullOrEmpty(Icon))
-      {
-        <Icon Name="@Icon" Size="18" />
-        @(" ")
-      }
-      @Title
-    </h3>
+    @Heading
     <div class="dashboard-card-body">
       @ChildContent
     </div>
@@ -26,16 +27,20 @@
 else
 {
   <div class="@css">
-    <h3>
-      @if (!string.IsNullOrEmpty(Icon))
-      {
-        <Icon Name="@Icon" Size="18" />
-        @(" ")
-      }
-      @Title
-    </h3>
+    @Heading
     <div class="dashboard-card-body">
-      @ChildContent
+      @if (IsLoading)
+      {
+        <div class="dashboard-card-skeleton" aria-hidden="true">
+          <Skeleton Width="70%" />
+          <Skeleton Width="50%" />
+          <Skeleton Width="60%" />
+        </div>
+      }
+      else
+      {
+        @ChildContent
+      }
     </div>
   </div>
 }
@@ -47,5 +52,27 @@ else
     [Parameter] public bool Emphasis { get; set; }
     [Parameter] public bool Warning { get; set; }
     [Parameter] public int Span { get; set; }
+
+    /// <summary>The dashboard's read has not returned: the title and a skeleton, nothing to act on.</summary>
+    [Parameter] public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// A count the title carries as its badge, as the Assessor's "Waiting for your rating 2" (R2-Landing-Assessor). Not
+    /// shown while the card loads.
+    /// </summary>
+    [Parameter] public int? Count { get; set; }
+
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private RenderFragment Heading => @<h2 class="dashboard-card-title">
+      @if (!string.IsNullOrEmpty(Icon))
+      {
+        <Icon Name="@Icon" Size="18" />
+      }
+      <span>@Title</span>
+      @if (Count is { } count && !IsLoading)
+      {
+        <span class="badge @BadgeFor.State(BadgeState.Submitted)">@count</span>
+      }
+    </h2>;
 }

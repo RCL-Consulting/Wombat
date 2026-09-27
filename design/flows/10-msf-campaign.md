@@ -411,7 +411,7 @@ Verbatim from `execution/knowledge/scenario-paediatrics/`: Role, Route, Do and E
 Step 3.34 — Mr Smit creates the MSF questionnaire
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/new
-Do: Open MSF Campaigns and start a new campaign. The Template select is empty, so add the Quick template as it stands:
+Do: Open MSF campaigns and start a new campaign. The Template select is empty, so add the Quick template as it stands:
   kind Multi-source feedback, name "Default MSF", with its scale question and its comment question.
 Expect: The list reads "No MSF campaigns", with MSF coverage and New campaign in its header. The create page shows a
   Quick template card and a Create campaign card. Adding the template reads "Template created.", and the Template
@@ -553,7 +553,7 @@ Expect: The report reads "Report released to the trainee." and State Released. T
 Step 3.47 — Dr Molefe reads her released report
 Role: Trainee — Dr Lerato Molefe
 Route: /msf/my-reports → /msf/my-reports/{CampaignId:int}
-Do: Open MSF Reports, then view the report.
+Do: Open MSF reports, then view the report.
 Expect: One row: Default MSF (Multi-source feedback), released just now, 6 responses. The report shows the narrative
   and two groups only, Nurse (4.50) and Consultant (4.00), each with its comments. It shows nothing of the peer doctor
   or the physiotherapist, not even that they answered, and no group's count (T249).
@@ -561,9 +561,9 @@ Expect: One row: Default MSF (Multi-source feedback), released just now, 6 respo
 Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress
-Do: Open My Activities, then My Progress.
-Expect: My Activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
-  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My Progress
+Do: Open My activities, then My progress.
+Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My progress
   reads:
   - semester targets "1 of 10 EPAs met this semester", and training year 4;
   - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
@@ -591,16 +591,16 @@ Step A.4.7 — Mr Smit signs out through the confirmation page
 Role: Coordinator — Mr Pieter Smit
 Route: /account/logout-confirm → / → /account/logout-confirm → /account/logout → /account/login → /msf/campaigns → /account/login → /msf/campaigns
 Do: Open the sign-out confirmation by its address and press Cancel. Open it again and sign out. Then open MSF
-  Campaigns by its address.
+  campaigns by its address.
 Expect: A "Sign out" page, with no nav, says to use its button to end the session. Cancel returns him to his
-  dashboard, still signed in. Sign out lands on the sign-in page. MSF Campaigns then asks him to sign in, and after
+  dashboard, still signed in. Sign out lands on the sign-in page. MSF campaigns then asks him to sign in, and after
   signing in he is brought back to it. The audit log records a Logout.
 
 Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
-Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions Due and the data-rights queue.
+Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
 Expect: The campaign page keeps its gutter (T226), and its invitee table (counts by respondent group: the page never
-  lists an address) scrolls within its card. Decisions Due's summary scrolls sideways, and a keyboard can scroll it, as
+  lists an address) scrolls within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as
   a labelled, focusable region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 ```

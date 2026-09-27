@@ -6,6 +6,8 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Curricula.Quota;
+using Wombat.Application.Features.Dashboards.Administrator;
+using Wombat.Application.Features.Dashboards.Assessor;
 using Wombat.Application.Features.Dashboards.Coordinator;
 using Wombat.Application.Features.Dashboards.SpecialityAdmin;
 using Wombat.Application.Features.Dashboards.SubSpecialityAdmin;
@@ -87,6 +89,62 @@ public sealed class WaitingCardsTests : TestContext
         Text(own.Closest("li")!).Should().NotContain("—", "her own row names nobody");
     }
 
+    /// <summary>
+    /// T335, flow 01 (R2-Landing-Assessor, S20): what waits on the Assessor is one card, "Waiting for your rating", its
+    /// count as its badge and its rows under it. Until T335 "Pending requests" counted them, "Awaiting your review" listed
+    /// them, and an Actions card linked the inbox a third time.
+    /// </summary>
+    [Fact]
+    public void TheAssessorsWaitingWork_IsOneCard_ItsCountTheBadge()
+    {
+        _auth.SetRoles("Assessor");
+        Services.AddSingleton<IScopedSender>(new Sender(new AssessorDashboardSummaryDto(
+            12,
+            [new AwaitingReviewItem(21, "Mini-CEX (Paediatrics)", "Nomsa Mahlangu", "requested", "Requested", When, IsOverdue: true)],
+            [])));
+
+        var cut = RenderComponent<AssessorDashboard>();
+        cut.WaitForState(() => cut.FindAll(".detail-card").Count > 0 && cut.FindAll(".skeleton").Count == 0);
+
+        Titles(cut).Should().Equal("Waiting for your rating", "Recent decisions");
+        var waiting = cut.FindAll(".detail-card").First();
+        waiting.QuerySelector("h2 .badge")!.TextContent.Should().Be("12", "the count is the inbox's, whatever the card lists");
+        waiting.ClassList.Should().Contain("detail-card--warning", "one row is overdue");
+        waiting.QuerySelectorAll("li a").Select(link => link.GetAttribute("href")).Should().Equal("/activities/21");
+        waiting.QuerySelector(".dashboard-card-footer a")!.GetAttribute("href").Should().Be("/activities/inbox");
+        cut.Markup.Should().NotContainAny(["Pending requests", "Awaiting your review", "Open my inbox"]);
+    }
+
+    /// <summary>
+    /// T335, flow 01 (R2-Shell-Admin, S20): the Administrator's job status is in System health only, and the Maintenance
+    /// card, four nav links over again, is gone. Its fifth, Curriculum progress, is on Curricula (CurriculaListScopeTests).
+    /// </summary>
+    [Fact]
+    public void TheAdministratorsHome_HasSystemHealthAndUsers_AndNoMaintenanceCard()
+    {
+        _auth.SetRoles("Administrator");
+        Services.AddSingleton<IScopedSender>(new Sender(new AdministratorDashboardSummaryDto(DatabaseHealthy: true, TotalUserCount: 12)));
+
+        var cut = RenderComponent<AdministratorDashboard>();
+        cut.WaitForState(() => cut.FindAll(".detail-card").Count > 0 && cut.FindAll(".skeleton").Count == 0);
+
+        Titles(cut).Should().Equal("System health", "Users across institutions");
+        cut.FindAll(".detail-card").First().ClassList.Should().Contain("dashboard-span-2");
+        cut.FindAll("a").Should().BeEmpty("Maintenance's links were the nav's, and Curriculum progress is on Curricula");
+    }
+
+    // T328: every row of a dashboard's list is a .list-row, and no dashboard lays a row out with an inline flex style.
+    [Fact]
+    public void NoDashboard_LaysOutARowWithAnInlineFlexStyle()
+    {
+        var folder = Path.Combine(Navigation.PageAccess.SolutionRoot(), "src", "Wombat.Web", "Components", "Pages", "Dashboards");
+
+        Directory.GetFiles(folder, "*.razor")
+            .Where(file => File.ReadAllText(file).Contains("display:flex", StringComparison.Ordinal))
+            .Select(Path.GetFileName)
+            .Should().BeEmpty("a row is .list-row, a row of buttons .actions-cell, and a row of figures .dashboard-metric-row");
+    }
+
     [Theory]
     [InlineData(1, "1 activity awaiting review")]
     [InlineData(2, "2 activities awaiting review")]
@@ -120,6 +178,9 @@ public sealed class WaitingCardsTests : TestContext
 
     private static CurriculumCoverage Coverage()
         => new(new DateOnly(2026, 9, 23), "Semester 2, 2026", "July to November", [], [], 0);
+
+    private static List<string> Titles(IRenderedFragment cut)
+        => cut.FindAll(".dashboard-card-title > span:not(.badge)").Select(title => title.TextContent.Trim()).ToList();
 
     private static string Text(IElement element)
         => string.Join(" ", element.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));

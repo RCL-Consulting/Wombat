@@ -75,7 +75,8 @@ internal static class NotFoundPages
            && AcceptsHtml(context.Request)
            && !NamesAFile(context.Request.Path);
 
-    private static bool AcceptsHtml(HttpRequest request)
+    /// <summary>Whether the request asks for HTML: a browser loading a page. The error page asks the same (ErrorPages).</summary>
+    internal static bool AcceptsHtml(HttpRequest request)
         => request.GetTypedHeaders().Accept.Any(mediaType =>
             mediaType.MediaType.Equals("text/html", StringComparison.OrdinalIgnoreCase)
             && mediaType.Quality is not 0);

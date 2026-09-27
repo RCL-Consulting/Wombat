@@ -410,12 +410,12 @@ Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
 Do: Type the entrustment decisions page's address. Filter Status to Revoked and apply, then to Active and apply.
-  Download the revoked certificate. Then open Decisions Due with "Every status".
+  Download the revoked certificate. Then open Decisions due with "Every status".
 Expect:
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
-  - **Decisions Due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
+  - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
     revoked. Schedule a review to decide it again." It offers Schedule.
   - **By EPA:** PAED-002 reads Decided 0, Deferred 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
@@ -434,7 +434,7 @@ Expect: Three cards, each issued on `D` with the committee's rationale: PAED-001
 Step 5.8 — Dr Molefe reads her final review and keeps a STAR certificate
 Role: Trainee — Dr Lerato Molefe
 Route: /committee/my-reviews → / → /portfolio/authorisations
-Do: Open My Committee Reviews and view the pre-graduation review. Then open My authorisations from her dashboard's card,
+Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her dashboard's card,
   and download the certificate for PAED-001.
 Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme complete). Its detail shows:
   - the review type;
@@ -447,7 +447,7 @@ Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme co
 Step 5.9 — Dr Molefe exports her portfolio
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/export
-Do: Open Export Portfolio from the menu. Set the from date to her programme start, `J−3y`, and the to date to `D`, and
+Do: Open Export portfolio from the menu. Set the from date to her programme start, `J−3y`, and the to date to `D`, and
   export the PDF.
 Expect: The page opens with the last twelve months filled in. After the export it says "Portfolio exported
   successfully. The download should start automatically.", and a file named `portfolio-<12 hex digits>.pdf` downloads.
@@ -493,7 +493,8 @@ Route: /portfolio/verify
 Do: In a private window, without signing in, open the verification page. Compute the SHA-256 of the PDF that Dr Molefe
   sent (`certutil -hashfile <file> SHA256`, or `sha256sum`, both of which print it in lower case), enter it and press
   Verify. Do the same for Mr Smit's copy.
-Expect: The page works signed out, as a static page. Verifying loads the page's own address with the hash in it. The
+Expect: The page works signed out, as a static page, under the signed-out bar: the brand and Sign in, and no menu.
+  Verifying loads the page's own address with the hash in it. The
   page reads "Export verified" and shows:
   - when Wombat generated the file, in UTC;
   - the trainee and the exporter as user ids, never as names (DESIGN: the anonymous page must not disclose a name);
@@ -514,7 +515,7 @@ Expect: The export page is not in her menu, but it admits her, because the portf
 Step A.1.5 — Dr Dlamini downloads her export
 Role: Trainee — Dr Anele Dlamini
 Route: /account/data-rights → /account/data-rights/download/{id:guid}
-Do: Reload Data Rights and download the completed request.
+Do: Reload My data rights and download the completed request.
 Expect: The row reads Completed and offers a Download named for the request.
   - The browser saves `data-export-<date>-<time>.zip`.
   - It holds `data-export.json`: schema version 2, with her profile, every activity she is the subject or author of,

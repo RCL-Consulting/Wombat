@@ -198,18 +198,19 @@ RUNBOOK STEPS, VERBATIM:
 ### Step 2.39 — Dr Molefe, final-year registrar
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → / → /portfolio/progress
-Do: Sign in, read the dashboard and nav, and open My Progress.
+Do: Sign in, read the dashboard and nav, and open My progress.
 Expect: Curriculum targets names the current semester and reads "0 / 10" semester targets met and "0 / 5" yearly targets
   met. The largest shortfalls are PAED-001 to PAED-005, each "0 of 3 this semester", and there is no "started part-way"
   line (D42). The other cards read "No pending items.", "No activities yet.", "No deadlines in the next 14 days.", My
-  authorisations, and Log an activity / Request an assessment. The nav adds Activities, My Activities, MSF Reports, My
-  Committee Reviews, My Progress and Export Portfolio. My Progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs
-  met in <year>" and Training year "4 — it sets the minimum level each encounter is judged against".
+  authorisations; the header offers "Log an activity" (T335). The sidebar reads "Acting as Trainee" over Home, Log an
+  activity, My activities, MSF reports, My committee reviews and Export portfolio, then My progress and My data rights
+  under the rule. My progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs met in <year>" and Training year
+  "4 — it sets the minimum level each encounter is judged against".
 
 ### Step 2.40 — The other registrars' training years
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
 Route: /account/login → / → /portfolio/progress
-Do: Each signs in and opens My Progress.
+Do: Each signs in and opens My progress.
 Expect: Each dashboard has Molefe's shape and figures. Training year reads 3 for Dlamini, 2 for du Plessis and 1 for
   Mahlangu and Ndlovu. Their semester and yearly targets apply now: a start on 15 January is on time for both (D42).
 
@@ -218,14 +219,14 @@ Expect: Each dashboard has Molefe's shape and figures. Training year reads 3 for
 ### Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My Activities
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int}
-Do: Open My Activities, then the Mini-CEX.
+Do: Open My activities, then the Mini-CEX.
 Expect: The row reads Completed, credited "1 item". The page is read-only. It shows rung 4 and Dr Naidoo's feedback, and
   offers no action. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete.
 
 ### Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress
-Do: Open My Progress.
+Do: Open My progress.
 Expect: The "This period" card reads:
   - "Semester 2, 2026 · July to November";
   - semester targets "0 of 10 EPAs met this semester" and yearly targets "0 of 5 EPAs met in 2026";
@@ -239,9 +240,9 @@ Expect: The "This period" card reads:
 ### Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress
-Do: Open My Activities, then My Progress.
-Expect: My Activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
-  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My Progress
+Do: Open My activities, then My progress.
+Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My progress
   reads:
   - semester targets "1 of 10 EPAs met this semester", and training year 4;
   - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
@@ -264,14 +265,14 @@ Expect:
   - Activity inbox: "No pending items."
   - Recent activities: her four WBAs, each Completed, in green.
   - Upcoming deadlines: "No deadlines in the next 14 days."
-  - My authorisations and Actions link to their pages.
+  - My authorisations links to its page, and the header offers "Log an activity" (T335: the Actions card is gone).
 
 --- from execution/knowledge/scenario-paediatrics/act-4-annual-review.md ---
 
 ### Step 4.40 — Dr Molefe reads her progress against Annexure A
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/progress
-Do: Open My Progress and read "Entrustment against Annexure A".
+Do: Open My progress and read "Entrustment against Annexure A".
 Expect: It says "You are in training year 4 on `D`." It then reads "2 at or above · 1 below · 12 with no decision, of
   15 EPAs". The table shows:
   - PAED-001 and 012 at `5`, each "At or above" the target of `5`, with its exit level Reached;
@@ -373,9 +374,9 @@ Expect: Each of the 15 EPAs carried over from 11.1 reads the count he noted in S
 ### Step A.7.3 — Dr Dlamini on her phone
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
-Do: At 390 px, sign in and open her dashboard, My Progress, My Activities and Data Rights from the folded nav.
-Expect: The dashboard's cards stack. On My Progress, each EPA's figures and trajectory fit the width. The tables of My
-  Activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
+Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
+Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. The tables of My
+  activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
 ```
 
 ### 2.2 After you pick a wireframe, paste this

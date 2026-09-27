@@ -133,16 +133,9 @@ internal static class NomineeGate
         return string.IsNullOrWhiteSpace(name) ? null : name;
     }
 
+    // The shared labels (T335): every role a field may require (WombatRoles.Nominable) reads as this gate's own map read it.
     private static string DescribeRoles(IReadOnlyList<string> roles)
-        => string.Join(" and ", roles.Select(role => role switch
-        {
-            WombatRoles.Assessor => "Assessor",
-            WombatRoles.CommitteeMember => "Committee member",
-            WombatRoles.InstitutionalAdmin => "Institutional admin",
-            WombatRoles.SpecialityAdmin => "Speciality admin",
-            WombatRoles.SubSpecialityAdmin => "Sub-speciality admin",
-            _ => role
-        }));
+        => string.Join(" and ", roles.Select(WombatRoleLabels.For));
 
     private static IEnumerable<string> OrderBySchema(FormSchema schema, IReadOnlySet<string> fields)
     {

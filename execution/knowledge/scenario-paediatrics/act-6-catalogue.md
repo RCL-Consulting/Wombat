@@ -225,8 +225,8 @@ Route: /account/login → /account/login/submit → / → /admin/colleges/{Id:in
 Do: Sign in. From the dashboard, type the address of CPSA's own College record (the id from Step 6.2), then the
   address for creating an entrustment scale.
 Expect: The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. His menu offers neither
-  of the pages he types. Each address lands on "Access denied" ("You do not have permission to view this page."), with
-  a Back to home link, and nothing changes.
+  of the pages he types. Each address lands on "You cannot open this page" ("Your role (College admin) does not open
+  this page."), with Go to Home, and nothing changes.
 Note: A CollegeAdmin keeps the College's specialities, EPAs and curricula. The College's own record and the scales
   belong to an Administrator (`UpdateCollege`, `CreateEntrustmentScale`).
 Actual (2026-09-26, T295 replay, wombat_scenario): Signed in through the login form to /. The dashboard reads "Viewing
@@ -327,7 +327,7 @@ Gap: none
 ### Step 6.14a — Dr Kruger drafts a College activity type
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/activity-types → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types → /admin/activity-types/new → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types
-Do: Open Activity Types from his menu and read the list. Open `Multi-Source Feedback (Paediatrics)` and change nothing.
+Do: Open Activity types from his menu and read the list. Open `Multi-Source Feedback (Paediatrics)` and change nothing.
   Back in the list, press New activity type, open the Metadata tab and read what Scope offers, under Sub-speciality
   too. Then enter:
   - Key `cpsa_case_presentation_log` and Name `CPSA Case Presentation Log`;
@@ -338,12 +338,12 @@ Do: Open Activity Types from his menu and read the list. Open `Multi-Source Feed
   - Active on.
   Press Save draft, publish nothing, and go back to the list.
 Expect:
-  - **The list.** Activity Types is in his menu (T300, D52). The list has 22 rows: the twelve `*_cpsa` instruments and
-    the ten Demo types. The College writes its disciplines' types, so each `*_cpsa` row offers Edit, named for its row
-    ("Edit Mini-CEX (Paediatrics)"). The exceptions are `msf_cpsa` and `learner_feedback_cpsa`: the MSF and
-    learner-feedback releases write their data, so they offer View (T334). The Demo types belong to the Demo College, so
-    they offer View. KGK Teaching Session Log is not listed, because it is an institution's own type. New activity type
-    is offered.
+  - **The list.** Activity types is in his menu, and lit (T300, D52). The list has 22 rows: the twelve `*_cpsa`
+    instruments and the ten Demo types. The College writes its disciplines' types, so each `*_cpsa` row offers Edit,
+    named for its row ("Edit Mini-CEX (Paediatrics)"). The exceptions are `msf_cpsa` and `learner_feedback_cpsa`: the
+    MSF and learner-feedback releases write their data, so they offer View (T334). The Demo types belong to the Demo
+    College, so they offer View. KGK Teaching Session Log is not listed, because it is an institution's own type. New
+    activity type is offered.
   - **A system-managed type.** Multi-Source Feedback (Paediatrics) opens read-only, with a notice that the system writes
     it, and no Save draft, Discard draft, Publish or editor controls (T334).
   - **The new type.** It opens headed "New activity type", on Form, with the default draft. Scope offers Speciality and
@@ -876,9 +876,13 @@ Gap: [F-6.37a, T304] As the Expect says, but the application leaves a moved regi
 
 ### Step 6.38 — devadmin rebuilds curriculum progress
 Role: Administrator — devadmin
-Route: / → /admin/curriculum-progress
-Do: From the dashboard's Maintenance card, open Curriculum progress and read it. Press Rebuild progress, and confirm.
+Route: /admin/curricula → /admin/curriculum-progress
+Do: From Curricula in the menu, open Curriculum progress from the header and read it. Press Rebuild progress, and
+  confirm.
 Expect:
+  - **The way in.** Curricula offers the Administrator an outline "Curriculum progress" in its header, where Home's
+    Maintenance card used to link it (T335, flow 01). On the page Curricula stays lit, and the trail reads Home ›
+    Curricula › Curriculum progress.
   - **The page.** It says that a rebuild credits every completed activity again against today's curriculum, judges only
     whether an EPA was active as of each completion, and runs as one transaction.
   - **The question.** The button asks first: "Rebuild curriculum progress?".
@@ -938,7 +942,7 @@ Expect:
   - PAED-002's period holding that day still reads "no target (your programme ended part-way through)", with the
     count Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
   - A KGK-001 card has appeared on his record too, as on Dr Molefe's.
-  - My Activities lists that Mini-CEX as Completed, with Credited None.
+  - My activities lists that Mini-CEX as Completed, with Credited None.
 Note: He keeps the Trainee role after withdrawing (Act 5), so he reads his own record like any trainee.
 Actual (2026-09-26, T295 replay, wombat_scenario): My progress still opens "Your programme ended on 24 September 2026.
   This page is your record of it and is read-only ...", Ended 24 September 2026, training year 2, no bars. PAED-002's

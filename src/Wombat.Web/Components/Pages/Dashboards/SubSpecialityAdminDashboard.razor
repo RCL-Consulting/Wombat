@@ -1,55 +1,47 @@
+@using System.Security.Claims
+@using MediatR
 @using Wombat.Application.Features.Dashboards.SubSpecialityAdmin
 @attribute [Authorize(Roles = "SubSpecialityAdmin")]
 @rendermode InteractiveServer
-@inject IScopedSender Sender
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits RoleDashboard<SubSpecialityAdminDashboardSummaryDto>
 
-<StatePanel IsLoading="_loading" LoadError="@_error">
-  @if (_vm is not null)
-  {
-    <div class="dashboard-grid">
-      @* The programme's backlog awaiting a reviewer, read from each activity's pinned workflow (T297). No link: the inbox
-         lists only what the caller can move, not this backlog, and no page lists the backlog yet. *@
-      <DashboardCard Title="Pending reviews" Icon="inbox" Emphasis="true">
-        <div class="dashboard-metric">
-          <span class="dashboard-metric-value">@_vm.PendingReviewCount</span>
-          <span class="dashboard-metric-label">@(_vm.PendingReviewCount == 1 ? "activity awaiting review" : "activities awaiting review")</span>
-        </div>
-      </DashboardCard>
+<DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
+  @* The programme's backlog awaiting a reviewer, read from each activity's pinned workflow (T297). No link: the inbox
+     lists only what the caller can move, not this backlog, and no page lists the backlog yet. *@
+  <DashboardCard Title="Pending reviews" Icon="inbox" Emphasis="true" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <div class="dashboard-metric">
+        <span class="dashboard-metric-value">@summary.PendingReviewCount</span>
+        <span class="dashboard-metric-label">@(summary.PendingReviewCount == 1 ? "activity awaiting review" : "activities awaiting review")</span>
+      </div>
+    }
+  </DashboardCard>
 
-      <DashboardCard Title="Trainees in programme" Icon="users">
-        <div class="dashboard-metric">
-          <span class="dashboard-metric-value">@_vm.ActiveTraineeCount</span>
-          <span class="dashboard-metric-label">active / @_vm.InactiveTraineeCount inactive</span>
-        </div>
-      </DashboardCard>
+  <DashboardCard Title="Trainees in programme" Icon="users" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <div class="dashboard-metric">
+        <span class="dashboard-metric-value">@summary.ActiveTraineeCount</span>
+        <span class="dashboard-metric-label">active / @summary.InactiveTraineeCount inactive</span>
+      </div>
+    }
+  </DashboardCard>
 
-      <DashboardCard Title="@($"Curriculum coverage — {_vm.CurriculumCoverage.CurrentSemesterName}")" Icon="book" Span="2">
-        <EpaTargetCoverageList Coverage="@_vm.CurriculumCoverage" />
-      </DashboardCard>
-    </div>
-  }
-</StatePanel>
+  @* Its title names the semester once the summary has come; until then, the card's own name (T335: a title the frame
+     draws before the read, which read the summary eagerly). *@
+  <DashboardCard Title="@CoverageTitle(Summary?.CurriculumCoverage.CurrentSemesterName)" Icon="book" Span="2" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <EpaTargetCoverageList Coverage="@summary.CurriculumCoverage" />
+    }
+  </DashboardCard>
+</DashboardFrame>
 
 @code {
-  private SubSpecialityAdminDashboardSummaryDto? _vm;
-  private bool _loading = true;
-  private string? _error;
+  protected override IRequest<SubSpecialityAdminDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
+    => new GetSubSpecialityAdminDashboardSummaryQuery(user);
 
-  protected override async Task OnInitializedAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _vm = await Sender.Send(new GetSubSpecialityAdminDashboardSummaryQuery(authState.User));
-    }
-    catch (Exception ex)
-    {
-      _error = ex.Message;
-    }
-    finally
-    {
-      _loading = false;
-    }
-  }
+  private static string CoverageTitle(string? semester)
+    => semester is null ? "Curriculum coverage" : $"Curriculum coverage — {semester}";
 }

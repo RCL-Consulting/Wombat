@@ -1,5 +1,7 @@
+@using Wombat.Web.Navigation
 @using Wombat.Web.Security
 @inject IHttpContextAccessor HttpContextAccessor
+@inject ActingRoleSwitchResults SwitchResults
 
 <!DOCTYPE html>
 <html lang="en">
@@ -35,7 +37,7 @@
 
 <body>
     <CascadingAuthenticationState>
-        <Routes @rendermode="PageRenderMode" />
+        <Routes @rendermode="PageRenderMode" Acting="_acting" SwitchResult="_switchResult" />
     </CascadingAuthenticationState>
     <ReconnectModal />
     <script src="@Assets["wombat.js"]"></script>
@@ -47,6 +49,24 @@
 </html>
 
 @code {
+    private ActingRole _acting = ActingRole.None;
+    private ActingRoleSwitchResult? _switchResult;
+
+    /// <summary>
+    /// The acting role, resolved once, here, from the sign-in cookie's claims, and the word a switch left for this page,
+    /// taken once (T335, flow 01; review S22(a)). App renders only in the request, never in a circuit, so this is the one
+    /// place that reads the request for them. Both go to <c>Routes</c> as parameters, which an interactive root carries
+    /// into its circuit, and Routes cascades them, fixed; nothing in a circuit reads the HTTP context for them.
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        if (HttpContextAccessor.HttpContext is { } context)
+        {
+            _acting = ActingRoleResolver.Resolve(context.User);
+            _switchResult = SwitchResults.Take(context);
+        }
+    }
+
     private string? CspNonce =>
         HttpContextAccessor.HttpContext?.Items[SecurityHeadersMiddleware.NonceItemKey] as string;
 
@@ -57,11 +77,13 @@
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Two pages are excluded. The MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not
+    /// Three pages are excluded. The MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not
     /// signed in. Static, its every request, the submit included, is an HTTP request, so the link's rate limit applies
     /// to it; over a circuit the submit would be a SignalR message the limiter never sees. It works without WebSockets
     /// or script, for a signed-in user too. And the export check (<c>/portfolio/verify</c>, T265), open to anyone holding
-    /// a portfolio PDF: its Verify is a GET form whose check is made as the page renders, the same signed in or not.
+    /// a portfolio PDF: its Verify is a GET form whose check is made as the page renders, the same signed in or not. And the
+    /// error page (<c>/Error</c>, T321; T335, flow 01), rendered once inside the request that failed, so the reference it
+    /// shows is that request's: its circuit, when it had one, re-rendered it with no request and lost it.
     /// </para>
     /// <para>
     /// A visitor who has not signed in gets no interactive root because the circuit is not theirs to have. The Blazor

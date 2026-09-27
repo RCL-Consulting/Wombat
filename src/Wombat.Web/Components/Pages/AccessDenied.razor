@@ -1,14 +1,71 @@
 @page "/access-denied"
 @attribute [AllowAnonymous]
+@using System.Security.Claims
 
-<PageTitle>Access denied</PageTitle>
+@*
+  Access denied (T335, flow 01: R2-Denied-In, R2-Denied-Out, R2-Denied-Narrow; the round-2 review, S1, S2 and D6;
+  DESIGN.md § System pages). Reached two ways, and drawn once in the one shell either way (T321): a full load of a page
+  the person may not open is sent here by the sign-in cookie's AccessDeniedPath, and in-app navigation to one renders
+  this in place, under the page's own address (Routes.razor).
 
-<PageHeader Title="Access denied" Subtitle="You do not have permission to view this page." />
+  - Signed in: why, from the person's claims alone: the roles they hold, never the page or the roles that would open it
+    (D6). No switch is offered: access is the union of the roles held, so no other role could open it (S1).
+  - Signed out, which only typing the address reaches: sign in, and come back to the page asked for when the address
+    names one on this site (S2).
+*@
+<AuthorizeView Context="deniedAuth">
+  <Authorized Context="state">
+    <PageTitle>@SignedInHeading · Wombat</PageTitle>
+    <PageHeader Title="@SignedInHeading" Icon="ban" IconTone="danger" Page="typeof(AccessDenied)" />
+    <div class="system-panel">
+      <p>@Wombat.Web.Navigation.SystemPageText.Refusal(state.User)</p>
+      <p class="muted">If you need it for your work, ask @Wombat.Web.Navigation.SystemPageText.WhomToAsk(state.User).</p>
+      <div class="actions-cell">
+        <a class="btn btn-primary" href="/"><Icon Name="home" />Go to Home</a>
+      </div>
+    </div>
+  </Authorized>
+  <NotAuthorized>
+    <PageTitle>@SignedOutHeading · Wombat</PageTitle>
+    <div class="system-card-page">
+      <div class="system-card">
+        <PageHeader Title="@SignedOutHeading" Icon="lock" Page="typeof(AccessDenied)" />
+        @if (LocalReturnUrl is { } returnUrl)
+        {
+          <p>After you sign in, Wombat brings you back to the page you asked for.</p>
+          <div class="actions-cell">
+            <a class="btn btn-primary" href="@($"/account/login?ReturnUrl={Uri.EscapeDataString(returnUrl)}")">Sign in</a>
+          </div>
+        }
+        else
+        {
+          <p>Sign in to carry on.</p>
+          <div class="actions-cell">
+            <a class="btn btn-primary" href="/account/login">Sign in</a>
+          </div>
+        }
+      </div>
+    </div>
+  </NotAuthorized>
+</AuthorizeView>
 
-<Alert Kind="warning" Role="">
-  Your current role does not allow access to this area. Return to the dashboard or sign in with a different account.
-</Alert>
+@code {
+  /// <summary>The heading, and the tab's stem, for someone signed in.</summary>
+  private static string SignedInHeading => "You cannot open this page";
 
-<div class="actions-cell">
-  <a class="btn btn-outline" href="/">Back to home</a>
-</div>
+  /// <summary>The heading, and the tab's stem, for a visitor who has not signed in.</summary>
+  private static string SignedOutHeading => "Sign in to open this page";
+
+  /// <summary>The page the sign-in cookie was asked for, as it sends a refusal here.</summary>
+  [SupplyParameterFromQuery(Name = "ReturnUrl")] public string? ReturnUrl { get; set; }
+
+  /// <summary>
+  /// The address to come back to after signing in, only when it is a path on this site (LocalUrl), and never this page
+  /// itself, which would bring the visitor back here.
+  /// </summary>
+  private string? LocalReturnUrl
+    => Wombat.Web.Security.LocalUrl.OrNull(ReturnUrl) is { } local
+       && !local.StartsWith("/access-denied", StringComparison.OrdinalIgnoreCase)
+        ? local
+        : null;
+}

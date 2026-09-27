@@ -25,6 +25,15 @@ public class WombatIdentityUser : IdentityUser
     /// </summary>
     public bool AllowLocalPassword { get; set; } = true;
 
+    /// <summary>
+    /// The role whose frame (navigation, landing, head) the person last chose, by its key; null until they first switch.
+    /// A view preference only: access is the union of the roles held, whatever this says. Stored with the account, not in
+    /// the browser, so it follows the person across sign-ins and the next person on the same browser gets their own
+    /// (T335, flow 01, D1; W-010; T317). Written only by the switch endpoint, and carried into the sign-in cookie as the
+    /// <see cref="WombatClaims.ActingRole"/> claim; a stored role the person no longer holds is ignored where it is read.
+    /// </summary>
+    public string? ActingRole { get; set; }
+
     public WombatUser ToDomainUser()
         => new()
         {

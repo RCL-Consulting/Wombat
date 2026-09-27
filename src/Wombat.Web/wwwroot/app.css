@@ -1,5 +1,28 @@
-/* Brand display face — used only for the Wombat wordmark/lockup, not body copy.
-   Self-hosted (CSP-clean); Fraunces is OFL-licensed (GPLv3-compatible). */
+/* ── Fonts ─────────────────────────────────────────── */
+/* Self-hosted, since the CSP's font-src is 'self'. Both faces are under the SIL Open Font License 1.1, served as files
+   beside the application, never compiled into it (W-011); each licence is in wwwroot/fonts beside its files.
+
+   The body face (T335 flow 01): Source Sans 3, Adobe's release 3.052R, its variable upright and italic WOFF2 files as
+   released, byte for byte (Design/TypographyTests pins their hashes). Adobe's licence reserves the name "Source", so a
+   subset or converted copy is a Modified Version that could not be served under this name: vendor a new release whole,
+   never a trimmed one. Its default figures are already tabular; the tables ask for tabular-nums for the fallbacks. */
+@font-face {
+  font-family: "Source Sans 3";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("/fonts/SourceSans3VF-Upright.ttf.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Source Sans 3";
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("/fonts/SourceSans3VF-Italic.ttf.woff2") format("woff2");
+}
+
+/* Brand display face: the Wombat wordmark and lockup only, never body copy. Fraunces reserves no font name. */
 @font-face {
   font-family: "Fraunces";
   font-style: normal;
@@ -8,34 +31,72 @@
   src: url("/fonts/fraunces-var.woff2") format("woff2");
 }
 
+/* ── Design tokens ─────────────────────────────────── */
+/* The round-3 token sheet of flow 01 (T335; T322's contrast fix). Every colour is written rgb(R G B), or
+   rgb(R G B / A) when it is translucent, one notation throughout (N3); the sheet's hex is beside each changed or new one.
+   DESIGN.md § Design tokens has the contrast of every pair, and Design/ContrastTests computes each from this block. */
 :root {
+  color-scheme: light; /* dark mode is later (W-011): the browser's own controls and scrollbars are the light ones */
+
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: Consolas, "Courier New", monospace;
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   /* WONK on, SOFT off; optical size tracks font-size via font-optical-sizing: auto */
   --font-display-settings: "SOFT" 0, "WONK" 1;
+
+  /* Page */
   --primary-color: rgb(44 62 80);
-  --secondary-color: rgb(45 108 223); /* refined action blue — 4.86:1 white-on-button (WCAG AA) */
-  --accent-color: rgb(52 152 219); /* lighter brand blue for soft accents / highlights */
-  --success-color: rgb(39 174 96);
-  --danger-color: rgb(231 76 60);
-  --warning-color: rgb(253 126 20);
-  --info-color: rgb(52 152 219);
+  --secondary-color: rgb(45 108 223); /* the one action colour: 4.86:1 under --on-fill */
+  --on-fill: rgb(255 255 255); /* #FFFFFF, text and icons on a filled button */
   --background-color: rgb(248 249 250);
   --surface-color: rgb(255 255 255);
-  --text-color: rgb(51 51 51);
-  --muted-text: rgb(104 111 119); /* darkened from 108 117 125 for WCAG AA 4.5:1 on --background-color (was 4.45) — T086 */
+  --text-color: rgb(51 51 51); /* body, and the words on every tint */
+  --muted-text: rgb(104 111 119); /* darkened from 108 117 125 for 4.5:1 on --background-color (was 4.45), T086 */
   --link-color: rgb(11 92 171);
-  --border-color: rgb(222 226 230);
-  --input-border: rgb(206 212 218);
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --focus-ring: rgb(52 152 219);
-  --danger-bg: rgb(255 245 245);
-  --success-bg: rgb(232 245 233);
-  --warning-bg: rgb(255 248 225);
-  --info-bg: rgb(243 248 255);
-  --hover-bg: rgb(248 249 250);
+  --link-hover: rgb(8 74 138); /* #084A8A */
+  --border-color: rgb(222 226 230); /* hairlines only: 1.30:1, never a control's edge */
+  --input-border: rgb(123 132 141); /* #7B848D, a control's edge: 3.80:1 on white (was #CED4DA, 1.49), T322 */
+  --focus-ring: rgb(45 108 223); /* #2D6CDF, the ring on a light ground: 4.61:1 on the page (was #3498DB, 2.99), T322 */
   --header-bg: rgb(241 243 245);
-  --sidebar-gradient-start: rgb(5, 39, 103);
-  --sidebar-gradient-end: rgb(58 6 71);
+  --hover-bg: rgb(248 249 250);
+
+  /* Semantic: the colour is an edge, an icon, a dot or a fill, never words on its own tint (T322) */
+  --success-color: rgb(26 115 64); /* #1A7340 (was #27AE60) */
+  --success-bg: rgb(232 245 233);
+  --warning-color: rgb(154 84 0); /* #9A5400 (was #FD7E14) */
+  --warning-bg: rgb(255 248 225);
+  --danger-color: rgb(184 50 42); /* #B8322A (was #E74C3C); also validation text, 5.95:1 on white */
+  --danger-bg: rgb(255 245 245);
+  --info-bg: rgb(243 248 255); /* its edge is --secondary-color */
+
+  /* Overlay and shadows */
+  --scrim: rgb(0 0 0 / 0.35); /* a dialog's backdrop */
+  --shadow-color: rgb(0 0 0 / 0.1);
+  --shadow-raised: 0 1px 3px var(--shadow-color); /* cards, tables, signed-out cards */
+  --shadow-dialog: 0 10px 25px rgb(0 0 0 / 0.25); /* the reconnect and confirm dialogs */
+  --shadow-bar: 0 -1px 2px rgb(0 0 0 / 0.2); /* the error bar */
+
+  /* Dark chrome: the sidebar, the phone bar, the signed-out bar. A translucent token is valid only over the gradient. */
+  --sidebar-gradient-start: rgb(5 39 103); /* #052767 */
+  --sidebar-gradient-end: rgb(58 6 71); /* #3A0647 */
+  --nav-text: rgb(215 215 215); /* #D7D7D7, an item at rest */
+  --nav-text-strong: rgb(255 255 255); /* the current and hovered item, the role's name, the brand, the bar's controls */
+  --nav-group-label: rgb(185 195 224); /* #B9C3E0, group headings, "Acting as", the switch's and toggle's edges */
+  --nav-active-bg: rgb(255 255 255 / 0.32); /* the current item; #556C98 at the gradient's start. Never under --nav-text */
+  --nav-hover-bg: rgb(255 255 255 / 0.1);
+  --nav-brand-bg: rgb(0 0 0 / 0.4); /* the brand cell at the head of the sidebar */
+  --nav-divider: rgb(255 255 255 / 0.18);
+  --nav-focus-ring: rgb(255 255 255); /* every focusable control on dark chrome; --focus-ring is 2.90:1 there */
+  --sidebar-width: 250px; /* the shell's sidebar, and where the error bar starts beside it (MainLayout.razor.css) */
+
+  /* Shape and motion */
+  --radius-sm: 4px; /* nav rows, skeleton, a field's warning */
+  --radius-md: 6px; /* controls, buttons, alerts */
+  --radius-lg: 8px; /* cards */
+  --radius-xl: 12px; /* tables, forms, dialogs */
+  --radius-pill: 999px; /* badges, tabs */
+  --motion-fast: 150ms; /* a button's dim, a card's lift, a nav item's hover */
+
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -47,15 +108,26 @@
 body {
   background-color: var(--background-color);
   color: var(--text-color);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-body);
+  line-height: 1.5;
   margin: 0;
+}
+
+/* Every control takes the body's font (T328): with no rule a textarea rendered in the browser's monospace, a select in
+   Arial, and a <button class="btn"> stood shorter than an <a class="btn"> beside it. The whole font, line height too.
+   A class that sets its own size (.form-control, .btn) still does. The builder's JSON textareas keep their monospace. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 .auth-page-shell {
   align-items: stretch;
   background:
-    radial-gradient(circle at top left, rgb(52 152 219 / 0.12), transparent 32%),
-    linear-gradient(135deg, rgb(248 249 250) 0%, rgb(241 243 245) 100%);
+    radial-gradient(circle at top left, color-mix(in srgb, var(--secondary-color) 12%, transparent), transparent 32%),
+    linear-gradient(135deg, var(--background-color) 0%, var(--header-bg) 100%);
   display: flex;
   justify-content: center;
   min-height: 100vh;
@@ -72,6 +144,12 @@ a {
   color: var(--link-color);
 }
 
+/* A link darkens on hover (8.91:1 on white). No more specific than "a" itself, so a link that some class colours (a
+   button's variant, the brand on the sidebar's gradient, a nav item) keeps its own colour under the pointer. */
+a:where(:hover) {
+  color: var(--link-hover);
+}
+
 main {
   min-width: 0;
 }
@@ -80,31 +158,43 @@ main {
 h1 {
   font-size: 1.5rem;
   font-weight: 600;
+  line-height: 1.25;
   margin-bottom: var(--space-md);
 }
 
 h2 {
   font-size: 1.25rem;
   font-weight: 600;
+  line-height: 1.25;
   margin-bottom: var(--space-sm);
 }
 
 h3 {
   font-size: 1.1rem;
   font-weight: 600;
+  line-height: 1.25;
   margin-bottom: var(--space-sm);
 }
 
 h4 {
   font-size: 1rem;
   font-weight: 600;
+  line-height: 1.25;
   margin-bottom: var(--space-xs);
 }
 
 h5 {
   font-size: 0.9rem;
   font-weight: 600;
+  line-height: 1.25;
   margin-bottom: var(--space-xs);
+}
+
+/* A page's heading at phone width: 1.375rem, on every 390px board (T335, flow 01; the review of the t335 branch). */
+@media (max-width: 640.98px) {
+  h1 {
+    font-size: 1.375rem;
+  }
 }
 
 .page-subtitle {
@@ -114,31 +204,63 @@ h5 {
 }
 
 /* ── Header + search ──────────────────────────────── */
+/* The header's actions stand on the heading's baseline (T335, flow 01: Home's "Log an activity"). At flex-start they sat
+   at the container's top, 16px above the heading, which keeps the browser's own top margin.
+   Spaced as the boards draw it (the review of the t335 branch): the heading with no margin of its own, the subtitle its
+   own small gap under it, 12px to the rule, and 24px from the rule to the page. Until then the heading kept the browser's
+   top margin and 16px under it, the rule sat 16px under the subtitle, and the page began 32px under the rule. */
 .header-container {
-  align-items: flex-start;
+  align-items: baseline;
   border-bottom: 2px solid var(--secondary-color);
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
   justify-content: space-between;
-  margin-bottom: var(--space-xl);
-  padding-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding-bottom: 0.75rem;
+}
+
+.header-container h1 {
+  margin: 0;
+}
+
+/* A heading with an icon before it: the system pages (T335, flow 01: "PageHeader with icon", R2-Denied-*, R2-NotFound-*,
+   R2-Error-*). The icon is aria-hidden; its colour says the kind of page: the action blue for "not found" and "nothing
+   went wrong", warning for a failure, danger for a refusal. Each is 3:1 or more on the page (a meaningful mark). */
+.page-title-with-icon {
+  align-items: center;
+  display: flex;
+  gap: calc(var(--space-sm) + var(--space-xs));
+}
+
+.page-title-icon {
+  color: var(--secondary-color);
+  flex: none;
+}
+
+.page-title-icon--warning {
+  color: var(--warning-color);
+}
+
+.page-title-icon--danger {
+  color: var(--danger-color);
 }
 
 .search-container {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   margin-bottom: var(--space-xl);
   padding: var(--space-lg);
 }
 
 .search-input {
   border: 1px solid var(--input-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   box-sizing: border-box;
   font-size: 1rem;
-  padding: 0.75rem;
+  min-height: 2.375rem;
+  padding: 0.375rem 0.75rem;
   width: 100%;
 }
 
@@ -163,7 +285,7 @@ h5 {
 .table-container {
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   overflow-x: auto;
   /* Positioned, so an absolutely placed visually-hidden label inside a cell scrolls with the table rather than
      widening the page (T166, 390px). */
@@ -172,6 +294,8 @@ h5 {
 
 .clinic-table {
   border-collapse: collapse;
+  /* Figures stand in columns. Source Sans 3's default figures are tabular already; this holds the fallback faces to it. */
+  font-variant-numeric: tabular-nums;
   width: 100%;
 }
 
@@ -311,21 +435,27 @@ h5 {
 }
 
 /* ── Buttons ───────────────────────────────────────── */
+/* Every button carries a 1px edge, transparent unless its variant colours it, so a filled button and an outline one
+   stand the same height; and every one is at least 36px, so the header's actions share one height whether each is a
+   <button> or an <a> (T335 flow 01; T328 measured them apart). Border-box, as a browser sizes a <button> already: an
+   <a class="btn"> sized its content box, so its padding and edge stood 10px over the <button> beside it. The label may
+   wrap: the padding keeps it off the edge. */
 .btn {
   align-items: center;
   background-color: transparent;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
   cursor: pointer;
   display: inline-flex;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   gap: var(--space-sm);
   justify-content: center;
-  min-height: 1.75rem; /* >=24px WCAG 2.5.8 (AA) target size; lifts .btn-sm/.btn-xs above 24px — T086 */
-  padding: 0.5rem 1rem;
+  min-height: 2.25rem;
+  padding: var(--space-xs) var(--space-md);
   text-decoration: none;
-  transition: filter 0.15s ease, transform 0.15s ease;
+  transition: filter var(--motion-fast) ease, transform var(--motion-fast) ease;
 }
 
 .btn:hover {
@@ -345,11 +475,11 @@ h5 {
   opacity: 0.65;
 }
 
-.btn:focus-visible,
-.form-control:focus-visible,
-.form-select:focus-visible,
-.search-input:focus-visible,
-a:focus-visible {
+/* The focus ring, on every element a keyboard focuses (T322, T328). Until T328 it was a list of classes, so a focusable
+   scroll region (Decisions Due's summary, .table-container[tabindex="0"]), a tab and a checkbox showed the browser's own
+   1px ring. 4.86:1 on white and 4.61:1 on the page. Dark chrome sets --nav-focus-ring in its own stylesheet: this ring
+   is 2.90:1 on the sidebar's gradient. */
+:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
@@ -367,33 +497,44 @@ h1[tabindex="-1"]:focus {
   outline: none;
 }
 
+/* A filled button's words are --on-fill: 4.86:1 on the action blue, 5.88:1 on success, 5.95:1 on danger (T322: the old
+   success and danger fills gave white 2.87 and 3.82:1). */
 .btn-primary {
   background-color: var(--secondary-color);
-  color: var(--surface-color);
+  border-color: var(--secondary-color);
+  color: var(--on-fill);
 }
 
 .btn-success {
   background-color: var(--success-color);
-  color: var(--surface-color);
+  border-color: var(--success-color);
+  color: var(--on-fill);
 }
 
 .btn-danger {
   background-color: var(--danger-color);
-  color: var(--surface-color);
+  border-color: var(--danger-color);
+  color: var(--on-fill);
 }
 
+/* Filled with the surface, never transparent (S16): on header-bg and a success tint a transparent one fell to 4.37 and
+   4.32:1, and on the error bar it passed by 0.07. Its own ground holds it at 4.86:1 wherever it sits. */
 .btn-outline {
-  border: 1px solid var(--secondary-color);
+  background-color: var(--surface-color);
+  border-color: var(--secondary-color);
   color: var(--secondary-color);
 }
 
+/* A row's actions and other small buttons: at least 28px, over WCAG 2.5.8's 24px (T086). */
 .btn-sm {
-  font-size: 0.8rem;
-  padding: 0.2rem 0.6rem;
+  font-size: 0.85rem;
+  min-height: 1.75rem;
+  padding: 0.125rem 0.625rem;
 }
 
 .btn-xs {
   font-size: 0.7rem;
+  min-height: 1.75rem;
   padding: 0.15rem 0.4rem;
 }
 
@@ -401,8 +542,8 @@ h1[tabindex="-1"]:focus {
 .form-container {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px var(--shadow-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-raised);
   padding: var(--space-xl);
 }
 
@@ -450,13 +591,16 @@ dl.form-group > dd {
   grid-column: 1 / -1;
 }
 
+/* A control is 38px: a 24px line (1rem at the body's 1.5) between 6px of padding and its 1px edge. With the old 12px
+   padding the body's line height would have made it 50px (T335 flow 01). */
 .form-control {
   background: var(--surface-color);
   border: 1px solid var(--input-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   box-sizing: border-box;
   font-size: 1rem;
-  padding: 0.75rem;
+  min-height: 2.375rem;
+  padding: 0.375rem 0.75rem;
   width: 100%;
 }
 
@@ -468,18 +612,20 @@ dl.form-group > dd {
   background-repeat: no-repeat;
   background-size: 16px 12px;
   border: 1px solid var(--input-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   box-sizing: border-box;
   color: var(--text-color);
   display: block;
   font-size: 0.95rem;
-  padding: 0.75rem 2rem 0.75rem 0.75rem;
+  min-height: 2.375rem;
+  padding: 0.375rem 2rem 0.375rem 0.75rem;
   width: 100%;
 }
 
 .form-select-sm {
-  font-size: 0.8rem;
-  padding: 0.25rem 1.75rem 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  min-height: 1.75rem;
+  padding: 0.125rem 1.75rem 0.125rem 0.5rem;
 }
 
 .form-check {
@@ -557,8 +703,8 @@ dl.form-group > dd {
 .account-form-container {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 10px 25px var(--shadow-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-raised);
   margin: auto;
   max-width: 30rem;
   width: min(100%, 30rem);
@@ -628,7 +774,7 @@ dl.form-group > dd {
 }
 
 .sso-divider span {
-  color: var(--text-muted);
+  color: var(--muted-text); /* was var(--text-muted), which :root never defined (T328) */
   font-size: 0.875rem;
 }
 
@@ -644,34 +790,85 @@ dl.form-group > dd {
 }
 
 /* ── Alerts ────────────────────────────────────────── */
+/* An alert's words are body text on its tint, 11.2:1 or more; its kind's colour is the edge, thickened to a 4px stripe
+   down the left, and the icon (T322: the kind's colour as text on its own tint was 2.42 to 3.57:1). The icon is a Lucide
+   glyph the stylesheet draws, a mask filled with the kind's colour, so every <Alert> has it without markup of its own.
+   It sits 20px on the first 24px line, in the padding the words are kept clear of. */
 .alert {
-  border-radius: 6px;
+  border: 1px solid;
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  color: var(--text-color);
   margin-bottom: var(--space-lg);
-  padding: 1rem;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  position: relative;
+}
+
+.alert::before {
+  content: "";
+  height: 1.25rem;
+  left: 1rem;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  position: absolute;
+  top: 0.875rem;
+  width: 1.25rem;
 }
 
 .alert-danger {
   background-color: var(--danger-bg);
-  border: 1px solid var(--danger-color);
-  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.alert-danger::before {
+  background-color: var(--danger-color);
+  mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='12' cy='12' r='10'/%3e%3cpath d='M12 8v4M12 16h.01'/%3e%3c/svg%3e");
 }
 
 .alert-success {
   background-color: var(--success-bg);
-  border: 1px solid var(--success-color);
-  color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.alert-success::before {
+  background-color: var(--success-color);
+  mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='12' cy='12' r='10'/%3e%3cpath d='m9 12 2 2 4-4'/%3e%3c/svg%3e");
 }
 
 .alert-warning {
   background-color: var(--warning-bg);
-  border: 1px solid var(--warning-color);
-  color: var(--warning-color);
+  border-color: var(--warning-color);
+}
+
+.alert-warning::before {
+  background-color: var(--warning-color);
+  mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01'/%3e%3c/svg%3e");
 }
 
 .alert-info {
   background-color: var(--info-bg);
-  border: 1px solid var(--secondary-color);
-  color: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+.alert-info::before {
+  background-color: var(--secondary-color);
+  mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='12' cy='12' r='10'/%3e%3cpath d='M12 16v-4M12 8h.01'/%3e%3c/svg%3e");
+}
+
+/* An alert that carries its own action: its words take the room, and the action sits at the right, wrapping under the
+   words where they need the width (T335, flow 01: Home's load error and its Try again, R2-Landing-Error; the switch's
+   result and its Switch back, R2-Landing-Assessor and R2-Detail-Email). */
+.alert-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.alert-row-text {
+  flex: 1 1 16rem;
+  min-width: 0;
 }
 
 /* The summary of a refused form post that reloads the page: it takes the focus as the page loads (tabindex="-1" +
@@ -691,9 +888,24 @@ dl.form-group > dd {
 }
 
 /* ── Validation ────────────────────────────────────── */
+/* A field's refusal: danger text (5.95:1 on white, T322) with the danger icon, hung in the left padding so a message
+   that wraps keeps its edge. The icon is the text's own colour. */
 .validation-message {
   color: var(--danger-color);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
+  padding-left: 1.375rem;
+  position: relative;
+}
+
+.validation-message::before {
+  background-color: currentColor;
+  content: "";
+  height: 1rem;
+  left: 0;
+  mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='12' cy='12' r='10'/%3e%3cpath d='M12 8v4M12 16h.01'/%3e%3c/svg%3e") center / contain no-repeat;
+  position: absolute;
+  top: calc((1.5em - 1rem) / 2);
+  width: 1rem;
 }
 
 /* A non-blocking warning under a field, beside .validation-message's refusal: the input is accepted as typed (T160's
@@ -702,32 +914,54 @@ dl.form-group > dd {
 .field-warning {
   background-color: var(--warning-bg);
   border-left: 4px solid var(--warning-color);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-color);
   font-size: 0.85rem;
   margin: 0;
   padding: var(--space-xs) var(--space-sm);
 }
 
+/* Blazor's <ValidationSummary class="validation-summary-errors">: a <ul> of <li class="validation-message">. It reads as a
+   danger alert (body text on the tint, the stripe and the icon), and its messages as lines of it, not as refusals under
+   a field, so each takes the summary's colour and no icon of its own. */
 .validation-summary-errors {
   background-color: var(--danger-bg);
   border: 1px solid var(--danger-color);
-  border-radius: 6px;
-  color: var(--danger-color);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  color: var(--text-color);
+  list-style: none;
   margin-bottom: var(--space-lg);
-  padding: 1rem;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  position: relative;
 }
 
-.validation-summary-errors ul {
-  margin: 0;
-  padding-left: 1.25rem;
+.validation-summary-errors::before {
+  background-color: var(--danger-color);
+  content: "";
+  height: 1.25rem;
+  left: 1rem;
+  mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='12' cy='12' r='10'/%3e%3cpath d='M12 8v4M12 16h.01'/%3e%3c/svg%3e") center / contain no-repeat;
+  position: absolute;
+  top: 0.875rem;
+  width: 1.25rem;
+}
+
+.validation-summary-errors .validation-message {
+  color: inherit;
+  font-size: inherit;
+  padding-left: 0;
+}
+
+.validation-summary-errors .validation-message::before {
+  content: none;
 }
 
 /* An invalid field says so on the control, not only in the message under it (T236). Blazor's inputs carry .invalid and
    aria-invalid="true" while their EditContext holds a message for them. A control a page marks by hand, where the page
    can tell the server will refuse what is typed, carries .input-validation-error and aria-invalid="true". The border
-   turns the danger colour, and its left edge thickens to a 4px stripe (the 1px border and a 3px inset shadow), so the
-   state is not shown by colour alone (WCAG 1.4.1). A shadow rather than a wider border, so the text does not move when a
+   turns the danger colour, and its left edge thickens to a 5px stripe (the 1px border and a 4px inset shadow, the
+   round-3 token sheet's; T335 flow 01), so the state is not shown by colour alone (WCAG 1.4.1). A shadow rather than a wider border, so the text does not move when a
    field turns invalid while it is being typed in. It comes after .form-control and .form-select, which are as specific
    as .input-validation-error. A checkbox or radio is not marked: a native one takes no border, and its message says it. */
 .input-validation-error,
@@ -738,11 +972,11 @@ textarea.invalid,
 .form-select[aria-invalid="true"],
 textarea[aria-invalid="true"] {
   border-color: var(--danger-color);
-  box-shadow: inset 3px 0 0 var(--danger-color);
+  box-shadow: inset 4px 0 0 var(--danger-color);
 }
 
 /* Forced colours (a Windows contrast theme) drop the shadow and paint every border in one system colour, so there the
-   stripe is the border itself. The text moves 3px as the field turns invalid, which is better than no mark at all. */
+   stripe is the border itself. The text moves 4px as the field turns invalid, which is better than no mark at all. */
 @media (forced-colors: active) {
   .input-validation-error,
   .form-control.invalid,
@@ -751,7 +985,16 @@ textarea[aria-invalid="true"] {
   .form-control[aria-invalid="true"],
   .form-select[aria-invalid="true"],
   textarea[aria-invalid="true"] {
-    border-left-width: 4px;
+    border-left-width: 5px;
+  }
+
+  /* A glyph drawn by a mask is filled with its background, which a contrast theme repaints as the ground it sits on:
+     paint it in the theme's text colour instead. */
+  .alert::before,
+  .validation-message::before,
+  .validation-summary-errors::before {
+    background-color: CanvasText;
+    forced-color-adjust: none;
   }
 }
 
@@ -759,8 +1002,8 @@ textarea[aria-invalid="true"] {
 .detail-card {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px var(--shadow-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
   padding: var(--space-lg);
 }
 
@@ -774,9 +1017,11 @@ textarea[aria-invalid="true"] {
 
 .detail-card--interactive {
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: box-shadow var(--motion-fast) ease, transform var(--motion-fast) ease;
 }
 
+/* The card's lift: raised further while the pointer is on it. The one shadow the token sheet does not name, a hover
+   state of --shadow-raised in its colour. */
 .detail-card--interactive:hover {
   box-shadow: 0 4px 12px var(--shadow-color);
   transform: translateY(-2px);
@@ -804,11 +1049,20 @@ textarea[aria-invalid="true"] {
 }
 
 /* ── Dashboard grid ───────────────────────────────── */
+/* Three tracks from 1100px, two to 901px, one below (T335, flow 01; the round-2 review, S22(b)). Until T335 it was
+   auto-fit on 320px tracks, which need 1,008px: at 1280px the content column is 974px (1280 less the 250px sidebar and
+   the article's 32px and 24px sides), so there were two tracks, and a card spanning three added a third the grid had
+   no room for. A card spanning three takes the whole row at every width. A card's own content cannot widen its track
+   (min-width: 0), so a wide table scrolls inside it. */
 .dashboard-grid {
   align-items: start;
   display: grid;
   gap: var(--space-lg);
-  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-grid > * {
+  min-width: 0;
 }
 
 .dashboard-span-2 {
@@ -816,7 +1070,42 @@ textarea[aria-invalid="true"] {
 }
 
 .dashboard-span-3 {
-  grid-column: span 3;
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1099.98px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* A card's title, under Home's h1: its icon, its words, and a count as its badge ("Waiting for your rating 2"). */
+.dashboard-card-title {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 1.1rem;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  margin-top: 0;
+}
+
+/* What a card shows while its dashboard reads (DashboardCard's IsLoading, R2-Landing-Loading): three still or pulsing
+   lines under the title, so the frame is there at once. */
+.dashboard-card-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* One row of a card's list: its label left, its state's badge or its date right. A badge keeps its pill (.badge's own
+   align-self). Replaces the inline display:flex the dashboards' rows each carried (T328). */
+.list-row {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: space-between;
+  padding: var(--space-xs) 0;
 }
 
 /* ── Dashboard widgets ────────────────────────────── */
@@ -838,9 +1127,42 @@ textarea[aria-invalid="true"] {
   font-size: 0.9rem;
 }
 
+/* Home's one header action (HomeFrame.ActionFor). At phone width it is its own row below the header's rule, a 44px target
+   the width of the page (R2-Phone-Folded): the rule is drawn under the heading block rather than under the header, so the
+   action falls below it (the review of the t335 branch; until then it sat above the rule). */
+@media (max-width: 640.98px) {
+  .header-container:has(> .actions-cell > .home-action) {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .header-container:has(> .actions-cell > .home-action) > :first-child {
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 0.75rem;
+    width: 100%;
+  }
+
+  .header-container > .actions-cell:has(> .home-action) {
+    width: 100%;
+  }
+
+  .home-action {
+    flex: 1 1 auto;
+    min-height: 2.75rem;
+  }
+}
+
+/* Figures side by side in one card: the trainee's semester and yearly targets. */
+.dashboard-metric-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xl);
+  margin: var(--space-sm) 0;
+}
+
 .progress-bar {
   background: var(--hover-bg);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   height: 0.5rem;
   overflow: hidden;
 }
@@ -958,50 +1280,58 @@ textarea[aria-invalid="true"] {
 }
 
 /* ── Badges ───────────────────────────────────────── */
+/* A badge's words are body text on one of five tints, and the tint's colour is its edge (T322: a state's colour as text
+   on its own tint was 2.42 to 3.57:1). T166's standing badges set that precedent; every badge now follows it, so a
+   standing badge is the state badge of its tint. In a flex row the pill keeps its shape: it neither stretches to the
+   row's height nor gives up its width (T328: beside a wrapping link on the dashboards it stood as a tall pill). */
 .badge {
-  border-radius: 999px;
-  display: inline-block;
+  align-items: center;
+  align-self: center;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-pill);
+  color: var(--text-color);
+  display: inline-flex;
+  flex: none;
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.15rem 0.5rem;
-}
-
-.badge-draft {
-  background: var(--hover-bg);
-  color: var(--muted-text);
-}
-
-.badge-submitted {
-  background: var(--info-bg);
-  color: var(--secondary-color);
-}
-
-.badge-accepted {
-  background: var(--warning-bg);
-  color: var(--warning-color);
-}
-
-.badge-completed {
-  background: var(--success-bg);
-  color: var(--success-color);
-}
-
-.badge-declined {
-  background: var(--danger-bg);
-  color: var(--danger-color);
-}
-
-/* Entrustment standing (T166): a STAR decision against a target level. The words carry the verdict ("At or above",
-   "Below", "No decision", "Not comparable"); the tint only repeats it. Body text on a tinted ground with a semantic
-   border, because the semantic colours as text on their own tints fall short of 4.5:1 at this size. */
-.badge-standing-met,
-.badge-standing-below,
-.badge-standing-none {
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
+  line-height: 1.5;
+  padding: 0.0625rem 0.625rem;
   white-space: nowrap;
 }
 
+/* Neutral: a draft, a state an institution's own workflow names. Grey claims nothing. */
+.badge-draft {
+  background: var(--header-bg);
+  border-color: var(--input-border);
+}
+
+/* Info: waiting on someone. */
+.badge-submitted {
+  background: var(--info-bg);
+  border-color: var(--secondary-color);
+}
+
+/* Warning: in hand. */
+.badge-accepted {
+  background: var(--warning-bg);
+  border-color: var(--warning-color);
+}
+
+/* Success: done. */
+.badge-completed {
+  background: var(--success-bg);
+  border-color: var(--success-color);
+}
+
+/* Danger: declined, rejected, cancelled, failed. */
+.badge-declined {
+  background: var(--danger-bg);
+  border-color: var(--danger-color);
+}
+
+/* Entrustment standing (T166): a STAR decision against a target level, painted as the state badge of its tint. The
+   words carry the verdict ("At or above", "Below", "No decision", "Not comparable"); the tint only repeats it. Each is
+   its own rule, as each state's is: a page test finds a badge's rule by its class alone. */
 .badge-standing-met {
   background: var(--success-bg);
   border-color: var(--success-color);
@@ -1013,7 +1343,8 @@ textarea[aria-invalid="true"] {
 }
 
 .badge-standing-none {
-  background: var(--hover-bg);
+  background: var(--header-bg);
+  border-color: var(--input-border);
 }
 
 /* ── Status dots ──────────────────────────────────── */
@@ -1050,7 +1381,7 @@ textarea[aria-invalid="true"] {
 .tab-bar-tab {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--text-color);
   cursor: pointer;
   padding: 0.5rem 1rem;
@@ -1059,7 +1390,7 @@ textarea[aria-invalid="true"] {
 .tab-bar-tab.is-active {
   background: var(--secondary-color);
   border-color: var(--secondary-color);
-  color: var(--surface-color);
+  color: var(--on-fill);
 }
 
 /* The builder's editor rail and live preview (T019). Two columns need 320px + 400px + the gap, 46.5rem, of the room the
@@ -1120,9 +1451,138 @@ textarea[aria-invalid="true"] {
     grid-template-columns: 1fr;
   }
 
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .dashboard-span-2,
   .dashboard-span-3 {
     grid-column: auto;
+  }
+}
+
+/* ── System pages ─────────────────────────────────── */
+/* Access denied, Page not found and the error page (T335, flow 01; DESIGN.md § System pages). Signed in, the page is its
+   header and one panel in the shell's content column (R2-Denied-In): what happened, what to do, and the way on. Signed
+   out, a card centred under the signed-out bar (R2-Denied-Out), the header in it with its icon above the heading and no
+   rule. */
+.system-panel {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-sm) + var(--space-xs));
+  max-width: 40rem;
+  padding: var(--space-lg);
+}
+
+.system-panel p,
+.system-card p {
+  margin: 0;
+}
+
+/* The card 80px under the bar (R2-*-Out): 56px here, and the article's own 24px. */
+.system-card-page {
+  display: flex;
+  justify-content: center;
+  padding-top: calc(var(--space-2xl) + var(--space-sm));
+}
+
+.system-card {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-raised);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-xl);
+  width: min(36.25rem, 100%);
+}
+
+.system-card .header-container {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.system-card .page-title-with-icon {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.system-card h1 {
+  margin-bottom: 0;
+}
+
+/* What a person quotes about a failure (ReferenceBlock, R2-Error-*): the label muted, the reference in the monospace face,
+   wrapping anywhere rather than widening the page at 390px. Muted text on --header-bg is 4.57:1. */
+.reference-block {
+  background: var(--header-bg);
+  border-radius: var(--radius-md);
+  display: grid;
+  font-size: 0.9375rem;
+  gap: var(--space-xs) var(--space-md);
+  grid-template-columns: auto minmax(0, 1fr);
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.reference-block dt {
+  color: var(--muted-text);
+}
+
+.reference-block dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.reference-block code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+/* At phone width the way on is one button under another, each the panel's width and a 44px target (R2-Error-Narrow,
+   R2-Denied-Narrow), and the signed-out card starts under the bar. */
+@media (max-width: 640.98px) {
+  .system-panel .actions-cell,
+  .system-card .actions-cell {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .system-panel .actions-cell .btn,
+  .system-card .actions-cell .btn {
+    min-height: 2.75rem;
+  }
+
+  /* 16px under the bar: the article's own. */
+  .system-card-page {
+    padding-top: 0;
+  }
+
+  .system-card {
+    padding: var(--space-lg);
+  }
+
+  /* R2-Error-Narrow (the review of the t335 branch): the panel pads 16px, and the reference is one column, each label
+     over its value, so a 32-character id has the block's whole width. 2px between a label and its value, 8px between
+     the two pairs. */
+  .system-panel {
+    padding: var(--space-md);
+  }
+
+  .reference-block {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0.75rem;
+    row-gap: 0.125rem;
+  }
+
+  .reference-block dd + dt {
+    margin-top: 0.375rem;
   }
 }
 
@@ -1162,7 +1622,10 @@ textarea[aria-invalid="true"] {
 }
 
 /* ── Password toggle ──────────────────────────────── */
+/* As tall as what it holds, even as a grid's item, which would otherwise stretch to its row and take the toggle, placed
+   from its foot, away from the field. */
 .password-wrapper {
+  height: fit-content;
   position: relative;
 }
 
@@ -1170,16 +1633,24 @@ textarea[aria-invalid="true"] {
   padding-right: 4.5rem;
 }
 
+/* The Show toggle sits inside its field's right end, a 28px target (T086; T328 found it 23px) centred on the 38px field.
+   It is placed from the wrapper's foot, not its middle: on the sign-in, registration and link pages the wrapper holds
+   the label above the field too, and 50% of it put the toggle on the field's top edge (T328). The field is the last
+   thing in the wrapper on every page that has one. */
 .password-toggle-btn {
+  align-items: center;
   background: none;
   border: none;
+  border-radius: var(--radius-sm);
+  bottom: calc((2.375rem - 1.75rem) / 2);
   color: var(--muted-text);
   cursor: pointer;
-  padding: 0.25rem 0.375rem;
+  display: inline-flex;
+  font-size: 0.875rem;
+  min-height: 1.75rem;
+  padding: 0 var(--space-sm);
   position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 0.375rem;
 }
 
 /* ── State panels / skeletons ─────────────────────── */
@@ -1199,7 +1670,7 @@ textarea[aria-invalid="true"] {
   animation: skeleton-pulse 1.2s ease-in-out infinite;
   background: linear-gradient(90deg, var(--hover-bg), var(--border-color), var(--hover-bg));
   background-size: 200% 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   margin-bottom: var(--space-sm);
   min-height: 1rem;
 }
@@ -1216,7 +1687,7 @@ textarea[aria-invalid="true"] {
 
 /* ── Utilities ─────────────────────────────────────── */
 .shadow {
-  box-shadow: 0 4px 6px var(--shadow-color);
+  box-shadow: var(--shadow-raised);
 }
 
 .text-center {
@@ -1240,7 +1711,7 @@ textarea[aria-invalid="true"] {
 }
 
 .font-mono {
-  font-family: Consolas, "Courier New", monospace;
+  font-family: var(--font-mono);
 }
 
 /* A block of stored text shown verbatim, such as an audit entry's JSON payload (T266). Long lines wrap, and a long token
@@ -1248,9 +1719,9 @@ textarea[aria-invalid="true"] {
 .code-block {
   background-color: var(--header-bg);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-family: Consolas, "Courier New", monospace;
-  font-size: 0.85rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
   margin: 0;
   overflow-wrap: anywhere;
   padding: var(--space-md);
@@ -1288,12 +1759,18 @@ textarea[aria-invalid="true"] {
   width: 1px;
 }
 
+/* A page's trail, above its header (T335, flow 01; D5; R2-Detail-*): Home › the list › the page, the page in body text.
+   Below 641px it folds to one 44px link back to its parent (R2-Detail-Phone). */
+/* At the top of the page, which the article's own padding spaces from the bar, and 16px above the header (R2-Detail-*;
+   the review of the t335 branch). It had stood 16px under the bar, and the heading's browser margin had kept the header
+   off it. */
 .breadcrumbs {
   align-items: center;
   color: var(--muted-text);
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  font-size: 0.9rem;
+  gap: var(--space-xs) 0.375rem;
   list-style: none;
   margin: 0 0 var(--space-md);
   padding: 0;
@@ -1302,7 +1779,41 @@ textarea[aria-invalid="true"] {
 .breadcrumbs li {
   align-items: center;
   display: flex;
-  gap: var(--space-sm);
+  gap: 0.375rem;
+}
+
+.breadcrumbs a {
+  align-items: center;
+  display: inline-flex;
+  min-height: 24px;
+}
+
+.breadcrumb-current span {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.breadcrumb-back {
+  display: none;
+}
+
+@media (max-width: 640.98px) {
+  /* As specific as .breadcrumbs li, which lays every crumb out, so that these win. */
+  .breadcrumbs li.breadcrumb-ancestor,
+  .breadcrumbs li.breadcrumb-current,
+  .breadcrumbs .breadcrumb-separator {
+    display: none;
+  }
+
+  .breadcrumb-parent a {
+    font-weight: 600;
+    gap: 0.375rem;
+    min-height: 44px;
+  }
+
+  .breadcrumb-back {
+    display: block;
+  }
 }
 
 .icon {
@@ -1314,12 +1825,13 @@ textarea[aria-invalid="true"] {
 }
 
 .dialog-scrim::backdrop {
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--scrim);
 }
 
 .dialog-card {
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-dialog);
   max-width: 28rem;
   padding: 0;
   width: calc(100% - 2rem);
@@ -1363,6 +1875,29 @@ fieldset.form-group fieldset.form-group > legend {
   float: left;
   margin: 0;
   width: 100%;
+}
+
+/* Reduced motion (S17): with the reader's "reduce motion" setting, nothing slides, fades or pulses. Every transition goes
+   to 0, and every animation runs 0.01ms, once, jumping to where it ends: a general safety for any animation with no
+   reduced-motion rule of its own. The reconnect dialog has one (ReconnectModal.razor.css sets animation: none on it, its
+   backdrop, the spinner and the bar), and is opaque at rest, so it shows at once and still. The skeleton, whose pulse
+   has no end worth keeping, is a still header-bg block. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-delay: 0s !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-delay: 0s !important;
+    transition-duration: 0s !important;
+  }
+
+  .skeleton {
+    animation: none;
+    background: var(--header-bg);
+  }
 }
 
 /* ── Trajectory chart ─────────────────────────────── */

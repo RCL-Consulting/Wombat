@@ -31,7 +31,7 @@
   where they were taught on the invitation.
 *@
 
-<PageTitle>@PageTitleText</PageTitle>
+<PageTitle>@PageTitleText · Wombat</PageTitle>
 
 <div class="account-form-container account-form-container--wide shadow">
   <div class="account-brand">
@@ -222,14 +222,17 @@
   /// <summary>What the feedback is on: the trainee, or for a learner the trainee's teaching, as the invitation said.</summary>
   private string FeedbackSubject => IsLearnerFeedback ? $"the teaching of {TraineeLabel}" : TraineeLabel;
 
-  /// <summary>Each state's own title, so the tab and a screen reader's first words say what happened (T205).</summary>
+  /// <summary>
+  /// Each state's own title, so the tab and a screen reader's first words say what happened (T205): the state's heading,
+  /// in its words (T190), and "Error: " before it after a refused post.
+  /// </summary>
   private string PageTitleText => (_fault, _refusal, _submitted, _submitError) switch
   {
-    (true, _, _, _) => "Something went wrong - Wombat",
-    (_, { } refusal, _, _) => $"{MsfResponseRefusals.Describe(refusal.Reason).Title} - Wombat",
-    (_, _, true, _) => "Thank you - Wombat",
-    (_, _, _, { }) => "Error: Feedback request - Wombat",
-    _ => "Feedback request - Wombat"
+    (true, _, _, _) => "Something went wrong",
+    (_, { } refusal, _, _) => MsfResponseRefusals.Describe(refusal.Reason).Title,
+    (_, _, true, _) => "Thank you",
+    (_, _, _, { }) => $"Error: Feedback on {FeedbackSubject}",
+    _ => $"Feedback on {FeedbackSubject}"
   };
 
   /// <summary>

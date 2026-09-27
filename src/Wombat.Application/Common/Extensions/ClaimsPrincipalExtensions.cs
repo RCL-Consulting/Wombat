@@ -30,6 +30,25 @@ public static class ClaimsPrincipalExtensions
             : userId;
     }
 
+    /// <summary>
+    /// The person's name as the shell shows it (<see cref="WombatClaimTypes.DisplayName" />, issued at sign-in: their name,
+    /// or their email when the account has none). A principal from a cookie issued before the claim existed is named by
+    /// its sign-in name. Null for one with neither. (T335, flow 01)
+    /// </summary>
+    public static string? GetDisplayName(this ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        var displayName = principal.FindFirst(WombatClaimTypes.DisplayName)?.Value;
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            return displayName;
+        }
+
+        var name = principal.Identity?.Name;
+        return string.IsNullOrWhiteSpace(name) ? null : name;
+    }
+
     public static bool IsAdministrator(this ClaimsPrincipal principal)
         => principal.IsInRole(WombatRoles.Administrator);
 

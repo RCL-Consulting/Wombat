@@ -38,12 +38,6 @@ public sealed class DashboardPriorityTests
     }
 
     [Fact]
-    public void CookieName_IsNotEmpty()
-    {
-        DashboardPriority.CookieName.Should().NotBeNullOrWhiteSpace();
-    }
-
-    [Fact]
     public void Assessor_HasHigherPriorityThanTrainee()
     {
         var assessorIndex = DashboardPriority.Order.ToList().IndexOf(WombatRoles.Assessor);

@@ -57,6 +57,7 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 InstitutionId = user.InstitutionId,
+                ActingRole = user.ActingRole,
                 SpecialityIds = user.SpecialityScopes.Select(s => s.SpecialityId).ToArray(),
                 SubSpecialityIds = user.SubSpecialityScopes.Select(s => s.SubSpecialityId).ToArray()
             };
@@ -230,6 +231,10 @@ internal sealed class AccessReportBuilder : IAccessReportBuilder
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public int? InstitutionId { get; set; }
+
+        /// <summary>The acting role the person last chose, as stored with the account (T335); null until they first switch.</summary>
+        public string? ActingRole { get; set; }
+
         public int[] SpecialityIds { get; set; } = [];
         public int[] SubSpecialityIds { get; set; } = [];
     }

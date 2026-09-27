@@ -136,6 +136,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
         {
             entity.Property(user => user.FirstName).HasMaxLength(100);
             entity.Property(user => user.LastName).HasMaxLength(100);
+            entity.Property(user => user.ActingRole).HasMaxLength(64);
 
             entity.HasMany(user => user.SpecialityScopes)
                 .WithOne(scope => scope.User)

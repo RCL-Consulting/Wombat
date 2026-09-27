@@ -1,0 +1,71 @@
+/* One row of the navigation (T335, flow 01; R2-Sidebar-Scroll, R2-Tokens): 28px, 44px below 641px. */
+
+.nav-link {
+  align-items: center;
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  color: var(--nav-text);
+  display: flex;
+  font-size: 0.9375rem;
+  gap: 0.625rem;
+  line-height: 1.2;
+  min-height: 28px;
+  padding: 0 0.625rem;
+  scroll-margin-block: var(--space-sm);
+  text-decoration: none;
+  transition: background-color var(--motion-fast), color var(--motion-fast);
+}
+
+.nav-link:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-text-strong);
+}
+
+/* The current item. Its cue is the 3px bar and the weight, not the fill, which is 2.67:1 against a plain row (D4); white
+   on the fill is 5.27:1 at the gradient's start, and --nav-text on it would fail (R2-Tokens: a forbidden pair). */
+.nav-link.active {
+  background-color: var(--nav-active-bg);
+  box-shadow: inset 3px 0 0 var(--nav-text-strong);
+  color: var(--nav-text-strong);
+  font-weight: 600;
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid var(--nav-focus-ring);
+  outline-offset: 2px;
+}
+
+.nav-link ::deep .icon {
+  flex: none;
+}
+
+/* A label longer than the row wraps inside it rather than push the row wider than the sidebar. */
+.nav-label {
+  min-width: 0;
+}
+
+@media (max-width: 640.98px) {
+  .nav-link {
+    font-size: 1rem;
+    gap: 0.75rem;
+    min-height: 44px;
+    padding: 0 0.75rem;
+  }
+}
+
+/* A Windows contrast theme paints no box-shadow and replaces the fill with its own ground, so the bar would be gone and
+   the weight the only cue (the review of the t335 branch). The bar becomes a 3px border in the theme's text colour, and
+   the row's left padding gives back its width, so the label does not move. */
+@media (forced-colors: active) {
+  .nav-link.active {
+    border-left: 3px solid CanvasText;
+    box-shadow: none;
+    padding-left: calc(0.625rem - 3px);
+  }
+}
+
+@media (forced-colors: active) and (max-width: 640.98px) {
+  .nav-link.active {
+    padding-left: calc(0.75rem - 3px);
+  }
+}

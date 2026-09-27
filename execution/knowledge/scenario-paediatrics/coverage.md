@@ -15,7 +15,7 @@ T294's test (`tests/Wombat.Web.Tests/Scenario/`) enforces the first two sections
 The other sections are an index, kept by hand. The step lists below were generated from the `Route:` lines of the seven
 act and appendix files on 2026-09-26: 324 steps, 68 page files, 80 templates, all 80 played. Step 6.14a (T300) was
 added by hand afterwards, so the files now hold 325. Of the 11 endpoints Wombat.Web maps outside the router, steps name
-9.
+9. T335 (flow 01, 2026-09-27) deleted the placeholder page and its template, so 67 page files and 79 templates remain.
 
 ## Pages
 
@@ -24,7 +24,7 @@ institution, speciality or the record's own people; where that decides what a pe
 
 | Templates | Page | Who may open it | Steps |
 |---|---|---|---|
-| `/` | Home.razor | Any signed-in user | 1.1, 1.8, 1.10, 1.11, 1.21, 2.1, 2.8, 2.9, 2.10, 2.18, 2.19, 2.23, 2.25, 2.27, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.38, 2.39, 2.40, 2.44, 3.1, 3.12, 3.16, 3.24, 3.30, 3.33, 3.34, 3.50, 3.51, 3.52, 3.53, 3.54, 4.1, 4.2, 4.3, 4.4, 4.35, 4.39, 4.42, 5.7, 5.8, 5.15, 5.21, 5.28, 6.10, 6.38, A.1.1, A.2.1, A.4.1, A.4.6, A.4.7, A.5.3, A.5.10, A.6.1, A.6.2, A.6.8, A.7.3, A.7.4, A.7.5, A.7.6, A.7.7, A.7.8, A.7.9, A.7.10, A.7.11, A.7.14 |
+| `/` | Home.razor | Any signed-in user | 1.1, 1.8, 1.10, 1.11, 1.21, 2.1, 2.8, 2.9, 2.10, 2.18, 2.19, 2.23, 2.25, 2.27, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.38, 2.39, 2.40, 2.44, 3.1, 3.12, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.30, 3.33, 3.34, 3.50, 3.51, 3.52, 3.53, 3.54, 4.1, 4.2, 4.3, 4.4, 4.35, 4.39, 4.42, 5.7, 5.8, 5.15, 5.21, 5.25, 5.28, 6.10, 6.38, A.1.1, A.2.1, A.4.1, A.4.6, A.4.7, A.5.3, A.5.10, A.6.1, A.6.2, A.6.8, A.7.3, A.7.4, A.7.5, A.7.6, A.7.7, A.7.8, A.7.9, A.7.10, A.7.11, A.7.14 |
 | `/access-denied` | AccessDenied.razor | Anyone, signed in or not | 1.15, 2.19, 2.32, 4.5, 4.41, 5.22, 6.10, A.5.1, A.5.2, A.6.3 |
 | `/account/change-password` | Account/ChangePassword.razor | Any signed-in user | A.4.2, A.4.6, A.7.14 |
 | `/account/data-rights` | Profile/DataRights.razor | Any signed-in user | A.1.1, A.1.2, A.1.5, A.1.6, A.1.7, A.1.9, A.1.11, A.2.3, A.2.5, A.7.3 |
@@ -79,7 +79,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/committee/panels/new`, `/committee/panels/{PanelId:int}` | CommitteeDecisions/PanelEdit.razor | Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.21, 2.22, 2.23, 2.25, 2.32, 4.13 |
 | `/committee/reviews` | CommitteeDecisions/ReviewsSchedule.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember | 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.15, 4.22, 4.26, 4.28, 4.30, 4.31, 4.32, 4.33, 4.44, 4.45, 4.49, 5.2, 5.3, 5.29, A.1.10, A.1.14, A.7.6, A.7.8, A.7.14 |
 | `/committee/reviews/{ReviewId:int}` | CommitteeDecisions/ReviewDetail.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.6, 4.7, 4.9, 4.10, 4.11, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.21, 4.22, 4.23, 4.24, 4.25, 4.26, 4.27, 4.28, 4.29, 4.30, 4.31, 4.32, 4.33, 4.41, 4.44, 4.45, 4.46, 4.47, 4.49, 4.50, 5.2, 5.3, 5.4, 5.5, 5.6, A.1.10, A.1.14, A.7.6, A.7.13 |
-| `/Error` | Error.razor | Any signed-in user | A.5.8 |
+| `/Error` | Error.razor | Anyone, signed in or not (static; T321) | A.5.8 |
 | `/msf/campaigns` | MultiSourceFeedback/CampaignsList.razor | Coordinator, Administrator | 3.34, 3.38, 3.41, 3.46, 3.49, A.4.7, A.7.5 |
 | `/msf/campaigns/new`, `/msf/campaigns/{CampaignId:int}` | MultiSourceFeedback/CampaignEdit.razor | Coordinator, Administrator | 3.34, 3.35, 3.36, 3.37, 3.38, 3.43, 3.44, A.7.5 |
 | `/msf/coverage` | MultiSourceFeedback/ProgrammeCoverage.razor | Coordinator, Administrator | 3.49 |
@@ -87,7 +87,6 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/msf/reports/{CampaignId:int}` | MultiSourceFeedback/CampaignReport.razor | Coordinator, Administrator | 3.41, 3.44, 3.46 |
 | `/msf/respond` | MultiSourceFeedback/MsfRespond.razor | Anyone, signed in or not (a static page) | 3.39, 3.40, 3.42, 3.45 |
 | `/not-found` | NotFound.razor | Anyone, signed in or not | 1.23, A.5.4, A.5.5 |
-| `/placeholder/{Feature}` | Placeholder/PlaceholderPage.razor | Any signed-in user; an unknown feature is Page not found | 3.31, 3.51, 3.52, 3.53, A.5.4, A.5.9, A.5.10, A.5.11, A.5.12, A.5.13, A.7.8 |
 | `/portfolio/authorisations` | Portfolio/MyAuthorisations.razor | Trainee | 4.39, 4.42, 5.8, 5.22 |
 | `/portfolio/export`, `/portfolio/export/{TraineeUserId}` | Portfolio/ExportPortfolio.razor | Any signed-in user; the export admits a trainee to her own portfolio, and staff to a trainee they oversee | 5.9, 5.10, 5.12, 5.23 |
 | `/portfolio/progress` | Portfolio/MyProgress.razor | Trainee, or a former trainee (trainee record) | 2.19, 2.39, 2.40, 3.7, 3.48, 4.40, 5.15, 5.19, 5.20, 5.26, 5.28, 6.15, 6.19, 6.21, 6.24, 6.27, 6.35, 6.37, 6.39, 6.40, 6.41, A.7.3, A.7.4 |
@@ -95,7 +94,7 @@ institution, speciality or the record's own people; where that decides what a pe
 
 ## Not played
 
-No template is unplayed. Every one of the 80 templates is named by at least one step's `Route:` line, so this section
+No template is unplayed. Every one of the 79 templates is named by at least one step's `Route:` line, so this section
 has no rows. A row added here must name, in backticks, a template that no step plays, with its reason (T294).
 
 ## Flows and states not played
@@ -110,8 +109,8 @@ state, `states.md` is where it belongs.
 | Linking an account on `/account/link-external` with an institutional sign-in in progress, and its post, `/account/link-external/submit` (password check, throttle, lockout) | Needs an identity provider to start an external sign-in. A.3.3 plays only the expired state. | A replay against a test IdP |
 | Adding and deleting SSO group mappings on `/admin/sso/group-mappings`, and T288's cross-institution refusal | The add form appears only when a provider is configured. A.3.1 plays the read-only, empty page. | T288; a replay against a test IdP |
 | Self-service password reset by emailed link | Not built. `/account/forgot-password` is a stub (A.4.4), and nothing sends the `PasswordResetEmail` template. The administrator's reset stands in (A.4.5). | Not built |
-| `/Error` reached through an unhandled exception | No exception handler is configured (`Program.cs` has no `UseExceptionHandler`). A.5.8 plays the page by its address. | Reported at A.5.8 |
-| The five "Coming soon" features: Recent Activities (Assessor), Stalled Activities (Coordinator), Programme Trainees (CommitteeMember, SpecialityAdmin, SubSpecialityAdmin), STAR Review Queue (SpecialityAdmin, SubSpecialityAdmin) and System (Administrator) | Not built. Only their shared stub at `/placeholder/{Feature}` is played (3.31, 3.51–3.53, A.5.9–A.5.13). | Not built |
+| `/Error` reached through an unhandled exception | Outside Development only (`ErrorPages`, T321); the replay runs in Development, whose developer exception page answers instead. `Hosting/ErrorPageFlowTests` plays it; A.5.8 plays the page by its address. | Reported at A.5.8 |
+| The five features the nav once linked as "Coming soon": Recent activities (Assessor), Stalled activities (Coordinator), Programme trainees (CommitteeMember, SpecialityAdmin, SubSpecialityAdmin), STAR review queue (SpecialityAdmin, SubSpecialityAdmin) and System (Administrator) | Not built, and not offered: the nav links to no unbuilt page, and the placeholder page is gone (T335, flow 01). Recent activities and System were dropped; stalled work and Programme trainees are flow 06's, the STAR review queue flow 09's. The menus are read at 3.31, 3.51–3.53 and A.5.9–A.5.13. | Flows 06 and 09 |
 | The Coordinator's stalled-work triage: sending a reminder, or reassigning a request | No page offers it. The dashboard's "Stalled requests" rows link to each activity's page (T297), which offers neither (3.30, A.5.10). | Not built |
 | Applying and completing an approved data-rights rectification | No page calls `ApplyRectificationCommand` or `CompleteRectificationRequestCommand` (T112, Still open). A.1.8 rejects the request instead. | Not built |
 | An email when an activity is requested, completed, declined or returned | Nothing sends the `AssessmentRequested`, `AssessmentAccepted`, `AssessmentCompleted` or `AssessmentDeclined` templates. Steps 3.3, 5.24, A.2.7 and A.7.2 expect that nothing is sent. | Undecided |
@@ -137,7 +136,7 @@ state, `states.md` is where it belongs.
 | Agenda lines "Decided elsewhere" and "no longer decided", Defer after recording, and Remove of a STAR that no longer fits (T235) | Each needs two sittings in one window, a STAR revoked mid-review, or a curriculum change between recording and ratifying. | `states.md` |
 | Appeal outcome Dismissed | The story's one appeal is remitted (4.47); 4.45 reads the other outcome on the form. There is no Upheld (T307, D51). | `states.md` |
 | The review page's notes for a chair who can no longer act (T256), and for a trainee now elsewhere (T182, T213) | Nobody in the story loses the role, moves or is deactivated mid-review. | `states.md` |
-| The Administrator on Decisions Due and on a review (no ratify or appeal bypass, D46) | The Administrator acts only in Act 1, Act 6 and the appendix. | `states.md` |
+| The Administrator on Decisions due and on a review (no ratify or appeal bypass, D46) | The Administrator acts only in Act 1, Act 6 and the appendix. | `states.md` |
 | A graduate filing an activity about herself | Undecided. 5.22 opens the page, which admits her, and files nothing. | A decision first |
 | Verifying a STAR certificate | `/portfolio/verify` checks portfolio exports only; a certificate's hash is recorded nowhere. | Not built |
 | A graduate appealing her final review | 5.8 reads the form; Act 4 plays an appeal. | — |
@@ -149,7 +148,7 @@ state, `states.md` is where it belongs.
 
 ## Reached only by address
 
-Pages a role is admitted to, played in the story, that its nav and dashboard do not link to. The redesign should decide
+Pages a role is admitted to, played in the story, that its menu and dashboard do not link to. The redesign should decide
 whether each deserves a link.
 
 | Page | Who is admitted but has no link | Steps |
@@ -157,10 +156,10 @@ whether each deserves a link.
 | `/portfolio/export/{TraineeUserId}` | Every member of staff who may export a trainee's portfolio: no page links to it | 5.10, 5.12 |
 | `/admin/entrustment-decisions` | SpecialityAdmin and SubSpecialityAdmin; the InstitutionalAdmin reaches it only from her dashboard's quick links | 4.36, 4.37, A.7.7 |
 | `/admin/institutions/{Id:int}` | InstitutionalAdmin, for her own institution | 1.23, A.6.3 |
-| `/committee/panels` | Coordinator: the page admits him, but his nav has no Decision Panels (DESIGN.md) | 2.32 |
-| `/account/logout-confirm` | Everyone: the nav's Logout signs out at once | A.4.7 |
-| `/Error` | Everyone: no failure leads to it | A.5.8 |
-| `/portfolio/authorisations` | Trainee: reached only from the dashboard's My authorisations card, not from the nav | 4.39, 4.42, 5.8 |
+| `/committee/panels` | Coordinator: the page admits him, but his menu has no Decision panels (DESIGN.md) | 2.32 |
+| `/account/logout-confirm` | Everyone: only the error page's Sign out links to it (on the replay no failure leads there, A.5.8); everywhere else the account row's Sign out signs out at once | A.4.7 |
+| `/Error` | Everyone: on the replay (Development) no failure leads to it | A.5.8 |
+| `/portfolio/authorisations` | Trainee: reached only from the dashboard's My authorisations card, not from the menu, which lights My progress on it | 4.39, 4.42, 5.8 |
 
 ## Endpoints
 
@@ -168,7 +167,7 @@ Routes Wombat.Web maps outside the router. A step names one in its `Route:` line
 
 | Endpoint | What it does | Steps |
 |---|---|---|
-| `/dashboard/switch/{role}` | Switches the dashboard to another role the user holds; a role not held changes nothing | 2.34, 3.33, 3.52, A.5.3 |
+| `/dashboard/switch/{role}` | Switches the acting role to another role the user holds, stored with the account, and says so once on the page it lands on (`?returnUrl=`, local only); a role not held writes nothing. The sidebar's "Switch to …" and "Change role" use it | 2.34, 3.5, 3.13, 3.15, 3.17, 3.26, 3.28, 3.33, 3.52, 4.5, 5.25, A.5.3 |
 | `/account/login/submit` | The sign-in form's post | 5.15, 5.20, 5.28, 6.10 (every sign-in posts it) |
 | `/account/logout` | Signs out and returns to the sign-in page | 2.8, 2.9, 2.10, 2.18, 2.27, 2.34, A.4.7 |
 | `/account/session-ended` | Where a tab goes, by a full page load, once its sign-in has ended (a role change, a completed programme, an erasure, a password change, a lock) | 2.31, 5.19, A.1.13, A.4.3, A.6.5 |
@@ -178,6 +177,7 @@ Routes Wombat.Web maps outside the router. A step names one in its `Route:` line
 | `/health` | The public health check, database included | A.6.10 |
 | `/account/register/submit` | The registration form's post | Not named; every registration in 1.8, 1.10, 2.8–2.10, 2.18 and 2.27 posts it |
 | `/account/change-password/submit` | The change-password form's post | Not named; A.4.2 and A.4.6 post it |
+| `/account/profile/submit` | My account's form post: saves the name, issues the sign-in cookie again so the top bar names the person as saved, and returns to My account with "Profile saved." or the refusal | 2.41, A.4.1, A.7.14 |
 | `/account/link-external/submit` | Links an institutional identity to an account by its password | Not played: needs an identity provider (see above) |
 
 ## Journeys by role
@@ -206,10 +206,10 @@ and Assessor) appears under each role for the jobs done in it.
 | Pause a scheduled job and resume it | A.2.2 | `/admin/jobs` |
 | See every scheduled job and its run history | A.2.1, A.2.10 | `/admin/jobs`, `/admin/jobs/runs` |
 | Read the audit trail across institutions, payloads included | 3.57 | `/admin/audit`, `/admin/audit/{Id:guid}` |
-| Rebuild every trainee's curriculum progress from their evidence | 6.38 | `/`, `/admin/curriculum-progress` |
+| Rebuild every trainee's curriculum progress from their evidence | 6.38 | `/admin/curricula`, `/admin/curriculum-progress` |
 | Approve a registrar's request to erase their data | A.1.12 | `/admin/data-rights`, `/admin/data-rights/{Id:guid}` |
 | Look at my own account | A.6.9 | `/admin/users`, `/admin/users/{UserId}` |
-| Open the System page (not built) | A.5.13 | `/placeholder/{Feature}` |
+| Find no System page: the menu offers nothing unbuilt | A.5.13 | `/` |
 | Do the platform's work on a phone | A.7.11 | `/`, `/admin/jobs`, `/admin/jobs/runs`, `/admin/institutions` |
 
 ### CollegeAdmin (Dr Anton Kruger, CPSA)
@@ -265,7 +265,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Reset a registrar's password | A.4.5 | `/admin/users`, `/admin/users/{UserId}` |
 | Lock a consultant out, and let him back in | A.6.4, A.6.7 | `/admin/users`, `/admin/users/{UserId}` |
 | Find the Administrator's pages closed to me | A.5.2 | `/admin/institutions`, `/admin/jobs`, `/access-denied` |
-| Do my administration on a phone, and check its contrast | A.7.9, A.7.14 | `/`, `/admin/users`, `/admin/users/{UserId}`, `/admin/trainees`, `/admin/trainees/edit`, `/admin/activity-types/{ActivityTypeId:int}`, `/account/login`, `/account/profile`, `/account/change-password`, `/committee/reviews` |
+| Do my administration on a phone, and check its contrast | A.7.9, A.7.14 | `/`, `/admin/users`, `/admin/users/{UserId}`, `/admin/trainees`, `/admin/trainees/edit`, `/admin/activity-types/{ActivityTypeId:int}`, `/account/login`, `/account/profile`, `/account/profile/submit`, `/account/change-password`, `/committee/reviews` |
 
 ### SpecialityAdmin (Dr Refilwe Mokoena, Paediatrics)
 
@@ -277,7 +277,7 @@ and Assessor) appears under each role for the jobs done in it.
 | See what the committee must decide in my speciality | 4.3 | `/committee/decisions-due` |
 | Schedule a registrar's review from what is due | 4.9 | `/committee/decisions-due`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Revoke a STAR issued in error | 4.36 | `/admin/entrustment-decisions` |
-| Open Programme Trainees and STAR Review Queue (not built) | 3.53, A.5.12 | `/placeholder/{Feature}` |
+| Find no Programme trainees or STAR review queue yet (flows 06 and 09) | 3.53, A.5.12 | `/` |
 | Review my account | 2.41 | `/account/profile` |
 | Do my programme's work on a phone | A.7.7 | `/`, `/committee/panels`, `/committee/decisions-due`, `/admin/entrustment-decisions` |
 
@@ -292,7 +292,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Schedule a registrar's review from what is due | 4.10 | `/committee/decisions-due`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Find a revoked STAR and what must be decided again | 4.37 | `/admin/entrustment-decisions`, `/committee/decisions-due` |
 | Review my account | 2.41 | `/account/profile` |
-| Do my work on a phone | A.7.8 | `/`, `/committee/reviews`, `/committee/decisions-due`, `/placeholder/{Feature}` |
+| Do my work on a phone | A.7.8 | `/`, `/committee/reviews`, `/committee/decisions-due` |
 
 ### Coordinator (Mr Pieter Smit, KGK)
 
@@ -300,7 +300,7 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation | 2.8, 2.11 | `/account/register`, `/`, `/account/logout`, `/account/login` |
 | Learn what my dashboard offers, and which pages are not mine | 2.32 | `/`, `/admin/invitations`, `/committee/panels`, `/committee/panels/new`, `/access-denied` |
-| See which requests have stalled | 3.30, 3.31, A.5.10 | `/`, `/placeholder/{Feature}` |
+| See which requests have stalled | 3.30, 3.31, A.5.10 | `/`, `/not-found` |
 | Set up an MSF questionnaire and a campaign for a registrar | 3.34, 3.35 | `/msf/campaigns`, `/msf/campaigns/new`, `/msf/campaigns/{CampaignId:int}` |
 | Invite the respondents, and fix one added under the wrong group | 3.36 | `/msf/campaigns/{CampaignId:int}` |
 | Open a campaign, and resend a link that was not delivered | 3.37, 3.43 | `/msf/campaigns/{CampaignId:int}` |
@@ -327,7 +327,7 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation | 2.10 | `/account/register`, `/` |
 | See how the programme's registrars stand against this period's targets | 2.33, 2.35, 2.37, 3.52 | `/account/login`, `/`, `/committee/panels` |
-| Switch between my committee and assessor dashboards | 2.34, 3.33, 3.52 | `/`, `/dashboard/switch/{role}`, `/account/logout`, `/account/login` |
+| Switch between my committee and assessor dashboards, to rate and back | 2.34, 3.13, 3.33, 3.52 | `/`, `/dashboard/switch/{role}`, `/account/logout`, `/account/login` |
 | Check who sits on my panel and which EPAs it decides | 4.14 | `/committee/panels` |
 | Find that scheduling is not mine | 4.5 | `/committee/decisions-due`, `/access-denied` |
 | List my panel's reviews and open one | 4.11 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
@@ -340,8 +340,8 @@ and Assessor) appears under each role for the jobs done in it.
 | (External member) See the appeal I may hear | 4.45 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | (Chair) Resolve an appeal, with a quorum for the replacement decision | 4.46, 4.47 | `/committee/reviews/{ReviewId:int}` |
 | (Chair) Hold and close a formative check-in | 4.50 | `/committee/reviews/{ReviewId:int}` |
-| Open Programme Trainees (not built) | 3.52, A.5.11 | `/placeholder/{Feature}` |
-| Review and correct my account | 2.41, A.4.1 | `/account/profile` |
+| Find no Programme trainees yet (flow 06) | 3.52, A.5.11 | `/` |
+| Review and correct my account | 2.41, A.4.1 | `/account/profile`, `/account/profile/submit` |
 | Read a review on a phone, and with a screen reader | A.7.6, A.7.13 | `/`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 
 ### Assessor (Dr Mohammed Patel, Dr Fatima Khumalo; and Dr Zulu, Dr Naidoo and Dr Botha as assessors)
@@ -350,14 +350,14 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation, getting the password rules right | 2.9, 2.10 | `/account/register`, `/`, `/account/logout` |
 | See my empty assessor dashboard on first sign-in | 2.36 | `/account/login`, `/` |
-| Rate a Mini-CEX a registrar sent me | 3.5, 3.13, 3.26, 3.33, 5.25 | `/activities/inbox`, `/activities/{ActivityId:int}` |
-| Rate the other WBAs sent to me: a DOPS, a CBD, a CCA, a direct observation | 3.24, 3.26, 3.28 | `/`, `/activities/inbox`, `/activities/{ActivityId:int}` |
+| Rate a Mini-CEX a registrar sent me | 3.5, 3.13, 3.26, 3.33, 5.25 | `/dashboard/switch/{role}`, `/`, `/activities/inbox`, `/activities/{ActivityId:int}` |
+| Rate the other WBAs sent to me: a DOPS, a CBD, a CCA, a direct observation | 3.24, 3.26, 3.28 | `/`, `/dashboard/switch/{role}`, `/activities/inbox`, `/activities/{ActivityId:int}` |
 | Be kept out of a request that does not name me | 3.4 | `/activities/inbox`, `/activities/{ActivityId:int}` |
 | Decline a request that is not mine to rate, saying why | 3.11 | `/activities/inbox`, `/activities/{ActivityId:int}` |
-| Return a reflection for more detail, then record the discussion | 3.15, 3.17 | `/activities/inbox`, `/activities/{ActivityId:int}` |
+| Return a reflection for more detail, then record the discussion | 3.15, 3.17 | `/dashboard/switch/{role}`, `/`, `/activities/inbox`, `/activities/{ActivityId:int}` |
 | Complete an assessment on an EPA the College has paused | 6.18 | `/activities/inbox`, `/activities/{ActivityId:int}` |
 | Read my assessor dashboard: what waits for me and what I decided | 3.33, 3.51 | `/`, `/dashboard/switch/{role}`, `/activities/inbox` |
-| Open Recent Activities (not built) | 3.51, A.5.9 | `/placeholder/{Feature}` |
+| Find no Recent activities: it was dropped | 3.51, A.5.9 | `/` |
 | Change my password, and have my other session end | A.4.2, A.4.3 | `/account/profile`, `/account/change-password`, `/account/session-ended`, `/account/login`, `/activities/inbox` |
 | Be locked out, and sign in again once reactivated | A.6.5, A.6.8 | `/account/session-ended`, `/account/login`, `/` |
 | Complete an assessment on my phone | A.7.2 | `/activities/inbox`, `/activities/{ActivityId:int}` |
@@ -397,7 +397,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Ask for my personal data to be erased | A.1.11, A.1.13 | `/account/data-rights`, `/account/session-ended`, `/account/login` |
 | Leave a draft and a request waiting, and be reminded | A.2.7 | `/activities/new`, `/activities/{ActivityId:int}` |
 | Sign in with a password an administrator set, and choose my own | A.4.6 | `/account/login`, `/`, `/account/profile`, `/account/change-password` |
-| Meet the pages that are not mine: an administrator's page, another's activity, a forged switch, an unknown address, the error page | A.5.1, A.5.3, A.5.4, A.5.6, A.5.8 | `/admin/users`, `/admin/jobs`, `/access-denied`, `/dashboard/switch/{role}`, `/not-found`, `/placeholder/{Feature}`, `/account/login`, `/activities/{ActivityId:int}`, `/Error` |
+| Meet the pages that are not mine: an administrator's page, another's activity, a forged switch, an unknown address, the error page | A.5.1, A.5.3, A.5.4, A.5.6, A.5.8 | `/admin/users`, `/admin/jobs`, `/access-denied`, `/dashboard/switch/{role}`, `/not-found`, `/account/login`, `/activities/{ActivityId:int}`, `/Error` |
 | Name an assessor when one is locked out | A.6.6 | `/activities/new` |
 | File an assessment with the keyboard alone, and use my pages on a phone | A.7.1, A.7.3 | `/activities/new`, `/activities/{ActivityId:int}`, `/`, `/portfolio/progress`, `/activities/mine`, `/account/data-rights` |
 

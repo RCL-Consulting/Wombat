@@ -1,34 +1,44 @@
 @page "/account/profile"
 @attribute [Authorize]
+@using Wombat.Web.Security
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>Profile</PageTitle>
+@*
+  My account. The name is saved by the form's post to an endpoint (ProfileOutcome.SubmitPath, Program.cs), as change
+  password's is (T265), never in this page's circuit. The shell names the person from the sign-in cookie's display_name
+  claim, and a circuit cannot write the cookie, so a name saved here left the account row on the old name, in the circuit
+  and in the cookie (the review of the t335 branch). The endpoint saves it and issues the cookie again in one request,
+  then sends the browser back here with what happened: ?status=saved, or ?error= and a code. The page loads in full, and
+  its circuit starts from the new cookie.
+*@
+
+<PageTitle>@(Refusal is not null ? "Error: My account" : "My account") · Wombat</PageTitle>
 
 <PageHeader Title="My account" Subtitle="Update your name and review your assigned roles." />
 
-@* What Save profile did. It takes the focus once the save is done (T234; DESIGN.md § Button system). A refusal leaves
-   the focus on the button: it is an alert, read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_actionError))
+@* What Save profile did. It arrives with the page the endpoint sends the browser back to, so it takes the focus as the
+   page loads (FocusOnLoad; DESIGN.md § Button system): an alert already on the page when it loads is not reliably
+   announced. *@
+<ActionResult FocusOnLoad="@(IsSaved || Refusal is not null)">
+  @if (Refusal is not null)
   {
-    <Alert Kind="danger">@_actionError</Alert>
+    <Alert Kind="danger" Id="@RefusalId">@Refusal</Alert>
   }
-
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+  else if (IsSaved)
   {
-    <Alert Kind="success">@_statusMessage</Alert>
+    <Alert Kind="success">Profile saved.</Alert>
   }
 </ActionResult>
 
-<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The current account profile could not be loaded.">
-  @if (_model is not null)
+<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(_profile is null)" EmptyTitle="Profile unavailable" EmptyBody="The current account profile could not be loaded.">
+  @if (_profile is not null)
   {
     <div class="details-grid">
       <aside class="detail-card">
         <h3>Account summary</h3>
-        <p><strong>Email:</strong> @_model.Email</p>
-        <p><strong>Roles:</strong> @string.Join(", ", _model.Roles)</p>
+        <p><strong>Email:</strong> @_profile.Email</p>
+        <p><strong>Roles:</strong> @string.Join(", ", _profile.Roles)</p>
         <div class="actions-cell">
           <a class="btn btn-outline btn-sm" href="/account/change-password">Change password</a>
         </div>
@@ -36,62 +46,65 @@
 
       <section class="detail-card">
         <h3>Profile details</h3>
-        <EditForm EditContext="_editContext" FormName="account-profile">
-          <DataAnnotationsValidator />
-          <ValidationSummary class="validation-summary-errors" />
+        @* data-submit-once (wombat.js): a second press while the post is on its way sends nothing. *@
+        <form method="post" action="@ProfileOutcome.SubmitPath" data-submit-once>
+          <AntiforgeryToken />
 
           <div class="form-grid">
             <FormField Label="Email" InputId="profile-email">
-              <InputText id="profile-email" class="form-control" @bind-Value="_model.Email" disabled />
+              <input id="profile-email" class="form-control" type="email" value="@_profile.Email" disabled />
             </FormField>
 
             <FormField Label="First name" InputId="profile-first-name" Required="true">
-              <InputText id="profile-first-name" class="form-control" @bind-Value="_model.FirstName" />
-              <ValidationMessage For="() => _model.FirstName" />
+              <input id="profile-first-name" name="FirstName" class="form-control" value="@_profile.FirstName"
+                     required maxlength="@ProfileOutcome.MaxNameLength" autocomplete="given-name" aria-describedby="@RefusalReference" />
             </FormField>
 
             <FormField Label="Last name" InputId="profile-last-name" Required="true">
-              <InputText id="profile-last-name" class="form-control" @bind-Value="_model.LastName" />
-              <ValidationMessage For="() => _model.LastName" />
+              <input id="profile-last-name" name="LastName" class="form-control" value="@_profile.LastName"
+                     required maxlength="@ProfileOutcome.MaxNameLength" autocomplete="family-name" aria-describedby="@RefusalReference" />
             </FormField>
           </div>
 
           <FormActions>
-            @* Not disabled while its save runs (T234): it has the focus, and a browser drops the focus of a button it
-               disables, to the page. A second press sends nothing. *@
-            <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)" @onclick="SaveValidatedAsync">@(_saving ? "Saving..." : "Save profile")</button>
+            <button type="submit" class="btn btn-primary">Save profile</button>
           </FormActions>
-        </EditForm>
+        </form>
       </section>
     </div>
   }
 </StatePanel>
 
 @code {
-  private ProfileFormModel? _model;
-  private EditContext? _editContext;
+  /// <summary>The refusal's id, which each field names, so a refusal is read with the field it sends the user back to.</summary>
+  public const string RefusalId = "profile-error";
+
+  private UserProfileDto? _profile;
   private bool _loading = true;
-  private bool _saving;
-  private ActionResult? _result;
   private string? _loadError;
-  private string? _actionError;
-  private string? _statusMessage;
+
+  /// <summary><see cref="ProfileOutcome.Saved" /> once the endpoint has saved the name.</summary>
+  [SupplyParameterFromQuery(Name = "status")]
+  public string? Status { get; set; }
+
+  /// <summary>The endpoint's refusal code, when it refused.</summary>
+  [SupplyParameterFromQuery(Name = "error")]
+  public string? Error { get; set; }
+
+  /// <summary>The page's words for the endpoint's refusal; null when it refused nothing.</summary>
+  private string? Refusal => string.IsNullOrWhiteSpace(Error) ? null : ProfileOutcome.Describe(Error);
+
+  private bool IsSaved => string.Equals(Status, ProfileOutcome.Saved, StringComparison.Ordinal);
+
+  private string? RefusalReference => Refusal is not null ? RefusalId : null;
 
   protected override async Task OnInitializedAsync()
   {
     try
     {
-      var profile = await Sender.Send(new GetCurrentUserProfileQuery(await GetCurrentUserAsync()));
-
-      _model = new ProfileFormModel
-      {
-        Email = profile.Email,
-        FirstName = profile.FirstName,
-        LastName = profile.LastName,
-        Roles = profile.Roles
-      };
-
-      _editContext = new EditContext(_model);
+      // The signed-in user, whose own account this page shows: the handler reads the id from it (T185).
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _profile = await Sender.Send(new GetCurrentUserProfileQuery(user));
     }
     catch (Exception exception)
     {
@@ -101,67 +114,5 @@
     {
       _loading = false;
     }
-  }
-
-  private async Task SaveValidatedAsync()
-  {
-    if (_saving || _editContext is null || !_editContext.Validate())
-    {
-      return;
-    }
-
-    await SaveAsync();
-  }
-
-  private async Task SaveAsync()
-  {
-    if (_model is null)
-    {
-      return;
-    }
-
-    _saving = true;
-    _actionError = null;
-    _statusMessage = null;
-
-    try
-    {
-      var profile = await Sender.Send(new UpdateCurrentUserProfileCommand(
-        await GetCurrentUserAsync(),
-        _model.FirstName,
-        _model.LastName));
-
-      _model.FirstName = profile.FirstName;
-      _model.LastName = profile.LastName;
-      _statusMessage = "Profile saved.";
-      _result?.FocusAfterRender();
-    }
-    catch (Exception exception)
-    {
-      _actionError = exception.Message;
-    }
-    finally
-    {
-      _saving = false;
-    }
-  }
-
-  // The signed-in user, whose own account this page shows and renames: the handlers read the id from it (T185).
-  private async Task<System.Security.Claims.ClaimsPrincipal> GetCurrentUserAsync()
-    => (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-  private sealed class ProfileFormModel
-  {
-    public string Email { get; set; } = string.Empty;
-
-    [Required]
-    [MaxLength(100)]
-    public string FirstName { get; set; } = string.Empty;
-
-    [Required]
-    [MaxLength(100)]
-    public string LastName { get; set; } = string.Empty;
-
-    public IReadOnlyCollection<string> Roles { get; set; } = [];
   }
 }

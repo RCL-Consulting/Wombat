@@ -1,40 +1,42 @@
+@using System.Security.Claims
+@using MediatR
 @using Wombat.Application.Features.Dashboards.Trainee
 @using Wombat.Application.Features.Curricula.Quota
 @attribute [Authorize(Roles = "Trainee,PendingTrainee")]
 @rendermode InteractiveServer
-@inject IScopedSender Sender
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits RoleDashboard<TraineeDashboardSummaryDto>
 
-<StatePanel IsLoading="_loading" LoadError="@_error">
-  @if (_vm is not null && _vm.IsPendingTrainee)
+<DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
+  @if (Pending)
   {
-    <div class="dashboard-grid">
-      <DashboardCard Title="Awaiting admission" Icon="info" Emphasis="true" Span="3">
-        <p>You are registered and waiting to be admitted to a curriculum by your programme administrator.</p>
-        <div class="dashboard-card-footer">
-          @* The account page, "My account": the pending trainee's name and the roles they hold. It admits every signed-in
-             user (T261). Not "Complete your profile": the name came with the registration or the SSO sign-in, so nothing
-             is left to complete. *@
-          <a href="/account/profile" class="btn btn-sm btn-outline">Review your account &rarr;</a>
-        </div>
-      </DashboardCard>
-    </div>
+    <DashboardCard Title="Awaiting admission" Icon="info" Emphasis="true" Span="3" IsLoading="IsLoading">
+      <p>You are registered and waiting to be admitted to a curriculum by your programme administrator.</p>
+      <div class="dashboard-card-footer">
+        @* The account page, "My account": the pending trainee's name and the roles they hold. It admits every signed-in
+           user (T261). Not "Complete your profile": the name came with the registration or the SSO sign-in, so nothing
+           is left to complete. *@
+        <a href="/account/profile" class="btn btn-sm btn-outline">Review your account &rarr;</a>
+      </div>
+    </DashboardCard>
   }
-  else if (_vm is not null)
+  else
   {
-    <div class="dashboard-grid">
-      <DashboardCard Title="Curriculum targets" Icon="book" Href="/portfolio/progress" Emphasis="true" Span="2">
-        @if (_vm.CurriculumTargets is null)
+    @* No Actions card: its Log an activity and Request an assessment both opened /activities/new, which Home's header
+       now offers as "Log an activity" (T335, flow 01; A-Spec § e). *@
+    <DashboardCard Title="Curriculum targets" Icon="book" Href="/portfolio/progress" Emphasis="true" Span="2" IsLoading="IsLoading">
+      @if (Summary is { } summary)
+      {
+        if (summary.CurriculumTargets is null)
         {
           <p class="muted">No curriculum assigned yet. Once you are admitted, your targets for each period appear here.</p>
         }
-        else if (_vm.CurriculumTargets.Ended is { } ended)
+        else if (summary.CurriculumTargets.Ended is { } ended)
         {
           @* T252: a withdrawn trainee keeps the Trainee role and lands here. Their programme is over, so no target is owed;
              the card says so and points to the record, rather than reading "No curriculum assigned yet". *@
           <p class="muted">@EndedLine(ended) Your progress in each period is kept on My progress, read-only.</p>
         }
-        else if (_vm.CurriculumTargets is not { Items.Count: > 0 } targets)
+        else if (summary.CurriculumTargets is not { Items.Count: > 0 } targets)
         {
           @* Admitted, but no item is in force: every EPA on the curriculum is inactive (T158), or it has none yet. *@
           <p class="muted">No EPA on your curriculum is in use at the moment, so no target applies to you.</p>
@@ -42,7 +44,7 @@
         else
         {
           <p class="progress-row-meta">@targets.CurrentSemesterName · @targets.CurrentSemesterMonths</p>
-          <div style="display:flex;gap:var(--space-xl);margin:var(--space-sm) 0">
+          <div class="dashboard-metric-row">
             @if (targets.HasSemesterItems)
             {
               <div class="dashboard-metric">
@@ -58,7 +60,7 @@
               </div>
             }
           </div>
-          @if (targets.ProgrammeNotStarted)
+          if (targets.ProgrammeNotStarted)
           {
             <p class="progress-row-meta">Your programme starts on @QuotaText.LongDate(targets.ProgrammeStartDate).</p>
           }
@@ -68,7 +70,7 @@
               You started part-way through a period.@(targets.SemesterTargetsStart is { } semesterStart ? $" Semester targets begin with {semesterStart.Name}." : string.Empty)@(targets.YearTargetsStart is { } yearStart ? $" Yearly targets begin with {yearStart.Name}." : string.Empty)
             </p>
           }
-          @foreach (var item in targets.Items
+          foreach (var item in targets.Items
                       .Where(entry => entry.Current.Applies && !entry.Current.IsMet)
                       .OrderByDescending(entry => entry.Current.Shortfall)
                       .ThenBy(entry => entry.EpaCode, StringComparer.Ordinal)
@@ -86,19 +88,22 @@
             </div>
           }
         }
-      </DashboardCard>
+      }
+    </DashboardCard>
 
-      <DashboardCard Title="Activity inbox" Icon="inbox" Href="/activities/inbox">
-        @if (_vm.Inbox.Count == 0)
+    <DashboardCard Title="Activity inbox" Icon="inbox" Href="/activities/inbox" IsLoading="IsLoading">
+      @if (Summary is { } summary)
+      {
+        if (summary.Inbox.Count == 0)
         {
           <p class="muted">No pending items.</p>
         }
         else
         {
           <ul class="list-unstyled">
-            @foreach (var item in _vm.Inbox)
+            @foreach (var item in summary.Inbox)
             {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+              <li class="list-row">
                 @* Another trainee's row, for a trainee who also assesses, says whose it is, as the Assessor's card does (T250,
                    T297 review); the caller's own names nobody. *@
                 @if (item.SubjectName is { } subjectName)
@@ -119,19 +124,22 @@
         <div class="dashboard-card-footer">
           <a href="/activities/inbox" class="btn btn-sm btn-outline">Open inbox &rarr;</a>
         </div>
-      </DashboardCard>
+      }
+    </DashboardCard>
 
-      <DashboardCard Title="Recent activities" Icon="file-text">
-        @if (_vm.RecentActivities.Count == 0)
+    <DashboardCard Title="Recent activities" Icon="file-text" IsLoading="IsLoading">
+      @if (Summary is { } summary)
+      {
+        if (summary.RecentActivities.Count == 0)
         {
           <p class="muted">No activities yet.</p>
         }
         else
         {
           <ul class="list-unstyled">
-            @foreach (var item in _vm.RecentActivities)
+            @foreach (var item in summary.RecentActivities)
             {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+              <li class="list-row">
                 <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
                 @* Green when the pinned workflow is finished, whatever its last state is called (D44, T266 review). *@
                 <span class="badge @BadgeFor.ActivityState(item.CurrentState, item.IsFinished)">@item.CurrentStateLabel</span>
@@ -142,67 +150,56 @@
         <div class="dashboard-card-footer">
           <a href="/activities/mine" class="btn btn-sm btn-outline">All activities &rarr;</a>
         </div>
-      </DashboardCard>
+      }
+    </DashboardCard>
 
-      <DashboardCard Title="Upcoming deadlines" Icon="calendar">
-        @if (_vm.UpcomingDeadlines.Count == 0)
+    <DashboardCard Title="Upcoming deadlines" Icon="calendar" IsLoading="IsLoading">
+      @if (Summary is { } summary)
+      {
+        if (summary.UpcomingDeadlines.Count == 0)
         {
           <p class="muted">No deadlines in the next 14 days.</p>
         }
         else
         {
           <ul class="list-unstyled">
-            @foreach (var item in _vm.UpcomingDeadlines)
+            @foreach (var item in summary.UpcomingDeadlines)
             {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+              <li class="list-row">
                 <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
                 <span class="muted">@item.DueDate.ToString("d MMM")</span>
               </li>
             }
           </ul>
         }
-      </DashboardCard>
+      }
+    </DashboardCard>
 
-      <DashboardCard Title="My authorisations" Icon="award" Href="/portfolio/authorisations">
-        <p class="muted">Statements of Awarded Responsibility (STAR) granted by committee review.</p>
-        <div class="dashboard-card-footer">
-          <a href="/portfolio/authorisations" class="btn btn-sm btn-outline">View authorisations &rarr;</a>
-        </div>
-      </DashboardCard>
-
-      <DashboardCard Title="Actions" Icon="plus">
-        <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">
-          <a href="/activities/new" class="btn btn-primary">Log an activity</a>
-          <a href="/activities/new" class="btn btn-outline">Request an assessment</a>
-        </div>
-      </DashboardCard>
-    </div>
+    <DashboardCard Title="My authorisations" Icon="award" Href="/portfolio/authorisations" IsLoading="IsLoading">
+      <p class="muted">Statements of Awarded Responsibility (STAR) granted by committee review.</p>
+      <div class="dashboard-card-footer">
+        <a href="/portfolio/authorisations" class="btn btn-sm btn-outline">View authorisations &rarr;</a>
+      </div>
+    </DashboardCard>
   }
-</StatePanel>
+</DashboardFrame>
 
 @code {
-  private TraineeDashboardSummaryDto? _vm;
-  private bool _loading = true;
-  private string? _error;
+  /// <summary>The acting role, as Routes cascades it: it says which frame to draw before the read has returned.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>
+  /// A pending trainee's one card, or a trainee's six. Once the summary has come it says (the handler's reading: Pending
+  /// trainee without Trainee); until then the acting role does, so the frame drawn while the read runs is the one it lands
+  /// on.
+  /// </summary>
+  private bool Pending => Summary?.IsPendingTrainee
+    ?? string.Equals(Acting?.Role, WombatRoles.PendingTrainee, StringComparison.Ordinal);
+
+  protected override IRequest<TraineeDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
+    => new GetTraineeDashboardSummaryQuery(user);
 
   /// <summary>How the programme ended, in the words of the progress page's notice (T252, <see cref="QuotaText.ProgrammeEnded" />).</summary>
   private static string EndedLine(ProgrammeEndDto ended)
     => $"{QuotaText.ProgrammeEnded(ended)}, so no target applies to you any more.";
-
-  protected override async Task OnInitializedAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _vm = await Sender.Send(new GetTraineeDashboardSummaryQuery(authState.User));
-    }
-    catch (Exception ex)
-    {
-      _error = ex.Message;
-    }
-    finally
-    {
-      _loading = false;
-    }
-  }
 }

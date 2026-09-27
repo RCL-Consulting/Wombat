@@ -363,6 +363,9 @@ public sealed class ErasureExecutor : IErasureExecutor
             identityUser.OptOutOfDigestEmails = true;
             identityUser.InstitutionId = null;
 
+            // The acting role names a role the person held, and every role is removed below (T335).
+            identityUser.ActingRole = null;
+
             EnsureSucceeded(await _userManager.UpdateAsync(identityUser), "clear the account");
 
             // Remove all roles

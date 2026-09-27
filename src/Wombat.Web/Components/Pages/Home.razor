@@ -1,32 +1,24 @@
 @page "/"
 @using Wombat.Web.Navigation
-@inject IHttpContextAccessor HttpContextAccessor
+@inject TimeProvider Clock
 
-<PageTitle>Dashboard — Wombat</PageTitle>
+<PageTitle>Home · Wombat</PageTitle>
 
+@*
+  Home's frame (T335, flow 01; R2-Landing-*, R2-Shell-*, R2-Phone-Folded; DESIGN.md § Dashboard page): headed "Home", the
+  acting role and the semester under it, the role's one header action, and the acting role's dashboard, whose cards
+  belong to later flows. Who is signed in is the top bar's to say, and switching role is the sidebar's.
+*@
 <AuthorizeView Context="homeAuth">
   <Authorized Context="state">
     @{
-      var displayName = state.User.Identity?.Name ?? "User";
-      var resolvedRole = ResolvePreferredRole(state.User);
-      var otherRoles = GetOtherRoles(state.User, resolvedRole);
+      var acting = Acting ?? ActingRoleResolver.Resolve(state.User);
+      var role = acting.Role;
     }
 
-    <PageHeader Title="@($"Welcome, {displayName}")" Subtitle="@(resolvedRole is null ? null : $"Viewing as {resolvedRole}")" />
+    <PageHeader Title="Home" Subtitle="@HomeFrame.Subtitle(role, _today)" Actions="@HeaderAction(HomeFrame.ActionFor(role))" />
 
-    @if (otherRoles.Count > 0)
-    {
-      <p class="muted" style="margin-top:calc(-1 * var(--space-sm));margin-bottom:var(--space-md)">
-        You also act as @string.Join(", ", otherRoles).
-        Switch view:
-        @foreach (var other in otherRoles)
-        {
-          <a href="/dashboard/switch/@other" style="margin-left:var(--space-xs)">@other</a>
-        }
-      </p>
-    }
-
-    @switch (resolvedRole)
+    @switch (role)
     {
       case WombatRoles.Administrator:
         <Wombat.Web.Components.Pages.Dashboards.AdministratorDashboard />
@@ -59,13 +51,26 @@
         <Wombat.Web.Components.Pages.Dashboards.TraineeDashboard />
         break;
       default:
-        @* A signed-in user who holds no role: an administrator removed the last one, which RemoveRoleFromUser allows.
-           Not the trainee's dashboard, whose links are to pages that refuse such a user (the T261 review). There is
-           nothing for them to open, so the card has no link. *@
+        @* A signed-in user who holds no role. A graduate keeps their training record, read-only, and holds no role for the
+           programme they finished (T252): their Home points to it (A-Spec § e: "her record, not No role assigned"). Anyone
+           else with no role (an administrator removed the last one, which RemoveRoleFromUser allows) is offered nothing,
+           since no page is theirs to open (the T261 review). *@
         <div class="dashboard-grid">
-          <DashboardCard Title="No role assigned" Icon="info" Emphasis="true" Span="3">
-            <p>Your account holds no role at the moment, so there is nothing to show you here. An administrator can give you one.</p>
-          </DashboardCard>
+          @if (HoldsTrainingRecord(state.User))
+          {
+            <DashboardCard Title="Your training record" Icon="book" Emphasis="true" Span="3">
+              <p>You hold no role at the moment. Your training record is kept, read-only: your progress in each period, and your portfolio to export.</p>
+              <div class="dashboard-card-footer">
+                <a href="/portfolio/progress" class="btn btn-sm btn-outline">Open My progress &rarr;</a>
+              </div>
+            </DashboardCard>
+          }
+          else
+          {
+            <DashboardCard Title="No role assigned" Icon="info" Emphasis="true" Span="3">
+              <p>Your account holds no role at the moment, so there is nothing to show you here. An administrator can give you one.</p>
+            </DashboardCard>
+          }
         </div>
         break;
     }
@@ -76,32 +81,24 @@
 </AuthorizeView>
 
 @code {
-  // The role whose dashboard Home shows: the cookie's, when the user holds it, else the first in DashboardPriority.Order
-  // the user holds. Null when they hold none, never a role they do not hold.
-  private string? ResolvePreferredRole(System.Security.Claims.ClaimsPrincipal user)
-  {
-    var cookieValue = HttpContextAccessor.HttpContext?.Request.Cookies[DashboardPriority.CookieName];
-    if (!string.IsNullOrEmpty(cookieValue) &&
-        DashboardPriority.ValidRoles.Contains(cookieValue) &&
-        user.IsInRole(cookieValue))
-    {
-      return cookieValue;
-    }
+  private DateOnly _today;
 
-    foreach (var role in DashboardPriority.Order)
-    {
-      if (user.IsInRole(role))
-        return role;
-    }
+  /// <summary>
+  /// The acting role, as App resolved it and Routes cascades it (T335, flow 01): the role whose dashboard Home shows. Its
+  /// stored choice while the person holds it, else the first role they hold in DashboardPriority.Order, else none. Never a
+  /// role they do not hold. Resolved from the principal, by the same resolver, where nothing cascades it (a test's render).
+  /// </summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
 
-    return null;
-  }
+  // Today on the South African calendar, for the subtitle's semester (HomeFrame.Subtitle).
+  protected override void OnInitialized() => _today = Wombat.Application.Features.Curricula.Quota.QuotaCalendar.Today(Clock);
 
-  private static IReadOnlyList<string> GetOtherRoles(System.Security.Claims.ClaimsPrincipal user, string? currentRole)
-  {
-    return DashboardPriority.Order
-      .Where(r => !string.Equals(r, currentRole, StringComparison.Ordinal) && user.IsInRole(r))
-      .ToList();
-  }
+  /// <summary>The role's one header action, a primary button; none for a role that has none (HomeFrame.ActionFor).</summary>
+  private static RenderFragment? HeaderAction(HomeAction? action) => action is null
+    ? null
+    : @<a class="btn btn-primary home-action" href="@action.Href"><Icon Name="@action.Icon" />@action.Label</a>;
 
+  /// <summary>Whether the person keeps a training record, as the progress page's policy reads it (TraineeOrFormerTrainee).</summary>
+  private static bool HoldsTrainingRecord(System.Security.Claims.ClaimsPrincipal user)
+    => user.HasClaim(claim => claim.Type == Wombat.Application.Common.Security.WombatClaimTypes.TraineeRecord);
 }

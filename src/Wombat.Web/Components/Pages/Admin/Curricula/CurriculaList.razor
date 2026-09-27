@@ -4,10 +4,16 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAuthorizationService AuthorizationService
 
-<PageTitle>Curricula</PageTitle>
+<PageTitle>Curricula · Wombat</PageTitle>
 
 <PageHeader Title="Curricula" Subtitle="Manage curriculum versions and the sub-speciality they apply to.">
   <Actions>
+    @* T335, flow 01: the Administrator's Home no longer carries a Maintenance card, so the progress rebuild is reached
+       here, from the item it lights (R2-Rules § 3). Offered to those its page admits, as Create is. *@
+    @if (_canRebuild)
+    {
+      <a class="btn btn-outline" href="/admin/curriculum-progress">Curriculum progress</a>
+    }
     @* T211. Offered to those the create page admits, so no one is sent to a page that turns them away. *@
     @if (_canCreate)
     {
@@ -72,13 +78,17 @@
   /// <summary>The policy of the curriculum create and edit page, <c>CurriculumEdit</c>.</summary>
   private const string CreatePagePolicy = "AdministratorOrCollegeAdmin";
 
+  /// <summary>The policy of the curriculum progress rebuild, <c>CurriculumProgressRebuild</c>.</summary>
+  private const string RebuildPagePolicy = "Administrator";
+
   private IReadOnlyList<CurriculumDto>? _curricula;
   private bool _canCreate;
+  private bool _canRebuild;
   private string? _errorMessage;
 
   private string EmptyBody => _canCreate
     ? "Create a curriculum before admitting trainees or building progress rules."
-    : "Your institution has not adopted a curriculum yet. Adopt one on the Curriculum Adoptions page before admitting trainees.";
+    : "Your institution has not adopted a curriculum yet. Adopt one on the Curriculum adoptions page before admitting trainees.";
 
   protected override async Task OnInitializedAsync()
   {
@@ -86,6 +96,7 @@
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _canCreate = (await AuthorizationService.AuthorizeAsync(authState.User, CreatePagePolicy)).Succeeded;
+      _canRebuild = (await AuthorizationService.AuthorizeAsync(authState.User, RebuildPagePolicy)).Succeeded;
       _curricula = await Sender.Send(new GetCurriculaListQuery(authState.User));
     }
     catch (Exception exception)

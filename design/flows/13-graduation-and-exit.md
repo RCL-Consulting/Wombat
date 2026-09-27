@@ -376,7 +376,7 @@ Paste this as the second message. It is each step's Role, Route, Do and Expect, 
 Step 5.9 — Dr Molefe exports her portfolio (act-5-graduation.md)
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/export
-Do: Open Export Portfolio from the menu. Set the from date to her programme start, `J−3y`, and the to date to `D`, and
+Do: Open Export portfolio from the menu. Set the from date to her programme start, `J−3y`, and the to date to `D`, and
   export the PDF.
 Expect: The page opens with the last twelve months filled in. After the export it says "Portfolio exported
   successfully. The download should start automatically.", and a file named `portfolio-<12 hex digits>.pdf` downloads.
@@ -422,7 +422,8 @@ Route: /portfolio/verify
 Do: In a private window, without signing in, open the verification page. Compute the SHA-256 of the PDF that Dr Molefe
   sent (`certutil -hashfile <file> SHA256`, or `sha256sum`, both of which print it in lower case), enter it and press
   Verify. Do the same for Mr Smit's copy.
-Expect: The page works signed out, as a static page. Verifying loads the page's own address with the hash in it. The
+Expect: The page works signed out, as a static page, under the signed-out bar: the brand and Sign in, and no menu.
+  Verifying loads the page's own address with the hash in it. The
   page reads "Export verified" and shows:
   - when Wombat generated the file, in UTC;
   - the trainee and the exporter as user ids, never as names (DESIGN: the anonymous page must not disclose a name);
@@ -510,17 +511,20 @@ Step 5.21 — What her home page and menu offer a graduate (act-5-graduation.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /
 Do: Open Home and read the menu.
-Expect: The menu offers Home, My Account, Data Rights, My Progress and Logout, and nothing else (DESIGN § The NavMenu,
-  T252). Home says "You completed your programme on <`D` as a long date>, so no target applies to you any more." and
-  points her to My progress, read-only, as the trainee dashboard's Curriculum targets card does for an ended programme
-  (T252 As built: "Home says the same").
+Expect: The sidebar has no "Acting as" head, since she holds no role, and the menu offers Home, then My progress and My
+  data rights under the rule, and nothing else (DESIGN § The NavMenu, D8, T252). The top bar names her, "Lerato
+  Molefe", with Sign out. Home says "You completed your programme on <`D` as a long date>, so no target applies to you
+  any more." and points her to My progress, read-only, as the trainee dashboard's Curriculum targets card does for an
+  ended programme (T252 As built: "Home says the same").
 
 Step 5.22 — What a graduate can no longer open (act-5-graduation.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /committee/my-reviews → /access-denied → /portfolio/authorisations → /access-denied → /msf/my-reports → /access-denied → /activities/new
-Do: Type the addresses of My Committee Reviews, My authorisations and MSF Reports in turn. Then type the address of the
+Do: Type the addresses of My committee reviews, My authorisations and MSF reports in turn. Then type the address of the
   new-activity page.
-Expect: Each of the first three shows Access denied: those pages still require the Trainee role (DESIGN § The NavMenu).
+Expect: Each of the first three reads "You cannot open this page", "Your account holds no role that opens this page."
+  and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home: those pages still
+  require the Trainee role (DESIGN § The NavMenu).
   Nothing offers her an activity to file: there is no menu link and no dashboard action. The new-activity page asks
   only that she is signed in, so it opens when she types its address. She files nothing.
 
@@ -548,11 +552,12 @@ Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CE
 
 Step 5.25 — Dr Naidoo rates it (act-5-graduation.md)
 Role: Assessor — Dr David Naidoo
-Route: /activities/inbox → /activities/{ActivityId:int}
-Do: Open Dr du Plessis's Mini-CEX from the inbox and rate it `3b`, PAED-002's minimum in training year 2. Write what
-  was done well, what to develop and the agreed plan, and complete it.
+Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
+Do: He has acted as a Committee member since Step 4.5: choose Switch to Assessor in the sidebar, then open Dr du
+  Plessis's Mini-CEX from Activity inbox and rate it `3b`, PAED-002's minimum in training year 2. Write what was done
+  well, what to develop and the agreed plan, and complete it. Then choose Switch to Committee member in the sidebar.
 Expect: The activity reads Completed and is read-only to both of them. It credits PAED-002 in the semester that holds
-  `D−1` (checked in Step 5.26), and My Activities reads it credited "1 item". Nobody is emailed.
+  `D−1` (checked in Step 5.26), and My activities reads it credited "1 item". Nobody is emailed.
 
 Step 5.26 — Dr du Plessis sees it counted (act-5-graduation.md)
 Role: Trainee — Dr Pieter du Plessis
@@ -577,14 +582,14 @@ Expect: The confirmation names `D−2` as his last day. It says that encounters 
 Step 5.28 — Dr du Plessis's record after he left (act-5-graduation.md)
 Role: Trainee — Dr Pieter du Plessis
 Route: /account/login → /account/login/submit → / → /portfolio/progress → /activities/mine
-Do: Sign in, then read Home, My progress and My Activities.
+Do: Sign in, then read Home, My progress and My activities.
 Expect: Each page records that his programme ended on `D−2`:
   - Home's Curriculum targets card says "Your programme ended on <`D−2` as a long date>, so no target applies to you any
     more.", and points to My progress.
   - My progress opens with "Your programme ended on <`D−2`>. This page is your record of it and is read-only…". Its
     "Your programme" card reads Ended `D−2`. PAED-002's period holding `D−2` reads "no target (your programme ended
     part-way through) · n−1 recorded".
-  - My Activities still lists the `D−1` Mini-CEX as Completed, now credited "None": the take-back's replay re-stamped
+  - My activities still lists the `D−1` Mini-CEX as Completed, now credited "None": the take-back's replay re-stamped
     its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
 
 Step 5.29 — Neither ended programme can be put before the panel (act-5-graduation.md)
@@ -624,14 +629,16 @@ Expect:
   - PAED-002's period holding that day still reads "no target (your programme ended part-way through)", with the
     count Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
   - A KGK-001 card has appeared on his record too, as on Dr Molefe's.
-  - My Activities lists that Mini-CEX as Completed, with Credited None.
+  - My activities lists that Mini-CEX as Completed, with Credited None.
 
 Step A.7.4 — Dr Molefe's record on her phone (appendix-cross-cutting.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: / → /portfolio/progress
-Do: At 390 px, sign in, read Home, and open My Progress from the folded nav.
-Expect: Home says that she completed her programme and points her to My progress, as at Step 5.21 (T252). My Progress
-  shows her read-only record of past periods (T252), its cards fitting the width.
+Do: At 390 px, sign in, read Home, and open My progress from the menu.
+Expect: Home says that she completed her programme and points her to My progress, as at Step 5.21 (T252). The phone
+  bar shows no "Acting as", since she holds no role, and the menu holds Home, My progress and My data rights, then her
+  name and Sign out at its foot. My progress shows her read-only record of past periods (T252), its cards fitting the
+  width.
 
 Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md)
 Role: Anonymous — a verifier

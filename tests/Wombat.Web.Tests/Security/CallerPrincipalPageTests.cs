@@ -318,26 +318,18 @@ public sealed class CallerPrincipalPageTests : TestContext
     // ─── The account page ────────────────────────────────────────────────────
 
     [Fact]
-    public void Profile_ReadsAndRenamesTheSignedInUser()
+    public void Profile_ReadsTheSignedInUser()
     {
-        // T185: the profile query and the rename take the caller, not a user id, and read the id from it.
+        // T185: the profile query takes the caller, not a user id, and reads the id from it. The rename is the endpoint's
+        // since the review of the t335 branch, and takes the request's caller the same way (Hosting/ProfileFlowTests).
         SignIn(TraineeUserId, WombatRoles.Trainee);
-        _sender
-            .On<GetCurrentUserProfileQuery>(_ => new UserProfileDto(TraineeUserId, "trainee@test", "Thandi", "Mokoena", [WombatRoles.Trainee]))
-            .On<UpdateCurrentUserProfileCommand>(command =>
-                new UserProfileDto(TraineeUserId, "trainee@test", command.FirstName, command.LastName, [WombatRoles.Trainee]));
+        _sender.On<GetCurrentUserProfileQuery>(_ => new UserProfileDto(TraineeUserId, "trainee@test", "Thandi", "Mokoena", [WombatRoles.Trainee]));
 
         var cut = RenderComponent<Profile>();
         cut.WaitForState(() => cut.FindAll("#profile-first-name").Count == 1);
 
-        cut.Find("#profile-first-name").Change("Thandeka");
-        cut.FindAll("button").Single(button => button.TextContent.Contains("Save profile")).Click();
-        cut.WaitForState(() => cut.Markup.Contains("Profile saved."));
-
         CallerOf(_sender.Single<GetCurrentUserProfileQuery>().Principal).Should().Be(TraineeUserId);
-        var rename = _sender.Single<UpdateCurrentUserProfileCommand>();
-        rename.FirstName.Should().Be("Thandeka");
-        CallerOf(rename.Principal).Should().Be(TraineeUserId);
+        cut.Find("#profile-first-name").GetAttribute("value").Should().Be("Thandi");
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

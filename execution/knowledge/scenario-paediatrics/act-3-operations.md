@@ -105,8 +105,8 @@ Gap: none
 ### Step 3.2 — Dr Dlamini reopens the draft, and a submit with a field missing is refused
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int}
-Do: Find the draft in My Activities and open it. Press Submit without filling in the presenting problem.
-Expect: My Activities lists the draft as Mini-CEX (Paediatrics), PAED-001 with its title, encounter date `D−10`, Draft,
+Do: Find the draft in My activities and open it. Press Submit without filling in the presenting problem.
+Expect: My activities lists the draft as Mini-CEX (Paediatrics), PAED-001 with its title, encounter date `D−10`, Draft,
   credited "—". On the draft's page, the Request fields are open. The page offers Submit and Cancel, and Discard changes
   stays disabled until something is typed. The history has one row: Create (Draft → Draft), by Dr Dlamini. The submit
   is refused with "Presenting problem: A value is required.", the field is marked (T263), and the activity stays a
@@ -144,26 +144,27 @@ Gap: none
 
 ### Step 3.5 — Dr Naidoo rates the Mini-CEX and completes it
 Role: Assessor — Dr David Naidoo
-Route: /activities/inbox → /activities/{ActivityId:int}
-Do: From Activity Inbox, open Dr Dlamini's Mini-CEX. Rate the supervision the encounter required at rung 4, write what
-  was done well, the areas for development and the agreed plan, and complete it.
+Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
+Do: Choose Switch to Assessor in the sidebar, then open Activity inbox from the menu and Dr Dlamini's Mini-CEX in it.
+  Rate the supervision the encounter required at rung 4, write what was done well, the areas for development and the
+  agreed plan, and complete it.
 Expect: The inbox row names Anele Dlamini, PAED-001, `D−10` and Requested. On the page, only Entrustment and Feedback
   can be filled in, and Complete and Decline are offered. The rating offers the six rungs by the College's labels, 1, 2,
   3a, 3b, 4 and 5 (D32). After Complete, the state is Completed and the page is read-only. The history's Complete row
   reads Requested → Completed, by David Naidoo, credited "1 item". Year 3's minimum on PAED-001 is rung 4, so the
   encounter counts at the minimum.
-Note: Dr Naidoo also holds CommitteeMember, so his dashboard opens as a CommitteeMember. Activity Inbox is his Assessor
-  link in the nav.
+Note: Dr Naidoo also holds CommitteeMember, so his sessions open acting as a Committee member, whose menu has no
+  Activity inbox. The switch is stored with his account, so he acts as Assessor until Step 4.5 switches back.
 Actual (2026-09-26, T295 replay, wombat_scenario): Home opened "Viewing as CommitteeMember". Inbox row: Mini-CEX,
   Anele Dlamini, PAED-001, 2026-09-16, Requested. Request disabled; Entrustment and Feedback open; Complete and Decline.
   Rating options 1, 2, 3a, 3b, 4, 5. After Complete: Completed, nothing enabled; history Complete Requested → Completed,
   David Naidoo, "1 item". Progress row PAED-001 2026 S2: count 1, at minimum 1.
 Gap: none
 
-### Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My Activities
+### Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My activities
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int}
-Do: Open My Activities, then the Mini-CEX.
+Do: Open My activities, then the Mini-CEX.
 Expect: The row reads Completed, credited "1 item". The page is read-only. It shows rung 4 and Dr Naidoo's feedback, and
   offers no action. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete.
 Actual (2026-09-26, T295 replay, wombat_scenario): Row: Mini-CEX, PAED-001, 2026-09-16, Completed, "1 item". Page: every
@@ -174,7 +175,7 @@ Gap: none
 ### Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress
-Do: Open My Progress.
+Do: Open My progress.
 Expect: The "This period" card reads:
   - "Semester 2, 2026 · July to November";
   - semester targets "0 of 10 EPAs met this semester" and yearly targets "0 of 5 EPAs met in 2026";
@@ -259,7 +260,7 @@ Do: Open the declined Mini-CEX from the dashboard's Recent activities. Then file
   `D−20`, PAED-002, naming Dr Sarah Botha, and submit.
 Expect: Recent activities lists the Mini-CEX with a red Declined badge. The Activity inbox card does not list it, as the
   inbox it opens does not: nothing can move a declined request on (T297). No mail tells him of the decline (T320), so
-  Recent activities, while it is among his five newest, and My Activities are where he finds it. Its page reads
+  Recent activities, while it is among his five newest, and My activities are where he finds it. Its page reads
   State: Declined, offers no action, and shows Dr Khumalo's note in the history. The re-filing is a new activity. As
   `D−20` is typed, the field warns: "This encounter was 20 days ago. It can still be filed, but a filing more than 14
   days after the encounter is recorded as late." Its own Submit row records "Filed 20 days after the encounter". It
@@ -282,10 +283,17 @@ Gap: [F-3.12a, T297] fixed by T297 (7bf8ea7): the card lists what the inbox list
 
 ### Step 3.13 — Dr Botha completes Dr Ndlovu's Mini-CEX
 Role: Assessor — Dr Sarah Botha
-Route: /activities/inbox → /activities/{ActivityId:int}
-Do: Open Dr Ndlovu's re-filed Mini-CEX, rate it 3a with feedback, and complete it.
+Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
+Do: Choose Switch to Assessor in the sidebar, then open Activity inbox from the menu and Dr Ndlovu's re-filed Mini-CEX
+  in it. Rate it 3a with feedback and complete it. Then choose Switch to Committee member in the sidebar.
 Expect: The Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-002 is 3a, so it counts at the minimum.
-  The declined request stays Declined and credits nothing.
+  The declined request stays Declined and credits nothing. Each switch lands on Home with its one-time info alert, "You
+  are now acting as Assessor." and then "You are now acting as Committee member." (Step 2.34), and the sidebar ends
+  reading "Acting as Committee member".
+Note: Dr Botha also holds CommitteeMember, so her sessions open acting as a Committee member, whose menu has no Activity
+  inbox, and in-app navigation never switches the role (R2-Rules § 1). The switch is stored with her account, so she
+  switches to rate and back after. Every step that sends her or Dr Zulu to rate does the same, which keeps the frames the
+  later steps read: Step 3.33's first "Acting as Committee member", Step 4.14's Decision panels and Step A.5.11's head.
 Actual (2026-09-26, T295 replay, wombat_scenario): Botha's inbox held only activity 3. Rated 3a with feedback:
   Completed, Complete row by Sarah Botha, "1 item". Progress: Ndlovu PAED-002 2026 S2 count 1, at minimum 1. Activity 2
   stays declined, and no progress row names it.
@@ -311,9 +319,10 @@ Gap: none
 
 ### Step 3.15 — Dr Botha returns the reflection for more detail
 Role: Assessor — Dr Sarah Botha
-Route: /activities/inbox → /activities/{ActivityId:int}
-Do: Open Dr Ndlovu's reflection. Return it with the note "Please say what you would do differently at triage, and what
-  you will read before your next take."
+Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
+Do: Choose Switch to Assessor in the sidebar, then open Dr Ndlovu's reflection from Activity inbox. Return it with the
+  note "Please say what you would do differently at triage, and what you will read before your next take." Then choose
+  Switch to Committee member in the sidebar.
 Expect: The inbox lists the reflection as Awaiting discussion. The page offers Record Discussion and Return, and only the
   Discussion field is open. Return asks for a note. Once it is returned, the state is Draft and the page offers
   Dr Botha nothing. The history's Return row (Awaiting discussion → Draft) carries her note.
@@ -345,8 +354,9 @@ Gap: [F-3.16a, T297] fixed by T297 (7bf8ea7).
 
 ### Step 3.17 — Dr Botha records the discussion
 Role: Assessor — Dr Sarah Botha
-Route: /activities/inbox → /activities/{ActivityId:int}
-Do: Open the re-submitted reflection, write the discussion notes, and record the discussion.
+Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
+Do: Choose Switch to Assessor in the sidebar, then open the re-submitted reflection from Activity inbox, write the
+  discussion notes, and record the discussion. Then choose Switch to Committee member in the sidebar.
 Expect: The state is Discussed, finished and read-only to both of them. The Record Discussion row is credited "—":
   the exercise credits nothing (D7), and no "counted towards no curriculum requirement" banner shows (T108). Dr Ndlovu's
   progress does not change.
@@ -392,7 +402,7 @@ Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/{ActivityId:int} → /activities/mine
 Do: Start a DOPS (Paediatrics) by mistake. Choose only the EPA PAED-002 and save the draft. Then cancel it from its page.
 Expect: The draft saves with its other required fields empty, because saving a draft checks formats only (T105). Cancel
-  asks for no note and moves the draft to Cancelled, with nothing offered after it. My Activities lists it as Cancelled,
+  asks for no note and moves the draft to Cancelled, with nothing offered after it. My activities lists it as Cancelled,
   credited "—", beside the three Logged sessions.
 Actual (2026-09-26, T295 replay, wombat_scenario): Activity 8 (R8) saved with only the EPA: "Draft saved. It has not
   been submitted." Cancel asked for no note and moved it to Cancelled, nothing enabled; history Create, Cancel
@@ -441,11 +451,11 @@ Gap: none
 Role: Assessor — Dr Mohammed Patel
 Route: / → /activities/inbox → /activities/{ActivityId:int}
 Do: From the dashboard, open the inbox, then the DOPS. Rate it 3a with feedback, and complete it.
-Expect: Home (Assessor view) reads "2 assessments awaiting review", and Awaiting your review lists the same two rows as
-  the inbox, oldest first: Pieter du Plessis's portfolio review (Awaiting review), then Nomsa Mahlangu's DOPS
+Expect: Home (Assessor view): "Waiting for your rating" is badged 2 and lists the same two rows as the inbox, oldest
+  first: Pieter du Plessis's portfolio review (Awaiting review), then Nomsa Mahlangu's DOPS
   (Requested) (T297). The inbox holds those two rows. After Complete, the DOPS is Completed, credited "1 item". Year 1's
-  minimum on PAED-002 is 3a, so it counts at the minimum. The portfolio review stays in his inbox, Home then reads
-  "1 assessment awaiting review", and Recent decisions lists the DOPS as Completed.
+  minimum on PAED-002 is 3a, so it counts at the minimum. The portfolio review stays in his inbox, Home's card is then
+  badged 1, and Recent decisions lists the DOPS as Completed.
 Actual (2026-09-26, T295 replay, wombat_scenario): Home (Assessor view) read "Pending requests 0 assessments awaiting
   review" and "No decisions yet." while the inbox held two rows: Nomsa Mahlangu's DOPS (Requested) and Pieter du
   Plessis's portfolio review (Awaiting review). DOPS rated 3a: Completed, Mohammed Patel, "1 item"; progress Mahlangu
@@ -472,7 +482,7 @@ Do: File and submit each of these, filling in every Request field. The clinical 
     diabetes.
   - CBD, PAED-012, Dr Khumalo, `D−5`, focus Ethics and consent: a transfusion refused on religious grounds.
   - Direct Observation, PAED-010, Dr Zulu, `D−4`, activity observed Ward round: leading the Monday ward round.
-Expect: Each ends Requested, with no lateness warning, since all six are within 14 days. My Activities lists the six as
+Expect: Each ends Requested, with no lateness warning, since all six are within 14 days. My activities lists the six as
   Requested, credited "—". The Direct Observation's EPA picker offers PAED-010, because its list names Direct
   observation. The Mini-CEX and DOPS pickers do not offer it.
 Actual (2026-09-26, T295 replay, wombat_scenario): Activities 12-17 (R12 Mini-CEX 001 Zulu, R13 CBD 001 Naidoo, R14
@@ -483,13 +493,15 @@ Gap: none
 
 ### Step 3.26 — The consultants complete Dr Molefe's six
 Role: Assessor — Dr Thandi Zulu, Dr David Naidoo, Dr Mohammed Patel, Dr Sarah Botha and Dr Fatima Khumalo
-Route: /activities/inbox → /activities/{ActivityId:int}
-Do: Each consultant opens their own requests from the inbox and completes them with feedback, rating:
+Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
+Do: Each consultant opens their own requests from Activity inbox and completes them with feedback, rating:
   - Dr Zulu: rung 5 on the PAED-001 Mini-CEX and rung 5 on the PAED-010 observation;
   - Dr Naidoo: rung 5;
   - Dr Patel: rung 4;
   - Dr Botha: rung 5;
   - Dr Khumalo: rung 5.
+  Dr Zulu and Dr Botha act as Committee members: each first chooses Switch to Assessor in the sidebar, and after rating
+  chooses Switch to Committee member (Step 3.13). Dr Naidoo still acts as Assessor, his choice from Step 3.5.
 Expect: Each inbox holds only that assessor's own requests. All six end Completed, each credited "1 item". Year 4's
   minimum is rung 5 on PAED-001, PAED-010 and PAED-012. So Dr Patel's rung 4 counts towards the target, but not at the
   minimum.
@@ -516,9 +528,10 @@ Gap: none
 
 ### Step 3.28 — The consultants complete Dr Dlamini's three
 Role: Assessor — Dr Thandi Zulu, Dr Sarah Botha and Dr Fatima Khumalo
-Route: /activities/inbox → /activities/{ActivityId:int}
-Do: Each completes their own with feedback, rating: Dr Zulu 3b on the CBD, Dr Botha 4 on the CCA, and Dr Khumalo 4 on
-  the Mini-CEX.
+Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
+Do: Each completes their own from Activity inbox with feedback, rating: Dr Zulu 3b on the CBD, Dr Botha 4 on the CCA,
+  and Dr Khumalo 4 on the Mini-CEX. Dr Zulu and Dr Botha first choose Switch to Assessor in the sidebar, and after
+  rating choose Switch to Committee member (Step 3.13).
 Expect: All three end Completed, each credited "1 item". Dr Dlamini's PAED-001 now holds three encounters this semester.
   Two are at year 3's minimum of rung 4; the CBD at 3b counts towards the target only. Her PAED-004 holds one, at the
   minimum.
@@ -574,14 +587,15 @@ Gap: [F-3.30a, T297] fixed by T297 (7bf8ea7): the card lists the Mini-CEX the nu
   [F-3.30b, T328] The row's date is not kept on one line: beside "Portfolio and Logbook Review (Paediatrics) — Pieter du
   Plessis" at 1280 px it breaks into "18" over "Sept".
 
-### Step 3.31 — Mr Smit opens Stalled Activities
+### Step 3.31 — Mr Smit looks for a page of stalled requests
 Role: Coordinator — Mr Pieter Smit
-Route: /placeholder/{Feature}
-Do: Choose Stalled Activities in the nav (`/placeholder/stalled-activities`). Then open a mistyped address,
-  `/placeholder/stalled-work`.
-Expect: Stalled Activities reads "This page is not built yet." with a "Coming soon" card. There is no page from which to
-  chase a stalled request: no reminder and no reassignment. The mistyped address is "Page not found" with status 404,
-  not a "Coming soon" (T178).
+Route: / → /not-found
+Do: Look in the menu for a page of stalled requests. Then type the address the menu once linked,
+  `/placeholder/stalled-activities`.
+Expect: The menu offers none: Home, Decisions due, MSF campaigns, Committee reviews and Data rights requests, then My
+  data rights. The nav links to no unbuilt page (DESIGN.md § The NavMenu); stalled work is flow 06's. Only Home's
+  "Stalled requests" card lists it, and no page chases a stalled request: no reminder and no reassignment. The old
+  address is "Page not found" with status 404: the placeholder page went with the stubs (T335, flow 01).
 Actual (2026-09-26, T295 replay, wombat_scenario): Stalled Activities reads "This page is not built yet." with a
   "Coming soon" card; nothing on it chases a request. `/placeholder/stalled-work` is "Page not found", HTTP 404.
 Gap: none
@@ -611,11 +625,13 @@ Gap: none
 ### Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
-Do: Her dashboard opens as a CommitteeMember; switch the view to Assessor. From "Review inbox", open Dr Mahlangu's
-  Mini-CEX, rate it 3a with feedback, and complete it.
-Expect: Home first reads "Viewing as CommitteeMember" and "You also act as Assessor. Switch view: Assessor". After the
-  switch it reads "Viewing as Assessor", and "Pending requests" counts 1 assessment awaiting review: this Mini-CEX.
-  Awaiting your review lists it, "Mini-CEX (Paediatrics) — Nomsa Mahlangu", badged Overdue: it has waited past the
+Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for your
+  rating", open Dr Mahlangu's Mini-CEX, rate it 3a with feedback, and complete it.
+Expect: The sidebar first reads "Acting as Committee member", with "Switch to Assessor" under it, and Home "Committee
+  member · Semester N, YYYY" under its heading. After the switch Home reads "You are now acting as Assessor." in an info
+  alert under the header, and "Assessor · Semester N, YYYY"; the sidebar reads "Acting as Assessor" over Home and
+  Activity inbox, and "Waiting for your rating" is badged 1: this Mini-CEX.
+  The card lists it, "Mini-CEX (Paediatrics) — Nomsa Mahlangu", badged Overdue: it has waited past the
   assessor's seven days since Step 3.30 aged it. After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's
   minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
 Note: The card counts what her inbox lists, less her own portfolio (`ActivityWaiting`, T297), so it cannot read 0
@@ -636,7 +652,7 @@ Gap: [F-3.33a, T297] fixed by T297 (7bf8ea7).
 ### Step 3.34 — Mr Smit creates the MSF questionnaire
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/new
-Do: Open MSF Campaigns and start a new campaign. The Template select is empty, so add the Quick template as it stands:
+Do: Open MSF campaigns and start a new campaign. The Template select is empty, so add the Quick template as it stands:
   kind Multi-source feedback, name "Default MSF", with its scale question and its comment question.
 Expect: The list reads "No MSF campaigns", with MSF coverage and New campaign in its header. The create page shows a
   Quick template card and a Create campaign card. Adding the template reads "Template created.", and the Template
@@ -851,7 +867,7 @@ Gap: none
 ### Step 3.47 — Dr Molefe reads her released report
 Role: Trainee — Dr Lerato Molefe
 Route: /msf/my-reports → /msf/my-reports/{CampaignId:int}
-Do: Open MSF Reports, then view the report.
+Do: Open MSF reports, then view the report.
 Expect: One row: Default MSF (Multi-source feedback), released just now, 6 responses. The report shows the narrative
   and two groups only, Nurse (4.50) and Consultant (4.00), each with its comments. It shows nothing of the peer doctor
   or the physiotherapist, not even that they answered, and no group's count (T249).
@@ -865,9 +881,9 @@ Gap: [F-3.47a, T270] The released report prints each scale question as "<questio
 ### Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress
-Do: Open My Activities, then My Progress.
-Expect: My Activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
-  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My Progress
+Do: Open My activities, then My progress.
+Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My progress
   reads:
   - semester targets "1 of 10 EPAs met this semester", and training year 4;
   - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
@@ -915,7 +931,7 @@ Expect:
   - Activity inbox: "No pending items."
   - Recent activities: her four WBAs, each Completed, in green.
   - Upcoming deadlines: "No deadlines in the next 14 days."
-  - My authorisations and Actions link to their pages.
+  - My authorisations links to its page, and the header offers "Log an activity" (T335: the Actions card is gone).
 Actual (2026-09-26, T295 replay, wombat_scenario): Every card as expected: 1 / 10 and 0 / 5, PAED-002, 003, 005, 010,
   012 "0 of 3 this semester"; "No pending items."; activities 20, 19, 18, 1 green; "No deadlines…"; links to
   /portfolio/authorisations and /activities/new. State capture: /msf/my-reports/1 reads "The selected report is not
@@ -926,19 +942,21 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Every card as expected: 1 / 1
 Gap: [F-3.50a, T270] My MSF Reports with another trainee's campaign id shows the refusal twice, as a danger alert and as the
   list's load error, and hides her (empty) list, where states.md expects "her empty list, nothing selected".
 
-### Step 3.51 — Dr Khumalo's dashboard, and Recent Activities
+### Step 3.51 — Dr Khumalo's dashboard and menu
 Role: Assessor — Dr Fatima Khumalo
-Route: / → /activities/inbox → /placeholder/{Feature}
-Do: Read the dashboard, then follow "Review inbox". Then choose Recent Activities in the nav.
+Route: / → /activities/inbox
+Do: Read the dashboard, then follow "Open inbox →". Then read the menu.
 Expect:
-  - Pending requests: 1 assessment awaiting review, Dr du Plessis's CBD. The inbox lists it as Requested.
-  - Awaiting your review: "Case-Based Discussion (Paediatrics) — Pieter du Plessis", Requested (T297).
+  - Waiting for your rating, badged 1: "Case-Based Discussion (Paediatrics) — Pieter du Plessis", Requested (T297,
+    T335). The inbox lists it as Requested.
   - Recent decisions, the activities she moved last, newest first: Mini-CEX (Paediatrics) — Anele Dlamini, Completed,
     in green; Case-Based Discussion (Paediatrics) — Lerato Molefe, Completed; Mini-CEX (Paediatrics) — Sipho Ndlovu,
     Declined, in red.
-  - Recent Activities (`/placeholder/recent-activities`) is "Coming soon".
-Note: "Pending requests" and Awaiting your review are read as in Step 3.33, from her inbox: 0 beside an inbox holding
-  the CBD is a Gap. Until T297 the second card was "Accepted, needing action", which read a state no CPSA workflow has.
+  - The inbox lights Activity inbox in the menu: Home and Activity inbox, then My data rights. There is no Recent
+    activities: the flow 01 pick dropped it, with its placeholder.
+Note: "Waiting for your rating" is read as in Step 3.33, from her inbox: 0 beside an inbox holding the CBD is a Gap.
+  Until T297 it was "Accepted, needing action"; until T335 it was split across Pending requests and Awaiting your
+  review.
 Actual (2026-09-26, T295 replay, wombat_scenario): Pending requests "0 assessments awaiting review", while Review inbox
   lists du Plessis's CBD (9), Requested. "No accepted assessments pending action." Recent decisions: Dlamini Mini-CEX
   and Molefe CBD Completed (green), Ndlovu Mini-CEX Declined (red). Recent Activities is "Coming soon".
@@ -949,17 +967,21 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Pending requests "0 assessmen
   Sipho Ndlovu, Declined in red. Recent Activities is "Coming soon".
 Gap: [F-3.51a, T297] fixed by T297 (7bf8ea7).
 
-### Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees
+### Step 3.52 — Dr Zulu's committee dashboard
 Role: CommitteeMember — Dr Thandi Zulu
-Route: /dashboard/switch/{role} → / → /placeholder/{Feature}
-Do: Switch the view back to CommitteeMember and read the dashboard. Then choose Programme Trainees in the nav.
+Route: / → /dashboard/switch/{role} → /
+Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
 Expect:
+  - Home opens acting as Assessor, her choice from Step 3.33, kept with her account. After the switch an info alert
+    reads "You are now acting as Committee member.", the sidebar "Acting as Committee member", and Home's subtitle
+    "Committee member · Semester N, YYYY".
   - Targets this period, "Semester 2, 2026 · July to November": KGK's five current trainees, fewest met first.
     Pieter du Plessis, Nomsa Mahlangu and Sipho Ndlovu read "semester 0/10 · yearly 0/5". Anele Dlamini and Lerato
     Molefe read "semester 1/10 · yearly 0/5".
   - Targets met by EPA: PAED-001 (3 per semester) reads "2 of 5 met", and every other EPA "0 of 5 met".
   - Neither card holds a link.
-  - Programme Trainees is "Coming soon".
+  - Her menu is Home, Committee reviews and Decision panels, then My data rights. Programme trainees is flow 06's, and
+    the menu offers no page before it is built.
 Note: The card reads the trainees in the member's sub-speciality scopes (`GetCommitteeMemberDashboardSummaryQuery`).
   Dr Zulu's invitation carried none; her Paediatrics sub-speciality came with her assessor profile (Step 2.14).
 Actual (2026-09-26, T295 replay, wombat_scenario): Landed on Assessor (3.33's switch persists); after the switch:
@@ -967,17 +989,18 @@ Actual (2026-09-26, T295 replay, wombat_scenario): Landed on Assessor (3.33's sw
   PAED-001 "2 of 5 met", 14 others "0 of 5 met"; no link in either card. Programme Trainees is "Coming soon".
 Gap: none
 
-### Step 3.53 — Dr Mokoena's dashboard, and STAR Review Queue
+### Step 3.53 — Dr Mokoena's dashboard
 Role: SpecialityAdmin — Dr Refilwe Mokoena
-Route: / → /placeholder/{Feature}
-Do: Read the dashboard. Then choose STAR Review Queue in the nav.
+Route: /
+Do: Read the dashboard and the menu.
 Expect:
   - Pending reviews: "2 activities awaiting review", Dr du Plessis's Requested CBD and his portfolio review awaiting
     review. The card has no link (T297).
   - Trainees in programme: "5 active / 0 inactive".
   - Curriculum coverage — Semester 2, 2026: the 15 EPAs with their targets. PAED-001 reads "2 of 5 met", and the rest
     "0 of 5 met", the same figures as Dr Zulu's.
-  - STAR Review Queue is "Coming soon".
+  - Her menu is Home, Decisions due, Committee reviews and Decision panels, then My data rights. The STAR review queue
+    is flow 09's and Programme trainees flow 06's; the menu offers neither before it is built.
 Note: The count is the programme's backlog awaiting a reviewer at KGK, read from each activity's pinned workflow
   (`ActivityWaiting`, T297): a request waits in `requested`, a portfolio review in `submitted`. It used to link to
   `/activities/inbox`, which lists only what she can move, and read "Inbox clear" beside the count; no page lists the
@@ -998,7 +1021,7 @@ Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /
 Do: Read the dashboard.
 Expect: The same three cards and figures as Dr Mokoena's: "2 activities awaiting review" with no link, "5 active / 0
-  inactive", and PAED-001 "2 of 5 met". His nav offers the same Programme Trainees and STAR Review Queue placeholders.
+  inactive", and PAED-001 "2 of 5 met". His menu reads as hers, under "Acting as Sub-speciality admin".
 Actual (2026-09-26, T295 replay, wombat_scenario): "Viewing as SubSpecialityAdmin": "1 activities in review" with
   Review queue → /activities/inbox, "5 active / 0 inactive", PAED-001 "2 of 5 met" and 14 "0 of 5 met". Nav: Programme
   Trainees and STAR Review Queue placeholders, Decision Panels, Committee Reviews, Decisions Due.
@@ -1011,7 +1034,7 @@ Gap: [F-3.54a, T297] fixed by T297 (7bf8ea7).
 ### Step 3.55 — Prof Mbatha reads KGK's audit log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit
-Do: Open the Audit Log, which shows the last 24 hours by default. Set From (UTC) to the start of this act's sitting, so
+Do: Open Audit log, which shows the last 24 hours by default. Set From (UTC) to the start of this act's sitting, so
   that no earlier act's rows are counted, and apply. Filter by Result: Failures only. Then clear that and filter by
   Action "Msf".
 Expect:
@@ -1047,7 +1070,7 @@ Gap: [F-3.56a, T286] The Actor card's "Display name" is Dr Ndlovu's email, not h
 ### Step 3.57 — devadmin reads the log across institutions
 Role: Administrator — devadmin@wombat.local
 Route: /admin/audit → /admin/audit/{Id:guid}
-Do: Open the Audit Log, with From (UTC) set to the start of this act's sitting as in Step 3.55. Open one respondent's
+Do: Open Audit log, with From (UTC) set to the start of this act's sitting as in Step 3.55. Open one respondent's
   submission (SubmitMsfResponseCommand), then one of Dr Naidoo's TransitionActivityCommand rows.
 Expect: The log holds every institution's rows and the rows with no institution. Among them are six
   SubmitMsfResponseCommand rows whose actor is "system", and devadmin's own RunScheduledJobNowCommand. The submission's

@@ -15,12 +15,12 @@ what is never uploaded.
 
 | Step | Who | Done when | Status |
 |---|---|---|---|
-| A. Choose and set up the design system | Operator; Claude | The design system holds Wombat's tokens, type, icons and brand, and passes its checks; the choice is recorded | **Done 2026-09-27** (W-009): Wombat's own, built from the code. The aesthetic direction is still to give (step C) |
+| A. Choose and set up the design system | Operator; Claude | The design system holds Wombat's tokens, type, icons and brand, and passes its checks; the choice is recorded | **Done 2026-09-27** (W-009): Wombat's own, built from the code. The aesthetic direction was given at step C |
 | B. Stage the upload set | Operator | `stage_upload.ps1 -Flow 01` exits 0; every screenshot has been opened; the crop-first file is cropped or left out | Ready |
-| C. Start the canvas | Operator | A Design artifact holds round 1's 2–3 structural variations; its link is in T335 | Ready; give the aesthetic direction in the first message |
-| D. Review the structural variations | Operator | Each variation is scored against the checklist, in the chat | Waits on C |
-| E. Choose, then fidelity and states | Operator | The chosen frame's artboards and token sheet are in `design/flows/01-shell/`, and § 6's nine answers are in the chat | Waits on D |
-| F. Hand off to Claude Code | Claude Code | Built; `DESIGN.md` amended; suites green; committed | Waits on E |
+| C. Start the canvas | Operator | A Design artifact holds round 1's 2–3 structural variations; its link is in T335 | Done 2026-09-27 (canvas https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD; A picked; round 3 accepted) |
+| D. Review the structural variations | Operator | Each variation is scored against the checklist, in the chat | Done 2026-09-27 (canvas https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD; A picked; round 3 accepted) |
+| E. Choose, then fidelity and states | Operator | The chosen frame's artboards and token sheet are in `design/flows/01-shell/`, and § 6's nine answers are in the chat | Done 2026-09-27 (canvas https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD; A picked; round 3 accepted) |
+| F. Hand off to Claude Code | Claude Code | Built; `DESIGN.md` amended; suites green; committed | Built on branch t335; squash pending |
 | G. Acceptance | Claude Code; operator | Flow 01's steps replay green on a fresh database; the baseline is re-captured | Waits on F |
 | H. Lessons into the brief | Claude Code; operator | BRIEF § 11 is written, dated, and flow 02 is restated | Waits on G |
 
@@ -204,7 +204,8 @@ answers are in the chat, and the artifact's link is in T335.
 **Bringing the design back:** pick the artboards and tell Claude to implement them [w34]. From claude.ai/design, use
 "Handoff to Claude Code", then "Send to local coding agent" [start]. Save the bundle under `design/flows/01-shell/`.
 
-**The implementation prompt** (in a Claude Code session in this repo):
+**The implementation prompt, as sent** (in a Claude Code session in this repo). The `[As built: …]` notes, added after
+the build, mark where what was built differs from what was asked.
 
 ```text
 Implement flow 01, the shell, from the chosen design: <Design artifact link>, artboards and bundle in
@@ -217,8 +218,10 @@ Razor:
 - Components/Pages/Home.razor, and the frame of the nine Components/Pages/Dashboards/*.razor (the cards' contents
   belong to later flows).
 - Components/Pages/AccessDenied.razor, NotFound.razor, Error.razor, Placeholder/PlaceholderPage.razor.
+  [As built: PlaceholderPage is deleted, and its /placeholder/{Feature} route with it.]
 - Components/Routes.razor and Components/App.razor, only if the frame needs it.
 - Role switching and landing: the /dashboard/switch/{role} endpoint in Program.cs, and Navigation/DashboardPriority.cs.
+  [As built: the switch is Navigation/ActingRoleSwitch.cs, mapped in Program.cs.]
 - Any NEW component in Components/Shared/, added to BRIEF § 5.1's list.
 
 Styles:
@@ -236,6 +239,7 @@ Render modes and framework hooks:
 - Sign-in, sign-out and the other cookie writes stay form posts.
 - Keep NavLink's active class, #blazor-error-ui and its .reload, the components-reconnect-* classes, EditForm and
   ValidationMessage.
+  [As built: NavItemLink replaced NavLink, and writes its own active class.]
 
 DESIGN.md:
 - Rewrite the sections the design changes: § Design tokens, § Typography, § Layout grid (the shell), § The NavMenu
@@ -291,8 +295,9 @@ re-capture a state that `states.md` marks "Scratch (post-actN)", never on the re
    the appendix through A.7.14. Write each step's `Actual (<date>, T335 replay, wombat_scenario_f01): …` line.
    - Every Expect must hold: flow 01's 21 steps and every other step that quotes the frame (step F's search).
    - Passwords go into `pwd_DO_NOT_COMMIT.txt` only.
-3. **Re-capture the baseline** into `design/baseline/`, as `states.md` § How to capture says. That covers flow 01's 27
-   states (§ 3), the landing captures (§ 4) and the steps' own captures.
+3. **Re-capture the baseline** into `design/baseline/`, as `states.md` § How to capture says. That covers the rows of
+   states.md § Shell and framework, § Home and the role dashboards, and § System pages, the landing captures (§ 4) and
+   the steps' own captures.
 4. **Compare** each capture with its chosen artboard, and list the differences in T335.
 5. **Browser check** at 1280 and at 390 px for every row of DESIGN.md's nav table, and for a two-role user. Check the
    reconnect dialog by suspending the app (`states.md` § Shell and framework).

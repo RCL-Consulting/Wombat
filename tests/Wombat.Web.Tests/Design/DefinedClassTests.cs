@@ -34,12 +34,13 @@ namespace Wombat.Web.Tests.Design;
 public sealed partial class DefinedClassTests
 {
     /// <summary>
-    /// Classes that are not styling but the framework's own, which no stylesheet need define: Blazor's error banner wires
-    /// its Reload link by <c>.reload</c> (blazor.web.js). Nothing else: a class the framework puts on at run time
-    /// (<c>NavLink</c>'s <c>active</c>, an input's <c>invalid</c>) is not in a page's markup, so the scan never meets it,
-    /// and a page that wrote one itself would be styling by it. The scan fails on an entry it did not need (T266 review).
+    /// Classes that are not styling but the framework's own, which no stylesheet need define: blazor.web.js wires the error
+    /// bar's Reload button by <c>.reload</c> and its Dismiss button by <c>.dismiss</c> (T335 flow 01; ErrorBarTests holds
+    /// that nothing styles either). Nothing else: a class the framework puts on at run time (<c>NavLink</c>'s
+    /// <c>active</c>, an input's <c>invalid</c>) is not in a page's markup, so the scan never meets it, and a page that
+    /// wrote one itself would be styling by it. The scan fails on an entry it did not need (T266 review).
     /// </summary>
-    private static readonly HashSet<string> FrameworkClasses = new(StringComparer.Ordinal) { "reload" };
+    private static readonly HashSet<string> FrameworkClasses = new(StringComparer.Ordinal) { "reload", "dismiss" };
 
     /// <summary>
     /// The start of a class an expression finishes, allowed in the one file that writes it, because a test holds every
@@ -148,6 +149,7 @@ public sealed partial class DefinedClassTests
         Judge(new ClassUse("alert-", IsPrefix: true), defined, "Alert.razor").Should().Be(Verdict.GluedPrefix,
             "the one file whose expression a test holds to app.css");
         Judge(new ClassUse("reload", IsPrefix: false), defined, "Page.razor").Should().Be(Verdict.Framework, "the framework's own");
+        Judge(new ClassUse("dismiss", IsPrefix: false), defined, "Page.razor").Should().Be(Verdict.Framework, "the framework's own");
         Judge(new ClassUse("active", IsPrefix: false), defined, "Page.razor").Should().Be(Verdict.Undefined,
             "a page that writes it is styling by it");
 

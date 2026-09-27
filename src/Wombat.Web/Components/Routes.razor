@@ -1,20 +1,79 @@
-<LeaveEndedSession />
-<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
-    <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
-            <NotAuthorized>
-                <AuthorizeView Context="authState">
-                    <Authorized Context="authorizedUser">
-                        <LayoutView Layout="typeof(Layout.MainLayout)">
+@using Wombat.Web.Navigation
+@implements IDisposable
+@inject NavigationManager Navigation
+@inject ActingRoleSwitchResults SwitchResults
+
+@* The acting role and a switch's one-time word, as App resolved them from the request (T335, flow 01). Cascaded fixed: a
+   switch is a full page load, which starts a new circuit, so neither changes while this one lives. *@
+<CascadingValue Value="Acting" IsFixed="true">
+  <CascadingValue Value="_notice" IsFixed="true">
+    <LeaveEndedSession />
+    <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+        <Found Context="routeData">
+            @* The page shown, for the shell: the nav item it lights and the trail its header draws (NavOwners, T335). *@
+            <CascadingValue Value="routeData">
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    <AuthorizeView Context="authState">
+                        <Authorized Context="authorizedUser">
+                            @* In place, at the address asked for, and drawn once: AuthorizeRouteView renders its
+                               NotAuthorized content in its DefaultLayout already, so a LayoutView here drew the shell
+                               twice, with two sidebars and two Sign out buttons (T321; T335, flow 01, D6). *@
                             <AccessDenied />
-                        </LayoutView>
-                    </Authorized>
-                    <NotAuthorized Context="anonymousUser">
-                        <RedirectToLogin />
-                    </NotAuthorized>
-                </AuthorizeView>
-            </NotAuthorized>
-        </AuthorizeRouteView>
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+                        </Authorized>
+                        <NotAuthorized Context="anonymousUser">
+                            <RedirectToLogin />
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            </CascadingValue>
+            @* A sibling of AuthorizeRouteView, so it renders before any component of the page (the renderer renders a
+               component's children before theirs), and its focus on the h1 is sent before a switch's result alert
+               focuses itself: the alert wins (ActingRoleSwitchAlert, T335). *@
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+    </Router>
+  </CascadingValue>
+</CascadingValue>
+
+@code {
+  private ActingRoleSwitchNotice _notice = new(null);
+  private bool _listening;
+
+  /// <summary>The acting role, resolved by App from the sign-in cookie's claims.</summary>
+  [Parameter] public ActingRole Acting { get; set; } = ActingRole.None;
+
+  /// <summary>What a switch did, when this page is the one it landed on (<see cref="ActingRoleSwitchResults" />).</summary>
+  [Parameter] public ActingRoleSwitchResult? SwitchResult { get; set; }
+
+  protected override void OnInitialized()
+  {
+    // A circuit resumed from this page's descriptor (Blazor.resumeCircuit) is given the word again: said by the page's
+    // first circuit, it is not said by a later one (the review of the t335 branch). The prerender is no circuit, and says it.
+    var result = SwitchResult;
+    if (result is not null && RendererInfo.IsInteractive && !SwitchResults.SayInCircuit(result))
+    {
+      result = null;
+    }
+
+    _notice = new ActingRoleSwitchNotice(result);
+
+    // The word belongs to the page it landed on. Any navigation in the circuit leaves that page, and the word with it.
+    if (result is not null)
+    {
+      Navigation.LocationChanged += OnLocationChanged;
+      _listening = true;
+    }
+  }
+
+  private void OnLocationChanged(object? sender, LocationChangedEventArgs e) => _notice.LeavePage();
+
+  public void Dispose()
+  {
+    if (_listening)
+    {
+      Navigation.LocationChanged -= OnLocationChanged;
+    }
+  }
+}

@@ -52,7 +52,9 @@ public sealed class NotFoundPageFlowTests : IClassFixture<MsfRespondPageFlowTest
     [InlineData("/admin/forms")] // retired by T145, where this was found
     [InlineData("/activities/no/such/page?from=a-bookmark")]
     [InlineData("/placeholder/activities")] // a stub T178 retired: the page it stood in for exists
-    [InlineData("/placeholder/no-such-feature")] // the placeholder's route matches, but it stands in for nothing
+    [InlineData("/placeholder/no-such-feature")]
+    [InlineData("/placeholder/recent-activities")] // the placeholder page went with the nav's stubs (T335, flow 01, S22e)
+    [InlineData("/placeholder/Recent-Activities")]
     public async Task ASignedInUser_OpeningAnUnknownAddress_GetsTheAppsPageNotFoundPage_WithStatus404(string address)
     {
         using var browser = NewBrowser();
@@ -68,11 +70,11 @@ public sealed class NotFoundPageFlowTests : IClassFixture<MsfRespondPageFlowTest
 
         page.QuerySelector("h1")!.TextContent.Should().Be(NotFoundHeading, html);
         page.Title.Should().Contain(NotFoundHeading);
-        page.QuerySelector("a[href='/']")!.TextContent.Trim().Should().Be("Back to home", "the way back into the app");
+        page.QuerySelector(".system-panel a[href='/']")!.TextContent.Trim().Should().Be("Go to Home", "the way back into the app (T335)");
 
         // In the app's own layout, for the user who is signed in: the rerun is authenticated like the request it reran.
         page.QuerySelector(".sidebar").Should().NotBeNull("the page is in the main layout, with the navigation");
-        page.QuerySelector(".top-row.auth")!.TextContent.Should().Contain(email);
+        page.QuerySelector(".account-row .account-link")!.TextContent.Trim().Should().Be("Signed Assessor", $"{email} signed in");
 
         // The app's CSP header and the import map carry one nonce: the rerun kept the request's, or Blazor's scripts would
         // be refused by the page's own policy. (The other CSP header is Blazor's own "frame-ancestors 'self'", which it
@@ -82,27 +84,6 @@ public sealed class NotFoundPageFlowTests : IClassFixture<MsfRespondPageFlowTest
         var nonce = Regex.Match(policy, "'nonce-([^']+)'").Groups[1].Value;
         nonce.Should().NotBeNullOrEmpty();
         page.QuerySelector("script[type=importmap]")!.GetAttribute("nonce").Should().Be(nonce);
-    }
-
-    /// <summary>
-    /// A placeholder the nav still links answers as before, with its own heading and status 200: only a feature the
-    /// placeholder does not stand in for is Page not found (T178). Named in any case, as the route itself is matched.
-    /// </summary>
-    [Theory]
-    [InlineData("/placeholder/recent-activities")]
-    [InlineData("/placeholder/Recent-Activities")]
-    public async Task ASignedInUser_OpeningAPlaceholderTheNavLinks_GetsItsComingSoonPage(string address)
-    {
-        using var browser = NewBrowser();
-        await SignInAsANewAssessorAsync(browser);
-
-        using var response = await LoadPageAsync(browser, address);
-        var html = await response.Content.ReadAsStringAsync();
-        var page = Parse(html);
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK, html);
-        page.QuerySelector("h1")!.TextContent.Should().Be("Recent Activities", html);
-        page.QuerySelector(".state-panel-title")!.TextContent.Should().Be("Coming soon");
     }
 
     /// <summary>

@@ -10,7 +10,7 @@
 @inject IActivityReferenceDataService ReferenceData
 @inject NavigationManager Navigation
 
-<PageTitle>@DocumentTitle</PageTitle>
+<PageTitle>@PageTitleText · Wombat</PageTitle>
 
 <PageHeader Title="@PageTitleText" Subtitle="@PageSubtitle">
   <Actions>
@@ -634,15 +634,15 @@
   /// <summary>The page's own address says whether it is a new type, never a missing editor (the T295 sweep).</summary>
   private bool IsNewRoute => ActivityTypeId is null;
 
+  /// <summary>
+  /// What heads the page and names its tab, in the same words (T190). Until then the tab took the stored name while the
+  /// header said "Edit …", and before T300 a new type's tab was empty once the editor had loaded (Step 1.26).
+  /// </summary>
   private string PageTitleText => IsNewRoute
     ? "New activity type"
     : _editor is null
       ? "Activity type"
       : _editor.CanWrite ? $"Edit {_name}" : _editor.Name;
-
-  private string DocumentTitle => IsNewRoute
-    ? "New activity type"
-    : string.IsNullOrWhiteSpace(_editor?.Name) ? "Activity type" : _editor.Name;
 
   private string PageSubtitle => CanWrite
     ? "Build the form, workflow, and credit definition for this activity type."

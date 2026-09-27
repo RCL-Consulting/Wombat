@@ -49,7 +49,8 @@ reactivates him before A.7 needs him.
 ### Step A.1.1 — Dr Dlamini reads her data rights and sets a preference
 Role: Trainee — Dr Anele Dlamini
 Route: / → /account/data-rights
-Do: Open Data Rights from the nav. Read the page, tick "Opt out of optional processing", and save her preferences.
+Do: Open My data rights, under the rule at the foot of her menu. Read the page, tick "Opt out of optional processing",
+  and save her preferences.
 Expect: The page has three parts: processing preferences, a request form, and "Your requests", which is empty ("No
   requests"). The digest opt-out's help names the three reminders it stops (the weekly coordinator digest, the 14-day
   draft reminder and the 5-day assessment reminder), and says that email about one particular thing is still sent
@@ -88,10 +89,12 @@ Gap: [F-A.1.2a, T319] The confirmation promises a notification that nothing send
 ### Step A.1.3 — Mr Smit approves the export from KGK's queue
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights → /admin/data-rights/{Id:guid}
-Do: Open Data Rights Requests from the nav. Narrow it to type Export and status Submitted, apply the filters, and
+Do: Open Data rights requests from the menu. Narrow it to type Export and status Submitted, apply the filters, and
   review Dr Dlamini's request. Press Approve with no decision note. Then approve it with the note "Identity confirmed;
   export released to the data subject."
-Expect: The queue holds only KGK's requests (T112), and the filters change it only when they are applied.
+Expect: The queue holds only KGK's requests (T112), and the filters change it only when they are applied. On the
+  request's page Data rights requests stays lit, and the trail reads Home › Data rights requests › Data rights
+  request.
   - The row names the requester by the address she signs in with, and its Review action is named for the row (T239).
   - The detail page shows the requester, her user id, when it was submitted, its type, its status and her reason.
   - Approving with no note is refused: "A decision note is required."
@@ -125,7 +128,7 @@ Gap: none
 ### Step A.1.5 — Dr Dlamini downloads her export
 Role: Trainee — Dr Anele Dlamini
 Route: /account/data-rights → /account/data-rights/download/{id:guid}
-Do: Reload Data Rights and download the completed request.
+Do: Reload My data rights and download the completed request.
 Expect: The row reads Completed and offers a Download named for the request.
   - The browser saves `data-export-<date>-<time>.zip`.
   - It holds `data-export.json`: schema version 2, with her profile, every activity she is the subject or author of,
@@ -188,7 +191,7 @@ Gap: none. The Note's stranded Approved rectification is confirmed only from cod
 ### Step A.1.9 — Dr Mahlangu reads the decision
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /account/data-rights
-Do: Reload Data Rights and read her request.
+Do: Reload My data rights and read her request.
 Expect: The request reads Rejected and offers nothing: no Withdraw, no Download. The page shows neither the decision
   note nor who decided, and no email told her of the decision.
 Note: The confirmation at A.1.7 promised a notification (reported at A.1.2).
@@ -269,7 +272,7 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
-  - Committee Reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
+  - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
   - The check-in reads Withdrawn, dated today, with the reason "Withdrawn because the trainee's personal data was erased
     at their request. Nothing more is decided at this review.", and offers no action.
@@ -292,7 +295,7 @@ Gap: none. The withdrawn review still renders the live "Entrustment against Anne
 ### Step A.2.1 — devadmin reads the scheduled jobs
 Role: Administrator — devadmin
 Route: / → /admin/jobs
-Do: Open Scheduled Jobs from the nav and read every row.
+Do: Open Scheduled jobs from the menu and read every row.
 Expect: Each row shows the job's description and its cron schedule (UTC), with its last run, that run's status badge
   and its next run in the server's local time. Each has Disable and Run now, both named for the job (T239). A job that
   has never run reads "—" for its last run and status. Run history is linked from the header. The nine jobs, by key:
@@ -474,10 +477,10 @@ Gap: [F-A.2.10a, T324] "Triggered by" prints a raw user id (ScheduledJobRunsList
 
 ## A.3 — Institutional sign-in (SSO)
 
-### Step A.3.1 — Prof Mbatha opens SSO Mappings with no provider configured
+### Step A.3.1 — Prof Mbatha opens SSO mappings with no provider configured
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/sso/group-mappings
-Do: Open SSO Mappings from the nav.
+Do: Open SSO mappings from the menu.
 Expect: A card says that no SSO providers are configured, and to add them to the `Sso:Providers` section of the
   application settings and restart. No form for adding a mapping is offered. Current mappings is empty ("No group
   mappings"), although its empty state still says to add a mapping above. Nothing on the page can be changed.
@@ -524,11 +527,16 @@ Gap: none
 
 ### Step A.4.1 — Dr Botha reviews and edits her account
 Role: CommitteeMember — Dr Sarah Botha
-Route: / → /account/profile
-Do: Open My Account from her address in the top row. Clear her last name and save. Then put "Botha" back and save.
-Expect: The account summary shows her address, both her roles (CommitteeMember and Assessor) and a Change password
-  link. The email field cannot be edited. The cleared last name is refused, with a required-field message beside it,
-  and nothing is saved. Restored, the page says "Profile saved." and the focus moves to that message (T234).
+Route: / → /account/profile → /account/profile/submit → /account/profile → /account/profile/submit → /account/profile
+Do: Open My account from her name in the top bar. Clear her last name and save. Then type a single space as her last
+  name and save. Then put "Botha" back and save.
+Expect: On My account her name in the top bar is the current page (underlined), and nothing in the menu is lit. The
+  account summary shows her address, both her roles (CommitteeMember and Assessor) and a Change password link. The
+  email field cannot be edited. The cleared last name is stopped by the browser's own required-field check, and nothing
+  is sent. The space is sent and refused: the page reloads with the alert "Enter your first name and your last name.",
+  which takes the focus and which each name field names, the tab's title starts "Error:", the fields show her name as
+  stored, and nothing is saved. Restored, the save reloads the page with "Profile saved.", which takes the focus
+  (T234), and the top bar's account row names her as saved, "Sarah Botha".
 Actual (2026-09-26, T295 replay, wombat_scenario): My Account from her address in the top row: the Account summary reads
   Email botha@kgk.wombat.local, Roles "CommitteeMember, Assessor", and a Change password link; the Email field is
   disabled. Last name cleared and saved: a summary list and a message beside the field, both "The LastName field is
@@ -541,7 +549,8 @@ Gap: [F-A.4.1a, T324] The required-field message names the field by its code nam
 ### Step A.4.2 — Dr Khumalo changes her password, getting it wrong first
 Role: Assessor — Dr Fatima Khumalo
 Route: /account/profile → /account/change-password
-Do: From My Account's Change password, try four times, and record the password (d) sets in `pwd_DO_NOT_COMMIT.txt`:
+Do: Open My account (the name in the top bar), then its Change password. Try four times, and record the password (d)
+  sets in `pwd_DO_NOT_COMMIT.txt`:
   - (a) a wrong current password;
   - (b) the right current password, with a new password and a confirmation that differ;
   - (c) the right current password, with a new one of 8 different lower-case letters;
@@ -553,7 +562,7 @@ Expect: Each refusal reloads the page with empty fields. The tab's title starts 
   - (c) gives one sentence for each rule it breaks: at least 12 characters, a digit, an upper-case letter and a
     symbol. It says nothing of lower-case letters, a rule it keeps.
   - (d) reads "Password updated.", and she stays signed in in this browser.
-Note: Before this step, sign Dr Khumalo in on a second browser and leave it on her Activity Inbox. Five wrong current
+Note: Before this step, sign Dr Khumalo in on a second browser and leave it on her Activity inbox. Five wrong current
   passwords in a row would lock the account for 15 minutes ("Too many incorrect passwords, so the account is locked
   for a few minutes. Please try again later.").
 Actual (2026-09-26, T295 replay, wombat_scenario): A second browser (a separate Playwright context) was signed in as
@@ -575,7 +584,7 @@ Route: /activities/inbox → /account/session-ended → /account/login → /acti
 Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
 Expect: The tab leaves for the sign-in page by a full page load, which says "Your session has ended. Please sign in
   again." (T279). The old password is refused ("Invalid email or password."). The new one brings her back to her
-  Activity Inbox.
+  Activity inbox.
 Actual (2026-09-26, T295 replay, wombat_scenario): The second browser's inbox left 36 s after the change, through
   /account/session-ended to /account/login?error=SessionEnded&returnUrl=%2Factivities%2Finbox: "Your session has ended.
   Please sign in again." The old password: ?error=Refused, "Invalid email or password." The new one brought her back to
@@ -631,8 +640,8 @@ Gap: The Trainee offer and its Remove (F-2.28a) are fixed by T303 (4824d62). [F-
 ### Step A.4.6 — Dr du Plessis signs in with it and chooses his own
 Role: Trainee — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password
-Do: Sign in with the password Prof Mbatha set. Then change it, from My Account, to one of his own. Record it in
-  `pwd_DO_NOT_COMMIT.txt`.
+Do: Sign in with the password Prof Mbatha set. Then change it, from My account (the name in the top bar), to one of
+  his own. Record it in `pwd_DO_NOT_COMMIT.txt`.
 Expect: He lands on his Trainee dashboard, which still says that his programme ended (Step 5.28). The change reads
   "Password updated."
 Actual (2026-09-26, T295 replay, wombat_scenario): Signed in with the password Prof Mbatha set, he lands on / "Viewing
@@ -649,11 +658,13 @@ Gap: none
 Role: Coordinator — Mr Pieter Smit
 Route: /account/logout-confirm → / → /account/logout-confirm → /account/logout → /account/login → /msf/campaigns → /account/login → /msf/campaigns
 Do: Open the sign-out confirmation by its address and press Cancel. Open it again and sign out. Then open MSF
-  Campaigns by its address.
+  campaigns by its address.
 Expect: A "Sign out" page, with no nav, says to use its button to end the session. Cancel returns him to his
-  dashboard, still signed in. Sign out lands on the sign-in page. MSF Campaigns then asks him to sign in, and after
+  dashboard, still signed in. Sign out lands on the sign-in page. MSF campaigns then asks him to sign in, and after
   signing in he is brought back to it. The audit log records a Logout.
-Note: No page links to the confirmation page: the nav's Logout and the top row's Sign out sign out at once.
+Note: Only the error page links to the confirmation page: its account row's Sign out is a link there, since a form
+  drawn on the error page could carry a refused token. Everywhere else the account row's Sign out, in the top bar or
+  the phone menu's foot, is a form that signs out at once.
 Actual (2026-09-26, T295 replay, wombat_scenario): /account/logout-confirm, titled "Sign out", with no nav or top row:
   heading "Sign out", "Use the button below to end the current session.", Cancel and Sign out. Cancel returned him to /
   "Viewing as Coordinator", still signed in. At 390 px, no horizontal scroll. Sign out landed on /account/login.
@@ -671,9 +682,10 @@ Gap: [F-A.4.7a, T317] This confirms the suspect "/account/logout-confirm is link
 ### Step A.5.1 — A registrar opens an administrator's pages
 Role: Trainee — Dr Anele Dlamini
 Route: /admin/users → /access-denied → /admin/jobs → /access-denied
-Do: Type the address of the Users page, then that of Scheduled Jobs.
-Expect: Each time, the "Access denied" page: she does not have permission to view the page, her role does not allow
-  access to the area, and "Back to home" takes her home. Nothing of the page she asked for is shown.
+Do: Type the address of the Users page, then that of Scheduled jobs.
+Expect: Each time, "You cannot open this page": "Your role (Trainee) does not open this page." and "If you need it for
+  your work, ask your institution's Wombat administrator.", with Go to Home, which takes her home. Nothing of the page
+  she asked for is shown or named, and no switch of role is offered (T335, D6).
 Actual (2026-09-26, T295 replay, wombat_scenario): /admin/users went to /access-denied?ReturnUrl=%2Fadmin%2Fusers,
   titled "Access denied": "You do not have permission to view this page." and "Your current role does not allow access
   to this area. Return to the dashboard or sign in with a different account.", with "Back to home" (/), which took her
@@ -683,8 +695,10 @@ Gap: none
 ### Step A.5.2 — Prof Mbatha opens the Administrator's own pages
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions → /access-denied → /admin/jobs → /access-denied
-Do: Type the address of the Institutions list, then that of Scheduled Jobs.
-Expect: Access denied for both. They are the Administrator's alone, and her nav offers neither.
+Do: Type the address of the Institutions list, then that of Scheduled jobs.
+Expect: For both, "You cannot open this page": "Your role (Institutional admin) does not open this page." and "If you
+  need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
+  offers neither, and nothing in it is lit on the refusal.
 Actual (2026-09-26, T295 replay, wombat_scenario): /admin/institutions and /admin/jobs each went to /access-denied
   (ReturnUrl kept) with the Access denied page. Her nav lists 17 links (Home to Decisions Due, among them Users, SSO
   Mappings and Audit Log) and neither Institutions nor Scheduled Jobs.
@@ -694,8 +708,8 @@ Gap: none
 Role: Trainee — Dr Anele Dlamini
 Route: /dashboard/switch/{role} → /
 Do: Open `/dashboard/switch/Administrator`.
-Expect: She is back on her own dashboard, viewing it as a Trainee. A switch to a role she does not hold changes
-  nothing, and no other view is offered to her.
+Expect: She is back on her own dashboard, still acting as a Trainee. A switch to a role she does not hold changes
+  nothing and says nothing (no "You are now acting as" alert), and the sidebar offers her no switch: she holds one role.
 Actual (2026-09-26, T295 replay, wombat_scenario): /dashboard/switch/Administrator redirected to /, "Welcome,
   dlamini@kgk.wombat.local", "Viewing as Trainee", with her Curriculum targets card; no "Switch view" line or other view
   is offered. The endpoint did write wombat_preferred_dashboard_role=Administrator (it checks only that the name is a
@@ -704,14 +718,15 @@ Gap: none
 
 ### Step A.5.4 — Addresses that do not exist
 Role: Trainee — Dr Anele Dlamini
-Route: /not-found → /placeholder/{Feature} → /account/login → /not-found
+Route: /not-found → /not-found → /account/login → /not-found
 Do: Type the following addresses:
   - `/portfolio/cv`;
-  - `/placeholder/reports`;
+  - `/placeholder/recent-activities`, which the Assessor's menu once linked;
   - then, signed out, `/portfolio/cv` again.
-Expect: For each, the "Page not found" page: the page asked for does not exist or has moved, and "Back to home" is
-  offered. The address stays as typed, and the status is 404 (the browser's network panel) (T233).
-  - `/placeholder/reports` is Page not found too, not a "Coming soon" (T178).
+Expect: For each, the "Page not found" page: "There is no page at this address." and "Check the address, or start
+  again from Home.", with Go to Home; the page does not repeat the address (T335). The address stays as typed, and the
+  status is 404 (the browser's network panel) (T233).
+  - `/placeholder/recent-activities` is Page not found too: the placeholder page went with the stubs (T335, flow 01).
   - Signed out, the unknown address first asks her to sign in, then shows Page not found.
 Actual (2026-09-26, T295 replay, wombat_scenario): Signed in, /portfolio/cv and /placeholder/reports each answered 404
   at the typed address with "Page not found": "The page you asked for does not exist or has moved.", "Nothing to show /
@@ -726,8 +741,9 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
   account's id.
-Expect: The institution shows Page not found, not Access denied. The user shows "User unavailable" ("The user could not
-  be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not 403).
+Expect: The institution shows Page not found, not "You cannot open this page". The user shows "User unavailable" ("The
+  user could not be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not
+  403).
 Note: The Demo Institution stands in for another institution only here. Its ids come from
   `SELECT "Id" FROM "Institutions" WHERE "Name" = 'Demo Institution'` and from `"AspNetUsers"`. On a host without the
   dev accounts, play the institution half only.
@@ -767,11 +783,16 @@ Gap: [F-A.5.7a, not a defect: T112 makes an unknown id and another institution's
 Role: Trainee — Dr Anele Dlamini
 Route: /Error
 Do: Type `/Error`.
-Expect: "Something went wrong": an unexpected error interrupted the request. If it keeps happening, she is to contact
-  her administrator, quoting the request ID the page gives. Signed out, `/Error` asks her to sign in first.
-Note: No failure leads here. No exception handler is configured, so an unhandled exception gives the developer page on
-  dev, a bare 500 in production, and the "An unhandled error has occurred" banner inside a page (reported; that path is
-  not played).
+Expect: Typed, no request failed: "Nothing went wrong" and "This is Wombat's error page, opened directly. No request
+  failed, so there is nothing to report.", with Go to Home, no reference and no Try again. Signed out it reads the same,
+  with no sign-in first: the page is open to everyone, and static (T321, T335).
+Note: Outside Development a failed page load is answered here with status 500 (T321): "Something went wrong", "Wombat
+  could not finish this request. Try again. If it keeps happening, send this reference to your institution's Wombat
+  administrator." (signed out: "… to whoever sent you the link, or to your Wombat administrator."), the reference (the
+  request's 32-character trace id, also in the log with the failure) and the time in SAST, then Try again (the failed
+  address) and Go to Home. On dev the developer exception page shows instead, and a failure inside a page shows the
+  error bar ("This page no longer responds; …"); `Hosting/ErrorPageFlowTests` plays the failure (states.md § System
+  pages).
 Actual (2026-09-26, T295 replay, wombat_scenario): Signed out, /Error went to /account/login?ReturnUrl=%2FError; signed
   in there, /Error shows "Something went wrong", "An unexpected error interrupted the current request." and the alert
   "If this keeps happening, please contact your administrator." with no request ID on screen. The prerendered HTML
@@ -781,24 +802,24 @@ Gap: [F-A.5.8a, T321] The request ID is gone by the time the page can be read. E
   her to contact an administrator with nothing to quote. The suspect "No exception handler is configured" cannot be
   observed here: no failure leads to this page, as the Note says.
 
-### Step A.5.9 — Dr Patel's Recent Activities
+### Step A.5.9 — Dr Patel's menu offers nothing unbuilt
 Role: Assessor — Dr Mohammed Patel
-Route: /placeholder/{Feature}
-Do: Open Recent Activities from the nav.
-Expect: A page headed "Recent Activities" says it is not built yet. Its "Coming soon" card says the menu links to it so
-  that the role's navigation is complete. Nothing else is offered.
+Route: /
+Do: Read the menu.
+Expect: Home and Activity inbox, then My data rights. There is no Recent activities: the flow 01 pick dropped it, and
+  the nav links to no page that is not built (DESIGN.md § The NavMenu).
 Actual (2026-09-26, T295 replay, wombat_scenario): Recent Activities, from the nav, is /placeholder/recent-activities,
   titled and headed "Recent Activities": "This page is not built yet." and the card "Coming soon / The menu links here
   so that your role's navigation is complete. The page itself is still to be built." No link or button in the page.
 Gap: none
 
-### Step A.5.10 — Mr Smit's Stalled Activities
+### Step A.5.10 — Mr Smit's stalled requests
 Role: Coordinator — Mr Pieter Smit
-Route: / → /placeholder/{Feature}
-Do: Read the dashboard's "Stalled requests" card, then open Stalled Activities from the nav.
+Route: /
+Do: Read the dashboard's "Stalled requests" card, then look for a stalled-work page in the menu.
 Expect: The card lists Dr du Plessis's portfolio review, still awaiting review since Step 3.30 aged it, and its row
-  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. Stalled
-  Activities is the "Coming soon" stub, headed "Stalled Activities".
+  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. The menu
+  offers no stalled-work page: it is flow 06's, and the nav links to no page that is not built.
 Note: Dr Mahlangu's request from A.2.7 has waited 6 days, under the card's 7, so it is not listed.
 Actual (2026-09-26, T295 replay, wombat_scenario): The Coordinator dashboard's "Stalled requests" card (a warning card)
   lists one row, "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis, 18 Sept" (activity 10, submitted),
@@ -812,30 +833,32 @@ Gap: none. The suspect "the Stalled requests card matches only activities in a s
   is not observable here, since activity 27 is under the 7 days either way; Step 3.30's re-check shows a stalled
   `requested` Mini-CEX listed.
 
-### Step A.5.11 — Dr Botha's Programme Trainees
+### Step A.5.11 — Dr Botha's menu offers no Programme trainees
 Role: CommitteeMember — Dr Sarah Botha
-Route: /placeholder/{Feature}
-Do: Open Programme Trainees from the nav.
-Expect: The "Coming soon" stub, headed "Programme Trainees".
+Route: /
+Do: Read the menu.
+Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Committee reviews and Decision
+  panels, then My data rights. Programme trainees is flow 06's, and not offered before it is built.
 Actual (2026-09-26, T295 replay, wombat_scenario): Programme Trainees from the nav is /placeholder/programme-trainees,
   titled and headed "Programme Trainees", with "This page is not built yet." and the Coming soon card.
 Gap: none
 
-### Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue
+### Step A.5.12 — Dr Mokoena's menu offers no Programme trainees or STAR review queue
 Role: SpecialityAdmin — Dr Refilwe Mokoena
-Route: /placeholder/{Feature} → /placeholder/{Feature}
-Do: Open Programme Trainees, then STAR Review Queue, from the nav.
-Expect: Both are the "Coming soon" stub, each under its own heading.
+Route: /
+Do: Read the menu.
+Expect: Home, Decisions due, Committee reviews and Decision panels, then My data rights. Programme trainees is flow
+  06's and the STAR review queue flow 09's; the menu offers neither before it is built.
 Actual (2026-09-26, T295 replay, wombat_scenario): Programme Trainees (/placeholder/programme-trainees) and STAR Review
   Queue (/placeholder/star-review-queue), both from her nav, are each the Coming soon stub, titled and headed "Programme
   Trainees" and "STAR Review Queue".
 Gap: none
 
-### Step A.5.13 — devadmin's System page
+### Step A.5.13 — devadmin's menu has no System page
 Role: Administrator — devadmin
-Route: /placeholder/{Feature}
-Do: Open System from the nav.
-Expect: The "Coming soon" stub, headed "System".
+Route: /
+Do: Read the menu.
+Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
 Actual (2026-09-26, T295 replay, wombat_scenario): System from the nav is /placeholder/system, titled and headed
   "System", the Coming soon stub.
 Gap: none
@@ -845,7 +868,7 @@ Gap: none
 ### Step A.6.1 — devadmin maintains the institution record
 Role: Administrator — devadmin
 Route: / → /admin/institutions → /admin/institutions/{Id:int}
-Do: Open Institutions from the dashboard's Maintenance card. Read the list, open KGK, set its contact email to
+Do: Open Institutions from the nav. Read the list, open KGK, set its contact email to
   `paediatrics@kgk.wombat.local`, and save.
 Expect: The list holds the Demo Institution and Kgosi Kgari Teaching Hospital. Each row shows its short code, contact
   email, status (Active) and creation time, with an Edit named for it; Create institution heads the page. Saving says
@@ -871,7 +894,7 @@ Role: Administrator — devadmin
 Route: /
 Do: Read the dashboard's System health and Users across institutions cards.
 Expect: Database connection is green. The card's other two lines, Email queue and Last nightly job, are amber whatever
-  their state, and each carries a task id: they are stubs, tied neither to the mail queue nor to Scheduled Jobs
+  their state, and each carries a task id: they are stubs, tied neither to the mail queue nor to Scheduled jobs
   (reported). The users card counts registered accounts.
 Actual (2026-09-26, T295 replay, wombat_scenario): System health lists Database connection with a green dot (status-dot
   ok), and "Email queue (T012)" and "Last nightly job (T024)" each with an amber dot (status-dot warn), although the
@@ -984,8 +1007,8 @@ Gap: none (the Trainee offer was F-2.28a, fixed by T303 (4824d62))
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
-Expect: He lands on his Assessor dashboard. Pending requests reads "1 assessment awaiting review", and Awaiting your
-  review lists Dr du Plessis's Portfolio and Logbook Review, badged Overdue, as his inbox lists it (T297). Dr Dlamini's
+Expect: He lands on his Assessor dashboard. "Waiting for your rating" is badged 1 and lists Dr du Plessis's Portfolio
+  and Logbook Review, badged Overdue, as his inbox lists it (T297, T335). Dr Dlamini's
   assessor list names him again (checked at A.7.1).
 Actual (2026-09-26, T295 replay, wombat_scenario): On the second browser, still on
   ?error=LockedOut&returnUrl=%2Factivities%2Finbox, his own password signed him in and returned him to his Activity
@@ -1028,11 +1051,13 @@ Gap: none
 ## A.7 — Narrow viewports and accessibility
 
 At 390 × 844 px, every page meets the rules of DESIGN.md § Layout grid and § Table system:
-- The nav folds behind the menu toggle.
+- The phone bar shows the brand, "Acting as" and the role (none without a role), and Menu. Menu opens the menu over the
+  page: the role head and its switch, the list with 44px rows, and at its foot the person's name and Sign out. Close
+  folds it, and following a link folds it too.
+- A page under a list shows its trail as one 44px link back to its parent.
 - The page keeps a 16px gutter and never scrolls sideways; a wide table scrolls inside its own container.
 - Cards and dashboard tiles stack in one column, and forms stack their fields.
 - Every button and link is at least 24px tall (T086).
-- The top row's address and Sign out stay reachable.
 
 Each step below names only what is particular to its pages.
 
@@ -1078,7 +1103,7 @@ Gap: [F-A.7.1a, T299] The focus is left on the page body twice. First, after the
 ### Step A.7.2 — Dr Patel completes it on his phone
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
-Do: At 390 px, open Dr Dlamini's Mini-CEX from the Activity Inbox. Rate the supervision at `3b`, write the three
+Do: At 390 px, open Dr Dlamini's Mini-CEX from Activity inbox. Rate the supervision at `3b`, write the three
   feedback fields, and complete it.
 Expect: The inbox lists it with an action named for it. On the activity, her request is read-only to him, and the
   six-rung ladder and the feedback fields fit the width. Complete and Decline are reachable without scrolling
@@ -1107,9 +1132,9 @@ Gap: [F-A.7.2a, T328] The top row's account-address link is 21 px tall on every 
 ### Step A.7.3 — Dr Dlamini on her phone
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
-Do: At 390 px, sign in and open her dashboard, My Progress, My Activities and Data Rights from the folded nav.
-Expect: The dashboard's cards stack. On My Progress, each EPA's figures and trajectory fit the width. The tables of My
-  Activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
+Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
+Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. The tables of My
+  activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
 Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, the sidebar is a top bar whose menu toggle ("Toggle
   navigation menu", the template's checkbox) opens the ten trainee links, each 48 px tall. The nav folds again after
   each navigation. Home: the six cards stack in one column with a 16 px gutter; Curriculum targets reads "1 / 10
@@ -1128,11 +1153,13 @@ Gap: [F-A.7.3a, T328] On the dashboard's Recent activities card (and Dr Patel's 
 ### Step A.7.4 — Dr Molefe's record on her phone
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: / → /portfolio/progress
-Do: At 390 px, sign in, read Home, and open My Progress from the folded nav.
-Expect: Home says that she completed her programme and points her to My progress, as at Step 5.21 (T252). My Progress
-  shows her read-only record of past periods (T252), its cards fitting the width.
-Note: The code shows an account with no role the "No role assigned" card instead, which tells her an administrator can
-  give her one (`Home.razor`; reported).
+Do: At 390 px, sign in, read Home, and open My progress from the menu.
+Expect: Home says that she completed her programme and points her to My progress, as at Step 5.21 (T252). The phone
+  bar shows no "Acting as", since she holds no role, and the menu holds Home, My progress and My data rights, then her
+  name and Sign out at its foot. My progress shows her read-only record of past periods (T252), its cards fitting the
+  width.
+Note: The code shows one card, "Your training record", pointing to My progress (T335), but does not say that or when she
+  completed her programme (T311).
 Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, she signs in to Home. Her nav holds Home, My Account, Data
   Rights, My Progress and Logout. Home shows a single card: "No role assigned / Your account holds no role at the
   moment, so there is nothing to show you here. An administrator can give you one." It neither says she completed her
@@ -1149,9 +1176,9 @@ Gap: [F-A.7.4a, T311] The reviewer's suspect is confirmed. Home shows a former t
 ### Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
-Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions Due and the data-rights queue.
+Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
 Expect: The campaign page keeps its gutter (T226), and its invitee table (counts by respondent group: the page never
-  lists an address) scrolls within its card. Decisions Due's summary scrolls sideways, and a keyboard can scroll it, as
+  lists an address) scrolls within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as
   a labelled, focusable region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home's three cards stack at the 16 px gutter. His folded
   nav holds Data Rights Requests, MSF Campaigns, Committee Reviews, Decisions Due and Stalled Activities. MSF Campaigns:
@@ -1178,7 +1205,7 @@ Gap: runbook corrected: the Expect called the campaign page's table an "address 
 ### Step A.7.6 — Dr Zulu on her phone
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: At 390 px, open Committee Reviews and Dr Molefe's final review.
+Do: At 390 px, open Committee reviews and Dr Molefe's final review.
 Expect: The review's cards stack. The evidence tables scroll inside their containers, and each EPA's trajectory chart
   fits the width (T166).
 Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home ("Viewing as CommitteeMember") shows two stacked
@@ -1196,10 +1223,11 @@ Gap: [F-A.7.6a, T323] The trajectory charts fit the width only by scaling down. 
 ### Step A.7.7 — Dr Mokoena on her phone
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
-Do: At 390 px, open her dashboard, Decision Panels, Decisions Due and, by its address, Entrustment decisions.
+Do: At 390 px, open her dashboard, Decision panels, Decisions due and, by its address, Entrustment decisions.
 Expect: The dashboard's coverage cards stack. The panels list and the decisions list scroll inside their containers
   (T226).
-Note: No nav item leads to Entrustment decisions for her role; only the InstitutionalAdmin dashboard links to it.
+Note: No menu item leads to Entrustment decisions for her role; only the InstitutionalAdmin dashboard links to it. On
+  it nothing is lit, and the trail reads Home › Entrustment decisions.
 Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home ("Viewing as SpecialityAdmin") stacks its three
   cards: Pending reviews 1, Trainees in programme "2 active / 3 inactive" (consistent with the profiles), and Curriculum
   coverage for Semester 2, 2026, whose 16 items (KGK-001 and PAED-001 to 015) stack one per row. Each item's "0 of 2
@@ -1217,11 +1245,10 @@ Gap: none
 
 ### Step A.7.8 — Dr Sithole on his phone
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
-Route: / → /committee/reviews → /committee/decisions-due → /placeholder/{Feature} → /placeholder/{Feature}
-Do: At 390 px, open his dashboard, Committee Reviews and Decisions Due, then Programme Trainees and STAR Review Queue
-  from the folded nav.
-Expect: As for Dr Mokoena, scoped to his sub-speciality. His nav offers the same two "Coming soon" stubs as hers
-  (A.5.12), and each fits the width.
+Route: / → /committee/reviews → /committee/decisions-due
+Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
+Expect: As for Dr Mokoena, scoped to his sub-speciality. The folded bar reads "Acting as" over "Sub-speciality admin",
+  in two lines: the bar grows, and the role is never cut. His menu reads as hers (A.5.12), each row 44px.
 Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home ("Viewing as SubSpecialityAdmin") matches Dr
   Mokoena's: three stacked cards (Pending reviews 1, "2 active / 3 inactive", and coverage of Semester 2, 2026), since
   the Paediatrics sub-speciality holds every KGK trainee. Committee Reviews: 8 rows; the table (902 px) scrolls in its
@@ -1295,7 +1322,7 @@ Gap: [F-A.7.10a, T323] At 390 px, the curriculum item editor is not usable witho
 ### Step A.7.11 — devadmin on his phone
 Role: Administrator — devadmin
 Route: / → /admin/jobs → /admin/jobs/runs → /admin/institutions
-Do: At 390 px, open Scheduled Jobs, Run history and Institutions.
+Do: At 390 px, open Scheduled jobs, Run history and Institutions.
 Expect: The jobs table scrolls inside its container, with each Run now and toggle reachable. The run-history filters
   stack.
 Actual (2026-09-26, T295 replay, wombat_scenario): At 390 px, Home's three cards stack. Scheduled Jobs: 9 rows; the
@@ -1358,27 +1385,26 @@ Gap: [F-A.7.13a, T280] A control is effectively unnamed: the "Sampling concentra
 
 ### Step A.7.14 — Prof Mbatha's pages, checked for contrast
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /account/login → / → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
+Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
   - the sign-in card;
-  - the nav on its gradient;
+  - the nav on its gradient, and its current item (white on the .32 fill);
   - muted text on the page background;
-  - the status badges on a committee review opened from Committee Reviews (Dr Molefe's review 7; the list itself shows
+  - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
     each state as plain text);
-  - a success alert (save My Account unchanged: "Profile saved.") and a danger alert (Change password with a
-    confirmation that differs, which checks no password and changes nothing);
+  - a success alert (save My account, the name in the top bar, unchanged: "Profile saved.") and a danger alert (Change
+    password with a confirmation that differs, which checks no password and changes nothing);
   - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
     not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
   - the focus ring on white and on the page background;
   - an input's border.
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus
   ring. Muted text passes on the page background since T086.
-Note: Calculated from app.css's tokens, several pairs fall short (reported):
-  - the semantic colours as text on their own tints (the Completed, Accepted and Declined badges, and the success,
-    warning and danger alerts);
-  - white on the danger and success buttons;
-  - the focus ring on the page background;
-  - input borders.
+Note: Since 2026-09-27 (T335, flow 01; T322), `Design/ContrastTests` computes every pair from app.css's tokens, and
+  DESIGN.md § Design tokens lists them. The badges and the alerts are body text on their tints (11.2:1 or more), with
+  the state's colour on the edge. White (`--on-fill`) is 5.95:1 on the danger button and 5.88:1 on the success one. The
+  focus ring is 4.61:1 on the page background, and an input's border 3.60:1 there. The nav's controls take
+  `--nav-focus-ring`, 14.07:1 on the gradient's start.
 Actual (2026-09-26, T295 replay, wombat_scenario): At 1280 px, WCAG ratios were computed from the rendered colours in
   the page (no axe in this browser). Passing: the sign-in card's text is #333 on white, 12.63:1; its muted line is
   5.09:1; its link #0b5cab is 6.70:1; white on primary (#2d6cdf) is 4.86:1. The nav's white is 14.07 and 16.19:1 on the
@@ -1482,5 +1508,5 @@ appendix could not play:
 - adding and deleting SSO group mappings, and T288's cross-institution mapping, which need a configured provider;
 - self-service password reset;
 - applying and completing a rectification, which no page offers;
-- the error page as a failure reaches it;
-- the five "Coming soon" features.
+- the error page as a failure reaches it, which it does outside Development only;
+- the five features the nav once linked as "Coming soon".

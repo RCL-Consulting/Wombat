@@ -1,76 +1,61 @@
+@using System.Security.Claims
+@using MediatR
 @using Wombat.Application.Features.Dashboards.InstitutionalAdmin
 @attribute [Authorize(Roles = "InstitutionalAdmin")]
 @rendermode InteractiveServer
-@inject IScopedSender Sender
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits RoleDashboard<InstitutionalAdminDashboardSummaryDto>
 
-<StatePanel IsLoading="_loading" LoadError="@_error">
-  @if (_vm is not null)
-  {
-    <div class="dashboard-grid">
-      <DashboardCard Title="Users" Icon="users" Emphasis="true">
-        @if (_vm.UsersByRole.Count == 0)
-        {
-          <p class="muted">No users found.</p>
-        }
-        else
-        {
-          <ul class="list-unstyled">
-            @foreach (var item in _vm.UsersByRole)
-            {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                <span>@item.Role</span>
-                <span class="dashboard-metric-value" style="font-size:1rem">@item.Count</span>
-              </li>
-            }
-          </ul>
-        }
-      </DashboardCard>
+<DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
+  <DashboardCard Title="Users" Icon="users" Emphasis="true" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      if (summary.UsersByRole.Count == 0)
+      {
+        <p class="muted">No users found.</p>
+      }
+      else
+      {
+        <ul class="list-unstyled">
+          @foreach (var item in summary.UsersByRole)
+          {
+            <li class="list-row">
+              <span>@item.Role</span>
+              <span class="dashboard-metric-value" style="font-size:1rem">@item.Count</span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </DashboardCard>
 
-      <DashboardCard Title="Specialities &amp; sub-specialities" Icon="book">
-        <div class="dashboard-metric">
-          <span class="dashboard-metric-value">@_vm.SpecialityCount</span>
-          <span class="dashboard-metric-label">specialities</span>
-        </div>
-        <div class="dashboard-metric" style="margin-top:var(--space-sm)">
-          <span class="dashboard-metric-value">@_vm.SubSpecialityCount</span>
-          <span class="dashboard-metric-label">sub-specialities</span>
-        </div>
-      </DashboardCard>
+  <DashboardCard Title="Specialities &amp; sub-specialities" Icon="book" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <div class="dashboard-metric">
+        <span class="dashboard-metric-value">@summary.SpecialityCount</span>
+        <span class="dashboard-metric-label">specialities</span>
+      </div>
+      <div class="dashboard-metric" style="margin-top:var(--space-sm)">
+        <span class="dashboard-metric-value">@summary.SubSpecialityCount</span>
+        <span class="dashboard-metric-label">sub-specialities</span>
+      </div>
+    }
+  </DashboardCard>
 
-      @* Not Institutions, whose list admits only an Administrator, and not Specialities, the College's national catalogue
-         (T091): an institution takes part in a speciality by adopting its curriculum (T261). *@
-      <DashboardCard Title="Quick links" Icon="settings">
-        <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">
-          <a href="/admin/users" class="btn btn-outline">Users</a>
-          <a href="/admin/invitations" class="btn btn-outline">Invitations</a>
-          <a href="/admin/adoptions" class="btn btn-outline">Curriculum adoptions</a>
-          <a href="/admin/entrustment-decisions" class="btn btn-outline">Entrustment decisions</a>
-        </div>
-      </DashboardCard>
+  @* Not Institutions, whose list admits only an Administrator, and not Specialities, the College's national catalogue
+     (T091): an institution takes part in a speciality by adopting its curriculum (T261). Inviting a person is Home's
+     header action (T335, flow 01). *@
+  <DashboardCard Title="Quick links" Icon="settings" IsLoading="IsLoading">
+    <div class="actions-cell">
+      <a href="/admin/users" class="btn btn-outline">Users</a>
+      <a href="/admin/invitations" class="btn btn-outline">Invitations</a>
+      <a href="/admin/adoptions" class="btn btn-outline">Curriculum adoptions</a>
+      <a href="/admin/entrustment-decisions" class="btn btn-outline">Entrustment decisions</a>
     </div>
-  }
-</StatePanel>
+  </DashboardCard>
+</DashboardFrame>
 
 @code {
-  private InstitutionalAdminDashboardSummaryDto? _vm;
-  private bool _loading = true;
-  private string? _error;
-
-  protected override async Task OnInitializedAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _vm = await Sender.Send(new GetInstitutionalAdminDashboardSummaryQuery(authState.User));
-    }
-    catch (Exception ex)
-    {
-      _error = ex.Message;
-    }
-    finally
-    {
-      _loading = false;
-    }
-  }
+  protected override IRequest<InstitutionalAdminDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
+    => new GetInstitutionalAdminDashboardSummaryQuery(user);
 }

@@ -56,6 +56,16 @@ public sealed class ActivityListColumnsTests : TestContext
     /// <summary>
     /// The three T108 values, worded as the activity's own history table words them, and never alike.
     /// </summary>
+    // T335, flow 01 (the titles lane's note; D10): the header action and the page it opens use the same words.
+    [Fact]
+    public void MyActivities_OffersLogAnActivity_InTheWordsOfThePageItOpens()
+    {
+        var cut = RenderMine(Row(1, "draft", creditedItemCount: null));
+
+        var action = cut.Find(".header-container .actions-cell a[href='/activities/new']");
+        action.TextContent.Trim().Should().Be("Log an activity");
+    }
+
     [Fact]
     public void MyActivities_ShowsWhatEachCompletionCredited()
     {

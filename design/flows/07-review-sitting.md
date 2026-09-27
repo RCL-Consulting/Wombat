@@ -231,7 +231,7 @@ RUNBOOK STEPS, VERBATIM:
 ### Step 4.14 — Dr Botha checks who sits and who decides
 Role: CommitteeMember — Dr Sarah Botha
 Route: /committee/panels
-Do: Open Decision Panels.
+Do: Open Decision panels.
 Expect:
   - **The list:** `Paed Annual Review Panel` with Scope Speciality, Decides for General panel and Members 4. There is no
     New panel button and no Edit column: she manages no panel (T239, T256).
@@ -241,7 +241,7 @@ Expect:
 ### Step 4.15 — Dr Zulu reads Dr Molefe's review before starting it
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews and Dr Molefe's review. Read every card before starting it.
+Do: Open Committee reviews and Dr Molefe's review. Read every card before starting it.
 Expect:
   - **Start review** is offered to her.
   - **Decision card:** "No decision has been recorded yet."
@@ -405,7 +405,7 @@ Expect: "Decision recorded." The state reads Decided.
 ### Step 4.26 — Prof Mbatha reads the decided review, and is not offered Ratify
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Between the recording and the ratifying, open Dr Molefe's review from Committee Reviews.
+Do: Between the recording and the ratifying, open Dr Molefe's review from Committee reviews.
 Expect: The list reads Decided, Satisfactory Progress, for her review. The review shows the decision with its
   "Present:" line and the three staged decisions under "Fixed when the committee's decision was recorded …". It offers
   no Ratify, no Remove and no Action column. The Review card says "Only the panel's chair, Thandi Zulu, can ratify the
@@ -581,7 +581,7 @@ Expect: The page says "Decision ratified." and the review reads Ratified. Every 
 ### Step A.7.6 — Dr Zulu on her phone
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: At 390 px, open Committee Reviews and Dr Molefe's final review.
+Do: At 390 px, open Committee reviews and Dr Molefe's final review.
 Expect: The review's cards stack. The evidence tables scroll inside their containers, and each EPA's trajectory chart
   fits the width (T166).
 

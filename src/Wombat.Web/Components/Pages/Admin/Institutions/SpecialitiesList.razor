@@ -3,9 +3,10 @@
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>Specialities</PageTitle>
+<PageTitle>Specialities · Wombat</PageTitle>
 
-<PageHeader Title="Specialities" Subtitle="@(_college is null ? "Manage specialities for the selected college." : $"College: {_college.Name} ({_college.ShortCode})")">
+<PageHeader Title="Specialities" Subtitle="@(_college is null ? "Manage specialities for the selected college." : $"College: {_college.Name} ({_college.ShortCode})")"
+            Trail="CollegeTrail" CurrentCrumb="@CollegeCrumb">
   <Actions>
     <a class="btn btn-outline btn-sm" href="/admin/colleges">Back to colleges</a>
     <a class="btn btn-primary btn-sm" href="@($"/admin/colleges/{CollegeId}/specialities/new")">
@@ -52,6 +53,21 @@
   private CollegeDto? _college;
   private IReadOnlyList<SpecialityDto>? _specialities;
   private string? _errorMessage;
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it: which list this page is under.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>
+  /// The College is on the trail (T335, flow 01; R2-Rules § 3). The Administrator came from Colleges, so it is the crumb
+  /// between them and this list (Home › Colleges › the College › Specialities); the College admin's own Specialities
+  /// opens this page, so for him it is the page's own crumb (Home › Specialities › the College).
+  /// </summary>
+  private bool UnderColleges => NavOwners.OwnerFor(typeof(SpecialitiesList), Acting?.Role) == NavItems.Colleges;
+
+  private IReadOnlyList<Crumb>? CollegeTrail
+    => UnderColleges && _college is not null ? [new Crumb(_college.Name, $"/admin/colleges/{CollegeId}")] : null;
+
+  private string? CollegeCrumb => UnderColleges ? null : _college?.Name;
 
   protected override async Task OnParametersSetAsync()
   {

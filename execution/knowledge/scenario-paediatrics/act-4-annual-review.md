@@ -72,7 +72,7 @@ authority.
 ### Step 4.1 — Mr Smit reads the decisions due
 Role: Coordinator — Mr Pieter Smit
 Route: / → /committee/decisions-due
-Do: Open Decisions Due from the nav. Leave Period on `<P>` and Status on "Outstanding: not yet decided". Page through
+Do: Open Decisions due from the menu. Leave Period on `<P>` and Status on "Outstanding: not yet decided". Page through
   the list, then filter Status to "Not scheduled" and EPA to PAED-004.
 Expect: The opening sentence names `<P>`, "5 trainees you oversee at Kgosi Kgari Teaching Hospital", and what Missed
   means. By EPA lists all 15 EPAs, each Due 5.
@@ -96,7 +96,7 @@ Gap: [F-4.1a, T280] The pager's page-size select has no accessible name: "Per pa
 ### Step 4.2 — Prof Mbatha reads the same period
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /committee/decisions-due
-Do: Open Decisions Due from the nav. Look for an Institution filter, then switch Period to the previous semester and
+Do: Open Decisions due from the menu. Look for an Institution filter, then switch Period to the previous semester and
   back to `<P>`.
 Expect: No Institution filter is offered, because she reads her own institution. The same five registrars and 75 rows
   as Step 4.1. For the previous semester, `<Y> S1`, the statuses follow that period's windows:
@@ -115,11 +115,12 @@ Gap: none
 ### Step 4.3 — Dr Mokoena reads what is due in her speciality
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/decisions-due
-Do: Sign in, read her nav, and open Decisions Due.
+Do: Sign in, read her menu, and open Decisions due.
 Expect:
-  - **Nav:** Programme Trainees, Decision Panels, Committee Reviews, STAR Review Queue and Decisions Due.
+  - **Menu:** Home, Decisions due, Committee reviews and Decision panels, then My data rights. Decisions due is lit on
+    its page.
   - **The page:** the same five registrars, all in Paediatrics, and 75 rows, each Schedule link offered.
-  - **Not in her nav or on her dashboard:** Entrustment Decisions.
+  - **Not in her menu or on her dashboard:** Entrustment decisions.
 Actual (2026-09-26, T295 replay, wombat_scenario): Nav: Home, My Account, Data Rights, Programme Trainees, Decision
   Panels, Committee Reviews, STAR Review Queue, Decisions Due, Logout. Dashboard (Viewing as SpecialityAdmin): Pending
   reviews, Trainees in programme 5, Curriculum coverage; no Entrustment Decisions in nav or dashboard. Decisions Due:
@@ -133,9 +134,9 @@ Gap: none
 ### Step 4.4 — Dr Sithole reads what is due in his sub-speciality
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /account/login → / → /committee/decisions-due
-Do: Sign in and open Decisions Due.
+Do: Sign in and open Decisions due.
 Expect: The same five registrars and 75 rows as Step 4.3: all five train in the Paediatrics sub-speciality he
-  administers. His nav reads as Mokoena's.
+  administers. His menu reads as Mokoena's.
 Actual (2026-09-26, T295 replay, wombat_scenario): Nav identical to Mokoena's (Programme Trainees, Decision Panels,
   Committee Reviews, STAR Review Queue, Decisions Due). Decisions Due: "the 5 trainees you oversee at Kgosi Kgari
   Teaching Hospital", "75 of 75 decisions due in 2026 S2 shown.", Schedule on every row.
@@ -143,10 +144,11 @@ Gap: none
 
 ### Step 4.5 — Dr Naidoo is not offered what is due
 Role: CommitteeMember — Dr David Naidoo
-Route: /committee/decisions-due → /access-denied
-Do: Look for Decisions Due in the nav, then type its address.
-Expect: His nav has Decision Panels and Committee Reviews but no Decisions Due. The typed address lands on the
-  access-denied page: the page is for the roles that schedule reviews.
+Route: /dashboard/switch/{role} → / → /committee/decisions-due → /access-denied
+Do: He still acts as Assessor, his choice from Step 3.5: choose Switch to Committee member in the sidebar. Look for
+  Decisions due in the menu, then type its address.
+Expect: His menu has Committee reviews and Decision panels but no Decisions due. The typed address lands on the
+  access-denied page, and nothing in his menu is lit there: the page is for the roles that schedule reviews.
 Actual (2026-09-26, T295 replay, wombat_scenario): Nav: Activity Inbox, Recent Activities, Programme Trainees, Decision
   Panels, Committee Reviews; no Decisions Due. Committee Reviews: "No reviews yet. The reviews of the panels you sit on
   appear here once they are scheduled." Typed /committee/decisions-due → /access-denied?ReturnUrl=… "You do not have
@@ -165,7 +167,7 @@ anyone who also holds Trainee (T216).
 ### Step 4.6 — Mr Smit schedules Dr Molefe's review
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews from the nav and choose Schedule review. Fill in:
+Do: Open Committee reviews from the menu and choose Schedule review. Fill in:
   - Panel: `Paed Annual Review Panel`.
   - Trainee: Dr Molefe.
   - Period: `<P>`, and leave the evidence window as it fills.
@@ -207,7 +209,7 @@ Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Schedule the same kind of review for Dr Dlamini, then for Dr du Plessis: same panel, `<P>`, window as filled,
   Scheduled on `D`, Annual progression review.
-Expect: Each opens as Scheduled with a 15-EPA preview like Step 4.6's. Committee Reviews lists three rows for `<P>`.
+Expect: Each opens as Scheduled with a 15-EPA preview like Step 4.6's. Committee reviews lists three rows for `<P>`.
   Each row reads:
   - Period "`<P>` · `<Y>`-01-01 to `<Y>`-12-31";
   - Type Annual progression;
@@ -240,10 +242,10 @@ Gap: [F-4.8a, T309] The agenda preview gives no sign that the trainee already ho
 ### Step 4.9 — Dr Mokoena schedules Dr Mahlangu's review from what is due
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: On Decisions Due, choose Schedule on Dr Mahlangu's PAED-001 row. Check the form it opens, set Scheduled on `D`, and
+Do: On Decisions due, choose Schedule on Dr Mahlangu's PAED-001 row. Check the form it opens, set Scheduled on `D`, and
   create the review.
 Expect:
-  - **Decisions Due before she schedules:** Molefe's, Dlamini's and du Plessis's rows now read Scheduled, "On the agenda
+  - **Decisions due before she schedules:** Molefe's, Dlamini's and du Plessis's rows now read Scheduled, "On the agenda
     of review #N, which is still open.", each with Open review.
   - **The link opens the scheduling form already filled:** Panel `Paed Annual Review Panel`, Trainee Dr Mahlangu and
     Period `<P>`. The preview shows 15 EPAs. The query string fills only what the form offers her, so the link
@@ -263,8 +265,8 @@ Gap: none
 ### Step 4.10 — Dr Sithole schedules Dr Ndlovu's review from what is due
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: On Decisions Due, choose Schedule on one of Dr Ndlovu's rows. Set Scheduled on `D` and create the review.
-Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Start is not offered. Decisions Due then
+Do: On Decisions due, choose Schedule on one of Dr Ndlovu's rows. Set Scheduled on `D` and create the review.
+Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Start is not offered. Decisions due then
   reads Scheduled on all 75 rows, and By EPA reads Scheduled 5 and To schedule 0 for every EPA.
 Actual (2026-09-26, T295 replay, wombat_scenario): From Ndlovu's PAED-002 Schedule link the form opened filled (Paed
   Annual Review Panel, Sipho Ndlovu, 2026 S2, Scheduled on 2026-09-26, Annual progression); created review #5,
@@ -276,7 +278,7 @@ Gap: none
 ### Step 4.11 — Dr Naidoo lists the panel's reviews
 Role: CommitteeMember — Dr David Naidoo
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews, then open Dr Dlamini's review.
+Do: Open Committee reviews, then open Dr Dlamini's review.
 Expect:
   - **The list:** its subtitle reads "Open existing committee reviews.", and no Schedule review button is offered. It
     lists the five reviews of the panel he sits on, all Scheduled, with Decision Pending.
@@ -289,8 +291,8 @@ Gap: none
 ### Step 4.12 — Prof Mbatha checks the schedule
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/reviews → /committee/decisions-due
-Do: Read Committee Reviews, then Decisions Due.
-Expect: Committee Reviews offers Schedule review and lists all five reviews. Decisions Due reads Scheduled on all 75
+Do: Read Committee reviews, then Decisions due.
+Expect: Committee reviews offers Schedule review and lists all five reviews. Decisions due reads Scheduled on all 75
   rows. Each row's "Open review" opens the review holding it, and no row offers Schedule.
 Actual (2026-09-26, T295 replay, wombat_scenario): Committee Reviews offers Schedule review and lists the five reviews.
   Decisions Due "75 of 75 decisions due in 2026 S2 shown."; all 75 rows Scheduled, each with Open review whose name
@@ -318,7 +320,7 @@ Gap: none
 ### Step 4.14 — Dr Botha checks who sits and who decides
 Role: CommitteeMember — Dr Sarah Botha
 Route: /committee/panels
-Do: Open Decision Panels.
+Do: Open Decision panels.
 Expect:
   - **The list:** `Paed Annual Review Panel` with Scope Speciality, Decides for General panel and Members 4. There is no
     New panel button and no Edit column: she manages no panel (T239, T256).
@@ -334,7 +336,7 @@ Gap: none
 ### Step 4.15 — Dr Zulu reads Dr Molefe's review before starting it
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews and Dr Molefe's review. Read every card before starting it.
+Do: Open Committee reviews and Dr Molefe's review. Read every card before starting it.
 Expect:
   - **Start review** is offered to her.
   - **Decision card:** "No decision has been recorded yet."
@@ -574,7 +576,7 @@ Gap: none
 ### Step 4.26 — Prof Mbatha reads the decided review, and is not offered Ratify
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Between the recording and the ratifying, open Dr Molefe's review from Committee Reviews.
+Do: Between the recording and the ratifying, open Dr Molefe's review from Committee reviews.
 Expect: The list reads Decided, Satisfactory Progress, for her review. The review shows the decision with its
   "Present:" line and the three staged decisions under "Fixed when the committee's decision was recorded …". It offers
   no Ratify, no Remove and no Action column. The Review card says "Only the panel's chair, Thandi Zulu, can ratify the
@@ -731,7 +733,7 @@ Gap: none
 ### Step 4.33 — Mr Smit reads the ratified schedule
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Read Committee Reviews, then open Dr Molefe's review.
+Do: Read Committee reviews, then open Dr Molefe's review.
 Expect: All five read Ratified. The Decision column reads:
   - Satisfactory Progress for Molefe and Dlamini;
   - Satisfactory with Observations for du Plessis;
@@ -818,12 +820,12 @@ Gap: [F-4.36a, T319] The revocation promises "The trainee is notified." and noti
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
 Do: Type the entrustment decisions page's address. Filter Status to Revoked and apply, then to Active and apply.
-  Download the revoked certificate. Then open Decisions Due with "Every status".
+  Download the revoked certificate. Then open Decisions due with "Every status".
 Expect:
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
-  - **Decisions Due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
+  - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
     revoked. Schedule a review to decide it again." It offers Schedule.
   - **By EPA:** PAED-002 reads Decided 0, Deferred 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
@@ -883,7 +885,7 @@ Gap: none
 ### Step 4.40 — Dr Molefe reads her progress against Annexure A
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/progress
-Do: Open My Progress and read "Entrustment against Annexure A".
+Do: Open My progress and read "Entrustment against Annexure A".
 Expect: It says "You are in training year 4 on `D`." It then reads "2 at or above · 1 below · 12 with no decision, of
   15 EPAs". The table shows:
   - PAED-001 and 012 at `5`, each "At or above" the target of `5`, with its exit level Reached;
@@ -899,7 +901,7 @@ Gap: none
 ### Step 4.41 — Dr Molefe reads her review, and not the committee's page
 Role: Trainee — Dr Lerato Molefe
 Route: /committee/my-reviews → /committee/reviews/{ReviewId:int} → /access-denied
-Do: Open My Committee Reviews and view her review. Then type the committee's own address for the same review.
+Do: Open My committee reviews and view her review. Then type the committee's own address for the same review.
 Expect:
   - **The list:** one row, with Period "`<P>` · `<Y>`-01-01 to `<Y>`-12-31", Type Annual progression, State Ratified and
     Decision Satisfactory Progress. Its View is named by the review.
@@ -971,7 +973,7 @@ Gap: none
 ### Step 4.45 — Dr van Rensburg, the external member, is offered the appeal
 Role: CommitteeMember (external) — Dr John van Rensburg
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews, then Dr Mahlangu's review. Read the resolve form, and press Resolve appeal without choosing
+Do: Open Committee reviews, then Dr Mahlangu's review. Read the resolve form, and press Resolve appeal without choosing
   an outcome. Then choose Remitted to see what it asks, and leave without resolving.
 Expect:
   - **The list:** the panel's five reviews.
@@ -1063,7 +1065,7 @@ Gap: none
 ### Step 4.48 — Dr Mahlangu reads the outcome
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /committee/my-reviews
-Do: Open My Committee Reviews and view the review.
+Do: Open My committee reviews and view the review.
 Expect: The row reads State Closed and Decision Satisfactory with Observations. The detail's current decision is the
   replacement, with "Present when this decision was taken: Thandi Zulu (chair), Sarah Botha". No appeal form is
   offered.
@@ -1123,7 +1125,7 @@ Gap: none
 ### Step 4.51 — Dr Ndlovu reads both reviews
 Role: Trainee — Dr Sipho Ndlovu
 Route: /committee/my-reviews
-Do: Open My Committee Reviews.
+Do: Open My committee reviews.
 Expect: Two rows for `<P>`. The annual review reads Ratified, Outcome Deferred. The check-in reads Closed, with Decision
   "No binding decision".
 Actual (2026-09-26, T295 replay, wombat_scenario): Two rows for 2026 S2: the check-in "Annual progression, Closed, No

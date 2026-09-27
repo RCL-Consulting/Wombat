@@ -1,0 +1,22 @@
+@*
+  What a person quotes to whoever looks into a failure (T335, flow 01: R2-Error-*, "Reference block"; T321): a label, the
+  reference in the monospace face, and the time with its zone. A description list, so a screen reader reads each label
+  with its value. The reference wraps anywhere rather than widen the page at 390px.
+*@
+<dl class="reference-block">
+  <dt>@Label</dt>
+  <dd><code>@Reference</code></dd>
+  <dt>Time</dt>
+  <dd>@Time</dd>
+</dl>
+
+@code {
+  /// <summary>What the reference is called on the page.</summary>
+  [Parameter] public string Label { get; set; } = "Reference";
+
+  /// <summary>The reference itself, as the log has it.</summary>
+  [Parameter, EditorRequired] public string Reference { get; set; } = default!;
+
+  /// <summary>When, with its zone: "2026-09-26 15:14 SAST".</summary>
+  [Parameter, EditorRequired] public string Time { get; set; } = default!;
+}

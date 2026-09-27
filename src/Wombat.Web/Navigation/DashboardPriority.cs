@@ -4,11 +4,10 @@ namespace Wombat.Web.Navigation;
 
 public static class DashboardPriority
 {
-    public const string CookieName = "wombat_preferred_dashboard_role";
-
     /// <summary>
-    /// Role priority order, highest first. A user with multiple roles
-    /// sees the dashboard for the first match unless overridden by cookie.
+    /// Role priority order, highest first: the precedence the acting role falls back to (<see cref="ActingRoleResolver" />).
+    /// A person who holds several roles acts as the first they hold, unless they have chosen another they hold. The choice
+    /// is stored with the account (T335, flow 01, D1); until then it was a browser cookie, which outlived sign-out (T317).
     /// </summary>
     public static readonly IReadOnlyList<string> Order =
     [

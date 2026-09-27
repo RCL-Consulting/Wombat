@@ -3,9 +3,11 @@
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>Data rights request</PageTitle>
+<PageTitle>Data rights request · Wombat</PageTitle>
 
-<PageHeader Title="Data rights request" Subtitle="Review and act on this request.">
+@* The trail's last crumb is the request's id once it has loaded, the record's own name (R2-Rules § 3: "Home › Data rights
+   requests › the request (its id is shown here)"); until then the page's title. *@
+<PageHeader Title="Data rights request" Subtitle="Review and act on this request." CurrentCrumb="@_request?.Id.ToString()">
   <Actions>
     <a class="btn btn-outline" href="/admin/data-rights">
       <Icon Name="arrow-left" />

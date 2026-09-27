@@ -198,7 +198,7 @@ RUNBOOK STEPS, VERBATIM:
 ### Step 2.20 — Decision panels before any exist
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels
-Do: Open Decision Panels.
+Do: Open Decision panels.
 Expect: The page reads "No decision panels" / "Create a panel before scheduling reviews." and offers New panel. "Who
   decides each EPA" names `Paediatric EPA Curriculum 11.1` and says against every EPA "No panel at this institution
   covers this programme."
@@ -228,7 +228,7 @@ Expect: The page reloads as the panel's own page. It has a "Decides for" card re
 ### Step 2.23 — Dr Mokoena adds Dr Botha to the panel
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/panels → /committee/panels/{PanelId:int} → /committee/panels
-Do: Sign in, open Decision Panels and Edit the panel. Select Botha under Members as well, then save and go back to the
+Do: Sign in, open Decision panels and Edit the panel. Select Botha under Members as well, then save and go back to the
   panels.
 Expect: The list offers her New panel and an Edit on this panel, a Speciality-scoped panel in her speciality at her
   institution (T194). Decides for is read-only: "General panel", with "Only an institutional administrator can change
@@ -246,7 +246,7 @@ Expect: One row: Paed Annual Review Panel, Speciality, General panel, 4 members,
 ### Step 2.25 — Dr Sithole looks at what he may create
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /account/login → / → /committee/panels → /committee/panels/new
-Do: Sign in, open Decision Panels, press New panel and read the form. He leaves without saving.
+Do: Sign in, open Decision panels, press New panel and read the form. He leaves without saving.
 Expect: The list offers him New panel and an Edit on the panel. The form's Scope offers Speciality only, because a
   sub-speciality administrator manages the Speciality-scoped panels of his sub-speciality's speciality (T194, T245).
   Speciality offers Paediatrics. There is no Decides for field. Nothing is created.
@@ -254,19 +254,22 @@ Expect: The list offers him New panel and an Edit on the panel. The form's Scope
 ### Step 2.32 — Mr Smit, Coordinator
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
-Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision Panels address, then the
+Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision panels address, then the
   new-panel address.
 Expect: The dashboard reads "No stalled requests.", "No invitations expiring soon." and a Quick action, "Start an MSF
-  campaign". The nav adds Data Rights Requests, MSF Campaigns, Committee Reviews, Decisions Due and Stalled Activities.
-  It has no Invitations, and the invitations page shows Access denied (T178). It has no Decision Panels either, though
-  that page admits him: it lists the panel with no New panel and no Edit column. The panel form shows Access denied.
+  campaign". The sidebar reads "Acting as Coordinator" over Home, Decisions due, MSF campaigns, Committee reviews and
+  Data rights requests, then My data rights. It has no Invitations, and the invitations page reads "You cannot
+  open this page", "Your role (Coordinator) does not open this page." and "If you need it for your work, ask your
+  institution's Wombat administrator.", with Go to Home (T178, T335). It has no Decision panels either, though that page
+  admits him: it lists the panel with no New panel and no Edit column, and nothing in his menu is lit there. The panel
+  form reads "You cannot open this page" in the same words.
 
 --- from execution/knowledge/scenario-paediatrics/act-4-annual-review.md ---
 
 ### Step 4.1 — Mr Smit reads the decisions due
 Role: Coordinator — Mr Pieter Smit
 Route: / → /committee/decisions-due
-Do: Open Decisions Due from the nav. Leave Period on `<P>` and Status on "Outstanding: not yet decided". Page through
+Do: Open Decisions due from the menu. Leave Period on `<P>` and Status on "Outstanding: not yet decided". Page through
   the list, then filter Status to "Not scheduled" and EPA to PAED-004.
 Expect: The opening sentence names `<P>`, "5 trainees you oversee at Kgosi Kgari Teaching Hospital", and what Missed
   means. By EPA lists all 15 EPAs, each Due 5.
@@ -282,7 +285,7 @@ Expect: The opening sentence names `<P>`, "5 trainees you oversee at Kgosi Kgari
 ### Step 4.2 — Prof Mbatha reads the same period
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /committee/decisions-due
-Do: Open Decisions Due from the nav. Look for an Institution filter, then switch Period to the previous semester and
+Do: Open Decisions due from the menu. Look for an Institution filter, then switch Period to the previous semester and
   back to `<P>`.
 Expect: No Institution filter is offered, because she reads her own institution. The same five registrars and 75 rows
   as Step 4.1. For the previous semester, `<Y> S1`, the statuses follow that period's windows:
@@ -295,30 +298,32 @@ Expect: No Institution filter is offered, because she reads her own institution.
 ### Step 4.3 — Dr Mokoena reads what is due in her speciality
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/decisions-due
-Do: Sign in, read her nav, and open Decisions Due.
+Do: Sign in, read her menu, and open Decisions due.
 Expect:
-  - **Nav:** Programme Trainees, Decision Panels, Committee Reviews, STAR Review Queue and Decisions Due.
+  - **Menu:** Home, Decisions due, Committee reviews and Decision panels, then My data rights. Decisions due is lit on
+    its page.
   - **The page:** the same five registrars, all in Paediatrics, and 75 rows, each Schedule link offered.
-  - **Not in her nav or on her dashboard:** Entrustment Decisions.
+  - **Not in her menu or on her dashboard:** Entrustment decisions.
 
 ### Step 4.4 — Dr Sithole reads what is due in his sub-speciality
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /account/login → / → /committee/decisions-due
-Do: Sign in and open Decisions Due.
+Do: Sign in and open Decisions due.
 Expect: The same five registrars and 75 rows as Step 4.3: all five train in the Paediatrics sub-speciality he
-  administers. His nav reads as Mokoena's.
+  administers. His menu reads as Mokoena's.
 
 ### Step 4.5 — Dr Naidoo is not offered what is due
 Role: CommitteeMember — Dr David Naidoo
-Route: /committee/decisions-due → /access-denied
-Do: Look for Decisions Due in the nav, then type its address.
-Expect: His nav has Decision Panels and Committee Reviews but no Decisions Due. The typed address lands on the
-  access-denied page: the page is for the roles that schedule reviews.
+Route: /dashboard/switch/{role} → / → /committee/decisions-due → /access-denied
+Do: He still acts as Assessor, his choice from Step 3.5: choose Switch to Committee member in the sidebar. Look for
+  Decisions due in the menu, then type its address.
+Expect: His menu has Committee reviews and Decision panels but no Decisions due. The typed address lands on the
+  access-denied page, and nothing in his menu is lit there: the page is for the roles that schedule reviews.
 
 ### Step 4.6 — Mr Smit schedules Dr Molefe's review
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews from the nav and choose Schedule review. Fill in:
+Do: Open Committee reviews from the menu and choose Schedule review. Fill in:
   - Panel: `Paed Annual Review Panel`.
   - Trainee: Dr Molefe.
   - Period: `<P>`, and leave the evidence window as it fills.
@@ -352,7 +357,7 @@ Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Schedule the same kind of review for Dr Dlamini, then for Dr du Plessis: same panel, `<P>`, window as filled,
   Scheduled on `D`, Annual progression review.
-Expect: Each opens as Scheduled with a 15-EPA preview like Step 4.6's. Committee Reviews lists three rows for `<P>`.
+Expect: Each opens as Scheduled with a 15-EPA preview like Step 4.6's. Committee reviews lists three rows for `<P>`.
   Each row reads:
   - Period "`<P>` · `<Y>`-01-01 to `<Y>`-12-31";
   - Type Annual progression;
@@ -372,10 +377,10 @@ Expect: Refused, and nothing is created. The refusal names the open review: "Rev
 ### Step 4.9 — Dr Mokoena schedules Dr Mahlangu's review from what is due
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: On Decisions Due, choose Schedule on Dr Mahlangu's PAED-001 row. Check the form it opens, set Scheduled on `D`, and
+Do: On Decisions due, choose Schedule on Dr Mahlangu's PAED-001 row. Check the form it opens, set Scheduled on `D`, and
   create the review.
 Expect:
-  - **Decisions Due before she schedules:** Molefe's, Dlamini's and du Plessis's rows now read Scheduled, "On the agenda
+  - **Decisions due before she schedules:** Molefe's, Dlamini's and du Plessis's rows now read Scheduled, "On the agenda
     of review #N, which is still open.", each with Open review.
   - **The link opens the scheduling form already filled:** Panel `Paed Annual Review Panel`, Trainee Dr Mahlangu and
     Period `<P>`. The preview shows 15 EPAs. The query string fills only what the form offers her, so the link
@@ -387,14 +392,14 @@ Expect:
 ### Step 4.10 — Dr Sithole schedules Dr Ndlovu's review from what is due
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: On Decisions Due, choose Schedule on one of Dr Ndlovu's rows. Set Scheduled on `D` and create the review.
-Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Start is not offered. Decisions Due then
+Do: On Decisions due, choose Schedule on one of Dr Ndlovu's rows. Set Scheduled on `D` and create the review.
+Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Start is not offered. Decisions due then
   reads Scheduled on all 75 rows, and By EPA reads Scheduled 5 and To schedule 0 for every EPA.
 
 ### Step 4.11 — Dr Naidoo lists the panel's reviews
 Role: CommitteeMember — Dr David Naidoo
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews, then open Dr Dlamini's review.
+Do: Open Committee reviews, then open Dr Dlamini's review.
 Expect:
   - **The list:** its subtitle reads "Open existing committee reviews.", and no Schedule review button is offered. It
     lists the five reviews of the panel he sits on, all Scheduled, with Decision Pending.
@@ -403,8 +408,8 @@ Expect:
 ### Step 4.12 — Prof Mbatha checks the schedule
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/reviews → /committee/decisions-due
-Do: Read Committee Reviews, then Decisions Due.
-Expect: Committee Reviews offers Schedule review and lists all five reviews. Decisions Due reads Scheduled on all 75
+Do: Read Committee reviews, then Decisions due.
+Expect: Committee reviews offers Schedule review and lists all five reviews. Decisions due reads Scheduled on all 75
   rows. Each row's "Open review" opens the review holding it, and no row offers Schedule.
 
 ### Step 4.13 — The panel cannot change what it decides while its reviews are open
@@ -418,7 +423,7 @@ Expect: Refused, and the panel stays a General panel. The refusal names the firs
 ### Step 4.33 — Mr Smit reads the ratified schedule
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Read Committee Reviews, then open Dr Molefe's review.
+Do: Read Committee reviews, then open Dr Molefe's review.
 Expect: All five read Ratified. The Decision column reads:
   - Satisfactory Progress for Molefe and Dlamini;
   - Satisfactory with Observations for du Plessis;
@@ -446,12 +451,12 @@ Expect:
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
 Do: Type the entrustment decisions page's address. Filter Status to Revoked and apply, then to Active and apply.
-  Download the revoked certificate. Then open Decisions Due with "Every status".
+  Download the revoked certificate. Then open Decisions due with "Every status".
 Expect:
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
-  - **Decisions Due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
+  - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
     revoked. Schedule a review to decide it again." It offers Schedule.
   - **By EPA:** PAED-002 reads Decided 0, Deferred 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
@@ -472,7 +477,7 @@ Expect:
 ### Step 5.1 — Mr Smit reads what Dr Molefe's committee still has to decide
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/decisions-due
-Do: Open Decisions Due for the period holding `D`, set the status filter to every status, and read Dr Molefe's rows.
+Do: Open Decisions due for the period holding `D`, set the status filter to every status, and read Dr Molefe's rows.
 Expect: There is one row for each EPA due for her in the period, and each row gives its status in words:
   - an EPA that an Act 4 STAR decided reads Decided, and names the STAR and the review that issued it;
   - an EPA that Act 4 deferred reads Deferred, and says that a later sitting plans it again;
@@ -519,18 +524,17 @@ Expect: The review opens with Mode "Formative (interim check-in, no binding deci
 ### Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
-Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions Due and the data-rights queue.
+Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
 Expect: The campaign page keeps its gutter (T226), and its invitee table (counts by respondent group: the page never
-  lists an address) scrolls within its card. Decisions Due's summary scrolls sideways, and a keyboard can scroll it, as
+  lists an address) scrolls within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as
   a labelled, focusable region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 
 ### Step A.7.8 — Dr Sithole on his phone
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
-Route: / → /committee/reviews → /committee/decisions-due → /placeholder/{Feature} → /placeholder/{Feature}
-Do: At 390 px, open his dashboard, Committee Reviews and Decisions Due, then Programme Trainees and STAR Review Queue
-  from the folded nav.
-Expect: As for Dr Mokoena, scoped to his sub-speciality. His nav offers the same two "Coming soon" stubs as hers
-  (A.5.12), and each fits the width.
+Route: / → /committee/reviews → /committee/decisions-due
+Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
+Expect: As for Dr Mokoena, scoped to his sub-speciality. The folded bar reads "Acting as" over "Sub-speciality admin",
+  in two lines: the bar grows, and the role is never cut. His menu reads as hers (A.5.12), each row 44px.
 ```
 
 ### 2.2 After you pick, paste this

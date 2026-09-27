@@ -113,6 +113,7 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
             var readDb = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var account = await readDb.Users.AsNoTracking().SingleAsync(user => user.Id == arranged.UserId);
             account.Email.Should().BeNull();
+            account.ActingRole.Should().BeNull("it names a role the person held, and every role is removed (T335)");
             (await readDb.UserRoles.AnyAsync(role => role.UserId == arranged.UserId)).Should().BeFalse();
             (await readDb.UserLogins.AnyAsync(login => login.UserId == arranged.UserId)).Should().BeFalse();
             var review = await readDb.CommitteeReviews.AsNoTracking().SingleAsync(entity => entity.Id == arranged.ReviewId);
@@ -174,6 +175,7 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
             account.PasswordHash.Should().NotBeNull("the account keeps its password");
             account.InstitutionId.Should().Be(arranged.InstitutionId);
             account.LockoutEnd.Should().BeNull("the account is not deactivated");
+            account.ActingRole.Should().Be("CommitteeMember", "the account keeps its acting role");
 
             (await readDb.UserRoles.CountAsync(role => role.UserId == arranged.UserId)).Should().Be(1, "the role is kept");
             (await readDb.UserLogins.SingleAsync(login => login.UserId == arranged.UserId)).ProviderKey
@@ -236,7 +238,8 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
             Email = Email,
             FirstName = "Priya",
             LastName = "Naidoo",
-            InstitutionId = institution.Id
+            InstitutionId = institution.Id,
+            ActingRole = "CommitteeMember"
         };
         (await users.CreateAsync(chair, "Correct-Horse-Battery-9!")).Succeeded.Should().BeTrue();
         (await users.AddToRoleAsync(chair, "CommitteeMember")).Succeeded.Should().BeTrue();

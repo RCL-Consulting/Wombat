@@ -146,8 +146,8 @@ Route: /account/register → / → /account/logout → /account/login
 Do: Open the link and enter first name Pieter, last name Smit and a password that meets the rules. Confirm it and
   register. Read the landing page, then sign out.
 Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with the email filled in and not editable.
-  The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home: "Welcome,
-  smit@kgk.wombat.local", "Viewing as Coordinator". Signing out returns him to the sign-in page.
+  The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home, headed
+  "Home" with "Coordinator · Semester N, YYYY" under it. Signing out returns him to the sign-in page.
 Note: Record every password chosen in this act in `pwd_DO_NOT_COMMIT.txt` only (README § Passwords).
 Actual (2026-09-26, T295 replay, wombat_scenario): "Registering smit@kgk.wombat.local as Coordinator.", the email
   filled and disabled. The address bar still held `?token=…` after load and until Register. Registering landed on Home:
@@ -164,7 +164,7 @@ Do: Register with a 10-character password that mixes upper case, lower case, a d
   12-character password with a different confirmation. Then use a 12-character password confirmed correctly. Sign out.
 Expect: The first attempt returns to the form with "Passwords must be at least 12 characters." The first field takes the
   focus and no account is created (T285). The second returns with "The password confirmation does not match." The
-  third registers him and lands on "Viewing as Assessor".
+  third registers him and lands on Home, "Assessor · Semester N, YYYY".
 Actual (2026-09-26, T295 replay, wombat_scenario): 10 characters: back with `&error=PasswordTooShort`, "Passwords must be
   at least 12 characters.", First name focused, no account (SQL count 0). Mismatch: "The password confirmation does not
   match.". Each refusal also emptied First and Last name. The third landed on "Viewing as Assessor"; signed out.
@@ -325,10 +325,10 @@ Role: Anonymous — Dr Molefe, Dr Dlamini, Dr Mahlangu and Dr Ndlovu
 Route: /account/register → / → /account/logout
 Do: Each registers from their own link. Molefe, Dlamini and Ndlovu sign out. Dr Mahlangu stays signed in with Home open
   in her tab, which Step 2.31 uses. Dr du Plessis cannot register: he says no email reached him.
-Expect: Each page reads "Registering <address> as Trainee." Each registrar lands on "Viewing as PendingTrainee", because
-  a Trainee invitation registers as PendingTrainee until admission. Home shows one card, "Awaiting admission": "You are
-  registered and waiting to be admitted to a curriculum by your programme administrator." It has a "Review your account
-  →" link.
+Expect: Each page reads "Registering <address> as Trainee." Each registrar lands on Home, "Pending trainee · Semester N,
+  YYYY", because a Trainee invitation registers as PendingTrainee until admission. Home shows one card, "Awaiting
+  admission": "You are registered and waiting to be admitted to a curriculum by your programme administrator." It has a
+  "Review your account →" link, and the header offers no action.
 Actual (2026-09-26, T295 replay, wombat_scenario): Each page read "Registering <address> as Trainee."; each landed on
   "Viewing as PendingTrainee" with the one "Awaiting admission" card, its sentence as quoted and "Review your account →"
   (to /account/profile). Molefe, Dlamini and Ndlovu signed out; Mahlangu stays signed in, on Home, in her own browser
@@ -338,14 +338,15 @@ Gap: none
 ### Step 2.19 — What a registrar sees before admission
 Role: PendingTrainee — Dr Nomsa Mahlangu
 Route: / → /account/profile → /activities/mine → /activities/new → /portfolio/progress → /access-denied → /
-Do: Read the nav. Follow Review your account, then open My Activities and Activities, and file nothing. Type the My
-  Progress address.
-Expect: The nav reads Home, My Account, Data Rights, Activities, My Activities and Logout. It has no MSF Reports, My
-  Committee Reviews, My Progress or Export Portfolio, because those pages do not admit a pending trainee (T141). My
-  account lists her role as PendingTrainee. My Activities reads "No activities yet". Activities opens the type picker
+Do: Read the menu. Follow Review your account, then open My activities and Log an activity, and file nothing. Type the
+  My progress address.
+Expect: The sidebar reads "Acting as Pending trainee" over Home, Log an activity and My activities, then My data rights
+  under the rule. It has no MSF reports, My committee reviews, My progress or Export portfolio, because those pages do
+  not admit a pending trainee (T141). My account lists her role as PendingTrainee. My activities reads "No activities
+  yet". Log an activity opens the type picker
   with the eleven instruments of Step 2.42: her invitation's Paediatrics scope selects them, and with no curriculum yet
-  no ladder narrows them. My Progress shows Access denied ("You do not have permission to view this page.") with Back
-  to home.
+  no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee) does not open this
+  page.") with Go to Home (T335).
 Actual (2026-09-26, T295 replay, wombat_scenario): Nav: Home, My Account, Data Rights, Activities, My Activities,
   Logout. My account: Roles PendingTrainee, email disabled. My Activities: "No activities yet". Activities opened the
   picker with the eleven instruments of Step 2.42 (no MSF, Learner Feedback or Demo type). The typed My Progress address
@@ -359,7 +360,7 @@ While the registrars' links age (Step 2.26 needs an hour), Mbatha forms the pane
 ### Step 2.20 — Decision panels before any exist
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels
-Do: Open Decision Panels.
+Do: Open Decision panels.
 Expect: The page reads "No decision panels" / "Create a panel before scheduling reviews." and offers New panel. "Who
   decides each EPA" names `Paediatric EPA Curriculum 11.1` and says against every EPA "No panel at this institution
   covers this programme."
@@ -404,7 +405,7 @@ Gap: [F-2.22a, T260] A panel's own page never shows its name (nor scope and spec
 ### Step 2.23 — Dr Mokoena adds Dr Botha to the panel
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/panels → /committee/panels/{PanelId:int} → /committee/panels
-Do: Sign in, open Decision Panels and Edit the panel. Select Botha under Members as well, then save and go back to the
+Do: Sign in, open Decision panels and Edit the panel. Select Botha under Members as well, then save and go back to the
   panels.
 Expect: The list offers her New panel and an Edit on this panel, a Speciality-scoped panel in her speciality at her
   institution (T194). Decides for is read-only: "General panel", with "Only an institutional administrator can change
@@ -431,7 +432,7 @@ Gap: none
 ### Step 2.25 — Dr Sithole looks at what he may create
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /account/login → / → /committee/panels → /committee/panels/new
-Do: Sign in, open Decision Panels, press New panel and read the form. He leaves without saving.
+Do: Sign in, open Decision panels, press New panel and read the form. He leaves without saving.
 Expect: The list offers him New panel and an Edit on the panel. The form's Scope offers Speciality only, because a
   sub-speciality administrator manages the Speciality-scoped panels of his sub-speciality's speciality (T194, T245).
   Speciality offers Paediatrics. There is no Decides for field. Nothing is created.
@@ -470,8 +471,8 @@ Role: Anonymous — Dr Pieter du Plessis
 Route: /account/register → / → /account/logout
 Do: Open the first link, then the resent one. Register from the resent link and sign out.
 Expect: The first link shows no form, only "This invitation is invalid.": the resend replaced the link's hash, so the old
-  token matches no invitation. The resent link registers him and lands on "Viewing as PendingTrainee" with the Awaiting
-  admission card.
+  token matches no invitation. The resent link registers him and lands on Home, "Pending trainee · Semester N, YYYY",
+  with the Awaiting admission card.
 Actual (2026-09-26, T295 replay, wombat_scenario): In the story he registered from his one link (nothing was resent).
   On the scratch copy, as Step 2.26's stand-in: the replaced link showed "Complete registration / This invitation is
   invalid." with no form; the resent link read "Registering lateregistrar@kgk.wombat.local as Trainee.", registered
@@ -554,7 +555,7 @@ Route: / → /account/session-ended → /account/login → /
 Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
 Expect: Within a minute of her admission the tab moves to the sign-in page, which reads "Your session has ended. Please
   sign in again." Admission changes her role, and a role change ends open sessions (T279). Signed in again, she sees
-  "Viewing as Trainee" and the trainee dashboard of Step 2.39.
+  "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 Actual (2026-09-26, T295 replay, wombat_scenario): 35 s after her admission (09:53:45 UTC) her Home tab, untouched,
   moved to /account/login?error=SessionEnded&returnUrl=%2F: "Your session has ended. Please sign in again." Signed in
   again: "Viewing as Trainee", Curriculum targets "Semester 2, 2026 · July to November", 0 / 10 and 0 / 5, PAED-001 to
@@ -566,12 +567,15 @@ Gap: none
 ### Step 2.32 — Mr Smit, Coordinator
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
-Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision Panels address, then the
+Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision panels address, then the
   new-panel address.
 Expect: The dashboard reads "No stalled requests.", "No invitations expiring soon." and a Quick action, "Start an MSF
-  campaign". The nav adds Data Rights Requests, MSF Campaigns, Committee Reviews, Decisions Due and Stalled Activities.
-  It has no Invitations, and the invitations page shows Access denied (T178). It has no Decision Panels either, though
-  that page admits him: it lists the panel with no New panel and no Edit column. The panel form shows Access denied.
+  campaign". The sidebar reads "Acting as Coordinator" over Home, Decisions due, MSF campaigns, Committee reviews and
+  Data rights requests, then My data rights. It has no Invitations, and the invitations page reads "You cannot
+  open this page", "Your role (Coordinator) does not open this page." and "If you need it for your work, ask your
+  institution's Wombat administrator.", with Go to Home (T178, T335). It has no Decision panels either, though that page
+  admits him: it lists the panel with no New panel and no Edit column, and nothing in his menu is lit there. The panel
+  form reads "You cannot open this page" in the same words.
 Actual (2026-09-26, T295 replay, wombat_scenario): the three cards as expected. Nav adds exactly the five named, no
   Invitations or Decision Panels. Invitations and the panel form go to /access-denied; /committee/panels lists the
   panel (Speciality, General panel, 4) and the Who-decides card, with no New panel, no Edit column and no link.
@@ -581,11 +585,12 @@ Gap: none
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
-Expect: The page reads "Viewing as CommitteeMember" and "You also act as Assessor. Switch view: Assessor". Targets this
-  period names the current semester and its months. It lists the five registrars, each at "semester 0/10 · yearly 0/5",
-  and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists PAED-001 to PAED-015,
-  each "0 of 5 met" (T130's count, never a percentage). The nav reads Activity Inbox, Recent Activities, Programme
-  Trainees, Decision Panels and Committee Reviews, each once (T178).
+Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The sidebar reads "Acting as Committee
+  member", with "Switch to Assessor" under it: she holds both, and the precedence opens her sessions as a Committee
+  member. Targets this period names the current semester and its months. It lists the five registrars, each at "semester
+  0/10 · yearly 0/5", and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
+  PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
+  never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
 Actual (2026-09-26, T295 replay, wombat_scenario): as expected: the switch line; "Semester 2, 2026 · July to November";
   five registrars at "semester 0/10 · yearly 0/5" (order Dlamini, Molefe, Ndlovu, Mahlangu, du Plessis), no exempt line;
   PAED-001 to 015 each "0 of 5 met". Nav: Home, My Account, Data Rights, then the five named once each, Logout.
@@ -594,13 +599,19 @@ Gap: [F-2.33a, T298] With every trainee level, the Targets card lists them by us
 
 ### Step 2.34 — Dr Zulu switches between her dashboards
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
-Route: / → /dashboard/switch/{role} → / → /account/logout → /account/login → / → /dashboard/switch/{role} → /
-Do: Choose Switch view: Assessor. Sign out and in again. Then type `/dashboard/switch/Administrator`.
-Expect: The page reads "Viewing as Assessor" and "You also act as CommitteeMember. Switch view: CommitteeMember". The
-  Assessor dashboard reads 0 "assessments awaiting review" with Review inbox, "Nothing is awaiting your review." (T297),
-  "No decisions yet." and "Open my inbox →". The nav is unchanged. After signing in again she lands on the Assessor view,
-  because the choice is remembered. The Administrator address brings her back to "Viewing as CommitteeMember": a role she
-  does not hold is never shown.
+Route: / → /dashboard/switch/{role} → / → /account/logout → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
+Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and in again. Then type
+  `/dashboard/switch/Administrator`. Last, choose Switch to Committee member in the sidebar.
+Expect: Under the header an info alert reads "You are now acting as Assessor." and takes the focus; on Home it offers no
+  Switch back. The sidebar reads "Acting as Assessor", with "Switch to Committee member" under it, and the menu changes
+  to the Assessor's: Home and Activity inbox, then My data rights. Home's subtitle reads "Assessor · Semester N, YYYY".
+  The Assessor dashboard has two cards: "Waiting for your rating", badged 0, which reads "Nothing is waiting for your
+  rating." with "Open inbox →" (T297, T335), and Recent decisions, "No decisions yet.". The reload shows no alert: it is
+  said once. After signing in again she lands acting as Assessor, with no alert, because the choice is stored with her
+  account, not in the browser (T317). The Administrator address writes nothing and says nothing: she is still acting as
+  Assessor, since a role she does not hold is never shown or stored. Switch to Committee member brings back the
+  Committee member's sidebar and menu, "Committee member · Semester N, YYYY" under Home's heading, and the alert "You are
+  now acting as Committee member.", the role Step 3.33 starts from.
 Actual (2026-09-26, T295 replay, wombat_scenario): "Viewing as Assessor", "You also act as CommitteeMember. Switch view:
   CommitteeMember"; Pending requests 0 "assessments awaiting review" "Review inbox →", the two empty lines, "Open my
   inbox →"; nav unchanged. Nav Logout (POST /account/logout), sign-in lands on the Assessor view; the Administrator
@@ -615,8 +626,8 @@ Gap: [F-2.34a, T317] The remembered view is a 30-day browser cookie (`wombat_pre
 ### Step 2.35 — Dr Naidoo and Dr Botha
 Role: CommitteeMember + Assessor — Dr David Naidoo and Dr Sarah Botha
 Route: /account/login → / → /committee/panels
-Do: Each signs in, reads the dashboard and opens Decision Panels.
-Expect: Each sees what Zulu saw in Step 2.33. Decision Panels lists the panel they sit on, with no New panel and no
+Do: Each signs in, reads the dashboard and opens Decision panels.
+Expect: Each sees what Zulu saw in Step 2.33. Decision panels lists the panel they sit on, with no New panel and no
   Edit.
 Actual (2026-09-26, T295 replay, wombat_scenario): each: "Viewing as CommitteeMember" with the Assessor switch line,
   the same five registrars at 0/10 · 0/5 and PAED-001 to 015 at "0 of 5 met", Zulu's nav. Decision Panels lists Paed
@@ -627,8 +638,8 @@ Gap: none
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
 Route: /account/login → /
 Do: Each signs in and reads the dashboard and nav.
-Expect: Each sees "Viewing as Assessor" with no Switch view line and the empty Assessor dashboard of Step 2.34. The nav
-  adds only Activity Inbox and Recent Activities.
+Expect: Each sees "Assessor · Semester N, YYYY" on Home, and the empty Assessor dashboard of Step 2.34. The sidebar
+  reads "Acting as Assessor" with no switch, over Home and Activity inbox, then My data rights.
 Actual (2026-09-26, T295 replay, wombat_scenario): each: "Viewing as Assessor", no switch line, Pending requests 0,
   "No accepted assessments pending action.", "No decisions yet.", "Open my inbox →". Nav: Home, My Account, Data
   Rights, Activity Inbox, Recent Activities, Logout.
@@ -642,12 +653,13 @@ Gap: [F-2.36a, T328] The "Awaiting your review" card, new with T297, always carr
 ### Step 2.37 — Dr van Rensburg, external committee member
 Role: CommitteeMember — Dr John van Rensburg
 Route: /account/login → / → /committee/panels
-Do: Sign in, read the dashboard and open Decision Panels.
-Expect: He sees "Viewing as CommitteeMember" with no Switch view line. Targets this period names the current semester
-  and reads "No trainees have targets this period.", and Targets met by EPA reads "No curriculum targets for these
-  trainees.": the card lists the trainees of the member's own sub-specialities at his institution, and he holds none.
-  The nav reads Programme Trainees, Decision Panels and Committee Reviews. Decision Panels lists the panel he sits on as
-  external member, with no New panel and no Edit.
+Do: Sign in, read the dashboard and open Decision panels.
+Expect: He sees "Committee member · Semester N, YYYY" on Home, and no switch: he holds one role. Targets this period
+  names the current semester and reads "No trainees have targets this period.", and Targets met by EPA reads "No
+  curriculum targets for these trainees.": the card lists the trainees of the member's own sub-specialities at his
+  institution, and he holds none.
+  The sidebar reads "Acting as Committee member" with no switch, over Home, Committee reviews and Decision panels, then
+  My data rights. Decision panels lists the panel he sits on as external member, with no New panel and no Edit.
 Note: Zulu, Naidoo and Botha hold the Paediatrics sub-speciality only through their assessor profiles (Step 2.14), and a
   CommitteeMember invitation may carry none (Step 2.3). So a committee member with no assessor profile sees no trainee
   here, although he sits on the panel and may read every KGK trainee's record (T113). Reported as a suspected defect.
@@ -661,10 +673,11 @@ Gap: [F-2.37a, T290] Confirmed: the panel's external member, who may read every 
 Role: SpecialityAdmin and SubSpecialityAdmin — Dr Refilwe Mokoena and Dr Kabelo Sithole
 Route: /
 Do: Each opens Home, now that the registrars are admitted.
-Expect: Each sees "Viewing as SpecialityAdmin" or "Viewing as SubSpecialityAdmin". Pending reviews reads 0 "activities
-  awaiting review", with no link (T297). Trainees in programme reads 5 active / 0 inactive. Curriculum coverage names the current
-  semester and lists PAED-001 to PAED-015 at "0 of 5 met". The nav reads Programme Trainees, Decision Panels, Committee
-  Reviews, STAR Review Queue and Decisions Due.
+Expect: Each sees "Speciality admin · Semester N, YYYY" or "Sub-speciality admin · Semester N, YYYY" on Home. Pending
+  reviews reads 0 "activities awaiting review", with no link (T297). Trainees in programme reads 5 active / 0 inactive.
+  Curriculum coverage names the current semester and lists PAED-001 to PAED-015 at "0 of 5 met". The sidebar reads
+  "Acting as Speciality admin" or "Acting as Sub-speciality admin", over Home, Decisions due, Committee reviews and
+  Decision panels, then My data rights.
 Actual (2026-09-26, T295 replay, wombat_scenario): both as expected: Pending reviews 0 "activities in review" "Review
   queue →"; 5 "active / 0 inactive"; "Curriculum coverage — Semester 2, 2026" over "Semester 2, 2026 · July to
   November", PAED-001 to 015 at "0 of 5 met". Nav: Home, My Account, Data Rights, the five named, Logout.
@@ -676,13 +689,14 @@ Gap: none
 ### Step 2.39 — Dr Molefe, final-year registrar
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → / → /portfolio/progress
-Do: Sign in, read the dashboard and nav, and open My Progress.
+Do: Sign in, read the dashboard and nav, and open My progress.
 Expect: Curriculum targets names the current semester and reads "0 / 10" semester targets met and "0 / 5" yearly targets
   met. The largest shortfalls are PAED-001 to PAED-005, each "0 of 3 this semester", and there is no "started part-way"
   line (D42). The other cards read "No pending items.", "No activities yet.", "No deadlines in the next 14 days.", My
-  authorisations, and Log an activity / Request an assessment. The nav adds Activities, My Activities, MSF Reports, My
-  Committee Reviews, My Progress and Export Portfolio. My Progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs
-  met in <year>" and Training year "4 — it sets the minimum level each encounter is judged against".
+  authorisations; the header offers "Log an activity" (T335). The sidebar reads "Acting as Trainee" over Home, Log an
+  activity, My activities, MSF reports, My committee reviews and Export portfolio, then My progress and My data rights
+  under the rule. My progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs met in <year>" and Training year
+  "4 — it sets the minimum level each encounter is judged against".
 Actual (2026-09-26, T295 replay, wombat_scenario): dashboard and nav exactly as expected, no part-way line. My
   Progress: "0 of 10 EPAs met this semester", "0 of 5 EPAs met in 2026", Training year "4 — it sets…"; each yearly EPA
   adds "Your training year changed on 14 Jan 2026" (365-day blocks across 2024's leap day, as the act's Dates says).
@@ -692,7 +706,7 @@ Gap: [F-2.39a, T306] The trainee dashboard shows no training year; only My Progr
 ### Step 2.40 — The other registrars' training years
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
 Route: /account/login → / → /portfolio/progress
-Do: Each signs in and opens My Progress.
+Do: Each signs in and opens My progress.
 Expect: Each dashboard has Molefe's shape and figures. Training year reads 3 for Dlamini, 2 for du Plessis and 1 for
   Mahlangu and Ndlovu. Their semester and yearly targets apply now: a start on 15 January is on time for both (D42).
 Actual (2026-09-26, T295 replay, wombat_scenario): each dashboard reads "0 / 10", "0 / 5" (2026) and PAED-001 to 005
@@ -702,11 +716,13 @@ Gap: none
 
 ### Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name
 Role: Every role in this act — each person onboarded here, signed in as themselves
-Route: /account/profile
-Do: Each opens My Account. Dr Khumalo changes her first name from "Fatma" to "Fatima" and saves the profile.
+Route: /account/profile → /account/profile/submit → /account/profile
+Do: Each opens My account (the name in the top bar). Dr Khumalo changes her first name from "Fatma" to "Fatima" and
+  saves the profile.
 Expect: The page reads "My account" and "Update your name and review your assigned roles.". The summary shows the email,
   the roles held (both roles for Zulu, Naidoo and Botha; Trainee for the registrars) and a Change password link. The
-  email field is not editable. Khumalo's save reads "Profile saved." (checked on Mbatha's lists in Step 2.44).
+  email field is not editable. Khumalo's save reloads the page with "Profile saved.", which takes the focus, and the
+  top bar's account row now reads "Fatima Khumalo" (the lists are checked on Mbatha's in Step 2.44).
 Actual (2026-09-26, T295 replay, wombat_scenario): all 14 read "My account" and the subtitle; Roles "CommitteeMember,
   Assessor" for Zulu, Naidoo and Botha, "Trainee" for the five, each other its one role; Change password link; Email
   input disabled. Khumalo: Fatma → Fatima, Save profile: "Profile saved.". At 390 px no sideways scroll.
@@ -744,8 +760,9 @@ Gap: none
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/assessors
 Do: Open Home. Then open Users and Assessors.
-Expect: The page reads "Viewing as InstitutionalAdmin". Users reads InstitutionalAdmin 1, SpecialityAdmin 1,
-  SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no PendingTrainee line.
+Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person". Users reads InstitutionalAdmin
+  1, SpecialityAdmin 1, SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no
+  PendingTrainee line.
   Specialities & sub-specialities reads 1 and 1, what KGK has adopted. Quick links reads Users, Invitations, Curriculum
   adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
 Note: The adopted count is T291 item 4's decision, still queued: the query counts the whole national catalogue, which

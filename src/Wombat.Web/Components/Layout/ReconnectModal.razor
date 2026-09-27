@@ -1,31 +1,109 @@
-﻿<script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
+@* The reconnect dialog (T335 flow 01, T330; DESIGN.md § The reconnect dialog and the error bar). blazor.web.js finds it by
+   its id, puts a components-reconnect-* class on it for the state the connection is in, and raises
+   components-reconnect-state-changed. ReconnectModal.razor.css shows the one state element those classes name, and
+   ReconnectModal.razor.js opens and closes the dialog, keeps its role, name and live region in step with the state shown,
+   and runs its buttons. Six states, one shown at a time; the retry's line changes as each attempt starts.
 
-<dialog id="components-reconnect-modal" data-nosnippet>
-    <div class="components-reconnect-container">
-        <div class="components-rejoining-animation" aria-hidden="true">
-            <div></div>
-            <div></div>
+   Its icons are Lucide's, with their paths inlined rather than drawn from Icon.razor's /icons/ files: the dialog shows
+   when the server cannot be reached, so it cannot fetch an icon then. *@
+<script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
+
+<dialog id="components-reconnect-modal" data-nosnippet
+        aria-labelledby="components-reconnect-rejoining-title" aria-describedby="components-reconnect-rejoining-text">
+    @* A new state's sentence, written once as the state changes, never on a tick of the countdown. *@
+    <p class="visually-hidden" aria-live="polite" data-reconnect-live></p>
+
+    <div class="reconnect-state components-reconnect-first-attempt-visible" data-reconnect-state="rejoining"
+         data-announce="The connection to Wombat dropped. Reconnecting now.">
+        <h2 id="components-reconnect-rejoining-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--progress reconnect-spinner" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">@LoaderCircle</svg>
+            Reconnecting
+        </h2>
+        <p id="components-reconnect-rejoining-text">The connection to Wombat dropped. Reconnecting now.</p>
+        <div class="reconnect-bar" role="progressbar" aria-label="Reconnecting"><span class="reconnect-bar-fill"></span></div>
+    </div>
+
+    @* One state however many attempts it waits through, so its heading keeps the focus and the dialog its name: only the
+       line changes. The script's data-attempt picks it: the count while the runtime waits its turn, and "Trying again
+       now." with the bar once the attempt starts. Both lines are one sentence to a listener. *@
+    <div class="reconnect-state components-reconnect-repeated-attempt-visible" data-reconnect-state="retrying"
+         data-announce="Could not reconnect. Trying again.">
+        <h2 id="components-reconnect-retrying-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--waiting" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">@Clock</svg>
+            Could not reconnect
+        </h2>
+        @* The script writes the runtime's count into the first line, a second at a time. *@
+        <p id="components-reconnect-retrying-text">
+            <span data-reconnect-line="waiting">Trying again in <span data-reconnect-countdown>a few seconds</span>.</span>
+            <span data-reconnect-line="started">Trying again now.</span>
+        </p>
+        <div class="reconnect-bar" data-reconnect-line="started" role="progressbar" aria-label="Trying again"><span class="reconnect-bar-fill"></span></div>
+    </div>
+
+    <div class="reconnect-state components-reconnect-failed-visible" data-reconnect-state="failed" data-role="alertdialog"
+         data-announce="Wombat cannot be reached. Try again when your connection is back. If the page cannot be restored, it reloads, and anything not yet saved on it is lost.">
+        <h2 id="components-reconnect-failed-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--alert" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">@CircleAlert</svg>
+            Connection lost
+        </h2>
+        <p id="components-reconnect-failed-text">Wombat cannot be reached. Try again when your connection is back. If the page cannot be restored, it reloads, and anything not yet saved on it is lost.</p>
+        <div class="reconnect-actions">
+            <button type="button" class="btn btn-primary" data-reconnect-action="retry">
+                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">@RefreshCw</svg>
+                Try again
+            </button>
         </div>
-        <p class="components-reconnect-first-attempt-visible">
-            Rejoining the server...
-        </p>
-        <p class="components-reconnect-repeated-attempt-visible">
-            Rejoin failed... trying again in <span id="components-seconds-to-next-attempt"></span> seconds.
-        </p>
-        <p class="components-reconnect-failed-visible">
-            Failed to rejoin.<br />Please retry or reload the page.
-        </p>
-        <button id="components-reconnect-button" class="components-reconnect-failed-visible">
-            Retry
-        </button>
-        <p class="components-pause-visible">
-            The session has been paused by the server.
-        </p>
-        <p class="components-resume-failed-visible">
-            Failed to resume the session.<br />Please retry or reload the page.
-        </p>
-        <button id="components-resume-button" class="components-pause-visible components-resume-failed-visible">
-            Resume
-        </button>
+    </div>
+
+    <div class="reconnect-state components-pause-visible" data-reconnect-state="paused"
+         data-announce="This page is paused. Resume to carry on.">
+        <h2 id="components-reconnect-paused-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--progress" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">@Pause</svg>
+            Page paused
+        </h2>
+        <p id="components-reconnect-paused-text">This page is paused. Resume to carry on.</p>
+        <div class="reconnect-actions">
+            <button type="button" class="btn btn-primary" data-reconnect-action="resume">Resume</button>
+        </div>
+    </div>
+
+    <div class="reconnect-state components-resume-failed-visible" data-reconnect-state="resume-failed" data-role="alertdialog"
+         data-announce="Wombat cannot be reached. Try again when your connection is back. If the page cannot be restored, it reloads, and anything not yet saved on it is lost.">
+        <h2 id="components-reconnect-resume-failed-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--alert" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">@CircleAlert</svg>
+            Could not resume
+        </h2>
+        <p id="components-reconnect-resume-failed-text">Wombat cannot be reached. Try again when your connection is back. If the page cannot be restored, it reloads, and anything not yet saved on it is lost.</p>
+        <div class="reconnect-actions">
+            <button type="button" class="btn btn-primary" data-reconnect-action="resume">
+                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">@RefreshCw</svg>
+                Try again
+            </button>
+        </div>
+    </div>
+
+    <div class="reconnect-state components-reconnect-rejected-visible" data-reconnect-state="rejected"
+         data-announce="Reloading the page…">
+        <h2 id="components-reconnect-rejected-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--progress reconnect-spinner" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">@LoaderCircle</svg>
+            Reloading
+        </h2>
+        <p id="components-reconnect-rejected-text">Reloading the page…</p>
     </div>
 </dialog>
+
+@code {
+    // Lucide's paths, as its SVG files draw them: loader-circle, clock, circle-alert, pause and refresh-cw.
+    private static readonly RenderFragment LoaderCircle = @<path d="M21 12a9 9 0 1 1-6.219-8.56" />;
+
+    private static readonly RenderFragment Clock = @<text><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></text>;
+
+    private static readonly RenderFragment CircleAlert =
+        @<text><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></text>;
+
+    private static readonly RenderFragment Pause =
+        @<text><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></text>;
+
+    private static readonly RenderFragment RefreshCw =
+        @<text><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></text>;
+}

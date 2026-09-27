@@ -87,7 +87,7 @@ public sealed class MsfReportPageFlowTests : IClassFixture<MsfRespondPageFlowTes
         ownLoad.StatusCode.Should().Be(HttpStatusCode.OK, own);
 
         var page = new HtmlParser().ParseDocument(own);
-        page.QuerySelector(".header-container h1")!.TextContent.Should().Be("My MSF reports");
+        page.QuerySelector(".header-container h1")!.TextContent.Should().Be("MSF reports");
         own.Should().Contain("Selected report")
             .And.Contain(Narrative)
             .And.Contain("Teaching contexts that responded:</strong> 1")

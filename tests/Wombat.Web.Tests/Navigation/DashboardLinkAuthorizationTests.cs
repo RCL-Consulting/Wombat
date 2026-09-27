@@ -6,8 +6,8 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Dashboards.Administrator;
 using Wombat.Application.Features.Dashboards.Assessor;
@@ -21,6 +21,7 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages;
 using Wombat.Web.Components.Pages.Dashboards;
+using Wombat.Web.Navigation;
 using Wombat.Web.Services;
 using static Wombat.Web.Tests.Navigation.PageAccess;
 
@@ -119,7 +120,7 @@ public sealed class DashboardLinkAuthorizationTests
     {
         Components(Path.Combine(DashboardsFolder(), "CommitteeMemberDashboard.razor"))
             .Select(path => Path.GetFileNameWithoutExtension(path))
-            .Should().Contain(["CommitteeMemberDashboard", "StatePanel", "Alert", "DashboardCard", "Icon", "EpaTargetCoverageList"]);
+            .Should().Contain(["CommitteeMemberDashboard", "DashboardFrame", "Alert", "DashboardCard", "Icon", "EpaTargetCoverageList"]);
 
         var traineeLinks = DeclaredLinks(Path.Combine(DashboardsFolder(), "TraineeDashboard.razor")).ToList();
         traineeLinks.Should().Contain(("TraineeDashboard", "/portfolio/progress"));
@@ -170,7 +171,7 @@ public sealed class DashboardLinkAuthorizationTests
 
     // The T261 review: a user who holds no role (an administrator removed the last one, which RemoveRoleFromUser allows)
     // was shown the trainee's dashboard, "Viewing as Trainee", and its links to pages that refuse them. Home says they
-    // hold none, and offers no link.
+    // hold none, names no role under its heading, and offers no link.
     [Fact]
     public void AUserWithNoRole_IsShownNoDashboardAndNoLink()
     {
@@ -178,7 +179,35 @@ public sealed class DashboardLinkAuthorizationTests
 
         home.Dashboards.Should().BeEmpty();
         home.Hrefs.Should().BeEmpty();
-        home.Markup.Should().Contain("No role assigned").And.NotContain("Viewing as");
+        home.Markup.Should().Contain("No role assigned").And.NotContain("page-subtitle");
+    }
+
+    // T335, flow 01: Home shows the acting role's dashboard, as Routes cascades it (resolved by App from the cookie's
+    // claims), and names that role under its heading. It offers no switch: the shell's sidebar does (R2-Landing-Assessor).
+    [Fact]
+    public void Home_ShowsTheCascadedActingRolesDashboard_AndOffersNoSwitchOfItsOwn()
+    {
+        var zulu = ActingRoleResolver.Resolve(WombatRoles.Assessor, [WombatRoles.CommitteeMember, WombatRoles.Assessor]);
+
+        var home = RenderHome(zulu, stored: null, WombatRoles.CommitteeMember, WombatRoles.Assessor);
+
+        home.Dashboards.Should().Equal(typeof(AssessorDashboard));
+        home.Subtitle.Should().StartWith("Assessor · Semester ");
+        home.Hrefs.Should().NotContain(href => href.StartsWith("/dashboard/switch/", StringComparison.Ordinal));
+        home.Markup.Should().NotContain("You also act as");
+    }
+
+    // Where nothing cascades it (a render outside Routes), Home resolves the same way from the principal: the stored
+    // choice while it is held, else the precedence.
+    [Theory]
+    [InlineData(WombatRoles.Assessor, typeof(AssessorDashboard))]
+    [InlineData(WombatRoles.Administrator, typeof(CommitteeMemberDashboard))]
+    [InlineData(null, typeof(CommitteeMemberDashboard))]
+    public void WithoutTheCascade_HomeResolvesFromTheClaims(string? stored, Type dashboard)
+    {
+        var home = RenderHome(cascade: null, stored, WombatRoles.CommitteeMember, WombatRoles.Assessor);
+
+        home.Dashboards.Should().Equal(dashboard);
     }
 
     /// <summary>
@@ -200,22 +229,44 @@ public sealed class DashboardLinkAuthorizationTests
     /// </summary>
     private static (List<Type> Dashboards, List<string> Hrefs, string Markup) RenderHome(params string[] roles)
     {
+        // No choice stored: Home shows the first role held in DashboardPriority, as for a first visit, cascaded as
+        // Routes cascades what App resolved.
+        var home = RenderHome(ActingRoleResolver.Resolve(stored: null, roles), stored: null, roles);
+        return (home.Dashboards, home.Hrefs, home.Markup);
+    }
+
+    /// <summary>
+    /// Home, rendered for a signed-in user holding these roles, whose account stores <paramref name="stored" /> as its
+    /// acting role, with <paramref name="cascade" /> cascaded as Routes cascades it (none, for a render outside Routes).
+    /// </summary>
+    private static (List<Type> Dashboards, List<string> Hrefs, string Markup, string? Subtitle) RenderHome(
+        ActingRole? cascade,
+        string? stored,
+        params string[] roles)
+    {
         using var context = new TestContext();
+        context.Services.AddSingleton(TimeProvider.System);
         var auth = context.AddTestAuthorization();
         auth.SetAuthorized(roles.Length == 0 ? "no.role@wombat.local" : $"{roles[0].ToLowerInvariant()}@wombat.local");
         auth.SetRoles(roles);
-        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "user-1"));
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, "user-1") };
+        if (stored is not null)
+        {
+            claims.Add(new Claim(WombatClaimTypes.ActingRole, stored));
+        }
 
-        // No request, so no preferred-dashboard cookie: Home picks by DashboardPriority, as for a first visit.
-        context.Services.AddSingleton<IHttpContextAccessor>(new HttpContextAccessor());
+        auth.SetClaims(claims.ToArray());
         context.Services.AddSingleton<IScopedSender>(new DashboardSender());
 
-        var cut = context.RenderComponent<Home>();
-        cut.WaitForState(() => cut.FindAll(".dashboard-grid").Count > 0);
+        var cut = cascade is null
+            ? context.RenderComponent<Home>()
+            : context.RenderComponent<Home>(parameters => parameters.AddCascadingValue(cascade));
+        // Drawn with its cards, not its skeleton: the frame draws the grid while the read runs, busy (T335, flow 01).
+        cut.WaitForState(() => cut.FindAll(".dashboard-grid").Count > 0 && cut.FindAll(".dashboard-grid[aria-busy]").Count == 0);
 
         var dashboards = DashboardTypes().Where(type => HasComponent(cut, type)).ToList();
         var hrefs = cut.FindAll("a[href]").Select(a => a.GetAttribute("href")!).ToList();
-        return (dashboards, hrefs, cut.Markup);
+        return (dashboards, hrefs, cut.Markup, cut.FindAll(".page-subtitle").SingleOrDefault()?.TextContent.Trim());
     }
 
     private static List<Type> DashboardTypes()

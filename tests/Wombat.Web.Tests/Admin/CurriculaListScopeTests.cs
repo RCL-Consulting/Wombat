@@ -25,6 +25,7 @@ namespace Wombat.Web.Tests.Admin;
 public sealed class CurriculaListScopeTests : TestContext
 {
     private const string CreatePagePolicy = "AdministratorOrCollegeAdmin";
+    private const string ProgressPagePolicy = "Administrator";
 
     [Fact]
     public void AnInstitution_IsOfferedTheItemsOfEachAdoptedCurriculum_AndNothingToCreateOrEdit()
@@ -49,6 +50,36 @@ public sealed class CurriculaListScopeTests : TestContext
             ("Edit", "/admin/curricula/6"),
             ("Items", "/admin/curricula/6/items"));
     }
+
+    // T335, flow 01 (R2-Shell-Admin, R2-Rules § 3): the Administrator's Home drops its Maintenance card, so Curriculum
+    // progress is reached from Curricula, the item it lights. Offered to those its page's policy admits.
+    [Fact]
+    public void TheAdministrator_IsOfferedCurriculumProgress_InTheHeader()
+    {
+        SignIn(WombatRoles.Administrator, CreatePagePolicy, ProgressPagePolicy);
+        var cut = RenderList([Curriculum(5, canEditCurriculum: true)]);
+
+        Links(cut).Should().Contain(("Curriculum progress", "/admin/curriculum-progress"));
+        cut.Find(".header-container .actions-cell a[href='/admin/curriculum-progress']").ClassList.Should().Contain("btn-outline");
+    }
+
+    [Theory]
+    [InlineData(WombatRoles.CollegeAdmin)]
+    [InlineData(WombatRoles.InstitutionalAdmin)]
+    public void NoOneElse_IsOfferedCurriculumProgress(string role)
+    {
+        SignIn(role, CreatePagePolicy);
+
+        Links(RenderList([Curriculum(5, canEditCurriculum: true)])).Select(link => link.Href).Should().NotContain("/admin/curriculum-progress");
+    }
+
+    [Fact]
+    public void TheCurriculumProgressPage_AdmitsThoseTheListOffersItTo()
+        => typeof(Wombat.Web.Components.Pages.Admin.CurriculumProgress.CurriculumProgressRebuild)
+            .GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), inherit: true)
+            .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
+            .Select(attribute => attribute.Policy)
+            .Should().Equal(ProgressPagePolicy);
 
     [Fact]
     public void AnInstitutionWithNothingAdopted_IsPointedAtAdoption_NotAtCreatingACurriculum()

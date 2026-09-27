@@ -1,14 +1,39 @@
 @page "/not-found"
 @attribute [AllowAnonymous]
 
-<PageTitle>Page not found</PageTitle>
+@*
+  Page not found (T233; T335, flow 01: R2-NotFound-In, R2-NotFound-Out, R2-NotFound-Narrow; the round-2 review, S3 and
+  S4; DESIGN.md § System pages). A browser's 404 is rerun here with its status kept (NotFoundPages), and the router shows
+  it for an address no page claims inside a circuit.
 
-<PageHeader Title="Page not found" Subtitle="The page you asked for does not exist or has moved." />
+  - It echoes no address: a crafted link would put its own words on a Wombat page (T285's class), and the address bar
+    already shows it (S4).
+  - It says nothing about records elsewhere: another institution's record is answered 404 so that it is not known to
+    exist, and a sentence saying so would undo that (S4).
+  - Signed out, the only way here is typing /not-found, since an unknown address sends a visitor to sign in first (S3).
+*@
+<PageTitle>Page not found · Wombat</PageTitle>
 
-<div class="detail-card detail-card--empty">
-  <div class="state-panel-title">Nothing to show</div>
-  <div class="state-panel-copy">Check the address or return to the dashboard.</div>
-  <div class="form-actions">
-    <a class="btn btn-outline" href="/">Back to home</a>
-  </div>
-</div>
+<AuthorizeView Context="notFoundAuth">
+  <Authorized>
+    <PageHeader Title="Page not found" Icon="search" />
+    <div class="system-panel">
+      <p>There is no page at this address.</p>
+      <p class="muted">Check the address, or start again from Home.</p>
+      <div class="actions-cell">
+        <a class="btn btn-primary" href="/"><Icon Name="home" />Go to Home</a>
+      </div>
+    </div>
+  </Authorized>
+  <NotAuthorized>
+    <div class="system-card-page">
+      <div class="system-card">
+        <PageHeader Title="Page not found" Icon="search" />
+        <p>There is no page at this address.</p>
+        <div class="actions-cell">
+          <a class="btn btn-primary" href="/">Go to Home</a>
+        </div>
+      </div>
+    </div>
+  </NotAuthorized>
+</AuthorizeView>

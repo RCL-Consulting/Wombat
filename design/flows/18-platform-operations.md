@@ -247,14 +247,17 @@ A.2.8 ages two rows by SQL, as a stand-in for time passing; nothing about that i
 Role: Administrator — the platform operator (`devadmin@wombat.local`)
 Route: /account/login → /
 Do: Sign in with `devadmin@wombat.local` and the dev password that `DevUserSeeder` gives it.
-Expect: Home reads "Welcome, devadmin@wombat.local" and "Viewing as Administrator". It has no "You also act as" line,
-  since devadmin holds one role. The dashboard has three cards:
+Expect: Home is headed "Home", with "Administrator · Semester N, YYYY" under it, naming the current semester, and its
+  header offers no action. No switch is offered, in the sidebar or on Home, since devadmin holds one role. The dashboard
+  has two cards:
   - System health, which shows the database connection as healthy;
-  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists);
-  - Maintenance, which links to Activity types, Users, Institutions and Curriculum progress.
-  The nav reads Home, My Account, Data Rights, Colleges, EPAs, Curricula, Institutions, Invitations, Users, Activity
-  Types, Entrustment Scales, Scheduled Jobs, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due,
-  Data Rights Requests, System, then Logout (DESIGN.md § The NavMenu).
+  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists).
+  There is no Maintenance card: Curriculum progress is linked from the Curricula page's header (T335).
+  The sidebar reads "Acting as Administrator", with no switch, over his menu, grouped: Home; Platform: Scheduled jobs,
+  Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations;
+  Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision
+  panels; then My data rights under a rule (DESIGN.md § The NavMenu). Home is lit. The top bar names him "Demo
+  Administrator", with Sign out beside it.
 
 [act-1-setup.md]
 ### Step 1.6 — Create Kgosi Kgari Teaching Hospital
@@ -267,8 +270,8 @@ Do: Open Institutions and read the list. Then press Create institution and enter
   Save. Record KGK's id as `{InstitutionId}`.
 Expect: The list holds one row, the `Demo Institution` (`DEMO`), Active, offering Edit only. The create form asks for
   Name, Short code and Contact email, and has no Status field. Save lands on KGK's own record, headed "Edit
-  institution", with the browser tab reading "Edit Institution". There, Active is ticked and Deactivate is offered. Back
-  on the list, KGK is a second row: Active, and created today.
+  institution", with the browser tab reading "Edit institution · Wombat" (T190). There, Active is ticked and
+  Deactivate is offered. Back on the list, KGK is a second row: Active, and created today.
 
 [act-1-setup.md]
 ### Step 1.11 — Both invitations are spent
@@ -294,7 +297,7 @@ Expect: The job's last run updates. The application log holds two stub emails, "
 ### Step 3.55 — Prof Mbatha reads KGK's audit log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit
-Do: Open the Audit Log, which shows the last 24 hours by default. Set From (UTC) to the start of this act's sitting, so
+Do: Open Audit log, which shows the last 24 hours by default. Set From (UTC) to the start of this act's sitting, so
   that no earlier act's rows are counted, and apply. Filter by Result: Failures only. Then clear that and filter by
   Action "Msf".
 Expect:
@@ -320,7 +323,7 @@ Expect: The Event card shows the time to the millisecond, category Command, acti
 ### Step 3.57 — devadmin reads the log across institutions
 Role: Administrator — devadmin@wombat.local
 Route: /admin/audit → /admin/audit/{Id:guid}
-Do: Open the Audit Log, with From (UTC) set to the start of this act's sitting as in Step 3.55. Open one respondent's
+Do: Open Audit log, with From (UTC) set to the start of this act's sitting as in Step 3.55. Open one respondent's
   submission (SubmitMsfResponseCommand), then one of Dr Naidoo's TransitionActivityCommand rows.
 Expect: The log holds every institution's rows and the rows with no institution. Among them are six
   SubmitMsfResponseCommand rows whose actor is "system", and devadmin's own RunScheduledJobNowCommand. The submission's
@@ -346,9 +349,13 @@ Expect:
 [act-6-catalogue.md]
 ### Step 6.38 — devadmin rebuilds curriculum progress
 Role: Administrator — devadmin
-Route: / → /admin/curriculum-progress
-Do: From the dashboard's Maintenance card, open Curriculum progress and read it. Press Rebuild progress, and confirm.
+Route: /admin/curricula → /admin/curriculum-progress
+Do: From Curricula in the menu, open Curriculum progress from the header and read it. Press Rebuild progress, and
+  confirm.
 Expect:
+  - **The way in.** Curricula offers the Administrator an outline "Curriculum progress" in its header, where Home's
+    Maintenance card used to link it (T335, flow 01). On the page Curricula stays lit, and the trail reads Home ›
+    Curricula › Curriculum progress.
   - **The page.** It says that a rebuild credits every completed activity again against today's curriculum, judges only
     whether an EPA was active as of each completion, and runs as one transaction.
   - **The question.** The button asks first: "Rebuild curriculum progress?".
@@ -360,7 +367,7 @@ Expect:
 ### Step A.2.1 — devadmin reads the scheduled jobs
 Role: Administrator — devadmin
 Route: / → /admin/jobs
-Do: Open Scheduled Jobs from the nav and read every row.
+Do: Open Scheduled jobs from the menu and read every row.
 Expect: Each row shows the job's description and its cron schedule (UTC), with its last run, that run's status badge
   and its next run in the server's local time. Each has Disable and Run now, both named for the job (T239). A job that
   has never run reads "—" for its last run and status. Run history is linked from the header. The nine jobs, by key:
@@ -450,21 +457,23 @@ Expect: The runs are listed newest first, each with its key, start, finish, dura
 ### Step A.5.2 — Prof Mbatha opens the Administrator's own pages
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions → /access-denied → /admin/jobs → /access-denied
-Do: Type the address of the Institutions list, then that of Scheduled Jobs.
-Expect: Access denied for both. They are the Administrator's alone, and her nav offers neither.
+Do: Type the address of the Institutions list, then that of Scheduled jobs.
+Expect: For both, "You cannot open this page": "Your role (Institutional admin) does not open this page." and "If you
+  need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
+  offers neither, and nothing in it is lit on the refusal.
 
 [appendix-cross-cutting.md]
 ### Step A.5.13 — devadmin's System page
 Role: Administrator — devadmin
-Route: /placeholder/{Feature}
-Do: Open System from the nav.
-Expect: The "Coming soon" stub, headed "System".
+Route: /
+Do: Read the menu.
+Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
 
 [appendix-cross-cutting.md]
 ### Step A.6.1 — devadmin maintains the institution record
 Role: Administrator — devadmin
 Route: / → /admin/institutions → /admin/institutions/{Id:int}
-Do: Open Institutions from the dashboard's Maintenance card. Read the list, open KGK, set its contact email to
+Do: Open Institutions from the nav. Read the list, open KGK, set its contact email to
   `paediatrics@kgk.wombat.local`, and save.
 Expect: The list holds the Demo Institution and Kgosi Kgari Teaching Hospital. Each row shows its short code, contact
   email, status (Active) and creation time, with an Edit named for it; Create institution heads the page. Saving says
@@ -476,7 +485,7 @@ Role: Administrator — devadmin
 Route: /
 Do: Read the dashboard's System health and Users across institutions cards.
 Expect: Database connection is green. The card's other two lines, Email queue and Last nightly job, are amber whatever
-  their state, and each carries a task id: they are stubs, tied neither to the mail queue nor to Scheduled Jobs
+  their state, and each carries a task id: they are stubs, tied neither to the mail queue nor to Scheduled jobs
   (reported). The users card counts registered accounts.
 
 [appendix-cross-cutting.md]
@@ -500,7 +509,7 @@ Expect: Status 200 with the body "Healthy". The check includes the database (T09
 ### Step A.7.11 — devadmin on his phone
 Role: Administrator — devadmin
 Route: / → /admin/jobs → /admin/jobs/runs → /admin/institutions
-Do: At 390 px, open Scheduled Jobs, Run history and Institutions.
+Do: At 390 px, open Scheduled jobs, Run history and Institutions.
 Expect: The jobs table scrolls inside its container, with each Run now and toggle reachable. The run-history filters
   stack.
 ````

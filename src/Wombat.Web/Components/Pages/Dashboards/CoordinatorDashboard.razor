@@ -1,83 +1,67 @@
+@using System.Security.Claims
+@using MediatR
 @using Wombat.Application.Features.Dashboards.Coordinator
 @attribute [Authorize(Roles = "Coordinator")]
 @rendermode InteractiveServer
-@inject IScopedSender Sender
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits RoleDashboard<CoordinatorDashboardSummaryDto>
 
-<StatePanel IsLoading="_loading" LoadError="@_error">
-  @if (_vm is not null)
-  {
-    <div class="dashboard-grid">
-      @* Activities awaiting a reviewer that nobody has moved for the stall days, read from each activity's pinned workflow
-         (T297), so a request the assessor nudge writes about is on this card once it has waited this long. *@
-      <DashboardCard Title="Stalled requests" Icon="alert-triangle" Warning="@(_vm.StalledRequests.Count > 0)">
-        @if (_vm.StalledRequests.Count == 0)
-        {
-          <p class="muted">No stalled requests.</p>
-        }
-        else
-        {
-          <ul class="list-unstyled">
-            @foreach (var item in _vm.StalledRequests)
-            {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                @* Each row opens its activity (T297), which the read rule that chose the row lets the Coordinator read (T101).
-                   The link's name starts with its visible label and names the trainee, as the assessor's rows do (T250). *@
-                <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
-                <span class="muted">@item.LastMovedOn.ToString("d MMM")</span>
-              </li>
-            }
-          </ul>
-        }
-      </DashboardCard>
+<DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
+  @* Activities awaiting a reviewer that nobody has moved for the stall days, read from each activity's pinned workflow
+     (T297), so a request the assessor nudge writes about is on this card once it has waited this long. *@
+  <DashboardCard Title="Stalled requests" Icon="alert-triangle" IsLoading="IsLoading" Warning="@(Summary?.StalledRequests.Count > 0)">
+    @if (Summary is { } summary)
+    {
+      if (summary.StalledRequests.Count == 0)
+      {
+        <p class="muted">No stalled requests.</p>
+      }
+      else
+      {
+        <ul class="list-unstyled">
+          @foreach (var item in summary.StalledRequests)
+          {
+            <li class="list-row">
+              @* Each row opens its activity (T297), which the read rule that chose the row lets the Coordinator read (T101).
+                 The link's name starts with its visible label and names the trainee, as the assessor's rows do (T250). *@
+              <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
+              <span class="muted">@item.LastMovedOn.ToString("d MMM")</span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </DashboardCard>
 
-      <DashboardCard Title="Invitations nearing expiry" Icon="calendar">
-        @if (_vm.ExpiringInvitations.Count == 0)
-        {
-          <p class="muted">No invitations expiring soon.</p>
-        }
-        else
-        {
-          <ul class="list-unstyled">
-            @foreach (var item in _vm.ExpiringInvitations)
-            {
-              <li style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
-                <span>@item.Email (@item.TargetRole)</span>
-                <span class="muted">expires @item.ExpiresOn.ToString("d MMM")</span>
-              </li>
-            }
-          </ul>
-        }
-      </DashboardCard>
+  <DashboardCard Title="Invitations nearing expiry" Icon="calendar" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      if (summary.ExpiringInvitations.Count == 0)
+      {
+        <p class="muted">No invitations expiring soon.</p>
+      }
+      else
+      {
+        <ul class="list-unstyled">
+          @foreach (var item in summary.ExpiringInvitations)
+          {
+            <li class="list-row">
+              <span>@item.Email (@item.TargetRole)</span>
+              <span class="muted">expires @item.ExpiresOn.ToString("d MMM")</span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </DashboardCard>
 
-      @* Not "Issue invitation": the invitations page admits only an Administrator or an InstitutionalAdmin, as the nav
-         says (T178). An MSF campaign is the Coordinator's own to start (T261). *@
-      <DashboardCard Title="Quick action" Icon="plus">
-        <a href="/msf/campaigns/new" class="btn btn-primary">Start an MSF campaign</a>
-      </DashboardCard>
-    </div>
-  }
-</StatePanel>
+  @* Not "Issue invitation": the invitations page admits only an Administrator or an InstitutionalAdmin, as the nav
+     says (T178). An MSF campaign is the Coordinator's own to start (T261). *@
+  <DashboardCard Title="Quick action" Icon="plus" IsLoading="IsLoading">
+    <a href="/msf/campaigns/new" class="btn btn-primary">Start an MSF campaign</a>
+  </DashboardCard>
+</DashboardFrame>
 
 @code {
-  private CoordinatorDashboardSummaryDto? _vm;
-  private bool _loading = true;
-  private string? _error;
-
-  protected override async Task OnInitializedAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _vm = await Sender.Send(new GetCoordinatorDashboardSummaryQuery(authState.User));
-    }
-    catch (Exception ex)
-    {
-      _error = ex.Message;
-    }
-    finally
-    {
-      _loading = false;
-    }
-  }
+  protected override IRequest<CoordinatorDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
+    => new GetCoordinatorDashboardSummaryQuery(user);
 }

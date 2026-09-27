@@ -640,7 +640,7 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
         var card = CurriculumTargetsCard(cut);
 
         card.GetAttribute("href").Should().Be("/portfolio/progress");
-        Text(card.QuerySelector("h3")!).Should().Be("Curriculum targets");
+        Text(card.QuerySelector("h2")!).Should().Be("Curriculum targets");
         Text(card).Should().Contain("Semester 2, 2026 · July to November");
         Metrics(card).Should().Equal(
             ("1 / 2", "semester targets met"),
@@ -1324,9 +1324,9 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
             .ToList();
 
     // The other dashboard cards nest a footer <a> inside the card's own <a>, which the HTML parser answers by
-    // cloning the outer anchor, so some ".detail-card" elements carry no heading.
+    // cloning the outer anchor, so some ".detail-card" elements carry no heading. A card's title is an h2 (T335).
     private static IElement CurriculumTargetsCard(IRenderedFragment cut)
-        => cut.FindAll(".detail-card").Single(card => card.QuerySelector("h3") is { } heading && Text(heading) == "Curriculum targets");
+        => cut.FindAll(".detail-card").Single(card => card.QuerySelector("h2") is { } heading && Text(heading) == "Curriculum targets");
 
     private static IReadOnlyList<(string Value, string Label)> Metrics(IElement card)
         => card.QuerySelectorAll(".dashboard-metric")

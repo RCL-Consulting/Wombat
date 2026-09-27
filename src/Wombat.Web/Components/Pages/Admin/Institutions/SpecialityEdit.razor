@@ -5,7 +5,7 @@
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>@(IsNew ? "Create Speciality" : "Edit Speciality")</PageTitle>
+<PageTitle>@(IsNew ? "Create speciality" : "Edit speciality") · Wombat</PageTitle>
 
 <PageHeader Title="@(IsNew ? "Create speciality" : "Edit speciality")" Subtitle="@(_college is null ? "Scope this speciality under the current college." : $"College: {_college.Name} ({_college.ShortCode})")">
   <Actions>

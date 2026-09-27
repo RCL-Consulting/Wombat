@@ -1,25 +1,100 @@
 @page "/Error"
-@using System.Diagnostics
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@inject TimeProvider Clock
 
-<PageTitle>Error</PageTitle>
+@*
+  The error page (T321; T335, flow 01: R2-Error-In, R2-Error-Out, R2-Error-Narrow, R2-Error-Typed; the round-2 review, S5
+  and S6; DESIGN.md § System pages). The exception handler reruns a failed page load here (ErrorPages), answered 500.
 
-<PageHeader Title="Something went wrong" Subtitle="An unexpected error interrupted the current request." />
+  - Static and anonymous: it renders once, inside the failed request, so the reference it shows is that request's, and a
+    visitor who has not signed in sees it rather than a sign-in form. Until T321 its circuit re-rendered it with no
+    request, and the request id it had shown was gone.
+  - It reads no database itself, and neither does its shell. The rerun that draws it checks the sign-in cookie again,
+    which reads the account once the cookie is over a minute old (T279); with the database down that check throws, and
+    the rerun draws this page signed out rather than fail with it (ErrorPages.GuardTheSignInCheck), leaving the cookie
+    as it was. So an outage cannot take it down with the page that failed.
+  - Signed out, its buttons carry no icons, as the signed-out Page not found and Access denied (R2-Error-Out).
+  - Typed as an address, no request failed: it says so, with no reference and no Try again.
+*@
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<Alert Kind="danger">
-  If this keeps happening, please contact your administrator.
-  @if (ShowRequestId)
-  {
-    <span> Request ID: <code>@RequestId</code></span>
-  }
-</Alert>
+@if (SignedIn)
+{
+  <PageHeader Title="@Heading" Icon="@HeadingIcon" IconTone="@HeadingTone" />
+  <div class="system-panel">
+    @Body
+  </div>
+}
+else
+{
+  <div class="system-card-page">
+    <div class="system-card">
+      <PageHeader Title="@Heading" Icon="@HeadingIcon" IconTone="@HeadingTone" />
+      @Body
+    </div>
+  </div>
+}
 
 @code {
-  [CascadingParameter]
-  private HttpContext? HttpContext { get; set; }
+  private string? _reference;
+  private string? _time;
+  private string? _retry;
+  private bool _failed;
 
-  private string? RequestId { get; set; }
-  private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+  /// <summary>The request, as static rendering cascades it: the page is rendered in the request that failed.</summary>
+  [CascadingParameter] private HttpContext? HttpContext { get; set; }
 
-  protected override void OnInitialized() =>
-    RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+  private bool SignedIn => Wombat.Web.Navigation.SystemPageText.IsSignedIn(HttpContext?.User);
+
+  /// <summary>The page's heading and its tab's stem: a failure, or, typed as an address, none.</summary>
+  private string Heading => _failed ? "Something went wrong" : "Nothing went wrong";
+
+  private string HeadingIcon => _failed ? "triangle-alert" : "info";
+
+  private string HeadingTone => _failed ? "warning" : "info";
+
+  protected override void OnInitialized()
+  {
+    if (HttpContext?.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>() is null)
+    {
+      return;
+    }
+
+    _failed = true;
+    _reference = Wombat.Web.Navigation.ErrorPages.ReferenceOf(HttpContext);
+    _time = Wombat.Web.Navigation.ErrorPages.TimeOf(Clock.GetUtcNow());
+    _retry = Wombat.Web.Navigation.ErrorPages.RetryAddressOf(HttpContext);
+  }
+
+  private RenderFragment Body => _failed
+    ? @<text>
+        <p>Wombat could not finish this request. Try again. If it keeps happening, send this reference to @WhomToSend.</p>
+        <ReferenceBlock Reference="@(_reference ?? string.Empty)" Time="@(_time ?? string.Empty)" />
+        <div class="actions-cell">
+          @if (_retry is not null)
+          {
+            @* A full load: the failed request is made again as it was. *@
+            <a class="btn btn-primary" href="@_retry" data-enhance-nav="false">@ButtonIcon("refresh-cw")Try again</a>
+          }
+          <a class="btn @(_retry is null ? "btn-primary" : "btn-outline")" href="/">@ButtonIcon("home")Go to Home</a>
+        </div>
+      </text>
+    : @<text>
+        <p>This is Wombat's error page, opened directly. No request failed, so there is nothing to report.</p>
+        <div class="actions-cell">
+          <a class="btn btn-primary" href="/">@ButtonIcon("home")Go to Home</a>
+        </div>
+      </text>;
+
+  /// <summary>A button's icon, signed in; signed out none, in either state (R2-Error-Out, R2-Error-Typed).</summary>
+  private RenderFragment? ButtonIcon(string name) => SignedIn ? @<Icon Name="@name" /> : null;
+
+  /// <summary>
+  /// Whom to send the reference to. Signed out, it may be an MSF respondent, who has no account and no institution here
+  /// (S6): whoever sent them the link.
+  /// </summary>
+  private string WhomToSend => SignedIn && HttpContext is not null
+    ? Wombat.Web.Navigation.SystemPageText.WhomToAsk(HttpContext.User)
+    : "whoever sent you the link, or to your Wombat administrator";
 }

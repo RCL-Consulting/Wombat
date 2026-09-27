@@ -459,12 +459,12 @@ Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
 Do: Type the entrustment decisions page's address. Filter Status to Revoked and apply, then to Active and apply.
-  Download the revoked certificate. Then open Decisions Due with "Every status".
+  Download the revoked certificate. Then open Decisions due with "Every status".
 Expect:
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
-  - **Decisions Due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
+  - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
     revoked. Schedule a review to decide it again." It offers Schedule.
   - **By EPA:** PAED-002 reads Decided 0, Deferred 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
@@ -483,7 +483,7 @@ Expect: Three cards, each issued on `D` with the committee's rationale: PAED-001
 Step 4.41 — Dr Molefe reads her review, and not the committee's page
 Role: Trainee — Dr Lerato Molefe
 Route: /committee/my-reviews → /committee/reviews/{ReviewId:int} → /access-denied
-Do: Open My Committee Reviews and view her review. Then type the committee's own address for the same review.
+Do: Open My committee reviews and view her review. Then type the committee's own address for the same review.
 Expect:
   - **The list:** one row, with Period "`<P>` · `<Y>`-01-01 to `<Y>`-12-31", Type Annual progression, State Ratified and
     Decision Satisfactory Progress. Its View is named by the review.
@@ -527,7 +527,7 @@ Expect: The list shows her review Under appeal. The Appeals card lists the appea
 Step 4.45 — Dr van Rensburg, the external member, is offered the appeal
 Role: CommitteeMember (external) — Dr John van Rensburg
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee Reviews, then Dr Mahlangu's review. Read the resolve form, and press Resolve appeal without choosing
+Do: Open Committee reviews, then Dr Mahlangu's review. Read the resolve form, and press Resolve appeal without choosing
   an outcome. Then choose Remitted to see what it asks, and leave without resolving.
 Expect:
   - **The list:** the panel's five reviews.
@@ -567,7 +567,7 @@ Expect: "Appeal resolved." The state reads Closed (T250).
 Step 4.48 — Dr Mahlangu reads the outcome
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /committee/my-reviews
-Do: Open My Committee Reviews and view the review.
+Do: Open My committee reviews and view the review.
 Expect: The row reads State Closed and Decision Satisfactory with Observations. The detail's current decision is the
   replacement, with "Present when this decision was taken: Thandi Zulu (chair), Sarah Botha". No appeal form is
   offered.
@@ -575,7 +575,7 @@ Expect: The row reads State Closed and Decision Satisfactory with Observations. 
 Step 4.51 — Dr Ndlovu reads both reviews
 Role: Trainee — Dr Sipho Ndlovu
 Route: /committee/my-reviews
-Do: Open My Committee Reviews.
+Do: Open My committee reviews.
 Expect: Two rows for `<P>`. The annual review reads Ratified, Outcome Deferred. The check-in reads Closed, with Decision
   "No binding decision".
 
@@ -595,7 +595,7 @@ Expect: There are fifteen Active rows, one for each EPA from PAED-001 to PAED-01
 Step 5.8 — Dr Molefe reads her final review and keeps a STAR certificate
 Role: Trainee — Dr Lerato Molefe
 Route: /committee/my-reviews → / → /portfolio/authorisations
-Do: Open My Committee Reviews and view the pre-graduation review. Then open My authorisations from her dashboard's card,
+Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her dashboard's card,
   and download the certificate for PAED-001.
 Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme complete). Its detail shows:
   - the review type;
@@ -623,7 +623,7 @@ Expect:
 Step A.7.7 — Dr Mokoena on her phone
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
-Do: At 390 px, open her dashboard, Decision Panels, Decisions Due and, by its address, Entrustment decisions.
+Do: At 390 px, open her dashboard, Decision panels, Decisions due and, by its address, Entrustment decisions.
 Expect: The dashboard's coverage cards stack. The panels list and the decisions list scroll inside their containers
   (T226).
 ```

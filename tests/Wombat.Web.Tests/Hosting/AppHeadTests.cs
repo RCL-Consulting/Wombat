@@ -24,7 +24,7 @@ public sealed class AppHeadTests
         var (_, _, document) = await host.LoadAsync(AppTestHost.AnonymousPage);
 
         document.Head!.QuerySelectorAll("title").Should().ContainSingle()
-            .Which.TextContent.Should().Be("Reset password", "the page's PageTitle reaches the head before any script runs");
+            .Which.TextContent.Should().Be("Reset password · Wombat", "the page's PageTitle reaches the head before any script runs");
     }
 
     /// <summary>

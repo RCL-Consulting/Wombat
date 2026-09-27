@@ -26,13 +26,80 @@ public sealed partial class NarrowLayoutTests
 
         var gutter = rules.Should().ContainSingle(rule => rule.AtRule == string.Empty && Selectors(rule).Contains("article"),
             "the article's gutter is set outside any media query, so it holds at every width").Which;
-        Selectors(gutter).Should().Contain(".top-row", "the signed-in name and Sign out keep the same gutter as the page");
+        Selectors(gutter).Should().Contain(".account-row", "the signed-in name and Sign out keep the same gutter as the page");
         gutter.Declarations.Should().Contain(["padding-left: var(--space-md)", "padding-right: var(--space-md)"]);
 
         // The desktop rule still widens it, so it must come later: the two are equally specific.
         var desktop = rules.Should().ContainSingle(rule => rule.AtRule == "@media (min-width: 641px)" && Selectors(rule).Contains("article")).Which;
         desktop.Declarations.Should().Contain(declaration => declaration.StartsWith("padding-left:", StringComparison.Ordinal));
         desktop.Index.Should().BeGreaterThan(gutter.Index);
+    }
+
+    // ---- the flow 01 boards at 390px (T335; the review of the t335 branch) ----
+
+    [Fact]
+    public void AtPhoneWidth_APagesHeading_Is1375Rem()
+    {
+        // Every 390px board sets the page's h1 at 1.375rem; 1.5rem from 641px.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, "h1").Declarations.Should().Contain("font-size: 1.5rem");
+        var phone = Rule(rules, "@media (max-width: 640.98px)", "h1");
+        phone.Declarations.Should().Contain("font-size: 1.375rem");
+        phone.Index.Should().BeGreaterThan(Rule(rules, string.Empty, "h1").Index, "equally specific, so the phone's comes later");
+    }
+
+    [Fact]
+    public void ThePage_BeginsUnderTheBar_16PxAtPhoneWidth_24PxFrom641_WithTheTrail16PxAboveTheHeader()
+    {
+        // Every board's content column is padded from the bar (16px at 390, 24px at 1280). The heading's browser top margin
+        // had been the only space above a page; with it gone (.header-container h1), the article pads itself, the trail
+        // stands at its top and 16px above the header, and the signed-out card keeps its 80px under the bar.
+        var layout = Parse(File.ReadAllText(WebFile("Components", "Layout", "MainLayout.razor.css")));
+        var app = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(layout, string.Empty, "main > article").Declarations.Should().Contain("padding-top: var(--space-md)");
+        Rule(layout, "@media (min-width: 641px)", "main > article").Declarations.Should().Contain("padding-top: var(--space-lg)");
+        Rule(app, string.Empty, ".breadcrumbs").Declarations.Should().Contain("margin: 0 0 var(--space-md)");
+        Rule(app, string.Empty, ".system-card-page").Declarations.Should().Contain("padding-top: calc(var(--space-2xl) + var(--space-sm))",
+            "56px and the article's 24px: 80px under the bar (R2-*-Out)");
+        Rule(app, "@media (max-width: 640.98px)", ".system-card-page").Declarations.Should().Contain("padding-top: 0",
+            "the article's 16px alone");
+    }
+
+    [Fact]
+    public void AtPhoneWidth_HomesHeaderAction_IsItsOwnRow_BelowTheHeadersRule()
+    {
+        // R2-Phone-Folded draws the rule under "Home" and its subtitle, and Log an activity below it, the page's width. Until
+        // the review the rule ran under the header, and the action sat above it.
+        const string phone = "@media (max-width: 640.98px)";
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, phone, ".header-container:has(> .actions-cell > .home-action)").Declarations
+            .Should().Contain(["border-bottom: 0", "padding-bottom: 0"], "the header itself draws no rule under the action");
+        Rule(rules, phone, ".header-container:has(> .actions-cell > .home-action) > :first-child").Declarations
+            .Should().Contain(["border-bottom: 2px solid var(--secondary-color)", "padding-bottom: 0.75rem", "width: 100%"],
+                "the heading block draws the rule, and its whole row pushes the action onto the next");
+        Rule(rules, phone, ".header-container > .actions-cell:has(> .home-action)").Declarations.Should().Contain("width: 100%");
+        Rule(rules, phone, ".home-action").Declarations.Should().Contain("min-height: 2.75rem", "a 44px target");
+    }
+
+    [Fact]
+    public void AtPhoneWidth_TheReferenceIsOneColumn_AndTheErrorPanelPads16Px()
+    {
+        // R2-Error-Narrow: each label over its value, in a block padded 12px, in a panel padded 16px. Two columns left the
+        // 32-character id a narrow track beside "Reference".
+        const string phone = "@media (max-width: 640.98px)";
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, ".reference-block").Declarations.Should().Contain("grid-template-columns: auto minmax(0, 1fr)",
+            "guard: from 641px, label beside value");
+        Rule(rules, phone, ".reference-block").Declarations
+            .Should().Contain(["grid-template-columns: minmax(0, 1fr)", "padding: 0.75rem"]);
+        Rule(rules, phone, ".reference-block dd + dt").Declarations.Should().Contain("margin-top: 0.375rem",
+            "the two pairs apart, each label close over its value");
+        Rule(rules, phone, ".system-panel").Declarations.Should().Contain("padding: var(--space-md)");
+        Rule(rules, string.Empty, ".system-panel").Declarations.Should().Contain("padding: var(--space-lg)", "guard: 24px from 641px");
     }
 
     [Fact]
@@ -47,11 +114,33 @@ public sealed partial class NarrowLayoutTests
                 .Select(declaration => (rule.Selector, Declaration: declaration)))
             .ToList();
 
-        grids.Select(grid => grid.Selector).Should().Contain([".form-grid", ".form-grid--wide", ".search-grid", ".dashboard-grid", ".check-grid"],
+        // Not .dashboard-grid since T335: its tracks are counted, not auto-fit (TheDashboardGrid_HasThreeTracksAt1280…).
+        grids.Select(grid => grid.Selector).Should().Contain([".form-grid", ".form-grid--wide", ".search-grid", ".check-grid"],
             "guard: the scan finds the auto-fit grids, or it proves nothing");
         grids.Where(grid => !CappedTrack().IsMatch(grid.Declaration))
             .Select(grid => $"{grid.Selector} {{ {grid.Declaration} }}")
             .Should().BeEmpty("an auto-fit column asks for min(its width, 100%), so a narrow container is not overflowed");
+    }
+
+    [Fact]
+    public void TheDashboardGrid_HasThreeTracksAt1280_TwoTo901_AndOneBelow()
+    {
+        // T335, flow 01 (the round-2 review, S22(b)). Auto-fit on 320px tracks needed 1,008px for three, and at 1280px the
+        // content column is 974px (1280 less the 250px sidebar and the article's 32px and 24px sides), so Home had two
+        // tracks there, and a card spanning three added a column the grid had no room for. The tracks are now counted: three
+        // from 1100px, two to 901px, one at 900px and below, where a spanning card takes the one column.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, ".dashboard-grid").Declarations.Should().Contain("grid-template-columns: repeat(3, minmax(0, 1fr))");
+        Rule(rules, "@media (max-width: 1099.98px)", ".dashboard-grid").Declarations
+            .Should().Contain("grid-template-columns: repeat(2, minmax(0, 1fr))");
+        Rule(rules, "@media (max-width: 900px)", ".dashboard-grid").Declarations.Should().Contain("grid-template-columns: minmax(0, 1fr)");
+        Rule(rules, "@media (max-width: 900px)", ".dashboard-span-2, .dashboard-span-3").Declarations.Should().Contain("grid-column: auto");
+
+        // A card spanning three takes the whole row at every width, so it never adds a track; a card's content cannot widen
+        // its track.
+        Rule(rules, string.Empty, ".dashboard-span-3").Declarations.Should().Contain("grid-column: 1 / -1");
+        Rule(rules, string.Empty, ".dashboard-grid > *").Declarations.Should().Contain("min-width: 0");
     }
 
     [Fact]

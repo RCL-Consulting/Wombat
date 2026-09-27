@@ -232,7 +232,7 @@ button).
 ### Step 1.24 — The twelve CPSA instruments are published
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types
-Do: Open Activity Types, search `cpsa` and read the list. Then clear the search.
+Do: Open Activity types, search `cpsa` and read the list. Then clear the search.
 Expect: The search leaves the 12 rows in the table below. Each reads Scope `Speciality · Paediatrics`, Published `v1`,
   Draft `None` and Active, and each offers View, named for its row ("View Mini-CEX (Paediatrics)"), not Edit: the
   College's instruments are the College's, and she may not write them (T300, D52; T239 names each row's action). With
@@ -248,10 +248,10 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types/{ActivityTypeId:int}
 Do: Open `Mini-CEX (Paediatrics)` from its View and read each tab, opening the `overall_level` field to read its
   settings. Change nothing, save nothing, and leave by Back to list.
-Expect: The page is headed "Mini-CEX (Paediatrics)", not "Edit …", and the browser tab reads the same. It opens on the
-  Form tab, under a standing information notice that is there on every visit (no alert role): "Set by the College that
-  owns Paediatrics. You can read this activity type here, but not change it." (T300; the wording is a product
-  decision.)
+Expect: The page is headed "Mini-CEX (Paediatrics)", not "Edit …", and the browser tab reads "Mini-CEX (Paediatrics) ·
+  Wombat" (T190). It opens on the Form tab, under a standing information notice that is there on every visit (no alert
+  role): "Set by the College that owns Paediatrics. You can read this activity type here, but not change it." (T300;
+  the wording is a product decision.)
   - **Form settings** read, as text, Encounter date field `observed_on`, Entrustment rating field `overall_level` and
     EPA field `epa_id`.
   - **Sections.** Request holds the EPA, the Assessor (a User field), the date observed, the clinical setting, the
@@ -279,8 +279,8 @@ Do: Press New activity type, open the Metadata tab and enter:
   - Description `A registrar's log of a teaching session they delivered at KGK. Not rated, and credits nothing.`;
   - Active on.
   Press Save draft. Record the type's id as `{ActivityTypeId}`.
-Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "New activity
-  type" too (T300, T190). It starts with a default draft:
+Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "New activity type
+  · Wombat" (T300, T190). It starts with a default draft:
   - one Details section holding a required Title text field;
   - a workflow from draft to submitted;
   - the credit rules `{"counts_for": []}`.
@@ -288,7 +288,8 @@ Expect: The builder opens on the Form tab, headed "New activity type", with the 
   never Global (T300, D52; DESIGN.md: a picker offers exactly what its command accepts). So the first Save draft is
   accepted without Scope being touched. This tool is offers `Not a WBA instrument` and the twelve instruments.
   Save draft moves the page to the type's own address and reads "Draft saved." (T291 item 3). The page is then headed
-  "Edit KGK Teaching Session Log", and the browser tab reads `KGK Teaching Session Log`.
+  "Edit KGK Teaching Session Log", and the browser tab says the same: "Edit KGK Teaching Session Log · Wombat"
+  (T190).
 
 [act-1-setup.md]
 ### Step 1.27 — The form, and a duplicate key refused
@@ -366,7 +367,7 @@ Expect: The list has 23 rows, and no two share a name:
 ### Step 6.14a — Dr Kruger drafts a College activity type
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/activity-types → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types → /admin/activity-types/new → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types
-Do: Open Activity Types from his menu and read the list. Open `Multi-Source Feedback (Paediatrics)` and change nothing.
+Do: Open Activity types from his menu and read the list. Open `Multi-Source Feedback (Paediatrics)` and change nothing.
   Back in the list, press New activity type, open the Metadata tab and read what Scope offers, under Sub-speciality
   too. Then enter:
   - Key `cpsa_case_presentation_log` and Name `CPSA Case Presentation Log`;
@@ -377,12 +378,12 @@ Do: Open Activity Types from his menu and read the list. Open `Multi-Source Feed
   - Active on.
   Press Save draft, publish nothing, and go back to the list.
 Expect:
-  - **The list.** Activity Types is in his menu (T300, D52). The list has 22 rows: the twelve `*_cpsa` instruments and
-    the ten Demo types. The College writes its disciplines' types, so each `*_cpsa` row offers Edit, named for its row
-    ("Edit Mini-CEX (Paediatrics)"). The exceptions are `msf_cpsa` and `learner_feedback_cpsa`: the MSF and
-    learner-feedback releases write their data, so they offer View (T334). The Demo types belong to the Demo College, so
-    they offer View. KGK Teaching Session Log is not listed, because it is an institution's own type. New activity type
-    is offered.
+  - **The list.** Activity types is in his menu, and lit (T300, D52). The list has 22 rows: the twelve `*_cpsa`
+    instruments and the ten Demo types. The College writes its disciplines' types, so each `*_cpsa` row offers Edit,
+    named for its row ("Edit Mini-CEX (Paediatrics)"). The exceptions are `msf_cpsa` and `learner_feedback_cpsa`: the
+    MSF and learner-feedback releases write their data, so they offer View (T334). The Demo types belong to the Demo
+    College, so they offer View. KGK Teaching Session Log is not listed, because it is an institution's own type. New
+    activity type is offered.
   - **A system-managed type.** Multi-Source Feedback (Paediatrics) opens read-only, with a notice that the system writes
     it, and no Save draft, Discard draft, Publish or editor controls (T334).
   - **The new type.** It opens headed "New activity type", on Form, with the default draft. Scope offers Speciality and
@@ -408,15 +409,15 @@ Expect: The user page's cards stack, and its buttons wrap rather than overflow. 
 [appendix-cross-cutting.md]
 ### Step A.7.14 — Prof Mbatha's pages, checked for contrast
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /account/login → / → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
+Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
   - the sign-in card;
-  - the nav on its gradient;
+  - the nav on its gradient, and its current item (white on the .32 fill);
   - muted text on the page background;
-  - the status badges on a committee review opened from Committee Reviews (Dr Molefe's review 7; the list itself shows
+  - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
     each state as plain text);
-  - a success alert (save My Account unchanged: "Profile saved.") and a danger alert (Change password with a
-    confirmation that differs, which checks no password and changes nothing);
+  - a success alert (save My account, the name in the top bar, unchanged: "Profile saved.") and a danger alert (Change
+    password with a confirmation that differs, which checks no password and changes nothing);
   - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
     not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
   - the focus ring on white and on the page background;

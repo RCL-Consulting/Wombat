@@ -15,6 +15,7 @@ using Wombat.Application;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Options;
+using Wombat.Application.Features.Accounts;
 using Wombat.Application.Features.Invitations;
 using Wombat.Domain.Audit;
 using Wombat.Domain.Identity;
@@ -82,6 +83,17 @@ builder.Services.AddScoped<AuthenticationStateProvider, SessionRevalidatingAuthe
 builder.Services.AddWombatCircuitServices();
 builder.Services.AddHttpContextAccessor();
 
+// The acting role's switch and the one-time word it leaves for the page it lands on (T335, flow 01).
+builder.Services.AddActingRoleSwitch();
+
+// A failed page load's reference goes to the log with the failure, as the error page shows it (T321; ErrorPages).
+builder.Services.AddExceptionHandler<ErrorPages.ReferenceLog>();
+
+// The error page's rerun checks the sign-in cookie again; with the database down that check throws, and the rerun draws
+// the page signed out rather than fail with it (ErrorPages.GuardTheSignInCheck). After AddInfrastructure, whose Identity
+// sets the check this wraps.
+builder.Services.ConfigureApplicationCookie(ErrorPages.GuardTheSignInCheck);
+
 // Health: a liveness-only probe reports "Healthy" while PostgreSQL is unreachable, which
 // would let the health cron skip its restart and let a deploy gate report success against
 // an unusable app. Probe the database the app actually depends on.
@@ -143,6 +155,15 @@ forwardedHeadersOptions.KnownProxies.Clear();
 forwardedHeadersOptions.KnownProxies.Add(System.Net.IPAddress.Loopback);
 forwardedHeadersOptions.KnownProxies.Add(System.Net.IPAddress.IPv6Loopback);
 app.UseForwardedHeaders(forwardedHeadersOptions);
+
+// A browser's failed page load is rerun as /Error, the app's own page, still answered 500, with the reference the log
+// holds; every other failed request keeps its bare 500 (T321; ErrorPages). Outside Development, whose developer exception
+// page shows the failure itself. Before the security headers and the 404 rerun: the handler clears the failed response,
+// headers and all, so its rerun passes through both again, and a failure inside the 404's rerun is caught too.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseWombatErrorPage();
+}
 
 // Security headers (CSP nonce, nosniff, referrer policy) — before anything that can write
 // a response, so static files and error pages carry them too.
@@ -245,7 +266,10 @@ app.MapPost("/account/login/submit", async (
             actorUserAgent: ua,
             institutionId: user?.InstitutionId));
 
-        return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
+        // Followed only when it is a path on this site. Until T335 the test was Uri.TryCreate(…, Relative), which passes
+        // //evil.example and /\evil.example: LocalRedirect then threw, and the sign-in answered 500 (LocalUrl). The
+        // institutional sign-in and the link page follow theirs the same way.
+        return Results.LocalRedirect(LocalUrl.OrNull(request.ReturnUrl) ?? "/");
     }
     else if (result.IsLockedOut)
     {
@@ -390,7 +414,7 @@ app.MapGet("/account/sso-callback", async (
 
     if (result.Succeeded)
     {
-        return Results.LocalRedirect(GetSafeLocalUrl(returnUrl));
+        return Results.LocalRedirect(LocalUrl.OrNull(returnUrl) ?? "/");
     }
 
     if (result.RequiresLinking)
@@ -449,7 +473,7 @@ app.MapPost("/account/link-external/submit", async (
     {
         attempt.Release();
         await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-        return Results.LocalRedirect(GetSafeLocalUrl(request.ReturnUrl));
+        return Results.LocalRedirect(LocalUrl.OrNull(request.ReturnUrl) ?? "/");
     }
 
     return Results.LocalRedirect(
@@ -588,6 +612,69 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
 app.MapGet(ChangePasswordOutcome.SubmitPath, () => Results.LocalRedirect(ChangePasswordOutcome.PagePath))
     .RequireAuthorization();
 
+// My account's form posts here (T335, flow 01; the review of the t335 branch). The shell names the person from the sign-in
+// cookie's display_name claim, so the name is saved and the cookie issued again in one request, as change password does,
+// and the browser comes back to the page by a full load, whose circuit starts from the new cookie. Saved in the page's
+// circuit, the name left the claim stale there and in the cookie, and the account row went on showing the old name.
+//
+// The session is checked first, as change password checks it (T265 review): one the account no longer accepts is signed
+// out, not issued a cookie. A refusal comes back as a code (ProfileOutcome), never the words.
+app.MapPost(ProfileOutcome.SubmitPath, async (
+    SignInManager<WombatIdentityUser> signInManager,
+    ISender sender,
+    ILoggerFactory loggerFactory,
+    HttpContext httpContext,
+    [FromForm] ProfileRequest request) =>
+{
+    var firstName = request.FirstName?.Trim() ?? string.Empty;
+    var lastName = request.LastName?.Trim() ?? string.Empty;
+    if (firstName.Length == 0 || lastName.Length == 0)
+    {
+        return Results.LocalRedirect(ProfileOutcome.RefusedUrl(ProfileOutcome.NameMissing));
+    }
+
+    if (firstName.Length > ProfileOutcome.MaxNameLength || lastName.Length > ProfileOutcome.MaxNameLength)
+    {
+        return Results.LocalRedirect(ProfileOutcome.RefusedUrl(ProfileOutcome.NameTooLong));
+    }
+
+    WombatIdentityUser account;
+    try
+    {
+        var current = await signInManager.ValidateSecurityStampAsync(httpContext.User);
+        if (current is null)
+        {
+            await signInManager.SignOutAsync();
+            return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.SessionEnded, ProfileOutcome.PagePath));
+        }
+
+        // The signed-in user, and nobody else: the command reads the id from the caller (T185).
+        await sender.Send(new UpdateCurrentUserProfileCommand(httpContext.User, firstName, lastName));
+        account = current;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+        loggerFactory.CreateLogger(ProfileOutcome.LogCategory).LogError(exception, "A name could not be saved.");
+        return Results.LocalRedirect(ProfileOutcome.RefusedUrl(ProfileOutcome.Failed));
+    }
+
+    // The cookie again, its display_name read from the account as saved (WombatUserClaimsPrincipalFactory), keeping the
+    // old one's "remember me" and how the user signed in. The name is saved by now, so a fault here does not say it is
+    // not: the cookie catches up at the stamp validator's next look (SessionRevalidation), within a minute.
+    try
+    {
+        await signInManager.RefreshSignInAsync(account);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+        loggerFactory.CreateLogger(ProfileOutcome.LogCategory)
+            .LogError(exception, "A name was saved, but the sign-in cookie could not be issued again.");
+    }
+
+    return Results.LocalRedirect(ProfileOutcome.SavedUrl);
+})
+.RequireAuthorization();
+
 // Where a tab goes, by a full page load, once its circuit's sign-in has ended (SessionEnd, the T279 review): a session the
 // account no longer accepts is signed out here, whatever the cookie's age, and sent to the sign-in page, which loads
 // signed out and says the session has ended; a session the account still accepts goes back to the page it was on. Open to
@@ -611,6 +698,10 @@ app.MapPost("/account/logout", async (
     var institutionId = httpContext.User.GetInstitutionId();
 
     await signInManager.SignOutAsync();
+
+    // Nothing of this person's choices outlives their sign-out on this browser (T317): the acting role is the account's,
+    // and a switch's word not yet shown goes with them.
+    ActingRoleSwitchResults.Forget(httpContext);
 
     await auditWriter.WriteAsync(AuditEntry.Create(
         occurredAt: DateTime.UtcNow,
@@ -647,23 +738,10 @@ app.MapGet("/account/data-rights/download/{id:guid}", async (
 })
 .RequireAuthorization();
 
-app.MapGet("/dashboard/switch/{role}", (string role, HttpContext httpContext) =>
-{
-    if (Wombat.Web.Navigation.DashboardPriority.ValidRoles.Contains(role))
-    {
-        httpContext.Response.Cookies.Append(
-            Wombat.Web.Navigation.DashboardPriority.CookieName,
-            role,
-            new CookieOptions
-            {
-                SameSite = SameSiteMode.Lax,
-                HttpOnly = true,
-                Secure = !httpContext.Request.Host.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase),
-                MaxAge = TimeSpan.FromDays(30)
-            });
-    }
-    return Results.LocalRedirect("/");
-});
+// The acting role's switch, a GET so an email's link can use it (W-010): a held role is stored with the account and the
+// cookie issued again; any other writes nothing; the return address is followed only when it is local (T335, flow 01).
+app.MapGet(ActingRoleSwitch.Route, ActingRoleSwitch.HandleAsync)
+    .RequireAuthorization();
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
@@ -708,16 +786,6 @@ if (args.Contains("--seed", StringComparer.Ordinal))
 }
 
 app.Run();
-
-static string GetSafeLocalUrl(string? url)
-{
-    if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Relative, out _))
-    {
-        return "/";
-    }
-
-    return url;
-}
 
 // The row every refused sign-in writes, but a lockout's: unstamped and naming no account, whatever the cause, so the log
 // says no more than the page about which addresses have accounts (T101, T156).
@@ -783,6 +851,13 @@ internal sealed class LinkExternalRequest
 {
     public string? Password { get; init; }
     public string? ReturnUrl { get; init; }
+}
+
+/// <summary>My account's form (T335, flow 01). The account is the signed-in user's, never the form's.</summary>
+internal sealed class ProfileRequest
+{
+    public string? FirstName { get; init; }
+    public string? LastName { get; init; }
 }
 
 /// <summary>The change-password form (T265). The account is the signed-in user's, never the form's.</summary>

@@ -601,20 +601,10 @@ public sealed class ActionFocusTests : TestContext
             SubmitButton,
             Submit),
 
-        ["Profile Save profile"] = new(
-            (test, hold) => test.Page<Profile>(
-                new Sender(hold, request => request is UpdateCurrentUserProfileCommand, request => request switch
-                {
-                    GetCurrentUserProfileQuery or UpdateCurrentUserProfileCommand =>
-                        new UserProfileDto("admin-1", "admin@test", "Ada", "Admin", [WombatRoles.Administrator]),
-                    _ => null
-                })),
-            cut => Named(cut, "Save profile", "Saving..."),
-            cut => Named(cut, "Save profile", "Saving...").Click()),
-
-        // Change password (/account/change-password) and Verify on the export check (/portfolio/verify) are not here: since
-        // T265 each is a form the browser sends, and its result arrives with the page it loads (ActionResult.FocusOnLoad).
-        // Account/ChangePasswordPageTests and Portfolio/VerifyExportPageTests hold them to the rule.
+        // Change password (/account/change-password), Save profile on My account (/account/profile) and Verify on the export
+        // check (/portfolio/verify) are not here: since T265 (My account since the review of the t335 branch) each is a form
+        // the browser sends, and its result arrives with the page it loads (ActionResult.FocusOnLoad).
+        // Account/ChangePasswordPageTests, Account/ProfilePageTests and Portfolio/VerifyExportPageTests hold them to the rule.
 
         ["AdoptionsList Adopt"] = new(
             (test, hold) =>

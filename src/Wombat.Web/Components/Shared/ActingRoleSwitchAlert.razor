@@ -1,0 +1,78 @@
+@using Wombat.Web.Navigation
+@inject NavigationManager Navigation
+
+@*
+  What a switch of the acting role did, said once, under the header of the page it landed on (T335, flow 01; R2-Rules
+  § 1, R2-Detail-Email, R2-Landing-Assessor): "You are now acting as Assessor.", an info alert in an ActionResult that
+  takes the focus. PageHeader renders it, so every page that has a header can say it.
+
+  - Shown only when the switch's new role is the acting role Routes cascades. A word that does not match (a stale one,
+    or one for a role since removed) says nothing.
+  - "Switch back to …" returns to this same page in the role the person was acting as: the switch link naming that role,
+    with this page as its return address. Not on Home: a switch that names no return address lands there, and the
+    sidebar's own switch is the way back (R2-Landing-Assessor).
+  - The focus: ActionResult's FocusOnLoad puts autofocus on the region for the prerendered or static page, and focuses
+    it after the circuit's first render. FocusOnNavigate focuses the h1 after that same render, but it sits beside
+    AuthorizeRouteView in Routes, so it renders before any component of the page and its call goes first; this one wins.
+    A header that appears only once the page has loaded renders later still (ActingRoleSwitchAlertTests).
+  - A switch link is a full page load (data-enhance-nav="false"). On a static page, enhanced navigation would fetch the
+    page and patch it in place: autofocus does not apply to a patch, FocusOnNavigate takes the h1, and no fresh circuit
+    starts. Found in a headless-browser check of /portfolio/verify (T335).
+*@
+@if (_result is { } result)
+{
+  <ActionResult FocusOnLoad="_takeFocus">
+    <Alert Kind="info" Role="status">
+      <div class="alert-row">
+        <span class="alert-row-text">You are now acting as @WombatRoleLabels.For(result.To).</span>
+        @if (_switchBack is not null && result.From is { } from)
+        {
+          <a class="btn btn-outline btn-sm" href="@_switchBack" data-enhance-nav="false">Switch back to @WombatRoleLabels.For(from)</a>
+        }
+      </div>
+    </Alert>
+  </ActionResult>
+}
+
+@code {
+  private ActingRoleSwitchResult? _result;
+  private bool _takeFocus;
+  private string? _switchBack;
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>A switch's one-time word, as Routes cascades it.</summary>
+  [CascadingParameter] public ActingRoleSwitchNotice? Notice { get; set; }
+
+  // Decided once, as the header is first drawn: the page's later renders keep what it showed.
+  protected override void OnInitialized()
+  {
+    if (Notice is not { Result: { } result, PageLeft: false } notice
+        || Acting is null
+        || !string.Equals(result.To, Acting.Role, StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    _result = result;
+    _takeFocus = notice.TakeFocus();
+
+    var here = Here();
+    if (result.From is { } from
+        && !string.Equals(from, result.To, StringComparison.Ordinal)
+        && Acting.Holds(from)
+        && !string.Equals(here.Split('?', 2)[0], "/", StringComparison.Ordinal))
+    {
+      _switchBack = ActingRoleSwitch.Url(from, here);
+    }
+  }
+
+  /// <summary>This page's path and query, without its fragment, which never reaches the server.</summary>
+  private string Here()
+  {
+    var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
+    var fragment = relative.IndexOf('#');
+    return "/" + (fragment >= 0 ? relative[..fragment] : relative);
+  }
+}

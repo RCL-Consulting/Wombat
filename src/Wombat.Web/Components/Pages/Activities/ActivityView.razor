@@ -9,12 +9,12 @@
 @inject ActivityNotices Notices
 @inject ILogger<ActivityView> Logger
 
-<PageTitle>Activity</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
 @if (_activity is not null)
 {
   @* The state by its label in the pinned workflow (T220), as the notices and refusals on this page name it (T189). *@
-  <PageHeader Title="@_activity.ActivityTypeName" Subtitle="@($"State: {_activity.CurrentStateLabel}")" />
+  <PageHeader Title="@Heading" Subtitle="@($"State: {_activity.CurrentStateLabel}")" />
 }
 
 @if (_notice is not null)
@@ -206,6 +206,11 @@
 
   // Shown until the next load or the next action. Taken, so it is shown once: reloading the page does not repeat it.
   private ActivityNotice? _notice;
+
+  /// <summary>
+  /// What names the page and its tab: the activity's type (T190), or "Activity" until it has loaded and where it cannot.
+  /// </summary>
+  private string Heading => _activity?.ActivityTypeName ?? "Activity";
 
   public const string UnavailableActionMessage =
     "That action is not available here. Reload the page to see what you can do now.";

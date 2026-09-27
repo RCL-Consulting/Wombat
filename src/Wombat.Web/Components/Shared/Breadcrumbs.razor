@@ -1,26 +1,32 @@
-@if (Items.Count > 0)
+@*
+  A page's trail (T335, flow 01; D5; R2-Detail-*): Home › the list it is under › this page, the last crumb the page itself
+  with aria-current="page". PageHeader draws it from the owner table (NavOwners.TrailTo). Below 641px it folds to one 44px
+  link back to its parent (R2-Detail-Phone): app.css hides every other crumb there, and shows the parent's back arrow.
+*@
+@if (Items.Count > 1)
 {
   <nav aria-label="Breadcrumb">
     <ol class="breadcrumbs">
-      @foreach (var item in Items)
+      @for (var index = 0; index < Items.Count; index++)
       {
-        <li>
-          @if (string.IsNullOrWhiteSpace(item.Href))
-          {
-            <span>@item.Label</span>
-          }
-          else
-          {
-            <a href="@item.Href">@item.Label</a>
-          }
-        </li>
+        var item = Items[index];
+        if (index == Items.Count - 1)
+        {
+          <li class="breadcrumb-current"><span aria-current="page">@item.Label</span></li>
+        }
+        else
+        {
+          <li class="@(index == Items.Count - 2 ? "breadcrumb-parent" : "breadcrumb-ancestor")">
+            <a href="@item.Href"><Icon Name="chevron-left" Size="18" Class="breadcrumb-back" />@item.Label</a>
+            <Icon Name="chevron-right" Size="14" Class="breadcrumb-separator" />
+          </li>
+        }
       }
     </ol>
   </nav>
 }
 
 @code {
-  [Parameter] public IReadOnlyList<BreadcrumbItem> Items { get; set; } = [];
-
-  public sealed record BreadcrumbItem(string Label, string? Href = null);
+  /// <summary>The crumbs, Home first and the page itself last.</summary>
+  [Parameter] public IReadOnlyList<Crumb> Items { get; set; } = [];
 }

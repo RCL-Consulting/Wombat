@@ -6,7 +6,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @using Wombat.Application.Features.Epas
 
-<PageTitle>@(IsNew ? "Create Sub-Speciality" : "Edit Sub-Speciality")</PageTitle>
+<PageTitle>@(IsNew ? "Create sub-speciality" : "Edit sub-speciality") · Wombat</PageTitle>
 
 <PageHeader Title="@(IsNew ? "Create sub-speciality" : "Edit sub-speciality")" Subtitle="@(_speciality is null ? "Scope this sub-speciality under the selected speciality." : $"Speciality: {_speciality.Name}")">
   <Actions>

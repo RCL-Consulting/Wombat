@@ -360,7 +360,8 @@ Paste this as the second message. It is each step's Role, Route, Do and Expect, 
 Step A.1.1 — Dr Dlamini reads her data rights and sets a preference (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /account/data-rights
-Do: Open Data Rights from the nav. Read the page, tick "Opt out of optional processing", and save her preferences.
+Do: Open My data rights, under the rule at the foot of her menu. Read the page, tick "Opt out of optional processing",
+  and save her preferences.
 Expect: The page has three parts: processing preferences, a request form, and "Your requests", which is empty ("No
   requests"). The digest opt-out's help names the three reminders it stops (the weekly coordinator digest, the 14-day
   draft reminder and the 5-day assessment reminder), and says that email about one particular thing is still sent
@@ -379,10 +380,12 @@ Expect: The form offers four types: Access, Export, Rectification and Erasure. W
 Step A.1.3 — Mr Smit approves the export from KGK's queue (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights → /admin/data-rights/{Id:guid}
-Do: Open Data Rights Requests from the nav. Narrow it to type Export and status Submitted, apply the filters, and
+Do: Open Data rights requests from the menu. Narrow it to type Export and status Submitted, apply the filters, and
   review Dr Dlamini's request. Press Approve with no decision note. Then approve it with the note "Identity confirmed;
   export released to the data subject."
-Expect: The queue holds only KGK's requests (T112), and the filters change it only when they are applied.
+Expect: The queue holds only KGK's requests (T112), and the filters change it only when they are applied. On the
+  request's page Data rights requests stays lit, and the trail reads Home › Data rights requests › Data rights
+  request.
   - The row names the requester by the address she signs in with, and its Review action is named for the row (T239).
   - The detail page shows the requester, her user id, when it was submitted, its type, its status and her reason.
   - Approving with no note is refused: "A decision note is required."
@@ -399,7 +402,7 @@ Expect: Page not found, with status 404. Nothing on the page says that the reque
 Step A.1.5 — Dr Dlamini downloads her export (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
 Route: /account/data-rights → /account/data-rights/download/{id:guid}
-Do: Reload Data Rights and download the completed request.
+Do: Reload My data rights and download the completed request.
 Expect: The row reads Completed and offers a Download named for the request.
   - The browser saves `data-export-<date>-<time>.zip`.
   - It holds `data-export.json`: schema version 2, with her profile, every activity she is the subject or author of,
@@ -434,7 +437,7 @@ Expect: The queue lists all three KGK requests, newest first, each with its stat
 Step A.1.9 — Dr Mahlangu reads the decision (appendix-cross-cutting.md)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /account/data-rights
-Do: Reload Data Rights and read her request.
+Do: Reload My data rights and read her request.
 Expect: The request reads Rejected and offers nothing: no Withdraw, no Download. The page shows neither the decision
   note nor who decided, and no email told her of the decision.
 
@@ -479,7 +482,7 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
-  - Committee Reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
+  - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
   - The check-in reads Withdrawn, dated today, with the reason "Withdrawn because the trainee's personal data was erased
     at their request. Nothing more is decided at this review.", and offers no action.
@@ -507,15 +510,15 @@ Expect: The refusal "You are not authorized to access this data-rights request."
 Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
-Do: At 390 px, sign in and open her dashboard, My Progress, My Activities and Data Rights from the folded nav.
-Expect: The dashboard's cards stack. On My Progress, each EPA's figures and trajectory fit the width. The tables of My
-  Activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
+Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
+Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. The tables of My
+  activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
 
 Step A.7.5 — Mr Smit on his phone (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
-Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions Due and the data-rights queue.
+Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
 Expect: The campaign page keeps its gutter (T226), and its invitee table (counts by respondent group: the page never
-  lists an address) scrolls within its card. Decisions Due's summary scrolls sideways, and a keyboard can scroll it, as
+  lists an address) scrolls within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as
   a labelled, focusable region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 ```

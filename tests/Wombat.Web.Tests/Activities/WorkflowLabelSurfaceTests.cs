@@ -15,6 +15,7 @@ using Wombat.Application.Features.Dashboards.Trainee;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Pages.Dashboards;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Activities;
 
@@ -73,6 +74,19 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
 
         Text(cut.Find(".page-subtitle")).Should().Be("State: Awaiting supervisor");
         Text(cut.Find("#activity-state")).Should().Be("State: Awaiting supervisor");
+    }
+
+    /// <summary>
+    /// T190: the page and its tab are named for the activity's type, in the same words. Every activity's tab read just
+    /// "Activity" before.
+    /// </summary>
+    [Fact]
+    public void TheActivityPage_IsNamedForItsType_InItsHeadingAndItsTab()
+    {
+        var cut = RenderActivity(SubmittedAudit());
+
+        Text(cut.Find("h1")).Should().Be("Clinical Audit (Paediatrics)");
+        TabTitle.Of(this, cut).Should().Be("Clinical Audit (Paediatrics) · Wombat");
     }
 
     [Fact]

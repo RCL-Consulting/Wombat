@@ -206,37 +206,40 @@ RUNBOOK STEPS, VERBATIM:
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
-Expect: The page reads "Viewing as CommitteeMember" and "You also act as Assessor. Switch view: Assessor". Targets this
-  period names the current semester and its months. It lists the five registrars, each at "semester 0/10 · yearly 0/5",
-  and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists PAED-001 to PAED-015,
-  each "0 of 5 met" (T130's count, never a percentage). The nav reads Activity Inbox, Recent Activities, Programme
-  Trainees, Decision Panels and Committee Reviews, each once (T178).
+Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The sidebar reads "Acting as Committee
+  member", with "Switch to Assessor" under it: she holds both, and the precedence opens her sessions as a Committee
+  member. Targets this period names the current semester and its months. It lists the five registrars, each at "semester
+  0/10 · yearly 0/5", and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
+  PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
+  never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
 
 ### Step 2.35 — Dr Naidoo and Dr Botha
 Role: CommitteeMember + Assessor — Dr David Naidoo and Dr Sarah Botha
 Route: /account/login → / → /committee/panels
-Do: Each signs in, reads the dashboard and opens Decision Panels.
-Expect: Each sees what Zulu saw in Step 2.33. Decision Panels lists the panel they sit on, with no New panel and no
+Do: Each signs in, reads the dashboard and opens Decision panels.
+Expect: Each sees what Zulu saw in Step 2.33. Decision panels lists the panel they sit on, with no New panel and no
   Edit.
 
 ### Step 2.37 — Dr van Rensburg, external committee member
 Role: CommitteeMember — Dr John van Rensburg
 Route: /account/login → / → /committee/panels
-Do: Sign in, read the dashboard and open Decision Panels.
-Expect: He sees "Viewing as CommitteeMember" with no Switch view line. Targets this period names the current semester
-  and reads "No trainees have targets this period.", and Targets met by EPA reads "No curriculum targets for these
-  trainees.": the card lists the trainees of the member's own sub-specialities at his institution, and he holds none.
-  The nav reads Programme Trainees, Decision Panels and Committee Reviews. Decision Panels lists the panel he sits on as
-  external member, with no New panel and no Edit.
+Do: Sign in, read the dashboard and open Decision panels.
+Expect: He sees "Committee member · Semester N, YYYY" on Home, and no switch: he holds one role. Targets this period
+  names the current semester and reads "No trainees have targets this period.", and Targets met by EPA reads "No
+  curriculum targets for these trainees.": the card lists the trainees of the member's own sub-specialities at his
+  institution, and he holds none.
+  The sidebar reads "Acting as Committee member" with no switch, over Home, Committee reviews and Decision panels, then
+  My data rights. Decision panels lists the panel he sits on as external member, with no New panel and no Edit.
 
 ### Step 2.38 — Dr Mokoena's and Dr Sithole's dashboards
 Role: SpecialityAdmin and SubSpecialityAdmin — Dr Refilwe Mokoena and Dr Kabelo Sithole
 Route: /
 Do: Each opens Home, now that the registrars are admitted.
-Expect: Each sees "Viewing as SpecialityAdmin" or "Viewing as SubSpecialityAdmin". Pending reviews reads 0 "activities
-  awaiting review", with no link (T297). Trainees in programme reads 5 active / 0 inactive. Curriculum coverage names the current
-  semester and lists PAED-001 to PAED-015 at "0 of 5 met". The nav reads Programme Trainees, Decision Panels, Committee
-  Reviews, STAR Review Queue and Decisions Due.
+Expect: Each sees "Speciality admin · Semester N, YYYY" or "Sub-speciality admin · Semester N, YYYY" on Home. Pending
+  reviews reads 0 "activities awaiting review", with no link (T297). Trainees in programme reads 5 active / 0 inactive.
+  Curriculum coverage names the current semester and lists PAED-001 to PAED-015 at "0 of 5 met". The sidebar reads
+  "Acting as Speciality admin" or "Acting as Sub-speciality admin", over Home, Decisions due, Committee reviews and
+  Decision panels, then My data rights.
 
 --- from execution/knowledge/scenario-paediatrics/act-3-operations.md ---
 
@@ -254,12 +257,13 @@ Expect: "Stalled requests" is marked as a warning and lists both, oldest first, 
 
 ### Step 3.31 — Mr Smit opens Stalled Activities
 Role: Coordinator — Mr Pieter Smit
-Route: /placeholder/{Feature}
-Do: Choose Stalled Activities in the nav (`/placeholder/stalled-activities`). Then open a mistyped address,
-  `/placeholder/stalled-work`.
-Expect: Stalled Activities reads "This page is not built yet." with a "Coming soon" card. There is no page from which to
-  chase a stalled request: no reminder and no reassignment. The mistyped address is "Page not found" with status 404,
-  not a "Coming soon" (T178).
+Route: / → /not-found
+Do: Look in the menu for a page of stalled requests. Then type the address the menu once linked,
+  `/placeholder/stalled-activities`.
+Expect: The menu offers none: Home, Decisions due, MSF campaigns, Committee reviews and Data rights requests, then My
+  data rights. The nav links to no unbuilt page (DESIGN.md § The NavMenu); stalled work is flow 06's. Only Home's
+  "Stalled requests" card lists it, and no page chases a stalled request: no reminder and no reassignment. The old
+  address is "Page not found" with status 404: the placeholder page went with the stubs (T335, flow 01).
 
 ### Step 3.32 — The daily nudge reminds the assessors
 Role: Administrator — devadmin@wombat.local
@@ -274,34 +278,39 @@ Expect: The job's last run updates. The application log holds two stub emails, "
 
 ### Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees
 Role: CommitteeMember — Dr Thandi Zulu
-Route: /dashboard/switch/{role} → / → /placeholder/{Feature}
-Do: Switch the view back to CommitteeMember and read the dashboard. Then choose Programme Trainees in the nav.
+Route: / → /dashboard/switch/{role} → /
+Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
 Expect:
+  - Home opens acting as Assessor, her choice from Step 3.33, kept with her account. After the switch an info alert
+    reads "You are now acting as Committee member.", the sidebar "Acting as Committee member", and Home's subtitle
+    "Committee member · Semester N, YYYY".
   - Targets this period, "Semester 2, 2026 · July to November": KGK's five current trainees, fewest met first.
     Pieter du Plessis, Nomsa Mahlangu and Sipho Ndlovu read "semester 0/10 · yearly 0/5". Anele Dlamini and Lerato
     Molefe read "semester 1/10 · yearly 0/5".
   - Targets met by EPA: PAED-001 (3 per semester) reads "2 of 5 met", and every other EPA "0 of 5 met".
   - Neither card holds a link.
-  - Programme Trainees is "Coming soon".
+  - Her menu is Home, Committee reviews and Decision panels, then My data rights. Programme trainees is flow 06's, and
+    the menu offers no page before it is built.
 
 ### Step 3.53 — Dr Mokoena's dashboard, its review queue, and STAR Review Queue
 Role: SpecialityAdmin — Dr Refilwe Mokoena
-Route: / → /placeholder/{Feature}
-Do: Read the dashboard. Then choose STAR Review Queue in the nav.
+Route: /
+Do: Read the dashboard and the menu.
 Expect:
   - Pending reviews: "2 activities awaiting review", Dr du Plessis's Requested CBD and his portfolio review awaiting
     review. The card has no link (T297).
   - Trainees in programme: "5 active / 0 inactive".
   - Curriculum coverage — Semester 2, 2026: the 15 EPAs with their targets. PAED-001 reads "2 of 5 met", and the rest
     "0 of 5 met", the same figures as Dr Zulu's.
-  - STAR Review Queue is "Coming soon".
+  - Her menu is Home, Decisions due, Committee reviews and Decision panels, then My data rights. The STAR review queue
+    is flow 09's and Programme trainees flow 06's; the menu offers neither before it is built.
 
 ### Step 3.54 — Dr Sithole's dashboard
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /
 Do: Read the dashboard.
 Expect: The same three cards and figures as Dr Mokoena's: "2 activities awaiting review" with no link, "5 active / 0
-  inactive", and PAED-001 "2 of 5 met". His nav offers the same Programme Trainees and STAR Review Queue placeholders.
+  inactive", and PAED-001 "2 of 5 met". His menu reads as hers, under "Acting as Sub-speciality admin".
 
 --- from execution/knowledge/scenario-paediatrics/appendix-cross-cutting.md ---
 
@@ -317,53 +326,54 @@ Expect: The log holds a stub mail "You have draft activities waiting" beginning 
 
 ### Step A.5.10 — Mr Smit's Stalled Activities
 Role: Coordinator — Mr Pieter Smit
-Route: / → /placeholder/{Feature}
-Do: Read the dashboard's "Stalled requests" card, then open Stalled Activities from the nav.
+Route: /
+Do: Read the dashboard's "Stalled requests" card, then look for a stalled-work page in the menu.
 Expect: The card lists Dr du Plessis's portfolio review, still awaiting review since Step 3.30 aged it, and its row
-  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. Stalled
-  Activities is the "Coming soon" stub, headed "Stalled Activities".
+  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. The menu
+  offers no stalled-work page: it is flow 06's, and the nav links to no page that is not built.
 
 ### Step A.5.11 — Dr Botha's Programme Trainees
 Role: CommitteeMember — Dr Sarah Botha
-Route: /placeholder/{Feature}
-Do: Open Programme Trainees from the nav.
-Expect: The "Coming soon" stub, headed "Programme Trainees".
+Route: /
+Do: Read the menu.
+Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Committee reviews and Decision
+  panels, then My data rights. Programme trainees is flow 06's, and not offered before it is built.
 
 ### Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue
 Role: SpecialityAdmin — Dr Refilwe Mokoena
-Route: /placeholder/{Feature} → /placeholder/{Feature}
-Do: Open Programme Trainees, then STAR Review Queue, from the nav.
-Expect: Both are the "Coming soon" stub, each under its own heading.
+Route: /
+Do: Read the menu.
+Expect: Home, Decisions due, Committee reviews and Decision panels, then My data rights. Programme trainees is flow
+  06's and the STAR review queue flow 09's; the menu offers neither before it is built.
 
 ### Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
-Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions Due and the data-rights queue.
+Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
 Expect: The campaign page keeps its gutter (T226), and its invitee table (counts by respondent group: the page never
-  lists an address) scrolls within its card. Decisions Due's summary scrolls sideways, and a keyboard can scroll it, as
+  lists an address) scrolls within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as
   a labelled, focusable region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 
 ### Step A.7.6 — Dr Zulu on her phone
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: At 390 px, open Committee Reviews and Dr Molefe's final review.
+Do: At 390 px, open Committee reviews and Dr Molefe's final review.
 Expect: The review's cards stack. The evidence tables scroll inside their containers, and each EPA's trajectory chart
   fits the width (T166).
 
 ### Step A.7.7 — Dr Mokoena on her phone
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
-Do: At 390 px, open her dashboard, Decision Panels, Decisions Due and, by its address, Entrustment decisions.
+Do: At 390 px, open her dashboard, Decision panels, Decisions due and, by its address, Entrustment decisions.
 Expect: The dashboard's coverage cards stack. The panels list and the decisions list scroll inside their containers
   (T226).
 
 ### Step A.7.8 — Dr Sithole on his phone
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
-Route: / → /committee/reviews → /committee/decisions-due → /placeholder/{Feature} → /placeholder/{Feature}
-Do: At 390 px, open his dashboard, Committee Reviews and Decisions Due, then Programme Trainees and STAR Review Queue
-  from the folded nav.
-Expect: As for Dr Mokoena, scoped to his sub-speciality. His nav offers the same two "Coming soon" stubs as hers
-  (A.5.12), and each fits the width.
+Route: / → /committee/reviews → /committee/decisions-due
+Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
+Expect: As for Dr Mokoena, scoped to his sub-speciality. The folded bar reads "Acting as" over "Sub-speciality admin",
+  in two lines: the bar grows, and the role is never cut. His menu reads as hers (A.5.12), each row 44px.
 ```
 
 ### 2.2 After you pick a wireframe, paste this

@@ -1,0 +1,55 @@
+@*
+  The frame a role dashboard draws its cards in, on Home (T335, flow 01; R2-Landing-Loading, R2-Landing-Error; review
+  S22(c); T329). DESIGN.md § Dashboard page.
+
+  - Loading: the grid and its cards at once, each card its title and a skeleton (DashboardCard's IsLoading), and the grid
+    marked busy. Nothing is offered until the read returns.
+  - Failed: one danger Alert with fixed words and Try again, which reads again, and no cards: a card drawn empty would say
+    there is nothing, and one drawn as a skeleton would say it is still coming. The failure's own text is the log's, not
+    the page's.
+  - Otherwise: the grid and its cards.
+
+  Try again is an action whose button goes with the alert, so its answer (the cards, or the alert again) takes the focus
+  once it has come (ActionResult; DESIGN.md § Button system, T234).
+*@
+<ActionResult @ref="_result">
+  @if (Failed)
+  {
+    <Alert Kind="danger">
+      <div class="alert-row">
+        <span class="alert-row-text"><strong>Could not load your Home.</strong> Nothing has changed. Try again, or come back in a few minutes.</span>
+        <button type="button" class="btn btn-outline btn-sm" @onclick="RetryAsync">
+          <Icon Name="refresh-cw" />
+          Try again
+        </button>
+      </div>
+    </Alert>
+  }
+  else
+  {
+    <div class="dashboard-grid" aria-busy="@(IsLoading ? "true" : null)">
+      @ChildContent
+    </div>
+  }
+</ActionResult>
+
+@code {
+  private ActionResult? _result;
+
+  /// <summary>The dashboard's read has not returned yet.</summary>
+  [Parameter] public bool IsLoading { get; set; }
+
+  /// <summary>The dashboard's read failed: the page says so once, and offers to read again.</summary>
+  [Parameter] public bool Failed { get; set; }
+
+  /// <summary>Reads the dashboard again; it returns once the read has answered.</summary>
+  [Parameter] public EventCallback OnRetry { get; set; }
+
+  [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+
+  private async Task RetryAsync()
+  {
+    await OnRetry.InvokeAsync();
+    _result?.FocusAfterRender();
+  }
+}

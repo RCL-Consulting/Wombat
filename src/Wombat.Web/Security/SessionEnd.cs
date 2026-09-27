@@ -47,20 +47,7 @@ public static class SessionEnd
     /// <paramref name="url" /> when it is a path on this site, as <c>LocalRedirect</c> judges one: it starts with one slash,
     /// not two and not a slash and a backslash, and carries no control character. Null for anything else.
     /// </summary>
-    public static string? LocalOrNull(string? url)
-    {
-        if (string.IsNullOrEmpty(url) || url[0] != '/')
-        {
-            return null;
-        }
-
-        if (url.Length > 1 && (url[1] == '/' || url[1] == '\\'))
-        {
-            return null;
-        }
-
-        return url.Any(char.IsControl) ? null : url;
-    }
+    public static string? LocalOrNull(string? url) => LocalUrl.OrNull(url);
 
     /// <summary>
     /// The endpoint: back to <paramref name="returnUrl" /> for a session the account still accepts; otherwise signed out,

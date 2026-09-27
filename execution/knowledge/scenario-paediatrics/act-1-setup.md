@@ -51,14 +51,17 @@ nobody else.
 Role: Administrator — the platform operator (`devadmin@wombat.local`)
 Route: /account/login → /
 Do: Sign in with `devadmin@wombat.local` and the dev password that `DevUserSeeder` gives it.
-Expect: Home reads "Welcome, devadmin@wombat.local" and "Viewing as Administrator". It has no "You also act as" line,
-  since devadmin holds one role. The dashboard has three cards:
+Expect: Home is headed "Home", with "Administrator · Semester N, YYYY" under it, naming the current semester, and its
+  header offers no action. No switch is offered, in the sidebar or on Home, since devadmin holds one role. The dashboard
+  has two cards:
   - System health, which shows the database connection as healthy;
-  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists);
-  - Maintenance, which links to Activity types, Users, Institutions and Curriculum progress.
-  The nav reads Home, My Account, Data Rights, Colleges, EPAs, Curricula, Institutions, Invitations, Users, Activity
-  Types, Entrustment Scales, Scheduled Jobs, SSO Mappings, Audit Log, Decision Panels, Committee Reviews, Decisions Due,
-  Data Rights Requests, System, then Logout (DESIGN.md § The NavMenu).
+  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists).
+  There is no Maintenance card: Curriculum progress is linked from the Curricula page's header (T335).
+  The sidebar reads "Acting as Administrator", with no switch, over his menu, grouped: Home; Platform: Scheduled jobs,
+  Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations;
+  Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision
+  panels; then My data rights under a rule (DESIGN.md § The NavMenu). Home is lit. The top bar names him "Demo
+  Administrator", with Sign out beside it.
 Note: The sign-in page offers no institutional sign-in, because dev configures no SSO provider (appendix).
 Actual (2026-09-26, T295 replay, wombat_scenario): As expected: "Welcome, devadmin@wombat.local", "Viewing as
   Administrator", no switch line, 9 registered users (the bootstrap admin@wombat.local exists), the three cards and the
@@ -85,9 +88,9 @@ Role: Administrator — the platform operator
 Route: /admin/colleges → /admin/colleges/{Id:int}
 Do: Open the CPSA's Edit and read the record. Leave by Back to colleges without saving. Record the CPSA's id as
   `{CollegeId}`.
-Expect: The page is headed "Edit college", and the browser tab reads "Edit College". Name, Short code and Description
-  hold Step 1.2's values, and Active is ticked. Deactivate and Save are offered. Leaving saves nothing, and the list is
-  unchanged.
+Expect: The page is headed "Edit college", and the browser tab reads "Edit college · Wombat" (T190). Name, Short
+  code and Description hold Step 1.2's values, and Active is ticked. Deactivate and Save are offered. Leaving saves
+  nothing, and the list is unchanged.
 Actual (2026-09-26, T295 replay, wombat_scenario): As expected: /admin/colleges/2, heading "Edit college", tab "Edit
   College", the three fields hold Step 1.2's values, Active ticked; Cancel, Deactivate and Save offered. Back to
   colleges left the list unchanged. `{CollegeId}` = 2.
@@ -96,7 +99,7 @@ Gap: none
 ### Step 1.4 — The CPSA ladder has six rungs
 Role: Administrator — the platform operator
 Route: /admin/entrustment-scales → /admin/entrustment-scales/{Id:int}
-Do: Open Entrustment Scales and read the list. Then open Edit on `CPSA Paediatric Entrustment Scale v11.1` and read its
+Do: Open Entrustment scales and read the list. Then open Edit on `CPSA Paediatric Entrustment Scale v11.1` and read its
   levels. Leave by Cancel without saving. Record the scale's id as `{ScaleId}`.
 Expect: The list has two scales: `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and the Demo `O-R Scale` at 5.
   The Administrator is offered Create scale, and Edit and Delete on each row.
@@ -153,8 +156,8 @@ Do: Open Institutions and read the list. Then press Create institution and enter
   Save. Record KGK's id as `{InstitutionId}`.
 Expect: The list holds one row, the `Demo Institution` (`DEMO`), Active, offering Edit only. The create form asks for
   Name, Short code and Contact email, and has no Status field. Save lands on KGK's own record, headed "Edit
-  institution", with the browser tab reading "Edit Institution". There, Active is ticked and Deactivate is offered. Back
-  on the list, KGK is a second row: Active, and created today.
+  institution", with the browser tab reading "Edit institution · Wombat" (T190). There, Active is ticked and
+  Deactivate is offered. Back on the list, KGK is a second row: Active, and created today.
 Note: This step used to be an SQL stand-in (T159). Played through the page, the save now writes KGK's audit row, which
   the stand-in never did.
 Actual (2026-09-26, T295 replay, wombat_scenario): As expected: one row, Demo Institution (DEMO), Active, Edit only; the
@@ -200,10 +203,10 @@ Do: In a fresh browser session, open the link from the CollegeAdmin stub email i
     digit and a symbol.
   Press Register. Write the password to `pwd_DO_NOT_COMMIT.txt`.
 Expect: The page reads "Registering kruger@cmsa.wombat.local as CollegeAdmin.", and the address is shown but cannot be
-  edited. Register signs Kruger in and lands on Home, which reads "Welcome, kruger@cmsa.wombat.local" and "Viewing as
-  CollegeAdmin". The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The nav reads
-  Home, My Account, Data Rights, Specialities, EPAs, Curricula, Activity Types, Logout: the College writes its
-  disciplines' activity types in the builder (T300, D52).
+  edited. Register signs Kruger in and lands on Home, with "College admin · Semester N, YYYY" under its heading. The
+  dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The sidebar reads "Acting as College
+  admin" over Home, Specialities, EPAs, Curricula and Activity types, then My data rights: the College writes its
+  disciplines' activity types in the builder (T300, D52). The top bar names him "Anton Kruger".
 Actual (2026-09-26, T295 replay, wombat_scenario): As expected: "Registering kruger@cmsa.wombat.local as CollegeAdmin.",
   Email disabled. Register landed on Home: "Welcome, kruger@cmsa.wombat.local", "Viewing as CollegeAdmin", one National
   catalogue card linking Specialities, EPAs, Curricula; nav Home, My Account, Data Rights, Specialities, EPAs,
@@ -229,14 +232,15 @@ Role: Anonymous — Prof Nolwazi Mbatha, invited
 Route: /account/register → /
 Do: Register as in Step 1.8, from the InstitutionalAdmin stub email in the log, with First name `Nolwazi` and Last name
   `Mbatha`. Write her password to `pwd_DO_NOT_COMMIT.txt`.
-Expect: The page reads "Registering mbatha@kgk.wombat.local as InstitutionalAdmin." Register lands her on Home, which
-  reads "Viewing as InstitutionalAdmin". The dashboard has three cards:
+Expect: The page reads "Registering mbatha@kgk.wombat.local as InstitutionalAdmin." Register lands her on Home, with
+  "Institutional admin · Semester N, YYYY" under its heading and "Invite a person" in its header, which opens the
+  invitations page. The dashboard has three cards:
   - Users, which lists InstitutionalAdmin 1;
   - Specialities & sub-specialities, which reads 0 and 0, because KGK has adopted nothing yet;
   - Quick links: Users, Invitations, Curriculum adoptions and Entrustment decisions.
-  The nav reads Home, My Account, Data Rights, Curriculum Adoptions, EPAs, Curricula, Activity Types, Entrustment
-  Scales, Trainees, Assessors, Invitations, Users, SSO Mappings, Audit Log, Decision Panels, Committee Reviews,
-  Decisions Due, Logout.
+  The sidebar reads "Acting as Institutional admin" over her menu, grouped: Home; People: Invitations, Trainees,
+  Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews:
+  Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log; then My data rights.
 Note: The specialities card is meant to count what the institution has adopted (T291 item 4). Until that fix lands, it
   counts the whole national catalogue: 2 and 2.
 Actual (2026-09-26, T295 replay, wombat_scenario): "Registering mbatha@kgk.wombat.local as InstitutionalAdmin.";
@@ -267,7 +271,8 @@ Do: Open Specialities from the nav and read the page. Record the Paediatrics spe
 Expect: He is redirected to his own College's specialities, subtitled "College: College of Paediatricians of South
   Africa (CPSA)". The page has one row: `Paediatrics`, "Specialist training in Paediatrics.", Active, offering Edit and
   Sub-specialities. The Demo College's speciality is not listed. The header offers Create speciality. It offers no link
-  to the Colleges list, which does not admit him (T291 item 2).
+  to the Colleges list, which does not admit him (T291 item 2). His menu's Specialities stays lit on it (T331), and the
+  trail above the header reads Home › Specialities › College of Paediatricians of South Africa.
 Actual (2026-09-26, T295 replay, wombat_scenario): Specialities in the nav redirected to /admin/colleges/2/specialities,
   subtitled "College: College of Paediatricians of South Africa (CPSA)"; one row, Paediatrics, "Specialist training in
   Paediatrics.", Active, Edit and Sub-specialities; no Demo speciality; Create speciality. The header also offers "Back
@@ -307,8 +312,9 @@ Gap: none
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/entrustment-scales → /access-denied
 Do: Type the address of the entrustment scales list.
-Expect: The page reads "Access denied" and "You do not have permission to view this page.", with a Back to home link.
-  The scales list admits only an Administrator or an InstitutionalAdmin, and Kruger's nav offers no Entrustment Scales.
+Expect: The page reads "You cannot open this page" and "Your role (College admin) does not open this page.", then "If
+  you need it for your work, ask the platform administrator.", with Go to Home (T335).
+  The scales list admits only an Administrator or an InstitutionalAdmin, and Kruger's menu offers no Entrustment scales.
   He reads the ladder by name where the College uses it: the sub-speciality's default (Step 1.14) and each item's Scale
   column (Step 1.18).
 Actual (2026-09-26, T295 replay, wombat_scenario): As expected: /access-denied?ReturnUrl=%2Fadmin%2Fentrustment-scales
@@ -427,7 +433,7 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/curricula → /admin/epas
 Do: Open Curricula, then EPAs, before adopting anything.
 Expect: Curricula shows the empty state "No curricula yet": "Your institution has not adopted a curriculum yet. Adopt
-  one on the Curriculum Adoptions page before admitting trainees." It offers no Create curriculum (T211).
+  one on the Curriculum adoptions page before admitting trainees." It offers no Create curriculum (T211).
   EPAs shows "No EPAs yet". An InstitutionalAdmin reads the national EPAs of the disciplines her institution has
   adopted, plus its own EPAs, and there are none of either.
 Actual (2026-09-26, T295 replay, wombat_scenario): Curricula as expected: "No curricula yet" with the quoted text, no
@@ -441,7 +447,7 @@ Gap: [F-1.19a, T291] Before any adoption the EPAs page offers an InstitutionalAd
 ### Step 1.20 — Adopt curriculum 11.1 for KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/adoptions
-Do: Open Curriculum Adoptions. Under Adopt a curriculum, choose `College of Paediatricians of South Africa —
+Do: Open Curriculum adoptions. Under Adopt a curriculum, choose `College of Paediatricians of South Africa —
   Paediatrics / Paediatrics: Paediatric EPA Curriculum (11.1)` and press Adopt. Then choose the same curriculum again
   and press Adopt a second time.
 Expect: The page has no institution picker, because hers is KGK. Current adoptions first reads "No curriculum adoptions
@@ -482,7 +488,7 @@ Gap: [F-1.21a, T291] Known, T291 item 1, still open: /admin/epas offers Edit on 
 ### Step 1.22 — The ladder, read-only to KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/entrustment-scales
-Do: Open Entrustment Scales and read the list.
+Do: Open Entrustment scales and read the list.
 Expect: The list shows `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and `O-R Scale` at 5, each with its
   description. It offers no Create scale and has no actions column, because only an Administrator changes a scale
   (T057, T239).
@@ -502,8 +508,8 @@ Expect: KGK's page is headed "Edit institution" and shows KGK's name, the short 
   She is offered nothing that would deactivate KGK, neither a Deactivate nor an Active she can untick, and no link
   (Back or Cancel) to the Institutions list: deactivating an institution and listing them belong to an Administrator
   alone (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
-  The Demo Institution's id sends her to Page not found, not Access denied. The product never confirms that a record
-  outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
+  The Demo Institution's id sends her to Page not found, not "You cannot open this page". The product never confirms
+  that a record outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
 Actual (2026-09-26, T295 replay, wombat_scenario): /admin/institutions/2 is headed "Edit institution" with KGK's name,
   `KGK`, the contact email and Active ticked, and offers Save. It also offers "Back to institutions" and Cancel (both
   /admin/institutions, which shows her Access denied), Deactivate, and an Active checkbox she can untick. Nothing was
@@ -530,7 +536,7 @@ changes none: they open read-only to her, because the College writes them (T300,
 ### Step 1.24 — The twelve CPSA instruments are published
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types
-Do: Open Activity Types, search `cpsa` and read the list. Then clear the search.
+Do: Open Activity types, search `cpsa` and read the list. Then clear the search.
 Expect: The search leaves the 12 rows in the table below. Each reads Scope `Speciality · Paediatrics`, Published `v1`,
   Draft `None` and Active, and each offers View, named for its row ("View Mini-CEX (Paediatrics)"), not Edit: the
   College's instruments are the College's, and she may not write them (T300, D52; T239 names each row's action). With
@@ -575,10 +581,10 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types/{ActivityTypeId:int}
 Do: Open `Mini-CEX (Paediatrics)` from its View and read each tab, opening the `overall_level` field to read its
   settings. Change nothing, save nothing, and leave by Back to list.
-Expect: The page is headed "Mini-CEX (Paediatrics)", not "Edit …", and the browser tab reads the same. It opens on the
-  Form tab, under a standing information notice that is there on every visit (no alert role): "Set by the College that
-  owns Paediatrics. You can read this activity type here, but not change it." (T300; the wording is a product
-  decision.)
+Expect: The page is headed "Mini-CEX (Paediatrics)", not "Edit …", and the browser tab reads "Mini-CEX (Paediatrics) ·
+  Wombat" (T190). It opens on the Form tab, under a standing information notice that is there on every visit (no alert
+  role): "Set by the College that owns Paediatrics. You can read this activity type here, but not change it." (T300;
+  the wording is a product decision.)
   - **Form settings** read, as text, Encounter date field `observed_on`, Entrustment rating field `overall_level` and
     EPA field `epa_id`.
   - **Sections.** Request holds the EPA, the Assessor (a User field), the date observed, the clinical setting, the
@@ -628,8 +634,8 @@ Do: Press New activity type, open the Metadata tab and enter:
   - Description `A registrar's log of a teaching session they delivered at KGK. Not rated, and credits nothing.`;
   - Active on.
   Press Save draft. Record the type's id as `{ActivityTypeId}`.
-Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "New activity
-  type" too (T300, T190). It starts with a default draft:
+Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "New activity type
+  · Wombat" (T300, T190). It starts with a default draft:
   - one Details section holding a required Title text field;
   - a workflow from draft to submitted;
   - the credit rules `{"counts_for": []}`.
@@ -637,7 +643,8 @@ Expect: The builder opens on the Form tab, headed "New activity type", with the 
   never Global (T300, D52; DESIGN.md: a picker offers exactly what its command accepts). So the first Save draft is
   accepted without Scope being touched. This tool is offers `Not a WBA instrument` and the twelve instruments.
   Save draft moves the page to the type's own address and reads "Draft saved." (T291 item 3). The page is then headed
-  "Edit KGK Teaching Session Log", and the browser tab reads `KGK Teaching Session Log`.
+  "Edit KGK Teaching Session Log", and the browser tab says the same: "Edit KGK Teaching Session Log · Wombat"
+  (T190).
 Note: The key and name cannot collide with a seed, since every seeded key is a bare family or ends `_cpsa`. The type
   has no instrument key, so no tool list restricts which EPA it is filed against (D21, D45).
 Actual (2026-09-26, T295 replay, wombat_scenario): Opens on Form, "New activity type", with the default draft (Details

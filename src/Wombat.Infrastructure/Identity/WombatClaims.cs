@@ -9,4 +9,6 @@ public static class WombatClaims
     public const string SpecialityId = WombatClaimTypes.SpecialityId;
     public const string SubSpecialityId = WombatClaimTypes.SubSpecialityId;
     public const string TraineeRecord = WombatClaimTypes.TraineeRecord;
+    public const string DisplayName = WombatClaimTypes.DisplayName;
+    public const string ActingRole = WombatClaimTypes.ActingRole;
 }

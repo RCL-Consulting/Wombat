@@ -1,49 +1,163 @@
-.components-reconnect-first-attempt-visible,
-.components-reconnect-repeated-attempt-visible,
-.components-reconnect-failed-visible,
-.components-pause-visible,
-.components-resume-failed-visible,
-.components-rejoining-animation {
+/* The reconnect dialog (T335 flow 01, T330; DESIGN.md § The reconnect dialog and the error bar).
+
+   One state at a time. blazor.web.js (UserSpecifiedDisplay) puts its classes on the dialog: -show when the connection
+   drops; -retrying beside it, from the second attempt that has to wait its turn; -paused, -failed or -rejected in place
+   of both; ReconnectModal.razor.js puts -resume-failed and -rejected on it where the runtime raises nothing. Each state
+   element carries the -visible class its rule below names, and shows under that rule alone. */
+
+.reconnect-state {
     display: none;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 #components-reconnect-modal.components-reconnect-show .components-reconnect-first-attempt-visible,
-#components-reconnect-modal.components-reconnect-show .components-rejoining-animation,
+#components-reconnect-modal.components-reconnect-retrying .components-reconnect-repeated-attempt-visible,
+#components-reconnect-modal.components-reconnect-failed .components-reconnect-failed-visible,
 #components-reconnect-modal.components-reconnect-paused .components-pause-visible,
 #components-reconnect-modal.components-reconnect-resume-failed .components-resume-failed-visible,
-#components-reconnect-modal.components-reconnect-retrying,
-#components-reconnect-modal.components-reconnect-retrying .components-reconnect-repeated-attempt-visible,
-#components-reconnect-modal.components-reconnect-retrying .components-rejoining-animation,
-#components-reconnect-modal.components-reconnect-failed,
-#components-reconnect-modal.components-reconnect-failed .components-reconnect-failed-visible {
-    display: block;
+#components-reconnect-modal.components-reconnect-rejected .components-reconnect-rejected-visible {
+    display: flex;
 }
 
+/* T330: the runtime adds -retrying beside -show and takes neither away while it retries, so without this the first
+   attempt's state showed above the retry's. Equally specific as the -show rule, so it comes after it. */
+#components-reconnect-modal.components-reconnect-retrying .components-reconnect-first-attempt-visible {
+    display: none;
+}
 
+/* The retry's one line (2026-09-27, T335, flow 01). The script sets data-attempt on every retry: "waiting" while the
+   runtime counts down to its next attempt, "started" once it makes it. Waiting shows the count; started shows "Trying
+   again now." and the bar. Inside the one state, so the heading, and the focus on it, stay put across every attempt
+   (until then each was a state of its own, and the focus moved between their two headings every few seconds). */
+#components-reconnect-modal:not([data-attempt="started"]) [data-reconnect-line="started"],
+#components-reconnect-modal[data-attempt="started"] [data-reconnect-line="waiting"] {
+    display: none;
+}
+
+/* ── The dialog ─────────────────────────────────────── */
+
+/* 400px, and 16px from each side where the screen is narrower (358px at 390). The browser centres a modal dialog. */
 #components-reconnect-modal {
-    background-color: var(--surface-color);
-    width: 20rem;
-    margin: 20vh auto;
-    padding: 2rem;
-    border: 0;
-    border-radius: 0.5rem;
-    box-shadow: 0 3px 6px 2px rgba(0, 0, 0, 0.3);
-    opacity: 0;
-    transition: display 0.5s allow-discrete, overlay 0.5s allow-discrete;
     animation: components-reconnect-modal-fadeOutOpacity 0.5s both;
-    &[open]
-
-{
-    animation: components-reconnect-modal-slideUp 1.5s cubic-bezier(.05, .89, .25, 1.02) 0.3s, components-reconnect-modal-fadeInOpacity 0.5s ease-in-out 0.3s;
-    animation-fill-mode: both;
+    background-color: var(--surface-color);
+    border: 0;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-dialog);
+    box-sizing: border-box;
+    color: var(--text-color);
+    max-width: calc(100% - 2 * var(--space-md));
+    padding: var(--space-lg);
+    transition: display 0.5s allow-discrete, overlay 0.5s allow-discrete;
+    width: 25rem;
 }
 
+/* It arrives after 0.3s, so a connection that drops and comes straight back shows nothing, then slides up and fades in.
+   It is opaque at rest: only the animation starts it transparent, so with motion reduced it is simply there. */
+#components-reconnect-modal[open] {
+    animation: components-reconnect-modal-slideUp 1.5s cubic-bezier(.05, .89, .25, 1.02) 0.3s both,
+        components-reconnect-modal-fadeInOpacity 0.5s ease-in-out 0.3s both;
+    display: flex;
+    flex-direction: column;
 }
 
 #components-reconnect-modal::backdrop {
-    background-color: rgba(0, 0, 0, 0.4);
     animation: components-reconnect-modal-fadeInOpacity 0.5s ease-in-out;
-    opacity: 1;
+    background-color: var(--scrim);
+}
+
+#components-reconnect-modal p {
+    margin: 0;
+}
+
+.reconnect-title {
+    align-items: center;
+    display: flex;
+    font-size: 1.25rem;
+    gap: 0.625rem;
+    line-height: 1.25;
+    margin: 0;
+}
+
+/* The heading takes the focus when the dialog opens, so that it is read, as a page's h1 does after a navigation
+   (app.css, h1[tabindex="-1"]); Tab never reaches it, so it draws no ring. */
+.reconnect-title:focus {
+    outline: none;
+}
+
+.reconnect-icon {
+    flex: none;
+}
+
+.reconnect-icon--progress {
+    color: var(--secondary-color);
+}
+
+.reconnect-icon--waiting {
+    color: var(--warning-color);
+}
+
+.reconnect-icon--alert {
+    color: var(--danger-color);
+}
+
+.reconnect-spinner {
+    animation: components-reconnect-spin 1s linear infinite;
+}
+
+/* An indeterminate bar: the fill runs across the track. At rest (reduced motion) it stands where the design draws it. */
+.reconnect-bar {
+    background-color: var(--header-bg);
+    border-radius: var(--radius-sm);
+    height: 4px;
+    overflow: hidden;
+}
+
+.reconnect-bar-fill {
+    animation: components-reconnect-bar 1.2s ease-in-out infinite;
+    background-color: var(--secondary-color);
+    border-radius: var(--radius-sm);
+    display: block;
+    height: 100%;
+    margin-left: 22%;
+    width: 38%;
+}
+
+.reconnect-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+}
+
+@media (min-width: 641px) {
+    /* The same height in every state, so the dialog does not jump as it moves between them. */
+    #components-reconnect-modal[open] {
+        min-height: 12.5rem;
+    }
+}
+
+@media (max-width: 640.98px) {
+    #components-reconnect-modal {
+        padding: 1.25rem;
+    }
+
+    .reconnect-actions .btn {
+        flex: 1 1 auto;
+        min-height: 44px;
+    }
+}
+
+/* The spinner and the bar stop, and the dialog neither slides nor fades: the words carry the state. */
+@media (prefers-reduced-motion: reduce) {
+    #components-reconnect-modal,
+    #components-reconnect-modal[open],
+    #components-reconnect-modal::backdrop,
+    .reconnect-spinner,
+    .reconnect-bar-fill {
+        animation: none;
+        transition: none;
+    }
 }
 
 @keyframes components-reconnect-modal-slideUp {
@@ -76,82 +190,19 @@
     }
 }
 
-.components-reconnect-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
+@keyframes components-reconnect-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-#components-reconnect-modal p {
-    margin: 0;
-    text-align: center;
-}
-
-#components-reconnect-modal button {
-    border: 0;
-    background-color: var(--secondary-color);
-    color: var(--surface-color);
-    padding: 4px 24px;
-    border-radius: 4px;
-}
-
-    #components-reconnect-modal button:hover {
-        background-color: var(--link-color);
+/* From off the track's left edge to off its right: the fill is 38% of the track and rests at 22%. */
+@keyframes components-reconnect-bar {
+    from {
+        transform: translateX(-158%);
     }
 
-    #components-reconnect-modal button:active {
-        background-color: var(--secondary-color);
-    }
-
-.components-rejoining-animation {
-    position: relative;
-    width: 80px;
-    height: 80px;
-}
-
-    .components-rejoining-animation div {
-        position: absolute;
-        border: 3px solid var(--focus-ring);
-        opacity: 1;
-        border-radius: 50%;
-        animation: components-rejoining-animation 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-    }
-
-        .components-rejoining-animation div:nth-child(2) {
-            animation-delay: -0.5s;
-        }
-
-@keyframes components-rejoining-animation {
-    0% {
-        top: 40px;
-        left: 40px;
-        width: 0;
-        height: 0;
-        opacity: 0;
-    }
-
-    4.9% {
-        top: 40px;
-        left: 40px;
-        width: 0;
-        height: 0;
-        opacity: 0;
-    }
-
-    5% {
-        top: 40px;
-        left: 40px;
-        width: 0;
-        height: 0;
-        opacity: 1;
-    }
-
-    100% {
-        top: 0px;
-        left: 0px;
-        width: 80px;
-        height: 80px;
-        opacity: 0;
+    to {
+        transform: translateX(206%);
     }
 }

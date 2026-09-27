@@ -1,34 +1,161 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager Navigation
 
-<div class="page">
-  <div class="sidebar">
-    <NavMenu />
-  </div>
+@*
+  The shell (T335, flow 01; DESIGN.md § Layout grid; R2-Shell-*, R2-Phone-*, R2-Sidebar-Scroll). One DOM at every width,
+  laid out by MainLayout.razor.css. The chrome is one <header>, the page's banner: the brand, the acting role and the
+  Menu toggle for a phone, the navigation, and the account row. From 641px the header is the full-height sidebar (the
+  brand cell, the role head, the scrolling list), with the account row fixed across the top of the page beside it; below
+  641px it is the phone bar (the brand, the acting role, Menu), whose menu opens over the page with the account row
+  pinned at its foot. The account row is one element and holds the one Sign out at both widths.
 
-  <main>
-    <div class="top-row auth">
-      <AuthorizeView Context="layoutAuth">
-        <Authorized Context="layoutUser">
-          <a href="/account/profile">@layoutUser.User.Identity?.Name</a>
-          <form action="/account/logout" method="post">
-            <AntiforgeryToken />
-            <button type="submit" class="btn btn-outline btn-sm">Sign out</button>
-          </form>
-        </Authorized>
-        <NotAuthorized Context="layoutAnonymous">
-          <a href="/account/login">Sign in</a>
-        </NotAuthorized>
-      </AuthorizeView>
+  It reads no database: the name is the display-name claim, the role the cascaded acting role (App resolved both from the
+  sign-in cookie), so a page drawn in a database outage, the error page's, still has its shell (review S7).
+*@
+
+<AuthorizeView Context="shell">
+  <Authorized>
+    <CascadingValue Value="NavItems.For(Acting ?? ActingRole.None, shell.User)">
+      <div class="page">
+        @*
+          The phone menu's toggle, CSS only (review S11). A visually hidden checkbox, first in the page so every part of
+          the shell is its later sibling, and keyed by a count of the circuit's navigations: every navigation replaces it,
+          unchecked, so the next page does not open under the menu, even one to the page shown (the lit item, the brand
+          on Home), whose path a key by path kept (the review of the t335 branch). Its label, in the header, is the 44px
+          target, "Menu", or "Close" when it is open, and takes the ring the checkbox's focus gives it. The checkbox is the
+          control a screen reader hears, checked or not, so the label carries no aria-expanded. From 641px neither is
+          displayed, so it is no tab stop.
+        *@
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" @key="_navigations" />
+
+        @*
+          The banner (the review of the t335 branch): until then the brand and the account row sat outside every landmark.
+          One header holds the shell's chrome at both widths, so neither needs display: contents, which some screen readers
+          drop a landmark for.
+        *@
+        <header class="sidebar">
+          <a class="brand" href="/">
+            <img class="brand-mark" src="/brand/wombat-mark.svg" alt="" width="32" height="32" />
+            <span class="brand-word">Wombat</span>
+          </a>
+
+          @* The phone bar names the acting role while the menu is folded; open, the menu's own head does (D8: none without a role). *@
+          @if (Acting?.Role is { } role)
+          {
+            <p class="phone-role"><span class="phone-role-label">Acting as</span> <span>@WombatRoleLabels.For(role)</span></p>
+          }
+
+          <label class="nav-toggle-label" for="nav-toggle">
+            <span class="nav-toggle-closed"><Icon Name="menu" Size="20" />Menu</span>
+            <span class="nav-toggle-open"><Icon Name="x" Size="20" />Close</span>
+          </label>
+
+          <NavMenu />
+
+          @*
+            The account row: the name, a link to My account, and Sign out. The name is the display-name claim, the whole of
+            it in the link, so it is the link's accessible name and its title; the top bar cuts it at 28 characters with an
+            ellipsis, the phone menu wraps it. On My account the name is the current page (R2-Rules § 3).
+          *@
+          <div class="account-row">
+            <a class="account-link" href="/account/profile" title="@DisplayName(shell.User)" aria-current="@(OnMyAccount ? "page" : null)">
+              <Icon Name="user" />
+              <span class="account-name">@DisplayName(shell.User)</span>
+            </a>
+            @if (OnTheErrorPage)
+            {
+              @* The error page is drawn in the failed request's rerun. A form's token here would be the one the failed pass
+                 made, whose antiforgery cookie the exception handler cleared with that pass's response, so the post could be
+                 refused. Sign out is a link to the sign-out page, which draws its own form and token. *@
+              <a class="btn btn-outline btn-sm sign-out-button" href="/account/logout-confirm">
+                <Icon Name="log-out" />
+                Sign out
+              </a>
+            }
+            else
+            {
+              <form class="sign-out" action="/account/logout" method="post">
+                <AntiforgeryToken />
+                <button type="submit" class="btn btn-outline btn-sm sign-out-button">
+                  <Icon Name="log-out" />
+                  Sign out
+                </button>
+              </form>
+            }
+          </div>
+        </header>
+
+        <main>
+          <article>
+            @Body
+          </article>
+        </main>
+      </div>
+    </CascadingValue>
+  </Authorized>
+  <NotAuthorized>
+    @* Signed out (the static pages a visitor reaches): a gradient bar with the brand and Sign in, and no navigation. *@
+    <div class="page page--signed-out">
+      <header class="signed-out-bar">
+        <a class="brand" href="/">
+          <img class="brand-mark" src="/brand/wombat-mark.svg" alt="" width="32" height="32" />
+          <span class="brand-word">Wombat</span>
+        </a>
+        <a class="sign-in" href="/account/login">
+          <Icon Name="log-in" />
+          Sign in
+        </a>
+      </header>
+
+      <main>
+        <article>
+          @Body
+        </article>
+      </main>
     </div>
+  </NotAuthorized>
+</AuthorizeView>
 
-    <article>
-      @Body
-    </article>
-  </main>
+@* The error bar (T335 flow 01; DESIGN.md § The reconnect dialog and the error bar), outside the AuthorizeView, so every
+   page has it. blazor.web.js shows it when the circuit fails by setting an inline display: block on #blazor-error-ui, so
+   its row is laid out on the wrapper inside; and it wires the buttons by their classes, .reload to reload the page and
+   .dismiss to hide the bar. Small buttons with their icons from 641px; below it 44px, without the icons (R2-ErrorBar,
+   R2-ErrorBar-Narrow). *@
+<div id="blazor-error-ui" role="alert" data-nosnippet>
+  <div class="error-bar-row">
+    <Icon Name="triangle-alert" Size="20" Class="error-bar-icon" />
+    <p class="error-bar-text">This page no longer responds; copy anything you need, then reload.</p>
+    <button type="button" class="btn btn-sm btn-primary reload"><Icon Name="refresh-cw" Class="error-bar-button-icon" />Reload</button>
+    <button type="button" class="btn btn-sm btn-outline dismiss"><Icon Name="x" Class="error-bar-button-icon" />Dismiss</button>
+  </div>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-  An unhandled error has occurred.
-  <a href="." class="reload">Reload</a>
-  <span class="dismiss">🗙</span>
-</div>
+@code {
+  /// <summary>How many navigations the circuit has made: the phone toggle's key.</summary>
+  private int _navigations;
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>The page shown, as Routes cascades it.</summary>
+  [CascadingParameter] public RouteData? Route { get; set; }
+
+  private bool OnMyAccount => Route?.PageType == NavOwners.MyAccountPage;
+
+  private bool OnTheErrorPage => Route?.PageType == typeof(Pages.Error);
+
+  protected override void OnInitialized() => Navigation.LocationChanged += OnLocationChanged;
+
+  /// <summary>Every navigation replaces the phone toggle, unchecked: the menu closes, whatever the page.</summary>
+  private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+  {
+    _navigations++;
+    _ = InvokeAsync(StateHasChanged);
+  }
+
+  public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+
+  /// <summary>The person's name, from the sign-in cookie's display-name claim; its email when the account has no name.</summary>
+  private static string DisplayName(System.Security.Claims.ClaimsPrincipal user) => user.GetDisplayName() ?? "My account";
+}

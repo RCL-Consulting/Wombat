@@ -14,9 +14,58 @@ public sealed class DashboardCardTests : TestContext
             .AddChildContent("<p>Body</p>"));
 
         cut.Markup.Should().Contain("class=\"detail-card\"");
-        cut.Markup.Should().Contain("<h3>");
-        cut.Markup.Should().Contain("Test Card");
+        cut.Find("h2.dashboard-card-title").TextContent.Trim().Should().Be("Test Card", "a card's title is an h2, under Home's h1 (T335)");
         cut.Markup.Should().Contain("Body");
+    }
+
+    // T335, flow 01 (R2-Landing-Loading): while its dashboard reads, a card is its title and a skeleton, and offers nothing.
+    [Fact]
+    public void ALoadingCard_ShowsItsTitleAndASkeleton_NotItsContent()
+    {
+        var cut = RenderComponent<DashboardCard>(parameters => parameters
+            .Add(p => p.Title, "Activity inbox")
+            .Add(p => p.IsLoading, true)
+            .AddChildContent("<a href=\"/activities/inbox\">Open inbox</a>"));
+
+        cut.Find("h2").TextContent.Trim().Should().Be("Activity inbox");
+        cut.FindAll(".skeleton").Should().NotBeEmpty();
+        cut.Find(".dashboard-card-skeleton").GetAttribute("aria-hidden").Should().Be("true");
+        cut.Markup.Should().NotContain("Open inbox");
+    }
+
+    [Fact]
+    public void ALoadingCardThatLinks_IsNoLinkUntilItHasLoaded()
+    {
+        var cut = RenderComponent<DashboardCard>(parameters => parameters
+            .Add(p => p.Title, "Curriculum targets")
+            .Add(p => p.Href, "/portfolio/progress")
+            .Add(p => p.IsLoading, true)
+            .AddChildContent("<p>Targets</p>"));
+
+        cut.FindAll("a").Should().BeEmpty();
+        cut.Markup.Should().NotContain("detail-card--interactive");
+
+        cut.SetParametersAndRender(parameters => parameters.Add(p => p.IsLoading, false));
+
+        cut.Find("a.detail-card--interactive").GetAttribute("href").Should().Be("/portfolio/progress");
+    }
+
+    // R2-Landing-Assessor: "Waiting for your rating", its count as its badge, once the count is known.
+    [Fact]
+    public void ACount_IsTheTitlesBadge_OnceLoaded()
+    {
+        var cut = RenderComponent<DashboardCard>(parameters => parameters
+            .Add(p => p.Title, "Waiting for your rating")
+            .Add(p => p.Count, 2)
+            .AddChildContent("<p>Rows</p>"));
+
+        var badge = cut.Find("h2 .badge");
+        badge.TextContent.Should().Be("2");
+        badge.ClassList.Should().Contain("badge-submitted", "the info tint: waiting on someone (BadgeFor)");
+
+        cut.SetParametersAndRender(parameters => parameters.Add(p => p.IsLoading, true));
+
+        cut.FindAll(".badge").Should().BeEmpty("a count is not known until the read returns");
     }
 
     [Fact]

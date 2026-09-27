@@ -1,6 +1,14 @@
+@* The trail, above the header, on a page under a list or outside the acting role's navigation (T335, flow 01; D5). *@
+@if (_trail is not null)
+{
+  <Breadcrumbs Items="_trail" />
+}
+
 <div class="header-container">
   <div>
-    <h1>@Title</h1>
+    @* An icon before the heading, on the system pages (T335, flow 01: "PageHeader with icon"): aria-hidden, so the
+       heading is named by its words alone. *@
+    <h1 class="@(Icon is null ? null : "page-title-with-icon")">@if (Icon is not null){<Icon Name="@Icon" Size="24" Class="@IconClass" />}@Title</h1>
     @if (!string.IsNullOrWhiteSpace(Subtitle))
     {
       <p class="page-subtitle">@Subtitle</p>
@@ -15,8 +23,56 @@
   }
 </div>
 
+@* A switch of the acting role says what it did under the header of the page it landed on, once (T335, flow 01). *@
+<ActingRoleSwitchAlert />
+
 @code {
+  private IReadOnlyList<Crumb>? _trail;
+
   [Parameter, EditorRequired] public string Title { get; set; } = default!;
   [Parameter] public string? Subtitle { get; set; }
   [Parameter] public RenderFragment? Actions { get; set; }
+
+  /// <summary>
+  /// The crumbs between the list the page is under and the page itself, where the owner table names one: the College,
+  /// on the Administrator's trail to a College's specialities (R2-Rules § 3).
+  /// </summary>
+  [Parameter] public IReadOnlyList<Crumb>? Trail { get; set; }
+
+  /// <summary>The words of the page's own crumb, when they are not its title.</summary>
+  [Parameter] public string? CurrentCrumb { get; set; }
+
+  /// <summary>
+  /// The page this header heads, when it is not the page the address routes to: Access denied, drawn in place of the page
+  /// that refused (D6), whose trail is its own (none), not the refused page's.
+  /// </summary>
+  [Parameter] public Type? Page { get; set; }
+
+  /// <summary>The page shown, as Routes cascades it.</summary>
+  [CascadingParameter] public RouteData? Route { get; set; }
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>The person's navigation, as MainLayout cascades it; none outside the signed-in shell.</summary>
+  [CascadingParameter] public NavMenuModel? Menu { get; set; }
+
+  protected override void OnParametersSet()
+  {
+    var before = NavOwners.TrailTo(Page ?? Route?.PageType, Acting?.Role, Menu);
+    _trail = before is null ? null : [.. before, .. Trail ?? [], new Crumb(CurrentCrumb ?? Title)];
+  }
+
+  /// <summary>A Lucide icon drawn before the heading, or none (the system pages, T335).</summary>
+  [Parameter] public string? Icon { get; set; }
+
+  /// <summary>The icon's colour: "info" (the action blue, the default), "warning" or "danger".</summary>
+  [Parameter] public string IconTone { get; set; } = "info";
+
+  private string IconClass => IconTone switch
+  {
+    "danger" => "page-title-icon page-title-icon--danger",
+    "warning" => "page-title-icon page-title-icon--warning",
+    _ => "page-title-icon"
+  };
 }

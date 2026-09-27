@@ -1,76 +1,42 @@
+@using System.Security.Claims
+@using MediatR
 @using Wombat.Application.Features.Dashboards.Administrator
 @attribute [Authorize(Roles = "Administrator")]
 @rendermode InteractiveServer
-@inject IScopedSender Sender
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits RoleDashboard<AdministratorDashboardSummaryDto>
 
-<StatePanel IsLoading="_loading" LoadError="@_error">
-  @if (_vm is not null)
-  {
-    <div class="dashboard-grid">
-      <DashboardCard Title="System health" Icon="settings">
-        <ul class="list-unstyled">
-          <li style="padding:var(--space-xs) 0">
-            <span class="status-dot @(_vm.DatabaseHealthy ? "ok" : "err")"></span>
-            Database connection
-          </li>
-          <li style="padding:var(--space-xs) 0">
-            <span class="status-dot warn"></span>
-            Email queue <span class="muted">(T012)</span>
-          </li>
-          <li style="padding:var(--space-xs) 0">
-            <span class="status-dot warn"></span>
-            Last nightly job <span class="muted">(T024)</span>
-          </li>
-        </ul>
-      </DashboardCard>
+@* Two cards (R2-Shell-Admin). Job status is in System health only. Until T335 a Maintenance card repeated four nav links;
+   the one it held that the nav does not, Curriculum progress, is linked from Curricula, the page that owns it (S20). *@
+<DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
+  <DashboardCard Title="System health" Icon="settings" Span="2" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <ul class="list-unstyled">
+        <li class="list-row">
+          <span><span class="status-dot @(summary.DatabaseHealthy ? "ok" : "err")"></span>Database connection</span>
+        </li>
+        <li class="list-row">
+          <span><span class="status-dot warn"></span>Email queue <span class="muted">(T012)</span></span>
+        </li>
+        <li class="list-row">
+          <span><span class="status-dot warn"></span>Last nightly job <span class="muted">(T024)</span></span>
+        </li>
+      </ul>
+    }
+  </DashboardCard>
 
-      <DashboardCard Title="Users across institutions" Icon="users" Emphasis="true">
-        <div class="dashboard-metric">
-          <span class="dashboard-metric-value">@_vm.TotalUserCount</span>
-          <span class="dashboard-metric-label">registered users</span>
-        </div>
-      </DashboardCard>
-
-      <DashboardCard Title="Maintenance" Icon="settings">
-        <ul class="list-unstyled">
-          <li style="padding:var(--space-xs) 0">
-            <a href="/admin/activity-types">Activity types</a>
-          </li>
-          <li style="padding:var(--space-xs) 0">
-            <a href="/admin/users">Users</a>
-          </li>
-          <li style="padding:var(--space-xs) 0">
-            <a href="/admin/institutions">Institutions</a>
-          </li>
-          <li style="padding:var(--space-xs) 0">
-            <a href="/admin/curriculum-progress">Curriculum progress</a>
-          </li>
-        </ul>
-      </DashboardCard>
-    </div>
-  }
-</StatePanel>
+  <DashboardCard Title="Users across institutions" Icon="users" Emphasis="true" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <div class="dashboard-metric">
+        <span class="dashboard-metric-value">@summary.TotalUserCount</span>
+        <span class="dashboard-metric-label">registered users</span>
+      </div>
+    }
+  </DashboardCard>
+</DashboardFrame>
 
 @code {
-  private AdministratorDashboardSummaryDto? _vm;
-  private bool _loading = true;
-  private string? _error;
-
-  protected override async Task OnInitializedAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _vm = await Sender.Send(new GetAdministratorDashboardSummaryQuery(authState.User));
-    }
-    catch (Exception ex)
-    {
-      _error = ex.Message;
-    }
-    finally
-    {
-      _loading = false;
-    }
-  }
+  protected override IRequest<AdministratorDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
+    => new GetAdministratorDashboardSummaryQuery(user);
 }

@@ -1,43 +1,46 @@
+@using System.Security.Claims
+@using MediatR
 @using Wombat.Application.Features.Dashboards.CommitteeMember
 @using Wombat.Application.Features.Curricula.Quota
 @attribute [Authorize(Roles = "CommitteeMember")]
 @rendermode InteractiveServer
-@inject IScopedSender Sender
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits RoleDashboard<CommitteeMemberDashboardSummaryDto>
 
-<StatePanel IsLoading="_loading" LoadError="@_error">
-  @if (_vm is not null)
-  {
-    <div class="dashboard-grid">
-      <DashboardCard Title="Targets this period" Icon="users" Emphasis="true">
-        <p class="progress-row-meta">@_vm.CurrentSemesterName · @_vm.CurrentSemesterMonths@(_vm.ExemptTraineeCount > 0 ? $" · {_vm.ExemptTraineeCount} exempt" : string.Empty)</p>
-        @if (_vm.TraineeTargets.Count == 0)
-        {
-          <p class="muted">No trainees have targets this period.</p>
-        }
-        else
-        {
-          <ul class="list-unstyled">
-            @foreach (var trainee in _vm.TraineeTargets)
-            {
-              <li class="progress-row-head">
-                <span>@trainee.TraineeName</span>
-                <span class="muted">@TargetsText(trainee)</span>
-              </li>
-            }
-          </ul>
-        }
-      </DashboardCard>
+<DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
+  <DashboardCard Title="Targets this period" Icon="users" Emphasis="true" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <p class="progress-row-meta">@summary.CurrentSemesterName · @summary.CurrentSemesterMonths@(summary.ExemptTraineeCount > 0 ? $" · {summary.ExemptTraineeCount} exempt" : string.Empty)</p>
+      if (summary.TraineeTargets.Count == 0)
+      {
+        <p class="muted">No trainees have targets this period.</p>
+      }
+      else
+      {
+        <ul class="list-unstyled">
+          @foreach (var trainee in summary.TraineeTargets)
+          {
+            <li class="progress-row-head">
+              <span>@trainee.TraineeName</span>
+              <span class="muted">@TargetsText(trainee)</span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </DashboardCard>
 
-      <DashboardCard Title="Targets met by EPA" Icon="book" Span="2">
-        <EpaTargetCoverageList Coverage="@(new CurriculumCoverage(DateOnly.MinValue, _vm.CurrentSemesterName, _vm.CurrentSemesterMonths, [], _vm.EpaTargets, _vm.ExemptTraineeCount))" />
-      </DashboardCard>
-    </div>
-  }
-</StatePanel>
+  <DashboardCard Title="Targets met by EPA" Icon="book" Span="2" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <EpaTargetCoverageList Coverage="@(new CurriculumCoverage(DateOnly.MinValue, summary.CurrentSemesterName, summary.CurrentSemesterMonths, [], summary.EpaTargets, summary.ExemptTraineeCount))" />
+    }
+  </DashboardCard>
+</DashboardFrame>
 
 @code {
-  private CommitteeMemberDashboardSummaryDto? _vm;
+  protected override IRequest<CommitteeMemberDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
+    => new GetCommitteeMemberDashboardSummaryQuery(user);
 
   // Fewest met first (the query orders them). Semester and yearly targets are shown apart, because the
   // yearly ones are met "as opportunities arise" and would otherwise drag every trainee down all year.
@@ -55,24 +58,5 @@
     }
 
     return string.Join(" · ", parts);
-  }
-  private bool _loading = true;
-  private string? _error;
-
-  protected override async Task OnInitializedAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _vm = await Sender.Send(new GetCommitteeMemberDashboardSummaryQuery(authState.User));
-    }
-    catch (Exception ex)
-    {
-      _error = ex.Message;
-    }
-    finally
-    {
-      _loading = false;
-    }
   }
 }

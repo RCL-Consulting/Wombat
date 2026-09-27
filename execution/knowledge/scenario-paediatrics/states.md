@@ -5,7 +5,7 @@ screenshot each one. Together with each step's own capture (README § How to pla
 baseline a GUI redesign is briefed from and checked against.
 
 Written 2026-09-26 (T293) from the code of each page, `DESIGN.md`'s page contracts and the act files. The pages are the
-68 page files of `coverage.md`'s Pages table, grouped by area. A state is listed where the page really has it; one no
+67 page files of `coverage.md`'s Pages table, grouped by area. A state is listed where the page really has it; one no
 local replay can reach is in the last section, with the reason.
 
 ## How to capture
@@ -88,42 +88,57 @@ refusal shows, with nothing sent. Where the story plays the real refusal, the ro
 
 ## Shell and framework
 
-The layout, the nav and what the Blazor runtime shows. Each role's nav is captured with its dashboard (Home, below),
-and so are the shell's other states: the role switcher's "You also act as … Switch view" line, "Awaiting admission" and
-"No role assigned". A session that ends lands on the sign-in page by a full load of the mapped endpoint
+The layout, the nav and what the Blazor runtime shows. Each acting role's menu is captured with its dashboard (Home,
+below), and so are the shell's other states: "Awaiting admission" and a graduate's "Your training record" ("No role
+assigned" is under States no local replay reaches). The sidebar's role head carries the switch (T335, flow 01): "Switch to …" beside a second role, "Change role"
+beside two or more. A session that ends lands on the sign-in page by a full load of the mapped endpoint
 `/account/session-ended`, so its state is the sign-in page's ("Session ended", under Account and sign-in).
 
 | State | Screenshot | Account | How to reach it |
 |---|---|---|---|
-| Nav folded at narrow width | `states/shell--nav-folded.png` | Dr Dlamini (Trainee) | At Step A.7.3, at 390 px, before opening the menu: the sidebar is a top bar with the menu toggle. No change. |
-| Nav open at narrow width | `states/shell--nav-open.png` | Dr Dlamini (Trainee) | At Step A.7.3, at 390 px, press the menu toggle. No change. |
-| Reconnect: rejoining | `states/shell--reconnect-rejoining.png` | Dr Zulu (CommitteeMember) | With her dashboard open, suspend the replay's `Wombat.Web` process (Process Explorer's Suspend, or `NtSuspendProcess`), wait about 30 s for the client's server timeout, capture "Rejoining the server...", then resume the process. Stopping it does not show this state: the first reconnect attempt is refused at once and the modal moves to Retrying within milliseconds (T295 sweep). No change. |
-| Reconnect: retrying | `states/shell--reconnect-retrying.png` | Dr Zulu | Keep the app stopped: "Rejoin failed... trying again in N seconds." No change. |
-| Reconnect: failed | `states/shell--reconnect-failed.png` | Dr Zulu | Keep it stopped until the attempts run out: "Failed to rejoin. Please retry or reload the page." with Retry. Restart the app and press Retry: the circuit is gone, so the page reloads. No change. |
-| Reconnect: paused | `states/shell--reconnect-paused.png` | Dr Zulu | In the browser's console run `Blazor.pauseCircuit()`: "The session has been paused by the server." with Resume (needs confirmation: the console call is .NET 10's). Resume restores the page. No change. |
-| Reconnect: resume failed | `states/shell--reconnect-resume-failed.png` | Dr Zulu | Pause as above, stop the app, press Resume: "Failed to resume the session. Please retry or reload the page." Restart the app and reload. No change. |
-| Unhandled error banner | `states/shell--error-banner.png` | Dr Dlamini (Trainee) | New activity reads its type list with no error handling (`NewActivity.OnInitializedAsync`). Hold a read, open Activities from the nav, and wait about 65 s: its first read (the programme start) times out and is passed over, then the type list's times out and the bar "An unhandled error has occurred. Reload" appears as the circuit ends. `ROLLBACK;`, then Reload. No change. |
+| Nav folded at narrow width | `states/shell--nav-folded.png` | Dr Dlamini (Trainee) | At Step A.7.3, at 390 px, before opening the menu: the phone bar, with the brand, "Acting as Trainee" and Menu. No change. |
+| Nav open at narrow width | `states/shell--nav-open.png` | Dr Dlamini (Trainee) | At Step A.7.3, at 390 px, press Menu: Close in the bar, the role head, the 44px rows, and her name and Sign out at the foot. No change. |
+| A long role in the folded bar | `states/shell--nav-folded-long-role.png` | Dr Sithole (SubSpecialityAdmin) | At Step A.7.8, at 390 px: "Sub-speciality admin" in two lines, the bar taller. No change. |
+| The Administrator's menu open at narrow width | `states/shell--nav-open-admin.png` | devadmin | At Step A.7.11, at 390 px, press Menu and scroll the list: the head and the foot stay. No change. |
+| The Administrator's sidebar scrolled | `states/shell--sidebar-scrolled.png` | devadmin | At 1280 × 700, open Decision panels: the list scrolls it into view under the fixed brand cell and role head. No change. |
+| Two roles: the switch | `states/shell--switch.png` | Dr Zulu (CommitteeMember + Assessor) | At Step 2.33: "Acting as Committee member" with "Switch to Assessor" under it. No change. |
+| Three or more roles: Change role open | `states/shell--change-role.png` | an account holding three roles | Give a copy's Dr Zulu a third role (a scratch database), sign in and open Change role: a switch link for each other role. |
+| No role | `states/shell--no-role.png` | Dr Molefe after Step 5.17 | At Step 5.21: no "Acting as" head; Home, then My progress and My data rights. No change. |
+| The current item under a list | `states/shell--owner-lit.png` | Mr Smit | At Step 3.41, a campaign's MSF report: MSF campaigns lit (T331), and the trail Home › MSF campaigns › MSF report. No change. |
+| My account current | `states/shell--my-account.png` | Dr Botha | At Step A.4.1: the name in the top bar underlined, nothing in the menu lit. No change. |
+| The trail folded at narrow width | `states/shell--trail-folded.png` | Dr Zulu | At Step A.7.6, at 390 px, a review: one 44px link back to Committee reviews. No change. |
+| Reconnect: rejoining | `states/shell--reconnect-rejoining.png` | Dr Zulu (CommitteeMember) | With her dashboard open, suspend the replay's `Wombat.Web` process (Process Explorer's Suspend, or `NtSuspendProcess`), wait about 30 s for the client's server timeout, capture "Reconnecting" with "The connection to Wombat dropped. Reconnecting now." over a running bar, alone in the dialog, then resume the process. Stopping it does not hold this state: the runtime's first ten attempts are refused at once and the dialog moves to "Could not reconnect" within milliseconds (T295 sweep). No change. |
+| Reconnect: retrying | `states/shell--reconnect-retrying.png` | Dr Zulu | Stop the app: "Could not reconnect" and "Trying again in N seconds.", the count running down a second at a time, with nothing above it (T330). No change. |
+| Reconnect: attempt started | `states/shell--reconnect-attempt-started.png` | Dr Zulu | With the app stopped and the count running, listen on its port without answering (PowerShell: `$l = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, <port>); $l.Start()`). At the next attempt the line reads "Trying again now." over a running bar, under the same "Could not reconnect", which keeps the focus (one state, its line replaced), and holds while the attempt waits on the listener. Capture it, then `$l.Stop()` (needs confirmation: that the attempt waits rather than fails). No change. |
+| Reconnect: failed | `states/shell--reconnect-failed.png` | Dr Zulu | Keep the app stopped until the attempts run out (about six minutes: ten at once, ten 5 s apart, ten 30 s apart): "Connection lost", "Wombat cannot be reached. Try again when your connection is back. If the page cannot be restored, it reloads, and anything not yet saved on it is lost." and Try again. Restart the app and press Try again: the circuit is gone and the restarted server kept nothing to resume it from, so "Reloading" and "Reloading the page…" show as the page reloads. No change. |
+| Reconnect: failed at narrow width | `states/shell--reconnect-failed-narrow.png` | Dr Zulu | As Reconnect: failed, at 390 px: the dialog 358 px wide, 16 px from each side, and Try again as wide as the dialog. No change. |
+| Reconnect: paused | `states/shell--reconnect-paused.png` | Dr Zulu | In the browser's console run `Blazor.pauseCircuit()`: "Page paused" and "This page is paused. Resume to carry on." with Resume (needs confirmation: the console call is .NET 10's). Resume restores the page. No change. |
+| Reconnect: resume failed | `states/shell--reconnect-resume-failed.png` | Dr Zulu | Pause as above, stop the app, press Resume: "Could not resume", the sentence Connection lost gives, and Try again, which takes the focus from Resume. Restart the app and press Try again: the page resumes, or shows "Reloading the page…" and reloads when the server has nothing to resume it from (needs confirmation: which). No change. |
+| Unhandled error banner | `states/shell--error-banner.png` | Dr Dlamini (Trainee) | New activity reads its type list with no error handling (`NewActivity.OnInitializedAsync`). Hold a read, open Log an activity from the menu, and wait about 65 s: its first read (the programme start) times out and is passed over, then the type list's times out and the bar "This page no longer responds; copy anything you need, then reload." with Reload and Dismiss, small (`btn-sm`) buttons with their refresh-cw and x icons, appears beside the sidebar as the circuit ends. `ROLLBACK;`, then Reload. No change. |
+| Unhandled error banner at narrow width | `states/shell--error-banner-narrow.png` | Dr Dlamini (Trainee) | As above, at 390 px: the sentence first, then Reload and Dismiss side by side, each half the bar, 44 px high and without their icons. `ROLLBACK;`, then Reload. No change. |
 
 ## Home and the role dashboards
 
-`/` (Home.razor), which hosts one dashboard per role (`Pages/Dashboards/*`), the "You also act as … Switch view" line
-and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which dashboard Home shows.
+`/` (Home.razor) is headed "Home", with "{acting role} · Semester N, YYYY" under it and the role's header action, if it
+has one. It hosts one dashboard per role (`Pages/Dashboards/*`), under the shell's sidebar and its switch (T335, flow
+01). The mapped endpoint `/dashboard/switch/{role}` stores the acting role with the account, which chooses the
+dashboard Home shows, and the page it lands on says so once ("You are now acting as …", T335).
 
 | State | Screenshot | Account | How to reach it |
 |---|---|---|---|
-| Administrator | `states/home--administrator.png` | devadmin | At Step 1.1: System health, Users across institutions, Maintenance. |
+| Administrator | `states/home--administrator.png` | devadmin | At Step 1.1: System health (with the job status), Users across institutions. |
 | CollegeAdmin | `states/home--college-admin.png` | Dr Kruger | At Step 1.8: the one National catalogue card. |
 | InstitutionalAdmin, before any adoption | `states/home--institutional-admin-first.png` | Prof Mbatha | At Step 1.10: Users lists InstitutionalAdmin 1. |
 | InstitutionalAdmin, onboarded | `states/home--institutional-admin.png` | Prof Mbatha | At Step 2.44. |
 | Coordinator, nothing waiting | `states/home--coordinator-empty.png` | Mr Smit | At Step 2.32: "No stalled requests.", "No invitations expiring soon.", Start an MSF campaign. |
 | Coordinator, stalled requests | `states/home--coordinator-stalled.png` | Mr Smit | At Step 3.30, after its ageing SQL: the warning card lists the waiting requests. |
 | Coordinator, invitations nearing expiry | `states/home--coordinator-expiring.png` | Mr Smit | Scratch (post-appendix): Prof Mbatha invites `expiring@kgk.wombat.local` as Trainee at KGK, Paediatrics / Paediatrics; then `UPDATE "Invitations" SET "ExpiresOn" = now() + interval '2 days' WHERE "Email" = 'expiring@kgk.wombat.local';`. The card lists it with its expiry (the card shows three days ahead). |
-| CommitteeMember with the switch line | `states/home--committee-member.png` | Dr Zulu | At Step 2.33: "You also act as Assessor. Switch view: Assessor", five registrars at 0. |
+| CommitteeMember, two roles | `states/home--committee-member.png` | Dr Zulu | At Step 2.33: "Committee member · Semester N, YYYY", five registrars at 0. |
 | CommitteeMember, nobody to show | `states/home--committee-member-empty.png` | Dr van Rensburg | At Step 2.37: "No trainees have targets this period." |
 | CommitteeMember with figures | `states/home--committee-member-figures.png` | Dr Zulu | At Step 3.52, after switching back. |
-| Assessor view after a switch | `states/home--assessor-switched.png` | Dr Zulu | At Step 2.34: "Viewing as Assessor", "You also act as CommitteeMember", every card empty. |
-| Assessor, first sign-in | `states/home--assessor-empty.png` | Dr Patel | At Step 2.36: no switch line, 0 awaiting, "No decisions yet." |
-| Assessor with a request waiting | `states/home--assessor-pending.png` | Dr Zulu | At Step 3.33, after the switch: Pending requests counts 1. |
+| Assessor view after a switch | `states/home--assessor-switched.png` | Dr Zulu | At Step 2.34: "You are now acting as Assessor.", "Assessor · Semester N, YYYY", every card empty. |
+| Assessor, first sign-in | `states/home--assessor-empty.png` | Dr Patel | At Step 2.36: "Waiting for your rating" badged 0, "No decisions yet." |
+| Assessor with a request waiting | `states/home--assessor-pending.png` | Dr Zulu | At Step 3.33, after the switch: "Waiting for your rating" badged 1. |
 | Assessor with recent decisions | `states/home--assessor-decisions.png` | Dr Khumalo | At Step 3.51: Completed in green, Declined in red. |
 | SpecialityAdmin | `states/home--speciality-admin.png` | Dr Mokoena | At Step 2.38. |
 | SpecialityAdmin with figures | `states/home--speciality-admin-figures.png` | Dr Mokoena | At Step 3.53. |
@@ -133,9 +148,9 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | Trainee with activity | `states/home--trainee.png` | Dr Dlamini | At Step 3.50. |
 | Trainee with work returned | `states/home--trainee-returned.png` | Dr Ndlovu | At Step 3.16: the Activity inbox card lists the reflection as Draft. |
 | Trainee whose programme ended | `states/home--trainee-ended.png` | Dr du Plessis | At Step 5.28: "Your programme ended on …, so no target applies to you any more." |
-| No role assigned | `states/home--no-role.png` | Dr Molefe (former trainee) | At Step 5.21: the code shows the "No role assigned" card (the step's expectation is the decided wording; see its note). |
-| Loading | `states/home--loading.png` | Dr Dlamini | Hold a read, then choose Home in the nav. No change. |
-| Load error | `states/home--load-error.png` | Dr Dlamini | The same, held 35 s. No change. |
+| Former trainee, no role | `states/home--no-role.png` | Dr Molefe (former trainee) | At Step 5.21: no subtitle, and one card, "Your training record", pointing to My progress (T335; the step's expectation, the ended line, is T311's). |
+| Loading | `states/home--loading.png` | Dr Dlamini | Hold a read, then choose Home in the menu: the header, each card's title and a skeleton in each card, and nothing to press in the cards. No change. |
+| Load error | `states/home--load-error.png` | Dr Dlamini | The same, held 35 s: one alert, "Could not load your Home. Nothing has changed. Try again, or come back in a few minutes.", with Try again, and no cards. `ROLLBACK;`, then Try again shows the cards. No change. |
 | Narrow: trainee | `states/home--narrow-trainee.png` | Dr Dlamini | At Step A.7.3. |
 | Narrow: former trainee | `states/home--narrow-former-trainee.png` | Dr Molefe | At Step A.7.4. |
 | Narrow: assessor | `states/home--narrow-assessor.png` | Dr Patel | At Step A.7.2, open Home at 390 px before the inbox. No change. |
@@ -152,21 +167,16 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | Page | State | Screenshot | Account | How to reach it |
 |---|---|---|---|---|
 | `/access-denied` | Signed in | `states/access-denied--signed-in.png` | Dr Kruger | At Step 1.15. |
-| `/access-denied` | Signed out | `states/access-denied--signed-out.png` | Anonymous | Signed out, type `/access-denied`: the static page, with Sign in in the top row. No change. |
+| `/access-denied` | Signed out | `states/access-denied--signed-out.png` | Anonymous | Signed out, type `/access-denied`: the static page, under the signed-out bar with Sign in: "Sign in to open this page" and "Sign in to carry on.", with Sign in; with `?ReturnUrl=%2Fadmin%2Faudit`, "After you sign in, Wombat brings you back to the page you asked for." (T335). No change. |
 | `/access-denied` | Narrow | `states/access-denied--narrow.png` | Dr Dlamini | At Step A.5.1, at 390 px. No change. |
 | `/not-found` | Signed in | `states/not-found--signed-in.png` | Prof Mbatha | At Step 1.23 (the Demo Institution's id). |
-| `/not-found` | Signed out | `states/not-found--signed-out.png` | Anonymous | At Step A.5.4, the unknown address after signing in again; or type `/not-found` signed out. No change. |
+| `/not-found` | Signed out | `states/not-found--signed-out.png` | Anonymous | Signed out, type `/not-found`: the card under the signed-out bar, "There is no page at this address." and Go to Home, with no "Check the address" line. No change. |
 | `/not-found` | From a data-rights download that is not his | `states/not-found--download.png` | Mr Smit | At Step A.1.4. |
 | `/not-found` | Narrow | `states/not-found--narrow.png` | Dr Dlamini | At Step A.5.4, at 390 px. No change. |
-| `/Error` | Signed in | `states/error--signed-in.png` | Dr Dlamini | At Step A.5.8: "Something went wrong" with a request ID. |
+| `/Error` | Typed, signed in | `states/error--signed-in.png` | Dr Dlamini | At Step A.5.8: "Nothing went wrong", with no reference and no Try again (T335). |
+| `/Error` | Typed, signed out | `states/error--signed-out.png` | Anonymous | Signed out, type `/Error`: the same words in the signed-out card, with no sign-in first (T321). No change. |
+| `/Error` | After a failure | `states/error--failed.png` | Dr Dlamini | Outside Development only: on dev the developer exception page answers instead. Start the app with another environment (the connection string then comes from `ConnectionStrings__DefaultConnection`), hold a read (§ Holding a read), and load `/activities/new` by its address: its prerender's type list times out (T329) and the request answers 500 with "Something went wrong", the reference and the time in SAST, Try again and Go to Home. The log has the failure with the same reference. `ROLLBACK;`, then Try again (needs confirmation: that the prerender's read fails the request). `Hosting/ErrorPageFlowTests` plays it with a failing test endpoint. No change. |
 | `/Error` | Narrow | `states/error--narrow.png` | Dr Dlamini | At Step A.5.8, at 390 px. No change. |
-| `/placeholder/{Feature}` | Recent Activities | `states/placeholder--recent-activities.png` | Dr Patel | At Step A.5.9. |
-| `/placeholder/{Feature}` | Stalled Activities | `states/placeholder--stalled-activities.png` | Mr Smit | At Step 3.31. |
-| `/placeholder/{Feature}` | Programme Trainees | `states/placeholder--programme-trainees.png` | Dr Botha | At Step A.5.11. |
-| `/placeholder/{Feature}` | STAR Review Queue | `states/placeholder--star-review-queue.png` | Dr Mokoena | At Step A.5.12. |
-| `/placeholder/{Feature}` | System | `states/placeholder--system.png` | devadmin | At Step A.5.13. |
-| `/placeholder/{Feature}` | An unknown feature | `states/placeholder--unknown-feature.png` | Mr Smit | At Step 3.31, `/placeholder/stalled-work`: Page not found, status 404. |
-| `/placeholder/{Feature}` | Narrow | `states/placeholder--narrow.png` | Dr Sithole | At Step A.7.8. |
 
 ## Account and sign-in
 
@@ -206,8 +216,8 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/account/profile` | Before admission | `states/profile--pending-trainee.png` | Dr Mahlangu | At Step 2.19: Roles reads PendingTrainee. |
 | `/account/profile` | Two roles | `states/profile--loaded.png` | Dr Zulu | At Step 2.41. |
 | `/account/profile` | Saved | `states/profile--saved.png` | Dr Khumalo | At Step 2.41: "Profile saved." |
-| `/account/profile` | Required field empty | `states/profile--invalid.png` | Dr Botha | At Step A.4.1, the cleared last name. |
-| `/account/profile` | Loading | `states/profile--loading.png` | Dr Botha | Hold a read, then My Account in the nav. No change. |
+| `/account/profile` | Required field empty | `states/profile--invalid.png` | Dr Botha | At Step A.4.1, the last name of a single space: the alert "Enter your first name and your last name.", which takes the focus. The cleared last name before it is stopped by the browser's own required-field check, and nothing is sent. |
+| `/account/profile` | Loading | `states/profile--loading.png` | Dr Botha | Hold a read, then My account from the name in the top bar. No change. |
 | `/account/profile` | Load error | `states/profile--load-error.png` | Dr Botha | The same, held 35 s. No change. |
 | `/account/profile` | Narrow | `states/profile--narrow.png` | Dr Khumalo | At Step 2.41, at 390 px. No change. |
 | `/account/change-password` | Blank | `states/change-password--blank.png` | Dr Khumalo | At Step A.4.2, before the first try. |
@@ -224,7 +234,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/account/data-rights` | Completed, with Download | `states/data-rights--completed.png` | Dr Dlamini | At Step A.1.5. |
 | `/account/data-rights` | Withdrawn | `states/data-rights--withdrawn.png` | Dr du Plessis | At Step A.1.6. |
 | `/account/data-rights` | Rejected | `states/data-rights--rejected.png` | Dr Mahlangu | At Step A.1.9. |
-| `/account/data-rights` | Loading | `states/data-rights--loading.png` | Dr Dlamini | Hold a read, then Data Rights in the nav. No change. |
+| `/account/data-rights` | Loading | `states/data-rights--loading.png` | Dr Dlamini | Hold a read, then My data rights in the menu. No change. |
 | `/account/data-rights` | Narrow | `states/data-rights--narrow.png` | Dr Dlamini | At Step A.7.3. |
 
 ## Activities
@@ -241,7 +251,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/activities/new` | Refused: before the programme | `states/new-activity--refused-before-programme.png` | Dr Ndlovu | At Step 3.9, after Submit. |
 | `/activities/new` | Late filing warning | `states/new-activity--late-warning.png` | Dr Ndlovu | At Step 3.12, as `D−20` is typed. |
 | `/activities/new` | Picker without a paused EPA | `states/new-activity--paused-epa.png` | Dr Mahlangu | At Step 6.20, the EPA picker open. |
-| `/activities/new` | Loading (no skeleton) | `states/new-activity--loading.png` | Dr Dlamini | Hold a read, open Activities from the nav, capture within 20 s: the header and an empty type select. `ROLLBACK;`. No change. |
+| `/activities/new` | Loading (no skeleton) | `states/new-activity--loading.png` | Dr Dlamini | Hold a read, open Log an activity from the menu, capture within 20 s: the header and an empty type select. `ROLLBACK;`. No change. |
 | `/activities/new` | Narrow | `states/new-activity--narrow.png` | Dr Dlamini | At Step A.6.6, at 390 px, with a Mini-CEX chosen. No change. |
 | `/activities/{ActivityId:int}` | Draft saved | `states/activity-view--draft-saved.png` | Dr Dlamini | At Step 3.1: "Draft saved. It has not been submitted." |
 | `/activities/{ActivityId:int}` | Refused submit | `states/activity-view--refused-submit.png` | Dr Dlamini | At Step 3.2: "Presenting problem: A value is required.", the field marked. |
@@ -262,7 +272,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/activities/{ActivityId:int}` | Awaiting review | `states/activity-view--awaiting-review.png` | Dr du Plessis | At Step 3.22. |
 | `/activities/{ActivityId:int}` | Credited nothing, EPA paused | `states/activity-view--credited-nothing.png` | Dr Patel | At Step 6.18, after Complete: the warning, and "(no longer in use)" on the EPA. |
 | `/activities/{ActivityId:int}` | Credited nothing, after the last day | `states/activity-view--after-programme-end.png` | Dr du Plessis | After Step 5.27, his `D−1` Mini-CEX: the same warning, credit None. |
-| `/activities/{ActivityId:int}` | Loading | `states/activity-view--loading.png` | Dr Dlamini | Hold a read, open an activity from My Activities. No change. |
+| `/activities/{ActivityId:int}` | Loading | `states/activity-view--loading.png` | Dr Dlamini | Hold a read, open an activity from My activities. No change. |
 | `/activities/{ActivityId:int}` | Load error | `states/activity-view--load-error.png` | Dr Dlamini | The same, held 35 s. No change. |
 | `/activities/{ActivityId:int}` | Narrow | `states/activity-view--narrow.png` | Dr Patel | At Step A.7.2. |
 | `/activities/mine` | Nothing filed | `states/my-activities--empty.png` | Dr Mahlangu | At Step 2.19: "No activities yet". |
@@ -271,14 +281,14 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/activities/mine` | With MSF records | `states/my-activities--msf.png` | Dr Molefe | At Step 3.48. |
 | `/activities/mine` | Credited None after leaving | `states/my-activities--credited-none.png` | Dr du Plessis | At Step 5.28. |
 | `/activities/mine` | A paused EPA | `states/my-activities--paused-epa.png` | Dr Dlamini | At Step 6.19. |
-| `/activities/mine` | Loading | `states/my-activities--loading.png` | Dr Dlamini | Hold a read, then My Activities in the nav. No change. |
+| `/activities/mine` | Loading | `states/my-activities--loading.png` | Dr Dlamini | Hold a read, then My activities in the menu. No change. |
 | `/activities/mine` | Load error | `states/my-activities--load-error.png` | Dr Dlamini | The same, held 35 s. No change. |
 | `/activities/mine` | Narrow | `states/my-activities--narrow.png` | Dr Dlamini | At Step A.7.3. |
 | `/activities/inbox` | Inbox clear | `states/activity-inbox--empty.png` | Dr Patel | At Step 3.4. |
 | `/activities/inbox` | An assessor's requests | `states/activity-inbox--assessor.png` | Dr Patel | At Step 3.24: two rows. |
 | `/activities/inbox` | A trainee's returned work | `states/activity-inbox--trainee.png` | Dr Ndlovu | At Step 3.16. |
 | `/activities/inbox` | A paused EPA | `states/activity-inbox--paused-epa.png` | Dr Patel | At Step 6.18, before opening it. |
-| `/activities/inbox` | Loading | `states/activity-inbox--loading.png` | Dr Patel | Hold a read, then Activity Inbox in the nav. No change. |
+| `/activities/inbox` | Loading | `states/activity-inbox--loading.png` | Dr Patel | Hold a read, then Activity inbox in the menu. No change. |
 | `/activities/inbox` | Narrow | `states/activity-inbox--narrow.png` | Dr Patel | At Step A.7.2. |
 
 ## Portfolio
@@ -297,7 +307,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/portfolio/progress` | New version before the rebuild | `states/my-progress--before-rebuild.png` | Dr Ndlovu | At Step 6.37. |
 | `/portfolio/progress` | New version after the rebuild | `states/my-progress--after-rebuild.png` | Dr Ndlovu | At Step 6.39. |
 | `/portfolio/progress` | December notice | `states/my-progress--december.png` | Dr Dlamini | Only when `D` is in December: "The <year> academic year ended on 30 November. …". December replays only: on any other replay it is not shown, and its absence is not a gap. No change. |
-| `/portfolio/progress` | Loading | `states/my-progress--loading.png` | Dr Dlamini | Hold a read, then My Progress in the nav. No change. |
+| `/portfolio/progress` | Loading | `states/my-progress--loading.png` | Dr Dlamini | Hold a read, then My progress in the menu. No change. |
 | `/portfolio/progress` | Load error | `states/my-progress--load-error.png` | Dr Dlamini | The same, held 35 s. No change. |
 | `/portfolio/progress` | Narrow, current | `states/my-progress--narrow.png` | Dr Dlamini | At Step A.7.3. |
 | `/portfolio/progress` | Narrow, former trainee | `states/my-progress--narrow-former.png` | Dr Molefe | At Step A.7.4. |
@@ -328,7 +338,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/committee/panels` | A speciality admin's list | `states/panels-list--speciality-admin.png` | Dr Mokoena | At Step 2.23, back on the list. |
 | `/committee/panels` | A member's list | `states/panels-list--member.png` | Dr Botha | At Step 4.14: no New panel, no Edit column. |
 | `/committee/panels` | A coordinator's list | `states/panels-list--coordinator.png` | Mr Smit | At Step 2.32. |
-| `/committee/panels` | Loading | `states/panels-list--loading.png` | Dr Botha | Hold a read, then Decision Panels in the nav. No change. |
+| `/committee/panels` | Loading | `states/panels-list--loading.png` | Dr Botha | Hold a read, then Decision panels in the menu. No change. |
 | `/committee/panels` | Narrow | `states/panels-list--narrow.png` | Dr Mokoena | At Step A.7.7. |
 | `/committee/panels/new` | The new-panel form | `states/panel-edit--new.png` | Prof Mbatha | At Step 2.21, before choosing members. |
 | `/committee/panels/new` | Chair moved out of Members | `states/panel-edit--chair-note.png` | Prof Mbatha | At Step 2.21: "Thandi Zulu is the chair now, …". |
@@ -346,14 +356,14 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/committee/reviews` | The agenda preview | `states/reviews-schedule--preview.png` | Mr Smit | At Step 4.6, before Create review. |
 | `/committee/reviews` | A second review refused | `states/reviews-schedule--refused.png` | Mr Smit | At Step 4.8. |
 | `/committee/reviews` | Scheduled | `states/reviews-schedule--scheduled.png` | Mr Smit | At Step 4.7. |
-| `/committee/reviews` | Filled from Decisions Due | `states/reviews-schedule--prefilled.png` | Dr Mokoena | At Step 4.9. |
+| `/committee/reviews` | Filled from Decisions due | `states/reviews-schedule--prefilled.png` | Dr Mokoena | At Step 4.9. |
 | `/committee/reviews` | Formative preview | `states/reviews-schedule--formative.png` | Mr Smit | At Step 4.49. |
 | `/committee/reviews` | Already decided in this window | `states/reviews-schedule--pre-graduation.png` | Mr Smit | At Step 5.2, before Create review. |
 | `/committee/reviews` | Ratified | `states/reviews-schedule--ratified.png` | Mr Smit | At Step 4.33. |
 | `/committee/reviews` | Current trainees only | `states/reviews-schedule--current-only.png` | Mr Smit | At Step 5.29, the trainee list open. |
 | `/committee/reviews` | After an erasure | `states/reviews-schedule--pseudonym.png` | Prof Mbatha | At Step A.1.14: `deleted_user_…`, one Withdrawn. |
 | `/committee/reviews` | Preview failed | `states/reviews-schedule--preview-failed.png` | Mr Smit | At Step 4.6, before choosing the trainee: hold a read, choose Dr Molefe, wait 35 s: "The agenda could not be previewed: …". `ROLLBACK;`, then choose another trainee and her again. No change. |
-| `/committee/reviews` | Loading | `states/reviews-schedule--loading.png` | Mr Smit | Hold a read, then Committee Reviews in the nav. No change. |
+| `/committee/reviews` | Loading | `states/reviews-schedule--loading.png` | Mr Smit | Hold a read, then Committee reviews in the menu. No change. |
 | `/committee/reviews` | Narrow | `states/reviews-schedule--narrow.png` | Dr Sithole | At Step A.7.8. |
 | `/committee/reviews/{ReviewId:int}` | Scheduled, the chair | `states/review-detail--scheduled.png` | Dr Zulu | At Step 4.15, with the sampling warnings above the cards. |
 | `/committee/reviews/{ReviewId:int}` | Scheduled, no Start | `states/review-detail--scheduled-no-start.png` | Dr Mokoena | At Step 4.9. |
@@ -387,18 +397,18 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/committee/reviews/{ReviewId:int}` | The chair can no longer act | `states/review-detail--chair-cannot-act.png` | Dr Naidoo | Scratch (post-act4): Mr Smit schedules a formative review of Dr Dlamini for the period holding `D`; Prof Mbatha locks Dr Zulu out; Dr Naidoo opens the review. |
 | `/committee/reviews/{ReviewId:int}` | Agenda: no longer decided | `states/review-detail--no-longer-decided.png` | Dr Zulu | Scratch (post-act4): Mr Smit schedules a second annual review of Dr Dlamini for the period (her first is ratified, so it holds no seat) and Dr Zulu starts it; Dr Mokoena revokes Dr Dlamini's PAED-001 STAR; Dr Zulu reloads: the agenda's warning that PAED-001 is no longer decided in its window. |
 | `/committee/reviews/{ReviewId:int}` | Ratify blocked | `states/review-detail--ratify-blocked.png` | Dr Zulu | Scratch (post-act4), continuing the review above: defer every closing line, record with Dr Naidoo present; Dr Zulu reloads. Ratify reads as the page gives it. Its quorum reason cannot be reached from the UI: the quorum is who sat when the decision was recorded (T165), so locking a member out afterwards changes nothing, and Record refuses a sitting without one (T295 sweep). |
-| `/committee/reviews/{ReviewId:int}` | Appeal dismissed | `states/review-detail--appeal-dismissed.png` | Dr Zulu | Scratch (post-act4): Dr Dlamini lodges an appeal on My Committee Reviews; Dr Zulu resolves it Dismissed. There is no Upheld outcome since T307 (D51), so `--appeal-upheld` is no longer captured. |
+| `/committee/reviews/{ReviewId:int}` | Appeal dismissed | `states/review-detail--appeal-dismissed.png` | Dr Zulu | Scratch (post-act4): Dr Dlamini lodges an appeal on My committee reviews; Dr Zulu resolves it Dismissed. There is no Upheld outcome since T307 (D51), so `--appeal-upheld` is no longer captured. |
 | `/committee/reviews/{ReviewId:int}` | Entrustment-only, and decided by another panel | `states/review-detail--entrustment-only.png` | Dr Zulu | Scratch (post-act4; the T295 sweep used it, with Semester 1, 2026 as the previous semester): Prof Mbatha creates a second Paediatrics panel sitting as the Neonatal team Clinical Competency Committee (Zulu chair, Botha member); Mr Smit schedules Dr Dlamini before it for the previous semester, type Entrustment-only review, then before the general panel for the same semester. Start the entrustment-only review and capture its decision form (no Category, its note) and the second (`--decided-elsewhere`, PAED-004 and 005 under "Decided by another panel"). Needs confirmation of the sitting-order warning, which may also show. |
-| `/committee/reviews/{ReviewId:int}` | Loading | `states/review-detail--loading.png` | Dr Zulu | Hold a read, open a review from Committee Reviews. No change. |
+| `/committee/reviews/{ReviewId:int}` | Loading | `states/review-detail--loading.png` | Dr Zulu | Hold a read, open a review from Committee reviews. No change. |
 | `/committee/reviews/{ReviewId:int}` | Narrow | `states/review-detail--narrow.png` | Dr Zulu | At Step A.7.6. |
-| `/committee/my-reviews` | None yet | `states/my-reviews--empty.png` | Dr Dlamini | At Step 3.50, My Committee Reviews from the nav: "No decisions yet". No change. |
+| `/committee/my-reviews` | None yet | `states/my-reviews--empty.png` | Dr Dlamini | At Step 3.50, My committee reviews from the menu: "No decisions yet". No change. |
 | `/committee/my-reviews` | The list and a review | `states/my-reviews--detail.png` | Dr Molefe | At Step 4.41. |
 | `/committee/my-reviews` | The appeal form | `states/my-reviews--appeal-form.png` | Dr Mahlangu | At Step 4.43, before lodging. |
 | `/committee/my-reviews` | Under appeal | `states/my-reviews--appealed.png` | Dr Mahlangu | At Step 4.43: "Appeal lodged." |
 | `/committee/my-reviews` | The replacement decision | `states/my-reviews--remitted.png` | Dr Mahlangu | At Step 4.48. |
 | `/committee/my-reviews` | Annual and formative | `states/my-reviews--two.png` | Dr Ndlovu | At Step 4.51. |
 | `/committee/my-reviews` | Pre-graduation | `states/my-reviews--pre-graduation.png` | Dr Molefe | At Step 5.8. |
-| `/committee/my-reviews` | Loading | `states/my-reviews--loading.png` | Dr Molefe | Hold a read, then My Committee Reviews in the nav. No change. |
+| `/committee/my-reviews` | Loading | `states/my-reviews--loading.png` | Dr Molefe | Hold a read, then My committee reviews in the menu. No change. |
 | `/committee/my-reviews` | Narrow | `states/my-reviews--narrow.png` | Dr Molefe | At Step 4.41, at 390 px. No change. |
 | `/committee/decisions-due` | Nothing due | `states/decisions-due--nothing-due.png` | Prof Mbatha | After Step 1.22, before Step 2.29 (no trainee admitted): "Nothing due for <period>". No change. |
 | `/committee/decisions-due` | An administrator, no institution | `states/decisions-due--choose-institution.png` | devadmin | Any time after Act 1: "Choose an institution". No change. |
@@ -408,7 +418,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/committee/decisions-due` | All scheduled | `states/decisions-due--scheduled.png` | Dr Sithole | At Step 4.10. |
 | `/committee/decisions-due` | After the sitting | `states/decisions-due--after-sitting.png` | Prof Mbatha | At Step 4.34, Every status. |
 | `/committee/decisions-due` | Revoked, to decide again | `states/decisions-due--revoked.png` | Dr Sithole | At Step 4.37. |
-| `/committee/decisions-due` | Loading | `states/decisions-due--loading.png` | Mr Smit | Hold a read, then Decisions Due in the nav. No change. |
+| `/committee/decisions-due` | Loading | `states/decisions-due--loading.png` | Mr Smit | Hold a read, then Decisions due in the menu. No change. |
 | `/committee/decisions-due` | Narrow | `states/decisions-due--narrow.png` | Mr Smit | At Step A.7.5. |
 | `/admin/entrustment-decisions` | None issued | `states/entrustment-decisions--empty.png` | Prof Mbatha | At Step 4.2, from her dashboard's quick link: "No entrustment decisions". No change. |
 | `/admin/entrustment-decisions` | Issued | `states/entrustment-decisions--issued.png` | Prof Mbatha | At Step 4.35. |
@@ -429,7 +439,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/msf/campaigns` | Withdraw dialog | `states/campaigns-list--withdraw-dialog.png` | Mr Smit | At Step 3.38. |
 | `/msf/campaigns` | Withdrawn | `states/campaigns-list--withdrawn.png` | Mr Smit | At Step 3.38, after confirming. |
 | `/msf/campaigns` | Released | `states/campaigns-list--released.png` | Mr Smit | At Step 3.46. |
-| `/msf/campaigns` | Loading | `states/campaigns-list--loading.png` | Mr Smit | Hold a read, then MSF Campaigns in the nav. No change. |
+| `/msf/campaigns` | Loading | `states/campaigns-list--loading.png` | Mr Smit | Hold a read, then MSF campaigns in the menu. No change. |
 | `/msf/campaigns` | Narrow | `states/campaigns-list--narrow.png` | Mr Smit | At Step A.7.5. |
 | `/msf/campaigns/new` | No template yet | `states/campaign-edit--no-template.png` | Mr Smit | At Step 3.34, before adding the Quick template. |
 | `/msf/campaigns/new` | Template created | `states/campaign-edit--template-created.png` | Mr Smit | At Step 3.34. |
@@ -458,11 +468,11 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/msf/coverage` | Coverage | `states/programme-coverage--loaded.png` | Mr Smit | At Step 3.49. |
 | `/msf/coverage` | Loading | `states/programme-coverage--loading.png` | Mr Smit | Hold a read, then MSF coverage on the list. No change. |
 | `/msf/coverage` | Narrow | `states/programme-coverage--narrow.png` | Mr Smit | At Step 3.49, at 390 px. No change. |
-| `/msf/my-reports` | None released | `states/my-msf-reports--empty.png` | Dr Molefe | At Step 3.25, MSF Reports in the nav: "No released reports". No change. |
+| `/msf/my-reports` | None released | `states/my-msf-reports--empty.png` | Dr Molefe | At Step 3.25, MSF reports in the menu: "No released reports". No change. |
 | `/msf/my-reports` | The list | `states/my-msf-reports--list.png` | Dr Molefe | At Step 3.47. |
 | `/msf/my-reports/{CampaignId:int}` | A report | `states/my-msf-reports--report.png` | Dr Molefe | At Step 3.47. |
 | `/msf/my-reports/{CampaignId:int}` | Someone else's id | `states/my-msf-reports--foreign.png` | Dr Dlamini | After Step 3.46, typed with Dr Molefe's campaign id: her empty list, nothing selected. No change. |
-| `/msf/my-reports` | Loading | `states/my-msf-reports--loading.png` | Dr Molefe | Hold a read, then MSF Reports in the nav. No change. |
+| `/msf/my-reports` | Loading | `states/my-msf-reports--loading.png` | Dr Molefe | Hold a read, then MSF reports in the menu. No change. |
 | `/msf/my-reports` | Narrow | `states/my-msf-reports--narrow.png` | Dr Molefe | At Step 3.47, at 390 px. No change. |
 | `/msf/respond` | The questionnaire | `states/msf-respond--form.png` | Anonymous | At Step 3.39, before answering. |
 | `/msf/respond` | Rating left out | `states/msf-respond--required.png` | Anonymous | At Step 3.39, Submit with no rating: the browser's own required prompt. No change. |
@@ -480,7 +490,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 |---|---|---|---|---|
 | `/admin/colleges` | Two Colleges | `states/colleges-list--two.png` | devadmin | At Step 1.2. |
 | `/admin/colleges` | Three Colleges | `states/colleges-list--three.png` | devadmin | At Step 6.1. |
-| `/admin/colleges` | Loading | `states/colleges-list--loading.png` | devadmin | Hold a read, then Colleges in the nav. No change. |
+| `/admin/colleges` | Loading | `states/colleges-list--loading.png` | devadmin | Hold a read, then Colleges in the menu. No change. |
 | `/admin/colleges` | Narrow | `states/colleges-list--narrow.png` | devadmin | At Step 6.2, at 390 px. No change. |
 | `/admin/colleges/{Id:int}` | Edit | `states/college-edit--edit.png` | devadmin | At Step 1.3. |
 | `/admin/colleges/new` | Create | `states/college-edit--create.png` | devadmin | At Step 6.1, before typing. |
@@ -494,7 +504,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/colleges/{CollegeId:int}/specialities` | One speciality | `states/specialities-list--one.png` | Dr Kruger | At Step 1.12. |
 | `/admin/colleges/{CollegeId:int}/specialities` | None yet | `states/specialities-list--empty.png` | devadmin | At Step 6.3, before the create. |
 | `/admin/colleges/{CollegeId:int}/specialities` | Another College's id | `states/specialities-list--other-college.png` | Dr Kruger | Typed with the Demo College's id (`SELECT "Id" FROM "Colleges" WHERE "ShortCode" = 'DEMO-C';`): reads as a College with no specialities. No change. |
-| `/admin/colleges/{CollegeId:int}/specialities` | Loading | `states/specialities-list--loading.png` | Dr Kruger | Hold a read, then Specialities in the nav. No change. |
+| `/admin/colleges/{CollegeId:int}/specialities` | Loading | `states/specialities-list--loading.png` | Dr Kruger | Hold a read, then Specialities in the menu. No change. |
 | `/admin/colleges/{CollegeId:int}/specialities` | Narrow | `states/specialities-list--narrow.png` | Dr Kruger | At Step 6.11, at 390 px. No change. |
 | `/admin/colleges/{CollegeId:int}/specialities/{Id:int}` | Edit | `states/speciality-edit--edit.png` | Dr Kruger | At Step 6.11, before saving. |
 | `/admin/colleges/{CollegeId:int}/specialities/{Id:int}` | Saved | `states/speciality-edit--saved.png` | Dr Kruger | At Step 6.11: "Speciality saved." |
@@ -521,7 +531,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/epas` | The adopted fifteen | `states/epas-list--institution.png` | Prof Mbatha | At Step 1.21. |
 | `/admin/epas` | One inactive | `states/epas-list--inactive.png` | Dr Kruger | At Step 6.17. |
 | `/admin/epas` | With a local EPA | `states/epas-list--local.png` | Prof Mbatha | At Step 6.25. |
-| `/admin/epas` | Loading | `states/epas-list--loading.png` | Dr Kruger | Hold a read, then EPAs in the nav. No change. |
+| `/admin/epas` | Loading | `states/epas-list--loading.png` | Dr Kruger | Hold a read, then EPAs in the menu. No change. |
 | `/admin/epas` | Load error | `states/epas-list--load-error.png` | Dr Kruger | The same, held 35 s. No change. |
 | `/admin/epas` | Narrow | `states/epas-list--narrow.png` | Dr Kruger | At Step A.7.10. |
 | `/admin/epas/{Id:int}` | Edit | `states/epa-edit--edit.png` | Dr Kruger | At Step 6.14, before saving. |
@@ -541,7 +551,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/curricula` | Adopted, items only | `states/curricula-list--institution.png` | Prof Mbatha | At Step 1.21. |
 | `/admin/curricula` | Active and inactive | `states/curricula-list--versions.png` | Dr Kruger | At Step 6.31. |
 | `/admin/curricula` | Two versions, an institution | `states/curricula-list--institution-versions.png` | Prof Mbatha | At Step 6.33. |
-| `/admin/curricula` | Loading | `states/curricula-list--loading.png` | Dr Kruger | Hold a read, then Curricula in the nav. No change. |
+| `/admin/curricula` | Loading | `states/curricula-list--loading.png` | Dr Kruger | Hold a read, then Curricula in the menu. No change. |
 | `/admin/curricula` | Narrow | `states/curricula-list--narrow.png` | Dr Kruger | At Step A.7.10. |
 | `/admin/curricula/new` | Create | `states/curriculum-edit--create.png` | Dr Kruger | At Step 6.13, before typing. |
 | `/admin/curricula/new` | Required fields empty | `states/curriculum-edit--invalid.png` | Dr Kruger | At Step 6.13, Save with the form empty. No change. |
@@ -566,7 +576,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/entrustment-scales` | Read-only | `states/entrustment-scales-list--read-only.png` | Prof Mbatha | At Step 1.22. |
 | `/admin/entrustment-scales` | Delete refused | `states/entrustment-scales-list--delete-refused.png` | devadmin | At Step 6.8. |
 | `/admin/entrustment-scales` | Deleted | `states/entrustment-scales-list--deleted.png` | devadmin | Scratch (post-appendix): create a two-level scale (a scale needs at least two levels), back on the list press Delete on it: "Entrustment scale deleted." |
-| `/admin/entrustment-scales` | Loading | `states/entrustment-scales-list--loading.png` | Prof Mbatha | Hold a read, then Entrustment Scales in the nav. No change. |
+| `/admin/entrustment-scales` | Loading | `states/entrustment-scales-list--loading.png` | Prof Mbatha | Hold a read, then Entrustment scales in the menu. No change. |
 | `/admin/entrustment-scales` | Narrow | `states/entrustment-scales-list--narrow.png` | Prof Mbatha | At Step 6.9, at 390 px. No change. |
 | `/admin/entrustment-scales/{Id:int}` | Six rungs | `states/entrustment-scale-edit--edit.png` | devadmin | At Step 1.4. |
 | `/admin/entrustment-scales/new` | Create | `states/entrustment-scale-edit--create.png` | devadmin | At Step 6.5, before typing. |
@@ -582,7 +592,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 |---|---|---|---|---|
 | `/admin/institutions` | One | `states/institutions-list--one.png` | devadmin | At Step 1.6, before the create. |
 | `/admin/institutions` | Two | `states/institutions-list--two.png` | devadmin | At Step A.6.1. |
-| `/admin/institutions` | Loading | `states/institutions-list--loading.png` | devadmin | Hold a read, then Institutions in the nav. No change. |
+| `/admin/institutions` | Loading | `states/institutions-list--loading.png` | devadmin | Hold a read, then Institutions in the menu. No change. |
 | `/admin/institutions` | Narrow | `states/institutions-list--narrow.png` | devadmin | At Step A.7.11. |
 | `/admin/institutions/new` | Create | `states/institution-edit--create.png` | devadmin | At Step 1.6, before typing. |
 | `/admin/institutions/new` | Required fields empty | `states/institution-edit--invalid.png` | devadmin | At Step 1.6, Save with the form empty. No change. |
@@ -599,13 +609,13 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/adoptions` | Superseded | `states/adoptions-list--superseded.png` | Prof Mbatha | At Step 6.32. |
 | `/admin/adoptions` | An administrator, no institution | `states/adoptions-list--choose-institution.png` | devadmin | Any time after Act 1: only the Institution picker. No change. |
 | `/admin/adoptions` | An administrator, KGK chosen | `states/adoptions-list--administrator.png` | devadmin | The same, choose Kgosi Kgari Teaching Hospital; adopt nothing. No change. |
-| `/admin/adoptions` | Loading | `states/adoptions-list--loading.png` | Prof Mbatha | Hold a read, then Curriculum Adoptions in the nav. No change. |
+| `/admin/adoptions` | Loading | `states/adoptions-list--loading.png` | Prof Mbatha | Hold a read, then Curriculum adoptions in the menu. No change. |
 | `/admin/adoptions` | Narrow | `states/adoptions-list--narrow.png` | Prof Mbatha | At Step 6.32, at 390 px, before Adopt. No change. |
 | `/admin/activity-types` | Searched | `states/activity-types-list--search.png` | Prof Mbatha | At Step 1.24: `cpsa`. |
 | `/admin/activity-types` | A draft in the list | `states/activity-types-list--draft.png` | Prof Mbatha | Between Steps 1.26 and 1.30: Draft reads "Draft saved" on the KGK row. No change. |
 | `/admin/activity-types` | All | `states/activity-types-list--all.png` | Prof Mbatha | At Step 1.31. |
 | `/admin/activity-types` | No match | `states/activity-types-list--no-match.png` | Prof Mbatha | At Step 1.31, search `zzz`: the page's empty card. No change. |
-| `/admin/activity-types` | Loading | `states/activity-types-list--loading.png` | Prof Mbatha | Hold a read, then Activity Types in the nav. No change. |
+| `/admin/activity-types` | Loading | `states/activity-types-list--loading.png` | Prof Mbatha | Hold a read, then Activity types in the menu. No change. |
 | `/admin/activity-types` | Narrow | `states/activity-types-list--narrow.png` | Prof Mbatha | At Step 1.31, at 390 px. No change. |
 | `/admin/activity-types/{ActivityTypeId:int}` | A College instrument, to an institution | `states/activity-type-edit--college-instrument.png` | Prof Mbatha | At Step 1.25, the Form tab. |
 | `/admin/activity-types/new` | New, the default draft | `states/activity-type-edit--new.png` | Prof Mbatha | At Step 1.26, before typing. |
@@ -632,14 +642,14 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/invitations` | Invalid address | `states/invitations-list--invalid.png` | Prof Mbatha | At Step 2.1, Issue invitation with the email `not-an-address`: the field's message. Nothing is sent. No change. |
 | `/admin/invitations` | Sent | `states/invitations-list--sent.png` | Prof Mbatha | Scratch (post-appendix), with an SMTP sink that accepts mail on the scratch instance's `Email__SmtpHost`: issue one invitation and reload once the worker reports it. |
 | `/admin/invitations` | Check the address | `states/invitations-list--check-address.png` | Prof Mbatha | Scratch (post-appendix), with a sink that refuses the address: issue, then Resend after each failure until the row says to check the address. |
-| `/admin/invitations` | Loading | `states/invitations-list--loading.png` | Prof Mbatha | Hold a read, then Invitations in the nav. No change. |
+| `/admin/invitations` | Loading | `states/invitations-list--loading.png` | Prof Mbatha | Hold a read, then Invitations in the menu. No change. |
 | `/admin/invitations` | Narrow | `states/invitations-list--narrow.png` | Prof Mbatha | At Step 2.16, at 390 px, after the issues. No change. |
 | `/admin/users` | KGK's staff | `states/users-list--staff.png` | Prof Mbatha | At Step 2.12. |
 | `/admin/users` | Filtered | `states/users-list--filtered.png` | Prof Mbatha | At Step 2.12, "zulu". |
 | `/admin/users` | No match | `states/users-list--no-match.png` | Prof Mbatha | At Step 2.12, filter "zzz": "No users match the current filter." No change. |
 | `/admin/users` | With pending trainees | `states/users-list--pending.png` | Prof Mbatha | At Step 2.28. |
 | `/admin/users` | After an erasure | `states/users-list--after-erasure.png` | Prof Mbatha | At Step A.1.14. |
-| `/admin/users` | Loading | `states/users-list--loading.png` | Prof Mbatha | Hold a read, then Users in the nav. No change. |
+| `/admin/users` | Loading | `states/users-list--loading.png` | Prof Mbatha | Hold a read, then Users in the menu. No change. |
 | `/admin/users` | Narrow | `states/users-list--narrow.png` | Prof Mbatha | At Step A.7.9. |
 | `/admin/users/{UserId}` | Her own account | `states/user-detail--own.png` | Prof Mbatha | At Step 2.12. |
 | `/admin/users/{UserId}` | Another's, before a change | `states/user-detail--other.png` | Prof Mbatha | At Step 2.13, Dr Zulu before Add role. |
@@ -657,7 +667,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/users/{UserId}` | Narrow | `states/user-detail--narrow.png` | Prof Mbatha | At Step A.7.9. |
 | `/admin/assessors` | None | `states/assessors-list--empty.png` | Prof Mbatha | At Step 2.14, before the first save. |
 | `/admin/assessors` | Five | `states/assessors-list--five.png` | Prof Mbatha | At Step 2.15. |
-| `/admin/assessors` | Loading | `states/assessors-list--loading.png` | Prof Mbatha | Hold a read, then Assessors in the nav. No change. |
+| `/admin/assessors` | Loading | `states/assessors-list--loading.png` | Prof Mbatha | Hold a read, then Assessors in the menu. No change. |
 | `/admin/assessors` | Narrow | `states/assessors-list--narrow.png` | Prof Mbatha | At Step 2.15, at 390 px. No change. |
 | `/admin/assessors/edit` | New | `states/assessor-profile-edit--new.png` | Prof Mbatha | At Step 2.14, before choosing. |
 | `/admin/assessors/edit` | With a completion date | `states/assessor-profile-edit--provisional.png` | Prof Mbatha | At Step 2.14, Dr Khumalo as Provisional: the date field shown. |
@@ -669,7 +679,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/trainees` | Some admitted | `states/pending-trainees-list--admitted.png` | Prof Mbatha | At Step 2.29. |
 | `/admin/trainees` | None pending | `states/pending-trainees-list--none-pending.png` | Prof Mbatha | At Step 2.30. |
 | `/admin/trainees` | Completed and closed | `states/pending-trainees-list--closed.png` | Prof Mbatha | At Step 5.27. |
-| `/admin/trainees` | Loading | `states/pending-trainees-list--loading.png` | Prof Mbatha | Hold a read, then Trainees in the nav. No change. |
+| `/admin/trainees` | Loading | `states/pending-trainees-list--loading.png` | Prof Mbatha | Hold a read, then Trainees in the menu. No change. |
 | `/admin/trainees` | Narrow | `states/pending-trainees-list--narrow.png` | Prof Mbatha | At Step A.7.9. |
 | `/admin/trainees/edit` | Admission | `states/trainee-profile-edit--admission.png` | Prof Mbatha | At Step 2.29, before saving. |
 | `/admin/trainees/edit` | An active profile | `states/trainee-profile-edit--active.png` | Prof Mbatha | At Step 2.29, after the admission. |
@@ -691,7 +701,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/audit` | Failures only | `states/audit-list--failures.png` | Prof Mbatha | At Step 3.55. |
 | `/admin/audit` | Every institution | `states/audit-list--administrator.png` | devadmin | At Step 3.57, with the pager's Next enabled. |
 | `/admin/audit` | No entries | `states/audit-list--empty.png` | Prof Mbatha | At Step 3.55, Action `NoSuchCommand`, applied. No change. |
-| `/admin/audit` | Loading | `states/audit-list--loading.png` | Prof Mbatha | Hold a read, then Audit Log in the nav. No change. |
+| `/admin/audit` | Loading | `states/audit-list--loading.png` | Prof Mbatha | Hold a read, then Audit log in the menu. No change. |
 | `/admin/audit` | Narrow | `states/audit-list--narrow.png` | Prof Mbatha | At Step 3.55, at 390 px. No change. |
 | `/admin/audit/{Id:guid}` | A failure | `states/audit-detail--failure.png` | Prof Mbatha | At Step 3.56. |
 | `/admin/audit/{Id:guid}` | With its payload | `states/audit-detail--payload.png` | devadmin | At Step 3.57. |
@@ -700,7 +710,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/jobs` | Nine jobs | `states/scheduled-jobs-list--loaded.png` | devadmin | At Step A.2.1. |
 | `/admin/jobs` | A job disabled | `states/scheduled-jobs-list--disabled.png` | devadmin | At Step A.2.2, before enabling it again. |
 | `/admin/jobs` | Dispatched | `states/scheduled-jobs-list--dispatched.png` | devadmin | At Step A.2.4. |
-| `/admin/jobs` | Loading | `states/scheduled-jobs-list--loading.png` | devadmin | Hold a read, then Scheduled Jobs in the nav. No change. |
+| `/admin/jobs` | Loading | `states/scheduled-jobs-list--loading.png` | devadmin | Hold a read, then Scheduled jobs in the menu. No change. |
 | `/admin/jobs` | Narrow | `states/scheduled-jobs-list--narrow.png` | devadmin | At Step A.7.11. |
 | `/admin/jobs/runs` | The history | `states/scheduled-job-runs-list--loaded.png` | devadmin | At Step A.2.10. |
 | `/admin/jobs/runs` | One job | `states/scheduled-job-runs-list--filtered.png` | devadmin | At Step A.2.10, the full key. |
@@ -717,7 +727,7 @@ and the nav. The mapped endpoint `/dashboard/switch/{role}` only changes which d
 | `/admin/data-rights` | Nothing matches | `states/data-rights-requests--empty.png` | Mr Smit | At Step A.1.3, before approving: type Erasure, applied: "No requests". No change. |
 | `/admin/data-rights` | Three requests | `states/data-rights-requests--three.png` | Mr Smit | At Step A.1.8. |
 | `/admin/data-rights` | Every institution | `states/data-rights-requests--administrator.png` | devadmin | At Step A.1.12. |
-| `/admin/data-rights` | Loading | `states/data-rights-requests--loading.png` | Mr Smit | Hold a read, then Data Rights Requests in the nav. No change. |
+| `/admin/data-rights` | Loading | `states/data-rights-requests--loading.png` | Mr Smit | Hold a read, then Data rights requests in the menu. No change. |
 | `/admin/data-rights` | Narrow | `states/data-rights-requests--narrow.png` | Mr Smit | At Step A.7.5. |
 | `/admin/data-rights/{Id:guid}` | Submitted | `states/data-rights-request--submitted.png` | Mr Smit | At Step A.1.3, before approving. |
 | `/admin/data-rights/{Id:guid}` | No decision note | `states/data-rights-request--note-required.png` | Mr Smit | At Step A.1.3: "A decision note is required." |
@@ -760,12 +770,17 @@ member can meet it. None is captured.
   identity provider (`Sso:Providers` is empty on dev; `coverage.md` § Flows and states not played). The refusal texts
   alone are reachable as typed codes on the sign-in page.
 - **Dashboard cards that nothing fills.** The Trainee's "Upcoming deadlines" with a row (it reads `due_date` keys no
-  type has). The Assessor's "Accepted, needing action", which no CPSA or KGK workflow could fill, is now "Awaiting your
-  review", read from the inbox (T297), and Steps 3.24, 3.33, 3.51 and A.6.8 fill it.
+  type has). The Assessor's "Accepted, needing action", which no CPSA or KGK workflow could fill, is now "Waiting for
+  your rating" (T297, T335), read from the inbox, and Steps 3.24, 3.33, 3.51 and A.6.8 fill it.
 - **Trainee states the admissions never produce.** "No curriculum assigned yet" on Home and "No curriculum items assigned
   yet" on My progress (a Trainee with no profile: admission sets the role and the profile together), "Your programme
   starts on …" (every start is on or before `D`), "You started part-way through a period" (every start is 15 January,
   the semester boundary, D42), and "No EPA on your curriculum is in use" (every EPA of a curriculum inactive at once).
+- **Home for an account with no role and no training record**: no subtitle and one card, "No role assigned" ("Your
+  account holds no role at the moment, so there is nothing to show you here. An administrator can give you one."), with
+  Home, then My data rights, as the menu. Nobody in the story loses their last role without keeping a trainee record:
+  Dr Molefe keeps hers, so her Home is "Your training record". A cheap scratch (post-act6), if wanted: devadmin removes
+  Dr van Rensburg's one role, CommitteeMember, on his user page, and he signs in again.
 - **An activity counted across scales** ("counted towards the required number of observations, but not towards the
   supervision level"): every rated instrument and every item uses the v11.1 ladder.
 - **A workflow action shown disabled with its reason** (T107): no seeded or KGK workflow leaves a required field its
@@ -776,7 +791,7 @@ member can meet it. None is captured.
   story has more than one assessor), "Sampling figures are incomplete" (evidence from another institution, or a
   malformed rating), the trainee-elsewhere note (no page moves a trainee to another institution), and "Starting now
   leaves out N feedback campaigns" (the story releases its campaign before any review starts).
-- **The "holds Trainee" notes** on Users, a user, the panel list and form, Committee Reviews, the MSF campaign pages and
+- **The "holds Trainee" notes** on Users, a user, the panel list and form, Committee reviews, the MSF campaign pages and
   MSF coverage (T218, T224, T237, T256, T278): no cast member holds Trainee beside a staff role. So is the panel form's
   "You cannot create a decision panel" card (T194): every panel manager in the cast has a scope to create in.
 - **MSF respondent refusals.** "Feedback link revoked": nothing in the product sets an MSF link's revoked time, so the
@@ -789,10 +804,13 @@ member can meet it. None is captured.
 - **Scheduled jobs.** A Failed run badge (no job fails on the replay) and Run now refused while the job runs (timing).
 - **The register page's skeleton**: the page is static for its only audience, so its read runs before the page is sent.
 - **`/admin/specialities`**: it redirects before it renders, so it has no state of its own.
-- **The error page through a real failure**: no exception handler is configured, so a failure reaches the developer page
-  on dev or a bare 500 (Step A.5.8); only the page by its address is captured.
+- **The error page through a real failure, on the replay**: the replay runs in Development, whose developer exception
+  page answers a failure. Outside Development the error page does (`ErrorPages`, T321): § System pages' "After a
+  failure" row says how to reach it from another environment, and `Hosting/ErrorPageFlowTests` plays it. Step A.5.8
+  captures the page by its address.
 - **Empty lists the seeders rule out**: Colleges, Institutions, Entrustment scales and Scheduled jobs always hold rows,
   and an InstitutionalAdmin's Users list always holds herself.
-- **The reconnect modal's "rejected" state**: it reloads the page at once.
+- **The reconnect dialog's Reloading state** ("Reloading the page…"): it shows only while the reload it starts is under
+  way.
 - **Loading of secondary reads inside a page** (the review page's standing and MSF coverage cards, My progress's MSF
   line): they run after the main read, so a hold cannot fail one without the other.

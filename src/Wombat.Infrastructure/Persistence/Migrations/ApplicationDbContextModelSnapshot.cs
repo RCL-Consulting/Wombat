@@ -2702,6 +2702,10 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ActingRole")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<bool>("AllowLocalPassword")
                         .HasColumnType("boolean");
 

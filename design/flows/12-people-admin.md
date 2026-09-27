@@ -422,8 +422,8 @@ Expect: KGK's page is headed "Edit institution" and shows KGK's name, the short 
   She is offered nothing that would deactivate KGK, neither a Deactivate nor an Active she can untick, and no link
   (Back or Cancel) to the Institutions list: deactivating an institution and listing them belong to an Administrator
   alone (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
-  The Demo Institution's id sends her to Page not found, not Access denied. The product never confirms that a record
-  outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
+  The Demo Institution's id sends her to Page not found, not "You cannot open this page". The product never confirms
+  that a record outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
 
 Step 2.12 — Mbatha reviews KGK's users
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -475,8 +475,9 @@ Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/assessors
 Do: Open Home. Then open Users and Assessors.
-Expect: The page reads "Viewing as InstitutionalAdmin". Users reads InstitutionalAdmin 1, SpecialityAdmin 1,
-  SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no PendingTrainee line.
+Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person". Users reads InstitutionalAdmin
+  1, SpecialityAdmin 1, SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no
+  PendingTrainee line.
   Specialities & sub-specialities reads 1 and 1, what KGK has adopted. Quick links reads Users, Invitations, Curriculum
   adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
 
@@ -485,7 +486,7 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
-  - Committee Reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
+  - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
   - The check-in reads Withdrawn, dated today, with the reason "Withdrawn because the trainee's personal data was erased
     at their request. Nothing more is decided at this review.", and offers no action.
@@ -494,7 +495,7 @@ Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
 Step A.3.1 — Prof Mbatha opens SSO Mappings with no provider configured
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/sso/group-mappings
-Do: Open SSO Mappings from the nav.
+Do: Open SSO mappings from the menu.
 Expect: A card says that no SSO providers are configured, and to add them to the `Sso:Providers` section of the
   application settings and restart. No form for adding a mapping is offered. Current mappings is empty ("No group
   mappings"), although its empty state still says to add a mapping above. Nothing on the page can be changed.
@@ -513,8 +514,9 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
   account's id.
-Expect: The institution shows Page not found, not Access denied. The user shows "User unavailable" ("The user could not
-  be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not 403).
+Expect: The institution shows Page not found, not "You cannot open this page". The user shows "User unavailable" ("The
+  user could not be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not
+  403).
 
 Step A.6.3 — Prof Mbatha edits her own institution
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -556,15 +558,15 @@ Expect: The user page's cards stack, and its buttons wrap rather than overflow. 
 
 Step A.7.14 — Prof Mbatha's pages, checked for contrast
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /account/login → / → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
+Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
   - the sign-in card;
-  - the nav on its gradient;
+  - the nav on its gradient, and its current item (white on the .32 fill);
   - muted text on the page background;
-  - the status badges on a committee review opened from Committee Reviews (Dr Molefe's review 7; the list itself shows
+  - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
     each state as plain text);
-  - a success alert (save My Account unchanged: "Profile saved.") and a danger alert (Change password with a
-    confirmation that differs, which checks no password and changes nothing);
+  - a success alert (save My account, the name in the top bar, unchanged: "Profile saved.") and a danger alert (Change
+    password with a confirmation that differs, which checks no password and changes nothing);
   - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
     not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
   - the focus ring on white and on the page background;

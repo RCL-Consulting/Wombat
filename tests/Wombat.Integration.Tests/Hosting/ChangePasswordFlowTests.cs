@@ -86,7 +86,8 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
             answer.StatusCode.Should().Be(HttpStatusCode.OK, $"not sent to sign in again ({answer.Headers.Location})");
             var page = Parse(await answer.Content.ReadAsStringAsync());
             page.QuerySelector(".action-result .alert-success")!.TextContent.Trim().Should().Be("Password updated.");
-            page.QuerySelector(".top-row.auth")!.TextContent.Should().Contain(email, "signed in, as themselves");
+            // The account row names them by the display-name claim sign-in issued (T335, flow 01): "Signed Assessor".
+            page.QuerySelector(".account-row .account-link")!.TextContent.Trim().Should().Be("Signed Assessor", "signed in, as themselves");
 
             // The cookie from before the change carries the old stamp, and is refused.
             using var stale = app.CreateDefaultClient(Origin);

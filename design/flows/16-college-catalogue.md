@@ -501,14 +501,14 @@ Role: Administrator — the platform operator
 Route: /admin/colleges → /admin/colleges/{Id:int}
 Do: Open the CPSA's Edit and read the record. Leave by Back to colleges without saving. Record the CPSA's id as
   `{CollegeId}`.
-Expect: The page is headed "Edit college", and the browser tab reads "Edit College". Name, Short code and Description
-  hold Step 1.2's values, and Active is ticked. Deactivate and Save are offered. Leaving saves nothing, and the list is
-  unchanged.
+Expect: The page is headed "Edit college", and the browser tab reads "Edit college · Wombat" (T190). Name, Short
+  code and Description hold Step 1.2's values, and Active is ticked. Deactivate and Save are offered. Leaving saves
+  nothing, and the list is unchanged.
 
 Step 1.4 — The CPSA ladder has six rungs (act-1-setup.md)
 Role: Administrator — the platform operator
 Route: /admin/entrustment-scales → /admin/entrustment-scales/{Id:int}
-Do: Open Entrustment Scales and read the list. Then open Edit on `CPSA Paediatric Entrustment Scale v11.1` and read its
+Do: Open Entrustment scales and read the list. Then open Edit on `CPSA Paediatric Entrustment Scale v11.1` and read its
   levels. Leave by Cancel without saving. Record the scale's id as `{ScaleId}`.
 Expect: The list has two scales: `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and the Demo `O-R Scale` at 5.
   The Administrator is offered Create scale, and Edit and Delete on each row.
@@ -524,7 +524,8 @@ Do: Open Specialities from the nav and read the page. Record the Paediatrics spe
 Expect: He is redirected to his own College's specialities, subtitled "College: College of Paediatricians of South
   Africa (CPSA)". The page has one row: `Paediatrics`, "Specialist training in Paediatrics.", Active, offering Edit and
   Sub-specialities. The Demo College's speciality is not listed. The header offers Create speciality. It offers no link
-  to the Colleges list, which does not admit him (T291 item 2).
+  to the Colleges list, which does not admit him (T291 item 2). His menu's Specialities stays lit on it (T331), and the
+  trail above the header reads Home › Specialities › College of Paediatricians of South Africa.
 
 Step 1.13 — The Paediatrics sub-speciality (act-1-setup.md)
 Role: CollegeAdmin — Dr Anton Kruger
@@ -550,8 +551,9 @@ Step 1.15 — The College does not open the scale pages (act-1-setup.md)
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/entrustment-scales → /access-denied
 Do: Type the address of the entrustment scales list.
-Expect: The page reads "Access denied" and "You do not have permission to view this page.", with a Back to home link.
-  The scales list admits only an Administrator or an InstitutionalAdmin, and Kruger's nav offers no Entrustment Scales.
+Expect: The page reads "You cannot open this page" and "Your role (College admin) does not open this page.", then "If
+  you need it for your work, ask the platform administrator.", with Go to Home (T335).
+  The scales list admits only an Administrator or an InstitutionalAdmin, and Kruger's menu offers no Entrustment scales.
   He reads the ladder by name where the College uses it: the sub-speciality's default (Step 1.14) and each item's Scale
   column (Step 1.18).
 
@@ -673,8 +675,8 @@ Route: /account/login → /account/login/submit → / → /admin/colleges/{Id:in
 Do: Sign in. From the dashboard, type the address of CPSA's own College record (the id from Step 6.2), then the
   address for creating an entrustment scale.
 Expect: The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. His menu offers neither
-  of the pages he types. Each address lands on "Access denied" ("You do not have permission to view this page."), with
-  a Back to home link, and nothing changes.
+  of the pages he types. Each address lands on "You cannot open this page" ("Your role (College admin) does not open
+  this page."), with Go to Home, and nothing changes.
 
 Step 6.11 — Dr Kruger edits the Paediatrics speciality (act-6-catalogue.md)
 Role: CollegeAdmin — Dr Anton Kruger

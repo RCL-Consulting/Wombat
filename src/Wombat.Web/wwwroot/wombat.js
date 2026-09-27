@@ -59,3 +59,37 @@ window.addEventListener("pageshow", function (event) {
         });
     });
 });
+
+// The navigation's lit item, scrolled into view inside the sidebar's list (T335, flow 01; R2-Sidebar-Scroll): the
+// Administrator's list is longer than a laptop's window. Only the list scrolls, never the page, and the item keeps 8px
+// of the list around it. As a page loads, after an enhanced navigation, when the phone menu opens, and from NavMenu after
+// the circuit's first render, which replaces the prerendered list.
+window.wombat.revealCurrentNavItem = function () {
+    const item = document.querySelector(".nav-list [aria-current]");
+    const list = item ? item.closest(".nav-list") : null;
+    if (!list || list.clientHeight === 0) {
+        return;
+    }
+
+    const margin = 8;
+    const itemBox = item.getBoundingClientRect();
+    const listBox = list.getBoundingClientRect();
+    if (itemBox.top < listBox.top + margin) {
+        list.scrollTop -= listBox.top + margin - itemBox.top;
+    } else if (itemBox.bottom > listBox.bottom - margin) {
+        list.scrollTop += itemBox.bottom - (listBox.bottom - margin);
+    }
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+    window.wombat.revealCurrentNavItem();
+    if (window.Blazor && typeof window.Blazor.addEventListener === "function") {
+        window.Blazor.addEventListener("enhancedload", window.wombat.revealCurrentNavItem);
+    }
+});
+
+document.addEventListener("change", function (event) {
+    if (event.target instanceof HTMLInputElement && event.target.id === "nav-toggle" && event.target.checked) {
+        window.wombat.revealCurrentNavItem();
+    }
+});

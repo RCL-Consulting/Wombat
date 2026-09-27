@@ -1,196 +1,128 @@
-@using Wombat.Domain.Identity
-@using Wombat.Application.Common.Security
+@*
+  The navigation (T335, flow 01; DESIGN.md § The NavMenu): the acting role's head and switch, then that role's links,
+  then the personal links under a rule. It reads no database: the acting role and the menu are cascaded (App resolved the
+  role from the sign-in cookie's claims, MainLayout built the menu from them), and the page shown is Routes' RouteData.
 
-@* Every class here is NavMenu.razor.css's or app.css's (T266). Until T266 the brand row also carried Bootstrap's ps-3,
-   navbar, navbar-dark and a container-fluid wrapper, the nav flex-column and each item px-3, all left from the Blazor
-   template: Wombat loads no Bootstrap, so they styled nothing. The items are where they were; the brand is 2px lower,
-   centred in its row, now that no wrapper's line box holds it (DESIGN.md § The NavMenu). *@
-<div class="top-row">
-  <a class="navbar-brand" href="">
-    <img class="navbar-brand-mark" src="/brand/wombat-mark.svg" alt="" width="40" height="40" />
-    <span class="navbar-brand-text">Wombat</span>
-  </a>
-</div>
+  - The head says "Acting as" and the role's label, which wraps and is never cut. Two roles: one "Switch to …" link.
+    Three or more: a native <details> "Change role" listing each other role. No script, so it works on a static page.
+    Every switch is ActingRoleSwitch.Url(role), with no return address, so it lands on the new role's Home, and a full
+    page load (data-enhance-nav="false"): enhanced navigation would patch a static page in place and start no circuit.
+    No role, no head (D8).
+  - A group's heading is not a link and not a heading element: the page's h1 is the first heading. It names its list.
+  - At most one item is lit (NavOwners): a list lights itself, a page under it lights its owner for the acting role.
+*@
+@inject IJSRuntime JS
 
-<input type="checkbox" title="Navigation menu" aria-label="Toggle navigation menu"
-       aria-expanded="@IsNavMenuExpanded" class="navbar-toggler" @bind="IsNavMenuExpanded" />
-
-<div class="nav-scrollable" @onclick="CloseNavMenu">
-  <nav>
-    <div class="nav-item">
-      <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-        <Icon Name="home" />
-        Home
-      </NavLink>
-    </div>
-
-    <AuthorizeView Context="navAuth">
-      <Authorized Context="navUser">
-        <div class="nav-item">
-          <NavLink class="nav-link" href="/account/profile">
-            <Icon Name="user" />
-            My Account
-          </NavLink>
-        </div>
-        <div class="nav-item">
-          <NavLink class="nav-link" href="/account/data-rights">
-            <Icon Name="shield" />
-            Data Rights
-          </NavLink>
-        </div>
-
-        @* Each of the user's roles adds its section's links, in the order of Sections below. A page two of their roles
-           offer appears once, where the first of those sections puts it (T178). *@
-        @foreach (var link in LinksFor(navUser.User))
-        {
-          <div class="nav-item">
-            <NavLink class="nav-link" href="@link.Href">
-              <Icon Name="@link.Icon" />
-              @link.Label
-            </NavLink>
-          </div>
-        }
-
-        <div class="nav-item">
-          <form action="/account/logout" method="post">
-            <AntiforgeryToken />
-            <button type="submit" class="nav-link nav-logout-button">
-              <Icon Name="log-out" />
-              Logout
-            </button>
-          </form>
-        </div>
-      </Authorized>
-      <NotAuthorized Context="anonymousNav">
-        <div class="nav-item">
-          <NavLink class="nav-link" href="/account/login">
-            <Icon Name="user" />
-            Sign in
-          </NavLink>
-        </div>
-      </NotAuthorized>
-    </AuthorizeView>
-  </nav>
-</div>
-
-@code {
-  private bool IsNavMenuExpanded { get; set; }
-
-  private void CloseNavMenu()
+<nav class="nav-panel" aria-label="Main">
+  @if (Acting?.Role is { } role)
   {
-    if (IsNavMenuExpanded)
-    {
-      IsNavMenuExpanded = false;
-    }
-  }
+    <div class="role-head">
+      <p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">@WombatRoleLabels.For(role)</span></p>
 
-  private sealed record NavItem(string Href, string Label, string Icon);
-
-  /// <param name="Claim">
-  /// A claim type that also admits a user to the section, whatever their roles, or null. For the one link that is a
-  /// person's own record rather than a role's work (T252).
-  /// </param>
-  private sealed record NavSection(string[] Roles, NavItem[] Items, string? Claim = null)
-  {
-    public bool Admits(System.Security.Claims.ClaimsPrincipal user)
-      => Roles.Any(user.IsInRole) || (Claim is { } type && user.HasClaim(claim => claim.Type == type));
-  }
-
-  // One entry per page, so a page has one label and one icon wherever it is offered. Every label is unique, so a user
-  // holding several roles never sees two links with the same name (T178).
-  private static readonly NavItem NewActivity = new("/activities/new", "Activities", "calendar");
-  private static readonly NavItem MyActivities = new("/activities/mine", "My Activities", "file-text");
-  private static readonly NavItem MyMsfReports = new("/msf/my-reports", "MSF Reports", "file-text");
-  private static readonly NavItem MyCommitteeReviews = new("/committee/my-reviews", "My Committee Reviews", "file-text");
-  private static readonly NavItem MyProgress = new("/portfolio/progress", "My Progress", "book");
-  private static readonly NavItem ExportPortfolio = new("/portfolio/export", "Export Portfolio", "arrow-down");
-  private static readonly NavItem ActivityInbox = new("/activities/inbox", "Activity Inbox", "inbox");
-  private static readonly NavItem RecentActivities = new("/placeholder/recent-activities", "Recent Activities", "file-text");
-  private static readonly NavItem DataRightsRequests = new("/admin/data-rights", "Data Rights Requests", "shield");
-  private static readonly NavItem MsfCampaigns = new("/msf/campaigns", "MSF Campaigns", "file-text");
-  private static readonly NavItem CommitteeReviews = new("/committee/reviews", "Committee Reviews", "file-text");
-  private static readonly NavItem DecisionsDue = new("/committee/decisions-due", "Decisions Due", "calendar");
-  private static readonly NavItem StalledActivities = new("/placeholder/stalled-activities", "Stalled Activities", "alert-triangle");
-  private static readonly NavItem ProgrammeTrainees = new("/placeholder/programme-trainees", "Programme Trainees", "users");
-  private static readonly NavItem DecisionPanels = new("/committee/panels", "Decision Panels", "users");
-  private static readonly NavItem StarReviewQueue = new("/placeholder/star-review-queue", "STAR Review Queue", "file-text");
-  private static readonly NavItem Specialities = new("/admin/specialities", "Specialities", "settings");
-  private static readonly NavItem Epas = new("/admin/epas", "EPAs", "file-text");
-  private static readonly NavItem Curricula = new("/admin/curricula", "Curricula", "book");
-  private static readonly NavItem CurriculumAdoptions = new("/admin/adoptions", "Curriculum Adoptions", "book");
-  private static readonly NavItem ActivityTypes = new("/admin/activity-types", "Activity Types", "file-text");
-  private static readonly NavItem EntrustmentScales = new("/admin/entrustment-scales", "Entrustment Scales", "award");
-  private static readonly NavItem Trainees = new("/admin/trainees", "Trainees", "users");
-  private static readonly NavItem Assessors = new("/admin/assessors", "Assessors", "users");
-  private static readonly NavItem Invitations = new("/admin/invitations", "Invitations", "users");
-  private static readonly NavItem Users = new("/admin/users", "Users", "users");
-  private static readonly NavItem SsoMappings = new("/admin/sso/group-mappings", "SSO Mappings", "key");
-  private static readonly NavItem AuditLog = new("/admin/audit", "Audit Log", "shield");
-  private static readonly NavItem Colleges = new("/admin/colleges", "Colleges", "award");
-  private static readonly NavItem Institutions = new("/admin/institutions", "Institutions", "settings");
-  private static readonly NavItem ScheduledJobs = new("/admin/jobs", "Scheduled Jobs", "clock");
-  private static readonly NavItem SystemSettings = new("/placeholder/system", "System", "settings");
-
-  // A section offers a link only if the link's page admits every role of the section: NavMenuAuthorizationTests judges
-  // each rendered link against its page's [Authorize] for every role. DESIGN.md § The NavMenu tabulates the result.
-  private static readonly NavSection[] Sections =
-  [
-    new([WombatRoles.Trainee, WombatRoles.PendingTrainee], [NewActivity, MyActivities]),
-
-    // Trainee only: these pages do not admit a PendingTrainee (T141). T154: the portfolio review asks the trainee to
-    // export the period and hand the PDF to their reviewer.
-    new([WombatRoles.Trainee], [MyMsfReports, MyCommitteeReviews, MyProgress, ExportPortfolio]),
-
-    // T252: completing a programme removes the Trainee role, but a graduate still reads their own progress, as their
-    // portfolio export prints it. Offered to anyone who holds a trainee profile (the claim), where a Trainee has it.
-    new([], [MyProgress], Claim: WombatClaimTypes.TraineeRecord),
-
-    new([WombatRoles.Assessor], [ActivityInbox, RecentActivities]),
-
-    // Not Invitations: its page admits only an Administrator or an InstitutionalAdmin (T178).
-    new([WombatRoles.Coordinator], [DataRightsRequests, MsfCampaigns, CommitteeReviews, DecisionsDue, StalledActivities]),
-
-    new(
-      [WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin, WombatRoles.CommitteeMember],
-      [ProgrammeTrainees, DecisionPanels, CommitteeReviews]),
-
-    // Not Curricula: the national catalogue admits an Administrator, a CollegeAdmin or an InstitutionalAdmin (T178).
-    new([WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin], [StarReviewQueue, DecisionsDue]),
-
-    // T300: the College writes its disciplines' activity types (T091), and the builder admits it.
-    new([WombatRoles.CollegeAdmin], [Specialities, Epas, Curricula, ActivityTypes]),
-
-    new(
-      [WombatRoles.InstitutionalAdmin],
-      [
-        CurriculumAdoptions, Epas, Curricula, ActivityTypes, EntrustmentScales, Trainees, Assessors, Invitations, Users,
-        SsoMappings, AuditLog, DecisionPanels, CommitteeReviews, DecisionsDue
-      ]),
-
-    new(
-      [WombatRoles.Administrator],
-      [
-        Colleges, Epas, Curricula, Institutions, Invitations, Users, ActivityTypes, EntrustmentScales, ScheduledJobs,
-        SsoMappings, AuditLog, DecisionPanels, CommitteeReviews, DecisionsDue, DataRightsRequests, SystemSettings
-      ])
-  ];
-
-  private static List<NavItem> LinksFor(System.Security.Claims.ClaimsPrincipal user)
-  {
-    var offered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    var links = new List<NavItem>();
-
-    foreach (var section in Sections.Where(section => section.Admits(user)))
-    {
-      foreach (var item in section.Items)
+      @if (Acting.OtherRoles is [var other])
       {
-        if (offered.Add(item.Href))
+        <a class="role-switch" href="@ActingRoleSwitch.Url(other)" data-enhance-nav="false">
+          <Icon Name="arrow-left-right" />
+          <span>Switch to @WombatRoleLabels.For(other)</span>
+        </a>
+      }
+      else if (Acting.OtherRoles.Count > 1)
+      {
+        <details class="role-change">
+          <summary class="role-switch">
+            <Icon Name="arrow-left-right" />
+            <span>Change role</span>
+          </summary>
+          <ul class="role-options">
+            @foreach (var option in Acting.OtherRoles)
+            {
+              <li>
+                <a class="role-option" href="@ActingRoleSwitch.Url(option)" data-enhance-nav="false">Switch to @WombatRoleLabels.For(option)</a>
+              </li>
+            }
+          </ul>
+        </details>
+      }
+    </div>
+  }
+
+  @if (Menu is not null)
+  {
+    <div class="nav-list">
+      @for (var index = 0; index < Menu.Groups.Count; index++)
+      {
+        var group = Menu.Groups[index];
+        if (group.Heading is { } heading)
         {
-          links.Add(item);
+          var id = $"nav-group-{index}";
+          <p class="nav-group-heading" id="@id">@heading</p>
+          <ul class="nav-items" aria-labelledby="@id">
+            @foreach (var item in group.Items)
+            {
+              <li><NavItemLink Item="item" Current="CurrentOf(item)" /></li>
+            }
+          </ul>
+        }
+        else
+        {
+          <ul class="nav-items">
+            @foreach (var item in group.Items)
+            {
+              <li><NavItemLink Item="item" Current="CurrentOf(item)" /></li>
+            }
+          </ul>
         }
       }
+
+      <ul class="nav-items nav-personal">
+        @foreach (var item in Menu.Personal)
+        {
+          <li><NavItemLink Item="item" Current="CurrentOf(item)" /></li>
+        }
+      </ul>
+    </div>
+  }
+</nav>
+
+@code {
+  private (NavItem? Item, NavCurrent Current) _lit;
+  private NavItem? _revealed;
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>This person's navigation, as MainLayout built it from the acting role and the claims.</summary>
+  [CascadingParameter] public NavMenuModel? Menu { get; set; }
+
+  /// <summary>The page shown, as Routes cascades it: which item is lit.</summary>
+  [CascadingParameter] public RouteData? Route { get; set; }
+
+  protected override void OnParametersSet() => _lit = NavOwners.Lit(Route?.PageType, Acting?.Role, Menu);
+
+  /// <summary>
+  /// The lit item scrolled into the list's view (R2-Sidebar-Scroll): the circuit's first render replaces the prerendered
+  /// list, scrolled to its top, and a link on a page can light an item below the list's fold. wombat.js does the same for
+  /// a static page as it loads.
+  /// </summary>
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_lit.Item is null || (!firstRender && _lit.Item == _revealed))
+    {
+      return;
     }
 
-    return links;
+    _revealed = _lit.Item;
+    try
+    {
+      await JS.InvokeVoidAsync("wombat.revealCurrentNavItem");
+    }
+    catch (Exception exception) when (exception is JSDisconnectedException or JSException or OperationCanceledException)
+    {
+      // Scrolling is decoration (the review of the t335 branch). The circuit went as it rendered, the script failed, or
+      // the call was cancelled as the circuit wound down: the menu stands as it is, and an unhandled failure here would
+      // end the circuit.
+    }
   }
+
+  private NavCurrent CurrentOf(NavItem item) => _lit.Item == item ? _lit.Current : NavCurrent.None;
 }
