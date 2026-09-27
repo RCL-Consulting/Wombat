@@ -125,7 +125,15 @@ pwsh design/tools/stage_upload.ps1 -Flow 01
 ## C. Start the canvas
 
 **Where:** a Claude Code session in this repo is recommended (BRIEF § 2.2). There, run `/design`, or ask Claude to
-create a Design artifact. claude.ai/design works too, with the staged folder uploaded.
+create a Design artifact. Or start it in the main claude.ai app: **Design → Make something new → Design**, choosing the
+Wombat design system.
+
+**Not the standalone homepage (claude.ai/design) for now** (observed 2026-09-27). Its design-system picker lists only
+its own design-system projects and the built-in presets, not the artifact-based design systems, so Wombat does not
+appear there. The main app's Design page says "Claude Design lives here now. New Slides and Design projects are created
+as artifacts", and the Design System type's own instructions call the standalone app's systems a separate, older store
+(a system "migrated from the standalone version"). Wombat was built as an artifact, so it lives on the main app's
+Design page and in Claude Code, where a Design artifact can name it by its link.
 
 **First message** (in Claude Code):
 
@@ -138,7 +146,7 @@ This is round 1: 2–3 STRUCTURAL variations as wireframes, each showing a–h i
 counts. No colour or type choices yet. Stop after round 1 and wait for my pick.
 ```
 
-**At claude.ai/design:**
+**In the main claude.ai app's Design page** (the standalone homepage would not offer Wombat; see above):
 1. Paste flow 01 § 1 (the ask), and attach the 14 key screenshots in flow 01 § 4: number 13, `1.5-2`, only once its
    link is cropped out.
 2. Paste § 8 as the next message.
