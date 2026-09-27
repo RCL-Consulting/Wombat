@@ -6,8 +6,8 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **the Claude Design brief is ready** (`design/BRIEF.md`, 18
-flow briefs). Left: the operator's redesign decision, the deploy, the College's answers, 15 P2s, and P3 polish.
+replayed journey catalogue with a screenshot baseline, and **the redesign's pilot is set up** (`design/BRIEF.md`, 20
+flow briefs, `design/pilot/`). Left: the pilot, the deploy, the College's answers, 15 P2s, and P3 polish.
 
 ## Now
 
@@ -34,8 +34,8 @@ flow briefs). Left: the operator's redesign decision, the deploy, the College's 
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign (operator):** decide reskin or restructure (BRIEF § 4 recommends restructuring the frame and
-  reskinning the pages), then run `/design` in this repo one flow at a time from `design/flows/`. Fix the P2s in parallel.
+- **The GUI redesign (T335, the pilot):** a restructure with UX, emails and PDFs in scope (W-008), on Wombat's own design
+  system (W-009). Next: the operator gives the aesthetic direction and starts `design/pilot/README.md` step C.
 
 ## Open questions
 

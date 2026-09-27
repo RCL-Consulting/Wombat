@@ -34,11 +34,18 @@ builds a design system from code but not an app's journeys. Then: "do it all" (t
   - T303: Trainee is system-managed.
   - T307: appeals are Dismissed or Remitted (D51), with a migration.
 
+- **Then, 2026-09-27: the restructure's pilot set up** (T335, in progress). Decisions W-008 (restructure, with UX,
+  emails and PDFs in scope) and W-009 (Wombat's own design system, built from the code into Claude Design:
+  https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18, source in `design/system/`). BRIEF restated; flows 19 (emails)
+  and 20 (PDFs) over a mail and PDF baseline (T336, done); `design/pilot/README.md` steps A–H; `stage_upload.ps1`.
+
 ### For the operator
 
-- **The redesign:**
-  - Decide reskin or restructure (BRIEF § 4).
-  - Then run `/design` in this repo, one `design/flows/NN-*.md` at a time, attaching its listed screenshots. They are
+- **The pilot, next:** give the aesthetic direction (a sentence or two), then `design/pilot/README.md` step C: stage
+  with `design/tools/stage_upload.ps1 -Flow 01` and start the canvas. The browser (Playwright MCP) disconnected on
+  2026-09-27; reconnect it (`/mcp`) before step G's replay.
+
+- **The redesign after the pilot:** one `design/flows/NN-*.md` at a time, attaching its listed screenshots. They are
     in the gitignored `design/baseline/`, so they exist only on this machine.
   - Upload tracked files only (BRIEF § 3). Crop invitation captures that show a registration link.
   - A flow is done when its runbook steps replay; BRIEF § 9 says how.
@@ -66,10 +73,8 @@ builds a design system from code but not an app's journeys. Then: "do it all" (t
   both, plus `MsfRespondUrl`.
 - **Downloads.** A download manager (IDM) takes downloads into `Downloads\Compressed`; check them in the page.
 - **Quoting.** From bash, `… sql` needs a `.sql` file, or the quotes of `"Table"` identifiers are lost.
-- **Task titles.** Keep them under ~150 characters, or the harness's file name breaks Windows' path limit.
+- **Task titles** over ~150 characters break Windows' path limit (the harness names the file after the title).
 - **The flow briefs quote runbook steps.** After changing a step, run `design/tools/sync_verbatim_steps.py`, then
   `check_verbatim_steps.py`.
-- **Passwords.** `browser_run_code_unsafe` with a filename echoes the file into the transcript.
-- **Harness lint** warns that `done/` holds 211 tasks, over its 200 guide: move the oldest to `log/tasks/`.
-- **Earlier traps hold:** the audit pipeline commits a failed handler's staged rows (T201), and merges are squashed per
-  task.
+- **Earlier traps hold:** the audit pipeline commits a failed handler's staged rows (T201); merges are squashed per task.
+  `browser_run_code_unsafe` with a filename echoes the file (and any password in it) into the transcript.
