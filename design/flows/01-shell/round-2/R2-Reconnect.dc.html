@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reconnect dialog states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333}
+h1,h2{margin:0;font-weight:600;line-height:1.25}
+p{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.btn-primary{background:#2d6cdf;color:#ffffff}
+.btn-outline{background:#ffffff;color:#2d6cdf}
+.cap{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#d7d7d7}
+.dlg{width:372px;box-sizing:border-box;background:#ffffff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.25);padding:24px;display:flex;flex-direction:column;gap:12px;min-height:196px}
+.dlg h2{font-size:1.25rem;display:flex;align-items:center;gap:10px}
+.act{display:flex;justify-content:flex-end;margin-top:auto}
+.track{height:4px;border-radius:4px;background:#f1f3f5;overflow:hidden}
+.track span{display:block;width:38%;height:100%;background:#2d6cdf;border-radius:4px;margin-left:22%}
+.st{display:flex;flex-direction:column;gap:8px}
+</style>
+</helmet>
+<div style="width:1280px;height:860px;box-sizing:border-box;padding:40px 48px;background:#5b6068;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px;color:#ffffff"><h1 style="font-size:1.5rem">Reconnect dialog: one message per state, the button says what the text says</h1><p style="color:#e6e8eb">A native &lt;dialog&gt; over the shell, on the scrim token (black 35%, now in :root). 400 px wide in the product (372 here); full width less 16 px at 390. The heading takes focus when it opens.</p></div>
+<div style="display:flex;gap:24px;flex-wrap:wrap">
+<div class="st"><span class="cap">1 · Rejoining</span><div class="dlg" role="dialog" aria-labelledby="h1"><h2 id="h1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" style="color:#2d6cdf"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Reconnecting</h2><p>The connection to Wombat dropped. Reconnecting now.</p><div class="track" role="progressbar" aria-label="Reconnecting"><span></span></div><p style="color:#686f77;font-size:.875rem;margin-top:auto">No button: nothing to do yet.</p></div></div>
+<div class="st"><span class="cap">2 · Retrying</span><div class="dlg" role="dialog" aria-labelledby="h2"><h2 id="h2"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" style="color:#9a5400"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Could not reconnect</h2><p>Trying again in 5 seconds.</p><div class="act"><button type="button" class="btn btn-primary">Try now</button></div></div></div>
+<div class="st"><span class="cap">3 · Failed</span><div class="dlg" role="alertdialog" aria-labelledby="h3"><h2 id="h3"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" style="color:#b8322a"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>Connection lost</h2><p>Reload the page to carry on. Anything not yet saved on this page is lost.</p><div class="act"><button type="button" class="btn btn-primary"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Reload</button></div></div></div>
+<div class="st"><span class="cap">4 · Paused</span><div class="dlg" role="dialog" aria-labelledby="h4"><h2 id="h4"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" style="color:#2d6cdf"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>Page paused</h2><p>Wombat paused this page while you were away. Your place is kept.</p><div class="act"><button type="button" class="btn btn-primary">Resume</button></div></div></div>
+<div class="st"><span class="cap">5 · Resume failed</span><div class="dlg" role="alertdialog" aria-labelledby="h5"><h2 id="h5"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" style="color:#b8322a"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>Could not resume</h2><p>Reload the page to carry on. Anything not yet saved on this page is lost.</p><div class="act"><button type="button" class="btn btn-primary"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Reload</button></div></div></div>
+<div class="st" style="width:372px"><span class="cap">Rules</span><div style="color:#ffffff;font-size:.9375rem;display:flex;flex-direction:column;gap:8px"><p>Each state replaces the last; two never show together (today rejoining sits above retrying).</p><p>Resume failed says Reload and its button says Reload (T330).</p><p>The spinner and the bar stop under prefers-reduced-motion; the words carry the state.</p><p>Icons are Lucide: loader-circle, clock, circle-alert, pause, refresh-cw.</p></div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

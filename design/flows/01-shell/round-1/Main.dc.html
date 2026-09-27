@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 01 round 1 overview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3{margin:0;font-weight:700}
+.card{background:#fff;border:1px solid #b8b8b8;border-radius:8px}
+.mut{color:#555}
+.cap{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#555}
+table.t{border-collapse:collapse;width:100%}
+.t th,.t td{text-align:left;padding:8px 10px;border-bottom:1px solid #d0d0d0;vertical-align:top;font-size:13px}
+.t th{background:#e8e8e8;font-weight:700}
+.t td:first-child{font-weight:600}
+.sch{position:relative;height:170px;border:1px solid #9a9a9a;border-radius:6px;background:#f4f4f4;overflow:hidden}
+.bar{background:#cfcfcf}
+.ln{height:6px;background:#bdbdbd;border-radius:3px}
+.gl{height:5px;width:40%;background:#8a8a8a;border-radius:3px}
+.chg{font-size:12px;border:1px solid #8a8a8a;border-radius:999px;padding:0 8px;background:#fff;white-space:nowrap}
+</style>
+</helmet>
+<div style="width:1280px;height:2440px;box-sizing:border-box;padding:48px;background:#f0f0f0;display:flex;flex-direction:column;gap:32px">
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<div class="cap">Wombat · Flow 01 · The shell · Round 1 wireframes</div>
+<h1 style="font-size:32px">Three ways to hold the navigation</h1>
+<p style="margin:0;max-width:860px" class="mut">Greyscale boxes and real labels; no colour or type choices yet. Each variation has its own page on this canvas: the Administrator's shell, Dr Zulu before and after changing role, the Trainee's phone folded and open, and a sheet with every role's navigation and the click counts. Outcomes and failure states are shared by all three and have their own page. Pick one (or name the parts to mix) before round 2.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px">
+<div class="sch">
+<div class="bar" style="position:absolute;left:0;top:0;right:0;height:18px"></div>
+<div style="position:absolute;left:0;top:18px;bottom:0;width:64px;background:#dedede;border-right:1px solid #9a9a9a;display:flex;flex-direction:column;gap:6px;padding:8px;box-sizing:border-box">
+<div class="gl"></div><div class="ln"></div><div class="ln"></div><div class="gl" style="margin-top:4px"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="gl" style="margin-top:4px"></div><div class="ln"></div><div class="ln"></div>
+</div>
+<div style="position:absolute;left:80px;top:32px;right:14px;display:flex;flex-direction:column;gap:8px"><div class="ln" style="width:30%;height:10px"></div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px"><div style="height:44px;background:#fff;border:1px solid #bbb"></div><div style="height:44px;background:#fff;border:1px solid #bbb"></div><div style="height:44px;background:#fff;border:1px solid #bbb"></div></div><div style="height:50px;background:#fff;border:1px solid #bbb"></div></div>
+</div>
+<div class="cap">Variation A</div>
+<h2 style="font-size:18px">Grouped sidebar, one role at a time</h2>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
+<li>The sidebar holds the acting role's links: a flat list up to 8, grouped under headings above 8.</li>
+<li>The acting role and the switch head the sidebar, on every page.</li>
+<li>Switching changes the navigation and the landing.</li>
+</ul>
+</div>
+
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px">
+<div class="sch">
+<div class="bar" style="position:absolute;left:0;top:0;right:0;height:22px;display:flex;gap:6px;align-items:center;padding:0 8px;box-sizing:border-box"><div class="ln" style="width:16px;background:#777"></div><div class="ln" style="width:26px;background:#777"></div><div class="ln" style="width:26px"></div><div class="ln" style="width:26px"></div><div class="ln" style="width:26px"></div></div>
+<div style="position:absolute;left:0;top:22px;right:0;height:16px;background:#e2e2e2;border-bottom:1px solid #9a9a9a;display:flex;gap:6px;align-items:center;padding:0 8px;box-sizing:border-box"><div class="ln" style="width:30px;background:#777"></div><div class="ln" style="width:30px"></div><div class="ln" style="width:30px"></div></div>
+<div style="position:absolute;left:14px;top:50px;right:14px;display:flex;flex-direction:column;gap:8px"><div class="ln" style="width:25%;height:10px"></div><div style="height:90px;background:#fff;border:1px solid #bbb"></div></div>
+</div>
+<div class="cap">Variation B</div>
+<h2 style="font-size:18px">Top-bar sections, all your roles at once</h2>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
+<li>The top bar lists pages (up to 5 besides Home) or sections; a section's pages sit in a second row.</li>
+<li>No role mode: you see everything you may do, and each page names the role it serves.</li>
+<li>Home holds each role's work; you choose which role leads it.</li>
+</ul>
+</div>
+
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px">
+<div class="sch">
+<div class="bar" style="position:absolute;left:0;top:0;right:0;height:18px"></div>
+<div style="position:absolute;left:14px;top:28px;right:14px;display:flex;flex-direction:column;gap:8px"><div class="ln" style="width:25%;height:10px"></div><div style="height:30px;background:#fff;border:1px solid #bbb"></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+<div style="height:40px;background:#fff;border:1px solid #bbb;padding:4px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px"><div class="gl"></div><div class="ln"></div><div class="ln"></div></div>
+<div style="height:40px;background:#fff;border:1px solid #bbb;padding:4px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px"><div class="gl"></div><div class="ln"></div><div class="ln"></div></div>
+<div style="height:40px;background:#fff;border:1px solid #bbb;padding:4px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px"><div class="gl"></div><div class="ln"></div><div class="ln"></div></div>
+</div></div>
+</div>
+<div class="cap">Variation C</div>
+<h2 style="font-size:18px">Home is the map</h2>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
+<li>No navigation bar. Home lists the acting role's waiting work, then every page it may open, grouped.</li>
+<li>Every other page carries breadcrumbs and its group's other pages.</li>
+<li>The role switch sits in the top bar and changes Home.</li>
+</ul>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">How each answers the brief's questions</h2>
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:170px">Question</th><th>A · Grouped sidebar</th><th>B · Top-bar sections</th><th>C · Home is the map</th></tr></thead>
+<tbody>
+<tr><td>1 · Model</td><td>Sidebar. Flat up to 8 links; grouped above 8 (Administrator 6 groups, Institutional admin 5).</td><td>Top bar. Up to 5 job links besides Home: the pages themselves. More: sections, and the section's pages in a second row. My Data Rights moves to the footer.</td><td>No bar. Home's directory, grouped as in A. Breadcrumbs and a "Also in this group" line on every other page.</td></tr>
+<tr><td>2 · Coming soon</td><td colspan="3">Same in all three: the five stubs leave the navigation now (table below). No stub survives, so round 2's screen 5 drops out; any /placeholder/ address is Page not found (404).</td></tr>
+<tr><td>3 · Role switch</td><td>In the shell, at the head of the sidebar. Changes the navigation and the landing.</td><td>No switch mode. The navigation is the union of your roles; each page names its role above its h1. Home's "Put Assessor first" sets which role leads.</td><td>In the top bar. Changes Home (the only navigation) and the first breadcrumb.</td></tr>
+<tr><td>4 · Sign out</td><td colspan="3">One button, top bar right, beside the name (the name opens My Account). At 390 px it sits at the foot of the open menu. Logout leaves the navigation.</td></tr>
+<tr><td>5 · Activity page</td><td>Lights the acting role's owning list: Activity Inbox (Assessor), My Activities (Trainee), Committee Reviews (review roles).</td><td>Same owner, lit as its tab and its second-row item.</td><td>Nothing to light: the breadcrumb names the owning list.</td></tr>
+<tr><td>6 · Error, signed out</td><td colspan="3">Neither is linked. The error page is reached only by a failure, and its Try again returns to the failed address; the signed-out confirmation only by signing out.</td></tr>
+<tr><td>7 · Type, dark, motion</td><td colspan="3">Round 2 (no type choices in round 1). My lean is in the reply.</td></tr>
+<tr><td>8 · Landing</td><td>Home for the acting role; its first card is the role's main job. Several roles: the brief's precedence, overridden by the last switch until sign-out.</td><td>One Home for all your roles, a section per role in precedence order; "Put … first" holds until sign-out.</td><td>Home is the acting role's map: waiting work first, then its pages. Precedence and memory as A.</td></tr>
+<tr><td>9 · Outcomes</td><td colspan="3">One rule for every later flow (States page): the result or refusal shows in an ActionResult inside the card that holds the control, directly above its action row, and focus moves to it. An action that goes to another page shows its result under that page's header. Never a toast.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">Shared by all three: what each role's navigation holds</h2>
+<p style="margin:0" class="mut">Order is by how often the role needs the page. GROUP headings apply where a variation groups. My Account and Logout leave the list in every variation (name link and Sign out in the top bar). Counts include Home and My Data Rights.</p>
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:170px">Role</th><th>Navigation (new)</th><th style="width:120px">Links today → new</th></tr></thead>
+<tbody>
+<tr><td>Administrator</td><td>Home · PLATFORM Scheduled Jobs, Audit Log, SSO Mappings, Data Rights Requests · ORGANISATIONS Institutions, Colleges · PEOPLE Users, Invitations · CATALOGUE EPAs, Curricula, Activity Types, Entrustment Scales · REVIEWS Decisions Due, Committee Reviews, Decision Panels · My Data Rights</td><td>20 → 17</td></tr>
+<tr><td>Institutional admin</td><td>Home · PEOPLE Invitations, Trainees, Assessors, Users · CURRICULUM Curriculum Adoptions, Curricula, EPAs, Activity Types, Entrustment Scales · REVIEWS Decisions Due, Committee Reviews, Decision Panels · ACCESS AND AUDIT SSO Mappings, Audit Log · My Data Rights</td><td>18 → 16</td></tr>
+<tr><td>College admin</td><td>Home, Specialities, EPAs, Curricula, Activity Types, My Data Rights</td><td>8 → 6</td></tr>
+<tr><td>Speciality admin, Sub-speciality admin</td><td>Home, Decisions Due, Committee Reviews, Decision Panels, My Data Rights</td><td>9 → 5</td></tr>
+<tr><td>Coordinator</td><td>Home, Decisions Due, MSF Campaigns, Committee Reviews, Data Rights Requests, My Data Rights</td><td>9 → 6</td></tr>
+<tr><td>Committee member</td><td>Home, Committee Reviews, Decision Panels, My Data Rights</td><td>7 → 4</td></tr>
+<tr><td>Assessor</td><td>Home, Activity Inbox, My Data Rights</td><td>6 → 3</td></tr>
+<tr><td>Committee member + Assessor</td><td>A and C: 4 as Committee member, 3 as Assessor. B (union): Home, Committee Reviews, Decision Panels, Activity Inbox, My Data Rights</td><td>9 → 4 / 3 or 5</td></tr>
+<tr><td>Trainee</td><td>Home, Log an Activity, My Activities, My Progress, MSF Reports, My Committee Reviews, Export Portfolio, My Data Rights</td><td>10 → 8</td></tr>
+<tr><td>Pending trainee</td><td>Home, Log an Activity, My Activities, My Data Rights</td><td>6 → 4</td></tr>
+<tr><td>Former trainee (no role)</td><td>Home (her record), My Progress, My Data Rights. Export is an action on My Progress, not a link, until flow 13 decides.</td><td>5 → 3</td></tr>
+<tr><td>Signed out</td><td>Home; Sign in is a button in the top bar</td><td>2 → 1 + button</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:24px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">The five "Coming soon" items</h2>
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:150px">Item</th><th>Outcome (proposed; confirm the later flows)</th></tr></thead>
+<tbody>
+<tr><td>Recent Activities</td><td>Dropped. The Assessor's history becomes a view of Activity Inbox when the inbox flow is designed; Home's "Recent decisions" card covers it now.</td></tr>
+<tr><td>Stalled Activities</td><td>Leaves the nav now; a later flow designs it (the Coordinator's first job). Home's "Stalled requests" card is the way in meanwhile.</td></tr>
+<tr><td>Programme Trainees</td><td>Leaves the nav now; a later flow designs it ("who is behind" for Committee members and programme admins). Home's "Behind this period" card meanwhile.</td></tr>
+<tr><td>STAR Review Queue</td><td>Leaves the nav now; a later flow designs it with the STAR register.</td></tr>
+<tr><td>System</td><td>Dropped. Scheduled Jobs, Audit Log and Home's "System health" card cover it.</td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin:0" class="mut">New rule: the navigation never links to an unbuilt page. An item returns in the flow that builds its page.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">Label changes</h2>
+<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:10px">
+<div><span class="chg">Activities</span> → <span class="chg">Log an Activity</span><div class="mut" style="font-size:13px">It is where a new activity starts; "Activities" beside "My Activities" reads as the same list.</div></div>
+<div><span class="chg">Data Rights</span> → <span class="chg">My Data Rights</span><div class="mut" style="font-size:13px">The Administrator and Coordinator also see Data Rights Requests.</div></div>
+<div><span class="chg">My Account</span> → the person's name in the top bar</div>
+<div><span class="chg">Logout</span> → one Sign out button in the top bar</div>
+<div class="mut" style="font-size:13px">Both invariants hold: every link opens a page that admits the role, and no two links share a label. Group headings are not links.</div>
+</div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2440}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

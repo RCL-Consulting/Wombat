@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C Home per role</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3{margin:0;font-weight:700}
+.card{background:#fff;border:1px solid #b8b8b8;border-radius:8px}
+.mut{color:#555}
+.cap{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.map{background:#fff;border:1px solid #9a9a9a;border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.wt{border:1px dashed #8a8a8a;border-radius:4px;padding:6px 8px;font-size:12px;background:#f4f4f4}
+.gp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.g{border:1px solid #b8b8b8;border-radius:4px;padding:6px 8px;font-size:12px;display:flex;flex-direction:column;gap:1px}
+.g b{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:#4a4a4a}
+table.t{border-collapse:collapse;width:100%}
+.t th,.t td{text-align:left;padding:7px 10px;border-bottom:1px solid #d0d0d0;vertical-align:top;font-size:13px}
+.t th{background:#e8e8e8;font-weight:700}
+.sc{display:flex;flex-direction:column;gap:10px}
+.hd{display:flex;align-items:center;gap:10px}
+ul.b{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+</style>
+</helmet>
+<div style="width:1280px;height:1960px;box-sizing:border-box;padding:48px;background:#f0f0f0;display:flex;flex-direction:column;gap:28px">
+<div><div class="cap">Variation C</div><h1 style="font-size:28px">Home is the map</h1></div>
+
+<div class="sc">
+<div class="hd"><span class="k">a</span><h2 style="font-size:18px">The navigation, written out: each role's Home</h2></div>
+<p style="margin:0" class="mut">No bar holds links. Home shows "Waiting for you" (the role's main job first), then "Your pages": the same lists and groups as A, as a directory. Every other page has breadcrumbs from Home and an "Also in [group]" line naming its group's other pages.</p>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start">
+<div class="sc"><strong>Administrator · 17 (20)</strong><div class="map"><div class="wt">Waiting: Scheduled jobs · System health</div><div class="gp"><div class="g"><b>Platform</b>Scheduled Jobs<br>Audit Log<br>SSO Mappings<br>Data Rights Requests</div><div class="g"><b>Organisations</b>Institutions<br>Colleges<b style="margin-top:4px">People</b>Users<br>Invitations</div><div class="g"><b>Catalogue</b>EPAs<br>Curricula<br>Activity Types<br>Entrustment Scales</div><div class="g"><b>Reviews</b>Decisions Due<br>Committee Reviews<br>Decision Panels</div><div class="g"><b>You</b>My Data Rights</div></div></div></div>
+<div class="sc"><strong>Institutional admin · 16 (18)</strong><div class="map"><div class="wt">Waiting: Invite a person · Awaiting admission</div><div class="gp"><div class="g"><b>People</b>Invitations<br>Trainees<br>Assessors<br>Users</div><div class="g"><b>Curriculum</b>Curriculum Adoptions<br>Curricula<br>EPAs<br>Activity Types<br>Entrustment Scales</div><div class="g"><b>Reviews</b>Decisions Due<br>Committee Reviews<br>Decision Panels</div><div class="g"><b>Access and audit</b>SSO Mappings<br>Audit Log</div><div class="g"><b>You</b>My Data Rights</div></div></div></div>
+<div class="sc"><strong>Trainee · 8 (10)</strong><div class="map"><div class="wt">Log an activity (header action) · Waiting: Activity inbox · Upcoming deadlines</div><div class="g"><b>Your pages</b>Log an Activity<br>My Activities<br>My Progress<br>MSF Reports<br>My Committee Reviews<br>Export Portfolio<br>My Data Rights</div></div>
+<strong style="margin-top:8px">Assessor · 3 (6)</strong><div class="map"><div class="wt">Waiting: Waiting for your rating (rows) · Recent decisions</div><div class="g"><b>Your pages</b>Activity Inbox<br>My Data Rights</div></div>
+<strong style="margin-top:8px">Dr Zulu as Committee member · 4 · as Assessor · 3</strong><div class="map"><div class="wt">Waiting: Your next review · Behind this period</div><div class="g"><b>Your pages</b>Committee Reviews<br>Decision Panels<br>My Data Rights</div></div></div>
+</div>
+<p style="margin:0;font-size:13px" class="mut">Other roles' directories are the Main page's lists: Coordinator 6, College admin 6, Speciality admins 5, Committee member 4, Pending trainee 4, Former trainee 3.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="card sc" style="padding:20px">
+<div class="hd"><span class="k">b</span><span class="k">d</span><h2 style="font-size:18px">Several roles, and switching</h2></div>
+<ul class="b">
+<li>One acting role, shown on every page in the top bar: "Acting as · Committee member". One-role people see a plain label, not a button.</li>
+<li>The button opens a native disclosure: the current role, then "Switch to Assessor". Switching opens that role's Home, so the map and the landing change together.</li>
+<li>A link into the other role's page (an emailed rating request) switches the role and says so, as in A.</li>
+<li>Remembered for the session, cleared at sign-out (T317); next sign-in lands by precedence.</li>
+</ul>
+</div>
+<div class="card sc" style="padding:20px">
+<div class="hd"><span class="k">c</span><h2 style="font-size:18px">Top bar</h2></div>
+<ul class="b">
+<li>56 px, sticky: the mark and Wombat (a link to Home, the only way back besides the first breadcrumb); then the role; the name (link to My Account); one Sign out.</li>
+<li>A role label that wraps: the role button holds two lines up to 220 px wide; it never truncates.</li>
+<li>A long name truncates at 24 characters; whole in its accessible name and title.</li>
+</ul>
+</div>
+<div class="card sc" style="padding:20px">
+<div class="hd"><span class="k">f</span><h2 style="font-size:18px">States</h2></div>
+<ul class="b">
+<li>Failure pages sit under the top bar with one breadcrumb, "Home", and no "Also in" line.</li>
+<li>Nothing to light: the breadcrumb's last item carries aria-current="page". That is how C meets T331.</li>
+<li>The error bar spans the window's foot; the reconnect dialog is modal. Same as A and B.</li>
+</ul>
+</div>
+<div class="card sc" style="padding:20px">
+<div class="hd"><span class="k">g</span><h2 style="font-size:18px">The phone</h2></div>
+<ul class="b">
+<li>Home is already a list, so the navigation needs no folding. The bar's CSS-only toggle ("Account") folds the role, the name and Sign out.</li>
+<li>Breadcrumbs wrap; "Also in" wraps below the h1.</li>
+<li>The same shell for static pages: only the account toggle, CSS-only.</li>
+</ul>
+</div>
+</div>
+
+<div class="sc">
+<div class="hd"><span class="k">e</span><h2 style="font-size:18px">Landing and clicks to the main job</h2></div>
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:200px">Role</th><th>Main job, and how</th><th style="width:90px">Today</th><th style="width:70px">C</th></tr></thead>
+<tbody>
+<tr><td>Trainee</td><td>File an observation: "Log an activity" on Home, then the type. Progress: My Progress on Home</td><td>1 · 1</td><td>1 · 1</td></tr>
+<tr><td>Assessor</td><td>Rate a waiting request: its row on Home</td><td>2</td><td>1</td></tr>
+<tr><td>Coordinator</td><td>Stalled work: row on Home. MSF Campaigns and Decisions Due: on Home</td><td>1* · 1 · 2*</td><td>1 · 1 · 2</td></tr>
+<tr><td>Committee member</td><td>Sit a review: Open review. Who is behind: on Home</td><td>2* · 0*</td><td>1 · 0</td></tr>
+<tr><td>Institutional admin</td><td>Invite: on Home. Adopt: Curriculum Adoptions on Home</td><td>2* · 1</td><td>1 · 1</td></tr>
+<tr><td>Administrator</td><td>From Home: 1. From Scheduled Jobs to Audit Log: "Also in Platform", 1. From Audit Log to Institutions: Home, then Institutions</td><td>1 · 1 · 1</td><td>1 · 1 · 2</td></tr>
+<tr><td>Former trainee</td><td>Her record on Home; export on My Progress</td><td>1 · —</td><td>0 · 2</td></tr>
+<tr><td>Dr Zulu, other role's work</td><td>Switch, then the row on the Assessor's Home</td><td>3</td><td>2</td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin:0;font-size:12px" class="mut">* Estimated; the landing captures would confirm. The cost: any page outside the current group is 2 clicks from anywhere but Home. The Administrator and Institutional admin pay it most.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="card sc" style="padding:20px">
+<h2 style="font-size:18px">Edge cases</h2>
+<ul class="b">
+<li>Long navs: none; the Administrator's 17 pages are a directory on Home that fits one 800 px screen with its two waiting cards.</li>
+<li>Deep links: a page reached from an email has breadcrumbs, so the way back is always visible.</li>
+<li>Wide tables get the full width on every page.</li>
+<li>The Home directory must stay a nav landmark ("Your pages") so screen reader users find it as navigation.</li>
+</ul>
+</div>
+<div class="card sc" style="padding:20px">
+<h2 style="font-size:18px">DESIGN.md rules and tests it changes</h2>
+<ul class="b">
+<li>Removes the sidebar, NavMenu, its gradient and the 641 px nav fold; the top row stays, with role and account only.</li>
+<li>New rules: Breadcrumbs on every page but Home; an "Also in" line on grouped pages; Home is the navigation.</li>
+<li>Tests: the invariants move to Home's directory and the "Also in" lines (every link admits the role; no two share a label within a person's Home); T331's active-item test becomes "the last breadcrumb is aria-current"; the role switch changes Home; T317 unchanged.</li>
+</ul>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1960}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

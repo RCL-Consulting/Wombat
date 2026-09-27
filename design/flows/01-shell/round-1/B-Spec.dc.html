@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B navigation per role</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3{margin:0;font-weight:700}
+.card{background:#fff;border:1px solid #b8b8b8;border-radius:8px}
+.mut{color:#555}
+.cap{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.bar{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #9a9a9a;border-radius:6px 6px 0 0;padding:0 10px;min-height:34px;font-size:13px;flex-wrap:wrap}
+.bar span{padding:6px 8px}
+.bar .on{font-weight:700;background:#e2e2e2;box-shadow:inset 0 -3px 0 #1c1c1c}
+.bar .sec{border:1px dashed #8a8a8a;border-radius:4px;padding:3px 8px;margin:4px 0}
+.row2{background:#e2e2e2;border:1px solid #9a9a9a;border-top:0;border-radius:0 0 6px 6px;padding:6px 10px;font-size:12px;display:flex;flex-direction:column;gap:3px}
+.role{display:grid;grid-template-columns:200px minmax(0,1fr) 90px;gap:16px;align-items:start;padding:10px 0;border-bottom:1px solid #d0d0d0}
+table.t{border-collapse:collapse;width:100%}
+.t th,.t td{text-align:left;padding:7px 10px;border-bottom:1px solid #d0d0d0;vertical-align:top;font-size:13px}
+.t th{background:#e8e8e8;font-weight:700}
+.sc{display:flex;flex-direction:column;gap:10px}
+.hd{display:flex;align-items:center;gap:10px}
+ul.b{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+</style>
+</helmet>
+<div style="width:1280px;height:1960px;box-sizing:border-box;padding:48px;background:#f0f0f0;display:flex;flex-direction:column;gap:28px">
+<div><div class="cap">Variation B</div><h1 style="font-size:28px">Top-bar sections, all your roles at once</h1></div>
+
+<div class="sc">
+<div class="hd"><span class="k">a</span><h2 style="font-size:18px">The navigation, written out</h2></div>
+<p style="margin:0" class="mut">The top bar holds the navigation. Up to 5 job links besides Home: the pages themselves. More: sections (dashed), each opening on its first page, with the section's pages in a second row under the bar. My Data Rights moves to the page footer. Someone with several roles gets the union, each page once.</p>
+<div class="card" style="padding:4px 20px">
+<div class="role"><div><strong>Administrator</strong><div class="mut">17 (20)</div></div><div><div class="bar"><span class="on">Home</span><span class="sec">Platform</span><span class="sec">Organisations</span><span class="sec">People</span><span class="sec">Catalogue</span><span class="sec">Reviews</span></div><div class="row2"><span><strong>Platform:</strong> Scheduled Jobs · Audit Log · SSO Mappings · Data Rights Requests</span><span><strong>Organisations:</strong> Institutions · Colleges</span><span><strong>People:</strong> Users · Invitations</span><span><strong>Catalogue:</strong> EPAs · Curricula · Activity Types · Entrustment Scales</span><span><strong>Reviews:</strong> Decisions Due · Committee Reviews · Decision Panels</span></div></div><div class="mut">6 tabs</div></div>
+<div class="role"><div><strong>Institutional admin</strong><div class="mut">16 (18)</div></div><div><div class="bar"><span class="on">Home</span><span class="sec">People</span><span class="sec">Curriculum</span><span class="sec">Reviews</span><span class="sec">Access and audit</span></div><div class="row2"><span><strong>People:</strong> Invitations · Trainees · Assessors · Users</span><span><strong>Curriculum:</strong> Curriculum Adoptions · Curricula · EPAs · Activity Types · Entrustment Scales</span><span><strong>Reviews:</strong> Decisions Due · Committee Reviews · Decision Panels</span><span><strong>Access and audit:</strong> SSO Mappings · Audit Log</span></div></div><div class="mut">5 tabs</div></div>
+<div class="role"><div><strong>Trainee</strong><div class="mut">8 (10)</div></div><div><div class="bar"><span class="on">Home</span><span class="sec">Activities</span><span class="sec">Progress</span></div><div class="row2"><span><strong>Activities:</strong> Log an Activity · My Activities</span><span><strong>Progress:</strong> My Progress · MSF Reports · My Committee Reviews · Export Portfolio</span></div></div><div class="mut">3 tabs</div></div>
+<div class="role"><div><strong>Assessor</strong><div class="mut">3 (6)</div></div><div><div class="bar"><span class="on">Home</span><span>Activity Inbox</span></div></div><div class="mut">2 tabs</div></div>
+<div class="role"><div><strong>Dr Zulu</strong><div class="mut">Committee member + Assessor · 5 (9)</div></div><div><div class="bar"><span class="on">Home</span><span>Committee Reviews</span><span>Decision Panels</span><span>Activity Inbox</span></div></div><div class="mut">4 tabs</div></div>
+<div class="role"><div><strong>Committee member</strong><div class="mut">4 (7)</div></div><div><div class="bar"><span class="on">Home</span><span>Committee Reviews</span><span>Decision Panels</span></div></div><div class="mut">3 tabs</div></div>
+<div class="role"><div><strong>Coordinator</strong><div class="mut">6 (9)</div></div><div><div class="bar"><span class="on">Home</span><span>Decisions Due</span><span>MSF Campaigns</span><span>Committee Reviews</span><span>Data Rights Requests</span></div></div><div class="mut">5 tabs</div></div>
+<div class="role"><div><strong>Speciality, Sub-speciality admin</strong><div class="mut">5 (9)</div></div><div><div class="bar"><span class="on">Home</span><span>Decisions Due</span><span>Committee Reviews</span><span>Decision Panels</span></div></div><div class="mut">4 tabs</div></div>
+<div class="role"><div><strong>College admin</strong><div class="mut">6 (8)</div></div><div><div class="bar"><span class="on">Home</span><span>Specialities</span><span>EPAs</span><span>Curricula</span><span>Activity Types</span></div></div><div class="mut">5 tabs</div></div>
+<div class="role" style="border-bottom:0"><div><strong>Pending trainee · Former trainee · Signed out</strong></div><div><div class="bar"><span class="on">Home</span><span>Log an Activity</span><span>My Activities</span></div><div class="bar" style="margin-top:6px;border-radius:6px"><span class="on">Home</span><span>My Progress</span></div><div class="bar" style="margin-top:6px;border-radius:6px"><span class="on">Home</span><span style="margin-left:auto;border:1px solid #5c5c5c;border-radius:4px">Sign in</span></div></div><div class="mut">3 · 2 · 1</div></div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="card sc" style="padding:20px">
+<div class="hd"><span class="k">b</span><span class="k">d</span><h2 style="font-size:18px">Several roles, and "switching"</h2></div>
+<ul class="b">
+<li>No acting role. Dr Zulu sees Committee Reviews, Decision Panels and Activity Inbox together: 5 links (today 9 across two dashboards).</li>
+<li>Every page names the role it serves in the eyebrow above its h1: "As Assessor". So the role shows on every page, set by the page, not by a mode.</li>
+<li>Home holds a section per role in the brief's precedence. "Put Assessor first" reorders it; that is the whole switch. It changes the landing, never the navigation.</li>
+<li>Held for the session, cleared at sign-out (T317).</li>
+<li>This departs from the brief's goal wording ("they can switch role"): B replaces the switch with a view of both. Say if that is out of bounds.</li>
+</ul>
+</div>
+<div class="card sc" style="padding:20px">
+<div class="hd"><span class="k">c</span><h2 style="font-size:18px">Top bar</h2></div>
+<ul class="b">
+<li>56 px, sticky: the mark and Wombat, the tabs, then the name (link to My Account) and one Sign out.</li>
+<li>The tabs never truncate. The name gives way first: truncated at 20 characters, whole in its accessible name and title.</li>
+<li>A section's second row is 48 px, also sticky, so a section page loses 104 px of height to the frame (A loses 56).</li>
+</ul>
+</div>
+<div class="card sc" style="padding:20px">
+<div class="hd"><span class="k">f</span><h2 style="font-size:18px">States</h2></div>
+<ul class="b">
+<li>As in A, in the one content column under the bar(s); the page footer stays.</li>
+<li>Access denied and not found keep the top bar, with no tab lit and no second row.</li>
+<li>The error bar spans the full width at the foot of the window.</li>
+</ul>
+</div>
+<div class="card sc" style="padding:20px">
+<div class="hd"><span class="k">g</span><h2 style="font-size:18px">The phone</h2></div>
+<ul class="b">
+<li>The bar folds to the mark and a CSS-only Menu toggle. Folded, a 40 px strip under it says where you are ("You are in Home").</li>
+<li>Open: every section expanded, its pages under its heading, then the name and Sign out.</li>
+<li>The fold point is set by the longest bar (Administrator with a long name), about 1100 px; a 1024 px laptop gets the folded menu.</li>
+</ul>
+</div>
+</div>
+
+<div class="sc">
+<div class="hd"><span class="k">e</span><h2 style="font-size:18px">Landing and clicks to the main job</h2></div>
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:200px">Role</th><th>Main job, and how</th><th style="width:90px">Today</th><th style="width:70px">B</th></tr></thead>
+<tbody>
+<tr><td>Trainee</td><td>File an observation: "Log an activity" on Home, then the type. Read progress: Progress (opens My Progress). MSF Reports: Progress, then MSF Reports</td><td>1 · 1 · 1</td><td>1 · 1 · 2</td></tr>
+<tr><td>Assessor</td><td>Rate a waiting request: its row on Home, or Activity Inbox, then the row</td><td>2</td><td>1</td></tr>
+<tr><td>Coordinator</td><td>Stalled work: row on Home. MSF Campaigns: tab. Schedule: Decisions Due, then the row</td><td>1* · 1 · 2*</td><td>1 · 1 · 2</td></tr>
+<tr><td>Committee member</td><td>Sit a review: Open review on Home. Who is behind: on Home</td><td>2* · 0*</td><td>1 · 0</td></tr>
+<tr><td>Speciality admins</td><td>Who is behind: on Home. Schedule: Decisions Due, then the row</td><td>0* · 2*</td><td>0 · 2</td></tr>
+<tr><td>Institutional admin</td><td>Invite: "Invite a person" on Home. Adopt: Curriculum (opens Curriculum Adoptions). Audit Log: Access and audit, then Audit Log</td><td>2* · 1 · 1</td><td>1 · 1 · 2</td></tr>
+<tr><td>College admin</td><td>Keep the catalogue: a tab each</td><td>1</td><td>1</td></tr>
+<tr><td>Administrator</td><td>Scheduled Jobs: Platform. Institutions: Organisations. Audit Log: Platform, then Audit Log</td><td>1 · 1 · 1</td><td>1 · 1 · 2</td></tr>
+<tr><td>Former trainee</td><td>Her record on Home; export on My Progress</td><td>1 · —</td><td>0 · 2</td></tr>
+<tr><td>Dr Zulu, other role's work</td><td>Both roles' work is on Home</td><td>3</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin:0;font-size:12px" class="mut">* Estimated; the landing captures would confirm. Moving between two pages of one section is 1 click; between sections, 1 or 2.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="card sc" style="padding:20px">
+<h2 style="font-size:18px">Edge cases</h2>
+<ul class="b">
+<li>Long navs: no height problem; the Administrator's 17 links are 6 tabs and at most 4 in a second row.</li>
+<li>A person with many roles (Speciality admin + Committee member + Assessor): 4 job links, still pages. The union of an Institutional admin with any review role is sections.</li>
+<li>A role label that wraps: only in the eyebrow, which may take two lines.</li>
+<li>Active state: one tab and, in a section, one second-row item. The second row is its own labelled nav ("Platform"), so a screen reader hears one current page.</li>
+</ul>
+</div>
+<div class="card sc" style="padding:20px">
+<h2 style="font-size:18px">DESIGN.md rules and tests it changes</h2>
+<ul class="b">
+<li>Removes the 250 px sidebar and the nav gradient; the sticky top row becomes the navigation; the fold point moves from 641 to about 1100 px; the content column takes the full width with a 32 px gutter.</li>
+<li>New rules: pages up to 5 job links, sections above; the section opens on its first page; every page carries its role eyebrow; My Data Rights in the footer.</li>
+<li>Tests: the union rule and both invariants stay; nav snapshot per role becomes tabs plus second rows; the role-switch test becomes "Put … first" reorders Home only; new: one lit tab and one lit second-row item per route.</li>
+</ul>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1960}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home · Wombat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.bar{height:56px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;background:#052767;color:#ffffff}
+.brand{display:flex;align-items:center;gap:8px;color:#ffffff;text-decoration:none}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.4rem;line-height:1;font-variation-settings:"SOFT" 0,"WONK" 1}
+.mk{width:28px;height:28px;border-radius:50%;background:#2d6cdf;box-shadow:inset 0 -9px 0 #1b2f52;flex:none}
+.tog{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:2px solid #ffffff;border-radius:6px;color:#ffffff;font-weight:600;background:rgba(255,255,255,.1)}
+.panel{flex-grow:1;min-height:0;background:linear-gradient(180deg,#052767 0%,#3a0647 70%);color:#d7d7d7;display:flex;flex-direction:column}
+.rl{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#b9c3e0}
+.nv{list-style:none;margin:0;padding:0 8px}
+.nv a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:4px;color:#d7d7d7;text-decoration:none}
+.nv a.on{background:rgba(255,255,255,.37);color:#ffffff;font-weight:600;box-shadow:inset 3px 0 0 #ffffff}
+.nring{outline:2px solid #ffffff;outline-offset:-2px}
+.gh{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#b9c3e0;padding:10px 20px 2px}
+.acc{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.18)}
+.acc a{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:#ffffff;text-decoration:none;font-weight:600;flex-grow:1;min-width:0}
+.so{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;background:transparent;font:inherit;font-weight:600}
+</style>
+</helmet>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;overflow:hidden">
+<header class="bar">
+<a class="brand" href="#"><span class="mk" role="img" aria-label="Wombat"></span><b>Wombat</b></a>
+<span style="flex-grow:1"></span>
+<label class="tog"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Close</label>
+</header>
+<nav class="panel" aria-label="Main">
+<div style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.18);display:flex;gap:8px;align-items:baseline"><span class="rl">Acting as</span><span style="color:#ffffff;font-weight:600;font-size:1.0625rem">Administrator</span></div>
+<div class="acc"><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>devadmin</a><button type="button" class="so"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>Sign out</button></div>
+<div tabindex="0" style="flex-grow:1;min-height:0;overflow:hidden;position:relative;padding-top:6px">
+<ul class="nv"><li><a href="#" class="on" aria-current="page"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</a></li></ul>
+<div class="gh">Platform</div>
+<ul class="nv">
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Scheduled Jobs</a></li>
+<li><a href="#" class="nring"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>Audit Log<span style="margin-left:auto;font-size:.75rem;color:#b9c3e0">nav focus ring</span></a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>SSO Mappings</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>Data Rights Requests</a></li>
+</ul>
+<div class="gh">Organisations</div>
+<ul class="nv">
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>Institutions</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>Colleges</a></li>
+</ul>
+<div class="gh">People</div>
+<ul class="nv">
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Users</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>Invitations</a></li>
+</ul>
+<div class="gh">Catalogue</div>
+<ul class="nv">
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>EPAs</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>Curricula</a></li>
+</ul>
+<div style="position:absolute;left:0;right:0;bottom:0;height:72px;background:linear-gradient(180deg,rgba(58,6,71,0),#3a0647);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-sizing:border-box;font-size:.8125rem;color:#d7d7d7">The list scrolls: 17 links in about 540 px</div>
+</div>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

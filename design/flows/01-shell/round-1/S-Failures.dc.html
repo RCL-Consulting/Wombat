@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Access denied not found error</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3{margin:0;font-weight:700}
+.mut{color:#555}
+.cap{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.btn{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 12px;border:1px solid #5c5c5c;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box}
+.btn.pri{background:#333;border-color:#333;color:#fff}
+.ic{display:inline-block;width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;opacity:.55;flex:none;box-sizing:border-box}
+.mark{width:22px;height:22px;border-radius:50%;background:#8a8a8a;flex:none}
+.fr{display:flex;flex-direction:column;border:1px solid #7a7a7a;border-radius:8px;overflow:hidden;background:#f0f0f0}
+.tb{height:44px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;background:#fff;border-bottom:1px solid #9a9a9a;font-size:13px}
+.navph{width:130px;flex:none;background:repeating-linear-gradient(45deg,#e6e6e6 0 8px,#dcdcdc 8px 16px);border-right:1px solid #9a9a9a;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:#444;padding:8px;box-sizing:border-box}
+.body{padding:20px 24px;display:flex;flex-direction:column;gap:12px;flex-grow:1}
+.code{font-family:Consolas,ui-monospace,monospace;background:#fff;border:1px solid #9a9a9a;border-radius:4px;padding:2px 6px}
+.lab{display:flex;align-items:center;gap:8px;font-weight:700}
+.k{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:11px;font-weight:700;flex:none}
+</style>
+</helmet>
+<div style="width:1280px;height:1640px;box-sizing:border-box;padding:48px;background:#e6e6e6;display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:8px"><span class="k">f</span><div class="cap">Shared by A, B and C</div></div>
+<h1 style="font-size:26px">Access denied, not found and the error page</h1>
+<p style="margin:0;max-width:980px" class="mut">Signed in, each renders once, in the content column of the chosen shell (hatched: A's sidebar, B's bar, or nothing in C). Signed out, a static page: the mark, Sign in, no script. Never a second layout. Page titles follow one pattern: "[Page] · Wombat".</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab">Access denied · signed in <span class="mut" style="font-weight:400">403</span></div>
+<div class="fr" style="height:290px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span>Dr Thandi Zulu</span><span class="btn" style="min-height:26px">Sign out</span></div>
+<div style="display:flex;flex-grow:1"><div class="navph">The chosen shell's navigation · nothing lit</div>
+<div class="body"><h2 style="font-size:20px">You cannot open this page</h2>
+<p style="margin:0">Audit Log is for Institutional admins and Administrators. You are acting as Committee member.</p>
+<p style="margin:0" class="mut">If you need it, ask your institution's Wombat administrator.</p>
+<div style="display:flex;gap:8px"><a href="#" class="btn pri">Go to Home</a><a href="#" class="btn">Go back</a></div></div></div></div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab">Access denied · signed out <span class="mut" style="font-weight:400">static</span></div>
+<div class="fr" style="height:290px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span class="btn" style="min-height:26px">Sign in</span></div>
+<div class="body" style="max-width:520px"><h2 style="font-size:20px">Sign in to open this page</h2>
+<p style="margin:0">This page is for signed-in people with the right role.</p>
+<p style="margin:0" class="mut">After you sign in, Wombat brings you back here.</p>
+<div><a href="#" class="btn pri">Sign in</a></div></div></div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab">Page not found · signed in <span class="mut" style="font-weight:400">404</span></div>
+<div class="fr" style="height:290px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span>Dr Thandi Zulu</span><span class="btn" style="min-height:26px">Sign out</span></div>
+<div style="display:flex;flex-grow:1"><div class="navph">The chosen shell's navigation · nothing lit</div>
+<div class="body"><h2 style="font-size:20px">Page not found</h2>
+<p style="margin:0">There is nothing at <span class="code">/placeholder/stalled-activities</span>, or the record it names does not exist.</p>
+<p style="margin:0" class="mut">Check the address, or start again from Home.</p>
+<div><a href="#" class="btn pri">Go to Home</a></div></div></div></div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab">Page not found · signed out <span class="mut" style="font-weight:400">static, 404</span></div>
+<div class="fr" style="height:290px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span class="btn" style="min-height:26px">Sign in</span></div>
+<div class="body" style="max-width:520px"><h2 style="font-size:20px">Page not found</h2>
+<p style="margin:0">There is nothing at <span class="code">/placeholder/system</span>, or the record it names does not exist.</p>
+<div style="display:flex;gap:8px"><a href="#" class="btn pri">Go to Home</a><a href="#" class="btn">Sign in</a></div></div></div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab">Error · signed in <span class="mut" style="font-weight:400">500, with its request id</span></div>
+<div class="fr" style="height:320px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span>Dr Thandi Zulu</span><span class="btn" style="min-height:26px">Sign out</span></div>
+<div style="display:flex;flex-grow:1"><div class="navph">The chosen shell's navigation · nothing lit</div>
+<div class="body"><h2 style="font-size:20px">Something went wrong</h2>
+<p style="margin:0">Wombat could not finish this request. Try again; if it fails again, send this reference to your administrator.</p>
+<div style="display:flex;flex-direction:column;gap:4px;font-size:13px"><span>Reference <span class="code">[request id]</span></span><span class="mut">2026-09-26 15:14 SAST</span></div>
+<div style="display:flex;gap:8px"><a href="#" class="btn pri">Try again</a><a href="#" class="btn">Go to Home</a></div></div></div></div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab">Error · signed out <span class="mut" style="font-weight:400">static; no redirect to sign-in</span></div>
+<div class="fr" style="height:320px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span class="btn" style="min-height:26px">Sign in</span></div>
+<div class="body" style="max-width:520px"><h2 style="font-size:20px">Something went wrong</h2>
+<p style="margin:0">Wombat could not finish this request. Try again; if it fails again, send this reference to your institution.</p>
+<div style="display:flex;flex-direction:column;gap:4px;font-size:13px"><span>Reference <span class="code">[request id]</span></span><span class="mut">2026-09-26 15:14 SAST</span></div>
+<div style="display:flex;gap:8px"><a href="#" class="btn pri">Try again</a><a href="#" class="btn">Go to Home</a></div></div></div></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab">At 390 px</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="fr" style="width:340px;height:360px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span class="btn" style="min-height:32px">Menu</span></div><div class="body" style="padding:16px"><h2 style="font-size:19px">You cannot open this page</h2><p style="margin:0">Audit Log is for Institutional admins and Administrators. You are acting as Committee member.</p><a href="#" class="btn pri" style="justify-content:center;min-height:44px">Go to Home</a></div></div>
+<div class="fr" style="width:340px;height:360px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span class="btn" style="min-height:32px">Sign in</span></div><div class="body" style="padding:16px"><h2 style="font-size:19px">Page not found</h2><p style="margin:0;overflow-wrap:anywhere">There is nothing at <span class="code">/placeholder/stalled-activities</span>, or the record it names does not exist.</p><a href="#" class="btn pri" style="justify-content:center;min-height:44px">Go to Home</a></div></div>
+<div class="fr" style="width:340px;height:360px"><div class="tb"><span class="mark"></span><strong>Wombat</strong><span style="flex-grow:1"></span><span class="btn" style="min-height:32px">Menu</span></div><div class="body" style="padding:16px"><h2 style="font-size:19px">Something went wrong</h2><p style="margin:0">Wombat could not finish this request. Try again; if it fails again, send this reference to your administrator.</p><span style="font-size:13px;overflow-wrap:anywhere">Reference <span class="code">[request id]</span></span><a href="#" class="btn pri" style="justify-content:center;min-height:44px">Try again</a></div></div>
+</div>
+<p style="margin:0;font-size:13px" class="mut">The address and the request id wrap rather than scroll sideways. "Audit Log" stands for whichever page was refused; an out-of-scope record is never "access denied" but Page not found.</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1640}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

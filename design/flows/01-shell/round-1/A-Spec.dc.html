@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A navigation per role</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3{margin:0;font-weight:700}
+.card{background:#fff;border:1px solid #b8b8b8;border-radius:8px}
+.mut{color:#555}
+.cap{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.side{background:#e2e2e2;border:1px solid #9a9a9a;border-radius:6px;padding:8px;display:flex;flex-direction:column}
+.mi{font-size:13px;min-height:24px;display:flex;align-items:center;padding:0 8px;border-radius:4px}
+.mi.on{background:#c9c9c9;font-weight:700;box-shadow:inset 3px 0 0 #1c1c1c}
+.mg{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#4a4a4a;padding:6px 8px 0}
+.dv{border-top:1px solid #b8b8b8;margin-top:4px;padding-top:2px}
+table.t{border-collapse:collapse;width:100%}
+.t th,.t td{text-align:left;padding:7px 10px;border-bottom:1px solid #d0d0d0;vertical-align:top;font-size:13px}
+.t th{background:#e8e8e8;font-weight:700}
+.sec{display:flex;flex-direction:column;gap:10px}
+.hd{display:flex;align-items:center;gap:10px}
+ul.b{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+</style>
+</helmet>
+<div style="width:1280px;height:1960px;box-sizing:border-box;padding:48px;background:#f0f0f0;display:flex;flex-direction:column;gap:28px">
+<div><div class="cap">Variation A</div><h1 style="font-size:28px">Grouped sidebar, one role at a time</h1></div>
+
+<div class="sec">
+<div class="hd"><span class="k">a</span><h2 style="font-size:18px">The navigation, written out</h2></div>
+<p style="margin:0" class="mut">A 250 px sidebar under a full-width top bar. Up to 8 links: one flat list. More than 8: group headings (not links). Home first; My Data Rights last, under a rule. Rows 28 px on desktop, 44 px on a phone.</p>
+<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;align-items:start">
+<div class="sec"><div style="font-weight:700">Administrator · 17 <span class="mut" style="font-weight:400">(20)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mg">Platform</div><div class="mi">Scheduled Jobs</div><div class="mi">Audit Log</div><div class="mi">SSO Mappings</div><div class="mi">Data Rights Requests</div><div class="mg">Organisations</div><div class="mi">Institutions</div><div class="mi">Colleges</div><div class="mg">People</div><div class="mi">Users</div><div class="mi">Invitations</div><div class="mg">Catalogue</div><div class="mi">EPAs</div><div class="mi">Curricula</div><div class="mi">Activity Types</div><div class="mi">Entrustment Scales</div><div class="mg">Reviews</div><div class="mi">Decisions Due</div><div class="mi">Committee Reviews</div><div class="mi">Decision Panels</div><div class="mi dv">My Data Rights</div></div></div>
+<div class="sec"><div style="font-weight:700">Institutional admin · 16 <span class="mut" style="font-weight:400">(18)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mg">People</div><div class="mi">Invitations</div><div class="mi">Trainees</div><div class="mi">Assessors</div><div class="mi">Users</div><div class="mg">Curriculum</div><div class="mi">Curriculum Adoptions</div><div class="mi">Curricula</div><div class="mi">EPAs</div><div class="mi">Activity Types</div><div class="mi">Entrustment Scales</div><div class="mg">Reviews</div><div class="mi">Decisions Due</div><div class="mi">Committee Reviews</div><div class="mi">Decision Panels</div><div class="mg">Access and audit</div><div class="mi">SSO Mappings</div><div class="mi">Audit Log</div><div class="mi dv">My Data Rights</div></div></div>
+<div class="sec"><div style="font-weight:700">Trainee · 8 <span class="mut" style="font-weight:400">(10)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mi">Log an Activity</div><div class="mi">My Activities</div><div class="mi">My Progress</div><div class="mi">MSF Reports</div><div class="mi">My Committee Reviews</div><div class="mi">Export Portfolio</div><div class="mi dv">My Data Rights</div></div>
+<div style="font-weight:700;margin-top:8px">Pending trainee · 4 <span class="mut" style="font-weight:400">(6)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mi">Log an Activity</div><div class="mi">My Activities</div><div class="mi dv">My Data Rights</div></div>
+<div style="font-weight:700;margin-top:8px">Former trainee · 3 <span class="mut" style="font-weight:400">(5)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mi">My Progress</div><div class="mi dv">My Data Rights</div></div></div>
+<div class="sec"><div style="font-weight:700">Assessor · 3 <span class="mut" style="font-weight:400">(6)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mi">Activity Inbox</div><div class="mi dv">My Data Rights</div></div>
+<div style="font-weight:700;margin-top:8px">Coordinator · 6 <span class="mut" style="font-weight:400">(9)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mi">Decisions Due</div><div class="mi">MSF Campaigns</div><div class="mi">Committee Reviews</div><div class="mi">Data Rights Requests</div><div class="mi dv">My Data Rights</div></div>
+<div style="font-weight:700;margin-top:8px">College admin · 6 <span class="mut" style="font-weight:400">(8)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mi">Specialities</div><div class="mi">EPAs</div><div class="mi">Curricula</div><div class="mi">Activity Types</div><div class="mi dv">My Data Rights</div></div></div>
+<div class="sec"><div style="font-weight:700">Committee member · 4 <span class="mut" style="font-weight:400">(7)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mi">Committee Reviews</div><div class="mi">Decision Panels</div><div class="mi dv">My Data Rights</div></div>
+<div style="font-weight:700;margin-top:8px">Speciality and Sub-speciality admin · 5 <span class="mut" style="font-weight:400">(9)</span></div>
+<div class="side"><div class="mi on">Home</div><div class="mi">Decisions Due</div><div class="mi">Committee Reviews</div><div class="mi">Decision Panels</div><div class="mi dv">My Data Rights</div></div>
+<div style="font-weight:700;margin-top:8px">Signed out</div>
+<div class="side"><div class="mi on">Home</div><div class="mut" style="font-size:12px;padding:4px 8px">Sign in: a button in the top bar</div></div></div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="card sec" style="padding:20px">
+<div class="hd"><span class="k">b</span><h2 style="font-size:18px">Several roles: Dr Zulu</h2></div>
+<ul class="b">
+<li>She acts in one role at a time. The sidebar's head says so on every page: "Acting as · Committee member", then "Switch to Assessor".</li>
+<li>Her navigation is that role's only: 4 links as Committee member, 3 as Assessor (today 9, merged).</li>
+<li>Three or more roles: the head shows "Change role" and opens a short list of the others (a native disclosure, no script).</li>
+<li>A link into the other role's page (an emailed rating request) switches her to that role and says so in the head and in a status line under the page header. A page both roles admit keeps the current role.</li>
+</ul>
+</div>
+<div class="card sec" style="padding:20px">
+<div class="hd"><span class="k">d</span><h2 style="font-size:18px">Switching</h2></div>
+<ul class="b">
+<li>Lives in the shell (sidebar head), so it is on every page, not on Home only.</li>
+<li>Changes the navigation and the landing: the switch opens the new role's Home, with "You are now acting as Assessor." as an info ActionResult; focus moves to it.</li>
+<li>Remembered for the session; forgotten at sign-out (T317). Next sign-in lands by the brief's precedence: Committee member before Assessor.</li>
+<li>Authorisation does not change: a page admits the union of her roles. The acting role only chooses what the frame shows.</li>
+</ul>
+</div>
+<div class="card sec" style="padding:20px">
+<div class="hd"><span class="k">c</span><h2 style="font-size:18px">Top bar</h2></div>
+<ul class="b">
+<li>Full width, 56 px, sticky. Left: the mark and Wombat over the sidebar column (the brand row leaves the sidebar, which buys the Administrator's list its height).</li>
+<li>Right: the person's name, a link to My Account, at least 32 px tall; then one Sign out button. Nothing else.</li>
+<li>A long name truncates at 28 characters with an ellipsis; the whole name is the link's accessible name and title. An account with no name shows its email, truncated the same way.</li>
+<li>Signed out: the mark and a Sign in button.</li>
+</ul>
+</div>
+<div class="card sec" style="padding:20px">
+<div class="hd"><span class="k">f</span><span class="k">g</span><h2 style="font-size:18px">States, and the phone</h2></div>
+<ul class="b">
+<li>Access denied, not found and the error page render in the content column of the one shell; signed out, in the static shell (top bar only). Never a second layout.</li>
+<li>The in-app error bar sits at the foot of the content column, above nothing else; the reconnect dialog is modal over the whole shell. See the States page.</li>
+<li>Below 641 px the sidebar folds behind a CSS-only Menu toggle in the top bar. Folded, the bar still names the acting role. Open, it lists the role head, the links, then the name and Sign out.</li>
+</ul>
+</div>
+</div>
+
+<div class="sec">
+<div class="hd"><span class="k">e</span><h2 style="font-size:18px">Landing and clicks to the main job</h2></div>
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:190px">Role</th><th style="width:230px">Lands on</th><th>Main job, and how</th><th style="width:80px">Today</th><th style="width:70px">A</th></tr></thead>
+<tbody>
+<tr><td>Trainee</td><td>Home: Log an activity, targets, inbox</td><td>File an observation: "Log an activity" in the page header (or Log an Activity in the nav), then the type</td><td>1</td><td>1</td></tr>
+<tr><td>Trainee</td><td>″</td><td>Read her progress: My Progress</td><td>1</td><td>1</td></tr>
+<tr><td>Assessor</td><td>Home: first card "Waiting for your rating"</td><td>Rate a waiting request: its row</td><td>2</td><td>1</td></tr>
+<tr><td>Coordinator</td><td>Home: first card "Stalled requests"</td><td>Chase stalled work: its row. MSF campaigns: nav. Schedule from what is due: Decisions Due, then the row</td><td>1* · 1 · 2*</td><td>1 · 1 · 2</td></tr>
+<tr><td>Committee member</td><td>Home: "Your next review", "Behind this period"</td><td>Sit a review: Open review. Who is behind: on Home</td><td>2* · 0*</td><td>1 · 0</td></tr>
+<tr><td>Speciality, Sub-speciality admin</td><td>Home: "Behind this period", "Due for review"</td><td>Who is behind: on Home. Schedule: Decisions Due, then the row</td><td>0* · 2*</td><td>0 · 2</td></tr>
+<tr><td>Institutional admin</td><td>Home: "Invite a person" in the header</td><td>Invite: the header action. Adopt the curriculum: Curriculum Adoptions</td><td>2* · 1</td><td>1 · 1</td></tr>
+<tr><td>College admin</td><td>Home: national catalogue</td><td>Keep the catalogue: EPAs (or Specialities, Curricula)</td><td>1</td><td>1</td></tr>
+<tr><td>Administrator</td><td>Home: "Scheduled jobs" first</td><td>Jobs, institutions, audit: one nav link each</td><td>1</td><td>1</td></tr>
+<tr><td>Former trainee</td><td>Home: her record (not "No role assigned")</td><td>Read her record: on Home. Export: Export portfolio on My Progress</td><td>1 · —</td><td>0 · 2</td></tr>
+<tr><td>Dr Zulu, other role's work</td><td>Home as Committee member</td><td>Rate a request: Switch to Assessor, then the row</td><td>3</td><td>2</td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin:0;font-size:12px" class="mut">* Today's figure is my estimate from the nav and the landing list; the landing captures would confirm it. From any other page, every nav destination is 1 click in A.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div class="card sec" style="padding:20px">
+<h2 style="font-size:18px">Edge cases</h2>
+<ul class="b">
+<li>17 links on an 800 px screen: fits at 28 px rows under a 56 px bar (about 700 px of list). A browser window loses 80–120 px to its own chrome, so the sidebar scrolls on its own: a focusable scroll region that shows the focus ring (T328), with the active item scrolled into view.</li>
+<li>A role label that wraps ("Sub-speciality admin", "Switch to Sub-speciality admin"): the head grows to two lines; nothing truncates a role.</li>
+<li>A long name or email: truncated in the bar, whole in the phone menu, where it wraps.</li>
+<li>The active item: exactly one per page (T331). A detail page lights its owning list; a page no list owns lights Home.</li>
+</ul>
+</div>
+<div class="card sec" style="padding:20px">
+<h2 style="font-size:18px">DESIGN.md rules and tests it changes</h2>
+<ul class="b">
+<li>Keeps: the 250 px sidebar, the 641 px breakpoint, the 16 px phone gutter.</li>
+<li>Changes: the top row spans the full width and carries the brand; the brand row leaves the sidebar. The nav's order, grouping and labels (Main page). My Account and Logout leave the nav.</li>
+<li>New rules: flat up to 8, grouped above; no link to an unbuilt page; one acting role, shown in the shell.</li>
+<li>Tests: nav snapshot per role (new lists); unique-label and admits-role tests unchanged, rerun on the new lists; new: one active item per route per role; switching changes the nav; the remembered role clears at sign-out.</li>
+</ul>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1960}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
