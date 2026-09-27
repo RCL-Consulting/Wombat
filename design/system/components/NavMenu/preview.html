@@ -1,0 +1,95 @@
+<!-- @dsCard group="Shell" height=800 width=760 subtitle="The sidebar: brand row, role-driven links, Logout" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NavMenu</title>
+<style>
+  body { padding: var(--space-lg); }
+  .pv-row { display: flex; gap: var(--space-xl); align-items: start; }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; width: 250px; }
+  .pv-row .page > .sidebar { height: 720px; }
+  .pv-row .sidebar .nav-scrollable { height: calc(720px - 3.5rem); }
+  /* the source's own hover values (NavMenu.razor.css), shown statically */
+  .pv-hover { background-color: rgba(255, 255, 255, 0.1) !important; color: white !important; }
+  .pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="pv-row">
+  <div>
+    <p class="pv-cap">A Trainee: My Activities active; My Progress hovered; Export Portfolio focused</p>
+    <div class="page">
+      <div class="sidebar">
+        <div class="top-row">
+          <a class="navbar-brand" href="#">
+            <img class="navbar-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="40" height="40">
+            <span class="navbar-brand-text">Wombat</span>
+          </a>
+        </div>
+        <input type="checkbox" title="Navigation menu" aria-label="Toggle navigation menu" aria-expanded="false" class="navbar-toggler">
+        <div class="nav-scrollable">
+          <nav>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg> Home</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg> My Account</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg> Data Rights</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /> <path d="M16 3v4M8 3v4M3 11h18" /></svg> Activities</a></div>
+            <div class="nav-item"><a class="nav-link active" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> My Activities</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> MSF Reports</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> My Committee Reviews</a></div>
+            <div class="nav-item"><a class="nav-link pv-hover" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg> My Progress</a></div>
+            <div class="nav-item"><a class="nav-link pv-focus" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7" /></svg> Export Portfolio</a></div>
+            <div class="nav-item">
+              <form action="#" method="post">
+                <button type="submit" class="nav-link nav-logout-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg> Logout</button>
+              </form>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="pv-cap">An InstitutionalAdmin: 18 links in one flat list; the list scrolls</p>
+    <div class="page">
+      <div class="sidebar">
+        <div class="top-row">
+          <a class="navbar-brand" href="#">
+            <img class="navbar-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="40" height="40">
+            <span class="navbar-brand-text">Wombat</span>
+          </a>
+        </div>
+        <input type="checkbox" title="Navigation menu" aria-label="Toggle navigation menu" aria-expanded="false" class="navbar-toggler">
+        <div class="nav-scrollable">
+          <nav>
+            <div class="nav-item"><a class="nav-link active" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg> Home</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg> My Account</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg> Data Rights</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg> Curriculum Adoptions</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> EPAs</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg> Curricula</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> Activity Types</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6" /> <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" /></svg> Entrustment Scales</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Trainees</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Assessors</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Invitations</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Users</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5" /> <path d="m21 2-9.6 9.6" /> <path d="m15.5 7.5 3 3L22 7l-3-3" /></svg> SSO Mappings</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg> Audit Log</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Decision Panels</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> Committee Reviews</a></div>
+            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /> <path d="M16 3v4M8 3v4M3 11h18" /></svg> Decisions Due</a></div>
+            <div class="nav-item">
+              <form action="#" method="post">
+                <button type="submit" class="nav-link nav-logout-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg> Logout</button>
+              </form>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,40 +1,59 @@
-# F01 The frame everyone shares: navigation, the Home frame, role switching and the system states
+# F01 The frame everyone shares: navigation, landing, role switching and the system states (the pilot)
 
-**Who and why:** every role and every signed-out visitor meets this frame on every page. It settles the navigation,
-the role switch, the failure screens and the tokens that F02–F18 sit inside, so it is briefed first (BRIEF.md § 2.3
-step 2).
+**Who and why:** every role and every signed-out visitor meets this frame on every page. It settles the navigation, what
+each role lands on, the role switch, the failure screens, and the tokens that F02–F20 sit inside.
+
+**This flow is the pilot** (T335). It is taken from Claude Design through Razor to a green replay before any other flow
+is briefed, and what it teaches corrects the brief (BRIEF.md § 2.3, § 11). The step-by-step is
+`design/pilot/README.md`.
 
 | | |
 |---|---|
-| Mode | **Wireframe first** for the shell, the nav per role and the dashboard grid, which are structure (BRIEF.md § 2.3). Then fidelity on the chosen frame, ending with the token sheet that every later flow uses. |
+| Decision | **Restructure, with UX in scope** (W-008; BRIEF.md § 4). The frame may change in structure, not only in look. Today's sidebar, top row, Home-only switch line and flat lists are what exists, not what must stay. |
+| Mode | **Structure first.** Round 1: 2–3 structural variations as wireframes, each with its reasoning and its click counts. Round 2, after the pick: the chosen frame at fidelity with all its states, ending with the token sheet that every later flow uses. |
 | Viewports | Desktop 1280×800 and phone 390×844 |
-| Variations | 2–3 |
+| Variations | 2–3 in round 1; the chosen one in round 2 |
 | People | All 10 roles (`src/Wombat.Domain/Identity/WombatRoles.cs`), a former trainee with no role, and signed-out visitors |
 | Runbook steps | 21, pasted verbatim in § 8 |
-| Pages (`coverage.md` templates) | `/`, `/access-denied`, `/not-found`, `/Error`, `/placeholder/{Feature}`; the endpoint `/dashboard/switch/{role}`; `Components/Layout/MainLayout.razor`, `NavMenu.razor`, `ReconnectModal.razor`; `#blazor-error-ui` (`MainLayout.razor:30`) |
-| Held | Nothing. T297's 3 images were re-captured on 2026-09-26 (§ 4) |
+| Pages (`coverage.md` templates) | `/`, `/access-denied`, `/not-found`, `/Error`, `/placeholder/{Feature}`; the endpoint `/dashboard/switch/{role}`; `Components/Layout/MainLayout.razor`, `NavMenu.razor`, `ReconnectModal.razor`; `#blazor-error-ui` (`MainLayout.razor:30`); `Components/Pages/Home.razor` and the frame of the nine `Components/Pages/Dashboards/*.razor` |
+| Held | Nothing. T297's images were re-captured on 2026-09-26 (§ 4) |
 
-**How to run this thread** (BRIEF.md § 2.3):
-1. Set up the design system first (BRIEF.md § 2.3 step 1). Then open a new Claude Design thread for this flow alone.
-2. Paste § 1, and attach the key screenshots in § 4 with it.
-3. Paste § 8, the runbook steps, as the next message.
-4. Attach the state screenshots in § 4 as the chat asks for them.
-5. Pick one wireframe variation, then ask for fidelity and the token sheet.
-6. Answer § 6's questions in the chat, one sentence per decision. Export the chosen artboards into
-   `design/flows/01-shell/` before moving on.
+**How to run this thread** (`design/pilot/README.md` steps B–E):
+1. **Stage the upload set:** `pwsh design/tools/stage_upload.ps1 -Flow 01`.
+   - Open each screenshot.
+   - The one file in `design/upload/crop-first/` shows a registration link. Crop it first, or leave it out.
+2. **Start the canvas** with the design system chosen in pilot step A (pilot step C). Paste § 1, and attach the key
+   screenshots in § 4 with it.
+3. **Paste § 8,** the runbook steps, as the next message.
+4. **Review round 1's variations** against the checklist in pilot step D. Attach § 4's landing and state captures as
+   the chat asks for them.
+5. **Pick one,** and say why in a sentence (pilot step E). Then ask for round 2.
+6. **Answer § 6's questions** in the chat, one sentence per decision.
+7. **Export the chosen artboards** into `design/flows/01-shell/` before moving on.
 
 ---
 
 ## 1. The ask (paste this first)
 
 ```text
-FLOW 01 — Know where I am, what I may do and which role I am acting in, and carry on when something fails
+FLOW 01 — Know where I am, what I may do and which role I am acting in, reach my work from where I land, and carry on
+  when something fails
+
+This is the pilot of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). The structure is open. Structure first,
+  then fidelity: round 1 is wireframes only, and I pick one before round 2.
 
 GOAL: Wherever a person is in Wombat, they know where they are, what they may do, and which role they are acting in,
-  and they can switch role. When something fails, is refused, is not found or is not built, they are told plainly and
-  can go on. This flow designs the frame every other flow sits in, and the token set every later flow uses.
+  and they can switch role. From where they land, their most frequent job is a click or two away. When something
+  fails, is refused, is not found or is not built, they are told plainly, where they are looking, and can go on. This
+  flow designs the frame every other flow sits in: the navigation, the landing per role, the role switch, where
+  outcomes and failures show, and the token set every later flow uses.
   What is wrong today (the attached screenshots show each):
   - The nav is a flat list of up to 20 links (the Administrator's), and five of them open "Coming soon" stubs.
+  - Every role lands on the same Home, which shows one role's dashboard at a time. A two-role person switches it from
+    a line on Home only, and the switch changes the dashboard but not the nav.
+  - Some dashboards say what exists rather than what needs doing. The InstitutionalAdmin's counts users per role by
+    their codes. Its "Quick links" repeat three nav links, and add Entrustment decisions, which her nav does not
+    offer.
   - Sign out appears twice: the top row's button and the nav's Logout.
   - The nav lights no item on some pages, and its items render underlined.
   - Access denied, reached by an in-app link, renders inside a second copy of the layout: two sidebars, two top rows,
@@ -50,6 +69,7 @@ AUDIENCE: every role, and signed-out visitors; desktop 1280×800 and phone 390×
   CommitteeMember, Assessor, Trainee, PendingTrainee. A former trainee holds no role and keeps a read-only record.
   Personas for the frame:
   - devadmin, the platform operator (Administrator): the longest nav.
+  - Prof Nolwazi Mbatha (InstitutionalAdmin): 18 links.
   - Dr Mohammed Patel (Assessor): a short nav.
   - Dr Thandi Zulu, the committee chair, holds CommitteeMember and Assessor and switches between them; so do
     Dr David Naidoo and Dr Sarah Botha.
@@ -77,14 +97,58 @@ NAV CONTENT PER ROLE (today's order; * = a "Coming soon" stub today):
   Nav lengths to design for: Assessor 6 links, CommitteeMember + Assessor 9, Trainee 10, InstitutionalAdmin 18,
   Administrator 20 (counting Home, My Account, Data Rights and Logout).
 
-SCREENS, in order:
-  1. The shell at 1280 px: the navigation (sidebar or other), the top row and the content column. Show it with the
-     Administrator's nav (the longest) and with the Assessor's (a short one).
-  2. The shell at 390 px: the navigation folded, and open. The toggle must be CSS-only, because signed-out pages are
-     static.
-  3. The Home frame: the page header, the role-switch line for a two-role user ("Viewing as Committee member · Switch
-     to Assessor"), and the dashboard grid that every role's dashboard sits in. The dashboards' own cards belong to
-     later flows; show placeholder cards spanning one, two and three columns.
+LANDING TODAY (every role lands on Home, /, which shows one dashboard; its cards' contents belong to later flows):
+  Administrator: System health, Users across institutions, Maintenance
+  CollegeAdmin: National catalogue
+  InstitutionalAdmin: Users (a count per role), Specialities & sub-specialities, Quick links
+  SpecialityAdmin, SubSpecialityAdmin: Pending reviews, Trainees in programme, Curriculum coverage
+  Coordinator: Stalled requests, Invitations nearing expiry, Quick action
+  CommitteeMember: Targets this period, Targets met by EPA
+  Assessor: Pending requests, Awaiting your review, Recent decisions, Actions
+  Trainee: Curriculum targets, Activity inbox, Recent activities, Upcoming deadlines, My authorisations, Actions
+  PendingTrainee: Awaiting admission, with "Review your account"
+  Former trainee: "No role assigned"
+  Someone with several roles lands on the first of theirs in this order: Administrator, CollegeAdmin,
+  InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember, Coordinator, Assessor, Trainee,
+  PendingTrainee. A remembered switch overrides it.
+
+WHAT EACH ROLE COMES TO DO MOST (the frame must get them there from where they land):
+  Trainee: file an observation (25 per semester) and follow it; read her progress.
+  Assessor: rate what waits in the inbox.
+  Coordinator: chase stalled work; run MSF campaigns; schedule reviews from what is due.
+  CommitteeMember: sit a review; see who is behind this period.
+  SpecialityAdmin, SubSpecialityAdmin: see who is behind; schedule reviews from what is due.
+  InstitutionalAdmin: invite, admit and manage people; adopt the curriculum.
+  CollegeAdmin: keep the national catalogue.
+  Administrator: keep the platform (jobs, institutions, audit).
+  Former trainee: read her record and export her portfolio.
+
+ROUND 1 — STRUCTURAL VARIATIONS (wireframes: greyscale boxes and real labels, no colour or type choices yet).
+  Give 2–3, each a different navigation model, and show for each:
+  a. The navigation model: what holds the navigation (a sidebar, a top bar, a rail, a hub page or something else), how
+     links are grouped, and each role's navigation written out. At least the Administrator's (20 links today), the
+     InstitutionalAdmin's (18), the Trainee's (10) and the Assessor's (6).
+  b. A person with several roles: Dr Zulu (CommitteeMember + Assessor). Her navigation, and how she sees which role she
+     is acting in: on every page, or on Home only.
+  c. The top bar: identity by name, one Sign out, and anything else it carries.
+  d. Role switching: where it lives, and what changes when it happens (the landing only, or the navigation too).
+  e. Landing per role: what each role sees first, and the clicks from landing to its most frequent job above, beside
+     today's count. Today a Trainee is one click from a new observation ("Log an activity" on Home, or Activities in
+     the nav), then chooses the type; an Assessor is two from a waiting request (Activity Inbox, then the row).
+  f. Where outcomes and system states show: an action's result and a refusal, in view of the control that caused it;
+     loading and load error; access denied; not found; the error page; the reconnect dialog; the in-app error bar.
+  g. At 390 px: the navigation folded and open. The toggle is CSS-only.
+  h. The reasoning: what the variation is best at, what it costs, which roles it serves worst, and which DESIGN.md rule
+     and test it changes.
+  Stop after round 1 and wait for my pick.
+
+ROUND 2 — AFTER I PICK: SCREENS at full fidelity, in order:
+  1. The shell at 1280 px: the navigation, the top bar and the content column, with the Administrator's navigation (the
+     longest) and with the Assessor's (a short one).
+  2. The shell at 390 px: the navigation folded, and open.
+  3. The landing frame: the page header, the acting role and the way to switch it for a two-role user ("Viewing as
+     Committee member · Switch to Assessor", or its replacement), and the grid every role's landing sits in. Show
+     placeholder cards spanning one, two and three columns; the cards themselves belong to later flows.
   4. The failure pages: Access denied (signed in, signed out), Page not found (signed in, signed out), and the error
      page with a request id to quote (signed in, signed out).
   5. The "Coming soon" stub, only if any placeholder survives question 2 below.
@@ -102,7 +166,7 @@ STEPS: 2.33, 2.34, 3.33, 3.52, 3.31, A.5.3, A.5.1, A.5.2, A.6.3, A.5.4, A.5.5, A
 STATES TO SHOW:
   Shell: nav folded and nav open at 390 px; reconnect rejoining, retrying, failed, paused, resume failed; the in-app
     error bar.
-  Home frame: a two-role user; the same user after switching; loading (skeleton); load error (alert, with no empty
+  Landing frame: a two-role user; the same user after switching; loading (skeleton); load error (alert, with no empty
     state under it).
   Access denied: signed in, signed out, narrow. Page not found: signed in, signed out, narrow.
   Error: signed in with its request id, signed out (today it redirects to sign-in: design the page instead), narrow.
@@ -113,8 +177,8 @@ REQUIREMENTS FROM KNOWN DEFECTS:
   - T322: contrast is fixed in the tokens. Text reaches 4.5:1; control boundaries and the focus ring reach 3:1
     (WCAG 1.4.3, 1.4.11). These fail today: success text on its tint 2.55, warning 2.42, danger 3.57; validation text
     on white 3.82; white on the danger button 3.82 and on the success button 2.87; the focus ring on the page 2.99;
-    the input border 1.49. The navigation needs its own focus-ring token that reaches 3:1 on both ends of its
-    gradient.
+    the input border 1.49. The navigation needs its own focus-ring token that reaches 3:1 on its background (both
+    ends of today's gradient).
   - T321: an unhandled failure shows a designed error page with a request id, signed in or out. Today it is a bare 500;
     /Error loses its id once the page goes interactive; signed out, it redirects to sign-in. Access denied is drawn
     once, never inside a second layout.
@@ -131,21 +195,28 @@ REQUIREMENTS FROM KNOWN DEFECTS:
     stay only in the audit log and an audit entry, the data-rights list and a request, and /portfolio/verify.
   - T190: page titles follow one pattern.
   - T317: the remembered dashboard role does not outlive sign-out.
+  - T311: a former trainee lands on something other than "No role assigned" (her landing's cards are flow 13's; her
+    frame and navigation are this flow's).
   - Observed, not filed: nav items render underlined; the navigation's gradient stops short of a full-page capture's
     height; Sign out appears twice; Home greets by email, not name.
 
 QUESTIONS THE DESIGN MUST ANSWER:
-  1. Grouped navigation, or a flat list? The Administrator sees 20 links and the InstitutionalAdmin 18. Whatever the
-     grouping, every link opens a page that admits the role, and no two links share a label.
+  1. Grouped navigation, or a flat list, or another model? The Administrator sees 20 links and the InstitutionalAdmin
+     18. Whatever the model, every link opens a page that admits the role, and no two links share a label.
   2. For each "Coming soon" item (Recent Activities, Stalled Activities, Programme Trainees, STAR Review Queue,
      System): will a later flow design it, or is the nav item dropped? The shell shows the outcome.
-  3. Where does the role switch live: on Home only (today), or in the shell, so it is visible on every page?
+  3. Where does the role switch live: on Home only (today), or in the shell, so it is visible on every page? Does a
+     switch change the navigation as well as the landing?
   4. One Sign out: where?
   5. Does an activity page, reached from several lists (inbox, My Activities, a dashboard, a review), light a nav item?
   6. Should the error page and the sign-out confirmation page be reachable by any link? Today they are reached only by
      typing their address.
   7. Body typeface: keep the Segoe UI stack (only Windows has Segoe UI), or name a self-hosted GPLv3-compatible face?
      Dark mode and reduced motion: in or out? Neither exists today.
+  8. What does each role land on: one Home whose content depends on the role (today), or a landing per role, such as
+     the Assessor's inbox or the Trainee's progress? What does a person with several roles land on?
+  9. Where does an action's outcome show, and where a refusal, so that it is in view of the control that caused it?
+     This is the frame's rule that every later flow follows.
 
 CONSTRAINTS:
 WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
@@ -176,12 +247,15 @@ Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (side
 Viewports: 1280×800 and 390×844.
 
 ASK:
-  - 2–3 variations, as wireframes first: the shell at 1280 and 390 px, the Administrator's and the Assessor's nav, and
-    the Home frame with the switch line. After I pick one, full fidelity for every screen above, then the token sheet.
+  - Round 1: 2–3 structural variations as wireframes, each showing a–h above, with its reasoning and its click
+    counts. No colour or type choices yet. Stop and wait for my pick.
+  - Round 2: the chosen frame at full fidelity, every screen and state above, then the token sheet.
   - Name every design-system component you use, and mark anything else NEW.
-  - Say which DESIGN.md rule a variation breaks. The shell's 250 px sidebar, sticky top row, 641 px breakpoint and
-    16 px gutter are rules; so are the nav's order, grouping and labels.
-  - Flag edge cases: a 20-link nav on an 800 px-tall screen, a long name or email in the top row, a role label that
+  - Say which DESIGN.md rule each variation changes. Today the shell's 250 px sidebar, sticky top row, 641 px
+    breakpoint and 16 px gutter are rules, and so are the nav's order, grouping and labels. All of these may change
+    (W-008). Two rules may not: every nav link opens a page that admits the role, and no two links share a label
+    (BRIEF.md § 4.4).
+  - Flag edge cases: a 20-link nav on an 800 px-tall screen, a long name or email in the top bar, a role label that
     wraps, a two-role user whose second role has a long name.
   - Run an accessibility review against WCAG 2.1 AA, and give a contrast figure for every token pair on the sheet.
 
@@ -190,7 +264,7 @@ ATTACHED: states/shell--nav-open.png, states/shell--nav-folded.png, states/home-
   states/placeholder--stalled-activities.png, states/shell--reconnect-retrying.png, states/shell--error-banner.png,
   states/home--loading.png, act-A/A.7.14-2-profile-saved-success-alert.png, act-A/A.7.14-6-reviews-badges.png,
   act-1/1.5-2-kruger-invited.png (cropped: it is here only for the underlined nav), states/home--administrator.png
-  (the 20-link nav).
+  (the 20-link nav). For round 1, the landing captures follow as you ask for them.
 ```
 
 ---
@@ -267,7 +341,9 @@ Not captured, so describe them in words:
 
 ## 4. Attach
 
-Paths are relative to `design/baseline/`. Every one below was checked with `ls` on 2026-09-26.
+Paths are relative to `design/baseline/`. Every one below was checked with `ls` on 2026-09-26, and the landing captures
+by `design/tools/check_baseline_paths.py` on 2026-09-27. `pwsh design/tools/stage_upload.ps1 -Flow 01` stages them
+all, keeping `act-1/1.5-2-kruger-invited.png` back in `design/upload/crop-first/` (BRIEF.md § 3.1).
 
 **Key screenshots (attach these first, with § 1):**
 1. `states/shell--nav-open.png`
@@ -285,6 +361,15 @@ Paths are relative to `design/baseline/`. Every one below was checked with `ls` 
 13. `act-1/1.5-2-kruger-invited.png`. It is here only to show the underlined nav. **Crop out its registration link
     first** (BRIEF.md § 3.3), or leave it out.
 14. `states/home--administrator.png`: the Administrator's 20-link nav (optional; Administrator homes are not held).
+
+**Landing per role (for round 1; attach as the chat asks).** Each is today's Home for one role:
+- `states/home--trainee.png` (Trainee), `states/home--assessor-pending.png` (Assessor, with a request waiting)
+- `states/home--coordinator-stalled.png` (Coordinator), `states/home--committee-member-figures.png` (CommitteeMember)
+- `states/home--speciality-admin-figures.png` (SpecialityAdmin), `states/home--college-admin.png` (CollegeAdmin)
+- `states/home--institutional-admin.png` (InstitutionalAdmin: users counted per role; Quick links that repeat three nav
+  links and add one the nav lacks)
+- `states/home--awaiting-admission.png` (PendingTrainee), `states/home--no-role.png` (former trainee, T311)
+- `states/logout-confirm--default.png` (the sign-out confirmation, reached only by address; question 6)
 
 **States (attach as the chat asks):**
 - `states/shell--reconnect-rejoining.png`, `states/shell--reconnect-failed.png`, `states/shell--reconnect-paused.png`,
@@ -324,14 +409,16 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 
 ## 6. Questions the design must answer
 
-1. **Grouped navigation or a flat list?** The Administrator sees 20 links, the InstitutionalAdmin 18
-   (DESIGN.md:192–205). Whatever the grouping, every link must open a page that admits the role, and no two links may
-   share a label (`NavMenuAuthorizationTests` parses DESIGN.md's nav table, so a regrouping is a DESIGN.md change).
+1. **Grouped navigation, a flat list, or another model?** The Administrator sees 20 links, the InstitutionalAdmin 18
+   (DESIGN.md § The NavMenu, its table). Whatever the model, every link must open a page that admits the role, and no
+   two links may share a label (`NavMenuAuthorizationTests` parses DESIGN.md's nav table, so a regrouping is a
+   DESIGN.md change).
 2. **The five "Coming soon" items** (`NavMenu.razor:108, 113, 114, 116, 132`; BRIEF.md § 7 B7). For each, either a
    later flow designs it or the nav item goes: Recent Activities (F04); Stalled Activities, Programme Trainees and STAR
    Review Queue (F06); System (F18). The shell shows the outcome. Their contents are inferred: no intent document
    exists.
 3. **Where does the role switch live?** On Home only, as today, or in the shell, so the role is visible on every page?
+   Does a switch change the navigation as well as the landing? Today it changes only the dashboard (Step 2.34).
 4. **One Sign out, where?** The nav's Logout and the top row's Sign out duplicate each other. Both are form posts
    (DESIGN.md § The NavMenu), and either survives the choice.
 5. **Does `/activities/{id}` light a nav item?** It is reached from the inbox, My Activities, the dashboards and a
@@ -341,26 +428,51 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 7. **Typeface, dark mode, reduced motion.** The body stack starts with Segoe UI (`app.css:50`), which only Windows has.
    Keep it, or name a self-hosted, GPLv3-compatible woff2 for `wwwroot/fonts`. Fraunces stays the wordmark's face
    (`--font-display`). Dark mode and reduced motion are both absent from `app.css` today: in or out?
+8. **What does each role land on?** Today it is one Home whose dashboard depends on the role, chosen by
+   `Navigation/DashboardPriority.cs` for a person with several. The alternative is a landing per role, such as the
+   Assessor's inbox or the Trainee's progress. Either way, the most frequent job (§ 1) is stated in clicks from landing,
+   beside today's count.
+9. **Where does an outcome show, and where a refusal?** Today a result region takes the focus
+   (`Accessibility/ActionFocusTests`). But a refusal can land at the head of a long page, out of view of the card that
+   caused it (`act-4/4.46-1-zulu-remit-quorum-refused.png`, flow 09). The frame sets the rule that every later flow
+   follows.
 
 ## 7. Acceptance
 
-A flow is done when BRIEF.md § 9's four checks hold. For this flow:
+A flow is done when BRIEF.md § 9's checks hold. For this flow, the pilot, `design/pilot/README.md` steps F and G give
+the commands.
 
-- **Replay the 21 steps** on a fresh database (BRIEF.md § 9 gives the commands), in act order: 2.33, 2.34, 3.31, 3.33,
-  3.52, then the appendix's A.5.1–A.5.13, A.6.3, A.7.3 and A.7.14. Every Expect must hold. If the design changes the
-  wording a step quotes, update that Expect in the same task (BRIEF.md § 9 item 7). Steps 1.1 and 2.33 list the nav,
-  and 2.33, 2.34, 3.33 and 3.52 quote the switch line.
+- **`DESIGN.md` is amended in the same task** (W-008; BRIEF.md § 9 item 6). The sections rewritten are the ones the
+  chosen frame changes, at least:
+  - § Design tokens and § Typography (the token sheet);
+  - § Layout grid (the shell) and § The NavMenu (its role table, which `NavMenuAuthorizationTests` parses);
+  - § Dashboard layout grid and § Page-level patterns › Dashboard page (the landing frame);
+  - § Alerts, validation, empty states, and § Accessibility (outcomes, refusals and the focus ring).
+
+  Flow 01 is then added to the banner's "Redesigned so far" list, with its date and commit.
+- **Replay on a fresh database, from Act 1.** Flow 01's steps run from Act 2 to the appendix, so the replay is the whole
+  runbook in order, through A.7.14. The 21 steps are the acceptance: 2.33, 2.34, 3.31, 3.33, 3.52, then the appendix's
+  A.5.1–A.5.13, A.6.3, A.7.3 and A.7.14. Every Expect must hold.
+- **Every step that quotes the frame is checked.** A keyword search finds 59 steps whose Role, Route, Do or Expect lines
+  mention the nav, the role switch, Sign out, a menu or "Coming soon" (BRIEF.md § 4.5); 15 of the 21 above are among
+  them, and the other six (A.5.1, A.5.3, A.5.5–A.5.8) are checked as this flow's own. If the design changes wording a
+  step quotes, update that Expect in the same task (BRIEF.md § 9 item 7). For example:
+  - Steps 1.1 and 2.33 list the nav;
+  - Steps 2.33, 2.34, 3.33 and 3.52 quote the switch line;
+  - Steps A.5.9–A.5.13 quote the "Coming soon" stubs.
 - **The tests pass** (`dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj`, never with `--no-build`). They
   must include:
   - `Navigation/NavMenuAuthorizationTests`, which covers the nav table, the role unions and `PlaceholderPage.Headings`;
-  - `Navigation/DashboardLinkAuthorizationTests`;
-  - `Design/NarrowLayoutTests`, `DesignSystemSmokeTests`, `PageShapeSmokeTests`, `DefinedClassTests`, `AlertRoleTests`,
-    `BadgeForStatusTableTests`, `InvalidFieldStyleTests` and `FieldGroupTests`;
+  - `Navigation/DashboardLinkAuthorizationTests` and `Dashboards/*`;
+  - `Design/NarrowLayoutTests` (`TheShell_HasASideGutter_AtPhoneWidth`), `DesignSystemSmokeTests`,
+    `PageShapeSmokeTests`, `DefinedClassTests`, `AlertRoleTests`, `BadgeForStatusTableTests`, `InvalidFieldStyleTests`
+    and `FieldGroupTests`;
   - T322's planned `Design/ContrastTests`, added in the same task;
-  - `Hosting/AppAssetUrlTests`, if a font or script is added;
+  - `Accessibility/*`, which holds the invariants in BRIEF.md § 4.4;
+  - `Hosting/AppHeadTests` (the page title, T190), and `Hosting/AppAssetUrlTests` if a font or script is added;
   - `Scenario/`.
-- **Re-capture** the 27 states in § 3 and the steps' own captures into `design/baseline/`. Compare them with the chosen
-  artboards.
+- **Re-capture** the 27 states in § 3, the landing captures in § 4, and the steps' own captures into `design/baseline/`.
+  Compare them with the chosen artboards.
 - **Browser check** at 1280 and at 390 px for every row of DESIGN.md's nav table, and for a two-role user. Check the
   reconnect dialog by suspending the app (`states.md` § Shell and framework).
 

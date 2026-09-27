@@ -1,0 +1,69 @@
+<!-- @dsCard group="Actions" height=560 subtitle="Primary in the page header, outline for the rest, danger only in a dialog footer" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Button</title>
+<style>
+  body { padding: var(--space-lg); }
+  .pv { display: grid; gap: var(--space-lg); }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-row { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center; }
+  .pv .form-actions { margin-top: 0; }
+  .pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="pv">
+  <section>
+    <p class="pv-cap">.btn-primary: the page's one primary action, in the PageHeader's action slot</p>
+    <div class="pv-row">
+      <a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg> Create curriculum</a>
+      <button type="button" class="btn btn-primary">Save</button>
+    </div>
+  </section>
+
+  <section>
+    <p class="pv-cap">.btn-outline: Cancel and secondary actions; row actions at .btn-sm, each named by its row</p>
+    <div class="pv-row">
+      <a class="btn btn-outline" href="#">Cancel</a>
+      <button type="button" class="btn btn-outline btn-sm" aria-label="Edit PAED-001 — Providing paediatric emergency care to children">Edit</button>
+      <button type="button" class="btn btn-outline btn-sm" aria-label="Remove PAED-001 — Providing paediatric emergency care to children">Remove</button>
+      <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg> Add level</button>
+      <button type="button" class="btn btn-outline btn-xs" aria-label="Dismiss">×</button>
+    </div>
+  </section>
+
+  <section>
+    <p class="pv-cap">.btn-danger belongs in a ConfirmDialog footer; .btn-success is Publish. Both white labels fail AA today (3.82:1 and 2.87:1, T322)</p>
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline">Cancel</button>
+      <button type="button" class="btn btn-danger">Confirm revocation</button>
+    </div>
+    <div class="pv-row" style="margin-top: var(--space-md)">
+      <button type="button" class="btn btn-success">Publish</button>
+    </div>
+  </section>
+
+  <section>
+    <p class="pv-cap">While Save runs it keeps the focus (ring shown) and says so with aria-disabled; the buttons it would race are disabled</p>
+    <div class="pv-row">
+      <button type="button" class="btn btn-primary pv-focus" aria-disabled="true">Saving...</button>
+      <button type="button" class="btn btn-outline" disabled>Discard draft</button>
+      <button type="button" class="btn btn-success" disabled>Publish</button>
+    </div>
+  </section>
+
+  <section>
+    <p class="pv-cap">A workflow action the actor cannot complete: shown disabled, its reason as visible text it points at</p>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary">Return</button>
+      <button type="button" class="btn btn-primary" disabled aria-describedby="reason-sign-off">Sign Off</button>
+    </div>
+    <ul class="workflow-action-reasons">
+      <li id="reason-sign-off"><strong>Sign Off:</strong> Needs Overall level, which you cannot fill in here.</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

@@ -1,12 +1,13 @@
 ---
 id: T336
 title: The emails and PDFs have no design brief or baseline, though the redesign now covers them
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-27
 started: 2026-09-27
+completed: 2026-09-27
 ---
 
 # T336 — The emails and PDFs have no design brief or baseline, though the redesign now covers them
@@ -33,8 +34,25 @@ PDF.
 
 ## Verification
 
-- [ ] All 15 templates in `design/baseline/mail/`, all PDFs' pages in `design/baseline/pdf/` — listed against the code.
-- [ ] Flows 19 and 20 in the template; BRIEF § 8 updated; `design/tools/` checks pass — the scripts.
+- [x] All 15 templates in `design/baseline/mail/`, all PDFs' pages in `design/baseline/pdf/` — listed against the code:
+  54 mail files (each template as PNG, HTML and text, plus a resent MSF invitation, the learner's MSF invitation and
+  the digest with items); 28 PDF files (Dr Molefe's 11-page portfolio, her own and the staff export alike by SHA-256;
+  Dr Dlamini's 8-page data-export summary; three STAR certificates: active, superseded and revoked).
+- [x] Flows 19 and 20 in the template; BRIEF § 8 updated; `design/tools/` checks pass — 0 missing paths, all 325 steps
+  in a flow, 416 quoted steps and 0 problems.
+
+## As built — 2026-09-27
+
+- **The inventory:** all 15 templates wrap their body in `EmailTemplateBase.WrapHtml` and have a plain-text twin. Nine
+  have a sender in the code; six have none (the four Assessment templates and StarDecision, T320; PasswordReset, reset
+  not built). No template exists for a revoked STAR or a data-rights decision (T319). Six emails were sent in the story
+  and are baselined from the replay's real mails; the rest are rendered from the published Application DLL with the
+  story's data. Every one-time token is a same-length placeholder.
+- **The PDFs:** from a scratch copy of the final state; each page at 110 dpi beside its PDF. Not rendered: an expired
+  certificate (no STAR in the story reaches expiry) and the notices T319 and T320 plan (they do not exist yet; flow 19
+  asks for them as new designs).
+- **The briefs:** `design/flows/19-emails.md` and `20-pdfs.md`; BRIEF § 8 lists 20 flows. `stage_upload.ps1` puts any
+  mail that may show a one-time link in `crop-first/`.
 
 ## Related
 

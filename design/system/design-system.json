@@ -1,0 +1,270 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-27T04:09:20Z"
+  },
+  "title": "Wombat",
+  "namespace": "Wombat",
+  "libraries": [],
+  "sections": {},
+  "groups": [
+    "Logos",
+    "Icons",
+    "Favicons"
+  ],
+  "assetGroups": {
+    "Logos": {
+      "name": "Logos",
+      "tile": "l",
+      "order": [
+        "wombat-mark.svg",
+        "wombat-tile.svg"
+      ],
+      "files": {
+        "wombat-mark.svg": {
+          "name": "wombat-mark.svg",
+          "blob": "16c4e619b7ea0971d0c28ed6509be7a8",
+          "size": 1328,
+          "type": "image/svg+xml"
+        },
+        "wombat-tile.svg": {
+          "name": "wombat-tile.svg",
+          "blob": "5c163fa0399811fb9fe46d0aad3c1671",
+          "size": 1171,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Icons": {
+      "name": "Icons",
+      "tile": "s",
+      "order": [
+        "alert-triangle.svg",
+        "arrow-down.svg",
+        "arrow-left.svg",
+        "arrow-up.svg",
+        "award.svg",
+        "book.svg",
+        "calendar.svg",
+        "check.svg",
+        "chevron-right.svg",
+        "clock.svg",
+        "file-text.svg",
+        "home.svg",
+        "inbox.svg",
+        "info.svg",
+        "key.svg",
+        "log-out.svg",
+        "pencil.svg",
+        "plus.svg",
+        "search.svg",
+        "settings.svg",
+        "shield.svg",
+        "trash.svg",
+        "user.svg",
+        "users.svg",
+        "x.svg"
+      ],
+      "files": {
+        "alert-triangle.svg": {
+          "name": "alert-triangle.svg",
+          "blob": "2a79cb595787d3c31018cbea5e35661c",
+          "size": 131,
+          "type": "image/svg+xml"
+        },
+        "arrow-down.svg": {
+          "name": "arrow-down.svg",
+          "blob": "be7171fedce2c16a7923ea1465e011fc",
+          "size": 118,
+          "type": "image/svg+xml"
+        },
+        "arrow-left.svg": {
+          "name": "arrow-left.svg",
+          "blob": "bfa71d72977e569be3a6513084491b16",
+          "size": 118,
+          "type": "image/svg+xml"
+        },
+        "arrow-up.svg": {
+          "name": "arrow-up.svg",
+          "blob": "64e0e21ab906b1a60eff5423cc1e08fc",
+          "size": 116,
+          "type": "image/svg+xml"
+        },
+        "award.svg": {
+          "name": "award.svg",
+          "blob": "a1fdcf76e91b922ab8f1596b04bc5471",
+          "size": 175,
+          "type": "image/svg+xml"
+        },
+        "book.svg": {
+          "name": "book.svg",
+          "blob": "d4ac817b70f55f657d8505b7bcd3b8c6",
+          "size": 160,
+          "type": "image/svg+xml"
+        },
+        "calendar.svg": {
+          "name": "calendar.svg",
+          "blob": "c4f2f4804d541b96708fc6aa1f41bd3e",
+          "size": 174,
+          "type": "image/svg+xml"
+        },
+        "check.svg": {
+          "name": "check.svg",
+          "blob": "b451e99c6d54a8658dc27a6996a37591",
+          "size": 110,
+          "type": "image/svg+xml"
+        },
+        "chevron-right.svg": {
+          "name": "chevron-right.svg",
+          "blob": "81bde84b9a4189e6eb7b08863534d964",
+          "size": 108,
+          "type": "image/svg+xml"
+        },
+        "clock.svg": {
+          "name": "clock.svg",
+          "blob": "0d8d1534a7b240d75e40faa928d4db7d",
+          "size": 167,
+          "type": "image/svg+xml"
+        },
+        "file-text.svg": {
+          "name": "file-text.svg",
+          "blob": "ec0ffce1f62d706f5838971e906a304f",
+          "size": 176,
+          "type": "image/svg+xml"
+        },
+        "home.svg": {
+          "name": "home.svg",
+          "blob": "6021566153702aa5b6cc3721bdaee40b",
+          "size": 131,
+          "type": "image/svg+xml"
+        },
+        "inbox.svg": {
+          "name": "inbox.svg",
+          "blob": "cb909ffb90e93ae9fc93f326b058c8f0",
+          "size": 133,
+          "type": "image/svg+xml"
+        },
+        "info.svg": {
+          "name": "info.svg",
+          "blob": "1628b5011bac1c0f408bb0c504ba63fb",
+          "size": 155,
+          "type": "image/svg+xml"
+        },
+        "key.svg": {
+          "name": "key.svg",
+          "blob": "1c41fa8a1dc12de49f8468983dff0069",
+          "size": 199,
+          "type": "image/svg+xml"
+        },
+        "log-out.svg": {
+          "name": "log-out.svg",
+          "blob": "b34bb861941bb8c82f05018327af2ce4",
+          "size": 156,
+          "type": "image/svg+xml"
+        },
+        "pencil.svg": {
+          "name": "pencil.svg",
+          "blob": "70d3d22f174f3f5099fb635529af905d",
+          "size": 138,
+          "type": "image/svg+xml"
+        },
+        "plus.svg": {
+          "name": "plus.svg",
+          "blob": "03fd249d6cfa6e269ad4f794bc259f7c",
+          "size": 111,
+          "type": "image/svg+xml"
+        },
+        "search.svg": {
+          "name": "search.svg",
+          "blob": "3a7dfc168948ed0b12d98849afa3abb9",
+          "size": 151,
+          "type": "image/svg+xml"
+        },
+        "settings.svg": {
+          "name": "settings.svg",
+          "blob": "bda5842c9005af35a9eac17047474e68",
+          "size": 224,
+          "type": "image/svg+xml"
+        },
+        "shield.svg": {
+          "name": "shield.svg",
+          "blob": "b7a842be6f5119f388ddd935a0c05797",
+          "size": 257,
+          "type": "image/svg+xml"
+        },
+        "trash.svg": {
+          "name": "trash.svg",
+          "blob": "4bc5a68f78bb7d71bf34e40e1a557545",
+          "size": 128,
+          "type": "image/svg+xml"
+        },
+        "user.svg": {
+          "name": "user.svg",
+          "blob": "84d11da88027137f52de5b1082413c24",
+          "size": 156,
+          "type": "image/svg+xml"
+        },
+        "users.svg": {
+          "name": "users.svg",
+          "blob": "73410e7eac5b96f55f684086090ac168",
+          "size": 199,
+          "type": "image/svg+xml"
+        },
+        "x.svg": {
+          "name": "x.svg",
+          "blob": "215651ab4fb06e2ce28695e9384d8ad0",
+          "size": 116,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Favicons": {
+      "name": "Favicons",
+      "tile": "m",
+      "order": [
+        "favicon.svg",
+        "apple-touch-icon.png",
+        "icon-192.png",
+        "icon-512.png"
+      ],
+      "files": {
+        "favicon.svg": {
+          "name": "favicon.svg",
+          "blob": "6027221d19c7a31b4038b4198c95a6cc",
+          "size": 1173,
+          "type": "image/svg+xml"
+        },
+        "apple-touch-icon.png": {
+          "name": "apple-touch-icon.png",
+          "blob": "8116bb925eda47f4ec8e86a10a57f0f0",
+          "size": 12276,
+          "type": "image/png"
+        },
+        "icon-192.png": {
+          "name": "icon-192.png",
+          "blob": "7cd827f1ce281bc25dd03cabd3e42623",
+          "size": 13254,
+          "type": "image/png"
+        },
+        "icon-512.png": {
+          "name": "icon-512.png",
+          "blob": "2f5386cabd1f7b57add9e9dd7a7e4a69",
+          "size": 67984,
+          "type": "image/png"
+        }
+      }
+    }
+  },
+  "blobs": {},
+  "docs": {
+    "sections": []
+  },
+  "lastChange": {
+    "by": "Renier Cloete",
+    "at": "2026-09-27T04:09:20Z",
+    "via": "Claude Code · Wombat@2a2a26cb",
+    "note": "Built from the Wombat repo (app.css, DESIGN.md, the Razor components): 24 colours, 6 spacing, 6 radii, 7 shadows, 16 sizes, 20 type styles; 18 components and a cover; 31 assets."
+  }
+}

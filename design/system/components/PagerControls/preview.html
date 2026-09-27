@@ -1,0 +1,26 @@
+<!-- @dsCard group="Data" height=110 subtitle="Under every list that can grow" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PagerControls</title>
+<style>
+  body { padding: 0 var(--space-lg) var(--space-lg); }
+</style>
+</head>
+<body>
+<div class="pager">
+  <div class="pager-info">Showing 1-20 of 137</div>
+  <div class="pager-actions">
+    <button type="button" class="btn btn-outline btn-sm" disabled>Previous</button>
+    <button type="button" class="btn btn-outline btn-sm">Next</button>
+  </div>
+  <div class="pager-page-size">
+    <span class="pager-page-size-label">Per page:</span>
+    <select class="form-select form-select-sm pager-page-size-select" aria-label="Per page">
+      <option>10</option><option selected>20</option><option>50</option><option>100</option>
+    </select>
+  </div>
+</div>
+</body>
+</html>

@@ -1,17 +1,34 @@
 # Wombat GUI redesign: the master brief
 
 For the operator running the redesign in Claude Design, and for Claude Code implementing its result (T332). Written
-2026-09-26.
+2026-09-26. Revised on 2026-09-27 for the operator's decision (W-008), the pilot (T335) and the emails and PDFs
+(T336): § 0 and § 11 are new, § 4 is rewritten, and § 2, § 3, § 5 (its DESIGN.md citations), § 8, § 9 and § 10
+changed.
 
 - **Per-flow briefs:** `design/flows/NN-<slug>.md`, one per flow, ready to paste (§ 8).
+- **The pilot's step-by-step:** `design/pilot/README.md`.
 - **Screenshots:** `design/baseline/`, which is gitignored (§ 10).
+- **The upload set:** `design/tools/stage_upload.ps1 -Flow NN` stages it into `design/upload/`, which is gitignored
+  (§ 3.1).
 - **Citations:**
   - Every claim about Wombat names a file, a task or a runbook step.
+  - `DESIGN.md` is cited by section, not by line, because every flow that lands now amends it (W-008).
   - Every claim about Claude Design names its source in brackets, keyed in § 2.0. Each was re-fetched and checked on
     2026-09-26.
   - Where a claim is inferred rather than documented, it says **(inference)**.
 
 ---
+
+## 0. Status (2026-09-27)
+
+| | |
+|---|---|
+| Decided | **Restructure, with UX in scope** (W-008). The operator: *"restructure because I want it to look at UX also, include mails and pdf"*. The redesign may change the shell, the navigation, the role dashboards, the page shapes and the task flows themselves, not only the look. § 4 says what that means for Wombat, and what stays invariant. |
+| Scope | 80 page templates (flows 01–18), the 15 email templates (flow 19) and the PDFs (flow 20). The PDFs are the portfolio, the STAR certificate and the data-export summary (§ 8). |
+| Pilot first | Flow 01, the shell, goes first. It is taken from Claude Design through Razor to a green replay (T335; `design/pilot/README.md`). What it teaches corrects this brief (§ 11) before flow 02 is briefed (§ 2.3). |
+| `DESIGN.md` | Its structural lock is lifted for the redesign. Everything else in it still binds whatever has not been redesigned, and each flow that lands amends it with its tests (the banner at its top; § 9). |
+| Decided | **The design system:** Wombat's own, built from the code (W-009): https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18, its source in `design/system/`. |
+| Pending | **The aesthetic direction,** in a sentence or two, given in the pilot's first message (pilot step C). |
 
 ## 1. What Wombat is and who uses it
 
@@ -51,6 +68,11 @@ it.
 The research behind every claim below, with each source's verdict after a skeptic re-fetched it, is in
 `design/research/claude-design-2026-09-26.json`. `design/tools/` holds the checks this brief was held to: every
 screenshot it names exists, every runbook step and page is in a flow, and every quoted step matches the runbook.
+
+**`DESIGN.md` line numbers in flows 02–18 are stale.** They were taken at commit `58bea95f` (2026-09-26). T300, T302,
+T303 and T307 have since added 39 lines, and W-008's banner another 16. Read such a citation with
+`git show 58bea95f:execution/architecture/DESIGN.md`, or find the passage by its section. This brief and flow 01 now
+cite sections.
 
 | Key | Source |
 |---|---|
@@ -106,30 +128,46 @@ web, and it is not (inference).
 
 ### 2.3 Order of work
 
-0. **Decide § 4** (reskin or restructure) and state the aesthetic direction in a sentence or two.
-   - Record the decision as a `W-nnn` entry in `execution/DECISIONS.md`.
-   - "Do the thinking before you prompt" [parrott].
-1. **Set up the design system.**
-   - Give it the staged set (§ 3.1) and 6–10 screenshots as "real examples, not just specs" [setup], for example
-     `states/home--administrator.png`, `states/activity-inbox--assessor.png`, `states/new-activity--mini-cex.png`,
-     `states/activity-view--requested.png`, `states/login--blank.png`, `states/shell--nav-open.png` and
-     `states/review-detail--staged.png`.
-   - Paste § 5.1 into the setup chat, framed as constraints.
-   - Name the components, which is what [start] advises ("mention it by name").
-   - **Check what it extracted:**
-     - the palette equals `app.css` `:root`;
-     - Fraunces is used on the wordmark only;
-     - the icons are Lucide line icons;
-     - no Google Fonts or CDN is used.
-   - If it misses, try again with other assets (a research sweep's paraphrase of [setup], not a quotation). "Design
-     system import is only as good as its source" [start].
-2. **Brief F01 (the shell) first.** It settles the tokens and the frame that every later flow sits in.
-3. **Brief the flows in order (§ 8), one thread per flow.** The brief template is § 2.4, and each flow file already
-   follows it.
-   - Attach the flow's KEY SCREENSHOTS. Add STATES as the chat asks for them.
-   - **Structural changes get a wireframe first, then a pick, then fidelity** ("Wireframe first when fidelity doesn't
-     matter" [parrott]). Structural means the shell, the nav, dashboards and page shapes. Recolour, type and density go
-     straight to fidelity.
+0. **Decided: restructure, with UX in scope** (W-008, § 4). Two things are still the operator's to settle:
+   - **the aesthetic direction,** in a sentence or two, given with the design system. "Do the thinking before you
+     prompt" [parrott].
+   - **the design system** itself, which is pilot step A.
+1. **Set up the design system** (`design/pilot/README.md` step A). Done: Wombat's own, built from the code (W-009).
+   - **Path 1: build a Wombat design system from the code.**
+     - Give it the staged set (§ 3.1) and 6–10 screenshots as "real examples, not just specs" [setup]. For example:
+       `states/home--administrator.png`, `states/activity-inbox--assessor.png`, `states/new-activity--mini-cex.png`,
+       `states/activity-view--requested.png`, `states/login--blank.png`, `states/shell--nav-open.png` and
+       `states/review-detail--staged.png`.
+     - Paste § 5.1 into the setup chat, framed as constraints.
+     - Name the components, which is what [start] advises ("mention it by name").
+     - **Check what it extracted:** the palette equals `app.css` `:root`; Fraunces is used on the wordmark only; the
+       icons are Lucide line icons; no Google Fonts or CDN is used.
+     - If it misses, try again with other assets (a research sweep's paraphrase of [setup], not a quotation). "Design
+       system import is only as good as its source" [start].
+   - **Path 2: use the existing "RCL Consulting" design system.** The pilot README lists what it brings and what it
+     lacks for Wombat.
+   - **Either way, today's tokens fail WCAG AA** (§ 6 A1). The pilot's token sheet fixes them, and the design system is
+     then updated from it (step 6).
+2. **Run the pilot: flow 01, the shell, end to end** (T335; `design/pilot/README.md` steps B–G):
+   - 2–3 structural variations as wireframes;
+   - a pick, then fidelity with its states;
+   - the Claude Code build, with `DESIGN.md` and its tests amended;
+   - a green replay of the flow's steps on a fresh database, and a re-captured baseline.
+3. **Put the lessons into the brief** (pilot step H).
+   - Write § 11, "Pilot findings", dated.
+   - Correct § 2.4, § 5, § 9 and the flow files by what the pilot found.
+   - Do this before flow 02 is briefed.
+4. **Then brief the flows in § 8's order, one thread per flow.** The brief template is § 2.4, and each flow file
+   already follows it.
+   - Stage the flow's upload set with `design/tools/stage_upload.ps1 -Flow NN` (§ 3.1). Attach its KEY SCREENSHOTS
+     first, and add STATES as the chat asks for them.
+   - **Get the structure first, then fidelity.**
+     - Each flow asks first for 2–3 structural variations as wireframes. A structural variation covers the flow's
+       pages and their order, the steps of its journeys, and where each outcome and refusal shows.
+     - Then comes a pick, then fidelity ("Wireframe first when fidelity doesn't matter" [parrott]).
+     - A flow marked F in § 8 is expected to change little in structure, so its wireframe round may be a single
+       proposal to confirm (inference; the pilot tests it).
+     - Flow 01 is restated this way already. Flows 02–18 are restated as each comes up, by what the pilot teaches.
    - Ask for 2–3 variations [start].
    - Ask for the empty, error and loading states and for different data volumes: "Flag edge cases" [academy].
    - Ask for an accessibility review [start], with § 6 A1 as the check.
@@ -137,9 +175,12 @@ web, and it is not (inference).
      handoff bundle [academy].
    - **Export the chosen artboards into `design/flows/NN-<slug>/` before moving on.** There is no version history
      [start].
-4. **Hand off (§ 9),** one Claude Code task per flow.
-5. **After any `app.css` or `DESIGN.md` change, re-import the design system.** This is a precaution: the claim that an
-   import is a snapshot rests on one uncited blog.
+   - **Flows 19 (emails) and 20 (PDFs)** need only F01's tokens and type. They can run beside the screen flows once the
+     pilot lands; W-008 rejected leaving them until after.
+5. **Hand off (§ 9),** one Claude Code task per flow. Each flow lands with its `DESIGN.md` amendment, its tests and a
+   green replay of its steps.
+6. **After any `app.css` or `DESIGN.md` change, update the design system.** The first such change is the pilot's token
+   sheet. This is a precaution: the claim that an import is a snapshot rests on one uncited blog.
 
 ### 2.4 The brief template (every `design/flows/*.md` follows it)
 
@@ -154,10 +195,20 @@ STATES TO SHOW: loading, empty, error, refused ("Nothing was saved. …"), acces
 REQUIREMENTS FROM KNOWN DEFECTS: <Txxx: testable requirement>.
 QUESTIONS THE DESIGN MUST ANSWER: …
 CONSTRAINTS: <§ 5.1, verbatim>.
-ASK: 2–3 variations; <wireframe | full fidelity>; name every design-system component used and mark anything else NEW;
-  say which DESIGN.md rule a variation breaks.
+ASK: first 2–3 STRUCTURAL variations as wireframes (pages and their order, steps per journey, where outcomes and
+  refusals show), each with its reasoning and its step count; after the pick, fidelity with the states; name every
+  design-system component used and mark anything else NEW; say which DESIGN.md rule a variation changes.
 ATTACHED: <file list>
 ```
+
+The ASK line was restated for W-008 on 2026-09-27. Flow 01's ask follows it. Flows 02–18 still carry the old line,
+"2–3 variations; <wireframe | full fidelity>", until each is restated (§ 2.3 step 4).
+
+Their Mode rows are from before W-008 too. Where one says "straight to fidelity" because a page shape "holds" or
+"stays", citing § 4 (flows 02, 08, 10, 14, 15 and 16), it cites the old recommendation, which W-008 replaced. Read it
+as § 8's F mark: a structure expected to change little, still to be confirmed in a structural round. Flow 17's
+citations of "§ 2.3 step 3" and of § 4's "three dense pages" point at text since rewritten. Each is corrected when its
+flow is restated.
 
 ## 3. What to link and upload, and what never to
 
@@ -166,16 +217,32 @@ ATTACHED: <file list>
 - **The same applies to a Claude Code `/design` session.** What it reads goes to the model, so point it at the files
   below (inference).
 
-### 3.1 The design system: stage tracked files only
+### 3.1 Stage the upload set with the script
 
-Run this from the repo root. It copies 47 tracked files (about 470 KB); it was dry-run on 2026-09-26.
+Run it from the repo root. It empties `design/upload/` (gitignored) and stages one thread's files there:
 
 ```powershell
-$dst = Join-Path $env:TEMP 'wombat-design-system'
-if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
-git ls-files src/Wombat.Web/wwwroot src/Wombat.Web/Components/Layout execution/architecture/DESIGN.md |
-  ForEach-Object { $to = Join-Path $dst $_; New-Item -ItemType Directory -Force (Split-Path $to) | Out-Null; Copy-Item -LiteralPath $_ $to }
+pwsh design/tools/stage_upload.ps1 -Flow 01          # a flow: the design-system set, the brief, the flow, its Attach list
+pwsh design/tools/stage_upload.ps1 -DesignSystem     # setting up a design system: the set and § 2.3's example screenshots
+pwsh design/tools/stage_upload.ps1 -Flow 01 -WithLayout   # also the shell's Razor and CSS (Components/Layout)
 ```
+
+**What it does:**
+- **It copies only tracked files,** as `git ls-files` lists them, from the working tree. It refuses a flow brief that is
+  not tracked yet.
+- **It copies screenshots by name** from `design/baseline/`: the ones the flow's Attach section lists, leaving out any
+  "Do not attach" paragraph's, or § 2.3's examples.
+- **It refuses** anything under `recovery/` or `.scenario-app/`, any `*.dump`, `pwd_DO_NOT_COMMIT.txt`,
+  `appsettings*.json`, user secrets, `bin/` and `obj/`. It also refuses to run if `design/upload/` is not gitignored.
+- **It keeps back what may show a one-time link.** Any file whose name holds invit, issued, resent, resend, reset or
+  MsfExpiryReminder goes into `design/upload/crop-first/` with a warning, never beside the rest (§ 3.3).
+- **It prints every file it staged,** grouped, with the total size.
+
+`-Flow 01` staged 78 files, 3.38 MB, on 2026-09-27:
+- 3 brief files: `DESIGN.md`, this brief and the flow;
+- 30 design-system files;
+- 44 screenshots;
+- 1 file kept back in `crop-first/`: `act-1/1.5-2-kruger-invited.png`.
 
 | What | Path | Why |
 |---|---|---|
@@ -183,15 +250,16 @@ git ls-files src/Wombat.Web/wwwroot src/Wombat.Web/Components/Layout execution/a
 | Display face | `wwwroot/fonts/fraunces-var.woff2` (OFL) | The wordmark |
 | Brand | `wwwroot/brand/wombat-mark.svg`, `wombat-tile.svg`, `wwwroot/favicon.svg` | The logo. Bring it; do not ask for a new one (the research sweep found no image-generation model; not re-verified) |
 | Icons | `wwwroot/icons/*.svg` (25 Lucide icons, 20 in use) | The icon set |
-| Shell | `Components/Layout/MainLayout.razor(.css)`, `NavMenu.razor(.css)`, `AuthLayout.razor`, `ReconnectModal.razor(.css)` | The frame |
-| Contract | `execution/architecture/DESIGN.md` | Mostly behaviour and wording, not look. Say which passages are stale (§ 5.5). The documented inputs do not name `.md` [setup], so if it is refused, paste § 5 instead. |
-| Optional | `Components/Shared/` (36 tracked files: 26 `.razor`, 10 `.cs`) | How well Razor is read is undocumented. [academy] names CSS modules, Tailwind and styled-components, and implies React only through its mention of hooks. |
+| Contract | `execution/architecture/DESIGN.md` | Mostly behaviour and wording, not look. Its banner says the structural lock is lifted (W-008). Say which passages are stale (§ 5.5). The documented inputs do not name `.md` [setup], so if it is refused, paste § 5 instead. |
+| The brief | `design/BRIEF.md` and `design/flows/NN-*.md` | What to design, and the constraints |
+| Shell, with `-WithLayout` | `Components/Layout/MainLayout.razor(.css)`, `NavMenu.razor(.css)`, `AuthLayout.razor`, `ReconnectModal.razor(.css, .js)` | Today's frame, and the framework hooks it must keep (§ 5.3). Optional: a restructure should not copy today's markup. |
+| Not staged | `Components/Shared/` (36 tracked files: 26 `.razor`, 10 `.cs`) | How well Razor is read is undocumented. [academy] names CSS modules, Tailwind and styled-components, and implies React only through its mention of hooks. § 5.1 names the components instead. |
 
-**Per flow, attach:**
-- the flow's screenshots from `design/baseline/`;
-- its runbook steps, pasted as text;
-- for F03 and F17, three seed folders from `src/Wombat.Infrastructure/Activities/Seeds/`: `mini_cex_cpsa`,
-  `reflective_exercise_cpsa` and `teaching_session`. Each holds `schema.json`, `workflow.json` and `credit.json`.
+**Per flow, also:**
+- paste its runbook steps as text (each flow's last section);
+- for F03 and F17, add three seed folders from `src/Wombat.Infrastructure/Activities/Seeds/`: `mini_cex_cpsa`,
+  `reflective_exercise_cpsa` and `teaching_session`. Each holds `schema.json`, `workflow.json` and `credit.json`. The
+  script does not stage them.
 
 ### 3.2 Never upload, link or paste
 
@@ -216,65 +284,157 @@ The screenshots are scenario data, so they are shareable, but **open each one fi
 
 - **Invitation captures show a one-time registration link.** Every capture of `/admin/invitations` taken just after
   Issue or Resend shows the full `/account/register?token=…` link.
-  - Observed: `act-1/1.5-2-kruger-invited.png` and `states/invitations-list--resent.png`.
-  - Likely the same: `states/invitations-list--issued.png` (`states.md`: "Issued, with its link") and the act-1 and
-    act-2 `*-invited`, `*-issued` and `*-resent` captures.
+  - Observed: `act-1/1.5-2-kruger-invited.png`, `act-1/1.7-1-mbatha-invited.png`,
+    `act-2/2.16-1-registrars-invited.png`, `states/invitations-list--issued.png`,
+    `states/invitations-list--being-sent.png` and `states/invitations-list--resent.png` (flows 11 and 19).
+  - Likely the same: the other act-1 and act-2 `*-invited`, `*-issued` and `*-resent` captures.
   - Crop the link out, or leave the image out.
-- **Other captures checked:** `act-A/A.4.5-2-reset.png` shows no password (observed).
+  - `stage_upload.ps1` keeps every invitations capture back in `design/upload/crop-first/`, including the empty and
+    loading ones. That is deliberately more than the captures observed to show a link.
+- **Emails carry one-time links too** (T336, flow 19). `InvitationEmail`, `MsfInvitationEmail`,
+  `MsfExpiryReminderEmail` and `PasswordResetEmail` each hold a registration, respondent or reset link.
+  - The script judges by file name alone, so it keeps these back only while each capture under `mail/` is named for
+    its template. On 2026-09-27 they are, so all four are kept back.
+  - T336 replaced every token in `design/baseline/mail/` with a placeholder of the same length
+    (`PLACEHOLDER-TOKEN-xxx…`), so these captures show no live link (observed). Open each one, then move it back from
+    `crop-first/`.
+  - The other emails' links are ordinary page addresses, but open each one first.
+- **Other captures checked:** `act-A/A.4.5-2-reset.png` shows no password (observed). The script keeps it back anyway,
+  for its name.
 
-## 4. The decision to make first: RESKIN or RESTRUCTURE
+## 4. The decision: RESTRUCTURE, with UX in scope (W-008)
 
-| | **RESKIN** | **RESTRUCTURE** |
+**Decided on 2026-09-27** (`execution/DECISIONS.md` W-008). The operator: *"restructure because I want it to look at
+UX also, include mails and pdf"*.
+- **The redesign may change how Wombat works for each person, not only how it looks.** It covers the shell, the
+  navigation, the role dashboards, the page shapes and the task flows themselves.
+- **It adds the emails and the PDFs** (§ 8, flows 19 and 20).
+- ***Rejected:* a reskin,** which keeps the structure and changes the look. It could not fix what the replay found wrong
+  in the frame (§ 4.3).
+
+This section used to recommend a middle course: restructure the frame, and reskin the pages. The operator went further,
+so the page shapes are open too. The evidence is kept below, because it is what the restructure must answer (§ 4.3)
+and carry (§ 4.4).
+
+### 4.1 What "UX in scope" means for Wombat
+
+Each flow's design answers every row for its people. These rows are what a structural variation is judged on (pilot
+step D).
+
+| Concern | What the design must decide | Wombat today (evidence) |
 |---|---|---|
-| Changes | The visual language: palette, type, radii, shadows, density, the sidebar's look, badge and alert styles | The same, plus the shell, the navigation, the dashboards and the page shapes |
-| Keeps | DESIGN.md's structure: its own lock reads "Change the colours in `:root`, keep everything else" (line 2103, and lines 5 and 2081) | Only the invariants in the last row of this table |
-| DESIGN.md | Rewrite § Design tokens, § Typography and the look of each component section | Retire the ClinicAssist structural lock (lines 5, 2081 and 2103) by a recorded decision, then rewrite § Layout grid, § The NavMenu, § Dashboard layout grid and § Page-level patterns |
-| Tests to edit | Only the pins on values that change: `Design/FieldGroupTests` (border), `InvalidFieldStyleTests`, `TableColumnClassTests` and `NarrowLayoutTests`. Add T322's planned `Design/ContrastTests`. | All of the RESKIN column, plus `Navigation/NavMenuAuthorizationTests`, which parses DESIGN.md's nav table, so a nav change is a DESIGN.md change; `DashboardLinkAuthorizationTests`; the placeholder test; `PageShapeSmokeTests` and `DesignSystemSmokeTests`, which pin class names; the page layout tests (`Admin/ActivityTypeBuilderLayoutTests`, `CurriculumItemsEditLayoutTests` and others); and `NarrowLayoutTests`' shell pins (`@media (min-width: 641px)` and the gutter). `Design/*` is 12 files and 2,509 lines. |
-| Survives either choice | Every nav link opens a page that admits the role, and no two share a label. One `<h1>` per page. Focus moves to an action's result. Row actions are named per row. Field help is linked. An invalid field is not shown by colour alone. Static pages stay static. The CSP. | |
+| **Information architecture and navigation, per role** | What each role's navigation holds and how it is grouped. The navigation of a person with several roles. Which item a sub-page lights. How a page now reached only by address gets a link. | One flat list per role, in the order of DESIGN.md § The NavMenu's table. That is 6 links for an Assessor, 10 for a Trainee, 18 for an InstitutionalAdmin and 20 for the Administrator; a multi-role user sees the union. Five items are "Coming soon". Seven pages have no link for a role they admit (`coverage.md` § Reached only by address). Some pages light no item (T331). |
+| **What each role lands on, and what it must do from there** | Each role's landing page and its first action. How a two-role person chooses the role they act in. | Every role lands on `/`, Home, which shows one role's dashboard at a time. `Navigation/DashboardPriority.cs` chooses it, and a line on Home alone switches it, through `/dashboard/switch/{role}` (Steps 2.33 and 2.34). Switching changes the dashboard but not the nav (Step 2.34: "The nav is unchanged"). A graduate lands on "No role assigned" (T311). |
+| **The number of steps in the core journeys** | For each journey in § 4.2: the pages and actions from landing to done, stated per variation beside today's count. | § 4.2, from `coverage.md` § Journeys by role and the steps' Route lines. |
+| **Where an action's outcome and a refusal appear** | Where every action's result shows, and where a refusal shows, in view of the control that caused it. | A result region takes the focus (`Accessibility/ActionFocusTests`; § 6 A5). But the review page's quorum refusal shows only at the head of the page, out of view of the card that caused it (`act-4/4.46-1-zulu-remit-quorum-refused.png`; flow 09). A refused move must keep its typed note (T299). |
+| **Empty, loading, error and reconnect states** | Each page's first render, skeleton, load error, empty and no-match states. The reconnect dialog, the in-app error bar, access denied, not found and the error page. | The header is missing until the first read ends, and an alert sits above an empty state (T329; § 6 A6). Access denied can render inside a second layout (T321). The reconnect dialog shows two messages at once (T330). |
+| **Narrow viewports** | The 390 px layout of every page, and of the navigation. | The nav folds behind a CSS-only toggle; open, it pushes the page down (`states/shell--nav-open.png`). The item editor is cut off, and the trajectory charts' labels are about 5 px (T323; § 6 A3; Steps A.7.1–A.7.13). |
+| **Forms and pickers offer only what the command accepts** | Each picker's options and each form's fields, taken from what the handler accepts from this caller. A read-only view where the caller cannot write. | Some pickers narrow already. In Step 3.1, the EPA picker offers the nine EPAs whose tool list names the Mini-CEX (T122), and the Assessor picker offers only KGK's active assessors (T102). Other forms offered what the command then refused; those are fixed or being fixed (T300, T302, T303, T291, T304, T301; § 6 A11). |
 
-### Recommendation: restructure the frame, reskin the pages
+### 4.2 The core journeys, and how many steps they take today
 
-**Restructure** the shell, the navigation and the role dashboards, and design the missing screens that hang off them
-(§ 7). **Reskin** the List, Detail, Form, Account and Anonymous page shapes, keeping the component vocabulary and its
-class names. Three dense pages get layouts designed deliberately inside their shapes: the review page (F07), the
-activity page (F03, F04 and F07), and the curriculum item editor and builder (F16, F17).
+"Route today" is the Route line of the runbook steps named. Each arrow is a page change. A structural variation states
+its own count for the same journey, with the same data.
 
-**Why the frame needs restructuring:**
+| Role | Journey (`coverage.md` § Journeys by role) | Steps | Route today | What the count hides |
+|---|---|---|---|---|
+| Trainee | Ask a consultant for a Mini-CEX: save a draft, then submit it. This is the most frequent job: 25 observations per registrar per semester (`act-1-setup.md:410`, Step 1.18). | 3.1, 3.2, 3.3 | `/` → `/activities/new` (save the draft), then `/activities/mine` → `/activities/{ActivityId:int}` (reopen it and submit) | The draft is found again through My Activities. Two of the form's three sections are locked until the state allows them. |
+| Assessor | Rate a Mini-CEX a registrar sent me | 3.5 | `/activities/inbox` → `/activities/{ActivityId:int}` | Two pages. A two-role consultant first switches the dashboard to Assessor to see the Assessor cards (Step 3.33), though the inbox is in the nav either way. |
+| Coordinator | See which requests have stalled, and chase one | 3.30, 3.31, A.5.10 | `/` (the "Stalled requests" card) → `/placeholder/{Feature}` | A dead end: "no reminder and no reassignment" (Step 3.31). |
+| Coordinator | Set up an MSF campaign and invite its respondents | 3.34, 3.35, 3.36 | `/` → `/msf/campaigns` → `/msf/campaigns/new` → `/msf/campaigns/{CampaignId:int}` | The questionnaire is created first, then the campaign (Step 3.34). |
+| SpecialityAdmin | Schedule a registrar's review from what is due | 4.9 | `/committee/decisions-due` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Three pages. The Schedule link fills a form on another page. |
+| CommitteeMember (chair) | Start a review, stage STARs, record the decision, ratify | 4.16, 4.17, 4.23, 4.27 | `/committee/reviews/{ReviewId:int}` throughout, leaving it for each piece of evidence: review → `/activities/{ActivityId:int}` → review (Step 4.17) | One long page carries the whole sitting (flow 07). |
+| InstitutionalAdmin | From registration to admission | 2.28, 2.29 | `/admin/invitations` → `/admin/users` → `/admin/users/{UserId}` → `/admin/trainees` to find who is pending; then `/admin/trainees` → `/admin/trainees/edit` → `/admin/trainees` for each registrar | Four pages to find who is waiting. Then three per admission, done four times in Step 2.29. |
+| CollegeAdmin | Publish a new curriculum version | 6.29, 6.30, 6.31 | Clone: `/admin/curricula` → `/admin/curricula/{Id:int}/items` → `/admin/curricula/{Id:int}` → `/admin/curricula`. Edit: `/admin/curricula` → `/admin/curricula/{Id:int}/items`. Publish: `/admin/curricula` → `/admin/curricula/{Id:int}` → `/admin/curricula`. | Each of the three moves starts again from the list. |
+| Former trainee | Read my record | 5.20, 5.21 | `/account/login` → `/portfolio/progress`; Home reads "No role assigned" | Home offers her nothing (T311; § 7 B1). |
+
+### 4.3 The evidence behind the decision
+
+**The frame is wrong in structure** (the 2026-09-26 analysis):
 - **The nav is long and flat.**
   - The Administrator sees 20 links: 16 role links plus Home, My Account, Data Rights and Logout. The InstitutionalAdmin
-    sees 18 (DESIGN.md:192–205). A multi-role user sees the union.
+    sees 18 (DESIGN.md § The NavMenu, its table). A multi-role user sees the union.
   - There is no grouping.
-  - Five links open "Coming soon" stubs (DESIGN.md:217–220).
+  - Five links open "Coming soon" stubs (DESIGN.md § The NavMenu, the paragraph on `/placeholder/{Feature}`).
   - Seven pages a role is admitted to have no link in that role's nav (`coverage.md` § Reached only by address).
   - The nav lights the wrong item or none (T331).
   - Sign out appears twice: in the top row and as the nav's Logout (`MainLayout.razor`, `NavMenu.razor`).
 - **The dashboards are wrong in what they show, not how they look.**
-  - Five cards count the wrong thing (T297).
+  - Five cards counted the wrong thing (T297, since fixed).
   - One card has no data source (T298).
   - A graduate lands on "No role assigned" (T311; `Home.razor:66`).
   - System health is two stubs labelled with task ids (T327).
   - Four of the five placeholders are the list behind a dashboard card: Recent Activities, Stalled Activities, Programme
     Trainees and System (§ 7 B7).
 
-**Why the page shapes can stay:**
-- **Their defects fit within the shapes.** They are presentation and state problems, each fixable inside the current
-  shapes:
-  - contrast (T322);
-  - widths (T323);
-  - labels (T324);
-  - copy (T326);
-  - stylesheet (T328);
-  - loading and error states (T329).
-- **The shapes carry pinned accessibility guarantees:** `Accessibility/ActionFocusTests`, `FormFieldHelpTextLinkTests`,
-  `Design/RowActionMarkupTests` and `AlertRoleTests`.
-- **Claude Code would rebuild new shapes from pictures.** Claude Design cannot build with Razor components (§ 2.1), so
-  new page shapes would come back as a visual spec that Claude Code rebuilds across 80 page templates (inference).
+**The page shapes' own defects would fit in today's shapes.** They are presentation and state problems:
+- contrast (T322);
+- widths (T323);
+- labels (T324);
+- copy (T326);
+- the stylesheet (T328);
+- loading and error states (T329).
 
-**Two visual decisions to make either way:**
+That was the case for keeping the shapes, and it still holds for those defects. But W-008 puts the journeys in scope.
+So a shape may now change for a UX reason, such as a journey's step count (§ 4.2), even where its defects do not
+require it.
+
+**The cost the pilot measures.** Claude Design cannot build with Razor components (§ 2.1). So a new page shape comes
+back as a visual spec, and Claude Code rebuilds it across 80 page templates (inference). The pilot (T335) is the first
+measure of what that costs and how much fidelity survives.
+
+### 4.4 What stays invariant
+
+Every variation, in every flow, keeps these. The first eight rows are the old decision table's "Survives either
+choice" row.
+
+| Invariant | Pinned by |
+|---|---|
+| Every nav link opens a page that admits the role, and no two links share a label | `Navigation/NavMenuAuthorizationTests` |
+| One `<h1>` per page, from `PageHeader` | No test as such. `Routes.razor`'s `FocusOnNavigate Selector="h1"` depends on it (§ 5.2). |
+| Focus moves to an action's result | `Accessibility/ActionFocusTests` |
+| Row actions are named per row | `Design/RowActionMarkupTests`, `Accessibility/RowNamesTests` |
+| Field help is linked | `Accessibility/FormFieldHelpTextLinkTests` |
+| An invalid field is not shown by colour alone | `Design/InvalidFieldStyleTests` |
+| Static pages stay static: signed-out pages, `/msf/respond`, `/portfolio/verify` | `Components/App.razor` (`PageRenderMode`); `Hosting/MsfRespondPageHostingTests`, `VerifyExportPageHostingTests` |
+| The CSP | `Security/SecurityHeadersMiddleware.cs`; `Hosting/AppAssetUrlTests` |
+| The sign-in cookie is written only by a form post | DESIGN.md § Account / auth page; § 5.2 |
+| An out-of-scope record is "not found", never "forbidden" | CLAUDE.md § InstitutionalAdmin scope-aware powers; Step A.5.5 |
+
+### 4.5 What the restructure changes in `DESIGN.md` and the tests
+
+- **`DESIGN.md`.** Its structural lock is lifted: the banner at its top, dated 2026-09-27, names the three passages.
+  Each flow rewrites the sections it redesigns, in the same task as its Razor (§ 9). For the shell and the tokens (flow
+  01), those are:
+  - § Design tokens and § Typography;
+  - § Layout grid (the shell), § The NavMenu and § Dashboard layout grid;
+  - § Page-level patterns › Dashboard page.
+- **The tests to edit, as each flow reaches them:**
+  - the value pins: `Design/FieldGroupTests` (the border), `InvalidFieldStyleTests`, `TableColumnClassTests` and
+    `NarrowLayoutTests`;
+  - T322's planned `Design/ContrastTests`, which is new;
+  - `Navigation/NavMenuAuthorizationTests`, which parses DESIGN.md's nav table, so a nav change is a DESIGN.md change;
+  - `DashboardLinkAuthorizationTests`, and the placeholder check (`PlaceholderPage.Headings`, in
+    `NavMenuAuthorizationTests`);
+  - `PageShapeSmokeTests` and `DesignSystemSmokeTests`, which pin class names;
+  - the page layout tests (`Admin/ActivityTypeBuilderLayoutTests`, `CurriculumItemsEditLayoutTests` and others);
+  - `NarrowLayoutTests`' shell pins (`@media (min-width: 641px)` and the gutter).
+
+  `Design/*` is 12 files and 2,509 lines.
+- **The runbook's Expect lines.** They quote the screen. By a keyword search, 59 steps' Role, Route, Do or Expect lines
+  mention the nav, the role switch, Sign out, a menu or "Coming soon". Fifteen of them are among flow 01's 21 steps;
+  its other six (A.5.1, A.5.3 and A.5.5–A.5.8) use none of the keywords. A shell change is checked against all 59 and
+  those six, 65 steps (pilot step F).
+
+### 4.6 Two visual decisions, still open
+
 - **The body font.** The stack starts with Segoe UI, which only Windows has (`app.css:50`), so other systems fall back
   to Tahoma, Geneva or Verdana. The choice is to keep it, or to name a self-hosted, GPLv3-compatible woff2.
 - **Dark mode and reduced motion.** `app.css` has neither (no `prefers-color-scheme` or `prefers-reduced-motion`
   rule), so both are opt-in.
+
+The "RCL Consulting" design system, if chosen, answers both in part: Jost for text, and a dark theme. Its
+reduced-motion rule covers only its own animation (pilot step A).
 
 ## 5. Constraints every design must meet to be buildable
 
@@ -314,16 +474,16 @@ Viewports: 1280×800 and 390×844.
 | Constraint | Source |
 |---|---|
 | **Two render modes.** A signed-out visitor's pages and `[ExcludeFromInteractiveRouting]` pages are static; everything else is `InteractiveServer`. | `Components/App.razor` (`PageRenderMode`) |
-| On a static page, `@onclick`, `@bind`, `OnAfterRenderAsync` and JS interop do nothing. Behaviour there is a link, a form post to an endpoint, or `wwwroot/wombat.js`. | DESIGN.md:1887–1891 |
-| **The sign-in cookie is written only by an HTTP POST.** Sign-in, register, link, sign-out and change password stay real `<form method="post">` elements. | DESIGN.md:1925–1933 |
+| On a static page, `@onclick`, `@bind`, `OnAfterRenderAsync` and JS interop do nothing. Behaviour there is a link, a form post to an endpoint, or `wwwroot/wombat.js`. | DESIGN.md § Account / auth page ("A visitor who has not signed in gets static pages") |
+| **The sign-in cookie is written only by an HTTP POST.** Sign-in, register, link, sign-out and change password stay real `<form method="post">` elements. | DESIGN.md § Account / auth page ("The sign-in cookie is written only in an HTTP request") |
 | `/msf/respond` is static for everyone: its link's rate limit must see every request. `/portfolio/verify` is a GET form checked as the page renders. | `App.razor` remarks; T205, T265 |
 | **CSP:** `default-src 'self'; script-src 'self' 'nonce-…'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'` | `src/Wombat.Web/Security/SecurityHeadersMiddleware.cs:46–58` |
 | Claude's design output is allowed Google Fonts and CDN scripts, including the Tailwind CDN and jQuery. All of these must be stripped. | [artifacts], per the research verdict |
-| Every script is same-origin or carries the nonce. Every first-party CSS and JS file is linked through `@Assets[…]`. | `Hosting/AppAssetUrlTests` (T175); DESIGN.md:41 |
+| Every script is same-origin or carries the nonce. Every first-party CSS and JS file is linked through `@Assets[…]`. | `Hosting/AppAssetUrlTests` (T175); DESIGN.md § Files that own the design system |
 | **Every class a page names is defined** in `app.css` or the component's `.razor.css`. So utility classes (`px-4`, `flex`) cannot be used unless they are written into `app.css`. | `Design/DefinedClassTests` (T266) |
-| Icons render as `<svg class="icon"><use href="/icons/{Name}.svg#i"/></svg>`. A new icon is a Lucide SVG whose root has `id="i"`. There is no Bootstrap Icons font. | `Components/Shared/Icon.razor`; DESIGN.md:1682 |
-| Dependencies must be GPLv3-compatible; the repo is AGPL-3.0. JS goes in small modules under `wwwroot/js/`. Modals are native `<dialog>` elements opened by `wwwroot/js/dialog.js`, on interactive pages only. | CLAUDE.md § Key technical choices; DESIGN.md:2080; `ConfirmDialog.razor` |
-| Exactly one `<h1>` per page, from `PageHeader`: `FocusOnNavigate Selector="h1"` targets it. Dashboards add none. | `Routes.razor`; DESIGN.md:1806 |
+| Icons render as `<svg class="icon"><use href="/icons/{Name}.svg#i"/></svg>`. A new icon is a Lucide SVG whose root has `id="i"`. There is no Bootstrap Icons font. | `Components/Shared/Icon.razor`; DESIGN.md § Icons |
+| Dependencies must be GPLv3-compatible; the repo is AGPL-3.0. JS goes in small modules under `wwwroot/js/`. Modals are native `<dialog>` elements opened by `wwwroot/js/dialog.js`, on interactive pages only. | CLAUDE.md § Key technical choices; DESIGN.md § Non-negotiables; `ConfirmDialog.razor` |
+| Exactly one `<h1>` per page, from `PageHeader`: `FocusOnNavigate Selector="h1"` targets it. Dashboards add none. | `Routes.razor`; DESIGN.md § Page-level patterns › Dashboard page |
 | The activity forms are drawn at runtime from jsonb schemas (22 seeded types). A design is for the renderer's field, section and state vocabulary, not for one form. | `Components/Shared/Activities/ActivityForm.razor`, `ActivityDetail.razor`; research `blazor_specific_risks[4]` |
 | The nav depends on role, and the data on institution scope. An out-of-scope id is a 404, not a 403. | `NavMenuAuthorizationTests`; CLAUDE.md § InstitutionalAdmin scope-aware powers |
 
@@ -339,33 +499,35 @@ None of this appears in any `.razor` file a design tool reads (research `blazor_
 
 ### 5.4 DESIGN.md's policy rules, which are open to deliberate change
 
-Change any of these only together with DESIGN.md and the test named.
+Change any of these only together with DESIGN.md and the test named. Under W-008 each is open to the flow that
+redesigns it (§ 4.5, § 9).
 
-| Rule | DESIGN.md | Pinned by |
+| Rule | DESIGN.md section | Pinned by |
 |---|---|---|
-| Structure "ported from ClinicAssist", with fixed class names (`.clinic-table`, `.detail-card`, `.btn-*`…) | 5, 2081, 2103 | `DesignSystemSmokeTests`, `PageShapeSmokeTests` |
-| Page shapes: List, Detail, Form, Dashboard, Account, Anonymous | 1689–2001 | `PageShapeSmokeTests` (the static and account shapes are technical) |
-| Shell values: 250px sidebar, sticky top row, 641px breakpoint, 16px gutter | 139–168 | `NarrowLayoutTests` |
-| Nav order, grouping and labels; the five placeholders | 170–243 | `NavMenuAuthorizationTests` (parses the table) |
-| Badge tints come from `BadgeFor` only, with a state→tint table | 847–1634 | `DefinedClassTests.OnlyBadgeFor_NamesABadgeClass`, `BadgeForStatusTableTests` |
-| Buttons: `.btn-outline` only; the primary action goes in the `PageHeader` slot; `.btn-danger` only in a dialog footer | 245–267 | Not tested. There are 15 uses of `.btn-danger` outside `ConfirmDialog.razor`. |
-| Colours only in `:root`; spacing only on `--space-*`; no inline `<style>` in pages | 45, 2073; CLAUDE.md | Not tested. There are 34 `style="` attributes in 14 files. |
+| Structure "ported from ClinicAssist", with fixed class names (`.clinic-table`, `.detail-card`, `.btn-*`…) | The opening; § Non-negotiables; § Historical context. Lifted for the redesign by the banner (W-008). | `DesignSystemSmokeTests`, `PageShapeSmokeTests` |
+| Page shapes: List, Detail, Form, Dashboard, Account, Anonymous | § Page-level patterns | `PageShapeSmokeTests` (the static and account shapes are technical) |
+| Shell values: 250px sidebar, sticky top row, 641px breakpoint, 16px gutter | § Layout grid (the shell) | `NarrowLayoutTests` |
+| Nav order, grouping and labels; the five placeholders | § The NavMenu | `NavMenuAuthorizationTests` (parses the table) |
+| Badge tints come from `BadgeFor` only, with a state→tint table | § Badges | `DefinedClassTests.OnlyBadgeFor_NamesABadgeClass`, `BadgeForStatusTableTests` |
+| Buttons: `.btn-outline` only; the primary action goes in the `PageHeader` slot; `.btn-danger` only in a dialog footer | § Button system | Not tested. There are 15 uses of `.btn-danger` outside `ConfirmDialog.razor`. |
+| Colours only in `:root`; spacing only on `--space-*`; no inline `<style>` in pages | § Design tokens; § Non-negotiables; CLAUDE.md | Not tested. There are 34 `style="` attributes in 14 files. |
 
 ### 5.5 Where DESIGN.md is stale (do not copy these)
 
-- **Line 3:** it describes a "37-line" `app.css`. The file is 1,406 lines.
-- **Line 2103:** "The palette is still TBD". The palette was set in T089.
+- **The opening:** it describes a "37-line" `app.css`. The file is 1,414 lines.
+- **§ Historical context:** "The palette is still TBD". The palette was set in T089.
 - **The token block** gives `--muted-text #6c757d`. The value is rgb(104 111 119) (T086). The block also omits
   `--font-display`.
-- **The lockup:** "font-weight 700" (line 115). The wordmark is Fraunces 500 at 1.7rem (`NavMenu.razor.css`).
-- **`.account-form-container`:** 400px (line 1870). The value is 30rem.
+- **The lockup:** "font-weight 700" (§ Logo & brand assets). The wordmark is Fraunces 500 at 1.7rem
+  (`NavMenu.razor.css`).
+- **`.account-form-container`:** 400px (§ Account / auth page). The value is 30rem.
 - **The List-page template** uses `shadow-sm mb-4`, which is undefined, so copying it fails `DefinedClassTests`.
-- **`wwwroot/lib/`** (line 16) does not exist.
+- **`wwwroot/lib/`** (§ Files that own the design system) does not exist.
 - **Defects in the stylesheets themselves:**
-  - `var(--text-muted)` at `app.css:623` names an undefined token;
+  - `var(--text-muted)` at `app.css:631` names an undefined token;
   - nav items render underlined (`act-1/1.5-2-kruger-invited.png`): `NavMenu.razor.css` sets `text-decoration: none`
     on the brand (line 38) but not on `.nav-link`;
-  - raw colours sit outside `:root`: the auth gradient (`app.css:57–58`), the dialog backdrop (`app.css:1309`),
+  - raw colours sit outside `:root`: the auth gradient (`app.css:57–58`), the dialog backdrop (`app.css:1316`),
     `NavMenu.razor.css`, and `#blazor-error-ui` in `lightyellow` (`MainLayout.razor.css:95`).
 
 ## 6. Requirements every design must meet
@@ -424,9 +586,16 @@ Each requirement is testable. It is listed with its task and the evidence before
 ## 8. The flow index
 
 The flows are in briefing order. The order is the shared frame first, then frequency × stakes. Frequency comes from
-the programme's calendar: 25 observations per registrar per semester (`act-1-setup.md:399`); a review each semester or
-year; one MSF campaign per period. Stakes come from task severity. Mode is W for wireframe first, F for straight to
-fidelity. "Held" names a group-1 task whose screenshots must be re-captured before briefing (§ 10).
+the programme's calendar: 25 observations per registrar per semester (`act-1-setup.md:410`, Step 1.18); a review
+each semester or year; one MSF campaign per period. Stakes come from task severity. "Held" names a group-1 task whose screenshots must be
+re-captured before briefing (§ 10).
+
+**Mode.** Under W-008 every flow starts with a structural round (§ 2.3 step 4). W marks a flow whose structure is
+expected to change a lot; F marks one expected to change little, whose structural round may be a single proposal to
+confirm. The marks were set before W-008, for the reskin question; the pilot tests them (§ 11).
+
+**Flows 19 and 20** have no page template and no nav. They are the outputs the screens send and print, added by W-008
+and written for T336. Their baseline goes into `design/baseline/mail/` and `design/baseline/pdf/`.
 
 | # | File | Flow | People | Pages (coverage.md templates) | Steps | Mode | Held |
 |---|---|---|---|---|---|---|---|
@@ -448,12 +617,20 @@ fidelity. "Held" names a group-1 task whose screenshots must be re-captured befo
 | 16 | `flows/16-college-catalogue.md` | The College keeps the national catalogue | CollegeAdmin, Administrator | `/admin/colleges/**`, `/admin/specialities/**`, `/admin/entrustment-scales/**`, `/admin/epas/**`, `/admin/curricula/**`, `/access-denied` (21 templates) | 33 | F | — (T300's dashboard re-captured 2026-09-26; Dr Kruger's other 1280 px sidebars are pre-fix) |
 | 17 | `flows/17-activity-type-builder.md` | Build and publish an activity type | InstitutionalAdmin, Administrator, CollegeAdmin (T300) | `/admin/activity-types` (+`new`, `{ActivityTypeId}`) | 11 | W | — (T300 re-captured 2026-09-26) |
 | 18 | `flows/18-platform-operations.md` | The operator keeps the platform running | Administrator; InstitutionalAdmin (audit) | `/`, `/admin/institutions/**`, `/admin/jobs` (+`runs`), `/admin/audit` (+`{Id:guid}`), `/admin/curriculum-progress`, `/admin/users/{UserId}`, `/placeholder/{Feature}` | 23 | W | — (T302 re-captured 2026-09-26) |
+| 19 | `flows/19-emails.md` | Emails: what each mail tells its reader, and where its link lands | each mail's recipient: invitees, registrars, assessors, the Coordinator, MSF respondents, anyone resetting a password | None. The 15 templates in `src/Wombat.Application/Common/Email/Templates/`, on `EmailTemplateBase.cs` | 20 | W | — (baseline captured 2026-09-27, T336) |
+| 20 | `flows/20-pdfs.md` | PDFs: the portfolio, the STAR certificate, the data-export summary | Trainee, former trainee, staff who export, verifiers | None. `Infrastructure/Reporting/PortfolioPdfService.cs` and its section components; `EntrustmentCertificatePdfService.cs`; the `portfolio-summary.pdf` in a data-rights export (`Infrastructure/DataRights/AccessReportBuilder.cs:198`) | 11 | W | — (baseline captured 2026-09-27, T336) |
 
-Coverage was checked by script on 2026-09-26 against the runbook, `coverage.md` and `design/baseline/states/`:
-- every one of the 324 runbook steps is in at least one flow;
+Coverage was checked by script on 2026-09-26 against the runbook, `coverage.md` and `design/baseline/states/`. The
+checks cover flows 01–18:
+- every one of the 324 runbook steps is in at least one flow (325 on 2026-09-27, with T300's Step 6.14a; still all
+  placed);
 - all 80 page templates are placed;
 - all 578 state captures are placed;
 - every role in `coverage.md` § Journeys by role is served (§ 1).
+
+Re-run on 2026-09-27 over all 20 flows: every baseline path the brief and the flows name exists, `mail/` and `pdf/`
+included (`check_baseline_paths.py` exits 1 otherwise; the three captures § 10 lists as never taken are reported
+apart); 416 quoted steps match the runbook; every flow's ask passes.
 
 Every group-3 task (the presentation debt) is a requirement in § 6 or a screen in § 7. The five "Coming soon" items are
 B7.
@@ -489,21 +666,34 @@ B7.
 management):
 1. **Colours.** Map every colour to a `:root` token. A new token goes into `:root` and DESIGN.md § Design tokens in the
    same change.
-2. **Markup.** Map every element to an existing component or class. A new class is defined in `app.css`, or
-   `DefinedClassTests` fails. Keep these patterns:
-   - `.clinic-table` in `.table-container`;
-   - `.form-container`, `.form-grid` and `.form-actions`;
-   - `StatePanel` on every list;
-   - `.dashboard-grid`.
+2. **Markup.** Map every element to a component or a class. A new class is defined in `app.css`, or
+   `DefinedClassTests` fails. A new component goes in `Components/Shared/` and into § 5.1's list.
+   - Where the design keeps a pattern, keep its class names: `.clinic-table` in `.table-container`; `.form-container`,
+     `.form-grid` and `.form-actions`; `StatePanel` on every list; `.dashboard-grid`.
+   - Where it replaces a pattern (W-008), the replacement is deliberate: the DESIGN.md section and the tests that pin
+     the old names change with it (item 6).
 3. **Icons.** Add any missing Lucide SVG to `wwwroot/icons` with `id="i"`, and render it through `<Icon Name=…>`.
 4. **Strip what the handoff brings.** Remove CDN fonts and scripts, utility classes, inline `<style>` and hex literals.
    Any script becomes a `wwwroot/js` module linked through `@Assets`.
 5. **Static pages.** Build them without interactivity, and keep the framework hooks: `EditForm` and `ValidationMessage`,
    `NavLink`, the reconnect class names, and `#blazor-error-ui`.
-6. **A deliberate break of a DESIGN.md rule.** Amend DESIGN.md and the tests that pin it (§ 4, § 5.4) in the same task,
-   citing the operator's decision.
+6. **Amend `DESIGN.md` and its tests, in the same task (W-008).**
+   - Rewrite every DESIGN.md section the flow redesigned, so that the contract describes what was built. For the
+     sections each flow is likely to touch, see § 4.5 and § 5.4.
+   - Change the tests that pin those sections in the same commit. Never delete a test to make room: replace what it
+     pinned with what the new design guarantees.
+   - Add the flow to the banner's "Redesigned so far" list at the top of DESIGN.md, with its date and commit.
+   - Keep § 4.4's invariants.
 7. **Wording.** If the redesign changes on-screen wording, update the runbook's `Expect:` lines in the same task. The
-   steps quote the screen.
+   steps quote the screen, and many steps outside the flow quote the frame (§ 4.5). Search the whole runbook, not just
+   the flow's own steps.
+8. **Emails and PDFs (flows 19 and 20).** Build them in the email templates and the QuestPDF components, not in
+   `app.css`. They share the tokens' values, not the stylesheet. Keep each email's plain-text twin. Keep the portfolio's
+   integrity footer (`Reporting/IntegrityFooterComponent.cs`) and what `/portfolio/verify` checks against it.
+   - The emails are checked by `tests/Wombat.Application.Tests`, for example
+     `Features/MultiSourceFeedback/MsfInvitationEmailTests`.
+   - The PDFs are checked by `tests/Wombat.Infrastructure.Tests/Reporting/`.
+   - Flows 19 and 20 name the rest.
 
 **A flow is done when all of these hold:**
 - **The tests pass.** `dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj` is green (never with `--no-build`:
@@ -515,9 +705,16 @@ management):
   - publish with `tools/scenario-replay.ps1 publish`;
   - start the app with `tools/scenario-replay.ps1 start wombat_scenario_<flow>`;
   - play the acts up to and through the flow's steps (`README.md` § How to play). Every Expect must hold.
+  - When a flow's steps span the acts, as flow 01's do (Act 2 to the appendix), that means the whole runbook in order. A
+    copy of a `recovery/scenario-post-act*.dump` is not a fresh database. It is for re-capturing a state that
+    `states.md` marks "Scratch (post-actN)", never for the acceptance replay (pilot step G).
 - **The baseline is re-captured.** The flow's step and state screenshots are taken again into `design/baseline/`
   (`states.md` § How to capture) and compared with the chosen artboards.
 - **The browser check passes** for each role in the flow, at 1280 and at 390.
+- **`DESIGN.md` says what was built,** and its banner lists the flow (item 6).
+
+For flows 19 and 20, "the steps replay" means the steps that send or print the output. Their captures are retaken into
+`design/baseline/mail/` and `pdf/` (T336).
 
 ## 10. Status of the baseline
 
@@ -526,6 +723,14 @@ management):
   - 672 step captures: act-1 53, act-2 134, act-3 131, act-4 56, act-5 58, act-6 85 and act-A 155, named
     `<step>-<n>-<slug>.png`;
   - 578 state captures, `states/<page>--<state>.png`.
+- **The emails and PDFs** (T336, 2026-09-27; flows 19 and 20 say where each came from):
+  - `mail/`: all 15 templates and 3 variants, each as `<Template>.png` (the HTML body at 600 px), `.html` and `.txt`.
+    Six templates come from the replay's SMTP sink (seven captures, with the resent MSF link). The other nine were
+    rendered with the story's data: the six that nothing sends, and three whose sender the story never triggers. Every
+    one-time token is a same-length placeholder.
+  - `pdf/`: 6 PDFs and their 22 pages at 110 dpi, from a copy of `scenario-post-actA`. They are Dr Molefe's portfolio
+    (her own export and the staff export, byte-identical), three STAR certificates (Active, Superseded and Revoked),
+    and Dr Dlamini's data-export summary.
 - **How it matches `states.md`.** `states.md` names 578 captures:
   - Two named captures were not taken: `login--sso-<code>` (no provider is configured) and `my-progress--december` (a
     December replay only).
@@ -541,7 +746,7 @@ from these images: the fix changes what the page shows. Each flow file repeats i
 | Task | Change | Screenshots to re-capture |
 |---|---|---|
 | T297 (in progress) | Five dashboard cards read literal state keys: the Assessor, Trainee, Coordinator, SpecialityAdmin and SubSpecialityAdmin homes change | Every capture of those five homes. By role (the planner's list, extended by persona; the extension is inferred): act-2 `2.8-2`, `2.9-3`, `2.10-4`, `2.10-6`, `2.10-7`, `2.31-2`, `2.32-1`, `2.34-1`, `2.36-1`, `2.36-2`, `2.38-1`, `2.38-2`, `2.39-1`, `2.40-1`, `2.40-3`, `2.40-5`, `2.40-7`; act-3 `3.12-1`, `3.16-1`, `3.24-1`, `3.30-1`, `3.33-2`, `3.50-1`, `3.51-1`, `3.53-1`, `3.53-2`, `3.54-1`; act-4 `4.3-1`; act-5 `5.28-1` (ended trainee, inferred); act-A `A.4.6-1` (ended trainee, inferred), `A.4.7-1`, `A.5.3-1`, `A.5.10-1`, `A.6.8-2`, `A.7.3-1`, `A.7.5-1`, `A.7.7-1`, `A.7.8-1`; states `home--assessor-empty`, `--assessor-pending`, `--assessor-decisions`, `--assessor-switched`, `home--coordinator-empty`, `--coordinator-stalled`, `--coordinator-expiring`, `home--speciality-admin`, `--speciality-admin-figures`, `home--sub-speciality-admin`, `home--trainee`, `--trainee-first`, `--trainee-returned`, `--trainee-ended` (inferred), `home--narrow-assessor`, `--narrow-coordinator`, `--narrow-speciality-admin`, `--narrow-sub-speciality-admin`, `--narrow-trainee`. **Re-captured on 2026-09-26** after T297 landed (7bf8ea7), from a fresh replay of Act 3 and a post-actA copy: act-3 `3.12-1`, `3.16-1`, `3.24-1`, `3.30-1`, `3.33-2`, `3.50-1`, `3.51-1`, `3.53-1`, `3.54-1`; act-A `A.6.8-2`. Not re-captured: act-3 `3.53-2`, because the Pending reviews card no longer links to the inbox it showed, so no step reaches it; do not attach it. **Every other capture in this row was re-captured on 2026-09-26 too**, each from the end-of-act snapshot of the act it belongs to, so it shows the end of that act, not the step's exact mid-act moment: act-2 (all 17) from `scenario-post-act2`, so Dr Mokoena's and Dr Sithole's Act 2 Homes already count the 5 admitted registrars; act-4 `4.3-1` from post-act4; act-5 `5.28-1` and `home--trainee-ended` from post-act5; the eight other act-A captures, the five `home--narrow-*` and `home--coordinator-expiring` (with states.md's scratch invitation) from post-actA. The other states come from the act their states.md row names: `--assessor-empty`, `--assessor-switched`, `--coordinator-empty`, `--speciality-admin` and `--trainee-first` from post-act2; `--assessor-decisions`, `--speciality-admin-figures`, `--sub-speciality-admin` and `--trainee` from post-act3; `--assessor-pending`, `--coordinator-stalled` and `--trainee-returned` from post-act3 with two SQL stand-ins for the mid-act moment (Dr Mahlangu's Mini-CEX, activity 21, set back to requested and aged 8 days; Dr Ndlovu's reflection, activity 4, set back to Draft). Nothing in this row is held now; `3.53-2` is retired. |
-| T300 | Builder: read-only mode, narrowed Scope, View or Edit per row; Activity Types in the CollegeAdmin's nav | act-1 `1.24-1`, `1.25-1`…`1.25-5`, `1.26-1`, `1.26-2`, `1.31-1`, `1.31-2`; act-A `A.7.9-6`; states `activity-types-list--*` (6), `activity-type-edit--college-instrument`, `--new`, `--loading`, `--not-found`, `--metadata`; Dr Kruger's dashboard (`home--college-admin`, `home--narrow-college-admin`, act-6 `6.10-1`, act-A `A.7.10-1`). In every other 1280 px capture of Dr Kruger the sidebar is pre-fix: brief from the page, not the nav (F16). The 390 px `A.7.10-2` to `A.7.10-5` fold the nav, so T300 does not change them (observed on `A.7.10-5`). **Re-captured on 2026-09-26** after T300 landed (1e154ab, D52), all 26. From a copy of `scenario-post-act1`, as Prof Mbatha: act-1 `1.24-1`, `1.25-1` to `1.25-5`, `1.26-1`, `1.26-2`, `1.31-1` and `1.31-2`, and the eleven states; as Dr Kruger, `home--college-admin`. From a copy of `scenario-post-act6`: act-6 `6.10-1`. From a post-actA copy: act-A `A.7.9-6`, `A.7.10-1` and `home--narrow-college-admin`. What changed (observed): the College rows offer View; Mini-CEX (Paediatrics) opens read-only, headed by its name, under the standing notice "Set by the College that owns Paediatrics. You can read this activity type here, but not change it.", with View on each section and field, the metadata as text, and the workflow and credit as code blocks; a new type's Scope offers Institution with KGK only; the loading and not-found states read "Activity type" with Back to list only; the list's loading state offers no New activity type; Dr Kruger's sidebar ends with Activity Types. Caveats: on the end-of-Act-1 copy KGK Teaching Session Log already exists, so the list captures show 23 rows (Step 1.31's moment), and Step 1.26 was replayed with a second type, "KGK Teaching Session Log (T300 re-check)", whose name is in `1.26-2`, `--metadata` and the `--draft` row. At 390 px Dr Kruger's nav is folded, so `A.7.10-1` and `home--narrow-college-admin` look as before. Six new captures, not counted above, record the new Step 6.14a as Dr Kruger: act-6 `6.14a-1` to `6.14a-6` (his list with Edit on the College's twelve; `msf_cpsa` open for editing, which T334 will make read-only; Scope with Speciality and Sub-speciality; the saved draft; the list with it). Still visible, still open: no "Draft saved." after a first save (T291 item 3), and the raw seed key in the read-only field view (T271, `1.25-5`). Nothing in this row is held now, except the sidebar in Dr Kruger's other 1280 px captures. |
+| T300 | Builder: read-only mode, narrowed Scope, View or Edit per row; Activity Types in the CollegeAdmin's nav | act-1 `1.24-1`, `1.25-1`…`1.25-5`, `1.26-1`, `1.26-2`, `1.31-1`, `1.31-2`; act-A `A.7.9-6`; states `activity-types-list--*` (6), `activity-type-edit--college-instrument`, `--new`, `--loading`, `--not-found`, `--metadata`; Dr Kruger's dashboard (`home--college-admin`, `home--narrow-college-admin`, act-6 `6.10-1`, act-A `A.7.10-1`). In every other 1280 px capture of Dr Kruger the sidebar is pre-fix: brief from the page, not the nav (F16). The 390 px `A.7.10-2` to `A.7.10-5` fold the nav, so T300 does not change them (observed on `A.7.10-5`). **Re-captured on 2026-09-26** after T300 landed (1e154ab, D52), all 26. From a copy of `scenario-post-act1`, as Prof Mbatha: act-1 `1.24-1`, `1.25-1` to `1.25-5`, `1.26-1`, `1.26-2`, `1.31-1` and `1.31-2`, and the eleven states; as Dr Kruger, `home--college-admin`. From a copy of `scenario-post-act6`: act-6 `6.10-1`. From a post-actA copy: act-A `A.7.9-6`, `A.7.10-1` and `home--narrow-college-admin`. What changed (observed): the College rows offer View; Mini-CEX (Paediatrics) opens read-only, headed by its name, under the standing notice "Set by the College that owns Paediatrics. You can read this activity type here, but not change it.", with View on each section and field, the metadata as text, and the workflow and credit as code blocks; a new type's Scope offers Institution with KGK only; the loading and not-found states read "Activity type" with Back to list only; the list's loading state offers no New activity type; Dr Kruger's sidebar ends with Activity Types. Caveats: on the end-of-Act-1 copy KGK Teaching Session Log already exists, so the list captures show 23 rows (Step 1.31's moment), and Step 1.26 was replayed with a second type, "KGK Teaching Session Log (T300 re-check)", whose name is in `1.26-2`, `activity-type-edit--metadata` and the `activity-types-list--draft` row. At 390 px Dr Kruger's nav is folded, so `A.7.10-1` and `home--narrow-college-admin` look as before. Six new captures, not counted above, record the new Step 6.14a as Dr Kruger: act-6 `6.14a-1` to `6.14a-6` (his list with Edit on the College's twelve; `msf_cpsa` open for editing, which T334 will make read-only; Scope with Speciality and Sub-speciality; the saved draft; the list with it). Still visible, still open: no "Draft saved." after a first save (T291 item 3), and the raw seed key in the read-only field view (T271, `1.25-5`). Nothing in this row is held now, except the sidebar in Dr Kruger's other 1280 px captures. |
 | T302 (in progress) | Institution page: Status as text for an InstitutionalAdmin, with no box and no Deactivate; Deactivate and Reactivate as commands for an Administrator, who keeps the Active box (Save sends a changed box as the state's own command, and unticking asks first) and a Deactivate behind a confirmation. Back and Cancel lead home for anyone but an Administrator (T291 item 7) | act-1 `1.23-1`; act-A `A.6.3-1`, `A.6.3-2`, `A.6.3-3` (these states cease to exist), `A.6.3-5`; states `institution-edit--own`, `--deactivate-refused`, `--administrator`, `--deactivated`, `--saved`, `--narrow`. **Re-captured on 2026-09-26** after T302 landed (41be531): `1.23-1`, `institution-edit--own` and `--administrator` from a post-act1 copy; `A.6.3-1`, `--saved`, `--narrow` (Step A.6.1 replayed first) and `--deactivated` (the Demo Institution) from a post-act6 copy. The states that ceased keep their file names and now hold the new page: `A.6.3-2-deactivate-refused` is the form after her save (Status "Active" as text, "Set by a global administrator.", Cancel and Save only; an element capture), `A.6.3-3-untick-active-saved` is the same page with "Back to home" focused, `A.6.3-5-devadmin-reactivates-kgk` is her Home, where "Back to home" and Cancel lead, and `institution-edit--deactivate-refused` is her full page after the save. Also re-captured, because the fix changed them: act-1 `1.6-2` and act-A `A.6.1-2` (held by flow 18), and `1.23-4` (the create form she can still open, T291 item 8, now with "Back to home"). No step reaches act-1 `1.23-2-back-link-access-denied` or act-A `A.6.3-4-back-to-institutions-denied` any more, because her links lead home: do not attach them as her page. `A.6.3-4` remains the evidence of T321's nested layout, which is still open (not re-checked here). |
 | T303 | User page: Trainee "System-managed", never under Add role | act-2 `2.28-3`; act-5 `5.17-3`; act-A `A.7.9-3`; states `user-detail--pending-trainee`, `--no-roles`, `--reset-refused`, `--reset`, `--narrow`; probably `--other` and `--role-added` (inferred). **Re-captured on 2026-09-26** after T303 landed (4824d62). Every user page an administrator manages changed: Add role never offers Trainee and carries a help line under its select ("Trainee is not offered: …"), and a held Trainee reads "System-managed" with no Remove (observed). `2.28-3`, `--pending-trainee`, `--other` and `--role-added` (with `2.13-1` and `2.13-2`) come from a fresh replay of Act 2 Steps 2.1 to 2.28 from `scenario-post-act1`, so at the steps' own moments; `5.17-3` and `--no-roles` from `scenario-post-act5`; `A.7.9-3`, `--narrow`, `--reset-refused` and `--reset` (with `A.4.5-1` and `A.4.5-2`) from a post-actA copy. Also re-captured there, because the help line changed them though the row did not name them: act-A `A.6.4-1`, `A.6.4-2` and `A.6.7-1`, and states `user-detail--locked`, `--reactivated` and `--pending-invitations` (Dr Patel locked and reactivated again, and states.md's scratch invitation to Dr Botha). Not re-taken: `--own`, `--administrator-own` and `--unavailable`, which have no Add role, and `--loading`, a skeleton. Nothing in this row is held now. The captures still show each role's name running into "System-managed" or its Remove with no gap ("PendingTraineeSystem-managed"; F-2.28b, which widens T323's Remove item). |
 | T307 | Appeal card: Outcome opens empty; replacement conditions; Upheld removed (D51) | act-4 `4.45-1`, `4.46-1`, `4.47-1`; states `review-detail--appeal-form`, `--appeal-member`, `--remit-refused`, `--remitted`, `--appeal-dismissed`, `--appeal-upheld` (ceased to exist). **Re-captured on 2026-09-26** after T307 landed (d03732d, D51), from a fresh replay of Act 4 Steps 4.1 to 4.48 on a copy of `scenario-post-act3`, so at the steps' own moments: `4.45-1`, `4.46-1`, `4.47-1`, `--appeal-form`, `--appeal-member`, `--remit-refused` and `--remitted`; also act-4 `4.44-1`, which flow 09 held with `--appeal-member`. `--appeal-dismissed` comes from a copy of `scenario-post-act4`, as `states.md` says (Dr Dlamini appeals; Dr Zulu resolves it Dismissed). What changed (observed): the Outcome opens on "Select an outcome…", with "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision" and help under it; Remitted adds an optional "Replacement conditions" box; the replacement's card reads "Conditions: …"; the Appeals list says the outcome in words ("(Remitted)", "(Dismissed)"). `review-detail--appeal-upheld` is not re-taken: there is no Upheld. It stays on disk as the old form's record; do not brief from it. One new capture, not counted above: act-4 `4.45-2-vanrensburg-choose-an-outcome`, the refusal "Choose an outcome." under the empty select. Still visible: at 1280 px the chosen outcome is clipped in the half-width select once Remitted opens the second column (`4.45-1`, F-4.45c), and the quorum refusal shows only at the head of the page, out of view of the card (`4.46-1` shows the form after it, F-4.46a). Nothing in this row is held now. |
@@ -554,3 +759,10 @@ from these images: the fix changes what the page shows. Each flow file repeats i
 - T319: "No longer in force", and decision notes;
 - T320: data-rights help text;
 - T329: loading and error states.
+
+## 11. Pilot findings
+
+Not yet written. The pilot on flow 01 (T335) fills this section before flow 02 is briefed, dated, from
+`design/pilot/README.md` step H. It records what the pilot found about the design system's import, the structural
+round, the handoff, the Razor rebuild, the tests and the replay. Each finding names what it changed in this brief or in
+the flow files.

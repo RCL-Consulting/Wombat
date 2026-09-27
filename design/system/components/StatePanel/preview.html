@@ -1,0 +1,34 @@
+<!-- @dsCard group="Feedback" height=560 subtitle="Every list and dashboard renders loading, error and empty explicitly" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>StatePanel</title>
+<style>
+  body { padding: var(--space-lg); }
+  .pv-cap { margin: var(--space-lg) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Loading: four 3rem skeletons (StatePanel's default), never "Loading..." text</p>
+<div aria-hidden="true">
+  <div class="skeleton" style="width:100%;height:3rem"></div>
+  <div class="skeleton" style="width:100%;height:3rem"></div>
+  <div class="skeleton" style="width:100%;height:3rem"></div>
+  <div class="skeleton" style="width:100%;height:3rem"></div>
+</div>
+
+<p class="pv-cap">Error: a danger Alert carrying the page's load error, in the refusal's own words (the text fails AA at 3.57:1, T322)</p>
+<div class="alert alert-danger" role="alert">The decision panel could not be found.</div>
+
+<p class="pv-cap">Empty: a dashed card with a title, a line of copy, and an optional action row</p>
+<div class="detail-card detail-card--empty">
+  <div class="state-panel-title">No activities yet</div>
+  <div class="state-panel-copy">Create the first activity from the activity catalogue.</div>
+  <div class="form-actions">
+    <a class="btn btn-primary" href="#">New activity</a>
+  </div>
+</div>
+</body>
+</html>

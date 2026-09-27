@@ -1,0 +1,44 @@
+<!-- @dsCard group="Navigation" height=400 width=960 subtitle="The page's one h1, its subtitle and its action slot" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PageHeader</title>
+<style>
+  body { padding: var(--space-lg); }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">A list page: the primary action (and an outline companion) in the slot</p>
+<div class="header-container">
+  <div>
+    <h1>MSF campaigns</h1>
+    <p class="page-subtitle">Create and review multi-source feedback campaigns.</p>
+  </div>
+  <div class="actions-cell">
+    <a id="msf-coverage-link" class="btn btn-outline" href="#">MSF coverage</a>
+    <a class="btn btn-primary" href="#">New campaign</a>
+  </div>
+</div>
+
+<p class="pv-cap">A form page: a small outline way back</p>
+<div class="header-container">
+  <div>
+    <h1>Edit EPA</h1>
+    <p class="page-subtitle">Define the EPA code, scope, and descriptive guidance.</p>
+  </div>
+  <div class="actions-cell">
+    <a class="btn btn-outline btn-sm" href="#">Back to EPAs</a>
+  </div>
+</div>
+
+<p class="pv-cap">No actions</p>
+<div class="header-container">
+  <div>
+    <h1>Decisions due</h1>
+    <p class="page-subtitle">Which EPAs each trainee's committee is to decide in a period, and where each decision stands.</p>
+  </div>
+</div>
+</body>
+</html>

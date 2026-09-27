@@ -38,8 +38,12 @@ every page uses:
 
 ## Verification
 
-- [ ] Set-up complete: the design system exists in Claude Design; `design/pilot/README.md` names every step, upload and
-  check; flow 01 asks for a restructure — read.
+- [x] Set-up complete: the design system exists in Claude Design; `design/pilot/README.md` names every step, upload and
+  check; flow 01 asks for a restructure — 2026-09-27: Wombat's design system built from the code (W-009,
+  https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18, source in `design/system/`); the pilot README's steps A–H each have
+  a done-signal, and a critic ran every command it names; flow 01 asks first for 2–3 structural wireframes;
+  `design/tools/stage_upload.ps1 -Flow 01` stages 78 files (3.4 MB) from tracked files and the listed screenshots,
+  holding back the one capture that shows a registration link.
 - [ ] A chosen design for the shell, with its states — the Claude Design artifact's link recorded here.
 - [ ] Implemented; suites green; `DESIGN.md` amended with a dated note — commit.
 - [ ] Flow 01's runbook steps replay green on a fresh database; baseline re-captured — the replay's Actual lines.

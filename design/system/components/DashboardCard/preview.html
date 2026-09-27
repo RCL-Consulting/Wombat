@@ -1,0 +1,106 @@
+<!-- @dsCard group="Containers" height=900 width=1040 subtitle="Role dashboards: DashboardCard in the shared dashboard grid, with metrics and progress rows" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DashboardCard</title>
+<style>
+  body { padding: var(--space-lg); }
+</style>
+</head>
+<body>
+<div class="dashboard-grid">
+  <a href="#" class="detail-card detail-card--emphasis detail-card--interactive dashboard-span-2" style="text-decoration:none;color:inherit;">
+    <h3><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg> Curriculum targets</h3>
+    <div class="dashboard-card-body">
+      <p class="progress-row-meta">Semester 2, 2026 · July to December</p>
+      <div style="display:flex;gap:var(--space-xl);margin:var(--space-sm) 0">
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">2 / 5</span>
+          <span class="dashboard-metric-label">semester targets met</span>
+        </div>
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">1 / 3</span>
+          <span class="dashboard-metric-label">yearly targets met (2026)</span>
+        </div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-row-head">
+          <span>PAED-003 — Providing intensive care to children</span>
+          <span class="muted">1 of 3 this semester</span>
+        </div>
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1" aria-label="PAED-003: 1 of 3 this semester">
+          <div class="progress-bar-fill" style="width:33%"></div>
+        </div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-row-head">
+          <span>PAED-001 — Providing paediatric emergency care to children</span>
+          <span class="muted">2 of 2 in 2026</span>
+        </div>
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="2" aria-valuenow="2" aria-label="PAED-001: 2 of 2 in 2026">
+          <div class="progress-bar-fill is-complete" style="width:100%"></div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <a href="#" class="detail-card detail-card--interactive" style="text-decoration:none;color:inherit;">
+    <h3><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg> Activity inbox</h3>
+    <div class="dashboard-card-body">
+      <p class="muted">No pending items.</p>
+    </div>
+  </a>
+
+  <div class="detail-card">
+    <h3><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" /> <circle cx="12" cy="12" r="4" /></svg> System health</h3>
+    <div class="dashboard-card-body">
+      <ul class="list-unstyled">
+        <li style="padding:var(--space-xs) 0"><span class="status-dot ok"></span>Database connection</li>
+        <li style="padding:var(--space-xs) 0"><span class="status-dot warn"></span>Email queue</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="detail-card detail-card--emphasis">
+    <h3><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Users across institutions</h3>
+    <div class="dashboard-card-body">
+      <div class="dashboard-metric">
+        <span class="dashboard-metric-value">42</span>
+        <span class="dashboard-metric-label">registered users</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-card detail-card--emphasis">
+    <h3><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg> Pending requests</h3>
+    <div class="dashboard-card-body">
+      <div class="dashboard-metric">
+        <span class="dashboard-metric-value">3</span>
+        <span class="dashboard-metric-label">assessments awaiting review</span>
+      </div>
+      <div class="dashboard-card-footer">
+        <a href="#" class="btn btn-sm btn-primary">Review inbox &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-card detail-card--warning">
+    <h3><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3zM12 9v4M12 17h.01" /></svg> Awaiting your review</h3>
+    <div class="dashboard-card-body">
+      <p class="muted">Warning="true" when any item is overdue: the stripe repeats what the list says.</p>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <h3><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg> Actions</h3>
+    <div class="dashboard-card-body">
+      <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">
+        <a href="#" class="btn btn-primary">Log an activity</a>
+        <a href="#" class="btn btn-outline">Request an assessment</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

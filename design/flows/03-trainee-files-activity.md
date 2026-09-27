@@ -1,8 +1,8 @@
 # F03 A registrar asks for an assessment, or logs one, and follows it to credit
 
 **Who and why:** a registrar files observed work (25 observations a semester, Annexure B's total:
-`act-1-setup.md:399`) and follows each piece to Completed and credited. It is the product's most frequent write, and
-progress, reviews and STARs all rest on it. This flow designs the activity renderer and the activity page once. F04
+`act-1-setup.md:410`, Step 1.18) and follows each piece to Completed and credited. It is the product's most frequent
+write, and progress, reviews and STARs all rest on it. This flow designs the activity renderer and the activity page once. F04
 (the assessor) and F07 (the chair reading evidence) extend that design.
 
 | | |

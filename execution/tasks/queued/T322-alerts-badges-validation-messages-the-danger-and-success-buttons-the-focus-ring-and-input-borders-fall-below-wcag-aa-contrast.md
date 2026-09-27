@@ -65,3 +65,7 @@ Every colour pair in the design system meets WCAG 2.1 AA: text 4.5:1, and contro
 ## Related
 
 T086 (the muted-text half of the same audit), T166 (`.badge-standing-*`), T160 (`.field-warning`), T236 (invalid-field stripe on `--danger-color`), runbook step A.7.14, DESIGN.md § tokens and § Accessibility.
+
+## Notes
+
+- **Wombat design system build, 2026-09-27.** Two more pairs below the 3:1 a meaningful mark needs: the ok and warn status dots against white (2.87:1 and 2.57:1), and a complete progress bar's green fill on its track (2.73:1). All the failing pairs are kept as they are and flagged in the design system's token notes and brand README.

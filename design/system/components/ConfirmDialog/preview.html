@@ -1,0 +1,28 @@
+<!-- @dsCard group="Actions" height=460 width=960 subtitle="A native modal dialog: what the action does and cannot undo, then Cancel and the action" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ConfirmDialog</title>
+<style>
+  /* The app opens the dialog with showModal() (wwwroot/js/dialog.js), so its scrim is .dialog-scrim::backdrop,
+     rgba(0, 0, 0, 0.35). A static preview cannot open a modal, so the stage below paints that backdrop itself. */
+  .pv-stage { position: relative; min-height: 460px; background: rgba(0, 0, 0, 0.35); padding-top: var(--space-2xl); box-sizing: border-box; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card">
+    <div class="form-container">
+      <h2>Deactivate this EPA?</h2>
+      <p>It can no longer be chosen for a new activity, and it stops being a target on every progress page and dashboard, for every institution that uses it. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page.</p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline">Cancel</button>
+        <button type="button" class="btn btn-danger">Deactivate</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+</body>
+</html>

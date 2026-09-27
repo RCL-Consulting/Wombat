@@ -425,3 +425,5 @@ execution/.session
 # The scenario replay's published app and logs (tools/scenario-replay.ps1) and its screenshot baseline (T295)
 .scenario-app/
 /design/baseline/
+# What design/tools/stage_upload.ps1 stages for one Claude Design thread (design/BRIEF.md § 3)
+/design/upload/

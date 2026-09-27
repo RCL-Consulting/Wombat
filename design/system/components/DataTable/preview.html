@@ -1,0 +1,62 @@
+<!-- @dsCard group="Data" height=540 width=960 subtitle="A list page: the search container, then the table with its row actions" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DataTable</title>
+<style>
+  body { padding: var(--space-lg); }
+</style>
+</head>
+<body>
+<div class="search-container shadow mb-3">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="activity-filter">Search</label>
+      <input id="activity-filter" class="search-input" value="PAED">
+    </div>
+  </div>
+</div>
+
+<div class="table-container shadow">
+  <table class="clinic-table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>EPA</th>
+        <th>Encounter date</th>
+        <th>State</th>
+        <th>Credited</th>
+        <th><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Mini-CEX</td>
+        <td>PAED-003 — Providing intensive care to children</td>
+        <td>2026-09-01</td>
+        <td>Awaiting supervisor</td>
+        <td>—</td>
+        <td><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View Mini-CEX, PAED-003, encounter date 2026-09-01">View</a></div></td>
+      </tr>
+      <tr>
+        <td>CBD</td>
+        <td>PAED-001 — Providing paediatric emergency care to children</td>
+        <td>2026-08-22</td>
+        <td>Completed</td>
+        <td>1 item</td>
+        <td><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View CBD, PAED-001, encounter date 2026-08-22">View</a></div></td>
+      </tr>
+      <tr>
+        <td>Mini-CEX</td>
+        <td>PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children <span class="muted">(no longer in use)</span></td>
+        <td>2026-08-14</td>
+        <td>Completed</td>
+        <td>None</td>
+        <td><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View Mini-CEX, PAED-008, encounter date 2026-08-14">View</a></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

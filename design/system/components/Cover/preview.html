@@ -1,0 +1,83 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wombat</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--background-color); color: var(--primary-color); overflow: hidden; }
+  .cover { position: relative; height: 288px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; overflow: hidden; }
+  .art svg { display: block; width: 480px; height: 288px; }
+  .s0 { stop-color: var(--sidebar-gradient-start); }
+  .s1 { stop-color: var(--sidebar-gradient-end); }
+  .slab { fill: url(#sidebar); }
+  .act { fill: var(--secondary-color); }
+  .ink { fill: var(--primary-color); }
+  .acc { fill: var(--accent-color); }
+  .cut { fill: var(--background-color); }
+  .card { rx: var(--radius-12); }
+  .blk { rx: var(--radius-8); }
+  .btn6 { rx: var(--radius-6); }
+  /* a 24-tall pill: rx is half its height, which is radius-12's value */
+  .pill { rx: var(--radius-12); }
+  .words { position: absolute; left: var(--space-lg); right: var(--space-lg); bottom: var(--space-lg); max-width: 440px; }
+  .name { margin: 0; font-family: var(--font-display); font-optical-sizing: auto; font-variation-settings: "SOFT" 0, "WONK" 1;
+          font-size: 120px; line-height: .9; font-weight: 500; letter-spacing: -0.005em; color: var(--primary-color); }
+  .tag { margin: var(--space-sm) 0 0 4px; font-family: var(--font-body); font-size: 14px; line-height: 20px; color: var(--muted-text); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      sidebar-gradient-start → sidebar-gradient-end slab 144×320 (the sidebar, square, bled top and bottom) · secondary-color 224×160 card and 112×32 button · primary-color 96×240 bled off the right edge · accent-color 96×24 pill — about 37% of 960×288
+  arrangement the shell's own composition: one tall sidebar slab, then a card, a badge-pill and a button beside it, with an ink block bleeding right; bottoms on one line space-md above the edge, space-md gutters
+  pattern     plus marks, from the mark's cross nose (README "The mark": a white face with a navy cross): space-md × space-xs bars at a space-xl pitch, cut into the action-blue card in background-color, thinning toward its top right
+  scales      sides in space-md multiples; gutters space-md; pitch space-xl; arms space-md long, space-xs thick; corners radius-12 (card), radius-8 (ink block), radius-6 (button), pill rx radius-12 (half of 24); the slab square like the sidebar
+-->
+<defs>
+  <linearGradient id="sidebar" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" class="s0"/>
+    <stop offset="0.7" class="s1"/>
+  </linearGradient>
+</defs>
+<rect class="slab" x="0" y="-16" width="144" height="320"/>
+<rect class="act card" x="160" y="32" width="224" height="160" rx="12"/>
+<rect class="ink blk" x="400" y="32" width="96" height="240" rx="8"/>
+<rect class="acc pill" x="160" y="248" width="96" height="24" rx="12"/>
+<rect class="act btn6" x="272" y="240" width="112" height="32" rx="6"/>
+<g class="cut">
+  <rect x="184" y="62" width="16" height="4"/><rect x="190" y="56" width="4" height="16"/>
+  <rect x="216" y="62" width="16" height="4"/><rect x="222" y="56" width="4" height="16"/>
+  <rect x="248" y="62" width="16" height="4"/><rect x="254" y="56" width="4" height="16"/>
+  <rect x="280" y="62" width="16" height="4"/><rect x="286" y="56" width="4" height="16"/>
+  <rect x="184" y="94" width="16" height="4"/><rect x="190" y="88" width="4" height="16"/>
+  <rect x="216" y="94" width="16" height="4"/><rect x="222" y="88" width="4" height="16"/>
+  <rect x="248" y="94" width="16" height="4"/><rect x="254" y="88" width="4" height="16"/>
+  <rect x="280" y="94" width="16" height="4"/><rect x="286" y="88" width="4" height="16"/>
+  <rect x="312" y="94" width="16" height="4"/><rect x="318" y="88" width="4" height="16"/>
+  <rect x="184" y="126" width="16" height="4"/><rect x="190" y="120" width="4" height="16"/>
+  <rect x="216" y="126" width="16" height="4"/><rect x="222" y="120" width="4" height="16"/>
+  <rect x="248" y="126" width="16" height="4"/><rect x="254" y="120" width="4" height="16"/>
+  <rect x="280" y="126" width="16" height="4"/><rect x="286" y="120" width="4" height="16"/>
+  <rect x="312" y="126" width="16" height="4"/><rect x="318" y="120" width="4" height="16"/>
+  <rect x="344" y="126" width="16" height="4"/><rect x="350" y="120" width="4" height="16"/>
+  <rect x="184" y="158" width="16" height="4"/><rect x="190" y="152" width="4" height="16"/>
+  <rect x="216" y="158" width="16" height="4"/><rect x="222" y="152" width="4" height="16"/>
+  <rect x="248" y="158" width="16" height="4"/><rect x="254" y="152" width="4" height="16"/>
+  <rect x="280" y="158" width="16" height="4"/><rect x="286" y="152" width="4" height="16"/>
+  <rect x="312" y="158" width="16" height="4"/><rect x="318" y="152" width="4" height="16"/>
+  <rect x="344" y="158" width="16" height="4"/><rect x="350" y="152" width="4" height="16"/>
+</g>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Wombat</h1>
+<p class="tag">Work-based assessment for medical specialists, built on EPAs.</p>
+</div>
+</div>
+</body>
+</html>

@@ -1,5 +1,21 @@
 # Design system
 
+> **2026-09-27: the structural lock is lifted for the Claude Design restructure (W-008).** The operator chose a
+> restructure with UX in scope. The shell, the navigation, the role dashboards, the page shapes and the task flows may
+> change, not only the colours (`execution/DECISIONS.md` W-008; `design/BRIEF.md` § 4). So the lock this file states
+> no longer binds the redesign. That lock is three passages:
+> - the opening's "ported structurally from ClinicAssist … Only the colours differ";
+> - § Non-negotiables' "Ask before widening the contract … silently deleting or renaming existing ones is not";
+> - § Historical context's "Change the colours in `:root`, keep everything else".
+>
+> - **Everything below still binds whatever has not been redesigned.** A page that no redesigned flow has reached keeps
+>   this contract, its class names and the tests that pin them.
+> - **Each redesigned flow amends this file deliberately,** in the same task as its Razor, its `app.css` and the tests
+>   that pin what it changes (`design/BRIEF.md` § 9). It then adds itself to the list below, with its date and commit.
+> - **The invariants in `design/BRIEF.md` § 4.4 bind every redesign.** For example, every nav link opens a page that
+>   admits the role, and there is one `<h1>` per page.
+> - **Redesigned so far:** none. The pilot, flow 01 (the shell), is first (T335).
+
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
 The design system is **ported structurally from ClinicAssist** (same token names, same component class names, same spacing scale, same layout grid) with a **new Wombat palette**. That means `t010` ships the card system, the button system, the form system, the pager, the validation summary, etc. with the same class names ClinicAssist uses, so muscle memory transfers and the Razor pages look identical in shape. Only the colours differ.

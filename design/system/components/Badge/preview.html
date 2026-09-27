@@ -1,0 +1,38 @@
+<!-- @dsCard group="Data" height=280 subtitle="Five state tints from BadgeFor, and the three standing badges" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Badge</title>
+<style>
+  body { padding: var(--space-lg); }
+  .pv { display: grid; gap: var(--space-lg); }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-grid { display: grid; grid-template-columns: max-content max-content 1fr; gap: var(--space-sm) var(--space-md); align-items: center; font-size: 0.85rem; }
+  .pv-grid .muted { margin: 0; }
+</style>
+</head>
+<body>
+<div class="pv">
+  <section>
+    <p class="pv-cap">BadgeFor.State: the tint repeats the words, it never replaces them</p>
+    <div class="pv-grid">
+      <span class="badge badge-draft">Draft</span><code class="font-mono">badge-draft</code><p class="muted">grey: not started, nothing wrong yet, or no longer in force (4.83:1)</p>
+      <span class="badge badge-submitted">Awaiting supervisor</span><code class="font-mono">badge-submitted</code><p class="muted">blue: handed on, waiting on someone (4.55:1)</p>
+      <span class="badge badge-accepted">Under review</span><code class="font-mono">badge-accepted</code><p class="muted">amber: in hand, or wanting attention again (fails AA: 2.42:1)</p>
+      <span class="badge badge-completed">Released</span><code class="font-mono">badge-completed</code><p class="muted">green: done or succeeded (fails AA: 2.55:1)</p>
+      <span class="badge badge-declined">Withdrawn</span><code class="font-mono">badge-declined</code><p class="muted">red: refused, failed, missed or withdrawn (fails AA: 3.57:1)</p>
+    </div>
+  </section>
+  <section>
+    <p class="pv-cap">BadgeFor.Standing: a level against a target, body text on the tint (every pair passes)</p>
+    <div style="display: flex; flex-wrap: wrap; gap: var(--space-md)">
+      <span class="badge badge-standing-met">At or above</span>
+      <span class="badge badge-standing-below">Below</span>
+      <span class="badge badge-standing-none">No decision</span>
+      <span class="badge badge-standing-none">Not comparable</span>
+    </div>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!-- @dsCard group="Forms" height=1180 width=900 subtitle="The form system: container, grid, fields, help, invalid states, read-only fields and the actions row" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FormField</title>
+<style>
+  body { padding: var(--space-lg); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">An EPA's form after a Save with Title empty: the summary at the top, the field marked and its message under it</p>
+<div class="form-container">
+  <form>
+    <ul class="validation-summary-errors">
+      <li class="validation-message">The Title field is required.</li>
+    </ul>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="epa-sub-speciality">Sub-speciality <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+        <select id="epa-sub-speciality" class="form-select"><option>Paediatrics (CPSA)</option></select>
+      </div>
+
+      <div class="form-group">
+        <label for="epa-code">Code <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+        <input id="epa-code" class="form-control" value="PAED-001">
+      </div>
+
+      <div class="form-group full-width">
+        <label for="epa-title">Title <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+        <input id="epa-title" class="form-control invalid" aria-invalid="true" value="">
+        <div class="validation-message">The Title field is required.</div>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="epa-description">Description</label>
+        <textarea id="epa-description" class="form-control" rows="2"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="epa-active">Status</label>
+        <div class="form-check">
+          <input id="epa-active" class="form-check-input" type="checkbox" checked aria-describedby="epa-active-help">
+          <label for="epa-active">Active</label>
+        </div>
+        <small class="page-subtitle" id="epa-active-help">An inactive EPA cannot be chosen for a new activity and is not a target on any progress page or dashboard.</small>
+      </div>
+
+      <fieldset class="form-group full-width" aria-describedby="add-tools-help">
+        <legend>Tools</legend>
+        <p id="add-tools-help" class="page-subtitle">The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.</p>
+        <div class="check-grid">
+          <div class="form-check"><input id="add-tool-mini_cex" class="form-check-input" type="checkbox" checked><label for="add-tool-mini_cex">Mini-CEX</label></div>
+          <div class="form-check"><input id="add-tool-cbd" class="form-check-input" type="checkbox" checked><label for="add-tool-cbd">CBD</label></div>
+          <div class="form-check"><input id="add-tool-dops" class="form-check-input" type="checkbox"><label for="add-tool-dops">DOPS</label></div>
+          <div class="form-check"><input id="add-tool-msf" class="form-check-input" type="checkbox"><label for="add-tool-msf">MSF</label></div>
+          <div class="form-check"><input id="add-tool-reflective" class="form-check-input" type="checkbox"><label for="add-tool-reflective">Reflective exercise</label></div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="form-actions">
+      <a class="btn btn-outline" href="#">Cancel</a>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">An activity's encounter date: refused as typed (message and stripe), or accepted but late (a warning, nothing marked)</p>
+<div class="form-container">
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="observed-a">Encounter date <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input id="observed-a" type="date" class="form-control input-validation-error" aria-invalid="true" value="2025-12-10" aria-describedby="observed-a-notice">
+      <div id="observed-a-notice" role="status">
+        <div class="validation-message">This date is before the trainee's programme started (2026-01-05), and will not be accepted.</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="observed-b">Encounter date <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input id="observed-b" type="date" class="form-control" value="2026-09-07" aria-describedby="observed-b-notice">
+      <div id="observed-b-notice" role="status">
+        <p class="field-warning">This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the encounter is recorded as late.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="pv-cap">A field the caller may read but not change is text: an institution's Status, shown to its InstitutionalAdmin</p>
+<div class="form-container">
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="institution-name">Name <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input id="institution-name" class="form-control" value="Kgosi Kgari Teaching Hospital">
+    </div>
+    <dl class="form-group">
+      <dt>Status</dt>
+      <dd id="institution-status">Active</dd>
+      <dd class="muted text-sm">Set by a global administrator.</dd>
+    </dl>
+  </div>
+</div>
+</body>
+</html>

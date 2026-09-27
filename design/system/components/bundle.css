@@ -1,0 +1,1625 @@
+/* Wombat — components/bundle.css
+   Wombat's component CSS, extracted from src/Wombat.Web/wwwroot/app.css (master@2a2a26cb) with every class name and
+   declaration unchanged, so a design maps back to the classes Razor writes. tokens.css (generated from tokens.json)
+   supplies the :root colours, the --space-* scale, --font-display and the Fraunces @font-face; app.css's own
+   @font-face and :root block are therefore left out, except the one custom property tokens.json cannot hold. The two
+   layout stylesheets (MainLayout.razor.css, NavMenu.razor.css) follow at the end, their isolation scope written as a
+   parent selector. The contrast pairs that fail WCAG AA (task T322) are kept exactly as the source has them. */
+
+/* From app.css :root: the display face's axes. WONK on, SOFT off; optical size tracks font-size via
+   font-optical-sizing: auto. */
+:root {
+  --font-display-settings: "SOFT" 0, "WONK" 1;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+}
+
+.auth-page-shell {
+  align-items: stretch;
+  background:
+    radial-gradient(circle at top left, rgb(52 152 219 / 0.12), transparent 32%),
+    linear-gradient(135deg, rgb(248 249 250) 0%, rgb(241 243 245) 100%);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.auth-page-main {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+a {
+  color: var(--link-color);
+}
+
+main {
+  min-width: 0;
+}
+
+/* ── Base ──────────────────────────────────────────── */
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+h5 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.page-subtitle {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: var(--space-xs) 0 0;
+}
+
+/* ── Header + search ──────────────────────────────── */
+.header-container {
+  align-items: flex-start;
+  border-bottom: 2px solid var(--secondary-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  justify-content: space-between;
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-md);
+}
+
+.search-container {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg);
+}
+
+.search-input {
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 1rem;
+  padding: 0.75rem;
+  width: 100%;
+}
+
+.search-grid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.search-hint {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+}
+
+/* ── Tables ────────────────────────────────────────── */
+.table-container {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow-x: auto;
+  /* Positioned, so an absolutely placed visually-hidden label inside a cell scrolls with the table rather than
+     widening the page (T166, 390px). */
+  position: relative;
+}
+
+.clinic-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.clinic-table caption {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  padding: var(--space-md);
+  text-align: left;
+}
+
+.clinic-table th {
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  padding: var(--space-md);
+  text-align: left;
+}
+
+.clinic-table td {
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-md);
+  vertical-align: top;
+}
+
+.clinic-table tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+/* A table grouped by one column: each group is a <tbody> whose first row opens with
+   <th scope="rowgroup" rowspan="n">. The label sits at the top of its group, as the cells beside it do (T167). */
+.clinic-table tbody th[scope="rowgroup"] {
+  vertical-align: top;
+}
+
+/* A table of many narrow columns (T176, nine on the curriculum items page). At the default padding the padding alone
+   was 288px of a 907px container at 1280px, so the table scrolled sideways with nothing in it too wide. A cell that
+   spans the table holds a form, and keeps the default padding. */
+.clinic-table--compact th,
+.clinic-table--compact td {
+  padding: var(--space-sm);
+}
+
+.clinic-table--compact td[colspan] {
+  padding: var(--space-md);
+}
+
+/* A column of long text on a table of many columns: a title, a list of names (T198). When the table is short of room it
+   gives way first: its lines wrap, then a long word breaks inside itself, down to the floor its header sets, and only
+   then does the table scroll sideways. So its longest word no longer sets the table's narrowest width; the floor does.
+   Without the floor, break-anywhere let the column fall to one letter a line. Its header asks for a share of the table,
+   not a length: a length would hold the column there on a wide screen while every other column grew. On the curriculum
+   items table the narrowest width fell from 883px to 794px, 113px under the container at 1280px (T176 left 33). No word
+   breaks at 1280px, but with little to spare: DESIGN.md § Table system has the measurements. */
+.clinic-table .col-wrap {
+  overflow-wrap: anywhere;
+}
+
+.clinic-table th.col-wrap {
+  min-width: 4rem;
+  width: 14%;
+}
+
+.clinic-table th.col-wrap--wide {
+  min-width: 5rem;
+  width: 20%;
+}
+
+/* A column as narrow as its content: a row's ordinal, a short code (T198). Its text stays on one line. Not for a row's
+   buttons: at 1% the column shrinks to its widest button and stacks them. */
+.clinic-table .col-fit {
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* A row's buttons (T198). The column asks for room to hold three small buttons on one line, and gets it before the
+   columns beside it grow. When the table is short of room the buttons wrap, so the table scrolls only once they are
+   stacked. Keeping them on one line at any width made the scale editor scroll sideways, with Remove out of view,
+   wherever its card is narrow: at 390px, and near 700 and 1000px. */
+.clinic-table .col-actions {
+  width: 12rem;
+}
+
+/* A grid whose every row is a set of inputs, such as a scale's levels (T198). A row's text and buttons centre on its
+   inputs, rather than sit at the top of a cell the inputs make taller. Its rows take no hover tint: every row is a form,
+   and tinting a form as the pointer crosses it is noise (see .is-editing). */
+.clinic-table--inputs td {
+  vertical-align: middle;
+}
+
+.clinic-table--inputs tbody tr:hover {
+  background-color: transparent;
+}
+
+/* Where a grid of inputs is narrow, its buttons stack and its inputs take the room (T226). The buttons' 12rem is claimed
+   before the inputs grow, so in a narrow table the inputs were left their headers' width: Label 39px and Description
+   83px on the scale editor (T198) at 390px, from 641 to 700px and from 941 to 1000px. Stacked, the column is as narrow
+   as its widest button, and the cells' sides pad by --space-xs, since the inputs' own padding spaces them. The buttons
+   go on one line only from 44rem, the narrowest table in which each input then still has the buttons' own 12rem (Label
+   201px in a 705px table; 191px at 688px). At 36rem, one line left Label 131px at 1280px, too narrow for "Indirect
+   supervision", and 5px from the edge: a 15px scrollbar stacked the buttons again (T226 review). Stacked, the inputs are
+   63px and 102px at 390px, 50px and 92px at 641px, 84px and 117px at 700px, 114px and 140px at 1000px, 220px at 1280px,
+   274px at 1440px; on one line, 227px at 1536px. The table no longer outgrows its card at 641px (by 11px). The rows are
+   three buttons high below 44rem. The container is the table's own, so the grid answers to the room its card gives it,
+   which the viewport does not say: at 1000px the card shares its row with the Scale details card, at 900px it has the
+   row to itself. Measured in Chrome on a static copy, with no scrollbar; DESIGN.md § Table system has both. */
+.table-container:has(> .clinic-table--inputs) {
+  container: inputs-grid / inline-size;
+}
+
+@container inputs-grid (width < 44rem) {
+  .clinic-table--inputs th,
+  .clinic-table--inputs td {
+    padding-left: var(--space-xs);
+    padding-right: var(--space-xs);
+  }
+
+  .clinic-table--inputs .col-actions {
+    width: 1%;
+  }
+}
+
+/* A list item open for editing (T176): its read-only row and, below it, the row whose one cell spans the table and
+   holds the edit form. A stripe down the left ties the two together. They take no hover tint: neither is a list row
+   while the edit is open, and tinting a whole form as the pointer crosses it is noise. */
+.clinic-table tbody tr.is-editing > td:first-child {
+  box-shadow: inset 4px 0 0 var(--secondary-color);
+}
+
+.clinic-table tbody tr.is-editing:hover {
+  background-color: transparent;
+}
+
+.actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+/* ── Buttons ───────────────────────────────────────── */
+.btn {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.95rem;
+  font-weight: 500;
+  gap: var(--space-sm);
+  justify-content: center;
+  min-height: 1.75rem; /* >=24px WCAG 2.5.8 (AA) target size; lifts .btn-sm/.btn-xs above 24px — T086 */
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.btn:hover {
+  filter: brightness(0.95);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* A button whose own action is running: not disabled, since it has the focus and a browser drops the focus of a
+   disabled button, but a second press sends nothing, and aria-disabled says so (InFlight.AriaDisabled; DESIGN.md
+   § Button system, T234 review). It looks unavailable too, and keeps its focus ring. */
+.btn[aria-disabled="true"] {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.search-input:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Blazor's <FocusOnNavigate Selector="h1" /> programmatically focuses the
+   page h1 after every navigation so screen readers announce the new page.
+   That hands the h1 a `tabindex="-1"` and triggers the browser's default
+   focus outline — a black rectangle that looks like a bug. `tabindex="-1"`
+   means the element is explicitly removed from the tab order, so no
+   keyboard user can reach it anyway; suppressing the focus outline
+   entirely keeps the screen-reader announcement working (Blazor still
+   focuses the h1 to fire the accessibility event) without showing a
+   visual ring that confuses sighted users. */
+h1[tabindex="-1"]:focus {
+  outline: none;
+}
+
+.btn-primary {
+  background-color: var(--secondary-color);
+  color: var(--surface-color);
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: var(--surface-color);
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: var(--surface-color);
+}
+
+.btn-outline {
+  border: 1px solid var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+.btn-sm {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+}
+
+.btn-xs {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+}
+
+/* ── Forms ─────────────────────────────────────────── */
+.form-container {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px var(--shadow-color);
+  padding: var(--space-xl);
+}
+
+/* An auto-fit grid's column asks for its width or the whole container, whichever is less (T226). A bare minmax(350px, 1fr)
+   is 350px in a card with less room than that: the Scale details card's Name input stuck out of its card at 390px, and
+   out of the 1fr column of .details-grid at every width that has two columns. So in every auto-fit grid below. */
+.form-grid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+}
+
+.form-grid--wide {
+  grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* A field-level fieldset is a form group too (T188), and holds what a <FormField> does not: its help as a paragraph, a
+   status line ("Select a trainee first."), and an action (Add year). The group's gap spaces them, as it spaces a
+   label, its control and its help, so a paragraph takes no margin of its own (1em above and below made the group
+   looser than the fields beside it). A button keeps its own width: a column stretches its items, and "Add year 3" ran
+   the width of the form. */
+.form-group > p {
+  margin: 0;
+}
+
+.form-group > .btn {
+  align-self: flex-start;
+}
+
+/* A field the caller may read but not change, as text among the inputs (T302: an institution's Status to its
+   InstitutionalAdmin). A <dl> laid out as a form group: its term stands where a field's label does, and the group's gap
+   spaces its value and the note under it. */
+dl.form-group,
+dl.form-group > dd {
+  margin: 0;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-control {
+  background: var(--surface-color);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 1rem;
+  padding: 0.75rem;
+  width: 100%;
+}
+
+.form-select {
+  appearance: none;
+  background-color: var(--surface-color);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23333333' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 16px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--text-color);
+  display: block;
+  font-size: 0.95rem;
+  padding: 0.75rem 2rem 0.75rem 0.75rem;
+  width: 100%;
+}
+
+.form-select-sm {
+  font-size: 0.8rem;
+  padding: 0.25rem 1.75rem 0.25rem 0.5rem;
+}
+
+.form-check {
+  align-items: center;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.form-check-input {
+  height: 1rem;
+  margin: 0;
+  width: 1rem;
+}
+
+/* Many short checkboxes in one fieldset, laid out in columns rather than one tall list (T122's curriculum tool list). */
+.check-grid {
+  display: grid;
+  gap: var(--space-sm) var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr));
+}
+
+/* The points of one rating scale, one radio (.form-check) per line, lowest first: an ordered scale reads down, not
+   across in columns (T205's MSF questionnaire). A point's description sits under its label. */
+.scale-choices {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.scale-choices .form-check label small {
+  display: block;
+  margin: 0;
+}
+
+/* Rows of a label, one control and a Remove button, aligned in three columns (T125's minimum by training year). The
+   control's column asks for up to 18rem, and takes whatever the year and the button leave it: its floor is 0 (T266).
+   With a 10rem floor the rows ran past the Add form's content edge into its padding, by 9px at 641px and 16px at 360px,
+   and out of the card at 320px, where the page scrolled 7px. The picker is now 93px wide at 641px, 116px at 390px and
+   still 288px (18rem) from 1000px. Measured in headless Chrome on a static copy of the form, with no scrollbar. */
+.stage-minima {
+  align-items: center;
+  display: grid;
+  gap: var(--space-sm) var(--space-md);
+  grid-template-columns: fit-content(12rem) minmax(0, 18rem) max-content;
+}
+
+/* A stored key or value is shown verbatim and may be one long token; let it wrap rather than widen the row. */
+.stage-minima .font-mono {
+  overflow-wrap: anywhere;
+}
+
+.form-actions {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+}
+
+/* Under a .form-actions row: why each disabled workflow action cannot be taken from this page, one line per action,
+   each the text its button is aria-describedby (T107). */
+.workflow-action-reasons {
+  color: var(--text-color);
+  font-size: 0.85rem;
+  list-style: none;
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+}
+
+.workflow-action-reasons li + li {
+  margin-top: var(--space-xs);
+}
+
+.account-form-container {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px var(--shadow-color);
+  margin: auto;
+  max-width: 30rem;
+  width: min(100%, 30rem);
+  padding: 2.5rem;
+}
+
+/* An account-shaped page that holds a questionnaire, not two fields: the MSF respondent page (T205). Wide enough for a
+   scale's labels and a comment box; the shell and the card are the sign-in page's. */
+.account-form-container--wide {
+  max-width: 44rem;
+  width: min(100%, 44rem);
+}
+
+/* Respondents open their link on a phone as often as not: give the questions the width the card's padding would take. */
+@media (max-width: 640.98px) {
+  .account-form-container--wide {
+    padding: var(--space-lg);
+  }
+}
+
+.account-brand {
+  align-items: center;
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: var(--space-lg);
+}
+
+.account-brand-mark {
+  display: block;
+  height: 56px;
+  width: 56px;
+}
+
+.account-brand-text {
+  color: var(--primary-color);
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: 2.4rem;
+  font-variation-settings: var(--font-display-settings);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1;
+}
+
+.account-form-container h2 {
+  font-size: 2rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.account-form-container form {
+  margin-top: var(--space-lg);
+}
+
+/* ── SSO ──────────────────────────────────────────── */
+.sso-divider {
+  align-items: center;
+  display: flex;
+  gap: var(--space-sm);
+  margin: var(--space-lg) 0;
+}
+
+.sso-divider::before,
+.sso-divider::after {
+  border-top: 1px solid var(--border-color);
+  content: "";
+  flex: 1;
+}
+
+.sso-divider span {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.sso-providers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.sso-button {
+  text-align: center;
+  width: 100%;
+}
+
+/* ── Alerts ────────────────────────────────────────── */
+.alert {
+  border-radius: 6px;
+  margin-bottom: var(--space-lg);
+  padding: 1rem;
+}
+
+.alert-danger {
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+}
+
+.alert-success {
+  background-color: var(--success-bg);
+  border: 1px solid var(--success-color);
+  color: var(--success-color);
+}
+
+.alert-warning {
+  background-color: var(--warning-bg);
+  border: 1px solid var(--warning-color);
+  color: var(--warning-color);
+}
+
+.alert-info {
+  background-color: var(--info-bg);
+  border: 1px solid var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+/* The summary of a refused form post that reloads the page: it takes the focus as the page loads (tabindex="-1" +
+   autofocus), so a screen reader starts there, and the field it is about names it with aria-describedby. It holds the
+   refusal's .alert-danger. The MSF respondent page's (T205). */
+.error-summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* The result of an action (tabindex="-1", the shared ActionResult component or a page's own region): it takes the focus
+   once the action is done, and once a ConfirmDialog that sent it has closed, since the button may be gone and a status
+   arriving on its own is often not read. Its alerts carry the role (T206 review, T196 review, T234). */
+.action-result:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Validation ────────────────────────────────────── */
+.validation-message {
+  color: var(--danger-color);
+  font-size: 0.85rem;
+}
+
+/* A non-blocking warning under a field, beside .validation-message's refusal: the input is accepted as typed (T160's
+   late-filing warning). Body text on the warning tint, with the warning colour as a stripe, since orange text on white
+   does not reach 4.5:1. */
+.field-warning {
+  background-color: var(--warning-bg);
+  border-left: 4px solid var(--warning-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.85rem;
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.validation-summary-errors {
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-color);
+  border-radius: 6px;
+  color: var(--danger-color);
+  margin-bottom: var(--space-lg);
+  padding: 1rem;
+}
+
+.validation-summary-errors ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+/* An invalid field says so on the control, not only in the message under it (T236). Blazor's inputs carry .invalid and
+   aria-invalid="true" while their EditContext holds a message for them. A control a page marks by hand, where the page
+   can tell the server will refuse what is typed, carries .input-validation-error and aria-invalid="true". The border
+   turns the danger colour, and its left edge thickens to a 4px stripe (the 1px border and a 3px inset shadow), so the
+   state is not shown by colour alone (WCAG 1.4.1). A shadow rather than a wider border, so the text does not move when a
+   field turns invalid while it is being typed in. It comes after .form-control and .form-select, which are as specific
+   as .input-validation-error. A checkbox or radio is not marked: a native one takes no border, and its message says it. */
+.input-validation-error,
+.form-control.invalid,
+.form-select.invalid,
+textarea.invalid,
+.form-control[aria-invalid="true"],
+.form-select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--danger-color);
+  box-shadow: inset 3px 0 0 var(--danger-color);
+}
+
+/* Forced colours (a Windows contrast theme) drop the shadow and paint every border in one system colour, so there the
+   stripe is the border itself. The text moves 3px as the field turns invalid, which is better than no mark at all. */
+@media (forced-colors: active) {
+  .input-validation-error,
+  .form-control.invalid,
+  .form-select.invalid,
+  textarea.invalid,
+  .form-control[aria-invalid="true"],
+  .form-select[aria-invalid="true"],
+  textarea[aria-invalid="true"] {
+    border-left-width: 4px;
+  }
+}
+
+/* ── Cards ─────────────────────────────────────────── */
+.detail-card {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px var(--shadow-color);
+  padding: var(--space-lg);
+}
+
+.detail-card--compact {
+  padding: var(--space-md);
+}
+
+.detail-card--header {
+  padding: var(--space-md) var(--space-lg);
+}
+
+.detail-card--interactive {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.detail-card--interactive:hover {
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transform: translateY(-2px);
+}
+
+.detail-card--empty {
+  border-style: dashed;
+  color: var(--muted-text);
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.detail-card--empty-compact {
+  border-style: dashed;
+  color: var(--muted-text);
+  padding: var(--space-md);
+  text-align: center;
+}
+
+/* An empty state that takes the focus when the action that emptied it removed the control that had it: the curriculum
+   item editor's Add form, once nothing is left to add (T222). tabindex="-1", so only the page can focus it. */
+.detail-card--empty-compact[tabindex]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Dashboard grid ───────────────────────────────── */
+.dashboard-grid {
+  align-items: start;
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+}
+
+.dashboard-span-2 {
+  grid-column: span 2;
+}
+
+.dashboard-span-3 {
+  grid-column: span 3;
+}
+
+/* ── Dashboard widgets ────────────────────────────── */
+.dashboard-metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.dashboard-metric-value {
+  color: var(--primary-color);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dashboard-metric-label {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.progress-bar {
+  background: var(--hover-bg);
+  border-radius: 4px;
+  height: 0.5rem;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  background: var(--secondary-color);
+  height: 100%;
+}
+
+.progress-bar-fill.is-complete {
+  background: var(--success-color);
+}
+
+/* progress-row: one titled figure with a bar and a meta line (T130). Promoted from the inline
+   flex/space-between pattern that had spread across six progress surfaces. */
+.progress-row {
+  margin-bottom: var(--space-sm);
+}
+
+.progress-row-head {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.progress-row-meta {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+  margin: var(--space-xs) 0 0;
+}
+
+.progress-group-title {
+  margin: var(--space-xl) 0 var(--space-sm);
+}
+
+.dashboard-card-body {
+  margin-top: var(--space-sm);
+}
+
+.dashboard-card-footer {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+}
+
+.detail-card--emphasis {
+  border-left: 4px solid var(--secondary-color);
+}
+
+.detail-card--warning {
+  border-left: 4px solid var(--warning-color);
+}
+
+/* ── Detail / stack lists ─────────────────────────── */
+/* details-list: <dl> with <div><dt>label</dt><dd>value</dd></div> rows. */
+.details-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.details-list > div {
+  align-items: baseline;
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+}
+
+.details-list dt {
+  color: var(--muted-text);
+  font-weight: 500;
+}
+
+.details-list dd {
+  margin: 0;
+}
+
+/* detail-list: <dl> with flat <dt> / <dd> siblings (admin detail pages). */
+.detail-list {
+  align-items: baseline;
+  display: grid;
+  gap: var(--space-sm) var(--space-md);
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  margin: 0;
+}
+
+.detail-list dt {
+  color: var(--muted-text);
+  font-weight: 500;
+}
+
+.detail-list dd {
+  margin: 0;
+}
+
+@media (max-width: 640.98px) {
+  .details-list > div,
+  .detail-list {
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
+  }
+}
+
+/* stack-list: vertical stack of cards with consistent gap. */
+.stack-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ── Badges ───────────────────────────────────────── */
+.badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+}
+
+.badge-draft {
+  background: var(--hover-bg);
+  color: var(--muted-text);
+}
+
+.badge-submitted {
+  background: var(--info-bg);
+  color: var(--secondary-color);
+}
+
+.badge-accepted {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+}
+
+.badge-completed {
+  background: var(--success-bg);
+  color: var(--success-color);
+}
+
+.badge-declined {
+  background: var(--danger-bg);
+  color: var(--danger-color);
+}
+
+/* Entrustment standing (T166): a STAR decision against a target level. The words carry the verdict ("At or above",
+   "Below", "No decision", "Not comparable"); the tint only repeats it. Body text on a tinted ground with a semantic
+   border, because the semantic colours as text on their own tints fall short of 4.5:1 at this size. */
+.badge-standing-met,
+.badge-standing-below,
+.badge-standing-none {
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.badge-standing-met {
+  background: var(--success-bg);
+  border-color: var(--success-color);
+}
+
+.badge-standing-below {
+  background: var(--warning-bg);
+  border-color: var(--warning-color);
+}
+
+.badge-standing-none {
+  background: var(--hover-bg);
+}
+
+/* ── Status dots ──────────────────────────────────── */
+.status-dot {
+  border-radius: 50%;
+  display: inline-block;
+  height: 0.6rem;
+  margin-right: var(--space-sm);
+  vertical-align: middle;
+  width: 0.6rem;
+}
+
+.status-dot.ok {
+  background: var(--success-color);
+}
+
+.status-dot.warn {
+  background: var(--warning-color);
+}
+
+.status-dot.err {
+  background: var(--danger-color);
+}
+
+/* ── Builder ───────────────────────────────────────── */
+.tab-bar {
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+}
+
+.tab-bar-tab {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+}
+
+.tab-bar-tab.is-active {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: var(--surface-color);
+}
+
+/* The builder's editor rail and live preview (T019). Two columns need 320px + 400px + the gap, 46.5rem, of the room the
+   builder's own card gives them, which the viewport does not say: the sidebar, the page's gutter and the card's padding
+   take 372px of it. So the card is a size container, and the columns collapse by its width (T266). Until T266 they
+   collapsed by a (max-width: 900px) media query, so from 901px the two columns were wider than the card: the page
+   scrolled sideways by 158px at 901px, 109px at 950px and 59px at 1000px, and up to 1115px the columns ran into the
+   card's padding (16px at 1100px). Now they stand one above the other up to 1115px and side by side from 1116px, a 744px
+   card. Measured in headless Chrome on a static copy of the Form tab, with no scrollbar. Each column's content keeps to
+   its track rather than widen it. */
+.form-container:has(> .builder-two-col) {
+  container: builder / inline-size;
+}
+
+.builder-two-col {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr);
+}
+
+.builder-two-col > * {
+  min-width: 0;
+}
+
+@container builder (width < 46.5rem) {
+  .builder-two-col {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Details grid ─────────────────────────────────── */
+.details-grid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: 1fr 2fr;
+}
+
+/* A grid item's default min-width is its content's, so a wide table would stretch the column past a narrow
+   viewport and scroll the whole page; at 0 the card keeps the column's width and the table scrolls in its own
+   container (T166, 390px). */
+.details-grid > .detail-card {
+  min-width: 0;
+}
+
+/* Opt-in: a details grid whose second card comes and goes with the page's state gives a lone card the whole row (T266).
+   The grid's first column is its narrow one, so a lone card sat in a third of the row with the rest empty beside it: on
+   /msf/campaigns/{id} at 1000px, a 223px card in a 694px row, and its invitees table scrolled 143px inside it; at
+   1280px, 317px of 974px. With the modifier the card is 694px at 1000px and the table does not scroll. Not on every
+   details grid (T266 review): on a grid of like cards (My authorisations' STARs, My progress's trajectories) one card
+   should look like each of several, and a lone trajectory chart, which scales with its width, would stand three times as
+   tall; and on My MSF reports the list would jump from the whole row to a third of it when a report is selected. */
+.details-grid--lone-spans > .detail-card:only-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-span-2,
+  .dashboard-span-3 {
+    grid-column: auto;
+  }
+}
+
+/* ── Pager ─────────────────────────────────────────── */
+.pager {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pager-info {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.pager-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pager-page-size {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.pager-page-size-label {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+}
+
+.pager-page-size-select {
+  min-width: 4.5rem;
+  width: auto;
+}
+
+/* ── Password toggle ──────────────────────────────── */
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .form-control {
+  padding-right: 4.5rem;
+}
+
+.password-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--muted-text);
+  cursor: pointer;
+  padding: 0.25rem 0.375rem;
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ── State panels / skeletons ─────────────────────── */
+.state-panel-title {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.state-panel-copy {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--hover-bg), var(--border-color), var(--hover-bg));
+  background-size: 200% 100%;
+  border-radius: 4px;
+  margin-bottom: var(--space-sm);
+  min-height: 1rem;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Utilities ─────────────────────────────────────── */
+.shadow {
+  box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+.font-mono {
+  font-family: Consolas, "Courier New", monospace;
+}
+
+/* A block of stored text shown verbatim, such as an audit entry's JSON payload (T266). Long lines wrap, and a long token
+   breaks, rather than widen the card. */
+.code-block {
+  background-color: var(--header-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.85rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+  padding: var(--space-md);
+  white-space: pre-wrap;
+}
+
+.list-unstyled {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.muted,
+.text-muted {
+  color: var(--muted-text);
+}
+
+.text-sm {
+  font-size: 0.85rem;
+}
+
+.text-danger {
+  color: var(--danger-color);
+}
+
+.visually-hidden {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.breadcrumbs {
+  align-items: center;
+  color: var(--muted-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  list-style: none;
+  margin: 0 0 var(--space-md);
+  padding: 0;
+}
+
+.breadcrumbs li {
+  align-items: center;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.dialog-scrim::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.dialog-card {
+  border: none;
+  border-radius: 12px;
+  max-width: 28rem;
+  padding: 0;
+  width: calc(100% - 2rem);
+}
+
+/* ── Accessibility ────────────────────────────────── */
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+fieldset legend {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  padding: 0;
+}
+
+/* A fieldset that is one field among others (an activity form's multi-choice, T177; every field-level group, T188): its
+   legend is that field's label, so it reads like the labels beside it, not like the section title above it. */
+fieldset.form-group > legend {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* A group within a field-level group (the committee review's evidence picker, its lines grouped by EPA, T131). Its
+   legend is the size of the field's own, so a rule down its left side and an indent show it belongs to that field
+   rather than standing beside it (T188). */
+fieldset.form-group fieldset.form-group {
+  border-left: 2px solid var(--border-color);
+  padding-left: var(--space-md);
+}
+
+/* A fieldset's legend sits across its top border, so the border box, and with it the rule down the left, starts at the
+   legend's middle: halfway down "PAED-001 — …", or between its lines once it wraps. A floated legend is laid out in the
+   group like any other part, spaced by the group's gap, so the rule runs the legend's full height. It still names the
+   fieldset: a fieldset is named by its first legend, however it is laid out. (T188 review) */
+fieldset.form-group fieldset.form-group > legend {
+  float: left;
+  margin: 0;
+  width: 100%;
+}
+
+/* ── Trajectory chart ─────────────────────────────── */
+.trajectory-chart {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.trajectory-chart-grid line {
+  stroke: var(--border-color);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.trajectory-chart-axis {
+  stroke: var(--muted-text);
+  stroke-width: 1;
+}
+
+.trajectory-chart-line {
+  fill: none;
+  stroke: var(--secondary-color);
+  stroke-width: 2;
+}
+
+.trajectory-chart-dot {
+  fill: var(--primary-color);
+  stroke: var(--surface-color);
+  stroke-width: 1.5;
+}
+
+/* A rating that is not a rung on the axis ladder — recorded against a different scale. Kept and drawn
+   hollow rather than dropped, because the trainee did not create the mismatch and the observation is
+   real; excluded from the polyline, because joining two incommensurable ordinals implies a trend that
+   is not there. (T123) */
+.trajectory-chart-dot.is-off-scale {
+  fill: var(--surface-color);
+  stroke: var(--muted-text);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+
+.trajectory-chart-x-label,
+.trajectory-chart-y-label {
+  fill: var(--muted-text);
+  font-size: 11px;
+  font-family: inherit;
+}
+
+/* ══ MainLayout.razor.css ═══════════════════════════════════════════════════
+   Blazor CSS isolation scopes these rules to the elements MainLayout.razor renders (a b-xxxx attribute), and ::deep
+   reaches into child components. Here that scope is written as a parent selector (.page > main > …) and ::deep is
+   dropped; every class name and declaration is the source's. */
+.page {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.page > main {
+  flex: 1;
+}
+
+.page > .sidebar {
+  background-image: linear-gradient(180deg, var(--sidebar-gradient-start) 0%, var(--sidebar-gradient-end) 70%);
+}
+
+.page > main > .top-row {
+  align-items: center;
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  height: 3.5rem;
+  justify-content: flex-end;
+}
+
+/* The side gutter at every width (T226). */
+.page > main > .top-row,
+.page > main > article {
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+.page > main > .top-row a,
+.page > main > .top-row .btn-link,
+.page > main > .top-row form {
+  margin-left: 1.5rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.page > main > .top-row a:hover,
+.page > main > .top-row .btn-link:hover {
+  text-decoration: underline;
+}
+
+.page > main > .top-row a:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640.98px) {
+  .page > main > .top-row {
+    justify-content: space-between;
+  }
+
+  .page > main > .top-row a,
+  .page > main > .top-row .btn-link,
+  .page > main > .top-row form {
+    margin-left: 0;
+  }
+}
+
+@media (min-width: 641px) {
+  .page {
+    flex-direction: row;
+  }
+
+  .page > .sidebar {
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    width: 250px;
+  }
+
+  .page > main > .top-row {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .page > main > .top-row.auth a:first-child {
+    flex: 1;
+    text-align: right;
+    width: 0;
+  }
+
+  .page > main > .top-row,
+  .page > main > article {
+    padding-left: 2rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+
+#blazor-error-ui {
+  background: lightyellow;
+  bottom: 0;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  color-scheme: light only;
+  display: none;
+  left: 0;
+  padding: 0.6rem 1.25rem 0.7rem;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+  cursor: pointer;
+  position: absolute;
+  right: 0.75rem;
+  top: 0.5rem;
+}
+
+/* ══ NavMenu.razor.css ══════════════════════════════════════════════════════
+   Scoped to NavMenu.razor's elements, which render inside .sidebar; written here as .sidebar …, ::deep dropped. The raw
+   colours below are the source's own: they sit outside :root (design/BRIEF.md § 5.5 lists them as a defect). */
+.sidebar .navbar-toggler {
+  appearance: none;
+  background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center/1.75rem rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  height: 2.5rem;
+  position: absolute;
+  right: 1rem;
+  top: 0.5rem;
+  width: 3.5rem;
+}
+
+.sidebar .navbar-toggler:checked {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar .top-row {
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  min-height: 4.25rem;
+}
+
+.sidebar .navbar-brand {
+  align-items: center;
+  color: white;
+  display: inline-flex;
+  font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  font-optical-sizing: auto;
+  font-size: 1.7rem;
+  font-variation-settings: "SOFT" 0, "WONK" 1;
+  font-weight: 500;
+  gap: 0.7rem;
+  letter-spacing: -0.005em;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.sidebar .navbar-brand-mark {
+  display: block;
+  flex-shrink: 0;
+  height: 40px;
+  width: 40px;
+}
+
+.sidebar .navbar-brand-text {
+  line-height: 1;
+}
+
+.sidebar .nav-item {
+  font-size: 0.9rem;
+  padding-bottom: 0.5rem;
+}
+
+.sidebar .nav-item:first-of-type {
+  padding-top: 1rem;
+}
+
+.sidebar .nav-item:last-of-type {
+  padding-bottom: 1rem;
+}
+
+.sidebar .nav-item .nav-link {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: rgb(215 215 215);
+  display: flex;
+  height: 3rem;
+  line-height: 3rem;
+  padding-left: 0.45rem;
+  padding-right: 0.75rem;
+  width: 100%;
+}
+
+.sidebar .nav-item .icon {
+  flex-shrink: 0;
+  height: 1.25rem;
+  margin-left: 0.35rem;
+  margin-right: 0.75rem;
+  width: 1.25rem;
+}
+
+.sidebar .nav-item a.active {
+  background-color: rgba(255, 255, 255, 0.37);
+  color: white;
+}
+
+.sidebar .nav-item .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.sidebar .nav-logout-button {
+  background: none;
+  border: none;
+  color: rgb(215 215 215);
+  text-align: left;
+  width: 100%;
+}
+
+.sidebar .nav-scrollable {
+  display: none;
+}
+
+.sidebar .navbar-toggler:checked ~ .nav-scrollable {
+  display: block;
+}
+
+@media (min-width: 641px) {
+  .sidebar .navbar-toggler {
+    display: none;
+  }
+
+  .sidebar .nav-scrollable {
+    display: block;
+    height: calc(100vh - 3.5rem);
+    overflow-y: auto;
+  }
+}

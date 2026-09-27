@@ -1,0 +1,44 @@
+<!-- @dsCard group="Forms" height=760 width=960 subtitle="The signed-out shell and its account card: static HTML with a real form post" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AuthLayout</title>
+</head>
+<body>
+<div class="auth-page-shell">
+  <main class="auth-page-main">
+    <div class="account-form-container shadow">
+      <div class="account-brand">
+        <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="44" height="44">
+        <span class="account-brand-text">Wombat</span>
+      </div>
+      <h2>Sign in</h2>
+
+      <div id="login-error" class="alert alert-danger" role="alert">Your session has ended. Please sign in again.</div>
+
+      <form method="post" action="#">
+        <div class="mb-3">
+          <label for="login-email">Email</label>
+          <input id="login-email" class="form-control" type="email" name="Email" autocomplete="username" required aria-describedby="login-error">
+        </div>
+        <div class="mb-3 password-wrapper">
+          <label for="login-password">Password</label>
+          <input id="login-password" class="form-control" type="password" name="Password" autocomplete="current-password" required aria-describedby="login-error">
+          <button type="button" class="password-toggle-btn">Show</button>
+        </div>
+        <div class="form-check mb-3">
+          <input id="login-remember" class="form-check-input" type="checkbox" name="RememberMe" value="true">
+          <label for="login-remember">Remember me</label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </div>
+      </form>
+
+      <p class="page-subtitle mt-3">Forgotten your password? <a href="#">Reset it</a>.</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>

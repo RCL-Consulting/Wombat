@@ -1,0 +1,74 @@
+<!-- @dsCard group="Containers" height=900 width=960 subtitle="The building block of detail pages and dashboards, and its variants" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DetailCard</title>
+<style>
+  body { padding: var(--space-lg); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: var(--space-lg); align-items: start; }
+  .pv-grid h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">A detail page: .details-grid, a summary card beside the main card (1fr 2fr; one column at 900px and below)</p>
+<div class="details-grid">
+  <aside class="detail-card">
+    <dl class="details-list">
+      <div><dt>Trainee</dt><dd>Thandi Nkosi</dd></div>
+      <div><dt>State</dt><dd><span class="badge badge-submitted">Open</span></dd></div>
+      <div><dt>Response window</dt><dd>2026-09-01 to 2026-09-30</dd></div>
+    </dl>
+  </aside>
+  <section class="detail-card">
+    <h2>Invitees</h2>
+    <div class="table-container">
+      <table class="clinic-table clinic-table--compact">
+        <thead><tr><th>Name</th><th>Group</th><th>Responded</th></tr></thead>
+        <tbody>
+          <tr><td>Mohammed Patel</td><td>Consultant</td><td>Yes</td></tr>
+          <tr><td>Fatima Khumalo</td><td>Consultant</td><td>No</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">Variants</p>
+<div class="pv-grid">
+  <div class="detail-card">
+    <h3>.detail-card</h3>
+    <p class="muted">Surface, 1px border, 8px radius, a resting shadow, padding space-lg.</p>
+  </div>
+  <div class="detail-card detail-card--compact">
+    <h3>--compact</h3>
+    <p class="muted">Padding space-md: a card inside a card, a snapshot per EPA.</p>
+  </div>
+  <div class="detail-card detail-card--emphasis">
+    <h3>--emphasis</h3>
+    <p class="muted">A 4px secondary-color stripe: the card the page is for.</p>
+  </div>
+  <div class="detail-card detail-card--warning">
+    <h3>--warning</h3>
+    <p class="muted">A 4px warning-color stripe; the words say what is wrong.</p>
+  </div>
+  <a class="detail-card detail-card--interactive" href="#" style="text-decoration:none;color:inherit;">
+    <h3>--interactive</h3>
+    <p class="muted">The whole card is a link; on hover it lifts 2px to a larger shadow.</p>
+  </a>
+</div>
+
+<p class="pv-cap">Empty states: dashed, centred, muted</p>
+<div class="pv-grid">
+  <div class="detail-card detail-card--empty">
+    <div class="state-panel-title">No activities yet</div>
+    <div class="state-panel-copy">Create the first activity from the activity catalogue.</div>
+  </div>
+  <div class="detail-card detail-card--empty-compact" tabindex="-1">
+    <span>Curriculum item added.</span> Every EPA your institution could add is already on this curriculum: each national EPA of Paediatrics, and each of your institution's own EPAs of Paediatrics. To add an item of your own, first create a local EPA of Paediatrics.
+  </div>
+</div>
+</body>
+</html>

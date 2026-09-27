@@ -1,0 +1,32 @@
+<!-- @dsCard group="Data" height=230 subtitle="Service status at a glance, always beside its words" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>StatusDot</title>
+<style>
+  body { padding: var(--space-lg); }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-row { display: flex; flex-wrap: wrap; gap: var(--space-lg); align-items: start; }
+  .pv-row .detail-card { width: 16rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">The Administrator's System health rows. ok and warn fall under 3:1 on white (2.87:1, 2.57:1); the words carry the state</p>
+<div class="pv-row">
+  <div class="detail-card">
+    <ul class="list-unstyled">
+      <li style="padding: var(--space-xs) 0"><span class="status-dot ok"></span>Database connection</li>
+      <li style="padding: var(--space-xs) 0"><span class="status-dot warn"></span>Email queue</li>
+      <li style="padding: var(--space-xs) 0"><span class="status-dot warn"></span>Last nightly job</li>
+    </ul>
+  </div>
+  <div class="detail-card">
+    <p class="pv-cap">When the database check fails</p>
+    <ul class="list-unstyled">
+      <li style="padding: var(--space-xs) 0"><span class="status-dot err"></span>Database connection</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
