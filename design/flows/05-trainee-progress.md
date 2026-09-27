@@ -153,31 +153,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
    newer curriculum version (PAED-016 on 11.2) marked?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 Also: TrajectoryChart is hand-drawn SVG with no chart library. You may change the chart's form, but it must stay SVG
 or HTML with no script. Every chart needs a text or table equivalent.
@@ -186,9 +194,9 @@ ASK: 2–3 variations. Wireframes first for screens 1 and 2, then full fidelity.
 use and mark anything else NEW. Say which DESIGN.md rule a variation breaks. Flag edge cases and draw the none, typical
 and heavy data volumes. Review the result for accessibility against WCAG 2.1 AA.
 
-ATTACHED: states/my-progress--first.png, act-3/3.7-2-dlamini-progress-full.png, states/my-progress--standing.png,
+ATTACHED: states/my-progress--first.png, act-3/3.7-1-dlamini-progress.png, states/my-progress--standing.png,
 states/my-progress--paused-epa.png, states/my-progress--after-rebuild.png, states/my-progress--narrow.png,
-act-A/A.7.6-2-zulu-trajectory.png, act-2/2.39-2-molefe-progress.png, and the post-T297
+states/review-detail--narrow.png, act-2/2.39-2-molefe-progress.png, and the post-T297
 states/home--trainee-first.png, states/home--trainee.png and states/home--narrow-trainee.png.
 
 RUNBOOK STEPS, VERBATIM:
@@ -460,12 +468,12 @@ Every path below is under `design/baseline/` and was checked with `ls` on 2026-0
 ### 5.1 Key screenshots (attach with the ask)
 
 1. `states/my-progress--first.png`: the whole page on the first day.
-2. `act-3/3.7-2-dlamini-progress-full.png`: the whole page, counting (the figures quoted in § 2.1).
+2. `act-3/3.7-1-dlamini-progress.png`: the whole page, counting (the figures quoted in § 2.1).
 3. `states/my-progress--standing.png`: the Annexure A standing table.
 4. `states/my-progress--paused-epa.png`: a paused EPA.
 5. `states/my-progress--after-rebuild.png`: seventeen cards on 11.2.
 6. `states/my-progress--narrow.png`: the page at 390 px.
-7. `act-A/A.7.6-2-zulu-trajectory.png`: three trajectory charts at 390 px, labels about 5 px.
+7. `states/review-detail--narrow.png`: at its foot, three trajectory charts at 375 px, labels about 5 px.
 8. `act-2/2.39-2-molefe-progress.png`: "Training year 4" on My progress.
 
 ### 5.2 State captures (add as the chat asks)
@@ -482,29 +490,29 @@ Every path below is under `design/baseline/` and was checked with `ls` on 2026-0
   - `states/my-activities--msf.png`
   - `states/my-activities--paused-epa.png`
 - Step captures, not held, useful for detail:
-  - `act-3/3.48-2-molefe-my-progress.png`
+  - `act-3/3.48-2-molefe-progress.png`
   - `act-4/4.40-1-molefe-progress-annexure-a.png`
   - `act-5/5.15-1-molefe-progress-running.png`
-  - `act-6/6.19-1-progress-paused.png`
-  - `act-6/6.19-2-my-activities-paused.png`
-  - `act-6/6.27-1-kgk001-card.png`
-  - `act-6/6.37-1-ndlovu-on-11.2-before-rebuild.png`
-  - `act-A/A.7.3-2-dlamini-progress.png`
-  - `act-A/A.7.3-3-dlamini-activities.png`
+  - `act-6/6.19-1-dlamini-progress.png`
+  - `act-6/6.19-2-dlamini-my-activities.png`
+  - `act-6/6.27-1-dlamini-progress.png`
+  - `act-6/6.37-1-ndlovu-progress.png`
+  - `act-A/A.7.3-3-progress-390.png`
+  - `act-A/A.7.3-4-activities-390.png`
   - `act-3/3.6-1-my-activities-completed.png`
 
 ### 5.3 Re-captured after T297 (formerly held)
 
 T297 changed the Trainee dashboard's Activity inbox card (BRIEF § 10). Every capture below was re-taken on 2026-09-26
-after it landed, so none is held; attach the three state captures:
+after it landed, and again on 2026-09-27 by the T335 replay, so none is held; attach the three state captures:
 
 `states/home--trainee-first.png`, `states/home--trainee.png`, `states/home--narrow-trainee.png`,
-`act-A/A.7.3-1-dlamini-home.png`, `act-2/2.39-1-molefe-home.png`,
+`act-A/A.7.3-1-home-390.png`, `act-2/2.39-1-molefe-home.png`,
 `act-2/2.40-1-dlamini-home.png`, `act-2/2.40-3-duplessis-home.png`, `act-2/2.40-5-mahlangu-home.png`,
 `act-2/2.40-7-ndlovu-home.png`
 
-Each was taken from the end of its act, not the step's own moment. `act-3/3.50-1-dlamini-dashboard.png` was re-captured
-from a fresh replay (Step 3.50: the Activity inbox card reads "No pending items." beside an inbox reading "Inbox
+The T335 replay took the step captures at their own moments. `act-3/3.50-1-dlamini-home.png` comes from that fresh
+replay (Step 3.50: the Activity inbox card reads "No pending items." beside an inbox reading "Inbox
 clear").
 
 ## 6. Known problems this design must solve
@@ -512,22 +520,22 @@ clear").
 | Task | Problem today | What it means for the design | Evidence |
 |---|---|---|---|
 | T306 (P3; BRIEF B4) | The training year is on My progress only. `TraineeDashboard.razor:26` (Curriculum targets) shows none. | The Curriculum targets card names "Training year N". Word it "training year N" (DESIGN.md:738, D17). | `act-2/2.39-2-molefe-progress.png`; the dashboard in `act-2/2.39-1-molefe-home.png` (re-captured after T297) |
-| T323 (P3; BRIEF A3) | `TrajectoryChart.razor` draws a 600×200 viewBox with 11 px labels. At 260–293 px they render at 5–6 px. The companion table is `.visually-hidden` at every width. | Chart text is at least 11 px at 390 px, or the table is visible under each chart below 641 px (T323 recommends the table). Record the choice in DESIGN. | `act-A/A.7.6-2-zulu-trajectory.png`; Step A.7.3's Actual (charts 293 px wide in a 341 px column) |
-| T298 (P3; BRIEF B13) | "Upcoming deadlines" scans each activity's data for a `due_date` key that no seeded or KGK type has (`GetTraineeDashboardSummaryQuery.cs:111-148`). It always reads "No deadlines in the next 14 days." | Remove the card, or give it one of these sources: the current window's end for an unmet target, a committee review scheduled for her, or a STAR nearing expiry. A card that can never fill is not acceptable. | `act-3/3.50-1-dlamini-dashboard.png` (re-captured after T297) |
-| T328 (P3; BRIEF A4) | Dashboard rows are inline `display:flex` (`TraineeDashboard.razor:101,125`), so a badge takes the row's height when the link wraps. Form controls use the browser's font. | A `.list-row` pattern: the badge keeps its pill (`align-self: center`, no wrap). Controls use the body font. | `states/home--narrow-trainee.png` (re-captured after T297; the badges still stretch) |
-| T280 (P3; BRIEF A14) | Inbox, recent and deadline links are named only by the instrument: "Mini-CEX (Paediatrics)" twice on one card. | Each link carries the EPA or the encounter date, so its name is unique. | `act-3/3.50-1-dlamini-dashboard.png` (re-captured after T297) |
+| T323 (P3; BRIEF A3) | `TrajectoryChart.razor` draws a 600×200 viewBox with 11 px labels. At 260–293 px they render at 5–6 px. The companion table is `.visually-hidden` at every width. | Chart text is at least 11 px at 390 px, or the table is visible under each chart below 641 px (T323 recommends the table). Record the choice in DESIGN. | `states/review-detail--narrow.png` (its foot, at 375 px); Step A.7.3's Actual (charts 293 px wide in a 341 px column) |
+| T298 (P3; BRIEF B13) | "Upcoming deadlines" scans each activity's data for a `due_date` key that no seeded or KGK type has (`GetTraineeDashboardSummaryQuery.cs:111-148`). It always reads "No deadlines in the next 14 days." | Remove the card, or give it one of these sources: the current window's end for an unmet target, a committee review scheduled for her, or a STAR nearing expiry. A card that can never fill is not acceptable. | `act-3/3.50-1-dlamini-home.png` (re-captured after T297) |
+| T328 (P3; BRIEF A4) | Dashboard rows are inline `display:flex` (`TraineeDashboard.razor:101,125`), so a badge takes the row's height when the link wraps. Form controls use the browser's font. | A `.list-row` pattern: the badge keeps its pill (`align-self: center`, no wrap). Controls use the body font. | `states/home--narrow-trainee.png` (re-taken after T335: the badges keep their pill now) |
+| T280 (P3; BRIEF A14) | Inbox, recent and deadline links are named only by the instrument: "Mini-CEX (Paediatrics)" twice on one card. | Each link carries the EPA or the encounter date, so its name is unique. | `act-3/3.50-1-dlamini-home.png` (re-captured after T297) |
 | T297 (group 1, landed in 7bf8ea7) | Before the fix, the Activity inbox card listed "requested, accepted, declined or draft", so it showed a declined request, which has no move left, and missed work waiting in "submitted". | The card lists exactly what `/activities/inbox` lists for her. A declined request is on Recent activities with its badge. | BRIEF § 10; § 5.3, re-captured 2026-09-26 |
-| T312 (P2, backend) | An ended record reads today's catalogue, so a paused EPA vanishes from a graduate's record. | After T312, an ended record keeps a paused EPA's card, headed "(no longer in use)" (`EpaLabel`, T255). A running trainee still loses the card (T158) but keeps the trajectory with the mark (Step 6.19). Design the mark for card headings and chart headings. The ended record itself is F13's. | `act-6/6.21-1-molefe-record-paused.png` (F13) |
+| T312 (P2, backend) | An ended record reads today's catalogue, so a paused EPA vanishes from a graduate's record. | After T312, an ended record keeps a paused EPA's card, headed "(no longer in use)" (`EpaLabel`, T255). A running trainee still loses the card (T158) but keeps the trajectory with the mark (Step 6.19). Design the mark for card headings and chart headings. The ended record itself is F13's. | `act-6/6.21-1-molefe-progress.png` (F13) |
 | T304 (P2, backend) | Moving a registrar to 11.2 replays none of his credit. His cards read 0 until the Administrator's global rebuild, and nothing says why (Step 6.37, F-6.37a). | T304's plan replays credit in the same save as the move, so the before-rebuild zeros go away. Design the after-rebuild state as the normal one. Do not design a "counts await a rebuild" notice unless T304 is rejected (inference from T304's plan). | `states/my-progress--before-rebuild.png` |
 | T329 (P2; BRIEF A6) | My progress already shows its header and a skeleton. The load error prints the driver's text, "An exception has been raised that is likely due to a transient failure." | Keep the header and skeleton. The error is one plain sentence under the header, with nothing empty drawn beneath it; the wording is T272's (queued). | `states/my-progress--loading.png`, `states/my-progress--load-error.png` |
-| T322 (P2; BRIEF A1) | `.badge-completed` text is 2.55:1 on its tint. The dashboard's green "Completed" badges fail. | Badges put body text on the tint, as `.badge-standing-*` already does (DESIGN.md:880-900). | `act-A/A.7.14-6-reviews-badges.png` |
-| Observed, not filed | Every quota card repeats two MSF sentences. This is by design: one line per semester, in `MsfCoverageText`'s words (DESIGN.md:940-947). | Change how it is shown if you like, but keep the words. A covering campaign is never "about" an EPA (D9), and MSF counts towards no target (D8). | `act-3/3.7-2-dlamini-progress-full.png` |
+| T322 (P2; BRIEF A1) | `.badge-completed` text is 2.55:1 on its tint. The dashboard's green "Completed" badges fail. | Badges put body text on the tint, as `.badge-standing-*` already does (DESIGN.md:880-900). | `act-A/A.7.14-7-review-7-badges.png` (re-taken after T335's tokens: the badges now pass) |
+| Observed, not filed | Every quota card repeats two MSF sentences. This is by design: one line per semester, in `MsfCoverageText`'s words (DESIGN.md:940-947). | Change how it is shown if you like, but keep the words. A covering campaign is never "about" an EPA (D9), and MSF counts towards no target (D8). | `act-3/3.7-1-dlamini-progress.png` |
 | Observed, not filed | One card prints "30 November 2026" and "2026-09-16" side by side. | Choose one date format for people to read. | Step 3.7's Actual |
 
 ## 7. Questions the design must answer
 
 1. **What leads My progress:** this semester's shortfall, the standing per EPA, or the trajectory? Today the order is
-   fixed, and the trajectory starts about 4,600 px down at 1280 px (`act-3/3.7-2-dlamini-progress-full.png`).
+   fixed, and the trajectory starts about 4,600 px down at 1280 px (`act-3/3.7-1-dlamini-progress.png`).
 2. **How are the three "per"s shown together without confusion?**
    - Per-semester observation targets (Annexure B, D39).
    - Per-semester or per-year decision cadence (`act-1-setup.md:382-396`).

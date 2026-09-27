@@ -16,13 +16,13 @@ what is never uploaded.
 | Step | Who | Done when | Status |
 |---|---|---|---|
 | A. Choose and set up the design system | Operator; Claude | The design system holds Wombat's tokens, type, icons and brand, and passes its checks; the choice is recorded | **Done 2026-09-27** (W-009): Wombat's own, built from the code. The aesthetic direction was given at step C |
-| B. Stage the upload set | Operator | `stage_upload.ps1 -Flow 01` exits 0; every screenshot has been opened; the crop-first file is cropped or left out | Ready |
+| B. Stage the upload set | Operator | `stage_upload.ps1 -Flow 01` exits 0; every screenshot has been opened; the crop-first file is cropped or left out | Done 2026-09-27 (the upload set was staged for round 1) |
 | C. Start the canvas | Operator | A Design artifact holds round 1's 2–3 structural variations; its link is in T335 | Done 2026-09-27 (canvas https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD; A picked; round 3 accepted) |
 | D. Review the structural variations | Operator | Each variation is scored against the checklist, in the chat | Done 2026-09-27 (canvas https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD; A picked; round 3 accepted) |
 | E. Choose, then fidelity and states | Operator | The chosen frame's artboards and token sheet are in `design/flows/01-shell/`, and § 6's nine answers are in the chat | Done 2026-09-27 (canvas https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD; A picked; round 3 accepted) |
-| F. Hand off to Claude Code | Claude Code | Built; `DESIGN.md` amended; suites green; committed | Built on branch t335; squash pending |
-| G. Acceptance | Claude Code; operator | Flow 01's steps replay green on a fresh database; the baseline is re-captured | Waits on F |
-| H. Lessons into the brief | Claude Code; operator | BRIEF § 11 is written, dated, and flow 02 is restated | Waits on G |
+| F. Hand off to Claude Code | Claude Code | Built; `DESIGN.md` amended; suites green; committed | **Done 2026-09-27:** `b347e11c`, one squash of branch t335; 8,226 tests green |
+| G. Acceptance | Claude Code; operator | Flow 01's steps replay green on a fresh database; the baseline is re-captured | **Done 2026-09-27:** the whole runbook on `wombat_scenario_t335`, 243 of 325 steps with no gap and no regression from flow 01 (BRIEF § 11); the states re-captured |
+| H. Lessons into the brief | Claude Code; operator | BRIEF § 11 is written, dated, and flow 02 is restated | **Done 2026-09-27:** § 11 written; § 2.3, § 2.4, § 5.1 and § 9 corrected; the digest restated in every flow brief. Flow 02's own restatement (its ASK line) is done when it is briefed |
 
 ---
 
@@ -123,6 +123,11 @@ pwsh design/tools/stage_upload.ps1 -Flow 01
 ---
 
 ## C. Start the canvas
+
+> **Learned in the pilot (BRIEF § 11):** first copy the mark into the new canvas. A canvas takes the design system's
+> tokens but not the logos it keeps by id, so without the copy it draws a stand-in disc. Use `Artifact publish` with
+> `asset: true`, `from_url` = the design system and `asset_ids` = the mark's id (`16c4e619b7ea0971d0c28ed6509be7a8`). Then
+> tell the canvas the copy's `/_blob/` URL in round 1's message.
 
 **Where:** a Claude Code session in this repo is recommended (BRIEF § 2.2). There, run `/design`, or ask Claude to
 create a Design artifact. Or start it in the main claude.ai app: **Design → Make something new → Design**, choosing the

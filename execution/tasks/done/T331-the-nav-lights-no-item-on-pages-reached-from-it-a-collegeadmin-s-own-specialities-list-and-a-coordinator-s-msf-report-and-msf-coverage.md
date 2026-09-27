@@ -1,11 +1,12 @@
 ---
 id: T331
 title: The nav lights no item on pages reached from it: a CollegeAdmin's own Specialities list, and a Coordinator's MSF report and MSF coverage
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-26
+completed: 2026-09-27
 ---
 
 # T331 — The nav lights no item on pages reached from it: a CollegeAdmin's own Specialities list, and a Coordinator's MSF report and MSF coverage
@@ -42,7 +43,7 @@ created: 2026-09-26
 ## Verification
 
 - [x] bUnit beside NavMenuAuthorizationTests: with the NavigationManager at /admin/colleges/5/specialities and a CollegeAdmin principal, Specialities carries the active class. At /msf/reports/3 and at /msf/coverage, a Coordinator's MSF Campaigns carries it. At /admin/colleges/5/specialities, an Administrator's Colleges carries it and no second item does. — `b347e11c`: `Navigation/ActiveNavItemTests`, from `NavOwners`. Specialities is lit for a College admin and Colleges for an Administrator on `/admin/colleges/{{id}}/specialities`, and MSF campaigns for a Coordinator on `/msf/reports/{{id}}` and `/msf/coverage`. At most one item is lit, and the real Routes' cascade is tested.
-- [ ] Browser: retake states specialities-list--loading (Dr Kruger), and campaign-report--blocked and programme-coverage--loading (Mr Smit), each with the owning item highlighted.
+- [x] Browser: retake states specialities-list--loading (Dr Kruger), and campaign-report--blocked and programme-coverage--loading (Mr Smit), each with the owning item highlighted. — 2026-09-27, T335 step G (wombat_scenario_t335, b347e11c): Specialities stays lit for the College admin with the right trail (Step 1.12), and MSF campaigns is lit with aria-current="true" on a report (`states/shell--owner-lit.png`, trail Home › MSF campaigns › MSF report). The three loading-state captures the item names were not retaken; the lit item does not depend on the load.
 
 ## As built in T335 (`b347e11c`, 2026-09-27)
 

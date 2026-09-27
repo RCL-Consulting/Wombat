@@ -70,6 +70,12 @@ Rewritten 2026-09-26 (T293) from the single file that T091 and T159 had re-basel
   can be replayed without the earlier ones.
 - **Screenshots.** A replay captures each step's outcome into `design/baseline/<act>/<step>-<n>-<slug>.png`
   (gitignored), and `states.md`'s states into `design/baseline/states/`. That is the redesign's visual baseline.
+  - The flow briefs cite captures by file name. So a replay that re-takes a capture of the same state keeps its
+    existing file name, and adds a new number only for a new state.
+  - After a replay, run `design/tools/check_baseline_paths.py`; it must report `missing 0` (BRIEF § 11).
+- **The browser.** Any browser a script can drive will do. The T335 replay drove Chrome with the Playwright library
+  (`chromium.launch({ channel: 'chrome' })`), and the Playwright MCP is not needed. Scripts read passwords from
+  environment variables and never print them.
 
 ## The step format
 

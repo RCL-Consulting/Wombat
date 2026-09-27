@@ -28,7 +28,7 @@ drawn at runtime from a type built on this page (BRIEF § 5.2; `Components/Share
    - `states/activity-type-edit--user-field.png`, `--field-rule.png`, `--published.png`, `--publish-warnings.png` and
      `--discarded.png`;
    - `act-1/1.27-2-form-saved-preview.png`, `1.28-2-workflow-saved.png` and `1.29-1-credit-tab.png`;
-   - `act-A/A.7.9-5-builder-top.png`.
+   - `act-A/A.7.9-6-builder-390.png`.
 3. **Some full-page captures show the sidebar part-way down the page.** In `states/activity-type-edit--user-field.png`,
    the sidebar and the top row appear again about 2,500 px down. That is how the full-page capture stitched a fixed
    element, not the layout (observed; the cause is an inference). Say so in the chat if Claude Design copies it.
@@ -174,31 +174,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
   3. How does the builder show what a published version pins? Existing activities stay on their version.
   4. On a phone, where does the live preview go?
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 ASK: 2–3 variations, as wireframes first, then the chosen one at full fidelity. Name every design-system component you
   use, and mark anything else NEW. Say which DESIGN.md rule a variation breaks. The rules most at risk are these:
@@ -214,7 +222,7 @@ ATTACHED: the screenshots below (paths under design/baseline/), in this order:
   3. states/activity-type-edit--field-rule.png
   4. states/activity-type-edit--published.png
   5. states/activity-type-edit--publish-warnings.png
-  6. act-A/A.7.9-5-builder-top.png
+  6. act-A/A.7.9-6-builder-390.png
   7. act-1/1.28-2-workflow-saved.png
   8. act-1/1.29-1-credit-tab.png
   Also, as text, the nine seed files under src/Wombat.Infrastructure/Activities/Seeds/:
@@ -515,7 +523,7 @@ Every path below is relative to `design/baseline/` and was checked with `ls` on 
 3. `states/activity-type-edit--field-rule.png`
 4. `states/activity-type-edit--published.png`
 5. `states/activity-type-edit--publish-warnings.png`
-6. `act-A/A.7.9-5-builder-top.png`
+6. `act-A/A.7.9-6-builder-390.png`
 7. `act-1/1.28-2-workflow-saved.png`
 8. `act-1/1.29-1-credit-tab.png`
 
@@ -523,7 +531,7 @@ Every path below is relative to `design/baseline/` and was checked with `ls` on 
 
 - `states/activity-type-edit--duplicate-key.png`, `--credit.png`, `--discarded.png` and `--narrow.png`
 - `act-1/1.27-1-duplicate-key-refused.png`, `1.28-1-field-rule-refused.png` and `1.30-1-published-v1.png`
-- `act-A/A.7.14-5-builder-publish-disabled.png`
+- `act-A/A.7.14-6-builder-publish.png`
 
 ### 5.3 Seed JSON (as text)
 
@@ -542,7 +550,7 @@ All nine are tracked (`git ls-files`).
     `1.25-4-mini-cex-credit.png` and `1.25-5-overall-level-field-editor.png`;
   - `1.26-1-new-type-default.png` and `1.26-2-first-save-no-status.png`;
   - `1.31-1-types-all.png` and `1.31-2-types-search-kgk.png`.
-- act-A: `act-A/A.7.9-6-mbatha-builder.png`.
+- act-A: `act-A/A.7.9-6-builder-390.png`.
 - states:
   - `states/activity-type-edit--college-instrument.png`, `--new.png`, `--loading.png`, `--not-found.png` and
     `--metadata.png`;
@@ -552,13 +560,15 @@ All nine are tracked (`git ls-files`).
   `6.14a-3-new-type-scope.png`, `6.14a-4-sub-speciality-targets.png`, `6.14a-5-draft-saved.png` and
   `6.14a-6-list-with-draft.png`.
 
-The act-1 and state captures come from a copy of the end-of-Act-1 snapshot, where KGK Teaching Session Log already
-exists and is published. So `1.24-1`, `1.31-1`, `1.31-2`, `--search`, `--all`, `--no-match` and `--narrow` show 23 rows
-(Step 1.31's moment), and Step 1.26 was replayed with a second type, `KGK Teaching Session Log (T300 re-check)`: its
-name is in `1.26-2`, `--metadata` and the `--draft` row, where the story has KGK's own. `1.26-1` and `--new` are taken
+The state captures come from a copy of the end-of-Act-1 snapshot, where KGK Teaching Session Log already exists and
+is published. So `--search`, `--all`, `--no-match` and `--narrow` show 23 rows (Step 1.31's moment), and Step 1.26
+was replayed with a second type, `KGK Teaching Session Log (T300 re-check)`: its name is in `--metadata` and the
+`--draft` row, where the story has KGK's own. The act-1 and act-6 step captures were re-taken on 2026-09-27 by the
+T335 replay at their own moments, so `1.24-1`, `1.31-1` and `1.31-2` show each step's own rows, and `1.26-2` KGK's
+own name. `1.26-1` and `--new` are taken
 before typing, so they are the story's. The loading states are held reads (`states.md` § Holding a read): the list's
 header offers no New activity type until it has loaded, and the editor's reads "Activity type" with Back to list only.
-The act-6 captures come from a copy of the end-of-Act-6 snapshot; `6.14a-2` shows `msf_cpsa` editable to the College,
+`6.14a-2` shows `msf_cpsa` editable to the College,
 which T334 will make read-only. Still visible and still open: no "Draft saved." after a first save (T291 item 3;
 `1.26-2`, `6.14a-5`), and the raw seed key "seed:cpsa:scale:v11.1" in the read-only field view (T271; `1.25-5`).
 
@@ -570,12 +580,12 @@ which T334 will make read-only. Still visible and still open: no "Draft saved." 
 | T329 | queued, P2 | While loading, or on an unknown id, the editor is not titled "New activity type" and does not offer Save draft (BRIEF § 6 A6). T300 already did both for this page: the re-captured states read "Activity type" with Back to list only. | `states/activity-type-edit--loading.png`, `--not-found.png` |
 | T324 | queued | Labels, not keys or code names: "EPA" and "Long text" in the field list (`ActivityTypeEdit.razor:218` prints the enum, though `FieldTypeLabel` exists at :870); "Sub-speciality" in Scope. The publish warning for a change of type also prints code names (`BuilderModels.cs:209`; from the code, not captured). (A8) | `act-1/1.27-2-form-saved-preview.png` |
 | T326 | queued | A no-match search is its own state, not "Create the first activity type" (A10). | `states/activity-types-list--no-match.png` |
-| T190, T280 | queued | The tab bar exposes the selected tab: the tabs pattern, or `aria-current` on the active button. DESIGN.md § Builder layout says nothing on this yet. The page title follows the heading and is never empty. (A14) | `act-A/A.7.9-5-builder-top.png`; `ActivityTypeEdit.razor:14, :62-66` |
+| T190, T280 | queued | The tab bar exposes the selected tab: the tabs pattern, or `aria-current` on the active button. DESIGN.md § Builder layout says nothing on this yet. The page title follows the heading and is never empty. (A14) | `act-A/A.7.9-6-builder-390.png`; `ActivityTypeEdit.razor:14, :62-66` |
 | T271 | queued | A field bound to a scale by seed key shows that scale, not "Select…". This includes the read-only mode, where Step 1.25 reads it and today sees the raw key "seed:cpsa:scale:v11.1". | `act-1/1.25-5-overall-level-field-editor.png` |
 | T291 items 3, 6 | queued (item 5 landed with T300) | Item 3: the first save shows "Draft saved." and takes the focus. Item 5, done: a scope label is never "#1". Item 6: the preview's EPA picker lists what the real form would (the 15 PAED EPAs, not the Demo EPA-001). | `act-1/1.26-2-first-save-no-status.png`, `act-6/6.14a-5-draft-saved.png`; `1.27-2-form-saved-preview.png` |
 | T264, A5 | queued | Section and field Delete are red filled buttons (`ActivityTypeEdit.razor:207, :225`). DESIGN.md:245–267 keeps `.btn-danger` for a dialog footer (BRIEF § 5.4). Discard draft has no confirmation (`:22-25`; observed in code, not filed). | `states/activity-type-edit--user-field.png` |
-| T322, A1 | queued, P2 | Publish is `.btn-success`: white on it is 2.87:1. The success alert is 2.55:1. | `act-A/A.7.14-5-builder-publish-disabled.png`; Step A.7.14 Actual |
-| T323, A3 | queued | At 390 px the tabs wrap to two rows, and the preview starts about 4,250 px down the page (Step A.7.9 Actual). The columns stack by the card's width (DESIGN.md § Builder layout, T266). | `act-A/A.7.9-5-builder-top.png`, `states/activity-type-edit--narrow.png` |
+| T322, A1 | queued, P2 | Publish is `.btn-success`: white on it is 2.87:1. The success alert is 2.55:1. | `act-A/A.7.14-6-builder-publish.png` (re-taken after T335's tokens: white on Publish is 5.88 now); Step A.7.14 Actual |
+| T323, A3 | queued | At 390 px the tabs wrap to two rows, and the preview starts about 4,080 px down the page (Step A.7.9 Actual). The columns stack by the card's width (DESIGN.md § Builder layout, T266). | `act-A/A.7.9-6-builder-390.png`, `states/activity-type-edit--narrow.png` |
 | (not filed) | — | Publish's reason is a tooltip only (Step 1.30 Actual: "carried as the button's title"). The field and section editors render below the whole section list, far from the Edit pressed. The Form settings pickers list field keys (`delivered_on`), not labels. All three are observed. | `act-1/1.27-2-form-saved-preview.png`, `states/activity-type-edit--user-field.png` |
 | T019-b…g, T106 item 11, T179 | queued | The builder backlog (BRIEF § 7 B10). The design may anticipate it but must not assume it is built: drag-and-drop reorder, nested and repeatable sections, visual workflow and credit editors, visibility on several conditions, templates and copy, an `editable_by` input. "This tool is" takes effect on save, not on publish (T179), so the design should not show it as pinned by a version. | the task files |
 

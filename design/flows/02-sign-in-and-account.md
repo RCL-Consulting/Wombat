@@ -129,31 +129,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
   4. Should My account show the person's roles, institution and institutional sign-ins?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -167,9 +175,9 @@ ASK:
     the focus lands after each refusal.
 
 ATTACHED: states/login--blank.png, states/login--locked-out.png, states/login--session-ended.png,
-  act-A/A.7.14-1-signin-contrast.png, states/change-password--rules.png, states/profile--saved.png,
+  act-A/A.7.14-1-login.png, states/change-password--rules.png, states/profile--saved.png,
   states/profile--invalid.png, states/forgot-password--stub.png, states/logout-confirm--default.png,
-  states/login--narrow.png, act-A/A.7.14-3-change-password-mismatch-danger-alert.png
+  states/login--narrow.png, act-A/A.7.14-4-danger-alert.png
 ```
 
 ---
@@ -257,14 +265,14 @@ Paths are relative to `design/baseline/`. Every one below was checked with `ls` 
 1. `states/login--blank.png`
 2. `states/login--locked-out.png`
 3. `states/login--session-ended.png`
-4. `act-A/A.7.14-1-signin-contrast.png`
+4. `act-A/A.7.14-1-login.png`
 5. `states/change-password--rules.png`
 6. `states/profile--saved.png`
 7. `states/profile--invalid.png`
 8. `states/forgot-password--stub.png`
 9. `states/logout-confirm--default.png`
 10. `states/login--narrow.png`
-11. `act-A/A.7.14-3-change-password-mismatch-danger-alert.png`
+11. `act-A/A.7.14-4-danger-alert.png`
 
 **States (attach as the chat asks):**
 - Sign in: `states/login--refused.png`, `states/login--too-many-attempts.png`, `states/login--fields-missing.png`,
@@ -291,7 +299,7 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 | **T328** | Every target is at least 24 px. The password toggle is centred on its input, exposes `aria-pressed`, and is named for the input it controls, so Change password's three are distinct. | `states/login--narrow.png`, `states/change-password--rules.png` |
 | **Static pages** (DESIGN.md:1887–1891, 1919–1921) | Sign-in, forgot password and link have no live connection. `PasswordToggleButton` uses `@onclick`, so on the sign-in page it has never worked. A toggle there is a `wwwroot/wombat.js` handler (which already holds `togglePasswordVisibility`) wired without an inline `onclick`, or it goes. Change password is interactive, so its toggles work. | `states/login--blank.png` |
 | **Form posts** (DESIGN.md:1925–1933) | Sign-in, sign-out, change password and link each post a real form to an endpoint, which writes the cookie and redirects with a code (`?error=…`, `?status=updated`). The page picks its words from the code, so the design's refusal slot holds one of a fixed set of sentences, never free text from the address. | `src/Wombat.Web/Security/SignInOutcome.cs`, `ChangePasswordOutcome.cs` |
-| **T322** | The danger and success alerts and the validation text on the sign-in card and account pages reach 4.5:1 (the tokens are F01's). | `act-A/A.7.14-1-signin-contrast.png`, `act-A/A.7.14-2-profile-saved-success-alert.png`, `act-A/A.7.14-3-change-password-mismatch-danger-alert.png` |
+| **T322** | The danger and success alerts and the validation text on the sign-in card and account pages reach 4.5:1 (the tokens are F01's). | `act-A/A.7.14-1-login.png`, `act-A/A.7.14-3-success-alert.png`, `act-A/A.7.14-4-danger-alert.png` (re-taken after T335's tokens landed T322: every pair now passes) |
 | **T324** | Validation names the field by its label; roles by their labels; the password rules as short sentences in plain words. | `states/profile--invalid.png`, `states/change-password--rules.png` |
 | **T317** | A typed `GET /account/logout` gets a page, not a 405. | T317's symptom (Steps 2.8, A.4.7) |
 | **T287** | One refusal for a wrong password, an unknown address and a locked account, unless the operator decides a locked person is told (question for the operator, not the design). The design keeps one refusal slot either way. | `states/login--locked-out.png` (Step A.6.5) |
@@ -354,7 +362,7 @@ Expect: Home is headed "Home", with "Administrator · Semester N, YYYY" under it
   panels; then My data rights under a rule (DESIGN.md § The NavMenu). Home is lit. The top bar names him "Demo
   Administrator", with Sign out beside it.
 
-Step 2.8 — Mr Smit registers from his link (act-2-onboarding.md:143)
+Step 2.8 — Mr Smit registers from his link (act-2-onboarding.md:146)
 Role: Anonymous — Mr Pieter Smit, holding his invitation link
 Route: /account/register → / → /account/logout → /account/login
 Do: Open the link and enter first name Pieter, last name Smit and a password that meets the rules. Confirm it and
@@ -363,7 +371,7 @@ Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with
   The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home, headed
   "Home" with "Coordinator · Semester N, YYYY" under it. Signing out returns him to the sign-in page.
 
-Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:552)
+Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:526)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: / → /account/session-ended → /account/login → /
 Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
@@ -371,7 +379,7 @@ Expect: Within a minute of her admission the tab moves to the sign-in page, whic
   sign in again." Admission changes her role, and a role change ends open sessions (T279). Signed in again, she sees
   "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 
-Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:717)
+Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:693)
 Role: Every role in this act — each person onboarded here, signed in as themselves
 Route: /account/profile → /account/profile/submit → /account/profile
 Do: Each opens My account (the name in the top bar). Dr Khumalo changes her first name from "Fatma" to "Fatima" and
@@ -381,7 +389,7 @@ Expect: The page reads "My account" and "Update your name and review your assign
   email field is not editable. Khumalo's save reloads the page with "Profile saved.", which takes the focus, and the
   top bar's account row now reads "Fatima Khumalo" (the lists are checked on Mbatha's in Step 2.44).
 
-Step A.3.2 — The sign-in page offers no institutional sign-in (appendix-cross-cutting.md:498)
+Step A.3.2 — The sign-in page offers no institutional sign-in (appendix-cross-cutting.md:477)
 Role: Anonymous — a KGK consultant
 Route: /account/login → /account/sso-challenge/{providerKey} → /account/login
 Do: Look for an institutional sign-in button. Sign in with a wrong password. Then open the challenge address for a
@@ -391,7 +399,7 @@ Expect: The page offers only an email, a password, Remember me and the "Forgotte
   institutional button (T156). The challenge for a provider that is not configured returns to the sign-in page, which
   says "Unknown SSO provider."
 
-Step A.3.3 — The callback and link pages with no institutional sign-in in progress (appendix-cross-cutting.md:513)
+Step A.3.3 — The callback and link pages with no institutional sign-in in progress (appendix-cross-cutting.md:493)
 Role: Anonymous — a KGK consultant
 Route: /account/sso-callback → /account/login → /account/link-external
 Do: Open the callback address, then the link-your-account page, directly.
@@ -399,7 +407,7 @@ Expect: The callback returns to the sign-in page, which says "External login inf
   page says "Your institutional sign-in has expired. Start again from the sign-in page." It offers Back to sign in and
   no password field (T149).
 
-Step A.4.1 — Dr Botha reviews and edits her account (appendix-cross-cutting.md:528)
+Step A.4.1 — Dr Botha reviews and edits her account (appendix-cross-cutting.md:508)
 Role: CommitteeMember — Dr Sarah Botha
 Route: / → /account/profile → /account/profile/submit → /account/profile → /account/profile/submit → /account/profile
 Do: Open My account from her name in the top bar. Clear her last name and save. Then type a single space as her last
@@ -412,7 +420,7 @@ Expect: On My account her name in the top bar is the current page (underlined), 
   stored, and nothing is saved. Restored, the save reloads the page with "Profile saved.", which takes the focus
   (T234), and the top bar's account row names her as saved, "Sarah Botha".
 
-Step A.4.2 — Dr Khumalo changes her password, getting it wrong first (appendix-cross-cutting.md:549)
+Step A.4.2 — Dr Khumalo changes her password, getting it wrong first (appendix-cross-cutting.md:530)
 Role: Assessor — Dr Fatima Khumalo
 Route: /account/profile → /account/change-password
 Do: Open My account (the name in the top bar), then its Change password. Try four times, and record the password (d)
@@ -429,7 +437,7 @@ Expect: Each refusal reloads the page with empty fields. The tab's title starts 
     symbol. It says nothing of lower-case letters, a rule it keeps.
   - (d) reads "Password updated.", and she stays signed in in this browser.
 
-Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:581)
+Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:559)
 Role: Assessor — Dr Fatima Khumalo (the second browser)
 Route: /activities/inbox → /account/session-ended → /account/login → /activities/inbox
 Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
@@ -437,7 +445,7 @@ Expect: The tab leaves for the sign-in page by a full page load, which says "You
   again." (T279). The old password is refused ("Invalid email or password."). The new one brings her back to her
   Activity inbox.
 
-Step A.4.4 — Dr du Plessis has forgotten his password (appendix-cross-cutting.md:594)
+Step A.4.4 — Dr du Plessis has forgotten his password (appendix-cross-cutting.md:572)
 Role: Anonymous — Dr Pieter du Plessis
 Route: /account/login → /account/forgot-password → /account/login
 Do: Follow "Forgotten your password? Reset it" from the sign-in page.
@@ -445,7 +453,7 @@ Expect: A "Reset password" page, saying exactly: "Password reset is not wired ye
   to issue a new invitation or reset the account directly." It offers Back to sign in, and nothing else: no field, and
   no email is sent.
 
-Step A.4.5 — Prof Mbatha resets his password (appendix-cross-cutting.md:611)
+Step A.4.5 — Prof Mbatha resets his password (appendix-cross-cutting.md:588)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
 Do: Open Dr du Plessis's account. Set a new password of 10 characters, then one that meets every rule. Record the
@@ -454,7 +462,7 @@ Expect: The Reset password card says it sets a password directly and that the us
   password is refused with the rules it breaks. The second is accepted, and the field is cleared. The audit log
   records the reset with the password redacted (T101).
 
-Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:640)
+Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:608)
 Role: Trainee — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password
 Do: Sign in with the password Prof Mbatha set. Then change it, from My account (the name in the top bar), to one of
@@ -462,7 +470,7 @@ Do: Sign in with the password Prof Mbatha set. Then change it, from My account (
 Expect: He lands on his Trainee dashboard, which still says that his programme ended (Step 5.28). The change reads
   "Password updated."
 
-Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:657)
+Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:622)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/logout-confirm → / → /account/logout-confirm → /account/logout → /account/login → /msf/campaigns → /account/login → /msf/campaigns
 Do: Open the sign-out confirmation by its address and press Cancel. Open it again and sign out. Then open MSF
@@ -471,14 +479,14 @@ Expect: A "Sign out" page, with no nav, says to use its button to end the sessio
   dashboard, still signed in. Sign out lands on the sign-in page. MSF campaigns then asks him to sign in, and after
   signing in he is brought back to it. The audit log records a Logout.
 
-Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:967)
+Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:886)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/session-ended → /account/login
 Do: Wait up to a minute on the page he had open, then sign in.
 Expect: The tab leaves for the sign-in page, which says "Your session has ended. Please sign in again." Signing in is
   refused: "Too many failed sign-in attempts. Please try again later or reset your password."
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:1006)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:922)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
@@ -486,7 +494,7 @@ Expect: He lands on his Assessor dashboard. "Waiting for your rating" is badged 
   and Logbook Review, badged Overdue, as his inbox lists it (T297, T335). Dr Dlamini's
   assessor list names him again (checked at A.7.1).
 
-Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appendix-cross-cutting.md:256)
+Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appendix-cross-cutting.md:251)
 Role: Trainee — Dr Sipho Ndlovu (the browser left signed in at A.1.11)
 Route: /account/session-ended → /account/login
 Do: Wait on any page for up to a minute. Then sign in with his old address and password.
@@ -494,7 +502,7 @@ Expect: The tab leaves for the sign-in page by itself, which says "Your session 
   (T279). Signing in is refused in the words an unknown address gets, "Invalid email or password.", with no mention
   of an erasure (T156). No email is sent to him.
 
-Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1336)
+Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1175)
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
 Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
@@ -502,7 +510,7 @@ Do: At 390 px, open the sign-in page and the forgot-password page. Then verify D
 Expect: The sign-in card fits the width, and its fields and buttons are easy to tap. The verify page's result fits
   the width.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1386)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1215)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
@@ -520,7 +528,7 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus
   ring. Muted text passes on the page background since T086.
 
-Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:472)
+Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:466)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /account/session-ended → /account/login
 Do: Go back to the tab left open at Step 5.15 and wait up to a minute.

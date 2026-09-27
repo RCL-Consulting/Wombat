@@ -186,31 +186,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
   3. Should MSF coverage stay a link from the campaign list, or become a tab of it?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -226,7 +234,7 @@ ATTACHED (key screenshots first):
   - states/msf-respond--form.png, msf-respond--thank-you.png, msf-respond--used.png, msf-respond--narrow.png;
   - states/campaign-report--under-review.png, campaign-report--blocked.png;
   - states/my-msf-reports--report.png, programme-coverage--loaded.png;
-  - act-3/3.47-1-my-msf-reports.png, act-3/3.46-1-report-released.png.
+  - act-3/3.47-1-molefe-report.png, act-3/3.46-1-report-released.png.
   - A full-page capture draws the sidebar part-way down a long page, or ends it early. That is the capture, not the
     product.
 ```
@@ -291,7 +299,7 @@ registration or response link. Open each one before you upload it (BRIEF § 3.3)
 10. `states/my-msf-reports--report.png`
 11. `states/programme-coverage--loaded.png`
 12. `states/msf-respond--narrow.png`
-13. `act-3/3.47-1-my-msf-reports.png`
+13. `act-3/3.47-1-molefe-report.png`
 14. `act-3/3.46-1-report-released.png`
 
 Items 13 and 14 are a pair: the same release on two clocks (T325).
@@ -342,16 +350,14 @@ Items 13 and 14 are a pair: the same release on two clocks (T325).
   - `states/programme-coverage--narrow.png`
 
 **Do not attach:**
-- `act-A/A.4.7-1-cancel-back-on-dashboard.png` and `act-A/A.7.5-1-smit-home.png`: both show the Coordinator's
+- `act-A/A.4.7-2-cancel-back-on-dashboard.png` and `act-A/A.7.5-1-home-390.png`: both show the Coordinator's
   dashboard, F06's (re-captured after T297 on 2026-09-26; BRIEF § 10).
-- `act-3/3.43-0-all-links-delivered-to-sink.png`: a replay artefact of the mail sink, not a product state (Step 3.43's
-  note).
 
 ## Known problems this design must solve
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T325** (A9) | One release reads "Released 2026-09-26 12:53" (server-local, no zone) on the trainee's list, and "Recorded on the portfolio: 2026-09-26 10:53 UTC" on the report. Show one SAST time, labelled, everywhere. New campaign's default dates also come from the server's date. | `act-3/3.47-1-my-msf-reports.png` against `act-3/3.46-1-report-released.png` |
+| **T325** (A9) | One release reads "2026-09-27 16:27" under Released (server-local, no zone) on the trainee's list, and "Recorded on the portfolio: 2026-09-27 14:27 UTC" on the report. Show one SAST time, labelled, everywhere. New campaign's default dates also come from the server's date. | `act-3/3.47-1-molefe-report.png` against `act-3/3.46-1-report-released.png` |
 | **T331** (A12) | The nav lights no item on `/msf/reports/{CampaignId:int}` or `/msf/coverage`. Mark MSF Campaigns there. | `states/campaign-report--loading.png`, `states/programme-coverage--loading.png`; the same unlit nav in `states/campaign-report--under-review.png` (observed) |
 | **T329** (P2, A6) | New campaign ends the circuit when a read fails. Design its load-error state: the header, the alert, and no form. | T329 |
 | **T270** | **Plurals.** "from 1 responses" becomes "from 1 response". **Address table.** At 390 px it was 428 px in a 306 px container, so Remove sat off-screen; it must stack or wrap, with Remove always visible. **Withdrawn drafts.** A campaign withdrawn while still a draft shows no Responded column. The replay's withdrawn draft had nobody invited, so `states/campaign-edit--withdrawn.png` shows only "Nobody was invited." (observed). | T270 (dev campaigns 18 and 20) |
@@ -394,7 +400,7 @@ The flow is done when BRIEF § 9's checks hold:
   - Every Expect holds. Change any Expect whose on-screen wording the redesign changes (for example, "from 1
     response"), in the same task (BRIEF § 9, item 7).
 - **The 49 states are re-captured** into `design/baseline/states/`, with the steps' captures `3.34-1` to `3.49-1`,
-  `A.4.7-2`, `A.4.7-3`, `A.7.5-2` and `A.7.5-4`. The scratch states (`campaign-report--blocked`, `--no-epa` and
+  `A.4.7-3`, `A.4.7-4`, `A.7.5-2` and `A.7.5-3`. The scratch states (`campaign-report--blocked`, `--no-epa` and
   `msf-respond--expired`) need the scratch database in `states.md`. Compare them with the chosen artboards.
 - **`dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj` is green,** without `--no-build`. That run includes
   `Design/*`, `Accessibility/*`, `Navigation/*` (for T331) and T294's scenario guard.

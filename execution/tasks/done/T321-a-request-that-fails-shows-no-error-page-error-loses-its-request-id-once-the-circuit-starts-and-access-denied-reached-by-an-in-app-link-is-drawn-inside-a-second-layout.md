@@ -1,11 +1,12 @@
 ---
 id: T321
 title: A request that fails shows no error page, /Error loses its request id once the circuit starts, and Access denied reached by an in-app link is drawn inside a second layout
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-26
+completed: 2026-09-27
 ---
 
 # T321 — A request that fails shows no error page, /Error loses its request id once the circuit starts, and Access denied reached by an in-app link is drawn inside a second layout
@@ -52,8 +53,8 @@ created: 2026-09-26
 - [x] Test with a captured logger: the id on the page appears in the logged failure. — `b347e11c`: `ErrorPageFlowTests`. The reference is the 32-character trace id, logged once, with the failure.
 - [x] Test that Error.razor's route renders statically for a signed-in user (no interactive root), so its id survives. — `b347e11c`: `Navigation/SystemPagesTests.TheErrorPage_IsStaticAndOpenToEveryone`.
 - [x] bUnit test on Routes: a page the signed-in user may not open renders Access denied with one nav and one Sign out button. — `b347e11c`: `SystemPagesTests.AccessDenied_ReachedInTheApp_IsDrawnOnce_InTheOneShell`, and `ActiveNavItemTests.InTheRealRoutes_AccessDeniedAtARefusedAddress_LightsNothing_AndDrawsNoTrail`.
-- [ ] Browser, replaying A.6.3 as Prof Mbatha: Back to institutions shows Access denied with one sidebar and one Sign out. Replace design/baseline/act-A/A.6.3-4-back-to-institutions-denied.png.
-- [ ] Browser, replaying A.5.8 signed in and signed out, at 390 px: the request id is still on screen after the page settles. Update the runbook's A.5.8 Expect.
+- [x] Browser, replaying A.6.3 as Prof Mbatha: Back to institutions shows Access denied with one sidebar and one Sign out. Replace design/baseline/act-A/A.6.3-4-back-to-institutions-denied.png. — 2026-09-27, T335 step G (wombat_scenario_t335, b347e11c): A.6.3 replayed with Gap: none. Its "Back to institutions" link no longer exists (T302), so there is no Access denied to reach from it. Access denied in place (one `.page`, one sidebar) was browser-checked by the Home lane's headless-Chrome probe and is held by `SystemPagesTests`. The old capture was removed, not replaced.
+- [x] Browser, replaying A.5.8 signed in and signed out, at 390 px: the request id is still on screen after the page settles. Update the runbook's A.5.8 Expect. — 2026-09-27, T335 step G (wombat_scenario_t335, b347e11c): A.5.8 replayed signed in and signed out at 390 px, with Gap: none (the typed state has no reference by design). The failure page's reference staying on screen after the page settles was browser-checked signed in and out at 390 px by the Home lane's probe. A real failure is not reachable on the Development replay (T337).
 
 ## As built in T335 (`b347e11c`, 2026-09-27)
 

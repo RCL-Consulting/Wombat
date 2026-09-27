@@ -222,31 +222,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
      This is the frame's rule that every later flow follows.
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -263,9 +271,9 @@ ASK:
   - Run an accessibility review against WCAG 2.1 AA, and give a contrast figure for every token pair on the sheet.
 
 ATTACHED: states/shell--nav-open.png, states/shell--nav-folded.png, states/home--committee-member.png,
-  states/access-denied--signed-in.png, act-A/A.6.3-4-back-to-institutions-denied.png, states/error--signed-in.png,
-  states/placeholder--stalled-activities.png, states/shell--reconnect-retrying.png, states/shell--error-banner.png,
-  states/home--loading.png, act-A/A.7.14-2-profile-saved-success-alert.png, act-A/A.7.14-6-reviews-badges.png,
+  states/access-denied--signed-in.png, states/error--signed-in.png, states/shell--reconnect-retrying.png,
+  states/shell--error-banner.png, states/home--loading.png, act-A/A.7.14-3-success-alert.png,
+  act-A/A.7.14-7-review-7-badges.png,
   act-1/1.5-2-kruger-invited.png (cropped: it is here only for the underlined nav), states/home--administrator.png
   (the 20-link nav). For round 1, the landing captures follow as you ask for them.
 ```
@@ -328,13 +336,8 @@ pages).
 | Page not found | Narrow | `states/not-found--narrow.png` | |
 | Error | Signed in | `states/error--signed-in.png` | "Something went wrong", ending with no request id once interactive (T321) |
 | Error | Narrow | `states/error--narrow.png` | |
-| Coming soon | Recent Activities | `states/placeholder--recent-activities.png` | Assessor |
-| Coming soon | Stalled Activities | `states/placeholder--stalled-activities.png` | Coordinator |
-| Coming soon | Programme Trainees | `states/placeholder--programme-trainees.png` | CommitteeMember |
-| Coming soon | STAR Review Queue | `states/placeholder--star-review-queue.png` | SpecialityAdmin |
-| Coming soon | System | `states/placeholder--system.png` | Administrator |
-| Coming soon | Unknown feature | `states/placeholder--unknown-feature.png` | Page not found, 404 |
-| Coming soon | Narrow | `states/placeholder--narrow.png` | |
+| Coming soon | Recent Activities, Stalled Activities, Programme Trainees, STAR Review Queue, System | none | T335 deleted the placeholder page, so each address is Page not found now. Flow 04 designs Recent Activities, flow 06 the next three, and flow 18 System |
+| Coming soon | Any `/placeholder/` address | `act-3/3.31-1-stalled-activities-404.png` | Page not found, 404 |
 
 Not captured, so describe them in words:
 - **The error page signed out.** It redirects to sign-in today (`act-A/A.5.8-2-error-signed-out.png` shows the
@@ -357,17 +360,19 @@ all, keeping `act-1/1.5-2-kruger-invited.png` back in `design/upload/crop-first/
 2. `states/shell--nav-folded.png`
 3. `states/home--committee-member.png`
 4. `states/access-denied--signed-in.png`
-5. `act-A/A.6.3-4-back-to-institutions-denied.png`
-6. `states/error--signed-in.png`
-7. `states/placeholder--stalled-activities.png`
-8. `states/shell--reconnect-retrying.png`
-9. `states/shell--error-banner.png`
-10. `states/home--loading.png`
-11. `act-A/A.7.14-2-profile-saved-success-alert.png`
-12. `act-A/A.7.14-6-reviews-badges.png`
-13. `act-1/1.5-2-kruger-invited.png`. It is here only to show the underlined nav. **Crop out its registration link
+5. `states/error--signed-in.png`
+6. `states/shell--reconnect-retrying.png`
+7. `states/shell--error-banner.png`
+8. `states/home--loading.png`
+9. `act-A/A.7.14-3-success-alert.png`
+10. `act-A/A.7.14-7-review-7-badges.png`
+11. `act-1/1.5-2-kruger-invited.png`. It is here only to show the underlined nav. **Crop out its registration link
     first** (BRIEF.md § 3.3), or leave it out.
-14. `states/home--administrator.png`: the Administrator's 20-link nav (optional; Administrator homes are not held).
+12. `states/home--administrator.png`: the Administrator's 20-link nav (optional; Administrator homes are not held).
+
+Access denied reached by an in-app link has no capture now: Back to institutions, the link that reached it, went with
+T302, and this flow designs Access denied. Nor do the "Coming soon" stubs: T335 deleted the placeholder page, so
+each address is Page not found now, and flows 04, 06 and 18 design the pages (§ 3).
 
 **Landing per role (for round 1; attach as the chat asks).** Each is today's Home for one role:
 - `states/home--trainee.png` (Trainee), `states/home--assessor-pending.png` (Assessor, with a request waiting)
@@ -385,16 +390,14 @@ all, keeping `act-1/1.5-2-kruger-invited.png` back in `design/upload/crop-first/
 - `states/access-denied--signed-out.png`, `states/access-denied--narrow.png`
 - `states/not-found--signed-in.png`, `states/not-found--signed-out.png`, `states/not-found--narrow.png`
 - `states/error--narrow.png`
-- `states/placeholder--recent-activities.png`, `states/placeholder--programme-trainees.png`,
-  `states/placeholder--star-review-queue.png`, `states/placeholder--system.png`,
-  `states/placeholder--unknown-feature.png`, `states/placeholder--narrow.png`
+- `act-3/3.31-1-stalled-activities-404.png` (a `/placeholder/` address, Page not found since T335 deleted the page)
 - `act-A/A.5.8-2-error-signed-out.png` (the signed-out redirect)
 
-**Re-captured after T297 landed (2026-09-26), so no longer held; attach as the chat asks.** Each is from the end of its
-act, not the step's own moment (BRIEF § 10):
+**Re-captured after T297 landed (2026-09-26), and re-taken on 2026-09-27 by the T335 replay, the step captures at
+their own moments (BRIEF § 10); attach as the chat asks:**
 - `states/home--assessor-switched.png` and `act-2/2.34-1-zulu-assessor-view.png` (Step 2.34: the empty Assessor view
   after the switch)
-- `act-A/A.5.3-1-forged-switch-trainee-view.png` (Step A.5.3: still "Viewing as Trainee")
+- `act-A/A.5.3-1-forged-switch-trainee-view.png` (Step A.5.3: still "Acting as Trainee")
 
 ## 5. Known problems this design must solve
 
@@ -402,16 +405,16 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 
 | Task | What it means for the design | Evidence (under `design/baseline/`) |
 |---|---|---|
-| **T322** (P2, High) | The token sheet is where contrast is fixed, not each page. Every alert tint, badge tint, validation colour, button fill, input border and focus ring on the sheet carries its measured ratio: text 4.5:1, boundaries and focus 3:1. The navigation gets a focus-ring token of its own that reaches 3:1 on both ends of its gradient. Today's failing pairs are in § 1. | `act-A/A.7.14-2-profile-saved-success-alert.png`, `act-A/A.7.14-6-reviews-badges.png`; the measurements are from step A.7.14 (BRIEF.md § 6, A1) |
-| **T321** | Design the error page for signed-in and signed-out visitors, with the request id as quotable text. Access denied is one page with one frame, whether it is reached by a typed address or an in-app link. | `act-A/A.6.3-4-back-to-institutions-denied.png`, `states/error--signed-in.png`, `act-A/A.5.8-2-error-signed-out.png` |
+| **T322** (P2, High) | The token sheet is where contrast is fixed, not each page. Every alert tint, badge tint, validation colour, button fill, input border and focus ring on the sheet carries its measured ratio: text 4.5:1, boundaries and focus 3:1. The navigation gets a focus-ring token of its own that reaches 3:1 on both ends of its gradient. Today's failing pairs are in § 1. | `act-A/A.7.14-3-success-alert.png`, `act-A/A.7.14-7-review-7-badges.png`, re-taken after T335's tokens landed T322 (every pair now passes); the failing measurements were step A.7.14's before T335 (BRIEF.md § 6, A1) |
+| **T321** | Design the error page for signed-in and signed-out visitors, with the request id as quotable text. Access denied is one page with one frame, whether it is reached by a typed address or an in-app link. | `states/error--signed-in.png`, `act-A/A.5.8-2-error-signed-out.png`; Access denied reached by an in-app link has no capture now (Back to institutions, the link that reached it, went with T302) |
 | **T330** | One message per reconnect state, and a button whose label matches the message. Keep the `components-reconnect-*` class names (`Layout/ReconnectModal.razor.css`). | `states/shell--reconnect-retrying.png`, `states/shell--reconnect-resume-failed.png` |
 | **T331** | The active item is designed, and a rule says which item a sub-page lights. Never two at once. | `states/specialities-list--loading.png`, `states/campaign-report--loading.png` (both F16/F10 pages, shown here for the unlit nav) |
-| **T328** | Controls in the body font; the design's focus ring on a focusable scroll region; badges that stay pills in a flex row; header actions of one height; a top-row account link at least 24 px tall. | `states/home--narrow-trainee.png` (the stretched badge; re-captured after T297, and still stretched), `act-A/A.7.5-3-decisions-due-summary-scrolled.png` |
+| **T328** | Controls in the body font; the design's focus ring on a focusable scroll region; badges that stay pills in a flex row; header actions of one height; a top-row account link at least 24 px tall. | `states/home--narrow-trainee.png` (the stretched badge; re-captured after T297, and still stretched), `act-A/A.7.5-4-decisions-due-390.png` (re-taken after T335: the design's ring) |
 | **T329** | The shared loading and load-error states: the header from the first render, a skeleton while the first read runs, an alert (not an alert above an empty state) when it fails, and no action before the record loads. The in-app error bar must not be the way a failed read ends. | `states/home--loading.png`, `states/home--load-error.png`, `states/shell--error-banner.png` |
 | **T325** | Wherever the frame prints a time, it is South African time with its zone. | BRIEF.md § 6, A9 |
 | **T324** | Home greets by name, and the switch line names roles by label ("Committee member"). | `states/home--committee-member.png` |
 | **T190** | One page-title pattern for every tab. | T190's symptom: "Dashboard — Wombat", "Sign in - Wombat", and most pages with no suffix |
-| **T317** | The switch choice is remembered per person, and does not carry over to the next person who signs in on the same browser. | `act-2/2.34-4-naidoo-inherits-view.png` |
+| **T317** | The switch choice is remembered per person, and does not carry over to the next person who signs in on the same browser. | `act-2/2.34-3-naidoo-same-browser.png` (built in T335: Dr Naidoo, next on the same browser, lands as Committee member) |
 | Observed, not filed | Nav items render underlined (`NavMenu.razor.css` sets `text-decoration: none` on the brand, line 38, but not on `.nav-link`). The navigation's gradient stops short of a full-page capture's height. Sign out appears twice (`MainLayout.razor:13–16` and the nav's Logout form). Home greets by email. | `act-1/1.5-2-kruger-invited.png`, `states/home--committee-member.png` |
 
 ## 6. Questions the design must answer
@@ -491,7 +494,7 @@ describes the product as it is today. Steps 2.34 and 3.33 describe the Assessor 
 "Waiting for your rating"; F04 designs the cards.
 
 ```text
-Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:584)
+Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:561)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
@@ -502,7 +505,7 @@ Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The
   PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
   never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
 
-Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:600)
+Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:578)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /account/logout → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and in again. Then type
@@ -518,7 +521,7 @@ Expect: Under the header an info alert reads "You are now acting as Assessor." a
   Committee member's sidebar and menu, "Committee member · Semester N, YYYY" under Home's heading, and the alert "You are
   now acting as Committee member.", the role Step 3.33 starts from.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:625)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:611)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for your
@@ -531,7 +534,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   assessor's seven days since Step 3.30 aged it. After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's
   minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
 
-Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:970)
+Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:967)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
@@ -547,7 +550,7 @@ Expect:
   - Her menu is Home, Committee reviews and Decision panels, then My data rights. Programme trainees is flow 06's, and
     the menu offers no page before it is built.
 
-Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:590)
+Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:579)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /not-found
 Do: Look in the menu for a page of stalled requests. Then type the address the menu once linked,
@@ -557,14 +560,14 @@ Expect: The menu offers none: Home, Decisions due, MSF campaigns, Committee revi
   "Stalled requests" card lists it, and no page chases a stalled request: no reminder and no reassignment. The old
   address is "Page not found" with status 404: the placeholder page went with the stubs (T335, flow 01).
 
-Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:707)
+Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:669)
 Role: Trainee — Dr Anele Dlamini
 Route: /dashboard/switch/{role} → /
 Do: Open `/dashboard/switch/Administrator`.
 Expect: She is back on her own dashboard, still acting as a Trainee. A switch to a role she does not hold changes
   nothing and says nothing (no "You are now acting as" alert), and the sidebar offers her no switch: she holds one role.
 
-Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:682)
+Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:642)
 Role: Trainee — Dr Anele Dlamini
 Route: /admin/users → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Users page, then that of Scheduled jobs.
@@ -572,7 +575,7 @@ Expect: Each time, "You cannot open this page": "Your role (Trainee) does not op
   your work, ask your institution's Wombat administrator.", with Go to Home, which takes her home. Nothing of the page
   she asked for is shown or named, and no switch of role is offered (T335, D6).
 
-Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:695)
+Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:656)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Institutions list, then that of Scheduled jobs.
@@ -580,7 +583,7 @@ Expect: For both, "You cannot open this page": "Your role (Institutional admin) 
   need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
   offers neither, and nothing in it is lit on the refusal.
 
-Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:910)
+Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:849)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /
 Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
@@ -591,7 +594,7 @@ Expect: "Institution saved." takes the focus. Status reads "Active" as text, wit
   `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
   `2|hod.paediatrics@kgk.wombat.local|t`.
 
-Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:719)
+Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:679)
 Role: Trainee — Dr Anele Dlamini
 Route: /not-found → /not-found → /account/login → /not-found
 Do: Type the following addresses:
@@ -604,7 +607,7 @@ Expect: For each, the "Page not found" page: "There is no page at this address."
   - `/placeholder/recent-activities` is Page not found too: the placeholder page went with the stubs (T335, flow 01).
   - Signed out, the unknown address first asks her to sign in, then shows Page not found.
 
-Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:739)
+Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:698)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
@@ -613,21 +616,21 @@ Expect: The institution shows Page not found, not "You cannot open this page". T
   user could not be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not
   403).
 
-Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:756)
+Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:716)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Open the address of Dr Mahlangu's submitted Mini-CEX from A.2.7.
 Expect: "Activity unavailable": the requested activity could not be loaded. Nothing of it is shown, and nothing on the
   page speaks of permission.
 
-Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:767)
+Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:727)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights/{Id:guid}
 Do: Open the address of Dr Mahlangu's request with its last digit changed.
 Expect: The refusal "You are not authorized to access this data-rights request." and the empty state "Not found". An
   unknown id and another institution's request read the same, so the page does not tell them apart (T112).
 
-Step A.5.8 — The error page (appendix-cross-cutting.md:782)
+Step A.5.8 — The error page (appendix-cross-cutting.md:740)
 Role: Trainee — Dr Anele Dlamini
 Route: /Error
 Do: Type `/Error`.
@@ -635,14 +638,14 @@ Expect: Typed, no request failed: "Nothing went wrong" and "This is Wombat's err
   failed, so there is nothing to report.", with Go to Home, no reference and no Try again. Signed out it reads the same,
   with no sign-in first: the page is open to everyone, and static (T321, T335).
 
-Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:805)
+Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:760)
 Role: Assessor — Dr Mohammed Patel
 Route: /
 Do: Read the menu.
 Expect: Home and Activity inbox, then My data rights. There is no Recent activities: the flow 01 pick dropped it, and
   the nav links to no page that is not built (DESIGN.md § The NavMenu).
 
-Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:816)
+Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:770)
 Role: Coordinator — Mr Pieter Smit
 Route: /
 Do: Read the dashboard's "Stalled requests" card, then look for a stalled-work page in the menu.
@@ -650,34 +653,34 @@ Expect: The card lists Dr du Plessis's portfolio review, still awaiting review s
   links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. The menu
   offers no stalled-work page: it is flow 06's, and the nav links to no page that is not built.
 
-Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:836)
+Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:785)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /
 Do: Read the menu.
 Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Committee reviews and Decision
   panels, then My data rights. Programme trainees is flow 06's, and not offered before it is built.
 
-Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:846)
+Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:795)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the menu.
 Expect: Home, Decisions due, Committee reviews and Decision panels, then My data rights. Programme trainees is flow
   06's and the STAR review queue flow 09's; the menu offers neither before it is built.
 
-Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:857)
+Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:805)
 Role: Administrator — devadmin
 Route: /
 Do: Read the menu.
 Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1132)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1031)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
 Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. The tables of My
   activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1386)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1215)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

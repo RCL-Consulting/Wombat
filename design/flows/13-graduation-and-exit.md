@@ -135,31 +135,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
      it as a clearly marked future state?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -282,31 +290,32 @@ Every path is under `design/baseline/` and was checked to exist on 2026-09-26. O
 - Verify: `states/verify-export--blank.png`, `states/verify-export--empty.png`,
   `states/verify-export--check-failed.png`, `states/verify-export--narrow.png`,
   `act-5/5.13-2-verifier-uppercase-hash.png` (the upper-case defect), `act-5/5.23-2-graduate-file-verified.png`,
-  `act-A/A.7.12-3-verify-molefe.png`.
+  `act-A/A.7.12-3-verify-390.png`.
 - Ending a programme: `states/trainee-profile-edit--future-refused.png`, `states/trainee-profile-edit--completed.png`,
   `states/trainee-profile-edit--deactivate-dialog.png`, `states/trainee-profile-edit--deactivated.png`,
   `states/pending-trainees-list--closed.png`, `act-5/5.17-1-mbatha-marked-complete.png`,
   `act-5/5.17-2-mbatha-trainees-completed.png`.
-- The graduate: `states/home--narrow-former-trainee.png`, `act-A/A.7.4-1-molefe-home-no-role.png`,
+- The graduate: `states/home--narrow-former-trainee.png`, `act-A/A.7.4-1-home-390.png`,
   `act-5/5.19-1-molefe-session-ended.png`, `act-5/5.22-1-molefe-my-reviews-denied.png`,
   `act-5/5.22-3-molefe-msf-reports-denied.png`, `act-5/5.22-4-molefe-new-activity-opens.png`.
 - The record: `states/my-progress--exit-met.png`, `states/my-progress--narrow-former.png`,
-  `act-A/A.7.4-2-molefe-record.png`, `states/activity-view--after-programme-end.png`,
+  `act-A/A.7.4-3-progress-390.png`, `states/activity-view--after-programme-end.png`,
   `states/my-activities--credited-none.png`, `states/reviews-schedule--current-only.png`.
-- Only as evidence of T312's drift, never as a target: `act-6/6.21-1-molefe-record-paused.png`,
-  `act-6/6.40-2-molefe-kgk001-card.png`, `act-6/6.41-1-duplessis-record-after-rebuild.png`.
+- Only as evidence of T312's drift, never as a target: `act-6/6.21-1-molefe-progress.png`,
+  `act-6/6.40-1-molefe-progress.png`, `act-6/6.41-1-duplessis-progress.png`.
 
 **Re-captured after T303 landed (4824d62, 2026-09-26), so no longer held** (BRIEF § 10):
-- T303 (Add role offered Trainee): `act-5/5.17-3-mbatha-user-no-roles.png`, `states/user-detail--no-roles.png`, both
-  from the end-of-Act-5 snapshot. Her page reads "This user has no roles."; Add role offers the six staff roles, no
+- T303 (Add role offered Trainee): `act-5/5.17-3-mbatha-user-no-roles.png` (re-taken on 2026-09-27 by the T335
+  replay, at the step's own moment) and `states/user-detail--no-roles.png` (from the end-of-Act-5 snapshot). Her
+  page reads "This user has no roles."; Add role offers the six staff roles, no
   Trainee, under a help line that points to Trainees' "Admit to curriculum", which a graduate is not offered (T303's
   open question of a second programme).
 
 **Re-captured after T297 landed (2026-09-26), so no longer held:** `states/home--trainee-ended.png`,
-`act-5/5.28-1-duplessis-home-ended.png` (both from the end-of-Act-5 snapshot) and
-`act-A/A.4.6-1-trainee-dashboard-ended.png` (the end of the appendix). The ended trainee does get the trainee dashboard,
-and T297 changed it: its Activity inbox card now lists his requested CBD and his portfolio review awaiting review, the
-two rows his inbox lists (Step 5.28's re-check).
+`act-5/5.28-1-duplessis-home-ended.png` and `act-A/A.4.6-1-trainee-dashboard-ended.png`, all three re-taken on
+2026-09-27 (the step captures by the T335 replay, at their own moments). The ended trainee does get the trainee
+dashboard, and T297 changed it: its Activity inbox card now lists his requested CBD and his portfolio review awaiting
+review, the two rows his inbox lists (Step 5.28's re-check).
 
 ## Known problems this design must solve
 
@@ -317,7 +326,7 @@ two rows his inbox lists (Step 5.28's re-check).
 | T305 | P2 | A completed or withdrawn profile is a details list with no inputs and no Save profile; the command refuses a save ("This programme ended on <date>; its record is archived and cannot be changed."). BRIEF § 7 B12 | `states/trainee-profile-edit--completed.png`, `states/trainee-profile-edit--deactivated.png` |
 | T313 | P2 | Verify: case-insensitive; "not a hash" message; "first generated on …, exported N times, last exported on …"; ids stay ids. Verification records are kept for the life of the record (the 90-day cleanup goes) | `act-5/5.13-2-verifier-uppercase-hash.png`, `states/verify-export--verified.png` |
 | T287 | P3 | The hash field's placeholder "Enter the hash from the PDF footer" is false: the PDF prints no hash (F-5.13b). T313 may take it | `states/verify-export--blank.png` |
-| T312 | P2 | An ended record reads the EPA list and targets it ended with. A later pause shows "(no longer in use)" and keeps the EPA; a later local item does not appear. The PDF's "Progress per EPA" follows | `act-6/6.21-1-molefe-record-paused.png`, `act-6/6.40-2-molefe-kgk001-card.png` |
+| T312 | P2 | An ended record reads the EPA list and targets it ended with. A later pause shows "(no longer in use)" and keeps the EPA; a later local item does not appear. The PDF's "Progress per EPA" follows | `act-6/6.21-1-molefe-progress.png`, `act-6/6.40-1-molefe-progress.png` |
 | T310 | P3 | The certificate names the issuing panel's institution. A PDF, not a screen: note it if the PDF is briefed | none (code read) |
 | T325 | P3 | Export's default range and "today" read the South African date; Verify prints a labelled time (today "2026-09-26 12:09 UTC") matching what the PDF prints (T325's rule) | `states/verify-export--verified.png` |
 | T323, T328 | P3 | At 390 px the verify result's ids wrap (A.7.12 found this holds); controls use the body font (BRIEF § 6 A3, A4) | `states/verify-export--narrow.png` |

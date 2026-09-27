@@ -25,10 +25,10 @@ changed.
 |---|---|
 | Decided | **Restructure, with UX in scope** (W-008). The operator: *"restructure because I want it to look at UX also, include mails and pdf"*. The redesign may change the shell, the navigation, the role dashboards, the page shapes and the task flows themselves, not only the look. § 4 says what that means for Wombat, and what stays invariant. |
 | Scope | 80 page templates (flows 01–18), the 15 email templates (flow 19) and the PDFs (flow 20). The PDFs are the portfolio, the STAR certificate and the data-export summary (§ 8). |
-| Pilot first | Flow 01, the shell, goes first. It is taken from Claude Design through Razor to a green replay (T335; `design/pilot/README.md`). What it teaches corrects this brief (§ 11) before flow 02 is briefed (§ 2.3). |
+| Pilot done | Flow 01, the shell, went first. It was taken from Claude Design through Razor to a green replay (T335): designed in three rounds, built as `b347e11c`, replayed on a fresh database with no regression, and put into the design system (`064cde00`). What it taught is § 11, and this brief is corrected by it. Flow 02 is next (§ 8). |
 | `DESIGN.md` | Its structural lock is lifted for the redesign. Everything else in it still binds whatever has not been redesigned, and each flow that lands amends it with its tests (the banner at its top; § 9). |
 | Decided | **The design system:** Wombat's own, built from the code (W-009): https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18, its source in `design/system/`. |
-| Pending | **The aesthetic direction,** in a sentence or two, given in the pilot's first message (pilot step C). |
+| Decided | **The aesthetic direction** was given in the pilot's first message (pilot step C). Flow 01's canvas and the design system now carry it; later flows follow them. |
 
 ## 1. What Wombat is and who uses it
 
@@ -161,7 +161,7 @@ web, and it is not (inference).
    already follows it.
    - Stage the flow's upload set with `design/tools/stage_upload.ps1 -Flow NN` (§ 3.1). Attach its KEY SCREENSHOTS
      first, and add STATES as the chat asks for them.
-   - **Get the structure first, then fidelity.**
+   - **Get the structure first, then fidelity, then a review round before the build** (§ 11: flow 01 needed one).
      - Each flow asks first for 2–3 structural variations as wireframes. A structural variation covers the flow's
        pages and their order, the steps of its journeys, and where each outcome and refusal shows.
      - Then comes a pick, then fidelity ("Wireframe first when fidelity doesn't matter" [parrott]).
@@ -177,10 +177,17 @@ web, and it is not (inference).
      [start].
    - **Flows 19 (emails) and 20 (PDFs)** need only F01's tokens and type. They can run beside the screen flows once the
      pilot lands; W-008 rejected leaving them until after.
+   - **Before round 1, copy the mark into the flow's canvas.** A canvas does not copy a design system's logos (§ 11):
+     `Artifact publish` with `asset: true`, `from_url` = the design system and `asset_ids` = the mark's id. Then tell the
+     canvas the copy's `/_blob/` URL.
+   - **Review the chosen round before building** from the boards' text (`Artifact read` returns each `.dc.html`):
+     unwritten or contradicting rules, states that cannot occur, copy, and the tokens. Put the decisions to the operator,
+     then ask for one correction round.
 5. **Hand off (§ 9),** one Claude Code task per flow. Each flow lands with its `DESIGN.md` amendment, its tests and a
    green replay of its steps.
-6. **After any `app.css` or `DESIGN.md` change, update the design system.** The first such change is the pilot's token
-   sheet. This is a precaution: the claim that an import is a snapshot rests on one uncited blog.
+6. **After every flow lands, re-sync the design system from the code and republish it** (`design/system/`, then the
+   Design System artifact: uploads first, the changed `project/` files in one publish, the index last). Flow 01 showed
+   that it goes stale at once (§ 11); the next flow starts only after it.
 
 ### 2.4 The brief template (every `design/flows/*.md` follows it)
 
@@ -200,6 +207,13 @@ ASK: first 2–3 STRUCTURAL variations as wireframes (pages and their order, ste
   design-system component used and mark anything else NEW; say which DESIGN.md rule a variation changes.
 ATTACHED: <file list>
 ```
+
+**The shell is a given for flows 02–20.** Flow 01 designed and built it: the sidebar per acting role, the top bar, the
+phone menu, the active item, breadcrumbs, Home's frame, the system pages, the reconnect dialog and the error bar
+(DESIGN.md § The NavMenu, § Layout grid, § System pages). A later flow designs page bodies inside it. Its CONSTRAINTS
+paste the digest as restated on 2026-09-27 (§ 5.1). Its screenshots of Home, the nav and the failure pages predate the
+shell, so where a brief quotes "Welcome", "Viewing as" or a Title Case nav, the build is flow 01's. The brief is
+restated when its flow comes up.
 
 The ASK line was restated for W-008 on 2026-09-27. Flow 01's ask follows it. Flows 02–18 still carry the old line,
 "2–3 variations; <wireframe | full fidelity>", until each is restated (§ 2.3 step 4).
@@ -441,31 +455,39 @@ reduced-motion rule covers only its own animation (pilot step A).
 ### 5.1 The constraints digest (paste verbatim into every brief)
 
 ```
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 ```
 
@@ -537,22 +559,23 @@ Each requirement is testable. It is listed with its task and the evidence before
 
 | # | Requirement | Tasks | Evidence |
 |---|---|---|---|
-| A1 | **Contrast in the tokens.** Text is 4.5:1; control borders and the focus ring are 3:1 (WCAG 1.4.3, 1.4.11). The sidebar needs its own focus-ring token that reaches 3:1 on both ends of its gradient. See the failing pairs below. | T322 (P2) | `act-A/A.7.14-1-signin-contrast.png`, `act-A/A.7.14-2-profile-saved-success-alert.png`, `act-A/A.7.14-4-patel-lockout-button-focused.png`, `act-A/A.7.14-6-reviews-badges.png` |
+| A1 | **Contrast in the tokens.** Text is 4.5:1; control borders and the focus ring are 3:1 (WCAG 1.4.3, 1.4.11). The sidebar needs its own focus-ring token that reaches 3:1 on both ends of its gradient. See the failing pairs below. | T322 (P2) | `act-A/A.7.14-1-login.png`, `act-A/A.7.14-3-success-alert.png`, `act-A/A.7.14-5-danger-button.png`, `act-A/A.7.14-7-review-7-badges.png` (re-taken after T335's tokens landed T322: every pair now passes, Step A.7.14's Actual) |
 | A2 | **Colour is never the only signal.** A status is written in words; a dot may sit beside it as a secondary cue, hidden from screen readers. | T327 | `act-A/A.6.2-1-system-health.png` |
-| A3 | **At 390 px nothing scrolls sideways.** The item editor fits with Save in view; activity inputs are ≥ ~290 px; chart text is ≥ 11 px or a table replaces the chart. **At 1280 px** long emails and GUIDs wrap, and wide tables show their actions. | T323 | `act-A/A.7.10-5-kruger-item-editor-viewport.png`, `states/activity-view--narrow.png`, `act-A/A.7.6-2-zulu-trajectory.png`, `states/invitations-list--check-address.png`, `states/user-detail--pending-invitations.png` |
-| A4 | **Targets, fonts, focus and order.** Every target is ≥ 24 px; controls use the body font; a scroll region shows the design's focus ring; filters come before Apply and the table in tab order; each password toggle exposes `aria-pressed` and names its input; badges keep their pill shape; header actions share one height. | T328 | `states/login--narrow.png`, `states/data-rights--narrow.png`, `act-A/A.7.5-3-decisions-due-summary-scrolled.png`, `states/home--narrow-trainee.png` |
-| A5 | **Every action reports its outcome** in a result region that takes the focus. A refused move keeps its typed note. A button is not disabled by its own action. A stale refusal mark goes when its value changes. Destructive actions confirm and name the target, and their trigger is an outline button. | T299, T264 | `act-A/A.7.1-3-submitted-requested.png`, `states/activity-view--decline-refused.png`, `act-6/6.8-1-delete-refused.png` |
+| A3 | **At 390 px nothing scrolls sideways.** The item editor fits with Save in view; activity inputs are ≥ ~290 px; chart text is ≥ 11 px or a table replaces the chart. **At 1280 px** long emails and GUIDs wrap, and wide tables show their actions. | T323 | `act-A/A.7.10-5-item-editor-390.png`, `states/activity-view--narrow.png`, `states/review-detail--narrow.png` (its trajectory charts, at 375 px), `states/invitations-list--check-address.png`, `states/user-detail--pending-invitations.png` |
+| A4 | **Targets, fonts, focus and order.** Every target is ≥ 24 px; controls use the body font; a scroll region shows the design's focus ring; filters come before Apply and the table in tab order; each password toggle exposes `aria-pressed` and names its input; badges keep their pill shape; header actions share one height. | T328 | `states/login--narrow.png`, `states/data-rights--narrow.png`, `act-A/A.7.5-4-decisions-due-390.png` (re-taken after T335: the region now shows the design's ring), `states/home--narrow-trainee.png` |
+| A5 | **Every action reports its outcome** in a result region that takes the focus. A refused move keeps its typed note. A button is not disabled by its own action. A stale refusal mark goes when its value changes. Destructive actions confirm and name the target, and their trigger is an outline button. | T299, T264 | `act-A/A.7.1-4-submitted-requested.png`, `states/activity-view--decline-refused.png`, `act-6/6.8-1-delete-refused.png` |
 | A6 | **Every page designs its loading, load-error and not-found states.** The header shows from the first render; a skeleton shows while loading; the alert shows with no empty state under it; no action is offered before the record has loaded. | T329 (P2) | `states/activity-view--loading.png`, `states/epas-list--load-error.png`, `states/panels-list--loading.png`, `states/activity-type-edit--not-found.png` |
-| A7 | **Failure screens.** A designed error page carries a request id, signed in or out. Access denied is drawn once. The reconnect dialog shows one message per state. | T321, T330 | `act-A/A.6.3-4-back-to-institutions-denied.png`, `act-A/A.5.8-2-error-signed-out.png`, `states/shell--reconnect-retrying.png` |
-| A8 | **People by name, states and types by label, fields by their own label.** Ids stay only in the audit log and an audit entry, the data-rights list and a request, and `/portfolio/verify`. | T324 | `states/scheduled-job-runs-list--loaded.png`, `act-1/1.27-2-form-saved-preview.png`, `states/institution-edit--invalid.png`, `states/entrustment-scale-edit--rung-refused.png`; Home greets by email, not name (`act-A/A.5.3-1-forged-switch-trainee-view.png`; observed, not filed) |
-| A9 | **One clock, labelled.** Every time is South African time with its zone ("2026-09-26 15:14 SAST"), and every "today" is the South African date. | T325 | `act-3/3.47-1-my-msf-reports.png` against `act-3/3.46-1-report-released.png`; `act-3/3.32-1-nudge-run.png` |
+| A7 | **Failure screens.** A designed error page carries a request id, signed in or out. Access denied is drawn once. The reconnect dialog shows one message per state. | T321, T330 | `act-A/A.5.8-2-error-signed-out.png`, `states/shell--reconnect-retrying.png`; Access denied drawn twice has no capture now (Back to institutions, the link that reached it, went with T302) |
+| A8 | **People by name, states and types by label, fields by their own label.** Ids stay only in the audit log and an audit entry, the data-rights list and a request, and `/portfolio/verify`. | T324 | `states/scheduled-job-runs-list--loaded.png`, `act-1/1.27-2-form-saved-preview.png`, `states/institution-edit--invalid.png`, `states/entrustment-scale-edit--rung-refused.png`; Home greeted by email, not name, until T335; its header now reads "Home" over the role and period, with no greeting (`act-A/A.5.3-1-forged-switch-trainee-view.png`) |
+| A9 | **One clock, labelled.** Every time is South African time with its zone ("2026-09-26 15:14 SAST"), and every "today" is the South African date. | T325 | `act-3/3.47-1-molefe-report.png` against `act-3/3.46-1-report-released.png`; `act-3/3.32-1-nudge-run.png` |
 | A10 | **Copy says what the page does for this viewer**, and "no match" is not "empty". | T326 | `act-1/1.22-1-scales-read-only.png`, `states/activity-types-list--no-match.png`, `states/curriculum-items-edit--no-items.png`, `states/group-mappings--no-provider.png` |
 | A11 | **Offer only what the caller can do.** Pickers offer exactly what the command accepts; records the caller cannot write get read-only views. | T300, T302, T303, T291, T304, T301 | § 10 (pre-fix) |
 | A12 | **The nav marks where you are,** never two items at once. | T331 | `states/campaign-report--loading.png`, `states/specialities-list--loading.png` |
 | A13 | **Operations pages report the truth.** Counts say what they count; the run filter is a select; lists page with "Showing 1–50 of N". | T327, T277 | `act-A/A.2.10-2-partial-key-nothing.png` |
-| A14 | **One page-title pattern, and unique accessible names.** This covers the alert's dismiss button (today "×"), the pager's size select, the builder's selected tab, and dashboard links. | T190, T280 | `act-A/A.7.13-1-zulu-review7-top.png`, `act-A/A.7.9-5-builder-top.png` |
+| A14 | **One page-title pattern, and unique accessible names.** This covers the alert's dismiss button (today "×"), the pager's size select, the builder's selected tab, and dashboard links. | T190, T280 | `act-A/A.7.13-1-review-7.png`, `act-A/A.7.9-6-builder-390.png` |
 
-**A1's failing pairs** (T322, measured at step A.7.14):
+**A1's failing pairs before T335** (T322, measured at step A.7.14 by the T295 replay; the T335 replay measured
+every pair passing):
 
 | Pair | Ratio |
 |---|---|
@@ -572,10 +595,10 @@ Each requirement is testable. It is listed with its task and the evidence before
 | B1 | **The graduate's home.** Today she lands on "No role assigned". | T311 (P2); `states/home--no-role.png`, `act-5/5.22-2-molefe-authorisations-denied.png` | A former-trainee dashboard: "You completed your programme on …", with My progress, My authorisations and Export portfolio. Her nav, and which pages admit her (F13). |
 | B2 | **Staff portfolio export.** It is reached only by typing `/portfolio/export/{userId}` and never names the trainee. | T314; `states/export-portfolio--staff.png` | A header naming the trainee, and links from the review page and the trainee profile page (F13). |
 | B3 | **Applying an approved correction.** No page does it. | T316 (P2); `states/data-rights-request--approved.png` | Who rectifies, then a Correction card on the request (F14). |
-| B4 | **Training year** beyond My progress. | T306; `act-2/2.29-2-four-admitted.png` | A column on Active profiles, a line on the admit form, and the trainee's targets card (F05, F11). |
+| B4 | **Training year** beyond My progress. | T306; `act-2/2.29-3-four-admitted.png` | A column on Active profiles, a line on the admit form, and the trainee's targets card (F05, F11). |
 | B5 | **The trainee's view of her decisions and appeals.** | T308; `states/my-reviews--appealed.png` | A decision history shared with the committee's review page, and an Appeals block (F09). |
 | B6 | **STARs no longer in force.** | T319 (P2); `states/my-authorisations--after-revocation.png` | A "No longer in force" section; the data-rights decision note (F09, F14). |
-| B7 | **The five "Coming soon" items** (`NavMenu.razor:108,113,114,116,132`). | coverage.md § Flows and states not played | For each, design it or drop the nav item: Recent Activities (F04); Stalled Activities with triage, Programme Trainees, and STAR Review Queue (perhaps simply "Entrustment decisions") (F06); System (F18). Their contents are inferred: no intent document exists. |
+| B7 | **The five pages that were "Coming soon".** T335 deleted the placeholder page and its five nav items, so each address is Page not found now. | coverage.md § Flows and states not played | For each, design the page or leave it out: Recent Activities (F04); Stalled Activities with triage, Programme Trainees, and STAR Review Queue (perhaps simply "Entrustment decisions") (F06); System (F18). Their contents are inferred: no intent document exists. |
 | B8 | **Pages reached only by address:** `/admin/entrustment-decisions` (speciality admins), `/admin/institutions/{id}` (her own), `/committee/panels` (Coordinator), `/portfolio/authorisations` (not in the nav), `/account/logout-confirm`, `/Error`. | coverage.md § Reached only by address | A link, or a reason for none (F09, F12, F08, F02, F01). |
 | B9 | **The appeal outcome form.** | T307 (group 1, landed in d03732d; D51), T309 | Built and re-captured on 2026-09-26: Outcome opens on "Select an outcome…" and says each outcome in words, with help; "Choose an outcome." if none is chosen; an optional "Replacement conditions" on a remit; Upheld is gone (D51), leaving Dismissed and Remitted (F09). The scheduling preview warns when the seat is held (F08, T309). |
 | B10 | **Implied but not built:** self-service password reset, rebuilding one trainee's progress, STAR certificate verification, and the builder's visual workflow and credit editors. | coverage.md; T019-b…g | Show as future, or leave out; not assumed built (F02, F15, F13, F17). |
@@ -632,8 +655,8 @@ Re-run on 2026-09-27 over all 20 flows: every baseline path the brief and the fl
 included (`check_baseline_paths.py` exits 1 otherwise; the three captures § 10 lists as never taken are reported
 apart); 416 quoted steps match the runbook; every flow's ask passes.
 
-Every group-3 task (the presentation debt) is a requirement in § 6 or a screen in § 7. The five "Coming soon" items are
-B7.
+Every group-3 task (the presentation debt) is a requirement in § 6 or a screen in § 7. The five pages that were
+"Coming soon" until T335 are B7.
 
 | Task | Where | Flows |
 |---|---|---|
@@ -708,8 +731,15 @@ management):
   - When a flow's steps span the acts, as flow 01's do (Act 2 to the appendix), that means the whole runbook in order. A
     copy of a `recovery/scenario-post-act*.dump` is not a fresh database. It is for re-capturing a state that
     `states.md` marks "Scratch (post-actN)", never for the acceptance replay (pilot step G).
+  - The whole runbook took about five hours for flow 01: seven agents played one act each, in order, then three
+    captured the states (§ 11). Each agent drove Chrome with the Playwright library; the Playwright MCP is not needed.
+  - A replay agent writes each step's Actual and Gap lines and nothing else. It classes each gap as a regression, an open
+    task still failing, a wrong runbook line, a new defect, or not played.
 - **The baseline is re-captured.** The flow's step and state screenshots are taken again into `design/baseline/`
   (`states.md` § How to capture) and compared with the chosen artboards.
+  - A re-taken capture keeps its file name (the runbook README's Screenshots rule).
+  - After the replay, `design/tools/check_baseline_paths.py` must report `missing 0`. Check that each citation still
+    shows what its sentence says: a path can exist and show something else (§ 11).
 - **The browser check passes** for each role in the flow, at 1280 and at 390.
 - **`DESIGN.md` says what was built,** and its banner lists the flow (item 6).
 
@@ -718,11 +748,17 @@ For flows 19 and 20, "the steps replay" means the steps that send or print the o
 
 ## 10. Status of the baseline
 
-- **What it holds.** `design/baseline/` (gitignored, `.gitignore:427`) holds 1,250 PNGs from the T295 replay of
-  2026-09-26:
-  - 672 step captures: act-1 53, act-2 134, act-3 131, act-4 56, act-5 58, act-6 85 and act-A 155, named
-    `<step>-<n>-<slug>.png`;
-  - 578 state captures, `states/<page>--<state>.png`.
+- **What it holds.** `design/baseline/` (gitignored, `.gitignore:427`) held 1,250 PNGs from the T295 replay of
+  2026-09-26 (before T335):
+  - 672 step captures (before T335): act-1 53, act-2 134, act-3 131, act-4 56, act-5 58, act-6 85 and act-A 155,
+    named `<step>-<n>-<slug>.png`;
+  - 578 state captures (before T335), `states/<page>--<state>.png`.
+- **The T335 replay** (step G, 2026-09-27) re-took every step capture from a fresh replay of the whole runbook, at each
+  step's own moment, on the restructured shell: 737 now (act-1 62, act-2 129, act-3 141, act-4 85, act-5 60, act-6 98
+  and act-A 162). It renumbered or dropped some, so a step's `-<n>` may differ from the one quoted before it; the
+  brief and the flows cite the new names. It re-took 65 states too, flow 01's (`shell--*`, `home--*`,
+  `access-denied--*`, `error--*`, `not-found--*`); the other states are still the T295 captures. The placeholder
+  pages went with T335, so `states/placeholder--*.png` stay on disk as the old stubs only.
 - **The emails and PDFs** (T336, 2026-09-27; flows 19 and 20 say where each came from):
   - `mail/`: all 15 templates and 3 variants, each as `<Template>.png` (the HTML body at 600 px), `.html` and `.txt`.
     Six templates come from the replay's SMTP sink (seven captures, with the resent MSF link). The other nine were
@@ -731,7 +767,7 @@ For flows 19 and 20, "the steps replay" means the steps that send or print the o
   - `pdf/`: 6 PDFs and their 22 pages at 110 dpi, from a copy of `scenario-post-actA`. They are Dr Molefe's portfolio
     (her own export and the staff export, byte-identical), three STAR certificates (Active, Superseded and Revoked),
     and Dr Dlamini's data-export summary.
-- **How it matches `states.md`.** `states.md` names 578 captures:
+- **How it matches `states.md`.** `states.md` named 578 captures (before T335):
   - Two named captures were not taken: `login--sso-<code>` (no provider is configured) and `my-progress--december` (a
     December replay only).
   - Two more are named only in the "how to reach" column and were not taken either: `change-password--throttled`
@@ -745,11 +781,11 @@ from these images: the fix changes what the page shows. Each flow file repeats i
 
 | Task | Change | Screenshots to re-capture |
 |---|---|---|
-| T297 (in progress) | Five dashboard cards read literal state keys: the Assessor, Trainee, Coordinator, SpecialityAdmin and SubSpecialityAdmin homes change | Every capture of those five homes. By role (the planner's list, extended by persona; the extension is inferred): act-2 `2.8-2`, `2.9-3`, `2.10-4`, `2.10-6`, `2.10-7`, `2.31-2`, `2.32-1`, `2.34-1`, `2.36-1`, `2.36-2`, `2.38-1`, `2.38-2`, `2.39-1`, `2.40-1`, `2.40-3`, `2.40-5`, `2.40-7`; act-3 `3.12-1`, `3.16-1`, `3.24-1`, `3.30-1`, `3.33-2`, `3.50-1`, `3.51-1`, `3.53-1`, `3.53-2`, `3.54-1`; act-4 `4.3-1`; act-5 `5.28-1` (ended trainee, inferred); act-A `A.4.6-1` (ended trainee, inferred), `A.4.7-1`, `A.5.3-1`, `A.5.10-1`, `A.6.8-2`, `A.7.3-1`, `A.7.5-1`, `A.7.7-1`, `A.7.8-1`; states `home--assessor-empty`, `--assessor-pending`, `--assessor-decisions`, `--assessor-switched`, `home--coordinator-empty`, `--coordinator-stalled`, `--coordinator-expiring`, `home--speciality-admin`, `--speciality-admin-figures`, `home--sub-speciality-admin`, `home--trainee`, `--trainee-first`, `--trainee-returned`, `--trainee-ended` (inferred), `home--narrow-assessor`, `--narrow-coordinator`, `--narrow-speciality-admin`, `--narrow-sub-speciality-admin`, `--narrow-trainee`. **Re-captured on 2026-09-26** after T297 landed (7bf8ea7), from a fresh replay of Act 3 and a post-actA copy: act-3 `3.12-1`, `3.16-1`, `3.24-1`, `3.30-1`, `3.33-2`, `3.50-1`, `3.51-1`, `3.53-1`, `3.54-1`; act-A `A.6.8-2`. Not re-captured: act-3 `3.53-2`, because the Pending reviews card no longer links to the inbox it showed, so no step reaches it; do not attach it. **Every other capture in this row was re-captured on 2026-09-26 too**, each from the end-of-act snapshot of the act it belongs to, so it shows the end of that act, not the step's exact mid-act moment: act-2 (all 17) from `scenario-post-act2`, so Dr Mokoena's and Dr Sithole's Act 2 Homes already count the 5 admitted registrars; act-4 `4.3-1` from post-act4; act-5 `5.28-1` and `home--trainee-ended` from post-act5; the eight other act-A captures, the five `home--narrow-*` and `home--coordinator-expiring` (with states.md's scratch invitation) from post-actA. The other states come from the act their states.md row names: `--assessor-empty`, `--assessor-switched`, `--coordinator-empty`, `--speciality-admin` and `--trainee-first` from post-act2; `--assessor-decisions`, `--speciality-admin-figures`, `--sub-speciality-admin` and `--trainee` from post-act3; `--assessor-pending`, `--coordinator-stalled` and `--trainee-returned` from post-act3 with two SQL stand-ins for the mid-act moment (Dr Mahlangu's Mini-CEX, activity 21, set back to requested and aged 8 days; Dr Ndlovu's reflection, activity 4, set back to Draft). Nothing in this row is held now; `3.53-2` is retired. |
-| T300 | Builder: read-only mode, narrowed Scope, View or Edit per row; Activity Types in the CollegeAdmin's nav | act-1 `1.24-1`, `1.25-1`…`1.25-5`, `1.26-1`, `1.26-2`, `1.31-1`, `1.31-2`; act-A `A.7.9-6`; states `activity-types-list--*` (6), `activity-type-edit--college-instrument`, `--new`, `--loading`, `--not-found`, `--metadata`; Dr Kruger's dashboard (`home--college-admin`, `home--narrow-college-admin`, act-6 `6.10-1`, act-A `A.7.10-1`). In every other 1280 px capture of Dr Kruger the sidebar is pre-fix: brief from the page, not the nav (F16). The 390 px `A.7.10-2` to `A.7.10-5` fold the nav, so T300 does not change them (observed on `A.7.10-5`). **Re-captured on 2026-09-26** after T300 landed (1e154ab, D52), all 26. From a copy of `scenario-post-act1`, as Prof Mbatha: act-1 `1.24-1`, `1.25-1` to `1.25-5`, `1.26-1`, `1.26-2`, `1.31-1` and `1.31-2`, and the eleven states; as Dr Kruger, `home--college-admin`. From a copy of `scenario-post-act6`: act-6 `6.10-1`. From a post-actA copy: act-A `A.7.9-6`, `A.7.10-1` and `home--narrow-college-admin`. What changed (observed): the College rows offer View; Mini-CEX (Paediatrics) opens read-only, headed by its name, under the standing notice "Set by the College that owns Paediatrics. You can read this activity type here, but not change it.", with View on each section and field, the metadata as text, and the workflow and credit as code blocks; a new type's Scope offers Institution with KGK only; the loading and not-found states read "Activity type" with Back to list only; the list's loading state offers no New activity type; Dr Kruger's sidebar ends with Activity Types. Caveats: on the end-of-Act-1 copy KGK Teaching Session Log already exists, so the list captures show 23 rows (Step 1.31's moment), and Step 1.26 was replayed with a second type, "KGK Teaching Session Log (T300 re-check)", whose name is in `1.26-2`, `activity-type-edit--metadata` and the `activity-types-list--draft` row. At 390 px Dr Kruger's nav is folded, so `A.7.10-1` and `home--narrow-college-admin` look as before. Six new captures, not counted above, record the new Step 6.14a as Dr Kruger: act-6 `6.14a-1` to `6.14a-6` (his list with Edit on the College's twelve; `msf_cpsa` open for editing, which T334 will make read-only; Scope with Speciality and Sub-speciality; the saved draft; the list with it). Still visible, still open: no "Draft saved." after a first save (T291 item 3), and the raw seed key in the read-only field view (T271, `1.25-5`). Nothing in this row is held now, except the sidebar in Dr Kruger's other 1280 px captures. |
-| T302 (in progress) | Institution page: Status as text for an InstitutionalAdmin, with no box and no Deactivate; Deactivate and Reactivate as commands for an Administrator, who keeps the Active box (Save sends a changed box as the state's own command, and unticking asks first) and a Deactivate behind a confirmation. Back and Cancel lead home for anyone but an Administrator (T291 item 7) | act-1 `1.23-1`; act-A `A.6.3-1`, `A.6.3-2`, `A.6.3-3` (these states cease to exist), `A.6.3-5`; states `institution-edit--own`, `--deactivate-refused`, `--administrator`, `--deactivated`, `--saved`, `--narrow`. **Re-captured on 2026-09-26** after T302 landed (41be531): `1.23-1`, `institution-edit--own` and `--administrator` from a post-act1 copy; `A.6.3-1`, `--saved`, `--narrow` (Step A.6.1 replayed first) and `--deactivated` (the Demo Institution) from a post-act6 copy. The states that ceased keep their file names and now hold the new page: `A.6.3-2-deactivate-refused` is the form after her save (Status "Active" as text, "Set by a global administrator.", Cancel and Save only; an element capture), `A.6.3-3-untick-active-saved` is the same page with "Back to home" focused, `A.6.3-5-devadmin-reactivates-kgk` is her Home, where "Back to home" and Cancel lead, and `institution-edit--deactivate-refused` is her full page after the save. Also re-captured, because the fix changed them: act-1 `1.6-2` and act-A `A.6.1-2` (held by flow 18), and `1.23-4` (the create form she can still open, T291 item 8, now with "Back to home"). No step reaches act-1 `1.23-2-back-link-access-denied` or act-A `A.6.3-4-back-to-institutions-denied` any more, because her links lead home: do not attach them as her page. `A.6.3-4` remains the evidence of T321's nested layout, which is still open (not re-checked here). |
+| T297 (in progress) | Five dashboard cards read literal state keys: the Assessor, Trainee, Coordinator, SpecialityAdmin and SubSpecialityAdmin homes change | Every capture of those five homes. By role (the planner's list, extended by persona; the extension is inferred): act-2 `2.8-2`, `2.9-3`, `2.10-4`, `2.10-6`, `2.10-7`, `2.31-2`, `2.32-1`, `2.34-1`, `2.36-1`, `2.36-2`, `2.38-1`, `2.38-2`, `2.39-1`, `2.40-1`, `2.40-3`, `2.40-5`, `2.40-7`; act-3 `3.12-1`, `3.16-1`, `3.24-1`, `3.30-1`, `3.33-2`, `3.50-1`, `3.51-1`, `3.53-1`, `3.54-1`; act-4 `4.3-1`; act-5 `5.28-1` (ended trainee, inferred); act-A `A.4.6-1` (ended trainee, inferred), `A.4.7-2`, `A.5.3-1`, `A.5.10-1`, `A.6.8-1`, `A.7.3-1`, `A.7.5-1`, `A.7.7-1`, `A.7.8-1`; states `home--assessor-empty`, `--assessor-pending`, `--assessor-decisions`, `--assessor-switched`, `home--coordinator-empty`, `--coordinator-stalled`, `--coordinator-expiring`, `home--speciality-admin`, `--speciality-admin-figures`, `home--sub-speciality-admin`, `home--trainee`, `--trainee-first`, `--trainee-returned`, `--trainee-ended` (inferred), `home--narrow-assessor`, `--narrow-coordinator`, `--narrow-speciality-admin`, `--narrow-sub-speciality-admin`, `--narrow-trainee`. **Re-captured on 2026-09-26** after T297 landed (7bf8ea7), from a fresh replay of Act 3 and a post-actA copy: act-3 `3.12-1`, `3.16-1`, `3.24-1`, `3.30-1`, `3.33-2`, `3.50-1`, `3.51-1`, `3.53-1`, `3.54-1`; act-A `A.6.8-1` (then numbered A.6.8-2). Not re-captured: Step 3.53's capture of the inbox, because the Pending reviews card no longer links to the inbox it showed, so no step reaches it; the T335 replay removed the file. **Every other capture in this row was re-captured on 2026-09-26 too**, each from the end-of-act snapshot of the act it belongs to, so it shows the end of that act, not the step's exact mid-act moment: act-2 (all 17) from `scenario-post-act2`, so Dr Mokoena's and Dr Sithole's Act 2 Homes already count the 5 admitted registrars; act-4 `4.3-1` from post-act4; act-5 `5.28-1` and `home--trainee-ended` from post-act5; the eight other act-A captures, the five `home--narrow-*` and `home--coordinator-expiring` (with states.md's scratch invitation) from post-actA. The other states come from the act their states.md row names: `--assessor-empty`, `--assessor-switched`, `--coordinator-empty`, `--speciality-admin` and `--trainee-first` from post-act2; `--assessor-decisions`, `--speciality-admin-figures`, `--sub-speciality-admin` and `--trainee` from post-act3; `--assessor-pending`, `--coordinator-stalled` and `--trainee-returned` from post-act3 with two SQL stand-ins for the mid-act moment (Dr Mahlangu's Mini-CEX, activity 21, set back to requested and aged 8 days; Dr Ndlovu's reflection, activity 4, set back to Draft). Nothing in this row is held now. **Re-taken again on 2026-09-27** by the T335 replay (step G), a fresh replay of the whole runbook: every step capture in this row now shows its step's own moment, on the restructured shell, so the end-of-act caveats above hold for none of them (Dr Mokoena's and Dr Sithole's Act 2 Homes count no registrars yet). The Home states were re-taken that day too, for flow 01. At that replay Step 3.30's ageing was refused, so `3.30-1` reads "No stalled requests."; the stalled request is on `A.5.10-1`, after A.5.10's stand-in ageing. |
+| T300 | Builder: read-only mode, narrowed Scope, View or Edit per row; Activity Types in the CollegeAdmin's nav | act-1 `1.24-1`, `1.25-1`…`1.25-5`, `1.26-1`, `1.26-2`, `1.31-1`, `1.31-2`; act-A `A.7.9-6`; states `activity-types-list--*` (6), `activity-type-edit--college-instrument`, `--new`, `--loading`, `--not-found`, `--metadata`; Dr Kruger's dashboard (`home--college-admin`, `home--narrow-college-admin`, act-6 `6.10-1`, act-A `A.7.10-1`). In Dr Kruger's other 1280 px step captures the sidebar was pre-fix until the T335 replay re-took them on 2026-09-27; in his other state captures it still is: brief those from the page, not the nav (F16). The 390 px `A.7.10-2` to `A.7.10-5` fold the nav, so T300 does not change them (observed on `A.7.10-5`). **Re-captured on 2026-09-26** after T300 landed (1e154ab, D52), all 26. From a copy of `scenario-post-act1`, as Prof Mbatha: act-1 `1.24-1`, `1.25-1` to `1.25-5`, `1.26-1`, `1.26-2`, `1.31-1` and `1.31-2`, and the eleven states; as Dr Kruger, `home--college-admin`. From a copy of `scenario-post-act6`: act-6 `6.10-1`. From a post-actA copy: act-A `A.7.9-6`, `A.7.10-1` and `home--narrow-college-admin`. What changed (observed): the College rows offer View; Mini-CEX (Paediatrics) opens read-only, headed by its name, under the standing notice "Set by the College that owns Paediatrics. You can read this activity type here, but not change it.", with View on each section and field, the metadata as text, and the workflow and credit as code blocks; a new type's Scope offers Institution with KGK only; the loading and not-found states read "Activity type" with Back to list only; the list's loading state offers no New activity type; Dr Kruger's sidebar ends with Activity Types. Caveats: on the end-of-Act-1 copy KGK Teaching Session Log already exists, so the list captures show 23 rows (Step 1.31's moment), and Step 1.26 was replayed with a second type, "KGK Teaching Session Log (T300 re-check)", whose name is in `1.26-2`, `activity-type-edit--metadata` and the `activity-types-list--draft` row. The T335 replay (2026-09-27) re-took the step captures at their own moments, so the caveat now holds for the states only: `1.26-2` shows the story's own "KGK Teaching Session Log". At 390 px Dr Kruger's nav is folded, so `A.7.10-1` and `home--narrow-college-admin` look as before. Six new captures, not counted above, record the new Step 6.14a as Dr Kruger: act-6 `6.14a-1` to `6.14a-6` (his list with Edit on the College's twelve; `msf_cpsa` open for editing, which T334 will make read-only; Scope with Speciality and Sub-speciality; the saved draft; the list with it). Still visible, still open: no "Draft saved." after a first save (T291 item 3), and the raw seed key in the read-only field view (T271, `1.25-5`). Nothing in this row is held now, except the sidebar in Dr Kruger's older state captures. |
+| T302 (in progress) | Institution page: Status as text for an InstitutionalAdmin, with no box and no Deactivate; Deactivate and Reactivate as commands for an Administrator, who keeps the Active box (Save sends a changed box as the state's own command, and unticking asks first) and a Deactivate behind a confirmation. Back and Cancel lead home for anyone but an Administrator (T291 item 7) | act-1 `1.23-1`; act-A `A.6.3-1`, `A.6.3-2` and Step A.6.3's other captures (these states cease to exist); states `institution-edit--own`, `--deactivate-refused`, `--administrator`, `--deactivated`, `--saved`, `--narrow`. **Re-captured on 2026-09-26** after T302 landed (41be531): `1.23-1`, `institution-edit--own` and `--administrator` from a post-act1 copy; `A.6.3-1`, `--saved`, `--narrow` (Step A.6.1 replayed first) and `--deactivated` (the Demo Institution) from a post-act6 copy. The state that ceased keeps its file name and now holds the new page: `institution-edit--deactivate-refused` is her full page after the save. **Re-taken by the T335 replay (2026-09-27):** Step A.6.3 is now two captures, `A.6.3-1-contact-saved` (the form after her save: Status "Active" as text, "Set by a global administrator.", Cancel and Save only) and `A.6.3-2-cancel-home` (her Home, where "Back to home" and Cancel lead); its other captures are gone. Also re-captured, because the fix changed them: act-1 `1.6-2` and act-A `A.6.1-2` (held by flow 18), and `1.23-4` (the create form she can still open, T291 item 8, now with "Back to home"). Back to institutions → Access denied no longer exists (T302): her links lead home, so no step reaches it, and the T335 replay removed both captures of it (act-1 1.23-2 and act-A A.6.3-4). T321's nested layout has no capture now; flow 01 designs Access denied. |
 | T303 | User page: Trainee "System-managed", never under Add role | act-2 `2.28-3`; act-5 `5.17-3`; act-A `A.7.9-3`; states `user-detail--pending-trainee`, `--no-roles`, `--reset-refused`, `--reset`, `--narrow`; probably `--other` and `--role-added` (inferred). **Re-captured on 2026-09-26** after T303 landed (4824d62). Every user page an administrator manages changed: Add role never offers Trainee and carries a help line under its select ("Trainee is not offered: …"), and a held Trainee reads "System-managed" with no Remove (observed). `2.28-3`, `--pending-trainee`, `--other` and `--role-added` (with `2.13-1` and `2.13-2`) come from a fresh replay of Act 2 Steps 2.1 to 2.28 from `scenario-post-act1`, so at the steps' own moments; `5.17-3` and `--no-roles` from `scenario-post-act5`; `A.7.9-3`, `--narrow`, `--reset-refused` and `--reset` (with `A.4.5-1` and `A.4.5-2`) from a post-actA copy. Also re-captured there, because the help line changed them though the row did not name them: act-A `A.6.4-1`, `A.6.4-2` and `A.6.7-1`, and states `user-detail--locked`, `--reactivated` and `--pending-invitations` (Dr Patel locked and reactivated again, and states.md's scratch invitation to Dr Botha). Not re-taken: `--own`, `--administrator-own` and `--unavailable`, which have no Add role, and `--loading`, a skeleton. Nothing in this row is held now. The captures still show each role's name running into "System-managed" or its Remove with no gap ("PendingTraineeSystem-managed"; F-2.28b, which widens T323's Remove item). |
-| T307 | Appeal card: Outcome opens empty; replacement conditions; Upheld removed (D51) | act-4 `4.45-1`, `4.46-1`, `4.47-1`; states `review-detail--appeal-form`, `--appeal-member`, `--remit-refused`, `--remitted`, `--appeal-dismissed`, `--appeal-upheld` (ceased to exist). **Re-captured on 2026-09-26** after T307 landed (d03732d, D51), from a fresh replay of Act 4 Steps 4.1 to 4.48 on a copy of `scenario-post-act3`, so at the steps' own moments: `4.45-1`, `4.46-1`, `4.47-1`, `--appeal-form`, `--appeal-member`, `--remit-refused` and `--remitted`; also act-4 `4.44-1`, which flow 09 held with `--appeal-member`. `--appeal-dismissed` comes from a copy of `scenario-post-act4`, as `states.md` says (Dr Dlamini appeals; Dr Zulu resolves it Dismissed). What changed (observed): the Outcome opens on "Select an outcome…", with "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision" and help under it; Remitted adds an optional "Replacement conditions" box; the replacement's card reads "Conditions: …"; the Appeals list says the outcome in words ("(Remitted)", "(Dismissed)"). `review-detail--appeal-upheld` is not re-taken: there is no Upheld. It stays on disk as the old form's record; do not brief from it. One new capture, not counted above: act-4 `4.45-2-vanrensburg-choose-an-outcome`, the refusal "Choose an outcome." under the empty select. Still visible: at 1280 px the chosen outcome is clipped in the half-width select once Remitted opens the second column (`4.45-1`, F-4.45c), and the quorum refusal shows only at the head of the page, out of view of the card (`4.46-1` shows the form after it, F-4.46a). Nothing in this row is held now. |
+| T307 | Appeal card: Outcome opens empty; replacement conditions; Upheld removed (D51) | act-4 `4.45-2`, `4.46-1`, `4.47-1`; states `review-detail--appeal-form`, `--appeal-member`, `--remit-refused`, `--remitted`, `--appeal-dismissed`, `--appeal-upheld` (ceased to exist). **Re-captured on 2026-09-26** after T307 landed (d03732d, D51), from a fresh replay of Act 4 Steps 4.1 to 4.48 on a copy of `scenario-post-act3`, so at the steps' own moments: `4.45-2`, `4.46-1`, `4.47-1`, `--appeal-form`, `--appeal-member`, `--remit-refused` and `--remitted`; also act-4 `4.44-1`, which flow 09 held with `--appeal-member`. `--appeal-dismissed` comes from a copy of `scenario-post-act4`, as `states.md` says (Dr Dlamini appeals; Dr Zulu resolves it Dismissed). What changed (observed): the Outcome opens on "Select an outcome…", with "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision" and help under it; Remitted adds an optional "Replacement conditions" box; the replacement's card reads "Conditions: …"; the Appeals list says the outcome in words ("(Remitted)", "(Dismissed)"). `review-detail--appeal-upheld` is not re-taken: there is no Upheld. It stays on disk as the old form's record; do not brief from it. One new capture, not counted above: act-4 `4.45-1-vanrensburg-choose-an-outcome` (the T335 replay numbers it first), the refusal "Choose an outcome." under the empty select. Still visible: at 1280 px the chosen outcome is clipped in the half-width select once Remitted opens the second column (`4.45-2`, F-4.45c), and the quorum refusal shows only at the head of the page, out of view of the card (`4.46-1` shows the form after it, F-4.46a). Nothing in this row is held now. |
 
 **Other backend fixes that will change what a page shows.** These do not hold a brief, but re-capture after they land:
 - T304: curriculum pickers, and a save that reports replayed credit;
@@ -762,7 +798,109 @@ from these images: the fix changes what the page shows. Each flow file repeats i
 
 ## 11. Pilot findings
 
-Not yet written. The pilot on flow 01 (T335) fills this section before flow 02 is briefed, dated, from
-`design/pilot/README.md` step H. It records what the pilot found about the design system's import, the structural
-round, the handoff, the Razor rebuild, the tests and the replay. Each finding names what it changed in this brief or in
-the flow files.
+Written 2026-09-27 at the end of the flow 01 pilot (T335). Flow 01 is designed (canvas
+https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD, round 3), built (`b347e11c`), replayed (step G) and in the design
+system (`064cde00`). Each finding says what was observed and what it changed. "Observed" means seen in this pilot;
+"inference" means reasoned, not tested.
+
+**Running Claude Design**
+- **Start from the main app's Design page or from Claude Code, never the standalone claude.ai/design.** Observed: the
+  design system made as an Artifact appears in the main app's Design page and in `/design`, not in the standalone
+  homepage, which keeps a separate, older store. *Changed:* `design/pilot/README.md` step C (`355317ce`).
+- **A canvas does not copy a design system's logos.** Observed: a Design canvas installs the system's `tokens.json` and
+  files, but not the logos, icons and pictures it keeps by id. Flow 01's canvas drew a CSS disc for the mark through
+  three rounds, and Claude Design later flagged it as a placeholder. Copying the mark into the canvas's asset store
+  fixed it: `Artifact publish` with `asset: true`, `from_url` = the design system, and `asset_ids` = the mark's id.
+  After that, one message had the boards use the copy's `/_blob/` URL.
+  *Changed:* do this before round 1 of every flow. Pilot README step C.
+- **The design system goes stale the moment a flow lands.** Observed: after flow 01 it still showed the old nav (Title
+  Case, the union of roles), the old tokens and none of the new components. It was re-synced from the code, checked by
+  two reviewers (23 mismatches, all fixed), and republished as versions 3 and 4 with 29 new icons.
+  *Changed:* § 2.3 step 6 is no longer a precaution but a step of every flow's landing. Flow 02 starts only after it.
+- **A canvas board is readable text.** Observed: `Artifact read` on the canvas returns each `.dc.html` board. So a
+  round can be checked item by item against the message that asked for it, on its text and its markup. Round 3's 30
+  fixes were checked this way, before anything was built.
+- **The boards use Google Fonts and inline hex.** Observed on every board. They are a picture, not code; the build
+  rebuilds them under the CSP. Unchanged from § 9's rule; confirmed.
+
+**The rounds**
+- **Structure first worked.** Observed: round 1's three structural variations (a grouped sidebar with one acting role;
+  top-bar sections; Home as the map) made the pick a one-line decision: variation A, with C's breadcrumbs.
+- **Plan a review round between fidelity and the build.** Observed: round 2 at fidelity was accepted with changes after
+  a four-lens review (tokens, shell, states, build). That review found:
+  - 22 should-fixes;
+  - rules left unwritten or contradicting each other (the switch rule; the active item);
+  - states that cannot occur (a signed-out Not found reached any way but typing);
+  - eleven decisions for the operator, D1–D11, seven of them needed before the build. Two became project rules (W-010,
+    W-011).
+
+  Round 3 applied 30 fixes. *Changed:* § 2.3 step 4 now reads structure, pick, fidelity, review, correction round,
+  build.
+- **Check a recommendation against its own claims.** Observed: D1, as recommended, was "remembered across sign-ins" in
+  a cookie "deleted at sign-out", which cannot both hold. The canvas's own rule text ("stored with the account") was
+  right, and the build followed it. *Changed:* nothing in the brief; a caution for the reviewer.
+- **The canvas can correct the reviewer.** Observed: the review's swatch for the active item was the blend at the old
+  alpha. Round 3's token sheet gave the right one, and a hand check confirmed it. Keep the numbers checkable on both
+  sides; the build's `ContrastTests` computes every pair.
+- **Boards can disagree with each other.** Observed:
+  - The owner table gives a list page the trail "Home › the list", while the list board draws none.
+  - The Sign out button is 28 px on one board and 32 px on another.
+
+  The integrator chose, and recorded the reading in DESIGN.md. *Changed:* nothing; expect it and record it.
+
+**The build (step F)**
+- **Parallel lanes, then dependent lanes.** Observed:
+  - Four independent lanes ran at once in worktrees: tokens and type, the acting role, the reconnect dialog, and page
+    titles.
+  - Two lanes that needed them followed: the shell, then Home with the failure pages.
+  - Then one integration branch, a four-lens review, two fix lanes, a last pass, and one squash (`b347e11c`: 238
+    files, +17,748 / −3,068; 7,725 → 8,226 tests, all green).
+
+  Merge friction came from shared files: DESIGN.md sections, runbook Expects, `app.css` `:root`, and two test helpers
+  named `StyleSheet.cs` and `Stylesheet.cs`, which are one file on Windows. *Changed:* a lane brief names the shared
+  helpers and the files each lane owns. Every merged state runs all six suites. Two tests that passed in their own lanes
+  failed only after the merge, each asserting the other lane's old copy.
+- **The review found what the lanes could not.** Observed: after all six suites were green, the review found three
+  medium defects:
+  - the error page's rerun ran the sign-in check again, so a database outage showed a bare 500;
+  - the reconnect dialog lost focus when its state changed under it;
+  - runbook steps sent a Committee member to an inbox her menu no longer offers.
+
+  It also found about 40 low ones. *Changed:* keep the review between the green merge and the squash, with one agreed
+  stopping line: one fix pass, then file the rest.
+- **No browser tool is needed.** Observed: the Playwright MCP was not connected all session. The lanes checked their
+  work in headless Chrome over the DevTools protocol, and the replay drove Chrome with the Playwright library
+  (`channel: 'chrome'`), sign-in passwords taken from environment variables. *Changed:* § 9's replay no longer waits
+  on the MCP.
+
+**The replay (step G)**
+- **The whole runbook replays in about five hours.** Observed: seven agents played the acts in order on a fresh database
+  (`wombat_scenario_t335`), and three captured flow 01's states from the new snapshots.
+  - 243 of 325 steps had no gap.
+  - None of the other 82 steps failed because of flow 01:
+    - 78 fail only on open tasks their Gap lines already cited (92 gaps in all);
+    - one had a wrong Expect, now corrected;
+    - three were not played (3.30, 3.32, and 3.33's Overdue badge). The session's permission rules refused the ageing
+      `UPDATE` their Note prescribes. The switch in 3.33 was played, and the Overdue badge was seen at A.7.2.
+
+  *Changed:* none yet. Ageing needs a command the replay tool owns, or an operator-run statement (T337).
+- **A replay must keep the capture names.** Observed: re-taken captures were renamed and renumbered, which broke 101
+  citations in the flow briefs and this brief. A script that repointed them by step and number made it worse: where a
+  step's captures were renumbered, a citation landed on a different picture, and the path checker cannot see that.
+  Every repointed citation was then checked against its image, and the dead ones were reworded, mostly the deleted
+  placeholder pages. *Changed:* the runbook README's Screenshots rule now says to keep an existing capture's file name
+  when the state is the same. `check_baseline_paths.py` runs after every replay.
+- **The error page after a real failure is not reachable by the replay.** Observed: it is served outside Development
+  only, and `tools/scenario-replay.ps1` starts the app in Development. It is covered by `ErrorPageFlowTests` and by a
+  headless-Chrome probe on a test host. *Changed:* states.md marks it so. A non-Development `start` option is filed
+  (T337).
+- **State recipes are hypotheses until replayed.** Observed: four were corrected.
+  - `Blazor.pauseCircuit()` works only on a page that has not reconnected.
+  - The "attempt started" listener must bind the IPv6 loopback too.
+  - One width was worded loosely.
+  - One timeout is 60 s, not 65 s.
+
+**What the brief keeps as it was**
+- The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
+  for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
+  gains the shell as a given.

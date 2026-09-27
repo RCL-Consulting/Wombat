@@ -25,7 +25,7 @@ trail; and to rebuild progress. Prof Mbatha reads her own institution's audit tr
    - Opened for this brief, showing no link or password:
      - `act-A/A.6.2-1-system-health.png`, `A.2.10-2-partial-key-nothing.png`;
      - `states/scheduled-jobs-list--dispatched.png`, `states/scheduled-job-runs-list--loaded.png`;
-     - `states/audit-list--failures.png`, `states/audit-detail--payload.png`, `states/placeholder--system.png`;
+     - `states/audit-list--failures.png`, `states/audit-detail--payload.png`;
      - `act-3/3.32-1-nudge-run.png`, `act-1/1.6-1-institutions-one.png`, `1.6-2-kgk-created.png`,
        `1.11-1-invitations-spent.png`.
    - The payload capture shows a user id and `[REDACTED]` values. These are scenario data (BRIEF § 1).
@@ -66,7 +66,7 @@ GOAL: Let the operator do six things:
   - "23 registered users" skips the accounts that hold no role; there are 25.
   - Run history's key filter matches only a whole key, and the list stops at 200 runs without saying so.
   - "Triggered by" prints a user id.
-  - The nav's System item opens a "Coming soon" stub.
+  - The nav's System item opened a "Coming soon" stub until T335 deleted both; its address is Page not found.
 AUDIENCE: The Administrator, devadmin ("Demo Administrator"), the platform operator. He is technical and comes rarely,
   so a page must say plainly what is wrong and where to act. Also an InstitutionalAdmin, Prof Nolwazi Mbatha, for the
   audit log only. Desktop 1280×800 and phone 390×844.
@@ -184,31 +184,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
   3. What does the operator need on a phone? Today, at 390 px, each wide table scrolls inside its own box, and the
      run-history filters stack.
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 ASK: 2–3 variations. Do the dashboard and System as wireframes first, and institutions, jobs and audit at full
   fidelity. Name every design-system component you use, and mark anything else NEW. Say which DESIGN.md rule a
@@ -226,10 +234,9 @@ ATTACHED: the screenshots below (paths under design/baseline/), in this order:
   5. act-A/A.2.10-2-partial-key-nothing.png
   6. states/audit-list--failures.png
   7. states/audit-detail--payload.png
-  8. states/placeholder--system.png
-  9. act-3/3.32-1-nudge-run.png
-  10. states/scheduled-job-runs-list--loaded.png
-  11. act-1/1.6-1-institutions-one.png
+  8. act-3/3.32-1-nudge-run.png
+  9. states/scheduled-job-runs-list--loaded.png
+  10. act-1/1.6-1-institutions-one.png
   More state captures follow when you ask for a state.
 
 RUNBOOK STEPS, verbatim (Role / Route / Do / Expect). Where an Expect describes today's behaviour and a requirement
@@ -238,8 +245,9 @@ above says otherwise, the requirement wins:
 - A.2.1's "next run in the server's local time" becomes SAST, labelled;
 - A.2.10's "'digest' alone matches nothing" and "never by user id" become a select and a name;
 - 1.6 and A.6.1's Active box may become Status with Deactivate or Reactivate (T302 kept the box; see § 1);
-- A.5.13's "Coming soon" stub becomes a page or goes;
-- 1.1's nav list loses System if the page is dropped, and its "Welcome, devadmin@wombat.local" greets him by name.
+- A.5.13's menu, with no System item since T335, gains one if System is built;
+- 1.1's nav list has no System (T335) unless the page is built, and its "Welcome, devadmin@wombat.local" greets
+  him by name.
 A.2.8 ages two rows by SQL, as a stand-in for time passing; nothing about that is on screen.
 
 [act-1-setup.md]
@@ -535,7 +543,7 @@ Expect: The jobs table scrolls inside its container, with each Run now and toggl
 | 15 | A.2.9 | `/admin/jobs` | devadmin | Runs the other six | Each Succeeded |
 | 16 | A.2.10 | `/admin/jobs` → `/admin/jobs/runs` | devadmin | Filters by key, by "digest", by Failed, and from today | Newest first; who triggered each run, by name; a key filter that finds; "No runs found" |
 | 17 | A.5.2 | `/admin/institutions`, `/admin/jobs` → `/access-denied` | Prof Mbatha | Types both addresses | Access denied, twice; neither page in her nav |
-| 18 | A.5.13 | `/placeholder/{Feature}` | devadmin | Opens System | Today a "Coming soon" stub; after this flow, a page or no item |
+| 18 | A.5.13 | `/` | devadmin | Reads his menu | No System item since T335; after this flow, a page or still none |
 | 19 | A.6.1 | `/` → `/admin/institutions` → `/{Id:int}` | devadmin | Changes KGK's contact email | Each row's code, email, status and creation time; "Institution saved." |
 | 20 | A.6.2 | `/` | devadmin | Reads health and the user count | Each line's state in words; a count that says what it counts |
 | 21 | A.6.9 | `/admin/users` → `/admin/users/{UserId}` | devadmin | Opens his own account | Why he cannot change his own roles, lockout or password here; the Change password link |
@@ -552,7 +560,7 @@ From `states.md` § Home and the role dashboards (rows 114, 148), § System page
 |---|---|---|---|---|
 | `/` | Administrator | `states/home--administrator.png` | — | At Step 1.1 |
 | | Narrow | `states/home--narrow-administrator.png` | — | At Step A.7.11 |
-| `/placeholder/{Feature}` | System | `states/placeholder--system.png` | — | At Step A.5.13 |
+| System | Not built | none: T335 deleted the placeholder page (Page not found now); this flow designs it | — | Step A.5.13: his menu has no System item |
 | `/admin/institutions` | One | `states/institutions-list--one.png` | — | At Step 1.6, before the create |
 | | Two | `states/institutions-list--two.png` | — | At Step A.6.1 |
 | | Loading | `states/institutions-list--loading.png` | — | Hold a read (`states.md` § Holding a read) |
@@ -612,10 +620,12 @@ Every path below is relative to `design/baseline/` and was checked with `ls` on 
 5. `act-A/A.2.10-2-partial-key-nothing.png`
 6. `states/audit-list--failures.png`
 7. `states/audit-detail--payload.png`
-8. `states/placeholder--system.png`
-9. `act-3/3.32-1-nudge-run.png`
-10. `states/scheduled-job-runs-list--loaded.png`
-11. `act-1/1.6-1-institutions-one.png`
+8. `act-3/3.32-1-nudge-run.png`
+9. `states/scheduled-job-runs-list--loaded.png`
+10. `act-1/1.6-1-institutions-one.png`
+
+The System stub has no capture now: T335 deleted the placeholder page and its nav item, so `/placeholder/system` is
+Page not found, and this flow designs System or leaves it out (B7 in § 6).
 
 ### 5.2 Add when the chat asks for a state (not held)
 
@@ -631,22 +641,24 @@ Every path below is relative to `design/baseline/` and was checked with `ls` on 
 
 **Step captures:**
 - act-1: `act-1/1.1-1-devadmin-home.png`, `1.6-3-institutions-two.png`, `1.11-2-devadmin-home-11.png`
-- act-3: `act-3/3.55-1-audit-kgk-from-sitting.png`, `3.55-2-audit-failures-only.png`, `3.55-3-audit-msf-actions.png`,
-  `3.56-1-audit-failure-detail.png`, `3.57-1-audit-all-institutions.png`, `3.57-2-msf-submission-detail.png`,
-  `3.57-3-naidoo-transition-payload.png`
-- act-4: `act-4/4.38-1-mbatha-quorum-failure-audit-entry.png`, `4.38-2-mbatha-revoke-audit-entry.png`
-- act-6: `act-6/6.38-1-curriculum-progress-page.png`, `6.38-2-rebuild-dialog.png`, `6.38-3-rebuilt.png`
+- act-3: `act-3/3.55-1-audit-from-sitting.png`, `3.55-2-audit-failures.png`, `3.55-3-audit-msf.png`,
+  `3.56-1-audit-entry.png`, `3.57-1-devadmin-audit.png`, `3.57-2-msf-submission-detail.png`,
+  `3.57-3-naidoo-transition-detail.png`
+- act-4: `act-4/4.38-2-mbatha-quorum-failure-audit-entry.png`, `4.38-5-mbatha-revoke-audit-entry.png`
+- act-6: `act-6/6.38-2-curriculum-progress-page.png`, `6.38-3-rebuild-dialog.png`, `6.38-4-rebuilt.png`
 - act-A, the jobs and their history: `act-A/A.2.1-1-scheduled-jobs.png`, `A.2.2-1-auto-close-disabled.png`,
   `A.2.2-2-auto-close-enabled.png`, `A.2.4-1-digest-dispatched.png`, `A.2.6-1-digest-dispatched-again.png`,
-  `A.2.8-1-nudges-dispatched.png`, `A.2.9-1-six-jobs-run.png`, `A.2.10-1-digest-key.png`, `A.2.10-3-from-today.png`,
-  `A.2.10-4-failed-none.png`
+  `A.2.8-1-nudges-dispatched.png`, `A.2.9-1-six-jobs-run.png`, `A.2.10-1-digest-key.png`, `A.2.10-4-from-today.png`,
+  `A.2.10-3-failed-none.png`
 - act-A, the rest: `act-A/A.5.2-1-institutions-access-denied.png`, `A.5.2-2-jobs-access-denied.png`,
-  `A.5.13-1-system.png`, `A.6.1-1-institutions-list.png`, `A.6.9-1-own-account.png`, `A.7.11-1-devadmin-home.png`,
-  `A.7.11-2-devadmin-jobs.png`, `A.7.11-3-devadmin-runs.png`, `A.7.11-4-devadmin-institutions.png`
+  `A.5.13-1-devadmin-menu.png` (no System item: T335 deleted the stub), `A.6.1-1-institutions-list.png`,
+  `A.6.9-1-own-account.png`, `A.7.11-1-home-390.png`, `A.7.11-3-jobs-390.png`, `A.7.11-4-runs-390.png`,
+  `A.7.11-5-institutions-390.png`
 
 ### 5.3 Re-captured after T302 (formerly held)
 
-Re-captured on 2026-09-26 after T302 landed (41be531); attach them:
+Re-captured on 2026-09-26 after T302 landed (41be531), the step captures re-taken on 2026-09-27 by the T335 replay
+at their own moments; attach them:
 - `states/institution-edit--administrator.png` and `act-1/1.6-2-kgk-created.png` (a copy of the end-of-Act-1 snapshot:
   the Active box ticked with its help, Cancel, Deactivate and Save);
 - `states/institution-edit--saved.png`, `act-A/A.6.1-2-kgk-saved.png` and `states/institution-edit--narrow.png` (Step
@@ -654,8 +666,8 @@ Re-captured on 2026-09-26 after T302 landed (41be531); attach them:
 - `states/institution-edit--deactivated.png` (the Demo Institution on the same copy: "Institution deactivated.", the
   box unticked, no Deactivate).
 
-`act-A/A.6.3-5-devadmin-reactivates-kgk.png` is no longer this flow's: Step A.6.3 no longer has devadmin reactivate KGK,
-and the file now holds Prof Mbatha's Home (flow 12; BRIEF § 10).
+Step A.6.3 no longer has devadmin reactivate KGK (T302), so no capture of it remains: the step is Prof Mbatha's alone
+now, and flow 12 holds its captures (BRIEF § 10).
 
 ## 6. Known problems this design must solve
 
@@ -675,7 +687,7 @@ and the file now holds Prof Mbatha's Home (flow 12; BRIEF § 10).
 | T329 | queued, P2 | Each list shows a skeleton under its header while loading, and an alert with no empty state on a load error. (A6) | `states/institutions-list--loading.png`, `states/scheduled-jobs-list--loading.png`, `states/audit-list--loading.png` |
 | T114 | queued | The payload card takes a large payload (the ~2 KB bound is a comment, not a mechanism). | `states/audit-detail--payload.png` |
 | T274 | queued | A run may one day carry an outcome count (sent, skipped, failed). The inference is to leave room for it; today only the application log has it. | Steps A.2.4–A.2.9 (the log lines) |
-| B7 | — | System: design it or drop the nav item (`NavMenu.razor:132`). The stub reads "This page is not built yet." | `states/placeholder--system.png` |
+| B7 | — | System: design it or leave it out. T335 deleted its stub and nav item, so its address is Page not found. | `act-A/A.5.13-1-devadmin-menu.png` (his menu, with no System item) |
 
 ## 7. Questions the design must answer
 

@@ -1,11 +1,12 @@
 ---
 id: T330
 title: The reconnect modal shows 'Rejoining the server' and 'Rejoin failed' at once while retrying, and resume-failed says retry beside a Resume button
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-26
+completed: 2026-09-27
 ---
 
 # T330 — The reconnect modal shows 'Rejoining the server' and 'Rejoin failed' at once while retrying, and resume-failed says retry beside a Resume button
@@ -38,7 +39,7 @@ created: 2026-09-26
 ## Verification
 
 - [x] A design test in the DesignSystemSmokeTests style reads ReconnectModal.razor.css and asserts that a retrying rule hides .components-reconnect-first-attempt-visible. A markup test asserts that the resume-failed text names the label of the button shown with it. — `b347e11c`: `Design/ReconnectModalTests` covers T330's retrying rule and one state at a time. It evaluates the stylesheet on the served markup. "Could not reconnect" is one state whose line changes, so its heading keeps the focus. Resume failed offers Try again, and its text names it. The runtime's names are checked against the served `blazor.web.js`.
-- [ ] Browser, on a scratch app, the states.md reconnect rows (states.md:100-104). Rejoining still shows only 'Rejoining the server...'. Retrying shows only 'Rejoin failed... trying again in N seconds.' In resume-failed, the text and the button agree. Retake shell--reconnect-rejoining, shell--reconnect-retrying and shell--reconnect-resume-failed.
+- [x] Browser, on a scratch app, the states.md reconnect rows (states.md:100-104). Rejoining still shows only 'Rejoining the server...'. Retrying shows only 'Rejoin failed... trying again in N seconds.' In resume-failed, the text and the button agree. Retake shell--reconnect-rejoining, shell--reconnect-retrying and shell--reconnect-resume-failed. — 2026-09-27, T335 step G (wombat_scenario_t335, b347e11c): the states pass captured every reconnect row of states.md § Shell and framework on a scratch copy (port 5184). Rejoining, retrying and resume-failed matched their rows. Only the recipes for paused and attempt-started needed corrections, now made in states.md.
 
 ## As built in T335 (`b347e11c`, 2026-09-27)
 

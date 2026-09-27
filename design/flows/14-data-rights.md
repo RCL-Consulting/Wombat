@@ -136,31 +136,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
   2. Does the requester's page keep preferences and requests on one page, or separate them?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -276,11 +284,12 @@ Every path is under `design/baseline/` and was checked to exist on 2026-09-26. O
   `act-A/A.1.5-1-dlamini-completed-download.png`, `act-A/A.1.6-1-duplessis-access-submitted.png`,
   `act-A/A.1.6-2-duplessis-withdrawn.png`, `act-A/A.1.9-1-mahlangu-reads-rejected.png`,
   `act-A/A.1.11-1-ndlovu-erasure-submitted.png`, `act-A/A.2.3-1-smit-digest-opt-out.png`,
-  `act-A/A.2.5-1-smit-digest-opt-in.png`, `act-A/A.7.3-4-dlamini-data-rights.png`.
+  `act-A/A.2.5-1-smit-digest-opt-in.png`, `act-A/A.7.3-5-data-rights-390.png`.
 - The queue: `states/data-rights-requests--empty.png`, `states/data-rights-requests--three.png`,
   `states/data-rights-requests--administrator.png`, `states/data-rights-requests--loading.png`,
   `act-A/A.1.3-1-smit-queue-filtered.png`, `act-A/A.1.8-1-smit-queue-three.png`,
-  `act-A/A.1.12-1-devadmin-queue-erasure.png`, `act-A/A.1.12-3-queue-after-erasure.png`, `act-A/A.7.5-4-smit-queue.png`.
+  `act-A/A.1.12-1-devadmin-queue-erasure.png`, `act-A/A.1.12-3-queue-after-erasure.png`,
+  `act-A/A.7.5-5-data-rights-390.png`.
 - A request: `states/data-rights-request--submitted.png`, `states/data-rights-request--withdrawn.png`,
   `states/data-rights-request--rejected.png`, `states/data-rights-request--not-found.png`,
   `states/data-rights-request--narrow.png`, `act-A/A.1.3-2-export-approved-completed.png`,
@@ -289,9 +298,10 @@ Every path is under `design/baseline/` and was checked to exist on 2026-09-26. O
 - The aftermath: `states/not-found--download.png`, `states/users-list--after-erasure.png`,
   `states/review-detail--withdrawn.png`, `act-A/A.1.4-1-smit-download-not-found.png`,
   `act-A/A.1.13-2-ndlovu-signin-refused.png`, `act-A/A.1.14-1-users-no-ndlovu.png`,
-  `act-A/A.1.14-2-reviews-pseudonym.png`, `act-A/A.1.14-3-checkin-withdrawn.png`.
+  `act-A/A.1.14-2-trainees-no-ndlovu.png`, `act-A/A.1.14-3-reviews-pseudonym.png`,
+  `act-A/A.1.14-4-checkin-withdrawn.png`.
 
-**Do not attach** `act-A/A.7.3-1-dlamini-home.png` or `act-A/A.7.5-1-smit-home.png`. They are Home captures from this
+**Do not attach** `act-A/A.7.3-1-home-390.png` or `act-A/A.7.5-1-home-390.png`. They are Home captures from this
 flow's phone steps, not pages this flow designs (re-captured after T297 on 2026-09-26; BRIEF § 10).
 
 ## Known problems this design must solve
@@ -305,7 +315,7 @@ flow's phone steps, not pages this flow designs (re-captured after T297 on 2026-
 | T318 | P3 | Remove the optional-processing opt-out and its column; reword the card; one result per action | `states/data-rights--saved.png`, `states/data-rights--reason-missing.png` |
 | T264 | P3 | The erasure's approval asks first, counting what it will withdraw and saying it cannot be undone (T264 note, 2026-09-25). Destructive triggers are outline buttons | `states/data-rights-request--erasure.png` |
 | T323 | P3 | At 1280 px the Request card is about 315 px wide and clips the address and the user id once the Decision card sits beside it | `states/data-rights-request--submitted.png`, `--approved.png`, `--erasure.png` |
-| T328 | P3 | "Apply filters" is a page-header action today, so it comes before the filters in reading and tab order; at 390 px it sits above them. Textareas render in monospace | `states/data-rights-requests--narrow.png`, `act-A/A.7.5-4-smit-queue.png` |
+| T328 | P3 | "Apply filters" is a page-header action today, so it comes before the filters in reading and tab order; at 390 px it sits above them. Textareas render in monospace | `states/data-rights-requests--narrow.png`, `act-A/A.7.5-5-data-rights-390.png` |
 | T325 | P3 | `DataRights.razor:108,137`, `RequestsList.razor:59` and `RequestDetail.razor:41,54` print stored UTC with no zone. T325's rule: SAST with the zone; these pages may keep the stored value where it is the record, but labelled | `act-A/A.1.2-2-export-submitted.png` |
 | T276 | P3 | Erasure leftovers the confirmation should not hide (Q1). The request keeping the erased address is F-A.1.12a, "unsure" | `states/data-rights-requests--administrator.png` |
 | T329 (BRIEF § 6 A6) | P2 | A6 applies T329's rule to every page: a skeleton while loading, the alert on a load error with no empty state under it, and no action offered before the record has loaded | `states/data-rights--loading.png`, `states/data-rights-requests--loading.png` |
@@ -384,8 +394,8 @@ Do: Open Data rights requests from the menu. Narrow it to type Export and status
   review Dr Dlamini's request. Press Approve with no decision note. Then approve it with the note "Identity confirmed;
   export released to the data subject."
 Expect: The queue holds only KGK's requests (T112), and the filters change it only when they are applied. On the
-  request's page Data rights requests stays lit, and the trail reads Home › Data rights requests › Data rights
-  request.
+  request's page Data rights requests stays lit, and the trail reads Home › Data rights requests › the request's id
+  once it has loaded (R2-Rules § 3; DESIGN.md's owner table).
   - The row names the requester by the address she signs in with, and its Review action is named for the row (T239).
   - The detail page shows the requester, her user id, when it was submitted, its type, its status and her reason.
   - Approving with no note is refused: "A decision note is required."

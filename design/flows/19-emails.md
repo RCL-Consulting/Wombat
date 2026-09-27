@@ -335,7 +335,7 @@ Two of them show a full registration link (observed): `act-2/2.16-1-registrars-i
 - Where the mails are caused and promised: `act-1/1.7-1-mbatha-invited.png` (crop its link out first),
   `states/invitations-list--not-delivered.png`,
   `act-3/3.32-1-nudge-run.png`, `act-3/3.43-1-link-not-delivered.png`, `act-3/3.43-2-link-resent.png`,
-  `act-4/4.27-1-zulu-ratified-stars-issued.png`, `act-4/4.36-1-mokoena-dlamini-paed002-revoked.png`,
+  `act-4/4.27-1-zulu-ratified-stars-issued.png`, `act-4/4.36-2-mokoena-dlamini-paed002-revoked.png`,
   `act-5/5.17-1-mbatha-marked-complete.png`, `act-A/A.2.3-1-smit-digest-opt-out.png`, `states/data-rights--rejected.png`
   (its help text promises the mail T320 says is not sent), `act-A/A.4.4-1-forgot-password-stub.png`.
 
@@ -581,8 +581,8 @@ Do: Open Data rights requests from the menu. Narrow it to type Export and status
   review Dr Dlamini's request. Press Approve with no decision note. Then approve it with the note "Identity confirmed;
   export released to the data subject."
 Expect: The queue holds only KGK's requests (T112), and the filters change it only when they are applied. On the
-  request's page Data rights requests stays lit, and the trail reads Home › Data rights requests › Data rights
-  request.
+  request's page Data rights requests stays lit, and the trail reads Home › Data rights requests › the request's id
+  once it has loaded (R2-Rules § 3; DESIGN.md's owner table).
   - The row names the requester by the address she signs in with, and its Review action is named for the row (T239).
   - The detail page shows the requester, her user id, when it was submitted, its type, its status and her reason.
   - Approving with no note is refused: "A decision note is required."

@@ -12,7 +12,7 @@ Part of the GUI redesign briefed in `design/BRIEF.md` (T332). Written 2026-09-26
 | **Frequency and stakes** | A few times a year; about one catalogue version a year. High: "a target and its period are read live, in every institution that has adopted the curriculum, including periods that have already closed" (Step 1.18's Expect, `act-1-setup.md:360-362`) |
 | **Mode** | **Straight to fidelity, in two parts** (the List and Form page shapes hold: BRIEF § 4): part 1, the Colleges, specialities, sub-specialities and scales; part 2, the EPAs and curricula, where the curriculum item editor needs a narrow-width layout |
 | **Pages** (`coverage.md` templates, 21) | `/admin/colleges`, `/admin/colleges/new`, `/admin/colleges/{Id:int}`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/colleges/{CollegeId:int}/specialities/new`, `/admin/colleges/{CollegeId:int}/specialities/{Id:int}`, `/admin/specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}`, `/admin/entrustment-scales`, `/admin/entrustment-scales/new`, `/admin/entrustment-scales/{Id:int}`, `/admin/epas`, `/admin/epas/new`, `/admin/epas/{Id:int}`, `/admin/curricula`, `/admin/curricula/new`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items`, `/access-denied` |
-| **Held screenshots** | None. T300 landed in 1e154ab and Dr Kruger's dashboard was re-captured on 2026-09-26 (§ Attach). T300 added Activity Types to his nav (flow 17), and only the dashboard captures were retaken, so **the sidebar in every other 1280 px capture of Dr Kruger is pre-fix**: brief from the page, not the nav |
+| **Held screenshots** | None. T300 landed in 1e154ab and Dr Kruger's dashboard was re-captured on 2026-09-26 (§ Attach). T300 added Activity Types to his nav (flow 17). The T335 replay re-took every step capture of him on 2026-09-27, so their sidebars show it; his state captures other than the two Homes are older: brief them from the page, not the nav |
 
 **How to run this thread** (BRIEF § 2.3, step 3; source keys are BRIEF § 2.0's):
 1. Open a new thread in the Wombat design system. Attach the KEY SCREENSHOTS (§ Attach, first list).
@@ -145,31 +145,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
   3. At 390 px, does the item editor become a card per item, or open one item at a time?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -183,8 +191,8 @@ ASK:
 ATTACHED: states/colleges-list--two.png, states/sub-speciality-edit--edit.png, states/entrustment-scale-edit--edit.png,
   states/entrustment-scales-list--delete-refused.png, states/epas-list--college.png,
   states/epa-edit--deactivate-dialog.png, states/epa-edit--reactivated.png, states/curriculum-items-edit--college.png,
-  states/curriculum-edit--clone.png, states/curricula-list--versions.png, act-A/A.7.10-4-kruger-item-editor-open.png,
-  act-A/A.7.10-5-kruger-item-editor-viewport.png, states/curriculum-items-edit--no-items.png,
+  states/curriculum-edit--clone.png, states/curricula-list--versions.png, act-A/A.7.10-4-items-390.png,
+  act-A/A.7.10-5-item-editor-390.png, states/curriculum-items-edit--no-items.png,
   states/entrustment-scale-edit--rung-refused.png. These show today's pages, defects included; they are not the target.
   In Dr Kruger's captures the sidebar is out of date (it lacks Activity Types).
 ```
@@ -356,8 +364,8 @@ not in this flow.
 - `states/curriculum-items-edit--college.png`
 - `states/curriculum-edit--clone.png`
 - `states/curricula-list--versions.png`
-- `act-A/A.7.10-4-kruger-item-editor-open.png` (the item editor at 390 px; brief from the editor, not the sidebar)
-- `act-A/A.7.10-5-kruger-item-editor-viewport.png`
+- `act-A/A.7.10-4-items-390.png` (the items table at 390 px; brief from the table, not the sidebar)
+- `act-A/A.7.10-5-item-editor-390.png` (the item editor open in it)
 - `states/curriculum-items-edit--no-items.png`
 - `states/entrustment-scale-edit--rung-refused.png`
 
@@ -380,7 +388,7 @@ not in this flow.
   `states/sub-speciality-edit--saved.png`, `states/sub-speciality-edit--deactivated.png`,
   `states/sub-speciality-edit--not-found.png`, `states/sub-speciality-edit--narrow.png`,
   `act-1/1.12-1-kruger-specialities.png`, `act-1/1.13-1-sub-specialities.png`, `act-1/1.14-1-sub-speciality-ladder.png`,
-  `act-6/6.3-1-no-specialities.png`, `act-6/6.4-2-adult-neurology-created.png`, `act-6/6.7-1-default-reopened.png`,
+  `act-6/6.3-1-no-specialities.png`, `act-6/6.4-2-adult-neurology-created.png`, `act-6/6.7-2-default-reopened.png`,
   `act-6/6.11-1-cpsa-specialities.png`, `act-6/6.12-2-two-sub-specialities.png`.
 - Scales: `states/entrustment-scales-list--administrator.png`, `states/entrustment-scales-list--deleted.png`,
   `states/entrustment-scales-list--loading.png`, `states/entrustment-scales-list--narrow.png`,
@@ -389,7 +397,7 @@ not in this flow.
   `states/entrustment-scale-edit--narrow.png`, `act-1/1.4-1-scales-list.png`, `act-1/1.4-2-cpsa-ladder.png`,
   `act-6/6.5-1-duplicate-labels-refused.png`, `act-6/6.6-1-sixth-level-saved.png`, `act-6/6.8-1-delete-refused.png`.
 - Access denied: `states/access-denied--signed-in.png`, `act-1/1.15-1-kruger-access-denied.png`,
-  `act-6/6.10-2-college-record-denied.png`, `act-6/6.10-3-scale-create-denied.png`.
+  `act-6/6.10-2-college-record-refused.png`, `act-6/6.10-3-scale-create-refused.png`.
 
 **Part 2:**
 - EPAs: `states/epas-list--inactive.png`, `states/epas-list--load-error.png`, `states/epas-list--loading.png`,
@@ -399,7 +407,7 @@ not in this flow.
   `act-6/6.14-1-paed-006-saved.png`, `act-6/6.17-1-deactivate-dialog.png`, `act-6/6.17-2-deactivated.png`,
   `act-6/6.23-1-reactivated.png`, `act-6/6.28-1-paed016-saved.png`, `act-6/6.28-2-kruger-epa-list.png`.
 - The pause as others meet it: `act-6/6.18-1-patel-inbox-paused.png`, `act-6/6.18-2-completed-credited-nothing.png`,
-  `act-6/6.19-1-progress-paused.png`, `act-6/6.19-3-picker-eight.png`, `act-6/6.24-1-progress-restored.png`.
+  `act-6/6.19-1-dlamini-progress.png`, `act-6/6.19-3-dlamini-picker.png`, `act-6/6.24-1-dlamini-progress.png`.
 - Curricula: `states/curricula-list--college.png`, `states/curricula-list--loading.png`,
   `states/curricula-list--narrow.png`, `states/curriculum-edit--create.png`, `states/curriculum-edit--saved.png`,
   `states/curriculum-edit--cloned.png`, `states/curriculum-edit--invalid.png`, `states/curriculum-edit--not-found.png`,
@@ -408,28 +416,28 @@ not in this flow.
 - Items: `states/curriculum-items-edit--inactive.png`, `states/curriculum-items-edit--row-edit.png`,
   `states/curriculum-items-edit--loading.png`, `states/curriculum-items-edit--not-found.png`,
   `states/curriculum-items-edit--narrow.png`, `act-1/1.18-1-college-items.png`, `act-6/6.13-4-items-nothing-to-add.png`,
-  `act-6/6.17-3-items-paused.png`, `act-6/6.30-1-add-paed016-form.png`, `act-6/6.30-3-paed011-edit-row.png`,
-  `act-6/6.30-4-paed011-saved.png`, `act-A/A.7.10-3b-kruger-items.png`.
+  `act-6/6.17-4-items-paused.png`, `act-6/6.30-1-add-paed016-form.png`, `act-6/6.30-3-paed011-edit-row.png`,
+  `act-6/6.30-4-paed011-saved.png` (Dr Kruger's items at 390 px are `A.7.10-4`, above).
 
 **Re-captured after T300 landed (1e154ab, 2026-09-26), so no longer held:** `states/home--college-admin.png` (from a
-post-act1 copy), `act-6/6.10-1-kruger-dashboard.png` (post-act6), and `states/home--narrow-college-admin.png` and
-`act-A/A.7.10-1-kruger-home.png` (post-actA). The dashboard itself did not change: one National catalogue card. At
-1280 px the sidebar now reads Home, My Account, Data Rights, Specialities, EPAs, Curricula, Activity Types; at 390 px
-the nav is folded, so the two narrow captures look as before. The 390 px `A.7.10-4` and `A.7.10-5` attached above fold
-the nav too. Every other 1280 px capture of Dr Kruger in this flow still shows the sidebar without Activity Types.
+post-act1 copy), `act-6/6.10-1-kruger-home.png` (post-act6), and `states/home--narrow-college-admin.png` and
+`act-A/A.7.10-1-home-390.png` (post-actA); all four were re-taken on 2026-09-27 (the step captures by the T335
+replay). The dashboard itself did not change: one National catalogue card. Since T335 his menu reads Home,
+Specialities, EPAs, Curricula, Activity types, then My data rights (Step A.7.10), and the T335 replay re-took every
+step capture of him with it; at 390 px the menu is folded (`A.7.10-4`, `A.7.10-5`).
 
 ## Known problems this design must solve
 
 | Task | Priority | What it means for the design | Evidence |
 |---|---|---|---|
-| T323 | P3 | The item editor renders as a `colspan` row inside the items table's scroll container, so it takes the table's 796 px width; its two-column form (370 px inputs) spills off a 291 px column (F-A.7.10a). It needs its own narrow layout | `act-A/A.7.10-4-kruger-item-editor-open.png`, `act-A/A.7.10-5-kruger-item-editor-viewport.png` |
+| T323 | P3 | The item editor renders as a `colspan` row inside the items table's scroll container, so it takes the table's 796 px width; its two-column form (370 px inputs) spills off a 291 px column (F-A.7.10a). It needs its own narrow layout | `act-A/A.7.10-4-items-390.png`, `act-A/A.7.10-5-item-editor-390.png` |
 | T326 | P3 | `CurriculumItemsEdit.razor` chooses the "every national EPA is already on this curriculum" text whenever the picker is empty, even with no EPA at all; the Existing items table renders its headers over an empty body (F-6.13a) | `states/curriculum-items-edit--no-items.png`, `act-6/6.13-4-items-nothing-to-add.png` |
 | T331 | P3 | No nav item lights on `/admin/colleges/{n}/specialities` for the CollegeAdmin, whose nav item is `/admin/specialities` | `states/specialities-list--loading.png` |
 | T324 | P3 | The rung refusal reads "Curriculum item N … requires level 6"; say the College's label ("5") and the item's EPA. Required messages read "The ShortCode field is required." (F-6.1a) | `states/entrustment-scale-edit--rung-refused.png`, `states/college-edit--invalid.png` |
 | T264 | P3 | Deactivate on the College, speciality and sub-speciality pages, and Delete on the scales list, are red in-row or form buttons with no ConfirmDialog (F-6.8a). A deactivation's effect is undecided: nothing in Application or Infrastructure reads their `IsActive` (`coverage.md` § Flows and states not played) | `act-6/6.8-1-delete-refused.png`, `states/college-edit--deactivated.png` |
 | T329 | P2 | The EPA list keeps its skeleton beside the load error | `states/epas-list--load-error.png` |
 | T291 | P3 | Item 2: `SpecialitiesList.razor:10` shows "Back to colleges" to every caller; show it only to an Administrator (F-1.12a, F-6.11a) | `act-1/1.12-1-kruger-specialities.png`, `act-6/6.11-1-cpsa-specialities.png` |
-| T300 | P3, group 1, landed in 1e154ab | Activity Types is in the CollegeAdmin's nav section, and the builder has a read-only mode, a narrowed Scope and View or Edit per row (flow 17; BRIEF § 10; D52). The dashboard captures were re-taken on 2026-09-26; every other Dr Kruger sidebar in this flow's captures is pre-fix | `states/home--college-admin.png` (re-captured) |
+| T300 | P3, group 1, landed in 1e154ab | Activity Types is in the CollegeAdmin's nav section, and the builder has a read-only mode, a narrowed Scope and View or Edit per row (flow 17; BRIEF § 10; D52). The dashboard captures were re-taken on 2026-09-26, and every step capture of him again on 2026-09-27 by the T335 replay | `states/home--college-admin.png` (re-captured) |
 | T301 | P3 | "Open for adoption" and "Open" / "Held back"; a new or cloned version starts held back (6.29 today: "a clone is adoptable the moment it exists"); adoption refuses a held-back version | `states/curriculum-edit--clone.png`, `states/curricula-list--versions.png` |
 | T272 | P3 | Only a real unique violation reads "already exists"; other failures read "could not be saved; try again"; no raw EF text | `states/college-edit--duplicate.png` |
 | T271 | P3 | A scale delete and a publish that binds the scale can race (a lock, not a screen); the builder labels a scale bound by seed key (flow 17) | none in this flow |

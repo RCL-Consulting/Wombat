@@ -181,31 +181,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
   3. What does a registrar see between registering and admission, and does it tell her who admits her, and when?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -219,8 +227,8 @@ ASK:
 ATTACHED (key screenshots first):
   - states/invitations-list--institution.png, invitations-list--not-delivered.png, invitations-list--check-address.png;
   - states/register--form.png, register--password-short.png, register--used.png;
-  - states/home--awaiting-admission.png, act-2/2.19-4-mahlangu-progress-denied.png;
-  - states/pending-trainees-list--pending.png, trainee-profile-edit--admission.png, act-2/2.29-2-four-admitted.png;
+  - states/home--awaiting-admission.png, act-2/2.19-5-mahlangu-progress-denied.png;
+  - states/pending-trainees-list--pending.png, trainee-profile-edit--admission.png, act-2/2.29-3-four-admitted.png;
   - states/home--institutional-admin-first.png.
   - A full-page capture draws the sidebar part-way down a long page, or ends it early. That is the capture, not the
     product.
@@ -295,10 +303,10 @@ upload it (BRIEF § 3.3).
 5. `states/register--password-short.png`
 6. `states/register--used.png`
 7. `states/home--awaiting-admission.png`
-8. `act-2/2.19-4-mahlangu-progress-denied.png`
+8. `act-2/2.19-5-mahlangu-progress-denied.png`
 9. `states/pending-trainees-list--pending.png`
 10. `states/trainee-profile-edit--admission.png`
-11. `act-2/2.29-2-four-admitted.png`
+11. `act-2/2.29-3-four-admitted.png`
 12. `states/home--institutional-admin-first.png`
 
 **Then, as the chat asks for them:**
@@ -357,9 +365,9 @@ Roles row still runs "PendingTrainee" into "System-managed" with no gap (F-2.28b
 do not copy that.
 
 **Re-captured after T297 landed (2026-09-26), so no longer held:** `act-2/2.31-2-mahlangu-trainee-home.png` and the
-other first-Home captures of the five affected roles, `2.8-2`, `2.9-3`, `2.10-4`, `2.10-6`, `2.10-7` and `2.32-1`. Each
-was taken from the end-of-Act-2 snapshot, not the step's own moment: Dr Mokoena's and Dr Sithole's Homes (`2.10-6`,
-`2.10-7`) already count the five registrars admitted later in the act (BRIEF § 10).
+other first-Home captures of the five affected roles, `2.8-2`, `2.9-3`, `2.10-4`, `2.10-6`, `2.10-7` and `2.32-1`. The
+T335 replay re-took them on 2026-09-27 at each step's own moment, so Dr Mokoena's and Dr Sithole's Homes (`2.10-6`,
+`2.10-7`) count no registrars yet (BRIEF § 10).
 
 ## Known problems this design must solve
 
@@ -367,7 +375,7 @@ was taken from the end-of-Act-2 snapshot, not the step's own moment: Dr Mokoena'
 |---|---|---|
 | **T303** (group 1, landed in 4824d62) | **The user page.** Trainee reads "System-managed", with no Remove, beside PendingTrainee. **Add role.** It never offers Trainee. Admission is the only way in. | The re-captured images above; Step 2.28 |
 | **T323** (A3) | **The table at 1280 px.** Delivery and the row actions show without sideways scrolling, and no word breaks. Today the card is about 630 px wide beside the form, and the table scrolls to hide Email and Role. "Not delivered" breaks as "delivere / d." and the check-address text runs one word per line (observed). | `states/invitations-list--check-address.png`, `states/invitations-list--not-delivered.png` |
-| **T306** (BRIEF § 7 B4) | **Admission form.** A read-only "Training year N (from the programme start)", recomputed as the start date is typed. **Active profiles.** A Training year column. | `act-2/2.29-2-four-admitted.png`, `states/trainee-profile-edit--admission.png` |
+| **T306** (BRIEF § 7 B4) | **Admission form.** A read-only "Training year N (from the programme start)", recomputed as the start date is typed. **Active profiles.** A Training year column. | `act-2/2.29-3-four-admitted.png`, `states/trainee-profile-edit--admission.png` |
 | **T304** (P2) | **The Curriculum picker.** It offers only the version the institution has adopted; after a re-adoption today, it offers the old one too. **Saving.** A profile save never re-admits the registrar, and it reports any credit it replays (BRIEF § 10). | T304; Step 2.29's note |
 | **T317** | A refused registration comes back with the first and last names as typed. The passwords never come back, and the names never go in the address (T317 recommends a short-lived cookie bound to the token). | Step 2.9; `states/register--password-short.png` |
 | **T315** (backend) | The token must leave the address bar. Register is static, so `OnAfterRenderAsync` never runs; T315 clears it through `wwwroot/wombat.js`, or a cookie and redirect. The design adds no behaviour that needs component code after load. | Step 2.8's Expect |
@@ -375,7 +383,7 @@ was taken from the end-of-Act-2 snapshot, not the step's own moment: Dr Mokoena'
 | **T264** | **Revoke.** It is an outline button (red today), named per row, and confirms naming the invitee. **The link.** A refused issue or a revoke clears the previous invitee's link from the screen (F-2.6a, `act-2-onboarding.md:125`). | `states/invitations-list--not-delivered.png`, `states/invitations-list--resent.png` |
 | **T324** (A8) | Validation messages use field labels. `InvitationsList` (`TargetRole`) and `TraineeProfileEdit` print property names today. | T324 |
 | **T322** (A1), **T328** (A4) | **The register card.** Its input borders reach 3:1. Its "Show" toggles are 24 px or larger, expose `aria-pressed` and name their input. **Date inputs** use the body font; they render in a monospace face today (observed). | `states/register--form.png`, `states/trainee-profile-edit--admission.png`; `states/login--narrow.png` (BRIEF § 6 A4) |
-| **Observed, not filed** | **Code names.** Roles print as code names ("InstitutionalAdmin", "PendingTrainee", "Viewing as PendingTrainee"). **Greeting.** Home greets by email, not by name (BRIEF § 6 A8). **Status.** The admission form's summary reads "Status: Active" for a registrar who is not yet admitted, meaning the account's status. **Pending admission.** The table clips the email, and its "Admit to curriculum" action is out of view at 1280 px. | `states/home--awaiting-admission.png`, `states/trainee-profile-edit--admission.png`, `act-2/2.29-2-four-admitted.png` |
+| **Observed, not filed** | **Code names.** Roles print as code names ("InstitutionalAdmin", "PendingTrainee", "Viewing as PendingTrainee"). **Greeting.** Home greets by email, not by name (BRIEF § 6 A8). **Status.** The admission form's summary reads "Status: Active" for a registrar who is not yet admitted, meaning the account's status. **Pending admission.** The table clips the email, and its "Admit to curriculum" action is out of view at 1280 px. | `states/home--awaiting-admission.png`, `states/trainee-profile-edit--admission.png`, `act-2/2.29-3-four-admitted.png` |
 
 ## Questions the design must answer
 

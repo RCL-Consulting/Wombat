@@ -1,12 +1,13 @@
 ---
 id: T335
 title: The restructure has no pilot: nothing has taken one flow from Claude Design through Razor to a green replay
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-27
 started: 2026-09-27
+completed: 2026-09-27
 ---
 
 # T335 — The restructure has no pilot: nothing has taken one flow from Claude Design through Razor to a green replay
@@ -56,8 +57,25 @@ every page uses:
   Web 2,549, Integration 453 (8,226), with 0 warnings. DESIGN.md's banner reads "Redesigned so far: flow 01".
   Each amended section carries "(2026-09-27, T335, flow 01)". The lanes' headless-Chrome checks, at 1280 and 390, are
   the evidence, not the replay: that is step G.
-- [ ] Flow 01's runbook steps replay green on a fresh database; baseline re-captured — the replay's Actual lines.
-- [ ] `BRIEF.md` corrected by the pilot's lessons — a dated "Pilot findings" section.
+- [x] Flow 01's runbook steps replay green on a fresh database; baseline re-captured — the replay's Actual lines. — 2026-09-27: the whole runbook replayed against `b347e11c` on a fresh
+  database (`wombat_scenario_t335`), acts 1–6 then the appendix, then flow 01's states. 243 of 325 steps had no gap.
+  None of the others failed because of flow 01:
+  - 78 fail only on open tasks their Gap lines already cite;
+  - one Expect was wrong about the design (A.1.3) and is corrected;
+  - three could not be played because the ageing `UPDATE` was refused (3.30, 3.32, and 3.33's Overdue badge; 3.33's
+    switch passed; T337).
+
+  Every flow 01 Expect that was played holds: the Home frame, the grouped nav, the acting-role switch and its memory,
+  the lit item and trails, the titles, the failure pages and the 390 px phone menu. The states section re-captured 65
+  states. Its 10 mismatches are open tasks (T327, T291, T311), four recipes corrected in states.md, and one capture
+  made from another moment. The error page after a real failure is not reachable on Development (T337); tests and a
+  headless-Chrome probe cover it. The Actual and Gap lines are in the act files; the snapshots are
+  `recovery/scenario-t335-post-act*.dump`.
+- [x] `BRIEF.md` corrected by the pilot's lessons — a dated "Pilot findings" section. — 2026-09-27: BRIEF § 11 "Pilot findings", dated. § 0, § 2.3
+  (a review round; the mark copied into each canvas; the design system re-synced after every flow), § 2.4 (the shell is
+  a given), § 5.1 (the digest restated, and pasted into the 18 briefs that carry it) and § 9 (the replay's browser,
+  capture names, citation checks) are corrected. `design/pilot/README.md` step C has the mark lesson. The design system
+  was re-synced and republished (`064cde00`).
 
 ## Related
 

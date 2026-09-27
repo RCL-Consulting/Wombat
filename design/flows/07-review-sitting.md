@@ -185,31 +185,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
 4. How are irreversible acts (Record, which fixes what is staged; Ratify, which issues STARs) marked and confirmed?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 Also: the page has exactly one h1. The trajectory chart is the hand-drawn SVG TrajectoryChart shared with My progress
 (Flow 05); it needs a text or table equivalent. A confirmation is the native <dialog> ConfirmDialog.
@@ -221,8 +229,8 @@ region, every row action named for its row.
 
 ATTACHED: states/review-detail--scheduled.png, act-4/4.17-1-zulu-minicex-from-snapshot.png,
 states/review-detail--staged.png, states/review-detail--ready-to-record.png, states/review-detail--quorum-refused.png,
-states/review-detail--ratified.png, act-5/5.3-2-zulu-standing-exit-rule.png, act-5/5.4-4-zulu-thirteen-staged-full.png,
-states/review-detail--member.png, act-A/A.7.13-1-zulu-review7-top.png, states/review-detail--narrow.png
+states/review-detail--ratified.png, act-5/5.3-2-zulu-review-full.png, act-5/5.4-4-zulu-thirteen-staged-full.png,
+states/review-detail--member.png, act-A/A.7.13-1-review-7.png, states/review-detail--narrow.png
 
 RUNBOOK STEPS, VERBATIM:
 
@@ -707,10 +715,10 @@ Every path below is under `design/baseline/` and was checked with `ls` on 2026-0
 4. `states/review-detail--ready-to-record.png`: every line settled, Record enabled.
 5. `states/review-detail--quorum-refused.png`: the quorum refusal.
 6. `states/review-detail--ratified.png`: ratified, STARs issued.
-7. `act-5/5.3-2-zulu-standing-exit-rule.png`: the standing and the exit rule.
+7. `act-5/5.3-2-zulu-review-full.png`: the standing and the exit rule.
 8. `act-5/5.4-4-zulu-thirteen-staged-full.png`: thirteen staged decisions (12,711 px tall).
 9. `states/review-detail--member.png`: a member's view.
-10. `act-A/A.7.13-1-zulu-review7-top.png`: the top of a populated review, with the "×" dismiss button.
+10. `act-A/A.7.13-1-review-7.png`: the top of a populated review, with the "×" dismiss button.
 11. `states/review-detail--narrow.png`: 390 px (12,935 px tall).
 
 ### 5.2 State captures (add as the chat asks)
@@ -739,12 +747,12 @@ Every path below is under `design/baseline/` and was checked with `ls` on 2026-0
   - `states/review-detail--loading.png`
   - `states/review-detail--not-found.png`
 - Evidence for the known problems:
-  - `act-A/A.7.6-2-zulu-trajectory.png` (the charts at 390 px)
-  - `act-A/A.7.14-6-reviews-badges.png` (badge contrast)
+  - the charts at 375 px: the foot of `states/review-detail--narrow.png` (§ 5.1, item 11)
+  - `act-A/A.7.14-7-review-7-badges.png` (badge contrast; the badges pass since T335's tokens)
 - Step captures for detail:
   - `act-4/4.16-1-zulu-review-started.png`
   - `act-4/4.19-1-zulu-three-staged.png`
-  - `act-4/4.21-1-zulu-ready-to-record.png`
+  - `act-4/4.21-2-zulu-ready-to-record.png`
   - `act-4/4.25-1-zulu-decision-recorded.png`
   - `act-4/4.27-1-zulu-ratified-stars-issued.png`
   - `act-4/4.30-1-zulu-duplessis-ratified-no-star.png`
@@ -762,16 +770,16 @@ None.
 | Task | Problem today | What it means for the design | Evidence |
 |---|---|---|---|
 | T329 (P2; BRIEF A6) | `ReviewDetail.razor:113` renders the body only once the review is read. `LoadAsync` keeps no loading flag, and the page has no `StatePanel`. | The header renders from the first moment, with a skeleton for the body. A failed first read shows its alert there. No action is offered before the review has loaded. | `states/review-detail--loading.png` |
-| T323 (P3; BRIEF A3) | Each trajectory is a 600×200 viewBox scaled to about 260 px, so its labels are 5–6 px. The table beside it is for screen readers only. | Text at least 11 px at 390 px, or the table visible under 641 px. Use F05's answer; it is one component. | `act-A/A.7.6-2-zulu-trajectory.png` |
+| T323 (P3; BRIEF A3) | Each trajectory is a 600×200 viewBox scaled to about 260 px, so its labels are 5–6 px. The table beside it is for screen readers only. | Text at least 11 px at 390 px, or the table visible under 641 px. Use F05's answer; it is one component. | `states/review-detail--narrow.png` (its foot, at 375 px) |
 | T273 (P3) | The sampling list and the staged lines print a bare "Code — Title" for an EPA no longer in force (DESIGN.md:448-450). | Mark both through `EpaLabel`, "(no longer in use)". A staged line also says "No longer fits". Decision adopted 2026-09-25: the frozen snapshot's headings are not re-marked. | — |
 | T325 (P3; BRIEF A9) | "Issued on" defaults to the UTC date (`ReviewDetail.razor:2083`), a day behind between 22:00 and 24:00 UTC. | The default is today on the South African calendar. Any printed time carries its zone. | Step 4.17 ("Issued on filled 2026-09-26") |
 | T260 (P3) | After a panel save, the panel page keeps a stale "can no longer sit" warning (F08's page). | This page's seat notes ("The chair can no longer act", T256) are re-read after every action and never left stale (inference: the same class of note). | `states/review-detail--chair-cannot-act.png` |
-| T280 (P3; BRIEF A14) | The sampling warnings' dismiss button is `<button …>×</button>` with no name. Only 3 of the 9 cards are named regions (Step A.7.13). | "Dismiss" as the accessible name. Every card `aria-labelledby` its heading. | `act-A/A.7.13-1-zulu-review7-top.png` |
-| T322 (P2; BRIEF A1) | Badge text on its tint fails 4.5:1 (for example success 2.55:1). | Body text on the tint, as `.badge-standing-*` does already. | `act-A/A.7.14-6-reviews-badges.png` |
+| T280 (P3; BRIEF A14) | The sampling warnings' dismiss button is `<button …>×</button>` with no name. Only 3 of the 9 cards are named regions (Step A.7.13). | "Dismiss" as the accessible name. Every card `aria-labelledby` its heading. | `act-A/A.7.13-1-review-7.png` |
+| T322 (P2; BRIEF A1) | Badge text on its tint fails 4.5:1 (for example success 2.55:1). | Body text on the tint, as `.badge-standing-*` does already. | `act-A/A.7.14-7-review-7-badges.png` (re-taken after T335's tokens: the badges now pass) |
 | T309 (P3) | A formative check-in carries Type "Annual progression review" (Steps 4.49, A.1.10). | Every surface reads "Formative check-in" (short: "Formative"). | `states/review-detail--formative-in-progress.png`, `states/review-detail--formative-closed.png` |
 | BRIEF A5; T264 (P3) | The result region (`ReviewDetail.razor:16-26`) is at the top of the page and takes the focus after each action. So each stage sends the chair about 6,000 px up from the staging form, at 1280 px (inference from the code and `states/review-detail--staged.png`). Remove, Ratify and Close review ask for no confirmation: the page has no `ConfirmDialog` (Steps 4.19, 4.27, 4.50). | Each action's outcome appears, and takes the focus, where the chair is working. Ratify and Record, which cannot be undone, confirm and name what they fix or issue. Remove confirms and names the staged decision. | Steps 4.19, 4.27, 4.50 |
 | T320 (P2, backend) | Ratifying issues STARs and sends no mail (Step 4.27, F-4.27a). | Do not promise "the registrar will be told" in the confirmation until T320 decides. | Step 4.27 |
-| T190 (P3; BRIEF A14) | The h1 is "Committee review" and the tab title "Committee Review" (`ReviewDetail.razor:7,9`). Neither names the registrar. The headings go h1 then h3, with no h2 (Step A.7.13 Note; cosmetic, T085). | One title pattern that names the registrar and the period. Headings in order. | `act-A/A.7.13-1-zulu-review7-top.png` |
+| T190 (P3; BRIEF A14) | The h1 is "Committee review" and the tab title "Committee Review" (`ReviewDetail.razor:7,9`). Neither names the registrar. The headings go h1 then h3, with no h2 (Step A.7.13 Note; cosmetic, T085). | One title pattern that names the registrar and the period. Headings in order. | `act-A/A.7.13-1-review-7.png` |
 | Layout (observed, not filed) | The Decision form (Record) sits at the top beside the Review card. The Agenda, where lines are staged and deferred, starts about 3,000 px lower, above the staging form (DESIGN.md:1231-1233: the Agenda "directly above the 'Pending entrustment decisions' card, so a chair reads what is due and stages it in one place"). | Keep the agenda and the staging together, and decide where Record belongs (questions 1 and 3). | `states/review-detail--staged.png` |
 
 ## 7. Questions the design must answer

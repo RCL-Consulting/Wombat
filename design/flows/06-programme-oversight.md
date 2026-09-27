@@ -1,8 +1,9 @@
 # F06 Watching the programme: who is behind, and what has stalled
 
 The committee, the programme director, the sub-speciality lead and the coordinator look each week at who is behind
-this period's targets and which requests have stalled. It is the programme's early warning; today three of its nav
-items are "Coming soon" stubs and its stalled list misses most of what has stalled.
+this period's targets and which requests have stalled. It is the programme's early warning; until T335 three of its nav
+items were "Coming soon" stubs (their addresses are Page not found now), and its stalled list misses most of what
+has stalled.
 
 Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screenshots are under `design/baseline/`
 (gitignored). Claims about Claude Design use BRIEF § 2.0's source keys.
@@ -13,15 +14,15 @@ Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screen
 | Pages | `/` (`Dashboards/CommitteeMemberDashboard.razor`, `SpecialityAdminDashboard.razor`, `SubSpecialityAdminDashboard.razor`, `CoordinatorDashboard.razor`), `/placeholder/{Feature}` (`Placeholder/PlaceholderPage.razor`), `/activities/inbox`, `/committee/panels`, and the endpoint `/dashboard/switch/{role}` (`coverage.md` § Pages, § Endpoints) |
 | Steps | 18: 2.33, 2.35, 2.37, 2.38, 3.30, 3.31, 3.32, 3.52, 3.53, 3.54, A.2.8, A.5.10, A.5.11, A.5.12, A.7.5, A.7.6, A.7.7, A.7.8. Steps 3.32 and A.2.8 are the Administrator running the reminder jobs on `/admin/jobs` (F18's page), seen here for what they chase. |
 | Frequency and stakes | Weekly. Medium-high: this is where a registrar falling behind, or a request nobody has answered, is caught before the committee sits. |
-| Mode | **Wireframe first.** Four role dashboards and three of the five "Coming soon" pages live here; decide them before fidelity (BRIEF § 2.3, step 3; § 7 B7). |
-| Held | **Nothing.** T297 (group 1, landed in 7bf8ea7) changed the Coordinator's, SpecialityAdmin's and SubSpecialityAdmin's cards. 23 of their 24 captures were re-captured on 2026-09-26, and one (`3.53-2`) no longer has a step (§ 5.3; BRIEF § 10). The CommitteeMember's dashboard and the placeholders were never held. |
+| Mode | **Wireframe first.** Four role dashboards and three of the five pages that were "Coming soon" (T335 deleted them) live here; decide them before fidelity (BRIEF § 2.3, step 3; § 7 B7). |
+| Held | **Nothing.** T297 (group 1, landed in 7bf8ea7) changed the Coordinator's, SpecialityAdmin's and SubSpecialityAdmin's cards. 23 of their 24 captures were re-captured on 2026-09-26, and one, Step 3.53's capture of the inbox, no longer has a step and is gone (§ 5.3; BRIEF § 10). The CommitteeMember's dashboard and the placeholders were never held. |
 
 ---
 
 ## 1. How to run this thread
 
-1. Run F01 (the shell and the nav) first. Whether each "Coming soon" item keeps its nav slot is decided here, but the
-   nav's grouping is F01's (BRIEF § 2.3, step 2).
+1. Run F01 (the shell and the nav) first. Whether each page that was "Coming soon" comes back with a nav item is
+   decided here, but the nav's grouping is F01's (BRIEF § 2.3, step 2).
 2. T297 has landed and the captures in § 5.3 were re-taken on 2026-09-26, so every screen can be briefed.
 3. Start a new thread. Attach the key screenshots in § 5.1, then paste § 2.1 as one message.
 4. Pick a wireframe. Record in the chat, one sentence each, whether each placeholder is designed or dropped and whether
@@ -51,8 +52,9 @@ What is wrong today:
   the hospital.
 - On the committee's "Targets this period", registrars with equal figures are ordered by an internal id.
 - Neither committee card holds a link.
-- Three nav items open a "Coming soon" stub: Programme Trainees (CommitteeMember, SpecialityAdmin, SubSpecialityAdmin),
-  Stalled Activities (Coordinator) and STAR Review Queue (SpecialityAdmin, SubSpecialityAdmin).
+- Three pages were "Coming soon" stubs until T335 deleted them and their nav items: Programme Trainees
+  (CommitteeMember, SpecialityAdmin, SubSpecialityAdmin), Stalled Activities (Coordinator) and STAR Review Queue
+  (SpecialityAdmin, SubSpecialityAdmin). Each address is Page not found now.
 
 AUDIENCE:
 - CommitteeMember: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha (senior paediatric consultants who also
@@ -160,31 +162,39 @@ Also say: should the committee's "Targets met by EPA" and the admins' "Curriculu
 carry one title?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK: 2–3 variations. Wireframes first, then full fidelity. Name every design-system component you use and mark
@@ -192,10 +202,8 @@ anything else NEW. Say which DESIGN.md rule a variation breaks. Where a screen p
 (triage) or a page that does not exist (Programme Trainees, a staff view of one registrar), label it PROPOSED. Flag
 edge cases and draw the none, typical and heavy data volumes. Review the result for accessibility against WCAG 2.1 AA.
 
-ATTACHED: states/home--committee-member-figures.png, act-3/3.52-1-zulu-committee-dashboard.png,
-states/placeholder--programme-trainees.png, states/placeholder--star-review-queue.png,
-act-A/A.7.8-4-sithole-trainees-stub.png, act-A/A.5.10-2-stalled-activities-stub.png,
-act-A/A.7.5-3-decisions-due-summary-scrolled.png, and the Coordinator, SpecialityAdmin and SubSpecialityAdmin
+ATTACHED: states/home--committee-member-figures.png, act-3/3.52-1-zulu-committee-home.png,
+act-A/A.7.5-4-decisions-due-390.png, and the Coordinator, SpecialityAdmin and SubSpecialityAdmin
 dashboards re-captured after T297 (§ 5.3).
 
 RUNBOOK STEPS, VERBATIM:
@@ -396,21 +404,21 @@ One line per step: what the person does, and what they must be able to see. The 
 | 2.33 | `/account/login` → `/` | Dr Zulu | First view as CommitteeMember, with the switch line. Five registrars at "semester 0/10 · yearly 0/5"; every EPA "0 of 5 met". |
 | 2.35 | `/account/login` → `/` → `/committee/panels` | Dr Naidoo, Dr Botha | The same dashboard. The panel they sit on, with no New panel and no Edit (the panel page is F08's). |
 | 2.37 | `/account/login` → `/` → `/committee/panels` | Dr van Rensburg | The external member: "No trainees have targets this period." He should see the institution's registrars (T290). |
-| 2.38 | `/` | Dr Mokoena, Dr Sithole | Pending reviews 0 with "Review queue", "5 active / 0 inactive", coverage "0 of 5 met" per EPA, and two placeholder items in the nav. |
+| 2.38 | `/` | Dr Mokoena, Dr Sithole | Pending reviews 0 with "Review queue", "5 active / 0 inactive", coverage "0 of 5 met" per EPA; since T335 no placeholder items in the nav. |
 | 3.30 | `/` | Mr Smit | Stalled requests lists both requests, oldest first, each a link to its activity naming the trainee, with the day it last moved (after T297, re-checked 2026-09-26). |
-| 3.31 | `/placeholder/{Feature}` | Mr Smit | Stalled Activities is "Coming soon": there is nowhere to chase a request. A mistyped placeholder address is Page not found (404). |
+| 3.31 | `/` → `/not-found` | Mr Smit | His menu offers no page of stalled requests, and the old stub's address is Page not found (404) since T335: there is nowhere to chase a request. |
 | 3.32 | `/admin/jobs` | devadmin (F18) | The nightly reminder runs: "Hi Thandi" and "Hi Mohammed", each listing the request that has waited 8 days. This is the only chase today. |
-| 3.52 | `/dashboard/switch/{role}` → `/` → `/placeholder/{Feature}` | Dr Zulu | Back to CommitteeMember. Registrars fewest met first: Ndlovu, Mahlangu and du Plessis at 0/10, then Dlamini and Molefe at 1/10. PAED-001 "2 of 5 met"; no link in either card. Programme Trainees is "Coming soon". |
-| 3.53 | `/` → `/placeholder/{Feature}` | Dr Mokoena | "2 activities awaiting review" counts the requested CBD and the portfolio review, in a card with no link (after T297, re-checked 2026-09-26). STAR Review Queue is "Coming soon". |
-| 3.54 | `/` | Dr Sithole | The same three cards and figures, and the same two stubs. |
+| 3.52 | `/dashboard/switch/{role}` → `/` | Dr Zulu | Back to CommitteeMember. Registrars fewest met first: Ndlovu, Mahlangu and du Plessis at 0/10, then Dlamini and Molefe at 1/10. PAED-001 "2 of 5 met"; no link in either card. The menu offers no Programme Trainees (T335). |
+| 3.53 | `/` | Dr Mokoena | "2 activities awaiting review" counts the requested CBD and the portfolio review, in a card with no link (after T297, re-checked 2026-09-26). The menu offers no STAR Review Queue (T335). |
+| 3.54 | `/` | Dr Sithole | The same three cards and figures, and the same menu, with no stubs. |
 | A.2.8 | `/admin/jobs` | devadmin (F18) | The draft reminder ("Hi Nomsa, … draft for 15 days") and the assessor reminder (6 days) run; each job logs whom it reminded and skipped. |
-| A.5.10 | `/` → `/placeholder/{Feature}` | Mr Smit | The card's rows link nowhere, and Stalled Activities is the stub. |
-| A.5.11 | `/placeholder/{Feature}` | Dr Botha | Programme Trainees is the stub. |
-| A.5.12 | `/placeholder/{Feature}` → `/placeholder/{Feature}` | Dr Mokoena | Programme Trainees and STAR Review Queue are both stubs. |
+| A.5.10 | `/` | Mr Smit | The card's row links to its activity; the menu offers no stalled-work page. |
+| A.5.11 | `/` | Dr Botha | The menu offers no Programme Trainees. |
+| A.5.12 | `/` | Dr Mokoena | The menu offers neither Programme Trainees nor STAR Review Queue. |
 | A.7.5 | `/` → `/msf/campaigns` → `/msf/campaigns/{CampaignId:int}` → `/committee/decisions-due` → `/admin/data-rights` | Mr Smit | At 390 px, Home's three cards stack. His other pages are F08's, F10's and F14's; Decisions Due's summary region shows the browser's focus ring (T328). |
 | A.7.6 | `/` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | At 390 px, Home's two cards stack. The review page is F07's. |
 | A.7.7 | `/` → `/committee/panels` → `/committee/decisions-due` → `/admin/entrustment-decisions` | Dr Mokoena | At 390 px, three cards stack. Each coverage row's "0 of 2 met" wraps to three lines in its narrow column (observed, not filed). She reaches Entrustment decisions only by typing its address. |
-| A.7.8 | `/` → `/committee/reviews` → `/committee/decisions-due` → `/placeholder/{Feature}` → `/placeholder/{Feature}` | Dr Sithole | At 390 px, as Dr Mokoena's, with the two stubs fitting the width. |
+| A.7.8 | `/` → `/committee/reviews` → `/committee/decisions-due` | Dr Sithole | At 390 px, as Dr Mokoena's; his menu has no stubs. |
 
 ## 4. States to design
 
@@ -431,9 +439,7 @@ From `execution/knowledge/scenario-paediatrics/states.md` § Home and the role d
 | `/` | 390 px, Coordinator | `home--narrow-coordinator.png` (re-captured) | Step A.7.5 |
 | `/` | 390 px, SpecialityAdmin | `home--narrow-speciality-admin.png` (re-captured) | Step A.7.7 |
 | `/` | 390 px, SubSpecialityAdmin | `home--narrow-sub-speciality-admin.png` (re-captured) | Step A.7.8 |
-| `/placeholder/{Feature}` | Programme Trainees | `placeholder--programme-trainees.png` | Step A.5.11 |
-| `/placeholder/{Feature}` | STAR Review Queue | `placeholder--star-review-queue.png` | Step A.5.12 |
-| `/placeholder/{Feature}` | Stalled Activities | `placeholder--stalled-activities.png` | Step 3.31 |
+| Programme Trainees, STAR Review Queue, Stalled Activities | Not built | none: T335 deleted the placeholder page, so each address is Page not found now (`act-3/3.31-1-stalled-activities-404.png`), and this flow designs them | Steps 3.31, A.5.11, A.5.12 |
 
 **A correction to the planner's list.** It named the Coordinator's third state "STARs expiring". The capture
 `home--coordinator-expiring.png` is **invitations** nearing expiry (`states.md` § Home; `CoordinatorDashboard.razor:30`,
@@ -457,52 +463,48 @@ Every path below is under `design/baseline/` and was checked with `ls` on 2026-0
 ### 5.1 Key screenshots (attach with the ask)
 
 1. `states/home--committee-member-figures.png`: the CommitteeMember dashboard with figures.
-2. `act-3/3.52-1-zulu-committee-dashboard.png`: the same, from the story.
-3. `states/placeholder--programme-trainees.png`: the stub, as a committee member sees it.
-4. `states/placeholder--star-review-queue.png`: the stub, as the programme director sees it.
-5. `act-A/A.7.8-4-sithole-trainees-stub.png`: a stub at 390 px.
-6. `act-A/A.5.10-2-stalled-activities-stub.png`: the Coordinator's stub.
-7. `act-A/A.7.5-3-decisions-due-summary-scrolled.png`: a scrolled summary region with the browser's focus ring (T328).
+2. `act-3/3.52-1-zulu-committee-home.png`: the same, from the story.
+3. `act-A/A.7.5-4-decisions-due-390.png`: a scrolled summary region with its focus ring, the design's since T335
+   (T328).
+
+No step captures a stub any more: T335 deleted the placeholder page, so Stalled Activities, Programme Trainees and STAR
+Review Queue are Page not found now (`act-3/3.31-1-stalled-activities-404.png`), and this flow designs them (§ 7,
+question 1).
 
 ### 5.2 State captures (add as the chat asks)
 
-- Dashboard and placeholder states:
+- Dashboard states:
   - `states/home--committee-member-empty.png`
   - `states/home--narrow-committee-member.png`
-  - `states/placeholder--stalled-activities.png`
 - Step captures, not held:
   - `act-2/2.33-1-zulu-committee-home.png`
   - `act-2/2.37-1-vanrensburg-home.png`
-  - `act-3/3.31-1-stalled-activities-placeholder.png`
-  - `act-3/3.31-2-mistyped-placeholder-404.png`
-  - `act-3/3.52-2-programme-trainees-placeholder.png`
-  - `act-3/3.53-3-star-review-queue-placeholder.png`
-  - `act-A/A.5.12-2-star-review-queue.png`
-  - `act-A/A.7.8-5-sithole-star-queue-stub.png`
-  - `act-A/A.7.7-4-mokoena-entrustment-decisions.png` (the list STAR Review Queue could become)
+  - `act-3/3.31-1-stalled-activities-404.png` (the old stub's address, Page not found)
+  - `act-A/A.7.7-5-entrustment-decisions-390.png` (the list STAR Review Queue could become)
 
 ### 5.3 Re-captured after T297 (formerly held)
 
-T297 changed these pages' cards (BRIEF § 10). Every capture below was re-taken on 2026-09-26 after it landed, each from
-the end of its act rather than the step's own moment, so none is held; attach them with § 5.1. At Step 2.10 Dr
-Mokoena's and Dr Sithole's Homes already count the five admitted registrars, and `home--coordinator-stalled` lists both
-stalled requests, as Step 3.30 now does (an SQL stand-in for the mid-act moment, BRIEF § 10):
+T297 changed these pages' cards (BRIEF § 10). Every capture below was re-taken on 2026-09-26 after it landed, and
+again on 2026-09-27 by the T335 replay, the step captures at their own moments (so at Step 2.10 Dr Mokoena's and
+Dr Sithole's Homes count no registrars yet); none is held, so attach them with § 5.1. `home--coordinator-stalled`
+was re-taken for flow 01 that day too:
 
 `states/home--speciality-admin.png`, `states/home--speciality-admin-figures.png`,
 `states/home--sub-speciality-admin.png`, `states/home--coordinator-empty.png`, `states/home--coordinator-stalled.png`,
 `states/home--coordinator-expiring.png`, `states/home--narrow-coordinator.png`,
 `states/home--narrow-speciality-admin.png`, `states/home--narrow-sub-speciality-admin.png`,
 `act-2/2.38-1-mokoena-home.png`,
-`act-2/2.38-2-sithole-home.png`, `act-A/A.5.10-1-stalled-requests-card.png`, `act-A/A.7.5-1-smit-home.png`,
-`act-A/A.7.7-1-mokoena-home.png`, `act-A/A.7.8-1-sithole-home.png`, `act-2/2.8-2-smit-home.png`,
+`act-2/2.38-2-sithole-home.png`, `act-A/A.5.10-1-stalled-requests-card.png`, `act-A/A.7.5-1-home-390.png`,
+`act-A/A.7.7-1-home-390.png`, `act-A/A.7.8-1-home-390.png`, `act-2/2.8-2-smit-home.png`,
 `act-2/2.32-1-smit-home.png`, `act-2/2.10-6-mokoena-home.png`, `act-2/2.10-7-sithole-home.png`,
 `act-4/4.3-1-mokoena-dashboard-nav.png`
 
-Re-captured from a fresh replay of Act 3 (2026-09-26); attach them with § 5.1 too:
-`act-3/3.30-1-smit-stalled-requests.png` (both stalled requests, oldest first, each a link naming the trainee),
-`act-3/3.53-1-mokoena-dashboard.png` and `act-3/3.54-1-sithole-dashboard.png` ("2 activities awaiting review", no
-link). Not re-captured, and not to be attached: `act-3/3.53-2-review-queue-inbox-clear.png`, since the Pending reviews
-card no longer links to the inbox it shows, so no step reaches it.
+Re-captured from a fresh replay of Act 3 (2026-09-26), and again by the T335 replay; attach them with § 5.1 too:
+`act-3/3.30-1-smit-stalled-requests.png` ("No stalled requests.": the T335 replay could not age the two requests;
+`act-A/A.5.10-1-stalled-requests-card.png` shows the card listing one, its type a link to the activity),
+`act-3/3.53-1-mokoena-home.png` and `act-3/3.54-1-sithole-home.png` ("2 activities awaiting review", no
+link). The inbox the Pending reviews card once led to has no capture: the card no longer links there, so no step
+reaches it, and the T335 replay removed the old one.
 
 ## 6. Known problems this design must solve
 
@@ -511,11 +513,11 @@ card no longer links to the inbox it shows, so no step reaches it.
 | T297 (group 1, P2, landed in 7bf8ea7) | Before the fix, the cards selected activities by literal state keys. The Coordinator's reads `submitted` only (`GetCoordinatorDashboardSummaryQuery.cs:44`), so every CPSA WBA waiting in `requested` is missed, and its rows are text (`CoordinatorDashboard.razor:22`). The speciality admins' tiles read `submitted` or `in_review`, say "activities in review" with no singular, and link to `/activities/inbox`, which lists only what the caller can move. | Stalled requests: linked rows naming the trainee, oldest first, for everything waiting on a reviewer for 7 days. Pending reviews: a singular label, and a link only to a page that lists what it counts. | § 5.3 (all re-captured after the fix, 2026-09-26); Steps 3.30, 3.53, 3.54 |
 | T298 (P3) | Tied registrars are ordered by user id, a GUID (`CurriculumCoverage.cs:241-244`): "Ndlovu, Mahlangu, du Plessis" at 0/10, then "Dlamini, Molefe" at 1/10. | Fewest met first, then surname and first name. At 2.33 all five read Dlamini, du Plessis, Mahlangu, Molefe, Ndlovu. | `states/home--committee-member-figures.png` |
 | T290 (P3; the committee item is Medium) | The committee card lists only trainees in the member's sub-speciality claims (`GetCommitteeMemberDashboardSummaryQuery.cs:34,55`). The external member holds none, so his card is empty. | The card reads the institution's current registrars. Design "nobody to show" only for an institution with none. | `states/home--committee-member-empty.png`; Step 2.37 |
-| B7 (BRIEF § 7) | Programme Trainees, Stalled Activities and STAR Review Queue open `PlaceholderPage.razor`'s "Coming soon" card. `PlaceholderPage.Headings` must list exactly the features the nav links there (`NavMenuAuthorizationTests.ThePlaceholderPage_KnowsExactlyTheFeaturesTheNavLinksToIt`). | Design each, or drop its nav item. A nav change is a DESIGN.md change: `NavMenuAuthorizationTests` parses DESIGN.md's nav table (DESIGN.md:192-205; BRIEF § 4). Their contents are inferred: no intent document exists for any of them (searched `execution/knowledge`, `execution/architecture`, `DECISIONS.md`). | § 5.1 |
+| B7 (BRIEF § 7) | Programme Trainees, Stalled Activities and STAR Review Queue opened `PlaceholderPage.razor`'s "Coming soon" card until T335 deleted the page and their nav items; each address is Page not found now. | Design each, or leave it out. A nav change is a DESIGN.md change: `NavMenuAuthorizationTests` parses DESIGN.md's nav table (DESIGN.md:192-205; BRIEF § 4). Their contents are inferred: no intent document exists for any of them (searched `execution/knowledge`, `execution/architecture`, `DECISIONS.md`). | § 5.1's note; `act-3/3.31-1-stalled-activities-404.png` |
 | Not built | Triage (remind, reassign): "No page offers it. The dashboard's 'Stalled requests' rows link nowhere" (`coverage.md` § Flows and states not played). Today's only chase is `AssessorPendingNudgeJob`, nightly, after 5 days (Step 3.32 Note). | Mark triage PROPOSED. A chosen design becomes a new task (`harness.py task new`). Who may reassign a named assessor is undecided (inference): the nominee rules (`NomineeGate`, CLAUDE.md) say whom a field may name, not who may change it. | Steps 3.31, A.5.10 |
 | Reached only by address (`coverage.md` § Reached only by address) | `/committee/panels` admits the Coordinator, but his nav has no Decision Panels. `/admin/entrustment-decisions` admits the speciality admins, who reach it only by typing it. | Give each a link, or record why not. STAR Review Queue → Entrustment decisions would settle the second. F08 asks the first too. | Steps 2.32, A.7.7 |
-| T328 (P3; BRIEF A4) | Dashboard rows are inline `display:flex`, so badges stretch. A focusable region (`DecisionsDue.razor:79`) shows the browser's 1 px ring. | A `.list-row` pattern for dashboard rows. A `:focus-visible` ring on focusable regions. | `act-A/A.7.5-3-decisions-due-summary-scrolled.png` |
-| T322 (P2; BRIEF A1) | Warning text on its tint is 2.42:1, and the Stalled requests card is a warning card. | Body text on the tint, the semantic colour as a stripe or border. | `act-A/A.7.14-6-reviews-badges.png` |
+| T328 (P3; BRIEF A4) | Dashboard rows are inline `display:flex`, so badges stretch. A focusable region (`DecisionsDue.razor:79`) shows the browser's 1 px ring. | A `.list-row` pattern for dashboard rows. A `:focus-visible` ring on focusable regions. | `act-A/A.7.5-4-decisions-due-390.png` (re-taken after T335: the design's ring) |
+| T322 (P2; BRIEF A1) | Warning text on its tint is 2.42:1, and the Stalled requests card is a warning card. | Body text on the tint, the semantic colour as a stripe or border. | `act-A/A.7.14-7-review-7-badges.png` (re-taken after T335's tokens: the tints now pass) |
 | Observed, not filed | One component (`EpaTargetCoverageList`, DESIGN.md:745-750) is titled "Targets met by EPA" on the committee dashboard (`CommitteeMemberDashboard.razor:32`) and "Curriculum coverage — <semester>" on the admins' (`SpecialityAdminDashboard.razor:28`). At 390 px its "0 of 2 met" wraps to three lines (Step A.7.7). | One title; a figure column that does not wrap at 390 px. | `states/home--narrow-speciality-admin.png` (held) |
 
 ## 7. Questions the design must answer
@@ -557,9 +559,9 @@ all of the following hold.
   - A.2.8, A.5.10, A.5.11, A.5.12, A.7.5, A.7.6, A.7.7 and A.7.8 (appendix).
 - Each act may instead start from its predecessor's snapshot, `recovery/scenario-post-act<N>.dump` (README § How to
   play, "Snapshots"). Every Expect must hold.
-- **Rewrite the steps that change.** A page that replaces a placeholder rewrites Steps 3.31, 3.52, 3.53, A.5.10–A.5.12
-  and A.7.8, whose Expects read "Coming soon". Add steps for any new action, such as triage. T294's guard fails on a
-  page with no step.
+- **Rewrite the steps that change.** A page built where a placeholder was rewrites Steps 3.31, 3.52, 3.53,
+  A.5.10–A.5.12 and A.7.8, whose Expects say the menu offers no such page (T335). Add steps for any new action, such
+  as triage. T294's guard fails on a page with no step.
 
 **Checks the design adds.**
 - Step 3.30: both stalled requests are listed, oldest first, and each opens its activity (T297).

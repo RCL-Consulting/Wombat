@@ -141,31 +141,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
      greyed with the reason beside it, or hide it and explain?
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -181,11 +189,11 @@ ASK:
   - Run an accessibility review against WCAG 2.1 AA: labels and required marks, help text linked to its field, the
     refusal named by its field, focus after each move, and keyboard-only filing.
 
-ATTACHED: act-2/2.42-1-molefe-new-activity.png, states/new-activity--mini-cex.png, act-3/3.23-1-dops-picker.png,
+ATTACHED: act-2/2.42-1-type-options.png, states/new-activity--mini-cex.png, act-3/3.23-1-dops-picker.png,
   states/activity-view--refused-submit.png, states/new-activity--late-warning.png,
   states/activity-view--submitted-late.png, states/activity-view--declined.png, states/activity-view--returned.png,
-  states/new-activity--teaching-log.png, act-A/A.7.1-3-submitted-requested.png,
-  act-A/A.7.1-4-late-filing-warning-fresh-form.png, states/new-activity--narrow.png, states/activity-view--narrow.png;
+  states/new-activity--teaching-log.png, act-A/A.7.1-4-submitted-requested.png,
+  act-A/A.7.1-5-fresh-form-late-warning.png, states/new-activity--narrow.png, states/activity-view--narrow.png;
   seed files mini_cex_cpsa/{schema,workflow,credit}.json and reflective_exercise_cpsa/{schema,workflow,credit}.json;
   the Teaching Session Log's definition (pasted as text).
 ```
@@ -284,7 +292,7 @@ Not captured, so describe them in words:
 Paths are relative to `design/baseline/`. Every one below was checked with `ls` on 2026-09-26.
 
 **Key screenshots (attach these first, with § 1):**
-1. `act-2/2.42-1-molefe-new-activity.png`
+1. `act-2/2.42-1-type-options.png`
 2. `states/new-activity--mini-cex.png`
 3. `act-3/3.23-1-dops-picker.png`
 4. `states/activity-view--refused-submit.png`
@@ -293,8 +301,8 @@ Paths are relative to `design/baseline/`. Every one below was checked with `ls` 
 7. `states/activity-view--declined.png`
 8. `states/activity-view--returned.png`
 9. `states/new-activity--teaching-log.png`
-10. `act-A/A.7.1-3-submitted-requested.png`
-11. `act-A/A.7.1-4-late-filing-warning-fresh-form.png`
+10. `act-A/A.7.1-4-submitted-requested.png`
+11. `act-A/A.7.1-5-fresh-form-late-warning.png`
 12. `states/new-activity--narrow.png`
 13. `states/activity-view--narrow.png`
 
@@ -327,8 +335,8 @@ Activity inbox card empty beside the declined request on Recent activities) and 
 (the card listing the returned reflection as Draft). `states/home--trainee-returned.png` too: it was taken from the
 end-of-Act-3 snapshot with the reflection set back to Draft by SQL, and shows the same cards as `3.16-1` (BRIEF § 10).
 
-**Also available** (step captures): every instrument in the picker, `act-2/2.42-2-…` to `act-2/2.42-12-…`; the
-decline and return from the registrar's side, `act-3/3.12-2-declined-view.png` and `act-3/3.16-3-returned-view.png`.
+**Also available** (step captures): the decline and return from the registrar's side,
+`act-3/3.12-2-declined-view.png` and `act-3/3.16-3-returned-view.png`.
 
 ## 5. Known problems this design must solve
 
@@ -336,23 +344,24 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 
 | Task | What it means for the design | Evidence (under `design/baseline/`) |
 |---|---|---|
-| **T299** | A result region under the header, taking the focus after every move. A note panel that stays open on a refusal, with its text, and a named note field. A pressed button that stays focusable (`aria-disabled`) while it runs. A refusal mark that clears when its value changes, letting the form's own hints (the late warning) come back. | `act-A/A.7.1-3-submitted-requested.png`, `states/activity-view--decline-refused.png`, `act-A/A.7.1-4-late-filing-warning-fresh-form.png` |
-| **T323** | One card deep at 390 px; inputs at least about 290 px wide; selects that show the chosen EPA and assessor. The history table must fit or reflow (its Actor column is cut off at 390 px in `act-A/A.7.2-1-patel-completes-on-phone.png`). | `states/activity-view--narrow.png`, `states/new-activity--narrow.png` |
+| **T299** | A result region under the header, taking the focus after every move. A note panel that stays open on a refusal, with its text, and a named note field. A pressed button that stays focusable (`aria-disabled`) while it runs. A refusal mark that clears when its value changes, letting the form's own hints (the late warning) come back. | `act-A/A.7.1-4-submitted-requested.png`, `states/activity-view--decline-refused.png`, `act-A/A.7.1-5-fresh-form-late-warning.png` |
+| **T323** | One card deep at 390 px; inputs at least about 290 px wide; selects that show the chosen EPA and assessor. The history table must fit or reflow (at 390 px its columns after Actor are out of view in `act-A/A.7.2-5-completed-390.png`). | `states/activity-view--narrow.png`, `states/new-activity--narrow.png` |
 | **T329** | New activity: the header and a skeleton from the first render; an alert, not the in-app error bar, when a read fails. | `states/new-activity--loading.png`, `states/shell--error-banner.png` |
 | **T320** | No copy promises an email to the assessor. The inbox is the only notice, so the design should make "who has it now" visible on the page. | `states/data-rights--rejected.png` (the promise, on another page) |
-| **T328** | Textareas and selects in the body font. | `act-A/A.7.2-1-patel-completes-on-phone.png` (monospace feedback) |
+| **T328** | Textareas and selects in the body font. | `act-A/A.7.2-5-completed-390.png` (re-taken after T335: the feedback is in the body font now) |
 | **T325** | History times in SAST with the zone. | `states/activity-view--to-rate.png` ("2026-09-26 12:14", no zone) |
 | **T324** | Labels, not codes, everywhere on the page. | BRIEF.md § 6 A8 |
 | **T190** | The tab title names the activity type. | T190's symptom |
 | **T280** | Links to an activity named by instrument plus EPA or date, so two rows never share a name. | T280's symptom |
 | **T297** (group 1, landed in 7bf8ea7) | The Home inbox card and `/activities/inbox` list the same things. | § 4: `act-3/3.12-1-…`, `act-3/3.16-1-…` and `states/home--trainee-returned.png`, all re-captured after the fix |
-| **T322** | Alert, badge and validation colours from F01's tokens. | `act-A/A.7.14-3-change-password-mismatch-danger-alert.png` |
+| **T322** | Alert, badge and validation colours from F01's tokens. | `act-A/A.7.14-4-danger-alert.png` (re-taken after T335's tokens: it now passes) |
 | Observed, not filed | The summary card lists Type, Encounter date, State and Version (`ActivityView.razor:73–79`), not the registrar or the assessor. "Version" is the pinned form's schema version. The Trainee's nav item that opens New activity is labelled "Activities" (DESIGN.md:196; `NavMenu.razor:101`). | `states/activity-view--to-rate.png`, `states/new-activity--mini-cex.png` |
 
 ## 6. Questions the design must answer
 
 1. **Is instrument choice a first step of its own, or one field among the rest?** The picker holds 11 instruments
-   (Step 2.42; `act-2/2.42-1-…` to `2.42-12-…`), and the rest of the form depends on the choice.
+   (Step 2.42), and the rest of the form depends on the choice: before one, the page is the select alone
+   (`act-2/2.42-1-type-options.png`).
 2. **How does the form show which fields the assessor fills in?** In a Mini-CEX the assessor's Entrustment and
    Feedback sections are read-only to the registrar (Step 3.1). Today they show as greyed inputs.
 3. **Where does the history sit, and how much of it shows by default?** Each move has an actor, a time, a credit and a
@@ -394,7 +403,7 @@ describes the product as it is today. `D` is the replay day and `J` the programm
 § The clock in this act).
 
 ```text
-Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:731)
+Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:709)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new
 Do: Open the Activity type select and read its options. Choose each in turn to see what it rates, and save nothing.
@@ -405,7 +414,7 @@ Expect: Eleven options besides "Select…", no name twice: Case-Based Discussion
   Feedback (Paediatrics) are not offered, because only the system writes them (T162, T164). Nor are the Demo types,
   which belong to another discipline.
 
-Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:746)
+Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:725)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new
 Do: Open `/activities/new?type=mini_cex_cpsa`. Read the EPA and Assessor pickers, then leave without saving.
@@ -429,7 +438,7 @@ Expect: The type select offers eleven types, and no name appears twice: the ten 
   Dr Sithole or Dr van Rensburg (T102). No lateness warning shows for `D−10`. Saving opens the activity's page, State:
   Draft, with "Draft saved. It has not been submitted." (T127).
 
-Step 3.2 — Dr Dlamini reopens the draft, and a submit with a field missing is refused (act-3-operations.md:105)
+Step 3.2 — Dr Dlamini reopens the draft, and a submit with a field missing is refused (act-3-operations.md:106)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int}
 Do: Find the draft in My activities and open it. Press Submit without filling in the presenting problem.
@@ -439,7 +448,7 @@ Expect: My activities lists the draft as Mini-CEX (Paediatrics), PAED-001 with i
   is refused with "Presenting problem: A value is required.", the field is marked (T263), and the activity stays a
   draft.
 
-Step 3.3 — Dr Dlamini completes the request and submits it (act-3-operations.md:120)
+Step 3.3 — Dr Dlamini completes the request and submits it (act-3-operations.md:121)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Type the presenting problem "Two-year-old with bronchiolitis and rising work of breathing" and submit.
@@ -447,14 +456,14 @@ Expect: State: Requested. The page is now read-only to her, and Cancel is the on
   (Draft → Requested). It carries no lateness note, because ten days is on time (D15). No email is sent: Wombat mails
   nobody when an activity moves, so Dr Naidoo learns of the request from his inbox.
 
-Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My Activities (act-3-operations.md:164)
+Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My Activities (act-3-operations.md:167)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int}
 Do: Open My activities, then the Mini-CEX.
 Expect: The row reads Completed, credited "1 item". The page is read-only. It shows rung 4 and Dr Naidoo's feedback, and
   offers no action. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete.
 
-Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target (act-3-operations.md:175)
+Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target (act-3-operations.md:178)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress
 Do: Open My progress.
@@ -468,7 +477,7 @@ Expect: The "This period" card reads:
   and "Semester 1, 2026: 0 of 3, 3 short". The Entrustment section shows no STAR yet. The trajectory charts PAED-001:
   1 observation from 1 distinct assessor.
 
-Step 3.8 — A future encounter date is refused (act-3-operations.md:199)
+Step 3.8 — A future encounter date is refused (act-3-operations.md:202)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /activities/new
 Do: Start a Mini-CEX (Paediatrics) for an encounter on the ward. Fill in the EPA PAED-002, the assessor Dr Fatima
@@ -477,7 +486,7 @@ Do: Start a Mini-CEX (Paediatrics) for an encounter on the ward. Fill in the EPA
 Expect: The submit is refused with "Nothing was saved. Date observed: The date cannot be after today (`D`)." The date
   field is marked and names the alert, and everything typed is kept (T160, T263). No activity exists.
 
-Step 3.9 — A date before the programme started is refused (act-3-operations.md:212)
+Step 3.9 — A date before the programme started is refused (act-3-operations.md:215)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /activities/new
 Do: Change the date observed to `J−1d`, the day before his programme started (2026-01-14 on a replay in 2026), and
@@ -487,7 +496,7 @@ Expect: As the date is typed, the field is marked, and below it reads "This date
   cannot be before the trainee's programme started (`J`)." A Mini-CEX can credit, so its date is held to the programme
   start (T160, T192). No activity exists.
 
-Step 3.10 — A late filing is warned about and recorded, never refused (act-3-operations.md:227)
+Step 3.10 — A late filing is warned about and recorded, never refused (act-3-operations.md:230)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /activities/new → /activities/{ActivityId:int}
 Do: Change the date observed to `D−20`, the day the encounter happened, and submit.
@@ -496,7 +505,7 @@ Expect: No lateness warning shows yet. The field still carries the last refusal'
   "Submitted. It is now Requested." In the history, the Submit row's time carries "Filed 20 days after the encounter"
   (D15, T160).
 
-Step 3.12 — Dr Ndlovu reads the decline and files the encounter again, naming Dr Botha (act-3-operations.md:256)
+Step 3.12 — Dr Ndlovu reads the decline and files the encounter again, naming Dr Botha (act-3-operations.md:259)
 Role: Trainee — Dr Sipho Ndlovu
 Route: / → /activities/{ActivityId:int} → /activities/new → /activities/{ActivityId:int}
 Do: Open the declined Mini-CEX from the dashboard's Recent activities. Then file the same encounter as a new Mini-CEX,
@@ -520,7 +529,7 @@ Expect: The EPA picker offers only PAED-001, 003, 008 and 014, the EPAs whose li
   lateness warning shows for `D−20`: a reflective exercise credits nothing, so its filing is late for nobody (T160).
   The submit reads "Submitted. It is now Awaiting discussion.", and the Submit row carries no lateness note.
 
-Step 3.16 — Dr Ndlovu finds the returned reflection in his inbox and submits it again (act-3-operations.md:334)
+Step 3.16 — Dr Ndlovu finds the returned reflection in his inbox and submits it again (act-3-operations.md:335)
 Role: Trainee — Dr Sipho Ndlovu
 Route: / → /activities/inbox → /activities/{ActivityId:int}
 Do: From the dashboard's Activity inbox card, open the inbox, then the reflection. Expand "What I will do differently":
@@ -530,7 +539,7 @@ Expect: The dashboard card lists the reflection as Draft. The inbox page lists i
   Submit, Return and Submit, and neither Submit row carries a lateness note. Home's Activity inbox card then lists the
   reflection as Awaiting discussion, as the inbox does (he may still cancel it), and not the declined Mini-CEX (T297).
 
-Step 3.18 — Dr du Plessis logs a teaching session (act-3-operations.md:370)
+Step 3.18 — Dr du Plessis logs a teaching session (act-3-operations.md:368)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/{ActivityId:int}
 Do: Choose KGK Teaching Session Log. Fill in the topic "Recognising the sick child: a triage refresher", the EPA
@@ -540,7 +549,7 @@ Expect: The form is Act 1's: one section, Teaching session, with six fields, the
   no tool list binds it (D21). The submit reads "Submitted. It is now Logged." The Log row is credited "—", and no
   lateness is recorded.
 
-Step 3.19 — Dr du Plessis logs two more sessions, one from before his programme (act-3-operations.md:386)
+Step 3.19 — Dr du Plessis logs two more sessions, one from before his programme (act-3-operations.md:384)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/{ActivityId:int}
 Do: Log two more sessions:
@@ -550,7 +559,7 @@ Do: Log two more sessions:
 Expect: Both sessions are Logged. `J−1y−56d` is before his programme started (`J−1y`), and it is accepted with no
   hint. A type that credits nothing is held only to "not after today" (T160).
 
-Step 3.20 — Dr du Plessis abandons a draft started on the wrong instrument (act-3-operations.md:400)
+Step 3.20 — Dr du Plessis abandons a draft started on the wrong instrument (act-3-operations.md:398)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/{ActivityId:int} → /activities/mine
 Do: Start a DOPS (Paediatrics) by mistake. Choose only the EPA PAED-002 and save the draft. Then cancel it from its page.
@@ -558,14 +567,14 @@ Expect: The draft saves with its other required fields empty, because saving a d
   asks for no note and moves the draft to Cancelled, with nothing offered after it. My activities lists it as Cancelled,
   credited "—", beside the three Logged sessions.
 
-Step 3.21 — Dr du Plessis asks Dr Khumalo for a CBD (act-3-operations.md:413)
+Step 3.21 — Dr du Plessis asks Dr Khumalo for a CBD (act-3-operations.md:411)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/{ActivityId:int}
 Do: File a Case-Based Discussion (Paediatrics). Fill in the EPA PAED-002, the assessor Dr Khumalo, the date `D−5`, the
   case discussed (a toddler with a first febrile seizure) and the focus Clinical reasoning. Submit.
 Expect: The CBD ends Requested. It stays that way to the end of the act; Step 3.51 reads it from Dr Khumalo's side.
 
-Step 3.22 — Dr du Plessis asks Dr Patel to review his portfolio (act-3-operations.md:423)
+Step 3.22 — Dr du Plessis asks Dr Patel to review his portfolio (act-3-operations.md:421)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/{ActivityId:int}
 Do: File a Portfolio and Logbook Review (Paediatrics). Fill in the EPA PAED-015, the reviewer Dr Patel, the review
@@ -575,7 +584,7 @@ Expect: The EPA picker offers PAED-015 only, the one EPA whose list names the po
   rating, and its Review section is locked. The submit reads "Submitted. It is now Awaiting review." The encounter date
   is the period's last day, `D−1`. The review stays Awaiting review to the end of the act.
 
-Step 3.23 — Dr Mahlangu files a DOPS, and the EPA picker follows the tool lists (act-3-operations.md:437)
+Step 3.23 — Dr Mahlangu files a DOPS, and the EPA picker follows the tool lists (act-3-operations.md:436)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new → /activities/{ActivityId:int}
 Do: File a DOPS (Paediatrics) for a lumbar puncture on a four-month-old with suspected meningitis. First look for
@@ -585,7 +594,7 @@ Expect: The EPA picker offers the eight EPAs whose list names the DOPS, PAED-001
   PAED-010, whose list is Direct observation and MSF only (T122); the old runbook filed this DOPS there. The DOPS ends
   Requested.
 
-Step 3.25 — Dr Molefe files six workplace-based assessments (act-3-operations.md:473)
+Step 3.25 — Dr Molefe files six workplace-based assessments (act-3-operations.md:467)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new → /activities/{ActivityId:int} → /activities/mine
 Do: File and submit each of these, filling in every Request field. The clinical context below is the presenting
@@ -601,7 +610,7 @@ Expect: Each ends Requested, with no lateness warning, since all six are within 
   Requested, credited "—". The Direct Observation's EPA picker offers PAED-010, because its list names Direct
   observation. The Mini-CEX and DOPS pickers do not offer it.
 
-Step 3.27 — Dr Dlamini files three more (act-3-operations.md:513)
+Step 3.27 — Dr Dlamini files three more (act-3-operations.md:508)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/{ActivityId:int}
 Do: File and submit:
@@ -613,14 +622,14 @@ Do: File and submit:
     distress.
 Expect: Each ends Requested.
 
-Step 3.29 — Dr Mahlangu asks Dr Zulu for a Mini-CEX, which is left unrated (act-3-operations.md:545)
+Step 3.29 — Dr Mahlangu asks Dr Zulu for a Mini-CEX, which is left unrated (act-3-operations.md:540)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics): PAED-004, Dr Zulu, `D−3`, Neonatal unit, "Term neonate with jaundice on day three",
   complexity Low. Submit. Dr Zulu does not act on it.
 Expect: The Mini-CEX ends Requested.
 
-Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended (act-5-graduation.md:578)
+Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended (act-5-graduation.md:572)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) on PAED-002 with:
@@ -632,7 +641,7 @@ Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CE
   activity reads Requested and appears in Dr Naidoo's inbox. No email is sent: Wombat mails nobody when an activity
   moves (Step 3.3).
 
-Step 6.16 — Dr Dlamini files a Mini-CEX on PAED-012 (act-6-catalogue.md:407)
+Step 6.16 — Dr Dlamini files a Mini-CEX on PAED-012 (act-6-catalogue.md:411)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) and submit it:
@@ -646,13 +655,13 @@ Do: File a Mini-CEX (Paediatrics) and submit it:
 Expect: The EPA picker offers nine EPAs for the Mini-CEX, PAED-012 among them. Once submitted, the activity reads
   Requested and is in Dr Patel's inbox.
 
-Step 6.20 — Dr Mahlangu's picker leaves PAED-012 out too (act-6-catalogue.md:498)
+Step 6.20 — Dr Mahlangu's picker leaves PAED-012 out too (act-6-catalogue.md:504)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new
 Do: Start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect: Eight EPAs: PAED-001 to PAED-004, PAED-006 to PAED-008, and PAED-013. PAED-012 is not offered.
 
-Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:660)
+Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:668)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /activities/new
 Do: Read her progress. Then start a Direct Observation (Paediatrics) and open its EPA picker. Leave without saving.
@@ -660,7 +669,7 @@ Expect: A KGK-001 card appears under "Once a year", reading 0 of 1 for the curre
   counts one more EPA. Its line for the year before reads "0 of 1, 1 short": a target is read live, into periods that
   have already closed, as the items page warned. The Direct Observation picker offers ten EPAs, KGK-001 among them.
 
-Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:853)
+Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:865)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress → /activities/new
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
@@ -671,7 +680,7 @@ Expect:
     Step 6.38, each card shows only what 11.2 holds for him, which is nothing yet.
   - **The picker.** The Mini-CEX picker offers ten EPAs, PAED-016 among them.
 
-Step A.2.7 — Dr Mahlangu leaves a draft and a request waiting (appendix-cross-cutting.md:388)
+Step A.2.7 — Dr Mahlangu leaves a draft and a request waiting (appendix-cross-cutting.md:378)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new → /activities/{ActivityId:int} → /activities/new → /activities/{ActivityId:int}
 Do: File two Mini-CEX (Paediatrics) activities, each with every request field filled, an EPA the list offers, and Dr
@@ -681,14 +690,14 @@ Do: File two Mini-CEX (Paediatrics) activities, each with every request field fi
 Expect: The first reads "Draft saved. It has not been submitted." The second reads "Submitted. It is now Requested.",
   and is in Dr Khumalo's inbox. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 
-Step A.6.6 — Dr Patel cannot be named as an assessor while locked (appendix-cross-cutting.md:983)
+Step A.6.6 — Dr Patel cannot be named as an assessor while locked (appendix-cross-cutting.md:901)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new
 Do: Start a Mini-CEX (Paediatrics) and open its assessor list. Then leave without saving.
 Expect: KGK's other assessors are listed (Dr Zulu, Dr Naidoo, Dr Botha and Dr Khumalo), but not Dr Patel, and never
   herself (T102). Nothing is saved.
 
-Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone (appendix-cross-cutting.md:1064)
+Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone (appendix-cross-cutting.md:974)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/{ActivityId:int}
 Do: At desktop width, using only Tab, Shift+Tab, the arrow keys, Space and Enter, file a Mini-CEX (Paediatrics):

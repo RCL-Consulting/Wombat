@@ -54,6 +54,13 @@ The pilot's design (T335), kept beside its brief (`../01-shell.md`) so that it o
     those runbook steps anyway.
   - `R2-Rules` is headed "round 2". Its content is round 3's.
 
+- **After round 3** (2026-09-27): the canvas's boards drew the mark as a CSS disc, because a canvas does not copy a
+  design system's logos (BRIEF § 11). The real mark was copied into the canvas's assets, and canvas version
+  `1790508781-630f` shows it (`/_blob/3ddf69ec3b0c226b928d7ee0c43990dd`, 32 px; 28 px on a phone). `round-3/` keeps the
+  boards as accepted, with the disc; nothing else changed.
+- **Built** as `b347e11c` (T335 step F), replayed on a fresh database with no regression (step G), and put into the
+  design system (`064cde00`).
+
 These files are HTML mockups written by the design tool. They load Google Fonts, which Wombat's CSP forbids, so they are
 a picture of the design, not code to copy. The build (pilot step F) implements them in Razor and `app.css` under
 `DESIGN.md`, as amended.

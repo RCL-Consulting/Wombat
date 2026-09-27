@@ -175,31 +175,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
      its address.
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -212,7 +220,7 @@ ASK:
 
 ATTACHED (key screenshots first):
   - states/users-list--staff.png, user-detail--locked.png;
-  - act-A/A.7.14-4-patel-lockout-button-focused.png;
+  - act-A/A.7.14-5-danger-button.png;
   - states/assessor-profile-edit--provisional.png, assessors-list--empty.png, group-mappings--no-provider.png,
     user-detail--pending-invitations.png, home--institutional-admin.png.
   - A full-page capture draws the sidebar part-way down a long page, or ends it early. That is the capture, not the
@@ -271,7 +279,7 @@ upload it (BRIEF § 3.3).
 **First, the key screenshots:**
 1. `states/users-list--staff.png`
 2. `states/user-detail--locked.png`
-3. `act-A/A.7.14-4-patel-lockout-button-focused.png`
+3. `act-A/A.7.14-5-danger-button.png`
 4. `states/assessor-profile-edit--provisional.png`
 5. `states/assessors-list--empty.png`
 6. `states/group-mappings--no-provider.png`
@@ -304,14 +312,13 @@ upload it (BRIEF § 3.3).
 - **Screen 5:**
   - `states/institution-edit--not-found.png`
   - `act-A/A.5.5-1-demo-institution-not-found.png`
-  - `act-A/A.6.3-4-back-to-institutions-denied.png`: T321's second layout, as evidence of T321 only. The link it
-    followed went with T302 (T291 item 7): her Back and Cancel now lead home, so no step reaches this image.
-  - The re-captured institution record (T302, 2026-09-26): `states/institution-edit--own.png`,
-    `act-1/1.23-1-kgk-own-record.png` (Step 1.23, before any change), `act-A/A.6.3-1-contact-saved.png` and
-    `states/institution-edit--deactivate-refused.png` (after her save), `act-A/A.6.3-2-deactivate-refused.png` (the
-    form alone: Status as text, Cancel and Save), `act-A/A.6.3-3-untick-active-saved.png` ("Back to home" focused) and
-    `act-A/A.6.3-5-devadmin-reactivates-kgk.png` (her Home, where Back to home and Cancel lead). The ceased states kept
-    their file names (BRIEF § 10).
+  - Back to institutions → Access denied (T321's second layout) no longer exists: the link went with T302 (T291
+    item 7), so her Back and Cancel lead home, and no step reaches it. Flow 01 designs Access denied.
+  - The re-captured institution record (T302, 2026-09-26; Step A.6.3's captures re-taken by the T335 replay):
+    `states/institution-edit--own.png`, `act-1/1.23-1-kgk-own-record.png` (Step 1.23, before any change),
+    `act-A/A.6.3-1-contact-saved.png` and `states/institution-edit--deactivate-refused.png` (after her save: Status as
+    text, Cancel and Save), and `act-A/A.6.3-2-cancel-home.png` (her Home, where Back to home and Cancel lead). The
+    ceased state `institution-edit--deactivate-refused` kept its file name (BRIEF § 10).
 - **Screen 6:**
   - `states/group-mappings--narrow.png`
 
@@ -323,7 +330,7 @@ upload it (BRIEF § 3.3).
   - `states/user-detail--narrow.png`
   - `states/user-detail--other.png`
   - `states/user-detail--role-added.png`
-  - `act-A/A.7.9-3-mbatha-dlamini-account.png`
+  - `act-A/A.7.9-3-user-390.png`
   - also, because T303's help line under Add role changed them: `states/user-detail--locked.png`, `--reactivated.png`
     and `--pending-invitations.png`, and `act-A/A.6.4-1`, `A.6.4-2`, `A.6.7-1`, `A.4.5-1` and `A.4.5-2`.
 
@@ -342,15 +349,15 @@ clip.
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T302** (group 1, landed in 41be531) | **Her own institution.** She sees Status as text, with no Active box and no Deactivate. The deactivate-refused and untick-and-save states no longer exist. **Related, T291 item 7, landed with T302.** "Back to home" and Cancel go to Home for her, not to the Administrator's list. **Item 8, still open:** she is still shown the create form if she types its address; she should never be. | Screen 5's re-captured captures; `act-1/1.23-4-institutional-admin-create-form.png` (re-captured 2026-09-26: the form, now with "Back to home"). `act-1/1.23-2-back-link-access-denied.png` shows a link that no longer exists |
+| **T302** (group 1, landed in 41be531) | **Her own institution.** She sees Status as text, with no Active box and no Deactivate. The deactivate-refused and untick-and-save states no longer exist. **Related, T291 item 7, landed with T302.** "Back to home" and Cancel go to Home for her, not to the Administrator's list. **Item 8, still open:** she is still shown the create form if she types its address; she should never be. | Screen 5's re-captured captures; `act-1/1.23-4-institutional-admin-create-form.png` (re-captured 2026-09-26: the form, now with "Back to home") (Step 1.23's capture of the old "Back to institutions" link was removed by the T335 replay: the link no longer exists) |
 | **T303** (group 1, landed in 4824d62) | **Trainee.** It is "System-managed" on the user page, with no Remove, and never offered under Add role. | The re-captured images above; Steps 2.13 and 2.28 |
-| **T264** | **Lock out user.** It asks first, naming the person, and its trigger is an outline button; today it is red and acts at once. **In-row destructive buttons.** A role's Remove and "Revoke all pending invitations" are red today (observed). They become outline buttons with per-row names. **Inactive records.** A destructive button is not offered on a record that is already inactive. | `act-A/A.7.14-4-patel-lockout-button-focused.png`, `states/user-detail--locked.png`, `states/user-detail--pending-invitations.png`; Step A.6.4 |
+| **T264** | **Lock out user.** It asks first, naming the person, and its trigger is an outline button; today it is red and acts at once. **In-row destructive buttons.** A role's Remove and "Revoke all pending invitations" are red today (observed). They become outline buttons with per-row names. **Inactive records.** A destructive button is not offered on a record that is already inactive. | `act-A/A.7.14-5-danger-button.png`, `states/user-detail--locked.png`, `states/user-detail--pending-invitations.png`; Step A.6.4 |
 | **T323** (A3) | **Long values.** Emails and GUIDs wrap inside their card at 1280 px (`overflow-wrap: anywhere` on the details list). **Pending invitations.** The table fits its card or moves to a wider column. **Remove.** Each role's button, and the "System-managed" note, has a gap before it; today "Assessor" runs into its button and "Trainee" into its note (observed; F-2.28b). | `states/user-detail--reset-refused.png`, `states/user-detail--pending-invitations.png`; Step A.4.5 Gap F-A.4.5c |
 | **T326** (A10) | **Assessors' empty state.** It says what a profile records (training status and date, qualifications); the nominee picker needs only the role. **SSO page.** With no provider, it does not point at a form ("Add a mapping above…"), and it tells an InstitutionalAdmin to ask a Wombat administrator instead of naming `Sso:Providers`. | `states/assessors-list--empty.png`, `states/group-mappings--no-provider.png`; Step 2.14 Gap F-2.14c |
 | **T289** (P2) | **The assessor profile.** It refuses anyone who holds Trainee, and requires the user to be at her institution. **After a save.** The page moves to the saved profile (`?id=`), and the new form's picker offers only assessors without a profile (Step 2.14 Gap F-2.14a, F-2.14b). | T289; Step 2.14 |
 | **T288** (P2) | **SSO mappings, once a provider exists.** A mapping grants roles only at the provider's institution, which is also hers. There is no free choice of institution for her. Not reachable on the replay. | T288; `coverage.md` § Flows and states not played |
-| **T321** (A7) | Access denied reached from an in-app link is drawn once, in one layout. | `act-A/A.6.3-4-back-to-institutions-denied.png` |
-| **T322** (A1) | White on the danger button is 3.82 today; the focus ring on the page 2.99; input borders 1.49. Each must reach AA. | `act-A/A.7.14-4-patel-lockout-button-focused.png`; BRIEF § 6's failing pairs |
+| **T321** (A7) | Access denied reached from an in-app link is drawn once, in one layout. | None now: Back to institutions, the link that reached it, went with T302 (Screen 5). Flow 01 designs Access denied |
+| **T322** (A1) | White on the danger button is 3.82 today; the focus ring on the page 2.99; input borders 1.49. Each must reach AA. | `act-A/A.7.14-5-danger-button.png` (re-taken after T335's tokens: white on it is 5.95 now); BRIEF § 6's failing pairs before T335 |
 | **T324** (A8) | The assessor form's empty save reads "The UserId field is required." Name the field "Assessor user". | `states/assessor-profile-edit--invalid.png`; Step 2.14 Gap F-2.14d |
 | **T286** | The user page lists the person's institutional sign-in links, to the account holder and to an admin, with Remove. It must also be decided whether a password reset drops them. | T286 (External logins) |
 | **T317** | Reset password enables at 12 characters, Identity's minimum, not 8. Its refusal reads as sentences joined by spaces, not "12 characters.; Passwords …". | Step A.4.5's note and Gap F-A.4.5a, F-A.4.5b |
@@ -396,7 +403,7 @@ The flow is done when BRIEF § 9's checks hold:
     - Act 1: `1.23-1` and `1.23-3`;
     - Act 2: `2.12-2`, `2.12-3`, `2.13-1`, `2.13-2`, `2.14-1` to `2.14-4`, `2.15-1`, `2.44-1`, `2.44-2` and `2.44-3`;
     - Appendix: `A.3.1-1`, `A.4.5-1`, `A.4.5-2`, `A.5.5-*`, `A.6.3-*`, `A.6.4-*`, `A.6.7-1`, `A.7.9-1`, `A.7.9-2`,
-      `A.7.9-3` and `A.7.14-4`.
+      `A.7.9-3` and `A.7.14-5`.
   - `user-detail--pending-invitations` needs the scratch database in `states.md`.
   - Compare the captures with the chosen artboards.
 - **`dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj` is green,** without `--no-build`. That run includes:

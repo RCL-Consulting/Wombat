@@ -184,31 +184,39 @@ QUESTIONS THE DESIGN MUST ANSWER:
      "No binding decision" and the View link's name mark it.
 
 CONSTRAINTS:
-WOMBAT CONSTRAINTS (from design/BRIEF.md § 5)
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
 Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
   over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
 Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
-  /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side behaviour beyond a
-  ≤10-line script module; no live validation; the phone nav toggle is CSS-only.
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
 Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
   Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
-  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
 No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
-  colour as an existing token or a NEW token with its value; spacing on the scale xs 4, sm 8, md 16, lg 24, xl 32,
-  2xl 48 px.
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
 Icons: Lucide line icons only, named by their Lucide name.
-Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, primary action),
-  Breadcrumbs, DataTable (.clinic-table in .table-container, PagerControls), FormField / FormActions (.form-container,
-  .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid), StatePanel (loading / empty / error),
-  Skeleton, Alert (success / info / warning / danger), ActionResult, ConfirmDialog (native <dialog>), badges (five tints),
-  Icon, TrajectoryChart (hand-drawn SVG, no chart library).
-Design these framework states explicitly (no source file shows them): the active nav item; field validation (invalid
-  border plus a stripe, not colour alone; message under the field; the summary); the reconnect dialog (rejoining,
-  retrying, failed, paused, resume-failed); the in-app error bar; access denied; not found; session ended.
-Content: people by name, states and types by label, times in South African time with the zone shown; an out-of-scope
-  record is "not found", never "forbidden".
-Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (sidebar included); targets ≥ 24 px; focus
-  moves to an action's result; every page works at 390 px with no sideways scroll.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
 Viewports: 1280×800 and 390×844.
 
 ASK:
@@ -221,7 +229,7 @@ ASK:
 ATTACHED (key screenshots first):
   - states/my-authorisations--expiring.png, my-reviews--detail.png, my-reviews--appealed.png, my-reviews--remitted.png,
     my-authorisations--after-revocation.png, entrustment-decisions--revoke-form.png, entrustment-decisions--superseded.png;
-  - act-4/4.41-2-molefe-committee-page-denied.png.
+  - act-4/4.41-3-molefe-committee-page-denied.png.
   - A full-page capture draws the sidebar and top row part-way down a long page. That is how the capture stitched the
     sticky frame, not how the product looks.
 ```
@@ -281,7 +289,7 @@ The states are from `scenario-paediatrics/states.md` § Portfolio, § Committee 
 | | Loading | `my-reviews--loading` | Held read |
 | | Narrow | `my-reviews--narrow` | Step 4.41 at 390 px |
 | `/committee/reviews/{ReviewId:int}`, Appeals card (re-captured after T307) | Under appeal, a member | `review-detail--appeal-member` | Dr Naidoo, Step 4.44 |
-| | No outcome chosen: "Choose an outcome." (a step capture) | `act-4/4.45-2-vanrensburg-choose-an-outcome` | Dr van Rensburg, Step 4.45 |
+| | No outcome chosen: "Choose an outcome." (a step capture) | `act-4/4.45-1-vanrensburg-choose-an-outcome.png` | Dr van Rensburg, Step 4.45 |
 | | The resolve form, Remitted chosen | `review-detail--appeal-form` | Dr van Rensburg, Step 4.45 |
 | | Remit without a quorum | `review-detail--remit-refused` | Dr Zulu, Step 4.46 |
 | | Closed after a remit | `review-detail--remitted` | Step 4.47 |
@@ -297,11 +305,11 @@ The states are from `scenario-paediatrics/states.md` § Portfolio, § Committee 
 | | Loading | `entrustment-decisions--loading` | Held read |
 | | Narrow | `entrustment-decisions--narrow` | Dr Mokoena, Step A.7.7 |
 
-That is 29 state captures and one step capture (`4.45-2`); `review-detail--appeal-upheld` no longer counts. Two states
+That is 29 state captures and one step capture (`4.45-1`); `review-detail--appeal-upheld` no longer counts. Two states
 are **new**, with no capture: My authorisations' "No longer in force" (T319) and the trainee's Appeals block (T308). The
-Outcome select's empty first option (T307) is built now: `4.45-2` shows it, refused. Two related captures belong to
+Outcome select's empty first option (T307) is built now: `4.45-1` shows it, refused. Two related captures belong to
 other flows: `decisions-due--revoked` (flow 08, Step 4.37) and the shell's access-denied page (flow 01;
-`act-4/4.41-2-molefe-committee-page-denied.png`). The Coordinator is refused the register too (`states.md` § Access
+`act-4/4.41-3-molefe-committee-page-denied.png`). The Coordinator is refused the register too (`states.md` § Access
 denied, by page).
 
 ## Attach
@@ -318,7 +326,7 @@ registration link or a password. The key screenshots listed first were opened; o
 5. `states/my-authorisations--after-revocation.png`
 6. `states/entrustment-decisions--revoke-form.png`
 7. `states/entrustment-decisions--superseded.png`
-8. `act-4/4.41-2-molefe-committee-page-denied.png`
+8. `act-4/4.41-3-molefe-committee-page-denied.png`
 
 **Then, as the chat asks for them:**
 - **Screen 1:**
@@ -335,8 +343,8 @@ registration link or a password. The key screenshots listed first were opened; o
   - `states/my-reviews--narrow.png`
   - `act-4/4.48-1-mahlangu-remitted-outcome.png`
 - **Screen 3** (re-captured on 2026-09-26 after T307 landed, d03732d; BRIEF § 10):
-  - `act-4/4.45-1-vanrensburg-remit-form.png`
-  - `act-4/4.45-2-vanrensburg-choose-an-outcome.png`
+  - `act-4/4.45-1-vanrensburg-choose-an-outcome.png`
+  - `act-4/4.45-2-vanrensburg-remit-form.png`
   - `act-4/4.46-1-zulu-remit-quorum-refused.png`
   - `act-4/4.47-1-zulu-appeal-remitted.png`
   - `act-4/4.44-1-naidoo-appeal-body-note.png`
@@ -355,7 +363,7 @@ registration link or a password. The key screenshots listed first were opened; o
   - `states/entrustment-decisions--narrow.png`
 
 **Do not attach:**
-- `act-A/A.7.7-1-mokoena-home.png`: a SpecialityAdmin home, F06's (re-captured after T297 on 2026-09-26; BRIEF § 10).
+- `act-A/A.7.7-1-home-390.png`: a SpecialityAdmin home, F06's (re-captured after T297 on 2026-09-26; BRIEF § 10).
 - `states/review-detail--appeal-upheld.png`: an outcome that no longer exists (T307, D51). It is kept on disk as the
   record of the old form.
 
@@ -370,7 +378,7 @@ registration link or a password. The key screenshots listed first were opened; o
 | **T324** (A8) | Wherever a revocation is shown, the reviser is named by name. The certificate prints "by f3e77734-…" today. | Step 4.37 Gap F-4.37a |
 | **T325** (A9) | "Expires in N days" counts on the South African calendar. Today it counts from the UTC date (`MyAuthorisations.razor:39,132`, cited in T325). | `states/my-authorisations--expiring.png` |
 | **T310** | The certificate is headed by the issuing panel's institution. It is a PDF, not a screen. Brief it separately if wanted. | T310 |
-| **T322** (A1) | The badge tints (Active, Superseded, Deferred, Not decided), the "Expires in" pill and the success alert need 4.5:1 text. | `act-A/A.7.14-6-reviews-badges.png` (BRIEF § 6) |
+| **T322** (A1) | The badge tints (Active, Superseded, Deferred, Not decided), the "Expires in" pill and the success alert need 4.5:1 text. | `act-A/A.7.14-7-review-7-badges.png` (BRIEF § 6; re-taken after T335's tokens: the badges now pass) |
 | **T328** (A4) | Form controls use the body font. The revoke reason box renders in a monospace face (observed). | `states/entrustment-decisions--revoke-form.png` |
 | **T309** | A formative check-in is typed as an "Annual progression" review. The trainee's list has no Mode column, so the design must mark a check-in some other way (question 4). | Step 4.51's Actual; Step 4.49 Gap F-4.49a |
 | **T311** | A graduate loses My authorisations and My committee reviews (Step 5.22). That home is flow 13's; this flow only must not assume the page outlives the Trainee role. | BRIEF § 7 B1 |
@@ -401,11 +409,11 @@ The flow is done when BRIEF § 9's checks hold:
     the ones pasted here. Change any other Expect whose on-screen wording the redesign changes, in the same task (BRIEF
     § 9, item 7).
 - **The 29 states are re-captured** into `design/baseline/states/`, together with the steps' captures:
-  - Act 4: `4.35-1`, `4.36-1`, `4.37-1`, `4.39-1`, `4.41-1`, `4.41-2`, `4.42-1`, `4.43-1`, `4.44-1`, `4.45-1`,
-    `4.45-2`, `4.46-1`, `4.47-1`, `4.48-1` and `4.51-1`;
+  - Act 4: `4.35-1`, `4.36-1`, `4.36-2`, `4.37-2`, `4.39-1`, `4.41-1` to `4.41-3`, `4.42-1`, `4.43-1`, `4.43-2`,
+    `4.44-1`, `4.45-1` to `4.45-3`, `4.46-1`, `4.47-1`, `4.48-1` and `4.51-1`;
   - Act 5: `5.7-1`, `5.7-2`, `5.8-1`, `5.8-2` and `5.8-3`;
   - Act 6: `6.22-3`;
-  - Appendix: `A.7.7-4`.
+  - Appendix: `A.7.7-5`.
 
   Compare them with the chosen artboards. `review-detail--appeal-dismissed` needs the scratch database in `states.md`.
   There is no `--appeal-upheld` to re-capture: T307 removed Upheld (D51).

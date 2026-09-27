@@ -6,18 +6,19 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **the redesign's pilot is set up** (`design/BRIEF.md`, 20
-flow briefs, `design/pilot/`). Left: the pilot, the deploy, the College's answers, 15 P2s, and P3 polish.
+replayed journey catalogue with a screenshot baseline, and **the redesign's pilot is done**: flow 01, the shell, is
+designed, built (`b347e11c`), replayed and in the design system (T335). Left: flows 02–20, the deploy, the College's
+answers, 14 P2s, and P3 polish.
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps playing all 80 page templates, replayed end to end
-  (T295); `coverage.md` indexes every role's jobs, `states.md` 577 states; T294's test holds it to the routes. Baseline in
-  gitignored `design/baseline/` (1,250+ screenshots), refreshed after each fix.
+- **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps playing all 80 page templates, last replayed whole
+  against `b347e11c` (T335 step G, `wombat_scenario_t335`); `coverage.md` indexes every role's jobs, `states.md` its
+  states; T294's test holds it to the routes. Baseline in gitignored `design/baseline/`.
 - **Group 1 fixed before designing:** T297, T300 (D52), T302, T303, T307 (D51), each browser-verified on its act.
-- **Open: 69 queued (1 P1, 15 P2, 53 P3), 1 blocked.**
+- **Open: 67 queued (1 P1, 14 P2, 52 P3), 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
-  - **P2, before real users:** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T322, T329, T333, T334.
+  - **P2, before real users:** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T329, T333, T334.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
 - **Gated on the College or the operator:** T139, T170, T146, T152, T153, T171 (`knowledge/college-message-2026-09.md`).
 
@@ -33,9 +34,7 @@ flow briefs, `design/pilot/`). Left: the pilot, the deploy, the College's answer
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign (T335, the pilot):** a restructure with UX, emails and PDFs in scope (W-008), on Wombat's own design
-  system (W-009). Flow 01, the shell, is designed (round 3 accepted) and built (`b347e11c`). Next: step G, the replay,
-  then step H, the lessons, and a refresh of the design system before flow 02.
+- **The GUI redesign:** flow 02 next, by BRIEF § 2.3 as § 11 corrects it (mark into the canvas first; a review round).
 
 ## Open questions
 
@@ -44,7 +43,7 @@ flow briefs, `design/pilot/`). Left: the pilot, the deploy, the College's answer
   - T131's O1–O8, T237 (no Trainee in any panel seat), T240 (the draft reminder is a digest);
   - T258 (erasure may be requested whatever the reviews' state), T268 (a locked account is not current);
   - T273, T281 (no credit after the last day) and T284 (opening a draft is new work).
-- **Dev database:** snapshots `recovery/pre-*.dump`, the replay's `scenario-post-act*.dump`. Dev PG 16, production 18 (T275).
+- **Dev database:** snapshots `recovery/pre-*.dump`; replays' `scenario-*post-act*.dump`. Dev PG 16, production 18 (T275).
 
 ## Files to open first
 
@@ -56,5 +55,5 @@ flow briefs, `design/pilot/`). Left: the pilot, the deploy, the College's answer
 
 ## Recent
 
-- **2026-09-26:** T292–T296 (runbook rewritten, guarded, replayed), T332 (the design brief), group 1 fixed; findings
-  T297–T334. Earlier: the stream shipped 2026-09-24/25 (see `git log` and each "As built").
+- **2026-09-27:** T335, the pilot: flow 01 designed, built (`b347e11c`), replayed, lessons in BRIEF § 11; T190, T321,
+  T322, T330, T331 closed by it. 2026-09-26: T292–T296, T332, group 1. Earlier: see `git log` and each "As built".
