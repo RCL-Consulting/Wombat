@@ -26,12 +26,16 @@ builds a design system from code but not an app's journeys. Then: "do it all" (t
     are W-010 (the GET role switch) and W-011 (OFL fonts).
   - D1 is built as a column on the account, carried as a claim. A cookie deleted at sign-out cannot remember a choice
     across sign-ins.
-  - **Step F is in flight on branch `t335`.**
-    - Four lanes run in worktrees `.claude/worktrees/t335-{tokens,role,reconnect,titles}`, each on its own branch.
-    - Next: merge them into `t335`, then the shell lane and the Home/failure-pages lane, then a review, then one
-      squashed T335 commit on master.
-    - The shared rules for the lanes are in the job's tmp directory (`t335-common.md`), and the plan is
-      `round-2-review.md` § Step F.
+  - **Step F is in flight on branch `t335`** (integration worktree `.claude/worktrees/t335`).
+    - Phase 1 is merged, and all six suites are green (7,966 tests). The lanes were:
+      - tokens and type: T322, T328 CSS, and Source Sans 3 under the OFL;
+      - the acting role, stored with the account;
+      - the reconnect dialog and the error bar (T330);
+      - titles (T190).
+    - Phase 2 runs in worktrees `t335-shell` (the navigation, layout, phone, active item and breadcrumbs) and
+      `t335-home` (Home's frame and the failure pages, T321).
+    - Then comes a review, then one squashed T335 commit on master. The lane rules and briefs are in the job's tmp
+      directory (`t335-*.md`).
 
 ### For the operator
 
