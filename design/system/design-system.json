@@ -12,7 +12,8 @@
   "groups": [
     "Logos",
     "Icons",
-    "Favicons"
+    "Favicons",
+    "Fonts"
   ],
   "assetGroups": {
     "Logos": {
@@ -43,26 +44,55 @@
       "order": [
         "alert-triangle.svg",
         "arrow-down.svg",
+        "arrow-left-right.svg",
         "arrow-left.svg",
         "arrow-up.svg",
         "award.svg",
+        "ban.svg",
+        "book-check.svg",
+        "book-open.svg",
         "book.svg",
+        "building.svg",
+        "calendar-check.svg",
         "calendar.svg",
         "check.svg",
+        "chevron-left.svg",
         "chevron-right.svg",
+        "circle-plus.svg",
+        "clipboard-list.svg",
         "clock.svg",
+        "download.svg",
         "file-text.svg",
+        "gauge.svg",
+        "graduation-cap.svg",
+        "history.svg",
         "home.svg",
         "inbox.svg",
         "info.svg",
         "key.svg",
+        "list-checks.svg",
+        "list.svg",
+        "lock.svg",
+        "log-in.svg",
         "log-out.svg",
+        "mail.svg",
+        "menu.svg",
+        "message-square.svg",
         "pencil.svg",
         "plus.svg",
+        "refresh-cw.svg",
+        "scale.svg",
         "search.svg",
         "settings.svg",
+        "shield-check.svg",
         "shield.svg",
+        "stethoscope.svg",
         "trash.svg",
+        "trending-up.svg",
+        "triangle-alert.svg",
+        "user-check.svg",
+        "user-plus.svg",
+        "user-round.svg",
         "user.svg",
         "users.svg",
         "x.svg"
@@ -217,6 +247,180 @@
           "blob": "215651ab4fb06e2ce28695e9384d8ad0",
           "size": 116,
           "type": "image/svg+xml"
+        },
+        "arrow-left-right.svg": {
+          "name": "arrow-left-right.svg",
+          "blob": "10831ba841f3ac2c4cf0321c7229b023",
+          "size": 136,
+          "type": "image/svg+xml"
+        },
+        "ban.svg": {
+          "name": "ban.svg",
+          "blob": "e8dd10e077f8209646f0bc0f2cc21871",
+          "size": 156,
+          "type": "image/svg+xml"
+        },
+        "book-check.svg": {
+          "name": "book-check.svg",
+          "blob": "a5c9d0e5d23d90838a78281436f9bd4a",
+          "size": 195,
+          "type": "image/svg+xml"
+        },
+        "book-open.svg": {
+          "name": "book-open.svg",
+          "blob": "33a83428aa0b9bcdf1f234a7e9eced33",
+          "size": 233,
+          "type": "image/svg+xml"
+        },
+        "building.svg": {
+          "name": "building.svg",
+          "blob": "df6484f939ec96bfe4cbb31f379bd3d6",
+          "size": 249,
+          "type": "image/svg+xml"
+        },
+        "calendar-check.svg": {
+          "name": "calendar-check.svg",
+          "blob": "13a069cc5e3a9b2dd8889435b701f171",
+          "size": 208,
+          "type": "image/svg+xml"
+        },
+        "chevron-left.svg": {
+          "name": "chevron-left.svg",
+          "blob": "6a56ceb02aed75cdecec56446037ed80",
+          "size": 109,
+          "type": "image/svg+xml"
+        },
+        "circle-plus.svg": {
+          "name": "circle-plus.svg",
+          "blob": "ecb341b43a2d871cd3e129f57781ad9b",
+          "size": 152,
+          "type": "image/svg+xml"
+        },
+        "clipboard-list.svg": {
+          "name": "clipboard-list.svg",
+          "blob": "7ca67246b13b4a6a84d2a3a07daf10ab",
+          "size": 257,
+          "type": "image/svg+xml"
+        },
+        "download.svg": {
+          "name": "download.svg",
+          "blob": "d3a2d013f9ce668a7908a52a81762172",
+          "size": 157,
+          "type": "image/svg+xml"
+        },
+        "gauge.svg": {
+          "name": "gauge.svg",
+          "blob": "21c3d1dbc5b43697fa4043321a211490",
+          "size": 133,
+          "type": "image/svg+xml"
+        },
+        "graduation-cap.svg": {
+          "name": "graduation-cap.svg",
+          "blob": "495b970129888dcc3306cd897e4fc508",
+          "size": 251,
+          "type": "image/svg+xml"
+        },
+        "history.svg": {
+          "name": "history.svg",
+          "blob": "62509ee0ecd13b31d9674e3bf68ce79c",
+          "size": 163,
+          "type": "image/svg+xml"
+        },
+        "list.svg": {
+          "name": "list.svg",
+          "blob": "89dd46497fd63df162382101ca57cf4f",
+          "size": 144,
+          "type": "image/svg+xml"
+        },
+        "list-checks.svg": {
+          "name": "list-checks.svg",
+          "blob": "2ab4fdcb2138dc4f008424e6ec47033f",
+          "size": 143,
+          "type": "image/svg+xml"
+        },
+        "lock.svg": {
+          "name": "lock.svg",
+          "blob": "b9341b24bc26c933f2ae7d058fb13e34",
+          "size": 178,
+          "type": "image/svg+xml"
+        },
+        "log-in.svg": {
+          "name": "log-in.svg",
+          "blob": "0123121a7aeb53da64e2645f01798cca",
+          "size": 158,
+          "type": "image/svg+xml"
+        },
+        "mail.svg": {
+          "name": "mail.svg",
+          "blob": "39ad539ffb2fc57e7a6b5189c80a9f49",
+          "size": 194,
+          "type": "image/svg+xml"
+        },
+        "menu.svg": {
+          "name": "menu.svg",
+          "blob": "417a873637dadfee2f84c6cb74f8b40d",
+          "size": 118,
+          "type": "image/svg+xml"
+        },
+        "message-square.svg": {
+          "name": "message-square.svg",
+          "blob": "7a988316af9c75e6e39819ae915248e0",
+          "size": 156,
+          "type": "image/svg+xml"
+        },
+        "refresh-cw.svg": {
+          "name": "refresh-cw.svg",
+          "blob": "07beda7840414f26c4fd0709053a55a8",
+          "size": 278,
+          "type": "image/svg+xml"
+        },
+        "scale.svg": {
+          "name": "scale.svg",
+          "blob": "3cd751a4cc4e3a499a31bc6d677681be",
+          "size": 238,
+          "type": "image/svg+xml"
+        },
+        "shield-check.svg": {
+          "name": "shield-check.svg",
+          "blob": "c3af6ff6ddea49708911a88cc2b7ab6b",
+          "size": 270,
+          "type": "image/svg+xml"
+        },
+        "stethoscope.svg": {
+          "name": "stethoscope.svg",
+          "blob": "7aaaaab37b8f674b8843ebf5e0839bb2",
+          "size": 229,
+          "type": "image/svg+xml"
+        },
+        "trending-up.svg": {
+          "name": "trending-up.svg",
+          "blob": "26108047eea005d296b511fc2bfd201f",
+          "size": 133,
+          "type": "image/svg+xml"
+        },
+        "triangle-alert.svg": {
+          "name": "triangle-alert.svg",
+          "blob": "815ca34edeaccdab848c0297cfe366b4",
+          "size": 226,
+          "type": "image/svg+xml"
+        },
+        "user-check.svg": {
+          "name": "user-check.svg",
+          "blob": "8cfcfdbcf2094cb98a299606d49e8784",
+          "size": 190,
+          "type": "image/svg+xml"
+        },
+        "user-plus.svg": {
+          "name": "user-plus.svg",
+          "blob": "d029598e7f87a1a630f6e55daa2fabbc",
+          "size": 234,
+          "type": "image/svg+xml"
+        },
+        "user-round.svg": {
+          "name": "user-round.svg",
+          "blob": "4797c05c12581adcc5490b1afe1add21",
+          "size": 157,
+          "type": "image/svg+xml"
         }
       }
     },
@@ -255,6 +459,12 @@
           "type": "image/png"
         }
       }
+    },
+    "Fonts": {
+      "name": "Fonts",
+      "tile": "s",
+      "order": [],
+      "files": {}
     }
   },
   "blobs": {},
@@ -263,8 +473,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-09-27T04:09:20Z",
-    "via": "Claude Code · Wombat@2a2a26cb",
-    "note": "Built from the Wombat repo (app.css, DESIGN.md, the Razor components): 24 colours, 6 spacing, 6 radii, 7 shadows, 16 sizes, 20 type styles; 18 components and a cover; 31 assets."
+    "at": "2026-09-27T13:26:51Z",
+    "via": "Claude Code · Wombat@46aa6257",
+    "note": "Re-synced to flow 01 as built (T335, b347e11c): 33 colours (11 new, 5 changed, 2 removed), radii, shadows and motion as tokens, Source Sans 3; 8 components added, 19 revised; 29 icons uploaded (54 in all), the Source Sans 3 fonts and both OFL texts."
   }
 }

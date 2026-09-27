@@ -1,4 +1,4 @@
-<!-- @dsCard group="Data" height=280 subtitle="Five state tints from BadgeFor, and the three standing badges" -->
+<!-- @dsCard group="Data" height=450 width=974 subtitle="Five tints from BadgeFor: body text on the tint, the tint's colour on the edge; the words are the state" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -10,27 +10,40 @@
   .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
   .pv-grid { display: grid; grid-template-columns: max-content max-content 1fr; gap: var(--space-sm) var(--space-md); align-items: center; font-size: 0.85rem; }
   .pv-grid .muted { margin: 0; }
+  .pv-card { max-width: 30rem; }
 </style>
 </head>
 <body>
 <div class="pv">
   <section>
-    <p class="pv-cap">BadgeFor.State: the tint repeats the words, it never replaces them</p>
+    <p class="pv-cap">BadgeFor.State: the tint and edge repeat the words, never replace them. Words 11.2:1 or more on every tint</p>
     <div class="pv-grid">
-      <span class="badge badge-draft">Draft</span><code class="font-mono">badge-draft</code><p class="muted">grey: not started, nothing wrong yet, or no longer in force (4.83:1)</p>
-      <span class="badge badge-submitted">Awaiting supervisor</span><code class="font-mono">badge-submitted</code><p class="muted">blue: handed on, waiting on someone (4.55:1)</p>
-      <span class="badge badge-accepted">Under review</span><code class="font-mono">badge-accepted</code><p class="muted">amber: in hand, or wanting attention again (fails AA: 2.42:1)</p>
-      <span class="badge badge-completed">Released</span><code class="font-mono">badge-completed</code><p class="muted">green: done or succeeded (fails AA: 2.55:1)</p>
-      <span class="badge badge-declined">Withdrawn</span><code class="font-mono">badge-declined</code><p class="muted">red: refused, failed, missed or withdrawn (fails AA: 3.57:1)</p>
+      <span class="badge badge-draft">Draft</span><code class="font-mono">badge-draft</code><p class="muted">neutral: not started, nothing wrong yet, a state an institution's own workflow names, or no longer in force</p>
+      <span class="badge badge-submitted">Requested</span><code class="font-mono">badge-submitted</code><p class="muted">info: handed on, waiting on someone (edge 4.55:1)</p>
+      <span class="badge badge-accepted">Overdue</span><code class="font-mono">badge-accepted</code><p class="muted">warning: in hand, or wanting attention again (edge 5.43:1)</p>
+      <span class="badge badge-completed">Completed</span><code class="font-mono">badge-completed</code><p class="muted">success: done or succeeded (edge 5.23:1)</p>
+      <span class="badge badge-declined">Declined</span><code class="font-mono">badge-declined</code><p class="muted">danger: refused, failed, missed or withdrawn (edge 5.56:1)</p>
     </div>
   </section>
   <section>
-    <p class="pv-cap">BadgeFor.Standing: a level against a target, body text on the tint (every pair passes)</p>
+    <p class="pv-cap">BadgeFor.Standing: a level against a target, painted as the state badge of its tint</p>
     <div style="display: flex; flex-wrap: wrap; gap: var(--space-md)">
       <span class="badge badge-standing-met">At or above</span>
       <span class="badge badge-standing-below">Below</span>
       <span class="badge badge-standing-none">No decision</span>
       <span class="badge badge-standing-none">Not comparable</span>
+    </div>
+  </section>
+  <section>
+    <p class="pv-cap">In a flex row the pill keeps its shape; a count on a dashboard card's title is a badge-submitted</p>
+    <div class="detail-card pv-card">
+      <h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg><span>Waiting for your rating</span><span class="badge badge-submitted">2</span></h2>
+      <ul class="list-unstyled">
+        <li class="list-row">
+          <span><a href="#" aria-label="Case-Based Discussion (Paediatrics) for Sipho Ndlovu">Case-Based Discussion (Paediatrics)</a> &mdash; Sipho Ndlovu</span>
+          <span class="badge badge-accepted">Overdue</span>
+        </li>
+      </ul>
     </div>
   </section>
 </div>

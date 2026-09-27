@@ -1,0 +1,89 @@
+<!-- @dsCard group="System pages" height=1220 width=974 subtitle="A failed request: what happened, the reference to quote, Try again and Go to Home; and the page typed as an address" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The error page</title>
+<style>
+  body { margin: 0; }
+  .pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); color: var(--muted-text); font-size: 0.8rem; background: var(--header-bg); }
+  .pv-in { padding: var(--space-lg) var(--space-lg) var(--space-xl) var(--space-xl); }
+  .pv .page { min-height: 0 !important; padding-bottom: var(--space-xl); }
+</style>
+</head>
+<body>
+<div class="pv">
+  <p class="pv-cap">After a failure (500), signed in: the warning icon, the reference block, Try again (the failed address, a full load) and Go to Home, with icons</p>
+  <div class="pv-in">
+    <div class="header-container">
+      <div>
+        <h1 class="page-title-with-icon"><svg class="icon page-title-icon page-title-icon--warning" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" /></svg>Something went wrong</h1>
+      </div>
+    </div>
+    <div class="system-panel">
+      <p>Wombat could not finish this request. Try again. If it keeps happening, send this reference to your institution's Wombat administrator.</p>
+      <dl class="reference-block">
+        <dt>Reference</dt>
+        <dd><code>4bf92f3577b34da6a3ce929d0e0e4736</code></dd>
+        <dt>Time</dt>
+        <dd>2026-09-26 15:14 SAST</dd>
+      </dl>
+      <div class="actions-cell">
+        <a class="btn btn-primary" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</a>
+        <a class="btn btn-outline" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg>Go to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="pv-cap">After a failure, signed out (an MSF respondent, say): the card, whom to send the reference to, and no icons on the buttons</p>
+  <div class="page page--signed-out">
+    <header class="signed-out-bar">
+      <a class="brand" href="#">
+        <img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32">
+        <span class="brand-word">Wombat</span>
+      </a>
+      <a class="sign-in" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" /></svg>Sign in</a>
+    </header>
+    <main>
+      <article>
+        <div class="system-card-page">
+          <div class="system-card">
+            <div class="header-container">
+              <div>
+                <h1 class="page-title-with-icon"><svg class="icon page-title-icon page-title-icon--warning" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" /></svg>Something went wrong</h1>
+              </div>
+            </div>
+            <p>Wombat could not finish this request. Try again. If it keeps happening, send this reference to whoever sent you the link, or to your Wombat administrator.</p>
+            <dl class="reference-block">
+              <dt>Reference</dt>
+              <dd><code>4bf92f3577b34da6a3ce929d0e0e4736</code></dd>
+              <dt>Time</dt>
+              <dd>2026-09-26 15:14 SAST</dd>
+            </dl>
+            <div class="actions-cell">
+              <a class="btn btn-primary" href="#" data-enhance-nav="false">Try again</a>
+              <a class="btn btn-outline" href="#">Go to Home</a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <p class="pv-cap">/Error typed as an address, signed in: no request failed, so no reference and no Try again</p>
+  <div class="pv-in">
+    <div class="header-container">
+      <div>
+        <h1 class="page-title-with-icon"><svg class="icon page-title-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <path d="M12 10v6M12 7h.01" /></svg>Nothing went wrong</h1>
+      </div>
+    </div>
+    <div class="system-panel">
+      <p>This is Wombat's error page, opened directly. No request failed, so there is nothing to report.</p>
+      <div class="actions-cell">
+        <a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg>Go to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -6,7 +6,7 @@ There is no TabBar component: the builder writes `div.tab-bar` and a `button.tab
 
 ## What the consumer provides
 
-The tabs' labels and which is active. Each tab is a `<button type="button">`; the active one is filled with `secondary-color` and labelled in `surface-color` (4.86:1); the others are `surface-color` with a 1px `border-color` edge and `text-color`, `radius-pill`, padding 0.5rem 1rem.
+The tabs' labels and which is active. Each tab is a `<button type="button">`; the active one is filled with `secondary-color` and labelled in `on-fill` (4.86:1); the others are `surface-color` with a 1px `border-color` edge and `text-color`, `radius-pill`, padding 0.5rem 1rem.
 
 ## Rules (DESIGN.md § Builder layout)
 
@@ -15,4 +15,5 @@ The tabs' labels and which is active. Each tab is a `<button type="button">`; th
 
 ## Known gaps
 
-The tabs are plain buttons, not an ARIA tab list: no `role="tablist"`, `role="tab"` or `aria-selected`, so the active tab is shown by colour alone.
+- The tabs are plain buttons, not an ARIA tab list: no `role="tablist"`, `role="tab"` or `aria-selected`, so the active tab is shown by colour alone.
+- An unselected tab is a `<button>` edged in `border-color` (1.30:1): the one control edged in a hairline. It is pre-restructure (flow 17); a new control takes `input-border`.

@@ -15,15 +15,15 @@
   .slab { fill: url(#sidebar); }
   .act { fill: var(--secondary-color); }
   .ink { fill: var(--primary-color); }
-  .acc { fill: var(--accent-color); }
+  .acc { fill: var(--info-bg); stroke: var(--secondary-color); stroke-width: 1; }
   .cut { fill: var(--background-color); }
-  .card { rx: var(--radius-12); }
-  .blk { rx: var(--radius-8); }
-  .btn6 { rx: var(--radius-6); }
-  /* a 24-tall pill: rx is half its height, which is radius-12's value */
-  .pill { rx: var(--radius-12); }
+  .card { rx: var(--radius-xl); }
+  .blk { rx: var(--radius-lg); }
+  .btn6 { rx: var(--radius-md); }
+  /* a 24-tall pill: rx is half its height, which is radius-xl's value */
+  .pill { rx: var(--radius-xl); }
   .words { position: absolute; left: var(--space-lg); right: var(--space-lg); bottom: var(--space-lg); max-width: 440px; }
-  .name { margin: 0; font-family: var(--font-display); font-optical-sizing: auto; font-variation-settings: "SOFT" 0, "WONK" 1;
+  .name { margin: 0; font-family: var(--font-display); font-optical-sizing: auto; font-variation-settings: var(--font-display-settings);
           font-size: 120px; line-height: .9; font-weight: 500; letter-spacing: -0.005em; color: var(--primary-color); }
   .tag { margin: var(--space-sm) 0 0 4px; font-family: var(--font-body); font-size: 14px; line-height: 20px; color: var(--muted-text); }
 </style>
@@ -33,10 +33,10 @@
 <div class="art" aria-hidden="true">
 <svg viewBox="0 0 480 288" width="480" height="288">
 <!--
-  blocks      sidebar-gradient-start → sidebar-gradient-end slab 144×320 (the sidebar, square, bled top and bottom) · secondary-color 224×160 card and 112×32 button · primary-color 96×240 bled off the right edge · accent-color 96×24 pill — about 37% of 960×288
+  blocks      sidebar-gradient-start → sidebar-gradient-end slab 144×320 (the sidebar, square, bled top and bottom) · secondary-color 224×160 card and 112×32 button · primary-color 96×240 bled off the right edge · a 96×24 badge pill (info-bg, a secondary-color edge) — about 37% of 960×288
   arrangement the shell's own composition: one tall sidebar slab, then a card, a badge-pill and a button beside it, with an ink block bleeding right; bottoms on one line space-md above the edge, space-md gutters
   pattern     plus marks, from the mark's cross nose (README "The mark": a white face with a navy cross): space-md × space-xs bars at a space-xl pitch, cut into the action-blue card in background-color, thinning toward its top right
-  scales      sides in space-md multiples; gutters space-md; pitch space-xl; arms space-md long, space-xs thick; corners radius-12 (card), radius-8 (ink block), radius-6 (button), pill rx radius-12 (half of 24); the slab square like the sidebar
+  scales      sides in space-md multiples; gutters space-md; pitch space-xl; arms space-md long, space-xs thick; corners radius-xl (card), radius-lg (ink block), radius-md (button), pill rx radius-xl (half of 24); the slab square like the sidebar
 -->
 <defs>
   <linearGradient id="sidebar" x1="0" y1="0" x2="0" y2="1">

@@ -13,7 +13,7 @@ A native modal `<dialog>` that asks before a consequential action: a title that 
 
 ## Markup
 
-`dialog.dialog-scrim.dialog-card` (max width 28rem, 12px radius, no padding) holds a `.form-container` with an `h2`, a `p` and a `.form-actions` row: Cancel (`.btn-outline`), then the action. The backdrop is `.dialog-scrim::backdrop`, black at 35% (a raw colour outside :root).
+`dialog.dialog-scrim.dialog-card` (max width 28rem, `radius-xl`, `shadow-dialog`, no padding, 100% less 2rem on a phone) holds a `.form-container` with an `h2`, a `p` and a `.form-actions` row (FormActions): Cancel (`.btn-outline`), then the action. The backdrop is `.dialog-scrim::backdrop`, `scrim`.
 
 ## Rules (DESIGN.md § Button system)
 
@@ -24,4 +24,4 @@ A native modal `<dialog>` that asks before a consequential action: a title that 
 
 ## Known gaps
 
-The dialog has no accessible name (no `aria-labelledby` on its `h2`). The `btn-danger` label fails AA at 3.82:1 (T322).
+The dialog has no accessible name (no `aria-labelledby` on its `h2`). The `btn-danger` label passes since T335 (5.95:1).

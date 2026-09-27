@@ -1,0 +1,179 @@
+<!-- @dsCard group="Shell" height=1400 width=390 subtitle="Below 641px: the phone bar folded, the menu open with the account row at its foot, and a trail folded to its parent" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MainLayout below 641px</title>
+<style>
+  /* MainLayout.razor at 390px, three times over. The markup is the layout's own; the preview only stacks the three and
+     stops each from taking the frame's height (the shell's 100vh and 100dvh). The app has one toggle, id="nav-toggle";
+     here each copy needs its own id for its label, and the CSS keys on the class, .nav-toggle, alone. */
+  body { margin: 0; }
+  .pv-cap { margin: 0; padding: var(--space-sm) var(--space-md); color: var(--muted-text); font-size: 0.8rem; background: var(--header-bg); }
+  .pv .page { min-height: 0 !important; }
+  .pv-open .page .sidebar { height: 640px !important; }
+  .pv .page + .pv-cap { border-top: 1px solid var(--border-color); }
+</style>
+</head>
+<body>
+<div class="pv">
+  <p class="pv-cap">Folded: Nomsa Mahlangu, a Trainee, on Home. The header's one action is its own 44px row under the rule.</p>
+  <div class="page">
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
+    <header class="sidebar">
+      <a class="brand" href="#">
+        <img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32">
+        <span class="brand-word">Wombat</span>
+      </a>
+      <p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Trainee</span></p>
+      <label class="nav-toggle-label" for="nav-toggle">
+        <span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span>
+        <span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span>
+      </label>
+      <nav class="nav-panel" aria-label="Main">
+        <div class="role-head">
+          <p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Trainee</span></p>
+        </div>
+        <div class="nav-list">
+          <ul class="nav-items">
+            <li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <path d="M8 12h8M12 8v8" /></svg><span class="nav-label">Log an activity</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13" /></svg><span class="nav-label">My activities</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF reports</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">My committee reviews</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg><span class="nav-label">Export portfolio</span></a></li>
+          </ul>
+          <ul class="nav-items nav-personal">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6" /></svg><span class="nav-label">My progress</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+          </ul>
+        </div>
+      </nav>
+      <div class="account-row">
+        <a class="account-link" href="#" title="Nomsa Mahlangu"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">Nomsa Mahlangu</span></a>
+        <form class="sign-out" action="#" method="post">
+          <button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button>
+        </form>
+      </div>
+    </header>
+    <main>
+      <article>
+        <div class="header-container">
+          <div>
+            <h1>Home</h1>
+            <p class="page-subtitle">Trainee · Semester 2, 2026</p>
+          </div>
+          <div class="actions-cell">
+            <a class="btn btn-primary home-action" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <path d="M8 12h8M12 8v8" /></svg>Log an activity</a>
+          </div>
+        </div>
+        <div class="action-result" tabindex="-1">
+          <div class="dashboard-grid">
+            <a href="#" class="detail-card detail-card--emphasis detail-card--interactive dashboard-span-2" style="text-decoration:none;color:inherit;">
+              <h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg><span>Curriculum targets</span></h2>
+              <div class="dashboard-card-body">
+                <div class="dashboard-metric-row">
+                  <div class="dashboard-metric">
+                    <span class="dashboard-metric-value">2 / 5</span>
+                    <span class="dashboard-metric-label">semester targets met</span>
+                  </div>
+                  <div class="dashboard-metric">
+                    <span class="dashboard-metric-value">1 / 3</span>
+                    <span class="dashboard-metric-label">yearly targets met (2026)</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <p class="pv-cap">Open: Thandi Zulu acting as Committee member. The menu takes the page's place; the list scrolls between the head and the foot.</p>
+  <div class="pv-open">
+    <div class="page">
+      <input type="checkbox" id="nav-toggle-open" class="nav-toggle" checked>
+      <header class="sidebar">
+        <a class="brand" href="#">
+          <img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32">
+          <span class="brand-word">Wombat</span>
+        </a>
+        <p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Committee member</span></p>
+        <label class="nav-toggle-label" for="nav-toggle-open">
+          <span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span>
+          <span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span>
+        </label>
+        <nav class="nav-panel" aria-label="Main">
+          <div class="role-head">
+            <p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Committee member</span></p>
+            <a class="role-switch" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg><span>Switch to Assessor</span></a>
+          </div>
+          <div class="nav-list">
+            <ul class="nav-items">
+              <li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+              <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li>
+              <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li>
+            </ul>
+            <ul class="nav-items nav-personal">
+              <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+            </ul>
+          </div>
+        </nav>
+        <div class="account-row">
+          <a class="account-link" href="#" title="Thandi Zulu"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">Thandi Zulu</span></a>
+          <form class="sign-out" action="#" method="post">
+            <button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button>
+          </form>
+        </div>
+      </header>
+      <main>
+        <article></article>
+      </main>
+    </div>
+  </div>
+
+  <p class="pv-cap">A page under a list: Thandi Zulu acting as Assessor on an activity. The trail folds to one 44px link to its parent.</p>
+  <div class="page">
+    <input type="checkbox" id="nav-toggle-detail" class="nav-toggle">
+    <header class="sidebar">
+      <a class="brand" href="#">
+        <img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32">
+        <span class="brand-word">Wombat</span>
+      </a>
+      <p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Assessor</span></p>
+      <label class="nav-toggle-label" for="nav-toggle-detail">
+        <span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span>
+        <span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span>
+      </label>
+      <!-- The panel and the account row, hidden while the menu is folded, are as in the copies above. -->
+      <nav class="nav-panel" aria-label="Main"></nav>
+      <div class="account-row"></div>
+    </header>
+    <main>
+      <article>
+        <nav aria-label="Breadcrumb">
+          <ol class="breadcrumbs">
+            <li class="breadcrumb-ancestor">
+              <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a>
+              <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </li>
+            <li class="breadcrumb-parent">
+              <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Activity inbox</a>
+              <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </li>
+            <li class="breadcrumb-current"><span aria-current="page">Mini-CEX (Paediatrics)</span></li>
+          </ol>
+        </nav>
+        <div class="header-container">
+          <div>
+            <h1>Mini-CEX (Paediatrics)</h1>
+            <p class="page-subtitle">State: Requested</p>
+          </div>
+        </div>
+      </article>
+    </main>
+  </div>
+</div>
+</body>
+</html>

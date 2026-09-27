@@ -8,7 +8,7 @@ The one pager: a "Showing 1-20 of 137" summary, Previous and Next, and a "Per pa
 
 ## Markup
 
-`.pager` (flex, wrapping, gap 1rem) holds `.pager-info` (`muted-text`, 0.9rem), `.pager-actions` (two `.btn .btn-outline .btn-sm`, disabled at either end) and `.pager-page-size` (a `.pager-page-size-label` and a `.form-select .form-select-sm .pager-page-size-select`).
+`.pager` (flex, wrapping, gap 1rem) holds `.pager-info` (`muted-text`, 0.9rem), `.pager-actions` (two `.btn .btn-outline .btn-sm`, 28px, disabled at either end) and `.pager-page-size` (a `.pager-page-size-label`, 0.85rem, and a `.form-select .form-select-sm .pager-page-size-select`, 28px).
 
 ## Rules (DESIGN.md § Pager)
 

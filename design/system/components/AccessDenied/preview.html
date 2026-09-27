@@ -1,0 +1,63 @@
+<!-- @dsCard group="System pages" height=770 width=974 subtitle="Signed in: why, from the roles held, and the way home. Signed out: sign in, and come back to the page asked for" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Access denied</title>
+<style>
+  /* Signed in, the page as it stands in the shell's content column (974px at 1280). Signed out, the whole page: MainLayout's
+     signed-out bar, then the card. */
+  body { margin: 0; }
+  .pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); color: var(--muted-text); font-size: 0.8rem; background: var(--header-bg); }
+  .pv-in { padding: var(--space-lg) var(--space-lg) var(--space-xl) var(--space-xl); }
+  .pv .page { min-height: 0 !important; padding-bottom: var(--space-xl); }
+</style>
+</head>
+<body>
+<div class="pv">
+  <p class="pv-cap">Signed in, holding Committee member and Assessor: drawn in place, at the refused page's address; nothing is lit, no trail, no switch offered</p>
+  <div class="pv-in">
+    <div class="header-container">
+      <div>
+        <h1 class="page-title-with-icon"><svg class="icon page-title-icon page-title-icon--danger" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <path d="m4.9 4.9 14.2 14.2" /></svg>You cannot open this page</h1>
+      </div>
+    </div>
+    <div class="system-panel">
+      <p>None of your roles (Committee member, Assessor) opens this page.</p>
+      <p class="muted">If you need it for your work, ask your institution's Wombat administrator.</p>
+      <div class="actions-cell">
+        <a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg>Go to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="pv-cap">Signed out, reached by typing an address: the card under the signed-out bar, its icon above the heading and no rule; buttons carry no icons</p>
+  <div class="page page--signed-out">
+    <header class="signed-out-bar">
+      <a class="brand" href="#">
+        <img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32">
+        <span class="brand-word">Wombat</span>
+      </a>
+      <a class="sign-in" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" /></svg>Sign in</a>
+    </header>
+    <main>
+      <article>
+        <div class="system-card-page">
+          <div class="system-card">
+            <div class="header-container">
+              <div>
+                <h1 class="page-title-with-icon"><svg class="icon page-title-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>Sign in to open this page</h1>
+              </div>
+            </div>
+            <p>After you sign in, Wombat brings you back to the page you asked for.</p>
+            <div class="actions-cell">
+              <a class="btn btn-primary" href="#">Sign in</a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </main>
+  </div>
+</div>
+</body>
+</html>

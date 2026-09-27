@@ -12,19 +12,27 @@
 </style>
 </head>
 <body>
-<p class="pv-cap">The Administrator's System health rows. ok and warn fall under 3:1 on white (2.87:1, 2.57:1); the words carry the state</p>
+<p class="pv-cap">The Administrator's System health rows: each dot 3:1 or more on white (5.88, 5.77, 5.95:1); the words carry the state</p>
 <div class="pv-row">
   <div class="detail-card">
     <ul class="list-unstyled">
-      <li style="padding: var(--space-xs) 0"><span class="status-dot ok"></span>Database connection</li>
-      <li style="padding: var(--space-xs) 0"><span class="status-dot warn"></span>Email queue</li>
-      <li style="padding: var(--space-xs) 0"><span class="status-dot warn"></span>Last nightly job</li>
+      <li class="list-row">
+        <span><span class="status-dot ok"></span>Database connection</span>
+      </li>
+      <li class="list-row">
+        <span><span class="status-dot warn"></span>Email queue <span class="muted">(T012)</span></span>
+      </li>
+      <li class="list-row">
+        <span><span class="status-dot warn"></span>Last nightly job <span class="muted">(T024)</span></span>
+      </li>
     </ul>
   </div>
   <div class="detail-card">
     <p class="pv-cap">When the database check fails</p>
     <ul class="list-unstyled">
-      <li style="padding: var(--space-xs) 0"><span class="status-dot err"></span>Database connection</li>
+      <li class="list-row">
+        <span><span class="status-dot err"></span>Database connection</span>
+      </li>
     </ul>
   </div>
 </div>

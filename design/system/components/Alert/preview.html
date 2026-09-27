@@ -1,4 +1,4 @@
-<!-- @dsCard group="Feedback" height=800 subtitle="Four kinds; the kind sets the ARIA role unless the caller names one" -->
+<!-- @dsCard group="Feedback" height=920 width=974 subtitle="Four kinds: body text on the tint, the kind's colour on the edge and the icon; the role follows the kind" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,34 +11,44 @@
 </style>
 </head>
 <body>
-<p class="pv-cap">success, role="status": what an action did (the text fails AA at 2.55:1, T322)</p>
-<div class="alert alert-success" role="status">Password updated.</div>
+<p class="pv-cap">success, role="status": what an action did. The icon is the stylesheet's (circle-check), so no page writes one</p>
+<div class="alert alert-success" role="status">Profile saved.</div>
 
-<p class="pv-cap">info, no role: standing page content</p>
+<p class="pv-cap">info, no role: standing page content (the builder's reader notice)</p>
 <div id="activity-type-read-only" class="alert alert-info">Set by the College that owns Paediatrics. You can read this activity type here, but not change it.</div>
 
-<p class="pv-cap">warning, Role="" because it is there on every visit (the text fails AA at 2.42:1, T322)</p>
+<p class="pv-cap">warning, Role="" because it is there on every visit</p>
 <div class="alert alert-warning">
   This activity is complete, but it counted towards no curriculum requirement. The EPA it was recorded against is most
   likely not part of this trainee's curriculum, or was not in use at the time, or the encounter is dated after the
   trainee's programme ended. The record is kept. If it should have counted, raise it with the programme administrator.
 </div>
 
-<p class="pv-cap">danger, role="alert": a refusal in its own words, named by the fields it concerns (the text fails AA at 3.57:1, T322)</p>
+<p class="pv-cap">danger, role="alert": a refusal in its own words, named by the fields it concerns (aria-describedby)</p>
 <div id="login-error" class="alert alert-danger" role="alert">Your session has ended. Please sign in again.</div>
 
-<p class="pv-cap">An ActionResult region takes the focus once its action is done (ring shown)</p>
+<p class="pv-cap">An alert that carries its own action: .alert-row. Home's load error, inside the ActionResult that takes the focus once Try again answers</p>
+<div class="action-result" tabindex="-1">
+  <div class="alert alert-danger" role="alert">
+    <div class="alert-row">
+      <span class="alert-row-text"><strong>Could not load your Home.</strong> Nothing has changed. Try again, or come back in a few minutes.</span>
+      <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</button>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">An ActionResult region with the focus once its action is done (ring shown)</p>
 <div class="action-result pv-focus" tabindex="-1">
   <div class="alert alert-success" role="status">Curriculum item added.</div>
 </div>
 
-<p class="pv-cap">Dismissible</p>
+<p class="pv-cap">Dismissible, Role="" (standing content on the committee review): a .btn-outline .btn-xs × beside the content, in an .actions-cell</p>
 <div class="alert alert-warning">
   <div class="actions-cell">
     <div>
       <div>
         <h3>Sampling concentration warnings</h3>
-        <p class="muted">12 rated observations from 2 distinct assessors in the review window.</p>
+        <p class="muted">12 rated observations from 2 distinct assessors in the review window. Acknowledge in the decision rationale if these warnings are relevant.</p>
       </div>
     </div>
     <button type="button" class="btn btn-outline btn-xs">×</button>

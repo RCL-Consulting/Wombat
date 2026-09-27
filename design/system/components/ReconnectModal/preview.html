@@ -1,0 +1,137 @@
+<!-- @dsCard group="Shell" height=940 width=1320 subtitle="The reconnect dialog: one state at a time, as the runtime's classes pick it; it cannot be dismissed" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ReconnectModal</title>
+<style>
+  /* The app has one <dialog id="components-reconnect-modal">, opened modal by ReconnectModal.razor.js, holding all six
+     state elements; the runtime's class on the dialog shows one. Here seven copies stand side by side, each carrying the
+     class (and data-attempt) of one moment and only the state element that class shows, so the id repeats. A static card
+     cannot open a modal, so the stage paints the backdrop (--scrim) and the dialogs sit in the flow, their entrance
+     animation off. */
+  body { margin: 0; }
+  .pv-stage { background: var(--background-color); padding: var(--space-lg); }
+  .pv-scrim { background: var(--scrim); padding: var(--space-lg); border-radius: var(--radius-md);
+              display: grid; grid-template-columns: repeat(3, 25rem); gap: var(--space-lg) var(--space-lg); align-items: start; }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--text-color); font-size: 0.8rem; } /* 4.89:1 on the scrim over the page */
+  .pv-scrim dialog#components-reconnect-modal { position: static; margin: 0; animation: none !important; opacity: 1; }
+  /* The spinner and the bar at rest, as under reduced motion: the bar's fill stands where the design draws it. */
+  .pv-scrim .reconnect-spinner, .pv-scrim .reconnect-bar-fill { animation: none !important; }
+</style>
+</head>
+<body>
+<div class="pv-stage">
+  <div class="pv-scrim">
+    <div>
+      <p class="pv-cap">Rejoining (-show): the first attempts, made at once</p>
+      <dialog open id="components-reconnect-modal" class="components-reconnect-show" aria-labelledby="components-reconnect-rejoining-title" aria-describedby="components-reconnect-rejoining-text">
+        <div class="reconnect-state components-reconnect-first-attempt-visible" data-reconnect-state="rejoining">
+          <h2 id="components-reconnect-rejoining-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--progress reconnect-spinner" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+            Reconnecting
+          </h2>
+          <p id="components-reconnect-rejoining-text">The connection to Wombat dropped. Reconnecting now.</p>
+          <div class="reconnect-bar" role="progressbar" aria-label="Reconnecting"><span class="reconnect-bar-fill"></span></div>
+        </div>
+      </dialog>
+    </div>
+
+    <div>
+      <p class="pv-cap">Retrying, waiting its turn (-retrying, data-attempt="waiting"): the count, a second at a time</p>
+      <dialog open id="components-reconnect-modal" class="components-reconnect-show components-reconnect-retrying" data-attempt="waiting" aria-labelledby="components-reconnect-retrying-title" aria-describedby="components-reconnect-retrying-text">
+        <div class="reconnect-state components-reconnect-repeated-attempt-visible" data-reconnect-state="retrying">
+          <h2 id="components-reconnect-retrying-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--waiting" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            Could not reconnect
+          </h2>
+          <p id="components-reconnect-retrying-text">
+            <span data-reconnect-line="waiting">Trying again in <span data-reconnect-countdown>5 seconds</span>.</span>
+            <span data-reconnect-line="started">Trying again now.</span>
+          </p>
+          <div class="reconnect-bar" data-reconnect-line="started" role="progressbar" aria-label="Trying again"><span class="reconnect-bar-fill"></span></div>
+        </div>
+      </dialog>
+    </div>
+
+    <div>
+      <p class="pv-cap">Retrying, the attempt started (data-attempt="started"): the same state, its line replaced</p>
+      <dialog open id="components-reconnect-modal" class="components-reconnect-show components-reconnect-retrying" data-attempt="started" aria-labelledby="components-reconnect-retrying-title" aria-describedby="components-reconnect-retrying-text">
+        <div class="reconnect-state components-reconnect-repeated-attempt-visible" data-reconnect-state="retrying">
+          <h2 class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--waiting" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            Could not reconnect
+          </h2>
+          <p>
+            <span data-reconnect-line="waiting">Trying again in <span data-reconnect-countdown>a few seconds</span>.</span>
+            <span data-reconnect-line="started">Trying again now.</span>
+          </p>
+          <div class="reconnect-bar" data-reconnect-line="started" role="progressbar" aria-label="Trying again"><span class="reconnect-bar-fill"></span></div>
+        </div>
+      </dialog>
+    </div>
+
+    <div>
+      <p class="pv-cap">Failed (-failed): role alertdialog; Try again reconnects, else resumes, else reloads</p>
+      <dialog open id="components-reconnect-modal" class="components-reconnect-failed" role="alertdialog" aria-labelledby="components-reconnect-failed-title" aria-describedby="components-reconnect-failed-text">
+        <div class="reconnect-state components-reconnect-failed-visible" data-reconnect-state="failed">
+          <h2 id="components-reconnect-failed-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--alert" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
+            Connection lost
+          </h2>
+          <p id="components-reconnect-failed-text">Wombat cannot be reached. Try again when your connection is back. If the page cannot be restored, it reloads, and anything not yet saved on it is lost.</p>
+          <div class="reconnect-actions">
+            <button type="button" class="btn btn-primary" data-reconnect-action="retry"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+          </div>
+        </div>
+      </dialog>
+    </div>
+
+    <div>
+      <p class="pv-cap">Paused (-paused): Blazor.pauseCircuit()</p>
+      <dialog open id="components-reconnect-modal" class="components-reconnect-paused" aria-labelledby="components-reconnect-paused-title" aria-describedby="components-reconnect-paused-text">
+        <div class="reconnect-state components-pause-visible" data-reconnect-state="paused">
+          <h2 id="components-reconnect-paused-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--progress" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></svg>
+            Page paused
+          </h2>
+          <p id="components-reconnect-paused-text">This page is paused. Resume to carry on.</p>
+          <div class="reconnect-actions">
+            <button type="button" class="btn btn-primary" data-reconnect-action="resume">Resume</button>
+          </div>
+        </div>
+      </dialog>
+    </div>
+
+    <div>
+      <p class="pv-cap">Resume failed (-resume-failed, set by the script): role alertdialog</p>
+      <dialog open id="components-reconnect-modal" class="components-reconnect-resume-failed" role="alertdialog" aria-labelledby="components-reconnect-resume-failed-title" aria-describedby="components-reconnect-resume-failed-text">
+        <div class="reconnect-state components-resume-failed-visible" data-reconnect-state="resume-failed">
+          <h2 id="components-reconnect-resume-failed-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--alert" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
+            Could not resume
+          </h2>
+          <p id="components-reconnect-resume-failed-text">Wombat cannot be reached. Try again when your connection is back. If the page cannot be restored, it reloads, and anything not yet saved on it is lost.</p>
+          <div class="reconnect-actions">
+            <button type="button" class="btn btn-primary" data-reconnect-action="resume"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+          </div>
+        </div>
+      </dialog>
+    </div>
+
+    <div>
+      <p class="pv-cap">Rejected (-rejected): the server holds no circuit to resume, so the page reloads</p>
+      <dialog open id="components-reconnect-modal" class="components-reconnect-rejected" aria-labelledby="components-reconnect-rejected-title" aria-describedby="components-reconnect-rejected-text">
+        <div class="reconnect-state components-reconnect-rejected-visible" data-reconnect-state="rejected">
+          <h2 id="components-reconnect-rejected-title" class="reconnect-title" tabindex="-1">
+            <svg class="icon reconnect-icon reconnect-icon--progress reconnect-spinner" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+            Reloading
+          </h2>
+          <p id="components-reconnect-rejected-text">Reloading the page…</p>
+        </div>
+      </dialog>
+    </div>
+  </div>
+</div>
+</body>
+</html>

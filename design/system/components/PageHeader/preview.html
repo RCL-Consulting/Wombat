@@ -1,16 +1,19 @@
-<!-- @dsCard group="Navigation" height=400 width=960 subtitle="The page's one h1, its subtitle and its action slot" -->
+<!-- @dsCard group="Navigation" height=720 width=974 subtitle="The trail from the owner table, the page's one h1, its subtitle, its actions, and an optional icon" -->
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>PageHeader</title>
 <style>
-  body { padding: var(--space-lg); }
-  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  /* 974px: the content column at 1280, less the sidebar and the article's gutters. Each block is what PageHeader renders
+     at the top of an article; the article's own 24px top padding is the preview's. */
+  body { padding: var(--space-lg) var(--space-lg) 0 var(--space-xl); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
 </style>
 </head>
 <body>
-<p class="pv-cap">A list page: the primary action (and an outline companion) in the slot</p>
+<p class="pv-cap">A list the acting role's menu offers: no trail. The primary action and an outline companion, on the heading's baseline.</p>
 <div class="header-container">
   <div>
     <h1>MSF campaigns</h1>
@@ -22,7 +25,41 @@
   </div>
 </div>
 
-<p class="pv-cap">A form page: a small outline way back</p>
+<p class="pv-cap">A page under a list: Home › the owner for the acting role (here the Assessor's Activity inbox) › the page, whose crumb is its title.</p>
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumbs">
+    <li class="breadcrumb-ancestor">
+      <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a>
+      <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+    </li>
+    <li class="breadcrumb-parent">
+      <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Activity inbox</a>
+      <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+    </li>
+    <li class="breadcrumb-current"><span aria-current="page">Mini-CEX (Paediatrics)</span></li>
+  </ol>
+</nav>
+<div class="header-container">
+  <div>
+    <h1>Mini-CEX (Paediatrics)</h1>
+    <p class="page-subtitle">State: Requested</p>
+  </div>
+</div>
+
+<p class="pv-cap">A form page under EPAs: its trail, and a small outline way back.</p>
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumbs">
+    <li class="breadcrumb-ancestor">
+      <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a>
+      <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+    </li>
+    <li class="breadcrumb-parent">
+      <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>EPAs</a>
+      <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+    </li>
+    <li class="breadcrumb-current"><span aria-current="page">Edit EPA</span></li>
+  </ol>
+</nav>
 <div class="header-container">
   <div>
     <h1>Edit EPA</h1>
@@ -33,11 +70,21 @@
   </div>
 </div>
 
-<p class="pv-cap">No actions</p>
+<p class="pv-cap">Home: its nav label as its heading, the acting role and the semester under it, and the role's one header action (a Trainee's).</p>
 <div class="header-container">
   <div>
-    <h1>Decisions due</h1>
-    <p class="page-subtitle">Which EPAs each trainee's committee is to decide in a period, and where each decision stands.</p>
+    <h1>Home</h1>
+    <p class="page-subtitle">Trainee · Semester 2, 2026</p>
+  </div>
+  <div class="actions-cell">
+    <a class="btn btn-primary home-action" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <path d="M8 12h8M12 8v8" /></svg>Log an activity</a>
+  </div>
+</div>
+
+<p class="pv-cap">With an icon (the system pages): aria-hidden, 24px, the action blue for "not found".</p>
+<div class="header-container">
+  <div>
+    <h1 class="page-title-with-icon"><svg class="icon page-title-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /> <path d="m20 20-3.5-3.5" /></svg>Page not found</h1>
   </div>
 </div>
 </body>

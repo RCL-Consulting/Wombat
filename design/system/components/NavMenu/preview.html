@@ -1,94 +1,142 @@
-<!-- @dsCard group="Shell" height=800 width=760 subtitle="The sidebar: brand row, role-driven links, Logout" -->
+<!-- @dsCard group="Shell" height=900 width=1160 subtitle="The acting role's navigation: grouped above eight links, one lit item, the switch, the personal links under a rule" -->
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>NavMenu</title>
 <style>
+  /* Four sidebars as MainLayout draws them from 641px (the brand cell, then NavMenu's panel), side by side. The preview
+     sets each column's height, which the shell takes from the window (100vh), so the Administrator's list scrolls. The
+     hover and focus rows repeat NavItemLink.razor.css's own rules on a class, since a static card cannot hover. */
   body { padding: var(--space-lg); }
   .pv-row { display: flex; gap: var(--space-xl); align-items: start; }
-  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; width: 250px; }
-  .pv-row .page > .sidebar { height: 720px; }
-  .pv-row .sidebar .nav-scrollable { height: calc(720px - 3.5rem); }
-  /* the source's own hover values (NavMenu.razor.css), shown statically */
-  .pv-hover { background-color: rgba(255, 255, 255, 0.1) !important; color: white !important; }
-  .pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; width: 250px; min-height: 3.6em; }
+  .pv-row .sidebar { width: 250px; height: 760px !important; position: static !important; }
+  .pv-row .sidebar.pv-short { height: 420px !important; }
+  .pv-row .nav-link.pv-hover { background-color: var(--nav-hover-bg); color: var(--nav-text-strong); }
+  .pv-row .nav-link.pv-focus { outline: 2px solid var(--nav-focus-ring); outline-offset: 2px; }
 </style>
 </head>
 <body>
 <div class="pv-row">
   <div>
-    <p class="pv-cap">A Trainee: My Activities active; My Progress hovered; Export Portfolio focused</p>
-    <div class="page">
-      <div class="sidebar">
-        <div class="top-row">
-          <a class="navbar-brand" href="#">
-            <img class="navbar-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="40" height="40">
-            <span class="navbar-brand-text">Wombat</span>
-          </a>
+    <p class="pv-cap">Administrator on an audit entry: 17 links, so grouped; Audit log is lit as the entry's owner (aria-current="true").</p>
+    <header class="sidebar">
+      <a class="brand" href="#"><img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+      <nav class="nav-panel" aria-label="Main">
+        <div class="role-head">
+          <p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Administrator</span></p>
         </div>
-        <input type="checkbox" title="Navigation menu" aria-label="Toggle navigation menu" aria-expanded="false" class="navbar-toggler">
-        <div class="nav-scrollable">
-          <nav>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg> Home</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg> My Account</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg> Data Rights</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /> <path d="M16 3v4M8 3v4M3 11h18" /></svg> Activities</a></div>
-            <div class="nav-item"><a class="nav-link active" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> My Activities</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> MSF Reports</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> My Committee Reviews</a></div>
-            <div class="nav-item"><a class="nav-link pv-hover" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg> My Progress</a></div>
-            <div class="nav-item"><a class="nav-link pv-focus" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7" /></svg> Export Portfolio</a></div>
-            <div class="nav-item">
-              <form action="#" method="post">
-                <button type="submit" class="nav-link nav-logout-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg> Logout</button>
-              </form>
-            </div>
-          </nav>
+        <div class="nav-list">
+          <ul class="nav-items">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+          </ul>
+          <p class="nav-group-heading" id="nav-group-1">Platform</p>
+          <ul class="nav-items" aria-labelledby="nav-group-1">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <polyline points="12 6 12 12 16 14" /></svg><span class="nav-label">Scheduled jobs</span></a></li>
+            <li><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5M12 7v5l4 2" /></svg><span class="nav-label">Audit log</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5" /> <path d="m21 2-9.6 9.6" /> <path d="m15.5 7.5 3 3L22 7l-3-3" /></svg><span class="nav-label">SSO mappings</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg><span class="nav-label">Data rights requests</span></a></li>
+          </ul>
+          <p class="nav-group-heading" id="nav-group-2">Organisations</p>
+          <ul class="nav-items" aria-labelledby="nav-group-2">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2" /> <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" /></svg><span class="nav-label">Institutions</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0zM22 10v6M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></svg><span class="nav-label">Colleges</span></a></li>
+          </ul>
+          <p class="nav-group-heading" id="nav-group-3">People</p>
+          <ul class="nav-items" aria-labelledby="nav-group-3">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg><span class="nav-label">Users</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2" /> <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg><span class="nav-label">Invitations</span></a></li>
+          </ul>
+          <p class="nav-group-heading" id="nav-group-4">Catalogue</p>
+          <ul class="nav-items" aria-labelledby="nav-group-4">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8" /></svg><span class="nav-label">EPAs</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg><span class="nav-label">Curricula</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" /> <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01" /></svg><span class="nav-label">Activity types</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 14 4-4M3.34 19a10 10 0 1 1 17.32 0" /></svg><span class="nav-label">Entrustment scales</span></a></li>
+          </ul>
+          <p class="nav-group-heading" id="nav-group-5">Reviews</p>
+          <ul class="nav-items" aria-labelledby="nav-group-5">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18M9 16l2 2 4-4" /></svg><span class="nav-label">Decisions due</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li>
+          </ul>
+          <ul class="nav-items nav-personal">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+          </ul>
         </div>
-      </div>
-    </div>
+      </nav>
+    </header>
   </div>
 
   <div>
-    <p class="pv-cap">An InstitutionalAdmin: 18 links in one flat list; the list scrolls</p>
-    <div class="page">
-      <div class="sidebar">
-        <div class="top-row">
-          <a class="navbar-brand" href="#">
-            <img class="navbar-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="40" height="40">
-            <span class="navbar-brand-text">Wombat</span>
-          </a>
+    <p class="pv-cap">Three roles held, acting as Speciality admin: "Change role" opened; Decisions due lit as the list shown.</p>
+    <header class="sidebar pv-short">
+      <a class="brand" href="#"><img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+      <nav class="nav-panel" aria-label="Main">
+        <div class="role-head">
+          <p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Speciality admin</span></p>
+          <details class="role-change" open>
+            <summary class="role-switch"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg><span>Change role</span></summary>
+            <ul class="role-options">
+              <li><a class="role-option" href="#" data-enhance-nav="false">Switch to Committee member</a></li>
+              <li><a class="role-option" href="#" data-enhance-nav="false">Switch to Assessor</a></li>
+            </ul>
+          </details>
         </div>
-        <input type="checkbox" title="Navigation menu" aria-label="Toggle navigation menu" aria-expanded="false" class="navbar-toggler">
-        <div class="nav-scrollable">
-          <nav>
-            <div class="nav-item"><a class="nav-link active" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg> Home</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg> My Account</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg> Data Rights</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg> Curriculum Adoptions</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> EPAs</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg> Curricula</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> Activity Types</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6" /> <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" /></svg> Entrustment Scales</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Trainees</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Assessors</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Invitations</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Users</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5" /> <path d="m21 2-9.6 9.6" /> <path d="m15.5 7.5 3 3L22 7l-3-3" /></svg> SSO Mappings</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg> Audit Log</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg> Decision Panels</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg> Committee Reviews</a></div>
-            <div class="nav-item"><a class="nav-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /> <path d="M16 3v4M8 3v4M3 11h18" /></svg> Decisions Due</a></div>
-            <div class="nav-item">
-              <form action="#" method="post">
-                <button type="submit" class="nav-link nav-logout-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg> Logout</button>
-              </form>
-            </div>
-          </nav>
+        <div class="nav-list">
+          <ul class="nav-items">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+            <li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18M9 16l2 2 4-4" /></svg><span class="nav-label">Decisions due</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li>
+          </ul>
+          <ul class="nav-items nav-personal">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+          </ul>
         </div>
-      </div>
-    </div>
+      </nav>
+    </header>
+  </div>
+
+  <div>
+    <p class="pv-cap">A graduate acting as Assessor: My progress is a personal link. Activity inbox hovered, My progress focused.</p>
+    <header class="sidebar pv-short">
+      <a class="brand" href="#"><img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+      <nav class="nav-panel" aria-label="Main">
+        <div class="role-head">
+          <p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Assessor</span></p>
+        </div>
+        <div class="nav-list">
+          <ul class="nav-items">
+            <li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+            <li><a class="nav-link pv-hover" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg><span class="nav-label">Activity inbox</span></a></li>
+          </ul>
+          <ul class="nav-items nav-personal">
+            <li><a class="nav-link pv-focus" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6" /></svg><span class="nav-label">My progress</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+  </div>
+
+  <div>
+    <p class="pv-cap">No role (a former trainee): no "Acting as" head and no switch; on My account, so nothing is lit.</p>
+    <header class="sidebar pv-short">
+      <a class="brand" href="#"><img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+      <nav class="nav-panel" aria-label="Main">
+        <div class="nav-list">
+          <ul class="nav-items">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+          </ul>
+          <ul class="nav-items nav-personal">
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6" /></svg><span class="nav-label">My progress</span></a></li>
+            <li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+          </ul>
+        </div>
+      </nav>
+    </header>
   </div>
 </div>
 </body>

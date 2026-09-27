@@ -5,9 +5,9 @@
 <meta charset="utf-8">
 <title>ConfirmDialog</title>
 <style>
-  /* The app opens the dialog with showModal() (wwwroot/js/dialog.js), so its scrim is .dialog-scrim::backdrop,
-     rgba(0, 0, 0, 0.35). A static preview cannot open a modal, so the stage below paints that backdrop itself. */
-  .pv-stage { position: relative; min-height: 460px; background: rgba(0, 0, 0, 0.35); padding-top: var(--space-2xl); box-sizing: border-box; }
+  /* The app opens the dialog with showModal() (wwwroot/js/dialog.js), so its backdrop is .dialog-scrim::backdrop,
+     var(--scrim). A static preview cannot open a modal, so the stage below paints that backdrop itself. */
+  .pv-stage { position: relative; min-height: 460px; background: var(--scrim); padding-top: var(--space-2xl); box-sizing: border-box; }
   .pv-stage dialog { position: static; margin: 0 auto; }
 </style>
 </head>

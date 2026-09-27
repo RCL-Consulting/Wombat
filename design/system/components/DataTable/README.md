@@ -25,7 +25,7 @@ PageHeader (title, subtitle, primary action) → `.search-container` with a `.se
 - `.col-fit`: as narrow as its content, on one line (an ordinal, a code). Not for buttons.
 - `.col-actions`: a row's buttons, 12rem for three small buttons.
 - `.clinic-table--inputs`: every row is a set of inputs; cells centre, no hover tint; under 44rem of container its buttons stack.
-- `tr.is-editing`: a row open for editing and its spanning form row below, tied by `editing-stripe`.
+- `tr.is-editing`: a row open for editing and its spanning form row below, tied by a 4px `secondary-color` stripe (`inset 4px 0 0`) on the first cell of each.
 - A table grouped by one column puts each group in its own `<tbody>`, opened by `<th scope="rowgroup" rowspan="n">`.
 
 ## Rules
@@ -39,4 +39,4 @@ PageHeader (title, subtitle, primary action) → `.search-container` with a `.se
 
 ## Appearance
 
-Header on `header-bg`, weight 600; rows ruled with `border-color`; cells padded `space-md`; hover `hover-bg`; the container is `surface-color` with a 1px border, `radius-12` and `shadow-utility`. All text pairs pass.
+Header on `header-bg`, weight 600; rows ruled with `border-color`; cells padded `space-md`; hover `hover-bg`; figures in columns (`tabular-nums`, which Source Sans 3 draws already); the container is `surface-color` with a 1px border, `radius-xl` and, through `.shadow`, `shadow-raised`. All text pairs pass; a focusable scroll container (`.table-container[tabindex="0"]`) shows the page's focus ring.

@@ -1,4 +1,4 @@
-<!-- @dsCard group="Feedback" height=560 subtitle="Every list and dashboard renders loading, error and empty explicitly" -->
+<!-- @dsCard group="Feedback" height=650 subtitle="Every list and dashboard renders loading, error and empty explicitly" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
 </style>
 </head>
 <body>
-<p class="pv-cap">Loading: four 3rem skeletons (StatePanel's default), never "Loading..." text</p>
+<p class="pv-cap">Loading: four 3rem skeletons (StatePanel's default), never "Loading..." text; a still header-bg block under reduced motion</p>
 <div aria-hidden="true">
   <div class="skeleton" style="width:100%;height:3rem"></div>
   <div class="skeleton" style="width:100%;height:3rem"></div>
@@ -19,7 +19,7 @@
   <div class="skeleton" style="width:100%;height:3rem"></div>
 </div>
 
-<p class="pv-cap">Error: a danger Alert carrying the page's load error, in the refusal's own words (the text fails AA at 3.57:1, T322)</p>
+<p class="pv-cap">Error: a danger Alert carrying the page's load error (body text on the tint, the danger edge and icon)</p>
 <div class="alert alert-danger" role="alert">The decision panel could not be found.</div>
 
 <p class="pv-cap">Empty: a dashed card with a title, a line of copy, and an optional action row</p>

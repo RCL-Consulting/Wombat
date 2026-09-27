@@ -1,0 +1,61 @@
+<!-- @dsCard group="System pages" height=770 width=974 subtitle="No page at this address: it echoes no address and says nothing about records elsewhere" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Page not found</title>
+<style>
+  body { margin: 0; }
+  .pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); color: var(--muted-text); font-size: 0.8rem; background: var(--header-bg); }
+  .pv-in { padding: var(--space-lg) var(--space-lg) var(--space-xl) var(--space-xl); }
+  .pv .page { min-height: 0 !important; padding-bottom: var(--space-xl); }
+</style>
+</head>
+<body>
+<div class="pv">
+  <p class="pv-cap">Signed in, in the shell's content column</p>
+  <div class="pv-in">
+    <div class="header-container">
+      <div>
+        <h1 class="page-title-with-icon"><svg class="icon page-title-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /> <path d="m20 20-3.5-3.5" /></svg>Page not found</h1>
+      </div>
+    </div>
+    <div class="system-panel">
+      <p>There is no page at this address.</p>
+      <p class="muted">Check the address, or start again from Home.</p>
+      <div class="actions-cell">
+        <a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg>Go to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="pv-cap">Signed out (only typing /not-found reaches it: an unknown address sends a visitor to sign in first)</p>
+  <div class="page page--signed-out">
+    <header class="signed-out-bar">
+      <a class="brand" href="#">
+        <img class="brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="32" height="32">
+        <span class="brand-word">Wombat</span>
+      </a>
+      <a class="sign-in" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" /></svg>Sign in</a>
+    </header>
+    <main>
+      <article>
+        <div class="system-card-page">
+          <div class="system-card">
+            <div class="header-container">
+              <div>
+                <h1 class="page-title-with-icon"><svg class="icon page-title-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /> <path d="m20 20-3.5-3.5" /></svg>Page not found</h1>
+              </div>
+            </div>
+            <p>There is no page at this address.</p>
+            <div class="actions-cell">
+              <a class="btn btn-primary" href="#">Go to Home</a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </main>
+  </div>
+</div>
+</body>
+</html>
