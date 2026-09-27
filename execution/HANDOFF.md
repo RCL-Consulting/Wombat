@@ -26,21 +26,20 @@ builds a design system from code but not an app's journeys. Then: "do it all" (t
     are W-010 (the GET role switch) and W-011 (OFL fonts).
   - D1 is built as a column on the account, carried as a claim. A cookie deleted at sign-out cannot remember a choice
     across sign-ins.
-  - **Step F is in flight on branch `t335`** (integration worktree `.claude/worktrees/t335`).
-    - Phase 1 is merged, and all six suites are green (7,966 tests). The lanes were:
-      - tokens and type: T322, T328 CSS, and Source Sans 3 under the OFL;
-      - the acting role, stored with the account;
-      - the reconnect dialog and the error bar (T330);
-      - titles (T190).
-    - Phase 2 runs in worktrees `t335-shell` (the navigation, layout, phone, active item and breadcrumbs) and
-      `t335-home` (Home's frame and the failure pages, T321).
-    - Then comes a review, then one squashed T335 commit on master. The lane rules and briefs are in the job's tmp
-      directory (`t335-*.md`).
+  - **Step F landed as `b347e11c`,** one squash of branch `t335`.
+    - Six lanes built it: tokens, the acting role, reconnect, titles, the shell, and Home with the failure pages.
+    - A four-sided review found 3 medium issues and the rest low; all are fixed.
+    - All six suites are green (8,226 tests).
+    - T190 is done. T317, T321, T322, T328–T331 carry "As built in T335" notes; their browser items wait for step G.
+  - **The mark on the canvas was a CSS disc.** A canvas does not copy a design system's by-id logos. The real mark is now
+    in the canvas's assets (`/_blob/3ddf69ec3b0c226b928d7ee0c43990dd`); a lesson for BRIEF § 11.
 
 ### For the operator
 
-- **The pilot, next:** nothing is needed from you until step G. That step replays in the browser, and the Playwright
-  MCP failed to connect this session; reconnect it (`/mcp`) before then.
+- **The pilot, next: step G.** Replay the runbook against `b347e11c`, act by act, from the `scenario-post-act*.dump`
+  snapshots on scratch databases. The Playwright MCP is not connected. The lanes' headless-Chrome driver (`cdp.mjs`, in
+  the job's tmp directory) works, and step G can use it. Then comes step H, the lessons in BRIEF § 11, and a refresh of
+  `design/system/` to the new tokens and rules, republished to Claude Design before flow 02.
 - **The redesign after the pilot:** one `design/flows/NN-*.md` at a time, attaching its listed screenshots. They are
     in the gitignored `design/baseline/`, so they exist only on this machine.
   - Upload tracked files only (BRIEF § 3). Crop invitation captures that show a registration link.

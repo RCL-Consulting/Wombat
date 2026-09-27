@@ -58,6 +58,21 @@ created: 2026-09-26
 - the data-rights queue's Tab order is Type, Status, Apply filters, then the table.
 Retake the cited screenshots.
 
+## As built in T335 (`b347e11c`, 2026-09-27)
+
+- **Done in T335:**
+  - controls take `font: inherit`;
+  - one universal `:focus-visible` ring covers a scroll region;
+  - badges keep their pill (`flex: none`);
+  - the password toggle is 28 px and centred;
+  - the top-bar account link is 32 px.
+  `StylesheetRuleTests` and `TypographyTests` hold these.
+- **Still open:**
+  - the dashboards' inline `display:flex` rows (`.list-row`);
+  - the label inside `.password-wrapper`, and `aria-pressed` / `aria-controls` on `PasswordToggleButton`;
+  - Apply filters' place in the Tab order.
+- The 390 px browser items belong to T335's step G replay.
+
 ## Related
 
 T086 (its finding 2 named the account link), T193 (password fields), T226, T266, DESIGN § Accessibility and § Page-level patterns (List page), T277 (the audit log's filter window, same page), runbook steps A.7.2, A.7.3, A.7.5, A.7.9 and A.7.12.

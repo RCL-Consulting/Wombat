@@ -43,9 +43,16 @@ created: 2026-09-26
 
 - [ ] Integration (AccountRefusalFlowTests): a registration refused for PasswordTooShort, and one refused for ConfirmationMismatch, each come back with both names filled and both password fields empty; the redirect address carries no name; a successful registration deletes the cookie.
 - [ ] Integration: GET /account/logout while signed in redirects to /account/logout-confirm and leaves the session signed in; the POST still signs out and writes Logout.
-- [ ] Web tests (DashboardPriorityTests, or an integration test of /dashboard/switch and Home): a view remembered by one account is ignored for another account on the same cookie jar; sign-out deletes the cookie; the same account signing in again gets its own choice.
+- [x] Web tests (DashboardPriorityTests, or an integration test of /dashboard/switch and Home): a view remembered by one account is ignored for another account on the same cookie jar; sign-out deletes the cookie; the same account signing in again gets its own choice. — `b347e11c`: `Hosting/ActingRoleFlowTests`. The view is stored with the account (a column carried as a claim), not in a cookie, so another account on the same browser lands by precedence, and sign-out leaves nothing of the choice behind. The one-time result cookie is deleted at sign-out.
 - [ ] bUnit (UserDetail, alongside UsersPagesSelfAndTraineeTests): Reset password stays disabled below Identity's RequiredLength, and a refused reset shows one sentence per broken rule, with no '; '.
 - [ ] Browser checks against the runbook, with the Expects updated: Step 2.9 (the names are kept), Step 2.8 (a typed /account/logout lands on the confirm page), Step 2.34 (Naidoo lands on his own view), Step A.4.5 (enabled at 12 characters, one sentence per rule), and Step A.4.7's Note.
+
+## As built in T335 (`b347e11c`, 2026-09-27)
+
+- Only the remembered-view part is closed. It is F-2.34a: the acting role is stored with the account (T335, D1 as
+  built). The browser check of Step 2.34 is part of T335's step G replay.
+- Still open: the registration names being dropped, GET `/account/logout` answering 405, the admin reset form enabling
+  at 8 characters, and the three Notes items.
 
 ## Related
 

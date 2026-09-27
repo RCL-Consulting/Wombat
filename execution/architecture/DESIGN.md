@@ -14,7 +14,7 @@
 >   that pin what it changes (`design/BRIEF.md` § 9). It then adds itself to the list below, with its date and commit.
 > - **The invariants in `design/BRIEF.md` § 4.4 bind every redesign.** For example, every nav link opens a page that
 >   admits the role, and there is one `<h1>` per page.
-> - **Redesigned so far:** flow 01, the shell (2026-09-27, T335).
+> - **Redesigned so far:** flow 01, the shell (2026-09-27, T335, `b347e11c`).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 

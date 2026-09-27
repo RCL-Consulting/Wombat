@@ -48,12 +48,19 @@ created: 2026-09-26
 
 ## Verification
 
-- [ ] Integration test modelled on tests/Wombat.Integration.Tests/Hosting/NotFoundPageFlowTests.cs: a test endpoint that throws answers 500 with the 'Something went wrong' page, the CSP header, the page's nonce and a request id. The same holds signed out. A POST, or a request that does not accept HTML, gets no page.
-- [ ] Test with a captured logger: the id on the page appears in the logged failure.
-- [ ] Test that Error.razor's route renders statically for a signed-in user (no interactive root), so its id survives.
-- [ ] bUnit test on Routes: a page the signed-in user may not open renders Access denied with one nav and one Sign out button.
+- [x] Integration test modelled on tests/Wombat.Integration.Tests/Hosting/NotFoundPageFlowTests.cs: a test endpoint that throws answers 500 with the 'Something went wrong' page, the CSP header, the page's nonce and a request id. The same holds signed out. A POST, or a request that does not accept HTML, gets no page. — `b347e11c`: `Hosting/ErrorPageFlowTests`: signed in, signed out, and no page for a POST or a non-HTML request. The page carries the CSP nonce. It also holds when the sign-in cannot be checked (a database outage).
+- [x] Test with a captured logger: the id on the page appears in the logged failure. — `b347e11c`: `ErrorPageFlowTests`. The reference is the 32-character trace id, logged once, with the failure.
+- [x] Test that Error.razor's route renders statically for a signed-in user (no interactive root), so its id survives. — `b347e11c`: `Navigation/SystemPagesTests.TheErrorPage_IsStaticAndOpenToEveryone`.
+- [x] bUnit test on Routes: a page the signed-in user may not open renders Access denied with one nav and one Sign out button. — `b347e11c`: `SystemPagesTests.AccessDenied_ReachedInTheApp_IsDrawnOnce_InTheOneShell`, and `ActiveNavItemTests.InTheRealRoutes_AccessDeniedAtARefusedAddress_LightsNothing_AndDrawsNoTrail`.
 - [ ] Browser, replaying A.6.3 as Prof Mbatha: Back to institutions shows Access denied with one sidebar and one Sign out. Replace design/baseline/act-A/A.6.3-4-back-to-institutions-denied.png.
 - [ ] Browser, replaying A.5.8 signed in and signed out, at 390 px: the request id is still on screen after the page settles. Update the runbook's A.5.8 Expect.
+
+## As built in T335 (`b347e11c`, 2026-09-27)
+
+- `UseExceptionHandler` runs outside Development only (`ErrorPages`). On dev and in the replay, the developer exception
+  page still answers a failure, so a forced failure has to be checked on a non-Development run.
+- Access denied renders in place (D6), and its copy comes from claims only.
+- The two browser items belong to T335's step G replay (A.6.3, A.5.8).
 
 ## Related
 

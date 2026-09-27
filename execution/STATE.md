@@ -14,9 +14,8 @@ flow briefs, `design/pilot/`). Left: the pilot, the deploy, the College's answer
 - **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps playing all 80 page templates, replayed end to end
   (T295); `coverage.md` indexes every role's jobs, `states.md` 577 states; T294's test holds it to the routes. Baseline in
   gitignored `design/baseline/` (1,250+ screenshots), refreshed after each fix.
-- **Group 1 fixed before designing** (the baseline showed them wrong): T297 dashboards, T300 builder (D52), T302
-  institution state, T303 Trainee role, T307 appeals (D51). Each browser-verified on a replay of its act.
-- **Open: 70 queued (1 P1, 15 P2, 54 P3), 1 blocked.**
+- **Group 1 fixed before designing:** T297, T300 (D52), T302, T303, T307 (D51), each browser-verified on its act.
+- **Open: 69 queued (1 P1, 15 P2, 53 P3), 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T322, T329, T333, T334.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -35,7 +34,8 @@ flow briefs, `design/pilot/`). Left: the pilot, the deploy, the College's answer
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
 - **The GUI redesign (T335, the pilot):** a restructure with UX, emails and PDFs in scope (W-008), on Wombat's own design
-  system (W-009). Next: the operator gives the aesthetic direction and starts `design/pilot/README.md` step C.
+  system (W-009). Flow 01, the shell, is designed (round 3 accepted) and built (`b347e11c`). Next: step G, the replay,
+  then step H, the lessons, and a refresh of the design system before flow 02.
 
 ## Open questions
 

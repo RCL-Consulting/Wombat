@@ -57,10 +57,14 @@ Every colour pair in the design system meets WCAG 2.1 AA: text 4.5:1, and contro
 
 ## Verification
 
-- [ ] A new `Design/ContrastTests` in Wombat.Web.Tests parses app.css's `:root` and each rule's colour and background. It asserts at least 4.5:1 for: every `.alert-*` and `.badge-*` text on its background; `.validation-message`, `.validation-summary-errors` and `.text-danger` on `--surface-color` and `--background-color`; and white on `.btn-primary`, `.btn-success` and `.btn-danger`. It asserts at least 3:1 for: the focus ring on `--surface-color` and `--background-color`; the sidebar ring on both gradient ends; and `--input-border` on both surfaces. Mutation check: put back one old token and the test fails.
+- [x] A new `Design/ContrastTests` in Wombat.Web.Tests parses app.css's `:root` and each rule's colour and background. It asserts at least 4.5:1 for: every `.alert-*` and `.badge-*` text on its background; `.validation-message`, `.validation-summary-errors` and `.text-danger` on `--surface-color` and `--background-color`; and white on `.btn-primary`, `.btn-success` and `.btn-danger`. It asserts at least 3:1 for: the focus ring on `--surface-color` and `--background-color`; the sidebar ring on both gradient ends; and `--input-border` on both surfaces. Mutation check: put back one old token and the test fails. — `b347e11c`: `Design/ContrastTests` computes every pair in the token sheet's two tables. It blends translucent colours over their real ground, samples the gradient at 21 points, and computes from the scoped shell stylesheets too. Putting back the old success colour and input border fails 21 of its tests.
 - [ ] Browser, runbook step A.7.14: repeat the replay's contrast measurement on the profile's success alert, Change password's danger alert, the user page's Lock out button (focused), a validation message and an input. Every pair passes. Retake `design/baseline/act-A/A.7.14-2..4`.
 - [ ] Browser, runbook steps A.7.5 and A.7.9: Tab through the sidebar nav and then page content. The ring is visible and at least 3:1 on both.
-- [ ] DESIGN.md's token section records the pairs and the sidebar ring token, and grep finds no hex or rgb colour outside `:root` in app.css.
+- [x] DESIGN.md's token section records the pairs and the sidebar ring token, and grep finds no hex or rgb colour outside `:root` in app.css. — `b347e11c`: DESIGN.md § Design tokens holds the contrast tables with their method and the computed figures. `StylesheetRuleTests` finds no raw colour outside `:root`, in app.css or in any `.razor.css`.
+
+## As built in T335 (`b347e11c`, 2026-09-27)
+
+- The browser items (A.7.14, A.7.5 and A.7.9) belong to T335's step G replay.
 
 ## Related
 

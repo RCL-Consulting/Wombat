@@ -41,8 +41,12 @@ created: 2026-09-26
 
 ## Verification
 
-- [ ] bUnit beside NavMenuAuthorizationTests: with the NavigationManager at /admin/colleges/5/specialities and a CollegeAdmin principal, Specialities carries the active class. At /msf/reports/3 and at /msf/coverage, a Coordinator's MSF Campaigns carries it. At /admin/colleges/5/specialities, an Administrator's Colleges carries it and no second item does.
+- [x] bUnit beside NavMenuAuthorizationTests: with the NavigationManager at /admin/colleges/5/specialities and a CollegeAdmin principal, Specialities carries the active class. At /msf/reports/3 and at /msf/coverage, a Coordinator's MSF Campaigns carries it. At /admin/colleges/5/specialities, an Administrator's Colleges carries it and no second item does. — `b347e11c`: `Navigation/ActiveNavItemTests`, from `NavOwners`. Specialities is lit for a College admin and Colleges for an Administrator on `/admin/colleges/{{id}}/specialities`, and MSF campaigns for a Coordinator on `/msf/reports/{{id}}` and `/msf/coverage`. At most one item is lit, and the real Routes' cascade is tested.
 - [ ] Browser: retake states specialities-list--loading (Dr Kruger), and campaign-report--blocked and programme-coverage--loading (Mr Smit), each with the owning item highlighted.
+
+## As built in T335 (`b347e11c`, 2026-09-27)
+
+- The browser item belongs to T335's step G replay.
 
 ## Related
 

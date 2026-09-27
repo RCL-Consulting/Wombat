@@ -1,11 +1,12 @@
 ---
 id: T190
 title: Page titles follow no common pattern
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-24
+completed: 2026-09-27
 ---
 
 # T190 — Page titles follow no common pattern
@@ -30,7 +31,12 @@ One rule in DESIGN.md (e.g. "<page> — Wombat", sentence case), and a `PageTitl
 
 ## Verification
 
-- [ ] Every routable page's title matches the rule. bUnit or reflection test.
+- [x] Every routable page's title matches the rule. bUnit or reflection test. — `b347e11c`: `Hosting/PageTitleTests` finds every page by reflection and reads its source. It holds each title to "<Stem> · Wombat", sentence case, and stem = heading. It failed on 64 pages before the change.
+
+## As built in T335 (`b347e11c`, 2026-09-27)
+
+- D10 applied: every routable page's tab is "<Stem> · Wombat", the stem in sentence case and the same words as its
+  heading. The rule is in DESIGN.md § Page-level patterns.
 
 ## Related
 

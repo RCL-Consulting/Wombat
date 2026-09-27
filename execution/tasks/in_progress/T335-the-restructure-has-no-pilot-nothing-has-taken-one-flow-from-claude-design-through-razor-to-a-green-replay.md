@@ -48,7 +48,14 @@ every page uses:
   https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD ("Wombat · Flow 01 · The shell"), variation A with C's breadcrumbs,
   round 3 accepted after the round-2 review's 30 fixes and D1–D11 (W-010, W-011). The boards are tracked in
   `design/flows/01-shell/round-3/`, and the record is `design/flows/01-shell/README.md`.
-- [ ] Implemented; suites green; `DESIGN.md` amended with a dated note — commit.
+- [x] Implemented; suites green; `DESIGN.md` amended with a dated note — commit — 2026-09-27: `b347e11c`, one squash of
+  branch `t335`. Six lanes (tokens and type, the acting role, reconnect and the error bar, titles, the shell, Home and the
+  failure pages) were built test-first in worktrees, then merged. A four-sided review followed (security, fidelity,
+  render modes and accessibility, runbook and docs: 3 medium findings, the rest low). Two fix lanes and a last pass
+  followed that review. All six suites pass: Domain 791, Application 3,392, Infrastructure 992, Architecture 49,
+  Web 2,549, Integration 453 (8,226), with 0 warnings. DESIGN.md's banner reads "Redesigned so far: flow 01".
+  Each amended section carries "(2026-09-27, T335, flow 01)". The lanes' headless-Chrome checks, at 1280 and 390, are
+  the evidence, not the replay: that is step G.
 - [ ] Flow 01's runbook steps replay green on a fresh database; baseline re-captured — the replay's Actual lines.
 - [ ] `BRIEF.md` corrected by the pilot's lessons — a dated "Pilot findings" section.
 

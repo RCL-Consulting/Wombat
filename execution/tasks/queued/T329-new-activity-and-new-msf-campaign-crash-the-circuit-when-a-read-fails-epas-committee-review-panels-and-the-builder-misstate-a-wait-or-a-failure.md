@@ -58,6 +58,14 @@ Hold every page to one StatePanel contract. The header renders from the first re
 - [ ] bUnit, with a read that never completes. NewActivity and ReviewDetail render a skeleton. The routing card on PanelsList, for an InstitutionalAdmin, renders its skeleton and never the 'no committee routing' line. ActivityTypeEdit on /admin/activity-types/5 renders neither 'New activity type' nor Save draft. On an unknown id it renders neither of them after the alert either.
 - [ ] Browser, with states.md's lock hold on a scratch database: retake new-activity--loading, epas-list--load-error, review-detail--loading, panels-list--loading, activity-type-edit--loading and activity-type-edit--not-found. New activity, held past 65 s, shows its alert, and the circuit stays alive (no error bar). Update states.md rows 105 and 244.
 
+## As built in T335 (`b347e11c`, 2026-09-27)
+
+- **Done in T335: Home's part.** DashboardCard has `IsLoading`. A dashboard read that fails shows one alert, "Could not
+  load your Home. Nothing has changed. Try again, or come back in a few minutes.", with Try again, and no cards.
+  `RoleDashboard` logs the failure. `Dashboards/HomeFrameTests` holds it.
+- **Still open:** NewActivity, the new MSF campaign, EpasList, InvitationsList, ReviewDetail, PanelsList and
+  ActivityTypeEdit.
+
 ## Related
 
 T272 (the wording of the alert: raw EF text, and RefusalText's case for database failures), T299 (ActivityView's missing h1 in the same loading and load-error states), T300 (the builder's buttons gated on CanWrite), T321 (the circuit's unhandled-error bar, which it leaves out of scope), T270 (MyMsfReports, where one field holds both the list's load error and a selection's refusal). states.md § Holding a read, and rows 105, 244, 331 and 392.

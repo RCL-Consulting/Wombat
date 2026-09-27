@@ -37,8 +37,13 @@ created: 2026-09-26
 
 ## Verification
 
-- [ ] A design test in the DesignSystemSmokeTests style reads ReconnectModal.razor.css and asserts that a retrying rule hides .components-reconnect-first-attempt-visible. A markup test asserts that the resume-failed text names the label of the button shown with it.
+- [x] A design test in the DesignSystemSmokeTests style reads ReconnectModal.razor.css and asserts that a retrying rule hides .components-reconnect-first-attempt-visible. A markup test asserts that the resume-failed text names the label of the button shown with it. — `b347e11c`: `Design/ReconnectModalTests` covers T330's retrying rule and one state at a time. It evaluates the stylesheet on the served markup. "Could not reconnect" is one state whose line changes, so its heading keeps the focus. Resume failed offers Try again, and its text names it. The runtime's names are checked against the served `blazor.web.js`.
 - [ ] Browser, on a scratch app, the states.md reconnect rows (states.md:100-104). Rejoining still shows only 'Rejoining the server...'. Retrying shows only 'Rejoin failed... trying again in N seconds.' In resume-failed, the text and the button agree. Retake shell--reconnect-rejoining, shell--reconnect-retrying and shell--reconnect-resume-failed.
+
+## As built in T335 (`b347e11c`, 2026-09-27)
+
+- The dialog was rebuilt from round 3: seven states, one shown at a time, no "Try now", and a rejected state. The browser
+  item (suspending the app, per states.md's recipes) belongs to T335's step G replay.
 
 ## Related
 
