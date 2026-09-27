@@ -10,41 +10,33 @@ builds a design system from code but not an app's journeys. Then: "do it all" (t
 
 ### Done
 
-- **The runbook as the journey catalogue.**
-  - T292: `devadmin@wombat.local` is a dev-only Administrator.
-  - T293: the runbook (`knowledge/scenario-paediatrics/`) now has 325 intent-and-outcome steps playing all 80 page
-    templates. `coverage.md` indexes every role's jobs and `states.md` lists 577 states.
-  - T294: a test holds the runbook to the routes.
-  - T295: replayed end to end, and every state captured on scratch copies.
-  - T296: docs corrected (ten roles).
-  - Replay tool: `tools/scenario-replay.ps1`.
-- **Findings, filed rather than fixed:** T297–T331, and T333–T334 from the fixes; 46+ notes on open tasks.
-- **The brief (T332):**
-  - `design/BRIEF.md`: how to run it, what to upload and never upload, the constraints, the requirements from the P3
-    backlog, the screens that do not exist yet, and the reskin-or-restructure decision (it recommends restructuring the
-    frame and reskinning the pages).
-  - 18 paste-ready `design/flows/*.md`.
-  - The research in `design/research/`, and the checks in `design/tools/`.
-- **Group 1 fixed before designing,** because the baseline showed these screens wrong. Each was built test-first in a
-  worktree, adversarially reviewed and fixed, squash-merged with all suites green (7,725 tests), and browser-verified on
-  a replay of its act, with its screenshots refreshed:
-  - T297: dashboards read what is waiting from the pinned workflow.
-  - T300: the builder follows its guard and admits the College (D52).
-  - T302: an institution's state belongs to the Administrator alone.
-  - T303: Trainee is system-managed.
-  - T307: appeals are Dismissed or Remitted (D51), with a migration.
-
-- **Then, 2026-09-27: the restructure's pilot set up** (T335, in progress). Decisions W-008 (restructure, with UX,
-  emails and PDFs in scope) and W-009 (Wombat's own design system, built from the code into Claude Design:
-  https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18, source in `design/system/`). BRIEF restated; flows 19 (emails)
-  and 20 (PDFs) over a mail and PDF baseline (T336, done); `design/pilot/README.md` steps A–H; `stage_upload.ps1`.
+- **The runbook is now the journey catalogue.**
+  - T292–T296: 325 steps playing all 80 page templates, `coverage.md`, `states.md` with 577 states, T294's guard, and a
+    replay end to end.
+  - The replay tool is `tools/scenario-replay.ps1`.
+  - Findings are filed as T297–T331 and T333–T334.
+- **The brief** is T332: `design/BRIEF.md`, 20 flow briefs, `design/research/` and `design/tools/`.
+- **Group 1 fixed before designing:** T297, T300, T302, T303 and T307, each browser-verified on its act's replay.
+- **2026-09-27: the pilot set up** (T335, in progress).
+  - W-008: a restructure, with UX, emails and PDFs in scope.
+  - W-009: Wombat's own design system (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18, source in `design/system/`).
+  - The mail and PDF baseline (T336), and `design/pilot/README.md` steps A–H.
+- **Then, 2026-09-27: flow 01 designed and accepted, and step F started.**
+  - The canvas's round 3 was accepted with D1–D11. It is recorded in `design/flows/01-shell/`, and the pilot's rules
+    are W-010 (the GET role switch) and W-011 (OFL fonts).
+  - D1 is built as a column on the account, carried as a claim. A cookie deleted at sign-out cannot remember a choice
+    across sign-ins.
+  - **Step F is in flight on branch `t335`.**
+    - Four lanes run in worktrees `.claude/worktrees/t335-{tokens,role,reconnect,titles}`, each on its own branch.
+    - Next: merge them into `t335`, then the shell lane and the Home/failure-pages lane, then a review, then one
+      squashed T335 commit on master.
+    - The shared rules for the lanes are in the job's tmp directory (`t335-common.md`), and the plan is
+      `round-2-review.md` § Step F.
 
 ### For the operator
 
-- **The pilot, next:** give the aesthetic direction (a sentence or two), then `design/pilot/README.md` step C: stage
-  with `design/tools/stage_upload.ps1 -Flow 01` and start the canvas. The browser (Playwright MCP) disconnected on
-  2026-09-27; reconnect it (`/mcp`) before step G's replay.
-
+- **The pilot, next:** nothing is needed from you until step G. That step replays in the browser, and the Playwright
+  MCP failed to connect this session; reconnect it (`/mcp`) before then.
 - **The redesign after the pilot:** one `design/flows/NN-*.md` at a time, attaching its listed screenshots. They are
     in the gitignored `design/baseline/`, so they exist only on this machine.
   - Upload tracked files only (BRIEF § 3). Crop invitation captures that show a registration link.
