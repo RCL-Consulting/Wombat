@@ -60,7 +60,8 @@ END $$;
 - **Loading.** With the locks held, go to the page inside the circuit: its nav link, or `Blazor.navigateTo('/route')`
   in the browser's console. Capture the skeleton, then `ROLLBACK;`. The page then loads as usual.
 - **Load error.** The same, held for 35 seconds: the database command times out at 30 (Npgsql's default; nothing in
-  Wombat sets another), and the page shows its danger alert with the raw timeout text. Capture, then `ROLLBACK;`.
+  Wombat sets another), and the page shows its danger alert: the raw timeout text on most pages, a fixed sentence with
+  Try again where the page words its own (My account, T339). Capture, then `ROLLBACK;`.
 - **Keep a hold under two minutes.** The circuit's sign-in check runs once a minute and a hold makes it fail; only the
   third failure in a row signs the circuit out (`SessionRevalidatingAuthenticationStateProvider`). The scheduler and any
   other browser wait meanwhile.
