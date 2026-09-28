@@ -40,13 +40,13 @@ The operator asked to tackle flow 02, then "proceed" through each step. T339 clo
 ### Environment left
 
 - **The replay app on `:5180`**: `wombat_scenario_t339`, built from `f50dffb2` (before `6735fa98`'s CSS). Stop it with
-  `tools/scenario-replay.ps1 stop 5180`. The cast's passwords are in the session scratchpad's `replay/g/replay-pw.env`
-  (gone when the scratchpad is cleared).
+  `tools/scenario-replay.ps1 stop 5180`. The cast's passwords were kept only in the session scratchpad, which is
+  cleared with the session: a later replay registers its own.
 - **Snapshots:** `recovery/scenario-t339-post-act{1..6,A}.dump` (new), and the T335 ones.
 - **Droppable scratch databases:** `wombat_scenario_t339_states_5184`, `_5184_2`, and the older `wombat_scenario_t335*`,
   `wombat_scenario_states*`, `_rc*`, `_t292`.
-- **The dev app on `:5080`** still runs the build from before 2026-09-26; it locks `bin/x64/Release`, so run suites
-  from a throwaway worktree. Its next restart applies T307's and T335's migrations.
+- **The dev app on `:5080`** still runs the build from before 2026-09-26; it locks the Web project's Release output, so run
+  suites from a throwaway worktree. Its next restart applies T307's and T335's migrations.
 - **Branches:** `t339*` lanes kept locally (squashed into `f50dffb2`); their worktrees are removed.
 
 ### Traps
