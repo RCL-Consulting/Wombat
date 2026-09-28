@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My account · Wombat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+a{color:#0b5cab}
+h1,h2,h3,p,ul{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.side{width:250px;flex:none;height:100%;background:linear-gradient(180deg,#052767 0%,#3a0647 70%);color:#d7d7d7;display:flex;flex-direction:column}
+.brand{height:56px;flex:none;display:flex;align-items:center;gap:10px;padding:0 16px;background:rgba(0,0,0,.4);color:#ffffff;text-decoration:none}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.6rem;line-height:1;font-variation-settings:"SOFT" 0,"WONK" 1}
+.role{flex:none;padding:10px 16px 12px;border-bottom:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;gap:2px}
+.rl{font-size:.8125rem;font-weight:600;color:#b9c3e0}
+.rn{color:#ffffff;font-weight:600;font-size:1.0625rem;line-height:1.3}
+.sw{display:flex;align-items:center;gap:8px;min-height:32px;margin-top:6px;padding:4px 10px;border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;text-decoration:none;font-size:.9375rem;line-height:1.25;box-sizing:border-box}
+.list{flex:1 1 auto;min-height:0;padding:4px 8px 8px}
+.nv{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.nv a{display:flex;align-items:center;gap:10px;min-height:28px;padding:0 10px;border-radius:4px;color:#d7d7d7;text-decoration:none;font-size:.9375rem;line-height:1.2}
+.dv{border-top:1px solid rgba(255,255,255,.18);margin-top:6px;padding-top:6px}
+.main{flex-grow:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.top{height:56px;flex:none;display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:0 24px;background:#ffffff;border-bottom:1px solid #dee2e6;box-sizing:border-box}
+.acct{display:inline-flex;align-items:center;gap:8px;min-height:32px;color:#333333;text-decoration:none;font-weight:600;white-space:nowrap;border-bottom:3px solid #2d6cdf;box-sizing:border-box;padding-top:3px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap;cursor:pointer}
+.btn-outline{background:#ffffff;color:#2d6cdf}
+.btn-sm{min-height:28px;padding:0 10px;font-size:.85rem;gap:6px}
+.art{flex-grow:1;padding:24px 24px 32px 32px;display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.ph{border-bottom:2px solid #2d6cdf;padding-bottom:12px;display:flex;flex-direction:column;gap:4px}
+.ph h1{font-size:1.5rem;font-weight:600;line-height:1.25}
+.sub{color:#686f77;font-size:.9rem}
+.alert{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-radius:6px;border:1px solid;border-left-width:4px;color:#333333}
+.a-danger{background:#fff5f5;border-color:#b8322a}.a-danger>.ico{color:#b8322a}
+.capt{position:absolute;left:0;right:0;bottom:0;background:#ffffff;border-top:1px solid #dee2e6;padding:8px 16px;font-size:.8125rem;line-height:1.4;color:#333333;display:flex;gap:24px;flex-wrap:wrap}
+.capt b{font-weight:600}
+</style>
+</helmet>
+<div style="width:1280px;height:800px;display:flex;overflow:hidden">
+<nav class="side" aria-label="Main">
+<a class="brand" href="#"><img src="/_blob/a6c690a50a59fa44f668ab96ac894576" alt="" width="32" height="32"><b>Wombat</b></a>
+<div class="role"><span class="rl">Acting as</span><span class="rn">Committee member</span><a class="sw" href="#"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>Switch to Assessor</a></div>
+<div class="list"><ul class="nv">
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Committee reviews</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>Decision panels</a></li>
+</ul><ul class="nv dv"><li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My data rights</a></li></ul></div>
+</nav>
+<div class="main">
+<header class="top"><a class="acct" href="#" aria-current="page"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Sarah Botha</a><button type="button" class="btn btn-outline btn-sm"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>Sign out</button></header>
+<main class="art">
+<div class="ph"><h1>My account</h1><div class="sub">Your name, your roles, and how you sign in.</div></div>
+<div class="alert a-danger" role="alert"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span style="flex:1 1 16rem"><strong>Could not load your account.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Try again</button></div>
+</main>
+<div class="capt"><span><b>4 · Load error</b> (T329) · StatePanel error on Home's pattern</span><span>Unchanged from R2 but the Sign out and Try again at .btn-sm 28 px (C8)</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 02 round 3 steps</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45;color:#333333;background:#f8f9fa}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#ffffff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.mut{color:#686f77}
+table.t{border-collapse:collapse;width:100%}
+.t th,.t td{text-align:left;padding:7px 10px;border-bottom:1px solid #dee2e6;vertical-align:top;font-size:13px}
+.t th{background:#f1f3f5;font-weight:600}
+.t td:first-child{font-weight:600;white-space:nowrap}
+.old{color:#686f77}
+</style>
+</helmet>
+<div style="width:1280px;height:2800px;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<p class="mut" style="font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase">Flow 02 · Round 3 · replaces R2-Steps (kept on the R2 page)</p>
+<h1 style="font-size:1.75rem;font-weight:600">The runbook Expects that change, and to what</h1>
+<p class="mut" style="max-width:980px">Left: today's Expect; right: the new one. 1.1 and A.6.8 are unchanged; A.4.5 changes only its field (E11). The build task updates the act files and the appendix (BRIEF.md § 9 item 7).</p>
+</div>
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:70px">Step</th><th style="width:440px">Today's Expect says</th><th>The new Expect says</th></tr></thead>
+<tbody>
+<tr><td>2.8</td><td class="old">Signing out returns him to the sign-in page.</td><td>Signing out returns him to the sign-in page, which reads "You have signed out."</td></tr>
+<tr><td>2.19</td><td class="old">My account lists her role as PendingTrainee.</td><td>My account lists her role as "Pending trainee", and her institution, Kgosi Kgari Teaching Hospital.</td></tr>
+<tr><td>2.31</td><td class="old">…reads "Your session has ended. Please sign in again."</td><td>…reads "Your session has ended. Sign in again.", an information notice; the focus is on Email (no institution buttons on dev).</td></tr>
+<tr><td>2.41</td><td class="old">"My account" and "Update your name and review your assigned roles." The summary shows the email, the roles held … and a Change password link. The email field is not editable. … "Profile saved."</td><td>"My account" and "Your name, your roles, and how you sign in." The Account card shows the email as text, the institution (Kgosi Kgari Teaching Hospital) and the roles by label, one per line. How you sign in shows Password with Change password. Khumalo's save: "Name saved." in the Your name card, focus on it; the top bar reads "Fatima Khumalo".</td></tr>
+<tr><td>A.3.2</td><td class="old">The page offers only an email, a password, Remember me and the "Forgotten your password?" link. … "Unknown SSO provider."</td><td>The page offers an email, a password with its Show toggle, Remember me and the "Forgotten your password?" link, under the line "Work-based assessment for specialist training."; no divider, no institution button. The wrong password: "Invalid email or password." The unknown provider: "That institution's sign-in is not set up in Wombat. Sign in with your email and password."</td></tr>
+<tr><td>A.3.3</td><td class="old">"External login information was not available." The link page says "Your institutional sign-in has expired. …"</td><td>"Your institution's sign-in did not complete. Sign in with your email and password." (the no-buttons form: none configured). The link page is headed "Institutional sign-in expired" and says "Your institutional sign-in has expired. Start again from the sign-in page."</td></tr>
+<tr><td>A.4.1</td><td class="old">…both her roles (CommitteeMember and Assessor) and a Change password link. The email field cannot be edited. … "Enter your first name and your last name." … each name field names … her name as stored … "Profile saved."</td><td>…her institution and both roles (Committee member, Assessor); Change password under How you sign in; the email as text. The space: "Your name was not saved. Enter your last name.", in the card, focused; Last name marked, empty, naming it; First name "Sarah"; tab "Error: My account · Wombat". Restored: "Name saved.", focused; top bar "Sarah Botha".</td></tr>
+<tr><td>A.4.2</td><td class="old">Each refusal … each field names the refusal. (c) one sentence for each rule it breaks … (d) "Password updated."</td><td>Each refusal: empty fields; "Your password was not changed." in the form's card above its buttons, focused; the field it concerns marked and naming it. (a) "Incorrect password." (b) "The password confirmation does not match." (c) "The new password needs:" and "At least 12 characters.", "A digit (0 to 9).", "An upper-case letter.", "A symbol, such as ! or #."; New password says "The new password does not meet the rules below." (d) lands on My account with "Password updated." under its header; she stays signed in. The toggles are "Show current password", "Show new password", "Show confirm new password".</td></tr>
+<tr><td>A.4.3</td><td class="old">"Your session has ended. Please sign in again." … refused ("Invalid email or password.")</td><td>"Your session has ended. Sign in again." (a notice), then "Invalid email or password." in its place; the new password returns her to her inbox (the returnUrl survives a refusal, as today).</td></tr>
+<tr><td>A.4.4</td><td class="old">Follow "Forgotten your password? Reset it" … "Reset password" … "Password reset is not wired yet in the rewrite. …"</td><td>Follow "Forgotten your password?". A "Forgotten password" page: "A Wombat administrator can set a new password for you." then three steps ("Ask your Wombat administrator for a new password: the one at your institution or, if your account belongs to no institution, the platform's administrator. They give it to you themselves; Wombat does not email it." "Sign in with it." "Choose your own password on My account, under Change password."), and Back to sign in; no field, no email.</td></tr>
+<tr><td>A.4.5</td><td class="old">The 10-character password is refused with the rules it breaks.</td><td>The field has the Show toggle ("Show new password") and the six rules under it; the 10-character password is refused with "The password was not reset. The new password needs:" and the rules it breaks, in the six rules' order.</td></tr>
+<tr><td>A.4.6</td><td class="old">The change reads "Password updated."</td><td>The change lands on My account with "Password updated."</td></tr>
+<tr><td>A.4.7</td><td class="old">A "Sign out" page … says to use its button to end the session. … Sign out lands on the sign-in page.</td><td>A "Sign out" page, no nav: "You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends your session in this browser.", Cancel and Sign out. GET /account/logout draws the same page. Sign out lands on Sign in with "You have signed out."</td></tr>
+<tr><td>A.6.5</td><td class="old">"Your session has ended. Please sign in again." … refused: "Too many failed sign-in attempts. Please try again later or reset your password."</td><td>"Your session has ended. Sign in again." … refused: "Invalid email or password." (T287).</td></tr>
+<tr><td>A.1.13</td><td class="old">"Your session has ended. Please sign in again." … "Invalid email or password."</td><td>"Your session has ended. Sign in again." (a notice) … "Invalid email or password."</td></tr>
+<tr><td>A.7.12</td><td class="old">…its fields and buttons are easy to tap.</td><td>…every field, toggle, button and link on the sign-in and forgot pages is 44 px tall; Sign in is full width; the h1 is 1.5rem.</td></tr>
+<tr><td>A.7.14</td><td class="old">a success alert (… "Profile saved.")</td><td>a success alert ("Name saved.", the name saved unchanged); add the pressed toggle (white on the action blue, 4.86:1).</td></tr>
+<tr><td>5.19</td><td class="old">"Your session has ended. Please sign in again."</td><td>"Your session has ended. Sign in again.", an information notice.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:6px">
+<h2 style="font-size:1.1rem;font-weight:600">Steps to add at acceptance</h2>
+<p>Five wrong current passwords on Change password lock the account and land on Sign in with "Your current password was entered incorrectly too many times, …" (E2). A typed GET /account/logout draws the Sign out page (T317). The sign-in page with scripts blocked has no toggle and still signs in. Change password throttled (never captured). Removing an institutional sign-in, with and without a password (needs a provider; not replayable on dev).</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

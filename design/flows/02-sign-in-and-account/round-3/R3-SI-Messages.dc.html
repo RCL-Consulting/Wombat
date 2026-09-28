@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in messages</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f1f3f5}
+h1,h2,h3,p{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-top:2px}
+.mini{background:#ffffff;border:1px solid #dee2e6;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:24px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
+.mini h1{font-size:2rem;font-weight:600;line-height:1.25}
+.fld{display:flex;flex-direction:column;gap:8px}
+.fc{height:38px;box-sizing:border-box;border:1px solid #7b848d;border-radius:6px;background:#ffffff;padding:6px 12px;font:inherit;color:#333333;width:100%}
+.fo{outline:2px solid #2d6cdf;outline-offset:2px}
+.al{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border:1px solid;border-left-width:4px;border-radius:6px;color:#333333}
+.ad{background:#fff5f5;border-color:#b8322a}.ad .ico{color:#b8322a}
+.ai{background:#f3f8ff;border-color:#2d6cdf}.ai .ico{color:#2d6cdf}
+.cell{display:flex;flex-direction:column;gap:8px}
+.lab{display:flex;flex-direction:column}
+.lab b{font-weight:600}
+.lab span{font-size:.875rem;color:#686f77}
+.meta{font-size:.8125rem;color:#333333;line-height:1.4}
+.k{display:inline-block;font-size:.75rem;font-weight:600;border:1px solid;border-radius:999px;padding:0 8px;margin-right:6px}
+.kd{background:#fff5f5;border-color:#b8322a}
+.ki{background:#f3f8ff;border-color:#2d6cdf}
+.new{background:#fff8e1;border-color:#9a5400}
+.ssob{border:1px solid #2d6cdf;border-radius:6px;min-height:44px;display:flex;align-items:center;padding:0 16px;color:#2d6cdf;font-weight:600}
+.v{font-size:.8125rem;font-weight:600;color:#686f77;margin-top:2px}
+</style>
+</helmet>
+<div style="width:1280px;height:2460px;box-sizing:border-box;padding:40px;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 style="font-size:1.5rem;font-weight:600">Sign in · every other message in its one slot (round 3 words)</h2>
+<p style="color:#686f77">"Please" is dropped from every sentence (C5). Focus (C6): a refusal takes the focus; a notice leaves it on Email when there are no institution buttons, and takes it itself when there are. The notices show only to a signed-out visitor; a signed-in visitor is sent Home (E4).</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start">
+
+<div class="cell"><div class="lab"><b>Too many attempts from this network</b><span>SignInOutcome.TooManyAttempts</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Too many failed sign-in attempts from this network. Wait a few minutes and try again.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k kd">danger</span>"Please" dropped.</p></div>
+
+<div class="cell"><div class="lab"><b>Locked out</b><span>LockedOut · T287</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Invalid email or password.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k kd">danger</span>As a wrong password and an unknown address; the timing is matched too (E5).</p></div>
+
+<div class="cell"><div class="lab"><b>Fields missing</b><span>SignInOutcome.FieldsMissing</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Enter your email and your password.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k new">new words</span>Was "Email and password are required."</p></div>
+
+<div class="cell"><div class="lab"><b>Password changed elsewhere</b><span>ChangePasswordOutcome · PasswordChanged</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ai" role="status"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Your password was changed. Sign in with your new password.</span></div><div class="fld"><label>Email</label><input class="fc fo"></div></div>
+<p class="meta"><span class="k ki">info</span>"Please" dropped.</p></div>
+
+<div class="cell"><div class="lab"><b>Signed out</b><span>SignInOutcome.SignedOut (NEW)</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ai" role="status"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>You have signed out.</span></div><div class="fld"><label>Email</label><input class="fc fo"></div></div>
+<p class="meta"><span class="k ki">info</span>2.8, A.4.7.</p></div>
+
+<div class="cell"><div class="lab"><b>Institutional sign-in did not complete</b><span>SignInOutcome · external login unavailable · A.3.3</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Your institution's sign-in did not complete. Sign in with your email and password.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k new">new words</span><b>No buttons</b> (drawn; A.3.3 on dev). <b>With buttons:</b> "Your institution's sign-in did not complete. Try your institution's button again, or sign in with your email and password."</p></div>
+
+<div class="cell"><div class="lab"><b>Institutional sign-in expired</b><span>SignInOutcome · external login expired</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Your institution's sign-in took too long and has expired. Use your institution's button to start again.</span></div><div class="ssob">Sign in with Kgosi Kgari Teaching Hospital</div></div>
+<p class="meta"><span class="k new">new words</span><b>With buttons</b> (drawn). <b>No buttons:</b> "Your institution's sign-in took too long and has expired. Sign in with your email and password."</p></div>
+
+<div class="cell"><div class="lab"><b>Unknown institution</b><span>SsoUnknownProvider · A.3.2</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>That institution's sign-in is not set up in Wombat. Sign in with your email and password.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k new">new words</span>Was "Unknown SSO provider." One sentence serves both cases.</p></div>
+
+<div class="cell"><div class="lab"><b>Institutional sign-in failed</b><span>SignInOutcome.SsoFailed</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Wombat could not sign you in through your institution this time. Try again in a few minutes, or sign in with your email and password.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k new">new words</span>Was "SSO login failed." (C5).</p></div>
+
+<div class="cell"><div class="lab"><b>No email from the institution</b><span>ExternalLoginHandler · SsoNoEmail</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Your institution's sign-in did not give Wombat your email address, so Wombat cannot find your account. Sign in with your email and password, or ask your administrator for help.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k new">new words</span>Was "The identity provider did not supply an email address." (C5).</p></div>
+
+<div class="cell"><div class="lab"><b>Institutional sign-in, account locked</b><span>ExternalLoginHandler · SsoAccountLocked · E1</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Wombat could not sign you in through your institution. Contact your administrator.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k new">new words</span>Accepted (E1). Was "This account is locked. Contact your administrator."</p></div>
+
+<div class="cell"><div class="lab"><b>General refusal</b><span>any other code</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Sign-in could not be completed. Try again.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k kd">danger</span>"Please" dropped.</p></div>
+
+<div class="cell"><div class="lab"><b>Refused, with buttons offered</b><span>InvalidCredentials, SSO configured</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Invalid email or password. If your institution signs you in, use its sign-in button below.</span></div><div class="ssob">Sign in with Kgosi Kgari Teaching Hospital</div></div>
+<p class="meta"><span class="k kd">danger</span>Unchanged.</p></div>
+
+<div class="cell"><div class="lab"><b>The longest refusal: 38 words</b><span>ExternalLoginHandler · SsoEmailNotVerified</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Your institution's sign-in did not confirm your email address, so Wombat cannot use it to find your account or create one. Sign in with your password if you have one, or ask your administrator for an invitation.</span></div><div class="fld"><label>Email</label><input class="fc"></div></div>
+<p class="meta"><span class="k kd">danger</span>Unchanged.</p></div>
+
+<div class="cell"><div class="lab"><b>Signed out by a lock</b><span>LockedSignedOut (NEW) · E2</span></div>
+<div class="mini"><h1>Sign in</h1><div class="al ai" role="status"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Your current password was entered incorrectly too many times, so your account is locked for a few minutes and you have been signed out. Wait a few minutes, then sign in again.</span></div><div class="fld"><label>Email</label><input class="fc fo"></div></div>
+<p class="meta"><span class="k new">new</span><span class="k ki">info</span>Full board beside the session-ended boards.</p></div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2460}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

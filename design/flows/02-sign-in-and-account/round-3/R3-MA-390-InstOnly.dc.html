@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My account · Wombat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+a{color:#0b5cab}
+h1,h2,h3,p,ul,dl,dd{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.bar{height:56px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;background:#052767;color:#ffffff}
+.brand{display:flex;align-items:center;gap:8px;min-height:44px;color:#ffffff;text-decoration:none}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.4rem;line-height:1;font-variation-settings:"SOFT" 0,"WONK" 1}
+.who{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:.9rem;text-align:right}
+.who small{font-size:.75rem;color:#b9c3e0;font-weight:600}
+.tog{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #b9c3e0;border-radius:6px;color:#ffffff;font-weight:600;flex:none;box-sizing:border-box}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;box-sizing:border-box;cursor:pointer;width:100%}
+.btn:disabled{opacity:.65}
+.btn-primary{background:#2d6cdf;color:#ffffff}
+.btn-outline{background:#ffffff;color:#2d6cdf}
+.ph{border-bottom:2px solid #2d6cdf;padding-bottom:10px;display:flex;flex-direction:column;gap:4px}
+.ph h1{font-size:1.375rem;font-weight:600;line-height:1.25}
+.sub{color:#686f77;font-size:.9rem}
+.card{background:#ffffff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:16px;display:flex;flex-direction:column;gap:14px}
+.card h2{font-size:1.1rem;font-weight:600;line-height:1.25}
+.details-list--stacked{display:flex;flex-direction:column;gap:10px}
+.details-list--stacked dt{color:#686f77;font-weight:500}
+.roles{list-style:none;padding:0}
+.fld{display:flex;flex-direction:column;gap:8px}
+.fc{height:44px;box-sizing:border-box;border:1px solid #7b848d;border-radius:6px;background:#ffffff;padding:6px 12px;font:inherit;color:#333333;width:100%}
+.facts{border-top:1px solid #dee2e6;padding-top:16px}
+.signin-method{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid #dee2e6}
+.mt{display:flex;flex-direction:column}
+.mt b{font-weight:600}
+.mt span{color:#686f77;font-size:.9rem}
+.signin-method-reason{color:#686f77;font-size:.875rem}
+</style>
+</helmet>
+<div style="width:390px;height:1300px;display:flex;flex-direction:column;overflow:hidden">
+<header class="bar">
+<a class="brand" href="#"><img src="/_blob/a6c690a50a59fa44f668ab96ac894576" alt="" width="28" height="28"><b>Wombat</b></a>
+<span style="flex-grow:1"></span>
+<span class="who"><small>Acting as</small>Assessor</span>
+<label class="tog"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>Menu</label>
+</header>
+<main style="flex-grow:1;padding:16px;display:flex;flex-direction:column;gap:16px">
+<div class="ph"><h1>My account</h1><div class="sub">Your name, your roles, and how you sign in.</div></div>
+<section class="card"><h2>Account</h2><dl class="details-list details-list--stacked"><div><dt>Email</dt><dd>sithole@kgk.wombat.local</dd></div><div><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd></div><div><dt>Roles</dt><dd><ul class="roles"><li>Assessor</li></ul></dd></div></dl></section>
+<form class="card" method="post" action="#"><h2>Your name</h2>
+<div class="fld"><label for="fn">First name</label><input class="fc" id="fn" value="Karabo"></div>
+<div class="fld"><label for="ln">Last name</label><input class="fc" id="ln" value="Sithole"></div>
+<div class="facts"><button type="button" class="btn btn-primary">Save name</button></div>
+</form>
+<section class="card"><h2>How you sign in</h2>
+<p>You sign in through your institution. This account has no Wombat password, so there is no password to change here.</p>
+<div class="signin-method"><div class="mt"><b>Kgosi Kgari Teaching Hospital</b><span>Institutional sign-in.</span></div><button type="button" class="btn btn-outline" disabled="" aria-describedby="why" aria-label="Remove your Kgosi Kgari Teaching Hospital sign-in">Remove</button><span id="why" class="signin-method-reason">Remove: this is the only way you sign in.</span></div>
+</section>
+<p style="font-size:.8125rem;background:#ffffff;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px">390 · institutional only (C9). The disabled Remove and its reason stack under the row's name.</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

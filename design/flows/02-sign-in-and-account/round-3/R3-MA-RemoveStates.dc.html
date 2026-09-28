@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Remove an institutional sign-in states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+h1,h2,h3,p,ul{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap;cursor:pointer}
+.btn:disabled{opacity:.65}
+.btn-outline{background:#ffffff;color:#2d6cdf}
+.btn-danger{background:#b8322a;border-color:#b8322a;color:#ffffff}
+.scrimbox{background:rgba(0,0,0,.35);border-radius:8px;padding:24px;display:flex;justify-content:center}
+.dialog-card{width:448px;background:#ffffff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.25);border:0;padding:0;margin:0;position:static}
+.dialog-form{padding:32px;display:flex;flex-direction:column;gap:16px}
+.dialog-form h2{font-size:1.25rem;font-weight:600;line-height:1.25}
+.fld{display:flex;flex-direction:column;gap:8px}
+.fc{height:38px;box-sizing:border-box;border:1px solid #7b848d;border-radius:6px;background:#ffffff;padding:6px 12px;font:inherit;color:#333333;flex-grow:1;min-width:0}
+.fc[aria-invalid="true"]{border-color:#b8322a;box-shadow:inset 4px 0 0 #b8322a}
+.vm{color:#b8322a;font-size:.875rem;display:flex;gap:6px;align-items:flex-start}
+.vm .ico{width:16px;height:16px;margin-top:2px}
+.password-field{display:flex;gap:8px}
+.password-toggle{min-height:38px;padding:0 12px;flex:none}
+.facts{display:flex;justify-content:flex-end;gap:12px;border-top:1px solid #dee2e6;padding-top:16px}
+.al{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border:1px solid;border-left-width:4px;border-radius:6px;color:#333333}
+.al>.ico{margin-top:2px}
+.ad{background:#fff5f5;border-color:#b8322a}.ad>.ico{color:#b8322a}
+.as{background:#e8f5e9;border-color:#1a7340}.as>.ico{color:#1a7340}
+.fo{outline:2px solid #2d6cdf;outline-offset:2px}
+.card{background:#ffffff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:24px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+.card h2{font-size:1.1rem;font-weight:600}
+.signin-method{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #dee2e6}
+.signin-method.first{border-top:0;padding-top:0}
+.mt{display:flex;flex-direction:column;flex-grow:1;min-width:0}
+.mt b{font-weight:600}
+.mt span{color:#686f77;font-size:.9rem}
+.lab{display:flex;flex-direction:column;gap:2px}
+.lab b{font-weight:600;font-size:1.05rem}
+.lab span{color:#686f77;font-size:.9rem}
+.meta{font-size:.875rem;line-height:1.4}
+</style>
+</helmet>
+<div style="width:1280px;height:1500px;box-sizing:border-box;padding:40px;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 style="font-size:1.5rem;font-weight:600">Remove an institutional sign-in · the dialog's variants and the results</h2>
+<p style="color:#686f77">Every Remove is a form post to /account/external-logins/remove (NEW endpoint): it checks the session, checks the password when the account has one, refuses to remove the last way in, removes the link, issues the sign-in again and redirects to My account with a code. The dialog's words come from what remains.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px">
+
+<div style="display:flex;flex-direction:column;gap:10px"><div class="lab"><b>a · A wrong password, inside the dialog</b><span>Tumi Moloi · E3 · RemoveWrongPassword</span></div>
+<div class="scrimbox"><dialog class="dialog-card" open=""><form class="dialog-form" method="post" action="/account/external-logins/remove">
+<h2>Remove your Kgosi Kgari Teaching Hospital sign-in?</h2>
+<p>You will still sign in with your email and password. You can link it again the next time you sign in through Kgosi Kgari Teaching Hospital.</p>
+<div id="rm-err" class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span><strong>Your sign-in was not removed.</strong> Incorrect password.</span></div>
+<div class="fld"><label for="p1">Password</label><div class="password-field"><input class="fc" id="p1" type="password" aria-invalid="true" aria-describedby="p1m rm-err"><button type="button" class="btn btn-outline password-toggle" aria-pressed="false" aria-controls="p1" aria-label="Show password"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div><span id="p1m" class="vm"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Incorrect password.</span></div>
+<div class="facts"><button type="button" class="btn btn-outline">Cancel</button><button type="submit" class="btn btn-danger">Remove sign-in</button></div>
+</form></dialog></div>
+<p class="meta">The post reloads My account with the code; the page reopens the dialog as it renders (showModal on first render), refusal first and focused, field empty. Wrong passwords count towards the lockout: the fifth locks the account and signs the session out (E2), as Change password does.</p></div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div class="lab"><b>b · No password on the account, two institutions</b><span>Karabo Sithole with a second link · E3: no field</span></div>
+<div class="scrimbox"><dialog class="dialog-card" open=""><form class="dialog-form" method="post" action="/account/external-logins/remove">
+<h2>Remove your Marula Academic Hospital sign-in?</h2>
+<p>You will still sign in through Kgosi Kgari Teaching Hospital. You can link it again the next time you sign in through Marula Academic Hospital.</p>
+<div class="facts"><button type="button" class="btn btn-outline fo">Cancel</button><button type="submit" class="btn btn-danger">Remove sign-in</button></div>
+</form></dialog></div>
+<p class="meta">The body says what remains: the password ("with your email and password"), the other institution ("through …"), or both ("with your email and password, or through …"). Focus on Cancel on open when there is no field. "Marula Academic Hospital" is invented.</p></div>
+
+</div>
+
+<div style="display:flex;flex-direction:column;gap:6px"><h3 style="font-size:1.1rem;font-weight:600">The results, in the How you sign in card (focus on each)</h3></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start">
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab"><b>c · Removed</b><span>?status=sign-in-removed</span></div>
+<section class="card"><h2>How you sign in</h2>
+<div class="al as fo" role="status" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>Kgosi Kgari Teaching Hospital sign-in removed.</span></div>
+<div><div class="signin-method first"><div class="mt"><b>Password</b><span>Your Wombat password.</span></div><a href="#" class="btn btn-outline">Change password</a></div></div>
+</section></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab"><b>d · Not removed</b><span>?error=RemoveFailed · a fault</span></div>
+<section class="card"><h2>How you sign in</h2>
+<div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Your Kgosi Kgari Teaching Hospital sign-in was not removed. Try again.</span></div>
+<div><div class="signin-method first"><div class="mt"><b>Password</b><span>Your Wombat password.</span></div><a href="#" class="btn btn-outline">Change password</a></div><div class="signin-method"><div class="mt"><b>Kgosi Kgari Teaching Hospital</b><span>Institutional sign-in.</span></div><button type="button" class="btn btn-outline">Remove</button></div></div>
+</section></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div class="lab"><b>e · The last way in, refused by the server</b><span>?error=RemoveLastSignIn · a crafted or second-tab post</span></div>
+<section class="card"><h2>How you sign in</h2>
+<div class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Your Kgosi Kgari Teaching Hospital sign-in was not removed. It is the only way you sign in to Wombat.</span></div>
+<p>You sign in through your institution. This account has no Wombat password, so there is no password to change here.</p>
+<div class="signin-method"><div class="mt"><b>Kgosi Kgari Teaching Hospital</b><span>Institutional sign-in.</span></div><button type="button" class="btn btn-outline" disabled="">Remove</button></div>
+</section></div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

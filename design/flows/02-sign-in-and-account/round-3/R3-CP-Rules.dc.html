@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error: Change password · Wombat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,1&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+a{color:#0b5cab}
+h1,h2,h3,p,ul{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.ico.xs{width:14px;height:14px}
+.side{width:250px;flex:none;height:100%;background:linear-gradient(180deg,#052767 0%,#3a0647 70%);color:#d7d7d7;display:flex;flex-direction:column}
+.brand{height:56px;flex:none;display:flex;align-items:center;gap:10px;padding:0 16px;background:rgba(0,0,0,.4);color:#ffffff;text-decoration:none}
+.brand b{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.6rem;line-height:1;font-variation-settings:"SOFT" 0,"WONK" 1}
+.role{flex:none;padding:10px 16px 12px;border-bottom:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;gap:2px}
+.rl{font-size:.8125rem;font-weight:600;color:#b9c3e0}
+.rn{color:#ffffff;font-weight:600;font-size:1.0625rem;line-height:1.3}
+.list{flex:1 1 auto;min-height:0;padding:4px 8px 8px}
+.nv{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.nv a{display:flex;align-items:center;gap:10px;min-height:28px;padding:0 10px;border-radius:4px;color:#d7d7d7;text-decoration:none;font-size:.9375rem;line-height:1.2}
+.dv{border-top:1px solid rgba(255,255,255,.18);margin-top:6px;padding-top:6px}
+.main{flex-grow:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.top{height:56px;flex:none;display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:0 24px;background:#ffffff;border-bottom:1px solid #dee2e6;box-sizing:border-box}
+.acct{display:inline-flex;align-items:center;gap:8px;min-height:32px;color:#333333;text-decoration:none;font-weight:600;white-space:nowrap;border-bottom:3px solid #2d6cdf;box-sizing:border-box;padding-top:3px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap;cursor:pointer}
+.btn-primary{background:#2d6cdf;color:#ffffff}
+.btn-outline{background:#ffffff;color:#2d6cdf}
+.btn-sm{min-height:28px;padding:0 10px;font-size:.85rem;gap:6px}
+.art{flex-grow:1;padding:20px 24px 32px 32px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+.crumbs{display:flex;align-items:center;gap:6px;font-size:.9rem;list-style:none;padding:0;margin:0}
+.crumbs .ico{color:#686f77}
+.crumbs strong{font-weight:600;color:#333333}
+.ph{border-bottom:2px solid #2d6cdf;padding-bottom:12px;display:flex;flex-direction:column;gap:4px}
+.ph h1{font-size:1.5rem;font-weight:600;line-height:1.25}
+.sub{color:#686f77;font-size:.9rem}
+.form-container{width:640px;box-sizing:border-box;background:#ffffff;border:1px solid #dee2e6;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:32px;display:flex;flex-direction:column;gap:20px;margin-top:8px}
+.fld{display:flex;flex-direction:column;gap:8px}
+.fc{height:38px;box-sizing:border-box;border:1px solid #7b848d;border-radius:6px;background:#ffffff;padding:6px 12px;font:inherit;color:#333333;flex-grow:1;min-width:0}
+.fc[aria-invalid="true"]{border-color:#b8322a;box-shadow:inset 4px 0 0 #b8322a}
+.vm{color:#b8322a;font-size:.875rem;display:flex;gap:6px;align-items:flex-start}
+.vm .ico{width:16px;height:16px;margin-top:2px}
+.password-field{display:flex;gap:8px}
+.password-toggle{min-height:38px;padding:0 12px;flex:none;background:#ffffff;color:#2d6cdf}
+.password-rules{color:#686f77;font-size:.9rem}
+.password-rules ul{margin:2px 0 0;padding-left:20px}
+.al{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border:1px solid;border-left-width:4px;border-radius:6px;color:#333333}
+.al>.ico{margin-top:2px}
+.ad{background:#fff5f5;border-color:#b8322a}.ad>.ico{color:#b8322a}
+.al ul{margin:4px 0 0;padding-left:20px}
+.fo{outline:2px solid #2d6cdf;outline-offset:2px}
+.facts{display:flex;justify-content:flex-end;gap:12px;border-top:1px solid #dee2e6;padding-top:16px}
+.capt{position:absolute;left:0;right:0;bottom:0;background:#ffffff;border-top:1px solid #dee2e6;padding:8px 16px;font-size:.8125rem;line-height:1.4;color:#333333;display:flex;gap:24px;flex-wrap:wrap}
+.capt b{font-weight:600}
+</style>
+</helmet>
+<div style="width:1280px;height:1120px;display:flex;overflow:hidden">
+<nav class="side" aria-label="Main">
+<a class="brand" href="#"><img src="/_blob/a6c690a50a59fa44f668ab96ac894576" alt="" width="32" height="32"><b>Wombat</b></a>
+<div class="role"><span class="rl">Acting as</span><span class="rn">Assessor</span></div>
+<div class="list"><ul class="nv">
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</a></li>
+<li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Activity inbox</a></li>
+</ul><ul class="nv dv"><li><a href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My data rights</a></li></ul></div>
+</nav>
+<div class="main">
+<header class="top"><a class="acct" href="#" aria-current="true"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Fatima Khumalo</a><button type="button" class="btn btn-outline btn-sm"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>Sign out</button></header>
+<main class="art">
+<nav aria-label="Breadcrumb"><ol class="crumbs"><li><a href="#">Home</a></li><li><svg class="ico xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li><a href="#">My account</a></li><li><svg class="ico xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li><strong aria-current="page">Change password</strong></li></ol></nav>
+<div class="ph"><h1>Change password</h1><div class="sub">Choose a new password for signing in to Wombat.</div></div>
+<form class="form-container" method="post" action="#">
+<div class="fld"><label for="cur">Current password</label><div class="password-field"><input class="fc" id="cur" type="password" required=""><button type="button" class="btn password-toggle" aria-pressed="false" aria-controls="cur" aria-label="Show current password"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div></div>
+<div class="fld"><label for="new">New password</label><div class="password-field"><input class="fc" id="new" type="password" required="" aria-invalid="true" aria-describedby="new-msg rules cp-error"><button type="button" class="btn password-toggle" aria-pressed="false" aria-controls="new" aria-label="Show new password"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div>
+<span id="new-msg" class="vm"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>The new password does not meet the rules below.</span>
+<div id="rules" class="password-rules">The new password needs:<ul><li>At least 12 characters.</li><li>At least 4 different characters.</li><li>A digit (0 to 9).</li><li>An upper-case letter.</li><li>A lower-case letter.</li><li>A symbol, such as ! or #.</li></ul></div></div>
+<div class="fld"><label for="conf">Confirm new password</label><div class="password-field"><input class="fc" id="conf" type="password" required=""><button type="button" class="btn password-toggle" aria-pressed="false" aria-controls="conf" aria-label="Show confirm new password"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div></div>
+<div id="cp-error" class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><div><strong>Your password was not changed.</strong> The new password needs:<ul><li>At least 12 characters.</li><li>A digit (0 to 9).</li><li>An upper-case letter.</li><li>A symbol, such as ! or #.</li></ul></div></div>
+<div class="facts"><a href="#" class="btn btn-outline">Cancel</a><button type="button" class="btn btn-primary">Change password</button></div>
+</form>
+</main>
+<div class="capt"><span><b>5 · The rules not met</b> (A.4.2 c: eight different lower-case letters)</span><span>The refusal repeats the list's heading, order and sentences, only the rules broken (C2)</span><span><b>Focus</b> the refusal; New password marked · <b>Tab</b> Error: Change password · Wombat</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1120}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

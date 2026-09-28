@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Administrator's reset card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+h1,h2,h3,p,ul{margin:0}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:16px;height:16px}
+.detail-card{background:#ffffff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:24px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+.detail-card h3{font-size:1.1rem;font-weight:600;line-height:1.25}
+.muted{color:#686f77}
+.fld{display:flex;flex-direction:column;gap:8px}
+.fc{height:38px;box-sizing:border-box;border:1px solid #7b848d;border-radius:6px;background:#ffffff;padding:6px 12px;font:inherit;color:#333333;flex-grow:1;min-width:0}
+.fc[aria-invalid="true"]{border-color:#b8322a;box-shadow:inset 4px 0 0 #b8322a}
+.vm{color:#b8322a;font-size:.875rem;display:flex;gap:6px;align-items:flex-start}
+.vm .ico{width:16px;height:16px;margin-top:2px}
+.password-field{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;box-sizing:border-box;white-space:nowrap;cursor:pointer}
+.btn-primary{background:#2d6cdf;color:#ffffff}
+.btn-outline{background:#ffffff;color:#2d6cdf}
+.password-toggle{min-height:38px;padding:0 12px;flex:none}
+.password-rules{color:#686f77;font-size:.9rem}
+.password-rules ul{margin:2px 0 0;padding-left:20px}
+.al{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border:1px solid;border-left-width:4px;border-radius:6px;color:#333333}
+.al>.ico{margin-top:2px}
+.ad{background:#fff5f5;border-color:#b8322a}.ad>.ico{color:#b8322a}
+.al ul{margin:4px 0 0;padding-left:20px}
+.fo{outline:2px solid #2d6cdf;outline-offset:2px}
+.facts{display:flex;justify-content:flex-end;gap:12px;border-top:1px solid #dee2e6;padding-top:16px}
+.lab b{font-weight:600;font-size:1.05rem}
+.meta{font-size:.875rem;line-height:1.4}
+</style>
+</helmet>
+<div style="width:1280px;height:900px;box-sizing:border-box;padding:40px;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 style="font-size:1.5rem;font-weight:600">E11 · The administrator's Reset password card (F12's user page), on the new toggle and the six rules</h2>
+<p class="muted">Only the card's password field changes in this flow; the card, its words and the page stay flow 12's. Prof Nolwazi Mbatha resetting Pieter du Plessis (A.4.5). The register page (F11) takes the same field and rules.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;align-items:start">
+
+<div style="display:flex;flex-direction:column;gap:10px"><div class="lab"><b>a · Blank</b></div>
+<section class="detail-card"><h3>Reset password</h3>
+<p class="muted">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p>
+<div class="fld"><label for="r1">New password</label><div class="password-field"><input class="fc" id="r1" type="password" autocomplete="new-password" aria-describedby="r1-rules"><button type="button" class="btn btn-outline password-toggle" aria-pressed="false" aria-controls="r1" aria-label="Show new password"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div>
+<div id="r1-rules" class="password-rules">The new password needs:<ul><li>At least 12 characters.</li><li>At least 4 different characters.</li><li>A digit (0 to 9).</li><li>An upper-case letter.</li><li>A lower-case letter.</li><li>A symbol, such as ! or #.</li></ul></div></div>
+<div class="facts"><button type="button" class="btn btn-primary">Reset password</button></div>
+</section>
+<p class="meta">The card is interactive (the admin page is), so the toggle here is the same markup driven by the page; its minlength="8" and "disabled until 8 characters" go, since the rule is 12 and the refusal names every rule.</p></div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div class="lab"><b>b · Ten characters, refused</b> (A.4.5)</div>
+<section class="detail-card"><h3>Reset password</h3>
+<p class="muted">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p>
+<div class="fld"><label for="r2">New password</label><div class="password-field"><input class="fc" id="r2" type="password" value="abcdefghij" aria-invalid="true" aria-describedby="r2m r2-rules r2-err"><button type="button" class="btn btn-outline password-toggle" aria-pressed="false" aria-controls="r2" aria-label="Show new password"><svg class="ico s" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div>
+<span id="r2m" class="vm"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>The new password does not meet the rules below.</span>
+<div id="r2-rules" class="password-rules">The new password needs: (the six rules, as in a)</div></div>
+<div id="r2-err" class="al ad fo" role="alert" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><div><strong>The password was not reset.</strong> The new password needs:<ul><li>At least 12 characters.</li><li>A digit (0 to 9).</li><li>An upper-case letter.</li><li>A symbol, such as ! or #.</li></ul></div></div>
+<div class="facts"><button type="button" class="btn btn-primary">Reset password</button></div>
+</section>
+<p class="meta">One heading everywhere, "The new password needs:", on Change password, register and this card alike; same order and sentences; the refusal names only the rules broken.</p></div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

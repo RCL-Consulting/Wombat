@@ -19,3 +19,5 @@ T339's design, kept beside its brief (`../02-sign-in-and-account.md`) so that it
   round 2 message drew nothing; a resend did.
 - **Round 2's review and the decisions** (2026-09-28): `round-2-review.md`. Four reviewers; accept with changes;
   corrections C1–C9; the operator accepted E1–E11 as recommended. **Round 3's ask:** `round-3-ask.txt`.
+- **Round 3** (2026-09-28, `round-3/`, canvas version `1790582802-44c1`): 41 boards on "R3 · Corrected". Checked item
+  by item (`round-3-check.md`): C1–C9 and E1–E11 all hold. **The design is final for step F.**
