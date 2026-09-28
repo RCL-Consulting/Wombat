@@ -38,8 +38,8 @@ FLOW 02 — Get in, be told plainly why when I cannot, and keep my own account r
 
 This is flow 02 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flow 01, the shell, is designed and built;
   these pages sit inside it (signed in) or on its anonymous card (signed out). Structure first, then fidelity: round 1
-  is wireframes only, and I confirm it before round 2. The brand mark is at <the /_blob/ URL>: use it, never a drawn
-  disc.
+  is wireframes only, and I confirm it before round 2. The brand mark is at /_blob/a6c690a50a59fa44f668ab96ac894576:
+  use it, never a drawn disc.
 
 GOAL: A person signs in, and is told clearly why when they are refused, throttled, locked out, or signed out by the
   system. Signed in, they correct their name and change their password, and see what their account is.
