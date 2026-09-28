@@ -34,7 +34,7 @@ answers, 14 P2s, and P3 polish.
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign:** flow 02 next, by BRIEF § 2.3 as § 11 corrects it (mark into the canvas first; a review round).
+- **The GUI redesign: T339, flow 02 (in progress). Model: Opus.** Follow BRIEF § 2.3 as § 11 corrects it: a new canvas, the mark first.
 
 ## Open questions
 

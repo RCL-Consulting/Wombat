@@ -30,12 +30,21 @@ want it to look at UX also, include mails and pdf and set up the pilot", and "ac
 - **Closed by the pilot:** T190, T321, T322, T330 and T331. "As built" notes are on T317, T328 and T329 (still open).
   Filed: T337 (the replay tool's gaps) and T338 (small leftovers).
 
-### For the operator
+### Next session: T339, flow 02 (sign-in and account). **Model: Opus.**
 
-- **Next: flow 02** (`design/flows/02-sign-in-and-account.md`), run by BRIEF § 2.3 as § 11 corrects it.
-  - First, copy the mark into its new canvas (pilot README step C).
-  - Restate the brief's ASK line.
-  - Then: structure, pick, fidelity, a review round, the build, the replay, and a design-system re-sync.
+- T339 is in progress, and its task file lists the whole loop. First, the session restates `design/flows/02-sign-in-and-account.md`'s
+  ASK line and checks its pages table (BRIEF § 2.4).
+- The operator then creates a **new** canvas from the main app's Design page, on the Wombat design system v4, and gives
+  its link. A new canvas, not the flow 01 one: that one holds the old design-system copy and is flow 01's record.
+- The session copies the mark into the canvas (asset `16c4e619b7ea0971d0c28ed6509be7a8`, `from_url` = the design
+  system) before round 1.
+- Reusable from T335:
+  - `design/pilot/build-lanes.md` (the lane rules);
+  - `design/pilot/review-lanes.md` (the reviewers' brief);
+  - `design/pilot/replay-workflow.js` (step G). Its Playwright install in the old job's scratch folder is gone; reinstall
+    in a new scratch folder with `npm install playwright@1.63` and `channel: 'chrome'`.
+
+### For the operator
 - **P2s before real users (14):** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T329, T333, T334.
 - **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now also carries T335's migration (the
   account's acting role).
@@ -61,7 +70,7 @@ want it to look at UX also, include mails and pdf and set up the pilot", and "ac
 - **A canvas does not copy the design system's logos.** Copy the mark into it first.
 - **Design-system publish order:** uploads first, then one publish of the changed `project/` files, then the index read
   again and sent last. A publish is refused until this session has read the artifact.
-- **No browser MCP is needed.** Playwright (library) with `channel: 'chrome'` in the job's tmp `pw/` works headless.
+- **No browser MCP is needed.** Use the Playwright library with `channel: 'chrome'`, installed in a scratch folder.
 - **Dev settings** send mail to `localhost:25` and links to `:5080`; `scenario-replay.ps1 start` overrides both.
 - **Downloads:** IDM takes them into `Downloads\Compressed`; check them in the page.
 - **From bash,** `… sql` needs a `.sql` file (quoted identifiers).
