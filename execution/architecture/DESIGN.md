@@ -2719,7 +2719,8 @@ the top; 32px, 16px at the sides, below 641px), padded 40px (24px below 641px), 
 the fields of its form: the card and its form are flex columns with a 16px gap, and no block carries a margin of its own.
 Its heading is the page's `<h1>`, 2rem (1.5rem below 641px); until T339 it was an `<h2>`. Below 641px every `.btn` and
 `.form-control` on it is 44px, an action row stacks with each button the row's width and the primary on top, the
-checkbox row is 44px, and "Forgotten your password?" (`.account-link`) a 44px target (E7). No text sits on the auth
+checkbox row is 44px, its label filling the row so the whole row is the target (the box itself 20px; 6735fa98, from
+the replay's A.7.12), and "Forgotten your password?" (`.account-link`) a 44px target (E7). No text sits on the auth
 ground outside the card: muted words on its blue corner are 4.13:1. The MSF respondent's `--wide` card keeps its own
 flow (T205): block layout, an `<h2>` a state, and its margins. `.account-purpose`, the purpose line under the lockup, and
 `.account-note`, a ruled-off condition, are muted on the surface (5.09:1); `.account-email` is an email in the card's

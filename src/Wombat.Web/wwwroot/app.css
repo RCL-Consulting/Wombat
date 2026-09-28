@@ -983,8 +983,8 @@ dl.form-group > dd {
   overflow-wrap: anywhere;
 }
 
-/* A result in a card or in the dialog keeps the 16px between its blocks: .alert's own 40px margin-bottom would stand
-   under it too. */
+/* A result in a card or in the dialog keeps the 16px between its blocks: .alert's own 24px margin-bottom would add
+   to the 16px gap under it. */
 .my-account-card .alert,
 .dialog-form .alert {
   margin: 0;
