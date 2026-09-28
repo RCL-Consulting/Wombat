@@ -6,19 +6,19 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **the redesign's pilot is done**: flow 01, the shell, is
-designed, built (`b347e11c`), replayed and in the design system (T335). Left: flows 02–20, the deploy, the College's
-answers, 14 P2s, and P3 polish.
+replayed journey catalogue with a screenshot baseline, and **two redesign flows are done**: flow 01, the shell (T335,
+`b347e11c`), and flow 02, sign-in and account (T339, `f50dffb2`), each designed, built, replayed and in the design
+system (version 7). Left: flows 03–20, the deploy, the College's answers, 15 P2s, and P3 polish.
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps playing all 80 page templates, last replayed whole
-  against `b347e11c` (T335 step G, `wombat_scenario_t335`); `coverage.md` indexes every role's jobs, `states.md` its
-  states; T294's test holds it to the routes. Baseline in gitignored `design/baseline/`.
+- **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps, all 80 page templates, last replayed whole against
+  `f50dffb2` (T339, `wombat_scenario_t339`: 246 with no gap); `coverage.md`, `states.md`; baseline in `design/baseline/`.
 - **Group 1 fixed before designing:** T297, T300 (D52), T302, T303, T307 (D51), each browser-verified on its act.
-- **Open: 67 queued (1 P1, 14 P2, 52 P3), 1 blocked.**
+- **Open: 70 queued (1 P1, 16 P2, 53 P3), 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
-  - **P2, before real users:** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T329, T333, T334.
+  - **P2, before real users:** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341;
+    and T342, flow 03.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
 - **Gated on the College or the operator:** T139, T170, T146, T152, T153, T171 (`knowledge/college-message-2026-09.md`).
 
@@ -34,7 +34,7 @@ answers, 14 P2s, and P3 polish.
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T339, flow 02 (in progress). Model: Opus.** Follow BRIEF § 2.3 as § 11 corrects it: a new canvas, the mark first.
+- **The GUI redesign: T342, flow 03 (queued). Model: Opus.** Its task lists the loop; flow 02's record is the template.
 
 ## Open questions
 
@@ -55,5 +55,6 @@ answers, 14 P2s, and P3 polish.
 
 ## Recent
 
-- **2026-09-27:** T335, the pilot: flow 01 designed, built (`b347e11c`), replayed, lessons in BRIEF § 11; T190, T321,
-  T322, T330, T331 closed by it. 2026-09-26: T292–T296, T332, group 1. Earlier: see `git log` and each "As built".
+- **2026-09-28:** T339, flow 02: three rounds, a four-sided review, built (`f50dffb2`), replayed, design system v7;
+  T340, T341, T342 filed.
+- **2026-09-27:** T335, flow 01 (`b347e11c`). 2026-09-26: T292–T296, T332, group 1. Earlier: `git log`, "As built".

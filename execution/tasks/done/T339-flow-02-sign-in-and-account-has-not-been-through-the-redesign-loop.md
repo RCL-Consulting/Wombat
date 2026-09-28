@@ -1,12 +1,13 @@
 ---
 id: T339
 title: Flow 02, sign-in and account, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-28
 started: 2026-09-28
+completed: 2026-09-28
 ---
 
 # T339 — Flow 02, sign-in and account, has not been through the redesign loop
