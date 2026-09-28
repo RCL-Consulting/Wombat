@@ -2,78 +2,60 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-09-26/27 (Opus): the redesign's pilot, flow 01, end to end
+## Session 2026-09-28 (Opus): flow 02, sign-in and account, end to end (T339, done)
 
-The operator asked whether Claude Design needs a workflow list (yes), then "do it all", then "restructure because I
-want it to look at UX also, include mails and pdf and set up the pilot", and "accept all" on round 2's decisions.
+The operator asked to tackle flow 02, then "proceed" through each step. T339 closed with all six checkboxes backed.
 
 ### Done
 
-- **Groundwork (2026-09-26):** the runbook became the journey catalogue (T292–T296), and the brief was written (T332,
-  `design/BRIEF.md`). Group 1 (T297, T300, T302, T303, T307) was fixed before designing.
-- **The pilot, T335, done:**
-  - **Design:** three structural variations; A picked, with C's breadcrumbs; round 2 reviewed from four sides; D1–D11
-    accepted; round 3 checked on 30 fixes. Canvas https://claude.ai/artifact/R86QvLEyyfKx98fT4MENcD; record in
-    `design/flows/01-shell/`. Decisions W-008 to W-011.
-  - **Build (`b347e11c`):**
-    - six lanes: tokens and type, the acting role (stored with the account), reconnect and the error bar, titles, the
-      shell, and Home with the failure pages;
-    - a four-sided review, then fixes;
-    - 8,226 tests green.
-  - **Replay:** the whole runbook on a fresh database (`wombat_scenario_t335`). 243 of 325 steps had no gap, and there
-    was no regression from flow 01. The other steps are open tasks already cited, one Expect corrected, and three not
-    played (T337).
-  - **Lessons:** BRIEF § 11 written; § 0, § 2.3, § 2.4, § 5.1 (the digest, in all 18 briefs) and § 9 corrected; flow
-    briefs' capture citations checked against the images.
-  - **The design system re-synced** to flow 01 and republished (`064cde00`; https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18
-    v4). The real mark is copied into the canvas.
-- **Closed by the pilot:** T190, T321, T322, T330 and T331. "As built" notes are on T317, T328 and T329 (still open).
-  Filed: T337 (the replay tool's gaps) and T338 (small leftovers).
+- **Brief restated** (`ca3b19ff`): structure-first ASK, one proposal (an F flow), new-shell key captures checked.
+- **Canvas** "Wombat 02" https://claude.ai/artifact/5BnSniM2QS8NouqWS6wsPB, mark copied in first.
+- **Rounds** (record: `design/flows/02-sign-in-and-account/`):
+  - R1 one structure; Q1–Q4 and T287 decided (institutions above the form; forgot = plain words, the emailed reset
+    filed as T340; one-press sign-out; My account lists and removes institutional sign-ins; one refusal for a lock).
+  - R2 at fidelity; four-sided review (`round-2-review.md`); E1–E11 accepted as recommended.
+  - R3 checked item by item (`round-3-check.md`).
+- **Build** (`f50dffb2`, pushed): waves — lane A words/endpoints and lane C My account in parallel, lane B password
+  pages after; a four-sided review; one fix pass (cross-site sign-out, a stranger's lockout, the Remove dialog's
+  focus, the details list, test gaps); runbook lane. 8,450 tests green. T341 filed from the review.
+- **Replay** (`6da0cdff`): the whole runbook on `wombat_scenario_t339`, 246 of 325 steps with no gap; the one flow 02
+  regression (Remember me at 390 px) fixed in `6735fa98`; the Account and sign-in states captured (63 rows).
+- **Design system** re-synced and republished as version 7 (`56628efb`, `e33b563b`; 4 components added, 4 icons).
+- **Lessons** in BRIEF § 11 "Flow 02" (`937fe19c`); § 2.3 now sends § 1 and § 8 as one message.
+- **Filed:** T340 (P3, emailed reset), T341 (P2, account outcomes in the address), T342 (P2, flow 03).
 
-### Next session: T339, flow 02 (sign-in and account). **Model: Opus.**
+### Next session: T342, flow 03 (a registrar asks for an assessment or logs one). **Model: Opus.**
 
-- **2026-09-28: step 1 done (`ca3b19ff`):** the brief is restated, and the upload set is staged (109 files in
-  `design/upload/`). Canvas "Wombat 02" https://claude.ai/artifact/5BnSniM2QS8NouqWS6wsPB, mark copied in (`ea1f316e`).
-  Rounds 1–2 reviewed and decided (`round-1-review.md`, `round-2-review.md`: E1–E11 accepted; T340 filed). Next: the
-  Round 3 checked and final. **Step F landed: `f50dffb2`** (lanes, four-sided review, one fix pass; 8,450 tests green;
-  T341 filed; worktrees removed, `t339*` branches kept). **Step G running** (workflow run `wf_a5af0dc3-294`, script
-  `design/flows/02-sign-in-and-account/replay-workflow.js`): `wombat_scenario_t339` on :5180, snapshots
-  `scenario-t339-post-act*`, Playwright in the session scratchpad. The static toggle was checked in a real browser first.
-  Then: design-system re-sync (step 8) and lessons (step 9).
-- Templates for the next flow: `design/pilot/*` (T335) and `design/flows/02-sign-in-and-account/{build-lanes,review-lanes}.md`,
-  `replay-workflow.js` (T339). Playwright: `npm install playwright@1.63` in a scratch folder, `channel: 'chrome'`.
+- Its task file lists the loop. Templates: flow 02's `build-lanes.md`, `review-lanes.md`, `replay-workflow.js`.
+- Flow 03 is marked W: round 1 asks for 2–3 structural variations. Send § 1 and § 8 together.
+- The operator creates a new canvas on the Wombat design system (version 7) and gives its link.
 
 ### For the operator
-- **P2s before real users (14):** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T329, T333, T334.
-- **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now also carries T335's migration (the
-  account's acting role).
-- **One slip:** a redaction command printed two of the previous replay's cast passwords into the session transcript.
-  They open only cast accounts in local scratch databases.
+
+- **P2s before real users (16):** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T342.
+- **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now also carries T339 (no migration).
+- **Slips, local only:** the act 1 replay agent printed two invitation tokens (already spent) and a grep of the tracked
+  dev-only DevUserSeeder passwords to the session console. Nothing reached a tracked file.
 
 ### Environment left
 
-- **The replay app on `:5180`**, holding the new story's end state: `wombat_scenario_t335`, built from `b347e11c`.
-  - Stop it with `tools/scenario-replay.ps1 stop 5180`.
-  - Its cast's passwords are in `pwd_DO_NOT_COMMIT.txt`, under "T335 step G replay".
-- **Snapshots:** `recovery/scenario-t335-post-act{1..6,A}.dump` (new), and the older `scenario-post-act*.dump`.
-- **Droppable scratch databases:** `wombat_scenario_t335_states_*`, `wombat_scenario_states*`, `_rc*` and `_t292`.
-- **The dev app on `:5080`** still runs the build from before 2026-09-26. Its next restart applies T307's and T335's
-  migrations.
-- **Branches:** the merged lanes `t335*` and the `t335` integration branch are kept locally. Their worktrees are
-  removed, except `.claude/worktrees/verify-master`.
+- **The replay app on `:5180`**: `wombat_scenario_t339`, built from `f50dffb2` (before `6735fa98`'s CSS). Stop it with
+  `tools/scenario-replay.ps1 stop 5180`. The cast's passwords are in the session scratchpad's `replay/g/replay-pw.env`
+  (gone when the scratchpad is cleared).
+- **Snapshots:** `recovery/scenario-t339-post-act{1..6,A}.dump` (new), and the T335 ones.
+- **Droppable scratch databases:** `wombat_scenario_t339_states_5184`, `_5184_2`, and the older `wombat_scenario_t335*`,
+  `wombat_scenario_states*`, `_rc*`, `_t292`.
+- **The dev app on `:5080`** still runs the build from before 2026-09-26; it locks `bin/x64/Release`, so run suites
+  from a throwaway worktree. Its next restart applies T307's and T335's migrations.
+- **Branches:** `t339*` lanes kept locally (squashed into `f50dffb2`); their worktrees are removed.
 
 ### Traps
 
-- **Replays rename captures.** A re-take must keep its file name. After a replay, run `check_baseline_paths.py`, then
-  check citations against the images: a path can exist and show something else (BRIEF § 11).
-- **A canvas does not copy the design system's logos.** Copy the mark into it first.
-- **Design-system publish order:** uploads first, then one publish of the changed `project/` files, then the index read
-  again and sent last. A publish is refused until this session has read the artifact.
-- **No browser MCP is needed.** Use the Playwright library with `channel: 'chrome'`, installed in a scratch folder.
-- **Dev settings** send mail to `localhost:25` and links to `:5080`; `scenario-replay.ps1 start` overrides both.
-- **Downloads:** IDM takes them into `Downloads\Compressed`; check them in the page.
-- **From bash,** `… sql` needs a `.sql` file (quoted identifiers).
-- **Task titles** over ~150 characters break Windows paths.
-- **Two test helpers** named `StyleSheet.cs` and `Stylesheet.cs` are one file on Windows. Lanes name shared helpers up
-  front.
+- **The canvas does not wait for a second message,** and a send can draw nothing: read `canvas.json`'s version after
+  each round.
+- **A design-system publish needs a fresh read of the artifact itself** (`read` with the url, no path) after any asset
+  upload; then the changed files; the index read again and sent last.
+- **Replays keep capture names**; still run `check_baseline_paths.py` and open the cited images.
+- **Task titles** over ~150 characters break Windows paths. **Two test helpers** named `StyleSheet.cs` and
+  `Stylesheet.cs` are one file on Windows.
 - **Earlier traps hold:** the audit pipeline commits a failed handler's staged rows (T201); merges are squashed per task.
