@@ -68,8 +68,12 @@ Run flow 01's loop, as BRIEF § 2.3 now describes it and § 11 corrected it:
 - [x] The canvas is created, with the mark copied in before round 1 — its link here. "Wombat 02", https://claude.ai/artifact/5BnSniM2QS8NouqWS6wsPB (2026-09-28); the mark copied as `/_blob/a6c690a50a59fa44f668ab96ac894576` (source asset `16c4e619…`, sha256 `db68eb6f…`), before round 1.
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/02-sign-in-and-account/`. Rounds 1–3 (2026-09-28): round 1 one structure, Q1–Q4 and T287 decided; round 2 at fidelity, reviewed from four sides (`round-2-review.md`), E1–E11 decided; round 3 checked item by item (`round-3-check.md`). T340 filed.
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 02) — the commit. `f50dffb2` (2026-09-28): three lanes, a four-sided review, two fix lanes and the runbook lane, squashed; Domain 791, Application 3400, Infrastructure 1010, Architecture 49, Web 2720, Integration 480, all green; build 0 warnings; `check_baseline_paths.py` missing 0. T341 filed from the review.
-- [ ] The whole runbook replays on a fresh database with no regression from flow 02, and the baseline is re-captured,
-  with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 02, and the baseline is re-captured,
+  with `check_baseline_paths.py` at `missing 0` — the Actual lines. `6da0cdff` (2026-09-28): `wombat_scenario_t339`
+  against `f50dffb2`, 246 of 325 steps with no gap, 81 gaps on open tasks already cited; the one flow 02 regression
+  (A.7.12, Remember me at 390 px) fixed in `6735fa98` and re-checked in Chrome; one new defect, not flow 02's, noted on
+  T328. The Account and sign-in states captured (63 rows, 76 files); `check_baseline_paths.py` missing 0; flow 02's key
+  captures opened and checked against their citations.
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
