@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in 390 SSO refused</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid #4a4a4a;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.pri{background:#2b2b2b;border-color:#2b2b2b;color:#fff;width:100%}
+.sso{justify-content:flex-start;white-space:normal;text-align:left;padding:8px 14px;width:100%}
+.fld{display:flex;flex-direction:column;gap:6px}
+.inp{height:44px;border:1px solid #6b6b6b;border-radius:6px;background:#fff;box-sizing:border-box;padding:0 12px;display:flex;align-items:center;color:#565656;flex-grow:1;min-width:0}
+.pw{display:flex;gap:8px;align-items:stretch}
+.al{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid #6b6b6b;border-left:8px solid #1c1c1c;border-radius:6px;background:#e0e0e0}
+.gl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.fo{outline:2px solid #1c1c1c;outline-offset:2px}
+.ic{display:inline-block;width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;opacity:.6;flex:none;box-sizing:border-box}
+.cb{width:20px;height:20px;border:1.5px solid #4a4a4a;border-radius:3px;flex:none;box-sizing:border-box}
+.div{display:flex;align-items:center;gap:10px;font-size:14px;color:#565656;text-align:center}
+.div span.l{flex-grow:1;height:1px;background:#b0b0b0;min-width:16px}
+.tag{position:absolute;top:6px;right:6px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#1c1c1c;color:#fff;padding:2px 6px;border-radius:4px}
+</style>
+</helmet>
+<div style="width:390px;height:1180px;box-sizing:border-box;background:#e9e9e9;position:relative;padding:40px 16px 16px">
+<span class="tag">Q1 A · refused · 390 · scrolls</span>
+<div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:12px"><img src="/_blob/a6c690a50a59fa44f668ab96ac894576" alt="" style="width:56px;height:56px"><span style="font-size:32px;font-weight:700">Wombat</span></div>
+<p class="mut">Work-based assessment for specialist training.</p>
+<h1 style="font-size:28px">Sign in</h1>
+<div class="al fo" role="alert" tabindex="-1"><span class="gl">!</span><span>Invalid email or password. If your institution signs you in, use its sign-in button below.</span></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<a href="#" class="btn sso"><span class="ic"></span>Sign in with [Institution name]</a>
+<a href="#" class="btn sso"><span class="ic"></span>Sign in with [Institution name]</a>
+<a href="#" class="btn sso"><span class="ic"></span>Sign in with [An institution name of about forty characters]</a>
+</div>
+<div class="div"><span class="l"></span>or sign in with your email and password<span class="l"></span></div>
+<form style="display:flex;flex-direction:column;gap:16px" method="post" action="#">
+<div class="fld"><label for="e">Email</label><span id="e" class="inp">&#8203;</span></div>
+<div class="fld"><label for="p">Password</label><div class="pw"><span id="p" class="inp">&#8203;</span><button type="button" class="btn" aria-pressed="false" aria-label="Show password"><span class="ic"></span>Show</button></div></div>
+<label style="display:flex;gap:12px;align-items:center;min-height:44px"><span class="cb"></span>Remember me</label>
+<button type="button" class="btn pri">Sign in</button>
+</form>
+<a href="#" style="min-height:44px;display:flex;align-items:center">Forgotten your password?</a>
+</div>
+<p class="mut" style="font-size:12px;margin-top:12px">Focus on the refusal; the page scrolls to it on load. A 40-character institution name wraps inside its button. Tab "Error: Sign in · Wombat".</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

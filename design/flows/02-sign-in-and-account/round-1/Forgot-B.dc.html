@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forgotten password option B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.sm{font-size:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:0 12px;border:1px solid #4a4a4a;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.pri{background:#2b2b2b;border-color:#2b2b2b;color:#fff}
+.fld{display:flex;flex-direction:column;gap:4px}
+.inp{height:34px;border:1px solid #6b6b6b;border-radius:6px;background:#fff;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;color:#565656;flex-grow:1;min-width:0}
+.pw{display:flex;gap:6px}
+.al{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid #6b6b6b;border-left:4px solid #6b6b6b;border-radius:6px;background:#f5f5f5}
+.gl{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid #1c1c1c;font-size:11px;font-weight:700;flex:none;box-sizing:border-box}
+.ic{display:inline-block;width:14px;height:14px;border:1.5px solid currentColor;border-radius:3px;opacity:.6;flex:none;box-sizing:border-box}
+.ar{font-size:22px;color:#565656;align-self:center}
+.tag{position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#1c1c1c;color:#fff;padding:3px 8px;border-radius:4px}
+ul.r{padding-left:16px;font-size:12px;color:#3a3a3a}
+</style>
+</helmet>
+<div style="width:1280px;height:900px;box-sizing:border-box;padding:40px;background:#e2e2e2;position:relative;display:flex;flex-direction:column;gap:20px">
+<span class="tag">Q2 · Option B · not built · static</span>
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 style="font-size:22px">Reset by emailed link: four screens, then Sign in</h2>
+<p class="mut" style="max-width:1000px">Needs, before it can ship: the PasswordResetEmail sent (flow 19), a single-use token with an expiry, the throttle on the request, and the audit log. The request page answers the same for every address (T287, T156), so it never says whether an account exists. An institutional-only account gets the same email-less answer. Wireframed so the choice is concrete; recommended as its own task with flow 19.</p>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1fr);gap:8px;align-items:start">
+
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<span class="sm mut">1 · /account/forgot-password</span>
+<h1 style="font-size:20px">Reset your password</h1>
+<p>Enter the email you sign in with. If it has a Wombat password, we will email it a link to choose a new one.</p>
+<form method="post" action="#" style="display:flex;flex-direction:column;gap:12px"><div class="fld"><label>Email</label><span class="inp">&#8203;</span></div>
+<span class="btn pri">Send reset link</span></form>
+<a href="#" class="sm">Back to sign in</a>
+</div>
+<span class="ar">→</span>
+
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<span class="sm mut">2 · the same page, after the post</span>
+<h1 style="font-size:20px">Check your email</h1>
+<div class="al" role="status"><span class="gl">i</span><span>If an account with a Wombat password uses [the address typed], it will receive a link in the next few minutes. The link works once, for [N] minutes.</span></div>
+<p class="sm mut">No email? Check the address, or ask your institution's Wombat administrator.</p>
+<a href="#" class="btn">Back to sign in</a>
+</div>
+<span class="ar">→</span>
+
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<span class="sm mut">3 · /account/reset-password?token=… (from the email)</span>
+<h1 style="font-size:20px">Choose a new password</h1>
+<div class="fld"><label>New password</label><div class="pw"><span class="inp">&#8203;</span><span class="btn"><span class="ic"></span>Show</span></div><ul class="r"><li>at least 12 characters</li><li>upper- and lower-case letters</li><li>a digit, a symbol</li></ul></div>
+<div class="fld"><label>Confirm new password</label><div class="pw"><span class="inp">&#8203;</span><span class="btn"><span class="ic"></span>Show</span></div></div>
+<span class="btn pri">Set password</span>
+<p class="sm mut">Refusals as Change password's, in the card above the button.</p>
+</div>
+<span class="ar">→</span>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<span class="sm mut">4 · Sign in, with a notice</span>
+<h1 style="font-size:20px">Sign in</h1>
+<div class="al" role="status"><span class="gl">i</span><span>Your password was reset. Sign in with your new password.</span></div>
+<div class="fld"><label>Email</label><span class="inp">&#8203;</span></div>
+</div>
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px;border-style:dashed">
+<span class="sm mut">3′ · the link used or expired</span>
+<h1 style="font-size:20px">Reset link expired</h1>
+<p>This link has expired or has already been used.</p>
+<a href="#" class="btn">Ask for a new link</a>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

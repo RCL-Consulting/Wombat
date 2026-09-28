@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign out 390</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid #4a4a4a;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap;width:100%}
+.pri{background:#2b2b2b;border-color:#2b2b2b;color:#fff}
+.ic{display:inline-block;width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;opacity:.6;flex:none;box-sizing:border-box}
+.tag{position:absolute;top:6px;right:6px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#1c1c1c;color:#fff;padding:2px 6px;border-radius:4px}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#e9e9e9;position:relative;padding:40px 16px 16px">
+<span class="tag">Static · 390</span>
+<div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+<h1 style="font-size:28px">Sign out</h1>
+<p>You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends your session in this browser.</p>
+<form method="post" action="#" style="display:flex;flex-direction:column;gap:12px">
+<button type="button" class="btn pri"><span class="ic"></span>Sign out</button>
+<a href="#" class="btn">Cancel</a>
+</form>
+</div>
+<p style="font-size:12px;color:#565656;margin-top:12px">On a phone the buttons stack, full width and 44 px, the one that ends the session first.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

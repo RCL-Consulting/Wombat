@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in notes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;color:#1c1c1c}
+h1,h2,h3,p,ul{margin:0}
+.mut{color:#565656}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.n{display:flex;gap:10px;align-items:flex-start}
+</style>
+</helmet>
+<div style="width:560px;height:1400px;box-sizing:border-box;padding:32px;background:#fff;border:1px solid #b0b0b0;display:flex;flex-direction:column;gap:14px">
+<h2 style="font-size:20px">Pages 1–2 · Sign in</h2>
+<p class="mut">Static: no circuit, no live validation. The page's words come from the code in the address.</p>
+<div class="n"><span class="k">1</span><p>The lockup: the mark at 56 px and the wordmark. Unchanged.</p></div>
+<div class="n"><span class="k">2</span><p>The purpose line (Q1): one sentence, no College or institution name.</p></div>
+<div class="n"><span class="k">3</span><p>One message slot, under the h1 and above everything the person acts on. A refusal (danger, role="alert", takes the focus) or a notice (info, role="status", the focus stays on Email). Never both, never stacked. It grows with its sentence.</p></div>
+<div class="n"><span class="k">4</span><p>The password toggle is a button beside the field, not drawn inside it: it can be 44 px on a phone, and it leaves the field's right edge to password managers, which put their own icons there. Visible "Show" with the eye icon; accessible name "Show password"; aria-pressed; aria-controls="password". It is rendered hidden and shown and wired by wombat.js (data-password-toggle, no inline onclick), so with scripts blocked there is no dead button. Pressed, it draws its pressed state and the icon turns to eye-off; the words stay "Show", so the name keeps its visible label.</p></div>
+<div class="n"><span class="k">5</span><p>Sign in posts the form to /account/login/submit with its antiforgery token and the returnUrl in a hidden field. Right-aligned on desktop, full width on a phone.</p></div>
+<div class="n"><span class="k">6</span><p>"Forgotten your password?" leads to page 6. One link, no "Reset it": nothing is reset there (Q2 A).</p></div>
+<div class="n"><span class="k">7</span><p>SSO (page 2): one link per configured provider, to /account/sso-challenge/{providerKey}, named "Sign in with" and the provider's display name, the building-2 icon. Full width, 44 px, wraps a long name. No provider, no block: A.3.2's page is the plain form.</p></div>
+<div class="n"><span class="k">8</span><p>The divider's words say what the form is for. In option A: "or sign in with your email and password"; in B, "or".</p></div>
+<h3 style="font-size:16px;margin-top:8px">Focus on arrival</h3>
+<p>Blank: Email (autofocus, as today). A refusal: the refusal. A notice: Email, which names the notice. The tab is "Sign in · Wombat", and "Error: Sign in · Wombat" after a refusal only.</p>
+<h3 style="font-size:16px;margin-top:8px">What the person keeps</h3>
+<p>After a refusal both fields are empty: the redirect carries only the code, never the address typed (it would sit in logs and history). Signing in after "session ended" returns to the page the tab was on; after a typed address, to that address (A.4.7). The returnUrl (a local path only) rides in a hidden field and on every redirect back to this page, refusals included, so a refusal between notice and success does not lose it (A.4.3: session ended, old password refused, new password, back to her inbox). Reached from a protected address, the page shows no message: it is the blank state.</p>
+<h3 style="font-size:16px;margin-top:8px">Not on this page</h3>
+<p>No College or institution name, no "Register" (registration starts from an invitation link, F11), no language or theme switch.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":1400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

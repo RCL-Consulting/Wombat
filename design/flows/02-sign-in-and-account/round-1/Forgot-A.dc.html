@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forgotten password option A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.5;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul,ol{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border:1px solid #4a4a4a;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.tag{position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#1c1c1c;color:#fff;padding:3px 8px;border-radius:4px}
+.ic{display:inline-block;width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;opacity:.6;flex:none;box-sizing:border-box}
+.hr{height:1px;background:#d0d0d0}
+.sso{border:1.5px dashed #9a9a9a;border-radius:6px;padding:10px 12px}
+</style>
+</helmet>
+<div style="width:1280px;height:800px;box-sizing:border-box;background:#e9e9e9;position:relative;display:flex;justify-content:center;padding-top:120px">
+<span class="tag">Q2 · Option A (recommended) · static · /account/forgot-password · 1280</span>
+<div class="card" style="width:560px;align-self:flex-start;padding:40px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:8px;align-items:center"><h1 style="font-size:30px">Forgotten password</h1><span class="k" style="margin-left:auto">1</span></div>
+<p>An administrator at your institution can set a new password for you.</p>
+<div style="display:flex;gap:8px;align-items:flex-start"><ol style="padding-left:20px;display:flex;flex-direction:column;gap:6px"><li>Ask your institution's Wombat administrator for a new password. They give it to you themselves; Wombat does not email it.</li><li>Sign in with it.</li><li>Choose your own password under My account, Change password.</li></ol><span class="k">2</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start"><p class="sso">If your institution signs you in, use its button on the sign-in page. Your institution resets that password, not Wombat.</p><span class="k">3</span></div>
+<div class="hr"></div>
+<div style="display:flex;justify-content:flex-end;gap:8px;align-items:center"><span class="k">4</span><a href="#" class="btn"><span class="ic"></span>Back to sign in</a></div>
+</div>
+<div style="position:absolute;left:24px;right:24px;bottom:20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;font-size:12px;color:#3a3a3a;border-top:1px solid #b0b0b0;padding-top:10px">
+<div><strong>1</strong> · h1 and tab "Forgotten password"; the sign-in link keeps "Forgotten your password?". No "Reset" in the name: nothing is reset here.</div>
+<div><strong>2</strong> · What happens today (A.4.5, A.4.6), as three steps. Names no person: the page cannot know the visitor's institution. Nothing promises a feature that is not built (B10).</div>
+<div><strong>3</strong> · Only where a provider is configured. Dashed: conditional.</div>
+<div><strong>4</strong> · One link back. No field, no post, no email sent. Focus starts at the top. The route stays, so option B can take its place.</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

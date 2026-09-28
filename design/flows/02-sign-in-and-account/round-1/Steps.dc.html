@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 02 round 1 steps check</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.cap{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#565656}
+.chip{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid #1c1c1c;border-radius:999px;padding:0 6px;white-space:nowrap}
+.chip.s{background:#1c1c1c;color:#fff}
+table.t{border-collapse:collapse;width:100%}
+.t th,.t td{text-align:left;padding:6px 10px;border-bottom:1px solid #d6d6d6;vertical-align:top;font-size:13px}
+.t th{background:#e6e6e6;font-weight:700}
+.t td:first-child{font-weight:700;white-space:nowrap}
+.n{text-align:center;font-weight:700}
+ul.b{padding-left:18px;display:flex;flex-direction:column;gap:4px}
+</style>
+</helmet>
+<div style="width:1280px;height:2600px;box-sizing:border-box;padding:48px;background:#f0f0f0;display:flex;flex-direction:column;gap:32px">
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<div class="cap">Flow 02 · Round 1 · checked against the 19 runbook steps</div>
+<h1 style="font-size:28px">Each step walked through the boards</h1>
+<p class="mut" style="max-width:960px"><span class="chip s">covered</span> the route, order and outcome are on the boards as the step needs them. <span class="chip">departs</span> the step holds, but a quoted sentence, a field or where the step ends differs from today's page; the step's Expect would be updated in the build task. <span class="chip">corrected</span> the boards did not cover it, and were changed in this pass. The Expects quote today's pages, which the proposal is free to change.</p>
+</div>
+
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:60px">Step</th><th style="width:260px">Route in the proposal</th><th style="width:230px">Boards</th><th>Outcome in the proposal · departures from today's words</th></tr></thead>
+<tbody>
+<tr><td>1.1</td><td>/account/login → /</td><td>1 · blank; Main journey "Sign in"</td><td><span class="chip s">covered</span> Password sign-in, one submit, Home (flow 01). An Administrator never gets an institution button to use: "An administrator account signs in with its password".</td></tr>
+<tr><td>2.8</td><td>… → / → Sign out (post /account/logout) → /account/login</td><td>1 · slots c; 3 · notes; Main "Sign out"</td><td><span class="chip">departs</span> Signing out lands on Sign in as today, now with the notice "You have signed out." (NEW, info). Registration itself is flow 11's.</td></tr>
+<tr><td>2.31</td><td>/ → /account/session-ended → /account/login → /</td><td>1 · slots b; Main "Signed out by the system"</td><td><span class="chip">departs</span> Same words; the notice is info, not danger, and the focus is on Email. Signing in returns to the page the tab was on (Home), now her Trainee Home.</td></tr>
+<tr><td>2.41</td><td>/account/profile → /account/profile/submit → /account/profile</td><td>4 · loaded, 390, states e</td><td><span class="chip">departs</span> Subtitle "Your name, your roles, and how you sign in." (today "Update your name and review your assigned roles."). The email is text in the Account card, not a disabled field. Roles by label. Change password sits in "How you sign in", not the summary. "Name saved." for "Profile saved.", in the Your name card, taking the focus; the top bar reads "Fatima Khumalo".</td></tr>
+<tr><td>A.3.2</td><td>/account/login → /account/sso-challenge/kgk → /account/login</td><td>1 · blank, slots a and e</td><td><span class="chip s">covered</span> No provider: no divider, no button; the purpose line is text, not an offer. "Invalid email or password." with no institutional pointer. "Unknown SSO provider." in the slot (round 2 may propose plainer words).</td></tr>
+<tr><td>A.3.3</td><td>/account/sso-callback → /account/login; /account/link-external</td><td>1 · slots e; 7 · states a, 390</td><td><span class="chip">departs</span> Same sentences. The link page's expired state gets its own h1 and tab, "Institutional sign-in expired", Back to sign in, no field.</td></tr>
+<tr><td>A.4.1</td><td>/ → /account/profile → submit ×3 → /account/profile</td><td>4 · states d, refused, states e</td><td><span class="chip">departs</span> Name underlined, nothing lit: as today. Blank: the browser's check, nothing sent. Space: "Your name was not saved. Enter your last name." (today "Enter your first name and your last name."); only Last name is marked, names the refusal and comes back empty, where today both fields name it and show the stored name. "Error: My account · Wombat". Restored: "Name saved.", focus on it, top bar "Sarah Botha".</td></tr>
+<tr><td>A.4.2</td><td>/account/profile → /account/change-password → submit ×4 → /account/profile</td><td>5 · states a, b; rules; 4 · states f</td><td><span class="chip">departs</span> (a) (b) same words, in the card above its buttons, the field concerned marked (today every field names the refusal). (c) "Your password was not changed. The new password needs:" and four short sentences: 12 characters, a digit, an upper-case letter, a symbol; lower-case not named. (d) Ends on My account, not on Change password: "Password updated." under the header; she stays signed in.</td></tr>
+<tr><td>A.4.3</td><td>/activities/inbox → /account/session-ended → /account/login (refused) → /account/login → /activities/inbox</td><td>1 · slots b then a; 1–2 · notes</td><td><span class="chip">corrected</span> The notice, then the refusal in its place (one slot). The boards did not say that the returnUrl survives a refused post, which this step needs to end on her inbox: now stated on the notes board and in Main's journey.</td></tr>
+<tr><td>A.4.4</td><td>/account/login → /account/forgot-password → /account/login</td><td>6 · A, A 390</td><td><span class="chip">departs</span> The link reads "Forgotten your password?" (no "Reset it"). The page is "Forgotten password", with three steps (ask your institution's administrator, sign in, choose your own) in place of the stub's words, and Back to sign in. Still no field, no email (Q2 option A).</td></tr>
+<tr><td>A.4.5</td><td>/admin/users/{UserId}</td><td>none (F12's page)</td><td><span class="chip s">covered</span> Out of this flow. The forgot page's words match it: an administrator sets the password and gives it to him; Wombat does not email it.</td></tr>
+<tr><td>A.4.6</td><td>/account/login → / → /account/profile → /account/change-password → /account/profile</td><td>5 · 390; 4 · states f</td><td><span class="chip">departs</span> As A.4.2 (d): ends on My account with "Password updated."</td></tr>
+<tr><td>A.4.7</td><td>/account/logout-confirm → / → /account/logout-confirm → post /account/logout → /account/login → /msf/campaigns → /account/login → /msf/campaigns</td><td>3 · 1280, 390, notes; 1 · slots c</td><td><span class="chip">corrected</span> The page, with no nav, names who is signed in and says what Sign out does; Cancel with no returnUrl goes to Home (his dashboard); Sign out lands on Sign in with "You have signed out.". The boards stopped there: Main's "Sign out" journey now carries on to the typed /msf/campaigns, the plain sign-in page with its returnUrl, and back to MSF campaigns. The page's words depart from "use the button below to end the current session".</td></tr>
+<tr><td>A.6.5</td><td>/account/session-ended → /account/login (refused)</td><td>1 · slots b, d</td><td><span class="chip">corrected</span> Main's "Signed out by the system" journey ended only in success; it now branches to a refusal (A.6.5, A.1.13). <span class="chip">departs</span> Recommended for T287: "Invalid email or password.", not "Too many failed sign-in attempts. Please try again later or reset your password." Either way, the same slot.</td></tr>
+<tr><td>A.6.8</td><td>/account/login → /</td><td>1 · blank</td><td><span class="chip s">covered</span> One submit, his Assessor Home (flow 01 and the inbox flow).</td></tr>
+<tr><td>A.1.13</td><td>/account/session-ended → /account/login (refused)</td><td>1 · slots b, a</td><td><span class="chip s">covered</span> "Invalid email or password.", no mention of erasure, as an unknown address. The notice is info.</td></tr>
+<tr><td>A.7.12</td><td>/account/login, /account/forgot-password at 390</td><td>1 · 390; 6 · A 390</td><td><span class="chip s">covered</span> Both cards fit with a 16 px gutter; every field, button and link 44 px, Sign in full width. /portfolio/verify is not this flow.</td></tr>
+<tr><td>A.7.14</td><td>/account/login; /account/profile save unchanged; /account/change-password mismatch</td><td>1 · blank; 4 · states e; 5 · states b</td><td><span class="chip">departs</span> Checked in round 2 on the tokens. Saving an unchanged name still posts and shows "Name saved." (today "Profile saved."); the mismatch refusal checks no password and changes nothing.</td></tr>
+<tr><td>5.19</td><td>/portfolio/progress → /account/session-ended → /account/login</td><td>1 · slots b</td><td><span class="chip">departs</span> Same words, info kind. Signing in again returns her to the address the tab held, where her record page shows as flow 13 designs it.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">Journey step counts, today and proposed</h2>
+<p class="mut" style="max-width:960px">A step is one thing the person does: a press, a followed link, or a submitted form (typing inside a form is part of its submit). Waits and system redirects are not steps. Today is flow 01's shell as built (T335).</p>
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:170px">Journey</th><th style="width:70px">Today</th><th style="width:80px">Proposed</th><th>What changes</th></tr></thead>
+<tbody>
+<tr><td>Sign in</td><td class="n">1</td><td class="n">1</td><td>Sign in. With SSO configured (option A), one press on the institution's button, plus the institution's own page. The Show toggle now works.</td></tr>
+<tr><td>Refused, then in</td><td class="n">2</td><td class="n">2</td><td>Two submits. The refusal now takes the focus; the returnUrl survives the refusal.</td></tr>
+<tr><td>Signed out by the system</td><td class="n">1</td><td class="n">1</td><td>One submit after the automatic move to Sign in. The notice is info and leaves the focus on Email, so it is one Tab fewer before typing.</td></tr>
+<tr><td>Forgotten password (A.4.4–A.4.6)</td><td class="n">6</td><td class="n">6 (A) · 5 (B)</td><td>Today and A: the link, Back to sign in, then (after the administrator) sign in, the name, Change password, submit. Today it ends on a blank Change password form; A ends on My account, and the forgot page says what to do instead of "not wired yet". B: the link, send, the emailed link, set password, sign in, with no administrator and no wait.</td></tr>
+<tr><td>Change your name</td><td class="n">2</td><td class="n">2</td><td>The name in the top bar, Save. A refusal names the field.</td></tr>
+<tr><td>Change password</td><td class="n">3</td><td class="n">3</td><td>The name, Change password, submit; +1 for each refusal (A.4.2 takes 6 in both). The rules are shown before typing, so (c) should happen less. It ends on My account.</td></tr>
+<tr><td>Sign out</td><td class="n">1</td><td class="n">1 (A) · 2 (B)</td><td>A: the top bar's Sign out, as flow 01 built it, now with "You have signed out.". A typed GET /account/logout: today a 405 and no way on; proposed, 1 press on the page. B would be two presses every time.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">Changed on the boards in this pass</h2>
+<div class="card" style="padding:16px">
+<ul class="b">
+<li><strong>Main · Signed out by the system:</strong> now ends in either of two ways, back to the page it was on, or a refusal in the notice's place (A.6.5, A.1.13).</li>
+<li><strong>Main · Sign out:</strong> now carries on after signing out: a typed address, the plain Sign in with its returnUrl, and back to that page (A.4.7).</li>
+<li><strong>Main · Refused:</strong> the returnUrl survives the refused post (A.4.3).</li>
+<li><strong>1–2 · Notes:</strong> the returnUrl travels with every refusal redirect, and Sign in reached from a protected address shows no message: the blank state, with the returnUrl in a hidden field.</li>
+<li><strong>This board</strong>, added beside Spec.</li>
+</ul>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2600}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

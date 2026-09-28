@@ -34,7 +34,7 @@ want it to look at UX also, include mails and pdf and set up the pilot", and "ac
 
 - **2026-09-28: step 1 done (`ca3b19ff`):** the brief is restated, and the upload set is staged (109 files in
   `design/upload/`). Canvas "Wombat 02" https://claude.ai/artifact/5BnSniM2QS8NouqWS6wsPB, mark copied in (`ea1f316e`).
-  Next: the operator pastes § 1 and § 8; the session records round 1 in `design/flows/02-sign-in-and-account/`.
+  Round 1 reviewed and decided (`round-1-review.md`; T340 filed). Next: the operator sends `round-2-ask.txt`; review round 2.
 - Reusable from T335:
   - `design/pilot/build-lanes.md` (the lane rules);
   - `design/pilot/review-lanes.md` (the reviewers' brief);

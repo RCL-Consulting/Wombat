@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 02 round 1 spec</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.cap{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#565656}
+.chip{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid #1c1c1c;border-radius:999px;padding:0 6px;white-space:nowrap}
+.chip.s{background:#1c1c1c;color:#fff}
+table.t{border-collapse:collapse;width:100%}
+.t th,.t td{text-align:left;padding:6px 10px;border-bottom:1px solid #d6d6d6;vertical-align:top;font-size:13px}
+.t th{background:#e6e6e6;font-weight:700}
+.t td.g{background:#f5f5f5;font-weight:700}
+ul.b{padding-left:18px;display:flex;flex-direction:column;gap:4px}
+</style>
+</helmet>
+<div style="width:1280px;height:2900px;box-sizing:border-box;padding:48px;background:#f0f0f0;display:flex;flex-direction:column;gap:32px">
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<div class="cap">Flow 02 · Round 1 · the rules behind the wireframes</div>
+<h1 style="font-size:28px">Every message: its kind, its slot, and where the focus lands</h1>
+<p class="mut" style="max-width:940px">Words are today's (from SignInMessages, SignInOutcome, ChangePasswordOutcome, ProfileOutcome, LinkExternalOutcome, ExternalLoginRefusal) except where the row says "proposed". Each page turns a code from the address into one of these sentences, never text from the address. A refusal is danger (role="alert"); a notice is info (role="status"); a success is success.</p>
+</div>
+
+<div class="card" style="overflow:hidden">
+<table class="t">
+<thead><tr><th style="width:150px">Page · code</th><th>Words</th><th style="width:80px">Kind</th><th style="width:330px">Slot · focus · tab title</th></tr></thead>
+<tbody>
+<tr><td class="g" colspan="4">Sign in (static). One slot, under the h1, above the SSO block and the form.</td></tr>
+<tr><td>InvalidCredentials</td><td>"Invalid email or password." With SSO offered: "… If your institution signs you in, use its sign-in button below."</td><td><span class="chip s">danger</span></td><td>The refusal takes the focus (tabindex -1, autofocus); both fields name it (aria-describedby). "Error: Sign in · Wombat".</td></tr>
+<tr><td>TooManyAttempts</td><td>"Too many failed sign-in attempts from this network. Please wait a few minutes and try again."</td><td><span class="chip s">danger</span></td><td>As above.</td></tr>
+<tr><td>LockedOut (T287)</td><td>Today "Too many failed sign-in attempts. Please try again later or reset your password." Recommended: the InvalidCredentials words, the lockout explained by email (flow 19). If a lockout sentence stays, drop "or reset your password" (nothing resets it): "… Please try again later, or ask your administrator."</td><td><span class="chip s">danger</span></td><td>As above. The slot is the same either way.</td></tr>
+<tr><td>FieldsMissing</td><td>"Email and password are required." Proposed (T324, fields by label): "Enter your email and your password." Both fields are required, so the browser stops this first; the code is the fallback.</td><td><span class="chip s">danger</span></td><td>As above.</td></tr>
+<tr><td>External unavailable · expired · unknown provider · general</td><td>"External login information was not available." · "External login session expired. Please try again." · "Unknown SSO provider." · "Sign-in could not be completed. Please try again." Round 2 proposes plainer words for the first three ("external login", "SSO provider" are the framework's).</td><td><span class="chip s">danger</span></td><td>As above.</td></tr>
+<tr><td>The twelve Sso… refusals</td><td>From 4 words ("Linking failed.") to 38 (SsoEmailNotVerified: "Your institution's sign-in did not confirm your email address, so Wombat cannot use it to find your account or create one. Sign in with your password if you have one, or ask your administrator for an invitation."). SsoAccountLocked ("This account is locked. Contact your administrator.") tells a locked account apart: T287 applies to it too.</td><td><span class="chip s">danger</span></td><td>As above. The slot wraps to any length; board 1 · slot f shows the 38 words.</td></tr>
+<tr><td>SessionEnded</td><td>"Your session has ended. Please sign in again."</td><td><span class="chip">info</span></td><td>Not a refusal: nothing the person did. Focus on Email, which names the notice (aria-describedby), so a screen reader hears it with the field. Tab "Sign in · Wombat", no "Error:".</td></tr>
+<tr><td>PasswordChanged</td><td>"Your password was changed. Please sign in with your new password."</td><td><span class="chip">info</span></td><td>As SessionEnded.</td></tr>
+<tr><td>SignedOut (NEW)</td><td>"You have signed out." After the top bar's Sign out and the Sign out page's.</td><td><span class="chip">info</span></td><td>As SessionEnded.</td></tr>
+<tr><td class="g" colspan="4">My account (interactive; the form posts). Results in the Your name card, above its action row (flow 01's outcome rule).</td></tr>
+<tr><td>saved</td><td>"Profile saved." Proposed "Name saved.", with the button "Save name": the form holds only the name.</td><td><span class="chip">success</span></td><td>The result takes the focus as the page loads.</td></tr>
+<tr><td>NameMissing</td><td>"Enter your first name and your last name." Proposed: split into FirstNameMissing / LastNameMissing, "Enter your first name." / "Enter your last name.", so the field is marked and named by its label (T324). The named field comes back empty; the other shows the stored name.</td><td><span class="chip s">danger</span></td><td>Focus on the refusal; the field is marked (border + stripe + message) and names it. "Error: My account · Wombat".</td></tr>
+<tr><td>NameTooLong · Failed</td><td>Today's words for NameTooLong; "Your name could not be saved. Please try again."</td><td><span class="chip s">danger</span></td><td>As above.</td></tr>
+<tr><td>(browser)</td><td>A blank name: the browser's own required check on the field. Nothing is sent.</td><td>—</td><td>The browser focuses the field.</td></tr>
+<tr><td>password-updated (NEW)</td><td>"Password updated.", arriving from Change password.</td><td><span class="chip">success</span></td><td>Under My account's header (a result from another page). Focus on it.</td></tr>
+<tr><td>loading · load error</td><td>StatePanel: loading (Skeleton in each card); error "Could not load your account. Nothing has changed. Try again, or come back in a few minutes." with Try again (Home's pattern; T329).</td><td>— · <span class="chip s">danger</span></td><td>The error takes the place of the cards; no form under it.</td></tr>
+<tr><td class="g" colspan="4">Change password. The refusal in the card, above its action row; fields come back empty.</td></tr>
+<tr><td>Incorrect · Mismatch</td><td>"Incorrect password." (Current password marked) · "The password confirmation does not match." (Confirm new password marked)</td><td><span class="chip s">danger</span></td><td>Focus on the refusal; the marked field names it. "Error: Change password · Wombat".</td></tr>
+<tr><td>Rules</td><td>Proposed: "Your password was not changed. The new password needs:" then one short sentence per rule broken: "At least 12 characters." "A digit (0 to 9)." "An upper-case letter." "A lower-case letter." "A symbol, such as ! or #." New password is marked.</td><td><span class="chip s">danger</span></td><td>As above. The same five rules are listed under New password before anyone types.</td></tr>
+<tr><td>FieldsMissing · LockedOut · TooManyAttempts · Failed</td><td>"Enter your current password, a new password, and the new password again to confirm it." · "Too many incorrect passwords, so the account is locked for a few minutes. Please try again later." · "Too many attempts from this network. Please wait a few minutes and try again." · "The password could not be changed. Please try again."</td><td><span class="chip s">danger</span></td><td>As above.</td></tr>
+<tr><td>InstitutionalSignIn</td><td>"This account signs in through your institution, so it has no password to change here."</td><td><span class="chip">info</span></td><td>Not a refusal: the page shows this in place of the form, with Back to My account. My account never links here for such an account (T286).</td></tr>
+<tr><td class="g" colspan="4">Link your institutional sign-in (static). The slot above the Password field.</td></tr>
+<tr><td>PasswordRequired · LinkRefused · LinkLockedOut · LinkFailed · general</td><td>"Your password is required." · "The account could not be linked. Check your password and try again." · "Too many failed attempts. Please try again later or reset your password." (T287 as sign-in) · "Linking failed." · "The account could not be linked. Please try again."</td><td><span class="chip s">danger</span></td><td>Focus on the refusal; Password names it. "Error: Link your institutional sign-in · Wombat".</td></tr>
+<tr><td>Expired</td><td>"Your institutional sign-in has expired. Start again from the sign-in page."</td><td>—</td><td>Its own state: h1 "Institutional sign-in expired", tab the same, Back to sign in, no field.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">What the proposal changes in DESIGN.md</h2>
+<div class="card" style="padding:16px">
+<ul class="b">
+<li><strong>§ Account / auth page:</strong> "session ended … in its danger Alert" becomes an info Alert (role="status"); password changed and signed out likewise. Refusals stay danger. One slot under the h1.</li>
+<li><strong>§ Account / auth page:</strong> PasswordToggleButton (@onclick; dead signed out) is retired for one static toggle: markup plus a wombat.js handler on data-password-toggle, rendered hidden and shown by the script, so a page with scripts blocked has no dead button.</li>
+<li><strong>§ Account / auth page:</strong> Change password gains [ExcludeFromInteractiveRouting] and is static in the shell, as /Error is. Its success redirect goes to /account/profile?status=password-updated.</li>
+<li><strong>§ Account / auth page:</strong> the sign-out confirmation moves from PageHeader + .form-container to the anonymous card, and answers GET /account/logout (T317).</li>
+<li><strong>§ Page-level patterns:</strong> a refusal on Change password moves from under the page header into the form's card, above its action row, as flow 01's outcome rule has it for every form. A result from another page (Password updated) stays under the header.</li>
+<li><strong>ProfileOutcome:</strong> NameMissing splits in two. The email leaves the name form; it is shown once, as text, in the Account card.</li>
+<li><strong>SignInOutcome:</strong> a new notice code, SignedOut.</li>
+<li>Nothing changes in the shell, the lockup rule (the lockup only on the sign-in card) or the tokens.</li>
+</ul>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">Components</h2>
+<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:10px">
+<div><strong>From the system:</strong> AuthLayout's card (.account-form-container), PageHeader, Breadcrumbs, Alert (danger, info, success), ActionResult, FormField, FormActions (.form-container, .form-grid, .form-actions), DashboardCard's .detail-card frame, StatePanel (loading, error), Skeleton, ConfirmDialog (Remove a sign-in), Icon: eye, eye-off, log-out, key-round, building-2, circle-alert, info, circle-check.</div>
+<div><strong>NEW:</strong></div>
+<ul class="b">
+<li><strong>PasswordToggle</strong>: a button beside the input, not inside it; name "Show [field label]", aria-pressed, aria-controls; wombat.js.</li>
+<li><strong>.auth-divider</strong>: the "or" rule between the institution buttons and the form.</li>
+<li><strong>SSO button</strong>: a full-width outline button with building-2 (.btn-block, NEW modifier).</li>
+<li><strong>Rules list</strong>: the password rules under New password, linked by aria-describedby (a field-help list).</li>
+<li><strong>Sign-in method row</strong>: a method, its detail, its action (Change password, Remove) or its reason in words.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">Edge cases</h2>
+<div class="card" style="padding:16px">
+<ul class="b">
+<li><strong>A 40-character email</strong> (thandi.zulu@paediatrics.kgk.wombat.local): wraps anywhere in the Account card and in the link page's sentence. The top bar shows the name; an account with no name shows the email cut at 28 characters, its full text in the link's accessible name.</li>
+<li><strong>A long refusal:</strong> the slot grows; nothing sits beside it. The longest today is 38 words, over the brief's 25: at 390 px about ten lines.</li>
+<li><strong>Four roles:</strong> one per line in the Account card, no truncation, no "and 2 more".</li>
+<li><strong>Three providers:</strong> a stack of full-width buttons, 44 px on a phone; a 40-character institution name wraps inside its button.</li>
+<li><strong>Institutional-only account:</strong> no Change password link anywhere; a typed address shows the info panel.</li>
+<li><strong>Refused sign-in</strong> comes back with empty fields: the redirect carries only the code, never the address typed.</li>
+</ul>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">Accessibility review (WCAG 2.1 AA, structural)</h2>
+<div class="card" style="padding:16px">
+<ul class="b">
+<li><strong>Contrast:</strong> nothing new is painted outside flow 01's measured pairs: text and muted text on the surface, text on the four tints (11.2 to 11.9:1), input-border 3.80:1, focus ring 4.86:1. Round 2 measures the SSO button, the divider's words and the pressed toggle.</li>
+<li><strong>Targets:</strong> every button and link 36 px or more on desktop (the toggle 38 px, beside its input); 44 px on a phone, including the toggle, Remember me's row and "Forgotten your password?".</li>
+<li><strong>The toggle:</strong> visible "Show" and an eye; accessible name "Show password", "Show current password", "Show new password", "Show new password again"; aria-pressed="false|true"; aria-controls the input. The name holds "Show" (2.5.3 label in name); the pressed state is drawn, not only announced.</li>
+<li><strong>Focus:</strong> a refusal takes it (all pages); a notice leaves it on the first field, which names the notice; a success takes it; the browser's check keeps its own; the Sign out, Forgotten password and Link-expired pages start at the top.</li>
+<li><strong>Static pages</strong> work with scripts blocked: every action is a link or a form post, and the toggle is simply absent.</li>
+<li>Error pages' tab titles start "Error:"; notices do not.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">Runbook steps whose quoted words would change</h2>
+<div class="card" style="padding:16px">
+<ul class="b">
+<li><strong>2.41, A.4.1, A.7.14:</strong> "Profile saved." becomes "Name saved."; the email is shown as text, not a disabled field; roles read "Committee member", "Assessor".</li>
+<li><strong>A.4.1:</strong> the space is refused with "Enter your last name.", the Last name field marked and empty.</li>
+<li><strong>A.4.2 (c):</strong> the rules as short sentences under "The new password needs:". <strong>(d), A.4.6:</strong> "Password updated." on My account.</li>
+<li><strong>A.4.4:</strong> the Forgotten password page's words (option A).</li>
+<li><strong>A.4.7:</strong> Sign out lands on Sign in with "You have signed out."</li>
+<li><strong>A.6.5:</strong> the lockout reads "Invalid email or password." if T287 goes the recommended way.</li>
+</ul>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

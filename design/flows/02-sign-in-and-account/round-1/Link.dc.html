@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Link institutional sign-in refused</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border:1px solid #4a4a4a;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.pri{background:#2b2b2b;border-color:#2b2b2b;color:#fff}
+.fld{display:flex;flex-direction:column;gap:6px}
+.inp{height:38px;border:1px solid #6b6b6b;border-radius:6px;background:#fff;box-sizing:border-box;padding:0 12px;display:flex;align-items:center;color:#565656;flex-grow:1;min-width:0}
+.pw{display:flex;gap:8px;align-items:stretch}
+.al{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid #6b6b6b;border-left:8px solid #1c1c1c;border-radius:6px;background:#e0e0e0}
+.gl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.fo{outline:2px solid #1c1c1c;outline-offset:2px}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.tag{position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#1c1c1c;color:#fff;padding:3px 8px;border-radius:4px}
+.ic{display:inline-block;width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;opacity:.6;flex:none;box-sizing:border-box}
+.hr{height:1px;background:#d0d0d0}
+</style>
+</helmet>
+<div style="width:1280px;height:800px;box-sizing:border-box;background:#e9e9e9;position:relative;display:flex;justify-content:center;padding-top:110px">
+<span class="tag">Static · /account/link-external · live, refused · 1280</span>
+<div class="card" style="width:560px;align-self:flex-start;padding:40px;display:flex;flex-direction:column;gap:16px">
+<h1 style="font-size:30px">Link your institutional sign-in</h1>
+<div style="display:flex;gap:8px;align-items:flex-start"><p>A Wombat account with the email <strong style="overflow-wrap:anywhere">thandi.zulu@paediatrics.kgk.wombat.local</strong> already exists. Enter your current password to link your institutional sign-in.</p><span class="k">1</span></div>
+<form method="post" action="#" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:8px;align-items:flex-start"><div class="al fo" role="alert" tabindex="-1" style="flex-grow:1"><span class="gl">!</span><span>The account could not be linked. Check your password and try again.</span></div><span class="k">2</span></div>
+<div class="fld"><label for="p">Password</label><div class="pw"><span id="p" class="inp">&#8203;</span><button type="button" class="btn" aria-pressed="false" aria-label="Show password" aria-controls="p" style="min-height:38px"><span class="ic"></span>Show</button></div></div>
+<div class="hr"></div>
+<div style="display:flex;justify-content:flex-end;gap:12px;align-items:center"><span class="k">3</span><a href="#" class="btn">Cancel</a><button type="button" class="btn pri">Link and sign in</button></div>
+</form>
+</div>
+<div style="position:absolute;left:24px;right:24px;bottom:20px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:12px;color:#3a3a3a;border-top:1px solid #b0b0b0;padding-top:10px">
+<div><strong>1</strong> · The sentence names the address; a 40-character address wraps anywhere. No lockup (the lockup rule is unchanged).</div>
+<div><strong>2</strong> · The refusal slot above the field, so the field and its refusal read in order; focus on the refusal, Password names it, tab "Error: Link your institutional sign-in · Wombat". Empty when the page first loads.</div>
+<div><strong>3</strong> · "Link and sign in" (sentence case, "and" for "&amp;") posts to /account/link-external/submit. Cancel returns to Sign in and discards the pending institutional sign-in.</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

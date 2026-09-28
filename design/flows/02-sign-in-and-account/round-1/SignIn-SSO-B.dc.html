@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in with SSO option B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border:1px solid #4a4a4a;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.pri{background:#2b2b2b;border-color:#2b2b2b;color:#fff}
+.sso{justify-content:flex-start;white-space:normal;text-align:left;min-height:44px;padding:8px 14px;width:100%}
+.fld{display:flex;flex-direction:column;gap:6px}
+.inp{height:38px;border:1px solid #6b6b6b;border-radius:6px;background:#fff;box-sizing:border-box;padding:0 12px;display:flex;align-items:center;color:#565656;flex-grow:1;min-width:0}
+.pw{display:flex;gap:8px;align-items:stretch}
+.tag{position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#1c1c1c;color:#fff;padding:3px 8px;border-radius:4px}
+.ic{display:inline-block;width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;opacity:.6;flex:none;box-sizing:border-box}
+.cb{width:18px;height:18px;border:1.5px solid #4a4a4a;border-radius:3px;flex:none;box-sizing:border-box}
+.hr{height:1px;background:#d0d0d0}
+.div{display:flex;align-items:center;gap:12px;font-size:14px;color:#565656}
+.div span.l{flex-grow:1;height:1px;background:#b0b0b0}
+</style>
+</helmet>
+<div style="width:1280px;height:900px;box-sizing:border-box;background:#e9e9e9;position:relative;display:flex;justify-content:center;padding-top:40px">
+<span class="tag">Q1 · Option B · the form first · static</span>
+<div class="card" style="width:560px;align-self:flex-start;padding:40px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:14px"><img src="/_blob/a6c690a50a59fa44f668ab96ac894576" alt="" style="width:56px;height:56px"><span style="font-size:34px;font-weight:700">Wombat</span></div>
+<p class="mut">Work-based assessment for specialist training.</p>
+<h1 style="font-size:30px">Sign in</h1>
+<form style="display:flex;flex-direction:column;gap:16px" method="post" action="#">
+<div class="fld"><label for="e">Email</label><span id="e" class="inp">&#8203;</span></div>
+<div class="fld"><label for="p">Password</label><div class="pw"><span id="p" class="inp">&#8203;</span><button type="button" class="btn" aria-pressed="false" aria-label="Show password" style="min-height:38px"><span class="ic"></span>Show</button></div></div>
+<label style="display:flex;gap:10px;align-items:center;min-height:24px"><span class="cb"></span>Remember me</label>
+<div style="display:flex;justify-content:space-between;align-items:center"><a href="#">Forgotten your password?</a><button type="button" class="btn pri">Sign in</button></div>
+</form>
+<div class="div"><span class="l"></span>or<span class="l"></span></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<a href="#" class="btn sso"><span class="ic"></span>Sign in with [Institution name]</a>
+<a href="#" class="btn sso"><span class="ic"></span>Sign in with [Institution name]</a>
+<a href="#" class="btn sso"><span class="ic"></span>Sign in with [An institution name of about forty characters]</a>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

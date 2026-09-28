@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 02 round 1 overview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.cap{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#565656}
+.chip{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid #1c1c1c;border-radius:999px;padding:0 6px;white-space:nowrap}
+.chip.s{background:#1c1c1c;color:#fff}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.jr{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;padding:12px 16px;border-bottom:1px solid #d6d6d6;align-items:start}
+.ch{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.jb{border:1px solid #6b6b6b;background:#fff;border-radius:6px;padding:4px 8px;font-size:13px}
+.jo{border:2px solid #1c1c1c;background:#f1f1f1;border-radius:6px;padding:4px 8px;font-size:13px}
+.ar{color:#565656;font-size:12px}
+.opt{border:1px solid #9a9a9a;border-radius:8px;padding:14px;background:#fafafa;display:flex;flex-direction:column;gap:6px}
+.opt.rec{border:2px solid #1c1c1c;background:#fff}
+ul.b{padding-left:18px;display:flex;flex-direction:column;gap:3px}
+</style>
+</helmet>
+<div style="width:1280px;height:2900px;box-sizing:border-box;padding:48px;background:#f0f0f0;display:flex;flex-direction:column;gap:36px">
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<div class="cap">Wombat · Flow 02 · Sign-in and account · Round 1 wireframes · 2026-09-28</div>
+<h1 style="font-size:32px">One structure: get in, be told plainly why not, keep your own account right</h1>
+<p class="mut" style="max-width:900px">Greyscale boxes, real words, no colour or type choices. One proposal, with two options only where questions 1, 2 and 3 fork. A heavy left edge and a dark ! mark a refusal (danger); a light edge and an i mark a notice (info); a tick marks a success. A black outline is where the focus lands. Numbered black dots on a screen are explained on that row's notes board. Round 2 starts only after you confirm.</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">The pages, in order</h2>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:8px;align-items:center"><span class="k">1</span><strong>Sign in</strong><span class="chip s">Static</span></div>
+<div class="mut" style="font-size:12px">/account/login · the anonymous card</div>
+<ul class="b"><li>One message slot under the h1: a refusal or a notice, never both.</li><li>A purpose line under the lockup (Q1).</li><li>A Show toggle that works: a separate button wired by wombat.js.</li></ul>
+</div>
+
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:8px;align-items:center"><span class="k">2</span><strong>Sign in, with SSO</strong><span class="chip s">Static</span></div>
+<div class="mut" style="font-size:12px">the same page, when a provider is configured</div>
+<ul class="b"><li>One full-width "Sign in with …" button per provider, and an "or" divider.</li><li>Above the password form (Q1 option A, recommended) or below it (B).</li></ul>
+</div>
+
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:8px;align-items:center"><span class="k">3</span><strong>Sign out</strong><span class="chip s">Static</span></div>
+<div class="mut" style="font-size:12px">GET /account/logout and /account/logout-confirm · the card, signed in, no nav</div>
+<ul class="b"><li>Moves onto the anonymous card: fixes the side-by-side break.</li><li>The answer to a typed GET, not a 405 (T317).</li><li>Not on the top bar's path (Q3 option A).</li></ul>
+</div>
+
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:8px;align-items:center"><span class="k">4</span><strong>My account</strong><span class="chip">Interactive</span></div>
+<div class="mut" style="font-size:12px">/account/profile · the shell · name underlined · nothing lit · no trail</div>
+<ul class="b"><li>Three cards: Account (email, institution, roles by label), Your name (the form), How you sign in.</li><li>The form still posts to /account/profile/submit.</li></ul>
+</div>
+
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:8px;align-items:center"><span class="k">5</span><strong>Change password</strong><span class="chip s">Static</span></div>
+<div class="mut" style="font-size:12px">/account/change-password · the shell · Home › My account › Change password</div>
+<ul class="b"><li>Proposed static in the shell, as /Error is: its toggles were its only reason to be interactive.</li><li>One column; the rules shown before you type.</li><li>Success returns to My account.</li></ul>
+</div>
+
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:8px;align-items:center"><span class="k">6</span><strong>Forgotten password</strong><span class="chip s">Static</span></div>
+<div class="mut" style="font-size:12px">/account/forgot-password · the anonymous card</div>
+<ul class="b"><li>Option A (recommended): what to do, in plain words; Back to sign in.</li><li>Option B: reset by emailed link, four screens, not built.</li></ul>
+</div>
+
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:8px;align-items:center"><span class="k">7</span><strong>Link your institutional sign-in</strong><span class="chip s">Static</span></div>
+<div class="mut" style="font-size:12px">/account/link-external · the anonymous card</div>
+<ul class="b"><li>Expired: its own h1 and tab, one link back.</li><li>Live: the sentence, the refusal slot above the password, Link and sign in, Cancel.</li></ul>
+</div>
+
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px;background:#f7f7f7">
+<strong>Not a page: /account/session-ended</strong>
+<div class="mut" style="font-size:12px">an endpoint</div>
+<ul class="b"><li>Signs the tab out and loads Sign in with the notice. Unchanged.</li><li>Every page above keeps a real &lt;form method="post"&gt; where it posts.</li></ul>
+</div>
+
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:20px">The journeys, and where each outcome shows</h2>
+<p class="mut">A thin box is a page; a heavy box is the page with its outcome. Arrows name what the person does, or what the system does.</p>
+<div class="card" style="overflow:hidden">
+
+<div class="jr"><div><strong>Sign in</strong><div class="mut" style="font-size:12px">1.1, 2.31, A.6.8</div></div>
+<div class="ch"><span class="jb">Any page, signed out</span><span class="ar">→ redirect, returnUrl kept →</span><span class="jb">Sign in</span><span class="ar">→ Sign in (post /account/login/submit) →</span><span class="jo">The page asked for, or Home</span></div></div>
+
+<div class="jr"><div><strong>Refused</strong><div class="mut" style="font-size:12px">A.3.2, A.4.3, A.6.5, A.1.13</div></div>
+<div class="ch"><span class="jb">Sign in</span><span class="ar">→ post →</span><span class="jo">Sign in · refusal in the slot · <span class="chip">danger</span> · focus on it · tab "Error: Sign in · Wombat" · fields empty</span><span class="ar">→ post again (the returnUrl survived the refusal) →</span><span class="jo">The page asked for</span></div></div>
+
+<div class="jr"><div><strong>Signed out by the system</strong><div class="mut" style="font-size:12px">2.31, A.4.3, A.6.5, A.1.13, 5.19</div></div>
+<div class="ch"><span class="jb">Any signed-in page</span><span class="ar">→ within a minute, a full load of /account/session-ended →</span><span class="jo">Sign in · "Your session has ended. Please sign in again." · <span class="chip">info</span> · focus on Email</span><span class="ar">→ post →</span><span class="jo">The page it was on</span><span class="ar">or, for a locked or erased account (A.6.5, A.1.13) or the old password (A.4.3),</span><span class="jo">Sign in · the refusal in the notice's place · <span class="chip">danger</span> · focus on it</span></div></div>
+
+<div class="jr"><div><strong>Forgotten password</strong><div class="mut" style="font-size:12px">A.4.4, A.4.5, A.4.6 · Q2 option A</div></div>
+<div class="ch"><span class="jb">Sign in</span><span class="ar">→ Forgotten your password? →</span><span class="jb">Forgotten password · ask your administrator</span><span class="ar">→ an administrator sets one (F12's page) and gives it to him →</span><span class="jb">Sign in</span><span class="ar">→</span><span class="jb">Home</span><span class="ar">→ name in the top bar →</span><span class="jb">My account</span><span class="ar">→</span><span class="jb">Change password</span><span class="ar">→ post →</span><span class="jo">My account · "Password updated." · <span class="chip">success</span></span></div></div>
+
+<div class="jr"><div><strong>Change your name</strong><div class="mut" style="font-size:12px">2.41, A.4.1</div></div>
+<div class="ch"><span class="jb">Any page</span><span class="ar">→ name in the top bar →</span><span class="jb">My account</span><span class="ar">→ Save name (post /account/profile/submit) →</span><span class="jo">My account · "Name saved." in the Your name card · <span class="chip">success</span> · focus</span><span class="ar">or</span><span class="jo">"Enter your last name." · <span class="chip">danger</span> · the field marked · "Error: My account · Wombat"</span><span class="ar">· a blank field: the browser's own check, nothing sent</span></div></div>
+
+<div class="jr"><div><strong>Change password</strong><div class="mut" style="font-size:12px">A.4.2, A.4.6</div></div>
+<div class="ch"><span class="jb">My account</span><span class="ar">→ Change password →</span><span class="jb">Change password</span><span class="ar">→ post →</span><span class="jo">Refused: the same page · empty fields · the refusal in the card above its buttons · <span class="chip">danger</span> · focus · "Error: …"</span><span class="ar">or</span><span class="jo">Accepted: My account · "Password updated." under the header · <span class="chip">success</span> · focus</span></div></div>
+
+<div class="jr" style="border-bottom:0"><div><strong>Sign out</strong><div class="mut" style="font-size:12px">2.8, A.4.7 · Q3 option A</div></div>
+<div class="ch"><span class="jb">Top bar: Sign out (a form post)</span><span class="ar">→</span><span class="jo">Sign in · "You have signed out." · <span class="chip">info</span> (NEW)</span><span class="ar">·</span><span class="jb">A typed /account/logout or /account/logout-confirm</span><span class="ar">→</span><span class="jb">Sign out, no nav</span><span class="ar">→ Sign out → the same · Cancel →</span><span class="jo">The page it came from, or Home</span><span class="ar">· then a typed address (A.4.7: /msf/campaigns) →</span><span class="jb">Sign in, no message, returnUrl in a hidden field</span><span class="ar">→ post →</span><span class="jo">That page</span></div></div>
+
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<h2 style="font-size:20px">The questions</h2>
+
+<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:16px">1 · What the sign-in page says about the product, and where the SSO buttons sit</h3>
+<p>One line of purpose under the lockup, "Work-based assessment for specialist training.", and no College or institution name. The sign-in page is one address for every institution and College on the platform; before sign-in Wombat cannot know which is the visitor's, so a name there would be wrong for most. An institution is named only on its own button, "Sign in with [institution]".</p>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div class="opt rec"><div style="display:flex;gap:8px;align-items:center"><strong>A · Institutions above the form</strong><span class="chip s">Recommended</span></div><p>The buttons first, then "or sign in with your email and password", then the form. Someone whose hospital signs them in is not first offered a password field, where their hospital password fails and counts towards the lockout and the network throttle. When no provider is configured (today, everywhere) the page is the plain form. Boards 2 · A and 2 · 390.</p></div>
+<div class="opt"><strong>B · Institutions below the form</strong><p>The form first, then "or", then the buttons. Suits the people who must use a password: administrators ("An administrator account signs in with its password"), College staff and anyone without SSO. The refusal "…use its sign-in button below" reads the same in both, because the slot sits above both. Board 2 · B.</p></div>
+</div>
+</div>
+
+<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:16px">2 · Forgotten password</h3>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div class="opt rec"><div style="display:flex;gap:8px;align-items:center"><strong>A · Say what to do, in plain words</strong><span class="chip s">Recommended now</span></div><p>Replace the stub with how it works today (A.4.5): an administrator at your institution sets a new password and gives it to you; you sign in and choose your own. With SSO, a line that your institution resets that password. Nothing promised that is not built (BRIEF § 7 B10). The route and the link stay, so B can replace the page later. Boards 6 · A.</p></div>
+<div class="opt"><strong>B · Reset by emailed link</strong><p>Four screens: ask (email), check your email (the same words whether or not the address has an account, T287), choose a new password (from the link), link expired or used; then Sign in with a notice. Needs the PasswordResetEmail sent (flow 19), a single-use token endpoint and the throttle. Worth its own task with flow 19. Board 6 · B.</p></div>
+</div>
+</div>
+
+<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:16px">3 · Is a sign-out confirmation page wanted?</h3>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div class="opt rec"><div style="display:flex;gap:8px;align-items:center"><strong>A · Only as the answer to a GET</strong><span class="chip s">Recommended</span></div><p>The top bar's Sign out stays one press, a form post, as flow 01 built it. The Sign out page is what a typed or bookmarked GET /account/logout shows (T317), and /account/logout-confirm shows the same. A GET never signs out by itself: a link on another site could otherwise sign a person out. Afterwards the sign-in page says "You have signed out." (NEW), which matters on a shared ward computer.</p></div>
+<div class="opt"><strong>B · Confirm every sign-out</strong><p>The top bar's Sign out opens the page, and its button signs out: two presses every time, for every person, between patients. It guards only against a mis-press, whose cost is one sign-in that returns to the same page (returnUrl). It does not protect unsaved work; a form that holds work is that form's job, in its own flow.</p></div>
+</div>
+</div>
+
+<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:8px">
+<h3 style="font-size:16px">4 · Should My account show the institution and institutional sign-ins, beside the roles?</h3>
+<p>Yes. The Account card shows the email once, the institution (for an account that has one) and the roles by label, one per line. A card "How you sign in" lists the password, with Change password, and each linked institutional sign-in, with Remove (T286; listing and removing links are not built). An account with no local password gets no Change password: the card says it signs in through its institution. Remove on the last way in is disabled, with its reason in words. Boards 4.</p>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

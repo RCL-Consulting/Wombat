@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My account more states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.sm{font-size:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:32px;padding:0 12px;border:1px solid #4a4a4a;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.pri{background:#2b2b2b;border-color:#2b2b2b;color:#fff}
+.fld{display:flex;flex-direction:column;gap:4px}
+.inp{height:32px;border:1px solid #6b6b6b;border-radius:6px;background:#fff;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;color:#1c1c1c;min-width:0}
+.al{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #6b6b6b;border-left:4px solid #6b6b6b;border-radius:6px;background:#f5f5f5}
+.dg{border-left:8px solid #1c1c1c;background:#e0e0e0}
+.gl{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid #1c1c1c;font-size:11px;font-weight:700;flex:none;box-sizing:border-box}
+.gl.x{background:#1c1c1c;color:#fff}
+.chip{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid #1c1c1c;border-radius:999px;padding:0 6px;white-space:nowrap}
+.chip.s{background:#1c1c1c;color:#fff}
+.fo{outline:2px solid #1c1c1c;outline-offset:2px}
+.sk{height:10px;border-radius:4px;background:#d6d6d6}
+.hr{height:1px;background:#d0d0d0}
+.phd{display:flex;flex-direction:column;gap:2px;border-bottom:2px solid #555;padding-bottom:8px}
+.cell{display:flex;flex-direction:column;gap:8px}
+.pane{background:#ececec;border:1px solid #9a9a9a;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;height:330px;box-sizing:border-box;overflow:hidden}
+.dt{font-size:12px;font-weight:600;color:#565656}
+.bub{position:relative;background:#fff;border:1px solid #1c1c1c;border-radius:4px;padding:6px 10px;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.25);align-self:flex-end}
+</style>
+</helmet>
+<div style="width:1280px;height:1000px;box-sizing:border-box;padding:40px;background:#e2e2e2;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 style="font-size:22px">My account · six more states</h2>
+<p class="mut">The page body only; the shell is as on the loaded board.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
+
+<div class="cell"><strong>a · Loading (T329)</strong>
+<div class="pane" aria-busy="true">
+<div class="phd"><h1 style="font-size:20px">My account</h1><p class="mut sm">Your name, your roles, and how you sign in.</p></div>
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><div class="sk" style="width:40%"></div><div class="sk" style="width:80%"></div><div class="sk" style="width:60%"></div></div>
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><div class="sk" style="width:30%"></div><div class="sk" style="width:90%"></div><div class="sk" style="width:90%"></div></div>
+<p class="sm mut">StatePanel loading: the header from the first render, a Skeleton in each card's place, no form yet.</p>
+</div></div>
+
+<div class="cell"><strong>b · Load error (T329)</strong>
+<div class="pane">
+<div class="phd"><h1 style="font-size:20px">My account</h1><p class="mut sm">Your name, your roles, and how you sign in.</p></div>
+<div class="al dg" role="alert"><span class="gl x">!</span><span style="flex-grow:1"><strong>Could not load your account.</strong> Nothing has changed. Try again, or come back in a few minutes.</span></div>
+<div><button type="button" class="btn">Try again</button></div>
+<p class="sm mut">StatePanel error, on Home's pattern. Nothing under it: no cards, no form. Sign out still works from the top bar.</p>
+</div></div>
+
+<div class="cell"><strong>c · Pending trainee</strong>
+<div class="pane">
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px">
+<h2 style="font-size:16px">Account</h2>
+<div><div class="dt">Email</div>[email]</div>
+<div><div class="dt">Institution</div>[Institution name]</div>
+<div><div class="dt">Roles</div><ul style="padding-left:18px"><li>Pending trainee</li></ul></div>
+</div>
+<p class="sm mut">The role by its label ("Pending trainee", never PendingTrainee). Nothing else differs: the name form and How you sign in are the same. Whether to add what admission means is flow 11's.</p>
+</div></div>
+
+<div class="cell"><strong>d · A blank name · the browser's check</strong>
+<div class="pane">
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+<h2 style="font-size:16px">Your name</h2>
+<div class="fld"><label>First name</label><span class="inp">Sarah</span></div>
+<div class="fld"><label>Last name</label><span class="inp fo">&#8203;</span></div>
+<div class="bub">Please fill in this field.</div>
+<div style="display:flex;justify-content:flex-end"><button type="button" class="btn pri">Save name</button></div>
+</div>
+<p class="sm mut">The two fields are required and maxlength 100. The browser's own bubble, in the browser's words; nothing is sent (A.4.1).</p>
+</div></div>
+
+<div class="cell"><strong>e · Saved</strong>
+<div class="pane">
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+<h2 style="font-size:16px">Your name</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div class="fld"><label>First name</label><span class="inp">Fatima</span></div><div class="fld"><label>Last name</label><span class="inp">Khumalo</span></div></div>
+<div class="al fo" role="status" tabindex="-1"><span class="gl">&#10003;</span><span>Name saved.</span></div>
+<div class="hr"></div>
+<div style="display:flex;justify-content:flex-end"><button type="button" class="btn pri">Save name</button></div>
+</div>
+<p class="sm mut"><span class="chip">success</span> In the card, above its action row; takes the focus as the page loads. The top bar reads "Fatima Khumalo" (2.41).</p>
+</div></div>
+
+<div class="cell"><strong>f · Password updated (from page 5)</strong>
+<div class="pane">
+<div class="phd"><h1 style="font-size:20px">My account</h1><p class="mut sm">Your name, your roles, and how you sign in.</p></div>
+<div class="al fo" role="status" tabindex="-1"><span class="gl">&#10003;</span><span>Password updated.</span></div>
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px"><h2 style="font-size:16px">Account</h2><div class="sk" style="width:70%;background:#e6e6e6"></div></div>
+<p class="sm mut"><span class="chip">success</span> A result from another page: under the header, taking the focus (flow 01's rule). She stays signed in in this browser; other sessions end within a minute (A.4.3).</p>
+</div></div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

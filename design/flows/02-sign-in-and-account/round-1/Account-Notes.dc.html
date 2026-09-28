@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My account notes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;color:#1c1c1c}
+h1,h2,h3,p,ul{margin:0}
+.mut{color:#565656}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.n{display:flex;gap:10px;align-items:flex-start}
+</style>
+</helmet>
+<div style="width:560px;height:1400px;box-sizing:border-box;padding:32px;background:#fff;border:1px solid #b0b0b0;display:flex;flex-direction:column;gap:14px">
+<h2 style="font-size:20px">Page 4 · My account</h2>
+<p class="mut">Inside the shell. Reached from the name in the top bar, which is the current page (underlined, aria-current="page"); no nav item lights; no trail. Tab "My account · Wombat". Interactive: it loads the account in its circuit. Its one form posts to /account/profile/submit, which saves the name, issues the sign-in again and redirects with ?status= or ?error=.</p>
+<div class="n"><span class="k">1</span><p>The top bar's name is the way in and the "you are here" mark. Unchanged from flow 01.</p></div>
+<div class="n"><span class="k">2</span><p>Account: read-only facts, as a details list. The email once, as text (no longer a disabled field in the form, which repeated it at low contrast). The institution, for an account that has one; the row is left out for a platform or College account. The roles by label, one per line, in the precedence order. The subtitle names what the page holds.</p></div>
+<div class="n"><span class="k">3</span><p>Your name: the only form. First and last name side by side from 641 px (.form-grid), required, maxlength 100. "Save name". Its result (saved, or a refusal naming the field) shows in this card above the action row and takes the focus as the page loads; a refused field is marked (border, stripe, message with the circle-alert icon) and names the refusal.</p></div>
+<div class="n"><span class="k">4</span><p>How you sign in (Q4, T286): one row per way in. Password, with Change password (a link to page 5). Each linked institutional sign-in, with its date and Remove. The institutional part appears only where the person's institution has a provider: on dev, where none is configured, the card holds the password row alone.</p></div>
+<div class="n"><span class="k">5</span><p>Data volumes: a 40-character email wraps anywhere; four roles are four lines. The top bar shows the name; only an account with no name shows the email there, cut at 28 characters, the whole address in the link's accessible name.</p></div>
+<div class="n"><span class="k">6</span><p>An institutional-only account: no Change password, and a sentence saying why. Remove on the last way in is disabled, its reason in visible words beginning with its name ("Remove: this is the only way you sign in."). With a password as well, Remove is enabled and asks first (ConfirmDialog: "Remove your [institution] sign-in?" / "You will sign in with your Wombat password only. You can link it again the next time you use your institution's sign-in."). Listing and removing links are not built.</p></div>
+<h3 style="font-size:16px;margin-top:8px">Layout</h3>
+<p>Two columns from 901 px, Account (1fr) beside Your name over How you sign in (2fr), as .details-grid; one column below, in the same order. The acting role changes nothing on this page.</p>
+<h3 style="font-size:16px;margin-top:8px">Not on this page</h3>
+<p>No email change (the email is the account's identity; an administrator changes it, F12). No acting-role switch (the sidebar has it). No data-rights links (My data rights is in the nav).</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":1400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

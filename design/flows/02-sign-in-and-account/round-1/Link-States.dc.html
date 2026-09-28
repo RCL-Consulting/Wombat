@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Link institutional sign-in states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;color:#1c1c1c}
+a{color:#1c1c1c}a:hover{color:#000}
+h1,h2,h3,p,ul{margin:0}
+.card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;box-sizing:border-box}
+.mut{color:#565656}
+.sm{font-size:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:0 12px;border:1px solid #4a4a4a;border-radius:6px;background:#fff;color:#1c1c1c;font:inherit;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.pri{background:#2b2b2b;border-color:#2b2b2b;color:#fff}
+.fld{display:flex;flex-direction:column;gap:4px}
+.inp{height:34px;border:1px solid #6b6b6b;border-radius:6px;background:#fff;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;color:#565656;flex-grow:1;min-width:0}
+.pw{display:flex;gap:6px}
+.al{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #6b6b6b;border-left:8px solid #1c1c1c;border-radius:6px;background:#e0e0e0}
+.gl{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:11px;font-weight:700;flex:none}
+.chip{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid #1c1c1c;border-radius:999px;padding:0 6px;white-space:nowrap}
+.chip.s{background:#1c1c1c;color:#fff}
+.fo{outline:2px solid #1c1c1c;outline-offset:2px}
+.hr{height:1px;background:#d0d0d0}
+.ic{display:inline-block;width:14px;height:14px;border:1.5px solid currentColor;border-radius:3px;opacity:.6;flex:none;box-sizing:border-box}
+.cell{display:flex;flex-direction:column;gap:8px}
+</style>
+</helmet>
+<div style="width:1280px;height:800px;box-sizing:border-box;padding:40px;background:#e2e2e2;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 style="font-size:22px">Link your institutional sign-in · three states</h2>
+<p class="mut">The card only, on the anonymous layout. Only the expired state can be captured on dev (A.3.3); the others are from the brief's text.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start">
+
+<div class="cell"><strong>a · Expired</strong><span class="sm mut">A.3.3 · no institutional sign-in in progress</span>
+<div class="card" style="padding:24px;display:flex;flex-direction:column;gap:14px">
+<h1 style="font-size:22px">Institutional sign-in expired</h1>
+<p>Your institutional sign-in has expired. Start again from the sign-in page.</p>
+<div class="hr"></div>
+<div style="display:flex;justify-content:flex-end"><a href="#" class="btn">Back to sign in</a></div>
+</div>
+<p class="sm mut">Its own h1 and tab, "Institutional sign-in expired · Wombat"; not a refusal (nothing was tried), so no alert and no "Error:". No field (T149). Focus starts at the top.</p>
+</div>
+
+<div class="cell"><strong>b · Live, as it first loads</strong><span class="sm mut">after an institutional sign-in whose email matches an account</span>
+<div class="card" style="padding:24px;display:flex;flex-direction:column;gap:14px">
+<h1 style="font-size:22px">Link your institutional sign-in</h1>
+<p>A Wombat account with the email <strong>[email]</strong> already exists. Enter your current password to link your institutional sign-in.</p>
+<div class="fld"><label>Password</label><div class="pw"><span class="inp fo">&#8203;</span><span class="btn"><span class="ic"></span>Show</span></div></div>
+<div class="hr"></div>
+<div style="display:flex;justify-content:flex-end;gap:8px"><a href="#" class="btn">Cancel</a><span class="btn pri">Link and sign in</span></div>
+</div>
+<p class="sm mut">Focus on Password (autofocus). The slot is empty and takes no space.</p>
+</div>
+
+<div class="cell"><strong>c · Locked out while linking</strong><span class="sm mut">SsoLinkLockedOut · T287</span>
+<div class="card" style="padding:24px;display:flex;flex-direction:column;gap:14px">
+<h1 style="font-size:22px">Link your institutional sign-in</h1>
+<p>A Wombat account with the email <strong>[email]</strong> already exists. Enter your current password to link your institutional sign-in.</p>
+<div class="al fo" role="alert" tabindex="-1"><span class="gl">!</span><span>Too many failed attempts. Please try again later or reset your password.</span></div>
+<div class="fld"><label>Password</label><div class="pw"><span class="inp">&#8203;</span><span class="btn"><span class="ic"></span>Show</span></div></div>
+<div class="hr"></div>
+<div style="display:flex;justify-content:flex-end;gap:8px"><a href="#" class="btn">Cancel</a><span class="btn pri">Link and sign in</span></div>
+</div>
+<p class="sm mut"><span class="chip s">danger</span> Today's words. Whatever T287 decides for the sign-in page applies here too, and "or reset your password" goes (Q2 A).</p>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

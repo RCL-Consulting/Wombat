@@ -1,0 +1,48 @@
+ROUND 1 CONFIRMED. Round 2: the confirmed structure at full fidelity.
+
+DECISIONS (one sentence each):
+  Q1: the institution buttons sit above the form, with the divider "or sign in with your email and password"; with no
+    provider configured the page is the plain form.
+  Q2: option A, plain words: an administrator at your institution sets a password, then you choose your own. Drop the
+    option B boards from round 2 (it is filed as later work).
+  Q3: option A: the top bar's Sign out stays one press; GET /account/logout and GET /account/logout-confirm both draw
+    the Sign out page.
+  Q4: yes: the institution on My account, and the "How you sign in" card with the password row and each institutional
+    sign-in with Remove, guarded on the last way in, with its ConfirmDialog. This is built in this flow.
+  T287: a locked account is told "Invalid email or password.", the same as a wrong password and an unknown address.
+    Show no lockout sentence on the sign-in page. The link page's lockout ("Too many failed attempts. …") follows the
+    same rule: use the link page's wrong-password refusal for it.
+  Everything else in round 1 stands as proposed: the one message slot; notices as info with the focus left on Email;
+  "You have signed out." (NEW); the static toggle beside the input; Change password static in the shell, one column,
+  the rules shown before typing, success going to My account with "Password updated."; "Save name" / "Name saved.";
+  NameMissing split into first and last; the rules as plain sentences shared with register and the admin reset card.
+
+CORRECTIONS TO ROUND 1:
+  1. /account/logout-confirm is not reached only by typing. Flow 01's error page links its Sign out there, because a
+     form on the error page would carry a token its own failed request invalidated. So /account/logout-confirm must stay
+     a page that draws its own form and token, never a redirect to a GET that signs out. Show GET /account/logout and
+     GET /account/logout-confirm as the same page, and say so on the Sign out notes board.
+  2. The returnUrl already survives a refused sign-in today; it is not a change. Keep it stated as a rule, not as new.
+  3. Round 1 proposed plainer words for "External login information was not available.", "External login session
+     expired. Please try again." and "Unknown SSO provider." Give them now, in sentence case, with no framework words
+     ("external login", "SSO provider"), each saying what to do next. Do the same for the link page's "Linking failed."
+  4. The locked-out row of the message table and every board showing the lockout sentence follow T287 above.
+
+ROUND 2 ASK:
+  - Full fidelity on the Wombat design system's tokens, as flow 01 built them: the anonymous card, the shell (sidebar,
+    top bar, the name underlined on My account), Alert, FormField, FormActions, StatePanel, Skeleton, ConfirmDialog,
+    Icon (Lucide). Use the brand mark at /_blob/a6c690a50a59fa44f668ab96ac894576, never a drawn disc.
+  - Every screen and state in the ask's STATES TO SHOW, at 1280 and at 390 px, with option B and the Q1 option B board
+    removed. Keep the long email, the 38-word refusal, four roles and three providers.
+  - My account: loaded (two roles, password only, as on dev), with an institutional sign-in linked beside the password,
+    institutional-only (Remove disabled with its reason; no Change password), the Remove ConfirmDialog, saved, the space
+    refused, a pending trainee, loading, load error, 390.
+  - Change password: blank, incorrect, mismatch, the rules, locked, throttled, institutional-only, 390; and My account
+    with "Password updated.".
+  - The toggle: shown and pressed (eye-off), and its focus ring, beside a focused input.
+  - Update the Spec board: the message table's kinds and words after the decisions, the DESIGN.md changes, the NEW
+    components with their class names, and a contrast figure for every new pair (the SSO button, the divider's words,
+    the pressed toggle, the info notice on the card).
+  - Update the Steps board: which runbook Expects change, and to what words.
+  - Keep round 1's boards; put round 2 on its own canvas page. Stop when round 2 is drawn; I will review it before any
+    corrections.

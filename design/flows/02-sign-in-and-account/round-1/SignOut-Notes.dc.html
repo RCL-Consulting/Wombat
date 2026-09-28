@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign out notes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;color:#1c1c1c}
+h1,h2,h3,p,ul{margin:0}
+.mut{color:#565656}
+.k{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;flex:none}
+.n{display:flex;gap:10px;align-items:flex-start}
+</style>
+</helmet>
+<div style="width:560px;height:844px;box-sizing:border-box;padding:32px;background:#fff;border:1px solid #b0b0b0;display:flex;flex-direction:column;gap:14px">
+<h2 style="font-size:20px">Page 3 · Sign out</h2>
+<p class="mut">Q3 option A (recommended): the top bar's Sign out stays one press and never comes here. This page is the answer to a GET.</p>
+<div class="n"><span class="k">1</span><p>The anonymous card, as sign-in, with no lockup (the lockup rule is unchanged) and no nav: the person is signed in, but nothing else on the page should be pressed. Today's break (the header beside a full-height empty card) goes with PageHeader and .form-container.</p></div>
+<div class="n"><span class="k">2</span><p>Names who is signed in, by name as stored, and the email, so a shared computer's next user sees whose session it is. What it does, in one sentence.</p></div>
+<div class="n"><span class="k">3</span><p>Sign out: a form post to /account/logout with antiforgery; it lands on Sign in with "You have signed out." Cancel: a link to the returnUrl when it is a local path, otherwise Home. Cancel first on desktop (as flow 01's form actions), Sign out first when stacked on a phone.</p></div>
+<h3 style="font-size:16px;margin-top:8px">Routes</h3>
+<p>GET /account/logout shows this page (T317: no more 405). GET /account/logout-confirm shows the same page; round 2 can make it a redirect to /account/logout instead. POST /account/logout signs out. Static ([ExcludeFromInteractiveRouting]): the page works whatever state the circuit is in.</p>
+<h3 style="font-size:16px;margin-top:8px">Option B, if chosen</h3>
+<p>The same page, reached from the top bar's Sign out, which becomes a link here instead of a post. Nothing else on this board changes.</p>
+<h3 style="font-size:16px;margin-top:8px">Focus</h3>
+<p>Starts at the top of the page; the h1 is the first thing read. No result is shown here: the result is on the sign-in page.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
