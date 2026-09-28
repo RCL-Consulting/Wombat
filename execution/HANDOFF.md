@@ -35,10 +35,6 @@ want it to look at UX also, include mails and pdf and set up the pilot", and "ac
 - **2026-09-28: step 1 done (`ca3b19ff`):** the brief is restated, and the upload set is staged (109 files in
   `design/upload/`). Canvas "Wombat 02" https://claude.ai/artifact/5BnSniM2QS8NouqWS6wsPB, mark copied in (`ea1f316e`).
   Next: the operator pastes § 1 and § 8; the session records round 1 in `design/flows/02-sign-in-and-account/`.
-- The operator then creates a **new** canvas from the main app's Design page, on the Wombat design system v4, and gives
-  its link. A new canvas, not the flow 01 one: that one holds the old design-system copy and is flow 01's record.
-- The session copies the mark into the canvas (asset `16c4e619b7ea0971d0c28ed6509be7a8`, `from_url` = the design
-  system) before round 1.
 - Reusable from T335:
   - `design/pilot/build-lanes.md` (the lane rules);
   - `design/pilot/review-lanes.md` (the reviewers' brief);
