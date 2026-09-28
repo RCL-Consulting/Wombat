@@ -36,8 +36,10 @@ want it to look at UX also, include mails and pdf and set up the pilot", and "ac
   `design/upload/`). Canvas "Wombat 02" https://claude.ai/artifact/5BnSniM2QS8NouqWS6wsPB, mark copied in (`ea1f316e`).
   Rounds 1–2 reviewed and decided (`round-1-review.md`, `round-2-review.md`: E1–E11 accepted; T340 filed). Next: the
   Round 3 checked and final. **Step F landed: `f50dffb2`** (lanes, four-sided review, one fix pass; 8,450 tests green;
-  T341 filed). Next: step G, the whole-runbook replay on a fresh database (`design/pilot/replay-workflow.js`), then the
-  design-system re-sync (step 8) and lessons (step 9). The lane branches `t339*` and their worktrees can be removed.
+  T341 filed; worktrees removed, `t339*` branches kept). **Step G running** (workflow run `wf_a5af0dc3-294`, script
+  `design/flows/02-sign-in-and-account/replay-workflow.js`): `wombat_scenario_t339` on :5180, snapshots
+  `scenario-t339-post-act*`, Playwright in the session scratchpad. The static toggle was checked in a real browser first.
+  Then: design-system re-sync (step 8) and lessons (step 9).
 - Reusable from T335:
   - `design/pilot/build-lanes.md` (the lane rules);
   - `design/pilot/review-lanes.md` (the reviewers' brief);
