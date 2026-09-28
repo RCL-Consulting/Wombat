@@ -39,9 +39,8 @@ The operator asked to tackle flow 02, then "proceed" through each step. T339 clo
 
 ### Environment left
 
-- **The replay app on `:5180`**: `wombat_scenario_t339`, built from `f50dffb2` (before `6735fa98`'s CSS). Stop it with
-  `tools/scenario-replay.ps1 stop 5180`. The cast's passwords were kept only in the session scratchpad, which is
-  cleared with the session: a later replay registers its own.
+- **The replay app on `:5180` is stopped** (2026-09-28). Its database `wombat_scenario_t339` holds flow 02's end state;
+  restart with `tools/scenario-replay.ps1 start wombat_scenario_t339 5180`.
 - **Snapshots:** `recovery/scenario-t339-post-act{1..6,A}.dump` (new), and the T335 ones.
 - **Droppable scratch databases:** `wombat_scenario_t339_states_5184`, `_5184_2`, and the older `wombat_scenario_t335*`,
   `wombat_scenario_states*`, `_rc*`, `_t292`.
