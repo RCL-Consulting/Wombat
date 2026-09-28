@@ -24,6 +24,8 @@ outcomes and endpoints; lane C My account and T286's half; lane B the password p
 **What counts as a finding.**
 - A real defect: wrong behaviour, a security weakness, a broken contract with the design or with DESIGN.md, a test
   that does not test what it claims, or a doc that now says something false.
+- A test that models a state which cannot occur (a cross-site post carrying a SameSite=Lax cookie; a stylesheet rule
+  read without the cascade) passes while the real case fails: ask of each test whether its setup can happen.
 - Give each finding: its file and line; a concrete failure scenario (inputs or state → wrong result); a severity (high,
   medium or low); the fix you would make.
 - Verify each one against the code before reporting it. Say "confirmed" if you traced it and "plausible" if you could

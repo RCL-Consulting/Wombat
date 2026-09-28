@@ -161,6 +161,8 @@ web, and it is not (inference).
    already follows it.
    - Stage the flow's upload set with `design/tools/stage_upload.ps1 -Flow NN` (§ 3.1). Attach its KEY SCREENSHOTS
      first, and add STATES as the chat asks for them.
+   - **Send § 1 and § 8 as one message.** The canvas draws round 1 from the first message; it does not wait for the
+     steps (§ 11, flow 02). Prefer new-shell captures (`act-*/`) to pre-shell `states/` ones in the key screenshots.
    - **Get the structure first, then fidelity, then a review round before the build** (§ 11: flow 01 needed one).
      - Each flow asks first for 2–3 structural variations as wireframes. A structural variation covers the flow's
        pages and their order, the steps of its journeys, and where each outcome and refusal shows.
@@ -899,6 +901,37 @@ system (`064cde00`). Each finding says what was observed and what it changed. "O
   - The "attempt started" listener must bind the IPv6 loopback too.
   - One width was worded loosely.
   - One timeout is 60 s, not 65 s.
+
+**Flow 02 (T339, 2026-09-28): what the second flow added**
+
+Flow 02 ran the whole loop in one day: brief, three rounds, a review, the build (`f50dffb2`), the replay (246 of 325
+steps with no gap) and the re-sync. Its record is `design/flows/02-sign-in-and-account/`. Only what flow 01 did not
+already teach is here.
+
+- **The canvas does not wait for the second message.** Observed: it drew round 1 (29 boards) from § 1 alone; § 8 went
+  in afterwards as a check, and added one board and three corrections. *Changed:* § 2.3 step 4 sends § 1 and § 8
+  together.
+- **A sent message can draw nothing.** Observed: the first send of round 2 saved no boards; the canvas's version was
+  unchanged. *Changed:* nothing in the brief; read `project/canvas.json`'s version after each round before reviewing.
+- **An F flow's single proposal worked.** Observed: round 1 was one structure with options only at the brief's forks
+  (three), and the operator decided all four questions in one exchange. Inference: an F flow can skip the 2–3
+  variations.
+- **The canvas does not know the code; the review must.** Observed: round 2 drew a link date Wombat does not store,
+  five password rules where Identity enforces six, and cast members with roles the runbook does not give them. The
+  four-sided review caught each by reading the code and the runbook. *Changed:* nothing; keep one reviewer on the code
+  and one on the cast.
+- **Lanes that share a contract run in waves.** Observed: the words and codes (lane A) and My account (lane C) ran in
+  parallel on agreed literals; the pages that render both (lane B) ran after their merge. Every merge was clean.
+  *Changed:* flow 02's `build-lanes.md` is the template: name the contract strings in both briefs.
+- **A test can pass by modelling what cannot happen.** Observed: the build's review found another site could still
+  sign a person out. The sign-out test posted "another site's form" with the victim's cookie, which a browser never
+  sends cross-site (the cookie is SameSite=Lax). Likewise a stylesheet test read only exact selectors, so a rule that
+  lost the cascade passed (`Stylesheet.Cascaded` now resolves it). *Changed:* the reviewers' brief asks whether each
+  test models a state that can occur.
+- **The main checkout cannot build while the dev app runs.** Observed: the app on :5080 locks `bin/x64/Release`. Run a
+  suite from a throwaway worktree (`git worktree add … HEAD`) after committing locally.
+- **Keeping capture names held.** Observed: the replay kept every existing name; `check_baseline_paths.py` read missing
+  0 with no repointing, where flow 01's replay broke 101 citations.
 
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
