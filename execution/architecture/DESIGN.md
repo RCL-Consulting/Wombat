@@ -15,7 +15,7 @@
 > - **The invariants in `design/BRIEF.md` § 4.4 bind every redesign.** For example, every nav link opens a page that
 >   admits the role, and there is one `<h1>` per page.
 > - **Redesigned so far:** flow 01, the shell (2026-09-27, T335, `b347e11c`); flow 02, sign-in and account (2026-09-28,
->   T339: § Account / auth page).
+>   T339, `f50dffb2`: § Account / auth page).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 

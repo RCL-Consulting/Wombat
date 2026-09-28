@@ -35,9 +35,9 @@ want it to look at UX also, include mails and pdf and set up the pilot", and "ac
 - **2026-09-28: step 1 done (`ca3b19ff`):** the brief is restated, and the upload set is staged (109 files in
   `design/upload/`). Canvas "Wombat 02" https://claude.ai/artifact/5BnSniM2QS8NouqWS6wsPB, mark copied in (`ea1f316e`).
   Rounds 1–2 reviewed and decided (`round-1-review.md`, `round-2-review.md`: E1–E11 accepted; T340 filed). Next: the
-  Round 3 checked and final (`round-3-check.md`). **Step F running:** wave 1 = lane A `t339-words` (words, outcomes,
-  endpoints) and lane C `t339-account` (My account, T286's half), merged on `t339` (`5fdc91c6`, six suites green,
-  8,370 tests); wave 2 = lane B `t339-pages` (password pages, toggle, Change password static, DESIGN.md) running. Rules: `design/flows/02-sign-in-and-account/build-lanes.md`.
+  Round 3 checked and final. **Step F landed: `f50dffb2`** (lanes, four-sided review, one fix pass; 8,450 tests green;
+  T341 filed). Next: step G, the whole-runbook replay on a fresh database (`design/pilot/replay-workflow.js`), then the
+  design-system re-sync (step 8) and lessons (step 9). The lane branches `t339*` and their worktrees can be removed.
 - Reusable from T335:
   - `design/pilot/build-lanes.md` (the lane rules);
   - `design/pilot/review-lanes.md` (the reviewers' brief);
