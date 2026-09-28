@@ -1,11 +1,12 @@
 ---
 id: T342
 title: Flow 03, a registrar asks for an assessment or logs one, has not been through the redesign loop
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-28
+started: 2026-09-28
 ---
 
 # T342 — Flow 03, a registrar asks for an assessment or logs one, has not been through the redesign loop
