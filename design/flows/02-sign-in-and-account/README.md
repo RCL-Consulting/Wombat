@@ -13,3 +13,7 @@ T339's design, kept beside its brief (`../02-sign-in-and-account.md`) so that it
 - **Round 1's review and the decisions** (2026-09-28): `round-1-review.md`. Q1 A, Q2 A (B filed as T340), Q3 A, Q4 yes
   with T286's half built here, T287's one refusal. `round-1/` holds the 30 boards and the index as read.
 - **Round 2's ask:** `round-2-ask.txt`, sent as the third message.
+- **Round 2** (2026-09-28, `round-2/`, canvas version `1790580216-aee6`): 36 boards on the page "R2 · Fidelity":
+  `R2-Spec` (messages, DESIGN.md changes, new classes, contrast) and `R2-Steps` (the runbook Expects that change), then
+  sign in, sign out, My account, change password, forgotten password and link, at 1280 and 390. The first send of the
+  round 2 message drew nothing; a resend did.

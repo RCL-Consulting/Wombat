@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Institutional sign-in expired · Wombat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+a{color:#0b5cab}
+h1,h2,h3,p{margin:0}
+.ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ground{background:radial-gradient(circle at top left,rgba(45,108,223,.12),transparent 32%),linear-gradient(135deg,#f8f9fa 0%,#f1f3f5 100%)}
+.acard{width:480px;box-sizing:border-box;background:#ffffff;border:1px solid #dee2e6;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:40px;display:flex;flex-direction:column;gap:16px}
+.atitle{font-size:2rem;font-weight:600;line-height:1.25}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.bo{background:#ffffff;color:#2d6cdf}
+.acts{display:flex;justify-content:flex-end;border-top:1px solid #dee2e6;padding-top:16px}
+.capt{position:absolute;left:0;right:0;bottom:0;background:#ffffff;border-top:1px solid #dee2e6;padding:8px 16px;font-size:.8125rem;line-height:1.4;color:#333333;display:flex;gap:24px;flex-wrap:wrap}
+.capt b{font-weight:600}
+</style>
+</helmet>
+<div class="ground" style="width:1280px;height:800px;box-sizing:border-box;position:relative;display:flex;justify-content:center;align-items:flex-start;padding-top:160px">
+<main class="acard">
+<h1 class="atitle">Institutional sign-in expired</h1>
+<p>Your institutional sign-in has expired. Start again from the sign-in page.</p>
+<div class="acts"><a href="#" class="btn bo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Back to sign in</a></div>
+</main>
+<div class="capt"><span><b>7 · Link · expired</b> (A.3.3; T149) · /account/link-external with no institutional sign-in in progress</span><span>Its own h1 and tab; not a refusal, so no alert and no "Error:"; no field</span><span><b>Tab</b> Institutional sign-in expired · Wombat</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

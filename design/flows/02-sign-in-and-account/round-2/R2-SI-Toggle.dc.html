@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Password toggle states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f1f3f5}
+h1,h2,h3,p{margin:0}
+.ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.panel{background:#ffffff;border:1px solid #dee2e6;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:24px;display:flex;flex-direction:column;gap:10px}
+.fld{display:flex;flex-direction:column;gap:8px}
+.fc{height:38px;box-sizing:border-box;border:1px solid #7b848d;border-radius:6px;background:#ffffff;padding:6px 12px;font:inherit;color:#333333;flex-grow:1;min-width:0}
+.fo{outline:2px solid #2d6cdf;outline-offset:2px}
+.password-field{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;box-sizing:border-box;white-space:nowrap;cursor:pointer;min-height:38px;flex:none}
+.password-toggle{background:#ffffff;color:#2d6cdf}
+.password-toggle[aria-pressed="true"]{background:#2d6cdf;color:#ffffff}
+.meta{font-size:.875rem;color:#333333;line-height:1.4}
+.mut{color:#686f77}
+code{font-family:Consolas,"Courier New",monospace;font-size:.875rem}
+</style>
+</helmet>
+<div style="width:1280px;height:840px;box-sizing:border-box;padding:40px;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 style="font-size:1.5rem;font-weight:600">The password toggle (NEW: <code>.password-field</code>, <code>.password-toggle</code>)</h2>
+<p class="mut">A button beside its input, never inside it. One markup on the four pages (sign in, change password ×3, link); shown and wired by <code>wombat.js</code> on <code>[data-password-toggle]</code>, rendered <code>hidden</code> until then. The visible word stays "Show"; the state is the fill, the icon and aria-pressed.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+
+<div class="panel"><div class="fld"><label for="a">Password</label><div class="password-field"><input class="fc" id="a" type="password" value="xxxxxxxxxxxxxx"><button type="button" class="btn password-toggle" aria-pressed="false" aria-controls="a" aria-label="Show password"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div></div>
+<p class="meta"><b>a · At rest.</b> Outline button: <code>secondary-color</code> label and edge on the surface, 4.86:1. 38 × 84 px.</p></div>
+
+<div class="panel"><div class="fld"><label for="b">Password</label><div class="password-field"><input class="fc fo" id="b" type="password" value="xxxxxxxxxx"><button type="button" class="btn password-toggle" aria-pressed="false" aria-controls="b" aria-label="Show password"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div></div>
+<p class="meta"><b>b · The input focused.</b> The ring (<code>focus-ring</code>, 2 px at 2 px) sits in the 8 px gap and does not touch the toggle.</p></div>
+
+<div class="panel"><div class="fld"><label for="c">Password</label><div class="password-field"><input class="fc" id="c" type="password" value="xxxxxxxxxx"><button type="button" class="btn password-toggle fo" aria-pressed="false" aria-controls="c" aria-label="Show password"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div></div>
+<p class="meta"><b>c · The toggle focused, not pressed.</b> Screen reader: "Show password, toggle button, not pressed".</p></div>
+
+<div class="panel"><div class="fld"><label for="d">Password</label><div class="password-field"><input class="fc" id="d" type="text" value="Kanga-roo-2026!"><button type="button" class="btn password-toggle fo" aria-pressed="true" aria-controls="d" aria-label="Show password"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>Show</button></div></div>
+<p class="meta"><b>d · Pressed and focused.</b> Filled: <code>on-fill</code> on <code>secondary-color</code>, 4.86:1; eye-off; the input's type is text. The ring stays <code>focus-ring</code> on the surface, 4.86:1, 2 px clear of the fill.</p></div>
+
+<div class="panel"><div class="fld"><label for="e">Password</label><div class="password-field"><input class="fc fo" id="e" type="text" value="Kanga-roo-2026!"><button type="button" class="btn password-toggle" aria-pressed="true" aria-controls="e" aria-label="Show password"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>Show</button></div></div>
+<p class="meta"><b>e · Pressed, the input focused again.</b> Pressing the toggle leaves the focus on it; the person moves back to type. Posting the form sets every field back to hidden (the page reloads).</p></div>
+
+<div class="panel"><div class="fld"><label for="f">Password</label><div class="password-field"><input class="fc" id="f" type="password" style="height:44px"></div></div>
+<p class="meta"><b>f · Scripts blocked.</b> No toggle at all (rendered <code>hidden</code>); the field fills the row. Nothing dead to press.</p></div>
+
+</div>
+<div style="display:flex;gap:32px;align-items:flex-start">
+<div class="panel" style="width:358px;box-sizing:border-box"><div class="fld"><label for="g">Current password</label><div class="password-field"><input class="fc" id="g" type="password" style="height:44px"><button type="button" class="btn password-toggle" aria-pressed="false" aria-controls="g" aria-label="Show current password" style="min-height:44px;min-width:44px"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Show</button></div></div>
+<p class="meta"><b>g · Below 641 px.</b> Field and toggle 44 px tall.</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:6px" class="meta">
+<b>Names on each page</b>
+<span>Sign in, link: "Show password". Change password: "Show current password", "Show new password", "Show new password again". Each name starts with the visible word (WCAG 2.5.3); aria-controls names its input; aria-pressed="false" or "true". The icon is decorative.</span>
+<b style="margin-top:6px">wombat.js</b>
+<span>On load: for each <code>[data-password-toggle]</code>, remove <code>hidden</code>, listen for click (no inline onclick; the CSP forbids it), flip the input's type and aria-pressed, swap the icon's <code>use</code>. About 20 lines; no framework.</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":840}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

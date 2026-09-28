@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign out · Wombat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;color:#333333;background:#f8f9fa}
+a{color:#0b5cab}
+h1,h2,h3,p{margin:0}
+.ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ground{background:radial-gradient(circle at top left,rgba(45,108,223,.12),transparent 32%),linear-gradient(135deg,#f8f9fa 0%,#f1f3f5 100%)}
+.acard{box-sizing:border-box;background:#ffffff;border:1px solid #dee2e6;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:24px;display:flex;flex-direction:column;gap:16px}
+.atitle{font-size:2rem;font-weight:600;line-height:1.25}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid #2d6cdf;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;box-sizing:border-box;white-space:nowrap;cursor:pointer;width:100%}
+.bp{background:#2d6cdf;color:#ffffff}
+.bo{background:#ffffff;color:#2d6cdf}
+</style>
+</helmet>
+<div class="ground" style="width:390px;height:844px;box-sizing:border-box;padding:32px 16px 16px">
+<main class="acard">
+<h1 class="atitle">Sign out</h1>
+<p>You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends your session in this browser.</p>
+<form method="post" action="/account/logout" style="display:flex;flex-direction:column;gap:12px;border-top:1px solid #dee2e6;padding-top:16px">
+<button type="button" class="btn bp"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>Sign out</button>
+<a href="#" class="btn bo">Cancel</a>
+</form>
+</main>
+<p style="font-size:.8125rem;margin-top:12px;background:#ffffff;border:1px solid #dee2e6;border-radius:6px;padding:6px 10px">390 · the buttons stack full width at 44 px, Sign out first; the card's padding 24 px.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

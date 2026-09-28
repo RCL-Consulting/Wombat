@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign out notes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.5;color:#333333}
+h2,h3,p,ul{margin:0}
+ul{padding-left:18px;display:flex;flex-direction:column;gap:4px}
+code{font-family:Consolas,"Courier New",monospace;font-size:.875rem}
+</style>
+</helmet>
+<div style="width:560px;height:844px;box-sizing:border-box;padding:28px;background:#ffffff;border:1px solid #dee2e6;display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:1.25rem;font-weight:600">Sign out · notes</h2>
+<h3 style="font-size:1rem;font-weight:600">Two addresses, one page</h3>
+<ul>
+<li><code>GET /account/logout</code> and <code>GET /account/logout-confirm</code> both draw this page: the same markup, its own <code>&lt;form method="post" action="/account/logout"&gt;</code> and a fresh antiforgery token. Neither redirects, and no GET signs out (T317: no more 405).</li>
+<li><code>/account/logout-confirm</code> is not reached only by typing: flow 01's error page links its Sign out here, because a form on the error page would carry a token its own failed request invalidated. So it must stay a page that draws its own form, never a redirect to a GET that signs out.</li>
+<li><code>POST /account/logout</code> signs out and lands on Sign in with "You have signed out." The audit log records a Logout (A.4.7).</li>
+</ul>
+<h3 style="font-size:1rem;font-weight:600">The page</h3>
+<ul>
+<li>The anonymous card, no lockup (the lockup stays the sign-in card's), no nav: signed in, but nothing else on the page should be pressed. Static ([ExcludeFromInteractiveRouting]).</li>
+<li>Names who is signed in, as stored, with the email, so the next person at a shared ward computer sees whose session it is.</li>
+<li>Cancel is a link to the returnUrl when it is a local path (the error page passes its own), else Home (A.4.7: his dashboard).</li>
+<li>h1 and tab "Sign out · Wombat". The focus starts at the top.</li>
+</ul>
+<h3 style="font-size:1rem;font-weight:600">The top bar (Q3)</h3>
+<ul><li>Flow 01's Sign out stays one press, a form post, and never comes here.</li></ul>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
