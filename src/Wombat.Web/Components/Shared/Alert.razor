@@ -1,6 +1,6 @@
 @if (!_dismissed)
 {
-  <div id="@Id" class="alert alert-@Kind" role="@EffectiveRole">
+  <div id="@Id" class="alert alert-@Kind" role="@EffectiveRole" @attributes="AdditionalAttributes">
     @if (Dismissible)
     {
       <div class="actions-cell">
@@ -48,6 +48,12 @@
     _ when string.IsNullOrWhiteSpace(Role) => null,
     _ => Role
   };
+
+  /// <summary>
+  /// Any other attribute, on the alert's own element: <c>tabindex="-1"</c> and <c>autofocus</c> for a message that takes
+  /// the focus as a static page loads (the sign-in page's refusal, change password's; T339, flow 02, C6).
+  /// </summary>
+  [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
   private void Dismiss() => _dismissed = true;
 }

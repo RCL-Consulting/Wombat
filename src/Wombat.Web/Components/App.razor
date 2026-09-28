@@ -77,13 +77,16 @@
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Three pages are excluded. The MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not
+    /// Five pages are excluded. The MSF respondent's (<c>/msf/respond</c>): a stranger holding an emailed link, not
     /// signed in. Static, its every request, the submit included, is an HTTP request, so the link's rate limit applies
     /// to it; over a circuit the submit would be a SignalR message the limiter never sees. It works without WebSockets
     /// or script, for a signed-in user too. And the export check (<c>/portfolio/verify</c>, T265), open to anyone holding
     /// a portfolio PDF: its Verify is a GET form whose check is made as the page renders, the same signed in or not. And the
     /// error page (<c>/Error</c>, T321; T335, flow 01), rendered once inside the request that failed, so the reference it
-    /// shows is that request's: its circuit, when it had one, re-rendered it with no request and lost it.
+    /// shows is that request's: its circuit, when it had one, re-rendered it with no request and lost it. And two account
+    /// pages whose one job is a form the browser posts (T339, flow 02): sign out (<c>/account/logout</c>), and change
+    /// password (<c>/account/change-password</c>), whose Show toggles are wombat.js's. Change password is drawn in the
+    /// shell, which works without a circuit, as the error page shows.
     /// </para>
     /// <para>
     /// A visitor who has not signed in gets no interactive root because the circuit is not theirs to have. The Blazor

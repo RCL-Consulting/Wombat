@@ -75,6 +75,29 @@ public interface IUserAdministrationService
                 StringComparer.Ordinal);
     }
 
+    /// <summary>
+    /// How the account signs in: whether it has a Wombat password that signs it in, and its institutional sign-ins (T339,
+    /// flow 02; T286's list). Null for an account that does not exist. The default implementation throws: only the real
+    /// service reads the logins, and a test directory that never shows My account need not.
+    /// </summary>
+    Task<AccountSignInMethods?> GetSignInMethodsAsync(string userId, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("This user directory does not read sign-in methods.");
+
+    /// <summary>
+    /// Removes the account's institutional sign-in through <paramref name="provider" /> (T339, flow 02; T286's removal),
+    /// unless it is the account's last way in: no password that signs it in, and no other institutional sign-in. The check
+    /// and the removal are one: the account is read before its logins, and the removal is saved against the account's
+    /// concurrency stamp, so a second tab that removed another sign-in in between makes this one a
+    /// <see cref="InstitutionalSignInRemoval.Conflict" />, never a second removal past the guard. Nothing is left staged
+    /// when it answers anything but <see cref="InstitutionalSignInRemoval.Removed" /> (the audit pipeline saves what a
+    /// failed handler left staged). The default implementation throws, as <see cref="GetSignInMethodsAsync" />'s does.
+    /// </summary>
+    Task<InstitutionalSignInRemoval> RemoveInstitutionalSignInAsync(
+        string userId,
+        string provider,
+        CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("This user directory does not remove sign-in methods.");
+
     Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default);
     Task UpdateScopeAsync(
         string userId,
@@ -110,3 +133,33 @@ public sealed record UserIdentityDetails(
 
 /// <summary>What a picker labels a person by: their name and email, and nothing about their roles or scope. (T248)</summary>
 public sealed record UserContact(string UserId, string FirstName, string LastName, string Email);
+
+/// <summary>How an account signs in (T339, flow 02).</summary>
+/// <param name="HasLocalPassword">
+/// A Wombat password signs the account in: it may use one (<c>AllowLocalPassword</c>, which the sign-in and change password
+/// endpoints hold it to) and it has one. An account provisioned by its institution's sign-in has neither.
+/// </param>
+/// <param name="InstitutionalSignIns">Its institutional sign-ins, each once, by the provider's key.</param>
+public sealed record AccountSignInMethods(bool HasLocalPassword, IReadOnlyList<InstitutionalSignIn> InstitutionalSignIns);
+
+/// <summary>
+/// One institutional sign-in linked to an account: the provider's key, which a removal names, and the name a person reads.
+/// Wombat stores no date for a link (<c>AspNetUserLogins</c> has none), so none is shown (T339, C1).
+/// </summary>
+public sealed record InstitutionalSignIn(string Provider, string DisplayName);
+
+/// <summary>What a removal of an institutional sign-in did (T339, flow 02).</summary>
+public enum InstitutionalSignInRemoval
+{
+    /// <summary>The sign-in is gone, and the account's security stamp has changed with it.</summary>
+    Removed,
+
+    /// <summary>The account has no sign-in through that provider: never linked, or removed already (a second tab).</summary>
+    NotLinked,
+
+    /// <summary>It is the account's last way in: no password that signs it in, and no other institutional sign-in.</summary>
+    LastWayIn,
+
+    /// <summary>The account changed after it was read (a second tab removed another sign-in); nothing was removed.</summary>
+    Conflict
+}

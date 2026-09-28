@@ -47,7 +47,7 @@ public sealed partial class VerifyExportPageHostingTests
         var answer = new HtmlParser().ParseDocument(html);
         answer.QuerySelector(".action-result h3")!.TextContent.Should().Be("Export verified");
         answer.QuerySelector(".action-result")!.HasAttribute("autofocus").Should().BeTrue("the answer to a press takes the focus");
-        ServerComponentMarker().IsMatch(html).Should().BeFalse("the page has no interactive root");
+        ServerComponentMarker.IsIn(html).Should().BeFalse("the page has no interactive root");
     }
 
     [Fact]
@@ -58,10 +58,10 @@ public sealed partial class VerifyExportPageHostingTests
 
         var (_, html, document) = await host.LoadAsync($"/portfolio/verify?hash={Hash}&check=1");
 
-        ServerComponentMarker().IsMatch(html).Should().BeFalse("[ExcludeFromInteractiveRouting]: one page for every visitor");
+        ServerComponentMarker.IsIn(html).Should().BeFalse("[ExcludeFromInteractiveRouting]: one page for every visitor");
         document.QuerySelector(".action-result h3")!.TextContent.Should().Be("Export verified");
         var (_, otherHtml, _) = await host.LoadAsync(AppTestHost.AnonymousPage);
-        ServerComponentMarker().IsMatch(otherHtml).Should().BeTrue("guard: other pages are still interactive for them");
+        ServerComponentMarker.IsIn(otherHtml).Should().BeTrue("guard: other pages are still interactive for them");
     }
 
     [Fact]
@@ -87,9 +87,6 @@ public sealed partial class VerifyExportPageHostingTests
                 SignedInVisitor.Register(services);
             }
         });
-
-    [GeneratedRegex("""<!--Blazor:\{[^>]*"type":"server""")]
-    private static partial Regex ServerComponentMarker();
 
     private sealed class VerifySender : IScopedSender
     {

@@ -639,8 +639,10 @@ Expect: The log holds a stub mail "You have draft activities waiting" beginning 
 Step A.4.4 — Dr du Plessis has forgotten his password
 Role: Anonymous — Dr Pieter du Plessis
 Route: /account/login → /account/forgot-password → /account/login
-Do: Follow "Forgotten your password? Reset it" from the sign-in page.
-Expect: A "Reset password" page, saying exactly: "Password reset is not wired yet in the rewrite. Ask an administrator
-  to issue a new invitation or reset the account directly." It offers Back to sign in, and nothing else: no field, and
+Do: Follow "Forgotten your password?" from the sign-in page.
+Expect: A "Forgotten password" page: "A Wombat administrator can set a new password for you." then three steps ("Ask
+  your Wombat administrator for a new password: the one at your institution or, if your account belongs to no
+  institution, the platform's administrator. They give it to you themselves; Wombat does not email it." "Sign in with
+  it." "Choose your own password on My account, under Change password."), and Back to sign in. There is no field, and
   no email is sent.
 ```

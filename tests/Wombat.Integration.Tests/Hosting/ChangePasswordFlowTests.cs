@@ -8,11 +8,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Mvc.Testing.Handlers;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Audit;
 using Wombat.Infrastructure.Identity;
+using Wombat.Infrastructure.Persistence;
+using WombatWeb::Wombat.Web.Navigation;
 using WombatWeb::Wombat.Web.Security;
 using Wombat.Integration.Tests.MultiSourceFeedback;
 
@@ -74,18 +78,19 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
             using var submit = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
 
             submit.StatusCode.Should().Be(HttpStatusCode.Redirect);
-            submit.Headers.Location!.ToString().Should().Be($"{PagePath}?status=updated");
+            submit.Headers.Location!.ToString().Should().Be("/account/profile?status=password-updated",
+                "a change goes to My account, which says so (T339, flow 02)");
             submit.Headers.GetValues("Set-Cookie").Should().Contain(
                 cookie => cookie.StartsWith($"{SignInCookie}=", StringComparison.Ordinal),
                 "the sign-in cookie is issued again in the response to the change");
             (await StampAsync(email)).Should().NotBe(stampBefore, "changing the password changes the security stamp");
             SignInCookieOf(cookies).Should().NotBe(cookieBefore);
 
-            // Still signed in: the page the redirect names loads, and says what happened.
+            // Still signed in: the page the redirect names loads. What My account says for the status is its own (T339,
+            // flow 02: "Password updated."), held by its page and flow tests.
             using var answer = await browser.GetAsync(submit.Headers.Location);
             answer.StatusCode.Should().Be(HttpStatusCode.OK, $"not sent to sign in again ({answer.Headers.Location})");
             var page = Parse(await answer.Content.ReadAsStringAsync());
-            page.QuerySelector(".action-result .alert-success")!.TextContent.Trim().Should().Be("Password updated.");
             // The account row names them by the display-name claim sign-in issued (T335, flow 01): "Signed Assessor".
             page.QuerySelector(".account-row .account-link")!.TextContent.Trim().Should().Be("Signed Assessor", "signed in, as themselves");
 
@@ -109,13 +114,14 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
     }
 
     [Theory]
-    [InlineData("Not-the-Pa55word!", NewPassword, NewPassword, "PasswordMismatch", "Incorrect password.")]
+    [InlineData("Not-the-Pa55word!", NewPassword, NewPassword, "PasswordMismatch",
+        "Your password was not changed. Incorrect password.")]
     [InlineData(MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, "Changed-Pa55word?", "ConfirmationMismatch",
-        "The password confirmation does not match.")]
+        "Your password was not changed. The password confirmation does not match.")]
     [InlineData(MsfRespondPageFlowTests.WebHost.SignInPassword, "short1A!", "short1A!", "PasswordTooShort",
-        "Passwords must be at least 12 characters.")]
+        "Your password was not changed. The new password needs: At least 12 characters.")]
     [InlineData(" ", " ", " ", "FieldsMissing",
-        "Enter your current password, a new password, and the new password again to confirm it.")]
+        "Your password was not changed. Enter your current password, a new password, and the new password again to confirm it.")]
     public async Task ARefusedChange_IsSaidOnThePage_TheUserStaysSignedIn_AndNothingChanges(
         string current,
         string replacement,
@@ -139,7 +145,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
             using var answer = await browser.GetAsync(submit.Headers.Location);
             answer.StatusCode.Should().Be(HttpStatusCode.OK);
-            Parse(await answer.Content.ReadAsStringAsync()).QuerySelector(".action-result .alert-danger")!.TextContent.Trim()
+            RefusalWords(Parse(await answer.Content.ReadAsStringAsync()))
                 .Should().Be(sentence);
         }
 
@@ -248,7 +254,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
             submit.Headers.Location!.ToString().Should().Be(
                 "/account/login?error=SessionEnded&returnUrl=" + Uri.EscapeDataString(PagePath),
                 "a code, never the words (T285)");
-            (await SignInPageRefusalAsync(browser, submit)).Should().Be("Your session has ended. Please sign in again.");
+            (await SignInPageMessageAsync(browser, submit)).Should().Be("Your session has ended. Sign in again.");
             IssuedSignInCookies(submit).Should().BeEmpty("no cookie is issued to a session that has ended");
             (await StampAsync(email)).Should().Be(stampAfterLock, "nothing changed");
             (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.SignInPassword)).Should().BeTrue();
@@ -271,7 +277,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
             // The first browser's change ends every other session: their cookies carry the old stamp.
             using (var changed = await PostTheFormAsync(first, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword))
             {
-                changed.Headers.Location!.ToString().Should().Be($"{PagePath}?status=updated", "guard: the first change went through");
+                changed.Headers.Location!.ToString().Should().Be(ChangePasswordOutcome.UpdatedUrl, "guard: the first change went through");
             }
 
             var stamp = await StampAsync(email);
@@ -289,43 +295,175 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         }
     }
 
+    /// <summary>
+    /// T339, flow 02, E2: the fifth wrong current password locks the account, as the sign-in page's does, and ends the
+    /// session that guessed, every copy of its cookie included, so whoever holds it cannot wait the lock out and guess five
+    /// more. The sign-in page says why, with the lockout Identity is configured with. Until T339 the lockout came back to
+    /// this page as a refusal and the session went on.
+    /// </summary>
     [Fact]
-    public async Task FiveWrongCurrentPasswords_LockTheAccount_AndThenEvenTheRightOneIsRefused_WhileTheSessionGoesOn()
+    public async Task FiveWrongCurrentPasswords_LockTheAccount_AndSignTheSessionOut_SayingWhy()
     {
+        // The security stamp checked on every request, so a cookie the lock ended is refused at once.
+        await using var app = _host.Factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.Zero)));
+
         var email = NewEmail();
-        await _host.CreateAssessorAsync(email);
-        var (browser, _) = NewBrowser(_host.Factory);
+        var account = await _host.CreateAssessorAsync(email);
+        var (browser, cookies) = NewBrowser(app);
         using (browser)
         {
             await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
-            var stamp = await StampAsync(email);
+            var cookieBefore = SignInCookieOf(cookies);
 
             var codes = new List<string>();
+            HttpResponseMessage? fifth = null;
             for (var attempt = 1; attempt <= 5; attempt++)
             {
-                using var wrong = await PostTheFormAsync(browser, $"Guess-{attempt}-Pa55word!", NewPassword, NewPassword);
+                using var load = await browser.GetAsync(PagePath);
+                if (attempt == 5)
+                {
+                    // A switch's word not yet shown, left after the page loaded (a load takes it): the sign-out takes it too
+                    // (T317; the review of the t339 branch).
+                    cookies.Container.Add(Origin, new Cookie(ActingRoleSwitchResults.CookieName, "a-word-not-yet-shown"));
+                }
+
+                var wrong = await PostTheLoadedFormAsync(browser, load, $"Guess-{attempt}-Pa55word!", NewPassword, NewPassword);
                 codes.Add(wrong.Headers.Location!.ToString());
+                if (attempt == 5)
+                {
+                    fifth = wrong;
+                }
+                else
+                {
+                    wrong.Dispose();
+                }
             }
 
-            // Identity's lockout, as the sign-in and link pages apply it: the fifth failure locks the account.
-            codes.Should().Equal(
-                $"{PagePath}?error=PasswordMismatch",
-                $"{PagePath}?error=PasswordMismatch",
-                $"{PagePath}?error=PasswordMismatch",
-                $"{PagePath}?error=PasswordMismatch",
-                $"{PagePath}?error={ChangePasswordOutcome.LockedOut}");
+            using (fifth)
+            {
+                // Identity's lockout, as the sign-in and link pages apply it: the fifth failure locks the account.
+                codes.Should().Equal(
+                    $"{PagePath}?error=PasswordMismatch",
+                    $"{PagePath}?error=PasswordMismatch",
+                    $"{PagePath}?error=PasswordMismatch",
+                    $"{PagePath}?error=PasswordMismatch",
+                    "/account/login?error=LockedSignedOut");
+                IssuedSignInCookies(fifth!).Should().BeEmpty("the session is signed out, not issued a cookie");
+                SetCookies(fifth!).Should().Contain(cookie => cookie.StartsWith(ActingRoleSwitchResults.CookieName + "=;", StringComparison.Ordinal),
+                    "the acting role's word goes with the sign-out");
 
-            using var right = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
-            right.Headers.Location!.ToString().Should().Be($"{PagePath}?error={ChangePasswordOutcome.LockedOut}",
-                "a locked account's password is not checked");
-            (await StampAsync(email)).Should().Be(stamp);
-            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.SignInPassword)).Should().BeTrue();
+                (await SignInPageMessageAsync(browser, fifth!)).Should().Be(
+                    "Your current password was entered incorrectly too many times, so your account is locked for 15 minutes " +
+                    "and you have been signed out. Wait 15 minutes, then sign in again.");
+            }
 
-            // A lockout the typing caused is not a deactivation: the session goes on, and the page says why.
-            using var answer = await browser.GetAsync(right.Headers.Location);
-            answer.StatusCode.Should().Be(HttpStatusCode.OK);
-            Parse(await answer.Content.ReadAsStringAsync()).QuerySelector(".action-result .alert-danger")!.TextContent.Trim()
-                .Should().Be(ChangePasswordOutcome.LockedOutMessage);
+            (await SignedInAsync(browser)).Should().BeFalse("the browser's session is signed out");
+            (await SignedInAsync(app, cookieBefore)).Should().BeFalse(
+                "a copy of the cookie is ended too: the stamp it carries is not the account's any more");
+            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.SignInPassword)).Should().BeTrue("nothing was changed");
+
+            // Signing in during the lock is refused as a wrong password is (T287).
+            (await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword, expectSuccess: false))
+                .Should().Be("/account/login?error=Refused");
+
+            // Recorded, as the sign-in page's lockout is: stamped with the account's institution, never the password (the
+            // review of the t339 branch).
+            var row = (await AuditRowsAsync(account.Id, "ChangePasswordLockedOut")).Should().ContainSingle().Subject;
+            row.Success.Should().BeFalse();
+            row.Category.Should().Be(AuditCategory.Authentication);
+            row.InstitutionId.Should().Be(account.InstitutionId);
+            (row.SummaryJson + row.ErrorMessage).Should().NotContain("Guess-5-Pa55word!", "never the password");
+        }
+    }
+
+    /// <summary>
+    /// The review of the t339 branch: an account locked already, by a stranger's five wrong passwords at the sign-in page,
+    /// is refused here with the wait, and nothing else changes. Identity answers a locked account's check with a lockout
+    /// without checking the password, so until the review the owner's own change, with the right current password, was
+    /// taken for the fifth guess: every session of the account ended, and the sign-in page told the owner they had typed
+    /// their password wrong too many times.
+    /// </summary>
+    [Fact]
+    public async Task AnAccountLockedAlready_IsRefusedWithTheWait_AndTheSessionGoesOn()
+    {
+        var email = NewEmail();
+        var account = await _host.CreateAssessorAsync(email);
+        var (browser, _) = NewBrowser(_host.Factory);
+        var (stranger, _) = NewBrowser(_host.Factory);
+        using (browser)
+        using (stranger)
+        {
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
+            for (var guess = 1; guess <= 5; guess++)
+            {
+                (await SignInAsync(stranger, email, $"Stranger-{guess}-Pa55word!", expectSuccess: false))
+                    .Should().Be("/account/login?error=Refused", "guard: a stranger's guess");
+            }
+
+            var stampBefore = await StampAsync(email);
+            using var post = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
+
+            post.Headers.Location!.ToString().Should().Be($"{PagePath}?error=AccountLocked&minutes=15");
+            SetCookies(post).Should().NotContain(cookie => cookie.StartsWith(SignInCookie, StringComparison.Ordinal),
+                "the session is neither signed out nor issued a cookie");
+
+            using var answer = await browser.GetAsync(post.Headers.Location);
+            answer.StatusCode.Should().Be(HttpStatusCode.OK, "still signed in");
+            RefusalWords(Parse(await answer.Content.ReadAsStringAsync()))
+                .Should().Be("Your account is locked. Wait 15 minutes, then try again.");
+
+            (await StampAsync(email)).Should().Be(stampBefore, "no session of the account was ended");
+            (await PasswordIsAsync(email, MsfRespondPageFlowTests.WebHost.SignInPassword)).Should().BeTrue("nothing was changed");
+            (await AuditRowsAsync(account.Id, "ChangePasswordLockedOut")).Should().BeEmpty("this post tripped no lock");
+        }
+    }
+
+    /// <summary>
+    /// The review of the t339 branch: a refused change of stamp at the lockout is tried once more, and the browser is signed
+    /// out whatever came of it. Until then the result was not read. A user validator refuses every write to the account
+    /// once the lock is saved, as a change made elsewhere would (ConcurrencyFailure).
+    /// </summary>
+    [Fact]
+    public async Task ALockoutWhoseStampCannotBeChanged_IsTriedTwice_AndStillSignsTheBrowserOut()
+    {
+        var writesWhileLocked = new WriteCounter();
+        await using var app = _host.Factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddScoped<IUserValidator<WombatIdentityUser>>(_ => new RefusesWritesAfterTheLock(writesWhileLocked))));
+
+        var email = NewEmail();
+        var account = await _host.CreateAssessorAsync(email);
+        var (browser, _) = NewBrowser(app);
+        using (browser)
+        {
+            await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
+            var stampBefore = await StampAsync(email);
+
+            HttpResponseMessage? fifth = null;
+            for (var attempt = 1; attempt <= 5; attempt++)
+            {
+                var wrong = await PostTheFormAsync(browser, $"Guess-{attempt}-Pa55word!", NewPassword, NewPassword);
+                if (attempt == 5)
+                {
+                    fifth = wrong;
+                }
+                else
+                {
+                    wrong.Dispose();
+                }
+            }
+
+            using (fifth)
+            {
+                fifth!.Headers.Location!.ToString().Should().Be("/account/login?error=LockedSignedOut");
+                SetCookies(fifth).Should().Contain(cookie => cookie.StartsWith(SignInCookie + "=;", StringComparison.Ordinal),
+                    "this browser is signed out whatever came of the stamp");
+            }
+
+            writesWhileLocked.Count.Should().Be(3, "the lock's own write, then the change of stamp and its one retry");
+            (await StampAsync(email)).Should().Be(stampBefore, "both changes were refused, and neither was saved by a later write");
+            (await AuditRowsAsync(account.Id, "ChangePasswordLockedOut")).Should().ContainSingle("the lockout is still recorded");
+            (await SignedInAsync(browser)).Should().BeFalse();
         }
     }
 
@@ -344,32 +482,45 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
                 changed.Headers.Location!.ToString().Should().Be(ChangePasswordOutcome.UpdatedUrl, "guard: a change that succeeds");
             }
 
+            // Six failed sign-ins from this address, to addresses no account has, then four wrong current passwords here:
+            // ten failed checks, one short of the account's lockout, which since T339 would end the session (E2). The
+            // sign-ins are another tab's, signed out, from the same address: since T339 the sign-in page sends a signed-in
+            // visitor Home (E4), so this browser has no sign-in form to post.
+            var (signedOut, _) = NewBrowser(_host.Factory);
+            using var signedOutTab = signedOut;
+            signedOut.DefaultRequestHeaders.Remove("X-Forwarded-For");
+            signedOut.DefaultRequestHeaders.Add("X-Forwarded-For", browser.DefaultRequestHeaders.GetValues("X-Forwarded-For").Single());
+            for (var attempt = 1; attempt <= 6; attempt++)
+            {
+                (await SignInAsync(signedOut, NewEmail(), NewPassword, expectSuccess: false))
+                    .Should().Be("/account/login?error=Refused", "guard: a failed check the throttle counts");
+            }
+
             var codes = new List<string>();
             string? retryAfter = null;
-            for (var attempt = 1; attempt <= 11; attempt++)
+            for (var attempt = 1; attempt <= 5; attempt++)
             {
                 using var guess = await PostTheFormAsync(browser, $"Guess-{attempt}-Pa55word!", NewPassword, NewPassword);
                 codes.Add(guess.Headers.Location!.ToString());
                 retryAfter = guess.Headers.RetryAfter?.ToString();
             }
 
-            // The fifth locks the account, and the ones after it fail on the lock: failures all the same.
-            codes.Take(10).Should().NotContain(code => code.Contains(ChangePasswordOutcome.TooManyAttempts), "guard: ten are checked");
-            codes[10].Should().Be($"{PagePath}?error={ChangePasswordOutcome.TooManyAttempts}",
+            codes.Take(4).Should().OnlyContain(code => code == $"{PagePath}?error=PasswordMismatch", "guard: four are checked");
+            codes[4].Should().Be($"{PagePath}?error={ChangePasswordOutcome.TooManyAttempts}",
                 "a signed-in user is sent back to the page they were on, not to the sign-in page");
             int.Parse(retryAfter!).Should().BeInRange(1, 300, "the seconds left of the address's five minutes");
 
-            using var answer = await browser.GetAsync(codes[10]);
+            using var answer = await browser.GetAsync(codes[4]);
             answer.StatusCode.Should().Be(HttpStatusCode.OK);
-            Parse(await answer.Content.ReadAsStringAsync()).QuerySelector(".action-result .alert-danger")!.TextContent.Trim()
+            RefusalWords(Parse(await answer.Content.ReadAsStringAsync()))
                 .Should().Be(ChangePasswordOutcome.TooManyAttemptsMessage);
 
             // Shared with the sign-in page: the same address is refused there too, before any password is checked.
-            var signInRefused = await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword, expectSuccess: false);
+            var signInRefused = await SignInAsync(signedOut, email, MsfRespondPageFlowTests.WebHost.SignInPassword, expectSuccess: false);
             signInRefused.Should().Be(SignInOutcome.Url(SignInOutcome.TooManyAttempts)).And.Be("/account/login?error=TooManyAttempts");
-            using var signInPage = await browser.GetAsync(signInRefused);
+            using var signInPage = await signedOut.GetAsync(signInRefused);
             Parse(await signInPage.Content.ReadAsStringAsync()).QuerySelector(".alert-danger")!.TextContent.Trim()
-                .Should().Be("Too many failed sign-in attempts from this network. Please wait a few minutes and try again.");
+                .Should().Be("Too many failed sign-in attempts from this network. Wait a few minutes and try again.");
         }
     }
 
@@ -382,6 +533,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         using (browser)
         {
             await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword);
+            using var loadedBefore = await browser.GetAsync(PagePath);
 
             // Moved to institutional sign-in while signed in. Its password no longer signs anyone in, and an SSO-provisioned
             // account has none, so checking one could only count failures towards a lockout that blocks its SSO sign-in.
@@ -395,7 +547,16 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
             var stamp = await StampAsync(email);
 
-            using var submit = await PostTheFormAsync(browser, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
+            // Since T339 (flow 02, C9) the page itself offers such an account no form, on its first visit: the notice and
+            // the way back. The endpoint still refuses a post, from a page loaded before the move, or a crafted one.
+            using var page = await browser.GetAsync(PagePath);
+            page.StatusCode.Should().Be(HttpStatusCode.OK);
+            var shown = Parse(await page.Content.ReadAsStringAsync());
+            shown.QuerySelector($"form[action='{SubmitPath}']").Should().BeNull("there is no password to change here");
+            shown.QuerySelector("main .alert-info")!.TextContent.Trim().Should().Be(ChangePasswordOutcome.InstitutionalSignInMessage);
+
+            using var submit = await PostTheLoadedFormAsync(
+                browser, loadedBefore, MsfRespondPageFlowTests.WebHost.SignInPassword, NewPassword, NewPassword);
 
             submit.Headers.Location!.ToString().Should().Be($"{PagePath}?error={ChangePasswordOutcome.InstitutionalSignIn}");
             (await StampAsync(email)).Should().Be(stamp);
@@ -433,7 +594,7 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
             using var answer = await browser.GetAsync(submit.Headers.Location);
             answer.StatusCode.Should().Be(HttpStatusCode.OK, "still signed in");
-            Parse(await answer.Content.ReadAsStringAsync()).QuerySelector(".action-result .alert-danger")!.TextContent.Trim()
+            RefusalWords(Parse(await answer.Content.ReadAsStringAsync()))
                 .Should().Be(ChangePasswordOutcome.GeneralRefusal);
         }
     }
@@ -466,8 +627,8 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
             submit.StatusCode.Should().Be(HttpStatusCode.Redirect, "not the error page");
             submit.Headers.Location!.ToString().Should().Be("/account/login?error=PasswordChanged", "a code, never the words (T285)");
-            (await SignInPageRefusalAsync(browser, submit))
-                .Should().Be("Your password was changed. Please sign in with your new password.");
+            (await SignInPageMessageAsync(browser, submit))
+                .Should().Be("Your password was changed. Sign in with your new password.");
             IssuedSignInCookies(submit).Should().BeEmpty();
             (await StampAsync(email)).Should().NotBe(stamp, "the password was changed, and the answer must not say otherwise");
             (await PasswordIsAsync(email, NewPassword)).Should().BeTrue();
@@ -541,14 +702,15 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
     }
 
     /// <summary>
-    /// Follows a redirect to the sign-in page and returns what its refusal says: the words the page chose for the code it
-    /// was sent (T285).
+    /// Follows a redirect to the sign-in page and returns what its one message says, refusal or notice: the words the page
+    /// chose for the code it was sent (T285). Which kind of alert it is, is the page's (T339, flow 02).
     /// </summary>
-    private static async Task<string?> SignInPageRefusalAsync(HttpClient browser, HttpResponseMessage redirect)
+    private static async Task<string?> SignInPageMessageAsync(HttpClient browser, HttpResponseMessage redirect)
     {
         using var page = await browser.GetAsync(redirect.Headers.Location);
         page.StatusCode.Should().Be(HttpStatusCode.OK, "guard: the sign-in page loads");
-        return Parse(await page.Content.ReadAsStringAsync()).QuerySelector(".alert-danger")?.TextContent.Trim();
+        return Parse(await page.Content.ReadAsStringAsync()).QuerySelectorAll(".alert").Should().ContainSingle()
+            .Which.TextContent.Trim();
     }
 
     /// <summary>Whether the browser's cookie, as it holds it now, loads the page signed in.</summary>
@@ -579,6 +741,18 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         load.StatusCode.Should().Be(HttpStatusCode.Redirect);
         load.Headers.Location!.AbsolutePathOf().Should().Be("/account/login", "guard: refused by being sent to sign in");
         return false;
+    }
+
+    private static IReadOnlyList<string> SetCookies(HttpResponseMessage response)
+        => response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies.ToList() : [];
+
+    private async Task<List<AuditEntry>> AuditRowsAsync(string userId, string action)
+    {
+        await using var scope = _host.Factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<AuditEntry>()
+            .AsNoTracking()
+            .Where(entry => entry.ActorUserId == userId && entry.Action == action)
+            .ToListAsync();
     }
 
     /// <summary>The sign-in cookies a response sets with a value; a sign-out sets them empty, to delete them.</summary>
@@ -641,6 +815,21 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
 
     private static IHtmlDocument Parse(string html) => new HtmlParser().ParseDocument(html);
 
+    /// <summary>
+    /// The page's refusal as it reads (T339, flow 02): it stands in the form's card now, not in an action-result region,
+    /// and a rule broken is a list item under the heading, read as its own sentence.
+    /// </summary>
+    private static string RefusalWords(IHtmlDocument page)
+    {
+        var refusal = page.QuerySelector("#change-password-error.alert-danger")!;
+        var list = refusal.QuerySelector("ul");
+        var before = list is null
+            ? refusal.TextContent
+            : refusal.TextContent[..refusal.TextContent.IndexOf(list.TextContent, StringComparison.Ordinal)];
+        var rules = refusal.QuerySelectorAll("li").Select(item => item.TextContent.Trim());
+        return System.Text.RegularExpressions.Regex.Replace(string.Join(" ", [before.Trim(), .. rules]), @"\s+", " ").Trim();
+    }
+
     /// <summary>The system clock, moved forward by as much as a test says.</summary>
     private sealed class MovableClock : TimeProvider
     {
@@ -649,6 +838,27 @@ public sealed class ChangePasswordFlowTests : IClassFixture<MsfRespondPageFlowTe
         public void MoveForward(TimeSpan by) => _ahead += by;
 
         public override DateTimeOffset GetUtcNow() => base.GetUtcNow() + _ahead;
+    }
+
+    private sealed class WriteCounter
+    {
+        private int _count;
+
+        public int Count => Volatile.Read(ref _count);
+
+        public int Add() => Interlocked.Increment(ref _count);
+    }
+
+    /// <summary>
+    /// Lets the write that saves an account's lock through, and refuses every later write while it is locked: a change of
+    /// stamp that cannot be made.
+    /// </summary>
+    private sealed class RefusesWritesAfterTheLock(WriteCounter writes) : IUserValidator<WombatIdentityUser>
+    {
+        public Task<IdentityResult> ValidateAsync(UserManager<WombatIdentityUser> manager, WombatIdentityUser user)
+            => Task.FromResult(user.LockoutEnd is { } end && end > DateTimeOffset.UtcNow && writes.Add() > 1
+                ? IdentityResult.Failed(new IdentityErrorDescriber().ConcurrencyFailure())
+                : IdentityResult.Success);
     }
 
     /// <summary>A switch a test turns on around the one request it means to fail.</summary>

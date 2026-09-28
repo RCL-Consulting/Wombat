@@ -30,8 +30,8 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/account/data-rights` | Profile/DataRights.razor | Any signed-in user | A.1.1, A.1.2, A.1.5, A.1.6, A.1.7, A.1.9, A.1.11, A.2.3, A.2.5, A.7.3 |
 | `/account/forgot-password` | Account/ForgotPassword.razor | Anyone, signed in or not | A.4.4, A.7.12 |
 | `/account/link-external` | Account/LinkExternalLogin.razor | Anyone, signed in or not | A.3.3 |
-| `/account/login` | Account/Login.razor | Anyone, signed in or not | 1.1, 2.1, 2.8, 2.23, 2.25, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.39, 2.40, 4.3, 4.4, 5.15, 5.19, 5.20, 5.28, 6.10, A.1.13, A.3.2, A.3.3, A.4.3, A.4.4, A.4.6, A.4.7, A.5.4, A.6.5, A.6.8, A.7.12, A.7.14 |
-| `/account/logout-confirm` | Account/Logout.razor | Any signed-in user | A.4.7 |
+| `/account/login` | Account/Login.razor | Anyone not signed in; a signed-in visitor is sent Home | 1.1, 2.1, 2.8, 2.9, 2.10, 2.18, 2.23, 2.25, 2.27, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.39, 2.40, 4.3, 4.4, 5.15, 5.19, 5.20, 5.28, 6.10, A.1.13, A.3.2, A.3.3, A.4.3, A.4.4, A.4.6, A.4.7, A.5.4, A.6.5, A.6.8, A.7.12, A.7.14 |
+| `/account/logout`, `/account/logout-confirm` | Account/Logout.razor | Any signed-in user; anyone else is sent to the sign-in page. A GET to either address draws the Sign out page and signs nobody out; its form posts to `/account/logout/submit` | A.4.7 |
 | `/account/profile` | Account/Profile.razor | Any signed-in user | 2.19, 2.41, A.4.1, A.4.2, A.4.6, A.7.14 |
 | `/account/register` | Account/Register.razor | Anyone, signed in or not | 1.8, 1.9, 1.10, 2.8, 2.9, 2.10, 2.11, 2.17, 2.18, 2.27 |
 | `/activities/inbox` | Activities/ActivityInbox.razor | Any signed-in user | 3.4, 3.5, 3.11, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.33, 3.51, 5.25, 6.18, A.4.3, A.7.2 |
@@ -108,7 +108,13 @@ state, `states.md` is where it belongs.
 | Institutional sign-in against a provider: `/account/sso-challenge/{providerKey}` to the identity provider and back to `/account/sso-callback`. This covers provisioning by group mapping, an unmatched group landing as PendingTrainee, Administrator never granted by SSO, the refusal of a deactivated or other-institution account, and the verified-email rules. | Needs an identity provider; `Sso:Providers` is empty on dev. The invariants are unit-tested (`SsoGroupMapperTests`, `SsoGroupMappingCommandTests`, `SsoScopeGuardTests`). A.3.2 and A.3.3 play the no-provider states. | A replay against a test IdP |
 | Linking an account on `/account/link-external` with an institutional sign-in in progress, and its post, `/account/link-external/submit` (password check, throttle, lockout) | Needs an identity provider to start an external sign-in. A.3.3 plays only the expired state. | A replay against a test IdP |
 | Adding and deleting SSO group mappings on `/admin/sso/group-mappings`, and T288's cross-institution refusal | The add form appears only when a provider is configured. A.3.1 plays the read-only, empty page. | T288; a replay against a test IdP |
-| Self-service password reset by emailed link | Not built. `/account/forgot-password` is a stub (A.4.4), and nothing sends the `PasswordResetEmail` template. The administrator's reset stands in (A.4.5). | Not built |
+| Self-service password reset by emailed link | Not built, by design: `/account/forgot-password` says to ask a Wombat administrator (A.4.4), and nothing sends the `PasswordResetEmail` template. The administrator's reset stands in (A.4.5). | Not built |
+| Removing an institutional sign-in on My account: the Remove dialog with and without a password, its post `/account/external-logins/remove`, its refusals (a wrong password, the throttle, the last way in) and the lock a fifth wrong password causes | Needs an account with a linked institutional sign-in, and so an identity provider. The card's results are reachable as typed codes (`states.md` § Typed codes). | A replay against a test IdP |
+| Change password for an account that signs in only through its institution: the page's reason and Back to My account in place of the form; My account's How you sign in with no Password row | Needs an SSO-provisioned account (no Wombat password); every cast account has one. | A replay against a test IdP |
+| The lock a fifth wrong current password on Change password causes: the session ends and the sign-in page gives the lock notice (T339, E2) | A.4.2 plays one wrong current password; five would lock Dr Khumalo for 15 minutes and end her other session before A.4.3. | `states.md`, on a scratch database |
+| Change password or Remove for an account someone else has already locked: refused on the page with the wait, the session kept (T339 review) | No step locks an account from outside while its owner is signed in. | `states.md`, on a scratch database |
+| Change password refused by the sign-in throttle ("Too many attempts from this network. …") | Needs ten failed password checks from one address within five minutes; no step fails that often. | `states.md` (typed, or on a scratch database) |
+| The sign-in page with scripts blocked (no Show toggle; signing in still works), and a signed-in visitor opening `/account/login` (sent Home) | No step blocks scripts or opens the sign-in page while signed in. | `states.md` |
 | `/Error` reached through an unhandled exception | Outside Development only (`ErrorPages`, T321); the replay runs in Development, whose developer exception page answers instead. `Hosting/ErrorPageFlowTests` plays it; A.5.8 plays the page by its address. | Reported at A.5.8 |
 | The five features the nav once linked as "Coming soon": Recent activities (Assessor), Stalled activities (Coordinator), Programme trainees (CommitteeMember, SpecialityAdmin, SubSpecialityAdmin), STAR review queue (SpecialityAdmin, SubSpecialityAdmin) and System (Administrator) | Not built, and not offered: the nav links to no unbuilt page, and the placeholder page is gone (T335, flow 01). Recent activities and System were dropped; stalled work and Programme trainees are flow 06's, the STAR review queue flow 09's. The menus are read at 3.31, 3.51–3.53 and A.5.9–A.5.13. | Flows 06 and 09 |
 | The Coordinator's stalled-work triage: sending a reminder, or reassigning a request | No page offers it. The dashboard's "Stalled requests" rows link to each activity's page (T297), which offers neither (3.30, A.5.10). | Not built |
@@ -157,7 +163,7 @@ whether each deserves a link.
 | `/admin/entrustment-decisions` | SpecialityAdmin and SubSpecialityAdmin; the InstitutionalAdmin reaches it only from her dashboard's quick links | 4.36, 4.37, A.7.7 |
 | `/admin/institutions/{Id:int}` | InstitutionalAdmin, for her own institution | 1.23, A.6.3 |
 | `/committee/panels` | Coordinator: the page admits him, but his menu has no Decision panels (DESIGN.md) | 2.32 |
-| `/account/logout-confirm` | Everyone: only the error page's Sign out links to it (on the replay no failure leads there, A.5.8); everywhere else the account row's Sign out signs out at once | A.4.7 |
+| `/account/logout-confirm`, `/account/logout` | Everyone: only the error page's Sign out links to the confirmation address (on the replay no failure leads there, A.5.8), and nothing links to `/account/logout`; everywhere else the account row's Sign out posts to `/account/logout/submit` and signs out at once | A.4.7 |
 | `/Error` | Everyone: on the replay (Development) no failure leads to it | A.5.8 |
 | `/portfolio/authorisations` | Trainee: reached only from the dashboard's My authorisations card, not from the menu, which lights My progress on it | 4.39, 4.42, 5.8 |
 
@@ -169,15 +175,16 @@ Routes Wombat.Web maps outside the router. A step names one in its `Route:` line
 |---|---|---|
 | `/dashboard/switch/{role}` | Switches the acting role to another role the user holds, stored with the account, and says so once on the page it lands on (`?returnUrl=`, local only); a role not held writes nothing. The sidebar's "Switch to …" and "Change role" use it | 2.34, 3.5, 3.13, 3.15, 3.17, 3.26, 3.28, 3.33, 3.52, 4.5, 5.25, A.5.3 |
 | `/account/login/submit` | The sign-in form's post | 5.15, 5.20, 5.28, 6.10 (every sign-in posts it) |
-| `/account/logout` | Signs out and returns to the sign-in page | 2.8, 2.9, 2.10, 2.18, 2.27, 2.34, A.4.7 |
+| `/account/logout/submit` | The sign-out forms' post (the account row's Sign out in the top bar and the phone menu's foot, and the Sign out page's): requires the antiforgery token, signs out, records a Logout, and lands on the sign-in page with "You have signed out." (T339) | 2.8, 2.9, 2.10, 2.18, 2.27, 2.34, A.4.7 |
 | `/account/session-ended` | Where a tab goes, by a full page load, once its sign-in has ended (a role change, a completed programme, an erasure, a password change, a lock) | 2.31, 5.19, A.1.13, A.4.3, A.6.5 |
 | `/account/data-rights/download/{id:guid}` | Downloads a completed data-rights export, to its data subject or a global Administrator | A.1.4, A.1.5 |
 | `/account/sso-challenge/{providerKey}` | Starts an institutional sign-in | A.3.2 (no provider configured) |
 | `/account/sso-callback` | Where the identity provider returns | A.3.3 (no sign-in in progress) |
 | `/health` | The public health check, database included | A.6.10 |
 | `/account/register/submit` | The registration form's post | Not named; every registration in 1.8, 1.10, 2.8–2.10, 2.18 and 2.27 posts it |
-| `/account/change-password/submit` | The change-password form's post | Not named; A.4.2 and A.4.6 post it |
-| `/account/profile/submit` | My account's form post: saves the name, issues the sign-in cookie again so the top bar names the person as saved, and returns to My account with "Profile saved." or the refusal | 2.41, A.4.1, A.7.14 |
+| `/account/change-password/submit` | The change-password form's post: a change lands on My account with "Password updated."; a refusal returns to the page; the fifth wrong current password locks the account and signs it out to the sign-in page (T339, E2); an account already locked by someone else is refused on the page with the wait, and stays signed in | Not named; A.4.2 and A.4.6 post it |
+| `/account/profile/submit` | My account's name form's post: saves the name, issues the sign-in cookie again so the top bar names the person as saved, and returns to My account with "Name saved." or the refusal | 2.41, A.4.1, A.7.14 |
+| `/account/external-logins/remove` | My account's Remove dialog's post: removes one institutional sign-in, asking for the password when the account has one, and never the last way in; a GET returns to My account (T339) | Not played: needs a linked institutional sign-in (see above) |
 | `/account/link-external/submit` | Links an institutional identity to an account by its password | Not played: needs an identity provider (see above) |
 
 ## Journeys by role
@@ -298,7 +305,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation | 2.8, 2.11 | `/account/register`, `/`, `/account/logout`, `/account/login` |
+| Accept my invitation | 2.8, 2.11 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
 | Learn what my dashboard offers, and which pages are not mine | 2.32 | `/`, `/admin/invitations`, `/committee/panels`, `/committee/panels/new`, `/access-denied` |
 | See which requests have stalled | 3.30, 3.31, A.5.10 | `/`, `/not-found` |
 | Set up an MSF questionnaire and a campaign for a registrar | 3.34, 3.35 | `/msf/campaigns`, `/msf/campaigns/new`, `/msf/campaigns/{CampaignId:int}` |
@@ -317,7 +324,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Decide a registrar's data-rights request: approve an export, reject a correction | A.1.3, A.1.8, A.5.7 | `/admin/data-rights`, `/admin/data-rights/{Id:guid}` |
 | Find that I cannot download a registrar's data export | A.1.4 | `/account/data-rights/download/{id:guid}` |
 | Stop, then restart, my weekly digest email | A.2.3, A.2.5 | `/account/data-rights` |
-| Sign out, and come back to the page I asked for | A.4.7 | `/account/logout-confirm`, `/`, `/account/logout`, `/account/login`, `/msf/campaigns` |
+| Sign out, and come back to the page I asked for | A.4.7 | `/account/logout-confirm`, `/`, `/account/logout`, `/account/logout/submit`, `/account/login`, `/msf/campaigns` |
 | Review my account | 2.41 | `/account/profile` |
 | Do my work on a phone | A.7.5 | `/`, `/msf/campaigns`, `/msf/campaigns/{CampaignId:int}`, `/committee/decisions-due`, `/admin/data-rights` |
 
@@ -327,7 +334,7 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation | 2.10 | `/account/register`, `/` |
 | See how the programme's registrars stand against this period's targets | 2.33, 2.35, 2.37, 3.52 | `/account/login`, `/`, `/committee/panels` |
-| Switch between my committee and assessor dashboards, to rate and back | 2.34, 3.13, 3.33, 3.52 | `/`, `/dashboard/switch/{role}`, `/account/logout`, `/account/login` |
+| Switch between my committee and assessor dashboards, to rate and back | 2.34, 3.13, 3.33, 3.52 | `/`, `/dashboard/switch/{role}`, `/account/logout/submit`, `/account/login` |
 | Check who sits on my panel and which EPAs it decides | 4.14 | `/committee/panels` |
 | Find that scheduling is not mine | 4.5 | `/committee/decisions-due`, `/access-denied` |
 | List my panel's reviews and open one | 4.11 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
@@ -348,7 +355,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation, getting the password rules right | 2.9, 2.10 | `/account/register`, `/`, `/account/logout` |
+| Accept my invitation, getting the password rules right | 2.9, 2.10 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
 | See my empty assessor dashboard on first sign-in | 2.36 | `/account/login`, `/` |
 | Rate a Mini-CEX a registrar sent me | 3.5, 3.13, 3.26, 3.33, 5.25 | `/dashboard/switch/{role}`, `/`, `/activities/inbox`, `/activities/{ActivityId:int}` |
 | Rate the other WBAs sent to me: a DOPS, a CBD, a CCA, a direct observation | 3.24, 3.26, 3.28 | `/`, `/dashboard/switch/{role}`, `/activities/inbox`, `/activities/{ActivityId:int}` |
@@ -405,7 +412,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Register from my invitation and wait to be admitted | 2.18, 2.27 | `/account/register`, `/`, `/account/logout` |
+| Register from my invitation and wait to be admitted | 2.18, 2.27 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
 | See what I can do before admission | 2.19 | `/`, `/account/profile`, `/activities/mine`, `/activities/new`, `/portfolio/progress`, `/access-denied` |
 
 ### Former trainee (Dr Lerato Molefe after Step 5.17: no role, a trainee record)
@@ -424,7 +431,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| (Invitee) Register from the link in my invitation | 1.8, 1.10, 2.8, 2.9, 2.10, 2.18, 2.27 | `/account/register`, `/`, `/account/logout`, `/account/login` |
+| (Invitee) Register from the link in my invitation | 1.8, 1.10, 2.8, 2.9, 2.10, 2.18, 2.27 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
 | (Invitee) Open a link that was used, revoked or replaced | 1.9, 2.11, 2.17, 2.27 | `/account/register` |
 | (MSF respondent) Give anonymous feedback on a registrar from my emailed link | 3.39, 3.42 | `/msf/respond` |
 | (MSF respondent) Open my link after I answered, or after the campaign closed | 3.40, 3.45 | `/msf/respond` |

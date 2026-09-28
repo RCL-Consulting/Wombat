@@ -188,9 +188,11 @@ public sealed partial class SessionRevalidationFlowTests : IClassFixture<MsfResp
                 // Another tab renewed the cookie less than a minute ago, so the cookie handler does not check it yet: a plain
                 // load of the sign-in page would still be signed in as the old user, interactive, its form's token naming
                 // them again. Only the endpoint's own check stands between the tab and the same 400.
+                // Since T339 (flow 02, E4) the sign-in page sends a signed-in visitor Home, so the plain load says so by its
+                // redirect, where it used to by rendering interactive.
                 using var plainLoad = await browser.GetAsync(SignInOutcome.PagePath);
-                ServerComponentMarker().IsMatch(await plainLoad.Content.ReadAsStringAsync()).Should().BeTrue(
-                    "guard: the cookie still signs the browser in");
+                plainLoad.StatusCode.Should().Be(HttpStatusCode.Redirect, "guard: the cookie still signs the browser in");
+                plainLoad.Headers.Location!.AbsolutePathOf().Should().Be("/", "guard: a signed-in visitor is sent Home");
             }
             else
             {
@@ -209,7 +211,8 @@ public sealed partial class SessionRevalidationFlowTests : IClassFixture<MsfResp
             var html = await page.Content.ReadAsStringAsync();
             ServerComponentMarker().IsMatch(html).Should().BeFalse("the browser's session ended with the circuit's");
             var document = Parse(html);
-            document.QuerySelector(".alert-danger")!.TextContent.Trim().Should().Be(ChangePasswordOutcome.SessionEndedMessage);
+            document.QuerySelectorAll(".alert").Should().ContainSingle().Which.TextContent.Trim()
+                .Should().Be(ChangePasswordOutcome.SessionEndedMessage).And.Be("Your session has ended. Sign in again.");
             document.QuerySelector("input[name=ReturnUrl]")!.GetAttribute("value").Should().Be(TabPage);
 
             using var signIn = await PostSignInAsync(
@@ -221,9 +224,10 @@ public sealed partial class SessionRevalidationFlowTests : IClassFixture<MsfResp
     }
 
     [Fact]
-    public async Task ALockedAccountsTab_ComesToASignInPage_ThatRefusesItInItsOwnWords()
+    public async Task ALockedAccountsTab_ComesToASignInPage_ThatRefusesItAsAWrongPasswordIsRefused()
     {
-        // Before the review a locked user got the bare 400 at this point, never the words that say why.
+        // Before the review a locked user got the bare 400 at this point, never the page's refusal. Since T339 (flow 02,
+        // T287) the refusal is a wrong password's, in the address as in the words, so it says nothing about the account.
         var clock = new MovableClock();
         await using var app = AppOn(clock);
 
@@ -242,11 +246,11 @@ public sealed partial class SessionRevalidationFlowTests : IClassFixture<MsfResp
 
             using var signIn = await PostSignInAsync(browser, TokenOf(document), email, returnUrl: TabPage);
             signIn.StatusCode.Should().Be(HttpStatusCode.Redirect);
-            QueryValue(signIn.Headers.Location!, "error").Should().Be(SignInOutcome.LockedOut);
+            QueryValue(signIn.Headers.Location!, "error").Should().Be(SignInOutcome.Refused);
 
             using var refusal = await browser.GetAsync(signIn.Headers.Location);
             Parse(await refusal.Content.ReadAsStringAsync()).QuerySelector(".alert-danger")!.TextContent.Trim()
-                .Should().Be(SignInOutcome.LockedOutMessage);
+                .Should().Be("Invalid email or password.");
         }
     }
 
@@ -329,7 +333,10 @@ public sealed partial class SessionRevalidationFlowTests : IClassFixture<MsfResp
 
     private static IHtmlDocument Parse(string html) => new HtmlParser().ParseDocument(html);
 
-    /// <summary>An interactive server component's marker: a page that opens a circuit carries one.</summary>
+    /// <summary>
+    /// An interactive server component's marker: a page that opens a circuit carries one. A copy of Web.Tests'
+    /// <c>ServerComponentMarker</c>, which is internal to that suite; keep the two patterns the same.
+    /// </summary>
     [GeneratedRegex("""<!--Blazor:\{[^>]*"type":"server""")]
     private static partial Regex ServerComponentMarker();
 

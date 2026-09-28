@@ -5,37 +5,81 @@
 @using Wombat.Application.Common.Options
 @using Wombat.Web.Security
 @inject IOptions<SsoOptions> SsoOptions
+@inject IOptions<Microsoft.AspNetCore.Identity.IdentityOptions> IdentityOptions
+@inject NavigationManager Navigation
 
-<PageTitle>Sign in · Wombat</PageTitle>
+@*
+  The sign-in page (T339, flow 02; R3-SI-*, R2-SI-*). Static: a visitor who has not signed in has no circuit (App.razor).
+  The lockup and the line under it, the page's one heading, one message slot, the institutions' buttons above the form
+  (Q1) with the divider that says what the form is for, the form, and "Forgotten your password?".
 
-<div class="account-form-container shadow">
+  The slot holds what sent the browser here, as a code in the address, in the page's own words (SignInOutcome, T285): a
+  refusal, danger and role="alert", or a notice (the session ended, the password changed, signed out, signed out by a
+  lock), info and role="status". An alert already on the page as it loads is not reliably announced, so the focus rule
+  (C6) decides who reads it:
+  - a refusal takes the focus itself (tabindex -1, autofocus), and both fields name it;
+  - a notice with no institution's button leaves the focus on Email, which names it;
+  - a notice beside institutions' buttons takes the focus itself, so the next Tab reaches the first institution;
+  - with nothing to say, Email takes the focus when there is no button, and nothing does when there are.
+
+  A signed-in visitor is sent Home (E4): the notices are for someone who has just stopped being signed in, and a
+  signed-in person has nothing to do here.
+*@
+
+<PageTitle>@(IsRefusal ? "Error: Sign in" : "Sign in") · Wombat</PageTitle>
+
+<div class="account-form-container">
   <div class="account-brand">
-    <img class="account-brand-mark" src="/brand/wombat-mark.svg" alt="" width="44" height="44" />
+    <img class="account-brand-mark" src="/brand/wombat-mark.svg" alt="" width="56" height="56" />
     <span class="account-brand-text">Wombat</span>
   </div>
-  <h2>Sign in</h2>
+  <p class="account-purpose">Work-based assessment for specialist training.</p>
+  <h1>Sign in</h1>
 
-  @* A refusal reloads this page with its code in the query, and the page says it in words of its own, never the query's
-     text, so a crafted link cannot put words on the page (SignInOutcome, T285). An alert already there when the page
-     loads is not reliably announced, and focus goes straight to the email, so both fields name it: it is read with the
-     field (T193). *@
-  @if (Refusal is not null)
+  @if (IsRefusal)
   {
-    <Alert Kind="danger" Id="@ErrorId">@Refusal</Alert>
+    <Alert Kind="danger" Id="@ErrorId" tabindex="-1" autofocus>@Message</Alert>
+  }
+  else if (Message is not null)
+  {
+    @if (OffersInstitutions)
+    {
+      <Alert Kind="info" Role="status" Id="@NoticeId" tabindex="-1" autofocus>@Message</Alert>
+    }
+    else
+    {
+      <Alert Kind="info" Role="status" Id="@NoticeId">@Message</Alert>
+    }
+  }
+
+  @if (OffersInstitutions)
+  {
+    <div class="sso-providers">
+      @foreach (var provider in SsoProviders)
+      {
+        <a href="/account/sso-challenge/@provider.Key?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")"
+           class="btn btn-outline sso-button">
+          <Icon Name="building-2" />
+          Sign in with @provider.DisplayName
+        </a>
+      }
+    </div>
+
+    <div class="sso-divider">
+      <span>or sign in with your email and password</span>
+    </div>
   }
 
   <form method="post" action="/account/login/submit">
     <AntiforgeryToken />
-    <div class="mb-3">
+    <div class="form-group">
       <label for="login-email">Email</label>
-      <input id="login-email" class="form-control" type="email" name="Email" autocomplete="username" required autofocus aria-describedby="@ErrorReference" />
+      <input id="login-email" class="form-control" type="email" name="Email" autocomplete="username" required
+             autofocus="@EmailTakesTheFocus" aria-describedby="@EmailDescribedBy" />
     </div>
-    <div class="mb-3 password-wrapper">
-      <label for="login-password">Password</label>
-      <input id="login-password" class="form-control" type="password" name="Password" autocomplete="current-password" required aria-describedby="@ErrorReference" />
-      <PasswordToggleButton For="login-password" />
-    </div>
-    <div class="form-check mb-3">
+    <PasswordField Label="Password" Id="login-password" Name="Password" Autocomplete="current-password" Required="true"
+                   DescribedBy="@(IsRefusal ? ErrorId : null)" />
+    <div class="form-check">
       <input id="login-remember" class="form-check-input" type="checkbox" name="RememberMe" value="true" />
       <label for="login-remember">Remember me</label>
     </div>
@@ -45,39 +89,50 @@
     </FormActions>
   </form>
 
-  @if (SsoProviders.Count > 0)
-  {
-    <div class="sso-divider">
-      <span>or</span>
-    </div>
-
-    <div class="sso-providers">
-      @foreach (var provider in SsoProviders)
-      {
-        <a href="/account/sso-challenge/@provider.Key?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")"
-           class="btn btn-outline sso-button">
-          Sign in with @provider.DisplayName
-        </a>
-      }
-    </div>
-  }
-
-  <p class="page-subtitle mt-3">Forgotten your password? <a href="/account/forgot-password">Reset it</a>.</p>
+  <a class="account-link" href="/account/forgot-password">Forgotten your password?</a>
 </div>
 
 @code {
   [SupplyParameterFromQuery(Name = "returnUrl")]
   public string? ReturnUrl { get; set; }
 
-  /// <summary>The code of the refusal that sent the browser here (<see cref="SignInOutcome" />), never its words.</summary>
+  /// <summary>The code of the refusal or notice that sent the browser here (<see cref="SignInOutcome" />), never its words.</summary>
   [SupplyParameterFromQuery(Name = "error")]
   public string? Error { get; set; }
 
-  private const string ErrorId = "login-error";
+  [CascadingParameter]
+  private Task<AuthenticationState>? AuthenticationState { get; set; }
 
-  private string? Refusal => SignInOutcome.Describe(Error, institutionalSignInOffered: SsoProviders.Count > 0);
+  /// <summary>The refusal's id, which both fields name.</summary>
+  public const string ErrorId = "login-error";
 
-  private string? ErrorReference => Refusal is null ? null : ErrorId;
+  /// <summary>The notice's id, which Email names when it keeps the focus.</summary>
+  public const string NoticeId = "login-notice";
 
   private IReadOnlyList<SsoProviderOptions> SsoProviders => SsoOptions.Value.Providers;
+
+  private bool OffersInstitutions => SsoProviders.Count > 0;
+
+  private string? Message => SignInOutcome.Describe(
+    Error, institutionalSignInOffered: OffersInstitutions, IdentityOptions.Value.Lockout.DefaultLockoutTimeSpan);
+
+  private bool IsRefusal => Message is not null && !SignInOutcome.IsNotice(Error);
+
+  private bool IsNotice => Message is not null && SignInOutcome.IsNotice(Error);
+
+  // C6: Email takes the focus only when the page offers no institution's button, and the slot holds no refusal, which
+  // takes the focus itself.
+  private bool EmailTakesTheFocus => !OffersInstitutions && !IsRefusal;
+
+  private string? EmailDescribedBy => IsRefusal ? ErrorId : IsNotice && !OffersInstitutions ? NoticeId : null;
+
+  protected override async Task OnInitializedAsync()
+  {
+    // E4: a signed-in visitor has nothing to do here. Home, whatever the address carries.
+    if (AuthenticationState is not null
+        && (await AuthenticationState).User.Identities.Any(identity => identity.IsAuthenticated))
+    {
+      Navigation.NavigateTo("/");
+    }
+  }
 }

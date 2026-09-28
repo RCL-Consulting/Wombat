@@ -148,9 +148,10 @@ public sealed class ActingRoleSwitchAlertTests : TestContext
     }
 
     // The focus must win over FocusOnNavigate, which focuses the h1 after the same first render. The real Routes, on a
-    // real page (change password, whose header needs nothing loaded), as the circuit renders it: FocusOnNavigate sits
+    // real page (Page not found, whose header needs nothing loaded), as the circuit renders it: FocusOnNavigate sits
     // beside AuthorizeRouteView, so it renders before any component of the page, its call goes first, and the alert's
-    // focus comes after it.
+    // focus comes after it. Changed deliberately by T339 (flow 02): the page was change password, which is static now, and
+    // so never in a circuit.
     [Fact]
     public void InTheRealRoutes_TheAlertIsFocusedAfterFocusOnNavigateHasFocusedTheHeading()
     {
@@ -160,14 +161,14 @@ public sealed class ActingRoleSwitchAlertTests : TestContext
         auth.SetRoles(WombatRoles.CommitteeMember, WombatRoles.Assessor);
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "zulu"), new Claim(WombatClaimTypes.ActingRole, WombatRoles.Assessor));
         SetRendererInfo(new RendererInfo("Server", isInteractive: true));
-        Services.GetRequiredService<FakeNavigationManager>().NavigateTo("/account/change-password");
+        Services.GetRequiredService<FakeNavigationManager>().NavigateTo("/not-found");
 
         var cut = RenderComponent<Routes>(parameters => parameters
             .Add(routes => routes.Acting, ZuluAsAssessor)
             .Add(routes => routes.SwitchResult, new ActingRoleSwitchResult(WombatRoles.CommitteeMember, WombatRoles.Assessor)));
 
         cut.WaitForAssertion(() => cut.Find(".action-result .alert span").TextContent.Should().Be("You are now acting as Assessor."));
-        cut.Find("h1").TextContent.Should().Be("Change password", "guard: the page is the one asked for");
+        cut.Find("h1").TextContent.Should().Be("Page not found", "guard: the page is the one asked for");
 
         var focusCalls = JSInterop.Invocations
             .Where(invocation => invocation.Identifier is FocusIdentifier or FocusBySelectorIdentifier)
@@ -188,16 +189,16 @@ public sealed class ActingRoleSwitchAlertTests : TestContext
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "zulu"));
         SetRendererInfo(new RendererInfo("Server", isInteractive: true));
         var navigation = Services.GetRequiredService<FakeNavigationManager>();
-        navigation.NavigateTo("/account/change-password");
+        navigation.NavigateTo("/not-found");
 
         var cut = RenderComponent<Routes>(parameters => parameters
             .Add(routes => routes.Acting, ZuluAsAssessor)
             .Add(routes => routes.SwitchResult, new ActingRoleSwitchResult(WombatRoles.CommitteeMember, WombatRoles.Assessor)));
         cut.WaitForAssertion(() => cut.FindAll(".action-result .alert").Should().ContainSingle());
 
-        navigation.NavigateTo("/not-found");
+        navigation.NavigateTo("/access-denied");
 
-        cut.WaitForAssertion(() => cut.Find("h1").TextContent.Should().NotBe("Change password", "guard: another page is shown"));
+        cut.WaitForAssertion(() => cut.Find("h1").TextContent.Should().NotBe("Page not found", "guard: another page is shown"));
         cut.FindAll(".page-header, .header-container").Should().NotBeEmpty("guard: the next page has a header that could say it");
         cut.Markup.Should().NotContain("You are now acting as");
     }
@@ -211,7 +212,7 @@ public sealed class ActingRoleSwitchAlertTests : TestContext
     {
         AddRoutesServices();
         SignInZulu();
-        Services.GetRequiredService<FakeNavigationManager>().NavigateTo("/account/change-password");
+        Services.GetRequiredService<FakeNavigationManager>().NavigateTo("/not-found");
         var result = new ActingRoleSwitchResult(WombatRoles.CommitteeMember, WombatRoles.Assessor, Nonce: "3F2A9C01B7D84E6F9A0B1C2D3E4F5061");
 
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));
@@ -221,7 +222,7 @@ public sealed class ActingRoleSwitchAlertTests : TestContext
         Said(RenderRoutes(result)).Should().Be("You are now acting as Assessor.", "the page's circuit says it once more, as it replaces the prerender");
 
         var resumed = RenderRoutes(result);
-        resumed.WaitForAssertion(() => resumed.Find("h1").TextContent.Should().Be("Change password", "guard: the page is drawn"));
+        resumed.WaitForAssertion(() => resumed.Find("h1").TextContent.Should().Be("Page not found", "guard: the page is drawn"));
         resumed.Markup.Should().NotContain("You are now acting as", "a circuit resumed from the page's descriptor says nothing again");
 
         var another = new ActingRoleSwitchResult(WombatRoles.Assessor, WombatRoles.CommitteeMember, Nonce: "00112233445566778899AABBCCDDEEFF");
@@ -229,7 +230,7 @@ public sealed class ActingRoleSwitchAlertTests : TestContext
             .Should().Be("You are now acting as Committee member.", "another switch is another result, said in its own circuit");
     }
 
-    /// <summary>What the real Routes needs registered beside the page it shows (change password's header needs nothing loaded).</summary>
+    /// <summary>What the real Routes needs registered beside the page it shows (Page not found's header needs nothing loaded).</summary>
     private void AddRoutesServices()
     {
         Services.AddSingleton(new IdentityErrorDescriber());

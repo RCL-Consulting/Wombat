@@ -13,6 +13,9 @@ namespace Wombat.Web.Tests.Security;
 /// </summary>
 public sealed class AccountRefusalCodeTests
 {
+    /// <summary>The lockout AddInfrastructure sets.</summary>
+    private static readonly TimeSpan Lockout = TimeSpan.FromMinutes(15);
+
     [Fact]
     public void TheSignInPagesAddress_CarriesTheCode_AndTheReturnAddress()
     {
@@ -25,9 +28,9 @@ public sealed class AccountRefusalCodeTests
     [Fact]
     public void ARefusedSignIn_PointsAtTheInstitutionalButton_OnlyWhereThePageOffersOne()
     {
-        SignInOutcome.Describe(SignInOutcome.Refused, institutionalSignInOffered: false)
+        SignInOutcome.Describe(SignInOutcome.Refused, institutionalSignInOffered: false, Lockout)
             .Should().Be(SignInMessages.InvalidCredentials);
-        SignInOutcome.Describe(SignInOutcome.Refused, institutionalSignInOffered: true)
+        SignInOutcome.Describe(SignInOutcome.Refused, institutionalSignInOffered: true, Lockout)
             .Should().Be(SignInMessages.InvalidCredentialsOrInstitutional);
     }
 
@@ -37,7 +40,7 @@ public sealed class AccountRefusalCodeTests
     [InlineData("  ")]
     public void NoCode_IsNoRefusal(string? code)
     {
-        SignInOutcome.Describe(code, institutionalSignInOffered: false).Should().BeNull();
+        SignInOutcome.Describe(code, institutionalSignInOffered: false, Lockout).Should().BeNull();
         LinkExternalOutcome.Describe(code).Should().BeNull();
     }
 
@@ -48,7 +51,7 @@ public sealed class AccountRefusalCodeTests
     [InlineData("Invalid email or password.")]
     public void ACodeThePagesDoNotKnow_ReadsAsTheirGeneralSentence(string code)
     {
-        SignInOutcome.Describe(code, institutionalSignInOffered: false).Should().Be(SignInOutcome.GeneralRefusal);
+        SignInOutcome.Describe(code, institutionalSignInOffered: false, Lockout).Should().Be(SignInOutcome.GeneralRefusal);
         LinkExternalOutcome.Describe(code).Should().Be(LinkExternalOutcome.GeneralRefusal);
         RegisterOutcome.Describe([code], new(), new()).Should().Equal(RegisterOutcome.GeneralRefusal);
     }
@@ -63,7 +66,7 @@ public sealed class AccountRefusalCodeTests
         {
             var sentence = ExternalLoginRefusal.Describe(code);
             sentence.Should().NotBeNullOrWhiteSpace(code);
-            SignInOutcome.Describe(code, institutionalSignInOffered: false).Should().Be(sentence);
+            SignInOutcome.Describe(code, institutionalSignInOffered: false, Lockout).Should().Be(sentence);
             LinkExternalOutcome.Describe(code).Should().Be(sentence);
         }
 
@@ -133,7 +136,7 @@ public sealed class AccountRefusalCodeTests
 
         RegisterOutcome.CodesFor(refusal).Should().Equal("PasswordTooShort", "InvalidEmail");
         RegisterOutcome.Describe(RegisterOutcome.CodesFor(refusal), new(), new() { RequiredLength = 12 })
-            .Should().Equal("Passwords must be at least 12 characters.", RegisterOutcome.GeneralRefusal);
+            .Should().Equal(RegisterOutcome.GeneralRefusal, "The new password needs:", "At least 12 characters.");
 
         RegisterOutcome.CodesFor(new InvitationRefusedException(InvitationRefusal.AccountNotCreated, "no codes", []))
             .Should().Equal(RegisterOutcome.Failed);

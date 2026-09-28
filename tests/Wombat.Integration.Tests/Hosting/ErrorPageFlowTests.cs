@@ -110,7 +110,7 @@ public sealed class ErrorPageFlowTests : IClassFixture<ErrorPageFlowTests.Host>
         var signOut = page.QuerySelector(".account-row a.sign-out-button")!;
         signOut.GetAttribute("href").Should().Be("/account/logout-confirm");
         Text(signOut).Should().Be("Sign out");
-        page.QuerySelector("form[action='/account/logout']").Should().BeNull();
+        page.QuerySelector("form[action='/account/logout/submit']").Should().BeNull();
     }
 
     // The database down, and the sign-in cookie over a minute old: its security stamp is checked against the account

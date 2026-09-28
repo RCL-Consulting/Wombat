@@ -1,118 +1,501 @@
 @page "/account/profile"
 @attribute [Authorize]
+@using Microsoft.Extensions.Options
+@using Wombat.Application.Common.Interfaces
+@using Wombat.Application.Common.Options
 @using Wombat.Web.Security
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IOptions<SsoOptions> SsoOptions
+@inject IOptions<Microsoft.AspNetCore.Identity.IdentityOptions> IdentityOptions
 
 @*
-  My account. The name is saved by the form's post to an endpoint (ProfileOutcome.SubmitPath, Program.cs), as change
-  password's is (T265), never in this page's circuit. The shell names the person from the sign-in cookie's display_name
-  claim, and a circuit cannot write the cookie, so a name saved here left the account row on the old name, in the circuit
-  and in the cookie (the review of the t335 branch). The endpoint saves it and issues the cookie again in one request,
-  then sends the browser back here with what happened: ?status=saved, or ?error= and a code. The page loads in full, and
-  its circuit starts from the new cookie.
+  My account (T335, flow 01; T339, flow 02, R3-MA-*): three cards. Account, what the account is (a stacked details list:
+  the email as text, the institution when there is one, the roles one per line by label); Your name, the page's one form;
+  How you sign in, the password with Change password when the account has one, and each institutional sign-in with Remove,
+  never the last way in's.
+
+  Nothing is saved in this page's circuit. The name form posts to an endpoint (ProfileOutcome.SubmitPath, Program.cs), and
+  Remove opens a ConfirmDialog in its form mode, a real form posted to SignInMethodEndpoints.RemovePath: each changes what
+  the sign-in cookie carries (the name's claim, the security stamp), and only a request can issue the cookie again. Each
+  endpoint sends the browser back here with what happened: ?status= or ?error= and a code, and for a sign-in the provider's
+  key, which the page names from its own configuration. The page chooses every word (ProfileOutcome).
+
+  Focus (T339, C6/A16): the result is not autofocused. After the circuit has drawn the loaded page, it moves the focus once,
+  to the one result there is: a wrong password reopens the dialog, whose refusal takes it; else the How you sign in card's
+  result, the Your name card's, or Password updated under the header. So the result is read once, when the page can act.
+  After a failed load and a Try again that loads, that result still takes the focus, and StatePanel's move to the Account
+  heading stands aside for it. A press of Remove opens the dialog only once the render naming its sign-in is drawn.
 *@
 
-<PageTitle>@(Refusal is not null ? "Error: My account" : "My account") · Wombat</PageTitle>
+<PageTitle>@(HasRefusal ? "Error: My account" : "My account") · Wombat</PageTitle>
 
-<PageHeader Title="My account" Subtitle="Update your name and review your assigned roles." />
+<div class="my-account">
+  <PageHeader Title="My account" Subtitle="Your name, your roles, and how you sign in." />
 
-@* What Save profile did. It arrives with the page the endpoint sends the browser back to, so it takes the focus as the
-   page loads (FocusOnLoad; DESIGN.md § Button system): an alert already on the page when it loads is not reliably
-   announced. *@
-<ActionResult FocusOnLoad="@(IsSaved || Refusal is not null)">
-  @if (Refusal is not null)
+  @* What change password did, from its redirect (R3-CP-PwUpdated): under the header, the page's own words. *@
+  @if (IsPasswordUpdated)
   {
-    <Alert Kind="danger" Id="@RefusalId">@Refusal</Alert>
+    <ActionResult @ref="_headerResult">
+      <Alert Kind="success">@ProfileOutcome.PasswordUpdatedMessage</Alert>
+    </ActionResult>
   }
-  else if (IsSaved)
-  {
-    <Alert Kind="success">Profile saved.</Alert>
-  }
-</ActionResult>
 
-<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(_profile is null)" EmptyTitle="Profile unavailable" EmptyBody="The current account profile could not be loaded.">
-  @if (_profile is not null)
-  {
-    <div class="details-grid">
-      <aside class="detail-card">
-        <h3>Account summary</h3>
-        <p><strong>Email:</strong> @_profile.Email</p>
-        <p><strong>Roles:</strong> @string.Join(", ", _profile.Roles)</p>
-        <div class="actions-cell">
-          <a class="btn btn-outline btn-sm" href="/account/change-password">Change password</a>
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusAccountHeadingAsync"
+              IsEmpty="@(_profile is null)" EmptyTitle="Profile unavailable" EmptyBody="The current account profile could not be loaded.">
+    @if (_profile is not null)
+    {
+      <div class="my-account-grid">
+        <section class="detail-card my-account-card" aria-labelledby="account-heading">
+          <h2 id="account-heading" tabindex="-1" @ref="_accountHeading">Account</h2>
+          <dl class="details-list details-list--stacked">
+            <div>
+              <dt>Email</dt>
+              <dd>@_profile.Email</dd>
+            </div>
+            @if (_profile.InstitutionName is { } institution)
+            {
+              <div>
+                <dt>Institution</dt>
+                <dd>@institution</dd>
+              </div>
+            }
+            <div>
+              <dt>Roles</dt>
+              <dd>
+                <ul class="my-account-roles">
+                  @foreach (var role in _profile.RoleLabels)
+                  {
+                    <li>@role</li>
+                  }
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <div class="my-account-column">
+          <section class="detail-card my-account-card" aria-labelledby="name-heading">
+            <h2 id="name-heading">Your name</h2>
+            @* data-submit-once (wombat.js): a second press while the post is on its way sends nothing. *@
+            <form method="post" action="@ProfileOutcome.SubmitPath" class="my-account-form" data-submit-once>
+              <AntiforgeryToken />
+
+              <div class="form-grid">
+                <FormField Label="First name" InputId="profile-first-name">
+                  <ChildContent>
+                    <input id="profile-first-name" name="FirstName" class="form-control" value="@(FirstNameRefusal is null ? _profile.FirstName : null)"
+                           required maxlength="@ProfileOutcome.MaxNameLength" autocomplete="given-name"
+                           aria-invalid="@(FirstNameRefusal is null ? null : "true")"
+                           aria-describedby="@(FirstNameRefusal is not null ? FirstNameErrorId : GeneralNameRefusalReference)" />
+                  </ChildContent>
+                  <ValidationContent>
+                    @if (FirstNameRefusal is not null)
+                    {
+                      <div class="validation-message" id="@FirstNameErrorId">@FirstNameRefusal</div>
+                    }
+                  </ValidationContent>
+                </FormField>
+
+                <FormField Label="Last name" InputId="profile-last-name">
+                  <ChildContent>
+                    <input id="profile-last-name" name="LastName" class="form-control" value="@(LastNameRefusal is null ? _profile.LastName : null)"
+                           required maxlength="@ProfileOutcome.MaxNameLength" autocomplete="family-name"
+                           aria-invalid="@(LastNameRefusal is null ? null : "true")"
+                           aria-describedby="@(LastNameRefusal is not null ? LastNameErrorId : GeneralNameRefusalReference)" />
+                  </ChildContent>
+                  <ValidationContent>
+                    @if (LastNameRefusal is not null)
+                    {
+                      <div class="validation-message" id="@LastNameErrorId">@LastNameRefusal</div>
+                    }
+                  </ValidationContent>
+                </FormField>
+              </div>
+
+              @* What Save name did (R3-MA-Saved, R3-MA-Refused): in the card, above its action row. *@
+              <ActionResult @ref="_nameResult">
+                @if (NameRefusal is not null)
+                {
+                  <Alert Kind="danger" Id="@RefusalId">@NameRefusal</Alert>
+                }
+                else if (IsSaved)
+                {
+                  <Alert Kind="success">@ProfileOutcome.SavedMessage</Alert>
+                }
+              </ActionResult>
+
+              <FormActions>
+                <button type="submit" class="btn btn-primary">Save name</button>
+              </FormActions>
+            </form>
+          </section>
+
+          <section class="detail-card my-account-card" aria-labelledby="signin-heading">
+            <h2 id="signin-heading">How you sign in</h2>
+
+            @* What Remove did (R3-MA-RemoveStates c-e): in the card, above the ways in. *@
+            <ActionResult @ref="_signInResult">
+              @if (CardRemoveRefusal is not null)
+              {
+                <Alert Kind="danger">@CardRemoveRefusal</Alert>
+              }
+              else if (IsSignInRemoved)
+              {
+                <Alert Kind="success">@ProfileOutcome.SignInRemovedMessage(InstitutionNamed(Provider))</Alert>
+              }
+            </ActionResult>
+
+            @if (!_profile.HasLocalPassword)
+            {
+              <p>You sign in through your institution. This account has no Wombat password, so there is no password to change here.</p>
+            }
+
+            <ul class="signin-methods">
+              @if (_profile.HasLocalPassword)
+              {
+                <li class="signin-method">
+                  <Icon Name="key-round" Size="20" Class="signin-method-icon" />
+                  <div class="signin-method-text">
+                    <strong>Password</strong>
+                    <span class="signin-method-detail">Your Wombat password.</span>
+                  </div>
+                  <a class="btn btn-outline" href="/account/change-password">Change password</a>
+                </li>
+              }
+              @foreach (var signIn in _profile.InstitutionalSignIns)
+              {
+                var reasonId = $"signin-reason-{signIn.Provider}";
+                <li class="signin-method">
+                  <Icon Name="building-2" Size="20" Class="signin-method-icon" />
+                  <div class="signin-method-text">
+                    <strong>@signIn.DisplayName</strong>
+                    <span class="signin-method-detail">Institutional sign-in.</span>
+                  </div>
+                  @if (IsLastWayIn)
+                  {
+                    @* The last way in (R3-MA-InstOnly): no live Remove, and why. The server refuses it too. *@
+                    <div class="signin-method-action">
+                      <button type="button" class="btn btn-outline" disabled aria-describedby="@reasonId"
+                              aria-label="@($"Remove your {signIn.DisplayName} sign-in")">Remove</button>
+                      <span class="signin-method-reason" id="@reasonId">Remove: this is the only way you sign in.</span>
+                    </div>
+                  }
+                  else
+                  {
+                    <button type="button" class="btn btn-outline" @ref="_removeButtons[signIn.Provider]"
+                            aria-label="@($"Remove your {signIn.DisplayName} sign-in")" aria-haspopup="dialog"
+                            @onclick="() => OpenRemove(signIn)">Remove</button>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
         </div>
-      </aside>
+      </div>
 
-      <section class="detail-card">
-        <h3>Profile details</h3>
-        @* data-submit-once (wombat.js): a second press while the post is on its way sends nothing. *@
-        <form method="post" action="@ProfileOutcome.SubmitPath" data-submit-once>
-          <AntiforgeryToken />
-
-          <div class="form-grid">
-            <FormField Label="Email" InputId="profile-email">
-              <input id="profile-email" class="form-control" type="email" value="@_profile.Email" disabled />
-            </FormField>
-
-            <FormField Label="First name" InputId="profile-first-name" Required="true">
-              <input id="profile-first-name" name="FirstName" class="form-control" value="@_profile.FirstName"
-                     required maxlength="@ProfileOutcome.MaxNameLength" autocomplete="given-name" aria-describedby="@RefusalReference" />
-            </FormField>
-
-            <FormField Label="Last name" InputId="profile-last-name" Required="true">
-              <input id="profile-last-name" name="LastName" class="form-control" value="@_profile.LastName"
-                     required maxlength="@ProfileOutcome.MaxNameLength" autocomplete="family-name" aria-describedby="@RefusalReference" />
-            </FormField>
-          </div>
-
-          <FormActions>
-            <button type="submit" class="btn btn-primary">Save profile</button>
-          </FormActions>
-        </form>
-      </section>
-    </div>
-  }
-</StatePanel>
+      @* Remove's dialog (R3-MA-Confirm, R3-MA-RemoveStates a-b): ConfirmDialog's form mode, posted by the browser. *@
+      <ConfirmDialog @ref="_dialog"
+                     FormAction="@SignInMethodEndpoints.RemovePath"
+                     HiddenFields="@RemoveFields"
+                     Title="@($"Remove your {_removing?.DisplayName} sign-in?")"
+                     Body="@RemoveBody"
+                     ConfirmLabel="Remove sign-in"
+                     DangerAction="true"
+                     OnClosed="RemoveDialogClosedAsync">
+        <FormContent>
+          @if (_dialogRefusal is not null)
+          {
+            @* The refusal first, and focused as the dialog opens (autofocus inside a modal dialog). *@
+            <div class="action-result" tabindex="-1" autofocus>
+              <Alert Kind="danger" Id="@RemoveRefusalId">@_dialogRefusal</Alert>
+            </div>
+          }
+          @if (_profile.HasLocalPassword)
+          {
+            @* E3: the account has a password, so the dialog asks for it. *@
+            @* The password field and its Show toggle, "Show password" (PasswordField; T339, flow 02, R3-SI-Toggle). *@
+            <PasswordField Label="Password" Id="remove-password" Name="Password" Autocomplete="current-password" Required="true"
+                           Autofocus="@(_dialogRefusal is null)" Invalid="@_dialogPasswordRefused"
+                           DescribedBy="@(_dialogPasswordRefused ? RemovePasswordErrorId : RemovePasswordHelpId)">
+              @if (_dialogPasswordRefused)
+              {
+                <div class="validation-message" id="@RemovePasswordErrorId">@ProfileOutcome.IncorrectPasswordMessage</div>
+              }
+              else
+              {
+                <small class="page-subtitle" id="@RemovePasswordHelpId">Enter your password to confirm it is you.</small>
+              }
+            </PasswordField>
+          }
+        </FormContent>
+      </ConfirmDialog>
+    }
+  </StatePanel>
+</div>
 
 @code {
-  /// <summary>The refusal's id, which each field names, so a refusal is read with the field it sends the user back to.</summary>
+  /// <summary>The Your name card's refusal's id, which a field names when the refusal is not about one field.</summary>
   public const string RefusalId = "profile-error";
+
+  /// <summary>The first name's own refusal.</summary>
+  public const string FirstNameErrorId = "profile-first-name-error";
+
+  /// <summary>The last name's own refusal.</summary>
+  public const string LastNameErrorId = "profile-last-name-error";
+
+  /// <summary>The Remove dialog's refusal.</summary>
+  public const string RemoveRefusalId = "remove-error";
+
+  private const string RemovePasswordErrorId = "remove-password-error";
+  private const string RemovePasswordHelpId = "remove-password-help";
+
+  private readonly Dictionary<string, ElementReference> _removeButtons = new(StringComparer.Ordinal);
 
   private UserProfileDto? _profile;
   private bool _loading = true;
   private string? _loadError;
 
-  /// <summary><see cref="ProfileOutcome.Saved" /> once the endpoint has saved the name.</summary>
+  private ActionResult? _headerResult;
+  private ActionResult? _nameResult;
+  private ActionResult? _signInResult;
+  private ElementReference _accountHeading;
+  private ConfirmDialog? _dialog;
+
+  // The sign-in the dialog is about, and what it says above the password when it was opened again by a refusal.
+  private InstitutionalSignIn? _removing;
+  private string? _dialogRefusal;
+  private bool _dialogPasswordRefused;
+
+  // The dialog is to open again as the loaded page is first drawn (a wrong password), and the result's focus has moved.
+  private bool _reopenDialog;
+  private bool _resultFocused;
+
+  // A Remove was pressed: the dialog opens once the render showing its sign-in is drawn.
+  private bool _openDialogAfterRender;
+
+  /// <summary><see cref="ProfileOutcome.Saved" />, <see cref="ProfileOutcome.PasswordUpdated" /> or <see cref="ProfileOutcome.SignInRemoved" />.</summary>
   [SupplyParameterFromQuery(Name = "status")]
   public string? Status { get; set; }
 
-  /// <summary>The endpoint's refusal code, when it refused.</summary>
+  /// <summary>An endpoint's refusal code, when it refused.</summary>
   [SupplyParameterFromQuery(Name = "error")]
   public string? Error { get; set; }
 
-  /// <summary>The page's words for the endpoint's refusal; null when it refused nothing.</summary>
-  private string? Refusal => string.IsNullOrWhiteSpace(Error) ? null : ProfileOutcome.Describe(Error);
+  /// <summary>The provider's key a Remove's status or refusal is about.</summary>
+  [SupplyParameterFromQuery(Name = "provider")]
+  public string? Provider { get; set; }
 
-  private bool IsSaved => string.Equals(Status, ProfileOutcome.Saved, StringComparison.Ordinal);
+  /// <summary>How long a lock the account had already has left, in whole minutes (ProfileOutcome.RemoveAccountLocked).</summary>
+  [SupplyParameterFromQuery(Name = ChangePasswordOutcome.MinutesParameter)]
+  public string? Minutes { get; set; }
 
-  private string? RefusalReference => Refusal is not null ? RefusalId : null;
+  private TimeSpan LockedFor => ChangePasswordOutcome.LockedFor(Minutes, IdentityOptions.Value.Lockout.DefaultLockoutTimeSpan);
 
-  protected override async Task OnInitializedAsync()
+  private bool HasError => !string.IsNullOrWhiteSpace(Error);
+
+  private bool HasRefusal => HasError;
+
+  private bool IsRemoveRefusal => ProfileOutcome.IsRemoveRefusal(Error);
+
+  /// <summary>The Your name card's refusal: any code that is not a removal's, a code the page does not know included.</summary>
+  private string? NameRefusal => HasError && !IsRemoveRefusal ? ProfileOutcome.Describe(Error!) : null;
+
+  private string? FirstNameRefusal => NameRefusal is null ? null : ProfileOutcome.FirstNameRefusal(Error);
+
+  private string? LastNameRefusal => NameRefusal is null ? null : ProfileOutcome.LastNameRefusal(Error);
+
+  /// <summary>A refusal of the name as a whole (too long, a fault) is named by both fields; one field's by that field.</summary>
+  private string? GeneralNameRefusalReference
+    => NameRefusal is not null && FirstNameRefusal is null && LastNameRefusal is null ? RefusalId : null;
+
+  private bool IsSaved => !HasError && string.Equals(Status, ProfileOutcome.Saved, StringComparison.Ordinal);
+
+  private bool IsPasswordUpdated => !HasError && string.Equals(Status, ProfileOutcome.PasswordUpdated, StringComparison.Ordinal);
+
+  private bool IsSignInRemoved => !HasError && string.Equals(Status, ProfileOutcome.SignInRemoved, StringComparison.Ordinal);
+
+  /// <summary>A removal's refusal the card shows: every one the dialog does not (the dialog opened again shows its own).</summary>
+  private string? CardRemoveRefusal
+    => IsRemoveRefusal && !_reopenDialog && _dialogRefusal is null
+        ? ProfileOutcome.DescribeRemoval(Error!, InstitutionNamed(Provider), LockedFor)
+        : null;
+
+  /// <summary>The account's only way in is its one institutional sign-in: no password, and no other.</summary>
+  private bool IsLastWayIn => _profile is { HasLocalPassword: false, InstitutionalSignIns.Count: <= 1 };
+
+  private IReadOnlyDictionary<string, string>? RemoveFields
+    => _removing is null ? null : new Dictionary<string, string> { ["Provider"] = _removing.Provider };
+
+  /// <summary>
+  /// What remains once the sign-in is gone, and how to link it again (R3-MA-RemoveStates b): the password, the other
+  /// institutions, or both (C5: never "only" the password when another institution is linked).
+  /// </summary>
+  private string RemoveBody
   {
+    get
+    {
+      if (_profile is null || _removing is null)
+      {
+        return string.Empty;
+      }
+
+      var others = _profile.InstitutionalSignIns
+        .Where(signIn => !string.Equals(signIn.Provider, _removing.Provider, StringComparison.Ordinal))
+        .Select(signIn => signIn.DisplayName)
+        .ToList();
+      var through = string.Join(" or ", others);
+      var remains = (_profile.HasLocalPassword, others.Count > 0) switch
+      {
+        (true, true) => $"You will still sign in with your email and password, or through {through}.",
+        (true, false) => "You will still sign in with your email and password.",
+        _ => $"You will still sign in through {through}."
+      };
+      return $"{remains} You can link it again the next time you sign in through {_removing.DisplayName}.";
+    }
+  }
+
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
     try
     {
       // The signed-in user, whose own account this page shows: the handler reads the id from it (T185).
       var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
       _profile = await Sender.Send(new GetCurrentUserProfileQuery(user));
+      PrepareDialogRefusal();
     }
-    catch (Exception exception)
+    catch (Exception)
     {
-      _loadError = exception.Message;
+      // The failure's own text is the log's (the pipeline logs it), not the page's (R3-MA-Error).
+      _profile = null;
+      _loadError = ProfileOutcome.LoadErrorMessage;
     }
     finally
     {
       _loading = false;
+    }
+  }
+
+  /// <summary>
+  /// A wrong password, the throttle, or a lock someone else set refused a Remove: the dialog opens again for that sign-in as the page is drawn,
+  /// its refusal first (R3-MA-RemoveStates a). A provider the account has no removable sign-in through shows the refusal in
+  /// the card instead.
+  /// </summary>
+  private void PrepareDialogRefusal()
+  {
+    if (!ProfileOutcome.IsShownInTheDialog(Error) || IsLastWayIn)
+    {
+      return;
+    }
+
+    var signIn = _profile?.InstitutionalSignIns
+      .FirstOrDefault(candidate => string.Equals(candidate.Provider, Provider, StringComparison.Ordinal));
+    if (signIn is null)
+    {
+      return;
+    }
+
+    _removing = signIn;
+    _dialogRefusal = ProfileOutcome.DescribeRemoval(Error!, signIn.DisplayName, LockedFor);
+    _dialogPasswordRefused = Error == ProfileOutcome.RemoveWrongPassword;
+    _reopenDialog = true;
+  }
+
+  /// <summary>The institution a provider's key names: the account's sign-in's name, else the configured one, else none.</summary>
+  private string? InstitutionNamed(string? provider)
+  {
+    if (string.IsNullOrWhiteSpace(provider))
+    {
+      return null;
+    }
+
+    var linked = _profile?.InstitutionalSignIns
+      .FirstOrDefault(signIn => string.Equals(signIn.Provider, provider, StringComparison.Ordinal));
+    if (linked is not null)
+    {
+      return linked.DisplayName;
+    }
+
+    var configured = SsoOptions.Value.Providers
+      .FirstOrDefault(option => string.Equals(option.Key, provider, StringComparison.Ordinal))?.DisplayName;
+    return string.IsNullOrWhiteSpace(configured) ? null : configured;
+  }
+
+  /// <remarks>
+  /// The dialog is opened after the render, not here (the step F review): a handler's render waits until the handler
+  /// yields, so showModal called here ran on the dialog as it was, named "Remove your  sign-in?" on a first open, the last
+  /// sign-in's name on the next, and after a refusal gave the focus to that refusal, which the render then removed.
+  /// </remarks>
+  private void OpenRemove(InstitutionalSignIn signIn)
+  {
+    _removing = signIn;
+    _dialogRefusal = null;
+    _dialogPasswordRefused = false;
+    _openDialogAfterRender = true;
+  }
+
+  /// <summary>
+  /// The dialog has closed without a post: the focus goes back to its sign-in's Remove. The browser does that itself for
+  /// a dialog a press opened; a dialog the page opened as it loaded had no opener to go back to.
+  /// </summary>
+  private async Task RemoveDialogClosedAsync()
+  {
+    if (_removing is not null && _removeButtons.TryGetValue(_removing.Provider, out var button))
+    {
+      await button.FocusAsync();
+    }
+  }
+
+  /// <summary>
+  /// StatePanel's move after a retry that loaded (B12): the Account heading, unless the page has a result to say, which
+  /// takes the focus itself (<see cref="OnAfterRenderAsync" />), so it is read and not passed over (the step F review).
+  /// </summary>
+  private async ValueTask FocusAccountHeadingAsync()
+  {
+    if (_reopenDialog || ArrivedResult is not null)
+    {
+      return;
+    }
+
+    await _accountHeading.FocusAsync();
+  }
+
+  /// <summary>The one result that arrived with the page and is shown in it, or null.</summary>
+  private ActionResult? ArrivedResult
+    => CardRemoveRefusal is not null || IsSignInRemoved ? _signInResult
+      : NameRefusal is not null || IsSaved ? _nameResult
+      : IsPasswordUpdated ? _headerResult
+      : null;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_openDialogAfterRender && _dialog is not null)
+    {
+      _openDialogAfterRender = false;
+      await _dialog.ShowAsync();
+      return;
+    }
+
+    // Once, on the circuit's first render of the loaded page: an action's result that arrived with the page (C6, A16).
+    if (_resultFocused || _loading || _profile is null)
+    {
+      return;
+    }
+
+    _resultFocused = true;
+    if (_reopenDialog && _dialog is not null)
+    {
+      await _dialog.ShowAsync();
+      return;
+    }
+
+    if (ArrivedResult is { } result)
+    {
+      await result.Element.FocusAsync();
     }
   }
 }

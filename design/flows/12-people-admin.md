@@ -512,9 +512,11 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
 Do: Open Dr du Plessis's account. Set a new password of 10 characters, then one that meets every rule. Record the
   second in `pwd_DO_NOT_COMMIT.txt`, as the password to give him out of band.
-Expect: The Reset password card says it sets a password directly and that the user is not emailed. The 10-character
-  password is refused with the rules it breaks. The second is accepted, and the field is cleared. The audit log
-  records the reset with the password redacted (T101).
+Expect: The Reset password card says it sets a password directly and that the user is not emailed. Its field has the
+  Show toggle ("Show new password") and the six rules under it, and Reset password is enabled once anything is typed.
+  The 10-character password is refused with "The password was not reset. The new password needs:" and the rules it
+  breaks, in the six rules' order. The second is accepted, and the field is cleared. The audit log records the reset
+  with the password redacted (T101).
 
 Step A.5.5 — Another institution's records, by id
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -572,8 +574,9 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - muted text on the page background;
   - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
     each state as plain text);
-  - a success alert (save My account, the name in the top bar, unchanged: "Profile saved.") and a danger alert (Change
-    password with a confirmation that differs, which checks no password and changes nothing);
+  - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
+    alert (Change password with a confirmation that differs, which checks no password and changes nothing);
+  - a password field's Show toggle, pressed (white on the action blue, 4.86:1);
   - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
     not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
   - the focus ring on white and on the page background;

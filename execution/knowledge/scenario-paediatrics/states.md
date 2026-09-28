@@ -69,19 +69,30 @@ END $$;
 
 ### Typed codes on the account pages
 
-The sign-in, register and change-password pages choose their words from a code in the address (`?error=`, and
-`?status=updated` on change password), never from text in it (T265, T285). Typing a code shows exactly the page a real
-refusal shows, with nothing sent. Where the story plays the real refusal, the row uses the story; the rest are typed.
+The sign-in, register, change-password and My account pages choose their words from a code in the address (`?error=`,
+and `?status=` on My account), never from text in it (T265, T285). Typing a code shows exactly the page a real refusal
+shows, with nothing sent. Where the story plays the real refusal, the row uses the story; the rest are typed.
 
-- **Sign-in** (`/account/login?error=<code>`): `FieldsMissing`, `Refused`, `TooManyAttempts`, `LockedOut`,
-  `SessionEnded`, `PasswordChanged`, `ExternalLoginUnavailable`, `ExternalSessionExpired`, `SsoFailed`, the twelve
-  institutional sign-in codes (`SsoUnknownProvider`, `SsoNoEmail`, `SsoEmailNotVerified`, `SsoAccountLocked`,
-  `SsoAdministrator`, `SsoWrongInstitution`, `SsoEmailInUse`, `SsoAccountNotCreated`, `SsoAlreadyLinked`,
-  `SsoLinkRefused`, `SsoLinkLockedOut`, `SsoLinkFailed`), and any other code, which gets the general refusal.
+- **Sign-in** (`/account/login?error=<code>`): `FieldsMissing`, `Refused`, `TooManyAttempts`, `SessionEnded`,
+  `PasswordChanged`, `SignedOut`, `LockedSignedOut`, `ExternalLoginUnavailable`, `ExternalSessionExpired`, `SsoFailed`,
+  the twelve institutional sign-in codes (`SsoUnknownProvider`, `SsoNoEmail`, `SsoEmailNotVerified`,
+  `SsoAccountLocked`, `SsoAdministrator`, `SsoWrongInstitution`, `SsoEmailInUse`, `SsoAccountNotCreated`,
+  `SsoAlreadyLinked`, `SsoLinkRefused`, `SsoLinkLockedOut`, `SsoLinkFailed`), and any other code, which gets the
+  general refusal. `LockedOut` reads as `Refused` does (T287): no endpoint sends it since T339. `SessionEnded`,
+  `PasswordChanged`, `SignedOut` and `LockedSignedOut` are notices (info, the focus on Email on dev); every other code is
+  a refusal (danger, focused, the tab's title starting "Error:").
 - **Change password** (`/account/change-password?error=<code>`, repeatable): `FieldsMissing`, `ConfirmationMismatch`,
-  `Failed`, `LockedOut`, `TooManyAttempts`, `InstitutionalSignIn`, and Identity's `PasswordMismatch`,
-  `PasswordTooShort`, `PasswordRequiresDigit`, `PasswordRequiresUpper`, `PasswordRequiresLower`,
-  `PasswordRequiresNonAlphanumeric`.
+  `Failed`, `TooManyAttempts`, `InstitutionalSignIn`, `AccountLocked` (with `&minutes=N`: "Your account is locked. Wait N
+  minutes, then try again.", for an account already locked by someone else; no sign-out), and Identity's `PasswordMismatch`, `PasswordTooShort`,
+  `PasswordRequiresUniqueChars`, `PasswordRequiresDigit`, `PasswordRequiresUpper`, `PasswordRequiresLower`,
+  `PasswordRequiresNonAlphanumeric`; any other code (`LockedOut` included) gets "The password could not be changed.
+  Try again." A change lands on My account (`/account/profile?status=password-updated`).
+- **My account** (`/account/profile?error=<code>` or `?status=<code>`): `?error=FirstNameMissing`, `LastNameMissing`,
+  `NameMissing`, `NameTooLong`, `Failed`; `?status=saved` and `?status=password-updated`. The How you sign in card's
+  results take `&provider=<key>` as well: `?status=sign-in-removed`, and `?error=RemoveWrongPassword`,
+  `RemoveTooManyAttempts`, `RemoveAccountLocked` (with `&minutes=N`), `RemoveLastSignIn`, `RemoveFailed`. With no institutional sign-in linked (every cast account
+  on dev) each shows in the card, naming no institution; the dialog reopened with its refusal needs a linked sign-in
+  (States no local replay reaches).
 - **Register** (`/account/register?token=<a usable token>&error=<code>`): `ConfirmationMismatch`, `DetailsInvalid`,
   `Failed` and Identity's password codes, shown under the form. With an unusable token the page says why the invitation
   cannot be used, whatever the code.
@@ -180,24 +191,31 @@ dashboard Home shows, and the page it lands on says so once ("You are now acting
 
 ## Account and sign-in
 
+The sign-in page has no signed-in state: a signed-in visitor who opens `/account/login` is sent Home (T339, E4). The
+sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor who is not signed in to the sign-in page.
+
 | Page | State | Screenshot | Account | How to reach it |
 |---|---|---|---|---|
-| `/account/login` | Blank | `states/login--blank.png` | Anonymous | At Step 1.1, before signing in. No SSO button (no provider). |
-| `/account/login` | Wrong password | `states/login--refused.png` | Anonymous | At Step A.3.2: "Invalid email or password." |
-| `/account/login` | Session ended | `states/login--session-ended.png` | Dr Mahlangu | At Step 2.31: "Your session has ended. Please sign in again." Also typed: `?error=SessionEnded`. |
-| `/account/login` | Locked out | `states/login--locked-out.png` | Dr Patel | At Step A.6.5: "Too many failed sign-in attempts. Please try again later or reset your password." |
-| `/account/login` | Unknown SSO provider | `states/login--sso-unknown-provider.png` | Anonymous | At Step A.3.2, after the challenge for `kgk`. |
-| `/account/login` | No external sign-in | `states/login--external-unavailable.png` | Anonymous | At Step A.3.3: "External login information was not available." |
-| `/account/login` | Throttled | `states/login--too-many-attempts.png` | Anonymous | Typed: `?error=TooManyAttempts`. No change. |
+| `/account/login` | Blank | `states/login--blank.png` | Anonymous | At Step 1.1, before signing in: "Work-based assessment for specialist training.", "Sign in", the focus on Email. No SSO button (no provider). |
+| `/account/login` | Password shown | `states/login--password-shown.png` | Anonymous | At Step 1.1, type a password and press Show: the toggle filled (pressed), its eye-off icon, the password as text. No change. |
+| `/account/login` | Scripts blocked | `states/login--no-script.png` | Anonymous | DevTools, Disable JavaScript, then open the page: no Show toggle, only the password field; the form still signs in, as it posts without script. No change. |
+| `/account/login` | Wrong password | `states/login--refused.png` | Anonymous | At Step A.3.2: "Invalid email or password.", focused; the tab's title starts "Error:". |
+| `/account/login` | Signed out | `states/login--signed-out.png` | Mr Smit | At Step 2.8, after Sign out: "You have signed out.", an information notice. Also typed: `?error=SignedOut`. |
+| `/account/login` | Session ended | `states/login--session-ended.png` | Dr Mahlangu | At Step 2.31: "Your session has ended. Sign in again.", an information notice, the focus on Email. Also typed: `?error=SessionEnded`. |
+| `/account/login` | Locked account | `states/login--locked-out.png` | Dr Patel | At Step A.6.5: "Invalid email or password.", the same page as a wrong password (T287). |
+| `/account/login` | Locked by wrong current passwords | `states/login--locked-signed-out.png` | Dr Khumalo (a copy) | Scratch (post-act2): Dr Khumalo signs in and opens Change password from My account, and enters a wrong current password five times. The first four read "Incorrect password."; the fifth locks the account, ends her session and lands here: "Your current password was entered incorrectly too many times, so your account is locked for 15 minutes and you have been signed out. Wait 15 minutes, then sign in again.", an information notice. Also typed, with no change: `?error=LockedSignedOut`. |
+| `/account/login` | Unknown SSO provider | `states/login--sso-unknown-provider.png` | Anonymous | At Step A.3.2, after the challenge for `kgk`: "That institution's sign-in is not set up in Wombat. Sign in with your email and password." |
+| `/account/login` | No external sign-in | `states/login--external-unavailable.png` | Anonymous | At Step A.3.3: "Your institution's sign-in did not complete. Sign in with your email and password." |
+| `/account/login` | Throttled | `states/login--too-many-attempts.png` | Anonymous | Typed: `?error=TooManyAttempts`: "Too many failed sign-in attempts from this network. Wait a few minutes and try again." No change. |
 | `/account/login` | Fields missing | `states/login--fields-missing.png` | Anonymous | Typed: `?error=FieldsMissing`. No change. |
 | `/account/login` | Password changed elsewhere | `states/login--password-changed.png` | Anonymous | Typed: `?error=PasswordChanged`. No change. |
 | `/account/login` | External sign-in expired | `states/login--external-expired.png` | Anonymous | Typed: `?error=ExternalSessionExpired`. No change. |
 | `/account/login` | Each institutional sign-in refusal | `states/login--sso-<code>.png` | Anonymous | Typed, one capture per code of § Typed codes, `SsoNoEmail` to `SsoLinkFailed`, and `SsoFailed`. No change. |
-| `/account/login` | Unknown code | `states/login--general-refusal.png` | Anonymous | Typed: `?error=Call012`: "Sign-in could not be completed. Please try again." No change. |
+| `/account/login` | Unknown code | `states/login--general-refusal.png` | Anonymous | Typed: `?error=Call012`: "Sign-in could not be completed. Try again." No change. |
 | `/account/login` | Narrow | `states/login--narrow.png` | Anonymous | At Step A.7.12. |
 | `/account/register` | No token | `states/register--token-missing.png` | Anonymous | Typed: `/account/register`: "The invitation token is missing." No change. |
-| `/account/register` | The form | `states/register--form.png` | Anonymous | At Step 1.8, before Register: "Registering kruger@cmsa.wombat.local as CollegeAdmin." |
-| `/account/register` | Password too short | `states/register--password-short.png` | Anonymous | At Step 2.9, the first attempt. |
+| `/account/register` | The form | `states/register--form.png` | Anonymous | At Step 1.8, before Register: "Registering kruger@cmsa.wombat.local as CollegeAdmin.", and the six password rules under Password. |
+| `/account/register` | Password too short | `states/register--password-short.png` | Anonymous | At Step 2.9, the first attempt: "The new password needs: At least 12 characters." |
 | `/account/register` | Confirmation differs | `states/register--confirmation.png` | Anonymous | At Step 2.9, the second attempt. |
 | `/account/register` | Details invalid | `states/register--details-invalid.png` | Anonymous | After Step 2.26, before 2.27: Dr du Plessis's resent link with `&error=DetailsInvalid` added. No change. |
 | `/account/register` | Used | `states/register--used.png` | Anonymous | At Step 1.9. |
@@ -205,27 +223,32 @@ dashboard Home shows, and the page it lands on says so once ("You are now acting
 | `/account/register` | Invalid | `states/register--invalid.png` | Anonymous | At Step 2.27, the replaced link. |
 | `/account/register` | Expired | `states/register--expired.png` | Anonymous | Scratch (post-appendix): Prof Mbatha invites `expired@kgk.wombat.local`; copy the link; `UPDATE "Invitations" SET "ExpiresOn" = now() - interval '1 day' WHERE "Email" = 'expired@kgk.wombat.local';`; open the link: "This invitation has expired." |
 | `/account/register` | Address already has an account | `states/register--account-exists.png` | Anonymous | Scratch (post-appendix): Prof Mbatha invites `botha@kgk.wombat.local` as Assessor; open the link: "A user with this email address already exists." |
-| `/account/register` | Could not be completed | `states/register--general-refusal.png` | Anonymous | Hold a read, open any registration link (static), wait 35 s: "Registration could not be completed. Please try again." No change. |
+| `/account/register` | Could not be completed | `states/register--general-refusal.png` | Anonymous | Hold a read, open any registration link (static), wait 35 s: "Registration could not be completed. Try again." No change. |
 | `/account/register` | Narrow | `states/register--narrow.png` | Anonymous | At Step 2.18, Dr Molefe's link at 390 px before registering. No change. |
-| `/account/forgot-password` | The stub | `states/forgot-password--stub.png` | Anonymous | At Step A.4.4. |
+| `/account/forgot-password` | The page | `states/forgot-password--stub.png` | Anonymous | At Step A.4.4: "Forgotten password", who to ask, three steps, and Back to sign in. |
 | `/account/forgot-password` | Narrow | `states/forgot-password--narrow.png` | Anonymous | At Step A.7.12. |
-| `/account/link-external` | No sign-in in progress | `states/link-external-login--expired.png` | Anonymous | At Step A.3.3: "Your institutional sign-in has expired. Start again from the sign-in page." |
+| `/account/link-external` | No sign-in in progress | `states/link-external-login--expired.png` | Anonymous | At Step A.3.3: "Institutional sign-in expired" and "Your institutional sign-in has expired. Start again from the sign-in page." |
 | `/account/link-external` | Narrow | `states/link-external-login--narrow.png` | Anonymous | At Step A.3.3, at 390 px. No change. |
-| `/account/logout-confirm` | The confirmation | `states/logout-confirm--default.png` | Mr Smit | At Step A.4.7, the first visit. |
+| `/account/logout-confirm` | The confirmation | `states/logout-confirm--default.png` | Mr Smit | At Step A.4.7, the first visit: "You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends your session in this browser.", Cancel and Sign out. |
+| `/account/logout` | The same page, typed | `states/logout-confirm--typed.png` | Mr Smit | At Step A.4.7, the typed `/account/logout`: the same page; nobody is signed out. No change. |
 | `/account/logout-confirm` | Narrow | `states/logout-confirm--narrow.png` | Mr Smit | At Step A.4.7, at 390 px, then Cancel. No change. |
-| `/account/profile` | Before admission | `states/profile--pending-trainee.png` | Dr Mahlangu | At Step 2.19: Roles reads PendingTrainee. |
-| `/account/profile` | Two roles | `states/profile--loaded.png` | Dr Zulu | At Step 2.41. |
-| `/account/profile` | Saved | `states/profile--saved.png` | Dr Khumalo | At Step 2.41: "Profile saved." |
-| `/account/profile` | Required field empty | `states/profile--invalid.png` | Dr Botha | At Step A.4.1, the last name of a single space: the alert "Enter your first name and your last name.", which takes the focus. The cleared last name before it is stopped by the browser's own required-field check, and nothing is sent. |
+| `/account/profile` | Before admission | `states/profile--pending-trainee.png` | Dr Mahlangu | At Step 2.19: Roles reads "Pending trainee", Institution Kgosi Kgari Teaching Hospital. |
+| `/account/profile` | Two roles | `states/profile--loaded.png` | Dr Zulu | At Step 2.41: the Account card, the roles one per line, Your name, and How you sign in with Password and Change password. |
+| `/account/profile` | Saved | `states/profile--saved.png` | Dr Khumalo | At Step 2.41: "Name saved." in the Your name card. |
+| `/account/profile` | Required field empty | `states/profile--invalid.png` | Dr Botha | At Step A.4.1, the last name of a single space: "Your name was not saved. Enter your last name." in the card, which takes the focus; Last name marked and empty, "Enter your last name." under it. The cleared last name before it is stopped by the browser's own required-field check, and nothing is sent. Typed with no change: `?error=FirstNameMissing`, `?error=NameMissing`. |
+| `/account/profile` | Password updated | `states/profile--password-updated.png` | Dr Khumalo | At Step A.4.2 (d): "Password updated." under the header, focused. Also typed: `?status=password-updated`. |
+| `/account/profile` | A removal's result, typed | `states/profile--remove-result.png` | Dr Botha | Typed, one capture each: `?status=sign-in-removed&provider=kgk` ("Institutional sign-in removed."), `?error=RemoveLastSignIn&provider=kgk` ("Your institutional sign-in was not removed. It is the only way you sign in to Wombat."), `?error=RemoveWrongPassword&provider=kgk` ("Your sign-in was not removed. Incorrect password."), each in the How you sign in card. No change. |
 | `/account/profile` | Loading | `states/profile--loading.png` | Dr Botha | Hold a read, then My account from the name in the top bar. No change. |
 | `/account/profile` | Load error | `states/profile--load-error.png` | Dr Botha | The same, held 35 s. No change. |
 | `/account/profile` | Narrow | `states/profile--narrow.png` | Dr Khumalo | At Step 2.41, at 390 px. No change. |
-| `/account/change-password` | Blank | `states/change-password--blank.png` | Dr Khumalo | At Step A.4.2, before the first try. |
-| `/account/change-password` | Wrong current password | `states/change-password--incorrect.png` | Dr Khumalo | At Step A.4.2 (a): the tab title starts "Error:". |
-| `/account/change-password` | Confirmation differs | `states/change-password--confirmation.png` | Dr Khumalo | At Step A.4.2 (b). |
-| `/account/change-password` | Rules broken | `states/change-password--rules.png` | Dr Khumalo | At Step A.4.2 (c): one sentence per rule. |
-| `/account/change-password` | Updated | `states/change-password--updated.png` | Dr Khumalo | At Step A.4.2 (d): "Password updated." |
-| `/account/change-password` | Locked or throttled | `states/change-password--locked.png` | Dr Khumalo | Typed: `?error=LockedOut`, then `?error=TooManyAttempts` (two captures, `--locked` and `--throttled`). No change. |
+| `/account/change-password` | Blank | `states/change-password--blank.png` | Dr Khumalo | At Step A.4.2, before the first try: the six rules under New password. |
+| `/account/change-password` | Password shown | `states/change-password--shown.png` | Dr Khumalo | At Step A.4.2, before the first try, type in New password and press "Show new password". No change. |
+| `/account/change-password` | Wrong current password | `states/change-password--incorrect.png` | Dr Khumalo | At Step A.4.2 (a): "Your password was not changed." and "Incorrect password." in the card, Current password marked; the tab title starts "Error:". |
+| `/account/change-password` | Confirmation differs | `states/change-password--confirmation.png` | Dr Khumalo | At Step A.4.2 (b): "The password confirmation does not match.", Confirm new password marked. |
+| `/account/change-password` | Rules broken | `states/change-password--rules.png` | Dr Khumalo | At Step A.4.2 (c): "The new password needs:" and the four rules broken, in the six rules' order; New password says "The new password does not meet the rules below." |
+| `/account/change-password` | Throttled | `states/change-password--throttled.png` | Dr Khumalo | Typed: `?error=TooManyAttempts`: "Too many attempts from this network. Wait a few minutes and try again." No change. For real, Scratch (post-act2): sign Dr Khumalo in first; then, from the same machine, sign in ten times within five minutes with an address no account has (each "Invalid email or password."; the throttle is per client address and shared with sign-in); within the five minutes she presses Change password with any current password. |
+| `/account/change-password` | Account already locked | `states/change-password--account-locked.png` | Dr Khumalo (a copy) | Scratch (post-act2): sign Dr Khumalo in; from another browser, sign in five times as her with a wrong password (each "Invalid email or password."; the fifth locks the account); within the lock she presses Change password with her right current password: "Your account is locked. Wait 15 minutes, then try again." in the card; she stays signed in and nothing changes (T339 review, fixsec 2). Also typed: `?error=AccountLocked&minutes=15`. |
+| `/account/change-password` | Could not be changed | `states/change-password--general-refusal.png` | Dr Khumalo | Typed: `?error=Failed`: "The password could not be changed. Try again." No change. |
 | `/account/change-password` | Narrow | `states/change-password--narrow.png` | Dr du Plessis | At Step A.4.6, at 390 px, before changing it. No change. |
 | `/account/data-rights` | Nothing requested | `states/data-rights--empty.png` | Dr Dlamini | At Step A.1.1, before saving: "No requests". |
 | `/account/data-rights` | Preferences saved | `states/data-rights--saved.png` | Dr Dlamini | At Step A.1.1. |
@@ -765,10 +788,20 @@ already reaches most of them. A signed-out visitor is sent to the sign-in page i
 Each is either missing from the product, needs something the replay environment lacks, or is guarded so that no cast
 member can meet it. None is captured.
 
-- **Institutional sign-in.** The sign-in page's "or" divider and "Sign in with …" buttons, the link page's password form
-  and its refusals, and the SSO mappings page's Add mapping form, mapping rows and Delete. Each needs a configured
-  identity provider (`Sso:Providers` is empty on dev; `coverage.md` § Flows and states not played). The refusal texts
-  alone are reachable as typed codes on the sign-in page.
+- **Institutional sign-in.** The sign-in page's "or" divider and "Sign in with …" buttons (and the notices beside them,
+  which take the focus themselves), the link page's password form and its refusals, and the SSO mappings page's Add
+  mapping form, mapping rows and Delete. Each needs a configured identity provider (`Sso:Providers` is empty on dev;
+  `coverage.md` § Flows and states not played). The refusal texts alone are reachable as typed codes on the sign-in
+  page.
+- **An account with an institutional sign-in** (T339, flow 02): My account's How you sign in listing the institution
+  with Remove, the Remove dialog (with a password field when the account has a password, without one when it has
+  none), the dialog reopened with "Incorrect password." or the throttle's words, the lock sign-out a fifth wrong
+  password in the dialog causes, and "Remove: this is the only way you sign in." on an account whose one institutional
+  sign-in is its only way in. And the institution-only account's pages: My account's "You sign in through your
+  institution. This account has no Wombat password, so there is no password to change here." and Change password's
+  "This account signs in through your institution, so it has no password to change here." with Back to My account, in
+  place of the form. Every cast account has a password and no linked sign-in; linking needs a provider. The card's
+  results alone are reachable as typed codes on My account (§ Typed codes).
 - **Dashboard cards that nothing fills.** The Trainee's "Upcoming deadlines" with a row (it reads `due_date` keys no
   type has). The Assessor's "Accepted, needing action", which no CPSA or KGK workflow could fill, is now "Waiting for
   your rating" (T297, T335), read from the inbox, and Steps 3.24, 3.33, 3.51 and A.6.8 fill it.

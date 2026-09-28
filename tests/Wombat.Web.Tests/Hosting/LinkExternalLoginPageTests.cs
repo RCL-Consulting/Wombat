@@ -7,20 +7,46 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Wombat.Infrastructure.Identity;
 using Wombat.Web.Security;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Hosting;
 
 /// <summary>
-/// The link-your-account page as a browser receives it (T193). A refused link reloads it with the reason in the query,
-/// and the password field takes focus at once, so the field names the refusal: an alert already there when the page
-/// loads is not reliably announced.
+/// The link-your-institutional-sign-in page as a browser receives it (T193; T339, flow 02, R3-LK-*). A refused link
+/// reloads it with the reason in the query; the refusal stands in the slot above Password and takes the focus itself, and
+/// Password names it: an alert already there when the page loads is not reliably announced.
 /// </summary>
+/// <remarks>
+/// Changed deliberately by T339 (flow 02): the heading is the page's &lt;h1&gt;, "Link your institutional sign-in"; the
+/// refusal takes the focus, where Password took it and named the refusal (C6); the expired state is a page of its own
+/// ("Institutional sign-in expired"), not a danger alert; the button says "Link and sign in".
+/// </remarks>
 public sealed class LinkExternalLoginPageTests
 {
     private const string LinkPath = "/account/link-external";
 
     [Fact]
-    public async Task ARefusedLink_IsReadWithThePasswordField()
+    public async Task TheLivePage_AsksForThePassword_WhichTakesTheFocus()
+    {
+        await using var host = await StartAsync();
+
+        var (_, _, document) = await host.LoadAsync($"{LinkPath}?returnUrl=%2F");
+
+        document.QuerySelectorAll("h1").Should().ContainSingle().Which.TextContent.Trim().Should().Be("Link your institutional sign-in");
+        document.Title.Should().Be("Link your institutional sign-in · Wombat");
+        document.QuerySelector(".account-email")!.TextContent.Should().Be("registrar@hospital.test");
+
+        var password = document.GetElementById("link-password")!;
+        password.HasAttribute("autofocus").Should().BeTrue();
+        password.GetAttribute("autocomplete").Should().Be("current-password");
+        PasswordToggleMarkup.ShouldBeTheToggle(document, "link-password", "Show password", PasswordToggleMarkup.Driven.ByScript);
+
+        document.QuerySelectorAll(".form-actions .btn").Select(button => button.TextContent.Trim())
+            .Should().Equal("Cancel", "Link and sign in");
+    }
+
+    [Fact]
+    public async Task ARefusedLink_StandsAbovePassword_TakesTheFocus_AndPasswordNamesIt()
     {
         await using var host = await StartAsync();
 
@@ -30,30 +56,53 @@ public sealed class LinkExternalLoginPageTests
         alert.TextContent.Trim().Should().Be("The account could not be linked. Check your password and try again.");
         alert.GetAttribute("role").Should().Be("alert");
         alert.Id.Should().Be("link-error");
+        alert.GetAttribute("tabindex").Should().Be("-1");
+        alert.HasAttribute("autofocus").Should().BeTrue();
+        alert.NextElementSibling!.QuerySelector("#link-password").Should().NotBeNull("the slot is above Password");
 
         var password = document.GetElementById("link-password")!;
-        password.HasAttribute("autofocus").Should().BeTrue();
+        password.HasAttribute("autofocus").Should().BeFalse("the refusal's autofocus replaces the field's");
         password.GetAttribute("aria-describedby").Should().Be("link-error");
-        password.GetAttribute("autocomplete").Should().Be("current-password");
+        document.Title.Should().Be("Error: Link your institutional sign-in · Wombat");
+    }
+
+    [Fact]
+    public async Task WhenTheSignInInProgressHasGone_ThePageSaysSo_WithNoField_AndTheWayBack()
+    {
+        await using var host = await StartAsync(expired: true);
+
+        var (_, _, document) = await host.LoadAsync($"{LinkPath}?returnUrl=%2F");
+
+        document.QuerySelectorAll("h1").Should().ContainSingle().Which.TextContent.Trim().Should().Be("Institutional sign-in expired");
+        document.Title.Should().Be("Institutional sign-in expired · Wombat");
+        document.QuerySelector(".account-form-container p")!.TextContent.Trim()
+            .Should().Be("Your institutional sign-in has expired. Start again from the sign-in page.");
+        document.QuerySelectorAll("input:not([type=hidden])").Should().BeEmpty("there is nothing left to link");
+        document.QuerySelector(".alert").Should().BeNull("not a refusal: nothing the person did was refused");
+        var back = document.QuerySelector(".form-actions a.btn")!;
+        back.TextContent.Trim().Should().Be("Back to sign in");
+        back.GetAttribute("href").Should().Be("/account/login");
     }
 
     /// <summary>
-    /// Each code the link endpoint sends reads as the refusal did before T285, when the endpoint sent the words. Written
-    /// out, so a changed word fails here.
+    /// Each code the link endpoint sends reads as round 3's Spec has it (T339, flow 02; T285 before it). Written out, so a
+    /// changed word fails here. A lockout reads as any other refused link (T287).
     /// </summary>
     [Theory]
-    [InlineData("PasswordRequired", "Your password is required.")]
+    [InlineData("PasswordRequired", "Enter your password.")]
     [InlineData("SsoLinkRefused", "The account could not be linked. Check your password and try again.")]
-    [InlineData("SsoLinkLockedOut", "Too many failed attempts. Please try again later or reset your password.")]
+    [InlineData("SsoLinkLockedOut", "The account could not be linked. Check your password and try again.")]
     [InlineData("SsoAlreadyLinked", "This institutional sign-in is already linked to an account.")]
-    [InlineData("SsoLinkFailed", "Linking failed.")]
-    [InlineData("SsoUnknownProvider", "Unknown SSO provider.")]
-    [InlineData("SsoNoEmail", "The identity provider did not supply an email address.")]
+    [InlineData("SsoLinkFailed", "Your institutional sign-in could not be linked this time. Try again later.")]
+    [InlineData("SsoUnknownProvider", "That institution's sign-in is not set up in Wombat. Sign in with your email and password.")]
+    [InlineData("SsoNoEmail",
+        "Your institution's sign-in did not give Wombat your email address, so Wombat cannot find your account. Sign in " +
+        "with your email and password, or ask your administrator for help.")]
     [InlineData("SsoEmailNotVerified",
         "Your institution's sign-in did not confirm your email address, so Wombat cannot use it to find your account or " +
         "create one. Sign in with your password if you have one, or ask your administrator for an invitation.")]
     [InlineData("SsoAdministrator", "An administrator account signs in with its password, not through institutional sign-in.")]
-    [InlineData("SsoAccountLocked", "This account is locked. Contact your administrator.")]
+    [InlineData("SsoAccountLocked", "Wombat could not sign you in through your institution. Contact your administrator.")]
     [InlineData("SsoWrongInstitution",
         "This account is not registered at the institution this sign-in belongs to. Contact your administrator.")]
     public async Task EachRefusal_ReadsAsItDidBefore(string code, string expected)
@@ -80,7 +129,7 @@ public sealed class LinkExternalLoginPageTests
         var (_, html, document) = await host.LoadAsync($"{LinkPath}?error={error}");
 
         document.QuerySelector(".alert.alert-danger")!.TextContent.Trim().Should().Be(LinkExternalOutcome.GeneralRefusal)
-            .And.Be("The account could not be linked. Please try again.");
+            .And.Be("The account could not be linked. Try again.");
         html.Should().NotContain(words);
         document.GetElementById("link-password")!.GetAttribute("aria-describedby").Should().Be("link-error",
             "the general sentence is a refusal like any other, read with the field");
@@ -98,15 +147,15 @@ public sealed class LinkExternalLoginPageTests
             "there is no refusal for it to name");
     }
 
-    private static Task<AppTestHost> StartAsync()
+    private static Task<AppTestHost> StartAsync(bool expired = false)
         => AppTestHost.StartAsync(services => services.AddScoped<SignInManager<WombatIdentityUser>>(provider =>
-            new ExternalSignInInProgress(provider.GetRequiredService<IHttpContextAccessor>())));
+            new ExternalSignInInProgress(provider.GetRequiredService<IHttpContextAccessor>(), expired)));
 
     /// <summary>
     /// A sign-in manager whose external sign-in is in progress, for the one call the page makes. The host has no
     /// database, so the user manager behind it has a store that answers nothing.
     /// </summary>
-    private sealed class ExternalSignInInProgress(IHttpContextAccessor accessor) : SignInManager<WombatIdentityUser>(
+    private sealed class ExternalSignInInProgress(IHttpContextAccessor accessor, bool expired) : SignInManager<WombatIdentityUser>(
         Users,
         accessor,
         new UserClaimsPrincipalFactory<WombatIdentityUser>(Users, Microsoft.Extensions.Options.Options.Create(new IdentityOptions())),
@@ -119,7 +168,7 @@ public sealed class LinkExternalLoginPageTests
             new(new NoStore(), null!, null!, null!, null!, null!, null!, null!, NullLogger<UserManager<WombatIdentityUser>>.Instance);
 
         public override Task<ExternalLoginInfo?> GetExternalLoginInfoAsync(string? expectedXsrf = null)
-            => Task.FromResult<ExternalLoginInfo?>(new ExternalLoginInfo(
+            => Task.FromResult<ExternalLoginInfo?>(expired ? null : new ExternalLoginInfo(
                 new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Email, "registrar@hospital.test")], "oidc")),
                 "oidc",
                 "subject-1",

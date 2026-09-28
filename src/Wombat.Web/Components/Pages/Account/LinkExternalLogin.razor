@@ -5,49 +5,56 @@
 @using Wombat.Web.Security
 @inject SignInManager<WombatIdentityUser> SignInManager
 
-<PageTitle>Link your account · Wombat</PageTitle>
+@*
+  Link your institutional sign-in (T339, flow 02; R3-LK-*, R2-LK-*). Static: the visitor is part way through an
+  institutional sign-in and not signed in. Three states: live, the password asked for; refused, the same with the refusal
+  in the slot above Password; and expired, when the sign-in in progress has gone, with no field, only the way back.
 
-<div class="account-form-container shadow">
-  <h2>Link your account</h2>
+  A refused link reloads this page with its code in the query, and the page says it in words of its own, never the
+  query's text (LinkExternalOutcome, T285). The refusal takes the focus itself (tabindex -1, autofocus), as the sign-in
+  page's does (C6), and Password names it; with no refusal, Password takes the focus.
+*@
 
-  @if (_loaded && _email is null)
-  {
-    <Alert Kind="danger">Your institutional sign-in has expired. Start again from the sign-in page.</Alert>
+@if (_loaded && _email is null)
+{
+  <PageTitle>Institutional sign-in expired · Wombat</PageTitle>
+
+  <div class="account-form-container">
+    <h1>Institutional sign-in expired</h1>
+    <p>Your institutional sign-in has expired. Start again from the sign-in page.</p>
     <FormActions>
-      <a href="/account/login" class="btn btn-primary">Back to sign in</a>
+      <a href="@SignInOutcome.PagePath" class="btn btn-outline"><Icon Name="arrow-left" />Back to sign in</a>
     </FormActions>
-  }
-  else
-  {
-    <p class="page-subtitle">
-      A Wombat account with the email <strong>@_email</strong> already exists.
-      Enter your current password to link your institutional sign-in.
-    </p>
+  </div>
+}
+else
+{
+  <PageTitle>@(Refusal is not null ? "Error: Link your institutional sign-in" : "Link your institutional sign-in") · Wombat</PageTitle>
 
-    @* A refused link reloads this page with its code in the query, and the page says it in words of its own, never the
-       query's text (LinkExternalOutcome, T285). Focus goes straight to the password, so the password names the refusal:
-       an alert already there when the page loads is not reliably announced (T193). *@
-    @if (Refusal is not null)
-    {
-      <Alert Kind="danger" Id="@ErrorId">@Refusal</Alert>
-    }
+  <div class="account-form-container">
+    <h1>Link your institutional sign-in</h1>
+    <p>
+      A Wombat account with the email <strong class="account-email">@_email</strong> already exists. Enter your current
+      password to link your institutional sign-in.
+    </p>
 
     <form method="post" action="/account/link-external/submit">
       <AntiforgeryToken />
       @* The account and the institutional login are read from the sign-in in progress, not from this form (T149). *@
       <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
-      <div class="mb-3 password-wrapper">
-        <label for="link-password">Password</label>
-        <input id="link-password" class="form-control" type="password" name="Password" autocomplete="current-password" required autofocus aria-describedby="@ErrorReference" />
-        <PasswordToggleButton For="link-password" />
-      </div>
+      @if (Refusal is not null)
+      {
+        <Alert Kind="danger" Id="@ErrorId" tabindex="-1" autofocus>@Refusal</Alert>
+      }
+      <PasswordField Label="Password" Id="link-password" Name="Password" Autocomplete="current-password" Required="true"
+                     Autofocus="@(Refusal is null)" DescribedBy="@(Refusal is null ? null : ErrorId)" />
       <FormActions>
-        <button type="submit" class="btn btn-primary">Link &amp; sign in</button>
-        <a href="/account/login" class="btn btn-outline">Cancel</a>
+        <a href="@SignInOutcome.PagePath" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary">Link and sign in</button>
       </FormActions>
     </form>
-  }
-</div>
+  </div>
+}
 
 @code {
   [SupplyParameterFromQuery(Name = "returnUrl")]
@@ -57,11 +64,10 @@
   [SupplyParameterFromQuery(Name = "error")]
   public string? Error { get; set; }
 
-  private const string ErrorId = "link-error";
+  /// <summary>The refusal's id, which Password names.</summary>
+  public const string ErrorId = "link-error";
 
   private string? Refusal => LinkExternalOutcome.Describe(Error);
-
-  private string? ErrorReference => Refusal is null ? null : ErrorId;
 
   private bool _loaded;
 

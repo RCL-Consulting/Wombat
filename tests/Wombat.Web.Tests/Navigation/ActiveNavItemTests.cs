@@ -294,12 +294,13 @@ public sealed class ActiveNavItemTests : TestContext
 
     // The review of the t335 branch: every test above cascades a RouteData by hand. Here the real Routes renders, signed in,
     // and its own cascade of the router's RouteData is what lights the nav and draws the trail, again at each navigation in
-    // the circuit. Without that cascade Home is never lit and Change password has no trail.
+    // the circuit. Without that cascade Home is never lit and a page under a list has no trail. Changed deliberately by
+    // T339 (flow 02): the page under a list was Change password, which is static now and never reached in a circuit, so it
+    // is a new curriculum, under Curricula. Its reads fail here, which draws its header and trail all the same.
     [Fact]
     public void InTheRealRoutes_TheLitItemAndTheTrail_FollowEachNavigationInTheCircuit()
     {
-        Services.AddSingleton(new Microsoft.AspNetCore.Identity.IdentityErrorDescriber());
-        Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new Microsoft.AspNetCore.Identity.IdentityOptions()));
+        Services.AddSingleton<IScopedSender>(new FailingSender());
         Services.AddSingleton(TimeProvider.System);
         Services.AddWombatCircuitServices();
         Services.AddSingleton<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(
@@ -309,6 +310,7 @@ public sealed class ActiveNavItemTests : TestContext
         auth.SetAuthorized("m.dube@cmsa.wombat.local");
         auth.SetRoles(WombatRoles.CollegeAdmin);
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "dube"));
+        auth.SetPolicies("AdministratorOrCollegeAdmin"); // the new curriculum's page asks for it
         SetRendererInfo(new RendererInfo("Server", isInteractive: true));
         var navigation = Services.GetRequiredService<FakeNavigationManager>();
         navigation.NavigateTo("/");
@@ -320,12 +322,12 @@ public sealed class ActiveNavItemTests : TestContext
         Lit(cut).Should().Equal([("Home", "page")], "Home is the page shown, and an item of the menu");
         cut.FindAll("nav[aria-label='Breadcrumb']").Should().BeEmpty("Home draws no trail");
 
-        navigation.NavigateTo("/account/change-password");
+        navigation.NavigateTo("/admin/curricula/new");
 
-        cut.WaitForAssertion(() => cut.Find("main h1").TextContent.Trim().Should().Be("Change password"));
-        Lit(cut).Should().BeEmpty("Change password is outside the rule: nothing is lit");
+        cut.WaitForAssertion(() => cut.Find("main h1").TextContent.Trim().Should().Be("Create curriculum"));
+        Lit(cut).Should().Equal([("Curricula", "true")], "the page is under Curricula, its owner");
         cut.FindAll("nav[aria-label='Breadcrumb'] li").Select(li => (li.TextContent.Trim(), li.QuerySelector("a")?.GetAttribute("href")))
-            .Should().Equal(("Home", "/"), ("My account", "/account/profile"), ("Change password", null));
+            .Should().Equal(("Home", "/"), ("Curricula", "/admin/curricula"), ("Create curriculum", null));
 
         navigation.NavigateTo("/");
 
@@ -494,4 +496,14 @@ public sealed class ActiveNavItemTests : TestContext
             authenticationType: "Test"));
 
     private static Claim TraineeRecord() => new(WombatClaims.TraineeRecord, "true");
+
+    /// <summary>Fails every read: a page draws its header and trail whatever its reads do.</summary>
+    private sealed class FailingSender : IScopedSender
+    {
+        public Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("No reads here.");
+
+        public Task Send(MediatR.IRequest request, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("No commands here.");
+    }
 }

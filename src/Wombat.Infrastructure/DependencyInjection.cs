@@ -70,6 +70,8 @@ public static class DependencyInjection
         })
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddClaimsPrincipalFactory<WombatUserClaimsPrincipalFactory>()
+        // A password rule's words are Wombat's, one sentence per rule, wherever Identity's errors are read (T339, flow 02).
+        .AddErrorDescriber<WombatIdentityErrorDescriber>()
         .AddDefaultTokenProviders();
 
         services.ConfigureApplicationCookie(options =>
@@ -115,6 +117,9 @@ public static class DependencyInjection
         services.AddScoped<IInvitedUserProvisioner, InvitedUserProvisioner>();
         services.AddScoped<SsoGroupMapper>();
         services.AddScoped<ExternalLoginHandler>();
+        // The password check that checks nothing, so a refused sign-in or link takes as long whatever refused it (T339,
+        // flow 02, E5): the sign-in endpoint's and the link handler's.
+        services.AddSingleton<SignInTiming>();
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
         // The clock the activity write path judges the encounter date's "today" by (T160). TryAdd: a host that already
         // registers one keeps it.

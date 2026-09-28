@@ -4,7 +4,26 @@
 }
 else if (!string.IsNullOrWhiteSpace(LoadError))
 {
-  <Alert Kind="danger">@LoadError</Alert>
+  @* With OnRetry, the failure offers Try again beside its words, as Home's does (DashboardFrame; T339, flow 02, B12;
+     T329): the page reads again, and the answer, the content or the alert again, takes the focus once it has come. *@
+  @if (OnRetry.HasDelegate)
+  {
+    <ActionResult @ref="_result">
+      <Alert Kind="danger">
+        <div class="alert-row">
+          <span class="alert-row-text">@LoadError</span>
+          <button type="button" class="btn btn-outline btn-sm" @onclick="RetryAsync">
+            <Icon Name="refresh-cw" />
+            Try again
+          </button>
+        </div>
+      </Alert>
+    </ActionResult>
+  }
+  else
+  {
+    <Alert Kind="danger">@LoadError</Alert>
+  }
 }
 else if (IsEmpty)
 {
@@ -25,6 +44,8 @@ else
 }
 
 @code {
+  private ActionResult? _result;
+
   [Parameter] public bool IsLoading { get; set; }
   [Parameter] public string? LoadError { get; set; }
   [Parameter] public bool IsEmpty { get; set; }
@@ -34,4 +55,48 @@ else
   [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
   [Parameter] public int SkeletonCount { get; set; } = 4;
   [Parameter] public string SkeletonHeight { get; set; } = "3rem";
+
+  /// <summary>
+  /// Reads again after a failed load; it returns once the read has answered. Set, the failure offers Try again (T339, B12).
+  /// Left unset, the failure is its words alone, as before.
+  /// </summary>
+  [Parameter] public EventCallback OnRetry { get; set; }
+
+  /// <summary>
+  /// Where the focus goes once a retry has answered: the page's own region for its content, when it has one, since the
+  /// alert and its button are gone once the read succeeds. Null leaves the focus to the alert, when it comes back.
+  /// </summary>
+  [Parameter] public Func<ValueTask>? FocusAfterRetry { get; set; }
+
+  // A retry has answered and the panel has not yet moved the focus.
+  private bool _focusAfterRetry;
+
+  private async Task RetryAsync()
+  {
+    // The button is gone while the read runs (the skeleton), so the focus is moved once the answer is drawn.
+    await OnRetry.InvokeAsync();
+    _focusAfterRetry = true;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!_focusAfterRetry || IsLoading)
+    {
+      return;
+    }
+
+    _focusAfterRetry = false;
+    if (!string.IsNullOrWhiteSpace(LoadError))
+    {
+      // Failed again: the alert, drawn again, takes the focus, so the failure is read again.
+      if (_result is not null)
+      {
+        await _result.Element.FocusAsync();
+      }
+    }
+    else if (FocusAfterRetry is not null)
+    {
+      await FocusAfterRetry();
+    }
+  }
 }

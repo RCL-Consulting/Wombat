@@ -14,7 +14,8 @@
 >   that pin what it changes (`design/BRIEF.md` § 9). It then adds itself to the list below, with its date and commit.
 > - **The invariants in `design/BRIEF.md` § 4.4 bind every redesign.** For example, every nav link opens a page that
 >   admits the role, and there is one `<h1>` per page.
-> - **Redesigned so far:** flow 01, the shell (2026-09-27, T335, `b347e11c`).
+> - **Redesigned so far:** flow 01, the shell (2026-09-27, T335, `b347e11c`); flow 02, sign-in and account (2026-09-28,
+>   T339: § Account / auth page).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -51,12 +52,15 @@ src/Wombat.Web/
         ├── Breadcrumbs.razor                     ← the trail PageHeader draws (§ Page-level patterns, T335)
         ├── DataTable.razor                       ← generic list shell using .clinic-table
         ├── FormField.razor                       ← <label> + input slot + validation message
-        ├── ConfirmDialog.razor
+        ├── PasswordField.razor                   ← label + password input + Show toggle; wombat.js drives it static (T339)
+        ├── PasswordRules.razor                   ← "The new password needs:" and the six rules, under a new password (T339)
+        ├── Alert.razor                           ← one message by kind; extra attributes (tabindex, autofocus) pass through
+        ├── ConfirmDialog.razor                   ← modal confirm: @onclick action mode, or form mode, a posted <form> (T339)
         ├── ActionResult.razor                    ← .action-result region; takes the focus when an action is done (T234)
         ├── InFlight.cs                           ← aria-disabled for a button whose own action runs (T234 review)
         ├── EpaLabel.razor                        ← "Code — Title", "(no longer in use)" muted beside it when not in force (T255)
         ├── PagerControls.razor                   ← .pager .pager-actions .pager-page-size
-        ├── StatePanel.razor                      ← empty / loading / error state shells
+        ├── StatePanel.razor                      ← empty / loading / error state shells; OnRetry adds Try again (T339)
         ├── DashboardCard.razor                   ← <DashboardCard Title=…> wraps .detail-card; its title an <h2>, IsLoading, Count
         ├── DashboardFrame.razor                  ← a dashboard's grid, busy while it reads; one alert + Try again if it fails (T335)
         ├── RoleDashboard.cs                      ← base of a dashboard that reads one summary: the read, the retry, the log (T335)
@@ -332,6 +336,15 @@ h5 { font-size: 0.9rem;  font-weight: 600; line-height: 1.25; margin-bottom: var
 
 Page `<h1>` is `1.5rem`, not bigger, and `1.375rem` below 641px, as every 390px board sets it. Pages use `PageHeader` (section below) to keep the subtitle + action slot consistent. Do not render a lone `<h1>` in a page — reach for `PageHeader`.
 
+**Two exceptions, from flow 02** (2026-09-28, T339; R3-Spec § Typography, E8):
+
+- **The auth card's heading is the page's `<h1>`**, and it is `2rem` at desktop and `1.5rem` below 641px (`.account-form-container
+  h1`). A page on the auth card (sign in, sign out, link, forgotten password, register) has no `PageHeader`; its card's
+  heading is its one `<h1>`. Until T339 it was an `<h2>`, so those pages had none. The MSF respondent's wide card keeps
+  an `<h2>` a state (§ Anonymous static page).
+- **My account's card titles are `<h2>` at the h3 size, 1.1rem** (`.my-account-card h2`): under the page's `<h1>` they are
+  the next level, so no level is skipped. Elsewhere a `.detail-card`'s title is still an `<h3>`.
+
 **The page header is spaced as the boards draw it** (2026-09-27, T335, flow 01; the review of the t335 branch; R2-Shell-*,
 R2-Landing-*, R2-Detail-*, R2-Error-*). The heading has no margin of its own in the header, the subtitle keeps its own
 0.25rem under it, the rule (2px `--secondary-color`) is 0.75rem under them, and the page begins `--space-lg` (24px) under
@@ -348,6 +361,7 @@ The scale, from the token sheet:
 |---|---|
 | The wordmark | Fraunces 500, 1.6rem in the sidebar (2.4rem on the sign-in card) |
 | h1 · h2 · h3 (card titles) · h4 · h5 | 1.5 · 1.25 · 1.1 · 1 · 0.9rem, all 600; h1 1.375rem below 641px |
+| The auth card's h1 | 2rem, 600; 1.5rem below 641px (T339, E8) |
 | Body | 1rem, line height 1.5 |
 | A nav label | 0.9375rem; 600 when it is the current item |
 | A nav group's label | 0.8125rem, 600, sentence case |
@@ -1031,11 +1045,26 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   required `*`), holding a `.scale-choices` list of `.form-check` rows: one radio each, lowest point first, each with its
   own id and `<label for>`, a point's description as a `<small>` in its label (T205, the MSF questionnaire). A list, not
   a `<select>`: every point's label stays in view. Not a `.check-grid`: an ordered scale reads down, not in columns.
-- Sensitive inputs (password, passphrase): wrap in `.password-wrapper` and use `PasswordToggleButton.razor` to show/hide.
-  The toggle is a 28px target inside the field's right end, placed from the wrapper's foot, so it is centred on the 38px
-  field even where the wrapper also holds the label (the sign-in, registration and link pages); the wrapper is as tall
-  as what it holds, even as a grid's item. So the field must be the last thing in the wrapper (2026-09-27, T335, flow 01;
-  T328 found the toggle 23px and on the field's top edge).
+- **A password is a `PasswordField`** (`Components/Shared/PasswordField.razor`; 2026-09-28, T339, flow 02; R3-SI-Toggle;
+  the round-2 review's A3–A5, B6, B7, E9): its label, its input and its Show toggle, in a `.form-group`, then whatever
+  the page gives it (a `.validation-message`, `PasswordRules`). The toggle (`.password-toggle`) is a `.btn.btn-outline`
+  8px to the right of the input in `.password-field`, never inside it, as tall as the field (38px; 44px below 641px),
+  with the `eye` icon and the word "Show". Its name is "Show" and the field's label lower-cased, exactly ("Show confirm
+  new password", C5); it carries `aria-controls` (the input) and `aria-pressed`. Pressed, it keeps the word "Show" (E9):
+  the `--secondary-color` fill with `--on-fill` words (4.86:1) and the `eye-off` icon say it is on; the stylesheet swaps
+  the icon from `aria-pressed`. **On a page with no circuit** (`RendererInfo.IsInteractive` false: every signed-out page,
+  change password, and an interactive page's prerender) it is rendered `hidden` with `data-password-toggle`, and
+  `wombat.js` drives it: one delegated click listener; the toggles shown as the page loads and after an enhanced
+  navigation; every controlled field back to `type="password"` (and `aria-pressed="false"`) as its form is posted and
+  when the page comes back from the back-forward cache. No inline handler (the CSP). With script blocked there is a
+  plain password field and no dead button: `[hidden] { display: none !important }`, since `.btn`'s `inline-flex` beat the
+  browser's own `[hidden]`. **In a circuit** it toggles through `@onclick` (My account's Remove dialog, the
+  administrator's reset card); `Value`/`ValueChanged` bind it on input, and a field nothing binds takes no input handler,
+so a password typed in a circuit does not cross it keystroke by keystroke. It replaced `PasswordToggleButton`, a 28px word
+  inside the field's end that toggled over JS interop from a circuit, so it never worked on a static page (T181).
+  `Design/PasswordFieldTests` and the shared assertion `TestSupport/PasswordToggleMarkup` hold every page's toggle.
+- **A new password lists the six rules under its field before anything is typed** (`PasswordRules`, `.password-rules`,
+  muted, 5.09:1; C2, E11), which the field names with `aria-describedby` until a refusal is shown (§ Account / auth page).
 - **A field the caller may read but not change is text, not a control** (T302). Where the command behind a field
   refuses the caller, the form does not offer its control (§ Table system, T211: read from the policy the command's
   rule is, with `IAuthorizationService`). The field stays in the grid as a `dl.form-group`: its `<dt>` where a label
@@ -2254,12 +2283,16 @@ Both are `onclick` properties set from the runtime's own script, so the CSP has 
 - A sign-in field says what it holds: the email is `autocomplete="username"` and the password
   `autocomplete="current-password"`. A password being set is `autocomplete="new-password"`: register, change password,
   and an administrator's reset, where the browser would otherwise offer the administrator's own password (T193).
-- A refused sign-in (`?error=`) is named by the email and password fields' `aria-describedby`, and a refused link by
-  the password field's: the page reloads with focus in the field, and the alert alone is not announced (§ Alerts,
-  validation, empty states). A refused password change is named by each of its three fields; the page reloads with the
-  focus on the refusal (T265). A refused registration is named by each of its four fields, and the page reloads with the
-  focus in the first name (T285).
-- Required fields show a visual `*` plus `aria-required="true"`.
+- A refused sign-in (`?error=`) takes the focus itself as the page reloads (`tabindex="-1"` + `autofocus`), and the
+  email and password fields name it with `aria-describedby`; a refused link does the same, named by the password field
+  (2026-09-28, T339, flow 02, C6; until then the field took the focus and the alert was read with it). A notice on the
+  sign-in page follows the focus rule in § Account / auth page. A refused password change takes the focus as the page
+  reloads, and the field it concerns names its own message and the refusal (T265; T339). A refused registration is
+  named by each of its four fields, and the page reloads with the focus in the first name (T285).
+- Required fields show a visual `*` plus `aria-required="true"`, **except on flow 02's account forms** (sign in, link,
+  change password, My account's name, the Remove dialog; 2026-09-28, T339, R3-Spec § Accessibility): every field on them
+  is required, so a mark on each tells nothing; `required` exposes it to assistive technology, and the browser's own
+  check names a blank field.
 - `.visually-hidden` is available for screen-reader-only copy.
 - **The focus ring** (2026-09-27, T335, flow 01; T322, T328): every element a keyboard focuses shows a 2px solid
   `--focus-ring` outline at a 2px offset, from one `:focus-visible` rule for every element. Until T328 the rule was a list
@@ -2655,40 +2688,129 @@ role, and following a link inside Wombat never switches it.
 
 ### Account / auth page
 
+> **Rewritten 2026-09-28, T339, flow 02** (`design/flows/02-sign-in-and-account/round-3/R3-SI-*`, `R3-LK-*`, `R3-FG*`,
+> `R3-CP-*`, `R3-Spec`; round 2's boards for what round 3 did not redraw; the round-2 review, C1–C9 and E1–E11). The
+> account pages are sign in, sign out, link your institutional sign-in, forgotten password and register, each on **the
+> auth card** in `AuthLayout`; and My account and change password, **in the shell**. There is no separate "Page-level
+> patterns (Account)": everything about these pages is here.
+
 ```
-<div class="account-form-container">
-  <h2>Sign in</h2>
-  @if (Refusal is not null) { <Alert Kind="danger" Id="login-error">@Refusal</Alert> }   @* role="alert" by default *@
+<div class="account-form-container">                       @* the auth card, in AuthLayout *@
+  <div class="account-brand"> the mark at 56px + .account-brand-text "Wombat" </div>   @* sign in only *@
+  <p class="account-purpose">Work-based assessment for specialist training.</p>
+  <h1>Sign in</h1>                                           @* the page's one h1 (§ Typography) *@
+  @* one slot: a refusal <Alert Kind="danger" Id="login-error" tabindex="-1" autofocus>, or a notice
+     <Alert Kind="info" Role="status" Id="login-notice"> *@
+  <div class="sso-providers"> a.btn.btn-outline.sso-button, building-2 + "Sign in with …", one an institution </div>
+  <div class="sso-divider"><span>or sign in with your email and password</span></div>
   <form method="post" action="/account/login/submit">
-    <div class="mb-3"> label + .form-control with its autocomplete token, aria-describedby="login-error" on a refusal </div>
-    …
-    <button type="submit" class="btn btn-primary">Sign in</button>
+    <AntiforgeryToken />
+    <div class="form-group"> label + .form-control with its autocomplete token </div>
+    <PasswordField Label="Password" Id="login-password" Name="Password" Autocomplete="current-password" Required="true" />
+    <div class="form-check"> Remember me </div>
+    <FormActions><button type="submit" class="btn btn-primary">Sign in</button></FormActions>
   </form>
+  <a class="account-link" href="/account/forgot-password">Forgotten your password?</a>
 </div>
 ```
 
-`.account-form-container` is a 400px centred card with a wide top margin — the shape ClinicAssist uses for its login/register/change-password pages.
+**The auth card** (`.account-form-container`, E8). 30rem (480px) as built, top-aligned by `.auth-page-main` (40px under
+the top; 32px, 16px at the sides, below 641px), padded 40px (24px below 641px), and 16px between its blocks and between
+the fields of its form: the card and its form are flex columns with a 16px gap, and no block carries a margin of its own.
+Its heading is the page's `<h1>`, 2rem (1.5rem below 641px); until T339 it was an `<h2>`. Below 641px every `.btn` and
+`.form-control` on it is 44px, an action row stacks with each button the row's width and the primary on top, the
+checkbox row is 44px, and "Forgotten your password?" (`.account-link`) a 44px target (E7). No text sits on the auth
+ground outside the card: muted words on its blue corner are 4.13:1. The MSF respondent's `--wide` card keeps its own
+flow (T205): block layout, an `<h2>` a state, and its margins. `.account-purpose`, the purpose line under the lockup, and
+`.account-note`, a ruled-off condition, are muted on the surface (5.09:1); `.account-email` is an email in the card's
+words, breaking anywhere; `.account-steps` a numbered list of steps. The card's rules are one block of `app.css`, "T339
+lane B: the auth card", with `.change-password`.
+
+- **Sign in** (`/account/login`, static). The lockup, the purpose line, the h1, **one message slot**, the institutions'
+  buttons **above** the form (Q1) with `.sso-divider` under them saying what the form is for, the form, and one link,
+  "Forgotten your password?". `.sso-button` is a full-width 44px outline button, `building-2` and "Sign in with" the
+  institution's configured name at its left, wrapping a long name inside it. The slot holds what sent the browser here,
+  from its code (`SignInOutcome.Describe`): a **refusal**, danger, `role="alert"`; or a **notice**
+  (`SignInOutcome.IsNotice`: `SessionEnded`, `PasswordChanged`, `SignedOut`, `LockedSignedOut`), info,
+  `role="status"`. **The focus rule** (C6): a refusal takes the focus itself (`tabindex="-1"` + `autofocus`), and both
+  fields name it; a notice with no institution's button leaves the focus on Email, which names it; a notice beside the
+  buttons takes the focus itself, so it is announced and the next Tab reaches the first institution; with nothing to
+  say, Email takes the focus when there is no button, and nothing does when there are. The tab says "Error: Sign in"
+  after a refusal only. **A signed-in visitor is sent Home** (E4): the notices are for someone who has just stopped
+  being signed in.
+- **Sign out** (`/account/logout`, and `/account/logout-confirm`, where the error page's Sign out links with no return
+  address). Static, on the card: "You are signed in as …", Cancel (back to a local return address, else Home) and Sign
+  out. Both GETs draw the page, each with a form and an antiforgery token of its own; the post goes to
+  `/account/logout/submit` (`SignOutOutcome`; a Razor page takes GET and POST, so `/account/logout` could not be the
+  post's too, B1) and requires the token (E6). A visitor who is not signed in is sent to the sign-in page with no return
+  address. The shell's Sign out is one press and never comes here.
+- **Link your institutional sign-in** (`/account/link-external`, static). "A Wombat account with the email … already
+  exists. Enter your current password to link your institutional sign-in.", the password, Cancel and "Link and sign
+  in". A refusal stands in the slot above Password, takes the focus, and Password names it; a wrong password and a
+  locked account read the same (T287). When the sign-in in progress has gone, the page is **Institutional sign-in
+  expired** (h1 and tab): one sentence and Back to sign in, no field and no alert.
+- **Forgotten password** (`/account/forgot-password`, static; Q2 A). Wombat sends no reset email. "A Wombat
+  administrator can set a new password for you.", three steps (`.account-steps`) worded for an account with an
+  institution and one without (C4), and Back to sign in; no field. Where an institution signs people in, an
+  `.account-note`: its password is the institution's to reset.
+- **Register** (`/account/register`, static; flow 11 designs the rest). Its h1 is "Complete registration", its password
+  fields are `PasswordField`s, and the six rules stand under the password before anything is typed.
+- **Change password** (`/account/change-password`) is **static in the shell**, `[ExcludeFromInteractiveRouting]`: its
+  toggles are `wombat.js`'s now, so nothing on it needs a circuit, and `/Error` shows the shell works without one. Until
+  T339 it stayed interactive for its Show buttons. Its trail is Home › My account › Change password; one column,
+  `.change-password`, about 640px (`40rem`); the header "Change password", "Choose a new password for signing in to
+  Wombat."; a `.form-container` holding Current password, New password with **the six rules** under it
+  (`PasswordRules`, `.password-rules`, which the field names with `aria-describedby`), and Confirm new password; Cancel
+  (to My account) and Change password. A refusal (`ChangePasswordOutcome.Refusal`) stands **in the card above its action
+  row**, focused as the page loads: "Your password was not changed." in bold, the reasons, and for broken rules the
+  heading with only those rules, listed in the one order. The field it concerns is marked (`aria-invalid`, its own
+  `.validation-message`: "Incorrect password.", "The password confirmation does not match.", "The new password does not
+  meet the rules below.") and names its message and the refusal; while a refusal is shown New password no longer names
+  the list (A15). The fields are always empty. The tab says "Error: Change password" after a refusal. With nothing to
+  report nothing is focused: reaching an excluded page is a full load, so the focus is at the top of the page (never
+  `FocusOnNavigate`). An account with no password of its own (`UserProfileDto.HasLocalPassword` false, read as My
+  account reads it) sees, **on its first visit**, in place of the form and with no subtitle (C9), the info notice "This
+  account signs in through your institution, so it has no password to change here." and Back to My account. Below 641px
+  its controls are 44px and its action row stacks (E7). A change goes to `/account/profile?status=password-updated`,
+  where My account says "Password updated."; this page has no success state. The fifth wrong current password locks
+  the account and signs the session out, to the sign-in page's `LockedSignedOut` notice (E2).
+- **My account** (`/account/profile`, interactive in the shell): § My account below.
+
+**Every field on these forms is required, and none is marked `*`** (R3-Spec; § Accessibility): a mark on each tells
+nothing, `required` exposes it to assistive technology, and the browser's own check names a blank field. The fields are
+`.form-group`s (`FormField`'s markup), and a password is a `PasswordField` (§ Form system). Register's other fields (name,
+email) are flow 11's and still sit in `.mb-3` wrappers; only its passwords are `PasswordField`s.
 
 **A refusal travels as a code, and the page chooses the words** (T265, T285). Every endpoint that sends the browser back
 to an account page with a refusal puts a code in `?error=`, never a sentence, and never an exception's message: sign-in
-(`SignInOutcome`), link account (`LinkExternalOutcome`), register (`RegisterOutcome`) and change password
-(`ChangePasswordOutcome`), each in `Wombat.Web/Security`. The page shows the sentence it holds for each code it knows,
-and one general sentence for any other, so a crafted link (`/account/login?error=Call%20012`) cannot put words of its
-choosing on Wombat's own page. The institutional sign-in's refusals are `ExternalLoginRefusal` codes, which the sign-in
-and link pages read alike. An exception that is not a refusal is logged, and the page says the action could not be
-completed. Until T285 the sign-in, link and register pages printed their `?error=` as it arrived. A refused registration
-keeps the form under its refusal while the invitation can still be used, the first field taking the focus and every field
-naming the refusal; an invitation that cannot be used says why and offers no form. Whether it can be used is the
-invitation preview's answer, never the code's: the preview refuses whatever no input could put right, an invitation
-revoked, used, expired or unknown and an address no account can be created for (one an account already holds, or one
-Identity will not take as a user name), by the provisioner's own test. So the form never comes back under the same
-refusal on every submit.
+(`SignInOutcome`), link account (`LinkExternalOutcome`), register (`RegisterOutcome`), change password
+(`ChangePasswordOutcome`) and My account (`ProfileOutcome`), each in `Wombat.Web/Security`. The page shows the sentence it
+holds for each code it knows, and one general sentence for any other, so a crafted link (`/account/login?error=Call%20012`)
+cannot put words of its choosing on Wombat's own page. No sentence says "Please" (C5). The institutional sign-in's
+refusals are `ExternalLoginRefusal` codes, which the sign-in and link pages read alike. An exception that is not a
+refusal is logged, and the page says the action could not be completed. Until T285 the sign-in, link and register pages
+printed their `?error=` as it arrived. A refused registration keeps the form under its refusal while the invitation can
+still be used, the first field taking the focus and every field naming the refusal; an invitation that cannot be used
+says why and offers no form. Whether it can be used is the invitation preview's answer, never the code's: the preview
+refuses whatever no input could put right, an invitation revoked, used, expired or unknown and an address no account can
+be created for (one an account already holds, or one Identity will not take as a user name), by the provisioner's own
+test. So the form never comes back under the same refusal on every submit.
+
+**The six password rules** (C2, E11) have one heading, "The new password needs:", one order and one sentence each
+(`PasswordRuleMessages`, from `WombatIdentityErrorDescriber`): at least 12 characters; at least 4 different characters;
+a digit (0 to 9); an upper-case letter; a lower-case letter; a symbol, such as ! or #. `PasswordRules` lists them all
+under a new-password field before anything is typed, on change password, register and the administrator's reset card; a
+refusal lists only the rules broken, in the same order. The field names the list until a refusal is shown (A15); a
+refusal that broke a rule marks the field (`aria-invalid`, its `.validation-message` "The new password does not meet the
+rules below.", `PasswordRuleMessages.FieldMessage`), which then names its message and the refusal, not the list. The
+reset card does it too (`UserDetailResetCardTests`), for a refusal that lists rules; any other refusal leaves the field
+alone. The reset card has no 8-character rule: Reset password is enabled once anything is typed.
 
 **A visitor who has not signed in gets static pages** (T181). `App.razor` gives them no render mode, so no page they
 reach opens a circuit: the Blazor hub stays behind the fallback policy, because inside a circuit navigation never meets
 an endpoint's policy. So everything on an `[AllowAnonymous]` page must work as plain HTML: links, form posts to a
-minimal-API endpoint (as sign-in, register and forgot-password do), and `wombat.js` for any behaviour. `@onclick`,
-`@bind`, `OnAfterRenderAsync` and JS interop do nothing there.
+minimal-API endpoint (as sign-in, register and link do), and `wombat.js` for any behaviour, such as the password
+toggle. `@onclick`, `@bind`, `OnAfterRenderAsync` and JS interop do nothing there.
 
 **A circuit whose account has changed is signed out within a minute** (T279). The circuit's sign-in is checked every
 `SessionRevalidation.Interval` (`SessionRevalidatingAuthenticationStateProvider`); after a lock, an erasure, or a change
@@ -2699,12 +2821,14 @@ router, the moment the sign-in ends on any page, and `RedirectToLogin` when it i
 statically, `RedirectToLogin` still redirects to the sign-in page. The endpoint asks the account itself, whatever the
 cookie's age: a session it no longer accepts, or cannot check, is signed out and sent to
 `/account/login?error=SessionEnded&returnUrl=…`, which loads signed out, static, with a form and an antiforgery token of
-its own, and says "Your session has ended. Please sign in again." in its danger `Alert`, named by both fields as every
-sign-in refusal is. Signing in comes back to the page the tab was on. A session the account still accepts (signed in
-again in another tab) goes straight back there. Until the review the sign-in page rendered inside the old circuit, and
-its form posted the antiforgery token the circuit was given on its first page, naming the old user; the cookie was
-refused at the post, so antiforgery refused the token and the endpoint answered a bare 400. A form inside a circuit
-cannot outlive the sign-in it was rendered for, so a page must never keep a circuit going once it is anonymous.
+its own, and says "Your session has ended. Sign in again." in its **info** `Alert` (`role="status"`), under the focus rule
+above: Email takes the focus and names it, or, beside the institutions' buttons, the notice takes the focus itself. Until
+T339 it was a danger alert, named by both fields as a refusal is. Signing in comes back to the page the tab was on. A
+session the account still accepts (signed in again in another tab) goes straight back there. Until the review the
+sign-in page rendered inside the old circuit, and its form posted the antiforgery token the circuit was given on its
+first page, naming the old user; the cookie was refused at the post, so antiforgery refused the token and the endpoint
+answered a bare 400. A form inside a circuit cannot outlive the sign-in it was rendered for, so a page must never keep a
+circuit going once it is anonymous.
 
 A fault in the minute's check (the database restarting) is logged and asked again at the next interval; only the third
 in a row signs the circuit out, so a restart does not send every open tab to the sign-in page at once.
@@ -2714,23 +2838,26 @@ that posts back to itself (`@formname` + `[SupplyParameterFromForm]`) runs two w
 post that the pipeline sees. Signed in, it is an `@onsubmit` event in the circuit: there is no post, so
 `[SupplyParameterFromForm]` binds nothing, the cascaded `HttpContext` is null, and no per-request middleware (a rate
 limit) or response status applies to it. Such a page carries `[ExcludeFromInteractiveRouting]` as well, as `/msf/respond`
-does, or it posts to an endpoint instead.
+does, or it posts to an endpoint instead. **Five pages are excluded** (`App.razor`): `/msf/respond`, `/portfolio/verify`,
+`/Error`, sign out and change password.
 
-Two predate the rule and are dead signed out: `PasswordToggleButton` (sign-in, register, link) and the register page's
-`OnAfterRenderAsync` that clears the invitation token from the address. Neither ever worked signed out: the hub has
-always refused an anonymous circuit. `/portfolio/verify`'s Verify button was the third. Since T265 that page carries
-`[ExcludeFromInteractiveRouting]` and its form is a GET: Verify loads `/portfolio/verify?hash=…&check=1`, and the check
-is made as the page renders, the same for every visitor. A check that fails says so on the page.
+One predated the rule and is still dead signed out: the register page's `OnAfterRenderAsync` that clears the invitation
+token from the address (T315). `PasswordToggleButton` (sign-in, register, link) was the other, until T339 replaced it
+with `PasswordField`, which `wombat.js` drives on a static page. `/portfolio/verify`'s Verify button was the third. Since
+T265 that page carries `[ExcludeFromInteractiveRouting]` and its form is a GET: Verify loads
+`/portfolio/verify?hash=…&check=1`, and the check is made as the page renders, the same for every visitor. A check that
+fails says so on the page.
 
 **The sign-in cookie is written only in an HTTP request** (T265). A circuit's response started when the page first
 loaded, so `SignInManager` there throws "Headers are read-only". Sign-in, register, link-account, sign-out, change
-password and My account's name each post a form to an endpoint in `Program.cs`, which writes the cookie and redirects. Change password stays
-an interactive page, for its Show buttons. Its form, a plain `<form method="post" action="/account/change-password/submit">`
-with `<AntiforgeryToken />`, is posted by the browser, which the circuit does not intercept. The endpoint changes the
-password and issues the cookie again with the new security stamp, in one request. A separate "refresh the cookie"
-endpoint would hand the new stamp to any cookie still inside the stamp validator's interval, a stolen one included. The
-redirect back carries `?status=updated`, or a code for each refusal (`?error=PasswordMismatch`), never the words.
-The page chooses the words (`ChangePasswordOutcome`), so a crafted link cannot put its own text in the page's alert.
+password, My account's name and Remove each post a form to an endpoint in `Program.cs`, which writes the cookie and
+redirects. Change password's form, a plain `<form method="post" action="/account/change-password/submit">` with
+`<AntiforgeryToken />`, is the browser's own post. The endpoint changes the password and issues the cookie again with the
+new security stamp, in one request. A separate "refresh the cookie" endpoint would hand the new stamp to any cookie still
+inside the stamp validator's interval, a stolen one included. A change redirects to
+`/account/profile?status=password-updated` (`ChangePasswordOutcome.UpdatedUrl`), a refusal back to the page with a code
+for each reason (`?error=PasswordMismatch`), never the words (until T339 a change came back with `?status=updated`). The
+page chooses the words (`ChangePasswordOutcome`), so a crafted link cannot put its own text in the page's alert.
 
 **My account's name is saved the same way** (2026-09-27, T335, flow 01; the review of the t335 branch). The shell names
 the person from the cookie's `display_name` claim and reads no database, so a name saved in the page's circuit left the
@@ -2751,6 +2878,87 @@ such an endpoint checks is checked as the sign-in page checks one: `CheckPasswor
 post came from. An account that signs in through its institution (`AllowLocalPassword` false) has no password to
 change. A fault before the change says the password could not be changed; a fault after it, in issuing the cookie,
 signs the user out and says the password was changed.
+
+#### My account (2026-09-28, T339, flow 02)
+
+Lane C of T339's build, from the round 3 boards (`design/flows/02-sign-in-and-account/round-3/R3-MA-*`, `R3-Spec`).
+`/account/profile` is interactive in the shell, and saves nothing in its circuit. Under the `PageHeader` ("My account",
+"Your name, your roles, and how you sign in.") and, after change password, its `?status=password-updated` success
+("Password updated.") in an `.action-result`, the page is three cards in `.my-account-grid` (a third and two thirds; one
+column to 900px), each a `section.detail-card.my-account-card` named by its `<h2>` at the h3 size, 1.1rem (§ Typography:
+under the page's h1 no level is skipped), 16px between its blocks:
+
+- **Account.** A `dl.details-list.details-list--stacked`: each term above its value, 12px between rows, the value wrapping
+  anywhere (a 40-character address stays in the card); its rules are `.details-list.details-list--stacked`, two classes,
+  so they outrank the base `.details-list` rules that come later in the sheet. Email, as text; Institution, by name, only for an account that
+  has one (never a "none" or a dash: the platform Administrator and a College admin have no row); Roles, one per line
+  (`.my-account-roles`), by label in `WombatRoles.All`'s order ("Pending trainee").
+- **Your name.** The page's one form, posted to `/account/profile/submit` (§ above). The two names are `required`,
+  `maxlength="100"`, and unmarked (no `*`: every field is required). Its result sits in the card above the action row,
+  "Save name": "Name saved." (also for an unchanged name, E10), or a refusal. `FirstNameMissing` and `LastNameMissing`
+  mark that field alone (`aria-invalid`, empty, its own `.validation-message`: "Enter your first name."), and the other
+  keeps the stored name; the card says "Your name was not saved." with the same sentence. Both blank (a crafted post, or
+  spaces) is `NameMissing`, and marks both. `NameTooLong` and `Failed` ("Your name could not be saved. Try again.") are
+  named by both fields.
+- **How you sign in.** A `ul.signin-methods`, one `li.signin-method` a way in: its icon (`key-round`, `building-2`;
+  muted, hidden below 641px), its name over what it is (`.signin-method-text`, `.signin-method-detail`), and its action.
+  Password, "Your Wombat password.", with Change password, only when a password signs the account in
+  (`AllowLocalPassword` and a stored password; T286). Each institutional sign-in by the provider's name, "Institutional
+  sign-in." (no date: Wombat stores none, C1), with Remove (`aria-label` "Remove your … sign-in"). An account with no
+  password says "You sign in through your institution. This account has no Wombat password, so there is no password to
+  change here." above the list; its last way in (no password and one sign-in) has a disabled Remove described by its
+  `.signin-method-reason`, "Remove: this is the only way you sign in.". Remove's results sit in the card above the list.
+
+**Remove.** The button opens a `ConfirmDialog` in its form mode: "Remove your … sign-in?", a body that says what remains
+(the password, the other institutions, or both, never "only" the password when another is linked, C5) and how to link it
+again, a password field when the account has one (E3; its help "Enter your password to confirm it is you."), Cancel and a
+danger "Remove sign-in". The form posts `Provider` and `Password` to `/account/external-logins/remove`
+(`SignInMethodEndpoints`), which checks the session first, reads the account from the cookie, refuses the last way in,
+checks the password with lockout under the sign-in throttle (the fifth wrong one changes the security stamp, so a
+copied cookie ends too, and signs this browser out,
+`/account/login?error=LockedSignedOut`, E2), removes the sign-in through `RemoveMyInstitutionalSignInCommand` (audited,
+stamped with the institution; it checks the last way in again against the account's concurrency stamp, so two tabs
+cannot remove two sign-ins past it), issues the cookie again, and redirects: `?status=sign-in-removed&provider=…`
+("Kgosi Kgari Teaching Hospital sign-in removed."), or `?error=` with `RemoveWrongPassword` or `RemoveTooManyAttempts`
+(both shown inside the dialog, which the page opens again as it is drawn, its refusal first and focused, the field
+empty; only `RemoveWrongPassword` marks the field, `aria-invalid` and "Incorrect password.": the throttle's refusal is
+about the network, not the password, so the field keeps its help), `RemoveLastSignIn` or `RemoveFailed` (in the card).
+The page names the institution from its own configuration, never from the address. The Remove codes and their words
+live in `ProfileOutcome`, beside the name's, since both come back to this one page; R3-Spec named a separate
+`ExternalLoginRemoveOutcome`, a deviation recorded here (T339 step F).
+
+**Focus.** No result is `autofocus`ed. Once the circuit has drawn the loaded page (`OnAfterRenderAsync`), it moves the
+focus once, to the one result there is: the dialog opened again, else the How you sign in card's result, the Your name
+card's, or Password updated. So a result is announced once (A16). A load that fails shows `StatePanel`'s danger alert,
+"Could not load your account. Nothing has changed. Try again, or come back in a few minutes.", with Try again
+(`OnRetry`, B12); a retry that loads moves the focus to the Account card's heading, unless the page has a result to say,
+which then takes it (one owner: the page's `FocusAfterRetry` stands aside); one that fails again, to the alert. A press
+of Remove opens the dialog from `OnAfterRenderAsync`, once the render naming its sign-in is drawn: opened in the press's
+own handler, `showModal` ran on the dialog as it was (no institution in its title, or the last one's; after a refusal,
+the focus on the refusal the render then removed).
+
+**ConfirmDialog's form mode** (C7). `FormAction` set, the native `<dialog class="dialog-scrim dialog-card
+dialog-card--form">` holds a real `<form class="dialog-form" method="post" data-submit-once>` with `<AntiforgeryToken />`,
+`HiddenFields`, the caller's `FormContent` and `.dialog-actions` (Cancel, a `type="button"` that closes the dialog, then
+the `type="submit"` action). It is 28rem (448px) wide, padded 32px, 16px between its blocks; its action row has the top
+rule every action row has (`.form-actions`'s: a 1px `--border-color` rule, 16px above the buttons); below 641px it pads
+24px and stacks its buttons full width, the action first. An `.alert` in a My account card or in the dialog has no margin
+of its own (`.my-account-card .alert`, `.dialog-form .alert`), so a result keeps the 16px rhythm. The heading and the body name and describe the dialog. On open the first
+`autofocus` inside takes the focus (the caller's refusal, else its password field, else Cancel); on close, by Cancel or
+Escape, `OnClosed` lets the caller put the focus back on the control that opened it. The action mode (`OnConfirm` in the
+circuit) is unchanged for every other caller. **Known deviation:** R3-Spec's Cancel is a `formmethod="dialog"` submit,
+which the browser closes the dialog with on its own; the build's Cancel is a `type="button"` with the circuit's `@onclick`,
+so while the circuit is down Cancel does nothing, and Escape still closes the dialog (the browser's). Kept for
+`OnClosed`, which puts the focus back after a dialog the page opened itself.
+
+**44px below 641px** (E7): every `.btn` and `.form-control` under `.my-account`, and each sign-in row stacks, its action
+full width. The page's classes are in one block of `app.css`, "T339 lane C: My account": `.my-account`,
+`.my-account-grid`, `.my-account-column`, `.my-account-card`, `.my-account-form`, `.my-account-roles`,
+`.details-list--stacked`, `.signin-methods`, `.signin-method`, `.signin-method-icon`, `.signin-method-text`,
+`.signin-method-detail`, `.signin-method-action`, `.signin-method-reason`, `.dialog-card--form`, `.dialog-form`,
+`.dialog-actions`. `Account/ProfilePageTests`, `Design/ConfirmDialogFormModeTests`, `Design/StatePanelRetryTests` and
+`Design/MyAccountStyleTests` hold the page and its parts; `Hosting/ProfileFlowTests` and `Hosting/RemoveSignInFlowTests`
+the posts.
 
 ### Anonymous static page (the MSF respondent page, T205)
 
@@ -2905,7 +3113,7 @@ throws draws the page signed out (below; the review of the t335 branch, 2026-09-
 /* ── Design tokens ─────────────────────────────────── */
 :root { … }
 
-body, button/input/select/textarea (font: inherit), .auth-page-shell, a, a:where(:hover), main
+body, button/input/select/textarea (font: inherit), .auth-page-shell, .auth-page-main (top-aligned; T339), a, a:where(:hover), main
 
 /* ── Base ──────────────────────────────────────────── */
 h1..h5, .page-subtitle
@@ -2920,7 +3128,12 @@ h1..h5, .page-subtitle
 .btn, :focus-visible (every element's ring), h1[tabindex="-1"]:focus, .btn-{variant}, .btn-outline, .btn-sm, .btn-xs
 
 /* ── Forms ─────────────────────────────────────────── */
-.form-container, .form-grid, .form-group (+ > p, > .btn), dl.form-group (+ > dd), .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .scale-choices, .form-actions, .account-form-container(--wide)
+.form-container, .form-grid, .form-group (+ > p, > .btn), dl.form-group (+ > dd), .full-width, .form-control, .form-select, .form-select-sm, .form-check, .check-grid, .scale-choices, .form-actions,
+  "T339 lane B: the auth card": .account-form-container(--wide), .account-purpose, .account-email, .account-link, .account-steps, .account-note, .account-brand(-mark|-text), .change-password (+ ≤640px: 44px controls, stacked action rows),
+  "T339 lane C: My account": .my-account…, .details-list--stacked, .signin-method…, .dialog-card--form, .dialog-form, .dialog-actions
+
+/* ── SSO ──────────────────────────────────────────── */
+"T339 lane B: the institutions' buttons": .sso-divider, .sso-providers, .sso-button
 
 /* ── Alerts ────────────────────────────────────────── */
 .alert, .alert-{kind}, .alert-row, .alert-row-text, .error-summary
@@ -2944,13 +3157,13 @@ h1..h5, .page-subtitle
 .pager, .pager-info, .pager-actions, .pager-page-size, .pager-page-size-label, .pager-page-size-select
 
 /* ── Password toggle ──────────────────────────────── */
-.password-wrapper, .password-toggle-btn
+"T339 lane B: the password field": .password-field, .password-toggle (+ [aria-pressed="true"], the eye/eye-off swap, ≤640px), .password-rules, .alert .password-rules-broken
 
 /* ── State panels / skeletons ─────────────────────── */
 .state-panel-title, .state-panel-copy, .skeleton, @keyframes skeleton-pulse
 
 /* ── Utilities ─────────────────────────────────────── */
-.shadow, .text-center, .mb-3, .font-mono, .code-block (a stored text block shown verbatim, T266), .visually-hidden
+[hidden] (display: none !important; T339), .shadow, .text-center, .mb-3, .font-mono, .code-block (a stored text block shown verbatim, T266), .visually-hidden
 
 /* ── Accessibility ────────────────────────────────── */
 fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fieldset.form-group (+ > legend),

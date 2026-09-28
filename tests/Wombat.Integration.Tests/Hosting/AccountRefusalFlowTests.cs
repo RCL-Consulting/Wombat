@@ -70,16 +70,16 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
 
         var page = await LoadAsync(browser, "/account/login?error=Call%20012");
 
-        Refusal(page).Should().Be("Sign-in could not be completed. Please try again.");
+        Refusal(page).Should().Be("Sign-in could not be completed. Try again.");
         page.DocumentElement.OuterHtml.Should().NotContain("Call 012");
 
         var longer = await LoadAsync(browser, "/account/login?error=" + Uri.EscapeDataString(Crafted));
-        Refusal(longer).Should().Be("Sign-in could not be completed. Please try again.");
+        Refusal(longer).Should().Be("Sign-in could not be completed. Try again.");
         longer.DocumentElement.OuterHtml.Should().NotContain("012 345 6789");
     }
 
     [Fact]
-    public async Task ARefusedSignIn_TravelsAsACode_AndReadsAsItDidBefore()
+    public async Task ARefusedSignIn_TravelsAsACode_AndALockoutAsAWrongPassword()
     {
         var email = NewEmail();
         await _host.CreateAssessorAsync(email);
@@ -87,7 +87,7 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
 
         var blank = await SignInAsync(browser, email, string.Empty);
         blank.Should().Be("/account/login?error=FieldsMissing");
-        Refusal(await LoadAsync(browser, blank)).Should().Be("Email and password are required.");
+        Refusal(await LoadAsync(browser, blank)).Should().Be("Enter your email and your password.");
 
         var wrong = await SignInAsync(browser, email, WrongPassword);
         wrong.Should().Be("/account/login?error=Refused");
@@ -96,36 +96,38 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
         var unknown = await SignInAsync(browser, NewEmail(), WrongPassword);
         unknown.Should().Be(wrong, "an address no account has is refused as a wrong password is (T156)");
 
-        // Identity's lockout trips at the account's fifth wrong password (one above, four here).
+        // Identity's lockout trips at the account's fifth wrong password (one above, four here), and the lock refuses even
+        // the right one. Each is sent back as a wrong password is, byte for byte (T287, T339, flow 02): until T339 the
+        // lockout had a code of its own, which said the address had an account.
         var answers = new List<string>();
         for (var guess = 2; guess <= 5; guess++)
         {
             answers.Add(await SignInAsync(browser, email, WrongPassword));
         }
 
-        answers.Should().Equal(
-            "/account/login?error=Refused",
-            "/account/login?error=Refused",
-            "/account/login?error=Refused",
-            "/account/login?error=LockedOut");
-        Refusal(await LoadAsync(browser, answers[^1]))
-            .Should().Be("Too many failed sign-in attempts. Please try again later or reset your password.");
+        answers.Add(await SignInAsync(browser, email, MsfRespondPageFlowTests.WebHost.SignInPassword));
+
+        (await LockedOutAsync(email)).Should().BeTrue("guard: the fifth wrong password locked the account");
+        answers.Should().AllBe(unknown);
+        Refusal(await LoadAsync(browser, answers[^1])).Should().Be("Invalid email or password.");
     }
 
     [Fact]
-    public async Task TheInstitutionalSignInsOwnRefusals_TravelAsCodes_AndReadAsTheyDidBefore()
+    public async Task TheInstitutionalSignInsOwnRefusals_TravelAsCodes_AndReadAsTheSpecHasThem()
     {
         using var browser = NewBrowser();
 
         using var challenge = await browser.GetAsync("/account/sso-challenge/no-such-provider");
         challenge.Headers.Location!.ToString().Should().Be("/account/login?error=SsoUnknownProvider");
-        Refusal(await LoadAsync(browser, challenge.Headers.Location.ToString())).Should().Be("Unknown SSO provider.");
+        Refusal(await LoadAsync(browser, challenge.Headers.Location.ToString()))
+            .Should().Be("That institution's sign-in is not set up in Wombat. Sign in with your email and password.");
 
         // No institutional sign-in in progress: nothing to read at the callback, and nothing to link at the link submit.
         using var callback = await browser.GetAsync("/account/sso-callback?returnUrl=%2Fprogress");
         callback.Headers.Location!.ToString().Should().Be("/account/login?error=ExternalLoginUnavailable&returnUrl=%2Fprogress");
         Refusal(await LoadAsync(browser, callback.Headers.Location.ToString()))
-            .Should().Be("External login information was not available.");
+            .Should().Be("Your institution's sign-in did not complete. Sign in with your email and password.",
+                "this host offers no institution's button, so the words point at the email and password");
 
         var signInPage = await LoadAsync(browser, "/account/login");
         using var link = await browser.PostAsync("/account/link-external/submit", new FormUrlEncodedContent(
@@ -135,7 +137,7 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
         ]));
         link.Headers.Location!.ToString().Should().Be("/account/login?error=ExternalSessionExpired");
         Refusal(await LoadAsync(browser, link.Headers.Location.ToString()))
-            .Should().Be("External login session expired. Please try again.");
+            .Should().Be("Your institution's sign-in took too long and has expired. Sign in with your email and password.");
     }
 
     [Fact]
@@ -175,12 +177,12 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
             "guard: the account is offered a link, with no refusal");
 
         var crafted = await LoadAsync(browser, "/account/link-external?returnUrl=%2F&error=" + Uri.EscapeDataString(Crafted));
-        Refusal(crafted).Should().Be("The account could not be linked. Please try again.");
+        Refusal(crafted).Should().Be("The account could not be linked. Try again.");
         crafted.DocumentElement.OuterHtml.Should().NotContain("012 345 6789");
 
         var blank = await PostLinkAsync(browser, string.Empty);
         blank.Should().Be("/account/link-external?returnUrl=%2F&error=PasswordRequired");
-        Refusal(await LoadAsync(browser, blank)).Should().Be("Your password is required.");
+        Refusal(await LoadAsync(browser, blank)).Should().Be("Enter your password.");
 
         var wrong = await PostLinkAsync(browser, WrongPassword);
         wrong.Should().Be("/account/link-external?returnUrl=%2F&error=SsoLinkRefused");
@@ -197,7 +199,7 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
 
         var page = await LoadAsync(browser, $"/account/register?token={Uri.EscapeDataString(token)}&error=Call%20012");
 
-        Refusal(page).Should().Be("Registration could not be completed. Please try again.");
+        Refusal(page).Should().Be("Registration could not be completed. Try again.");
         page.DocumentElement.OuterHtml.Should().NotContain("Call 012");
         page.QuerySelector("form[action='/account/register/submit']").Should().NotBeNull("the invitation can still be used");
     }
@@ -220,9 +222,9 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
         var weak = await RegisterAsync(browser, registerPage, "short", "short");
         weak.Should().StartWith($"{registerPage}&error=PasswordTooShort").And.NotContain("%20").And.NotContain("Passwords");
         var afterWeak = await LoadAsync(browser, weak);
-        Refusal(afterWeak).Should().Contain("Passwords must be at least 12 characters.")
-            .And.Contain("Passwords must have at least one digit ('0'-'9').")
-            .And.Contain("Passwords must have at least one uppercase ('A'-'Z').");
+        Refusal(afterWeak).Should().Be(
+            "The new password needs: At least 12 characters. A digit (0 to 9). An upper-case letter. A symbol, such as ! or #.",
+            "the rules broken, in the one order the rules are listed in (T339, flow 02, E11)");
 
         var registered = await RegisterAsync(browser, registerPage, NewUserPassword, NewUserPassword);
         registered.Should().Be("/", "guard: the right details register the account and sign it in");
@@ -349,7 +351,7 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
         var failed = await RegisterAsync(browser, registerPage, NewUserPassword, NewUserPassword);
 
         failed.Should().Be($"{registerPage}&error=Failed", "an exception's message is never put in an address");
-        Refusal(await LoadAsync(browser, failed)).Should().Be("Registration could not be completed. Please try again.");
+        Refusal(await LoadAsync(browser, failed)).Should().Be("Registration could not be completed. Try again.");
         logs.Entries.Should().Contain(entry => entry.Category == RegisterOutcome.LogCategory
                                                && entry.Level == LogLevel.Error
                                                && entry.Exception != null
@@ -501,6 +503,13 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
     {
         await using var scope = _host.Factory.Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>().FindByEmailAsync(email);
+    }
+
+    private async Task<bool> LockedOutAsync(string email)
+    {
+        await using var scope = _host.Factory.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>();
+        return await users.IsLockedOutAsync((await users.FindByEmailAsync(email))!);
     }
 
     private async Task<int> InstitutionOfAsync(string email) => (await FindUserAsync(email))!.InstitutionId!.Value;

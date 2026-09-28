@@ -26,7 +26,10 @@ public sealed class ResetUserPasswordCommandValidator : AbstractValidator<ResetU
     public ResetUserPasswordCommandValidator()
     {
         RuleFor(command => command.UserId).NotEmpty();
-        RuleFor(command => command.NewPassword).NotEmpty().MinimumLength(8).MaximumLength(256);
+        // No minimum length here: Identity's own rules judge the password, and the reset card names every rule broken in
+        // their words. Until T339 this refused a password under 8 characters in the validator's words, while the rule is 12
+        // (T339, flow 02, E11).
+        RuleFor(command => command.NewPassword).NotEmpty().MaximumLength(256);
     }
 }
 

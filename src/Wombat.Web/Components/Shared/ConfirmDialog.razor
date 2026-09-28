@@ -1,22 +1,64 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-<dialog @ref="_dialog" class="dialog-scrim dialog-card">
-  <div class="form-container">
-    <h2>@Title</h2>
-    <p>@Body</p>
-    <FormActions>
-      @* While the confirmed action runs, the dialog stays open and the confirm button keeps the focus: it is not disabled,
-         a second press sends nothing, and aria-disabled says so (DESIGN.md § Button system, T234 review). Cancel would
-         race it, so Cancel is disabled. *@
-      <button type="button" class="btn btn-outline" disabled="@_confirming" @onclick="CancelAsync">Cancel</button>
-      <button type="button" class="btn @(DangerAction ? "btn-danger" : "btn-primary")"
-              aria-disabled="@InFlight.AriaDisabled(_confirming)" @onclick="ConfirmAsync">@ConfirmLabel</button>
-    </FormActions>
-  </div>
+@*
+  Two modes.
+
+  - The action mode (every caller before T339): Confirm runs OnConfirm in the circuit, and the dialog stays open, its
+    button keeping the focus, until the action answers.
+  - The form mode (T339, flow 02, C7): FormAction set. The dialog holds a real <form method="post"> with its antiforgery
+    token, HiddenFields and the caller's FormContent (a password field, a refusal), and its confirm button is a submit.
+    The browser posts it to an endpoint, which can issue the sign-in cookie again, as nothing in a circuit can. My
+    account's Remove of an institutional sign-in is the first.
+
+  Either way the native <dialog> is opened modal, so Escape closes it and the browser returns the focus to the control that
+  opened it. In the form mode the first element the caller marks autofocus takes the focus on open (the refusal, else the
+  password), else Cancel, which carries autofocus itself; OnClosed tells the caller the dialog has closed, however it was
+  closed, so a caller that opened it without a press (a refusal reopening it as the page loads) can put the focus back.
+*@
+<dialog @ref="_dialog" class="dialog-scrim dialog-card @(IsFormMode ? "dialog-card--form" : null)"
+        aria-labelledby="@TitleId" aria-describedby="@BodyId" @onclose="ClosedAsync">
+  @if (IsFormMode)
+  {
+    @* data-submit-once (wombat.js): a second press while the post is on its way sends nothing. Cancel is not a submit,
+       so it never marks the form sent. *@
+    <form class="dialog-form" method="post" action="@FormAction" data-submit-once>
+      <AntiforgeryToken />
+      @if (HiddenFields is not null)
+      {
+        @foreach (var field in HiddenFields)
+        {
+          <input type="hidden" name="@field.Key" value="@field.Value" />
+        }
+      }
+      <h2 id="@TitleId">@Title</h2>
+      <p id="@BodyId">@Body</p>
+      @FormContent
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-outline" autofocus @onclick="CancelAsync">Cancel</button>
+        <button type="submit" class="btn @(DangerAction ? "btn-danger" : "btn-primary")">@ConfirmLabel</button>
+      </div>
+    </form>
+  }
+  else
+  {
+    <div class="form-container">
+      <h2 id="@TitleId">@Title</h2>
+      <p id="@BodyId">@Body</p>
+      <FormActions>
+        @* While the confirmed action runs, the dialog stays open and the confirm button keeps the focus: it is not disabled,
+           a second press sends nothing, and aria-disabled says so (DESIGN.md § Button system, T234 review). Cancel would
+           race it, so Cancel is disabled. *@
+        <button type="button" class="btn btn-outline" disabled="@_confirming" @onclick="CancelAsync">Cancel</button>
+        <button type="button" class="btn @(DangerAction ? "btn-danger" : "btn-primary")"
+                aria-disabled="@InFlight.AriaDisabled(_confirming)" @onclick="ConfirmAsync">@ConfirmLabel</button>
+      </FormActions>
+    </div>
+  }
 </dialog>
 
 @code {
+  private readonly string _id = $"confirm-{Guid.NewGuid():N}";
   private ElementReference _dialog;
 
   // The confirmed action has been sent and has not answered.
@@ -28,6 +70,29 @@
   [Parameter] public bool DangerAction { get; set; }
   [Parameter] public EventCallback OnConfirm { get; set; }
   [Parameter] public EventCallback OnCancel { get; set; }
+
+  /// <summary>
+  /// Where the form mode's form posts (T339, C7). Set, the dialog is a form the browser posts, and
+  /// <see cref="OnConfirm" /> is not called.
+  /// </summary>
+  [Parameter] public string? FormAction { get; set; }
+
+  /// <summary>The form mode's hidden fields, by name: what the endpoint is to act on (a provider's key).</summary>
+  [Parameter] public IReadOnlyDictionary<string, string>? HiddenFields { get; set; }
+
+  /// <summary>The form mode's fields and messages, between the body and the buttons: a password field, a refusal.</summary>
+  [Parameter] public RenderFragment? FormContent { get; set; }
+
+  /// <summary>The dialog has closed, by Cancel, by Escape or by the caller.</summary>
+  [Parameter] public EventCallback OnClosed { get; set; }
+
+  /// <summary>The dialog's heading's id, which the dialog is named by.</summary>
+  public string TitleId => $"{_id}-title";
+
+  /// <summary>The dialog's body's id, which the dialog is described by.</summary>
+  public string BodyId => $"{_id}-body";
+
+  private bool IsFormMode => !string.IsNullOrEmpty(FormAction);
 
   public ValueTask ShowAsync()
     => JS.InvokeVoidAsync("wombatDialog.showModal", _dialog);
@@ -65,6 +130,8 @@
     await OnCancel.InvokeAsync();
     await CloseAsync();
   }
+
+  private Task ClosedAsync() => OnClosed.InvokeAsync();
 
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

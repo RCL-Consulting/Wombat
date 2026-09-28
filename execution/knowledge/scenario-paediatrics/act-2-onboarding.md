@@ -145,12 +145,13 @@ Gap: none (the stale link under the refusal is F-2.6a)
 
 ### Step 2.8 — Mr Smit registers from his link
 Role: Anonymous — Mr Pieter Smit, holding his invitation link
-Route: /account/register → / → /account/logout → /account/login
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Open the link and enter first name Pieter, last name Smit and a password that meets the rules. Confirm it and
   register. Read the landing page, then sign out.
 Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with the email filled in and not editable.
   The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home, headed
-  "Home" with "Coordinator · Semester N, YYYY" under it. Signing out returns him to the sign-in page.
+  "Home" with "Coordinator · Semester N, YYYY" under it. Signing out (the top bar's Sign out, one press) returns him to
+  the sign-in page, which reads "You have signed out."
 Note: Record every password chosen in this act in `pwd_DO_NOT_COMMIT.txt` only (README § Passwords).
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): "Registering smit@kgk.wombat.local as Coordinator.", the email
   filled and disabled. The address bar still held `?token=…` after load. Registering landed on Home: "Home",
@@ -162,12 +163,15 @@ Gap: [F-2.8a, T315] (still) The invitation token is never cleared from the addre
 
 ### Step 2.9 — Dr Patel's first two attempts are refused
 Role: Anonymous — Dr Mohammed Patel, holding his invitation link
-Route: /account/register → / → /account/logout
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Register with a 10-character password that mixes upper case, lower case, a digit and a symbol. Then use a
   12-character password with a different confirmation. Then use a 12-character password confirmed correctly. Sign out.
-Expect: The first attempt returns to the form with "Passwords must be at least 12 characters." The first field takes the
-  focus and no account is created (T285). The second returns with "The password confirmation does not match." The
-  third registers him and lands on Home, "Assessor · Semester N, YYYY".
+Expect: Before anything is typed, the six rules stand under Password: "The new password needs:" and "At least 12
+  characters.", "At least 4 different characters.", "A digit (0 to 9).", "An upper-case letter.", "A lower-case
+  letter.", "A symbol, such as ! or #."; each password field has its Show toggle. The first attempt returns to the
+  form with "The new password needs: At least 12 characters." The first field takes the focus and no account is
+  created (T285). The second returns with "The password confirmation does not match." The third registers him and
+  lands on Home, "Assessor · Semester N, YYYY". Signing out lands on the sign-in page with "You have signed out."
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): 10 characters: back at `&error=PasswordTooShort` with
   "Passwords must be at least 12 characters.", First name focused, no account (inferred: the same invitation
   registered him at the third try). Mismatch: back at `&error=ConfirmationMismatch`, "The password confirmation does
@@ -178,12 +182,13 @@ Gap: [F-2.9a, T317] (still) A refused registration drops the first and last name
 
 ### Step 2.10 — The other seven staff register
 Role: Anonymous — Dr Zulu, Dr Naidoo, Dr Botha, Dr Khumalo, Dr van Rensburg, Dr Mokoena and Dr Sithole
-Route: /account/register → / → /account/logout
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Each registers from their own link with the cast's name and signs out. Dr Khumalo types her first name as "Fatma"
   by mistake (she corrects it in Step 2.41).
-Expect: Each page names the address and the invited role. Each person lands on Home viewing as that role. Zulu, Naidoo,
-  Botha and van Rensburg view as CommitteeMember, Khumalo as Assessor, Mokoena as SpecialityAdmin and Sithole as
-  SubSpecialityAdmin.
+Expect: Each page names the address and the invited role, and lists the six password rules under Password (Step 2.9).
+  Each person lands on Home viewing as that role. Zulu, Naidoo, Botha and van Rensburg view as CommitteeMember, Khumalo
+  as Assessor, Mokoena as SpecialityAdmin and Sithole as SubSpecialityAdmin. Each sign-out lands on the sign-in page
+  with "You have signed out."
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): Each page read "Registering <address> as <role>." and each
   landed on Home: Zulu, Naidoo, Botha and van Rensburg "Committee member · Semester 2, 2026" (sidebar "Acting as
   Committee member"), Khumalo (typed "Fatma") "Assessor · …", Mokoena "Speciality admin · …" and Sithole
@@ -312,13 +317,14 @@ Gap: [F-2.6a, T264] (still) A revoke leaves the revoked invitation's link on scr
 
 ### Step 2.18 — Four registrars register and are pending
 Role: Anonymous — Dr Molefe, Dr Dlamini, Dr Mahlangu and Dr Ndlovu
-Route: /account/register → / → /account/logout
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Each registers from their own link. Molefe, Dlamini and Ndlovu sign out. Dr Mahlangu stays signed in with Home open
   in her tab, which Step 2.31 uses. Dr du Plessis cannot register: he says no email reached him.
 Expect: Each page reads "Registering <address> as Trainee." Each registrar lands on Home, "Pending trainee · Semester N,
   YYYY", because a Trainee invitation registers as PendingTrainee until admission. Home shows one card, "Awaiting
   admission": "You are registered and waiting to be admitted to a curriculum by your programme administrator." It has a
-  "Review your account →" link, and the header offers no action.
+  "Review your account →" link, and the header offers no action. Each sign-out lands on the sign-in page with "You
+  have signed out."
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): Each page read "Registering <address> as Trainee."; each
   landed on Home, "Pending trainee · Semester 2, 2026", with the one "Awaiting admission" card, its sentence as quoted
   and "Review your account →" (to /account/profile), and no header action. Molefe, Dlamini and Ndlovu signed out;
@@ -332,8 +338,8 @@ Do: Read the menu. Follow Review your account, then open My activities and Log a
   My progress address.
 Expect: The sidebar reads "Acting as Pending trainee" over Home, Log an activity and My activities, then My data rights
   under the rule. It has no MSF reports, My committee reviews, My progress or Export portfolio, because those pages do
-  not admit a pending trainee (T141). My account lists her role as PendingTrainee. My activities reads "No activities
-  yet". Log an activity opens the type picker
+  not admit a pending trainee (T141). My account lists her role as "Pending trainee", and her institution, Kgosi Kgari
+  Teaching Hospital. My activities reads "No activities yet". Log an activity opens the type picker
   with the eleven instruments of Step 2.42: her invitation's Paediatrics scope selects them, and with no curriculum yet
   no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee) does not open this
   page.") with Go to Home (T335).
@@ -457,11 +463,11 @@ Gap: none
 
 ### Step 2.27 — Dr du Plessis registers from the new link
 Role: Anonymous — Dr Pieter du Plessis
-Route: /account/register → / → /account/logout
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Open the first link, then the resent one. Register from the resent link and sign out.
 Expect: The first link shows no form, only "This invitation is invalid.": the resend replaced the link's hash, so the old
   token matches no invitation. The resent link registers him and lands on Home, "Pending trainee · Semester N, YYYY",
-  with the Awaiting admission card.
+  with the Awaiting admission card. Signing out lands on the sign-in page with "You have signed out."
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): The first link read "Complete registration" / "This invitation
   is invalid." with no form. The resent link read "Registering duplessis@kgk.wombat.local as Trainee.", registered him
   and landed on Home, "Pending trainee · Semester 2, 2026", with the Awaiting admission card; he signed out.
@@ -527,8 +533,9 @@ Gap: none
 Role: Trainee — Dr Nomsa Mahlangu
 Route: / → /account/session-ended → /account/login → /
 Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
-Expect: Within a minute of her admission the tab moves to the sign-in page, which reads "Your session has ended. Please
-  sign in again." Admission changes her role, and a role change ends open sessions (T279). Signed in again, she sees
+Expect: Within a minute of her admission the tab moves to the sign-in page, which reads "Your session has ended. Sign in
+  again.", an information notice; the focus is on Email (no institution buttons on dev). Admission changes her role,
+  and a role change ends open sessions (T279). Signed in again, she sees
   "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): 30 s after her admission (12:50:52 UTC) her Home tab,
   untouched since Step 2.19, moved to /account/login?error=SessionEnded&returnUrl=%2F: "Your session has ended. Please
@@ -577,7 +584,7 @@ Gap: [F-2.33a, T298] (still) With every trainee level, the Targets card lists th
 
 ### Step 2.34 — Dr Zulu switches between her dashboards
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
-Route: / → /dashboard/switch/{role} → / → /account/logout → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
+Route: / → /dashboard/switch/{role} → / → /account/logout/submit → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and in again. Then type
   `/dashboard/switch/Administrator`. Last, choose Switch to Committee member in the sidebar.
 Expect: Under the header an info alert reads "You are now acting as Assessor." and takes the focus; on Home it offers no
@@ -585,11 +592,12 @@ Expect: Under the header an info alert reads "You are now acting as Assessor." a
   to the Assessor's: Home and Activity inbox, then My data rights. Home's subtitle reads "Assessor · Semester N, YYYY".
   The Assessor dashboard has two cards: "Waiting for your rating", badged 0, which reads "Nothing is waiting for your
   rating." with "Open inbox →" (T297, T335), and Recent decisions, "No decisions yet.". The reload shows no alert: it is
-  said once. After signing in again she lands acting as Assessor, with no alert, because the choice is stored with her
-  account, not in the browser (T317). The Administrator address writes nothing and says nothing: she is still acting as
-  Assessor, since a role she does not hold is never shown or stored. Switch to Committee member brings back the
-  Committee member's sidebar and menu, "Committee member · Semester N, YYYY" under Home's heading, and the alert "You are
-  now acting as Committee member.", the role Step 3.33 starts from.
+  said once. Signing out lands on the sign-in page with "You have signed out." After signing in again she lands acting
+  as Assessor, with no alert, because the choice is stored with her account, not in the browser (T317). The
+  Administrator address writes nothing and says nothing: she is still acting as Assessor, since a role she does not hold
+  is never shown or stored. Switch to Committee member brings back the Committee member's sidebar and menu, "Committee
+  member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
+  role Step 3.33 starts from.
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): Switch to Assessor: Home, "Assessor · Semester 2, 2026", "You
   are now acting as Assessor." with the focus, no Switch back; the sidebar "Acting as Assessor" / "Switch to Committee
   member" over Home and Activity inbox, then My data rights; "Waiting for your rating" badged 0, "Nothing is waiting
@@ -694,11 +702,12 @@ Gap: none
 Role: Every role in this act — each person onboarded here, signed in as themselves
 Route: /account/profile → /account/profile/submit → /account/profile
 Do: Each opens My account (the name in the top bar). Dr Khumalo changes her first name from "Fatma" to "Fatima" and
-  saves the profile.
-Expect: The page reads "My account" and "Update your name and review your assigned roles.". The summary shows the email,
-  the roles held (both roles for Zulu, Naidoo and Botha; Trainee for the registrars) and a Change password link. The
-  email field is not editable. Khumalo's save reloads the page with "Profile saved.", which takes the focus, and the
-  top bar's account row now reads "Fatima Khumalo" (the lists are checked on Mbatha's in Step 2.44).
+  saves her name.
+Expect: The page reads "My account" and "Your name, your roles, and how you sign in." The Account card shows the email
+  as text, the institution (Kgosi Kgari Teaching Hospital) and the roles by label, one per line ("Committee member" and
+  "Assessor" for Zulu, Naidoo and Botha; "Trainee" for the registrars). How you sign in shows Password with Change
+  password. Khumalo's Save name reloads the page with "Name saved." in the Your name card, which takes the focus, and
+  the top bar's account row now reads "Fatima Khumalo" (the lists are checked on Mbatha's in Step 2.44).
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): All 14 opened My account from the top bar's name (then marked
   the current page): "My account" and the subtitle; Roles "CommitteeMember, Assessor" for Zulu, Naidoo and Botha,
   "Trainee" for the five, each other its one role; Change password link; Email input disabled. Khumalo: Fatma →

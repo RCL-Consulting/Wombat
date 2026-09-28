@@ -623,7 +623,7 @@ and written for T336. Their baseline goes into `design/baseline/mail/` and `desi
 | # | File | Flow | People | Pages (coverage.md templates) | Steps | Mode | Held |
 |---|---|---|---|---|---|---|---|
 | 01 | `flows/01-shell.md` | The shared frame: nav, Home frame, role switch, system states | everyone | `/`, `/access-denied`, `/not-found`, `/Error`, `/placeholder/{Feature}` | 21 | W | — (T297 re-captured 2026-09-26) |
-| 02 | `flows/02-sign-in-and-account.md` | Getting in, staying in, one's own account | everyone, anonymous | `/account/login`, `logout-confirm`, `profile`, `change-password`, `forgot-password`, `link-external` | 19 | F | — |
+| 02 | `flows/02-sign-in-and-account.md` | Getting in, staying in, one's own account | everyone, anonymous | `/account/login`, `logout`, `logout-confirm`, `profile`, `change-password`, `forgot-password`, `link-external` | 19 | F | — |
 | 03 | `flows/03-trainee-files-activity.md` | A registrar asks for an assessment or logs one | Trainee | `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine`, `/activities/inbox` | 30 | W | — (T297 re-captured 2026-09-26) |
 | 04 | `flows/04-assessor-inbox.md` | An assessor works their inbox | Assessor | `/`, `/activities/inbox`, `/activities/{ActivityId:int}`, `/placeholder/{Feature}` | 17 | W | — (T297 re-captured 2026-09-26) |
 | 05 | `flows/05-trainee-progress.md` | A registrar reads where they stand | Trainee | `/`, `/portfolio/progress`, `/activities/mine` | 17 | W | — (T297 re-captured 2026-09-26) |

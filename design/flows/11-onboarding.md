@@ -576,30 +576,35 @@ Expect: The first is refused: "The selected role requires speciality and sub-spe
 
 Step 2.8 — Mr Smit registers from his link
 Role: Anonymous — Mr Pieter Smit, holding his invitation link
-Route: /account/register → / → /account/logout → /account/login
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Open the link and enter first name Pieter, last name Smit and a password that meets the rules. Confirm it and
   register. Read the landing page, then sign out.
 Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with the email filled in and not editable.
   The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home, headed
-  "Home" with "Coordinator · Semester N, YYYY" under it. Signing out returns him to the sign-in page.
+  "Home" with "Coordinator · Semester N, YYYY" under it. Signing out (the top bar's Sign out, one press) returns him to
+  the sign-in page, which reads "You have signed out."
 
 Step 2.9 — Dr Patel's first two attempts are refused
 Role: Anonymous — Dr Mohammed Patel, holding his invitation link
-Route: /account/register → / → /account/logout
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Register with a 10-character password that mixes upper case, lower case, a digit and a symbol. Then use a
   12-character password with a different confirmation. Then use a 12-character password confirmed correctly. Sign out.
-Expect: The first attempt returns to the form with "Passwords must be at least 12 characters." The first field takes the
-  focus and no account is created (T285). The second returns with "The password confirmation does not match." The
-  third registers him and lands on Home, "Assessor · Semester N, YYYY".
+Expect: Before anything is typed, the six rules stand under Password: "The new password needs:" and "At least 12
+  characters.", "At least 4 different characters.", "A digit (0 to 9).", "An upper-case letter.", "A lower-case
+  letter.", "A symbol, such as ! or #."; each password field has its Show toggle. The first attempt returns to the
+  form with "The new password needs: At least 12 characters." The first field takes the focus and no account is
+  created (T285). The second returns with "The password confirmation does not match." The third registers him and
+  lands on Home, "Assessor · Semester N, YYYY". Signing out lands on the sign-in page with "You have signed out."
 
 Step 2.10 — The other seven staff register
 Role: Anonymous — Dr Zulu, Dr Naidoo, Dr Botha, Dr Khumalo, Dr van Rensburg, Dr Mokoena and Dr Sithole
-Route: /account/register → / → /account/logout
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Each registers from their own link with the cast's name and signs out. Dr Khumalo types her first name as "Fatma"
   by mistake (she corrects it in Step 2.41).
-Expect: Each page names the address and the invited role. Each person lands on Home viewing as that role. Zulu, Naidoo,
-  Botha and van Rensburg view as CommitteeMember, Khumalo as Assessor, Mokoena as SpecialityAdmin and Sithole as
-  SubSpecialityAdmin.
+Expect: Each page names the address and the invited role, and lists the six password rules under Password (Step 2.9).
+  Each person lands on Home viewing as that role. Zulu, Naidoo, Botha and van Rensburg view as CommitteeMember, Khumalo
+  as Assessor, Mokoena as SpecialityAdmin and Sithole as SubSpecialityAdmin. Each sign-out lands on the sign-in page
+  with "You have signed out."
 
 Step 2.11 — A used link cannot be used again
 Role: Anonymous — Mr Pieter Smit
@@ -627,13 +632,14 @@ Expect: The row's button is named "Revoke the Trainee invitation to ndlvou@kgk.w
 
 Step 2.18 — Four registrars register and are pending
 Role: Anonymous — Dr Molefe, Dr Dlamini, Dr Mahlangu and Dr Ndlovu
-Route: /account/register → / → /account/logout
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Each registers from their own link. Molefe, Dlamini and Ndlovu sign out. Dr Mahlangu stays signed in with Home open
   in her tab, which Step 2.31 uses. Dr du Plessis cannot register: he says no email reached him.
 Expect: Each page reads "Registering <address> as Trainee." Each registrar lands on Home, "Pending trainee · Semester N,
   YYYY", because a Trainee invitation registers as PendingTrainee until admission. Home shows one card, "Awaiting
   admission": "You are registered and waiting to be admitted to a curriculum by your programme administrator." It has a
-  "Review your account →" link, and the header offers no action.
+  "Review your account →" link, and the header offers no action. Each sign-out lands on the sign-in page with "You
+  have signed out."
 
 Step 2.19 — What a registrar sees before admission
 Role: PendingTrainee — Dr Nomsa Mahlangu
@@ -642,8 +648,8 @@ Do: Read the menu. Follow Review your account, then open My activities and Log a
   My progress address.
 Expect: The sidebar reads "Acting as Pending trainee" over Home, Log an activity and My activities, then My data rights
   under the rule. It has no MSF reports, My committee reviews, My progress or Export portfolio, because those pages do
-  not admit a pending trainee (T141). My account lists her role as PendingTrainee. My activities reads "No activities
-  yet". Log an activity opens the type picker
+  not admit a pending trainee (T141). My account lists her role as "Pending trainee", and her institution, Kgosi Kgari
+  Teaching Hospital. My activities reads "No activities yet". Log an activity opens the type picker
   with the eleven instruments of Step 2.42: her invitation's Paediatrics scope selects them, and with no curriculum yet
   no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee) does not open this
   page.") with Go to Home (T335).
@@ -659,11 +665,11 @@ Expect: His is the only row left. Its Delivery reads "Not delivered. Resend emai
 
 Step 2.27 — Dr du Plessis registers from the new link
 Role: Anonymous — Dr Pieter du Plessis
-Route: /account/register → / → /account/logout
+Route: /account/register → / → /account/logout/submit → /account/login
 Do: Open the first link, then the resent one. Register from the resent link and sign out.
 Expect: The first link shows no form, only "This invitation is invalid.": the resend replaced the link's hash, so the old
   token matches no invitation. The resent link registers him and lands on Home, "Pending trainee · Semester N, YYYY",
-  with the Awaiting admission card.
+  with the Awaiting admission card. Signing out lands on the sign-in page with "You have signed out."
 
 Step 2.28 — The pending registrars, as Mbatha sees them
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -702,8 +708,9 @@ Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Traine
 Role: Trainee — Dr Nomsa Mahlangu
 Route: / → /account/session-ended → /account/login → /
 Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
-Expect: Within a minute of her admission the tab moves to the sign-in page, which reads "Your session has ended. Please
-  sign in again." Admission changes her role, and a role change ends open sessions (T279). Signed in again, she sees
+Expect: Within a minute of her admission the tab moves to the sign-in page, which reads "Your session has ended. Sign in
+  again.", an information notice; the focus is on Email (no institution buttons on dev). Admission changes her role,
+  and a role change ends open sessions (T279). Signed in again, she sees
   "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 
 Step 2.32 — Mr Smit, Coordinator

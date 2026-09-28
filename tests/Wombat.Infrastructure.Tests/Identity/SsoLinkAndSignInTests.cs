@@ -38,6 +38,7 @@ public sealed class SsoLinkAndSignInTests : IDisposable
     private readonly IServiceScope _scope;
     private readonly RecordingAuthenticationService _authentication = new();
     private readonly RecordingAuditWriter _audit = new();
+    private readonly HashCheckCounter _hashChecks = new();
 
     public SsoLinkAndSignInTests()
     {
@@ -83,6 +84,10 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         services.AddScoped<SsoGroupMapper>();
         services.AddScoped<ExternalLoginHandler>();
         services.AddScoped<UserAdministrationService>();
+        services.AddSingleton<SignInTiming>();
+
+        // Identity's hasher, counting each password it verifies: what a refused link costs (T287's timing half).
+        services.AddScoped<IPasswordHasher<WombatIdentityUser>>(_ => new CountingPasswordHasher(new PasswordHasher<WombatIdentityUser>(), _hashChecks));
 
         _root = services.BuildServiceProvider();
         _scope = _root.CreateScope();
@@ -153,7 +158,9 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         var right = await Handler.LinkAndSignInAsync(external, Password, null, null);
 
         right.Succeeded.Should().BeFalse();
-        right.ErrorMessage.Should().Be(ExternalLoginHandler.LinkLockedOutMessage);
+        right.ErrorCode.Should().Be(ExternalLoginRefusal.LinkRefused,
+            "a lockout is sent as any refused link is, so the address says nothing about the account (T287, T339)");
+        right.ErrorMessage.Should().Be("The account could not be linked. Check your password and try again.");
         (await Users.GetLoginsAsync(user)).Should().BeEmpty();
         _authentication.SignedInUserIds.Should().BeEmpty();
         _audit.Actions.Should().Contain("SsoAccountLinkLockedOut");
@@ -173,6 +180,60 @@ public sealed class SsoLinkAndSignInTests : IDisposable
             .Select(result => result.ErrorMessage)
             .Should().OnlyContain(message => message == ExternalLoginHandler.LinkRefusedMessage);
         _authentication.SignedInUserIds.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// T287's timing half on the link path (the review of the t339 branch): every refused link that reads as a wrong
+    /// password costs what one costs, one password hash, so a stopwatch cannot tell no account, another institution's
+    /// account, an institution-only account or a locked one from a wrong password. Until then those four verified none. The
+    /// time is not measured, the hashes are.
+    /// </summary>
+    [Fact]
+    public async Task EveryLinkRefusedAsAWrongPassword_CostsOnePasswordCheck()
+    {
+        await CreateUserAsync("naidoo@kgk.test", ProviderInstitutionId);
+        await CreateUserAsync("elsewhere@kgk.test", OtherInstitutionId);
+        var institutional = await CreateUserAsync("sso-only@kgk.test", ProviderInstitutionId);
+        institutional.AllowLocalPassword = false;
+        await Users.UpdateAsync(institutional);
+        var locked = await CreateUserAsync("locked@kgk.test", ProviderInstitutionId);
+        await Users.SetLockoutEndDateAsync(locked, DateTimeOffset.UtcNow.AddMinutes(15));
+
+        async Task<(string? Code, int Checks)> LinkAsync(string email, string subject, string password)
+        {
+            var before = _hashChecks.Count;
+            var result = await Handler.LinkAndSignInAsync(Verified(email, subject), password, null, null);
+            return (result.ErrorCode, _hashChecks.Count - before);
+        }
+
+        (await LinkAsync("naidoo@kgk.test", "s1", "Wrong-Password-1")).Should().Be((ExternalLoginRefusal.LinkRefused, 1),
+            "the wrong password every refusal is measured against");
+        (await LinkAsync("nobody@kgk.test", "s2", Password)).Should().Be((ExternalLoginRefusal.LinkRefused, 1), "no account");
+        (await LinkAsync("elsewhere@kgk.test", "s3", Password)).Should().Be((ExternalLoginRefusal.LinkRefused, 1),
+            "another institution's account");
+        (await LinkAsync("sso-only@kgk.test", "s4", Password)).Should().Be((ExternalLoginRefusal.LinkRefused, 1),
+            "an account that signs in only through its institution");
+        (await LinkAsync("locked@kgk.test", "s5", Password)).Should().Be((ExternalLoginRefusal.LinkRefused, 1),
+            "a locked account: Identity answers the lock before it checks the password, even the right one");
+        (await Users.GetAccessFailedCountAsync(institutional)).Should().Be(0, "the equalising check counts nothing against anyone");
+    }
+
+    [Fact]
+    public async Task TheLinkThatTripsTheLock_CostsOnePasswordCheck_NotTwo()
+    {
+        var user = await CreateUserAsync("naidoo@kgk.test", ProviderInstitutionId);
+        for (var attempt = 1; attempt <= 4; attempt++)
+        {
+            (await Handler.LinkAndSignInAsync(Verified("naidoo@kgk.test", "s1"), "Wrong-Password-" + attempt, null, null))
+                .Succeeded.Should().BeFalse();
+        }
+
+        var before = _hashChecks.Count;
+        var fifth = await Handler.LinkAndSignInAsync(Verified("naidoo@kgk.test", "s1"), "Wrong-Password-5", null, null);
+
+        fifth.ErrorCode.Should().Be(ExternalLoginRefusal.LinkRefused);
+        (await Users.IsLockedOutAsync(user)).Should().BeTrue("guard: the fifth tripped the lock");
+        (_hashChecks.Count - before).Should().Be(1, "it checked the password itself, so it is not equalised again");
     }
 
     [Fact]
@@ -234,7 +295,8 @@ public sealed class SsoLinkAndSignInTests : IDisposable
 
         result.Succeeded.Should().BeFalse();
         result.ErrorCode.Should().Be(ExternalLoginRefusal.LinkFailed);
-        result.ErrorMessage.Should().Be("Linking failed.").And.NotContain(address);
+        result.ErrorMessage.Should().Be("Your institutional sign-in could not be linked this time. Try again later.")
+            .And.NotContain(address);
         _authentication.SignedInUserIds.Should().BeEmpty();
         _audit.Actions.Should().NotContain("SsoAccountLinked");
 
@@ -274,7 +336,9 @@ public sealed class SsoLinkAndSignInTests : IDisposable
 
         result.RequiresLinking.Should().BeFalse();
         result.ErrorCode.Should().Be(ExternalLoginRefusal.AccountLocked);
-        result.ErrorMessage.Should().Be(ExternalLoginHandler.LockedOutMessage);
+        result.ErrorMessage.Should().Be(ExternalLoginHandler.LockedOutMessage)
+            .And.Be("Wombat could not sign you in through your institution. Contact your administrator.",
+                "only a provider-verified person reaches it, and it says only who can help (T339, flow 02, E1)");
     }
 
     [Fact]
@@ -899,6 +963,28 @@ public sealed class SsoLinkAndSignInTests : IDisposable
         await Db.SaveChangesAsync();
         Db.ChangeTracker.Clear();
         return await Db.Users.AsNoTracking().SingleAsync(user => user.Id == userId);
+    }
+
+    private sealed class HashCheckCounter
+    {
+        private int _count;
+
+        public int Count => Volatile.Read(ref _count);
+
+        public void Add() => Interlocked.Increment(ref _count);
+    }
+
+    /// <summary>Identity's hasher, counting each password it verifies.</summary>
+    private sealed class CountingPasswordHasher(IPasswordHasher<WombatIdentityUser> inner, HashCheckCounter checks)
+        : IPasswordHasher<WombatIdentityUser>
+    {
+        public string HashPassword(WombatIdentityUser user, string password) => inner.HashPassword(user, password);
+
+        public PasswordVerificationResult VerifyHashedPassword(WombatIdentityUser user, string hashedPassword, string providedPassword)
+        {
+            checks.Add();
+            return inner.VerifyHashedPassword(user, hashedPassword, providedPassword);
+        }
     }
 
     private sealed class RecordingAuthenticationService : IAuthenticationService

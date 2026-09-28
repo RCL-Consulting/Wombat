@@ -187,7 +187,9 @@ public sealed partial class StylesheetRuleTests
     public void ThePasswordToggle_IsATarget()
     {
         // T328: 45x23px, under T086's floor, on the sign-in card and the user page.
-        Stylesheet.Rem(Stylesheet.AppCss().Computed(".password-toggle-btn")["min-height"]).Should().BeGreaterThanOrEqualTo(1.75);
+        // Since T339 (flow 02) it is a button beside the field and as tall as it (38px), where it was a word inside the
+        // field's end (.password-toggle-btn).
+        Stylesheet.Rem(Stylesheet.AppCss().Computed(".btn", ".btn-outline", ".password-toggle")["min-height"]).Should().Be(2.375);
     }
 
     [Fact]

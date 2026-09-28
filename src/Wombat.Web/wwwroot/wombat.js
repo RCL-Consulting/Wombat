@@ -12,14 +12,57 @@ window.wombat.clearInvitationTokenFromUrl = function () {
     window.history.replaceState({}, "", next);
 };
 
-window.wombat.togglePasswordVisibility = function (elementId, visible) {
-    const input = document.getElementById(elementId);
-    if (!input) {
+// A password field's Show toggle on a page with no circuit (PasswordField.razor; T339, flow 02, the round 2 review's A3
+// to A5). The button is rendered hidden with data-password-toggle, so a page whose script is blocked has no dead button;
+// this shows it as the page loads and after an enhanced navigation. One delegated listener drives every toggle: pressed,
+// the field it controls (aria-controls) shows its text and aria-pressed says so; the stylesheet swaps the icon. No inline
+// handler, which the CSP forbids.
+window.wombat.revealPasswordToggles = function () {
+    document.querySelectorAll("[data-password-toggle][hidden]").forEach(function (button) {
+        button.hidden = false;
+    });
+};
+
+document.addEventListener("click", function (event) {
+    const button = event.target instanceof Element ? event.target.closest("[data-password-toggle]") : null;
+    if (!button) {
         return;
     }
 
-    input.type = visible ? "text" : "password";
+    const input = document.getElementById(button.getAttribute("aria-controls"));
+    if (!(input instanceof HTMLInputElement)) {
+        return;
+    }
+
+    const show = button.getAttribute("aria-pressed") !== "true";
+    input.type = show ? "text" : "password";
+    button.setAttribute("aria-pressed", show ? "true" : "false");
+});
+
+// Every field a toggle controls goes back to a password: as its form is posted, so a shown password is not saved in the
+// browser's form history as text, and when the page comes back from the back-forward cache, so it is not left on screen.
+window.wombat.hidePasswords = function (root) {
+    root.querySelectorAll(".password-toggle[aria-controls]").forEach(function (button) {
+        const input = document.getElementById(button.getAttribute("aria-controls"));
+        if (input instanceof HTMLInputElement) {
+            input.type = "password";
+        }
+
+        button.setAttribute("aria-pressed", "false");
+    });
 };
+
+document.addEventListener("submit", function (event) {
+    if (event.target instanceof HTMLFormElement) {
+        window.wombat.hidePasswords(event.target);
+    }
+});
+
+window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+        window.wombat.hidePasswords(document);
+    }
+});
 
 // A server-rendered form marked data-submit-once posts once: a second submit while the first is on its way is dropped,
 // and the submit button is disabled once the post has left. The MSF respondent page (T205) is the first. Its link takes
@@ -83,8 +126,10 @@ window.wombat.revealCurrentNavItem = function () {
 
 document.addEventListener("DOMContentLoaded", function () {
     window.wombat.revealCurrentNavItem();
+    window.wombat.revealPasswordToggles();
     if (window.Blazor && typeof window.Blazor.addEventListener === "function") {
         window.Blazor.addEventListener("enhancedload", window.wombat.revealCurrentNavItem);
+        window.Blazor.addEventListener("enhancedload", window.wombat.revealPasswordToggles);
     }
 });
 

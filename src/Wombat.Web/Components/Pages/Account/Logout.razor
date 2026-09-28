@@ -1,16 +1,84 @@
+@page "/account/logout"
 @page "/account/logout-confirm"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
 @layout Layout.AuthLayout
+@using System.Security.Claims
+@using Wombat.Web.Security
+@inject NavigationManager Navigation
+
+@*
+  The sign-out page (T339, flow 02; the round 2 review's B1 and A12). Both addresses draw it: /account/logout, and
+  /account/logout-confirm, where the error page's Sign out links, since a form there would carry a token its own failed
+  request invalidated (T321). Neither GET signs anyone out: the form posts to SignOutOutcome.SubmitPath with a token of its
+  own, and the post requires it (E6). The shell's Sign out is one press and never comes here.
+
+  Static ([ExcludeFromInteractiveRouting]), as the other account pages a signed-in person reaches are: the form is an HTTP
+  post, and the page opens no circuit to end. Open to anyone ([AllowAnonymous]) only so that a visitor who is not signed
+  in is sent to the sign-in page with no return address, rather than challenged and brought back here after signing in.
+*@
 
 <PageTitle>Sign out · Wombat</PageTitle>
 
-<PageHeader Title="Sign out" Subtitle="Use the button below to end the current session." />
+<div class="account-form-container">
+  <h1>Sign out</h1>
+  <p>@SignedInAs Signing out ends your session in this browser.</p>
 
-<div class="form-container">
-  <form method="post" action="/account/logout">
+  <form method="post" action="@SignOutOutcome.SubmitPath">
     <AntiforgeryToken />
     <FormActions>
-      <a class="btn btn-outline" href="/">Cancel</a>
-      <button type="submit" class="btn btn-primary">Sign out</button>
+      <a class="btn btn-outline" href="@CancelHref">Cancel</a>
+      <button type="submit" class="btn btn-primary">
+        <Icon Name="log-out" />
+        Sign out
+      </button>
     </FormActions>
   </form>
 </div>
+
+@code {
+  [CascadingParameter]
+  private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+  /// <summary>Where Cancel goes: back to the page the person came from when it is a path on this site, else Home.</summary>
+  [SupplyParameterFromQuery(Name = "returnUrl")]
+  public string? ReturnUrl { get; set; }
+
+  private ClaimsPrincipal _user = new(new ClaimsIdentity());
+
+  private string CancelHref => LocalUrl.OrNull(ReturnUrl) ?? "/";
+
+  /// <summary>
+  /// "You are signed in as Name (email)." Both as stored: the name from the sign-in's display name, the email from its
+  /// email claim. One of them alone when the other is missing or the same (an account with no name shows its email).
+  /// </summary>
+  private string SignedInAs
+  {
+    get
+    {
+      var name = _user.GetDisplayName();
+      var email = _user.FindFirst(ClaimTypes.Email)?.Value ?? _user.FindFirst(ClaimTypes.Name)?.Value;
+
+      if (string.IsNullOrWhiteSpace(name) || string.Equals(name, email, StringComparison.OrdinalIgnoreCase))
+      {
+        return string.IsNullOrWhiteSpace(email) ? "You are signed in." : $"You are signed in as {email}.";
+      }
+
+      return string.IsNullOrWhiteSpace(email) ? $"You are signed in as {name}." : $"You are signed in as {name} ({email}).";
+    }
+  }
+
+  protected override async Task OnInitializedAsync()
+  {
+    if (AuthenticationState is not null)
+    {
+      _user = (await AuthenticationState).User;
+    }
+
+    // Nobody to sign out: the sign-in page, with no return address, so signing in does not come back here to sign out.
+    if (!_user.Identities.Any(identity => identity.IsAuthenticated))
+    {
+      Navigation.NavigateTo(SignInOutcome.PagePath);
+    }
+  }
+}

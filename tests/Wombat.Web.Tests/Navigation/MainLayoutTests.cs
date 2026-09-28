@@ -39,7 +39,8 @@ public sealed partial class MainLayoutTests : TestContext
         var cut = RenderSignedIn([WombatRoles.Assessor], new Claim(WombatClaimTypes.DisplayName, "Mohammed Patel"));
 
         var form = cut.FindAll("form").Should().ContainSingle("one Sign out, placed by CSS at both widths (D9)").Which;
-        form.GetAttribute("action").Should().Be("/account/logout");
+        form.GetAttribute("action").Should().Be("/account/logout/submit",
+            "the page is /account/logout; its post moved beside it, as every account form's (T339, flow 02, B1)");
         form.GetAttribute("method").Should().Be("post");
         form.ParentElement!.ClassList.Should().Contain("account-row");
         form.QuerySelector("button[type=submit]")!.TextContent.Trim().Should().Be("Sign out");

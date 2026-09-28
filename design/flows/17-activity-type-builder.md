@@ -424,8 +424,9 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - muted text on the page background;
   - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
     each state as plain text);
-  - a success alert (save My account, the name in the top bar, unchanged: "Profile saved.") and a danger alert (Change
-    password with a confirmation that differs, which checks no password and changes nothing);
+  - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
+    alert (Change password with a confirmation that differs, which checks no password and changes nothing);
+  - a password field's Show toggle, pressed (white on the action blue, 4.86:1);
   - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
     not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
   - the focus ring on white and on the page background;

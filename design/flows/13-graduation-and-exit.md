@@ -499,8 +499,8 @@ Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /account/session-ended → /account/login
 Do: Go back to the tab left open at Step 5.15 and wait up to a minute.
 Expect: Removing her role changed her account's security stamp. The session check, which runs once a minute, ends the
-  session: the tab reloads to the sign-in page, which says "Your session has ended. Please sign in again." Nothing
-  she had open still acts as a Trainee.
+  session: the tab reloads to the sign-in page, which says "Your session has ended. Sign in again.", an information
+  notice. Nothing she had open still acts as a Trainee.
 
 Step 5.20 — Dr Molefe signs in again and reads her record (act-5-graduation.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
@@ -654,6 +654,6 @@ Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
 Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
   its hash.
-Expect: The sign-in card fits the width, and its fields and buttons are easy to tap. The verify page's result fits
-  the width.
+Expect: The sign-in card fits the width. Every field, toggle, button and link on the sign-in and forgot pages is
+  44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's result fits the width.
 ```

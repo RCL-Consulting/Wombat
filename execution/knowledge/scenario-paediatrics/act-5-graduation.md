@@ -468,8 +468,8 @@ Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /account/session-ended → /account/login
 Do: Go back to the tab left open at Step 5.15 and wait up to a minute.
 Expect: Removing her role changed her account's security stamp. The session check, which runs once a minute, ends the
-  session: the tab reloads to the sign-in page, which says "Your session has ended. Please sign in again." Nothing
-  she had open still acts as a Trainee.
+  session: the tab reloads to the sign-in page, which says "Your session has ended. Sign in again.", an information
+  notice. Nothing she had open still acts as a Trainee.
 Actual (2026-09-27, T335 replay, wombat_scenario_t335): The tab held open since Step 5.15 was on /portfolio/progress
   when Mark complete ran (15:12:25 UTC); about a second later it reloaded to
   /account/login?error=SessionEnded&returnUrl=%2Fportfolio%2Fprogress, reading "Your session has ended. Please sign in

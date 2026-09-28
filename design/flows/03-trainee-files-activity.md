@@ -403,7 +403,7 @@ describes the product as it is today. `D` is the replay day and `J` the programm
 § The clock in this act).
 
 ```text
-Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:709)
+Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:718)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new
 Do: Open the Activity type select and read its options. Choose each in turn to see what it rates, and save nothing.
@@ -414,7 +414,7 @@ Expect: Eleven options besides "Select…", no name twice: Case-Based Discussion
   Feedback (Paediatrics) are not offered, because only the system writes them (T162, T164). Nor are the Demo types,
   which belong to another discipline.
 
-Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:725)
+Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:734)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new
 Do: Open `/activities/new?type=mini_cex_cpsa`. Read the EPA and Assessor pickers, then leave without saving.
@@ -690,14 +690,14 @@ Do: File two Mini-CEX (Paediatrics) activities, each with every request field fi
 Expect: The first reads "Draft saved. It has not been submitted." The second reads "Submitted. It is now Requested.",
   and is in Dr Khumalo's inbox. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 
-Step A.6.6 — Dr Patel cannot be named as an assessor while locked (appendix-cross-cutting.md:901)
+Step A.6.6 — Dr Patel cannot be named as an assessor while locked (appendix-cross-cutting.md:916)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new
 Do: Start a Mini-CEX (Paediatrics) and open its assessor list. Then leave without saving.
 Expect: KGK's other assessors are listed (Dr Zulu, Dr Naidoo, Dr Botha and Dr Khumalo), but not Dr Patel, and never
   herself (T102). Nothing is saved.
 
-Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone (appendix-cross-cutting.md:974)
+Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone (appendix-cross-cutting.md:989)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/{ActivityId:int}
 Do: At desktop width, using only Tab, Shift+Tab, the arrow keys, Space and Enter, file a Mini-CEX (Paediatrics):

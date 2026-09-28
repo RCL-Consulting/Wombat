@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -107,6 +108,9 @@ builder.Services.AddHealthChecks()
 // check: a rate-limiter policy counts a request before the endpoint runs, and cannot tell a failure from a success.
 builder.Services.AddSingleton<SignInThrottle>();
 
+// SignInTiming, the password check that checks nothing so a refused sign-in takes as long whatever refused it (T339,
+// flow 02, E5), is registered by AddInfrastructure: the link page's handler uses it too.
+
 builder.Services.AddRateLimiter(options =>
 {
     // The MSF respondent page (/msf/respond): ten requests a minute for one link from one address, and
@@ -203,6 +207,7 @@ app.MapPost("/account/login/submit", async (
     UserManager<WombatIdentityUser> userManager,
     IAuditWriter auditWriter,
     SignInThrottle throttle,
+    SignInTiming timing,
     HttpContext httpContext,
     [FromForm] LoginRequest request) =>
 {
@@ -223,22 +228,37 @@ app.MapPost("/account/login/submit", async (
     var ua = httpContext.Request.Headers.UserAgent.ToString() is { Length: > 0 } s ? s : null;
 
     // The words are the page's, which point at the institutional sign-in button where the page offers one
-    // (SignInMessages.Refused).
+    // (SignInMessages.Refused). A wrong password, an address no account has, an account that signs in only through its
+    // institution and a locked account are all sent here, to the same address, and each after one password check's time
+    // (T287 and its timing half, T339, flow 02, E5): neither the address nor a stopwatch says which it was.
     var refused = SignInOutcome.Url(SignInOutcome.Refused, request.ReturnUrl);
+
+    // An address no account has: Identity would find no user and answer at once, before any password check.
+    var loginUser = await userManager.FindByEmailAsync(request.Email.Trim());
+    if (loginUser is null)
+    {
+        timing.Equalize(userManager.PasswordHasher, request.Password);
+        await WriteLoginFailedAsync(auditWriter, ip, ua);
+        return Results.LocalRedirect(refused);
+    }
 
     // An account that signs in only through its institution has no password to check, and a check could only count
     // failures towards a lockout that would block its SSO sign-in too. It is refused as an address no account has is, in
     // the same words and with the same audit row: telling it apart would say which addresses have accounts, and how they
     // sign in (T156).
-    var loginUser = await userManager.FindByEmailAsync(request.Email.Trim());
-    if (loginUser is not null && !loginUser.AllowLocalPassword)
+    if (!loginUser.AllowLocalPassword)
     {
+        timing.Equalize(userManager.PasswordHasher, request.Password);
         await WriteLoginFailedAsync(auditWriter, ip, ua);
         return Results.LocalRedirect(refused);
     }
 
+    // Identity answers an account that is locked already before it checks the password; the attempt that trips the lock
+    // has checked one. So only the first costs nothing, and is made to.
+    var lockedBefore = await userManager.IsLockedOutAsync(loginUser);
+
     var result = await signInManager.PasswordSignInAsync(
-        request.Email.Trim(),
+        loginUser,
         request.Password,
         request.RememberMe,
         lockoutOnFailure: true);
@@ -247,8 +267,8 @@ app.MapPost("/account/login/submit", async (
     {
         attempt.Release();
 
-        var user = await userManager.FindByEmailAsync(request.Email.Trim());
-        var display = user is not null ? $"{user.FirstName} {user.LastName}".Trim() : null;
+        var user = loginUser;
+        var display = $"{user.FirstName} {user.LastName}".Trim();
 
         // Stamped so an InstitutionalAdmin keeps sight of their own users' sign-ins. T101 removed
         // the "null institution means everyone may read it" catch-all from the audit queries, so an
@@ -260,11 +280,11 @@ app.MapPost("/account/login/submit", async (
             category: AuditCategory.Authentication,
             action: "Login",
             success: true,
-            actorUserId: user?.Id,
+            actorUserId: user.Id,
             actorDisplay: display,
             actorIpAddress: ip,
             actorUserAgent: ua,
-            institutionId: user?.InstitutionId));
+            institutionId: user.InstitutionId));
 
         // Followed only when it is a path on this site. Until T335 the test was Uri.TryCreate(…, Relative), which passes
         // //evil.example and /\evil.example: LocalRedirect then threw, and the sign-in answered 500 (LocalUrl). The
@@ -273,11 +293,16 @@ app.MapPost("/account/login/submit", async (
     }
     else if (result.IsLockedOut)
     {
-        // Distinguished in the audit log so an admin can see a lockout trip. The reply names no account, but it is not
-        // the reply an unknown address gets, so it does say one exists: Identity answers a locked account before it
-        // checks a password, so an account an administrator has deactivated gets it at the first try, and an active one
-        // after five wrong guesses. An unknown or institutional address never does. Left so, knowingly (T156 review):
-        // whether a locked-out person is told so is its own decision.
+        if (lockedBefore)
+        {
+            timing.Equalize(userManager.PasswordHasher, request.Password);
+        }
+
+        // Distinguished in the audit log so an admin can see a lockout trip. The reply is a wrong password's, words and
+        // address alike (T287, T339, flow 02, the round 2 review's A1 and A2). Until T339 it was a code of its own, which
+        // said an account existed: Identity answers a locked account before it checks a password, so an account an
+        // administrator has deactivated got it at the first try, and an active one after five wrong guesses, while an
+        // unknown or institutional address never did.
         //
         // Stamped, unlike LoginFailed below. A lockout only trips on an account that exists, and it
         // can only ever be that account's own institution — so naming the locked-out user to their
@@ -289,17 +314,21 @@ app.MapPost("/account/login/submit", async (
             category: AuditCategory.Authentication,
             action: "LoginLockedOut",
             success: false,
-            actorUserId: loginUser?.Id,
-            actorDisplay: loginUser is not null ? $"{loginUser.FirstName} {loginUser.LastName}".Trim() : null,
+            actorUserId: loginUser.Id,
+            actorDisplay: $"{loginUser.FirstName} {loginUser.LastName}".Trim(),
             actorIpAddress: ip,
             actorUserAgent: ua,
-            institutionId: loginUser?.InstitutionId,
+            institutionId: loginUser.InstitutionId,
             errorMessage: "Account locked after repeated failed sign-in attempts."));
 
-        return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.LockedOut, request.ReturnUrl));
+        return Results.LocalRedirect(refused);
     }
     else
     {
+        // A wrong password has also written the account's failed-attempt count (AccessFailedAsync), one database write
+        // the refusals above do not make: a residual timing difference, far smaller than the hash, and accepted (the
+        // review of the t339 branch; SignInTiming's remarks).
+        //
         // Record failed login without leaking whether the user account exists.
         await WriteLoginFailedAsync(auditWriter, ip, ua);
 
@@ -503,6 +532,9 @@ app.MapPost("/account/link-external/submit", async (
 app.MapPost(ChangePasswordOutcome.SubmitPath, async (
     SignInManager<WombatIdentityUser> signInManager,
     UserManager<WombatIdentityUser> userManager,
+    IAuditWriter auditWriter,
+    TimeProvider clock,
+    IOptions<IdentityOptions> identityOptions,
     ILoggerFactory loggerFactory,
     SignInThrottle throttle,
     HttpContext httpContext,
@@ -543,6 +575,16 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
             return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.InstitutionalSignIn]));
         }
 
+        // An account locked already, by someone else's guesses at the sign-in page, say: Identity would answer the check
+        // below with a lockout without checking the password, and this session would be taken for the one that guessed.
+        // It is refused here, and nothing changes: no password is read, the throttle counts nothing, and the session goes
+        // on (PasswordCheckLockout; the review of the t339 branch).
+        if (await PasswordCheckLockout.LockedForAsync(userManager, user, clock, identityOptions.Value.Lockout.DefaultLockoutTimeSpan)
+            is { } lockedFor)
+        {
+            return Results.LocalRedirect(ChangePasswordOutcome.LockedUrl(lockedFor));
+        }
+
         // The sign-in throttle, as the sign-in and link pages apply it: ten failed password checks in five minutes from one
         // address, shared with them. A refusal comes back to this page, which says why (T265, T156).
         var attempt = throttle.Begin(httpContext);
@@ -552,16 +594,25 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
             return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.TooManyAttempts]));
         }
 
-        // A locked account's password is not checked at all, and a fifth wrong one locks it.
+        // The fifth wrong one locks the account.
         var check = await signInManager.CheckPasswordSignInAsync(user, request.CurrentPassword, lockoutOnFailure: true);
         if (check.Succeeded)
         {
             attempt.Release();
         }
 
+        // The lock ends the session that guessed, as well as the sign-ins to come, and the sign-in page says why (T339,
+        // flow 02, E2). Until T339 the page said the account was locked, and the session went on: a stolen cookie could wait
+        // the lock out and guess five more. Signing this browser out would not stop that, since a copy of the cookie still
+        // carries the account's stamp, so the stamp is changed: every session of the account ends at the stamp validator's
+        // next look, as an administrator's lock ends them. The account was not locked before this check, so the lock is
+        // this request's (PasswordCheckLockout).
         if (check.IsLockedOut)
         {
-            return Results.LocalRedirect(ChangePasswordOutcome.RefusedUrl([ChangePasswordOutcome.LockedOut]));
+            await PasswordCheckLockout.EndSessionsAsync(
+                httpContext, signInManager, userManager, auditWriter,
+                loggerFactory.CreateLogger(ChangePasswordOutcome.LogCategory), user, PasswordCheckLockout.ChangePasswordAction);
+            return Results.LocalRedirect(SignInOutcome.Url(ChangePasswordOutcome.LockedSignedOut));
         }
 
         if (!check.Succeeded)
@@ -599,6 +650,7 @@ app.MapPost(ChangePasswordOutcome.SubmitPath, async (
         loggerFactory.CreateLogger(ChangePasswordOutcome.LogCategory)
             .LogError(exception, "A password was changed, but the sign-in cookie could not be issued again.");
         await signInManager.SignOutAsync();
+        ActingRoleSwitchResults.Forget(httpContext);
         return Results.LocalRedirect(SignInOutcome.Url(SignInOutcome.PasswordChanged));
     }
 
@@ -628,9 +680,13 @@ app.MapPost(ProfileOutcome.SubmitPath, async (
 {
     var firstName = request.FirstName?.Trim() ?? string.Empty;
     var lastName = request.LastName?.Trim() ?? string.Empty;
+    // The blank field by name, so the page marks it and keeps the other as stored (T339, flow 02); both blank, both.
     if (firstName.Length == 0 || lastName.Length == 0)
     {
-        return Results.LocalRedirect(ProfileOutcome.RefusedUrl(ProfileOutcome.NameMissing));
+        return Results.LocalRedirect(ProfileOutcome.RefusedUrl(
+            firstName.Length == 0 && lastName.Length == 0 ? ProfileOutcome.NameMissing
+            : firstName.Length == 0 ? ProfileOutcome.FirstNameMissing
+            : ProfileOutcome.LastNameMissing));
     }
 
     if (firstName.Length > ProfileOutcome.MaxNameLength || lastName.Length > ProfileOutcome.MaxNameLength)
@@ -675,6 +731,9 @@ app.MapPost(ProfileOutcome.SubmitPath, async (
 })
 .RequireAuthorization();
 
+// My account's Remove of an institutional sign-in (T339, flow 02): SignInMethodEndpoints.
+app.MapSignInMethodEndpoints();
+
 // Where a tab goes, by a full page load, once its circuit's sign-in has ended (SessionEnd, the T279 review): a session the
 // account no longer accepts is signed out here, whatever the cookie's age, and sent to the sign-in page, which loads
 // signed out and says the session has ended; a session the account still accepts goes back to the page it was on. Open to
@@ -686,11 +745,34 @@ app.MapGet(SessionEnd.Path, (
     [FromQuery] string? returnUrl) => SessionEnd.HandleAsync(httpContext, signInManager, loggerFactory, returnUrl))
 .AllowAnonymous();
 
-app.MapPost("/account/logout", async (
+// The sign-out page's form and the shell's Sign out post here (SignOutOutcome, T339, flow 02, B1). Not to the page's own
+// address: a Razor component's address answers POST as well as GET, so the page could not also be /account/logout while
+// the post was mapped there. Signing out lands on the sign-in page, which says so.
+//
+// The antiforgery token is required of a signed-in request (E6): without it a page that could send the sign-in cookie
+// could sign a Wombat user out with a form of its own. A request that arrives not signed in is only redirected, to where
+// signing out lands, and changes nothing: no sign-out, no cookie deleted. That is a tab whose session has ended already
+// (a cookie the stamp validator refuses, it clears itself), whose token names someone the request no longer does; but it is
+// also another site's auto-submitted form, since the sign-in cookie is SameSite=Lax and a browser does not send it on a
+// cross-site POST. Until the review of the t339 branch this branch called SignOutAsync, whose Set-Cookie deletions the
+// browser applies whether or not it sent the cookies: any site could sign a Wombat user out, and end a link in progress by
+// deleting the external cookie, with no token at all.
+app.MapPost(SignOutOutcome.SubmitPath, async (
     SignInManager<WombatIdentityUser> signInManager,
     IAuditWriter auditWriter,
+    IAntiforgery antiforgery,
     HttpContext httpContext) =>
 {
+    if (!httpContext.User.Identities.Any(identity => identity.IsAuthenticated))
+    {
+        return Results.LocalRedirect(SignOutOutcome.SignedOutUrl);
+    }
+
+    if (!await antiforgery.IsRequestValidAsync(httpContext))
+    {
+        return Results.BadRequest();
+    }
+
     var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     var display = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
     // Read BEFORE SignOutAsync — afterwards the principal is gone and the row would be unstamped,
@@ -713,8 +795,9 @@ app.MapPost("/account/logout", async (
         actorIpAddress: TruncateLoginIp(httpContext.Connection.RemoteIpAddress),
         institutionId: institutionId));
 
-    return Results.LocalRedirect("/account/login");
-});
+    return Results.LocalRedirect(SignOutOutcome.SignedOutUrl);
+})
+.AllowAnonymous();
 
 app.MapGet("/account/data-rights/download/{id:guid}", async (
     Guid id,
@@ -801,23 +884,7 @@ static Task WriteLoginFailedAsync(IAuditWriter auditWriter, string? ip, string? 
 
 // The address an audit row keeps: its /24 (IPv6: its /48), never the whole of it. The sign-in throttle counts the whole
 // address (ClientAddress), in memory only.
-static string? TruncateLoginIp(System.Net.IPAddress? address)
-{
-    if (address is null) return null;
-    if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-    {
-        var bytes = address.GetAddressBytes();
-        bytes[3] = 0;
-        return new System.Net.IPAddress(bytes).ToString() + "/24";
-    }
-    if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-    {
-        var bytes = address.GetAddressBytes();
-        for (int i = 6; i < 16; i++) bytes[i] = 0;
-        return new System.Net.IPAddress(bytes).ToString() + "/48";
-    }
-    return address.ToString();
-}
+static string? TruncateLoginIp(System.Net.IPAddress? address) => PasswordCheckLockout.AuditAddress(address);
 
 static string GetLandingPath(string role)
     => string.Equals(role, WombatRoles.Administrator, StringComparison.Ordinal)

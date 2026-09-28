@@ -39,10 +39,17 @@ public static class ExternalLoginRefusal
     /// <summary>The institutional sign-in is linked to an account already.</summary>
     public const string AlreadyLinked = "SsoAlreadyLinked";
 
-    /// <summary>Every refused link but a lockout: a wrong password, no account, another institution's (T149).</summary>
+    /// <summary>
+    /// Every refused link, a lockout included since T339 (T287): a wrong password, no account, another institution's
+    /// account, one that signs in only through its institution, and a locked one (T149). Each costs one password check's
+    /// time (<see cref="SignInTiming" />).
+    /// </summary>
     public const string LinkRefused = "SsoLinkRefused";
 
-    /// <summary>The account's lockout refused the link's password check.</summary>
+    /// <summary>
+    /// The account's lockout refused the link's password check. Not sent since T339: a lockout is sent as
+    /// <see cref="LinkRefused" />, in the same words (T287). A link that still carries it reads as that does.
+    /// </summary>
     public const string LinkLockedOut = "SsoLinkLockedOut";
 
     /// <summary>The link could not be saved, for a reason that is not the person's to put right.</summary>

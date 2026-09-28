@@ -24,6 +24,7 @@ public sealed class ExternalLoginHandler
     private readonly SsoGroupMapper _groupMapper;
     private readonly IAuditWriter _auditWriter;
     private readonly IOptions<SsoOptions> _ssoOptions;
+    private readonly SignInTiming _timing;
     private readonly ILogger<ExternalLoginHandler> _logger;
 
     public ExternalLoginHandler(
@@ -33,6 +34,7 @@ public sealed class ExternalLoginHandler
         SsoGroupMapper groupMapper,
         IAuditWriter auditWriter,
         IOptions<SsoOptions> ssoOptions,
+        SignInTiming timing,
         ILogger<ExternalLoginHandler> logger)
     {
         _userManager = userManager;
@@ -41,6 +43,7 @@ public sealed class ExternalLoginHandler
         _groupMapper = groupMapper;
         _auditWriter = auditWriter;
         _ssoOptions = ssoOptions;
+        _timing = timing;
         _logger = logger;
     }
 
@@ -50,18 +53,32 @@ public sealed class ExternalLoginHandler
     /// </summary>
     internal const string LinkRefusedMessage = "The account could not be linked. Check your password and try again.";
 
-    internal const string LinkLockedOutMessage =
-        "Too many failed attempts. Please try again later or reset your password.";
+    /// <summary>
+    /// What a link refused by the account's lockout says: the same as any other refused link, so the lockout says nothing
+    /// about the account either (T287 in T339, flow 02). No link is sent it since T339: the lockout is sent as
+    /// <see cref="ExternalLoginRefusal.LinkRefused" />, and only the audit row tells the two apart.
+    /// </summary>
+    internal const string LinkLockedOutMessage = LinkRefusedMessage;
 
-    internal const string LockedOutMessage = "This account is locked. Contact your administrator.";
+    /// <summary>
+    /// What an institutional sign-in to a deactivated account says (T149). Only someone the provider has verified reaches
+    /// it; it says no more than that Wombat did not sign them in, and who can help (T339, flow 02, E1). Until T339 it said
+    /// "This account is locked."
+    /// </summary>
+    internal const string LockedOutMessage =
+        "Wombat could not sign you in through your institution. Contact your administrator.";
 
-    internal const string UnknownProviderMessage = "Unknown SSO provider.";
+    internal const string UnknownProviderMessage =
+        "That institution's sign-in is not set up in Wombat. Sign in with your email and password.";
 
-    internal const string NoEmailMessage = "The identity provider did not supply an email address.";
+    internal const string NoEmailMessage =
+        "Your institution's sign-in did not give Wombat your email address, so Wombat cannot find your account. Sign in " +
+        "with your email and password, or ask your administrator for help.";
 
     internal const string AlreadyLinkedMessage = "This institutional sign-in is already linked to an account.";
 
-    internal const string LinkFailedMessage = "Linking failed.";
+    /// <summary>The link could not be saved: nothing the person did wrong, so it says to try again later (T339, flow 02).</summary>
+    internal const string LinkFailedMessage = "Your institutional sign-in could not be linked this time. Try again later.";
 
     internal const string AdministratorMessage =
         "An administrator account signs in with its password, not through institutional sign-in.";
@@ -290,9 +307,14 @@ public sealed class ExternalLoginHandler
             return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.AlreadyLinked };
         }
 
+        // From here every refusal reads as a wrong password's, and costs what one costs: a hash of the password typed
+        // (SignInTiming; T287's timing half, as the sign-in page's, the review of the t339 branch). Until then no account,
+        // another institution's account, an institution-only account and a locked one answered with no hash, sooner than a
+        // wrong password, so a stopwatch told them apart.
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null || user.InstitutionId != providerConfig.InstitutionId)
         {
+            _timing.Equalize(_userManager.PasswordHasher, password);
             // Unstamped, like the local login's failure: stamping would say which institution the address belongs to.
             await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user: null, ipAddress, userAgent,
                 "No account in the provider's institution for the asserted email.");
@@ -304,6 +326,7 @@ public sealed class ExternalLoginHandler
         // that asserts its email lock it out. The message is the same as a wrong password's.
         if (!user.AllowLocalPassword)
         {
+            _timing.Equalize(_userManager.PasswordHasher, password);
             await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user: null, ipAddress, userAgent,
                 "The account the provider's email names has no local password to prove ownership with.");
             return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.LinkRefused };
@@ -316,14 +339,26 @@ public sealed class ExternalLoginHandler
             return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.Administrator };
         }
 
+        // Identity answers an account that is locked already before it checks the password; the attempt that trips the
+        // lock has checked one. So only the first costs nothing, and is made to, as on the sign-in page.
+        var lockedBefore = await _userManager.IsLockedOutAsync(user);
         var check = await _signInManager.CheckPasswordSignInAsync(user, password ?? string.Empty, lockoutOnFailure: true);
         if (check.IsLockedOut)
         {
+            if (lockedBefore)
+            {
+                _timing.Equalize(_userManager.PasswordHasher, password);
+            }
+
+            // Its own audit action, so an administrator sees the lockout, but the refusal a wrong password gets: the address
+            // the page is sent to says nothing about the account (T287 in T339, flow 02; the round 2 review's A1, A2).
             await WriteLinkAuditAsync("SsoAccountLinkLockedOut", success: false, user, ipAddress, userAgent,
                 "Account locked; the link was refused.");
-            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.LinkLockedOut };
+            return new ExternalLoginResult { ErrorCode = ExternalLoginRefusal.LinkRefused };
         }
 
+        // A wrong password has also written the account's failed-attempt count, one database write the refusals above do
+        // not make: a residual timing difference, far smaller than the hash, and accepted (SignInTiming's remarks).
         if (!check.Succeeded)
         {
             await WriteLinkAuditAsync("SsoAccountLinkFailed", success: false, user: null, ipAddress, userAgent,

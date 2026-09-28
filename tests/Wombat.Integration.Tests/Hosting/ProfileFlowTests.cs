@@ -57,19 +57,21 @@ public sealed class ProfileFlowTests : IClassFixture<MsfRespondPageFlowTests.Web
         var after = await LoadAsync(browser, "/account/profile?status=saved");
         AccountRowName(after).Should().Be("Thandeka Zulu-Mokoena", "the account row reads the new cookie's claim");
         after.QuerySelector(".account-row a.account-link")!.GetAttribute("title").Should().Be("Thandeka Zulu-Mokoena");
-        after.QuerySelector(".action-result .alert-success")!.TextContent.Trim().Should().Be("Profile saved.");
+        after.QuerySelector(".action-result .alert-success")!.TextContent.Trim().Should().Be("Name saved.", "T339, E10");
         after.QuerySelector("#profile-first-name")!.GetAttribute("value").Should().Be("Thandeka", "stored trimmed");
 
         AccountRowName(await LoadAsync(browser, "/")).Should().Be("Thandeka Zulu-Mokoena", "and on every page after it");
         (await StoredAsync(account.Id)).Should().Be(("Thandeka", "Zulu-Mokoena"));
     }
 
+    // T339 (flow 02): the blank field by name, so the page marks it alone and keeps the other; both blank, both.
     [Theory]
-    [InlineData("", "Zulu", "NameMissing")]
-    [InlineData("Thandeka", "   ", "NameMissing")]
-    [InlineData("Thandeka", null, "NameMissing")]
-    [InlineData(null, "Zulu", "NameMissing")]
-    public async Task ANameLeftBlank_IsRefused_AsACode_AndNothingIsSaved(string? firstName, string? lastName, string code)
+    [InlineData("", "Zulu", "FirstNameMissing", "Your name was not saved. Enter your first name.")]
+    [InlineData(null, "Zulu", "FirstNameMissing", "Your name was not saved. Enter your first name.")]
+    [InlineData("Thandeka", "   ", "LastNameMissing", "Your name was not saved. Enter your last name.")]
+    [InlineData("Thandeka", null, "LastNameMissing", "Your name was not saved. Enter your last name.")]
+    [InlineData(" ", null, "NameMissing", "Your name was not saved. Enter your first name and your last name.")]
+    public async Task ANameLeftBlank_IsRefused_AsACode_AndNothingIsSaved(string? firstName, string? lastName, string code, string words)
     {
         var account = await _host.CreateAssessorAsync(NewEmail());
         using var browser = NewBrowser();
@@ -79,8 +81,25 @@ public sealed class ProfileFlowTests : IClassFixture<MsfRespondPageFlowTests.Web
 
         save.Headers.Location!.ToString().Should().Be($"/account/profile?error={code}");
         var page = await LoadAsync(browser, save.Headers.Location.ToString());
-        page.QuerySelector(".action-result .alert-danger")!.TextContent.Trim().Should().Be("Enter your first name and your last name.");
+        page.QuerySelector(".action-result .alert-danger")!.TextContent.Trim().Should().Be(words);
         (await StoredAsync(account.Id)).Should().Be(("Signed", "Assessor"));
+    }
+
+    // Change password redirects here with ?status=password-updated (T339: lane A's ChangePasswordOutcome.UpdatedUrl);
+    // the page says so under its header, in its own words, and the result is focused by the circuit, not autofocused.
+    [Fact]
+    public async Task PasswordUpdated_IsSaidUnderTheHeader()
+    {
+        var account = await _host.CreateAssessorAsync(NewEmail());
+        using var browser = NewBrowser();
+        await SignInAsync(browser, account.Email!);
+
+        var page = await LoadAsync(browser, "/account/profile?status=password-updated");
+
+        var done = page.QuerySelector(".my-account > .action-result .alert-success");
+        done.Should().NotBeNull("under the header, above the cards");
+        done!.TextContent.Trim().Should().Be("Password updated.");
+        done.ParentElement!.GetAttribute("tabindex").Should().Be("-1", "the circuit moves the focus to it once it has drawn the page");
     }
 
     [Fact]

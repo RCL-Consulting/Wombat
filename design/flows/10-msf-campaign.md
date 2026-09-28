@@ -595,12 +595,14 @@ Expect: One programme: "Paediatric EPA Curriculum 11.1 at Kgosi Kgari Teaching H
 
 Step A.4.7 — Mr Smit signs out through the confirmation page
 Role: Coordinator — Mr Pieter Smit
-Route: /account/logout-confirm → / → /account/logout-confirm → /account/logout → /account/login → /msf/campaigns → /account/login → /msf/campaigns
-Do: Open the sign-out confirmation by its address and press Cancel. Open it again and sign out. Then open MSF
-  campaigns by its address.
-Expect: A "Sign out" page, with no nav, says to use its button to end the session. Cancel returns him to his
-  dashboard, still signed in. Sign out lands on the sign-in page. MSF campaigns then asks him to sign in, and after
-  signing in he is brought back to it. The audit log records a Logout.
+Route: /account/logout-confirm → / → /account/logout → / → /account/logout-confirm → /account/logout/submit → /account/login → /msf/campaigns → /account/login → /msf/campaigns
+Do: Open the sign-out confirmation by its address and press Cancel. Type `/account/logout` and press Cancel. Open the
+  confirmation again and sign out. Then open MSF campaigns by its address.
+Expect: A "Sign out" page, with no nav: "You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends
+  your session in this browser.", with Cancel and Sign out. Cancel returns him to his dashboard, still signed in. A
+  typed GET /account/logout draws the same page and signs nobody out (T317). Sign out lands on the sign-in page with
+  "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it. The
+  audit log records a Logout.
 
 Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit

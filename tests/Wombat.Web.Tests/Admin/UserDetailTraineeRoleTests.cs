@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
@@ -119,6 +120,8 @@ public sealed class UserDetailTraineeRoleTests : TestContext
         JSInterop.Mode = JSRuntimeMode.Loose;
 
         Services.AddSingleton<IScopedSender>(new FakeSender(user));
+        // PasswordField reads it (T339, flow 02): this page is interactive, so its toggles are the circuit's.
+        SetRendererInfo(new RendererInfo("Server", isInteractive: true));
         var cut = RenderComponent<UserDetail>(parameters => parameters.Add(page => page.UserId, user.UserId));
         cut.WaitForState(() => cut.FindAll("#add-role-select").Count == 1);
         return cut;

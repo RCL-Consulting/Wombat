@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Options;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
 
@@ -8,13 +10,25 @@ namespace Wombat.Infrastructure.Identity;
 
 public sealed class UserAdministrationService : IUserAdministrationService
 {
+    /// <summary>The first words of a refused reset, before what was wrong with the password (T339, flow 02, E11).</summary>
+    internal const string ResetRefusedMessage = "The password was not reset.";
+
     private readonly UserManager<WombatIdentityUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
+    private readonly IOptions<SsoOptions>? _ssoOptions;
 
-    public UserAdministrationService(UserManager<WombatIdentityUser> userManager, ApplicationDbContext dbContext)
+    /// <param name="ssoOptions">
+    /// The configured providers, whose names an institutional sign-in is shown by (T339). Optional, so the tests that make
+    /// the service by hand need not pass it: without it a sign-in is named as it was stored when it was linked.
+    /// </param>
+    public UserAdministrationService(
+        UserManager<WombatIdentityUser> userManager,
+        ApplicationDbContext dbContext,
+        IOptions<SsoOptions>? ssoOptions = null)
     {
         _userManager = userManager;
         _dbContext = dbContext;
+        _ssoOptions = ssoOptions;
     }
 
     public async Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
@@ -177,6 +191,106 @@ public sealed class UserAdministrationService : IUserAdministrationService
         return results;
     }
 
+    public async Task<AccountSignInMethods?> GetSignInMethodsAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var account = await _dbContext.Users
+            .AsNoTracking()
+            .Where(entity => entity.Id == userId)
+            .Select(entity => new { entity.AllowLocalPassword, HasPassword = entity.PasswordHash != null })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (account is null)
+        {
+            return null;
+        }
+
+        var logins = await _dbContext.UserLogins
+            .AsNoTracking()
+            .Where(login => login.UserId == userId)
+            .ToListAsync(cancellationToken);
+
+        // Each provider once: an account holds at most one subject a provider asserts (ExternalLoginHandler refuses a
+        // second link), and a removal names the provider, not the subject.
+        var signIns = logins
+            .GroupBy(login => login.LoginProvider, StringComparer.Ordinal)
+            .Select(group => new InstitutionalSignIn(group.Key, DisplayNameOf(group.First())))
+            .OrderBy(signIn => signIn.DisplayName, StringComparer.CurrentCulture)
+            .ThenBy(signIn => signIn.Provider, StringComparer.Ordinal)
+            .ToList();
+
+        return new AccountSignInMethods(account.AllowLocalPassword && account.HasPassword, signIns);
+    }
+
+    /// <summary>
+    /// The guard and the removal, in that order (T339, flow 02; the round 2 review's B-D6). The account is read before its
+    /// logins, and <see cref="UserManager{TUser}.RemoveLoginAsync" /> saves the removal with the account's new security
+    /// stamp against the concurrency stamp read here. So a removal another tab saved before the logins were read is seen by
+    /// the count, and one saved after the account was read fails the save: two tabs cannot each leave the other's sign-in
+    /// as the last way in and then remove it too.
+    /// </summary>
+    public async Task<InstitutionalSignInRemoval> RemoveInstitutionalSignInAsync(
+        string userId,
+        string provider,
+        CancellationToken cancellationToken = default)
+    {
+        // Tracked: in a request that has already read the account (the endpoint's session check), this is that instance,
+        // so the concurrency stamp is the one read first.
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new InvalidOperationException("The user could not be found.");
+
+        var logins = await _dbContext.UserLogins
+            .AsNoTracking()
+            .Where(login => login.UserId == userId)
+            .ToListAsync(cancellationToken);
+
+        var target = logins.FirstOrDefault(login => string.Equals(login.LoginProvider, provider, StringComparison.Ordinal));
+        if (target is null)
+        {
+            return InstitutionalSignInRemoval.NotLinked;
+        }
+
+        // The last way in: a password that cannot sign the account in (AllowLocalPassword false, as the sign-in endpoint
+        // refuses it) is no way in, whatever the row holds.
+        var hasPassword = user.AllowLocalPassword && user.PasswordHash is not null;
+        if (!hasPassword && logins.Count(login => !ReferenceEquals(login, target)) == 0)
+        {
+            return InstitutionalSignInRemoval.LastWayIn;
+        }
+
+        var result = await _userManager.RemoveLoginAsync(user, target.LoginProvider, target.ProviderKey);
+        if (result.Succeeded)
+        {
+            return InstitutionalSignInRemoval.Removed;
+        }
+
+        // Identity's store catches the concurrency conflict and answers a failed result, leaving the login's deletion and
+        // the account's new stamps staged. The handler throws on this answer, and the audit pipeline's row would send them
+        // again (T201): take them back, and read the account as it now stands.
+        foreach (var entry in _dbContext.ChangeTracker.Entries<IdentityUserLogin<string>>()
+                     .Where(entry => entry.Entity.UserId == userId && entry.State == EntityState.Deleted)
+                     .ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
+
+        await _dbContext.Entry(user).ReloadAsync(cancellationToken);
+        return InstitutionalSignInRemoval.Conflict;
+    }
+
+    /// <summary>
+    /// The provider's name as configured now, else as it was stored when the sign-in was linked, else its key: a provider
+    /// renamed in configuration is shown by its new name.
+    /// </summary>
+    private string DisplayNameOf(IdentityUserLogin<string> login)
+    {
+        var configured = _ssoOptions?.Value.Providers
+            .FirstOrDefault(provider => string.Equals(provider.Key, login.LoginProvider, StringComparison.Ordinal))?
+            .DisplayName;
+
+        return !string.IsNullOrWhiteSpace(configured) ? configured
+            : !string.IsNullOrWhiteSpace(login.ProviderDisplayName) ? login.ProviderDisplayName
+            : login.LoginProvider;
+    }
+
     public async Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
     {
         var user = await _dbContext.Users.SingleOrDefaultAsync(entity => entity.Id == userId, cancellationToken)
@@ -331,7 +445,7 @@ public sealed class UserAdministrationService : IUserAdministrationService
         var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
         if (!result.Succeeded)
         {
-            throw new InvalidOperationException(string.Join("; ", result.Errors.Select(error => error.Description)));
+            throw new InvalidOperationException(ResetRefusal(result.Errors));
         }
 
         await _userManager.UpdateSecurityStampAsync(user);
@@ -358,6 +472,37 @@ public sealed class UserAdministrationService : IUserAdministrationService
         }
 
         await _userManager.UpdateSecurityStampAsync(user);
+    }
+
+    /// <summary>
+    /// What the administrator's reset card says when Identity refuses the new password: that it was not reset, then each
+    /// rule broken, once, in the one order the rules are always listed in, under their one heading (T339, flow 02, E11).
+    /// Until T339 it was Identity's descriptions joined with "; ", in the order Identity found them. The words are
+    /// <see cref="WombatIdentityErrorDescriber" />'s, which Identity's own errors carry; any other refusal reads as its
+    /// description.
+    /// </summary>
+    internal static string ResetRefusal(IEnumerable<IdentityError> errors)
+    {
+        var all = errors.ToList();
+        var others = all
+            .Where(error => !WombatIdentityErrorDescriber.IsRule(error.Code))
+            .Select(error => error.Description)
+            .Distinct(StringComparer.Ordinal);
+        var rules = WombatIdentityErrorDescriber.RuleOrder
+            .Select(code => all.FirstOrDefault(error => string.Equals(error.Code, code, StringComparison.Ordinal)))
+            .OfType<IdentityError>()
+            .Select(error => error.Description)
+            .ToList();
+
+        var words = new List<string> { ResetRefusedMessage };
+        words.AddRange(others);
+        if (rules.Count > 0)
+        {
+            words.Add(WombatIdentityErrorDescriber.Heading);
+            words.AddRange(rules);
+        }
+
+        return string.Join(" ", words);
     }
 
     private IQueryable<WombatIdentityUser> LoadUsersQuery()

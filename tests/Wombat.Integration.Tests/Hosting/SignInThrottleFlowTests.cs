@@ -255,12 +255,11 @@ public sealed class SignInThrottleFlowTests : IClassFixture<MsfRespondPageFlowTe
 
         locations.Take(10).Should().NotContain(location => location.Contains("error=" + SignInOutcome.TooManyAttempts),
             "guard: ten are checked");
-        // A wrong password until the account's own lockout trips, at the fifth: each comes back to the link page with a code,
-        // never the words (T285).
+        // A wrong password, and from the fifth the account's own lockout: each comes back to the link page with a code, never
+        // the words (T285), and the lockout with a wrong password's code, so the address says nothing about the account
+        // (T287, T339, flow 02).
         locations[0].Should().Be("/account/link-external?returnUrl=%2F&error=SsoLinkRefused");
-        locations.Take(10).Should().OnlyContain(location =>
-            location == LinkExternalOutcome.Url("/", ExternalLoginRefusal.LinkRefused)
-            || location == LinkExternalOutcome.Url("/", ExternalLoginRefusal.LinkLockedOut));
+        locations.Take(10).Should().OnlyContain(location => location == LinkExternalOutcome.Url("/", ExternalLoginRefusal.LinkRefused));
         externalCookieEnded.Take(10).Should().AllBeEquivalentTo(false, "guard: a refused password keeps the sign-in in progress");
         locations[10].Should().Be(Refused(SignInOutcome.TooManyAttempts), "the sign-in page says to wait and try again");
         externalCookieEnded[10].Should().BeTrue("the institutional sign-in in progress is ended with the refusal");

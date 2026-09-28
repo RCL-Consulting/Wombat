@@ -399,15 +399,15 @@ public sealed class ActingRoleFlowTests : IClassFixture<MsfRespondPageFlowTests.
     private static async Task SignOutAsync(HttpClient browser)
     {
         using var page = await browser.GetAsync("/account/profile");
-        var form = Parse(await page.Content.ReadAsStringAsync()).QuerySelector("form[action='/account/logout']")!;
+        var form = Parse(await page.Content.ReadAsStringAsync()).QuerySelector("form[action='/account/logout/submit']")!;
 
-        using var signOut = await browser.PostAsync("/account/logout", new FormUrlEncodedContent(
+        using var signOut = await browser.PostAsync("/account/logout/submit", new FormUrlEncodedContent(
         [
             new("__RequestVerificationToken", form.QuerySelector("input[name=__RequestVerificationToken]")!.GetAttribute("value")!)
         ]));
 
         signOut.StatusCode.Should().Be(HttpStatusCode.Redirect);
-        signOut.Headers.Location!.ToString().Should().Be("/account/login", "guard: signed out");
+        signOut.Headers.Location!.ToString().Should().Be("/account/login?error=SignedOut", "guard: signed out");
     }
 
     private static IReadOnlyList<string> SetCookies(HttpResponseMessage response)

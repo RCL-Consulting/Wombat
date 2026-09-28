@@ -1,5 +1,6 @@
 @page "/admin/users/{UserId}"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using Wombat.Web.Security
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -27,7 +28,7 @@ else
   <ActionResult @ref="_result">
     @if (!string.IsNullOrWhiteSpace(_actionError))
     {
-      <Alert Kind="danger">@_actionError</Alert>
+      <Alert Kind="danger" Id="@ActionErrorId">@_actionError</Alert>
     }
 
     @if (!string.IsNullOrWhiteSpace(_statusMessage))
@@ -117,16 +118,24 @@ else
           <section class="detail-card">
             <h3>Reset password</h3>
             <p class="muted">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p>
+            @* The field, its Show toggle and the six rules under it (T339, flow 02, E11; R3-CP-AdminReset). The page is
+               interactive, so the toggle is PasswordField's @onclick one. No minlength and no "disabled until 8
+               characters": the rule is 12, the rules are listed, and a refusal names every rule broken. *@
             <div class="form-grid form-grid--wide">
-              <FormField Label="New password" InputId="reset-password-input">
-                <div class="password-wrapper">
-                  <input id="reset-password-input" type="password" class="form-control" autocomplete="new-password" @bind="_newPassword" @bind:event="oninput" minlength="8" />
-                  <PasswordToggleButton For="reset-password-input" />
-                </div>
-              </FormField>
+              @* A refusal that broke a rule marks the field (A15): it names its own message and the refusal, which lists
+                 the rules broken, no longer the list, which still says them all under it. *@
+              <PasswordField Label="New password" Id="reset-password-input" Autocomplete="new-password"
+                             @bind-Value="_newPassword" Invalid="@_resetRulesRefused"
+                             DescribedBy="@(_resetRulesRefused ? $"{ResetMessageId} {ActionErrorId}" : ResetRulesId)">
+                @if (_resetRulesRefused)
+                {
+                  <div class="validation-message" id="@ResetMessageId">@PasswordRuleMessages.FieldMessage</div>
+                }
+                <PasswordRules Id="@ResetRulesId" />
+              </PasswordField>
             </div>
             <FormActions>
-              <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(ResetPasswordAction) || string.IsNullOrWhiteSpace(_newPassword) || _newPassword.Length < 8)" aria-disabled="@InFlight.AriaDisabled(Running(ResetPasswordAction))" @onclick="ResetPasswordAsync">Reset password</button>
+              <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(ResetPasswordAction) || string.IsNullOrWhiteSpace(_newPassword))" aria-disabled="@InFlight.AriaDisabled(Running(ResetPasswordAction))" @onclick="ResetPasswordAsync">Reset password</button>
             </FormActions>
           </section>
 
@@ -218,6 +227,9 @@ else
 
   private const string AddRoleAction = "add-role";
   private const string ResetPasswordAction = "reset-password";
+  private const string ResetRulesId = "reset-password-rules";
+  private const string ResetMessageId = "reset-password-error";
+  private const string ActionErrorId = "user-action-error";
   private const string LockoutAction = "lockout";
   private const string RevokeAction = "revoke";
 
@@ -231,6 +243,9 @@ else
   private string? _statusMessage;
   private string _addRoleSelection = string.Empty;
   private string _newPassword = string.Empty;
+
+  // The last reset was refused for a password rule (T339, flow 02, E11, A15): New password is marked until the next action.
+  private bool _resetRulesRefused;
   private bool _callerIsAdministrator;
   private System.Security.Claims.ClaimsPrincipal? _caller;
 
@@ -317,6 +332,7 @@ else
     _inFlight = name;
     _actionError = null;
     _statusMessage = null;
+    _resetRulesRefused = false;
     var done = false;
     try
     {
@@ -389,6 +405,9 @@ else
 
     if (!done)
     {
+      // The refusal lists the rules broken under their heading (UserAdministrationService.ResetRefusal); only then is the
+      // field itself at fault.
+      _resetRulesRefused = _actionError?.Contains(PasswordRuleMessages.Heading, StringComparison.Ordinal) == true;
       _result?.FocusAfterRender();
     }
   }

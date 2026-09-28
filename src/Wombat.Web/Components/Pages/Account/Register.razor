@@ -11,8 +11,8 @@
 
 <PageTitle>Complete registration · Wombat</PageTitle>
 
-<div class="account-form-container shadow">
-  <h2>Complete registration</h2>
+<div class="account-form-container">
+  <h1>Complete registration</h1>
 
   @if (_loading)
   {
@@ -57,19 +57,15 @@
                aria-describedby="@RefusalReference" />
       </div>
 
-      <div class="mb-3 password-wrapper">
-        <label for="register-password">Password</label>
-        <input id="register-password" class="form-control" type="password" name="Password" autocomplete="new-password" required
-               aria-describedby="@RefusalReference" />
-        <PasswordToggleButton For="register-password" />
-      </div>
+      @* The password fields and their Show toggles (PasswordField), and the six rules before anything is typed, which the
+         password names until a refusal is shown (T339, flow 02, E11). The rest of the page is flow 11's. *@
+      <PasswordField Label="Password" Id="register-password" Name="Password" Autocomplete="new-password" Required="true"
+                     DescribedBy="@(RefusalReference ?? RulesId)">
+        <PasswordRules Id="@RulesId" />
+      </PasswordField>
 
-      <div class="mb-3 password-wrapper">
-        <label for="register-confirm-password">Confirm password</label>
-        <input id="register-confirm-password" class="form-control" type="password" name="ConfirmPassword" autocomplete="new-password" required
-               aria-describedby="@RefusalReference" />
-        <PasswordToggleButton For="register-confirm-password" />
-      </div>
+      <PasswordField Label="Confirm password" Id="register-confirm-password" Name="ConfirmPassword" Autocomplete="new-password"
+                     Required="true" DescribedBy="@RefusalReference" />
 
       <input type="hidden" name="Token" value="@_token" />
       <FormActions>
@@ -82,6 +78,9 @@
 @code {
   /// <summary>The refusal's id, which each field names, so the refusal is read with the field that has the focus.</summary>
   public const string RefusalId = "register-error";
+
+  /// <summary>The six rules' id, which the password names until a refusal is shown.</summary>
+  public const string RulesId = "register-password-rules";
 
   [SupplyParameterFromQuery(Name = "token")]
   public string? Token { get; set; }

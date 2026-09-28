@@ -145,7 +145,7 @@ public sealed partial class BlazorEndpointAccessTests
 
         var (_, html, document) = await host.LoadAsync(path);
 
-        ServerComponentMarker().IsMatch(html).Should().BeFalse(
+        ServerComponentMarker.IsIn(html).Should().BeFalse(
             "an interactive server root would have blazor.web.js open a circuit, which the hub refuses a visitor who " +
             "has not signed in");
         document.QuerySelectorAll("script[src]").Select(script => script.GetAttribute("src")!)
@@ -166,7 +166,7 @@ public sealed partial class BlazorEndpointAccessTests
 
         var (_, html, _) = await host.LoadAsync(AppTestHost.AnonymousPage);
 
-        ServerComponentMarker().Matches(html).Should().HaveCount(
+        ServerComponentMarker.CountIn(html).Should().Be(
             2, "a signed-in user's every page is interactive: the head outlet and the router run in their circuit");
     }
 
@@ -199,7 +199,4 @@ public sealed partial class BlazorEndpointAccessTests
     };
 
     private static string Route(RouteEndpoint endpoint) => endpoint.RoutePattern.RawText!.Trim('/');
-
-    [GeneratedRegex("""<!--Blazor:\{[^>]*"type":"server""")]
-    private static partial Regex ServerComponentMarker();
 }

@@ -483,9 +483,9 @@ Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appe
 Role: Trainee — Dr Sipho Ndlovu (the browser left signed in at A.1.11)
 Route: /account/session-ended → /account/login
 Do: Wait on any page for up to a minute. Then sign in with his old address and password.
-Expect: The tab leaves for the sign-in page by itself, which says "Your session has ended. Please sign in again."
-  (T279). Signing in is refused in the words an unknown address gets, "Invalid email or password.", with no mention
-  of an erasure (T156). No email is sent to him.
+Expect: The tab leaves for the sign-in page by itself, which says "Your session has ended. Sign in again." (T279), an
+  information notice. Signing in is refused in the words an unknown address gets, "Invalid email or password.", with
+  no mention of an erasure (T156). No email is sent to him.
 
 Step A.1.14 — What the erasure left, as KGK sees it (appendix-cross-cutting.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

@@ -601,9 +601,10 @@ public sealed class ActionFocusTests : TestContext
             SubmitButton,
             Submit),
 
-        // Change password (/account/change-password), Save profile on My account (/account/profile) and Verify on the export
-        // check (/portfolio/verify) are not here: since T265 (My account since the review of the t335 branch) each is a form
-        // the browser sends, and its result arrives with the page it loads (ActionResult.FocusOnLoad).
+        // Change password (/account/change-password), Save name and Remove on My account (/account/profile) and Verify on the
+        // export check (/portfolio/verify) are not here: since T265 (My account since the review of the t335 branch) each is
+        // a form the browser sends, and its result arrives with the page it loads (ActionResult.FocusOnLoad; My account
+        // focuses it once the circuit has drawn the page, T339).
         // Account/ChangePasswordPageTests, Account/ProfilePageTests and Portfolio/VerifyExportPageTests hold them to the rule.
 
         ["AdoptionsList Adopt"] = new(
@@ -1071,6 +1072,8 @@ public sealed class ActionFocusTests : TestContext
             navigation.NavigateTo(navigation.GetUriWithQueryParameter(supplied.Name, supplied.Value.ToString()));
         }
 
+        // PasswordField reads it (T339, flow 02): every page here is interactive.
+        SetRendererInfo(new RendererInfo("Server", isInteractive: true));
         var cut = RenderComponent<TPage>(parameters ?? (_ => { }));
         cut.WaitForState(() => cut.FindAll(".form-actions button, .form-container button, td button").Count > 0);
         return cut;

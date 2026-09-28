@@ -173,6 +173,7 @@ public sealed class SsoEmailSyncPostgresTests : IAsyncLifetime
             }));
             services.AddScoped<SsoGroupMapper>();
             services.AddScoped<ExternalLoginHandler>();
+            services.AddSingleton<SignInTiming>();
             configure?.Invoke(services);
 
             await using var root = services.BuildServiceProvider();

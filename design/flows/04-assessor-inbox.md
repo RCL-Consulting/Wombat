@@ -332,7 +332,7 @@ describes the product as it is today. The Expects of 3.24, 3.33, 3.51 and A.6.8 
 T297 rewrote them; 2.36 refers to Step 2.34's empty dashboard, which T297 also changed. `D` is the replay day (`act-3-operations.md` § The clock in this act).
 
 ```text
-Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:615)
+Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:623)
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
 Route: /account/login → /
 Do: Each signs in and reads the dashboard and nav.
@@ -478,15 +478,15 @@ Expect:
   - The activity page warns that it counted towards no curriculum requirement, and names as one cause an EPA that was
     not in use at the time. In its history, the completion's Credit reads None.
 
-Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:559)
+Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:569)
 Role: Assessor — Dr Fatima Khumalo (the second browser)
 Route: /activities/inbox → /account/session-ended → /account/login → /activities/inbox
 Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
-Expect: The tab leaves for the sign-in page by a full page load, which says "Your session has ended. Please sign in
-  again." (T279). The old password is refused ("Invalid email or password."). The new one brings her back to her
-  Activity inbox.
+Expect: The tab leaves for the sign-in page by a full page load, which says "Your session has ended. Sign in again."
+  (T279), an information notice. The old password is refused, and "Invalid email or password." takes the notice's
+  place. The new one brings her back to her Activity inbox: the return address survives the refusal.
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:922)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:937)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
@@ -494,7 +494,7 @@ Expect: He lands on his Assessor dashboard. "Waiting for your rating" is badged 
   and Logbook Review, badged Overdue, as his inbox lists it (T297, T335). Dr Dlamini's
   assessor list names him again (checked at A.7.1).
 
-Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1009)
+Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1024)
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: At 390 px, open Dr Dlamini's Mini-CEX from Activity inbox. Rate the supervision at `3b`, write the three

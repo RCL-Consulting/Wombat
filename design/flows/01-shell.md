@@ -494,7 +494,7 @@ describes the product as it is today. Steps 2.34 and 3.33 describe the Assessor 
 "Waiting for your rating"; F04 designs the cards.
 
 ```text
-Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:561)
+Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:568)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
@@ -505,9 +505,9 @@ Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The
   PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
   never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
 
-Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:578)
+Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:585)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
-Route: / → /dashboard/switch/{role} → / → /account/logout → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
+Route: / → /dashboard/switch/{role} → / → /account/logout/submit → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and in again. Then type
   `/dashboard/switch/Administrator`. Last, choose Switch to Committee member in the sidebar.
 Expect: Under the header an info alert reads "You are now acting as Assessor." and takes the focus; on Home it offers no
@@ -515,11 +515,12 @@ Expect: Under the header an info alert reads "You are now acting as Assessor." a
   to the Assessor's: Home and Activity inbox, then My data rights. Home's subtitle reads "Assessor · Semester N, YYYY".
   The Assessor dashboard has two cards: "Waiting for your rating", badged 0, which reads "Nothing is waiting for your
   rating." with "Open inbox →" (T297, T335), and Recent decisions, "No decisions yet.". The reload shows no alert: it is
-  said once. After signing in again she lands acting as Assessor, with no alert, because the choice is stored with her
-  account, not in the browser (T317). The Administrator address writes nothing and says nothing: she is still acting as
-  Assessor, since a role she does not hold is never shown or stored. Switch to Committee member brings back the
-  Committee member's sidebar and menu, "Committee member · Semester N, YYYY" under Home's heading, and the alert "You are
-  now acting as Committee member.", the role Step 3.33 starts from.
+  said once. Signing out lands on the sign-in page with "You have signed out." After signing in again she lands acting
+  as Assessor, with no alert, because the choice is stored with her account, not in the browser (T317). The
+  Administrator address writes nothing and says nothing: she is still acting as Assessor, since a role she does not hold
+  is never shown or stored. Switch to Committee member brings back the Committee member's sidebar and menu, "Committee
+  member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
+  role Step 3.33 starts from.
 
 Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:611)
 Role: Assessor — Dr Thandi Zulu
@@ -560,14 +561,14 @@ Expect: The menu offers none: Home, Decisions due, MSF campaigns, Committee revi
   "Stalled requests" card lists it, and no page chases a stalled request: no reminder and no reassignment. The old
   address is "Page not found" with status 404: the placeholder page went with the stubs (T335, flow 01).
 
-Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:669)
+Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:684)
 Role: Trainee — Dr Anele Dlamini
 Route: /dashboard/switch/{role} → /
 Do: Open `/dashboard/switch/Administrator`.
 Expect: She is back on her own dashboard, still acting as a Trainee. A switch to a role she does not hold changes
   nothing and says nothing (no "You are now acting as" alert), and the sidebar offers her no switch: she holds one role.
 
-Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:642)
+Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:657)
 Role: Trainee — Dr Anele Dlamini
 Route: /admin/users → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Users page, then that of Scheduled jobs.
@@ -575,7 +576,7 @@ Expect: Each time, "You cannot open this page": "Your role (Trainee) does not op
   your work, ask your institution's Wombat administrator.", with Go to Home, which takes her home. Nothing of the page
   she asked for is shown or named, and no switch of role is offered (T335, D6).
 
-Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:656)
+Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:671)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Institutions list, then that of Scheduled jobs.
@@ -583,7 +584,7 @@ Expect: For both, "You cannot open this page": "Your role (Institutional admin) 
   need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
   offers neither, and nothing in it is lit on the refusal.
 
-Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:849)
+Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:864)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /
 Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
@@ -594,7 +595,7 @@ Expect: "Institution saved." takes the focus. Status reads "Active" as text, wit
   `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
   `2|hod.paediatrics@kgk.wombat.local|t`.
 
-Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:679)
+Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:694)
 Role: Trainee — Dr Anele Dlamini
 Route: /not-found → /not-found → /account/login → /not-found
 Do: Type the following addresses:
@@ -607,7 +608,7 @@ Expect: For each, the "Page not found" page: "There is no page at this address."
   - `/placeholder/recent-activities` is Page not found too: the placeholder page went with the stubs (T335, flow 01).
   - Signed out, the unknown address first asks her to sign in, then shows Page not found.
 
-Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:698)
+Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:713)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
@@ -616,21 +617,21 @@ Expect: The institution shows Page not found, not "You cannot open this page". T
   user could not be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not
   403).
 
-Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:716)
+Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:731)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Open the address of Dr Mahlangu's submitted Mini-CEX from A.2.7.
 Expect: "Activity unavailable": the requested activity could not be loaded. Nothing of it is shown, and nothing on the
   page speaks of permission.
 
-Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:727)
+Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:742)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights/{Id:guid}
 Do: Open the address of Dr Mahlangu's request with its last digit changed.
 Expect: The refusal "You are not authorized to access this data-rights request." and the empty state "Not found". An
   unknown id and another institution's request read the same, so the page does not tell them apart (T112).
 
-Step A.5.8 — The error page (appendix-cross-cutting.md:740)
+Step A.5.8 — The error page (appendix-cross-cutting.md:755)
 Role: Trainee — Dr Anele Dlamini
 Route: /Error
 Do: Type `/Error`.
@@ -638,14 +639,14 @@ Expect: Typed, no request failed: "Nothing went wrong" and "This is Wombat's err
   failed, so there is nothing to report.", with Go to Home, no reference and no Try again. Signed out it reads the same,
   with no sign-in first: the page is open to everyone, and static (T321, T335).
 
-Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:760)
+Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:775)
 Role: Assessor — Dr Mohammed Patel
 Route: /
 Do: Read the menu.
 Expect: Home and Activity inbox, then My data rights. There is no Recent activities: the flow 01 pick dropped it, and
   the nav links to no page that is not built (DESIGN.md § The NavMenu).
 
-Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:770)
+Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:785)
 Role: Coordinator — Mr Pieter Smit
 Route: /
 Do: Read the dashboard's "Stalled requests" card, then look for a stalled-work page in the menu.
@@ -653,34 +654,34 @@ Expect: The card lists Dr du Plessis's portfolio review, still awaiting review s
   links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. The menu
   offers no stalled-work page: it is flow 06's, and the nav links to no page that is not built.
 
-Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:785)
+Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:800)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /
 Do: Read the menu.
 Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Committee reviews and Decision
   panels, then My data rights. Programme trainees is flow 06's, and not offered before it is built.
 
-Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:795)
+Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:810)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the menu.
 Expect: Home, Decisions due, Committee reviews and Decision panels, then My data rights. Programme trainees is flow
   06's and the STAR review queue flow 09's; the menu offers neither before it is built.
 
-Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:805)
+Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:820)
 Role: Administrator — devadmin
 Route: /
 Do: Read the menu.
 Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1031)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1046)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
 Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. The tables of My
   activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1215)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1230)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
@@ -689,8 +690,9 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - muted text on the page background;
   - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
     each state as plain text);
-  - a success alert (save My account, the name in the top bar, unchanged: "Profile saved.") and a danger alert (Change
-    password with a confirmation that differs, which checks no password and changes nothing);
+  - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
+    alert (Change password with a confirmation that differs, which checks no password and changes nothing);
+  - a password field's Show toggle, pressed (white on the action blue, 4.86:1);
   - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
     not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
   - the focus ring on white and on the page background;

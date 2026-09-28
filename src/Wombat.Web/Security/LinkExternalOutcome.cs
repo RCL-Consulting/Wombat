@@ -16,10 +16,10 @@ public static class LinkExternalOutcome
     public const string PasswordRequired = "PasswordRequired";
 
     /// <summary>What the page says for <see cref="PasswordRequired" />.</summary>
-    public const string PasswordRequiredMessage = "Your password is required.";
+    public const string PasswordRequiredMessage = "Enter your password.";
 
     /// <summary>What the page says for any code it does not know.</summary>
-    public const string GeneralRefusal = "The account could not be linked. Please try again.";
+    public const string GeneralRefusal = "The account could not be linked. Try again.";
 
     /// <summary>
     /// The page, coming back to <paramref name="returnUrl" /> once linked, and refusing with <paramref name="code" /> when

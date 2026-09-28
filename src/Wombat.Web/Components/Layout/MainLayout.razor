@@ -75,7 +75,7 @@
             }
             else
             {
-              <form class="sign-out" action="/account/logout" method="post">
+              <form class="sign-out" action="@Wombat.Web.Security.SignOutOutcome.SubmitPath" method="post">
                 <AntiforgeryToken />
                 <button type="submit" class="btn btn-outline btn-sm sign-out-button">
                   <Icon Name="log-out" />

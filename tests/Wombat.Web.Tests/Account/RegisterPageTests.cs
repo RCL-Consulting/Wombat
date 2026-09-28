@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
@@ -12,6 +13,7 @@ using Wombat.Web.Components.Pages.Account;
 using Wombat.Web.Security;
 using Wombat.Web.Services;
 using Wombat.Web.Tests.Accessibility;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Account;
 
@@ -65,9 +67,29 @@ public sealed class RegisterPageTests : TestContext
         cut.FindAll(".alert-danger").Should().BeEmpty();
         cut.Find("form").GetAttribute("action").Should().Be(RegisterOutcome.SubmitPath).And.Be("/account/register/submit");
         cut.Find("input[name=Token]").GetAttribute("value").Should().Be(Token);
-        FieldIds.Should().OnlyContain(id => !cut.Find($"#{id}").HasAttribute("aria-describedby"));
+        FieldIds.Where(id => id != "register-password").Should().OnlyContain(id => !cut.Find($"#{id}").HasAttribute("aria-describedby"));
         cut.Find("#register-first-name").HasAttribute("autofocus").Should().BeFalse(
             "a first visit reads from the top, where the invitation is named");
+    }
+
+    /// <summary>
+    /// T339 (flow 02, E11): the six rules stand under the password before anything is typed, and the password names them
+    /// until a refusal is shown; each password field has its Show toggle, for wombat.js to drive. The rest of the page is
+    /// flow 11's. Changed deliberately: until T339 no field named anything on a first visit, and no rule was listed.
+    /// </summary>
+    [Fact]
+    public void ThePasswordFields_HaveTheirToggles_AndThePasswordNamesTheSixRules()
+    {
+        var cut = Render($"{RegisterOutcome.PagePath}?token={Token}");
+
+        cut.Find("h1").TextContent.Trim().Should().Be("Complete registration", "the card's heading is the page's h1");
+        cut.Find("#register-password").GetAttribute("aria-describedby").Should().Be(Register.RulesId);
+        var rules = cut.Find($"#{Register.RulesId}");
+        rules.QuerySelector("p")!.TextContent.Trim().Should().Be("The new password needs:");
+        rules.QuerySelectorAll("li").Should().HaveCount(6);
+        PasswordToggleMarkup.ShouldBeTheToggle(cut, "register-password", "Show password", PasswordToggleMarkup.Driven.ByScript);
+        PasswordToggleMarkup.ShouldBeTheToggle(cut, "register-confirm-password", "Show confirm password", PasswordToggleMarkup.Driven.ByScript);
+        IdReferences.Broken(cut).Should().BeEmpty();
     }
 
     [Theory]
@@ -78,13 +100,13 @@ public sealed class RegisterPageTests : TestContext
     [InlineData("InvitationUsed", "This invitation has already been used.")]
     [InlineData("InvitationExpired", "This invitation has expired.")]
     [InlineData("DetailsInvalid", "Enter your first name and last name, each of at most 100 characters, and a password.")]
-    [InlineData("Failed", "Registration could not be completed. Please try again.")]
-    [InlineData("PasswordTooShort", "Passwords must be at least 12 characters.")]
-    [InlineData("PasswordRequiresNonAlphanumeric", "Passwords must have at least one non alphanumeric character.")]
-    [InlineData("PasswordRequiresDigit", "Passwords must have at least one digit ('0'-'9').")]
-    [InlineData("PasswordRequiresUpper", "Passwords must have at least one uppercase ('A'-'Z').")]
-    [InlineData("PasswordRequiresLower", "Passwords must have at least one lowercase ('a'-'z').")]
-    [InlineData("PasswordRequiresUniqueChars", "Passwords must use at least 4 different characters.")]
+    [InlineData("Failed", "Registration could not be completed. Try again.")]
+    [InlineData("PasswordTooShort", "The new password needs: At least 12 characters.")]
+    [InlineData("PasswordRequiresNonAlphanumeric", "The new password needs: A symbol, such as ! or #.")]
+    [InlineData("PasswordRequiresDigit", "The new password needs: A digit (0 to 9).")]
+    [InlineData("PasswordRequiresUpper", "The new password needs: An upper-case letter.")]
+    [InlineData("PasswordRequiresLower", "The new password needs: A lower-case letter.")]
+    [InlineData("PasswordRequiresUniqueChars", "The new password needs: At least 4 different characters.")]
     public void ARefusal_ReadsAsItDidBefore_AboveTheForm_AndIsNamedByEachField(string code, string expected)
     {
         var cut = Render($"{RegisterOutcome.PagePath}?token={Token}&error={code}");
@@ -102,13 +124,14 @@ public sealed class RegisterPageTests : TestContext
     }
 
     [Fact]
-    public void SeveralPasswordRules_ReadEachOnce_InTheOrderSent()
+    public void SeveralPasswordRules_ReadEachOnce_InTheRulesOwnOrder_WhateverOrderTheyWereSent()
     {
+        // The one order the rules are listed in everywhere (T339, flow 02, E11); until T339, the order Identity sent them.
         var cut = Render($"{RegisterOutcome.PagePath}?token={Token}" +
-                         "&error=PasswordTooShort&error=PasswordRequiresDigit&error=PasswordTooShort");
+                         "&error=PasswordRequiresDigit&error=PasswordTooShort&error=PasswordRequiresDigit");
 
         cut.Find(".alert.alert-danger").TextContent.Trim().Should().Be(
-            "Passwords must be at least 12 characters. Passwords must have at least one digit ('0'-'9').");
+            "The new password needs: At least 12 characters. A digit (0 to 9).");
     }
 
     [Theory]
@@ -121,7 +144,7 @@ public sealed class RegisterPageTests : TestContext
 
         cut.Markup.Should().NotContain(words, "a refusal travels as a code, and the page chooses the words");
         cut.Find(".alert.alert-danger").TextContent.Trim().Should().Be(RegisterOutcome.GeneralRefusal)
-            .And.Be("Registration could not be completed. Please try again.");
+            .And.Be("Registration could not be completed. Try again.");
     }
 
     [Fact]
@@ -182,7 +205,7 @@ public sealed class RegisterPageTests : TestContext
 
         var cut = Render($"{RegisterOutcome.PagePath}?token={Token}");
 
-        cut.Find(".alert.alert-danger").TextContent.Trim().Should().Be("Registration could not be completed. Please try again.");
+        cut.Find(".alert.alert-danger").TextContent.Trim().Should().Be("Registration could not be completed. Try again.");
         cut.Markup.Should().NotContain("Npgsql").And.NotContain("012 345 6789");
         cut.FindAll("form").Should().BeEmpty();
         _logger.Errors.Should().ContainSingle().Which.Should().BeSameAs(fault);
@@ -191,6 +214,8 @@ public sealed class RegisterPageTests : TestContext
     private IRenderedComponent<Register> Render(string address)
     {
         Services.GetRequiredService<FakeNavigationManager>().NavigateTo(address);
+        // PasswordField reads it (T339, flow 02): a signed-out visitor's page is static, so its toggles are wombat.js's.
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
         return RenderComponent<Register>();
     }
 

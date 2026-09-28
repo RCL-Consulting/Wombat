@@ -152,7 +152,7 @@ public sealed partial class MsfRespondPageHostingTests
         using var response = await host.Client.GetAsync(Link(Token));
         var html = await response.Content.ReadAsStringAsync();
 
-        ServerComponentMarker().IsMatch(html).Should().BeFalse("no part of the page, its head included, is an interactive root");
+        ServerComponentMarker.IsIn(html).Should().BeFalse("no part of the page, its head included, is an interactive root");
 
         // The framework adds a frame-ancestors-only policy of its own beside Wombat's; the one that governs scripts is
         // Wombat's, nonce-backed (T097). The page has no inline script at all: only the import map carries the nonce.
@@ -172,9 +172,9 @@ public sealed partial class MsfRespondPageHostingTests
         // signed in, off a circuit the link's rate limit cannot see.
         await using var signedIn = await StartAsync(new FakeRespondSender(), signedIn: true);
         var (_, signedInHtml, _) = await signedIn.LoadAsync(Link(Token));
-        ServerComponentMarker().IsMatch(signedInHtml).Should().BeFalse("the page is static for a signed-in respondent too");
+        ServerComponentMarker.IsIn(signedInHtml).Should().BeFalse("the page is static for a signed-in respondent too");
         var (_, otherHtml, _) = await signedIn.LoadAsync(AppTestHost.AnonymousPage);
-        ServerComponentMarker().IsMatch(otherHtml).Should().BeTrue("every other page renders in a signed-in user's circuit");
+        ServerComponentMarker.IsIn(otherHtml).Should().BeTrue("every other page renders in a signed-in user's circuit");
     }
 
     [Fact]
@@ -421,9 +421,6 @@ public sealed partial class MsfRespondPageHostingTests
     }
 
     private static IHtmlDocument Parse(string html) => new HtmlParser().ParseDocument(html);
-
-    [GeneratedRegex("""<!--Blazor:\{[^>]*"type":"server""")]
-    private static partial Regex ServerComponentMarker();
 
     [GeneratedRegex(@"script-src 'self' 'nonce-(?<nonce>[^']+)'")]
     private static partial Regex CspNonce();

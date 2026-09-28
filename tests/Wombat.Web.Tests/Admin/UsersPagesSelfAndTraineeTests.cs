@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
@@ -113,6 +114,7 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
         // Before T278 their own account offered Remove on the Trainee role, and a colleague's offered Lock out.
         SignInAs(role, holdsTrainee: true);
 
+        SetRendererInfo(new RendererInfo("Server", isInteractive: true)); // PasswordField reads it (T339, flow 02)
         var cut = RenderComponent<UserDetail>(parameters => parameters.Add(page => page.UserId, userId));
         cut.WaitForState(() => cut.FindAll("#user-trainee-note").Count == 1);
 
@@ -131,6 +133,7 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
     {
         SignInAs(role, holdsTrainee: false);
 
+        SetRendererInfo(new RendererInfo("Server", isInteractive: true)); // PasswordField reads it (T339, flow 02)
         var cut = RenderComponent<UserDetail>(parameters => parameters.Add(page => page.UserId, Other));
         cut.WaitForState(() => Buttons(cut).Contains("Lock out user"));
 
@@ -147,6 +150,7 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
     {
         SignInAs(role, holdsTrainee: false);
 
+        SetRendererInfo(new RendererInfo("Server", isInteractive: true)); // PasswordField reads it (T339, flow 02)
         var cut = RenderComponent<UserDetail>(parameters => parameters.Add(page => page.UserId, Self));
         cut.WaitForState(() => cut.FindAll("#user-own-account-note").Count == 1);
 

@@ -80,7 +80,7 @@ public static class RegisterOutcome
     public const string UserNotLoadedMessage = "The invited user could not be loaded after registration.";
 
     /// <summary>What the page says for <see cref="Failed" /> and for any code it does not know.</summary>
-    public const string GeneralRefusal = "Registration could not be completed. Please try again.";
+    public const string GeneralRefusal = "Registration could not be completed. Try again.";
 
     /// <summary>
     /// The page, for the invitation <paramref name="token" /> names, refusing with <paramref name="codes" /> (each once;
@@ -120,23 +120,30 @@ public static class RegisterOutcome
     public static bool IsRefusal(Exception exception) => exception is InvitationRefusedException or ValidationException;
 
     /// <summary>
-    /// The sentences the page shows for the codes it was sent back with, each once, in the order sent: its own for each
-    /// code above, Identity's for each password rule, and <see cref="GeneralRefusal" /> for any code this list does not
-    /// name.
+    /// The sentences the page shows for the codes it was sent back with, each once: its own for each code above, in the
+    /// order sent, and <see cref="GeneralRefusal" /> for any code this list does not name; then, when a password rule was
+    /// broken, the rules' heading and each rule broken, in the one order the rules are always listed in
+    /// (<see cref="PasswordRuleMessages" />, T339, flow 02, E11), whatever order Identity sent them in.
     /// </summary>
     public static IReadOnlyList<string> Describe(
         IEnumerable<string>? codes,
         IdentityErrorDescriber describer,
         PasswordOptions rules)
-    {
-        var sentences = new List<string>();
-        foreach (var code in codes ?? [])
-        {
-            if (string.IsNullOrWhiteSpace(code))
-            {
-                continue;
-            }
+        => Refusal(codes, describer, rules).Flat;
 
+    /// <summary>What <see cref="Describe" /> says, with the rules broken apart from the other reasons, for a page to list.</summary>
+    public static PasswordRefusal Refusal(
+        IEnumerable<string>? codes,
+        IdentityErrorDescriber describer,
+        PasswordOptions rules)
+    {
+        ArgumentNullException.ThrowIfNull(describer);
+        ArgumentNullException.ThrowIfNull(rules);
+
+        var sent = (codes ?? []).Where(code => !string.IsNullOrWhiteSpace(code)).ToList();
+        var sentences = new List<string>();
+        foreach (var code in sent.Where(code => !PasswordRuleMessages.IsRule(code)))
+        {
             var sentence = code switch
             {
                 TokenMissing => TokenMissingMessage,
@@ -149,7 +156,7 @@ public static class RegisterOutcome
                 InvitationExpired => InvitationRefusals.Describe(InvitationRefusal.Expired),
                 AccountExists => InvitationRefusals.Describe(InvitationRefusal.AccountExists),
                 AddressNotAccepted => InvitationRefusals.Describe(InvitationRefusal.AddressNotAccepted),
-                _ => PasswordRuleMessages.Describe(code, describer, rules) ?? GeneralRefusal
+                _ => GeneralRefusal
             };
 
             if (!sentences.Contains(sentence, StringComparer.Ordinal))
@@ -158,7 +165,7 @@ public static class RegisterOutcome
             }
         }
 
-        return sentences;
+        return new PasswordRefusal(null, sentences, PasswordRuleMessages.Broken(sent, rules));
     }
 
     private static string CodeOf(InvitationRefusal reason) => reason switch
