@@ -52,6 +52,7 @@
         "book-check.svg",
         "book-open.svg",
         "book.svg",
+        "building-2.svg",
         "building.svg",
         "calendar-check.svg",
         "calendar.svg",
@@ -62,6 +63,8 @@
         "clipboard-list.svg",
         "clock.svg",
         "download.svg",
+        "eye-off.svg",
+        "eye.svg",
         "file-text.svg",
         "gauge.svg",
         "graduation-cap.svg",
@@ -69,6 +72,7 @@
         "home.svg",
         "inbox.svg",
         "info.svg",
+        "key-round.svg",
         "key.svg",
         "list-checks.svg",
         "list.svg",
@@ -421,6 +425,30 @@
           "blob": "4797c05c12581adcc5490b1afe1add21",
           "size": 157,
           "type": "image/svg+xml"
+        },
+        "eye.svg": {
+          "name": "eye.svg",
+          "blob": "c560a6446d23638df2b4c5f47bfa3b50",
+          "size": 238,
+          "type": "image/svg+xml"
+        },
+        "eye-off.svg": {
+          "name": "eye-off.svg",
+          "blob": "f2061237567c0fd562f4b9189b1e0bd9",
+          "size": 390,
+          "type": "image/svg+xml"
+        },
+        "building-2.svg": {
+          "name": "building-2.svg",
+          "blob": "13e443d55c5e3e9e86eb31eef09146ad",
+          "size": 372,
+          "type": "image/svg+xml"
+        },
+        "key-round.svg": {
+          "name": "key-round.svg",
+          "blob": "c2305074bb982b7a4088fd4720f05c08",
+          "size": 331,
+          "type": "image/svg+xml"
         }
       }
     },
@@ -473,8 +501,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-09-28T12:00:00Z",
-    "via": "Claude Code · Wombat@937fe19c",
-    "note": "Re-synced to flow 02 as built (T339, f50dffb2 and 6735fa98): no token value changed; 4 components added (SignInCard, PasswordField, PasswordRules, MyAccount), 7 revised (AuthLayout, Alert, ConfirmDialog, StatePanel, FormField, Icon, and the bundle); 4 icons to upload (eye, eye-off, building-2, key-round; 58 in all)."
+    "at": "2026-09-28T15:00:00Z",
+    "via": "Claude Code · Wombat@e33b563b",
+    "note": "Re-synced to flow 02 as built (T339, f50dffb2 and 6735fa98): no token value changed; 4 components added (SignInCard, PasswordField, PasswordRules, MyAccount), 7 revised (AuthLayout, Alert, ConfirmDialog, StatePanel, FormField, Icon, and the bundle); 4 icons uploaded (eye, eye-off, building-2, key-round; 58 in all)."
   }
 }

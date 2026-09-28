@@ -74,7 +74,7 @@ Run flow 01's loop, as BRIEF § 2.3 now describes it and § 11 corrected it:
   (A.7.12, Remember me at 390 px) fixed in `6735fa98` and re-checked in Chrome; one new defect, not flow 02's, noted on
   T328. The Account and sign-in states captured (63 rows, 76 files); `check_baseline_paths.py` missing 0; flow 02's key
   captures opened and checked against their citations.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. Version 7 (2026-09-28; https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18): `56628efb` and `e33b563b`; 4 components added (SignInCard, PasswordField, PasswordRules, MyAccount), 7 revised, 4 icons uploaded (58), the index sent last. Lessons: BRIEF § 11 "Flow 02" (`937fe19c`).
 
 ## Related
 
