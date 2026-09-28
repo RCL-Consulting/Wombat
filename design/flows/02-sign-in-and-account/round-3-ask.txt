@@ -1,0 +1,83 @@
+ROUND 2 REVIEWED. Round 3: one correction round, then we build.
+
+Four reviews read your round 2 boards against the code, the runbook and DESIGN.md. The tokens hold: every colour is a
+token and all 14 contrast figures are right. The structure stands. Apply the corrections and decisions below, on a new
+canvas page "R3 · Corrected", copying only the boards you change (keep R1 and R2 as the record). Update R2-Spec and
+R2-Steps as R3-Spec and R3-Steps. Then list, item by item (C1–C9, E1–E11), what you changed and on which board.
+
+CORRECTIONS:
+C1. Drop "Linked 2026-08-14" everywhere: Wombat stores no link date. Name each institutional sign-in by the
+    institution's display name only.
+C2. There are SIX password rules: add "At least 4 different characters." (Identity's RequiredUniqueChars = 4). Use one
+    heading, one order and one sentence per rule in both the list shown before typing and the refusal, in this order:
+    at least 12 characters; at least 4 different characters; a digit (0 to 9); an upper-case letter; a lower-case
+    letter; a symbol, such as ! or #. Put the New password field's own message ("The new password does not meet the
+    rules below.") in the Spec.
+C3. Real cast members only as the runbook has them: Thandi Zulu is Committee member + Assessor at
+    zulu@kgk.wombat.local; Mohammed Patel signs in with a password. Put four roles, the 40-character email and the
+    institutional-only account on an invented person (a name no cast member has).
+C4. The institution is "Kgosi Kgari Teaching Hospital" for every KGK person, never a placeholder. An account with no
+    institution (the platform Administrator; a College admin) has no Institution row: draw that Account card. Forgotten
+    password must read right for such a person too: do not say "your institution" unconditionally.
+C5. Words:
+    - Rewrite "SSO login failed." (SsoFailed) and "The identity provider did not supply an email address." (SsoNoEmail)
+      in plain words, each saying what to do next.
+    - "Your institution's sign-in did not complete…" needs a variant for a page with no institution buttons (Step A.3.3
+      is played where none is configured): give both, as InvalidCredentials has.
+    - LinkFailed: the person did nothing wrong. Say it could not be linked this time and to try again later; do not ask
+      for the password again.
+    - The link page's missing password: "Enter your password."
+    - The third toggle's name follows its field's label: "Show confirm new password" or rename the label; they must
+      match.
+    - The Remove dialog must not say "You will sign in with your email and Wombat password only." when another
+      institution stays linked: word it from what remains.
+    - "Please": keep it or drop it, the same way in every sentence.
+    - Steps board: A.3.2's Expect adds the Show toggle; add Step 2.19 ("My account lists her role as PendingTrainee"
+      becomes "Pending trainee").
+C6. One focus rule for sign-in notices. With institution buttons configured, "focus Email" and "no autofocus" contradict
+    each other, and a notice present at load is not announced unless something takes the focus. Rule: with no buttons,
+    Email takes the focus and names the notice; with buttons, the notice itself takes the focus (tabindex -1), so the
+    next Tab reaches the first institution. Draw the session-ended notice with three institution buttons.
+C7. Remove is a form post, not a click in the page: the dialog holds a real form (NEW: ConfirmDialog's form mode, with
+    its antiforgery token and a submit button). Draw it at the built dialog size (448 px wide, 32 px padding). Draw
+    the Remove success ("… sign-in removed."), the Remove refusal, and the server's refusal when the last way in is
+    removed by a crafted or second-tab post, with words for each.
+C8. Correct the Spec's claims:
+    - PasswordToggleButton is also used by the register page and the administrator's reset card: both move to the new
+      toggle in this flow (E11), so name them.
+    - .details-list already exists and sets term beside value at desktop. Use it as built, or name a NEW modifier for
+      the stacked layout you drew.
+    - The icons eye, eye-off, building-2 and key-round are NEW to Wombat's icon set.
+    - Who owns the words: SignInOutcome holds FieldsMissing, the external-login codes and SsoFailed; ExternalLoginHandler
+      holds the twelve institutional refusals; ChangePasswordOutcome holds SessionEnded and PasswordChanged.
+    - DESIGN.md rules this flow changes and the Spec does not yet name: § Typography (page h1 1.5rem; card titles h3):
+      the auth h1 is 2rem, My account's card titles h2; § Accessibility (required fields show *): dropped on these
+      forms, say why; § Account / auth page: the 400 px card, the .mb-3 markup, "Change password stays interactive",
+      the PasswordToggleButton paragraph, ?status=updated. There is no "§ Page-level patterns (Account)": it is
+      § Account / auth page.
+    - The error page's Sign out links to /account/logout-confirm with no returnUrl today; if Cancel is to return there,
+      name that as a change.
+    - .btn-sm is 28 px as built (flow 01), not 32: redraw the top bar's Sign out.
+C9. Missing states: at 390, the linked account, institutional-only, the Remove dialog, the link page expired, and one
+    ordinary sign-in refusal. Change password for an institutional-only account without the generic subtitle.
+
+DECISIONS (the operator's):
+E1. An institutional sign-in to a locked account: "Wombat could not sign you in through your institution. Contact your
+    administrator." Accepted as you proposed.
+E2. Five wrong current passwords on Change password lock the account AND sign the session out. Draw where the person
+    lands: the sign-in page with a notice that says why, in plain words.
+E3. Removing an institutional sign-in asks for the account's password in the dialog, when the account has one; with no
+    password (institution-only with two institutions), no field. Draw both, and the wrong-password refusal inside it.
+E4. The sign-in page's notices show only to a signed-out visitor; a signed-in visitor is sent Home. Nothing to draw;
+    note it on the Spec.
+E5. The lockout is also hidden by timing (a build matter). Note it on the Spec.
+E6. Signing out requires the antiforgery token (a build matter). Note it.
+E7. 44 px controls below 641 px on this flow's pages (the auth card, My account, Change password), named as a rule.
+E8. Your values win, each named in the Spec as a change: 16 px between blocks on the card, the card top-aligned, the
+    auth h1 2rem at desktop and 1.5rem below 641 px (so "Link your institutional sign-in" wraps less).
+E9. The pressed toggle keeps the word "Show", with aria-pressed, the eye-off icon and the fill. As drawn.
+E10. Saving an unchanged name says "Name saved.". As drawn.
+E11. The register page and the administrator's reset card move to the new toggle and the six rule sentences in this
+    flow. Draw the reset card's password field with the new toggle and the rules (one board is enough).
+
+Stop when round 3 is drawn.

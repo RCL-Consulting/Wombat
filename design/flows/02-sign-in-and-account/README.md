@@ -17,3 +17,5 @@ T339's design, kept beside its brief (`../02-sign-in-and-account.md`) so that it
   `R2-Spec` (messages, DESIGN.md changes, new classes, contrast) and `R2-Steps` (the runbook Expects that change), then
   sign in, sign out, My account, change password, forgotten password and link, at 1280 and 390. The first send of the
   round 2 message drew nothing; a resend did.
+- **Round 2's review and the decisions** (2026-09-28): `round-2-review.md`. Four reviewers; accept with changes;
+  corrections C1–C9; the operator accepted E1–E11 as recommended. **Round 3's ask:** `round-3-ask.txt`.
