@@ -32,8 +32,8 @@ want it to look at UX also, include mails and pdf and set up the pilot", and "ac
 
 ### Next session: T339, flow 02 (sign-in and account). **Model: Opus.**
 
-- T339 is in progress, and its task file lists the whole loop. First, the session restates `design/flows/02-sign-in-and-account.md`'s
-  ASK line and checks its pages table (BRIEF § 2.4).
+- **2026-09-28: step 1 done (`ca3b19ff`):** the brief is restated, and the upload set is staged (109 files in
+  `design/upload/`). Waiting on the operator's new canvas; the task file lists the rest of the loop.
 - The operator then creates a **new** canvas from the main app's Design page, on the Wombat design system v4, and gives
   its link. A new canvas, not the flow 01 one: that one holds the old design-system copy and is flow 01's record.
 - The session copies the mark into the canvas (asset `16c4e619b7ea0971d0c28ed6509be7a8`, `from_url` = the design

@@ -64,7 +64,7 @@ Run flow 01's loop, as BRIEF § 2.3 now describes it and § 11 corrected it:
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — the commit.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — the commit. `ca3b19ff` (2026-09-28); completeness exit 0, verbatim steps 0 problems, baseline paths missing 0. Upload set staged: 109 files, none in `crop-first/`.
 - [ ] The canvas is created, with the mark copied in before round 1 — its link here.
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/02-sign-in-and-account/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 02) — the commit.
