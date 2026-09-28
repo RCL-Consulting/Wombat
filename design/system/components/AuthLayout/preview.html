@@ -1,44 +1,92 @@
-<!-- @dsCard group="Forms" height=760 width=960 subtitle="The signed-out shell and its account card: static HTML with a real form post" -->
+<!-- @dsCard group="Account" height=1320 width=1120 subtitle="The auth card: 480px, top-aligned, 16px between its blocks, its heading the page's h1; sign out, link, forgotten password" -->
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>AuthLayout</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; max-width: 30rem; }
+  .pv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-lg); align-items: start; }
+  /* The app's shell is a full viewport (min-height 100vh); here each page gets a shell only as tall as its card. */
+  .pv-grid .auth-page-shell { min-height: 0; border-radius: var(--radius-lg); }
+</style>
 </head>
 <body>
-<div class="auth-page-shell">
-  <main class="auth-page-main">
-    <div class="account-form-container shadow">
-      <div class="account-brand">
-        <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="44" height="44">
-        <span class="account-brand-text">Wombat</span>
+<div class="pv-grid">
+
+<div>
+<p class="pv-cap">Sign out: no lockup; the h1, who is signed in, Cancel and Sign out. Neither GET signs anyone out; the form posts with its own token.</p>
+<div class="auth-page-shell"><main class="auth-page-main">
+  <div class="account-form-container">
+    <h1>Sign out</h1>
+    <p>You are signed in as Nomsa Mahlangu (mahlangu@kgk.wombat.local). Signing out ends your session in this browser.</p>
+    <form method="post" action="#">
+      <div class="form-actions">
+        <a class="btn btn-outline" href="#">Cancel</a>
+        <button type="submit" class="btn btn-primary"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button>
       </div>
-      <h2>Sign in</h2>
+    </form>
+  </div>
+</main></div>
+</div>
 
-      <div id="login-error" class="alert alert-danger" role="alert">Your session has ended. Please sign in again.</div>
+<div>
+<p class="pv-cap">Link your institutional sign-in, refused: the refusal in the slot above Password, focused, and named by Password. Tab: "Error: Link your institutional sign-in · Wombat".</p>
+<div class="auth-page-shell"><main class="auth-page-main">
+  <div class="account-form-container">
+    <h1>Link your institutional sign-in</h1>
+    <p>A Wombat account with the email <strong class="account-email">mahlangu@kgk.wombat.local</strong> already exists. Enter your current password to link your institutional sign-in.</p>
+    <form method="post" action="#">
+      <div id="link-error" class="alert alert-danger" role="alert" tabindex="-1">The account could not be linked. Check your password and try again.</div>
+      <div class="form-group">
+        <label for="link-password">Password</label>
+        <div class="password-field">
+          <input id="link-password" class="form-control" type="password" autocomplete="current-password" required aria-describedby="link-error">
+          <button type="button" class="btn btn-outline password-toggle" aria-controls="link-password" aria-pressed="false" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>Show</button>
+        </div>
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-outline" href="#">Cancel</a>
+        <button type="submit" class="btn btn-primary">Link and sign in</button>
+      </div>
+    </form>
+  </div>
+</main></div>
+</div>
 
-      <form method="post" action="#">
-        <div class="mb-3">
-          <label for="login-email">Email</label>
-          <input id="login-email" class="form-control" type="email" name="Email" autocomplete="username" required aria-describedby="login-error">
-        </div>
-        <div class="mb-3 password-wrapper">
-          <label for="login-password">Password</label>
-          <input id="login-password" class="form-control" type="password" name="Password" autocomplete="current-password" required aria-describedby="login-error">
-          <button type="button" class="password-toggle-btn">Show</button>
-        </div>
-        <div class="form-check mb-3">
-          <input id="login-remember" class="form-check-input" type="checkbox" name="RememberMe" value="true">
-          <label for="login-remember">Remember me</label>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Sign in</button>
-        </div>
-      </form>
-
-      <p class="page-subtitle mt-3">Forgotten your password? <a href="#">Reset it</a>.</p>
+<div>
+<p class="pv-cap">Forgotten password: no reset email and no field; three steps, the note where an institution signs people in, and the way back.</p>
+<div class="auth-page-shell"><main class="auth-page-main">
+  <div class="account-form-container">
+    <h1>Forgotten password</h1>
+    <p>A Wombat administrator can set a new password for you.</p>
+    <ol class="account-steps">
+      <li>Ask your Wombat administrator for a new password: the one at your institution or, if your account belongs to no institution, the platform's administrator. They give it to you themselves; Wombat does not email it.</li>
+      <li>Sign in with it.</li>
+      <li>Choose your own password on My account, under Change password.</li>
+    </ol>
+    <p class="account-note">If your institution signs you in, use its button on the sign-in page. Your institution resets that password, not Wombat.</p>
+    <div class="form-actions">
+      <a class="btn btn-outline" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>Back to sign in</a>
     </div>
-  </main>
+  </div>
+</main></div>
+</div>
+
+<div>
+<p class="pv-cap">Institutional sign-in expired: the sign-in in progress has gone. One sentence and the way back; no field, no alert.</p>
+<div class="auth-page-shell"><main class="auth-page-main">
+  <div class="account-form-container">
+    <h1>Institutional sign-in expired</h1>
+    <p>Your institutional sign-in has expired. Start again from the sign-in page.</p>
+    <div class="form-actions">
+      <a class="btn btn-outline" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>Back to sign in</a>
+    </div>
+  </div>
+</main></div>
+</div>
+
 </div>
 </body>
 </html>

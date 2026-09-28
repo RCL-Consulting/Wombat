@@ -1,6 +1,6 @@
 /* Wombat — components/bundle.css
-   Wombat's component CSS as flow 01 built it (T335, b347e11c; master@46aa6257), extracted with every class name and
-   declaration unchanged, so a design maps back to the classes Razor writes.
+   Wombat's component CSS as flows 01 and 02 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; master@937fe19c),
+   extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,
      --font-body, --font-mono, --font-display) and the @font-face rules for Source Sans 3 and Fraunces, so app.css's own
@@ -15,7 +15,7 @@
   color-scheme: light; /* dark mode is later (W-011): the browser's own controls and scrollbars are the light ones */
   /* WONK on, SOFT off; optical size tracks font-size via font-optical-sizing: auto */
   --font-display-settings: "SOFT" 0, "WONK" 1;
-}
+
 
 body {
   background-color: var(--background-color);
@@ -45,11 +45,21 @@ textarea {
   min-height: 100vh;
 }
 
+/* The card is top-aligned, 40px under the top at desktop and 32px at phone width (T339, flow 02, E8; R3-SI-*), not
+   centred: a card that grows (a refusal, the institutions' buttons) no longer moves its heading. No text sits on this
+   ground outside the card: muted words on its blue corner are 4.13:1 (R3-Spec § Contrast). */
 .auth-page-main {
+  align-items: flex-start;
   display: flex;
   flex: 1;
   justify-content: center;
-  padding: 3rem 1.5rem;
+  padding: 2.5rem 1.5rem;
+}
+
+@media (max-width: 640.98px) {
+  .auth-page-main {
+    padding: 2rem 1rem 1rem;
+  }
 }
 
 a {
@@ -612,22 +622,97 @@ dl.form-group > dd {
   margin-top: var(--space-xs);
 }
 
+/* T339 lane B: the auth card */
+/* The auth card (T339, flow 02; R3-SI-*, R3-LK-*, R3-FG, R2-SO): sign in, sign out, link, forgotten password and register.
+   30rem (480px) as built, top-aligned by .auth-page-main, padded 40px (24px below 641px), and 16px between its blocks
+   and between the fields of its form (E8), so no block carries a margin of its own. */
 .account-form-container {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-raised);
-  margin: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: 0 auto;
   max-width: 30rem;
-  width: min(100%, 30rem);
   padding: 2.5rem;
+  width: min(100%, 30rem);
+}
+
+.account-form-container:not(.account-form-container--wide) > *,
+.account-form-container:not(.account-form-container--wide) form > * {
+  margin: 0;
+}
+
+.account-form-container:not(.account-form-container--wide) form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* The page's one heading (R3-Spec § Typography): 2rem on the card, 1.5rem below 641px (E8). */
+.account-form-container h1 {
+  font-size: 2rem;
+  line-height: 1.25;
+  margin: 0;
+}
+
+/* The line under the lockup (R3-SI-*): muted on the surface, 5.09:1. */
+.account-purpose {
+  color: var(--muted-text);
+}
+
+/* An email in the card's words (the link page's): it breaks anywhere rather than widen the card (R3-LK-Live). */
+.account-email {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* A link on its own line under the form ("Forgotten your password?"): a 24px target, 44px below 641px (E7). */
+.account-link {
+  align-items: center;
+  align-self: flex-start;
+  display: inline-flex;
+  min-height: 1.5rem;
+}
+
+/* Forgotten password's three steps (R3-FG). */
+.account-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-left: 1.375rem;
+}
+
+/* A condition under the card's words, ruled off: forgotten password's line for a person whose institution signs them in. */
+.account-note {
+  border-top: 1px solid var(--border-color);
+  color: var(--muted-text);
+  padding-top: var(--space-md);
 }
 
 /* An account-shaped page that holds a questionnaire, not two fields: the MSF respondent page (T205). Wide enough for a
-   scale's labels and a comment box; the shell and the card are the sign-in page's. */
+   scale's labels and a comment box; the shell and the card are the sign-in page's. Its states keep their own flow: the
+   brand, an <h2> for each state, and the form, spaced by their margins. */
 .account-form-container--wide {
+  display: block;
   max-width: 44rem;
   width: min(100%, 44rem);
+}
+
+.account-form-container--wide .account-brand {
+  margin-bottom: var(--space-lg);
+}
+
+.account-form-container--wide h2 {
+  font-size: 2rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.account-form-container--wide form {
+  margin-top: var(--space-lg);
 }
 
 /* Respondents open their link on a phone as often as not: give the questions the width the card's padding would take. */
@@ -637,11 +722,11 @@ dl.form-group > dd {
   }
 }
 
+/* The lockup: the mark at 56px and the wordmark in the display face. */
 .account-brand {
   align-items: center;
   display: flex;
   gap: 0.85rem;
-  margin-bottom: var(--space-lg);
 }
 
 .account-brand-mark {
@@ -661,21 +746,320 @@ dl.form-group > dd {
   line-height: 1;
 }
 
-.account-form-container h2 {
-  font-size: 2rem;
-  margin: 0 0 var(--space-sm);
+/* Change password, in the shell (R3-CP-*): one column of about 640px, the form's card 16px from the header, 20px
+   between its fields. Its institution-only state is the notice and Back to My account, in the same column. */
+.change-password {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 40rem;
 }
 
-.account-form-container form {
-  margin-top: var(--space-lg);
+.change-password .alert {
+  margin: 0;
 }
+
+.change-password .form-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.change-password .form-container .form-actions {
+  margin-top: 0;
+}
+
+.change-password > .btn {
+  align-self: flex-start;
+}
+
+/* Below 641px (E7, E8): 44px controls, the card padded 24px and its heading 1.5rem; an action row stacks, each button
+   the row's width, the primary on top. On the auth card and on Change password. */
+@media (max-width: 640.98px) {
+  .account-form-container:not(.account-form-container--wide) {
+    padding: var(--space-lg);
+  }
+
+  .account-form-container h1 {
+    font-size: 1.5rem;
+  }
+
+  .account-form-container:not(.account-form-container--wide) .form-control,
+  .account-form-container:not(.account-form-container--wide) .btn,
+  .change-password .form-control,
+  .change-password .btn {
+    min-height: 2.75rem;
+  }
+
+  .account-form-container:not(.account-form-container--wide) .form-actions,
+  .change-password .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .account-form-container:not(.account-form-container--wide) > .btn,
+  .change-password > .btn {
+    align-self: stretch;
+  }
+
+  .account-form-container .form-check {
+    gap: var(--space-sm) 0.75rem;
+    min-height: 2.75rem;
+  }
+
+  .account-form-container .form-check-input {
+    height: 1.25rem;
+    width: 1.25rem;
+  }
+
+  /* The label is the target: it fills the 44px row, so the tick is pressed anywhere on it (E7; T339 step G, A.7.12). */
+  .account-form-container .form-check label {
+    align-items: center;
+    display: inline-flex;
+    min-height: 2.75rem;
+  }
+
+  .account-link {
+    min-height: 2.75rem;
+  }
+
+  .change-password .form-container {
+    padding: var(--space-lg);
+  }
+}
+/* end T339 lane B: the auth card */
+
+/* T339 lane C: My account */
+/* My account (T339, flow 02; R3-MA-*): three cards, Account at the left in a third of the row, Your name and How you sign
+   in stacked in the rest; one column below 901px, as a details grid. Each card spaces its blocks 16px apart. */
+.my-account-grid {
+  align-items: start;
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.my-account-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.my-account-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+/* A card's title is the h2 under the page's h1, set at the h3 size (R3-Spec § Typography): no level is skipped. */
+.my-account-card h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.my-account-card p {
+  margin: 0;
+}
+
+.my-account-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.my-account-form .form-actions {
+  margin-top: 0;
+}
+
+/* A result region with nothing to say takes no row of the card's gap. It is focused only once it holds its alert. */
+.my-account .action-result:empty {
+  display: none;
+}
+
+/* A details list for a narrow card (C8): each term above its value, 12px between the rows. The value wraps anywhere, so a
+   40-character address stays in the card. Two classes, so these outrank the base .details-list rules, which come later in
+   the sheet (the step F review: with one class each, the base grid won and set each term beside its value). */
+.details-list.details-list--stacked {
+  gap: 0.75rem;
+}
+
+.details-list.details-list--stacked > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.details-list.details-list--stacked dd {
+  overflow-wrap: anywhere;
+}
+
+/* A result in a card or in the dialog keeps the 16px between its blocks: .alert's own 40px margin-bottom would stand
+   under it too. */
+.my-account-card .alert,
+.dialog-form .alert {
+  margin: 0;
+}
+
+/* The roles, one per line, by label. */
+.my-account-roles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* How you sign in: one row a way in, its icon, its name over what it is, and its action or why there is none. No link
+   date (C1): Wombat stores none. */
+.signin-methods {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.signin-method {
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.signin-method:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.signin-method:last-child {
+  padding-bottom: 0;
+}
+
+.signin-method-icon {
+  color: var(--muted-text);
+  flex: none;
+}
+
+.signin-method-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.signin-method-detail {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+/* The last way in: its Remove, not live, and why, under it (R3-MA-InstOnly). Muted words, 5.09:1 on the surface. */
+.signin-method-action {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.signin-method-reason {
+  color: var(--muted-text);
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+/* ConfirmDialog's form mode (C7): the dialog card (.dialog-card, 28rem) holds the form itself, padded 32px, 16px between
+   its blocks; Cancel then the action, at the right. */
+.dialog-card--form {
+  padding: 0;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-xl);
+}
+
+.dialog-form h2 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.dialog-form p {
+  margin: 0;
+}
+
+/* The top rule every action row has (.form-actions, the action mode's FormActions), 16px above the buttons. */
+.dialog-actions {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: var(--space-md);
+}
+
+/* Below 641px (E7): My account's controls are 44px and its buttons take the row; each sign-in stacks, its name over its
+   action; the cards pad 16px. The dialog pads 24px and stacks its buttons, the action first. */
+@media (max-width: 900px) {
+  .my-account-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640.98px) {
+  .my-account .btn,
+  .my-account .form-control {
+    min-height: 2.75rem;
+  }
+
+  .my-account .detail-card {
+    padding: var(--space-md);
+  }
+
+  .my-account .form-actions .btn,
+  .signin-method .btn {
+    width: 100%;
+  }
+
+  .signin-method {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .signin-method-icon {
+    display: none;
+  }
+
+  .signin-method-action {
+    align-items: stretch;
+  }
+
+  .signin-method-reason {
+    text-align: left;
+  }
+
+  .dialog-form {
+    padding: var(--space-lg);
+  }
+
+  .dialog-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+}
+/* end T339 lane C */
 
 /* ── SSO ──────────────────────────────────────────── */
+/* T339 lane B: the institutions' buttons */
+/* The institutions' buttons stand above the form on the sign-in card (T339, flow 02, Q1; R3-SI-SSO-SessionEnded), then
+   the divider that says what the form below is for. Its words are muted on the surface, 5.09:1; its rules are hairlines,
+   decorative. The card's gap spaces both. */
 .sso-divider {
   align-items: center;
   display: flex;
   gap: var(--space-sm);
-  margin: var(--space-lg) 0;
+  text-align: center;
 }
 
 .sso-divider::before,
@@ -683,6 +1067,7 @@ dl.form-group > dd {
   border-top: 1px solid var(--border-color);
   content: "";
   flex: 1;
+  min-width: 1.5rem;
 }
 
 .sso-divider span {
@@ -696,10 +1081,17 @@ dl.form-group > dd {
   gap: var(--space-sm);
 }
 
+/* One institution: a full-width 44px outline button, its building icon and "Sign in with" its name at the left; a long
+   name wraps inside it (secondary on the surface, 4.86:1). */
 .sso-button {
-  text-align: center;
+  justify-content: flex-start;
+  line-height: 1.3;
+  min-height: 2.75rem;
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
   width: 100%;
 }
+/* end T339 lane B: the institutions' buttons */
 
 /* ── Alerts ────────────────────────────────────────── */
 /* An alert's words are body text on its tint, 11.2:1 or more; its kind's colour is the edge, thickened to a 4px stripe
@@ -1534,36 +1926,68 @@ textarea[aria-invalid="true"] {
 }
 
 /* ── Password toggle ──────────────────────────────── */
-/* As tall as what it holds, even as a grid's item, which would otherwise stretch to its row and take the toggle, placed
-   from its foot, away from the field. */
-.password-wrapper {
-  height: fit-content;
-  position: relative;
+/* T339 lane B: the password field */
+/* A password field and its Show toggle (PasswordField; T339, flow 02; R3-SI-Toggle). The toggle stands 8px to the right
+   of the input, never inside it, so the input's focus ring sits in the gap and a typed password never runs under it.
+   Until T339 the toggle was a 28px muted word inside the field's right end (.password-toggle-btn). */
+.password-field {
+  align-items: stretch;
+  display: flex;
+  gap: var(--space-sm);
 }
 
-.password-wrapper .form-control {
-  padding-right: 4.5rem;
+.password-field .form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
 }
 
-/* The Show toggle sits inside its field's right end, a 28px target (T086; T328 found it 23px) centred on the 38px field.
-   It is placed from the wrapper's foot, not its middle: on the sign-in, registration and link pages the wrapper holds
-   the label above the field too, and 50% of it put the toggle on the field's top edge (T328). The field is the last
-   thing in the wrapper on every page that has one. */
-.password-toggle-btn {
-  align-items: center;
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  bottom: calc((2.375rem - 1.75rem) / 2);
+/* A .btn-outline as tall as the field, 38px (44px below 641px, E7): secondary on the surface at rest, 4.86:1. Pressed,
+   the fill: on-fill on secondary, 4.86:1, and the eye-off icon in place of the eye (E9). The words stay "Show". */
+.password-toggle {
+  flex: none;
+  min-height: 2.375rem;
+  padding: 0 0.75rem;
+}
+
+.password-toggle[aria-pressed="true"] {
+  background-color: var(--secondary-color);
+  color: var(--on-fill);
+}
+
+.password-toggle[aria-pressed="true"] .password-toggle-eye,
+.password-toggle:not([aria-pressed="true"]) .password-toggle-eye-off {
+  display: none;
+}
+
+@media (max-width: 640.98px) {
+  .password-toggle {
+    min-height: 2.75rem;
+  }
+}
+
+/* The six rules under a new-password field, before anything is typed (C2): the heading, then one sentence a rule, muted
+   on the surface, 5.09:1. */
+.password-rules {
   color: var(--muted-text);
-  cursor: pointer;
-  display: inline-flex;
-  font-size: 0.875rem;
-  min-height: 1.75rem;
-  padding: 0 var(--space-sm);
-  position: absolute;
-  right: 0.375rem;
+  font-size: 0.9rem;
 }
+
+.password-rules p {
+  margin: 0;
+}
+
+.password-rules ul {
+  margin: 0.125rem 0 0;
+  padding-left: 1.25rem;
+}
+
+/* The rules broken, listed in a refusal under the same heading (R3-CP-Rules). */
+.alert .password-rules-broken {
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.25rem;
+}
+/* end T339 lane B: the password field */
 
 /* ── State panels / skeletons ─────────────────────── */
 .state-panel-title {
@@ -1598,6 +2022,13 @@ textarea[aria-invalid="true"] {
 }
 
 /* ── Utilities ─────────────────────────────────────── */
+/* The hidden attribute hides, whatever the element's class displays it as (T339, flow 02, the round 2 review's A3): the
+   browser's own [hidden] rule is display: none at the lowest weight, so .btn's inline-flex showed a hidden button. The
+   password toggle is rendered hidden until wombat.js drives it. */
+[hidden] {
+  display: none !important;
+}
+
 .shadow {
   box-shadow: var(--shadow-raised);
 }

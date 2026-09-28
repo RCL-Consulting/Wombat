@@ -1,0 +1,133 @@
+<!-- @dsCard group="Account" height=1560 width=1040 subtitle="My account in the shell: Account, Your name, How you sign in; the last way in; Remove's dialog in its form mode" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyAccount</title>
+<style>
+  body { padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-xl); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens the dialog with showModal(), so its backdrop is .dialog-scrim::backdrop, var(--scrim). A static preview
+     cannot open a modal, so the stage below paints that backdrop itself. */
+  .pv-stage { background: var(--scrim); padding: var(--space-xl) 0; border-radius: var(--radius-lg); }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  .pv-narrow { max-width: 44rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Thandi Zulu: a password and one institutional sign-in, both removable; "Name saved." after Save name. Inside the shell (MainLayout), whose top bar's name is the current page; no trail.</p>
+<div class="my-account">
+  <div class="header-container">
+    <div>
+      <h1>My account</h1>
+      <p class="page-subtitle">Your name, your roles, and how you sign in.</p>
+    </div>
+  </div>
+
+  <div class="my-account-grid">
+    <section class="detail-card my-account-card" aria-labelledby="pv-account-heading">
+      <h2 id="pv-account-heading" tabindex="-1">Account</h2>
+      <dl class="details-list details-list--stacked">
+        <div><dt>Email</dt><dd>zulu@kgk.wombat.local</dd></div>
+        <div><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd></div>
+        <div><dt>Roles</dt><dd><ul class="my-account-roles"><li>Committee member</li><li>Assessor</li></ul></dd></div>
+      </dl>
+    </section>
+
+    <div class="my-account-column">
+      <section class="detail-card my-account-card" aria-labelledby="pv-name-heading">
+        <h2 id="pv-name-heading">Your name</h2>
+        <form method="post" action="#" class="my-account-form" data-submit-once>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="pv-first">First name</label>
+              <input id="pv-first" name="FirstName" class="form-control" value="Thandi" required maxlength="100" autocomplete="given-name">
+            </div>
+            <div class="form-group">
+              <label for="pv-last">Last name</label>
+              <input id="pv-last" name="LastName" class="form-control" value="Zulu" required maxlength="100" autocomplete="family-name">
+            </div>
+          </div>
+          <div class="action-result" tabindex="-1">
+            <div class="alert alert-success" role="status">Name saved.</div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save name</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="detail-card my-account-card" aria-labelledby="pv-signin-heading">
+        <h2 id="pv-signin-heading">How you sign in</h2>
+        <ul class="signin-methods">
+          <li class="signin-method">
+            <svg class="icon signin-method-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></svg>
+            <div class="signin-method-text">
+              <strong>Password</strong>
+              <span class="signin-method-detail">Your Wombat password.</span>
+            </div>
+            <a class="btn btn-outline" href="#">Change password</a>
+          </li>
+          <li class="signin-method">
+            <svg class="icon signin-method-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4M10 10h4M10 14h4M10 18h4" /></svg>
+            <div class="signin-method-text">
+              <strong>Kgosi Kgari Teaching Hospital</strong>
+              <span class="signin-method-detail">Institutional sign-in.</span>
+            </div>
+            <button type="button" class="btn btn-outline" aria-label="Remove your Kgosi Kgari Teaching Hospital sign-in" aria-haspopup="dialog">Remove</button>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">How you sign in for an account with no password and one institution: the sentence above the list, Remove disabled and described by its reason</p>
+<div class="my-account pv-narrow">
+  <section class="detail-card my-account-card" aria-labelledby="pv-signin2-heading">
+    <h2 id="pv-signin2-heading">How you sign in</h2>
+    <p>You sign in through your institution. This account has no Wombat password, so there is no password to change here.</p>
+    <ul class="signin-methods">
+      <li class="signin-method">
+        <svg class="icon signin-method-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4M10 10h4M10 14h4M10 18h4" /></svg>
+        <div class="signin-method-text">
+          <strong>Kgosi Kgari Teaching Hospital</strong>
+          <span class="signin-method-detail">Institutional sign-in.</span>
+        </div>
+        <div class="signin-method-action">
+          <button type="button" class="btn btn-outline" disabled aria-describedby="pv-reason" aria-label="Remove your Kgosi Kgari Teaching Hospital sign-in">Remove</button>
+          <span class="signin-method-reason" id="pv-reason">Remove: this is the only way you sign in.</span>
+        </div>
+      </li>
+    </ul>
+  </section>
+</div>
+
+<p class="pv-cap">Remove's dialog, reopened after a wrong password: the refusal first and focused, the field marked and empty; Cancel, then the danger action. 448px, padded 32px, the action row under a hairline.</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card dialog-card--form" aria-labelledby="pv-dlg-title" aria-describedby="pv-dlg-body">
+    <form class="dialog-form" method="post" action="#" data-submit-once>
+      <input type="hidden" name="Provider" value="kgk">
+      <h2 id="pv-dlg-title">Remove your Kgosi Kgari Teaching Hospital sign-in?</h2>
+      <p id="pv-dlg-body">You will still sign in with your email and password. You can link it again the next time you sign in through Kgosi Kgari Teaching Hospital.</p>
+      <div class="action-result" tabindex="-1">
+        <div id="remove-error" class="alert alert-danger" role="alert">Your sign-in was not removed. Incorrect password.</div>
+      </div>
+      <div class="form-group">
+        <label for="remove-password">Password</label>
+        <div class="password-field">
+          <input id="remove-password" name="Password" class="form-control" type="password" autocomplete="current-password" required aria-invalid="true" aria-describedby="remove-password-error">
+          <button type="button" class="btn btn-outline password-toggle" aria-controls="remove-password" aria-pressed="false" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>Show</button>
+        </div>
+        <div class="validation-message" id="remove-password-error">Incorrect password.</div>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-outline">Cancel</button>
+        <button type="submit" class="btn btn-danger">Remove sign-in</button>
+      </div>
+    </form>
+  </dialog>
+</div>
+</body>
+</html>

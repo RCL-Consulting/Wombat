@@ -1,4 +1,4 @@
-<!-- @dsCard group="Actions" height=460 width=960 subtitle="A native modal dialog: what the action does and cannot undo, then Cancel and the action" -->
+<!-- @dsCard group="Actions" height=900 width=960 subtitle="A native modal dialog: what the action does and cannot undo, then Cancel and the action; and its form mode, a real post" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,22 +6,47 @@
 <title>ConfirmDialog</title>
 <style>
   /* The app opens the dialog with showModal() (wwwroot/js/dialog.js), so its backdrop is .dialog-scrim::backdrop,
-     var(--scrim). A static preview cannot open a modal, so the stage below paints that backdrop itself. */
-  .pv-stage { position: relative; min-height: 460px; background: var(--scrim); padding-top: var(--space-2xl); box-sizing: border-box; }
+     var(--scrim). A static preview cannot open a modal, so each stage below paints that backdrop itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-2xl) 0; box-sizing: border-box; }
   .pv-stage dialog { position: static; margin: 0 auto; }
+  .pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); color: var(--muted-text); font-size: 0.8rem; background: var(--background-color); }
 </style>
 </head>
 <body>
+<p class="pv-cap">The action mode: the confirm runs in the circuit, keeping the focus while it runs</p>
 <div class="pv-stage">
-  <dialog open class="dialog-scrim dialog-card">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-a-title" aria-describedby="pv-a-body">
     <div class="form-container">
-      <h2>Deactivate this EPA?</h2>
-      <p>It can no longer be chosen for a new activity, and it stops being a target on every progress page and dashboard, for every institution that uses it. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page.</p>
+      <h2 id="pv-a-title">Deactivate this EPA?</h2>
+      <p id="pv-a-body">It can no longer be chosen for a new activity, and it stops being a target on every progress page and dashboard, for every institution that uses it. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page.</p>
       <div class="form-actions">
         <button type="button" class="btn btn-outline">Cancel</button>
         <button type="button" class="btn btn-danger">Deactivate</button>
       </div>
     </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">The form mode (My account's Remove): a real form posted to an endpoint, with its token, a hidden field and the caller's password field; the password takes the focus on open</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card dialog-card--form" aria-labelledby="pv-b-title" aria-describedby="pv-b-body">
+    <form class="dialog-form" method="post" action="#" data-submit-once>
+      <input type="hidden" name="Provider" value="marula">
+      <h2 id="pv-b-title">Remove your Marula Academic Hospital sign-in?</h2>
+      <p id="pv-b-body">You will still sign in with your email and password, or through Kgosi Kgari Teaching Hospital. You can link it again the next time you sign in through Marula Academic Hospital.</p>
+      <div class="form-group">
+        <label for="pv-b-password">Password</label>
+        <div class="password-field">
+          <input id="pv-b-password" name="Password" class="form-control" type="password" autocomplete="current-password" required aria-describedby="pv-b-help">
+          <button type="button" class="btn btn-outline password-toggle" aria-controls="pv-b-password" aria-pressed="false" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>Show</button>
+        </div>
+        <small class="page-subtitle" id="pv-b-help">Enter your password to confirm it is you.</small>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-outline">Cancel</button>
+        <button type="submit" class="btn btn-danger">Remove sign-in</button>
+      </div>
+    </form>
   </dialog>
 </div>
 </body>

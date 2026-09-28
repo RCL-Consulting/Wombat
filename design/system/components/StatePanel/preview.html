@@ -1,4 +1,4 @@
-<!-- @dsCard group="Feedback" height=650 subtitle="Every list and dashboard renders loading, error and empty explicitly" -->
+<!-- @dsCard group="Feedback" height=780 subtitle="Every list and dashboard renders loading, error and empty explicitly" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -19,8 +19,18 @@
   <div class="skeleton" style="width:100%;height:3rem"></div>
 </div>
 
-<p class="pv-cap">Error: a danger Alert carrying the page's load error (body text on the tint, the danger edge and icon)</p>
+<p class="pv-cap">Error without OnRetry: a danger Alert carrying the page's load error (body text on the tint, the danger edge and icon)</p>
 <div class="alert alert-danger" role="alert">The decision panel could not be found.</div>
+
+<p class="pv-cap">Error with OnRetry (My account, T339): fixed words that say nothing changed, and Try again; the answer takes the focus once it has come</p>
+<div class="action-result" tabindex="-1">
+  <div class="alert alert-danger" role="alert">
+    <div class="alert-row">
+      <span class="alert-row-text">Could not load your account. Nothing has changed. Try again, or come back in a few minutes.</span>
+      <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</button>
+    </div>
+  </div>
+</div>
 
 <p class="pv-cap">Empty: a dashed card with a title, a line of copy, and an optional action row</p>
 <div class="detail-card detail-card--empty">

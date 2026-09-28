@@ -1,4 +1,4 @@
-<!-- @dsCard group="Feedback" height=920 width=974 subtitle="Four kinds: body text on the tint, the kind's colour on the edge and the icon; the role follows the kind" -->
+<!-- @dsCard group="Feedback" height=1010 width=974 subtitle="Four kinds: body text on the tint, the kind's colour on the edge and the icon; the role follows the kind" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -12,7 +12,7 @@
 </head>
 <body>
 <p class="pv-cap">success, role="status": what an action did. The icon is the stylesheet's (circle-check), so no page writes one</p>
-<div class="alert alert-success" role="status">Profile saved.</div>
+<div class="alert alert-success" role="status">Name saved.</div>
 
 <p class="pv-cap">info, no role: standing page content (the builder's reader notice)</p>
 <div id="activity-type-read-only" class="alert alert-info">Set by the College that owns Paediatrics. You can read this activity type here, but not change it.</div>
@@ -24,8 +24,11 @@
   trainee's programme ended. The record is kept. If it should have counted, raise it with the programme administrator.
 </div>
 
-<p class="pv-cap">danger, role="alert": a refusal in its own words, named by the fields it concerns (aria-describedby)</p>
-<div id="login-error" class="alert alert-danger" role="alert">Your session has ended. Please sign in again.</div>
+<p class="pv-cap">info, Role="status": a notice that arrives with the page and refused nothing (the sign-in page's; named by Email, or focused beside the institutions' buttons)</p>
+<div id="login-notice" class="alert alert-info" role="status">Your session has ended. Sign in again.</div>
+
+<p class="pv-cap">danger, role="alert": a refusal in its own words, named by the fields it concerns (aria-describedby); on a static page it takes the focus itself (tabindex="-1" autofocus)</p>
+<div id="login-error" class="alert alert-danger" role="alert" tabindex="-1">Invalid email or password.</div>
 
 <p class="pv-cap">An alert that carries its own action: .alert-row. Home's load error, inside the ActionResult that takes the focus once Try again answers</p>
 <div class="action-result" tabindex="-1">

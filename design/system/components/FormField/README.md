@@ -14,7 +14,7 @@ One labelled field of a form: a `<label for>`, the caller's control, its help te
 
 - `Label` and `InputId` (required): the label's text and the control's id.
 - The control, in the slot: `.form-control` for inputs and textareas, `.form-select` for selects, a `.form-check` with a `.form-check-input` for one checkbox.
-- `Required`: a visual `*` (hidden from screen readers) plus a visually hidden "required".
+- `Required`: a visual `*` (hidden from screen readers) plus a visually hidden "required". **Not on flow 02's account forms** (sign in, link, change password, My account's name, the Remove dialog; T339, R3-Spec § Accessibility): every field on them is required, so a mark on each tells nothing; the input's own `required` exposes it to assistive technology, and the browser's check names a blank field. Elsewhere the mark stands.
 - `HelpText`: rendered as `small.page-subtitle` with id `{InputId}-help`. The control is the caller's, so the caller names the help with `aria-describedby="@FieldHelp.DescribedBy(…)"`, help first, then any warning or refusal region.
 - `FullWidth`: spans the grid row. `ValidationContent`: a region under the field (the encounter date's warning).
 
@@ -29,7 +29,7 @@ One labelled field of a form: a `<label for>`, the caller's control, its help te
 - A group of checkboxes or radios is a `fieldset.form-group` with a `<legend>` (reading as a label), its help a `p.page-subtitle` the fieldset names, its checkboxes in a `.check-grid`, each with a unique id. A rating scale is a `.scale-choices` list, lowest point first. Not a FormField.
 - A field the caller may read but not change is text, not a control: a `dl.form-group` with the value and a `.muted .text-sm` line saying who sets it ("Set by a global administrator.").
 - An option is shown by its label, never the key it stores.
-- Sensitive inputs sit in a `.password-wrapper` with `PasswordToggleButton`.
+- A password is a `PasswordField` (its own component: the label, the input and a Show toggle beside it), not a FormField; a new password lists the six rules under it (PasswordRules). The old `.password-wrapper` and `PasswordToggleButton` are gone (T339).
 
 ## Invalid and warning states (DESIGN.md § Form system; § Alerts, validation, empty states)
 

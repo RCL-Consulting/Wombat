@@ -473,8 +473,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-09-27T13:26:51Z",
-    "via": "Claude Code · Wombat@46aa6257",
-    "note": "Re-synced to flow 01 as built (T335, b347e11c): 33 colours (11 new, 5 changed, 2 removed), radii, shadows and motion as tokens, Source Sans 3; 8 components added, 19 revised; 29 icons uploaded (54 in all), the Source Sans 3 fonts and both OFL texts."
+    "at": "2026-09-28T12:00:00Z",
+    "via": "Claude Code · Wombat@937fe19c",
+    "note": "Re-synced to flow 02 as built (T339, f50dffb2 and 6735fa98): no token value changed; 4 components added (SignInCard, PasswordField, PasswordRules, MyAccount), 7 revised (AuthLayout, Alert, ConfirmDialog, StatePanel, FormField, Icon, and the bundle); 4 icons to upload (eye, eye-off, building-2, key-round; 58 in all)."
   }
 }

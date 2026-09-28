@@ -6,16 +6,18 @@ A message block in one of four kinds (`success`, `info`, `warning`, `danger`): b
 
 `<Alert Kind="danger" Id="login-error" Role="…" Dismissible="true">…</Alert>`
 
-- `Kind`: `success`, `info` (the default), `warning` or `danger`. It renders `div.alert.alert-{Kind}`.
+- `Kind`: `success`, `info` (the default), `warning` or `danger`. It renders `div.alert.alert-{Kind}`. **Info is for a notice**: something the person should know that refused nothing (flow 02: "Your session has ended. Sign in again.", "You have signed out.", change password's "This account signs in through your institution, so it has no password to change here."). Danger is for a refusal only.
 - The content: the message in the product's words. A caught refusal goes through `RefusalText.Of(exception)`, never `exception.Message`, so a validator's refusal reads as its sentences, not as "Validation failed: -- Members: … Severity: Error".
-- `Role`, only where the kind's default is wrong. Defaults: `danger` is `role="alert"` (read at once), `warning` and `success` are `role="status"`, `info` has none. A refusal shown as a warning takes `Role="alert"`; a warning or success that is standing page content, there on every visit, takes `Role=""`, which renders none.
+- `Role`, only where the kind's default is wrong. Defaults: `danger` is `role="alert"` (read at once), `warning` and `success` are `role="status"`, `info` has none. A refusal shown as a warning takes `Role="alert"`; a notice that arrives with the page takes `Kind="info" Role="status"` (the sign-in page's notices, change password's institution-only notice); a warning or success that is standing page content, there on every visit, takes `Role=""`, which renders none.
 - `Id`, when a field must name the alert with `aria-describedby`: an alert already on the page when it loads is not reliably announced, so the field that takes the focus names it (sign-in, and every field a refusal names).
+- **Any other attribute** lands on the alert's own element (`CaptureUnmatchedValues`, T339): `tabindex="-1"` and `autofocus` for a message that takes the focus as a static page loads (the sign-in page's refusal, and its notice beside the institutions' buttons; the link page's refusal; change password's refusal). SignInCard has the focus rule.
 - `Dismissible`: puts the content in a `div` beside a `.btn .btn-outline .btn-xs` × inside an `.actions-cell`.
 - **An action of its own:** lay the words and the action out in `div.alert-row`: the words in `span.alert-row-text` (flex `1 1 16rem`), the button or link after them, wrapping under the words where they need the width. Home's load error ("**Could not load your Home.** Nothing has changed. Try again, or come back in a few minutes." with Try again) and the acting-role switch's result (with Switch back).
 
 ## Look (DESIGN.md § Alerts, validation, empty states)
 
 - `.alert`: `text-color` words, a 1px edge in the kind's colour thickened to 4px down the left, `radius-md`, padding 0.75rem 1rem 0.75rem 3rem, `space-lg` below.
+- **Inside a card or a dialog that spaces its blocks with a gap, the alert has no margin of its own**, so a result keeps the container's rhythm: the auth card (its children's margins are zeroed), `.change-password .alert`, `.my-account-card .alert` and `.dialog-form .alert`, all 16px between blocks. A new container with a gap does the same.
 - `.alert::before`: the kind's 20px Lucide icon, a mask filled with the kind's colour, 1rem in and on the first line: circle-check (success), info (info), triangle-alert (warning), circle-alert (danger). No page writes the icon.
 - Tints and edges: success `success-bg`/`success-color`; info `info-bg`/`secondary-color`; warning `warning-bg`/`warning-color`; danger `danger-bg`/`danger-color`.
 - In a Windows contrast theme the icon is filled with `CanvasText`.
@@ -29,8 +31,8 @@ A message block in one of four kinds (`success`, `info`, `warning`, `danger`): b
 - Never hand-write `<div class="alert …">`: it skips the role default.
 - **A semantic colour is never an alert's words** (T322): the kind is told by the tint, the edge and the icon.
 - An action that is done moves the focus to its result; a refused action leaves the focus where it was, with its refusal as a `danger` Alert.
-- A load error says that nothing changed and offers the read again; it draws nothing the read would have filled. (Only Home's DashboardFrame does today: every StatePanel `LoadError` prints the page's own string with no Try again; see StatePanel's Known gaps.)
-- A refusal that arrives by URL travels as a code and the page chooses the sentence, so a crafted link cannot put words on Wombat's page.
+- A load error says that nothing changed and offers the read again; it draws nothing the read would have filled. Home's DashboardFrame and My account (StatePanel with `OnRetry`, T339) do; every other StatePanel `LoadError` prints the page's own string with no Try again (StatePanel's Known gaps).
+- A refusal that arrives by URL travels as a code and the page chooses the sentence, so a crafted link cannot put words on Wombat's page. No sentence says "Please" (flow 02, C5).
 
 ## Contrast
 

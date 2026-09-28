@@ -1,0 +1,161 @@
+<!-- @dsCard group="Account" height=1720 width=1120 subtitle="The sign-in page on the auth card: blank, refused, a notice, and with three institutions above the form" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SignInCard</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: 0 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; max-width: 30rem; }
+  .pv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-lg); align-items: start; }
+  /* The app's shell is a full viewport (min-height 100vh); here each state gets a shell only as tall as its card. */
+  .pv-grid .auth-page-shell { min-height: 0; border-radius: var(--radius-lg); }
+</style>
+</head>
+<body>
+<div class="pv-grid">
+
+<div>
+<p class="pv-cap">Blank, no institution configured: Email takes the focus. Tab: "Sign in · Wombat".</p>
+<div class="auth-page-shell"><main class="auth-page-main">
+  <div class="account-form-container">
+    <div class="account-brand">
+      <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="56" height="56">
+      <span class="account-brand-text">Wombat</span>
+    </div>
+    <p class="account-purpose">Work-based assessment for specialist training.</p>
+    <h1>Sign in</h1>
+    <form method="post" action="#">
+      <div class="form-group">
+        <label for="a-email">Email</label>
+        <input id="a-email" class="form-control" type="email" name="Email" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="a-password">Password</label>
+        <div class="password-field">
+          <input id="a-password" class="form-control" type="password" name="Password" autocomplete="current-password" required>
+          <button type="button" class="btn btn-outline password-toggle" aria-controls="a-password" aria-pressed="false" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>Show</button>
+        </div>
+      </div>
+      <div class="form-check">
+        <input id="a-remember" class="form-check-input" type="checkbox" name="RememberMe" value="true">
+        <label for="a-remember">Remember me</label>
+      </div>
+      <div class="form-actions"><button type="submit" class="btn btn-primary">Sign in</button></div>
+    </form>
+    <a class="account-link" href="#">Forgotten your password?</a>
+  </div>
+</main></div>
+</div>
+
+<div>
+<p class="pv-cap">Refused: danger, role="alert", in the one slot under the h1; it takes the focus itself and both fields name it. A wrong password, an unknown address, an institution-only account and a locked one read the same. Tab: "Error: Sign in · Wombat".</p>
+<div class="auth-page-shell"><main class="auth-page-main">
+  <div class="account-form-container">
+    <div class="account-brand">
+      <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="56" height="56">
+      <span class="account-brand-text">Wombat</span>
+    </div>
+    <p class="account-purpose">Work-based assessment for specialist training.</p>
+    <h1>Sign in</h1>
+    <div id="login-error" class="alert alert-danger" role="alert" tabindex="-1">Invalid email or password.</div>
+    <form method="post" action="#">
+      <div class="form-group">
+        <label for="b-email">Email</label>
+        <input id="b-email" class="form-control" type="email" name="Email" autocomplete="username" required aria-describedby="login-error" value="mahlangu@kgk.wombat.local">
+      </div>
+      <div class="form-group">
+        <label for="b-password">Password</label>
+        <div class="password-field">
+          <input id="b-password" class="form-control" type="password" name="Password" autocomplete="current-password" required aria-describedby="login-error">
+          <button type="button" class="btn btn-outline password-toggle" aria-controls="b-password" aria-pressed="false" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>Show</button>
+        </div>
+      </div>
+      <div class="form-check">
+        <input id="b-remember" class="form-check-input" type="checkbox" name="RememberMe" value="true">
+        <label for="b-remember">Remember me</label>
+      </div>
+      <div class="form-actions"><button type="submit" class="btn btn-primary">Sign in</button></div>
+    </form>
+    <a class="account-link" href="#">Forgotten your password?</a>
+  </div>
+</main></div>
+</div>
+
+<div>
+<p class="pv-cap">A notice, no institution: info, role="status". Nothing was refused, so Email keeps the focus and names the notice.</p>
+<div class="auth-page-shell"><main class="auth-page-main">
+  <div class="account-form-container">
+    <div class="account-brand">
+      <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="56" height="56">
+      <span class="account-brand-text">Wombat</span>
+    </div>
+    <p class="account-purpose">Work-based assessment for specialist training.</p>
+    <h1>Sign in</h1>
+    <div id="login-notice" class="alert alert-info" role="status">Your session has ended. Sign in again.</div>
+    <form method="post" action="#">
+      <div class="form-group">
+        <label for="c-email">Email</label>
+        <input id="c-email" class="form-control" type="email" name="Email" autocomplete="username" required aria-describedby="login-notice">
+      </div>
+      <div class="form-group">
+        <label for="c-password">Password</label>
+        <div class="password-field">
+          <input id="c-password" class="form-control" type="password" name="Password" autocomplete="current-password" required>
+          <button type="button" class="btn btn-outline password-toggle" aria-controls="c-password" aria-pressed="false" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>Show</button>
+        </div>
+      </div>
+      <div class="form-check">
+        <input id="c-remember" class="form-check-input" type="checkbox" name="RememberMe" value="true">
+        <label for="c-remember">Remember me</label>
+      </div>
+      <div class="form-actions"><button type="submit" class="btn btn-primary">Sign in</button></div>
+    </form>
+    <a class="account-link" href="#">Forgotten your password?</a>
+  </div>
+</main></div>
+</div>
+
+<div>
+<p class="pv-cap">Three institutions, above the form, then the divider that says what the form is for. With a notice beside the buttons the notice takes the focus itself, so the next Tab reaches the first institution; with nothing to say, nothing is focused.</p>
+<div class="auth-page-shell"><main class="auth-page-main">
+  <div class="account-form-container">
+    <div class="account-brand">
+      <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="56" height="56">
+      <span class="account-brand-text">Wombat</span>
+    </div>
+    <p class="account-purpose">Work-based assessment for specialist training.</p>
+    <h1>Sign in</h1>
+    <div id="login-notice-2" class="alert alert-info" role="status" tabindex="-1">Your session has ended. Sign in again.</div>
+    <div class="sso-providers">
+      <a href="#" class="btn btn-outline sso-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4M10 10h4M10 14h4M10 18h4" /></svg>Sign in with Kgosi Kgari Teaching Hospital</a>
+      <a href="#" class="btn btn-outline sso-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4M10 10h4M10 14h4M10 18h4" /></svg>Sign in with Marula Academic Hospital</a>
+      <a href="#" class="btn btn-outline sso-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4M10 10h4M10 14h4M10 18h4" /></svg>Sign in with Ridgeview Provincial Tertiary Hospital</a>
+    </div>
+    <div class="sso-divider"><span>or sign in with your email and password</span></div>
+    <form method="post" action="#">
+      <div class="form-group">
+        <label for="d-email">Email</label>
+        <input id="d-email" class="form-control" type="email" name="Email" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="d-password">Password</label>
+        <div class="password-field">
+          <input id="d-password" class="form-control" type="password" name="Password" autocomplete="current-password" required>
+          <button type="button" class="btn btn-outline password-toggle" aria-controls="d-password" aria-pressed="false" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>Show</button>
+        </div>
+      </div>
+      <div class="form-check">
+        <input id="d-remember" class="form-check-input" type="checkbox" name="RememberMe" value="true">
+        <label for="d-remember">Remember me</label>
+      </div>
+      <div class="form-actions"><button type="submit" class="btn btn-primary">Sign in</button></div>
+    </form>
+    <a class="account-link" href="#">Forgotten your password?</a>
+  </div>
+</main></div>
+</div>
+
+</div>
+</body>
+</html>
