@@ -133,6 +133,7 @@ public sealed class AuthCardStyleTests
     [InlineData(NarrowCard + " .btn")]
     [InlineData(".change-password .form-control")]
     [InlineData(".change-password .btn")]
+    [InlineData(".account-form-container .form-check label")] // Remember me: the label is the target (T339 step G, A.7.12)
     public void BelowTheSmallBreakpoint_TheControlsAre44Px(string selector)
         => Stylesheet.AppCss().ComputedIn(Phone, selector)["min-height"].Should().Be("2.75rem", "E7");
 

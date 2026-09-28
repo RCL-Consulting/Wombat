@@ -900,6 +900,13 @@ dl.form-group > dd {
     width: 1.25rem;
   }
 
+  /* The label is the target: it fills the 44px row, so the tick is pressed anywhere on it (E7; T339 step G, A.7.12). */
+  .account-form-container .form-check label {
+    align-items: center;
+    display: inline-flex;
+    min-height: 2.75rem;
+  }
+
   .account-link {
     min-height: 2.75rem;
   }
