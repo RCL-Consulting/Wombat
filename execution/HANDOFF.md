@@ -40,11 +40,8 @@ want it to look at UX also, include mails and pdf and set up the pilot", and "ac
   `design/flows/02-sign-in-and-account/replay-workflow.js`): `wombat_scenario_t339` on :5180, snapshots
   `scenario-t339-post-act*`, Playwright in the session scratchpad. The static toggle was checked in a real browser first.
   Then: design-system re-sync (step 8) and lessons (step 9).
-- Reusable from T335:
-  - `design/pilot/build-lanes.md` (the lane rules);
-  - `design/pilot/review-lanes.md` (the reviewers' brief);
-  - `design/pilot/replay-workflow.js` (step G). Its Playwright install in the old job's scratch folder is gone; reinstall
-    in a new scratch folder with `npm install playwright@1.63` and `channel: 'chrome'`.
+- Templates for the next flow: `design/pilot/*` (T335) and `design/flows/02-sign-in-and-account/{build-lanes,review-lanes}.md`,
+  `replay-workflow.js` (T339). Playwright: `npm install playwright@1.63` in a scratch folder, `channel: 'chrome'`.
 
 ### For the operator
 - **P2s before real users (14):** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T329, T333, T334.
