@@ -47,8 +47,8 @@ Run the loop as flow 02 ran it (`design/flows/02-sign-in-and-account/`, BRIEF §
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — the commit.
-- [ ] The canvas is created, with the mark copied in before round 1 — its link here.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — `6df626e6` (with `check_verbatim_steps.py` and `check_baseline_paths.py` clean for flow 03; staged: 85 files, 2.69 MB, plus the two seed folders).
+- [x] The canvas is created, with the mark copied in before round 1 — https://claude.ai/artifact/6Uar9yce4Dxx9iPwgE8JY5 (mark `/_blob/c1b21826d1dc3296fc39cb61b871981e`, 2026-09-29).
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/03-trainee-files-activity/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 03) — the commit.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 03, and the baseline is re-captured,
