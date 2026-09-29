@@ -36,8 +36,8 @@ Add an `xmin` concurrency token to `Activity` (migration), and turn a `DbUpdateC
 
 ## Related
 
-_Task ids, decisions (`D<n>` for product, `W-<n>` for process), files, commits._
+T342 (flow 03), `design/flows/03-trainee-files-activity/build-review.md`.
 
 ## Notes
 
-_Observed facts, inferences, and unknowns. Label them when the difference matters._
+Observed by the T342 build review (code read at `t342`, 2026-09-29); not yet replayed.
