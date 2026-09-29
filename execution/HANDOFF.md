@@ -26,11 +26,17 @@ The operator asked to start T342. Steps 1–4 are done; the loop now waits on th
 
 - **Round 3** drawn and checked item by item (`round-3-check.md`): all hold. **The design is final.**
 
-### Next session: T342 step 6, the build. **Model: Opus.**
+- **Step 6 started:** `build-lanes.md` (flow 03's lane rules). Worktrees under `.claude/worktrees/`: `t342`
+  (integration), `t342-lists` (lane A1: Needs you, returned, who has it, My activities paging, E7 names) and
+  `t342-filing` (lane A2: picker shape, move hand-off and result words, File it again query, save-draft command,
+  viewer-aware programme wording, rung descriptors). Wave 1 was running when this was written.
 
-- Lanes from flow 02's `build-lanes.md`; the build items are `round-2-review.md` § For the build (Needs you query,
-  who-has-it, picker shape, File it again, save-without-a-move command, rung row, history table, focus on arrival,
-  ConfirmDialog CancelLabel, CSS reuse and scoping). Then review, fix pass, squash, DESIGN.md banner; step 7 replay.
+### Next session: T342 step 6 continues. **Model: Opus.**
+
+- Merge wave 1 (`t342-lists`, `t342-filing`) into `t342`, all six suites; then wave 2 lanes: B Log an activity and
+  the renderer (`ActivityForm`), C the activity page, D My activities, Home's Needs you card and the inbox's empty
+  state; each owns its DESIGN.md section. Then the runbook lane, the four-sided review (`review-lanes.md` from flow
+  02's), one fix pass, squash onto master.
 
 ### For the operator
 
