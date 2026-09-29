@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shared parts</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1f1f1f}
+*{box-sizing:border-box}
+a{color:#1f1f1f}a:hover{color:#000}
+.card{background:#fff;border:1px solid #d0d0d0;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.card h2{margin:0;font-size:17px}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1.5px solid #333;border-radius:6px;background:#fff;color:#111;font:inherit;font-weight:600;font-size:14px;text-decoration:none}
+.btn.pri{background:#333;color:#fff}
+.btn.quiet{border-color:transparent;text-decoration:underline;padding:0 4px}
+.btn.dis{opacity:.45}
+.field{display:flex;flex-direction:column;gap:6px}
+.in{height:38px;border:1.5px solid #777;border-radius:6px;background:#fff;padding:0 12px;display:flex;align-items:center;justify-content:space-between;color:#333}
+.in.area{height:76px;align-items:flex-start;padding-top:8px}
+.in.bad{border-color:#111;box-shadow:inset 4px 0 0 #111}
+.help{font-size:13px;color:#555}
+.msg{font-size:14px;font-weight:600}
+.alert{border:1.5px solid #555;border-left-width:6px;border-radius:6px;background:#f6f6f6;padding:12px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.badge{display:inline-block;border:1px solid #777;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:600;background:#eee}
+.lock{border:1.5px dashed #999;border-radius:8px;background:#f7f7f7;padding:16px;display:flex;flex-direction:column;gap:8px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;border:1px dashed #333;padding:1px 6px;border-radius:4px;background:#fff;align-self:flex-start}
+.focus{outline:2px solid #000;outline-offset:2px}
+.rung{flex:1;border:1.5px solid #999;border-radius:6px;padding:8px;font-size:12px;background:#fff;display:flex;flex-direction:column;gap:4px}
+.rung b{font-size:16px}
+.rung.on{border:3px solid #111;background:#e6e6e6}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{background:#ececec;text-align:left;padding:8px 10px;font-weight:600}
+td{padding:8px 10px;border-top:1px solid #e0e0e0;vertical-align:top}
+.muted{color:#555}
+.k{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#555}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1500px; box-sizing: border-box; padding: 40px; background: #f2f2f2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-content: start">
+
+<section class="card">
+<span class="k">1 · Result region (ActionResult) · takes the focus</span>
+<div class="alert focus" role="status" tabindex="-1"><b>Submitted. It is now Requested.</b><span>Fatima Khumalo will find it in her Activity inbox.</span></div>
+<div class="alert"><b>Draft saved. It has not been submitted.</b><span>Nobody else can see a draft.</span></div>
+<div class="alert"><b>Saved as a draft, but not submitted.</b><span>Fix the 2 fields named below and submit again.</span></div>
+<p class="help" style="margin: 0">One region at the head of the page body, above who-has-it-now. It replaces the old silent Submit and Complete on the activity page. Focus moves here; it is never left on the page body.</p>
+</section>
+
+<section class="card">
+<span class="k">2 · A refusal: summary, then the field (T263, T299)</span>
+<div class="alert focus" role="alert" tabindex="-1"><b>Nothing was saved.</b><a href="#d">Date observed: The date cannot be after today (2026-09-29).</a></div>
+<div class="field"><label>Date observed *</label><div class="in bad"><span>2026-09-30</span></div><span class="msg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4M12 16h.01"></path></svg> The date cannot be after today (2026-09-29).</span><span class="help">The day you were observed. Help text sits under the label and is read with the field.</span></div>
+<p class="help" style="margin: 0">The summary links each refused field; the field carries its own message (aria-describedby: help, then message). Changing the value drops the mark and message at once and the field's own hints return (next panel).</p>
+</section>
+
+<section class="card">
+<span class="k">3 · Hints as the date is typed (a live region under the field)</span>
+<div class="field"><label>Date observed *</label><div class="in"><span>2026-09-09</span></div><div class="alert" style="padding: 8px 12px"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg> This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the encounter is recorded as late.</span></div></div>
+<div class="field"><label>Date observed *</label><div class="in bad"><span>2026-01-14</span></div><span class="msg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4M12 16h.01"></path></svg> This date is before your programme started (2026-01-15), and will not be accepted.</span></div>
+<p class="help" style="margin: 0">Only instruments that credit carry either hint (a reflection or a session log shows neither). Checked when the date field is left, not per keystroke: one round trip.</p>
+</section>
+
+<section class="card">
+<span class="k">4 · A section someone else fills in (Q2)</span>
+<div class="lock"><div style="display: flex; justify-content: space-between"><b>Entrustment</b><span class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Fatima Khumalo fills this in</span></div><span class="muted">Not filled in yet. She rates the encounter on this ladder after you submit.</span><div style="display: flex; gap: 6px"><span class="rung"><b>1</b></span><span class="rung"><b>2</b></span><span class="rung"><b>3a</b></span><span class="rung"><b>3b</b></span><span class="rung"><b>4</b></span><span class="rung"><b>5</b></span></div></div>
+<div class="lock" style="border-style: solid; background: #fff"><div style="display: flex; justify-content: space-between"><b>Entrustment</b><span class="badge">Filled in by David Naidoo, 2026-09-22</span></div><div style="display: flex; gap: 6px"><span class="rung"><b>1</b></span><span class="rung"><b>2</b></span><span class="rung"><b>3a</b></span><span class="rung"><b>3b</b></span><span class="rung on"><b>4</b><span>[Rung 4 descriptor]</span></span><span class="rung"><b>5</b></span></div></div>
+<p class="help" style="margin: 0">Before: no inputs at all, a dashed frame and the owner's name. After: values as text, solid frame, who and when. The ladder is a read-only row (Q4), its descriptor shown for the chosen rung.</p>
+</section>
+
+<section class="card">
+<span class="k">5 · The action bar (one per page, under the form)</span>
+<div style="display: flex; gap: 12px; align-items: center"><a class="btn pri" href="#">Submit</a><a class="btn" href="#">Save draft</a><span style="flex: 1"></span><a class="btn quiet" href="#">Cancel this draft…</a></div>
+<div style="display: flex; gap: 12px; align-items: center"><a class="btn" href="#">Cancel request…</a><span class="help">She has not acted on it yet.</span></div>
+<div style="display: flex; gap: 12px; align-items: center"><a class="btn pri" href="#" aria-disabled="true" style="cursor: progress">Submitting…</a><a class="btn dis" href="#">Save draft</a><span class="help">Submit is aria-disabled, keeps focus; the racing button is disabled.</span></div>
+<p class="help" style="margin: 0">One filled button: the move that moves it on. Cancel is last and quiet, and asks first (ConfirmDialog: "Cancel this draft? It cannot be reopened, and it credits nothing.").</p>
+</section>
+
+<section class="card">
+<span class="k">6 · Note panel, refused and kept (flow 04 preview, T299)</span>
+<div class="alert focus" role="alert" tabindex="-1"><b>Not returned.</b><a href="#n">Note to Sipho Ndlovu: [the refusal, in its own words]</a></div>
+<div class="lock" style="border-style: solid; background: #fff"><label><b>Note to Sipho Ndlovu *</b></label><div class="in area bad">[The note exactly as typed stays here]</div><span class="msg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4M12 16h.01"></path></svg> [the refusal, in its own words]</span><div style="display: flex; gap: 12px"><a class="btn pri" href="#">Return with this note</a><a class="btn quiet" href="#">Keep it without returning</a></div></div>
+<p class="help" style="margin: 0">Opens inline under the action bar, not in a dialog. The field is named for who reads it. Replaces "Transition note" and "Apply".</p>
+</section>
+
+<section class="card">
+<span class="k">7 · A move its mover cannot make (Q5)</span>
+<div style="display: flex; gap: 12px; align-items: center"><a class="btn pri dis" href="#" aria-disabled="true">Complete</a><span class="help">Complete: Needs Entrustment level, which you cannot fill in here.</span></div>
+<div class="alert" style="background: #fff"><span>Option: hide the move and say it in who-has-it-now: "Waiting for Entrustment, which only Fatima Khumalo can fill in."</span></div>
+<p class="help" style="margin: 0">A and C show it greyed with the reason (DESIGN.md's rule as it stands). B hides it and says it in the thread's Now card.</p>
+</section>
+
+<section class="card">
+<span class="k">8 · One history row, wide and stacked</span>
+<table><thead><tr><th>Move</th><th>By</th><th>When</th><th>Credit</th></tr></thead><tbody><tr><td><b>Submit</b><br><span class="muted">Draft → Requested</span></td><td>Sipho Ndlovu</td><td>2026-09-29 09:12 SAST<br><span class="muted">Filed 20 days after the encounter</span></td><td>—</td></tr><tr><td><b>Decline</b><br><span class="muted">Requested → Declined</span></td><td>Fatima Khumalo</td><td>2026-09-29 14:05 SAST</td><td>—</td></tr><tr><td colspan="4" style="border-top: 0; padding-top: 0"><span class="muted">Note:</span> [Her reason, as she wrote it]</td></tr></tbody></table>
+<div style="width: 358px; border: 1px solid #ccc; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 2px; font-size: 14px"><b>Decline · Requested → Declined</b><span>Fatima Khumalo · 2026-09-29 14:05 SAST</span><span class="muted">Credit —</span><span>Note: [Her reason, as she wrote it]</span></div>
+<p class="help" style="margin: 0">The note gets its own full-width line, not a narrow cell. Below 641 px each move is a block of lines: no sideways scroll.</p>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

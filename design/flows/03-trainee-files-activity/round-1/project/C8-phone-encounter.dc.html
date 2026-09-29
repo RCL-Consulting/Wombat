@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C8 Phone: step 2, late warning</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;color:#1f1f1f}
+*{box-sizing:border-box}
+a{color:#1f1f1f}a:hover{color:#000}
+.pbar{height:56px;background:#4a4a4a;color:#fff;display:flex;align-items:center;gap:10px;padding:0 16px}
+.pbar img{width:28px;height:28px}
+.pbar .r{font-size:12px;line-height:1.2;color:#ddd}
+.pbar .r b{display:block;color:#fff;font-size:14px}
+.menu{margin-left:auto;border:1px solid #aaa;border-radius:6px;height:44px;display:flex;align-items:center;padding:0 14px;font-weight:600}
+.part{padding:12px 16px 40px;display:flex;flex-direction:column;gap:16px}
+.hdr{border-bottom:2px solid #888;padding-bottom:10px}
+.hdr h1{margin:0;font-size:22px;font-weight:600;line-height:1.25}
+.sub{font-size:14px;color:#555;margin-top:4px}
+.steps{font-size:14px;font-weight:600;border-top:4px solid #111;padding-top:6px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+legend{padding:0;margin-bottom:4px}
+.opt{display:flex;gap:10px;align-items:flex-start;min-height:44px;border:1.5px solid #999;border-radius:6px;padding:10px 12px;font-size:15px}
+.opt.sel{border:2.5px solid #111;background:#eee}
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid #555;flex:none;margin-top:2px}
+.sel .dot{background:radial-gradient(#111 45%,#fff 50%)}
+.field{display:flex;flex-direction:column;gap:6px}
+.in{min-height:44px;border:1.5px solid #777;border-radius:6px;background:#fff;padding:8px 12px;display:flex;align-items:center}
+.help{font-size:13px;color:#555}
+.alert{border:1.5px solid #555;border-left-width:6px;border-radius:6px;background:#f6f6f6;padding:10px 12px;font-size:14px}
+.pbtn{height:44px;display:flex;align-items:center;justify-content:center;border:1.5px solid #333;border-radius:6px;font-weight:600;text-decoration:none;background:#333;color:#fff}
+.fold{position:absolute;left:0;top:844px;width:390px;border-top:2px dashed #111}
+.fold span{position:absolute;right:4px;top:-20px;font-size:11px;background:#111;color:#fff;padding:1px 6px}
+</style>
+</helmet>
+<div style="width: 390px; height: 1500px; position: relative; background: #fff; overflow: hidden">
+<header class="pbar"><img src="/_blob/c1b21826d1dc3296fc39cb61b871981e" alt=""><span class="r">Acting as<b>Trainee</b></span><span class="menu">Menu</span></header>
+<main class="part">
+<div class="hdr"><h1>Log an activity</h1><div class="sub">Mini-CEX (Paediatrics)</div></div>
+<div class="steps">Step 2 of 4: the encounter · <a href="#" style="font-weight: 400">Back to step 1</a></div>
+<fieldset><legend>EPA *</legend>
+<span class="opt"><span class="dot"></span>PAED-001 — Providing paediatric emergency care to children</span>
+<span class="opt sel"><span class="dot"></span>PAED-002 — [EPA title, wrapping onto a second line when long]</span>
+<span class="opt"><span class="dot"></span>PAED-003 — [EPA title]</span>
+<span class="opt"><span class="dot"></span>PAED-004 — [EPA title]</span>
+<span class="help">… 5 more (9 in all). With 17, the list is long but every title is whole.</span></fieldset>
+<div class="field"><label>Date observed *</label><div class="in">2026-09-09</div><div class="alert" role="status">This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the encounter is recorded as late.</div></div>
+<fieldset><legend>Assessor *</legend>
+<span class="opt sel"><span class="dot"></span>Sarah Botha</span><span class="opt"><span class="dot"></span>Fatima Khumalo</span><span class="opt"><span class="dot"></span>David Naidoo</span><span class="opt"><span class="dot"></span>Mohammed Patel</span><span class="opt"><span class="dot"></span>Thandi Zulu</span></fieldset>
+<a class="pbtn" href="#">Continue</a>
+<span class="help">Continue saves it as a draft. Nobody else sees a draft.</span>
+</main>
+<div class="fold"><span>844 px</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

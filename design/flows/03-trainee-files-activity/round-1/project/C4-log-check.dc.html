@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C4 Log an activity, step 4</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1f1f1f}
+*{box-sizing:border-box}
+a{color:#1f1f1f}a:hover{color:#000}
+.side{width:250px;flex:none;background:#4a4a4a;color:#f2f2f2;display:flex;flex-direction:column}
+.brand{height:56px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#3b3b3b;font-weight:600;font-size:22px}
+.brand img{width:32px;height:32px}
+.role{padding:10px 16px 12px;font-size:13px;color:#d0d0d0;border-bottom:1px solid #666}
+.role b{display:block;color:#fff;font-size:16px}
+.nav{display:flex;flex-direction:column;padding:8px 0}
+.nav a{color:#eee;text-decoration:none;padding:9px 16px;font-size:15px}
+.nav a.on{background:#6b6b6b;font-weight:600;box-shadow:inset 3px 0 0 #fff;color:#fff}
+.nav .rule{border-top:1px solid #666;margin:6px 16px}
+.nav .ph{margin:8px 16px;height:12px;width:120px;background:#5e5e5e;border-radius:3px}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:#f2f2f2}
+.top{height:56px;background:#fff;border-bottom:1px solid #d6d6d6;display:flex;align-items:center;justify-content:flex-end;gap:20px;padding:0 24px;font-size:14px}
+.art{padding:20px 24px 48px 32px;display:flex;flex-direction:column;gap:24px}
+.hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:2px solid #888;padding-bottom:12px}
+.hdr h1{margin:0;font-size:24px;font-weight:600;line-height:1.25}
+.sub{font-size:14px;color:#555;margin-top:4px}
+.steps{display:flex;list-style:none;margin:0;padding:0;font-size:14px;max-width:860px}
+.steps li{flex:1;border-top:4px solid #ccc;padding-top:6px;color:#555}
+.steps li.cur{border-top-color:#111;color:#111;font-weight:600}
+.steps li.done{border-top-color:#777}
+.card{background:#fff;border:1px solid #d0d0d0;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:12px;max-width:860px}
+.card h2{margin:0;font-size:18px}
+.dl{display:grid;grid-template-columns:160px minmax(0,1fr);gap:8px 12px;font-size:14px;margin:0}
+.dl dt{color:#555}.dl dd{margin:0}
+.next{border:2px solid #333;border-radius:8px;background:#fff;padding:20px 24px;display:flex;flex-direction:column;gap:6px;max-width:860px}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1.5px solid #333;border-radius:6px;background:#fff;color:#111;font:inherit;font-weight:600;font-size:14px;text-decoration:none}
+.btn.pri{background:#333;color:#fff}
+.btn.quiet{border-color:transparent;text-decoration:underline;padding:0 4px}
+.help{font-size:13px;color:#555}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1200px; display: flex; overflow: hidden">
+<header class="side"><div class="brand"><img src="/_blob/c1b21826d1dc3296fc39cb61b871981e" alt=""><span>Wombat</span></div><div class="role">Acting as<b>Trainee</b></div><nav class="nav"><a href="#">Home</a><a class="on" href="#" aria-current="page">Log an activity</a><a href="#">My activities</a><span class="ph"></span><span class="ph"></span><div class="rule"></div><a href="#">My progress</a><a href="#">My data rights</a></nav></header>
+<div class="main"><div class="top"><a href="#">Sipho Ndlovu</a><a href="#">Sign out</a></div>
+<main class="art">
+<div class="hdr"><div><h1>Log an activity</h1><div class="sub">Step 4 of 4: check and submit · Mini-CEX (Paediatrics)</div></div></div>
+<ol class="steps" aria-label="Steps"><li class="done"><a href="#">1 What</a></li><li class="done"><a href="#">2 The encounter</a></li><li class="done"><a href="#">3 The request</a></li><li class="cur" aria-current="step">4 Check and submit</li></ol>
+<section class="card"><div style="display: flex; justify-content: space-between"><h2>The encounter</h2><a href="#">Change the encounter</a></div><dl class="dl"><dt>Type</dt><dd>Mini-CEX (Paediatrics)</dd><dt>EPA</dt><dd>PAED-002 — [EPA title]</dd><dt>Date observed</dt><dd>2026-09-09</dd><dt>Assessor</dt><dd>Fatima Khumalo</dd></dl></section>
+<section class="card"><div style="display: flex; justify-content: space-between"><h2>Request</h2><a href="#">Change the request</a></div><dl class="dl"><dt>Clinical setting</dt><dd>Ward</dd><dt>Presenting problem</dt><dd>Nine-month-old with gastroenteritis and moderate dehydration</dd><dt>Case complexity</dt><dd>Low</dd></dl></section>
+<section class="next"><b>When you submit</b><span>It goes to Fatima Khumalo's Activity inbox and is Requested until she completes or declines it. You can cancel it while she has not acted.</span><span>Filed today, 20 days after the encounter: it will be recorded as late.</span></section>
+<div style="display: flex; gap: 12px; align-items: center"><a class="btn pri" href="#">Submit to Fatima Khumalo</a><a class="btn" href="#">Save and leave</a><span style="flex: 1"></span><a class="btn quiet" href="#">Cancel this draft…</a></div>
+</main></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1200}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

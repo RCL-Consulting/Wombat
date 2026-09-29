@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C10 Phone: My activities, tabs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;color:#1f1f1f}
+*{box-sizing:border-box}
+a{color:#1f1f1f}a:hover{color:#000}
+.pbar{height:56px;background:#4a4a4a;color:#fff;display:flex;align-items:center;gap:10px;padding:0 16px}
+.pbar img{width:28px;height:28px}
+.pbar .r{font-size:12px;line-height:1.2;color:#ddd}
+.pbar .r b{display:block;color:#fff;font-size:14px}
+.menu{margin-left:auto;border:1px solid #aaa;border-radius:6px;height:44px;display:flex;align-items:center;padding:0 14px;font-weight:600}
+.part{padding:12px 16px 40px;display:flex;flex-direction:column;gap:14px}
+.hdr{border-bottom:2px solid #888;padding-bottom:10px;display:flex;flex-direction:column;gap:10px}
+.hdr h1{margin:0;font-size:22px;font-weight:600;line-height:1.25}
+.pbtn{height:44px;display:flex;align-items:center;justify-content:center;border:1.5px solid #333;border-radius:6px;font-weight:600;text-decoration:none;background:#333;color:#fff}
+.tabs{display:flex;flex-direction:column;gap:6px}
+.tabs a{display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 14px;border:1.5px solid #888;border-radius:6px;text-decoration:none;font-weight:600}
+.tabs a.on{background:#333;color:#fff;border-color:#333}
+.row{border-top:1px solid #ccc;padding:12px 0;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.row a{font-weight:600;font-size:15px}
+.badge{display:inline-flex;border:1px solid #777;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:600;background:#eee;align-self:flex-start}
+.fold{position:absolute;left:0;top:844px;width:390px;border-top:2px dashed #111}
+.fold span{position:absolute;right:4px;top:-20px;font-size:11px;background:#111;color:#fff;padding:1px 6px}
+</style>
+</helmet>
+<div style="width: 390px; height: 1200px; position: relative; background: #fff; overflow: hidden">
+<header class="pbar"><img src="/_blob/c1b21826d1dc3296fc39cb61b871981e" alt=""><span class="r">Acting as<b>Trainee</b></span><span class="menu">Menu</span></header>
+<main class="part">
+<div class="hdr"><h1>My activities</h1><a class="pbtn" href="#">Log an activity</a></div>
+<nav class="tabs" aria-label="Which activities"><a class="on" href="#" aria-current="page">Needs you<span>2</span></a><a href="#">With others<span>7</span></a><a href="#">Finished<span>31</span></a></nav>
+<div class="row"><a href="#">Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-09 · Sarah Botha</a><span class="badge">Draft</span><span>Returned by Sarah Botha. Change it and submit again.</span></div>
+<div class="row"><a href="#">Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25 · David Naidoo</a><span class="badge">Draft</span><span>Finish the request and submit it.</span></div>
+</main>
+<div class="fold"><span>844 px</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1200}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
