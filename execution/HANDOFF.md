@@ -2,33 +2,26 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-09-28 (Opus): flow 02, sign-in and account, end to end (T339, done)
+## Session 2026-09-29 (Opus): flow 03 started (T342, in progress)
 
-The operator asked to tackle flow 02, then "proceed" through each step. T339 closed with all six checkboxes backed.
+The operator asked to start T342. Steps 1–4 are done; the loop now waits on the operator's send of round 1.
 
 ### Done
 
-- **Brief restated** (`ca3b19ff`): structure-first ASK, one proposal (an F flow), new-shell key captures checked.
-- **Canvas** "Wombat 02" https://claude.ai/artifact/5BnSniM2QS8NouqWS6wsPB, mark copied in first.
-- **Rounds** (record: `design/flows/02-sign-in-and-account/`):
-  - R1 one structure; Q1–Q4 and T287 decided (institutions above the form; forgot = plain words, the emailed reset
-    filed as T340; one-press sign-out; My account lists and removes institutional sign-ins; one refusal for a lock).
-  - R2 at fidelity; four-sided review (`round-2-review.md`); E1–E11 accepted as recommended.
-  - R3 checked item by item (`round-3-check.md`).
-- **Build** (`f50dffb2`, pushed): waves — lane A words/endpoints and lane C My account in parallel, lane B password
-  pages after; a four-sided review; one fix pass (cross-site sign-out, a stranger's lockout, the Remove dialog's
-  focus, the details list, test gaps); runbook lane. 8,450 tests green. T341 filed from the review.
-- **Replay** (`6da0cdff`): the whole runbook on `wombat_scenario_t339`, 246 of 325 steps with no gap; the one flow 02
-  regression (Remember me at 390 px) fixed in `6735fa98`; the Account and sign-in states captured (63 rows).
-- **Design system** re-synced and republished as version 7 (`56628efb`, `e33b563b`; 4 components added, 4 icons).
-- **Lessons** in BRIEF § 11 "Flow 02" (`937fe19c`); § 2.3 now sends § 1 and § 8 as one message.
-- **Filed:** T340 (P3, emailed reset), T341 (P2, account outcomes in the address), T342 (P2, flow 03).
+- **Brief restated** (`6df626e6`): W flow, 2–3 structural variations; "what is wrong today" re-checked at `77b5892d`
+  (font and tab title done; new: no "who has it now", assessor sections look open, refusal only at the head, raw
+  exception text, system copy, the registrar's inbox in no nav, question 6). Key screenshots are T339's new-shell
+  captures, each opened; one old-shell capture kept and marked. Quoted steps re-synced (pointers only). All three
+  checks clean. Staged: 85 files plus the two seed folders (`design/upload/seeds/`, gitignored).
+- **Canvas** https://claude.ai/artifact/6Uar9yce4Dxx9iPwgE8JY5, the mark copied in (`/_blob/c1b21826…`), its URL in
+  § 1 and `round-1-ask.txt` (`689761f1`). Empty canvas version `1790661931-bcb3` recorded in the record README.
 
-### Next session: T342, flow 03 (a registrar asks for an assessment or logs one). **Model: Opus.**
+### Next session: T342 continues. **Model: Opus.**
 
-- Its task file lists the loop. Templates: flow 02's `build-lanes.md`, `review-lanes.md`, `replay-workflow.js`.
-- Flow 03 is marked W: round 1 asks for 2–3 structural variations. Send § 1 and § 8 together.
-- The operator creates a new canvas on the Wombat design system (version 7) and gives its link.
+- The operator sends `design/flows/03-trainee-files-activity/round-1-ask.txt` as ONE message with § 4's 12 key
+  screenshots and the six seed files. Then: check the canvas version changed, read the boards, review round 1, and put
+  the pick and § 6's six questions to the operator as one table (accept all / go through them).
+- Record every round in `design/flows/03-trainee-files-activity/` (flow 02's folder is the template).
 
 ### For the operator
 
