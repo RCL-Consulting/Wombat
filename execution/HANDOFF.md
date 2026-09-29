@@ -20,12 +20,15 @@ The operator asked to start T342. Steps 1–4 are done; the loop now waits on th
   file; status on top" with B's collapsed history at 390 and C's check line; the registrar's inbox goes (Q6); File it
   again (E1). Round 2's ask written (`round-2-ask.txt`, five corrections) (`c3ef5893`).
 
+- **Round 2** drawn (`round-2/`, 80 files), reviewed from four sides (`round-2-review.md`: accept with changes,
+  C1–C15; the ask's own correction 2 was wrong: the portfolio review has a named reviewer). The operator accepted
+  E1–E9 (E3: build a save-without-a-move command). Round 3's ask written (`round-3-ask.txt`).
+
 ### Next session: T342 continues. **Model: Opus.**
 
-- The operator sends `design/flows/03-trainee-files-activity/round-2-ask.txt`. Then: check the canvas version moved
-  from `1790663484-624c`, save round 2 into `round-2/`, and run the four-sided review (flow 02's `round-2-review.md`:
-  one reviewer on the code, one on the cast), then the decisions table, then round 3.
-- For the build: check whether `ActivityWaiting.LoadActionableAsync` counts a cancel-only request (round-1-review.md).
+- The operator sends `round-3-ask.txt`. Then: check the canvas version moved from `1790666059-feef`, save round 3
+  into `round-3/`, check C1–C15 and E1–E9 item by item (`round-3-check.md`, as flow 02's), then step 6, the build
+  (`build-lanes.md` from flow 02's; the build items are in `round-2-review.md` § For the build).
 
 ### For the operator
 

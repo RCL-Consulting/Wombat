@@ -1,0 +1,107 @@
+ROUND 2 REVIEWED: accept with changes. Round 3: apply the decisions and corrections below to round 2, and change
+nothing else. The tokens, the contrast figures and every round 1 decision hold.
+
+DECISIONS (one sentence each):
+  E1: the portfolio review has a named reviewer (the seed and Step 3.22): my round 2 correction 2 was wrong; see C1.
+  E2: an assessor who can no longer be named is refused at submit with a field message, as today; see C4.
+  E3: Save draft on an existing draft's page stays: it will be built (a save without a move).
+  E4: buttons and results use each move's own label ("Log", "Submit", "Record Discussion", "Sign Off"), with
+    "to <name>" only when the move hands the activity to that person; results "Logged.", "Submitted. It is now
+    Requested.", "Cancelled."; see C3.
+  E5: File it again is offered only on a Declined request, and only to its registrar.
+  E6: the forms keep the College's seed order and labels; see C6.
+  E7: when a re-filing shares type · EPA · date with another of the registrar's activities, the h1, the tab title and
+    the last crumb add " · <nominee>" (e.g. "Mini-CEX (Paediatrics) · PAED-002 · 2026-09-09 · Sarah Botha"); otherwise
+    they do not.
+  E8: Home's card is titled "Needs you" and its footer opens My activities, as proposed.
+  E9: a draft saved empty is named "Mini-CEX (Paediatrics) · no EPA yet · no date yet", as drawn.
+
+CORRECTIONS TO ROUND 2:
+  C1. The portfolio review (awaiting review). Draw its Review request section in seed order: EPA; Reviewer (user,
+    required); Review period from; Review period to; Portfolio export (file name); Notes for your reviewer. The
+    Review section (Date of the review, Evidence reviewed, Review comments, Agreed actions) is locked: "Mohammed Patel
+    fills this in". Status card: "With Mohammed Patel since …". Result: "Submitted. It is now Awaiting review." ·
+    "It is in Mohammed Patel's Activity inbox." About: "Credit: none" (it credits nothing). Keep "Waiting for
+    <state label>." with no name only as a generic fallback for a move held by a role, noted on the Spec, not drawn
+    as the portfolio review.
+  C2. A draft is not private: programme staff in scope can list it, and a named assessor can open it by its address.
+    Replace "Nobody else can see a draft", "A draft is yours alone until you submit it" and "Nobody else can see it"
+    everywhere with "It is in nobody's inbox until you submit it."
+  C3. Move labels come from the workflow: the teaching log's move is "Log" (button "Log"; history "Log · Draft →
+    Logged"; result "Logged."), the reflection's discussion move is "Record Discussion", the review's is "Sign Off".
+    "Submit to <name>" appears only when the move leads to a state whose next move belongs to the person a filled
+    user field names (the Mini-CEX's Assessor, the reflection's Supervisor or mentor, the review's Reviewer). The
+    log's Supervising consultant is a user field that receives nothing: its button stays "Log". Fix the TSL board,
+    the history rows, the Spec and Steps 3.18.
+  C4. The greyed move. The only move the app greys is one needing a required field its mover cannot write. Redraw the
+    blocked-move board on an invented type ("Example: a type whose Submit needs Entrustment level"), reason "Submit:
+    needs Entrustment level, which only the assessor fills in." The locked assessor becomes a refusal at submit: the
+    summary line and the field message "Mohammed Patel can no longer be named as an assessor. Choose someone else."
+    In the picker a locked assessor is simply absent (Step A.6.6); a stored value no longer offered reads
+    "<name> (not on the current list)". Remove "(can no longer be named)" from the select.
+  C5. The cast and the data.
+    - Random Case Analysis and Chart-Stimulated Recall only on EPAs whose list names them: RCA on PAED-001, 002 or
+      003; CSR on PAED-002 or 012. Not PAED-006 or PAED-007.
+    - The 17-EPA picker is Sipho Ndlovu's, on curriculum 11.2 (Step 6.37: 16 national EPAs plus KGK-001), not Pieter
+      du Plessis's (15, on 11.1).
+    - My activities (full) must be one moment of the story. Ndlovu's re-filed Mini-CEX to Sarah Botha is completed
+      (Step 3.13) before his reflection is filed (3.14), so it cannot be Requested beside the returned reflection.
+      Make the dates agree across boards: the reflection returned on one date everywhere, then discussed after;
+      Anele Dlamini's first draft created on one date on draft-saved and completed. The returned board shows the
+      reflection as returned, before 3.16's edit (not yet "Start the sepsis bundle at triage…").
+    - Label the 40-row list "an invented volume case" on the board.
+    - PAED-002 is "Managing common paediatric presentations": use the title, not "[EPA title]".
+  C6. Seed order and labels.
+    Mini-CEX Request: EPA; Assessor; Date observed; Clinical setting; Presenting problem (one line, text, not a
+      textarea); Case complexity. A.7.1's focus order on the Steps board follows it.
+    Reflective Exercise Reflection: EPA; Supervisor or mentor; Date of the case or incident; Reflecting on (choice,
+      required); What happened; What went well, and what could have gone differently; What I learned; What I will do
+      differently. Discussion (locked): Discussion.
+    DOPS Request: EPA; Assessor; Date observed; Procedure; Clinical setting; Procedure complexity; then Entrustment
+      ("Supervision required for this procedure") and Feedback. No "Assessment" section.
+  C7. Not found is also "not yours". The page must read the same for an id that does not exist and one the reader may
+    not open (Step 3.4: Dr Patel). Title "Activity unavailable", copy "This activity does not exist, or you cannot
+    open it." with "Go to My activities".
+  C8. Focus targets. Each summary link points at its input ("#observed_on-in"), not the field's wrapper; the note
+    panel's link at the textarea ("#note-in"). Give the summary an id, and name it from every refused field's
+    aria-describedby.
+  C9. The before-the-programme hint is a predicted refusal: draw it as the field's validation message with
+    aria-invalid="true" and the invalid border and stripe, not as a warning.
+  C10. Draw what is missing:
+    - the assessor's board with the note panel just opened: focus in the textarea, Decline with aria-expanded="true"
+      and aria-controls; "Keep the request" returns the focus to Decline. Its refusal reads today's words, "Decline
+      requires a note.";
+    - the draft's Cancel dialog (Step 3.20): "Cancel this draft?" · "A cancelled draft cannot be reopened, and it
+      credits nothing." · Keep the draft / Cancel draft;
+    - Submit while it runs ("Submitting…", aria-disabled, focus kept).
+  C11. One wording per message.
+    - Needs you, the same on Home's card and My activities: "Returned to you by Sarah Botha on <date>. Change it and
+      submit again." and "Not submitted yet. It is in nobody's inbox until you submit it." Add both to the Spec.
+    - "Closed" and "Done", not "Nobody: closed" and "Nobody: done".
+    - Every status headline ends with a full stop ("With Fatima Khumalo since 2026-09-29 09:12 SAST.").
+    - The check line names the target state and the person, never a past-tense move or a pronoun: "When you submit:
+      it goes to Fatima Khumalo's Activity inbox and stays Requested until Fatima Khumalo acts on it."
+    - Cancel's label: "Cancel request…" while another person holds it; "Cancel this draft…" on a draft. State the
+      rule on the Spec.
+    - On a closed record the locked section's owner line reads "Fatima Khumalo was to fill this in."
+  C12. "Your programme" only to the registrar. The same form is read by the assessor and the committee: to them the
+    hint and the refusal read "the trainee's programme". Give both on the Spec.
+  C13. Keep a place in About for what the old summary carried when it applies: the form's version (a move's reason
+    can name it), and the two credit warnings ("This activity's EPA is paused: its credit waits." and the ended
+    programme's). Draw one About with a warning.
+  C14. The locked section must not look like an empty state (.detail-card--empty is dashed and muted too). Give the
+    locked frame its lock icon and owner line as a head row on --header-bg, and keep the body on the page ground.
+  C15. The Steps board.
+    - Add 2.43 (Submit first, then Save draft), 3.3 (the status card, a quiet "Cancel request…"), 3.4 (C7), 3.6 (the
+      completed card's "Open My progress"), 3.11 (the assessor's note panel words), 3.21, 3.23, 3.25, 3.27–3.29, 5.24
+      and 6.16 (the result's inbox sentence; 3.25 also "Who has it now"), A.6.6 (C4), and 3.2's history row
+      "Create · — → Draft".
+    - Home's Recent activities stays (flow 05 owns Home); it is how Ndlovu finds the decline in 3.12. Say so.
+    - The hint rule: on a form that opens with a date already in it (File it again), the late warning shows at once;
+      otherwise when the date field is left.
+
+ROUND 3 ASK:
+  - Apply C1–C15 and E1–E9 to the round 2 boards; add the boards C10 lists; update the Spec (messages, rules, the
+    fallback card, both "programme" wordings) and the Steps board.
+  - Keep round 2's boards; put round 3 on its own canvas page. Stop when round 3 is drawn; I will check it item by
+    item.

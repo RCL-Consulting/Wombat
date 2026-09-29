@@ -143,3 +143,6 @@ round is:
 | E7 | Two requests alike after a re-filing share an h1 (type · EPA · date) | Add " · <nominee>" to the h1, tab and last crumb only when another of the registrar's activities shares the rest |
 | E8 | Home's card title | "Needs you", linking to My activities (the canvas's proposal) |
 | E9 | A draft saved with no EPA or date | Named "Mini-CEX (Paediatrics) · no EPA yet · no date yet", as drawn |
+
+**The operator's answer (2026-09-29): accept all,** E1–E9 as recommended. Round 3's ask is `round-3-ask.txt`
+(C1–C15 with the seeds' field orders and labels, and the EPAs RCA and CSR may be filed on).
