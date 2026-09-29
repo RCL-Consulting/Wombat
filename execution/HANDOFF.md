@@ -16,12 +16,16 @@ The operator asked to start T342. Steps 1–4 are done; the loop now waits on th
 - **Canvas** https://claude.ai/artifact/6Uar9yce4Dxx9iPwgE8JY5, the mark copied in (`/_blob/c1b21826…`), its URL in
   § 1 and `round-1-ask.txt` (`689761f1`). Empty canvas version `1790661931-bcb3` recorded in the record README.
 
+- **Round 1** drawn (27 boards, `round-1/`), reviewed (`round-1-review.md`): the operator accepted all, A "Pick, then
+  file; status on top" with B's collapsed history at 390 and C's check line; the registrar's inbox goes (Q6); File it
+  again (E1). Round 2's ask written (`round-2-ask.txt`, five corrections) (`c3ef5893`).
+
 ### Next session: T342 continues. **Model: Opus.**
 
-- The operator sends `design/flows/03-trainee-files-activity/round-1-ask.txt` as ONE message with § 4's 12 key
-  screenshots and the six seed files. Then: check the canvas version changed, read the boards, review round 1, and put
-  the pick and § 6's six questions to the operator as one table (accept all / go through them).
-- Record every round in `design/flows/03-trainee-files-activity/` (flow 02's folder is the template).
+- The operator sends `design/flows/03-trainee-files-activity/round-2-ask.txt`. Then: check the canvas version moved
+  from `1790663484-624c`, save round 2 into `round-2/`, and run the four-sided review (flow 02's `round-2-review.md`:
+  one reviewer on the code, one on the cast), then the decisions table, then round 3.
+- For the build: check whether `ActivityWaiting.LoadActionableAsync` counts a cancel-only request (round-1-review.md).
 
 ### For the operator
 
