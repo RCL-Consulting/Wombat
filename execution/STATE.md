@@ -34,7 +34,7 @@ system (version 7). Left: flows 03–20, the deploy, the College's answers, 15 P
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T342, flow 03 (in progress, 2026-09-29). Model: Opus.** Brief restated, canvas made; round 1 waits on the operator's send.
+- **The GUI redesign: T342, flow 03 (in progress, 2026-09-29). Model: Opus.** Designed (3 rounds), built and squashed (`725237ee`); the replay (step 7) is next.
 
 ## Open questions
 

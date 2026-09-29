@@ -31,16 +31,17 @@ The operator asked to start T342. Steps 1–4 are done; the loop now waits on th
   `t342-filing` (lane A2: picker shape, move hand-off and result words, File it again query, save-draft command,
   viewer-aware programme wording, rung descriptors). Wave 1 was running when this was written.
 
-- **Built on `t342`** (worktree `.claude/worktrees/t342`, not yet squashed): lanes A1, A2 (backend), B (Log an
-  activity and the form), C (the activity page), D (My activities, Home's Needs you card, the inbox), then an
-  integration pass (one refusal summary, one button rule, CSS deduped, DESIGN.md consistent, banner). All six suites
-  green (Web 2,826, Integration 480). Review brief `review-lanes.md`; the runbook lane on `t342-runbook`.
+- **Built and squashed:** `725237ee` (T342 step 6). Two waves of lanes, an integration pass, a four-sided review
+  (`build-review.md`), one fix pass; all six suites green (Web 2,859, Integration 481). The runbook, states.md and the
+  quoted steps follow the pages. DESIGN.md banner lists flow 03. **Filed:** T343–T347 (P3, the review's deferrals).
 
-### Next session: T342 step 6 finishes. **Model: Opus.**
+### Next session: T342 step 7, the replay. **Model: Opus.**
 
-- Read the four review reports (backend; pages vs design; accessibility; tests and regressions) and the runbook
-  lane's; one fix pass on `t342` with one agreed stopping line; merge `t342-runbook`; all six suites; squash onto
-  master as one T342 commit and push. Then step 7, the replay (`replay-workflow.js` from flow 02).
+- Replay the whole runbook on a fresh database (`design/flows/02-sign-in-and-account/replay-workflow.js` as template;
+  `tools/scenario-replay.ps1 create/publish/start`); keep capture names; `check_baseline_paths.py`; capture the new
+  states.md rows (picker, file-again, Needs you, the cancel dialogs, submitting). Watch 3.10, 3.12 (File it again),
+  3.16 (Needs you and the empty inbox) and A.2.7 closely. Then step 8 (design system re-sync) and step 9 (lessons).
+- The `t342*` branches and worktrees under `.claude/worktrees/` can be removed once the replay no longer needs them.
 
 ### For the operator
 
