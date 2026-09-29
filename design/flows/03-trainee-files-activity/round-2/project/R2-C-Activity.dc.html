@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Activity page (all states)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wombat-root.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow03.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Source Sans 3";src:url("/_blob/0749fad61c0148128f66400e31be2b8c") format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/_blob/d9e2feab5a038f688b3d1ac61648219b") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div style="width: {{w}}px; height: {{h}}px; overflow: hidden; position: relative; background-color: var(--background-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/c1b21826d1dc3296fc39cb61b871981e" alt=""><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span><span>{{u.role}}</span></p>
+<label for="nav-toggle" class="nav-toggle-label"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>Menu</span></label>
+<div class="nav-panel">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span><span class="role-now-name">{{u.role}}</span></p></div>
+<nav class="nav-list" aria-label="Main">
+<sc-if value="{{isTrainee}}" hint-placeholder-val="{{true}}">
+<ul class="nav-items">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4M9 15h6M12 18v-6"></path></svg><span class="nav-label">Log an activity</span></a></li>
+<li><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"></path></svg><span class="nav-label">My activities</span></a></li>
+</ul>
+</sc-if>
+<sc-if value="{{isAssessor}}" hint-placeholder-val="{{false}}">
+<ul class="nav-items">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg><span class="nav-label">Activity inbox</span></a></li>
+</ul>
+</sc-if>
+<ul class="nav-items nav-personal">
+<sc-if value="{{isTrainee}}" hint-placeholder-val="{{true}}"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="m19 9-5 5-4-4-3 3"></path></svg><span class="nav-label">My progress</span></a></li></sc-if>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</nav>
+</div>
+<div class="account-row"><a class="account-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="account-name">{{u.name}}</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+</header>
+<main><article>
+
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+<li class="breadcrumb-ancestor"><a href="#">Home</a></li>
+<li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>{{crumbParent}}</a></li>
+<li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-current" aria-current="page"><span>{{crumb}}</span></li>
+</ol></nav>
+
+<div class="header-container"><div>
+<sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}"><h1 tabindex="-1"><span class="visually-hidden">Loading the activity</span><span class="skeleton skeleton-h1" style="display: block" aria-hidden="true"></span></h1></sc-if>
+<sc-if value="{{hasH1}}" hint-placeholder-val="{{true}}"><h1 tabindex="-1">{{h1}}</h1></sc-if>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{true}}"><p class="page-subtitle">{{sub}}</p></sc-if>
+</div></div>
+
+<sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+<div class="activity-status activity-status--others" aria-hidden="true"><div class="activity-status-main"><div class="skeleton" style="width: 9rem"></div><div class="skeleton" style="width: 60%; min-height: 1.4rem"></div><div class="skeleton" style="width: 80%"></div></div></div>
+<div class="details-grid" aria-hidden="true"><div class="detail-card"><div class="skeleton" style="width: 50%"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton" style="width: 70%"></div></div><div class="stack"><div class="detail-card"><div class="skeleton" style="width: 30%; min-height: 1.4rem"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton" style="width: 60%"></div></div><div class="detail-card"><div class="skeleton" style="width: 30%; min-height: 1.4rem"></div><div class="skeleton" style="width: 70%"></div></div></div></div>
+</sc-if>
+
+<sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty" role="alert"><p class="state-panel-title">Could not load this activity.</p><p class="state-panel-copy">Nothing has changed. Try again, or come back in a few minutes.</p><p style="margin: var(--space-md) 0 0"><button type="button" class="btn btn-outline"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></p></div>
+</sc-if>
+
+<sc-if value="{{isNotFound}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty"><p class="state-panel-title">There is no activity at this address.</p><p class="state-panel-copy">It may have been mistyped. Your activities are all in My activities.</p><p style="margin: var(--space-md) 0 0"><a class="btn btn-outline" href="#">Go to My activities</a></p></div>
+</sc-if>
+
+<sc-if value="{{isPage}}" hint-placeholder-val="{{true}}">
+
+<sc-if value="{{hasResult}}" hint-placeholder-val="{{false}}">
+<div class="action-result demo-focus" tabindex="-1" role="status"><div class="{{result.cls}}" style="margin-bottom: var(--space-lg)"><strong>{{result.title}}</strong> {{result.text}}</div></div>
+</sc-if>
+
+<sc-if value="{{hasSummary}}" hint-placeholder-val="{{false}}">
+<div class="validation-summary-errors error-summary demo-focus" tabindex="-1" role="alert"><strong>{{summary.title}}</strong> {{summary.text}}
+<ul style="margin: var(--space-xs) 0 0; padding-left: 1.1rem"><sc-for list="{{summary.items}}" as="it" hint-placeholder-count="1"><li><a href="#{{it.target}}">{{it.text}}</a></li></sc-for></ul></div>
+</sc-if>
+
+<section class="{{st.cls}}" aria-labelledby="st-head">
+<div class="activity-status-main">
+<p class="activity-status-label">Who has it now</p>
+<p class="activity-status-head" id="st-head"><span class="{{st.badgeCls}}">{{st.badge}}</span><span class="activity-status-headline">{{st.headline}}</span></p>
+<sc-if value="{{st.hasQuote}}" hint-placeholder-val="{{false}}"><blockquote class="activity-status-quote">{{st.quote}}<cite>{{st.quoteBy}}</cite></blockquote></sc-if>
+<sc-if value="{{st.hasBody}}" hint-placeholder-val="{{true}}"><p class="activity-status-body">{{st.body}}</p></sc-if>
+<sc-if value="{{st.hasMeta}}" hint-placeholder-val="{{false}}"><p class="activity-status-meta">{{st.meta}}</p></sc-if>
+</div>
+<sc-if value="{{st.hasAction}}" hint-placeholder-val="{{false}}">
+<div class="activity-status-action">
+<sc-if value="{{st.actPrimary}}" hint-placeholder-val="{{false}}"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>{{st.actLabel}}</a></sc-if>
+<sc-if value="{{st.actOutline}}" hint-placeholder-val="{{false}}"><a class="btn btn-outline" href="#">{{st.actLabel}}</a></sc-if>
+<sc-if value="{{st.actQuiet}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-quiet">{{st.actLabel}}</button></sc-if>
+</div>
+</sc-if>
+</section>
+
+<div class="details-grid">
+<section class="detail-card" aria-labelledby="about-h" style="align-self: start">
+<h2 id="about-h" style="font-size: 1.1rem; margin: 0 0 var(--space-md)">About</h2>
+<dl class="details-list"><sc-for list="{{about}}" as="a" hint-placeholder-count="5"><div><dt>{{a.k}}</dt><dd>{{a.v}}</dd></div></sc-for></dl>
+</section>
+
+<div class="stack">
+<sc-for list="{{sections}}" as="sec" hint-placeholder-count="2">
+<section class="{{sec.cls}}" aria-labelledby="{{sec.hid}}">
+<div class="form-section-head"><h2 id="{{sec.hid}}">{{sec.title}}</h2>
+<p class="form-section-owner"><sc-if value="{{sec.isLocked}}" hint-placeholder-val="{{false}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></sc-if>{{sec.owner}}</p></div>
+<sc-if value="{{sec.hasEmpty}}" hint-placeholder-val="{{false}}"><p class="form-section-empty">{{sec.emptyText}}</p></sc-if>
+<sc-if value="{{sec.hasRungs}}" hint-placeholder-val="{{false}}">
+<div><p class="field-help" style="margin-bottom: var(--space-sm)">{{sec.rungLabel}}</p>
+<ol class="rung-row" aria-label="Entrustment level"><sc-for list="{{sec.rungs}}" as="r" hint-placeholder-count="6"><li class="{{r.cls}}">{{r.label}}<sc-if value="{{r.chosen}}" hint-placeholder-val="{{false}}"><span class="rung-check">chosen</span></sc-if></li></sc-for></ol></div>
+<sc-if value="{{sec.hasDescriptor}}" hint-placeholder-val="{{false}}"><p class="rung-descriptor"><b>{{sec.descriptorTitle}}</b>{{sec.descriptor}}</p></sc-if>
+</sc-if>
+<sc-if value="{{sec.hasRungInputs}}" hint-placeholder-val="{{false}}">
+<fieldset class="form-group"><legend>Entrustment level <span class="required-mark" aria-hidden="true">*</span></legend>
+<ol class="rung-row"><sc-for list="{{sec.rungInputs}}" as="r" hint-placeholder-count="6"><li><label class="rung rung-choice"><input type="radio" name="level">{{r}}</label></li></sc-for></ol>
+<p class="field-help">The chosen rung's descriptor shows under the row.</p></fieldset>
+</sc-if>
+<sc-if value="{{sec.hasReadout}}" hint-placeholder-val="{{false}}">
+<dl class="field-readout"><sc-for list="{{sec.readout}}" as="f" hint-placeholder-count="3"><div><dt>{{f.label}}</dt><dd class="{{f.cls}}">{{f.value}}</dd></div></sc-for></dl>
+</sc-if>
+<sc-if value="{{sec.hasInputs}}" hint-placeholder-val="{{false}}">
+<div class="form-grid">
+<sc-for list="{{sec.inputs}}" as="f" hint-placeholder-count="3">
+<div class="{{f.groupCls}}" id="{{f.id}}">
+<label for="{{f.id}}-in">{{f.label}} <span class="required-mark" aria-hidden="true">{{f.star}}</span></label>
+<sc-if value="{{f.isSelect}}" hint-placeholder-val="{{true}}"><select class="form-select" id="{{f.id}}-in" aria-invalid="{{f.invalid}}" aria-required="{{f.req}}" aria-describedby="{{f.describedby}}"><option>{{f.value}}</option></select></sc-if>
+<sc-if value="{{f.isText}}" hint-placeholder-val="{{false}}"><input class="form-control" id="{{f.id}}-in" type="text" value="{{f.value}}" aria-invalid="{{f.invalid}}" aria-required="{{f.req}}" aria-describedby="{{f.describedby}}"></sc-if>
+<sc-if value="{{f.isArea}}" hint-placeholder-val="{{false}}"><textarea class="form-control" id="{{f.id}}-in" rows="4" value="{{f.value}}" aria-invalid="{{f.invalid}}" aria-required="{{f.req}}" aria-describedby="{{f.describedby}}"></textarea></sc-if>
+<sc-if value="{{f.hasReadback}}" hint-placeholder-val="{{false}}"><p class="field-readback">{{f.readback}}</p></sc-if>
+<sc-if value="{{f.hasHelp}}" hint-placeholder-val="{{false}}"><p class="field-help" id="{{f.id}}-help">{{f.help}}</p></sc-if>
+<sc-if value="{{f.hasMsg}}" hint-placeholder-val="{{false}}"><p class="validation-message" id="{{f.id}}-msg" style="margin: 0">{{f.msg}}</p></sc-if>
+<sc-if value="{{f.hasWarn}}" hint-placeholder-val="{{false}}"><p class="field-warning" id="{{f.id}}-warn" role="status">{{f.warn}}</p></sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</sc-for>
+
+<sc-if value="{{hasBar}}" hint-placeholder-val="{{false}}">
+<div>
+<sc-if value="{{hasCheck}}" hint-placeholder-val="{{false}}"><p class="submit-check"><strong>When you submit:</strong> {{check}}</p></sc-if>
+<div class="form-actions form-actions--moves">
+<sc-for list="{{bar}}" as="b" hint-placeholder-count="2">
+<sc-if value="{{b.isPri}}" hint-placeholder-val="{{true}}"><button type="button" class="btn btn-primary">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isOut}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isOff}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline" disabled="">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isBlocked}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="why-{{b.key}}">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isQuiet}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-quiet">{{b.label}}</button></sc-if>
+</sc-for>
+<sc-if value="{{hasReasons}}" hint-placeholder-val="{{false}}"><ul class="move-reasons"><sc-for list="{{reasons}}" as="r" hint-placeholder-count="1"><li id="why-{{r.key}}">{{r.text}}</li></sc-for></ul></sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{hasNote}}" hint-placeholder-val="{{false}}">
+<section class="detail-card note-panel" aria-labelledby="note-h">
+<h2 id="note-h" style="font-size: 1.1rem; margin: 0">Decline this request</h2>
+<div class="validation-summary-errors error-summary demo-focus" tabindex="-1" role="alert" style="margin: 0"><strong>Not declined.</strong> <a href="#note">Reason for Sipho Ndlovu: [the refusal, in its own words]</a></div>
+<div class="form-group" id="note"><label for="note-in">Reason for Sipho Ndlovu <span class="required-mark" aria-hidden="true">*</span></label>
+<p class="field-help" id="note-help">Sipho Ndlovu reads it on the activity's page. It is kept with the activity's history.</p>
+<textarea class="form-control" id="note-in" rows="4" aria-invalid="true" aria-required="true" aria-describedby="note-help note-msg" value="[The reason exactly as Fatima Khumalo typed it, kept after the refusal]"></textarea>
+<p class="validation-message" id="note-msg" style="margin: 0">[the refusal, in its own words]</p></div>
+<div class="form-actions form-actions--moves"><button type="button" class="btn btn-danger">Decline with this reason</button><button type="button" class="btn btn-quiet" style="color: var(--link-color)">Keep the request</button></div>
+</section>
+</sc-if>
+
+<section class="detail-card" aria-labelledby="hist-h">
+<h2 id="hist-h" style="font-size: 1.1rem; margin: 0 0 var(--space-md)">History</h2>
+<div class="history-table" role="table" aria-labelledby="hist-h">
+<div role="row"><span role="columnheader">Move</span><span role="columnheader">From → to</span><span role="columnheader">By</span><span role="columnheader">When</span><span role="columnheader">Credit</span></div>
+<sc-for list="{{history}}" as="m" hint-placeholder-count="2">
+<div role="row"><span role="cell" class="{{m.cellCls}}">{{m.move}}</span><span role="cell" class="{{m.cellCls}}">{{m.from}}</span><span role="cell" class="{{m.cellCls}}">{{m.by}}</span><span role="cell" class="{{m.cellCls}}">{{m.when}}<sc-if value="{{m.hasLate}}" hint-placeholder-val="{{false}}"><span class="history-late">{{m.late}}</span></sc-if></span><span role="cell" class="{{m.cellCls}}">{{m.credit}}</span></div>
+<sc-if value="{{m.hasNote}}" hint-placeholder-val="{{false}}"><div role="row"><span role="cell" class="history-note"><span class="text-muted">Note:</span> {{m.note}}</span></div></sc-if>
+</sc-for>
+</div>
+<details class="history-details"><summary><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>{{historyLabel}}</summary>
+<ol class="history-list"><sc-for list="{{history}}" as="m" hint-placeholder-count="2"><li class="history-row"><b>{{m.move}} · {{m.from}}</b><span>{{m.by}} · {{m.when}}</span><sc-if value="{{m.hasLate}}" hint-placeholder-val="{{false}}"><span class="history-meta">{{m.late}}</span></sc-if><span class="history-meta">Credit {{m.credit}}</span><sc-if value="{{m.hasNote}}" hint-placeholder-val="{{false}}"><span>Note: {{m.note}}</span></sc-if></li></sc-for></ol>
+</details>
+<p class="field-help" style="margin-top: var(--space-sm)">Times are South African time.</p>
+</section>
+</div>
+</div>
+</sc-if>
+
+</article></main>
+</div>
+
+<sc-if value="{{hasDialog}}" hint-placeholder-val="{{false}}">
+<div class="dialog-demo"><div class="dialog-card dialog-card--form" role="dialog" aria-modal="true" aria-labelledby="dlg-h"><div class="dialog-form">
+<h2 id="dlg-h">Cancel this request?</h2>
+<p>It leaves Fatima Khumalo's Activity inbox. A cancelled request cannot be reopened, and it credits nothing.</p>
+<div class="dialog-actions"><button type="button" class="btn btn-outline demo-focus">Keep the request</button><button type="button" class="btn btn-danger">Cancel request</button></div>
+</div></div></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["draft-saved","refused-submit","saved-not-submitted","requested","declined","returned","discussed","logged","cancelled","awaiting-review","completed","cancel-dialog","blocked-move","loading","load-error","not-found","assessor"],"default":"requested"},"w":{"editor":"int","default":1280},"h":{"editor":"int","default":1500},"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const state = this.props.state || 'requested';
+    const w = this.props.w || 1280;
+    const h = this.props.h || 1500;
+    const RUNGS = ['1', '2', '3a', '3b', '4', '5'];
+    const T = (name) => ({ name: name, role: 'Trainee' });
+
+    const sec = (o) => {
+      const locked = !!o.locked;
+      const cls = 'detail-card form-section' + (locked ? ' form-section--locked' : '');
+      const hid = 'sec-' + o.title.toLowerCase().replace(/[^a-z]+/g, '-');
+      let rungs = [];
+      if (o.rungs) {
+        rungs = RUNGS.map((r) => ({
+          label: r,
+          chosen: o.chosen === r,
+          cls: o.chosen === r ? 'rung is-chosen' : (o.rungs === 'pending' ? 'rung rung--pending' : 'rung')
+        }));
+      }
+      return {
+        title: o.title, hid: hid, cls: cls, isLocked: locked, owner: o.owner || '',
+        hasEmpty: !!o.empty, emptyText: o.empty || '',
+        hasRungs: !!o.rungs, rungs: rungs, rungLabel: o.rungLabel || 'Entrustment level: 1, 2, 3a, 3b, 4, 5',
+        hasDescriptor: !!o.descriptor, descriptor: o.descriptor || '', descriptorTitle: o.descriptorTitle || '',
+        hasRungInputs: !!o.rungInputs, rungInputs: o.rungInputs ? RUNGS : [],
+        hasReadout: !!o.readout, readout: (o.readout || []).map((f) => ({ label: f[0], value: f[1] || 'Not filled in', cls: f[1] ? '' : 'is-empty' })),
+        hasInputs: !!o.inputs, inputs: o.inputs || []
+      };
+    };
+    const inp = (id, label, kind, value, o) => {
+      o = o || {};
+      const ids = [];
+      if (o.help) ids.push(id + '-help');
+      if (o.msg) ids.push(id + '-msg');
+      if (o.warn) ids.push(id + '-warn');
+      return {
+        id: id, label: label, star: o.optional ? '' : '*', req: o.optional ? 'false' : 'true',
+        isSelect: kind === 's', isText: kind === 't', isArea: kind === 'a', value: value || '',
+        invalid: o.msg ? 'true' : 'false',
+        groupCls: 'form-group' + (o.full ? ' full-width' : ''),
+        hasHelp: !!o.help, help: o.help || '', hasMsg: !!o.msg, msg: o.msg || '', hasWarn: !!o.warn, warn: o.warn || '',
+        hasReadback: !!o.readback, readback: o.readback || '', describedby: ids.join(' ')
+      };
+    };
+    const mv = (move, from, by, when, credit, o) => {
+      o = o || {};
+      return { move: move, from: from, by: by, when: when, credit: credit || '—', hasLate: !!o.late, late: o.late || '',
+        hasNote: !!o.note, note: o.note || '', cellCls: o.note ? 'has-note' : '' };
+    };
+    const LATE = 'Filed 20 days after the encounter';
+    const st = (kind, badgeCls, badge, headline, o) => {
+      o = o || {};
+      return {
+        cls: 'activity-status activity-status--' + kind, badgeCls: 'badge ' + badgeCls, badge: badge, headline: headline,
+        hasBody: !!o.body, body: o.body || '', hasQuote: !!o.quote, quote: o.quote || '', quoteBy: o.quoteBy || '',
+        hasMeta: !!o.meta, meta: o.meta || '',
+        hasAction: !!o.act, actLabel: o.act ? o.act[1] : '',
+        actPrimary: !!o.act && o.act[0] === 'pri', actOutline: !!o.act && o.act[0] === 'out', actQuiet: !!o.act && o.act[0] === 'quiet'
+      };
+    };
+    const btn = (kind, label, key) => ({ label: label, key: key || '', isPri: kind === 'pri', isOut: kind === 'out', isOff: kind === 'off', isBlocked: kind === 'blocked', isQuiet: kind === 'quiet' });
+
+    // Common data
+    const nd = {
+      h1: 'Mini-CEX (Paediatrics) · PAED-002 · 2026-09-09', sub: "Sipho Ndlovu's request to Fatima Khumalo",
+      about: [['Registrar', 'Sipho Ndlovu'], ['Assessor', 'Fatima Khumalo'], ['EPA', 'PAED-002 — [EPA title]'], ['Encounter', '2026-09-09'], ['Filed', '2026-09-29, 20 days after the encounter (late)'], ['Credit', 'None until it is completed']],
+      request: sec({ title: 'Request', owner: 'Filled in by Sipho Ndlovu, 2026-09-29', readout: [['Clinical setting', 'Ward'], ['Presenting problem', 'Nine-month-old with gastroenteritis and moderate dehydration'], ['Case complexity', 'Low']] }),
+      hist2: [mv('Create', '— → Draft', 'Sipho Ndlovu', '2026-09-29 09:12 SAST'), mv('Submit', 'Draft → Requested', 'Sipho Ndlovu', '2026-09-29 09:12 SAST', '—', { late: LATE })]
+    };
+    const lockedNot = (title, who) => sec({ title: title, locked: true, owner: who + ' fills this in', empty: 'Not filled in yet.', rungs: title === 'Entrustment' ? 'pending' : null });
+    const dl = {
+      h1: 'Mini-CEX (Paediatrics) · PAED-001 · 2026-09-19', sub: "Anele Dlamini's request to David Naidoo"
+    };
+    const dlInputs = (o) => {
+      o = o || {};
+      return [
+        inp('epa', 'EPA', 's', 'PAED-001 — Providing paediatric emergency care to children', { full: true, help: 'The 9 EPAs whose list names the Mini-CEX.' }),
+        inp('date', 'Date observed', 't', '2026-09-19', { help: 'The day of the encounter.' }),
+        inp('assessor', 'Assessor', 's', o.assessor || 'David Naidoo', o.assessorOpts || { help: "Your institution's active assessors." }),
+        inp('setting', 'Clinical setting', 's', 'Emergency unit'),
+        inp('complexity', 'Case complexity', 's', 'Moderate'),
+        inp('problem', 'Presenting problem', 'a', o.problem || '', { full: true, msg: o.problemMsg })
+      ];
+    };
+    const draftStatus = st('yours', 'badge-draft', 'Draft', 'With you. Not submitted yet.', { body: 'Finish the request and submit it. Until then nobody else can see it.' });
+    const dlLocked = [lockedNot('Entrustment', 'David Naidoo'), lockedNot('Feedback', 'David Naidoo')];
+    const dlCheck = "it goes to David Naidoo's Activity inbox and stays Requested until it is completed or declined.";
+    const dlBar = [btn('pri', 'Submit to David Naidoo'), btn('out', 'Save draft'), btn('off', 'Discard changes'), btn('quiet', 'Cancel this draft…')];
+    const dlAbout = [['Registrar', 'Anele Dlamini'], ['Started', '2026-09-29'], ['Credit', 'None until it is completed']];
+
+    const rf = {
+      h1: 'Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-09', sub: "Sipho Ndlovu's reflection, for discussion with Sarah Botha",
+      about: [['Registrar', 'Sipho Ndlovu'], ['Supervisor', 'Sarah Botha'], ['EPA', 'PAED-001 — Providing paediatric emergency care to children'], ['Incident', '2026-09-09'], ['Credit', 'None: a reflective exercise credits nothing']],
+      answers: [['What happened', 'A three-year-old in septic shock waited 90 minutes for antibiotics after triage'], ['Analysis', '[His analysis, as he wrote it]'], ['What I learned', '[What he learned, as he wrote it]'], ['What I will do differently', 'Start the sepsis bundle at triage; read the paediatric sepsis guideline before my next take']]
+    };
+    const RET_NOTE = "[Sarah Botha's note, as she wrote it]";
+    const rfHist3 = [mv('Create', '— → Draft', 'Sipho Ndlovu', '2026-09-25 10:02 SAST'), mv('Submit', 'Draft → Awaiting discussion', 'Sipho Ndlovu', '2026-09-25 10:05 SAST'), mv('Return', 'Awaiting discussion → Draft', 'Sarah Botha', '2026-09-26 16:40 SAST', '—', { note: RET_NOTE })];
+
+    let v = {
+      u: T('Sipho Ndlovu'), isTrainee: true, isAssessor: false, crumbParent: 'My activities',
+      isLoading: false, isError: false, isNotFound: false, isPage: true, hasH1: true, hasSub: true,
+      hasResult: false, result: {}, hasSummary: false, summary: { items: [] },
+      st: {}, about: [], sections: [], hasBar: false, hasCheck: false, check: '', bar: [], hasReasons: false, reasons: [],
+      hasNote: false, history: [], hasDialog: false
+    };
+
+    if (state === 'draft-saved' || state === 'refused-submit' || state === 'blocked-move') {
+      Object.assign(v, { u: T('Anele Dlamini'), h1: dl.h1, sub: dl.sub, st: draftStatus, about: dlAbout, hasBar: true, hasCheck: true, check: dlCheck, bar: dlBar,
+        history: [mv('Create', '— → Draft', 'Anele Dlamini', '2026-09-29 08:05 SAST')] });
+      v.sections = [sec({ title: 'Request', owner: 'You fill this in', inputs: dlInputs() })].concat(dlLocked);
+      if (state === 'draft-saved') {
+        v.hasResult = true; v.result = { cls: 'alert alert-success', title: 'Draft saved. It has not been submitted.', text: 'Nobody else can see a draft.' };
+      }
+      if (state === 'refused-submit') {
+        v.hasSummary = true; v.summary = { title: 'Not submitted. It is still a draft.', text: 'Fix the field below and submit again.', items: [{ target: 'problem', text: 'Presenting problem: A value is required.' }] };
+        v.sections[0] = sec({ title: 'Request', owner: 'You fill this in', inputs: dlInputs({ problemMsg: 'A value is required.' }) });
+      }
+      if (state === 'blocked-move') {
+        v.u = T('Anele Dlamini');
+        v.sections[0] = sec({ title: 'Request', owner: 'You fill this in', inputs: dlInputs({ problem: 'Term neonate with respiratory distress', assessor: 'Mohammed Patel (can no longer be named)', assessorOpts: { msg: 'Mohammed Patel can no longer be named as an assessor. Choose someone else.' } }) });
+        v.sections[1] = lockedNot('Entrustment', 'The assessor you name');
+        v.sections[2] = lockedNot('Feedback', 'The assessor you name');
+        v.st = st('yours', 'badge-draft', 'Draft', 'With you. Not submitted yet.', { body: 'Mohammed Patel can no longer be named as an assessor. Choose someone else, then submit.' });
+        v.check = "it goes to the assessor you name, in their Activity inbox, and stays Requested until it is completed or declined.";
+        v.bar = [btn('blocked', 'Submit', 'submit'), btn('out', 'Save draft'), btn('quiet', 'Cancel this draft…')];
+        v.hasReasons = true; v.reasons = [{ key: 'submit', text: 'Submit: Needs an assessor who can be named. Choose someone other than Mohammed Patel above.' }];
+      }
+    } else if (state === 'saved-not-submitted') {
+      const e = 'A value is required.';
+      Object.assign(v, { u: T('Anele Dlamini'), h1: 'Mini-CEX (Paediatrics) · no EPA yet · no date yet', sub: "Anele Dlamini's draft", st: draftStatus, about: dlAbout, hasBar: true, hasCheck: true,
+        check: "it goes to the assessor you name, in their Activity inbox, and stays Requested until it is completed or declined.",
+        bar: [btn('pri', 'Submit'), btn('out', 'Save draft'), btn('off', 'Discard changes'), btn('quiet', 'Cancel this draft…')],
+        history: [mv('Create', '— → Draft', 'Anele Dlamini', '2026-09-29 08:05 SAST')] });
+      v.hasSummary = true;
+      v.summary = { title: 'Saved as a draft, but not submitted.', text: 'Fix the 6 fields below and submit again.', items: [
+        { target: 'epa', text: 'EPA: ' + e }, { target: 'date', text: 'Date observed: ' + e }, { target: 'assessor', text: 'Assessor: ' + e },
+        { target: 'setting', text: 'Clinical setting: ' + e }, { target: 'complexity', text: 'Case complexity: ' + e }, { target: 'problem', text: 'Presenting problem: ' + e }] };
+      v.sections = [sec({ title: 'Request', owner: 'You fill this in', inputs: [
+        inp('epa', 'EPA', 's', 'Select…', { full: true, msg: e }), inp('date', 'Date observed', 't', '', { msg: e }), inp('assessor', 'Assessor', 's', 'Select…', { msg: e }),
+        inp('setting', 'Clinical setting', 's', 'Select…', { msg: e }), inp('complexity', 'Case complexity', 's', 'Select…', { msg: e }), inp('problem', 'Presenting problem', 'a', '', { full: true, msg: e })] }),
+        lockedNot('Entrustment', 'The assessor you name'), lockedNot('Feedback', 'The assessor you name')];
+    } else if (state === 'requested' || state === 'cancel-dialog' || state === 'assessor') {
+      Object.assign(v, { h1: nd.h1, sub: nd.sub, about: nd.about, history: nd.hist2,
+        st: st('others', 'badge-submitted', 'Requested', 'With Fatima Khumalo since 2026-09-29 09:12 SAST', { body: 'Nothing for you to do. You can cancel the request until Fatima Khumalo acts on it.', meta: 'Filed 20 days after the encounter: recorded as late.', act: ['quiet', 'Cancel request…'] }),
+        sections: [nd.request, lockedNot('Entrustment', 'Fatima Khumalo'), lockedNot('Feedback', 'Fatima Khumalo')] });
+      if (state === 'requested') {
+        v.hasResult = true; v.result = { cls: 'alert alert-success', title: 'Submitted. It is now Requested.', text: "It is in Fatima Khumalo's Activity inbox." };
+      }
+      if (state === 'cancel-dialog') { v.hasDialog = true; }
+      if (state === 'assessor') {
+        v.u = { name: 'Fatima Khumalo', role: 'Assessor' }; v.isTrainee = false; v.isAssessor = true; v.crumbParent = 'Activity inbox';
+        v.st = st('yours', 'badge-submitted', 'Requested', 'Your move. Sipho Ndlovu asked you on 2026-09-29 09:12 SAST.', { body: 'Complete it with a rating and feedback, or decline it with a reason Sipho Ndlovu will read.', meta: 'Filed 20 days after the encounter: recorded as late.' });
+        v.sections = [nd.request,
+          sec({ title: 'Entrustment', owner: 'You fill this in', rungInputs: true }),
+          sec({ title: 'Feedback', owner: 'You fill this in', inputs: [inp('fb1', '[Feedback field, from the schema]', 'a', '', { full: true }), inp('fb2', '[Second feedback field]', 'a', '', { full: true })] })];
+        v.hasBar = true; v.bar = [btn('pri', 'Complete'), btn('out', 'Decline')];
+        v.hasNote = true;
+      }
+    } else if (state === 'declined') {
+      Object.assign(v, { h1: nd.h1, sub: nd.sub, about: nd.about.slice(0, 5).concat([['Credit', 'None']]),
+        st: st('declined', 'badge-declined', 'Declined', 'Closed. Fatima Khumalo declined it on 2026-09-29 14:05 SAST.', { quote: '[Her reason, as she wrote it, in full]', quoteBy: 'Fatima Khumalo', body: 'It credits nothing, and nothing more can happen to it. To be assessed on this encounter, file it again and name someone else.', act: ['pri', 'File it again, to someone else'] }),
+        sections: [nd.request, sec({ title: 'Entrustment', locked: true, owner: 'Fatima Khumalo', empty: 'Not filled in: the request was declined.' }), sec({ title: 'Feedback', locked: true, owner: 'Fatima Khumalo', empty: 'Not filled in: the request was declined.' })],
+        history: nd.hist2.concat([mv('Decline', 'Requested → Declined', 'Fatima Khumalo', '2026-09-29 14:05 SAST', '—', { note: '[Her reason, as she wrote it, in full]' })]) });
+    } else if (state === 'returned') {
+      Object.assign(v, { h1: rf.h1, sub: rf.sub, about: rf.about, history: rfHist3, hasBar: true, hasCheck: true,
+        check: "it goes back to Sarah Botha's Activity inbox and stays Awaiting discussion until it is discussed or returned to you.",
+        bar: [btn('pri', 'Submit to Sarah Botha'), btn('out', 'Save draft'), btn('off', 'Discard changes'), btn('quiet', 'Cancel this reflection…')],
+        st: st('yours', 'badge-draft', 'Draft', 'With you. Sarah Botha returned it on 2026-09-26 16:40 SAST.', { quote: RET_NOTE, quoteBy: 'Sarah Botha', body: 'Change your reflection and submit it again.' }) });
+      v.sections = [sec({ title: 'Reflection', owner: 'You fill this in', inputs: [
+        inp('epa', 'EPA', 's', 'PAED-001 — Providing paediatric emergency care to children', { full: true }),
+        inp('date', 'Date of the incident', 't', '2026-09-09'), inp('sup', 'Supervisor', 's', 'Sarah Botha'),
+        inp('r1', 'What happened', 'a', rf.answers[0][1], { full: true }), inp('r2', 'Analysis', 'a', rf.answers[1][1], { full: true }),
+        inp('r3', 'What I learned', 'a', rf.answers[2][1], { full: true }), inp('r4', 'What I will do differently', 'a', rf.answers[3][1], { full: true })] }),
+        sec({ title: 'Discussion', locked: true, owner: 'Sarah Botha fills this in', empty: 'Not filled in yet. Sarah Botha fills it in after you submit.' })];
+    } else if (state === 'discussed') {
+      Object.assign(v, { h1: rf.h1, sub: rf.sub, about: rf.about,
+        st: st('done', 'badge-completed', 'Discussed', 'Done. Sarah Botha discussed it on 2026-09-28 11:30 SAST.', { body: 'A reflective exercise credits nothing. Nothing more happens to it.' }),
+        sections: [sec({ title: 'Reflection', owner: 'Filled in by Sipho Ndlovu, 2026-09-27', readout: rf.answers }), sec({ title: 'Discussion', owner: 'Filled in by Sarah Botha, 2026-09-28', readout: [['[Discussion field, from the schema]', '[What Sarah Botha wrote]']] })],
+        history: rfHist3.concat([mv('Submit', 'Draft → Awaiting discussion', 'Sipho Ndlovu', '2026-09-27 07:50 SAST'), mv('Discuss', 'Awaiting discussion → Discussed', 'Sarah Botha', '2026-09-28 11:30 SAST')]) });
+    } else if (state === 'logged') {
+      Object.assign(v, { u: T('Pieter du Plessis'), h1: 'KGK Teaching Session Log · PAED-015 · 2026-09-23', sub: 'Logged by Pieter du Plessis',
+        hasResult: true, result: { cls: 'alert alert-success', title: 'Submitted. It is now Logged.', text: 'Nobody else acts on a session log.' },
+        about: [['Registrar', 'Pieter du Plessis'], ['EPA', 'PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research'], ['Delivered', '2026-09-23'], ['Credit', 'None: a session log credits nothing']],
+        st: st('done', 'badge-completed', 'Logged', 'Done. Logged on 2026-09-29 10:40 SAST.', { body: 'A teaching session log credits nothing, and nobody else acts on it.' }),
+        sections: [sec({ title: 'Teaching session', owner: 'Filled in by Pieter du Plessis, 2026-09-29', readout: [['Topic', 'Recognising the sick child: a triage refresher'], ['Audience', 'Interns'], ['Learning objectives', '[His learning objectives, as he wrote them]'], ['Supervising consultant', '']] })],
+        history: [mv('Create', '— → Draft', 'Pieter du Plessis', '2026-09-29 10:38 SAST'), mv('Submit', 'Draft → Logged', 'Pieter du Plessis', '2026-09-29 10:40 SAST')] });
+    } else if (state === 'cancelled') {
+      Object.assign(v, { u: T('Pieter du Plessis'), h1: 'DOPS (Paediatrics) · PAED-002 · no date', sub: "Pieter du Plessis's draft, cancelled",
+        hasResult: true, result: { cls: 'alert alert-success', title: 'Cancelled.', text: 'Nothing more can happen to it.' },
+        about: [['Registrar', 'Pieter du Plessis'], ['EPA', 'PAED-002 — [EPA title]'], ['Credit', 'None']],
+        st: st('others', 'badge-draft', 'Cancelled', 'Closed. You cancelled it on 2026-09-29 11:02 SAST.', { body: 'It was never submitted, and it credits nothing.' }),
+        sections: [sec({ title: 'Request', owner: 'Filled in by Pieter du Plessis', readout: [['Date observed', ''], ['Assessor', ''], ['Procedure', ''], ['Clinical setting', ''], ['Case complexity', '']] }),
+          sec({ title: 'Assessment', locked: true, owner: 'The assessor', empty: 'Not filled in: cancelled before it was submitted.' })],
+        history: [mv('Create', '— → Draft', 'Pieter du Plessis', '2026-09-29 11:00 SAST'), mv('Cancel', 'Draft → Cancelled', 'Pieter du Plessis', '2026-09-29 11:02 SAST')] });
+    } else if (state === 'awaiting-review') {
+      Object.assign(v, { u: T('Pieter du Plessis'), h1: 'Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-28', sub: "Pieter du Plessis's request for a portfolio review",
+        hasResult: true, result: { cls: 'alert alert-success', title: 'Submitted. It is now Awaiting review.', text: "Any of your programme's reviewers can take it from their Activity inbox." },
+        about: [['Registrar', 'Pieter du Plessis'], ['EPA', 'PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research'], ['Period', '2026-07-31 to 2026-09-28'], ['Credit', 'None until it is reviewed']],
+        st: st('others', 'badge-submitted', 'Awaiting review', 'Waiting for a reviewer', { body: 'Nothing for you to do. You can cancel the request until a reviewer acts on it.', act: ['quiet', 'Cancel request…'] }),
+        sections: [sec({ title: 'Request', owner: 'Filled in by Pieter du Plessis, 2026-09-29', readout: [['Review period', '2026-07-31 to 2026-09-28'], ['Note for the reviewer', 'Three teaching sessions logged; please review them with my logbook'], ['Export file name (optional)', '']] }),
+          sec({ title: 'Review', locked: true, owner: 'A reviewer fills this in', empty: 'Not filled in yet.' })],
+        history: [mv('Create', '— → Draft', 'Pieter du Plessis', '2026-09-29 11:20 SAST'), mv('Submit', 'Draft → Awaiting review', 'Pieter du Plessis', '2026-09-29 11:24 SAST')] });
+    } else if (state === 'completed') {
+      Object.assign(v, { u: T('Anele Dlamini'), h1: dl.h1, sub: dl.sub,
+        about: [['Registrar', 'Anele Dlamini'], ['Assessor', 'David Naidoo'], ['EPA', 'PAED-001 — Providing paediatric emergency care to children'], ['Encounter', '2026-09-19'], ['Filed', '2026-09-20'], ['Credit', '1 item']],
+        st: st('done', 'badge-completed', 'Completed', 'Done. David Naidoo completed it on 2026-09-22 15:30 SAST.', { body: 'Rated 4. Credited 1 item to PAED-001: 1 of 3 this semester.', act: ['out', 'Open My progress'] }),
+        sections: [sec({ title: 'Request', owner: 'Filled in by Anele Dlamini, 2026-09-20', readout: [['Clinical setting', 'Emergency unit'], ['Presenting problem', '[Her presenting problem, as she wrote it]'], ['Case complexity', 'Moderate']] }),
+          sec({ title: 'Entrustment', owner: 'Filled in by David Naidoo, 2026-09-22', rungs: 'done', chosen: '4', rungLabel: 'Entrustment level, rung 4 chosen', descriptorTitle: 'Rung 4', descriptor: '[Rung 4 descriptor, as the College wrote it]' }),
+          sec({ title: 'Feedback', owner: 'Filled in by David Naidoo, 2026-09-22', readout: [['[Feedback field, from the schema]', '[What David Naidoo wrote]'], ['[Second feedback field]', '[What David Naidoo wrote]']] })],
+        history: [mv('Create', '— → Draft', 'Anele Dlamini', '2026-09-20 07:40 SAST'), mv('Submit', 'Draft → Requested', 'Anele Dlamini', '2026-09-20 07:46 SAST'), mv('Complete', 'Requested → Completed', 'David Naidoo', '2026-09-22 15:30 SAST', '1 item')] });
+    } else if (state === 'loading') {
+      Object.assign(v, { isLoading: true, isPage: false, hasH1: false, hasSub: false });
+    } else if (state === 'load-error') {
+      Object.assign(v, { isError: true, isPage: false, h1: 'Activity', hasSub: false });
+    } else if (state === 'not-found') {
+      Object.assign(v, { isNotFound: true, isPage: false, h1: 'Activity not found', hasSub: false });
+    }
+    v.crumb = v.isLoading ? 'Loading…' : v.h1;
+    v.historyLabel = 'All ' + v.history.length + (v.history.length === 1 ? ' move' : ' moves');
+    v.w = w; v.h = h;
+    return v;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 03 runbook steps</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wombat-root.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow03.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Source Sans 3";src:url("/_blob/0749fad61c0148128f66400e31be2b8c") format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1280px; height: 4200px; box-sizing: border-box; overflow: hidden; padding: 48px; background-color: var(--background-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5; display: flex; flex-direction: column; gap: 24px">
+<div class="header-container"><div><h1>Runbook steps that change</h1><p class="page-subtitle">What each Expect quotes today, and what it reads once flow 03 ships. Routes change only where named.</p></div></div>
+<div class="table-container shadow"><table class="clinic-table clinic-table--compact">
+<thead><tr><th scope="col" style="width: 7%">Step</th><th scope="col" style="width: 38%">Today's Expect (quoted or paraphrased)</th><th scope="col">Becomes</th></tr></thead>
+<tbody>
+<tr><td><b>2.42</b></td><td>"Open the Activity type select and read its options": eleven options besides "Select…".</td><td>Log an activity lists the eleven as links in three groups: Rated by an assessor (7), Discussed or reviewed, not rated (3), Logged by you (1). Each opens /activities/new?type=…. No "Select…".</td></tr>
+<tr><td><b>3.1</b></td><td>"The type select offers eleven types". "Only Request can be filled in; the other two are locked." "Saving opens the activity's page, State: Draft, with 'Draft saved. It has not been submitted.'"</td><td>She chooses Mini-CEX (Paediatrics) from the picker. Entrustment and Feedback are dashed frames with no inputs, "David Naidoo fills this in", once he is named. Save draft opens the page with the result region "Draft saved. It has not been submitted." (focused) and the status card: Draft, "With you. Not submitted yet." No "State:" line, no summary card.</td></tr>
+<tr><td><b>3.2</b></td><td>My activities lists the draft "… Draft, credited '—'". "The page offers Submit and Cancel, and Discard changes stays disabled until something is typed." "The submit is refused with 'Presenting problem: A value is required.', the field is marked (T263)."</td><td>My activities lists it under Needs you ("Not submitted yet. Nobody else can see it.") and in All activities. The page offers Submit to David Naidoo, Save draft, Discard changes (disabled until something is typed) and, last and quiet, Cancel this draft…. The refusal: summary "Not submitted. It is still a draft. Fix the field below and submit again." with the link "Presenting problem: A value is required.", focused; the field marked with "A value is required." under it.</td></tr>
+<tr><td><b>3.8</b></td><td>"Nothing was saved. Date observed: The date cannot be after today (D)." "The date field is marked and names the alert, and everything typed is kept."</td><td>Summary "Nothing was saved. Everything you typed is kept below." with the linked line "Date observed: The date cannot be after today (D)."; the field carries the same message under it (it names its message, not the alert).</td></tr>
+<tr><td><b>3.9</b></td><td>"As the date is typed, the field is marked, and below it reads 'This date is before the trainee's programme started (J), and will not be accepted.'" Then "Nothing was saved. Date observed: The date cannot be before the trainee's programme started (J)."</td><td>When the date field is left, the last refusal's mark goes and a warning shows under it: "This date is before your programme started (J), and will not be accepted." The field is not marked until a submit refuses it: "Nothing was saved. … Date observed: The date cannot be before your programme started (J)." (<b>"your programme"</b> where the reader is the trainee.)</td></tr>
+<tr><td><b>3.10</b></td><td>"No lateness warning shows yet. The field still carries the last refusal's mark, which stays until the next action (T263)." "Submitted. It is now Requested."</td><td>T299: changing the date drops the refusal's mark at once, and the late-filing warning shows under it. The check line adds "Filed today, 20 days after the encounter: it will be recorded as late." Submit to Fatima Khumalo lands on the page with "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." and the status card "With Fatima Khumalo since …", "Filed 20 days after the encounter: recorded as late."</td></tr>
+<tr><td><b>3.12</b></td><td>Route / → /activities/{id} → /activities/new → /activities/{id}. "Its page reads State: Declined, offers no action, and shows Dr Khumalo's note in the history." "The Activity inbox card … lists it … he may still cancel it."</td><td>Route / → /activities/{id} → <b>/activities/new?from={id}</b> → /activities/{newId}. The status card reads Declined, "Closed. Fatima Khumalo declined it on …", quotes her reason, and offers "File it again, to someone else". The form opens with the info notice "Copied from your request to Fatima Khumalo, which was declined. …", the type, EPA, date and request copied and the assessor empty; the button reads Submit until Sarah Botha is named, then Submit to Sarah Botha. The late warning shows at once. Home's card is now "Needs you" and lists neither: the new request is with Sarah Botha, so it is in All activities.</td></tr>
+<tr><td><b>3.14</b></td><td>"Its Discussion section is locked." "The submit reads 'Submitted. It is now Awaiting discussion.'"</td><td>Discussion is a dashed frame, "Sarah Botha fills this in". The button is Submit to Sarah Botha; the check line says where it goes. The result adds "It is in Sarah Botha's Activity inbox."</td></tr>
+<tr><td><b>3.16</b></td><td>Route / → /activities/inbox → /activities/{id}. "The dashboard card lists the reflection as Draft. The inbox page lists it and nothing else of his." "Home's Activity inbox card then lists the reflection as Awaiting discussion."</td><td>Route / → /activities/{id} (from Home's Needs you card) or /activities/mine. Needs you lists it: "Returned to you. Change it and submit again." The status card quotes Sarah Botha's note. After the submit it leaves Needs you and Home's card: it is with Sarah Botha. /activities/inbox, for him, is an empty state pointing to My activities.</td></tr>
+<tr><td><b>3.18</b></td><td>"Choose KGK Teaching Session Log." "The submit reads 'Submitted. It is now Logged.'"</td><td>He chooses it under Logged by you. The button is Submit (no nominee). The check line: "it is Logged at once. A teaching session log credits nothing, and nobody else acts on it." The result adds "Nobody else acts on a session log."; the status card "Done. Logged on …".</td></tr>
+<tr><td><b>3.20</b></td><td>"Cancel asks for no note and moves the draft to Cancelled, with nothing offered after it."</td><td>Cancel this draft… (quiet, last) opens ConfirmDialog "Cancel this draft?" / "A cancelled draft cannot be reopened, and it credits nothing." with Keep the draft and Cancel draft. Still no note. The result: "Cancelled. Nothing more can happen to it."; status card "Closed. You cancelled it on …".</td></tr>
+<tr><td><b>3.22</b></td><td>"The submit reads 'Submitted. It is now Awaiting review.'" "Its Review section is locked."</td><td>The result adds "Any of your programme's reviewers can take it from their Activity inbox." The status card names no one: "Waiting for a reviewer". Review is a dashed frame, "A reviewer fills this in". (See the Spec's open point on the reviewer field.)</td></tr>
+<tr><td><b>A.2.7</b></td><td>"The first reads 'Draft saved. It has not been submitted.' The second reads 'Submitted. It is now Requested.'"</td><td>The same words in the focused result region; the second adds "It is in Fatima Khumalo's Activity inbox." Needs you lists the first and not the second.</td></tr>
+<tr><td><b>A.7.1</b></td><td>"Focus follows the page's order: activity type, the request fields, Save draft, Submit." Empty submit: "Saved as a draft, but not submitted: … Fix the fields below and submit again." "Typing D−20 announces the late-filing warning."</td><td>Tab to Mini-CEX (Paediatrics) in the picker and press Enter. Focus order: EPA, Date observed, Assessor, Clinical setting, Case complexity, Presenting problem, <b>Submit, Save draft</b>. Empty submit opens the draft with the summary "Saved as a draft, but not submitted. Fix the 6 fields below and submit again." and one linked line a field, focused. Leaving the date field at D−20 announces the warning from its status region. The button reads Submit until Mohammed Patel is named, then Submit to Mohammed Patel.</td></tr>
+</tbody></table></div>
+<p class="field-help">Also affected, not in the list: 3.3 and 3.6 (the status card replaces "State:"), 3.27 to 3.29, 5.24, 6.16 (the result adds the inbox sentence). The EPA and assessor pickers' contents (T102, T122) do not change.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4200}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

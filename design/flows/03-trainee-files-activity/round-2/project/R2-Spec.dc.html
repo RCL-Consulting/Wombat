@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 03 spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wombat-root.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow03.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Source Sans 3";src:url("/_blob/0749fad61c0148128f66400e31be2b8c") format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1280px; height: 4400px; box-sizing: border-box; overflow: hidden; padding: 48px; background-color: var(--background-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5; display: flex; flex-direction: column; gap: 24px">
+<div class="header-container"><div><h1>Flow 03 spec: filing an activity</h1><p class="page-subtitle">Round 2, variation A. Messages, DESIGN.md changes, NEW components and their contrast. Times are SAST; dates are the scenario's (today 2026-09-29).</p></div></div>
+
+<section class="detail-card">
+<h2>1 · Every message, by kind</h2>
+<div class="table-container"><table class="clinic-table clinic-table--compact">
+<thead><tr><th scope="col" style="width: 13%">Kind</th><th scope="col" style="width: 27%">Where, and how it is announced</th><th scope="col">Words</th></tr></thead>
+<tbody>
+<tr><td><b>Result</b></td><td>ActionResult at the head of the page body, <code>role="status"</code>; takes the focus after the move. Alert success.</td><td>"Draft saved. It has not been submitted." · "Nobody else can see a draft."<br>"Submitted. It is now Requested." · "It is in Fatima Khumalo's Activity inbox."<br>"Submitted. It is now Awaiting discussion." · "It is in Sarah Botha's Activity inbox."<br>"Submitted. It is now Awaiting review." · "Any of your programme's reviewers can take it from their Activity inbox."<br>"Submitted. It is now Logged." · "Nobody else acts on a session log."<br>"Cancelled." · "Nothing more can happen to it."</td></tr>
+<tr><td><b>Refusal</b></td><td>Validation summary above the first section, <code>role="alert"</code>; takes the focus; each line links to its field. The field: <code>aria-invalid</code>, the invalid border and stripe, and its message under it (<code>.validation-message</code>), named by <code>aria-describedby</code>.</td><td>"Nothing was saved." · "Everything you typed is kept below." · "Date observed: The date cannot be after today (2026-09-29)." / "Date observed: The date cannot be before your programme started (2026-01-15)."<br>"Not submitted. It is still a draft." · "Fix the field below and submit again." · "Presenting problem: A value is required."<br>"Saved as a draft, but not submitted." · "Fix the 6 fields below and submit again." · one line a field.<br>Field messages: "A value is required." · "The date cannot be after today (2026-09-29)." · "The date cannot be before your programme started (2026-01-15)." · "Mohammed Patel can no longer be named as an assessor. Choose someone else."<br>Note panel (flow 04): "Not declined." · "Reason for Sipho Ndlovu: [the refusal]". The panel stays open and keeps the note as typed.</td></tr>
+<tr><td><b>Hint</b></td><td><code>.field-warning</code> under the field, <code>role="status"</code>, named by the field's <code>aria-describedby</code>; shown when the date field is left (one round trip, not per key). A changed value drops a refusal's mark and message at once.</td><td>"This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the encounter is recorded as late." (types that credit)<br>"This date is before your programme started (2026-01-15), and will not be accepted." (types that credit; was "the trainee's programme")</td></tr>
+<tr><td><b>Check line</b></td><td><code>.submit-check</code> above the action bar on Log an activity and on a draft's page. Plain text, not live.</td><td>"When you submit: it goes to Fatima Khumalo's Activity inbox and stays Requested until it is completed or declined." + " Filed today, 20 days after the encounter: it will be recorded as late." when it will be.<br>"… it goes to Sarah Botha's Activity inbox and stays Awaiting discussion until it is discussed or returned to you."<br>"… it is Logged at once. A teaching session log credits nothing, and nobody else acts on it."<br>No nominee yet: "… it goes to the assessor you name, in their Activity inbox, and stays Requested until it is completed or declined."</td></tr>
+<tr><td><b>Move reason</b></td><td><code>.move-reasons</code> in the action bar; the greyed move is <code>aria-disabled="true"</code> and names it with <code>aria-describedby</code>.</td><td>"Submit: Needs an assessor who can be named. Choose someone other than Mohammed Patel above."</td></tr>
+<tr><td><b>Notice</b></td><td>Alert info at the head of the form, <code>role="status"</code>.</td><td>"Copied from your request to Fatima Khumalo, which was declined. The EPA, date and request are as you filed them. Name someone else, then submit. Nothing is saved until you do."</td></tr>
+<tr><td><b>Status card</b></td><td>ActivityStatus under the header; "Who has it now", the badge and one headline, then the body. Not live; the result region announces changes.</td><td>Draft: "With you. Not submitted yet." · Returned: "With you. Sarah Botha returned it on 2026-09-26 16:40 SAST." + her note + "Change your reflection and submit it again."<br>Requested: "With Fatima Khumalo since 2026-09-29 09:12 SAST" · "Nothing for you to do. You can cancel the request until Fatima Khumalo acts on it." · Awaiting review: "Waiting for a reviewer" (no name: any reviewer may take it)<br>Declined: "Closed. Fatima Khumalo declined it on 2026-09-29 14:05 SAST." + her reason + "It credits nothing, and nothing more can happen to it. To be assessed on this encounter, file it again and name someone else."<br>Cancelled: "Closed. You cancelled it on …" · Completed: "Done. David Naidoo completed it on …" · "Rated 4. Credited 1 item to PAED-001: 1 of 3 this semester." · Discussed, Logged: "Done. …" and "credits nothing".</td></tr>
+<tr><td><b>Empty</b></td><td>StatePanel (<code>.detail-card--empty</code>), title then copy.</td><td>My activities: "No activities yet" · "Log an activity to ask an assessor to rate an encounter, or to log a teaching session."<br>Activity inbox, registrar with no other role: "Nothing here is yours to act on." · "… Your drafts and work returned to you are under My activities, in Needs you." · Open My activities<br>Not found: "There is no activity at this address." · "It may have been mistyped. Your activities are all in My activities." · Go to My activities</td></tr>
+<tr><td><b>Load error</b></td><td>StatePanel in the page, <code>role="alert"</code>, with Try again (Home's pattern). Never the exception's text; never the session.</td><td>"Could not load this activity." / "Could not load your activities." / "Could not load what you can file." · "Nothing has changed. Try again, or come back in a few minutes."</td></tr>
+<tr><td><b>Confirm</b></td><td>ConfirmDialog (native <code>&lt;dialog&gt;</code>); focus on the safe button; the result region takes the focus after.</td><td>"Cancel this request?" · "It leaves Fatima Khumalo's Activity inbox. A cancelled request cannot be reopened, and it credits nothing." · Keep the request / Cancel request<br>"Cancel this draft?" · "A cancelled draft cannot be reopened, and it credits nothing." · Keep the draft / Cancel draft</td></tr>
+</tbody></table></div>
+<p class="field-help" style="margin-top: var(--space-sm)">No message names a person by pronoun: Wombat stores no pronouns, so a sentence names the person again ("until Fatima Khumalo acts on it").</p>
+</section>
+
+<section class="detail-card">
+<h2>2 · What DESIGN.md changes</h2>
+<div class="table-container"><table class="clinic-table clinic-table--compact">
+<thead><tr><th scope="col" style="width: 22%">Section</th><th scope="col">Change</th></tr></thead>
+<tbody>
+<tr><td>§ Form system</td><td>An activity form is a stack of sections, each a <code>.detail-card</code> one deep on the page (never a card in a card). A section someone else fills in is <code>.form-section--locked</code>: a dashed <code>input-border</code> frame on the page's ground, no inputs, the owner's name with <code>lock</code>. Filled, it is a plain card of read-outs with "Filled in by {name}, {date}". Required fields carry a visible <code>*</code> and <code>aria-required</code>; help sits under the control. The action bar is <code>.form-actions--moves</code>: the move that moves it on is the one filled button, first; Save draft outlined; Cancel last and quiet, behind ConfirmDialog. A named nominee puts the name on the button ("Submit to Fatima Khumalo") only when the type has exactly one nominee field and it is filled; otherwise the move's own label. A move its mover cannot make is greyed with <code>aria-disabled</code> and a visible reason starting with its name. Below 641px every control is 44px and the bar stacks, primary on top.</td></tr>
+<tr><td>§ Alerts, validation, empty states</td><td>A refusal is the validation summary (focus, links) plus the message beside each field; a changed value drops both at once and the form's hints (<code>.field-warning</code>) return. A move's outcome is the result region (<code>.action-result</code>, focus). A copy made from another record says so in an info notice. Load failures follow Home's pattern with Try again; no page prints an exception.</td></tr>
+<tr><td>§ Page-level patterns</td><td>A record page with a workflow opens with the status card (who has it now, what next, the one action), replacing the summary card and the state under the h1. Then <code>.details-grid</code>: About (the people, EPA, dates, credit) and the sections. The history closes the page: a table oldest first, each note on its own full-width line, times in SAST; below 641px it is stacked blocks behind a native <code>&lt;details&gt;</code> ("All 3 moves"). The h1 is type · EPA · date; the people are in the subtitle; the tab is the h1 + " · Wombat"; the last crumb is the h1. A list of work opens with Needs you when the reader has any.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card">
+<h2>3 · NEW components and their classes</h2>
+<div class="table-container"><table class="clinic-table clinic-table--compact">
+<thead><tr><th scope="col" style="width: 18%">Component</th><th scope="col" style="width: 34%">Classes</th><th scope="col">Notes</th></tr></thead>
+<tbody>
+<tr><td>ActivityStatus (the status card)</td><td><code>.activity-status</code> + <code>--yours</code> / <code>--others</code> / <code>--done</code> / <code>--declined</code>; <code>-main</code>, <code>-label</code>, <code>-head</code>, <code>-headline</code>, <code>-quote</code>, <code>-body</code>, <code>-meta</code>, <code>-action</code></td><td>One per record page; role-aware (flow 04, flow 07 extend it). The stripe repeats whose move it is; the words carry it.</td></tr>
+<tr><td>InstrumentPicker</td><td><code>.instrument-group</code>, <code>.instrument-group-head</code>, <code>.instrument-picker</code>, <code>.instrument-link</code></td><td>Groups from the type's shape: a scale field, "Rated by an assessor"; the creator's move straight to a final state, "Logged by you"; else "Discussed or reviewed, not rated". An empty group is not drawn. Links to /activities/new?type=….</td></tr>
+<tr><td>FormSection, LockedSection</td><td><code>.form-section</code>, <code>.form-section-head</code>, <code>.form-section-owner</code>, <code>.form-section--locked</code>, <code>.form-section-empty</code>, <code>.field-readout</code>, <code>.field-readback</code>, <code>.required-mark</code></td><td>The renderer's vocabulary for every field type; read-outs keep line breaks.</td></tr>
+<tr><td>RungRow</td><td><code>.rung-row</code>, <code>.rung</code>, <code>.rung--pending</code>, <code>.rung.is-chosen</code>, <code>.rung-check</code>, <code>.rung-descriptor</code>; assessor: <code>.rung-choice</code></td><td>Six rungs, 1 · 2 · 3a · 3b · 4 · 5; the chosen one filled, with "chosen" in words; its descriptor under the row.</td></tr>
+<tr><td>HistoryRow (stacked)</td><td><code>.history-table</code> (the app builds it as <code>.clinic-table</code>), <code>.history-note</code>, <code>.history-late</code>, <code>.history-details</code>, <code>.history-list</code>, <code>.history-row</code>, <code>.history-meta</code></td><td>Below 641px the table hides and the <code>&lt;details&gt;</code> shows.</td></tr>
+<tr><td>SubmitCheck, NotePanel, NeedsYouList</td><td><code>.submit-check</code>; <code>.note-panel</code>; <code>.needs-you</code>, <code>.needs-you-row</code>, <code>.needs-you-why</code>, <code>.activity-link</code>, <code>.activity-link-to</code></td><td>Home's card and My activities render the same NeedsYouList from one query.</td></tr>
+<tr><td>Modifiers</td><td><code>.form-actions--moves</code>, <code>.btn-quiet</code>, <code>.btn.is-unavailable</code>, <code>.move-reasons</code>, <code>.clinic-table--stack</code></td><td><code>.clinic-table--stack</code> turns a DataTable into labelled blocks below 641px.</td></tr>
+</tbody></table></div>
+<p class="field-help" style="margin-top: var(--space-sm)">Used as built: MainLayout and NavMenu, PageHeader (<code>.header-container</code>, <code>.page-subtitle</code>), Breadcrumbs, Alert, ActionResult, the validation summary and message, <code>.field-warning</code>, FormField (<code>.form-group</code>, <code>.form-control</code>, <code>.form-select</code>), FormActions, DataTable (<code>.table-container</code>, <code>.clinic-table</code>, PagerControls), DashboardCard, StatePanel, Skeleton, ConfirmDialog (<code>.dialog-card--form</code>), badges, Icon (Lucide: house, file-plus, list-checks, inbox, chart-line, shield, user, menu, chevron-right, chevron-left, lock, copy, refresh-cw).</p>
+</section>
+
+<section class="detail-card">
+<h2>4 · Contrast of every new pair (WCAG 2.1, token values)</h2>
+<div class="table-container"><table class="clinic-table clinic-table--compact">
+<thead><tr><th scope="col">Pair</th><th scope="col">Needs</th><th scope="col">Ratio</th></tr></thead>
+<tbody>
+<tr><td>Locked section's dashed frame: <code>input-border</code> on <code>background-color</code> (its ground and the page's)</td><td>3</td><td>3.60</td></tr>
+<tr><td>Locked section's owner line and "Not filled in yet": <code>muted-text</code> on <code>background-color</code></td><td>4.5</td><td>4.83</td></tr>
+<tr><td>Rung row, chosen rung: <code>on-fill</code> on <code>secondary-color</code> · its fill against the neighbouring rungs' <code>surface-color</code></td><td>4.5 · 3</td><td>4.86 · 4.86</td></tr>
+<tr><td>Rung row, other rungs: <code>text-color</code> on <code>surface-color</code> · edge <code>input-border</code> on <code>surface-color</code>; pending rungs' dashed edge on <code>background-color</code></td><td>4.5 · 3 · 3</td><td>12.63 · 3.80 · 3.60</td></tr>
+<tr><td>Rung descriptor: <code>text-color</code> on <code>info-bg</code> · edge <code>secondary-color</code> on <code>info-bg</code></td><td>4.5 · 3</td><td>11.84 · 4.55</td></tr>
+<tr><td>Status card's border: <code>input-border</code> on <code>background-color</code> (outside) · on <code>surface-color</code> (inside)</td><td>3</td><td>3.60 · 3.80</td></tr>
+<tr><td>Status card's stripe on <code>background-color</code>: yours <code>secondary-color</code> · others <code>input-border</code> · done <code>success-color</code> · declined <code>danger-color</code></td><td>3</td><td>4.61 · 3.60 · 5.58 · 5.65</td></tr>
+<tr><td>Status card's quote: <code>text-color</code> on <code>header-bg</code> · edge <code>input-border</code> on <code>header-bg</code></td><td>4.5 · 3</td><td>11.36 · 3.42</td></tr>
+<tr><td>Quiet Cancel: <code>danger-color</code> label on <code>surface-color</code> · on <code>background-color</code></td><td>4.5</td><td>5.95 · 5.65</td></tr>
+<tr><td>Check line: <code>text-color</code> on <code>info-bg</code> · edge <code>secondary-color</code> on <code>info-bg</code></td><td>4.5 · 3</td><td>11.84 · 4.55</td></tr>
+<tr><td>Needs you row's edge: <code>secondary-color</code> on <code>surface-color</code> · reason <code>text-color</code></td><td>3 · 4.5</td><td>4.86 · 12.63</td></tr>
+<tr><td>Instrument link: <code>link-color</code> on <code>surface-color</code> · on hover <code>hover-bg</code> · edge <code>input-border</code></td><td>4.5 · 4.5 · 3</td><td>6.70 · 6.36 · 3.80</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card detail-card--warning">
+<h2>5 · Open points for your review</h2>
+<ul style="margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 6px">
+<li><b>E2 and T280 collide on a re-filing.</b> A request filed again after a decline has the same type, EPA and date as the declined one, so the two share an h1, tab and crumb. Links in lists stay distinct (the assessor is a second line inside the link), but the headings do not. Options: add the assessor to the h1 only when a sibling shares it, or always.</li>
+<li><b>A name with no EPA or date yet.</b> Drawn as "Mini-CEX (Paediatrics) · no EPA yet · no date yet" (a draft saved empty) and "DOPS (Paediatrics) · PAED-002 · no date" (cancelled).</li>
+<li><b>The portfolio review's reviewer.</b> Step 3.22 names Dr Patel as reviewer, but correction 2 says any reviewer may take it. Drawn as correction 2 says, with no reviewer field shown; if the form keeps a reviewer field, its label should say it is a request, not an assignment.</li>
+<li><b>The trainee's nav</b> shows only the links this flow touches (Home, Log an activity, My activities, then My progress and My data rights); the rest is flow 01's, unchanged.</li>
+<li><b>Home's card</b> is titled "Needs you", not "Activity inbox", because the page it used to open is gone for a registrar; its footer opens My activities.</li>
+<li><b>Discard changes</b> stays, disabled until something is typed (step 3.2).</li>
+</ul>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
