@@ -69,3 +69,13 @@ action bar.
 | E1 | "File it again, to someone else" on a declined request | Yes: NEW `/activities/new?from={id}`, copying the type, EPA, date and request, with the assessor empty; nothing is saved until she saves |
 | E2 | The activity page's h1 | Type · EPA · date (enough for T280). The assessor goes in the subtitle ("Sipho Ndlovu's request to Fatima Khumalo"), not the h1 |
 | E3 | Cancel | Quiet, last, and behind a ConfirmDialog ("Cancel this draft? It cannot be reopened, and it credits nothing.") |
+
+## The operator's answer (2026-09-29)
+
+**Accept all**: A with both borrowings; Q1–Q6 and E1–E3 as recommended. Round 2's ask is `round-2-ask.txt`, which
+adds five corrections: the Submit label with no single nominee field; "who has it" when no one person does; what
+"Needs you" holds; the programme hint's changed words; and the loading, error and not-found boards.
+
+*For the build:* today's actionable read (`ActivityWaiting.LoadActionableAsync`) takes any state the caller can move
+out of, so a request the registrar can only cancel may count as hers. Correction 3 says it does not belong in "Needs
+you"; check which it is before building the list (3.16-2 shows only the returned reflection).

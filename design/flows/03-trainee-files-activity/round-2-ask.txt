@@ -1,0 +1,70 @@
+ROUND 1 PICKED: variation A, "Pick, then file; status on top", with two borrowings. Round 2: A at full fidelity.
+
+DECISIONS (one sentence each):
+  Pick: A. Borrow from B the history behind a native <details> ("All 3 moves") at 390 px only; borrow from C the check
+    line before Submit ("When you submit: it goes to Fatima Khumalo's Activity inbox and is Requested until she
+    completes or declines it. Filed today, 20 days after the encounter: it will be recorded as late."), placed above
+    A's action bar on Log an activity and on a draft's page. Drop B's and C's boards from round 2.
+  Q1: yes, A1's grouped picker of links to /activities/new?type=…. The three groups are worked out from each type's
+    shape, not a hand list: a scale field makes it "Rated by an assessor"; a creator's move straight to a final state
+    makes it "Logged by you"; anything else is "Discussed or reviewed, not rated". An empty group is not drawn.
+  Q2: Main panel 4 as drawn: before, a dashed frame with no inputs and the owner's name; after, the values as text in a
+    solid frame, with who filled it in and when.
+  Q3: A's status card on top, carrying the page's one action, replaces the summary card and the state under the h1. The
+    history table stays, oldest first, each note on its own full-width line; stacked as blocks below 641 px.
+  Q4: the rungs as a read-only row of six (1, 2, 3a, 3b, 4, 5); the chosen rung shows its descriptor (the data holds
+    one per rung). Instruments by their full label.
+  Q5: a move its mover cannot make is shown greyed (aria-disabled) with its reason beside it. Drop the hide option.
+  Q6: the registrar's Activity inbox goes. My activities' "Needs you" and Home's Activity inbox card list exactly the
+    same rows. /activities/inbox is the assessor's page (flow 04); a registrar who holds no other role and types it sees
+    an empty state that points to My activities › Needs you.
+  E1: "File it again, to someone else" on a declined request, as A4 draws it: /activities/new?from={id} copies the type,
+    EPA, date and request, leaves the assessor empty, and saves nothing until she saves or submits.
+  E2: the activity page's h1 is type · EPA · date ("Mini-CEX (Paediatrics) · PAED-002 · 2026-09-09"); the assessor
+    moves to the subtitle ("Sipho Ndlovu's request to Fatima Khumalo"). The tab title is the h1 plus " · Wombat"; the
+    trail's last crumb is the same h1.
+  E3: Cancel is last, quiet, and behind a ConfirmDialog, as Main panel 5 says.
+
+CORRECTIONS TO ROUND 1:
+  1. "Submit to Fatima Khumalo" works only when the type has exactly one nominee field and it is filled. With none (the
+     teaching log: "Log it"), several, or an empty one, the button reads by the move's own label ("Submit"). Show one
+     such case.
+  2. "Who has it now" is the person or people who can make the next move. When that is not one named person (a
+     portfolio review "Awaiting review", which any of several reviewers may take), say the state in words ("Waiting for
+     a reviewer") and name no one. Show the portfolio review's status card.
+  3. A registrar's "Needs you" holds a draft (hers to finish or submit) and a returned piece of work. A request she can
+     still cancel is not "Needs you": it is with the assessor. Say this rule on the My activities board.
+  4. The before-the-programme hint in Main panel 3 now reads "your programme" where today's page says "the trainee's
+     programme". Keep the change if you mean it, and list it on the Steps board.
+  5. A2's loading and load-error states are only tags. Draw them as boards, and the activity page's and My activities'
+     loading, load error and not found too.
+
+ROUND 2 ASK:
+  - Full fidelity on the Wombat design system's tokens, as flows 01 and 02 built them: the shell (sidebar per acting
+    role, top bar, the active item; "My activities" lights as the owner of an activity page), PageHeader with its
+    trail, Alert, ActionResult, FormField, FormActions, DataTable, StatePanel, Skeleton, ConfirmDialog, badges, Icon
+    (Lucide). Use the brand mark at /_blob/c1b21826d1dc3296fc39cb61b871981e, never a drawn disc.
+  - Every screen and state in the ask's STATES TO SHOW, at 1280 and at 390 px, in A's structure:
+    Log an activity: the picker; Mini-CEX; Reflective Exercise; Teaching Session Log; refused (future date); the hint
+      and the refusal before the programme; the late-filing warning; the EPA picker with a 17-item list of long names;
+      File it again (from a decline); loading; load error.
+    The activity page (the registrar's view): draft saved; refused submit (the summary and the field message); saved as
+      a draft but not submitted; requested (just submitted, late); declined; returned; discussed; logged; cancelled;
+      awaiting review (the portfolio review, correction 2); completed and credited (the rung row with its descriptor,
+      the feedback, "1 item"); the Cancel ConfirmDialog; a greyed move with its reason; loading; load error; not found.
+    My activities: Needs you plus all (40 rows, paged); only finished work (no Needs you); empty; loading; load error.
+    The inbox as a registrar with no other role: its empty state (Q6).
+    Home's Activity inbox card listing the same rows as Needs you (the card only, in F01's dashboard frame).
+  - Keep one vocabulary for the status card, the sections, locked sections, the action bar, the note panel, the result
+    region and the history: flow 04 (the assessor) and flow 07 (the chair) extend this page. Add one board showing the
+    same page in the assessor's view of a request (Complete, Decline, the note panel open), so the vocabulary is proved
+    for a second role; flow 04 designs it fully.
+  - A Spec board: every message the pages show, by kind (result, refusal, hint, notice, empty) and its words; the
+    DESIGN.md sections this changes (§ Form system; § Alerts, validation, empty states; § Page-level patterns); every
+    NEW component with its proposed class names (the status card, the picker, the locked section, the rung row, the
+    stacked history row); and a contrast figure for every new pair (the dashed frame, the rung row's chosen rung, the
+    status card's border, the quiet Cancel).
+  - A Steps board: which runbook Expects change (3.1, 3.2, 3.8–3.10, 3.12, 3.14, 3.16, 3.18, 3.20, 3.22, A.2.7, A.7.1
+    quote today's words and routes), and to what.
+  - Keep round 1's boards; put round 2 on its own canvas page. Stop when round 2 is drawn; I will review it before any
+    corrections.

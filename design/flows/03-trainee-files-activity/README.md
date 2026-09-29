@@ -12,3 +12,4 @@ T342's design, kept beside its brief (`../03-trainee-files-activity.md`) so that
   `Main` holds the shared parts; A is "Pick, then file; status on top", B "One form; the activity as a thread",
   C "Guided filing; next step first". No step counts were given; the review counts them.
 - **Round 1's review:** `round-1-review.md`. Recommendation: A, with B's collapsed history at 390 px and C's check line.
+- **The decisions:** accept all (2026-09-29). **Round 2's ask:** `round-2-ask.txt`.
