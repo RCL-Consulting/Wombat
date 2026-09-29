@@ -24,11 +24,13 @@ The operator asked to start T342. Steps 1–4 are done; the loop now waits on th
   C1–C15; the ask's own correction 2 was wrong: the portfolio review has a named reviewer). The operator accepted
   E1–E9 (E3: build a save-without-a-move command). Round 3's ask written (`round-3-ask.txt`).
 
-### Next session: T342 continues. **Model: Opus.**
+- **Round 3** drawn and checked item by item (`round-3-check.md`): all hold. **The design is final.**
 
-- The operator sends `round-3-ask.txt`. Then: check the canvas version moved from `1790666059-feef`, save round 3
-  into `round-3/`, check C1–C15 and E1–E9 item by item (`round-3-check.md`, as flow 02's), then step 6, the build
-  (`build-lanes.md` from flow 02's; the build items are in `round-2-review.md` § For the build).
+### Next session: T342 step 6, the build. **Model: Opus.**
+
+- Lanes from flow 02's `build-lanes.md`; the build items are `round-2-review.md` § For the build (Needs you query,
+  who-has-it, picker shape, File it again, save-without-a-move command, rung row, history table, focus on arrival,
+  ConfirmDialog CancelLabel, CSS reuse and scoping). Then review, fix pass, squash, DESIGN.md banner; step 7 replay.
 
 ### For the operator
 

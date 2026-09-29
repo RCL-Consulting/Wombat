@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Log an activity, round 3 (all states)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wombat-root.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow03.css">
+<link rel="stylesheet" href="flow03-r3.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Source Sans 3";src:url("/_blob/0749fad61c0148128f66400e31be2b8c") format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/_blob/d9e2feab5a038f688b3d1ac61648219b") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div style="width: {{w}}px; height: {{h}}px; overflow: hidden; position: relative; background-color: var(--background-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/c1b21826d1dc3296fc39cb61b871981e" alt=""><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span><span>Trainee</span></p>
+<label for="nav-toggle" class="nav-toggle-label"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>Menu</span></label>
+<div class="nav-panel">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span><span class="role-now-name">Trainee</span></p></div>
+<nav class="nav-list" aria-label="Main">
+<ul class="nav-items">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4M9 15h6M12 18v-6"></path></svg><span class="nav-label">Log an activity</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"></path></svg><span class="nav-label">My activities</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="m19 9-5 5-4-4-3 3"></path></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</nav>
+</div>
+<div class="account-row"><a class="account-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="account-name">{{user}}</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+</header>
+<main><article>
+
+<div class="header-container"><div>
+<h1 tabindex="-1">Log an activity</h1>
+<sc-if value="{{isPicker}}" hint-placeholder-val="{{false}}"><p class="page-subtitle">Choose what you are filing. Each opens its own form.</p></sc-if>
+<sc-if value="{{isForm}}" hint-placeholder-val="{{true}}"><p class="page-subtitle">{{typeLabel}} · <a href="#">Choose another type</a></p></sc-if>
+</div></div>
+
+<sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+<div class="form-column" aria-hidden="true"><div class="detail-card"><div class="skeleton" style="width: 30%; min-height: 1.4rem"></div><div class="skeleton" style="width: 20%"></div><div class="skeleton" style="min-height: 2.375rem"></div><div class="skeleton" style="width: 20%"></div><div class="skeleton" style="min-height: 2.375rem"></div><div class="skeleton" style="width: 20%"></div><div class="skeleton" style="min-height: 2.375rem"></div></div>
+<div class="detail-card"><div class="skeleton" style="width: 25%; min-height: 1.4rem"></div><div class="skeleton" style="width: 60%"></div></div></div>
+<p class="visually-hidden" role="status">Loading what you can file.</p>
+</sc-if>
+
+<sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty form-column" role="alert"><p class="state-panel-title">Could not load what you can file.</p><p class="state-panel-copy">Nothing has changed. Try again, or come back in a few minutes.</p><p style="margin: var(--space-md) 0 0"><button type="button" class="btn btn-outline"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></p></div>
+</sc-if>
+
+<sc-if value="{{isPicker}}" hint-placeholder-val="{{false}}">
+<div class="stack">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+<section class="detail-card instrument-group" aria-labelledby="{{g.id}}">
+<div class="instrument-group-head"><h2 id="{{g.id}}">{{g.title}}</h2><span class="text-muted">{{g.count}}</span></div>
+<p class="text-muted">{{g.text}}</p>
+<ul class="instrument-picker"><sc-for list="{{g.items}}" as="it" hint-placeholder-count="3"><li><a class="instrument-link" href="#">{{it}}<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></a></li></sc-for></ul>
+</section>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isForm}}" hint-placeholder-val="{{true}}">
+<div class="form-column">
+<sc-if value="{{hasNotice}}" hint-placeholder-val="{{false}}"><div class="alert alert-info" role="status">{{notice}}</div></sc-if>
+<sc-if value="{{hasSummary}}" hint-placeholder-val="{{false}}">
+<div class="validation-summary-errors error-summary demo-focus" id="error-summary" tabindex="-1" role="alert"><strong>{{summary.title}}</strong> {{summary.text}}
+<ul style="margin: var(--space-xs) 0 0; padding-left: 1.1rem"><sc-for list="{{summary.items}}" as="it" hint-placeholder-count="1"><li><a href="#{{it.target}}-in">{{it.text}}</a></li></sc-for></ul></div>
+</sc-if>
+<sc-for list="{{sections}}" as="sec" hint-placeholder-count="2">
+<section class="{{sec.cls}}" aria-labelledby="{{sec.hid}}">
+<sc-if value="{{sec.isLocked}}" hint-placeholder-val="{{false}}">
+<div class="form-section-lockhead"><h2 id="{{sec.hid}}">{{sec.title}}</h2><p class="form-section-owner"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{sec.owner}}</p></div>
+<div class="form-section-lockbody">
+<sc-if value="{{sec.hasHolds}}" hint-placeholder-val="{{false}}"><p class="form-section-holds">{{sec.holds}}</p></sc-if>
+<sc-if value="{{sec.hasRungs}}" hint-placeholder-val="{{false}}"><ol class="rung-row" aria-label="Entrustment level: 1, 2, 3a, 3b, 4, 5"><sc-for list="{{sec.rungs}}" as="r" hint-placeholder-count="6"><li class="rung rung--pending">{{r}}</li></sc-for></ol></sc-if>
+<p class="form-section-empty">{{sec.emptyText}}</p>
+</div>
+</sc-if>
+<sc-if value="{{sec.isOpen}}" hint-placeholder-val="{{true}}">
+<div class="form-section-head"><h2 id="{{sec.hid}}">{{sec.title}}</h2><p class="form-section-owner">{{sec.owner}}</p></div>
+<div class="form-grid">
+<sc-for list="{{sec.inputs}}" as="f" hint-placeholder-count="3">
+<div class="{{f.groupCls}}">
+<label for="{{f.id}}-in">{{f.label}} <span class="required-mark" aria-hidden="true">{{f.star}}</span></label>
+<sc-if value="{{f.isSelect}}" hint-placeholder-val="{{true}}"><select class="form-select" id="{{f.id}}-in" aria-invalid="{{f.invalid}}" aria-required="{{f.req}}" aria-describedby="{{f.describedby}}"><option>{{f.value}}</option></select></sc-if>
+<sc-if value="{{f.isText}}" hint-placeholder-val="{{false}}"><input class="form-control" id="{{f.id}}-in" type="text" value="{{f.value}}" aria-invalid="{{f.invalid}}" aria-required="{{f.req}}" aria-describedby="{{f.describedby}}"></sc-if>
+<sc-if value="{{f.isArea}}" hint-placeholder-val="{{false}}"><textarea class="form-control" id="{{f.id}}-in" rows="4" value="{{f.value}}" aria-invalid="{{f.invalid}}" aria-required="{{f.req}}" aria-describedby="{{f.describedby}}"></textarea></sc-if>
+<sc-if value="{{f.hasListbox}}" hint-placeholder-val="{{false}}"><ul class="epa-listbox" aria-hidden="true"><sc-for list="{{f.listbox}}" as="o" hint-placeholder-count="8"><li class="{{o.cls}}">{{o.text}}</li></sc-for></ul></sc-if>
+<sc-if value="{{f.hasReadback}}" hint-placeholder-val="{{false}}"><p class="field-readback">{{f.readback}}</p></sc-if>
+<sc-if value="{{f.hasHelp}}" hint-placeholder-val="{{false}}"><p class="field-help" id="{{f.id}}-help">{{f.help}}</p></sc-if>
+<sc-if value="{{f.hasMsg}}" hint-placeholder-val="{{false}}"><p class="validation-message" id="{{f.id}}-msg" style="margin: 0">{{f.msg}}</p></sc-if>
+<sc-if value="{{f.hasWarn}}" hint-placeholder-val="{{false}}"><p class="field-warning" id="{{f.id}}-warn" role="status">{{f.warn}}</p></sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</sc-for>
+<p class="submit-check"><strong>{{checkLead}}</strong> {{check}}</p>
+<div class="form-actions form-actions--moves"><button type="button" class="btn btn-primary">{{submitLabel}}</button><button type="button" class="btn btn-outline">Save draft</button></div>
+<p class="field-help">Save draft keeps it in My activities. It is in nobody's inbox until you submit it. <span class="required-mark" aria-hidden="true">*</span> marks a field you must fill in.</p>
+</div>
+</sc-if>
+
+</article></main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["picker","minicex","reflective","tsl","refused-future","hint-programme","refused-programme","late","epa17","file-again","loading","load-error"],"default":"minicex"},"w":{"editor":"int","default":1280},"h":{"editor":"int","default":1500},"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const state = this.props.state || 'minicex';
+    const w = this.props.w || 1280;
+    const h = this.props.h || 1500;
+    const RUNGS = ['1', '2', '3a', '3b', '4', '5'];
+    const PAED001 = 'PAED-001 — Providing paediatric emergency care to children';
+    const PAED002 = 'PAED-002 — Managing common paediatric presentations';
+    const PAED015 = 'PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research';
+    const inp = (id, label, kind, value, o) => {
+      o = o || {};
+      const ids = [];
+      if (o.help) ids.push(id + '-help');
+      if (o.msg) ids.push(id + '-msg');
+      if (o.msg && o.inSummary) ids.push('error-summary');
+      if (o.warn) ids.push(id + '-warn');
+      return {
+        id: id, label: label, star: o.optional ? '' : '*', req: o.optional ? 'false' : 'true',
+        isSelect: kind === 's', isText: kind === 't', isArea: kind === 'a', value: value || '',
+        invalid: o.msg ? 'true' : 'false', groupCls: 'form-group' + (o.full ? ' full-width' : ''),
+        hasHelp: !!o.help, help: o.help || '', hasMsg: !!o.msg, msg: o.msg || '', hasWarn: !!o.warn, warn: o.warn || '',
+        hasReadback: !!o.readback, readback: o.readback || '', hasListbox: !!o.listbox, listbox: o.listbox || [],
+        describedby: ids.join(' ')
+      };
+    };
+    const hid = (t) => 'sec-' + t.toLowerCase().replace(/[^a-z]+/g, '-');
+    const open = (title, inputs) => ({ title: title, hid: hid(title), cls: 'detail-card form-section', isLocked: false, isOpen: true, owner: 'You fill this in', inputs: inputs });
+    const locked = (title, owner, text, o) => {
+      o = o || {};
+      return { title: title, hid: hid(title), cls: 'detail-card form-section form-section--locked', isLocked: true, isOpen: false, owner: owner, emptyText: text,
+        hasHolds: !!o.holds, holds: o.holds ? 'It holds: ' + o.holds : '', hasRungs: !!o.rungs, rungs: o.rungs ? RUNGS : [], inputs: [] };
+    };
+
+    const LATE = 'This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the encounter is recorded as late.';
+    const EPA_HELP = 'The 9 EPAs whose list names the Mini-CEX.';
+    const ASSESSOR_HELP = "Your institution's active assessors. It goes to the Activity inbox of the one you name.";
+    // Mini-CEX Request, in the College's seed order: EPA, Assessor, Date observed, Clinical setting, Presenting problem, Case complexity.
+    const miniCex = (o) => {
+      o = o || {};
+      const who = o.who || 'Fatima Khumalo';
+      return [
+        open('Request', [
+          inp('epa', 'EPA', 's', o.epa || PAED002, { full: true, help: EPA_HELP }),
+          inp('assessor', 'Assessor', 's', o.assessor || 'Fatima Khumalo', { help: ASSESSOR_HELP }),
+          inp('observed_on', 'Date observed', 't', o.date || '2026-09-09', { help: 'The day of the encounter.', msg: o.dateMsg, inSummary: o.inSummary, warn: o.dateWarn }),
+          inp('clinical_setting', 'Clinical setting', 's', o.setting || 'Ward'),
+          inp('presenting_problem', 'Presenting problem', 't', o.problem === undefined ? 'Nine-month-old with gastroenteritis and moderate dehydration' : o.problem, { full: true }),
+          inp('case_complexity', 'Case complexity', 's', o.complexity || 'Low')
+        ]),
+        locked('Entrustment', who + ' fills this in', 'After you submit, ' + (o.whoInline || who) + ' rates the encounter on this ladder.', { rungs: true }),
+        locked('Feedback', who + ' fills this in', 'After you submit, ' + (o.whoInline || who) + ' writes feedback here.')
+      ];
+    };
+    const khCheck = "it goes to Fatima Khumalo's Activity inbox and stays Requested until Fatima Khumalo acts on it.";
+    const lateCheck = ' Filed today, 20 days after the encounter: it will be recorded as late.';
+    const tslSection = (epaOpts) => [open('Teaching session', [
+      inp('topic', 'Topic', 't', 'Recognising the sick child: a triage refresher', { full: true }),
+      inp('epa', 'EPA', 's', 'PAED-015 — Teaching and applying evidence-based care responsibly…', epaOpts),
+      inp('delivered_on', 'Date delivered', 't', '2026-09-23'),
+      inp('audience', 'Audience', 's', 'Interns'),
+      inp('objectives', 'Learning objectives', 'a', '[His learning objectives]', { full: true }),
+      inp('supervisor', 'Supervising consultant (optional)', 's', 'None', { optional: true, help: 'Optional. Naming someone does not send it to them.' })])];
+
+    let v = { user: 'Sipho Ndlovu', isPicker: false, isForm: true, isLoading: false, isError: false, typeLabel: 'Mini-CEX (Paediatrics)',
+      hasNotice: false, notice: '', hasSummary: false, summary: { items: [] }, sections: [], checkLead: 'When you submit:', check: khCheck, submitLabel: 'Submit to Fatima Khumalo', groups: [] };
+
+    if (state === 'picker' || state === 'load-error') {
+      Object.assign(v, { user: 'Lerato Molefe', isPicker: state === 'picker', isForm: false, isError: state === 'load-error', groups: [
+        { id: 'g-rated', title: 'Rated by an assessor', count: '7', text: 'You name an assessor. They rate the encounter on 1, 2, 3a, 3b, 4, 5 and write feedback. Completed, it counts towards the EPA.',
+          items: ['Case-Based Discussion (Paediatrics)', 'Chart-Stimulated Recall (Paediatrics)', 'Clinical Case Analysis (Paediatrics)', 'Direct Observation (Paediatrics)', 'DOPS (Paediatrics)', 'Mini-CEX (Paediatrics)', 'Random Case Analysis (Paediatrics)'] },
+        { id: 'g-unrated', title: 'Discussed or reviewed, not rated', count: '3', text: 'You name a supervisor or reviewer, who discusses or reviews it with you. No rating.',
+          items: ['Clinical Audit (Paediatrics)', 'Portfolio and Logbook Review (Paediatrics)', 'Reflective Exercise (Paediatrics)'] },
+        { id: 'g-logged', title: 'Logged by you', count: '1', text: 'Only you fill it in. It is logged at once, and credits nothing.', items: ['KGK Teaching Session Log'] }] });
+    } else if (state === 'minicex') {
+      Object.assign(v, { user: 'Anele Dlamini', check: "it goes to David Naidoo's Activity inbox and stays Requested until David Naidoo acts on it.", submitLabel: 'Submit to David Naidoo',
+        sections: miniCex({ epa: PAED001, date: '2026-09-19', assessor: 'David Naidoo', setting: 'Emergency unit', complexity: 'Moderate', problem: '', who: 'David Naidoo' }) });
+    } else if (state === 'reflective') {
+      Object.assign(v, { typeLabel: 'Reflective Exercise (Paediatrics)', submitLabel: 'Submit to Sarah Botha',
+        check: "it goes to Sarah Botha's Activity inbox and stays Awaiting discussion until Sarah Botha acts on it.",
+        sections: [open('Reflection', [
+          inp('epa', 'EPA', 's', PAED001, { full: true, help: 'The 4 EPAs whose list names the reflective exercise.' }),
+          inp('supervisor', 'Supervisor or mentor', 's', 'Sarah Botha', { help: "Your institution's active assessors." }),
+          inp('incident_on', 'Date of the case or incident', 't', '2026-09-09'),
+          inp('reflecting_on', 'Reflecting on', 's', 'Critical incident'),
+          inp('happened', 'What happened', 'a', 'A three-year-old in septic shock waited 90 minutes for antibiotics after triage', { full: true }),
+          inp('went_well', 'What went well, and what could have gone differently', 'a', '[His answer]', { full: true }),
+          inp('learned', 'What I learned', 'a', '[What he learned]', { full: true }),
+          inp('differently', 'What I will do differently', 'a', '[His one-line plan]', { full: true })]),
+          locked('Discussion', 'Sarah Botha fills this in', 'After you submit, Sarah Botha discusses it with you and fills this in.')] });
+    } else if (state === 'tsl') {
+      Object.assign(v, { user: 'Pieter du Plessis', typeLabel: 'KGK Teaching Session Log', submitLabel: 'Log', checkLead: 'When you log it:',
+        check: 'it is Logged at once, and credits nothing. Nobody else acts on it.',
+        sections: tslSection({ full: true, help: 'All 15 PAED EPAs of your curriculum (11.1): a session log is not bound to a College tool list.', readback: PAED015 }) });
+    } else if (state === 'epa17') {
+      const list = [{ text: PAED001, cls: '' }, { text: PAED002, cls: '' }];
+      for (let i = 3; i <= 16; i++) {
+        const code = 'PAED-' + (i < 10 ? '00' : '0') + i;
+        if (i === 15) list.push({ text: PAED015, cls: 'is-current' });
+        else list.push({ text: code + ' — [EPA title]', cls: '' });
+      }
+      list.push({ text: 'KGK-001 — [EPA title]', cls: '' });
+      Object.assign(v, { user: 'Sipho Ndlovu', typeLabel: 'KGK Teaching Session Log', submitLabel: 'Log', checkLead: 'When you log it:',
+        check: 'it is Logged at once, and credits nothing. Nobody else acts on it.',
+        sections: tslSection({ full: true, help: 'All 17 EPAs of your curriculum (11.2): 16 national EPAs and KGK-001. A session log is not bound to a College tool list.', readback: PAED015, listbox: list }) });
+    } else if (state === 'refused-future') {
+      Object.assign(v, { hasSummary: true, summary: { title: 'Nothing was saved.', text: 'Everything you typed is kept below.', items: [{ target: 'observed_on', text: 'Date observed: The date cannot be after today (2026-09-29).' }] },
+        sections: miniCex({ date: '2026-09-30', dateMsg: 'The date cannot be after today (2026-09-29).', inSummary: true }) });
+    } else if (state === 'hint-programme') {
+      // C9: a predicted refusal, drawn as the field's own message; no summary until a submit refuses it.
+      Object.assign(v, { sections: miniCex({ date: '2026-01-14', dateMsg: 'This date is before your programme started (2026-01-15), and will not be accepted.' }) });
+    } else if (state === 'refused-programme') {
+      Object.assign(v, { hasSummary: true, summary: { title: 'Nothing was saved.', text: 'Everything you typed is kept below.', items: [{ target: 'observed_on', text: 'Date observed: The date cannot be before your programme started (2026-01-15).' }] },
+        sections: miniCex({ date: '2026-01-14', dateMsg: 'The date cannot be before your programme started (2026-01-15).', inSummary: true }) });
+    } else if (state === 'late') {
+      Object.assign(v, { check: khCheck + lateCheck, sections: miniCex({ dateWarn: LATE }) });
+    } else if (state === 'file-again') {
+      Object.assign(v, { hasNotice: true, submitLabel: 'Submit',
+        notice: 'Copied from your request to Fatima Khumalo, which was declined. The EPA, date and request are as you filed them. Name someone else, then submit. Nothing is saved until you do.',
+        check: 'it goes to the Activity inbox of the assessor you name, and stays Requested until that assessor acts on it.' + lateCheck,
+        sections: miniCex({ assessor: 'Select…', dateWarn: LATE, who: 'The assessor you name', whoInline: 'the assessor you name' }) });
+    } else if (state === 'loading') {
+      Object.assign(v, { isForm: false, isLoading: true });
+    }
+    v.w = w; v.h = h;
+    return v;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My activities, round 3 (all states)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wombat-root.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow03.css">
+<link rel="stylesheet" href="flow03-r3.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Source Sans 3";src:url("/_blob/0749fad61c0148128f66400e31be2b8c") format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/_blob/d9e2feab5a038f688b3d1ac61648219b") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div style="width: {{w}}px; height: {{h}}px; overflow: hidden; position: relative; background-color: var(--background-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/c1b21826d1dc3296fc39cb61b871981e" alt=""><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span><span>Trainee</span></p>
+<label for="nav-toggle" class="nav-toggle-label"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>Menu</span></label>
+<div class="nav-panel">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span><span class="role-now-name">Trainee</span></p></div>
+<nav class="nav-list" aria-label="Main">
+<ul class="nav-items">
+<li><a class="{{navHome}}" href="#" aria-current="{{curHome}}"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4M9 15h6M12 18v-6"></path></svg><span class="nav-label">Log an activity</span></a></li>
+<li><a class="{{navMine}}" href="#" aria-current="{{curMine}}"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"></path></svg><span class="nav-label">My activities</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="m19 9-5 5-4-4-3 3"></path></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</nav>
+</div>
+<div class="account-row"><a class="account-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="account-name">{{user}}</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+</header>
+<main><article>
+
+<sc-if value="{{isInbox}}" hint-placeholder-val="{{false}}">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Home</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></li><li class="breadcrumb-current" aria-current="page"><span>Activity inbox</span></li></ol></nav>
+<div class="header-container"><div><h1 tabindex="-1">Activity inbox</h1><p class="page-subtitle">Work waiting for an assessor's rating or review.</p></div></div>
+<div class="detail-card detail-card--empty"><p class="state-panel-title">Nothing here is yours to act on.</p><p class="state-panel-copy">This inbox holds work that assessors rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs you.</p><p style="margin: var(--space-md) 0 0"><a class="btn btn-outline" href="#">Open My activities</a></p></div>
+</sc-if>
+
+<sc-if value="{{isHome}}" hint-placeholder-val="{{false}}">
+<div class="header-container"><div><h1 tabindex="-1">Home</h1><p class="page-subtitle">Trainee · Semester 2, 2026</p></div><div class="actions-cell"><a class="btn btn-primary home-action" href="#">Log an activity</a></div></div>
+<div class="dashboard-grid">
+<section class="detail-card" aria-labelledby="card-needs">
+<h2 class="dashboard-card-title" id="card-needs"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>Needs you <span class="badge badge-submitted">2</span></h2>
+<div class="dashboard-card-body">
+<ul class="needs-you">
+<li class="needs-you-row"><a class="activity-link" href="#">Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-09<span class="activity-link-to">with Sarah Botha</span></a><span class="badge badge-draft">Draft</span><p class="needs-you-why">Returned to you by Sarah Botha on 2026-09-29. Change it and submit again.</p></li>
+<li class="needs-you-row"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25<span class="activity-link-to">to David Naidoo</span></a><span class="badge badge-draft">Draft</span><p class="needs-you-why">Not submitted yet. It is in nobody's inbox until you submit it.</p></li>
+</ul></div>
+<div class="dashboard-card-footer"><a href="#">Open My activities</a></div>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{isMine}}" hint-placeholder-val="{{true}}">
+<div class="header-container"><div><h1 tabindex="-1">My activities</h1><p class="page-subtitle">Everything you have filed or logged, newest encounter first.</p></div><div class="actions-cell"><a class="btn btn-primary home-action" href="#">Log an activity</a></div></div>
+
+<sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+<div class="detail-card" aria-hidden="true" style="margin-bottom: var(--space-lg)"><div class="skeleton" style="width: 20%; min-height: 1.4rem"></div><div class="skeleton" style="min-height: 3rem"></div><div class="skeleton" style="min-height: 3rem"></div></div>
+<div class="table-container shadow" aria-hidden="true" style="padding: var(--space-md)"><div class="skeleton" style="min-height: 2rem"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton" style="width: 70%"></div></div>
+<p class="visually-hidden" role="status">Loading your activities.</p>
+</sc-if>
+
+<sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty" role="alert"><p class="state-panel-title">Could not load your activities.</p><p class="state-panel-copy">Nothing has changed. Try again, or come back in a few minutes.</p><p style="margin: var(--space-md) 0 0"><button type="button" class="btn btn-outline"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></p></div>
+</sc-if>
+
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty"><p class="state-panel-title">No activities yet</p><p class="state-panel-copy">Log an activity to ask an assessor to rate an encounter, or to log a teaching session.</p><p style="margin: var(--space-md) 0 0"><a class="btn btn-outline" href="#">Log an activity</a></p></div>
+</sc-if>
+
+<sc-if value="{{isFull}}" hint-placeholder-val="{{true}}">
+<section class="detail-card" aria-labelledby="needs-h" style="margin-bottom: var(--space-lg)">
+<div class="section-title-row"><h2 id="needs-h">Needs you <span class="badge badge-submitted">2</span></h2></div>
+<p class="section-rule">Your drafts, and work returned to you. A request you can still cancel is with its assessor, so it is not here: it is under All activities.</p>
+<ul class="needs-you">
+<li class="needs-you-row"><a class="activity-link" href="#">Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-09<span class="activity-link-to">with Sarah Botha</span></a><span class="badge badge-draft">Draft</span><p class="needs-you-why">Returned to you by Sarah Botha on 2026-09-29. Change it and submit again.</p></li>
+<li class="needs-you-row"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25<span class="activity-link-to">to David Naidoo</span></a><span class="badge badge-draft">Draft</span><p class="needs-you-why">Not submitted yet. It is in nobody's inbox until you submit it.</p></li>
+</ul>
+</section>
+<section aria-labelledby="all-h">
+<div class="section-title-row"><h2 id="all-h">All activities (40)</h2></div>
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack">
+<thead><tr><th scope="col">Activity</th><th scope="col">Who has it now</th><th scope="col">State</th><th scope="col">Credit</th></tr></thead>
+<tbody>
+<tr><td><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25<span class="activity-link-to">to David Naidoo</span></a></td><td data-label="Who has it now">You</td><td><span class="badge badge-draft">Draft</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-09<span class="activity-link-to">with Sarah Botha</span></a></td><td data-label="Who has it now">You</td><td><span class="badge badge-draft">Draft</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-002 · 2026-09-09 · Sarah Botha</a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-002 · 2026-09-09 · Fatima Khumalo</a></td><td data-label="Who has it now">Closed</td><td><span class="badge badge-declined">Declined</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">Case-Based Discussion (Paediatrics) · PAED-004 · 2026-09-04<span class="activity-link-to">to Thandi Zulu</span></a></td><td data-label="Who has it now">Thandi Zulu</td><td><span class="badge badge-submitted">Requested</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">DOPS (Paediatrics) · PAED-001 · 2026-09-01<span class="activity-link-to">to Mohammed Patel</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-001 · 2026-08-28<span class="activity-link-to">to David Naidoo</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">Direct Observation (Paediatrics) · PAED-010 · 2026-08-26<span class="activity-link-to">to Thandi Zulu</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">Clinical Case Analysis (Paediatrics) · PAED-003 · 2026-08-21<span class="activity-link-to">to Sarah Botha</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">KGK Teaching Session Log · PAED-015 · 2026-08-19</a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Logged</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">Case-Based Discussion (Paediatrics) · PAED-002 · 2026-08-14<span class="activity-link-to">to Fatima Khumalo</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-08-12<span class="activity-link-to">to David Naidoo</span></a></td><td data-label="Who has it now">Closed</td><td><span class="badge badge-draft">Cancelled</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">Random Case Analysis (Paediatrics) · PAED-003 · 2026-08-07<span class="activity-link-to">to Mohammed Patel</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">Chart-Stimulated Recall (Paediatrics) · PAED-012 · 2026-08-05<span class="activity-link-to">to Thandi Zulu</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">DOPS (Paediatrics) · PAED-003 · 2026-07-31<span class="activity-link-to">to Fatima Khumalo</span></a></td><td data-label="Who has it now">Closed</td><td><span class="badge badge-declined">Declined</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-008 · 2026-07-29<span class="activity-link-to">to Sarah Botha</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">Reflective Exercise (Paediatrics) · PAED-008 · 2026-07-24<span class="activity-link-to">with David Naidoo</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Discussed</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">Case-Based Discussion (Paediatrics) · PAED-001 · 2026-07-22<span class="activity-link-to">to Mohammed Patel</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-012 · 2026-07-17<span class="activity-link-to">to Fatima Khumalo</span></a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Completed</span></td><td data-label="Credit">1 item</td></tr>
+<tr><td><a class="activity-link" href="#">KGK Teaching Session Log · PAED-004 · 2026-07-15</a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Logged</span></td><td data-label="Credit">—</td></tr>
+</tbody>
+</table>
+</div>
+<nav class="pager" aria-label="Pages"><span class="pager-info">1–20 of 40</span><span class="pager-actions"><button type="button" class="btn btn-outline btn-sm" disabled="">Previous</button><button type="button" class="btn btn-outline btn-sm">Next</button></span><label class="pager-page-size"><span class="pager-page-size-label">Rows</span><select class="form-select form-select-sm pager-page-size-select"><option>20</option></select></label></nav>
+</section>
+</sc-if>
+
+<sc-if value="{{isFinished}}" hint-placeholder-val="{{false}}">
+<section aria-labelledby="all-h2">
+<div class="section-title-row"><h2 id="all-h2">All activities (3)</h2></div>
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack">
+<thead><tr><th scope="col">Activity</th><th scope="col">Who has it now</th><th scope="col">State</th><th scope="col">Credit</th></tr></thead>
+<tbody>
+<tr><td><a class="activity-link" href="#">KGK Teaching Session Log · PAED-015 · 2026-09-23</a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Logged</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">KGK Teaching Session Log · PAED-004 · 2026-09-16</a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Logged</span></td><td data-label="Credit">—</td></tr>
+<tr><td><a class="activity-link" href="#">KGK Teaching Session Log · PAED-015 · 2024-11-20</a></td><td data-label="Who has it now">Done</td><td><span class="badge badge-completed">Logged</span></td><td data-label="Credit">—</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</sc-if>
+</sc-if>
+
+</article></main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["full","finished","empty","loading","load-error","inbox-empty","home-card"],"default":"full"},"w":{"editor":"int","default":1280},"h":{"editor":"int","default":2000},"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const state = this.props.state || 'full';
+    const v = {
+      w: this.props.w || 1280, h: this.props.h || 2000, user: 'Sipho Ndlovu',
+      isMine: true, isInbox: false, isHome: false, isLoading: false, isError: false, isEmpty: false, isFull: false, isFinished: false,
+      navHome: 'nav-link', navMine: 'nav-link active', curHome: 'false', curMine: 'page'
+    };
+    if (state === 'full') { v.isFull = true; }
+    if (state === 'finished') { v.user = 'Pieter du Plessis'; v.isFinished = true; }
+    if (state === 'empty') { v.user = 'Nomsa Mahlangu'; v.isEmpty = true; }
+    if (state === 'loading') { v.isLoading = true; }
+    if (state === 'load-error') { v.isError = true; }
+    if (state === 'inbox-empty') { v.isMine = false; v.isInbox = true; v.navMine = 'nav-link'; v.curMine = 'false'; }
+    if (state === 'home-card') { v.isMine = false; v.isHome = true; v.navMine = 'nav-link'; v.curMine = 'false'; v.navHome = 'nav-link active'; v.curHome = 'page'; }
+    return v;
+  }
+}
+</script>
+</body>
+</html>

@@ -15,3 +15,4 @@ T342's design, kept beside its brief (`../03-trainee-files-activity.md`) so that
 - **The decisions:** accept all (2026-09-29). **Round 2's ask:** `round-2-ask.txt`.
 - **Round 2** (2026-09-29, `round-2/`, canvas version `1790666059-feef`): three component boards (Log, Activity, Mine) with 76 state wrappers, Spec, Steps and `flow03.css`. **Round 2's review:** `round-2-review.md` (four reviewers; accept with changes; C1–C15; E1–E9 for the operator).
 - **The decisions:** accept all (2026-09-29). **Round 3's ask:** `round-3-ask.txt`.
+- **Round 3** (2026-09-29, `round-3/`, canvas version `1790668927-bde4`): 88 files. Checked item by item (`round-3-check.md`): C1–C15 and E1–E9 all hold. **The design is final for step F.**
