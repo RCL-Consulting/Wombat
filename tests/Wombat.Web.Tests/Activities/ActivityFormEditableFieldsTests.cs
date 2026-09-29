@@ -9,9 +9,10 @@ using Wombat.Web.Components.Shared.Activities;
 namespace Wombat.Web.Tests.Activities;
 
 /// <summary>
-/// T070 step 5: per-field locking in <see cref="ActivityForm" />. The <c>disabled</c> attribute is
-/// a browser hint; the assertions that matter here are the ones driving an event at a locked field
-/// and watching <c>DataJsonChanged</c> stay silent, because that is the C# guard doing the work.
+/// T070 step 5: per-field locking in <see cref="ActivityForm" />. Since T342 (flow 03) a locked field has no control at
+/// all: among writable fields it is read out as text, a section with nothing writable is read out whole when it holds
+/// anything, and a locked section when it holds nothing. The C# guards in <c>UpdateValue</c> and
+/// <c>ToggleMultiChoice</c> stay, with no element left to forge an event at.
 /// </summary>
 public sealed class ActivityFormEditableFieldsTests : TestContext
 {
@@ -49,69 +50,69 @@ public sealed class ActivityFormEditableFieldsTests : TestContext
     }
 
     [Fact]
-    public void EditableFieldKeys_EnablesExactlyThoseFields()
+    public void EditableFieldKeys_GivesControlsToExactlyThoseFields()
     {
         var cut = Render(Writable("overall_level", "strengths"));
 
-        cut.Find("#overall_level").HasAttribute("disabled").Should().BeFalse();
-        cut.Find("#strengths").HasAttribute("disabled").Should().BeFalse();
-        cut.Find("#epa_id").HasAttribute("disabled").Should().BeTrue();
-        cut.Find("#settings-ward").HasAttribute("disabled").Should().BeTrue();
+        cut.Find("#overall_level-in").LocalName.Should().Be("input");
+        cut.Find("#strengths-in").LocalName.Should().Be("textarea");
 
-        cut.FindAll("input:not([disabled]), textarea:not([disabled]), select:not([disabled])")
-            .Should().HaveCount(2);
+        // T342 (flow 03): a field the actor may not write has no control, not a disabled one. The trainee's request,
+        // which the assessor may not change, is read out; so is the multi-choice beside the assessor's own fields.
+        cut.Find("#epa_id-in").LocalName.Should().Be("div", "the Request section holds a value, so it is read out");
+        cut.Find("#epa_id-in dd").TextContent.Trim().Should().Be("3");
+        cut.Find("#settings-in").LocalName.Should().Be("dl", "a locked field among writable ones is text (T302)");
+        cut.FindAll("#settings-ward").Should().BeEmpty();
+
+        cut.FindAll("input, textarea, select").Should().HaveCount(2);
+        cut.FindAll("[disabled]").Should().BeEmpty("nothing is shown disabled: what cannot be written is read out");
     }
 
     [Fact]
-    public void LockedField_RejectsAForgedInput_WhileAnEditableFieldStillWorks()
+    public void ALockedField_OffersNothingToForge_AndAnEditToAWritableOneKeepsItsValue()
     {
+        // The C# guard in UpdateValue stays (a forged event at a key the actor may not write changes nothing), but since
+        // T342 there is no element to dispatch one at: a locked field renders no control.
         string? captured = null;
         var cut = Render(Writable("overall_level"), value => captured = value);
 
-        // The event is dispatched at a disabled element exactly as a tampered-with client would.
-        cut.Find("#epa_id").Input("99");
-        captured.Should().BeNull("a locked field must not reach DataJsonChanged");
+        cut.FindAll("#epa_id-in input, #epa_id-in select, #epa_id-in textarea").Should().BeEmpty();
 
-        cut.Find("#overall_level").Input("5");
+        cut.Find("#overall_level-in").Input("5");
         captured.Should().NotBeNull();
         captured.Should().Contain("\"overall_level\":\"5\"").And.Contain("\"epa_id\":\"3\"");
     }
 
     [Fact]
-    public void LockedMultiChoice_RejectsAForgedChange()
+    public void ALockedMultiChoice_RendersNoCheckboxes()
     {
-        string? captured = null;
-        var cut = Render(Writable("overall_level"), value => captured = value);
+        var cut = Render(Writable("overall_level"));
 
-        cut.Find("#settings-ward").Change(true);
-
-        captured.Should().BeNull("ToggleMultiChoice carries its own guard");
+        cut.FindAll("input[type=checkbox]").Should().BeEmpty("ToggleMultiChoice's guard has nothing to guard on the page");
+        cut.Find("#settings-in dd").TextContent.Trim().Should().Be("Not filled in.");
     }
 
     [Fact]
-    public void EmptyEditableFieldKeys_LockEveryField()
+    public void EmptyEditableFieldKeys_ReadsEverythingOut()
     {
-        // The non-bound user on the detail page: nothing writable, nothing editable.
+        // The non-bound user on the detail page: nothing writable, so no controls. Each section that holds a value is
+        // read out, every field under its label.
         var cut = Render(Writable());
 
-        cut.FindAll("input, textarea, select")
-            .Should().OnlyContain(element => element.HasAttribute("disabled"));
-
-        string? captured = null;
-        var editable = Render(Writable(), value => captured = value);
-        editable.Find("#overall_level").Input("5");
-        captured.Should().BeNull();
+        cut.FindAll("input, textarea, select").Should().BeEmpty();
+        cut.Find("#epa_id-in dd").TextContent.Trim().Should().Be("3");
+        cut.Find("#overall_level-in dd").TextContent.Trim().Should().Be("2");
+        cut.Find("#strengths-in dd").TextContent.Trim().Should().Be("Not filled in.");
+        cut.FindAll(".form-section--locked").Should().BeEmpty("both sections hold something");
     }
 
     [Fact]
     public void ReadOnly_OverridesEditableFieldKeys()
     {
-        string? captured = null;
-        var cut = Render(Writable("overall_level"), value => captured = value, readOnly: true);
+        var cut = Render(Writable("overall_level"), readOnly: true);
 
-        cut.Find("#overall_level").HasAttribute("disabled").Should().BeTrue();
-        cut.Find("#overall_level").Input("5");
-        captured.Should().BeNull();
+        cut.FindAll("input, textarea, select").Should().BeEmpty();
+        cut.Find("#overall_level-in dd").TextContent.Trim().Should().Be("2");
     }
 
     [Fact]
@@ -122,15 +123,14 @@ public sealed class ActivityFormEditableFieldsTests : TestContext
         string? captured = null;
         var editable = Render(writableFieldKeys: null, onChanged: value => captured = value);
 
-        editable.FindAll("input, textarea, select")
-            .Should().OnlyContain(element => !element.HasAttribute("disabled"));
+        editable.FindAll("input, textarea, select").Should().HaveCount(5, "every field has its control");
+        editable.FindAll("[disabled]").Should().BeEmpty();
 
-        editable.Find("#epa_id").Input("9");
+        editable.Find("#epa_id-in").Input("9");
         captured.Should().NotBeNull();
 
         var locked = Render(writableFieldKeys: null, readOnly: true);
-        locked.FindAll("input, textarea, select")
-            .Should().OnlyContain(element => element.HasAttribute("disabled"));
+        locked.FindAll("input, textarea, select").Should().BeEmpty();
     }
 
     private IRenderedComponent<ActivityForm> Render(

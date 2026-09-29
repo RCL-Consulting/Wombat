@@ -304,7 +304,8 @@ Do: Open Dr Zulu's own PAED-001 Mini-CEX from the snapshot to re-read it, then c
   - the rationale "Leads resuscitation and emergency care without prompting; ready for unsupervised practice."
   Tick the Mini-CEX, then Dr Naidoo's CBD, and stage the pending decision.
 Expect:
-  - **The snapshot line** opens the Mini-CEX, Completed and read-only, rated 5.
+  - **The snapshot line** opens the Mini-CEX, read-only: its status card, badged Completed, reads "Done. You completed
+    it on …" and "Rated 5. Credited 1 item to PAED-001.", and no move is offered (T342).
   - **Choosing Stage** puts PAED-001 in the EPA select and moves the focus there.
   - **The level select** offers the rungs 1, 2, 3a, 3b, 4 and 5 under "CPSA Paediatric Entrustment Scale v11.1", with
     the help "Rungs of CPSA Paediatric Entrustment Scale v11.1, the ladder this EPA is assessed on." (T076, T167)

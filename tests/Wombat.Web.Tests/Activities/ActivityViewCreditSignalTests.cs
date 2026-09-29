@@ -16,9 +16,9 @@ namespace Wombat.Web.Tests.Activities;
 /// T108: a completed activity that credited nothing says so, where a clinician will see it.
 /// </summary>
 /// <remarks>
-/// The banner sits above the details grid, OUTSIDE the editable/read-only branch. That matters: a
-/// completed activity has no writable fields and no available actions, so it always renders the
-/// read-only branch — which is exactly the activity this is meant to warn about.
+/// Since T342 (flow 03, C13) the warning is a <c>.field-warning</c> under the About card's Credit, outside the form's
+/// editable/read-only branch: a completed activity has no writable fields and no available actions, so it always renders
+/// the read-only branch — which is exactly the activity this is meant to warn about.
 /// </remarks>
 public sealed class ActivityViewCreditSignalTests : TestContext
 {
@@ -60,13 +60,13 @@ public sealed class ActivityViewCreditSignalTests : TestContext
     {
         var cut = RenderPage(Completion(creditedItemCount: 0));
 
-        cut.Markup.Should().Contain("alert-warning");
-        cut.Find(".alert-warning").HasAttribute("role").Should().BeFalse(
+        var warning = CreditWarning(cut);
+        warning.HasAttribute("role").Should().BeFalse(
             "it is standing page content, there on every visit, not news to announce (T193)");
         cut.Markup.Should().Contain("counted towards no curriculum requirement");
         cut.Markup.Should().Contain("or was not in use at the time",
             "a completion against a deactivated EPA credits nothing too (T158), and the warning is how it is explained");
-        cut.Find(".alert-warning").TextContent.Should().Contain("or the encounter is dated after the trainee's programme ended.",
+        warning.TextContent.Should().Contain("or the encounter is dated after the trainee's programme ended.",
             "an encounter after the programme's last day credits nothing on it (T281), and this warning is how it is explained");
         cut.Markup.Should().Contain("If it should have counted, raise it with the programme administrator.",
             "zero credit on a retired EPA is intended, so the warning must not call every such record a fault");
@@ -79,7 +79,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
     {
         var cut = RenderPage(Completion(creditedItemCount: 2));
 
-        cut.Markup.Should().NotContain("alert-warning");
+        cut.FindAll(".field-warning").Should().BeEmpty();
         cut.Markup.Should().Contain("2 items");
     }
 
@@ -91,7 +91,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         // transition recorded before the outcome started being stamped.
         var cut = RenderPage(Completion(creditedItemCount: null));
 
-        cut.Markup.Should().NotContain("alert-warning");
+        cut.FindAll(".field-warning").Should().BeEmpty();
         cut.Markup.Should().NotContain("counted towards no curriculum requirement");
     }
 
@@ -103,8 +103,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         // an unexplained shortfall on the progress page as the only clue.
         var cut = RenderPage(Completion(creditedItemCount: 1, creditScaleMismatchCount: 1));
 
-        cut.Markup.Should().Contain("alert-warning");
-        cut.Find(".alert-warning").HasAttribute("role").Should().BeFalse("standing page content (T193)");
+        CreditWarning(cut).HasAttribute("role").Should().BeFalse("standing page content (T193)");
         cut.Markup.Should().Contain("different entrustment scale");
         cut.Markup.Should().NotContain("counted towards no curriculum requirement",
             "volume did count — this is a different failure from T108's");
@@ -115,7 +114,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
     {
         var cut = RenderPage(Completion(creditedItemCount: 1, creditScaleMismatchCount: 0));
 
-        cut.Markup.Should().NotContain("alert-warning");
+        cut.FindAll(".field-warning").Should().BeEmpty();
         cut.Markup.Should().NotContain("different entrustment scale");
     }
 
@@ -129,12 +128,31 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         cut.Markup.Should().NotContain("different entrustment scale");
     }
 
+    // C13: the warning sits under About's Credit value.
+    private static AngleSharp.Dom.IElement CreditWarning(IRenderedComponent<ActivityView> cut)
+    {
+        var credit = cut.FindAll(".activity-about .details-list > div")
+            .Single(row => row.QuerySelector("dt")!.TextContent.Trim() == "Credit");
+        return credit.QuerySelectorAll("dd .field-warning").Should().ContainSingle().Subject;
+    }
+
+    [Fact]
+    public void ACompletionOnAPausedEpa_SaysItsCreditWaits()
+    {
+        // D48, T196: an EPA deactivated after the completion pauses its credit; About says so (C13), as does the card.
+        var detail = Completion(creditedItemCount: 1) with { EpaCode = "PAED-001", EpaTitle = "Emergency care", EpaInForce = false };
+        var cut = RenderPage(detail);
+
+        CreditWarning(cut).TextContent.Trim().Should().Be("This activity's EPA is paused: its credit waits.");
+        cut.Find(".activity-status-body").TextContent.Should().Contain("Its credit to PAED-001 waits while the EPA is paused.");
+    }
+
     private IRenderedComponent<ActivityView> RenderPage(ActivityDetailDto detail)
     {
         Services.AddSingleton<IScopedSender>(new FakeSender(detail));
 
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 11));
-        cut.WaitForState(() => cut.Markup.Contains("Activity details"));
+        cut.WaitForState(() => cut.Markup.Contains("Who has it now"));
 
         return cut;
     }

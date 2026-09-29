@@ -340,10 +340,11 @@ Do: Read the menu. Follow Review your account, then open My activities and Log a
 Expect: The sidebar reads "Acting as Pending trainee" over Home, Log an activity and My activities, then My data rights
   under the rule. It has no MSF reports, My committee reviews, My progress or Export portfolio, because those pages do
   not admit a pending trainee (T141). My account lists her role as "Pending trainee", and her institution, Kgosi Kgari
-  Teaching Hospital. My activities reads "No activities yet". Log an activity opens the type picker
-  with the eleven instruments of Step 2.42: her invitation's Paediatrics scope selects them, and with no curriculum yet
-  no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee) does not open this
-  page.") with Go to Home (T335).
+  Teaching Hospital. My activities reads "No activities yet" and "Log an activity to ask an assessor to rate an
+  encounter, or to log a teaching session.", with Log an activity. Log an activity opens its instrument picker: the
+  eleven instruments of Step 2.42, in its three groups. Her invitation's Paediatrics scope selects them, and with no
+  curriculum yet no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee)
+  does not open this page.") with Go to Home (T335).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): The sidebar reads "Acting as Pending trainee" over Home, Log an
   activity and My activities, then My data rights, and nothing else. Review your account: My account, Institution Kgosi
   Kgari Teaching Hospital, Roles "Pending trainee". My activities: "No activities yet". Log an activity: "Select…" and
@@ -675,11 +676,12 @@ Route: /account/login → / → /portfolio/progress
 Do: Sign in, read the dashboard and nav, and open My progress.
 Expect: Curriculum targets names the current semester and reads "0 / 10" semester targets met and "0 / 5" yearly targets
   met. The largest shortfalls are PAED-001 to PAED-005, each "0 of 3 this semester", and there is no "started part-way"
-  line (D42). The other cards read "No pending items.", "No activities yet.", "No deadlines in the next 14 days.", My
-  authorisations; the header offers "Log an activity" (T335). The sidebar reads "Acting as Trainee" over Home, Log an
-  activity, My activities, MSF reports, My committee reviews and Export portfolio, then My progress and My data rights
-  under the rule. My progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs met in <year>" and Training year
-  "4 — it sets the minimum level each encounter is judged against".
+  line (D42). The other cards read: Needs you, "Nothing needs you. Requests you have filed are in My activities.", with
+  Open My activities (T342); "No activities yet."; "No deadlines in the next 14 days."; and My authorisations. The
+  header offers "Log an activity" (T335). The sidebar reads "Acting as Trainee" over Home, Log an activity, My
+  activities, MSF reports, My committee reviews and Export portfolio, then My progress and My data rights under the
+  rule. My progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs met in <year>" and Training year "4 — it sets
+  the minimum level each encounter is judged against".
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Home, "Trainee · Semester 2, 2026", header action "Log an
   activity"; Curriculum targets "Semester 2, 2026 · July to November", "0 / 10" semester and "0 / 5" yearly (2026),
   PAED-001 to 005 each "0 of 3 this semester", no part-way line; "No pending items.", "No activities yet.", "No
@@ -719,14 +721,22 @@ Gap: none
 
 ### Step 2.42 — The instruments a KGK registrar is offered
 Role: Trainee — Dr Lerato Molefe
-Route: /activities/new
-Do: Open the Activity type select and read its options. Choose each in turn to see what it rates, and save nothing.
-Expect: Eleven options besides "Select…", no name twice: Case-Based Discussion, Chart-Stimulated Recall, Clinical Audit,
-  Clinical Case Analysis, Direct Observation, DOPS, Mini-CEX, Portfolio and Logbook Review, Random Case Analysis and
-  Reflective Exercise, each "(Paediatrics)", and `KGK Teaching Session Log`. Seven of them rate on `1 2 3a 3b 4 5`:
-  CBD, Chart-Stimulated Recall, CCA, Direct Observation, DOPS, Mini-CEX and RCA. Multi-Source Feedback and Learner
-  Feedback (Paediatrics) are not offered, because only the system writes them (T162, T164). Nor are the Demo types,
-  which belong to another discipline.
+Route: /activities/new → /activities/new?type=mini_cex_cpsa
+Do: Open Log an activity and read its instrument picker. Open each type in turn to see what it rates, going back by
+  Choose another type, and save nothing.
+Expect: The page is headed "Log an activity", with "Choose what you are filing. Each opens its own form." under it, and
+  lists eleven types as links, no name twice, in three groups (T342, Q1). Each link opens its own form,
+  `/activities/new?type=<key>`, and the form's subtitle names the type with Choose another type, which leads back.
+  - **Rated by an assessor**, "7 types": "You name an assessor. They rate the encounter on 1, 2, 3a, 3b, 4, 5 and
+    write feedback. Completed, it counts towards the EPA." Case-Based Discussion, Chart-Stimulated Recall, Clinical
+    Case Analysis, Direct Observation, DOPS, Mini-CEX and Random Case Analysis, each "(Paediatrics)". Each of the seven
+    rates on `1 2 3a 3b 4 5`.
+  - **Discussed or reviewed, not rated**, "3 types": "You name a supervisor or reviewer, who discusses or reviews it
+    with you. No rating." Clinical Audit, Portfolio and Logbook Review and Reflective Exercise, each "(Paediatrics)".
+  - **Logged by you**, "1 type": "Only you fill it in. It is logged at once, and credits nothing." `KGK Teaching
+    Session Log`.
+  Multi-Source Feedback and Learner Feedback (Paediatrics) are not offered, because only the system writes them (T162,
+  T164). Nor are the Demo types, which belong to another discipline.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): "Select…" and exactly the eleven named, alphabetical, none
   twice; no MSF, Learner Feedback or Demo type. The level select offers 1, 2, 3a, 3b, 4, 5 on exactly CBD, CSR, CCA,
   Direct Observation, DOPS, Mini-CEX and RCA; Audit, Portfolio Review, Reflective and the Teaching Log have none. None
@@ -735,12 +745,16 @@ Gap: none
 
 ### Step 2.43 — The Mini-CEX link and whom it may name
 Role: Trainee — Dr Lerato Molefe
-Route: /activities/new
+Route: /activities/new?type=mini_cex_cpsa
 Do: Open `/activities/new?type=mini_cex_cpsa`. Read the EPA and Assessor pickers, then leave without saving.
-Expect: The Mini-CEX (Paediatrics) is already chosen, with the sections Request, Entrustment and Feedback, and Save
-  draft and Submit. The EPA picker offers the nine EPAs whose Annexure A list names the Mini-CEX: PAED-001, 002, 003,
-  004, 006, 007, 008, 012 and 013 (T122). The Assessor picker offers exactly Botha, Khumalo, Naidoo, Patel and Zulu, each
-  with their email. It does not offer van Rensburg, Molefe herself or any Demo account (T102). Nothing is saved.
+Expect: The Mini-CEX (Paediatrics) form opens at once, its name under the heading with Choose another type. Request is
+  open. Entrustment and Feedback are locked, each reading "The assessor you name fills this in" until an assessor is
+  named. Above the actions: "When you submit: it goes to the Activity inbox of the assessor you name, and stays
+  Requested until that assessor acts on it." The actions read Submit first, then Save draft, with "Save draft keeps it
+  in My activities. It is in nobody's inbox until you submit it." under them. The EPA picker offers the nine EPAs whose
+  Annexure A list names the Mini-CEX: PAED-001, 002, 003, 004, 006, 007, 008, 012 and 013 (T122). The Assessor picker
+  offers exactly Botha, Khumalo, Naidoo, Patel and Zulu, each with their email. It does not offer van Rensburg, Molefe
+  herself or any Demo account (T102). Nothing is saved.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Mini-CEX (Paediatrics) preselected; Request, Entrustment and
   Feedback (the level disabled for her); Save draft and Submit. EPA: PAED-001, 002, 003, 004, 006, 007, 008, 012, 013.
   Assessor: Botha, Khumalo (as Fatima), Naidoo, Patel, Zulu, each "(email)"; nobody else. Left unsaved (SQL: no KGK

@@ -97,4 +97,22 @@ public sealed class ConfirmDialogFormModeTests : TestContext
 
         confirmed.Should().Be(1);
     }
+
+    [Fact]
+    public void TheSafeButton_SaysCancel_UnlessTheCallerNamesIt()
+    {
+        // T342 (flow 03, A5): "Keep the request" / "Keep the draft"; every other dialog reads as it did.
+        var plain = RenderComponent<ConfirmDialog>(parameters => parameters.Add(dialog => dialog.ConfirmLabel, "Withdraw"));
+        plain.FindAll("button").Select(button => button.TextContent.Trim()).Should().Equal("Cancel", "Withdraw");
+
+        var named = RenderComponent<ConfirmDialog>(parameters => parameters
+            .Add(dialog => dialog.ConfirmLabel, "Cancel request")
+            .Add(dialog => dialog.CancelLabel, "Keep the request"));
+        named.FindAll("button").Select(button => button.TextContent.Trim()).Should().Equal("Keep the request", "Cancel request");
+
+        var form = RenderComponent<ConfirmDialog>(parameters => parameters
+            .Add(dialog => dialog.FormAction, "/somewhere")
+            .Add(dialog => dialog.CancelLabel, "Keep it"));
+        form.Find("button[autofocus]").TextContent.Trim().Should().Be("Keep it", "the focus starts on the safe button");
+    }
 }

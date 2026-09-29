@@ -7,7 +7,14 @@
               ActivityInstitutionId="@ActivityInstitutionId"
               StoredDataJson="@DataJson"
               RefusedFieldKeys="@RefusedFieldKeys"
+              RefusalMessage="@RefusalMessage"
               RefusalId="@RefusalId"
+              LockedOwnerName="@LockedOwnerName"
+              LockedSectionsClosed="@LockedSectionsClosed"
+              ReaderIsSubject="@ReaderIsSubject"
+              Rungs="@Rungs"
+              SectionAttributions="@SectionAttributions"
+              HandOffFieldKey="@HandOffFieldKey"
               ReadOnly="true" />
 
 @code {
@@ -25,5 +32,18 @@
   // Forwarded so a move refused on a form this actor cannot write still marks the field that stopped it (T263): an
   // assessor whose `complete` is refused for a field someone else owns sees which one, read-only as it is.
   [Parameter] public IReadOnlyCollection<string>? RefusedFieldKeys { get; set; }
+  [Parameter] public string? RefusalMessage { get; set; }
   [Parameter] public string? RefusalId { get; set; }
+
+  // T342 (flow 03, C14; build-contracts.md): who fills a locked section, whether the record is closed, whose programme the
+  // words name (C12), and the rated field's rungs, forwarded to the renderer as the editable page passes them.
+  [Parameter] public string? LockedOwnerName { get; set; }
+  [Parameter] public bool LockedSectionsClosed { get; set; }
+  [Parameter] public bool ReaderIsSubject { get; set; }
+  [Parameter] public IReadOnlyList<Wombat.Application.Features.Epas.EntrustmentRung>? Rungs { get; set; }
+
+  // Lane B's two more (T342): each filled section's "Filled in by <name>, <date>", and the field whose label names a
+  // locked section's owner while nobody is named ("The assessor was to fill this in.").
+  [Parameter] public IReadOnlyDictionary<string, string>? SectionAttributions { get; set; }
+  [Parameter] public string? HandOffFieldKey { get; set; }
 }

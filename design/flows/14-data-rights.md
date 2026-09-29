@@ -521,8 +521,9 @@ Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
-Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. The tables of My
-  activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
+Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. My activities'
+  rows stack, each cell but the link and the state labelled by its column (T342), and the table of "Your requests"
+  scrolls inside its container; each row's link or action stays reachable.
 
 Step A.7.5 — Mr Smit on his phone (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit

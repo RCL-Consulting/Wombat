@@ -1,0 +1,71 @@
+@* A refused form's summary (T342, flow 03; Spec § 1, "Refusal"; C8, T263). It takes the focus when the refusal arrives
+   (the page calls FocusAsync once it has rendered it), so a screen reader starts there; role="alert" announces it too.
+   Its title says what became of the work, its text what to do, and each line is one field's refusal as a link to that
+   field's input (#observed_on-in, ActivityFieldIds.Input), in the order the refusal named them. A line about no field is
+   plain text. Each refused field names the summary by its id with aria-describedby, so the refusal is read with the
+   field and not only announced once.
+   A link's href is only for a page with no circuit: <base href="/"> resolves a bare fragment against the site's root, so
+   Blazor would navigate to Home and lose what was typed. Pressed, the link moves the focus to its field instead
+   (PageFocus, wombat.focusById), and navigates nowhere (T342; the build review's A1). *@
+@inject IJSRuntime JS
+<div @ref="_element" id="@Id" class="validation-summary-errors error-summary" tabindex="-1" role="alert" autofocus="@AutoFocus">
+  <strong>@Title</strong>
+  @if (!string.IsNullOrWhiteSpace(Text))
+  {
+    @(" ")@Text
+  }
+  @if (Lines.Count > 0)
+  {
+    <ul class="refusal-summary-list">
+      @foreach (var line in Lines)
+      {
+        <li>
+          @if (line.FieldKey is { } key)
+          {
+            <a href="@($"#{ActivityFieldIds.Input(key)}")" @onclick="() => FocusFieldAsync(key)" @onclick:preventDefault>@line.Text</a>
+          }
+          else
+          {
+            @line.Text
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>
+
+@code {
+  private ElementReference _element;
+
+  /// <summary>The summary's id on Log an activity and the activity page (the contract between flow 03's lanes).</summary>
+  public const string DefaultId = "refusal-summary";
+
+  /// <summary>The id every refused field names.</summary>
+  [Parameter] public string Id { get; set; } = DefaultId;
+
+  /// <summary>"Nothing was saved.", "Saved as a draft, but not submitted.".</summary>
+  [Parameter, EditorRequired] public string Title { get; set; } = default!;
+
+  /// <summary>"Everything you typed is kept below.", "Fix the 2 fields below and submit again.".</summary>
+  [Parameter] public string? Text { get; set; }
+
+  /// <summary>The refusal, one line a field (<see cref="FieldRefusals.Split" />).</summary>
+  [Parameter] public IReadOnlyList<RefusalLine> Lines { get; set; } = [];
+
+  /// <summary>
+  /// Takes the focus as the page first draws it (autofocus), for a refusal that arrives with the page: the activity's
+  /// page, reached from Log an activity with its submit refused, where it must win over FocusOnNavigate's h1 (A2, T265).
+  /// The page still calls <see cref="FocusAsync" /> once it has rendered it.
+  /// </summary>
+  [Parameter] public bool AutoFocus { get; set; }
+
+  /// <summary>The summary's element, for a test to match a focus call against.</summary>
+  public ElementReference Element => _element;
+
+  /// <summary>Moves the focus to the summary. Call it once the page has rendered it.</summary>
+  public ValueTask FocusAsync() => _element.FocusAsync();
+
+  // The field's input, or its group, read-out or locked line: each carries ActivityFieldIds.Input and can take the focus
+  // (A2).
+  private async Task FocusFieldAsync(string fieldKey) => await PageFocus.FocusByIdAsync(JS, ActivityFieldIds.Input(fieldKey));
+}

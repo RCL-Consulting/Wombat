@@ -535,7 +535,8 @@ Expect: Each of the first three reads "You cannot open this page", "Your account
   and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home: those pages still
   require the Trainee role (DESIGN § The NavMenu).
   Nothing offers her an activity to file: there is no menu link and no dashboard action. The new-activity page asks
-  only that she is signed in, so it opens when she types its address. She files nothing.
+  only that she is signed in, so it opens when she types its address, on Log an activity's instrument picker. She
+  files nothing.
 
 Step 5.23 — Dr Molefe exports her portfolio as a graduate (act-5-graduation.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
@@ -549,15 +550,15 @@ Expect: The export page is not in her menu, but it admits her, because the portf
 
 Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended (act-5-graduation.md)
 Role: Trainee — Dr Pieter du Plessis
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) on PAED-002 with:
   - encounter date `D−1`;
   - Dr Naidoo as the assessor;
   - a clinical setting, a presenting problem and a case complexity.
   Submit it.
-Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CEX. There is no late-filing warning. The
-  activity reads Requested and appears in Dr Naidoo's inbox. No email is sent: Wombat mails nobody when an activity
-  moves (Step 3.3).
+Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CEX. There is no late-filing warning.
+  Submit to David Naidoo reads "Submitted. It is now Requested. It is in David Naidoo's Activity inbox.", and the
+  activity is in his inbox. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 
 Step 5.25 — Dr Naidoo rates it (act-5-graduation.md)
 Role: Assessor — Dr David Naidoo
@@ -598,8 +599,8 @@ Expect: Each page records that his programme ended on `D−2`:
   - My progress opens with "Your programme ended on <`D−2`>. This page is your record of it and is read-only…". Its
     "Your programme" card reads Ended `D−2`. PAED-002's period holding `D−2` reads "no target (your programme ended
     part-way through) · n−1 recorded".
-  - My activities still lists the `D−1` Mini-CEX as Completed, now credited "None": the take-back's replay re-stamped
-    its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
+  - My activities still lists the `D−1` Mini-CEX as Completed, its Credit now "None": the take-back's replay
+    re-stamped its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
 
 Step 5.29 — Neither ended programme can be put before the panel (act-5-graduation.md)
 Role: Coordinator — Mr Pieter Smit
@@ -638,7 +639,7 @@ Expect:
   - PAED-002's period holding that day still reads "no target (your programme ended part-way through)", with the
     count Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
   - A KGK-001 card has appeared on his record too, as on Dr Molefe's.
-  - My activities lists that Mini-CEX as Completed, with Credited None.
+  - My activities lists that Mini-CEX as Completed, its Credit None.
 
 Step A.7.4 — Dr Molefe's record on her phone (appendix-cross-cutting.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe

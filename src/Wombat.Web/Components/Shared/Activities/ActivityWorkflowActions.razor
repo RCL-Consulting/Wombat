@@ -1,123 +1,400 @@
 @using Wombat.Application.Features.Activities.Dtos
 
-@if (Actions.Count > 0)
+@*
+  The activity page's action bar and its note panel (T342, flow 03; R3-C-Activity, R3-Spec § 2; DESIGN.md § Page-level
+  patterns, "Record page with a workflow").
+
+  - The bar (.form-actions--moves): the move that leads on first and filled ("Submit to Fatima Khumalo", E4, C3), Save
+    draft outlined (E3), Discard changes, the other moves outlined, and Cancel last and quiet (C11), which the page puts
+    behind its ConfirmDialog.
+  - A move the actor cannot complete from here (T107, C4) is shown, aria-disabled, never natively disabled, and names its
+    reason in .move-reasons by aria-describedby; its handler returns at once (A10).
+  - While a move runs, its button keeps the focus and reads "Submitting…", aria-disabled; every button it would race is
+    disabled, and a status region says so (C10, A10; DESIGN.md § Button system).
+  - A move that needs a note (decline, return) is a toggle: it opens the note panel under the bar, the focus moves into the
+    note, and "Keep the request" closes it and hands the focus back to the toggle (A6, C8, C10). A refused move keeps the
+    panel open with the note as typed; a refusal of the note itself is summarised in the panel by the one refusal
+    summary (RefusalSummary), linked to #note-in.
+*@
+
+@if (HasAnything)
 {
-  <div class="form-actions">
-    @foreach (var action in Actions)
+  <div class="activity-moves">
+    <div class="form-actions form-actions--moves">
+      @foreach (var action in Moves)
+      {
+        var current = action;
+        if (!current.IsAvailable)
+        {
+          @* T107, A10: shown, not hidden, so the actor learns what the move needs; not disabled, so it can be reached and its
+             reason read; pressing it sends nothing. *@
+          <button type="button" class="btn @(IsFirstPrimary(current) ? "btn-primary" : "btn-outline") is-unavailable"
+                  aria-disabled="true" aria-describedby="@ReasonId(current)" @onclick="IgnoreAsync">
+            @LabelOf(current)
+          </button>
+        }
+        else if (current.RequiresNote)
+        {
+          <button @ref="_toggles[current.TransitionKey]" type="button" class="btn btn-outline"
+                  aria-expanded="@(IsOpen(current) ? "true" : "false")" aria-controls="@NotePanelId"
+                  disabled="@RacesTheRunning(current.TransitionKey)" @onclick="() => ToggleNote(current)">
+            @LabelOf(current)
+          </button>
+        }
+        else
+        {
+          <button type="button" class="btn @(IsFirstPrimary(current) ? "btn-primary" : "btn-outline") @(IsRunning(current.TransitionKey) ? "is-running" : null)"
+                  disabled="@RacesTheRunning(current.TransitionKey)"
+                  aria-disabled="@InFlight.AriaDisabled(IsRunning(current.TransitionKey))"
+                  @onclick="() => RequestAsync(current)">
+            @(IsRunning(current.TransitionKey) ? RunningLabel(current.Label) : LabelOf(current))
+          </button>
+        }
+
+        if (current == LastPrimaryBeforeSave)
+        {
+          @SaveAndDiscard
+        }
+      }
+
+      @if (LastPrimaryBeforeSave is null)
+      {
+        @SaveAndDiscard
+      }
+
+      @if (CancelAction is { } cancel)
+      {
+        <button type="button" class="btn btn-quiet btn-quiet--danger" disabled="@RacesTheRunning(cancel.TransitionKey)"
+                @onclick="() => OnCancelRequested.InvokeAsync(cancel)">
+          @CancelLabel
+        </button>
+      }
+
+      @if (Moves.Any(action => !action.IsAvailable))
+      {
+        <ul class="move-reasons">
+          @foreach (var action in Moves.Where(action => !action.IsAvailable))
+          {
+            <li id="@ReasonId(action)"><strong>@action.Label:</strong> @action.UnavailableReason</li>
+          }
+        </ul>
+      }
+
+      @* Always present, filled while a move runs: a live region added with its words in it is often not read (T342; the
+         build review's A6). *@
+      <p class="visually-hidden" role="status">@(Running is null ? null : $"{RunningLabel(RunningLabelOfKey(Running)).TrimEnd('…')}.")</p>
+    </div>
+
+    @if (_selected is { } selected)
     {
-      if (action.IsAvailable)
-      {
-        <button type="button" class="btn btn-primary" disabled="@Busy" @onclick="() => RequestTransitionAsync(action)">
-          @action.Label
-        </button>
-      }
-      else
-      {
-        @* T107. Shown, not hidden, so the actor learns what the move needs. No click handler at all: pressing it could
-           only be refused. *@
-        <button type="button" class="btn btn-primary" disabled aria-describedby="@ReasonId(action)">
-          @action.Label
-        </button>
-      }
+      <section class="detail-card note-panel" id="@NotePanelId" aria-labelledby="note-panel-title">
+        <h2 id="note-panel-title" class="note-panel-title">@NoteHeading(selected)</h2>
+
+        @if (!string.IsNullOrWhiteSpace(NoteRefusal))
+        {
+          <RefusalSummary @ref="_noteSummary"
+                          Id="note-summary"
+                          Title="@RefusalWords.NotDone(selected)"
+                          Lines="@([new RefusalLine("note", $"{NoteLabel(selected)}: {NoteRefusal}", NoteRefusal)])" />
+        }
+
+        <div class="form-group">
+          <label for="@NoteInputId">
+            @NoteLabel(selected)
+            <span aria-hidden="true">*</span>
+            <span class="visually-hidden">required</span>
+          </label>
+          <small class="page-subtitle" id="note-help">@SubjectName reads it on the activity's page. It is kept with the activity's history.</small>
+          <textarea @ref="_noteInput" id="@NoteInputId" class="form-control" rows="4" aria-required="true"
+                    aria-invalid="@(string.IsNullOrWhiteSpace(NoteRefusal) ? null : "true")"
+                    aria-describedby="@(string.IsNullOrWhiteSpace(NoteRefusal) ? "note-help" : "note-help note-msg note-summary")"
+                    @bind="_note" @bind:event="oninput"></textarea>
+          @if (!string.IsNullOrWhiteSpace(NoteRefusal))
+          {
+            <p class="validation-message" id="note-msg">@NoteRefusal</p>
+          }
+        </div>
+
+        <div class="form-actions form-actions--moves">
+          <button type="button" class="btn @(IsEnding(selected) ? "btn-danger" : "btn-primary") @(IsRunning(selected.TransitionKey) ? "is-running" : null)"
+                  aria-disabled="@InFlight.AriaDisabled(IsRunning(selected.TransitionKey))"
+                  disabled="@RacesTheRunning(selected.TransitionKey)"
+                  @onclick="ApplyNoteAsync">
+            @(IsRunning(selected.TransitionKey) ? RunningLabel(selected.Label) : $"{selected.Label} with this note")
+          </button>
+          <button type="button" class="btn btn-quiet" disabled="@(Running is not null)" @onclick="CloseNoteAsync">@KeepLabel(selected)</button>
+        </div>
+      </section>
     }
   </div>
-
-  @if (Actions.Any(action => !action.IsAvailable))
-  {
-    <ul class="workflow-action-reasons">
-      @foreach (var action in Actions.Where(action => !action.IsAvailable))
-      {
-        <li id="@ReasonId(action)"><strong>@action.Label:</strong> @action.UnavailableReason</li>
-      }
-    </ul>
-  }
-
-  @if (_selectedAction?.RequiresNote == true)
-  {
-    <div class="form-group">
-      <label for="transition-note">Transition note</label>
-      <textarea id="transition-note" class="form-control" rows="3" @bind="_note"></textarea>
-    </div>
-    <div class="form-actions">
-      <button type="button" class="btn btn-outline" @onclick="ClearSelection">Cancel</button>
-      <button type="button" class="btn btn-primary" disabled="@Busy" @onclick="ConfirmSelectedTransitionAsync">Apply</button>
-    </div>
-  }
 }
 
 @code {
+  /// <summary>The note panel's id, which its toggle names with aria-controls (C8).</summary>
+  public const string NotePanelId = "note-panel";
+
+  /// <summary>The note's input, which the panel's refusal links to (C8).</summary>
+  public const string NoteInputId = "note-in";
+
+  /// <summary>The key <see cref="Running" /> takes while Save draft runs.</summary>
+  public const string SaveDraftKey = "__save-draft";
+
   /// <summary>
-  /// The transitions the server has already decided this actor may perform, from
-  /// <c>ActivityDetailDto.AvailableActions</c>. This component is purely presentational (T070).
-  /// It used to re-evaluate the workflow client-side against a synthetic
-  /// <c>new ActivityType()</c>, which defaults <c>Scope</c> to <c>Global</c> and <c>ScopeId</c> to
-  /// null — so every <c>scope:</c> actor rule evaluated false in the button list while the server
-  /// would have allowed the transition. Evaluating once, server-side, also stops the whole workflow
-  /// being re-parsed on every parent render.
+  /// The moves the server has already decided this actor may see (T070): <c>ActivityDetailDto.AvailableActions</c>. This
+  /// component only presents them. An action carrying an <c>UnavailableReason</c> is shown with it and never raises
+  /// <see cref="OnTransitionRequested" /> (T107).
   /// </summary>
-  /// <remarks>
-  /// An action carrying an <c>UnavailableReason</c> is rendered disabled, described by the reason as visible text, and
-  /// never raises <see cref="OnTransitionRequested" /> (T107).
-  /// </remarks>
   [Parameter, EditorRequired] public IReadOnlyList<ActivityActionDto> Actions { get; set; } = [];
 
   [Parameter] public EventCallback<(string TransitionKey, string? Note)> OnTransitionRequested { get; set; }
 
-  /// <summary>True while the page is carrying out an action; every button is disabled until it finishes.</summary>
-  [Parameter] public bool Busy { get; set; }
+  /// <summary>
+  /// The key of the move running now (or <see cref="SaveDraftKey" />), null when nothing runs. Its button keeps the focus
+  /// with aria-disabled; every other is disabled until it answers.
+  /// </summary>
+  [Parameter] public string? Running { get; set; }
 
-  private ActivityActionDto? _selectedAction;
+  /// <summary>
+  /// The Cancel move, shown last and quiet in this bar (C11); null when the status card carries it instead (a request
+  /// someone else holds) or there is none.
+  /// </summary>
+  [Parameter] public ActivityActionDto? CancelAction { get; set; }
+
+  [Parameter] public string CancelLabel { get; set; } = "Cancel this draft…";
+
+  /// <summary>Cancel was pressed: the page asks first (ConfirmDialog).</summary>
+  [Parameter] public EventCallback<ActivityActionDto> OnCancelRequested { get; set; }
+
+  /// <summary>Whether Save draft is offered: a draft whose author can write fields (E3).</summary>
+  [Parameter] public bool CanSaveDraft { get; set; }
+
+  [Parameter] public EventCallback OnSaveDraft { get; set; }
+
+  /// <summary>Whether Discard changes is offered: the form below has fields this actor may write (as before T342).</summary>
+  [Parameter] public bool CanDiscard { get; set; }
+
+  /// <summary>Whether what is typed differs from what is stored: Discard changes has something to discard.</summary>
+  [Parameter] public bool HasPendingChanges { get; set; }
+
+  [Parameter] public EventCallback OnDiscard { get; set; }
+
+  /// <summary>
+  /// The name a move's button hands the activity to, when the page knows better than the stored data (a nominee typed and
+  /// not yet saved clears it); by default <see cref="ActivityActionDto.HandsToName" />.
+  /// </summary>
+  [Parameter] public Func<ActivityActionDto, string?>? HandsTo { get; set; }
+
+  /// <summary>The registrar, who reads the note (A6: "Reason for Sipho Ndlovu").</summary>
+  [Parameter] public string SubjectName { get; set; } = "the registrar";
+
+  /// <summary>A refusal of the note move, shown in the panel with the note kept as typed.</summary>
+  [Parameter] public string? NoteRefusal { get; set; }
+
+  private readonly Dictionary<string, ElementReference> _toggles = new(StringComparer.Ordinal);
+  private ElementReference _noteInput;
+  private RefusalSummary? _noteSummary;
+  private ActivityActionDto? _selected;
   private string? _note;
+  private bool _focusNote;
+  private string? _focusToggle;
+  private string? _shownRefusal;
+  private bool _focusRefusal;
 
-  protected override void OnParametersSet()
+  private bool HasAnything => Actions.Count > 0 || CanSaveDraft || CanDiscard;
+
+  // For a test to match a focus call against: bUnit leaves an element's reference out of the markup (A9).
+  internal ElementReference NoteInput => _noteInput;
+
+  internal ElementReference ToggleOf(string transitionKey) => _toggles[transitionKey];
+
+  // Every move but Cancel, in the order the bar shows them: the moves that lead on (filled first), then the rest.
+  private IReadOnlyList<ActivityActionDto> Moves
+    => Actions.Where(action => !ActivityPageModel.IsCancel(action))
+        .OrderBy(action => action.RequiresNote ? 1 : 0)
+        .ToList();
+
+  private ActivityActionDto? FirstPrimary => Moves.FirstOrDefault(action => !action.RequiresNote);
+
+  private bool IsFirstPrimary(ActivityActionDto action) => ReferenceEquals(action, FirstPrimary);
+
+  // Save draft follows the move that leads on (R3: Submit, Save draft, Discard changes, …, Cancel).
+  private ActivityActionDto? LastPrimaryBeforeSave => FirstPrimary;
+
+  private RenderFragment SaveAndDiscard => __builder =>
   {
-    // A note panel opened for an action the new list no longer offers (another action moved the activity on) would
-    // send a move the page can only refuse. Close it. One still offered keeps its panel and the note typed into it.
-    if (_selectedAction is not null &&
-        !Actions.Any(action => action.IsAvailable &&
-                               string.Equals(action.TransitionKey, _selectedAction.TransitionKey, StringComparison.Ordinal)))
+    if (CanSaveDraft)
     {
-      ClearSelection();
+    <button type="button" class="btn btn-outline @(Running == SaveDraftKey ? "is-running" : null)"
+            disabled="@RacesTheRunning(SaveDraftKey)"
+            aria-disabled="@InFlight.AriaDisabled(Running == SaveDraftKey)"
+            @onclick="SaveAsync">
+      @(Running == SaveDraftKey ? "Saving…" : "Save draft")
+    </button>
     }
-  }
-
-  private async Task RequestTransitionAsync(ActivityActionDto action)
-  {
-    if (!action.IsAvailable)
+    if (!CanSaveDraft && !CanDiscard)
     {
       return;
     }
+    @* A10: not natively disabled, so it keeps its place in the tab order; with nothing to discard it says it is
+       unavailable and does nothing. *@
+    <button id="discard-changes" type="button" class="btn btn-outline"
+            disabled="@(Running is not null)"
+            aria-disabled="@(HasPendingChanges ? null : "true")"
+            @onclick="DiscardAsync">
+      Discard changes
+    </button>
+  };
 
-    if (action.RequiresNote)
+  private string LabelOf(ActivityActionDto action)
+  {
+    // E4, C3: "Submit to Fatima Khumalo" only when the move hands it to the person a filled field names.
+    var name = HandsTo is null ? action.HandsToName : HandsTo(action);
+    return FilingWords.MoveButtonLabel(action.Label, action.HandOffFieldKey, name);
+  }
+
+  private string RunningLabelOfKey(string key)
+    => key == SaveDraftKey ? "Save" : Actions.FirstOrDefault(action => action.TransitionKey == key)?.Label ?? "Working";
+
+  /// <summary>"Submitting…", "Completing…", "Declining…", "Logging…": the one rule, <see cref="FilingWords.Running" />.</summary>
+  public static string RunningLabel(string label) => FilingWords.Running(label);
+
+  private bool IsRunning(string key) => Running is not null && string.Equals(Running, key, StringComparison.Ordinal);
+
+  private bool RacesTheRunning(string key) => Running is not null && !IsRunning(key);
+
+  private bool IsOpen(ActivityActionDto action)
+    => _selected is not null && string.Equals(_selected.TransitionKey, action.TransitionKey, StringComparison.Ordinal);
+
+  // A move that ends it (decline) is danger-coloured in its panel; one that leads on (return) is primary.
+  // A move into a state no move leaves (MoveOutcome.TargetIsFinal); not read from the sentence, since R5's "Submitted."
+  // has no "It is now" and still leads on (T342).
+  private static bool IsEnding(ActivityActionDto action) => action.TargetIsFinal;
+
+  private string NoteLabel(ActivityActionDto action)
+    => string.Equals(action.TransitionKey, "decline", StringComparison.Ordinal) ? $"Reason for {SubjectName}" : $"Note to {SubjectName}";
+
+  private static string NoteHeading(ActivityActionDto action)
+    => string.Equals(action.TransitionKey, "decline", StringComparison.Ordinal) ? "Decline this request" : $"{action.Label}: add a note";
+
+  private static string KeepLabel(ActivityActionDto action)
+    => string.Equals(action.TransitionKey, "decline", StringComparison.Ordinal) ? "Keep the request" : $"Do not {action.Label.ToLowerInvariant()} it";
+
+  protected override void OnParametersSet()
+  {
+    // A note panel opened for a move the new list no longer offers (another move moved the activity on) would send a
+    // move the page can only refuse. Close it. One still offered keeps its panel and the note typed into it.
+    if (_selected is not null &&
+        !Actions.Any(action => action.IsAvailable &&
+                               string.Equals(action.TransitionKey, _selected.TransitionKey, StringComparison.Ordinal)))
     {
-      _selectedAction = action;
+      _selected = null;
       _note = null;
+    }
+
+    // A refusal of the note that was not on show before takes the focus (R3-Spec § 1, "Refusal").
+    if (!string.IsNullOrWhiteSpace(NoteRefusal) && !string.Equals(NoteRefusal, _shownRefusal, StringComparison.Ordinal))
+    {
+      _focusRefusal = _selected is not null;
+    }
+
+    _shownRefusal = NoteRefusal;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusRefusal && _selected is not null && _noteSummary is not null)
+    {
+      _focusRefusal = false;
+      await _noteSummary.FocusAsync();
+    }
+    else if (_focusNote && _selected is not null)
+    {
+      _focusNote = false;
+      await _noteInput.FocusAsync();
+    }
+    else if (_focusToggle is { } key && _toggles.TryGetValue(key, out var toggle))
+    {
+      _focusToggle = null;
+      await toggle.FocusAsync();
+    }
+  }
+
+  private Task IgnoreAsync() => Task.CompletedTask;
+
+  private async Task RequestAsync(ActivityActionDto action)
+  {
+    if (!action.IsAvailable || Running is not null)
+    {
       return;
     }
 
     await OnTransitionRequested.InvokeAsync((action.TransitionKey, null));
   }
 
-  private async Task ConfirmSelectedTransitionAsync()
+  private void ToggleNote(ActivityActionDto action)
   {
-    if (_selectedAction is null)
+    if (Running is not null)
     {
       return;
     }
 
-    await OnTransitionRequested.InvokeAsync((_selectedAction.TransitionKey, _note));
-    ClearSelection();
+    if (IsOpen(action))
+    {
+      _selected = null;
+      return;
+    }
+
+    _selected = action;
+    _note = null;
+    _focusNote = true;
   }
 
-  private void ClearSelection()
+  private async Task ApplyNoteAsync()
   {
-    _selectedAction = null;
+    if (_selected is null || Running is not null)
+    {
+      return;
+    }
+
+    // The panel stays open until the move answers: done, the actions change and it closes; refused, the note is kept.
+    await OnTransitionRequested.InvokeAsync((_selected.TransitionKey, _note));
+  }
+
+  private Task CloseNoteAsync()
+  {
+    if (_selected is { } selected)
+    {
+      _focusToggle = selected.TransitionKey;
+    }
+
+    _selected = null;
     _note = null;
+    return Task.CompletedTask;
+  }
+
+  private async Task SaveAsync()
+  {
+    if (Running is not null)
+    {
+      return;
+    }
+
+    await OnSaveDraft.InvokeAsync();
+  }
+
+  private async Task DiscardAsync()
+  {
+    if (!HasPendingChanges || Running is not null)
+    {
+      return;
+    }
+
+    await OnDiscard.InvokeAsync();
   }
 
   // A transition key is any string the builder was given, and aria-describedby reads a space as two ids, so the id keeps
   // only characters that are safe in both an id and an IDREFS list.
   private static string ReasonId(ActivityActionDto action)
-      => "action-reason-" + string.Concat(action.TransitionKey.Select(character =>
-          char.IsAsciiLetterOrDigit(character) || character is '-' or '_' ? character : '-'));
+    => "action-reason-" + string.Concat(action.TransitionKey.Select(character =>
+        char.IsAsciiLetterOrDigit(character) || character is '-' or '_' ? character : '-'));
 }

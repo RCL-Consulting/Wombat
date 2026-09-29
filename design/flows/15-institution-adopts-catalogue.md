@@ -506,7 +506,7 @@ Expect: The save is confirmed, and the profile reads 11.2. From now on, his comp
 
 Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md)
 Role: Trainee — Dr Sipho Ndlovu
-Route: /portfolio/progress → /activities/new
+Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect:
   - **The cards.** Seventeen: 11.2's 16 national items (PAED-016 once a year, and PAED-011 at 2 per academic year,

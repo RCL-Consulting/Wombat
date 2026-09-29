@@ -85,26 +85,28 @@ public sealed class NewActivityCreationLockTests : TestContext
     {
         var cut = SelectTheActivityType();
 
-        cut.Find("#epa_id").HasAttribute("disabled").Should().BeFalse();
-        cut.Find("#assessor_user_id").HasAttribute("disabled").Should().BeFalse();
+        cut.Find("#epa_id-in").HasAttribute("disabled").Should().BeFalse();
+        cut.Find("#assessor_user_id-in").HasAttribute("disabled").Should().BeFalse();
 
-        cut.Find("#overall_level").HasAttribute("disabled").Should()
-            .BeTrue("the trainee must not be able to pre-fill the assessor's rating");
-        cut.Find("#strengths").HasAttribute("disabled").Should().BeTrue();
+        // T342 (flow 03, C14): the assessor's section is a locked section, with no inputs for the trainee to pre-fill
+        // the assessor's rating in, and a head row saying who fills it in.
+        var locked = cut.Find("section.form-section--locked");
+        locked.QuerySelector("h2")!.TextContent.Trim().Should().Be("Entrustment");
+        locked.QuerySelector(".form-section-owner")!.TextContent.Trim().Should().Be("The assessor you name fills this in");
+        locked.QuerySelectorAll("input, select, textarea").Should().BeEmpty();
+        cut.FindAll("#overall_level-in, #strengths-in").Should().BeEmpty();
     }
 
     [Fact]
-    public void ATypedRatingInTheLockedSection_NeverReachesTheForm()
+    public void ATypedRequest_ReachesTheForm_AndTheLockedSectionOffersNothingToType()
     {
         var cut = SelectTheActivityType();
 
-        cut.Find("#overall_level").Input("5");
-        cut.Find("#epa_id").Input("3");
+        cut.Find("#epa_id-in").Input("3");
 
-        // ActivityForm's own C# guard rejects the locked field, so the data the page would post
-        // carries the request key only.
-        cut.Find("#overall_level").GetAttribute("value").Should().BeEmpty();
-        cut.Find("#epa_id").GetAttribute("value").Should().Be("3");
+        // ActivityForm's own C# guard still rejects a locked field; there is no control on the page to send one from.
+        cut.Find("#epa_id-in").GetAttribute("value").Should().Be("3");
+        cut.FindAll("section.form-section--locked input").Should().BeEmpty();
     }
 
 
@@ -119,8 +121,13 @@ public sealed class NewActivityCreationLockTests : TestContext
 
         var cut = RenderComponent<NewActivity>();
 
-        cut.WaitForState(() => cut.FindAll("#epa_id").Count == 1);
-        cut.Find("#activity-type").GetAttribute("value").Should().Be("2");
+        cut.WaitForState(() => cut.FindAll("#epa_id-in").Count == 1);
+
+        // T342 (flow 03): the form is headed by its type, with a way back to the picker.
+        var subtitle = cut.Find(".header-container .page-subtitle");
+        subtitle.TextContent.Should().Contain("Mini-CEX (CPSA)");
+        subtitle.QuerySelector("a")!.GetAttribute("href").Should().Be("/activities/new");
+        subtitle.QuerySelector("a")!.TextContent.Trim().Should().Be("Choose another type");
     }
 
     [Fact]
@@ -130,7 +137,7 @@ public sealed class NewActivityCreationLockTests : TestContext
 
         var cut = RenderComponent<NewActivity>();
 
-        cut.WaitForState(() => cut.FindAll("#epa_id").Count == 1);
+        cut.WaitForState(() => cut.FindAll("#epa_id-in").Count == 1);
     }
 
     [Fact]
@@ -142,17 +149,19 @@ public sealed class NewActivityCreationLockTests : TestContext
 
         var cut = RenderComponent<NewActivity>();
 
-        cut.Find("#activity-type").GetAttribute("value").Should().Be("0");
-        cut.FindAll("#epa_id").Should().BeEmpty();
+        // The picker, as with no key (T342, Q1).
+        cut.WaitForState(() => cut.FindAll(".instrument-link").Count > 0);
+        cut.FindAll("#epa_id-in").Should().BeEmpty();
     }
 
     [Fact]
-    public void NoTypeKey_BehavesExactlyAsBefore()
+    public void NoTypeKey_ShowsThePicker_WhoseLinksAreTheTypesForms()
     {
         var cut = RenderComponent<NewActivity>();
 
-        cut.Find("#activity-type").GetAttribute("value").Should().Be("0");
-        cut.FindAll("#epa_id").Should().BeEmpty();
+        cut.WaitForState(() => cut.FindAll(".instrument-link").Count > 0);
+        cut.Find(".instrument-link").GetAttribute("href").Should().Be("/activities/new?type=mini_cex_cpsa");
+        cut.FindAll("#epa_id-in").Should().BeEmpty();
     }
 
     private void NavigateWithType(string typeKey)
@@ -163,13 +172,7 @@ public sealed class NewActivityCreationLockTests : TestContext
 
     private IRenderedComponent<NewActivity> SelectTheActivityType()
     {
-        var cut = RenderComponent<NewActivity>();
-        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
-
-        cut.Find("#activity-type").Change("2");
-        cut.WaitForState(() => cut.FindAll("#epa_id").Count == 1);
-
-        return cut;
+        return NewActivityPage.Open(this, "mini_cex_cpsa", "#epa_id-in");
     }
 
     private sealed class FakeSender : IScopedSender

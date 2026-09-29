@@ -1,0 +1,33 @@
+@*
+  Needs you (T342, flow 03; R3-C-Mine "full" and "home-card", R3-Spec § 1 and § 4): the caller's drafts and the work
+  returned to them, each its link, its state's badge and why it is here. Home's Needs you card and My activities' Needs
+  you section both draw it from ListNeedsYouQuery's rows, so the two say the same of each row (C11; T297's rule as flow
+  03 restates it). The words are ActivityListWords'.
+*@
+<ul class="needs-you stack-list">
+  @foreach (var item in Items)
+  {
+    <li class="needs-you-row detail-card--emphasis">
+      <ActivityLink Item="item" Name="@NameOf(item)" />
+      @* Nothing here is finished: every row has a move that leads on. *@
+      <span class="badge @BadgeFor.ActivityState(item.CurrentState, isFinished: false)">@item.CurrentStateLabel</span>
+      <p class="needs-you-why">@ActivityListWords.NeedsYouWhy(item)</p>
+    </li>
+  }
+</ul>
+
+@code {
+  [Parameter, EditorRequired] public IReadOnlyList<ActivitySummaryDto> Items { get; set; } = [];
+
+  /// <summary>
+  /// The links' names on the page (<c>ActivityRowNames.Links</c>), when the page lists these rows beside others: My
+  /// activities names them over both its lists, so a row in both reads the same in each. Null: named among these rows.
+  /// </summary>
+  [Parameter] public IReadOnlyDictionary<int, string>? Names { get; set; }
+
+  private IReadOnlyDictionary<int, string> _names = new Dictionary<int, string>();
+
+  protected override void OnParametersSet() => _names = Names ?? ActivityRowNames.Links(Items);
+
+  private string? NameOf(ActivitySummaryDto item) => _names.TryGetValue(item.Id, out var name) ? name : null;
+}

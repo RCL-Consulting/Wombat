@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
+using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Epas;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Services;
@@ -16,7 +17,8 @@ namespace Wombat.Web.Tests.Activities;
 
 /// <summary>
 /// T137 and T106 item 14: /activities/mine and /activities/inbox show the EPA and the encounter date, and the trainee's
-/// list shows what each completion credited.
+/// list shows what each completion credited. Since T342 (flow 03) My activities shows the EPA and the date in each row's
+/// link, its name; the inbox keeps its columns (MyActivitiesTests holds the rest of the new page).
 /// </summary>
 /// <remarks>
 /// The symptom T137 was filed on, verbatim: a released MSF campaign covering three EPAs listed as three rows reading
@@ -46,11 +48,12 @@ public sealed class ActivityListColumnsTests : TestContext
         var rows = BodyRows(cut);
         rows.Should().HaveCount(3);
 
-        Column(cut, rows, "EPA").Should().Equal(
-            "PAED-001 — Assess and manage an acutely unwell child",
-            "PAED-002 — Lead a ward round",
-            "PAED-003 — Communicate with families");
-        Column(cut, rows, "Encounter date").Should().OnlyContain(date => date == "2026-09-19");
+        // T342 (flow 03): the EPA and the encounter date are in each row's link, its name "Type · EPA · date" (E7, E9),
+        // where T137 had them as columns.
+        Column(cut, rows, "Activity").Should().Equal(
+            $"{MsfName} · PAED-001 · 2026-09-19",
+            $"{MsfName} · PAED-002 · 2026-09-19",
+            $"{MsfName} · PAED-003 · 2026-09-19");
     }
 
     /// <summary>
@@ -75,30 +78,21 @@ public sealed class ActivityListColumnsTests : TestContext
             Row(3, "completed", creditedItemCount: 0),
             Row(4, "requested", creditedItemCount: null));
 
-        Column(cut, BodyRows(cut), "Credited").Should().Equal("2 items", "1 item", "None", "—");
+        Column(cut, BodyRows(cut), "Credit").Should().Equal("2 items", "1 item", "None", "—");
     }
 
+    /// <summary>
+    /// T342 (flow 03, R3-C-Mine): four columns, Activity, Who has it now, State and Credit. The encounter date is in the
+    /// name, and the audit clock is on no column (T137).
+    /// </summary>
     [Fact]
-    public void MyActivities_ShowsTheEncounterDate_NotTheAuditClock_AndMarksAnUndatedOne()
+    public void MyActivities_HasTheBoardsFourColumns_AndNoAuditClock()
     {
-        var cut = RenderMine(
-            Row(1, "completed", creditedItemCount: null) with { ObservedOn = new DateOnly(2026, 3, 10), ObservedOnDeclared = true },
-            Row(2, "draft", creditedItemCount: null) with { ObservedOn = new DateOnly(2026, 3, 20), ObservedOnDeclared = false });
+        var cut = RenderMine(Row(1, "completed", creditedItemCount: null));
 
-        var dates = Column(cut, BodyRows(cut), "Encounter date");
-        dates[0].Should().Be("2026-03-10");
-        dates[1].Should().Be("not recorded (created 2026-03-20)", "nobody stated when it happened, so it must not read as a clinical date");
-
-        cut.FindAll("th").Select(header => header.TextContent.Trim()).Should().NotContain("Updated");
-        cut.Markup.Should().NotContain(":44", "the audit clock (06:44 UTC) is no longer a column, in any time zone");
-    }
-
-    [Fact]
-    public void MyActivities_ShowsADashForAnActivityAboutNoEpa()
-    {
-        var cut = RenderMine(Row(1, "draft", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null });
-
-        Column(cut, BodyRows(cut), "EPA").Should().Equal("—");
+        cut.FindAll("thead th").Select(header => header.TextContent.Trim())
+            .Should().Equal("Activity", "Who has it now", "State", "Credit");
+        cut.Markup.Should().NotContain(":44", "the audit clock (06:44 UTC) is no column, in any time zone");
     }
 
     [Fact]
@@ -145,11 +139,10 @@ public sealed class ActivityListColumnsTests : TestContext
             Row(2, "completed", creditedItemCount: 0) with { EpaId = 5006, EpaCode = "PAED-006", EpaTitle = "Manage a sick neonate", EpaInForce = false },
             Row(3, "draft", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null });
 
-        Column(cut, BodyRows(cut), "EPA").Should().Equal(
-            "PAED-001 — Take a history",
-            EpaOptionLabel.For("PAED-006", "Manage a sick neonate", inForce: false),
-            "—");
-        MarkersIn(cut).Should().Equal([EpaOptionLabel.NoLongerInUse], "only the EPA that is not in force is marked, and muted");
+        // T342: the name carries the code only, so the mark is under the link, in the picker's own words (D48).
+        var marks = cut.FindAll("tbody td .muted").Select(mark => mark.TextContent.Trim()).ToList();
+        marks.Should().Equal($"PAED-006 {EpaOptionLabel.NoLongerInUse}");
+        BodyRows(cut).ToList()[1].QuerySelector(".muted").Should().NotBeNull("only the EPA that is not in force is marked");
     }
 
     /// <summary>T231. The inbox marks it too: an assessor asked to act on an activity whose EPA was deactivated.</summary>
@@ -169,22 +162,21 @@ public sealed class ActivityListColumnsTests : TestContext
     }
 
     /// <summary>
-    /// T239. Each row's View is named by its row, so the campaign's three rows are three different links to a screen
-    /// reader too, and the column has a header.
+    /// T239, restated by T342 (T280): a row is its activity's link, and the link's words are its name. No View button, and
+    /// no Actions column.
     /// </summary>
     [Fact]
-    public void MyActivities_NamesEachRowsView_ByItsTypeEpaAndEncounterDate()
+    public void MyActivities_EachRowIsItsActivitysLink_NamedByItsOwnWords()
     {
         var cut = RenderMine(
             Msf(1, 5001, "PAED-001", "Assess and manage an acutely unwell child"),
-            Msf(2, 5002, "PAED-002", "Lead a ward round"),
-            Msf(3, 5003, "PAED-003", "Communicate with families"));
+            Msf(2, 5002, "PAED-002", "Lead a ward round"));
 
-        LinkNames(cut, "View").Should().Equal(
-            $"View {MsfName}, PAED-001, encounter date 2026-09-19",
-            $"View {MsfName}, PAED-002, encounter date 2026-09-19",
-            $"View {MsfName}, PAED-003, encounter date 2026-09-19");
-        cut.FindAll("thead th").Last().TextContent.Trim().Should().Be("Actions");
+        var links = cut.FindAll("tbody a.activity-link");
+        links.Select(link => link.GetAttribute("href")).Should().Equal("/activities/1", "/activities/2");
+        links.Should().OnlyContain(link => !link.HasAttribute("aria-label"), "each link's words are its name");
+        cut.FindAll("tbody .actions-cell").Should().BeEmpty();
+        cut.FindAll("thead th").Select(header => header.TextContent.Trim()).Should().NotContain("Actions");
     }
 
     /// <summary>T239. The inbox's Open names whose activity it is too; two that read the same add when each was updated.</summary>
@@ -228,7 +220,11 @@ public sealed class ActivityListColumnsTests : TestContext
         true,
         CampaignClosed,
         true,
-        null);
+        null)
+    {
+        DisplayName = $"{MsfName} · {code} · 2026-09-19",
+        Holder = new ActivityHolderDto(ActivityHolderKind.Done, null, null, false, null)
+    };
 
     private static ActivitySummaryDto Row(int id, string state, int? creditedItemCount) => new(
         id,
@@ -246,7 +242,10 @@ public sealed class ActivityListColumnsTests : TestContext
         true,
         new DateOnly(2026, 3, 10),
         true,
-        creditedItemCount);
+        creditedItemCount)
+    {
+        DisplayName = "Mini-CEX (CPSA) · PAED-001 · 2026-03-10"
+    };
 
     /// <summary>What the list query hands the page for a <c>mini_cex_cpsa</c> state: its label in the seed.</summary>
     private static string LabelOf(string state) => state switch
@@ -303,9 +302,14 @@ public sealed class ActivityListColumnsTests : TestContext
         public FakeSender(IReadOnlyList<ActivitySummaryDto> rows) => _rows = rows;
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-            => request is ListActivitiesBySubjectQuery or ListActivitiesByActorInboxQuery
-                ? Task.FromResult((TResponse)(object)_rows)
-                : throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
+            => request switch
+            {
+                // T342 (B7): My activities' list comes a page at a time.
+                ListActivitiesBySubjectQuery => Task.FromResult((TResponse)(object)new ActivityListPageDto(_rows, 1, 20, _rows.Count)),
+                ListActivitiesByActorInboxQuery => Task.FromResult((TResponse)(object)_rows),
+                ListNeedsYouQuery => Task.FromResult((TResponse)(object)Array.Empty<ActivitySummaryDto>()),
+                _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
+            };
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();

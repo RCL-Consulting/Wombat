@@ -32,6 +32,9 @@ internal static class SeedSchemas
 
     public static string Schema(string seedKey) => File.ReadAllText(PathOf(seedKey, "schema.json"));
 
+    /// <summary>The seed's workflow (T342: the activity page's tests run on the seeds' own states and moves).</summary>
+    public static string Workflow(string seedKey) => File.ReadAllText(PathOf(seedKey, "workflow.json"));
+
     /// <summary>The seed's credit rules, or null for a seed that declares none.</summary>
     public static string? CreditRules(string seedKey)
     {

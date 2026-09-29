@@ -44,7 +44,7 @@ public sealed class NomineePickerGateParityTests
     private const int CommitteeFieldTypeId = 101;
 
     /// <summary>The fragment every nominee-gate refusal carries, so a test can tell it apart from any other refusal.</summary>
-    private const string GateRefusal = "cannot be named here";
+    private const string GateRefusal = "be named as ";
 
     /// <summary>
     /// One row per seeded user. Each decoy fails exactly one condition for an <c>Assessor</c> field; the eligible rows
@@ -186,7 +186,7 @@ public sealed class NomineePickerGateParityTests
 
         var message = await ShouldBeRefusedAsync(options, service => service.TransitionAsync(
             new TransitionActivityInput(draft.Id, "submit", TraineeId, Principal(TraineeId), null, null)));
-        message.Should().StartWith("Nominee: First eligible cannot be named here.");
+        message.Should().StartWith("Nominee: First eligible cannot be named as an assessor.");
         (await StoredAsync(options, draft.Id)).CurrentState.Should().Be("draft");
 
         foreach (var option in picker.Where(option => option.Value != "eligible"))

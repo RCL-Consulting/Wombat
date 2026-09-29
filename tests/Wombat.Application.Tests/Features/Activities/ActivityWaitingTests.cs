@@ -235,11 +235,139 @@ public sealed class ActivityWaitingTests
         (await Reached(TestPrincipals.InRoles([WombatRoles.Assessor], "assessor-1", 10))).Should().BeEquivalentTo(
             [1], "the request naming him: not one naming another assessor, nor a draft, whose moves are its author's");
         (await Reached(TestPrincipals.InRoles([WombatRoles.Trainee], "trainee-1", 10))).Should().BeEquivalentTo(
-            [1, 4], "her own rows with a move of hers left: not her teaching session, which only its SpecialityAdmin moves");
+            [4], "her own draft: not her request, which she may only cancel (T342, B6), nor her teaching session, which only its SpecialityAdmin moves");
         (await Reached(TestPrincipals.InRoles([WombatRoles.SpecialityAdmin], "speciality-admin", 10, 5, 6))).Should().BeEquivalentTo(
             [5], "her institution's teaching session, not another institution's");
         (await Reached(TestPrincipals.InRoles([WombatRoles.Coordinator], "coordinator-1", 20))).Should().BeEmpty(
             "no move on either type is a coordinator's");
+    }
+
+    /// <summary>
+    /// T342 (B6): the read now asks only the moves that lead on, and the Activity inbox only the arms that are not the
+    /// author's. For everyone who is neither a row's subject nor its creator, that changes nothing: over every shipped
+    /// workflow, filed in every state, the inbox read admits exactly the rows the read before T342 admitted (any move out of
+    /// the state, any arm). An assessor's Complete, Record Discussion and Sign Off all lead on, and a Decline or a Return
+    /// never stood alone.
+    /// </summary>
+    [Fact]
+    public async Task TheInbox_IsUnchanged_ForEveryoneButTheAuthor_ForEveryShippedWorkflow()
+    {
+        await using var db = await EveryWorkflowInEveryStateAsync();
+        var everyRow = await db.Activities.AsNoTracking().Include(activity => activity.ActivityType).ToListAsync();
+        var published = await db.Set<ActivityTypeVersion>().AsNoTracking().ToListAsync();
+        var evaluator = new WorkflowEvaluator();
+        var admittedSomewhere = 0;
+
+        foreach (var (who, principal) in Callers())
+        {
+            var callerId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            bool NotTheirs(Activity activity) => activity.SubjectUserId != callerId && activity.CreatedByUserId != callerId;
+
+            // The read before T342: some move out of the state, by any arm.
+            var before = everyRow
+                .Where(NotTheirs)
+                .Where(activity => Pin(published, activity) is { } workflow &&
+                    workflow.Transitions.Any(transition =>
+                        transition.From.Contains(activity.CurrentState, StringComparer.Ordinal) &&
+                        evaluator.Evaluate(workflow, activity, transition.Key, principal).Allowed))
+                .Select(activity => activity.Id)
+                .ToList();
+
+            var inbox = (await ActivityWaiting.LoadActionableAsync(
+                    db.Activities, db, evaluator, principal, arms: ActorArms.NotAuthor))
+                .Select(row => row.Activity)
+                .Where(NotTheirs)
+                .Select(activity => activity.Id);
+
+            inbox.Should().BeEquivalentTo(before, $"the {who}'s inbox holds what it held before T342, for work that is not theirs");
+            admittedSomewhere += before.Count;
+        }
+
+        admittedSomewhere.Should().BePositive("not vacuous: the callers between them have work waiting on them");
+    }
+
+    /// <summary>
+    /// Needs you and the Activity inbox split the moves that lead on between them (T342, B6): what a caller may move on
+    /// is in one or the other, and Needs you holds only the caller's own rows.
+    /// </summary>
+    [Fact]
+    public async Task NeedsYouAndTheInbox_SplitTheMovesThatLeadOn_ForEveryShippedWorkflowAndCaller()
+    {
+        await using var db = await EveryWorkflowInEveryStateAsync();
+        var evaluator = new WorkflowEvaluator();
+
+        foreach (var (who, principal) in Callers())
+        {
+            var callerId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var all = await ActivityWaiting.LoadActionableAsync(db.Activities, db, evaluator, principal);
+            var needsYou = await ActivityWaiting.LoadActionableAsync(db.Activities, db, evaluator, principal, arms: ActorArms.Author);
+            var inbox = await ActivityWaiting.LoadActionableAsync(db.Activities, db, evaluator, principal, arms: ActorArms.NotAuthor);
+
+            needsYou.Select(row => row.Activity.Id).Concat(inbox.Select(row => row.Activity.Id)).Distinct()
+                .Should().BeEquivalentTo(all.Select(row => row.Activity.Id), $"the {who}'s moves are in Needs you or the inbox");
+            needsYou.Should().OnlyContain(
+                row => row.Activity.SubjectUserId == callerId || row.Activity.CreatedByUserId == callerId,
+                $"the {who}'s Needs you is their own work");
+        }
+    }
+
+    /// <summary>
+    /// Step 3.12 and A.2.7: a Mini-CEX request its registrar may only cancel is with its assessor. It is in neither her
+    /// Needs you nor her inbox, and still in his; her draft is in her Needs you.
+    /// </summary>
+    [Fact]
+    public async Task ARequestItsRegistrarMayOnlyCancel_IsWithItsAssessor_AndHerDraftIsWithHer()
+    {
+        await using var db = NewContext();
+        ShippedSeeds.AddType(db, 1, "mini_cex_cpsa");
+        db.Activities.AddRange(
+            Filed(1, 1, "requested", subject: "trainee-1", creator: "trainee-1", """{ "assessor_user_id": "assessor-1" }""", institution: 10),
+            Filed(2, 1, "draft", subject: "trainee-1", creator: "trainee-1", """{ "assessor_user_id": "assessor-1" }""", institution: 10),
+            Filed(3, 1, "declined", subject: "trainee-1", creator: "trainee-1", """{ "assessor_user_id": "assessor-1" }""", institution: 10));
+        await db.SaveChangesAsync();
+        var evaluator = new WorkflowEvaluator();
+        var trainee = TestPrincipals.InRoles([WombatRoles.Trainee], "trainee-1", 10);
+        var assessor = TestPrincipals.InRoles([WombatRoles.Assessor], "assessor-1", 10);
+
+        async Task<IEnumerable<int>> Read(ClaimsPrincipal principal, ActorArms arms)
+            => (await ActivityWaiting.LoadActionableAsync(db.Activities, db, evaluator, principal, arms: arms)).Select(row => row.Activity.Id);
+
+        (await Read(trainee, ActorArms.Author)).Should().Equal([2], "her draft needs her; her request does not, though she may cancel it");
+        (await Read(trainee, ActorArms.NotAuthor)).Should().BeEmpty("a registrar with no other role has an empty inbox (Q6)");
+        (await Read(assessor, ActorArms.NotAuthor)).Should().Equal([1], "the request waits on the assessor it names");
+    }
+
+    [Theory]
+    [InlineData("subject|creator", ActorArms.Author, "subject|creator")]
+    [InlineData("subject|creator", ActorArms.NotAuthor, "")]
+    [InlineData("subject|field:assessor_user_id", ActorArms.Author, "subject")]
+    [InlineData("subject|field:assessor_user_id", ActorArms.NotAuthor, "field:assessor_user_id")]
+    [InlineData("role:SpecialityAdmin+scope:speciality", ActorArms.NotAuthor, "role:SpecialityAdmin+scope:speciality")]
+    [InlineData("role:SpecialityAdmin+scope:speciality", ActorArms.Author, "")]
+    [InlineData("subject+scope:institution", ActorArms.Author, "subject+scope:institution")]
+    [InlineData("subject+scope:institution", ActorArms.NotAuthor, "")]
+    [InlineData("field:assessor_user_id", ActorArms.All, "field:assessor_user_id")]
+    public void AnActorRule_IsCutToTheArmsAskedFor(string actor, ActorArms arms, string expected)
+    {
+        Render(ActivityWaiting.RestrictTo(ActorRuleParser.Parse(actor), arms)).Should().Be(
+            expected, "an arm cut away admits no one, and reads as nothing");
+    }
+
+    [Theory]
+    [InlineData("subject|creator", ActorArms.Author, "subject|creator")]
+    [InlineData("subject|creator", ActorArms.NotAuthor, "")]
+    [InlineData("subject|field:assessor_user_id", ActorArms.Author, "subject")]
+    [InlineData("subject|field:assessor_user_id", ActorArms.NotAuthor, "field:assessor_user_id")]
+    [InlineData("role:SpecialityAdmin+scope:speciality", ActorArms.NotAuthor, "role:SpecialityAdmin+scope:speciality")]
+    [InlineData("role:SpecialityAdmin+scope:speciality", ActorArms.Author, "")]
+    [InlineData("subject+scope:institution", ActorArms.Author, "subject+scope:institution")]
+    [InlineData("subject+scope:institution", ActorArms.NotAuthor, "")]
+    public void TheArmsCutAway_ReachNoRow_AndTheArmsKept_ReachWhatTheyDid(string actor, ActorArms arms, string expected)
+    {
+        var caller = TestPrincipals.InRoles([WombatRoles.SpecialityAdmin], "caller", 10, 5, 6);
+
+        ActivityWaiting.ReachOf(ActivityWaiting.RestrictTo(ActorRuleParser.Parse(actor), arms), caller).Should().Be(
+            expected.Length == 0 ? CallerReach.None : ActivityWaiting.ReachOf(ActorRuleParser.Parse(expected), caller));
     }
 
     [Theory]
@@ -270,6 +398,57 @@ public sealed class ActivityWaitingTests
             .Should().Be(CallerReach.None);
     }
 
+    /// <summary>
+    /// Every shipped workflow filed in every state, six ways, as <see cref="TheNarrowing_KeepsEveryRowTheActGateAdmits_ForEveryShippedWorkflowAndCaller" />
+    /// files them.
+    /// </summary>
+    private static async Task<ApplicationDbContext> EveryWorkflowInEveryStateAsync()
+    {
+        var db = NewContext();
+        var id = 0;
+        var typeId = 0;
+        foreach (var key in ShippedSeeds.Keys())
+        {
+            ShippedSeeds.AddType(db, ++typeId, key);
+            var workflow = WorkflowParser.Parse(ShippedSeeds.Workflow(key));
+            var fields = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var transition in workflow.Transitions)
+            {
+                ActorFieldRules.CollectFieldNames(transition.Actor, fields);
+            }
+
+            foreach (var state in workflow.States.Select(state => state.Key))
+            {
+                db.Activities.AddRange(
+                    Filed(++id, typeId, state, subject: "trainee-1", creator: "trainee-1", Naming(fields, "assessor-1"), institution: 10),
+                    Filed(++id, typeId, state, subject: "trainee-2", creator: "trainee-2", Naming(fields, "assessor-1"), institution: 10),
+                    Filed(++id, typeId, state, subject: "trainee-2", creator: "trainee-2", Naming(fields, "assessor-2"), institution: 10),
+                    Filed(++id, typeId, state, subject: "trainee-3", creator: "trainee-3", Naming(fields, "assessor-1"), institution: 20),
+                    Filed(++id, typeId, state, subject: "trainee-3", creator: "coordinator-1", Naming(fields, "trainee-2"), institution: 20),
+                    Filed(++id, typeId, state, subject: "trainee-2", creator: "trainee-2", "{}", institution: null));
+            }
+        }
+
+        await db.SaveChangesAsync();
+        return db;
+    }
+
+    private static IReadOnlyDictionary<string, ClaimsPrincipal> Callers() => new Dictionary<string, ClaimsPrincipal>
+    {
+        ["trainee"] = TestPrincipals.InRoles([WombatRoles.Trainee], "trainee-1", 10),
+        ["assessor"] = TestPrincipals.InRoles([WombatRoles.Assessor], "assessor-1", 10),
+        ["assessor who is also a trainee"] = TestPrincipals.InRoles([WombatRoles.Assessor, WombatRoles.Trainee], "trainee-2", 10),
+        ["coordinator"] = TestPrincipals.InRoles([WombatRoles.Coordinator], "coordinator-1", 20),
+        ["speciality admin"] = TestPrincipals.InRoles([WombatRoles.SpecialityAdmin], "speciality-admin", 10, 5, 6),
+        ["administrator"] = TestPrincipals.InRoles([WombatRoles.Administrator], "admin", null)
+    };
+
+    private static Workflow? Pin(IReadOnlyList<ActivityTypeVersion> published, Activity activity)
+        => published.SingleOrDefault(version =>
+                version.ActivityTypeId == activity.ActivityTypeId && version.Version == activity.SchemaVersion) is { } pin
+            ? WorkflowParser.Parse(pin.WorkflowJson)
+            : null;
+
     private static string Naming(IReadOnlySet<string> fields, string userId)
         => JsonSerializer.Serialize(fields.ToDictionary(field => field, _ => userId, StringComparer.Ordinal));
 
@@ -293,6 +472,19 @@ public sealed class ActivityWaitingTests
         Id = id, ActivityTypeId = typeId, SchemaVersion = version,
         SubjectUserId = "trainee-1", CreatedByUserId = "trainee-1", CurrentState = "requested", DataJson = dataJson,
         CreatedOn = DateTime.UtcNow.AddDays(-1), UpdatedOn = DateTime.UtcNow.AddMinutes(-id)
+    };
+
+    /// <summary>A rule in the DSL's own words; an empty disjunction, which admits no one, as nothing.</summary>
+    private static string Render(ActorRule rule) => rule switch
+    {
+        SubjectUserActorRule => "subject",
+        CreatorUserActorRule => "creator",
+        FieldUserActorRule field => "field:" + field.Field,
+        NamedRoleActorRule role => "role:" + role.Role,
+        ScopeMatchActorRule scope => "scope:" + scope.Scope,
+        CombinedActorRule { CombinationKind: ActorRuleCombinationKind.Any } any => string.Join("|", any.Rules.Select(Render)),
+        CombinedActorRule all => string.Join("+", all.Rules.Select(Render)),
+        _ => rule.ToString()!
     };
 
     private static bool NamesAField(ActorRule rule) => rule switch

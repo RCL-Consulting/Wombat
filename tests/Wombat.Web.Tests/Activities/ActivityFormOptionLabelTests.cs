@@ -66,7 +66,7 @@ public sealed partial class ActivityFormOptionLabelTests : TestContext
         // The form the defect was found on (the T177 browser check): what a reader sees, and what the controls send.
         var cut = RenderForm(ReadSeedSchema("cca_cpsa"));
 
-        var documents = cut.FindAll("fieldset fieldset .check-grid .form-check");
+        var documents = cut.FindAll("section fieldset .check-grid .form-check");
         documents.Select(check => check.QuerySelector("label")!.TextContent.Trim())
             .Should().Equal("Admission notes", "Progress notes", "Referral letters", "Discharge summary", "Prescriptions");
         documents.Select(check => check.QuerySelector("input")!.Id)
@@ -75,7 +75,7 @@ public sealed partial class ActivityFormOptionLabelTests : TestContext
                 "documents_reviewed-referral_letters", "documents_reviewed-discharge_summary",
                 "documents_reviewed-prescriptions");
 
-        var settings = cut.FindAll("#setting option").Where(option => option.GetAttribute("value") != string.Empty).ToList();
+        var settings = cut.FindAll("#setting-in option").Where(option => option.GetAttribute("value") != string.Empty).ToList();
         settings.Select(option => option.GetAttribute("value"))
             .Should().Equal("ward", "outpatient_clinic", "emergency_unit", "neonatal_unit", "picu", "community");
         settings.Select(option => option.TextContent.Trim())
@@ -91,11 +91,9 @@ public sealed partial class ActivityFormOptionLabelTests : TestContext
             .Add(component => component.DataJson, """{ "setting": "picu", "documents_reviewed": ["admission_notes", "prescriptions"] }""")
             .Add(component => component.ReadOnly, true));
 
-        cut.Find("#setting option[selected]").TextContent.Trim().Should().Be("PICU");
-        cut.FindAll("fieldset fieldset .check-grid .form-check")
-            .Where(check => check.QuerySelector("input")!.HasAttribute("checked"))
-            .Select(check => check.QuerySelector("label")!.TextContent.Trim())
-            .Should().Equal("Admission notes", "Prescriptions");
+        // Read out since T342 (flow 03): a reader who may write nothing is shown the values as text, in words.
+        cut.Find("#setting-in dd").TextContent.Trim().Should().Be("PICU");
+        cut.Find("#documents_reviewed-in dd").TextContent.Trim().Should().Be("Admission notes, Prescriptions");
     }
 
     /// <summary>

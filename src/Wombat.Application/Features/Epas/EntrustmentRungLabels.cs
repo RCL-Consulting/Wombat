@@ -54,15 +54,20 @@ public static class EntrustmentRungLabels
         var rungs = await dbContext.Set<EntrustmentLevel>()
             .AsNoTracking()
             .Where(level => ids.Contains(level.ScaleId))
-            .Select(level => new { level.ScaleId, level.Order, level.Label })
+            .Select(level => new { level.ScaleId, level.Order, level.Label, level.Description })
             .ToListAsync(cancellationToken);
 
-        var byScaleAndOrder = new Dictionary<(int ScaleId, int Order), string>(rungs.Count);
+        var byScaleAndOrder = new Dictionary<(int ScaleId, int Order), EntrustmentRung>(rungs.Count);
         foreach (var rung in rungs)
         {
             // A scale with two rungs at the same Order is malformed; first wins rather than throwing,
             // because this is a display path and a broken ladder should not take a progress page down.
-            byScaleAndOrder.TryAdd((rung.ScaleId, rung.Order), rung.Label);
+            byScaleAndOrder.TryAdd(
+                (rung.ScaleId, rung.Order),
+                new EntrustmentRung(
+                    rung.Order,
+                    rung.Label,
+                    string.IsNullOrWhiteSpace(rung.Description) ? null : rung.Description.Trim()));
         }
 
         return new EntrustmentRungLookup(byScaleAndOrder);
@@ -102,13 +107,13 @@ public static class EntrustmentRungLabels
 public sealed class EntrustmentRungLookup
 {
     public static readonly EntrustmentRungLookup Empty =
-        new(new Dictionary<(int ScaleId, int Order), string>());
+        new(new Dictionary<(int ScaleId, int Order), EntrustmentRung>());
 
-    private readonly IReadOnlyDictionary<(int ScaleId, int Order), string> _byScaleAndOrder;
+    private readonly IReadOnlyDictionary<(int ScaleId, int Order), EntrustmentRung> _byScaleAndOrder;
     private readonly IReadOnlyDictionary<string, int> _scaleIdByKey;
 
     internal EntrustmentRungLookup(
-        IReadOnlyDictionary<(int ScaleId, int Order), string> byScaleAndOrder,
+        IReadOnlyDictionary<(int ScaleId, int Order), EntrustmentRung> byScaleAndOrder,
         IReadOnlyDictionary<string, int>? scaleIdByKey = null)
     {
         _byScaleAndOrder = byScaleAndOrder;
@@ -144,15 +149,37 @@ public sealed class EntrustmentRungLookup
             : _byScaleAndOrder
                 .Where(pair => pair.Key.ScaleId == scaleId.Value)
                 .OrderBy(pair => pair.Key.Order)
-                .Select(pair => (pair.Key.Order, pair.Value))
+                .Select(pair => (pair.Key.Order, pair.Value.Label))
                 .ToList();
+
+    /// <summary>
+    /// The ordered rungs of a scale with each rung's descriptor (T342, B12): what the rung row beside a rating prints
+    /// ("4 · Supervision at a distance …"). Empty when the scale resolves to nothing.
+    /// </summary>
+    public IReadOnlyList<EntrustmentRung> RungDetailsOf(int? scaleId) =>
+        scaleId is null
+            ? []
+            : _byScaleAndOrder
+                .Where(pair => pair.Key.ScaleId == scaleId.Value)
+                .OrderBy(pair => pair.Key.Order)
+                .Select(pair => pair.Value)
+                .ToList();
+
+    /// <summary>
+    /// The rung's descriptor as the College words it, or null when the scale is unpinned, the ordinal is not a rung on
+    /// it, or the rung has none (T342, B12).
+    /// </summary>
+    public string? DescriptionOf(int? scaleId, int order) =>
+        scaleId.HasValue && _byScaleAndOrder.TryGetValue((scaleId.Value, order), out var rung)
+            ? rung.Description
+            : null;
 
     /// <summary>
     /// The rung label, or null when the scale is unpinned or the ordinal is not a rung on it.
     /// </summary>
     public string? Find(int? scaleId, int order) =>
-        scaleId.HasValue && _byScaleAndOrder.TryGetValue((scaleId.Value, order), out var label)
-            ? label
+        scaleId.HasValue && _byScaleAndOrder.TryGetValue((scaleId.Value, order), out var rung)
+            ? rung.Label
             : null;
 
     /// <summary>
@@ -162,3 +189,14 @@ public sealed class EntrustmentRungLookup
     public string Format(int? scaleId, int order) =>
         Find(scaleId, order) ?? order.ToString();
 }
+
+/// <summary>
+/// One rung of an entrustment ladder (T342, B12).
+/// </summary>
+/// <param name="Order">
+/// The rank: what an activity's data stores and credit compares. Not the rung's name: on the CPSA v11.1 ladder order 5 is
+/// the rung "4" (T100), so a page saying "Rated 4" of a stored 5 prints <paramref name="Label" />.
+/// </param>
+/// <param name="Label">The rung as the College prints it: "1", "2", "3a", "3b", "4", "5".</param>
+/// <param name="Description">The rung's descriptor as the College words it, or null when it has none.</param>
+public sealed record EntrustmentRung(int Order, string Label, string? Description);

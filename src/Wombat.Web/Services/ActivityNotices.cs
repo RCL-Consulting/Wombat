@@ -23,8 +23,17 @@ public sealed class ActivityNotices
 
     /// <summary>Leaves a notice for the activity, replacing any it had not yet shown.</summary>
     /// <param name="refusedFieldKeys">The fields a refusal the notice reports named, so the activity's page marks them (T263).</param>
-    public void Post(int activityId, string kind, string message, IReadOnlyList<string>? refusedFieldKeys = null)
-        => _notices[activityId] = new ActivityNotice(kind, message, refusedFieldKeys);
+    /// <param name="refusal">
+    /// The refusal itself, in the server's words, so the activity's page can list it one field a line and show each field
+    /// its own part (T342, flow 03; <c>FieldRefusals.Split</c>).
+    /// </param>
+    public void Post(
+        int activityId,
+        string kind,
+        string message,
+        IReadOnlyList<string>? refusedFieldKeys = null,
+        string? refusal = null)
+        => _notices[activityId] = new ActivityNotice(kind, message, refusedFieldKeys, refusal);
 
     /// <summary>Returns the activity's notice and removes it, so it is shown once; null when there is none.</summary>
     public ActivityNotice? Take(int activityId)
@@ -37,4 +46,14 @@ public sealed class ActivityNotices
 /// whose notice asks the author to fix the fields below. The activity's page marks them (T263). Null for any other notice,
 /// and for a refusal that names no field.
 /// </param>
-public sealed record ActivityNotice(string Kind, string Message, IReadOnlyList<string>? RefusedFieldKeys = null);
+/// <param name="Refusal">
+/// The refusal the notice reports, as the server words it ("EPA: A value is required. Assessor: A value is required."), for
+/// the activity's page to split into its summary's lines and each field's message (T342, flow 03, Spec § 1:
+/// <c>FieldRefusals.Split(Refusal, RefusedFieldKeys, labelOf)</c>). <see cref="Message" /> then holds the summary's title
+/// and text: "Saved as a draft, but not submitted. Fix the 2 fields below and submit again." Null for any other notice.
+/// </param>
+public sealed record ActivityNotice(
+    string Kind,
+    string Message,
+    IReadOnlyList<string>? RefusedFieldKeys = null,
+    string? Refusal = null);

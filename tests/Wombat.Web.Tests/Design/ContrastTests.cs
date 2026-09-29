@@ -214,6 +214,32 @@ public sealed partial class ContrastTests
         palette.Ratio(palette.Resolve(style["color"]), palette.Resolve(Background(style))).Should().BeGreaterThanOrEqualTo(Text);
     }
 
+    /// <summary>
+    /// T342 (flow 03, R3-Spec § 5, T4): a quiet button's words, neutral ("Keep the request") and danger ("Cancel
+    /// request…"), are text on the surface and on the page, having no ground of their own.
+    /// </summary>
+    [Theory]
+    [InlineData(".btn-quiet")]
+    [InlineData(".btn-quiet--danger")]
+    public void AQuietButtonsWords_AreReadable_OnSurfaceAndPage(string variant)
+    {
+        var palette = Palette.FromAppCss();
+        var colour = palette.Resolve(Stylesheet.AppCss().Computed(".btn", ".btn-quiet", variant)["color"]);
+
+        palette.Ratio(colour, palette.Token("--surface-color")).Should().BeGreaterThanOrEqualTo(Text);
+        palette.Ratio(colour, palette.Token("--background-color")).Should().BeGreaterThanOrEqualTo(Text);
+    }
+
+    /// <summary>T342 (C11): the check line before Submit is body text on the info tint.</summary>
+    [Fact]
+    public void TheSubmitCheck_IsReadable_OnItsTint()
+    {
+        var palette = Palette.FromAppCss();
+        var style = Stylesheet.AppCss().Computed(".submit-check");
+
+        palette.Ratio(palette.Token("--text-color"), palette.Resolve(Background(style))).Should().BeGreaterThanOrEqualTo(Text);
+    }
+
     [Theory]
     [InlineData(".btn-primary")]
     [InlineData(".btn-success")]

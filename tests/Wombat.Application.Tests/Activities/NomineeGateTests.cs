@@ -81,7 +81,7 @@ public sealed class NomineeGateTests
     private const int SchemaOrderTypeId = 205;
 
     /// <summary>The fragment every eligibility refusal carries, so a test can tell the gate apart from any other refusal.</summary>
-    private const string GateRefusal = "cannot be named here";
+    private const string GateRefusal = "be named as ";
 
     /// <summary>The fragment the gate's refusal of a non-string value carries.</summary>
     private const string NotAPersonRefusal = "must name a person";
@@ -373,7 +373,7 @@ public sealed class NomineeGateTests
         var message = await RefusedAtCreateAsync(options, CommitteeTypeId, Data(("reviewer_user_id", AssessorId)));
 
         message.Should().StartWith("Reviewer: ").And.Contain(GateRefusal);
-        message.Should().Contain("active Committee member at the trainee's institution");
+        message.Should().Contain("be named as a committee member. Choose someone else.");
 
         var created = await CreateAsync(options, CommitteeTypeId, Data(("reviewer_user_id", CommitteeMemberId)));
         ReadString(created.DataJson, "reviewer_user_id").Should().Be(CommitteeMemberId);
@@ -397,7 +397,7 @@ public sealed class NomineeGateTests
             var message = await RefusedAtCreateAsync(options, DuplicateKeyTypeId, Data(("reviewer_user_id", holdsOnlyOneRole)));
 
             message.Should().Contain(GateRefusal);
-            message.Should().Contain("active Assessor and Committee member at the trainee's institution");
+            message.Should().Contain("be named as an assessor and a committee member. Choose someone else.");
         }
 
         var created = await CreateAsync(options, DuplicateKeyTypeId, Data(("reviewer_user_id", AssessorAndCommitteeMemberId)));
@@ -422,7 +422,7 @@ public sealed class NomineeGateTests
 
         var notAnAssessor = await RefusedAtCreateAsync(options, TextFieldRuleTypeId, Data(("supervisor_id", CommitteeMemberId)));
         notAnAssessor.Should().StartWith("Supervisor: ").And.Contain(GateRefusal);
-        notAnAssessor.Should().Contain("active Assessor at the trainee's institution");
+        notAnAssessor.Should().Contain("be named as an assessor. Choose someone else.");
 
         var created = await CreateAsync(options, TextFieldRuleTypeId, Data(("supervisor_id", AssessorId)));
         ReadString(created.DataJson, "supervisor_id").Should().Be(AssessorId);
@@ -465,8 +465,8 @@ public sealed class NomineeGateTests
         await SeedAsync(options);
 
         var sameInstitution = await RefusedAtCreateAsync(options, StandardTypeId, Data(("assessor_user_id", NoRoleUserId)));
-        sameInstitution.Should().StartWith("Assessor: Nomsa Dlamini cannot be named here.");
-        sameInstitution.Should().Contain("active Assessor at the trainee's institution").And.Contain("choose someone else");
+        sameInstitution.Should().StartWith("Assessor: Nomsa Dlamini cannot be named as an assessor.");
+        sameInstitution.Should().EndWith("Choose someone else.");
 
         var elsewhere = await RefusedAtCreateAsync(options, StandardTypeId, Data(("assessor_user_id", OtherInstitutionAssessorId)));
         elsewhere.Should().Contain("that person");
@@ -485,7 +485,7 @@ public sealed class NomineeGateTests
         var nobody = await RefusedAtCreateAsync(options, StandardTypeId, Data(("assessor_user_id", NobodyId)));
 
         elsewhere.Should().Be(nobody);
-        nobody.Should().StartWith("Assessor: that person cannot be named here.");
+        nobody.Should().StartWith("Assessor: that person cannot be named as an assessor.");
     }
 
     [Fact]
@@ -498,7 +498,7 @@ public sealed class NomineeGateTests
         var deactivated = await RefusedAtCreateAsync(options, StandardTypeId, Data(("assessor_user_id", DeactivatedAssessorId)));
         var noRole = await RefusedAtCreateAsync(options, StandardTypeId, Data(("assessor_user_id", NoRoleUserId)));
 
-        deactivated.Should().Contain("Lindiwe Mokoena cannot be named here");
+        deactivated.Should().Contain("Lindiwe Mokoena cannot be named as an assessor");
         deactivated.Replace("Lindiwe Mokoena", "X", StringComparison.Ordinal)
             .Should().Be(noRole.Replace("Nomsa Dlamini", "X", StringComparison.Ordinal));
         deactivated.Should().NotContainAny("locked", "deactivated", "lockout", "role");

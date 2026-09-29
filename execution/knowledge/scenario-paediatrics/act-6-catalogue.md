@@ -384,7 +384,7 @@ Gap: none
 
 ### Step 6.16 — Dr Dlamini files a Mini-CEX on PAED-012
 Role: Trainee — Dr Anele Dlamini
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) and submit it:
   - EPA: PAED-012;
   - assessor: Dr Patel;
@@ -393,8 +393,8 @@ Do: File a Mini-CEX (Paediatrics) and submit it:
   - presenting problem: "Counselling the parents of a toddler newly diagnosed with type 1 diabetes";
   - complexity: Moderate.
   Note the activity's id from its address.
-Expect: The EPA picker offers nine EPAs for the Mini-CEX, PAED-012 among them. Once submitted, the activity reads
-  Requested and is in Dr Patel's inbox.
+Expect: The EPA picker offers nine EPAs for the Mini-CEX, PAED-012 among them. Submit to Mohammed Patel reads
+  "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox."
 Note: The trainee files it. The assessor must be an active Assessor at KGK (T102).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Log an activity, Mini-CEX (Paediatrics): the EPA picker offers
   nine, PAED-001 to 004, 006 (corrected title), 007, 008, 012 and 013. Filed on PAED-012 with Mohammed Patel,
@@ -434,11 +434,12 @@ Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Open Dr Dlamini's Mini-CEX from the inbox. Rate it at the rung that Dr Dlamini's PAED-012 card named as the minimum
   now (Step 6.15). Write the three feedback fields, and complete it.
 Expect:
-  - The inbox row and the activity's EPA both read "PAED-012 — Communicating with and counselling patients, caregivers
+  - The inbox row and the request's EPA both read "PAED-012 — Communicating with and counselling patients, caregivers
     and healthcare teams (no longer in use)".
-  - The completion is not refused (D48). The activity reads Completed and is read-only.
-  - The activity page warns that it counted towards no curriculum requirement, and names as one cause an EPA that was
-    not in use at the time. In its history, the completion's Credit reads None.
+  - The completion is not refused (D48): "Completed.". The activity is read-only.
+  - The status card reads "Done. You completed it on …" and "Rated <the rung>. Its credit to PAED-012 waits while the
+    EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
+    its history, the completion's Credit reads None.
 Note: Only the nominated assessor completes it (`field:assessor_user_id`). T231.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Dr Patel's inbox row and the activity's EPA read "PAED-012 —
   Communicating with and counselling patients, caregivers and healthcare teams (no longer in use)". Rated 4 (the list
@@ -450,14 +451,14 @@ Gap: none
 
 ### Step 6.19 — Dr Dlamini during the pause
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/mine → /activities/new
+Route: /portfolio/progress → /activities/mine → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read her progress and her activities. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without
   saving.
 Expect:
   - **Progress.** No PAED-012 card, and the semester targets line counts `m − 1` EPAs. The rating trajectory for
     PAED-012 still charts every rating on it, the one from Step 6.18 included, under the heading "PAED-012 — … (no
     longer in use)" (T255).
-  - **My activities.** The Mini-CEX shows the same marker, and Credited reads None.
+  - **My activities.** The Mini-CEX carries "PAED-012 (no longer in use)" under its name, and its Credit reads None.
   - **The picker.** It offers eight EPAs, without PAED-012.
 Note: T158: progress, pickers and dashboards list only EPAs in force. T231 and T255 mark what was recorded against an
   EPA that is not.
@@ -469,7 +470,7 @@ Gap: none
 
 ### Step 6.20 — Dr Mahlangu's picker leaves PAED-012 out too
 Role: Trainee — Dr Nomsa Mahlangu
-Route: /activities/new
+Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect: Eight EPAs: PAED-001 to PAED-004, PAED-006 to PAED-008, and PAED-013. PAED-012 is not offered.
 Note: The pause is national. It reaches every registrar on every curriculum that holds PAED-012.
@@ -544,7 +545,7 @@ Do: Read her progress and her activities.
 Expect:
   - PAED-012's card is back, with `n + 1` this semester, and one more at the minimum level when observed than in Step
     6.15. The semester targets line counts `m` EPAs again.
-  - The trajectory heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credited reads
+  - The trajectory heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credit reads
     1 item.
   - The credit PAED-012 had earned before the pause was kept, not cancelled. Dr Dlamini holds none from Acts 3-4
     (`n` is 0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged
@@ -619,7 +620,7 @@ Gap: none
 
 ### Step 6.27 — Dr Dlamini is measured against KGK-001
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/new
+Route: /portfolio/progress → /activities/new → /activities/new?type=direct_observation_cpsa
 Do: Read her progress. Then start a Direct Observation (Paediatrics) and open its EPA picker. Leave without saving.
 Expect: A KGK-001 card appears under "Once a year", reading 0 of 1 for the current year, and the yearly targets line
   counts one more EPA. Its line for the year before reads "0 of 1, 1 short": a target is read live, into periods that
@@ -808,7 +809,7 @@ Gap: none
 
 ### Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt
 Role: Trainee — Dr Sipho Ndlovu
-Route: /portfolio/progress → /activities/new
+Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect:
   - **The cards.** Seventeen: 11.2's 16 national items (PAED-016 once a year, and PAED-011 at 2 per academic year,
@@ -894,7 +895,7 @@ Expect:
   - PAED-002's period holding that day still reads "no target (your programme ended part-way through)", with the
     count Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
   - A KGK-001 card has appeared on his record too, as on Dr Molefe's.
-  - My activities lists that Mini-CEX as Completed, with Credited None.
+  - My activities lists that Mini-CEX as Completed, its Credit None.
 Note: He keeps the Trainee role after withdrawing (Act 5), so he reads his own record like any trainee.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): My progress still opens "Your programme ended on 26 September
   2026. This page is your record of it and is read-only …", training year 2, no bars. PAED-002 "Semester 2, 2026 no

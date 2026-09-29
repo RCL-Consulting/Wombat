@@ -96,26 +96,31 @@ public sealed class ActivityFormHelpTextTests : TestContext
             SeedSchemas.CreditRules("mini_cex_cpsa"),
             FiledOn);
 
-        var date = cut.Find("#observed_on");
+        var date = cut.Find("#observed_on-in");
         date.GetAttribute("aria-describedby").Should().Be("observed_on-help observed_on-filing-notice");
         cut.Find("#observed_on-help").TextContent.Should().Be("When the encounter happened, not when this form is completed.");
 
-        cut.Find("#assessor_user_id").GetAttribute("aria-describedby").Should().Be("assessor_user_id-help");
+        cut.Find("#assessor_user_id-in").GetAttribute("aria-describedby").Should().Be("assessor_user_id-help");
         cut.Find("#assessor_user_id-help").TextContent.Should().Be("The supervisor who observed you. They complete this assessment.");
 
-        cut.Find("#epa_id").HasAttribute("aria-describedby").Should().BeFalse("the EPA field has no help text and no warning");
+        cut.Find("#epa_id-in").HasAttribute("aria-describedby").Should().BeFalse("the EPA field has no help text and no warning");
     }
 
     [Fact]
-    public void ALockedForm_StillNamesItsHelp()
+    public void ALockedForm_HasNoControlsToDescribe_AndNamesNothingThatIsNotThere()
     {
-        // The detail page shows a reader the same form read-only. The help still says what each value means.
+        // T342 (flow 03): a reader who may write nothing is shown no controls. A section that holds values is read out,
+        // each value under its label; one that holds nothing is a locked section. No help is left to describe a control,
+        // and no description names an element that is not there.
         var cut = RenderComponent<ActivityForm>(parameters => parameters
             .Add(component => component.SchemaJson, SeedSchemas.Schema("mini_cex_cpsa"))
-            .Add(component => component.DataJson, "{}")
+            .Add(component => component.DataJson, """{ "observed_on": "2026-09-09" }""")
             .Add(component => component.ReadOnly, true));
 
-        cut.Find("#observed_on").GetAttribute("aria-describedby").Should().Be("observed_on-help");
+        cut.FindAll("input, select, textarea").Should().BeEmpty();
+        cut.Find("#observed_on-in dt").TextContent.Trim().Should().Be("Date observed");
+        cut.Find("#observed_on-in dd").TextContent.Trim().Should().Be("2026-09-09");
+        IdReferences.Broken(cut).Should().BeEmpty();
     }
 
     [Fact]
@@ -143,9 +148,9 @@ public sealed class ActivityFormHelpTextTests : TestContext
 
         var cut = RenderForm(schema, credit, FiledOn);
 
-        cut.Find("[id='seen on']").GetAttribute("aria-describedby").Should().Be("seen-on-help seen-on-filing-notice");
+        cut.Find("#seen-on-in").GetAttribute("aria-describedby").Should().Be("seen-on-help seen-on-filing-notice");
         cut.Find("#seen-on-help").TextContent.Trim().Should().Be("When you saw the patient.");
-        cut.Find("[id='patient age']").GetAttribute("aria-describedby").Should().Be("patient-age-help");
+        cut.Find("#patient-age-in").GetAttribute("aria-describedby").Should().Be("patient-age-help");
         cut.Find("#patient-age-help").TextContent.Trim().Should().Be("In whole years.");
         IdReferences.Broken(cut).Should().BeEmpty();
     }
@@ -208,13 +213,13 @@ public sealed class ActivityFormHelpTextTests : TestContext
     /// </summary>
     private static IElement DescribedElementOf(IRenderedFragment cut, SchemaField field)
     {
-        var control = cut.FindAll($"[id='{field.Key}']").SingleOrDefault();
+        var control = cut.FindAll($"[id='{ActivityFieldIds.Input(field.Key)}']").SingleOrDefault();
         if (control is not null)
         {
             return control;
         }
 
-        var groups = cut.FindAll("fieldset fieldset.form-group")
+        var groups = cut.FindAll("section fieldset.form-group")
             .Where(group => group.QuerySelector("legend")!.TextContent.Contains(field.Label, StringComparison.Ordinal))
             .ToList();
         groups.Should().ContainSingle("field '{0}' is one control keyed by its key or one group named by its label", field.Key);

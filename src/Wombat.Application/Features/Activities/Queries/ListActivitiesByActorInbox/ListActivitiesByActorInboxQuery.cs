@@ -34,8 +34,12 @@ public sealed class ListActivitiesByActorInboxQueryHandler : IRequestHandler<Lis
         // row shows (T220). The one reading the Assessor's and the Trainee's cards share, so neither can disagree with this
         // page (T297); narrowed in SQL to the states that have a move out and the rows the caller could reach, where every
         // activity used to be loaded. With the transitions, for the credit column below.
+        // T342 (B6, Q6): only the work that waits on the caller for someone else, by the moves that lead on. The caller's
+        // own drafts and the work returned to them are Needs you (ListNeedsYouQuery), on My activities and Home, so a
+        // registrar with no other role finds this inbox empty, and a request she may only cancel is in neither.
         var actionable = await ActivityWaiting.LoadActionableAsync(
-            _dbContext.Set<Activity>(), _dbContext, _workflowEvaluator, request.Principal, withTransitions: true, cancellationToken);
+            _dbContext.Set<Activity>(), _dbContext, _workflowEvaluator, request.Principal, withTransitions: true, cancellationToken,
+            ActorArms.NotAuthor);
 
         // T137. The EPA each row is about, from the stamped column, in one read for the rows that survived the act
         // gate. An assessor with three requests from one trainee used to see three rows that differed only by id.

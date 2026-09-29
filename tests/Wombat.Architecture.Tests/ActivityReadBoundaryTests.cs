@@ -46,6 +46,8 @@ public class ActivityReadBoundaryTests
         "ActivityDto",
         "ActivityDetailDto",
         "ActivitySummaryDto",
+        // T342: My activities' page of rows, which holds ActivitySummaryDto rows in a record the unwrap cannot see into.
+        "ActivityListPageDto",
         "EpaTrajectoryDto",
         "TrajectoryPointDto"
     ];

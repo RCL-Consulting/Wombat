@@ -15,7 +15,9 @@
 > - **The invariants in `design/BRIEF.md` § 4.4 bind every redesign.** For example, every nav link opens a page that
 >   admits the role, and there is one `<h1>` per page.
 > - **Redesigned so far:** flow 01, the shell (2026-09-27, T335, `b347e11c`); flow 02, sign-in and account (2026-09-28,
->   T339, `f50dffb2`: § Account / auth page).
+>   T339, `f50dffb2`: § Account / auth page); flow 03, a registrar files an activity (2026-09-29, T342, commit: T342
+>   (squash pending): § Form system "The activity form", § Alerts "An action's outcome on a record page", § Page-level
+>   patterns "List page" and "Record page with a workflow", § Dashboard page).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -926,6 +928,9 @@ is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby
 
 ## Form system
 
+(T342, flow 03: the activity form and Log an activity are § "The activity form" at the end of this section; the rest
+holds for every form.)
+
 ```css
 .form-container   /* surface card with padding, border, shadow */
 .form-grid        /* grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap 1.5rem */
@@ -946,11 +951,33 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
 .scale-choices    /* one radio per line for a rating scale's points, lowest first (T205) */
 .workflow-action-reasons /* list under a workflow action row: why a disabled action cannot be taken (T107) */
 .stage-minima     /* grid: training year | rung picker (up to 18rem, floor 0, T266) | Remove, one row per year (T125) */
+
+/* The activity form and Log an activity (T342, flow 03), in app.css under "Flow 03: Log an activity and the form (T342)" */
+.form-column      /* Log an activity's column: max 52rem, its blocks 24px apart (notice, summary, form, check line, bar) */
+.activity-form    /* ActivityForm's root: its sections 24px apart */
+.form-section     /* a section: a .detail-card one deep, named by its h2 (-head: h2 + .form-section-owner) */
+.form-section--locked /* someone else's section, not filled in yet: dashed --input-border frame on the page's ground */
+.form-section-lockhead /* its head row on --header-bg: h2, then the lock icon and the owner line */
+.form-section-lockbody /* its body: a pending rung row, then .form-section-empty ("Not filled in yet.") */
+.field-help       /* a field's help under its control, muted 0.9rem */
+.field-readback   /* the chosen option of an EPA or person select, printed in full under it (T323) */
+.required-mark    /* the visible * of a required field, --danger-color, aria-hidden */
+.form-readout-value /* a read-out value keeps its lines (pre-line) */
+.rung-row, .rung, .rung--pending, .rung.is-chosen, .rung-check, .rung-descriptor /* the read-only ladder (RungRow) */
+.refusal-summary-list /* the refusal summary's lines, each a link to its field's input */
+.submit-check     /* the check line above a form's moves: body text on --info-bg, a --secondary-color stripe */
+.form-actions--moves /* the action bar of a form with workflow moves: the move first, no top rule; stacks below 641px */
+.btn-quiet        /* words on no ground, underlined, --link-color ("Keep the request"); --danger for Cancel, pushed last */
+.btn.is-unavailable /* a move the actor cannot complete from here: aria-disabled, never disabled (T107, A10) */
+.btn[aria-disabled="true"].is-running /* the move running: keeps the focus (T234, C10) */
+.move-reasons     /* under the bar: why each unavailable move cannot be made, named by its button's aria-describedby */
+.instrument-group, .instrument-group-head, .instrument-picker, .instrument-link /* the instrument picker (Q1) */
 ```
 
 **Rules:**
 
-- Every form is inside a `.form-container`. Every form's submit/cancel cluster is a `.form-actions` row at the bottom.
+- Every form is inside a `.form-container`, except an activity form, whose sections are each a card of their own
+  (below). Every form's submit/cancel cluster is a `.form-actions` row at the bottom.
 - **An auto-fit grid's column asks for its width or the whole container, whichever is less**: `minmax(min(350px,
   100%), 1fr)`, never a bare `minmax(350px, 1fr)` (T226). A bare one is 350px in a container with less room: the scale
   editor's Name input stuck out of its card at 390px, and out of the one-third column of `.details-grid` at every width
@@ -994,15 +1021,19 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   refused field is one the rule styles (the agenda deferral reason, the activity form's encounter date).
 - **A field the server refused is marked, not only named** (T263). An activity form's refusal names each field by its
   label in words, and carries the fields' schema keys beside the message (`ActivityFieldsRefusedException.FieldKeys`;
-  CUSTOMIZATION.md § Keys are for logic). The page hands them to `ActivityForm` as `RefusedFieldKeys`, with the id of the
-  `Alert` that shows the refusal as `RefusalId`. Each control named takes the two markers above and names the alert in
-  its `aria-describedby`, after its help text and any notice (`FieldHelp.DescribedBy`). A multi-choice group's fieldset
-  names the alert, and its checkboxes are not marked. A locked field the refusal names is marked too, so the actor sees
-  which field stopped the move. The page holds the keys with the alert and clears both on its next action, so a field
-  is marked exactly while the alert that names it is shown. The three places are `/activities/new`'s refused create
-  (`NewActivity.RefusalAlertId`), a refused move on the activity's page (`ActivityView.ActionRefusalAlertId`) and the
-  notice of a submit refused straight after the create (`ActivityView.NoticeAlertId`, the keys riding on
-  `ActivityNotice.RefusedFieldKeys`). `Activities/RefusedFieldMarkingTests` holds all three.
+  CUSTOMIZATION.md § Keys are for logic). The page hands them to `ActivityForm` as `RefusedFieldKeys`, the refusal's
+  words as `RefusalMessage` (T342), and the id of the summary or alert that shows it as `RefusalId`. Each control named
+  takes the two markers above, shows its own part of the refusal under it (`.validation-message`, id `<key>-msg`; the
+  words cut one field a line by `FieldRefusals.Split`), and names in its `aria-describedby` its help, its message, any
+  notice, then the summary (`FieldHelp.DescribedBy`). A multi-choice group's fieldset names the summary, and its
+  checkboxes are not marked. A field the actor may not write has no control (below), so a refusal that names it is said
+  under its read-out value, so the actor sees which field stopped the move. **A changed value drops its marks and its
+  message at once**, and the form's hints come back (T342, Spec § 3); the summary stays until the page's next action.
+  The places are `/activities/new`'s refused create (`NewActivity.RefusalAlertId`, the `RefusalSummary` with id
+  `refusal-summary`), a refused move on the activity's page (`ActivityView.ActionRefusalAlertId`) and the notice of a
+  submit refused straight after the create (`ActivityView.NoticeAlertId`, the keys riding on
+  `ActivityNotice.RefusedFieldKeys` and the words on `ActivityNotice.Refusal`). `Activities/RefusedFieldMarkingTests`
+  holds them.
 - Multi-step forms get `<fieldset>` with a styled `<legend>` — both reset in the CSS.
 - Checkbox: `<div class="form-check">` wrapping a `.form-check-input` + `<label>`.
 - A group of checkboxes is a `<fieldset>` with a `<legend>`, the checkboxes inside a `.check-grid` (columns of
@@ -1025,11 +1056,11 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   group too, and is set in by a 2px rule down its left, because its legend is the same size as the field's. Its legend
   is floated, so it is laid out inside the group and the rule runs its full height (a rendered legend straddles the
   top border, and the rule began halfway down it); a floated legend still names its fieldset. A fieldset that
-  **holds** fields (a `.form-grid` or `<FormField>`s: an activity form's section, the curriculum item's edit row, a
-  deferral) is a cluster, and keeps the section-size legend. `Design/FieldGroupTests` reads every `<fieldset` in every
-  `.razor` file, the render fragments in `@code` included, and fails on a field whose class does not write
-  `form-group` out (one an expression adds is sometimes not there), and on a paragraph in a field that does not write
-  `page-subtitle` (or `field-warning`) out.
+  **holds** fields (a `.form-grid` or `<FormField>`s: the curriculum item's edit row, a deferral) is a cluster, and
+  keeps the section-size legend; an activity form's section is a `<section>` since T342 (below). `Design/FieldGroupTests`
+  reads every `<fieldset` in every `.razor` file, the render fragments in `@code` included, and fails on a field whose
+  class does not write `form-group` out (one an expression adds is sometimes not there), and on a paragraph in a field
+  that does not write `page-subtitle` (or `field-warning`, or the group's own refusal, `validation-message`) out.
 - An option is shown by its label, never by the key it stores (T191): `<option value="picu">PICU</option>`, and a
   checkbox's id is built from the key, checking it stores the key, and its `<label>` shows the words. A schema option
   is a bare string only when the string reads as words ("1"); a key is written
@@ -1078,6 +1109,93 @@ so a password typed in a circuit does not cross it keystroke by keystroke. It re
   window are unreleased, T173) says so in a `<span class="muted">` beside the button in its `.form-actions` row, and
   the button points at it with `aria-describedby`. Say it at the button even when a notice elsewhere on the page says
   it too: on a narrow screen the notice can be several cards away.
+
+### The activity form (T342, flow 03)
+
+`ActivityForm` (`Components/Shared/Activities/`) renders an activity type's schema for filing (Log an activity), for the
+activity's page, and for the builder's live preview, in the schema's own order (E6: the College's seeds are never
+reordered). Log an activity is `NewActivity.razor`. Drawn in `design/flows/03-trainee-files-activity/round-3/`
+(R3-C-Log, R3-C-Activity, R3-Spec).
+
+- **Sections one card deep.** Each schema section is a `<section class="detail-card form-section">` named by its `<h2>`
+  (`aria-labelledby`, id `sec-<key>`), never a fieldset and never a card inside a card. What it is depends on the reader:
+  - **Open**: the reader may write at least one of its fields. Its fields are a `.form-grid` of `.form-group`s. A field
+    the reader may not write, among ones they may, is text, not a disabled control: a `dl.form-group` (T302).
+  - **Filled**: they may write none of it, and it holds a value. It is read out as a `.details-list--stacked` (a
+    field's label over its value, in words: an option's label, a person's name, an EPA's "Code — Title"). The page may
+    give its head a line, "Filled in by David Naidoo, 2026-09-29" (`SectionAttributions`).
+  - **Locked**: they may write none of it, and it holds nothing yet. `.form-section--locked` (C14): a head row on
+    `--header-bg` (the lock icon, the title, the owner line) over a body on the page's ground, in a dashed
+    `--input-border` frame; no inputs. The owner line comes from the section's own `editable_by` (`subject|creator` when
+    unset, as `FieldPermissionEvaluator` reads it; the build review's G2):
+    - a `field:` owner is the person that field names: "Fatima Khumalo fills this in" (`LockedOwnerName` for the page's
+      hand-off field, else the field's own option), and while nobody on the list is named, the field by its label, "The
+      assessor you name fills this in";
+    - a `role:` owner is the role by its label, since nobody is named: "A coordinator fills this in" (`msf_cpsa`'s and
+      `learner_feedback_cpsa`'s review);
+    - the author's own section (a submitted `qi_project`'s empty PDSA cycles) has no owner line, and reads "Not filled
+      in.": nobody else is to fill it in, and its author no longer can.
+    On a closed record (`LockedSectionsClosed`) the line says who was to: "Fatima Khumalo was to fill this in.", "The
+    assessor was to fill this in.", "A coordinator was to fill this in.". Its body is the pending rung row of a scale field
+    it holds, then "Not filled in yet." ("Not filled in." when closed, or the author's). It is not `.detail-card--empty`,
+    which is centred and muted and has no head.
+  - An open section says "You fill this in" in its head when the form has another kind beside it.
+- **The input's id is the key with `-in`** (`ActivityFieldIds.Input`, built through `FieldHelp.IdPart`): a summary's link
+  lands on the control. A multi-choice or file group's fieldset carries it, and so do a read-out's row, a locked field's
+  `dl` among writable ones and a locked section's refusal line; each of those has `tabindex="-1"`, so the link can give
+  it the focus (the build review's A2; § Alerts, "The refusal summary").
+- **Section headings** are `h2` under the page's h1; the builder's live preview, under its own `h3`, passes
+  `SectionHeadingLevel="4"` (G8).
+- **The required mark.** The label ends in `<span class="required-mark" aria-hidden="true"> *</span>`, and the control
+  carries `aria-required="true"`. One line above the first section explains it: "* marks a field you must fill in."
+  (A15). A required group keeps its legend's visually hidden "required".
+- **Help under the control**, `p.field-help` with id `<key>-help`, named first in the control's `aria-describedby`. An EPA
+  or person select prints its chosen option in full under it (`.field-readback`, `aria-hidden`: the select already says
+  it), so nothing is cut off at 390px (T323). The EPA picker stays a native `<select>` with each option's full text.
+- **The rung row** (`RungRow`): where the reader cannot write a scale field, its value is an `<ol class="rung-row">`, every
+  rung of the ladder abreast, the chosen one filled (`--secondary-color`, `--on-fill`) and named in words ("4, chosen"),
+  its descriptor under the row (`.rung-descriptor`). Before the section is filled the rungs are pending: dashed, and
+  `aria-hidden`, the list named "Entrustment level: 1, 2, 3a, 3b, 4, 5" (A12). The value stored is the rung's Order (5 is
+  "4"). A writer of the scale keeps the select; radios are flow 04's.
+- **Hints.** Only a type whose credit rules can credit carries either (`EncounterDatePolicy.CanCredit`). The late-filing
+  warning (`.field-warning`) sits in the date's always-present `role="status"` region (A3). A date before the programme
+  started is a predicted refusal (C9): the field's own `.validation-message`, worded for its reader
+  (`ProgrammeStartWording.Hint`, `ReaderIsSubject`: "your programme" / "the trainee's programme", C12), with
+  `aria-invalid` and the invalid marks. Both show once a date is entered (the date input's change), or at once on a form
+  that opens with one (File it again, a draft).
+- **The action bar** (`.form-actions--moves`), one rule on Log an activity and the activity page (§ Page-level
+  patterns, "Record page with a workflow", adds that page's other buttons): the move first and filled (`.btn-primary`),
+  Save draft after it and outlined. A move's button is its own label (`WorkflowTransition.LabelFor`: "Submit", "Log",
+  "Complete"), and adds " to <name>" only when the move hands the activity to the person a filled user field names
+  (`MoveHandOff`; E4, C3; `FilingWords.MoveButtonLabel`): the name is the picker's own option for the value on the
+  form, reported by `HandOffNameChanged`, so a nominee picked or changed names the button at once, saved or not. A
+  pressed move keeps the focus, `aria-disabled="true"` and `.is-running` while it runs, and reads its -ing form
+  (`FilingWords.Running`: "Submitting…", "Logging…", "Completing…"; "Working…" for a label of more than one word;
+  "Saving…" for Save draft), and a visually hidden status says "Submitting."; every button it would race is disabled
+  (T234). The status region is always on the page, empty until a move runs (A6). Below 641px every control of the form
+  is 44px (`2.75rem`), a multi-choice checkbox row too, its label filling the row as flow 02's Remember me does (A8), a
+  section pads 16px, and the bar stacks, the move on top.
+- **The check line** (`SubmitCheck`, `.submit-check`) above the bar, on Log an activity and on the author's draft on the
+  activity page, plain text, not live: what the move will do, by the target state's label and the person's name (C11;
+  `FilingWords.CheckText`, the one wording): "When you submit: it goes to Fatima Khumalo's
+  Activity inbox and stays Requested until Fatima Khumalo acts on it.", "… the Activity inbox of the assessor you name,
+  and stays Requested until that assessor acts on it.", "When you log it: it is Logged at once, and credits nothing.
+  Nobody else acts on it.", with " Filed today, 20 days after the encounter: it will be recorded as late." when it will.
+- **Log an activity** is the instrument picker with no `?type`: a card a group (`InstrumentPicker`), "Rated by an
+  assessor", "Discussed or reviewed, not rated", "Logged by you" (`ActivityTypeShape`), each with its count and one line,
+  its types as `.instrument-link`s to `/activities/new?type=<key>`; an empty group is not drawn. With `?type` it is that
+  type's form under "<type> · Choose another type". With `?from=<id>` of the caller's own declined request it is the
+  copy (`GetFileAgainSourceQuery`), under an info notice with no role (A14). The header is drawn from the first render; a
+  failed read is the `StatePanel` error with Try again, in the page's words, never an exception's. Choosing a type, or
+  "Choose another type", keeps the page, so FocusOnNavigate does not run: the h1 takes the focus once the new address has
+  loaded (`PageFocus.FocusHeadingAsync`, A4). With nothing the caller may file, the picker is an empty state, "Nothing can
+  be filed yet." (G7).
+- **Outcomes** go to the activity's page as its notice (`ActivityNotices`): the move's result (`MoveOutcome`), then whose
+  inbox it is in ("It is in Fatima Khumalo's Activity inbox.", or after Save draft "It is in nobody's inbox until you
+  submit it."). A submit refused straight after the create hands the activity's page the refusal's own words and the
+  fields it named (`ActivityNotice.Refusal`, `RefusedFieldKeys`), from which that page builds its summary (§ Alerts). A
+  refused create stays: the `RefusalSummary` ("Nothing was saved." · "Everything you typed is kept below."), each line
+  a link to its input.
 
 ## Card system
 
@@ -1304,6 +1422,40 @@ T019 introduces a small builder-specific extension to the shared system:
   accepted. It is a hint: the server's refusal stays the rule. A refusal the page did not predict counts the same
   (T263): while a refusal on show names the field, the `.field-warning` is left out, since the page's start date was
   missing or out of date and the alert says why the date was not accepted.
+
+- **An action's outcome on a record page (2026-09-29, T342, flow 03; R3-Spec § 1).** Four kinds, each in one place:
+  - **The result** is an `ActionResult` at the head of the page body, `role="status"` on its success alert, and it takes
+    the focus after every move. Its first sentence is the move's result, in bold (`ActivityActionDto.ResultSentence`:
+    "Submitted. It is now Requested.", "Logged.", "Cancelled."); the second, when there is one, says whose inbox it is in
+    ("It is in Fatima Khumalo's Activity inbox.", "It is in nobody's inbox until you submit it."). A result handed over
+    from another page (Log an activity's filing) arrives with the page and wins over `FocusOnNavigate`'s h1:
+    `FocusOnLoad` (the T265 pattern; A2).
+  - **A refusal that names fields** is one summary, the `RefusalSummary` component (Components/Shared/Activities), the
+    same on Log an activity, on the activity page and in its note panel: `id="refusal-summary"` (the note panel's
+    `note-summary`), `class="validation-summary-errors error-summary"` (the danger summary of § Validation),
+    `role="alert"`, `tabindex="-1"`. A bold title says what did not happen and what state the record is still in, a line
+    says what to do (`RefusalWords`: "Not submitted. It is still a draft." · "Fix the 2 fields below and submit again.";
+    "Not saved. It is still a draft."; "Saved as a draft, but not submitted." for the submit refused straight after the
+    create; on Log an activity "Nothing was saved." · "Everything you typed is kept below."), and then one line a field,
+    in the refusal's own words, each a link to the field's input (`#<field>-in`, never its wrapper; C8). The href is only
+    for a page with no circuit: `<base href="/">` resolves a bare fragment against the site's root, so Blazor would
+    navigate to Home and lose what was typed. Pressed, a link moves the focus to its target by script
+    (`@onclick:preventDefault`, `PageFocus.FocusByIdAsync`, wombat.js's `wombat.focusById`) and navigates nowhere; every
+    target can take the focus (§ Form system; the build review's A1, A2). The lines are
+    cut from the server's refusal at each field's label by `FieldRefusals.Split`, never from a notice's own sentence; a
+    refusal handed over from Log an activity travels as `ActivityNotice.Refusal`. It takes the focus once drawn
+    (`FocusAsync`), and on arrival also by `autofocus` (`AutoFocus`), so it wins over `FocusOnNavigate`'s h1. Each field
+    it names shows its own part under its control (`RefusalMessage`, id `<key>-msg`), the invalid border and stripe and
+    `aria-invalid="true"`, and names its message, then the summary, with `aria-describedby` (§ Form system).
+  - **A refusal that names no field** is a danger `Alert` above the page's cards; the focus stays on the button pressed
+    (§ Button system).
+  - **A refusal of a move's note** is the same summary inside the note panel (`id="note-summary"`, "Not declined." and
+    a line linked to `#note-in`), with the field's message under the note and the note kept as typed (A6).
+- **"Unavailable" is one page for a record that does not exist and one the reader may not open** (T101, C7): h1
+  "Activity unavailable", `.detail-card--empty` "This activity does not exist, or you cannot open it." and a way on ("Go
+  to My activities"). It never says which.
+- **A record page's load error** follows Home's: h1 "Activity", a `StatePanel` with `OnRetry`, "Could not load this
+  activity. Nothing has changed. Try again, or come back in a few minutes." The exception goes to the log.
 
 ## Skeleton loaders
 
@@ -2465,6 +2617,50 @@ else
 }
 ```
 
+**A list of work opens with Needs you when the reader has any** (2026-09-29, T342, flow 03; R3-C-Mine, E8). My
+activities (`/activities/mine`) is headed "My activities", "Everything you have filed or logged, newest encounter first."
+(the query's order: the encounter date, newest first), with "Log an activity" as its header action. Then:
+
+- **Needs you**, only when there is any: a `.detail-card` headed by an `h2` "Needs you" whose count is a badge to the eye
+  and words to a screen reader (`aria-hidden` on the badge, a `.visually-hidden` ", 2 items"; A16), the rule line
+  (`.needs-you-rule`) "Your drafts, and work returned to you. A request you can still cancel is with its assessor, so it
+  is not here: it is under All activities.", then the rows. The rows are `NeedsYouList` (`Shared/Activities`), drawn
+  from `ListNeedsYouQuery`, the same component and the same read on Home's card: a `.stack-list.needs-you` of
+  `.needs-you-row`s carrying `.detail-card--emphasis`'s stripe, each the activity's link, its state's badge and why it is
+  there (`.needs-you-why`): "Returned to you by Sarah Botha on 2026-09-29. Change it and submit again." or "Not submitted
+  yet. It is in nobody's inbox until you submit it." (a draft is not private, C2: never "nobody can see it"). The words
+  are `ActivityListWords`'.
+- **All activities (<total>)**: a stacked `DataTable` (below) with the columns Activity, Who has it now, State and
+  Credit, a page of 20 at a time under `PagerControls` (`ActivityListPageDto`); a page turn puts the focus on the list's
+  heading. Who has it now reads "You", the holder's name, "Waiting for <state label>." (a move a role holds, nobody
+  named), "Done" or "Closed". Credit is `CreditOutcome.Label` ("1 item", "None", "—"). An EPA not in force now is marked
+  under the link, "PAED-006 (no longer in use)" (T231).
+- **An activity's link** (`ActivityLink`, `.activity-link`) is its name, "Type · EPA · date" (`DisplayName`, E7, E9),
+  with a second line (`.activity-link-to`): "to David Naidoo" for work that goes to its nominee, "with Sarah Botha" for
+  work discussed or reviewed with them (the type's shape, `ActivityTypeShape.DiscussedOrReviewed`: the reflection, the
+  portfolio review). No second line when there is no nominee, or when the name already ends with them (E7). A visually
+  hidden ", " stands between the two lines, so the link reads as two phrases; a name two links on the page would still
+  share adds an `aria-label` that starts with the link's words and adds its state, then "(1 of 2)"
+  (`ActivityRowNames.Links`, T280).
+- **Empty**: "No activities yet" · "Log an activity to ask an assessor to rate an encounter, or to log a teaching
+  session." with Log an activity. **Loading**: skeletons. **Load error**: `StatePanel`'s alert with Try again, "Could not
+  load your activities. Nothing has changed. Try again, or come back in a few minutes.", never the exception's text.
+
+**The Activity inbox for a registrar** (T342): subtitle "Work waiting for an assessor's rating or review." Its query
+leaves out the author's own arms, so a caller holding no role but Trainee (or PendingTrainee) always finds it empty, and
+its empty state says where their work is: "Nothing here is yours to act on." · "This inbox holds work that assessors
+rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs you." with Open My
+activities. Anyone holding another role reads "Inbox clear" · "Nothing is waiting for you to rate, discuss or review."
+Its load error is worded as My activities', never the exception's text.
+
+**The stacked table** (`.clinic-table--stack`, `DataTable`'s `Stack`; T342, A8). Below 641px each row is a block of its
+cells, one under another. The `thead` stays in the table, visually hidden (never `display: none`), so a screen reader
+still has each cell's column; the table, row groups, rows, headers and cells carry explicit roles (`table`, `rowgroup`,
+`row`, `columnheader`, `cell`), since a row laid out as a grid loses its table semantics in some browsers. A cell whose
+value does not say what it is carries `data-label` (the column's name), shown before the value as
+`content: attr(data-label) ": " / ""`: empty alternative text, so the column's name is not read twice. A cell that says
+what it is (the link, the state's badge) has none.
+
 ### Detail page
 
 ```
@@ -2489,6 +2685,100 @@ inside it. It is the only page that asks. It is opt-in (T266 review): on a grid 
 My progress's trajectories) one card should look like each of several, and a lone trajectory chart, which scales with
 its width, would stand three times as tall; on My MSF reports the list would jump from the whole row to a third of it
 when a report is selected.
+
+### Record page with a workflow
+
+> **Added 2026-09-29, T342, flow 03** (R3-C-Activity, R3-Spec § 2 and § 4): the activity page, `/activities/{id}`. CSS
+> under `/* Flow 03: the activity page (T342) */` in `app.css`; the page's parts are `ActivityStatus`, `ActivityAbout`,
+> `ActivityForm` (§ Form system), `ActivityWorkflowActions` and `ActivityHistory` (Components/Shared/Activities), and
+> their words are `ActivityPageModel`'s.
+
+```
+<PageHeader Title="Mini-CEX (Paediatrics) · PAED-002 · 2026-09-09"      <!-- h1, tab and last crumb (E2, E7) -->
+            Subtitle="Sipho Ndlovu's request to Fatima Khumalo" />     <!-- its people; no "State:" line -->
+<ActionResult Id="activity-result" />                                  <!-- the result -->
+<RefusalSummary />                                                     <!-- a refusal that names fields (§ Alerts) -->
+<section class="detail-card activity-status …">                        <!-- "Who has it now" -->
+<div class="details-grid activity-grid">
+  <ActivityAbout />                                                    <!-- .details-list -->
+  <div class="activity-sections"> the form's sections · SubmitCheck · the action bar · the note panel </div>
+</div>
+<ActivityHistory />                                                    <!-- the table; <details> below 641px -->
+```
+
+- **The status card** (`.activity-status`, a `.detail-card`) answers "Who has it now": a muted label, the state's badge
+  (`BadgeFor.ActivityState`) and one headline ending in a full stop, a quoted note when the last move carried one
+  (`.activity-status-quote`, a return's or a decline's, its writer in `<cite>`), a body, a muted meta line (a late
+  filing), and the page's one action for that state (`.activity-status-action`). Its 4px stripe says whose move it is:
+  the viewer's is `.detail-card--emphasis` (the action blue), someone else's `--others` (the control edge), `--done`
+  green, `--declined` red; its frame is every card's hairline. The viewer's own moves are verb phrases by key
+  (`ActivityPageModel.MovePhrase`): "Record the discussion, or return it with a note Sipho Ndlovu will read." The words,
+  by holder (`ActivityHolderDto`):
+  - the author's draft: "With you. Not submitted yet." · "Finish the request and submit it. It is in nobody's inbox until
+    you submit it."; returned: "With you. Sarah Botha returned it on 2026-09-29 15:30 SAST." + the note + "Change your
+    reflection and submit it again." (the form's first section names the author's part);
+  - a person holds it: "With Fatima Khumalo since 2026-09-29 09:12 SAST." · "Nothing for you to do. You can cancel the
+    request until Fatima Khumalo acts on it." and the quiet "Cancel request…"; to that person: "Your move. Sipho Ndlovu
+    asked you on …"; a role holds it: "Waiting for <state label>.";
+  - closed: "Closed. Fatima Khumalo declined it on …" + her reason and, to its registrar only, "File it again, to someone
+    else" (`/activities/new?from={id}`, E5); done: "Done. David Naidoo completed it on …" · "Rated 4. Credited 1 item to
+    PAED-001." and, to its registrar, "Open My progress".
+- **The subtitle** names its people (`ActivityPageModel.Subtitle`, D5): "Sipho Ndlovu's request to Fatima Khumalo" (a
+  review's too), "Sipho Ndlovu's reflection, for discussion with Sarah Botha", "Anele Dlamini's draft" with nobody named,
+  and a draft cancelled before it was filed "Pieter du Plessis's draft, cancelled". **The filing** is the author's first
+  move out of the initial state that leads on, or the create itself where the create files it (a type born in
+  `requested`, or born logged; T148, G3): a born-logged journal club is not "a draft", a cancelled born-requested request
+  was submitted, and its lateness is its create row's.
+- **About** (`.details-list`): Registrar, the nominee by its field's label (Assessor, Supervisor or mentor, Reviewer), EPA
+  with its title, Encounter (`EncounterDate.Label`), Filed ("2026-09-29, 20 days after the encounter (late)"), Credit
+  ("None until it is completed", "None: a reflective exercise credits nothing", "1 item"). The form's version shows as
+  "Form: Version n" only where a move's reason names it (T107), and the credit warnings (T108 credited nothing, T109
+  across scales, a paused EPA's "its credit waits") are `.field-warning`s under Credit with no role: they are standing
+  content (C13). An author's own draft, never filed, has only Registrar, Started, Encounter and Credit.
+- **The action bar** (`.form-actions--moves`, under the sections; `ActivityWorkflowActions`) is the form's (§ Form
+  system, "The action bar": the label rule, the running move and the phone layout are one rule on both pages): the move
+  that leads on, filled, first; Save draft, outlined, on the author's draft (E3); Discard changes; any other move outlined (a move that needs a note is a toggle with
+  `aria-expanded` and `aria-controls="note-panel"`); Cancel last, `.btn-quiet .btn-quiet--danger`, pushed to the end
+  ("Cancel this draft…" on a draft; "Cancel request…" once filed). Cancel is offered to whoever the server offers it,
+  not only the author: the demo types' cancel is `subject|field:assessor_user_id`, so their assessor has it last in the
+  bar (G1). While someone else holds it, or a role does, it is the status card's action instead (C11;
+  `ActivityPageModel.CancelOnCard`), and its dialog says whose inbox it leaves ("your" to its holder). Cancel always opens a `ConfirmDialog` whose safe button says what it keeps (`CancelLabel`: "Keep the request",
+  "Keep the draft"); the focus starts there, returns to the opener on Keep, and goes to the result once cancelled.
+  - A move the actor cannot complete from here is `.is-unavailable`, `aria-disabled="true"` and named by its reason in
+    `.move-reasons`; never natively disabled, so it stays in the tab order, and its handler returns at once (A10).
+    `aria-disabled` without `.is-running` is "cannot"; with it, "running".
+  - Where the reader may write the hand-off field, the button, the check line and the locked section's owner line name the
+    person the form's own picker names (`HandOffNameChanged`), from the first render, as Log an activity does: a nominee
+    changed on the page names them at once, and a stored nominee the directory no longer offers ("(not on the current
+    list)") is named nowhere, the button reading "Submit" alone (the build review's D1; Step A.6.6). Elsewhere the stored
+    nominee (`HandsToName`), whom the reader cannot change.
+- **The check line** (`SubmitCheck`) sits above the bar on the author's draft, in Log an activity's words (§ Form
+  system): "When you submit: it goes to Fatima Khumalo's Activity inbox and stays Requested until Fatima Khumalo acts on
+  it.", with the late clause counted as Log an activity counts it (`FilingLateness.DaysLate`, D6).
+- **The result** of a move is its sentence in bold, then whose inbox it is in, plain; the notice Log an activity hands over
+  is shown the same way (`ActivityPageModel.SplitResult`, D7).
+- **Who filled in each section.** A filled section's head says "Filled in by Sipho Ndlovu, 2026-09-29"
+  (`ActivityPageModel.SectionAttributions`, handed to the form as `SectionAttributions`): the last person who moved the
+  record out of a state in which they could write that section (its `editable_by` within the state's, both
+  `subject|creator` when unset; a `role:` or `scope:` term matches anyone, since the page has no one's claims), with that
+  move's date on the South African calendar; the create where the create is the filing; a cancelled draft names its
+  author without a date. A locked section names who fills it in (§ Form system).
+- **The note panel** (`.detail-card.note-panel`, `id="note-panel"`) opens under the bar for a move that needs a note: its
+  heading ("Decline this request"), the note labelled for its reader ("Reason for Sipho Ndlovu", `id="note-in"`; the
+  focus moves into it), "<Move> with this note" and the quiet "Keep the request", which closes it and hands the focus
+  back to the toggle. A refused move keeps it open with the note as typed.
+- **The history** is a real `.clinic-table.history-table` in a `.table-container`, oldest first: Move, From → to, By,
+  When, Credit. The create row reads "— → Draft"; a late filing says "Filed 20 days after the encounter" under its time;
+  a note is its own row under its move, one `<td colspan="5">` ("Note: …"), so a long reason never squeezes the columns.
+  Every time is South African with its zone ("2026-09-29 09:12 SAST", `ActivityMoments.When`), and a line under the
+  table says so. Below 641px (scoped to `.activity-page`) the table hides and a native `<details class="history-details">`
+  ("All 3 moves", its summary 44px) holds the same moves as stacked `.history-row` blocks. The flex summary has no native
+  triangle, so it draws a chevron (`.history-details-marker`) that turns down while open, at `--motion-fast` (A7).
+- **Its states:** loading (a skeleton status card and grid, and a status "Loading the activity."), the load error and
+  "Activity unavailable" (§ Alerts, validation, empty states). One `PageHeader` heads them all, its title changing, so the
+  h1 FocusOnNavigate focused on arrival is the loaded page's (A5); the loading line's `role="status"` is always there,
+  filled while it loads (A6). One `StatePanel` holds the three (its `LoadingContent` the page's own skeleton), kept across
+  Try again: a retry that reads focuses the h1, one that fails again the alert (A3).
 
 ### Form page
 
@@ -2576,6 +2866,12 @@ Dashboards are a composition, not a standalone page pattern.
     the page that owns it, for the Administrator its page admits;
   - the Trainee's Actions card is gone: its Log an activity and Request an assessment both opened `/activities/new`,
     which the header now offers.
+  - the Trainee's "Activity inbox" card is **Needs you** (2026-09-29, T342, flow 03, E8; R3-C-Mine "home-card"): exactly
+    My activities' Needs you, the same `NeedsYouList` rows in the same words, read by the same code (the summary's
+    `NeedsYou` is `ListNeedsYouQuery`'s read, `NeedsYou.ReadAsync`; T297's rule, restated). It lists the first five and
+    counts them all, its count a badge read as words (`DashboardCard`'s `CountWords`, "2 items"); its foot is "Open My
+    activities" (`/activities/mine`); empty, it says "Nothing needs you. Requests you have filed are in My activities."
+    Recent activities stays as it was (flow 05 owns Home).
 - **Every role has its own case in Home's switch**, and the dashboard it picks admits the role (T261). Until then a
   CollegeAdmin fell through to the trainee's dashboard: "No curriculum assigned yet", beside links to pages that refuse
   a CollegeAdmin. PendingTrainee shares the trainee's dashboard, which branches on it. A signed-in user who holds **no
@@ -3143,16 +3439,19 @@ h1..h5, .page-subtitle
 .validation-message, .validation-summary-errors, .input-validation-error (+ .invalid, [aria-invalid="true"], forced colours), .field-warning
 
 /* ── Cards ─────────────────────────────────────────── */
-.detail-card, .detail-card--{variant}
+.detail-card, .detail-card--{variant},
+  "Flow 03: Log an activity and the form (T342)": .form-column, .activity-form, .form-section(-head|-owner|-empty), .form-section--locked, .form-section-lockhead, .form-section-lockbody, .field-help, .field-readback, .required-mark, .form-readout-value, .rung-row, .rung(--pending|.is-chosen), .rung-check, .rung-descriptor, .refusal-summary-list, .submit-check, .form-actions--moves (+ .btn-quiet--danger), .btn-quiet(--danger), .btn.is-unavailable, .btn[aria-disabled="true"].is-running, .move-reasons, .instrument-group(-head), .instrument-picker, .instrument-link (+ ≤640px: one card deep, 44px controls, the bar stacked)
 
 /* ── Dashboard grid ───────────────────────────────── */
 .dashboard-grid (+ > *, three/two/one tracks), .dashboard-span-{N}, .dashboard-card-title, .dashboard-card-skeleton, .list-row, .home-action (≤640px)
 
 /* ── Details grid ─────────────────────────────────── */
-.details-grid (+ responsive)
+.details-grid (+ responsive),
+  "Flow 03: the activity page (T342)": .activity-status(--others|--done|--declined), .activity-status-main, -label, -head, -headline, -body, -meta, -quote, -action, .activity-card-title, .activity-grid, .activity-about (+ .field-warning), .activity-sections, .activity-moves, .note-panel(-title) (+ .validation-summary-errors), .history-table .has-note, .history-note, .history-late, .history-details, .history-list, .history-row, .history-meta, .history-zone (+ ≤640px, scoped to .activity-page)
 
 /* ── System pages ─────────────────────────────────── */
-.system-panel, .system-card-page, .system-card, .reference-block (+ ≤640px)
+.system-panel, .system-card-page, .system-card, .reference-block (+ ≤640px),
+  "Flow 03: My activities and Needs you (T342)": .list-section, .list-section-title, .needs-you-rule, .needs-you, .needs-you-row, .needs-you-why, .activity-link, .activity-link-to, .clinic-table--stack (≤640px)
 
 /* ── Pager ─────────────────────────────────────────── */
 .pager, .pager-info, .pager-actions, .pager-page-size, .pager-page-size-label, .pager-page-size-select

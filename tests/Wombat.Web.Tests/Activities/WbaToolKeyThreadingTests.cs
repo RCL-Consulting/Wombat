@@ -12,6 +12,7 @@ using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Infrastructure.Activities;
 using Wombat.Web.Components.Pages.Activities;
+using Wombat.Web.Components.Shared;
 using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.Activities;
@@ -74,6 +75,8 @@ public sealed class WbaToolKeyThreadingTests : TestContext
 
     public WbaToolKeyThreadingTests()
     {
+        // A type chosen on the same page moves the focus to its h1 (T342, A4): the one script call these tests allow.
+        JSInterop.SetupVoid(PageFocus.FocusHeadingIdentifier);
         var auth = this.AddTestAuthorization();
         auth.SetAuthorized("trainee@test");
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "trainee-1"));
@@ -93,7 +96,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
             Type(2, "mini_cex_cpsa", "Mini-CEX (CPSA)", "mini_cex")));
 
         var cut = RenderComponent<NewActivity>();
-        Select(cut, 2);
+        Select(cut, "mini_cex_cpsa");
 
         var credited = CreditedScopes().Should().ContainSingle().Subject;
         credited.WbaToolKey.Should().Be("mini_cex");
@@ -111,7 +114,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
             Type(5, "acat", "ACAT", null)));
 
         var cut = RenderComponent<NewActivity>();
-        Select(cut, 5);
+        Select(cut, "acat");
 
         CreditedScopes().Should().ContainSingle()
             .Which.WbaToolKey.Should().BeNull();
@@ -129,8 +132,8 @@ public sealed class WbaToolKeyThreadingTests : TestContext
             Type(3, "dops_cpsa", "DOPS (CPSA)", "dops")));
 
         var cut = RenderComponent<NewActivity>();
-        Select(cut, 2);
-        Select(cut, 3);
+        Select(cut, "mini_cex_cpsa");
+        Select(cut, "dops_cpsa");
 
         CreditedScopes().Select(scope => scope.WbaToolKey).Should().Equal("mini_cex", "dops");
     }
@@ -147,7 +150,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<NewActivity>();
-        Select(cut, 2);
+        Select(cut, "mini_cex_cpsa");
 
         sender.EditorQueries.Should().ContainSingle().Which.ForBuilder.Should().BeFalse();
     }
@@ -163,7 +166,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
         var cut = RenderView(Detail("completed", toolKey: "mini_cex", editable: [], actions: []));
 
         cut.FindAll("#discard-changes").Should().BeEmpty("this is the read-only branch");
-        cut.Find("#epa_id").HasAttribute("disabled").Should().BeTrue();
+        cut.FindAll("select#epa_id-in").Should().BeEmpty("the read-only branch reads the EPA out (T342)");
 
         var credited = CreditedScopes().Should().ContainSingle().Subject;
         credited.WbaToolKey.Should().Be("mini_cex");
@@ -183,7 +186,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
             actions: [new ActivityActionDto("submit", false)]));
 
         cut.FindAll("#discard-changes").Should().ContainSingle("this is the editable branch");
-        cut.Find("#epa_id").HasAttribute("disabled").Should().BeFalse();
+        cut.Find("#epa_id-in").HasAttribute("disabled").Should().BeFalse();
 
         var credited = CreditedScopes().Should().ContainSingle().Subject;
         credited.WbaToolKey.Should().Be("dops");
@@ -207,11 +210,12 @@ public sealed class WbaToolKeyThreadingTests : TestContext
     private IEnumerable<EpaOptionScope> CreditedScopes()
         => _recorder.Scopes.OfType<EpaOptionScope>().Where(scope => scope.NarrowToCreditable);
 
-    private static void Select(IRenderedComponent<NewActivity> cut, int activityTypeId)
+    // A type is chosen by its link, /activities/new?type=<key> (T342, flow 03, Q1): the page loads its form.
+    private void Select(IRenderedComponent<NewActivity> cut, string activityTypeKey)
     {
-        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
-        cut.Find("#activity-type").Change(activityTypeId.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        cut.WaitForState(() => cut.FindAll("#epa_id").Count == 1);
+        var loads = cut.RenderCount;
+        NewActivityPage.NavigateTo(this, activityTypeKey);
+        cut.WaitForState(() => cut.RenderCount > loads && cut.FindAll("#epa_id-in").Count == 1);
     }
 
     private IRenderedComponent<ActivityView> RenderView(ActivityDetailDto detail)
@@ -219,7 +223,7 @@ public sealed class WbaToolKeyThreadingTests : TestContext
         Services.AddSingleton<IScopedSender>(new ActivityViewSender(detail));
 
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 21));
-        cut.WaitForState(() => cut.FindAll("#epa_id").Count == 1);
+        cut.WaitForState(() => cut.FindAll("#epa_id-in").Count == 1);
 
         return cut;
     }

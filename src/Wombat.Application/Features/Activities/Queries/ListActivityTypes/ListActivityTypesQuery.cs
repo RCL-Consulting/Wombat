@@ -67,6 +67,7 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
                 activityType.Version,
                 activityType.IsActive,
                 activityType.SchemaJson,
+                activityType.WorkflowJson,
                 activityType.CreditRulesJson
             })
             .ToListAsync(cancellationToken);
@@ -78,14 +79,24 @@ public sealed class ListActivityTypesQueryHandler : IRequestHandler<ListActivity
 
         return candidates
             .Where(candidate => offered is null || offered.Contains(candidate.Id))
-            .Select(candidate => new ActivityTypeListItemDto(
-                candidate.Id,
-                candidate.Key,
-                candidate.Name,
-                candidate.Scope,
-                candidate.ScopeId,
-                candidate.Version,
-                candidate.IsActive))
+            .Select(candidate =>
+            {
+                // T342, B8: the picker's group and its "credits nothing" note, from the published version a new
+                // activity is pinned to.
+                var (shape, creditsNothing) = ActivityTypeShapes.Of(
+                    candidate.SchemaJson, candidate.WorkflowJson, candidate.CreditRulesJson);
+
+                return new ActivityTypeListItemDto(
+                    candidate.Id,
+                    candidate.Key,
+                    candidate.Name,
+                    candidate.Scope,
+                    candidate.ScopeId,
+                    candidate.Version,
+                    candidate.IsActive,
+                    shape,
+                    creditsNothing);
+            })
             .ToList();
     }
 

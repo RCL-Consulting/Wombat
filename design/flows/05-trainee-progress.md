@@ -209,11 +209,12 @@ Route: /account/login → / → /portfolio/progress
 Do: Sign in, read the dashboard and nav, and open My progress.
 Expect: Curriculum targets names the current semester and reads "0 / 10" semester targets met and "0 / 5" yearly targets
   met. The largest shortfalls are PAED-001 to PAED-005, each "0 of 3 this semester", and there is no "started part-way"
-  line (D42). The other cards read "No pending items.", "No activities yet.", "No deadlines in the next 14 days.", My
-  authorisations; the header offers "Log an activity" (T335). The sidebar reads "Acting as Trainee" over Home, Log an
-  activity, My activities, MSF reports, My committee reviews and Export portfolio, then My progress and My data rights
-  under the rule. My progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs met in <year>" and Training year
-  "4 — it sets the minimum level each encounter is judged against".
+  line (D42). The other cards read: Needs you, "Nothing needs you. Requests you have filed are in My activities.", with
+  Open My activities (T342); "No activities yet."; "No deadlines in the next 14 days."; and My authorisations. The
+  header offers "Log an activity" (T335). The sidebar reads "Acting as Trainee" over Home, Log an activity, My
+  activities, MSF reports, My committee reviews and Export portfolio, then My progress and My data rights under the
+  rule. My progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs met in <year>" and Training year "4 — it sets
+  the minimum level each encounter is judged against".
 
 ### Step 2.40 — The other registrars' training years
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
@@ -228,8 +229,11 @@ Expect: Each dashboard has Molefe's shape and figures. Training year reads 3 for
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int}
 Do: Open My activities, then the Mini-CEX.
-Expect: The row reads Completed, credited "1 item". The page is read-only. It shows rung 4 and Dr Naidoo's feedback, and
-  offers no action. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete.
+Expect: Needs you is gone. Under All activities the row reads Who has it now "Done", State Completed, Credit "1 item".
+  The page is read-only. Its status card, badged Completed, reads "Done. David Naidoo completed it on …" and "Rated 4.
+  Credited 1 item to PAED-001.", with Open My progress, a link. Entrustment shows rung 4 chosen, and Feedback Dr
+  Naidoo's three texts, "Filled in by David Naidoo, `D`". No move is offered. The history holds Create, Submit and
+  Complete, with Dr Naidoo as the actor of the Complete.
 
 ### Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target
 Role: Trainee — Dr Anele Dlamini
@@ -250,8 +254,7 @@ Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress
 Do: Open My activities, then My progress.
 Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
-  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My progress
-  reads:
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credit "—" (D8). My progress reads:
   - semester targets "1 of 10 EPAs met this semester", and training year 4;
   - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
     own and counts towards no target.";
@@ -270,7 +273,7 @@ Expect:
   - Curriculum targets, "Semester 2, 2026 · July to November": "1 / 10" semester targets met and "0 / 5" yearly targets
     met (2026). Below them are the five EPAs furthest short, largest shortfall first: PAED-002, PAED-003, PAED-005,
     PAED-010 and PAED-012, each "0 of 3 this semester".
-  - Activity inbox: "No pending items."
+  - Needs you: "Nothing needs you. Requests you have filed are in My activities.", with Open My activities (T342).
   - Recent activities: her four WBAs, each Completed, in green.
   - Upcoming deadlines: "No deadlines in the next 14 days."
   - My authorisations links to its page, and the header offers "Log an activity" (T335: the Actions card is gone).
@@ -322,14 +325,14 @@ Expect: PAED-012 is among the "Each semester" cards, with a target of 3 per seme
 
 ### Step 6.19 — Dr Dlamini during the pause
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/mine → /activities/new
+Route: /portfolio/progress → /activities/mine → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read her progress and her activities. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without
   saving.
 Expect:
   - **Progress.** No PAED-012 card, and the semester targets line counts `m − 1` EPAs. The rating trajectory for
     PAED-012 still charts every rating on it, the one from Step 6.18 included, under the heading "PAED-012 — … (no
     longer in use)" (T255).
-  - **My activities.** The Mini-CEX shows the same marker, and Credited reads None.
+  - **My activities.** The Mini-CEX carries "PAED-012 (no longer in use)" under its name, and its Credit reads None.
   - **The picker.** It offers eight EPAs, without PAED-012.
 
 ### Step 6.24 — Dr Dlamini's credit is counted
@@ -339,7 +342,7 @@ Do: Read her progress and her activities.
 Expect:
   - PAED-012's card is back, with `n + 1` this semester, and one more at the minimum level when observed than in Step
     6.15. The semester targets line counts `m` EPAs again.
-  - The trajectory heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credited reads
+  - The trajectory heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credit reads
     1 item.
   - The credit PAED-012 had earned before the pause was kept, not cancelled. Dr Dlamini holds none from Acts 3-4
     (`n` is 0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged
@@ -347,7 +350,7 @@ Expect:
 
 ### Step 6.27 — Dr Dlamini is measured against KGK-001
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/new
+Route: /portfolio/progress → /activities/new → /activities/new?type=direct_observation_cpsa
 Do: Read her progress. Then start a Direct Observation (Paediatrics) and open its EPA picker. Leave without saving.
 Expect: A KGK-001 card appears under "Once a year", reading 0 of 1 for the current year, and the yearly targets line
   counts one more EPA. Its line for the year before reads "0 of 1, 1 short": a target is read live, into periods that
@@ -361,7 +364,7 @@ Expect: Sixteen cards: the 15 national EPAs of 11.1, and KGK-001. PAED-016 is no
 
 ### Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt
 Role: Trainee — Dr Sipho Ndlovu
-Route: /portfolio/progress → /activities/new
+Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect:
   - **The cards.** Seventeen: 11.2's 16 national items (PAED-016 once a year, and PAED-011 at 2 per academic year,
@@ -383,8 +386,9 @@ Expect: Each of the 15 EPAs carried over from 11.1 reads the count he noted in S
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
-Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. The tables of My
-  activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
+Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. My activities'
+  rows stack, each cell but the link and the state labelled by its column (T342), and the table of "Your requests"
+  scrolls inside its container; each row's link or action stays reachable.
 ```
 
 ### 2.2 After you pick a wireframe, paste this

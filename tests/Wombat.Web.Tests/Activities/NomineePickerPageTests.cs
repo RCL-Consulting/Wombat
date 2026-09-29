@@ -74,7 +74,7 @@ public sealed class NomineePickerPageTests : WombatTestContext
         """;
 
     private const string Refusal =
-        "Assessor: Dr Gone cannot be named here. Assessor must name an active Assessor at the trainee's institution; choose someone else.";
+        "Assessor: Dr Gone cannot be named as an assessor. Choose someone else.";
 
     private readonly RecordingReferenceDataService _recorder = new();
 
@@ -136,8 +136,8 @@ public sealed class NomineePickerPageTests : WombatTestContext
 
         _recorder.NomineeScopes.Should().BeEmpty();
         _recorder.UserLabelRequests.Should().Equal(["assessor-1"]);
-        cut.FindAll("#assessor_user_id option").Single(option => option.HasAttribute("selected"))
-            .TextContent.Trim().Should().Be("Dr One");
+        // Read out, by name (T342, flow 03).
+        cut.Find("#assessor_user_id-in dd").TextContent.Trim().Should().Be("Dr One");
     }
 
     [Fact]
@@ -149,10 +149,10 @@ public sealed class NomineePickerPageTests : WombatTestContext
 
         _recorder.NomineeScopes.Should().HaveCount(1);
 
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         TheRefusedPersonFallsOffTheList();
         ClickButton(cut, "Submit");
-        cut.WaitForState(() => cut.Markup.Contains("cannot be named here"));
+        cut.WaitForState(() => cut.Markup.Contains("cannot be named as an assessor"));
 
         sender.Transitions.Should().ContainSingle("the refusal came from the server, on the move the trainee asked for");
         _recorder.NomineeScopes.Should().HaveCount(2, "the remounted form asks the directory again");
@@ -197,13 +197,13 @@ public sealed class NomineePickerPageTests : WombatTestContext
         };
         var cut = RenderActivityView(sender);
 
-        cut.Find("#epa_id").Input("12");
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#epa_id-in").Input("12");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         TheRefusedPersonFallsOffTheList();
         ClickButton(cut, "Submit");
-        cut.WaitForState(() => cut.Markup.Contains("cannot be named here"));
+        cut.WaitForState(() => cut.Markup.Contains("cannot be named as an assessor"));
 
-        cut.Find("#epa_id").GetAttribute("value").Should().Be("12");
+        cut.Find("#epa_id-in").GetAttribute("value").Should().Be("12");
         ShowsTheRefusedChoiceAsNotAvailable(cut);
         _recorder.UserLabelRequests.Should().BeEmpty();
     }
@@ -217,13 +217,13 @@ public sealed class NomineePickerPageTests : WombatTestContext
         var sender = new ViewSender(Detail(institutionId: 7)) { TransitionFailure = new InvalidOperationException(Refusal) };
         var cut = RenderActivityView(sender);
 
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         TheRefusedPersonFallsOffTheList();
         ClickButton(cut, "Submit");
-        cut.WaitForState(() => cut.Markup.Contains("cannot be named here"));
+        cut.WaitForState(() => cut.Markup.Contains("cannot be named as an assessor"));
         sender.Transitions[0].DataPatchJson.Should().Be("""{"assessor_user_id":"assessor-gone"}""");
 
-        cut.Find("#assessor_user_id").Change("");
+        cut.Find("#assessor_user_id-in").Change("");
         sender.TransitionFailure = null;
         ClickButton(cut, "Submit");
         cut.WaitForState(() => sender.Transitions.Count == 2);
@@ -259,10 +259,10 @@ public sealed class NomineePickerPageTests : WombatTestContext
         var sender = new NewSender { CreateFailure = new InvalidOperationException(Refusal) };
         var cut = SelectTheType(sender);
 
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         TheRefusedPersonFallsOffTheList();
         ClickButton(cut, "Save draft");
-        cut.WaitForState(() => cut.Markup.Contains("cannot be named here"));
+        cut.WaitForState(() => cut.Markup.Contains("cannot be named as an assessor"));
 
         sender.Creates.Should().ContainSingle()
             .Which.InitialDataJson.Should().Contain("assessor-gone");
@@ -281,12 +281,12 @@ public sealed class NomineePickerPageTests : WombatTestContext
         var sender = new NewSender { CreateFailure = new InvalidOperationException(Refusal) };
         var cut = SelectTheType(sender);
 
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         TheRefusedPersonFallsOffTheList();
         ClickButton(cut, "Save draft");
-        cut.WaitForState(() => cut.Markup.Contains("cannot be named here"));
+        cut.WaitForState(() => cut.Markup.Contains("cannot be named as an assessor"));
 
-        cut.Find("#assessor_user_id").Change("");
+        cut.Find("#assessor_user_id-in").Change("");
         sender.CreateFailure = null;
         ClickButton(cut, "Save draft");
         cut.WaitForState(() => sender.Creates.Count == 2);
@@ -302,10 +302,10 @@ public sealed class NomineePickerPageTests : WombatTestContext
         var sender = new NewSender { CreateFailure = new InvalidOperationException(Refusal) };
         var cut = SelectTheType(sender);
 
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         TheRefusedPersonFallsOffTheList();
         ClickButton(cut, "Submit");
-        cut.WaitForState(() => cut.Markup.Contains("cannot be named here"));
+        cut.WaitForState(() => cut.Markup.Contains("cannot be named as an assessor"));
 
         sender.Transitions.Should().BeEmpty("the create was refused, so there was nothing to submit");
         _recorder.NomineeScopes.Should().HaveCount(2);
@@ -326,7 +326,7 @@ public sealed class NomineePickerPageTests : WombatTestContext
         var sender = new NewSender { TransitionFailure = new InvalidOperationException(Refusal) };
         var cut = SelectTheType(sender);
 
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         TheRefusedPersonFallsOffTheList();
         ClickButton(cut, "Submit");
         cut.WaitForAssertion(() => Services.GetRequiredService<FakeNavigationManager>().History.Should().ContainSingle()
@@ -390,15 +390,18 @@ public sealed class NomineePickerPageTests : WombatTestContext
         var cut = RenderActivityView(sender);
 
         var submitting = FindButton(cut, "Submit").ClickAsync(new MouseEventArgs());
-        cut.WaitForAssertion(() => FindButton(cut, "Submit").HasAttribute("disabled").Should().BeTrue());
 
-        var again = FindButton(cut, "Submit").ClickAsync(new MouseEventArgs());
+        // T342 (C10, A10): the pressed move keeps the focus, says it is running and is aria-disabled, not disabled.
+        cut.WaitForAssertion(() => FindButton(cut, "Submitting…").GetAttribute("aria-disabled").Should().Be("true"));
+        FindButton(cut, "Submitting…").HasAttribute("disabled").Should().BeFalse();
+
+        var again = FindButton(cut, "Submitting…").ClickAsync(new MouseEventArgs());
 
         pending.SetResult(Detail(institutionId: 7).Activity);
         await Task.WhenAll(submitting, again);
 
         sender.Transitions.Should().ContainSingle("the page carries out one action at a time");
-        cut.WaitForAssertion(() => FindButton(cut, "Submit").HasAttribute("disabled").Should().BeFalse(), AsyncWorkTimeout);
+        cut.WaitForAssertion(() => FindButton(cut, "Submit").HasAttribute("aria-disabled").Should().BeFalse(), AsyncWorkTimeout);
     }
 
     // ---- helpers ----
@@ -417,14 +420,18 @@ public sealed class NomineePickerPageTests : WombatTestContext
     private static void ShowsTheRefusedChoiceAsNotAvailable<TComponent>(IRenderedComponent<TComponent> cut)
         where TComponent : IComponent
     {
-        var selected = cut.FindAll("#assessor_user_id option").Single(option => option.HasAttribute("selected"));
+        var selected = cut.FindAll("#assessor_user_id-in option").Single(option => option.HasAttribute("selected"));
         selected.GetAttribute("value").Should().Be("assessor-gone");
         selected.TextContent.Trim().Should().Be("Not available (choose someone else)");
     }
 
+    // On Log an activity a move's button changes its words as the form is filled and while it runs (T342), so it is found
+    // by its place in the action bar.
     private static IElement FindButton<TComponent>(IRenderedComponent<TComponent> cut, string label)
         where TComponent : IComponent
-        => cut.FindAll("button").First(button => button.TextContent.Trim() == label);
+        => cut is IRenderedComponent<NewActivity>
+            ? NewActivityPage.FindMove(cut, label)
+            : cut.FindAll("button").First(button => button.TextContent.Trim() == label);
 
     private void SignIn(string userId)
     {
@@ -438,7 +445,7 @@ public sealed class NomineePickerPageTests : WombatTestContext
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 7));
-        cut.WaitForState(() => cut.Markup.Contains("Activity details"));
+        cut.WaitForState(() => cut.Markup.Contains("Who has it now"));
 
         return cut;
     }
@@ -447,20 +454,14 @@ public sealed class NomineePickerPageTests : WombatTestContext
     {
         Services.AddSingleton<IScopedSender>(sender);
 
-        var cut = RenderComponent<NewActivity>();
-        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
-
-        cut.Find("#activity-type").Change("2");
-        cut.WaitForState(() => cut.FindAll("#assessor_user_id").Count == 1);
-
-        return cut;
+        return NewActivityPage.Open(this, "mini_cex_cpsa", "#assessor_user_id-in");
     }
 
     private static void ClickButton(IRenderedComponent<ActivityView> cut, string label)
         => cut.FindAll("button").First(button => button.TextContent.Trim() == label).Click();
 
     private static void ClickButton(IRenderedComponent<NewActivity> cut, string label)
-        => cut.FindAll("button").First(button => button.TextContent.Trim() == label).Click();
+        => NewActivityPage.FindMove(cut, label).Click();
 
     private static ActivityDetailDto Detail(
         int? institutionId,

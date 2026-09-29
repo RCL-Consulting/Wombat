@@ -387,7 +387,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         releasedReport.CoveredEpas.Should().ContainSingle(epa => epa.EpaId == _coveredEpaId);
         releasedReport.EvidenceRecordedOn.Should().NotBeNull();
 
-        var activities = await SendAsync(new ListActivitiesBySubjectQuery("trainee-1", _coordinator));
+        var activities = (await SendAsync(new ListActivitiesBySubjectQuery("trainee-1", _coordinator))).Items;
         var evidence = activities.Should().ContainSingle(activity => activity.ActivityTypeKey == "msf_cpsa").Subject;
         evidence.CurrentState.Should().Be("recorded");
 
@@ -505,7 +505,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
         await SendAsync(new ReleaseMsfCampaignCommand(campaign.Id, "coordinator-1", "Clear and well paced.", null, _coordinator));
 
-        var activities = await SendAsync(new ListActivitiesBySubjectQuery("trainee-1", _coordinator));
+        var activities = (await SendAsync(new ListActivitiesBySubjectQuery("trainee-1", _coordinator))).Items;
         var evidence = activities.Should().ContainSingle().Subject;
         evidence.ActivityTypeKey.Should().Be("learner_feedback_cpsa");
 

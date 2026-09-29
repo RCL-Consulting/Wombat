@@ -9,7 +9,11 @@
     @* An icon before the heading, on the system pages (T335, flow 01: "PageHeader with icon"): aria-hidden, so the
        heading is named by its words alone. *@
     <h1 class="@(Icon is null ? null : "page-title-with-icon")">@if (Icon is not null){<Icon Name="@Icon" Size="24" Class="@IconClass" />}@Title</h1>
-    @if (!string.IsNullOrWhiteSpace(Subtitle))
+    @if (SubtitleContent is not null)
+    {
+      <p class="page-subtitle">@SubtitleContent</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(Subtitle))
     {
       <p class="page-subtitle">@Subtitle</p>
     }
@@ -31,6 +35,12 @@
 
   [Parameter, EditorRequired] public string Title { get; set; } = default!;
   [Parameter] public string? Subtitle { get; set; }
+
+  /// <summary>
+  /// A subtitle that holds more than words: Log an activity's "Mini-CEX (Paediatrics) · Choose another type", whose last
+  /// part is a link (T342, flow 03). Given, it is drawn in place of <see cref="Subtitle" />.
+  /// </summary>
+  [Parameter] public RenderFragment? SubtitleContent { get; set; }
   [Parameter] public RenderFragment? Actions { get; set; }
 
   /// <summary>

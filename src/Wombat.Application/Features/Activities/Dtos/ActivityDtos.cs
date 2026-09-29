@@ -3,6 +3,14 @@ using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Application.Features.Activities.Dtos;
 
+/// <param name="Shape">
+/// Which group of the Log page's instrument picker the type belongs to (T342, B8, Q1), from its published version:
+/// <c>ActivityTypeShapes.Of</c>. Defaulted only so a hand-built row in a test compiles; the one producer,
+/// <c>ListActivityTypesQuery</c>, always sets it.
+/// </param>
+/// <param name="CreditsNothing">
+/// Whether the published credit rules credit nothing (an empty <c>counts_for</c>): the picker's "credits nothing" note.
+/// </param>
 public sealed record ActivityTypeListItemDto(
     int Id,
     string Key,
@@ -10,7 +18,28 @@ public sealed record ActivityTypeListItemDto(
     ActivityScope Scope,
     int? ScopeId,
     int Version,
-    bool IsActive);
+    bool IsActive,
+    ActivityTypeShape Shape = ActivityTypeShape.DiscussedOrReviewed,
+    bool CreditsNothing = false);
+
+/// <summary>
+/// The three groups of the Log page's instrument picker (T342, B8, Q1). See <c>ActivityTypeShapes.Of</c> for the
+/// rule.
+/// </summary>
+public enum ActivityTypeShape
+{
+    /// <summary>The form carries an entrustment rating (a <c>scale</c> field): CBD, Mini-CEX, DOPS and the rest.</summary>
+    Rated = 0,
+
+    /// <summary>
+    /// Nobody else acts on it: the author's own move out of the initial state goes straight to a terminal state (the
+    /// teaching log's <c>log</c>), or the type is born terminal (<c>procedure_log</c>, <c>journal_club</c>).
+    /// </summary>
+    LoggedByYou = 1,
+
+    /// <summary>Someone else discusses, reviews or signs it off: the reflection, the audit, the portfolio review.</summary>
+    DiscussedOrReviewed = 2
+}
 
 /// <summary>
 /// The builder's list as the caller sees it (T300): the types they may open, and whether they may start a new one, which
@@ -195,6 +224,39 @@ public sealed record ActivityActionDto(
     public bool IsAvailable => UnavailableReason is null;
 
     /// <summary>
+    /// The user field whose person this move hands the activity to (<c>MoveHandOff.NomineeFieldFor</c>), or null when
+    /// it hands it to nobody by name (T342, B2, C3). Set whether or not the field is filled: the page, holding the values
+    /// being typed, may resolve the name itself from the field's picker options.
+    /// </summary>
+    public string? HandOffFieldKey { get; init; }
+
+    /// <summary>
+    /// The name of the person <see cref="HandOffFieldKey" /> names on the STORED data ("Fatima Khumalo"), for the button
+    /// "Submit to Fatima Khumalo" and the result "It is in Fatima Khumalo's Activity inbox."; null when the move hands it
+    /// to nobody by name or the field is empty. A value typed on the page and not yet saved is the page's to resolve.
+    /// </summary>
+    public string? HandsToName { get; init; }
+
+    /// <summary>The label of the state the move goes to ("Requested", "Logged"): the check line's words (C11).</summary>
+    public string TargetStateLabel { get; init; } = string.Empty;
+
+    /// <summary>Whether that state is marked <c>terminal</c> (credit fires there).</summary>
+    public bool TargetIsTerminal { get; init; }
+
+    /// <summary>
+    /// Whether no move leaves that state (<c>MoveOutcome.TargetIsFinal</c>): the move ends the activity, as a decline or a
+    /// completion does. The page's test for "this move ends it", in place of reading <see cref="ResultSentence" />, which
+    /// since T342 R5 can be "Submitted." alone for a move that leads on.
+    /// </summary>
+    public bool TargetIsFinal { get; init; }
+
+    /// <summary>
+    /// The first sentence of the result once the move is made: "Submitted. It is now Requested.", "Logged.",
+    /// "Cancelled." (<c>MoveOutcome.ResultSentence</c>, T342 E4).
+    /// </summary>
+    public string ResultSentence { get; init; } = string.Empty;
+
+    /// <summary>
     /// The action's name on its button, from <see cref="WorkflowTransition.LabelFor" />: the name a refusal of the same
     /// move uses (T189), and the name the workflow history gives the move once it is made
     /// (<see cref="ActivityTransitionDto.TransitionLabel" />, T220), so all three call it the same thing.
@@ -214,7 +276,132 @@ public sealed record ActivityActionDto(
 public sealed record ActivityDetailDto(
     ActivityDto Activity,
     IReadOnlyList<string> EditableFieldKeys,
-    IReadOnlyList<ActivityActionDto> AvailableActions);
+    IReadOnlyList<ActivityActionDto> AvailableActions)
+{
+    /// <summary>
+    /// Who has the activity now (<c>ActivityHolders</c>, T342, B7): the status card's headline. Filled by
+    /// <c>GetActivityByIdQuery</c>, with names; null from every other producer (<c>ActivityService</c> maps without a
+    /// lookup).
+    /// </summary>
+    public ActivityHolderDto? Holder { get; init; }
+
+    /// <summary>
+    /// Who returned it to its author, when and with what note, while it is back in its first state (T342, B6); null
+    /// when it is not returned. Filled by <c>GetActivityByIdQuery</c>.
+    /// </summary>
+    public ActivityReturnDto? Returned { get; init; }
+
+    /// <summary>
+    /// The nominee's name, the person the activity goes to or is discussed with (<c>ActivityHolders.NomineeField</c>,
+    /// T342, B7); null for a type whose workflow names no one in a field, or while the field is empty. Filled by
+    /// <c>GetActivityByIdQuery</c>.
+    /// </summary>
+    public string? NomineeName { get; init; }
+
+    /// <summary>
+    /// The activity's name for the h1, the tab and the last crumb: "Type · EPA · date", with " · nominee" when another
+    /// of the subject's activities the caller can read shares the rest (<c>ActivityDisplayNames</c>, T342, E7, E9).
+    /// Filled by <c>GetActivityByIdQuery</c>.
+    /// </summary>
+    public string? DisplayName { get; init; }
+
+    /// <summary>
+    /// The subject's name, the registrar the activity is about (<c>UserDisplayNames.NameOf</c>): the activity page's
+    /// subtitle, its About card's Registrar and its status card's sentences (T342, flow 03). Filled by
+    /// <c>GetActivityByIdQuery</c>, in the lookup that names the history; null from every other producer.
+    /// </summary>
+    public string? SubjectName { get; init; }
+
+    /// <summary>
+    /// The stamped EPA's code, title and whether it is in force now (<c>Epa.IsActive</c>), for the About card's "EPA"
+    /// with its full title and the paused-credit warning (T342, C13; D48). Null when the activity is about no EPA. Filled
+    /// by <c>GetActivityByIdQuery</c>.
+    /// </summary>
+    public string? EpaCode { get; init; }
+
+    /// <inheritdoc cref="EpaCode" />
+    public string? EpaTitle { get; init; }
+
+    /// <inheritdoc cref="EpaCode" />
+    public bool? EpaInForce { get; init; }
+}
+
+/// <summary>
+/// Who has an activity now, as the status card and My activities' "Who has it now" column read it (T342, B7). Told from
+/// the moves out of its state that lead on (<c>Workflow.TransitionsLeadingOn</c>), in its pinned workflow.
+/// </summary>
+public enum ActivityHolderKind
+{
+    /// <summary>
+    /// Its author: every move that leads on is the subject's or the creator's (a draft, or work returned). "You" to them;
+    /// <see cref="ActivityHolderDto.Name" /> is the subject's name for anyone else.
+    /// </summary>
+    Author = 0,
+
+    /// <summary>One named person: every other move that leads on names the same user in a <c>field:</c> arm.</summary>
+    Person = 1,
+
+    /// <summary>
+    /// No single person: a <c>role:</c> or <c>scope:</c> arm leads on, or the field names no one, or the pin has no
+    /// workflow that declares the state. The page reads "Waiting for &lt;state label&gt;."
+    /// </summary>
+    Waiting = 2,
+
+    /// <summary>No one, and finished: the state is <c>terminal: true</c>. "Done".</summary>
+    Done = 3,
+
+    /// <summary>No one, and not finished: no move out of the state leads on (declined, cancelled). "Closed".</summary>
+    Closed = 4
+}
+
+/// <param name="Kind">Which of the five answers it is.</param>
+/// <param name="UserId">
+/// The holder's id for <see cref="ActivityHolderKind.Author" /> (the subject) and <see cref="ActivityHolderKind.Person" />;
+/// null otherwise.
+/// </param>
+/// <param name="Name">That user's name (<c>UserDisplayNames.NameOf</c>); null when <paramref name="UserId" /> is.</param>
+/// <param name="IsViewer">
+/// Whether the holder is the caller: for <see cref="ActivityHolderKind.Author" />, the caller is the subject or the
+/// creator; for <see cref="ActivityHolderKind.Person" />, the named user. The page says "You" / "With you." then.
+/// </param>
+/// <param name="Since">
+/// When it entered its current state: the newest recorded move (UTC; the page formats it in SAST). Null only for an
+/// activity with no history row.
+/// </param>
+public sealed record ActivityHolderDto(
+    ActivityHolderKind Kind,
+    string? UserId,
+    string? Name,
+    bool IsViewer,
+    DateTime? Since);
+
+/// <summary>
+/// An activity returned to its author (T342, B6): its newest move entered the workflow's initial state from another state.
+/// </summary>
+/// <param name="ByUserId">Who made the move that returned it.</param>
+/// <param name="ByName">Their name (<c>UserDisplayNames.NameOf</c>).</param>
+/// <param name="ReturnedOn">When (UTC; the page formats it in SAST).</param>
+/// <param name="Note">The note on that move, which a return requires in every shipped workflow; null if none.</param>
+public sealed record ActivityReturnDto(
+    string ByUserId,
+    string ByName,
+    DateTime ReturnedOn,
+    string? Note);
+
+/// <summary>One page of an activity list (T342, B7): My activities' All activities table.</summary>
+/// <param name="Items">The page's rows, in the list's order.</param>
+/// <param name="Page">The page served, from 1: the page asked for, brought within 1 and <see cref="PageCount" />.</param>
+/// <param name="PageSize">Rows per page.</param>
+/// <param name="TotalCount">Every row the list holds, across all pages: "All activities (40)", "1-20 of 40".</param>
+public sealed record ActivityListPageDto(
+    IReadOnlyList<ActivitySummaryDto> Items,
+    int Page,
+    int PageSize,
+    int TotalCount)
+{
+    /// <summary>How many pages the list has; 1 for an empty list, so "page 1 of 1" is always true.</summary>
+    public int PageCount => Math.Max(1, (TotalCount + PageSize - 1) / PageSize);
+}
 
 /// <summary>
 /// One row of an activity list: enough to tell an activity from its siblings without opening it (T137).
@@ -268,6 +455,50 @@ public sealed record ActivitySummaryDto(
     /// on the subject's own list, which is all one person and does not show them.
     /// </summary>
     public string? SubjectName { get; init; }
+
+    /// <summary>
+    /// Who has it now (<c>ActivityHolders</c>, T342, B7): the "Who has it now" column. Filled by
+    /// <c>ListActivitiesBySubjectQuery</c> and <c>ListNeedsYouQuery</c>; null from the inbox.
+    /// </summary>
+    public ActivityHolderDto? Holder { get; init; }
+
+    /// <summary>
+    /// The nominee's name, for the link's second line ("to David Naidoo", "with Sarah Botha"): the user a <c>field:</c>
+    /// arm of the next move that leads on names, else the first field any move's rule names
+    /// (<c>ActivityHolders.NomineeField</c>, T342, B7). Null for a type whose workflow names no one in a field (a log), or
+    /// while the field is empty. Filled by the two queries that fill <see cref="Holder" />.
+    /// </summary>
+    public string? NomineeName { get; init; }
+
+    /// <summary>
+    /// Who returned it, when and with what note, while it is back in its first state (T342, B6); null when it is not
+    /// returned. Filled by the two queries that fill <see cref="Holder" />.
+    /// </summary>
+    public ActivityReturnDto? Returned { get; init; }
+
+    /// <summary>Whether it was returned to its author: <see cref="Returned" /> is set.</summary>
+    public bool IsReturned => Returned is not null;
+
+    /// <summary>
+    /// "Type · EPA · date", with " · nominee" when another of the subject's activities shares the rest
+    /// (<c>ActivityDisplayNames</c>, T342, E7, E9): the link's text. Filled by the two queries that fill
+    /// <see cref="Holder" />.
+    /// </summary>
+    public string? DisplayName { get; init; }
+
+    /// <summary>
+    /// Whether <see cref="DisplayName" /> ends with the nominee because another activity shares the rest (E7). The page
+    /// then drops the link's second line, which would repeat the name.
+    /// </summary>
+    public bool DisplayNameHasNominee { get; init; }
+
+    /// <summary>
+    /// The type's shape as its pinned form and workflow read (<c>ActivityTypeShapes.Of</c>, T342): My activities and
+    /// Needs you word the nominee "with Sarah Botha" for <see cref="ActivityTypeShape.DiscussedOrReviewed" /> (a
+    /// reflection, a review: it is talked over with them) and "to David Naidoo" otherwise (a request goes to its assessor).
+    /// Filled by the two queries that fill <see cref="Holder" />; null from the inbox, and for a pin that no longer parses.
+    /// </summary>
+    public ActivityTypeShape? Shape { get; init; }
 }
 
 public sealed record ActivityValidationErrorDto(

@@ -4,6 +4,7 @@
 @using Wombat.Application.Features.Activities.Commands.CreateActivity
 @using Wombat.Application.Features.Activities.Commands.TransitionActivity
 @using Wombat.Application.Features.Activities.Queries.GetActivityById
+@using Wombat.Application.Features.Activities.Queries.GetFileAgainSource
 @using Wombat.Application.Features.Activities.Services
 @using Wombat.Domain.Activities
 @using Wombat.Domain.Activities.Workflow
@@ -14,80 +15,128 @@
 @inject NavigationManager Navigation
 @inject ActivityNotices Notices
 @inject ILogger<NewActivity> Logger
+@inject IJSRuntime JS
 @implements IDisposable
 
 <PageTitle>Log an activity · Wombat</PageTitle>
 
-<PageHeader Title="Log an activity" Subtitle="Create a draft or submit an activity from the published catalogue." />
+@* Log an activity (T342, flow 03; R3-C-Log). With no type in the address it is the instrument picker: every type the
+   caller may file, as links grouped by shape (Q1). With ?type=<key> it is that type's form, and "Choose another type"
+   leads back. With ?from=<id>, a declined request of the caller's own, it is the same type's form filled in from it (E5).
+   The header is drawn from the first render; the reads come after it (T329). *@
+<PageHeader Title="Log an activity" SubtitleContent="@Subtitle" />
 
-@* Only a refused create is reported here. Once the activity exists the page leaves for it, and whatever happened next is
-   said there (T127). The fields the refusal names are marked in the form below, and each names this alert (T263). *@
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger" Id="@RefusalAlertId">@_error</Alert>
-}
+@* The skeleton says nothing to a screen reader; this does, while the reads run (R3-C-Log "loading"). *@
+<p class="visually-hidden" role="status">@(_loading ? "Loading what you can file." : null)</p>
 
-<div class="form-container">
-  <div class="form-grid">
-    <FormField Label="Activity type" InputId="activity-type" Required="true">
-      @* Locked while an action runs: the outcome is judged against the type that was filed, not one picked since. *@
-      <select id="activity-type" class="form-select" disabled="@_busy" @bind="_selectedActivityTypeId" @bind:after="LoadSelectedTypeAsync">
-        <option value="0">Select…</option>
-        @foreach (var item in _activityTypes)
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" SkeletonCount="3" SkeletonHeight="8rem">
+  @if (_selectedEditor is null || _selectedType is null)
+  {
+    <InstrumentPicker Types="_activityTypes" />
+  }
+  else
+  {
+    <div class="form-column">
+      @if (_fileAgain is not null)
+      {
+        @* A standing notice, not an event: no role (A14). *@
+        <Alert Kind="info">
+          <p>@FileAgainNotice(_fileAgain)</p>
+          @if (_fileAgain.EpaDropped)
+          {
+            <p>The EPA it was filed on cannot be chosen now, so choose one again.</p>
+          }
+        </Alert>
+      }
+
+      @* Only a refused create is reported here. Once the activity exists the page leaves for it, and whatever happened next
+         is said there (T127). The summary takes the focus; each line links to the field it is about, which is marked and
+         shows its own part of the refusal (T263, C8). *@
+      @if (_refusal is not null)
+      {
+        <RefusalSummary @ref="_summary"
+                        Id="@RefusalAlertId"
+                        Title="Nothing was saved."
+                        Text="Everything you typed is kept below."
+                        Lines="_refusalLines" />
+      }
+
+      @* The creator IS the subject here — this page files an activity about the current user — so the
+         EPA picker narrows to what would actually credit for them (T108), and to what this instrument may be
+         filed against (T122): the write path refuses anything else. *@
+      @* Keyed on a generation so a refused create remounts it with fresh option lists (T102). What is typed here is filed
+         today, whether by the create or by the submit sent straight after it, so the encounter date warns of a late filing
+         against today (T160, D15), on a type that can credit: the form reads that from the credit rules. A date before the
+         author's programme started is refused on such a type, so the form says that instead (T192), to the author as
+         "your programme" (C12). *@
+      <ActivityForm @key="_formGeneration"
+                    SchemaJson="@SchemaJson"
+                    DataJson="@_dataJson"
+                    SubjectUserId="@_currentUserId"
+                    CreditRulesJson="@CreditRulesJson"
+                    WbaToolKey="@_selectedEditor.WbaToolKey"
+                    EditableFieldKeys="_editableFieldKeys"
+                    FiledOn="@FilingLateness.Today()"
+                    ProgrammeStartsOn="@_programmeStartsOn"
+                    ReaderIsSubject="true"
+                    RefusedFieldKeys="_refusedFieldKeys"
+                    RefusalMessage="@_refusal"
+                    RefusalId="@RefusalAlertId"
+                    LockedOwnerName="@_handOffName"
+                    HandOffFieldKey="@_words?.HandOffFieldKey"
+                    HandOffNameChanged="OnHandOffNameChanged"
+                    DataJsonChanged="OnDataChanged" />
+
+      @if (_words is not null)
+      {
+        <SubmitCheck Lead="@_words.CheckLead" Text="@_words.CheckText(_handOffName, !_canCredit, DaysLate())" />
+      }
+
+      @* The move first and filled, Save draft after it and outlined (Spec § 3). Where creating the activity files it (a
+         type born in `requested`, or born terminal like procedure_log) there is no draft to keep: "Save draft" would send
+         the request to the assessor, or file a finished log. Only the move is offered, and the create checks the author's
+         required fields as a submit would (T148). While one runs the other is disabled, and the one pressed is not
+         (T234): it has the focus, and a browser drops the focus of a button it disables, to the page, where a refused
+         create, which keeps the page, would leave it. It says it is running, and a second press sends nothing
+         (CreateOrTransitionAsync). *@
+      <div class="form-actions form-actions--moves">
+        <button type="button" class="btn btn-primary" disabled="@(_busy && !_submitPressed)" aria-disabled="@InFlight.AriaDisabled(_busy && _submitPressed)" @onclick="SubmitAsync">@PrimaryLabel</button>
+        @if (!_createIsTheFiling)
         {
-          <option value="@item.Id">@item.Name</option>
+          <button type="button" class="btn btn-outline" disabled="@(_busy && _submitPressed)" aria-disabled="@InFlight.AriaDisabled(_busy && !_submitPressed)" @onclick="SaveDraftAsync">@(_busy && !_submitPressed ? "Saving…" : "Save draft")</button>
         }
-      </select>
-    </FormField>
-  </div>
-</div>
-
-@if (_selectedEditor is not null)
-{
-  @* The creator IS the subject here — this page files an activity about the current user — so the
-     EPA picker narrows to what would actually credit for them (T108), and to what this instrument may be
-     filed against (T122): the write path refuses anything else. *@
-  @* Keyed on a generation so a refused create remounts it with fresh option lists (T102). What is typed here is filed
-     today, whether by the create or by the submit sent straight after it, so the encounter date warns of a late filing
-     against today (T160, D15), on a type that can credit: the form reads that from the credit rules. A date before the
-     author's programme started is refused on such a type, so the form says that instead (T192). *@
-  <ActivityForm @key="_formGeneration"
-                SchemaJson="@(_selectedEditor.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson)"
-                DataJson="@_dataJson"
-                SubjectUserId="@_currentUserId"
-                CreditRulesJson="@(_selectedEditor.PublishedCreditRulesJson ?? _selectedEditor.DraftCreditRulesJson)"
-                WbaToolKey="@_selectedEditor.WbaToolKey"
-                EditableFieldKeys="_editableFieldKeys"
-                FiledOn="@FilingLateness.Today()"
-                ProgrammeStartsOn="@_programmeStartsOn"
-                RefusedFieldKeys="_refusedFieldKeys"
-                RefusalId="@RefusalAlertId"
-                DataJsonChanged="OnDataChanged" />
-
-  <FormActions>
-    @* Where creating the activity files it (a type born in `requested`, or born terminal like procedure_log) there is
-       no draft to keep: "Save draft" would send the request to the assessor, or file a finished log. Only Submit is
-       offered, and the create checks the author's required fields as a submit would. *@
-    @* While one runs the other is disabled, and the one pressed is not (T234): it has the focus, and a browser drops the
-       focus of a button it disables, to the page, where a refused create, which keeps the page, would leave it. A second
-       press sends nothing (CreateOrTransitionAsync). *@
-    @if (!_createIsTheFiling)
-    {
-      <button type="button" class="btn btn-outline" disabled="@(_busy && _submitPressed)" aria-disabled="@InFlight.AriaDisabled(_busy && !_submitPressed)" @onclick="SaveDraftAsync">Save draft</button>
-    }
-    <button type="button" class="btn btn-primary" disabled="@(_busy && !_submitPressed)" aria-disabled="@InFlight.AriaDisabled(_busy && _submitPressed)" @onclick="SubmitAsync">Submit</button>
-  </FormActions>
-}
+      </div>
+      @if (!_createIsTheFiling)
+      {
+        <p class="field-help">Save draft keeps it in My activities. @FilingWords.NobodysInboxSentence</p>
+      }
+      <p class="visually-hidden" role="status">@(_busy ? (_submitPressed ? "Submitting." : "Saving.") : null)</p>
+    </div>
+  }
+</StatePanel>
 
 @code {
-  /// <summary>The id of the refused create's alert, which each field the refusal names points at (T263).</summary>
-  public const string RefusalAlertId = "activity-refusal";
+  /// <summary>The id of the refused create's summary, which each field the refusal names points at (T263, C8).</summary>
+  public const string RefusalAlertId = RefusalSummary.DefaultId;
+
+  /// <summary>The load failure's words (Spec § 1, "Load error"): never an exception's text.</summary>
+  public const string LoadFailure = "Could not load what you can file. Nothing has changed. Try again, or come back in a few minutes.";
 
   private readonly List<ActivityTypeListItemDto> _activityTypes = [];
+  private bool _typesLoaded;
+  private ActivityTypeListItemDto? _selectedType;
   private ActivityTypeEditorDto? _selectedEditor;
-  private int _selectedActivityTypeId;
+  private FileAgainSourceDto? _fileAgain;
   private string _dataJson = "{}";
   private int _formGeneration;
+
+  private bool _loading = true;
+  private string? _loadError;
+
+  // The address last loaded, so a change of ?type or ?from loads again and a re-render does not.
+  private string? _loadedTypeKey;
+  private int? _loadedFrom;
+  private bool _loadedOnce;
 
   // One action at a time: a double-click used to file two drafts, and since T102 two refusals at once would each remount
   // the form and race their option loads. Once a create has succeeded it stays set, because the page is leaving (T127).
@@ -96,13 +145,20 @@
   // Which of the two buttons sent the action _busy stands for: that one stays enabled while it runs (T234).
   private bool _submitPressed;
 
-  // Set when the page is torn down, by a click elsewhere while an action was still running. The action finishes, but the
-  // page no longer navigates: taking the author back to the activity would undo the click they made.
+  // Set when the page is torn down, or the author follows a link to another form of this page, while an action was still
+  // running. The action finishes, but the page no longer navigates to the activity: that would undo the click they made.
   private bool _disposed;
+  private bool _leftWhileBusy;
 
   // True when no move out of the selected type's initial state that leads on is this author's, so the create files it
-  // and there is no draft to save (T148). A prediction for the buttons only; see PredictCreateIsTheFiling.
+  // and there is no draft to save (T148). A prediction for the buttons only; see PredictAuthorMove.
   private bool _createIsTheFiling;
+
+  // The button's and the check line's words for the selected type (T342, E4, C11), and the person its hand-off field
+  // names now, from the form's own options (B2).
+  private FilingWords? _words;
+  private string? _handOffName;
+  private bool _canCredit;
 
   // The subject of anything created here. Held rather than re-read per render because the EPA
   // picker's option list is keyed on it (T108).
@@ -116,90 +172,223 @@
   // restriction", which is both the pre-T070 behaviour and the fallback whenever the set cannot be
   // resolved — the server filters the submitted data either way.
   private IReadOnlySet<string>? _editableFieldKeys;
-  private string? _error;
 
-  // The fields the refused create named (T263), held with _error and cleared with it, so the form marks them while the
-  // alert that names them is shown.
+  // A refused create: the server's words, the fields they name (T263), and the summary's lines (C8). Held together and
+  // cleared together on the page's next action, so a field is marked while the summary that names it is shown.
+  private string? _refusal;
   private IReadOnlyList<string> _refusedFieldKeys = [];
+  private IReadOnlyList<RefusalLine> _refusalLines = [];
+  private RefusalSummary? _summary;
+  private bool _focusSummary;
 
   /// <summary>
-  /// Optional deep link: <c>/activities/new?type=mini_cex</c> preselects that activity type.
+  /// Optional deep link: <c>/activities/new?type=mini_cex_cpsa</c> opens that type's form; without it the page is the
+  /// instrument picker, whose links are these (T342, Q1).
   /// </summary>
   /// <remarks>
   /// This is an activity-type KEY, not an id, because a key is stable across databases and an id is
   /// not — a link that travels in an email or a dashboard button cannot carry an id. It is resolved
   /// against the list this page has already loaded, which is scope-filtered AND ladder-filtered, so a
-  /// key the caller may not use simply is not there and the picker stays unset. Resolving it against
+  /// key the caller may not use simply is not there and the picker is shown. Resolving it against
   /// the database instead would bypass both filters and turn a convenience link into an
   /// authorization statement, which it must never be. (T111)
   /// </remarks>
   [SupplyParameterFromQuery(Name = "type")]
   public string? TypeKey { get; set; }
 
-  protected override async Task OnInitializedAsync()
-  {
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    _programmeStartsOn = await FilingLateness.ProgrammeStartAsync(Sender, _currentUserId, authState.User, Logger);
-    // The creator IS the subject here, so the type picker narrows to tools whose rating ladder this
-    // trainee's curriculum could actually credit — the same reasoning the EPA picker below already
-    // applies to EPAs (T123 defect 3). Permissive wherever the subject cannot be resolved.
-    _activityTypes.AddRange(await Sender.Send(
-      new Wombat.Application.Features.Activities.Queries.ListActivityTypes.ListActivityTypesQuery(
-        authState.User, _currentUserId)));
+  /// <summary>
+  /// <c>/activities/new?from={id}</c>: file a declined request again (T342, E5). Honoured only when
+  /// <see cref="GetFileAgainSourceQuery" /> answers, which it does only for the request's own subject and a declined
+  /// request; otherwise the address is read as though it had no <c>from</c>.
+  /// </summary>
+  [SupplyParameterFromQuery(Name = "from")]
+  public int? From { get; set; }
 
-    await PreselectFromQueryAsync();
+  private string SchemaJson => _selectedEditor!.PublishedSchemaJson ?? _selectedEditor.DraftSchemaJson;
+
+  private string? CreditRulesJson => _selectedEditor?.PublishedCreditRulesJson ?? _selectedEditor?.DraftCreditRulesJson;
+
+  private string? WorkflowJson => _selectedEditor?.PublishedWorkflowJson ?? _selectedEditor?.DraftWorkflowJson;
+
+  private string PrimaryLabel
+    => _busy && _submitPressed
+      ? _words?.RunningLabel ?? "Submitting…"
+      : _words?.ButtonLabel(_handOffName) ?? FilingWords.SubmitLabel;
+
+  private RenderFragment? Subtitle
+    => _loading || _loadError is not null
+      ? null
+      : _selectedType is not null && _selectedEditor is not null
+        ? @<text>@_selectedType.Name · <a href="/activities/new">Choose another type</a></text>
+        : @<text>Choose what you are filing. Each opens its own form.</text>;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    if (_loadedOnce &&
+        string.Equals(_loadedTypeKey, TypeKey, StringComparison.Ordinal) &&
+        _loadedFrom == From)
+    {
+      return;
+    }
+
+    // A type chosen on the picker, or "Choose another type": the same page, so FocusOnNavigate does not move the focus,
+    // and the link pressed is gone. The h1 takes it once the new address has loaded (T342; the build review's A4).
+    _focusHeading = _loadedOnce;
+
+    if (_busy)
+    {
+      // The author followed a link while an action runs. It finishes, but the page stays where they went (see _disposed),
+      // and loads the address they chose once it has.
+      _leftWhileBusy = true;
+      return;
+    }
+
+    await LoadAsync();
   }
 
-  private async Task PreselectFromQueryAsync()
+  // A load the address drove, after the first: the h1 takes the focus once it is drawn.
+  private bool _focusHeading;
+
+  private async Task RetryAsync() => await LoadAsync();
+
+  private async Task LoadAsync()
   {
-    if (string.IsNullOrWhiteSpace(TypeKey))
-    {
-      return;
-    }
-
-    var match = _activityTypes.FirstOrDefault(
-      item => string.Equals(item.Key, TypeKey.Trim(), StringComparison.OrdinalIgnoreCase));
-
-    if (match is null)
-    {
-      // Not published, out of scope, on the wrong ladder, or simply renamed. Leave the picker unset;
-      // the link is a convenience and a dead one is not an error worth showing.
-      return;
-    }
-
-    _selectedActivityTypeId = match.Id;
-
-    // Setting the bound field alone would select the <option> and render no form, because the schema
-    // is loaded by @bind:after on the element's change event, which code does not raise.
-    await LoadSelectedTypeAsync();
-  }
-
-  private async Task LoadSelectedTypeAsync()
-  {
-    _error = null;
-    _refusedFieldKeys = [];
-
-    if (_selectedActivityTypeId <= 0)
-    {
-      _selectedEditor = null;
-      _editableFieldKeys = null;
-      _createIsTheFiling = false;
-      return;
-    }
-
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    // Only the type's definition: what the builder would let the caller change is not this page's to know (T300 review).
-    _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(_selectedActivityTypeId, authState.User, ForBuilder: false));
+    _loading = true;
+    _loadError = null;
+    _loadedOnce = true;
+    _loadedTypeKey = TypeKey;
+    _loadedFrom = From;
+    ClearRefusal();
+    _selectedType = null;
+    _selectedEditor = null;
+    _fileAgain = null;
+    _words = null;
+    _handOffName = null;
+    _editableFieldKeys = null;
+    _createIsTheFiling = false;
     _dataJson = "{}";
-    _editableFieldKeys = ResolveEditableFieldKeys(authState.User);
-    _createIsTheFiling = PredictCreateIsTheFiling(authState.User);
+    _formGeneration++;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var user = authState.User;
+      _currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+      if (!_typesLoaded)
+      {
+        _programmeStartsOn = await FilingLateness.ProgrammeStartAsync(Sender, _currentUserId, user, Logger);
+        // The creator IS the subject here, so the type picker narrows to tools whose rating ladder this
+        // trainee's curriculum could actually credit — the same reasoning the EPA picker below already
+        // applies to EPAs (T123 defect 3). Permissive wherever the subject cannot be resolved.
+        var types = await Sender.Send(
+          new Wombat.Application.Features.Activities.Queries.ListActivityTypes.ListActivityTypesQuery(user, _currentUserId));
+        _activityTypes.Clear();
+        _activityTypes.AddRange(types);
+        _typesLoaded = true;
+      }
+
+      // File it again: only the subject's own declined request answers; anything else is read as no ?from (E5).
+      var fileAgain = From is > 0 and var sourceId
+        ? await Sender.Send(new GetFileAgainSourceQuery(sourceId, user))
+        : null;
+
+      var match = Find(fileAgain?.ActivityTypeKey) ?? Find(TypeKey);
+      if (fileAgain is not null && !string.Equals(match?.Key, fileAgain.ActivityTypeKey, StringComparison.OrdinalIgnoreCase))
+      {
+        // Its type is not one the caller may file now: the copy has nowhere to go.
+        fileAgain = null;
+      }
+
+      if (match is not null)
+      {
+        // Only the type's definition: what the builder would let the caller change is not this page's to know (T300 review).
+        _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(match.Id, user, ForBuilder: false));
+        _selectedType = match;
+        _fileAgain = fileAgain;
+        _dataJson = fileAgain?.DataJson ?? "{}";
+        _canCredit = FilingLateness.WarnsFor(CreditRulesJson);
+        _editableFieldKeys = ResolveEditableFieldKeys(user);
+        _words = PredictWords(user);
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // The page's own words, never the exception's (T329); the log keeps what failed.
+      Logger.LogError(exception, "Log an activity could not load what the caller can file.");
+      _selectedType = null;
+      _selectedEditor = null;
+      _fileAgain = null;
+      _loadError = LoadFailure;
+    }
+    finally
+    {
+      _loading = false;
+    }
   }
+
+  // A type in the list the page loaded, by key; null when it is not there (T111).
+  private ActivityTypeListItemDto? Find(string? key)
+    => string.IsNullOrWhiteSpace(key)
+      ? null
+      : _activityTypes.FirstOrDefault(item => string.Equals(item.Key, key.Trim(), StringComparison.OrdinalIgnoreCase));
+
+  private static string FileAgainNotice(FileAgainSourceDto source)
+    => $"Copied from your request to {source.DeclinedByName}, which was declined. " +
+       (source.EpaDropped ? "The date and request are as you filed them. " : "The EPA, date and request are as you filed them. ") +
+       "Name someone else, then submit. Nothing is saved until you do.";
 
   private Task OnDataChanged(string dataJson)
   {
     _dataJson = dataJson;
     return Task.CompletedTask;
+  }
+
+  private Task OnHandOffNameChanged(string? name)
+  {
+    _handOffName = name;
+    return Task.CompletedTask;
+  }
+
+  // How many days late a filing today would be, for the check line: only on a type that can credit, for a date not
+  // before the programme start, which is refused rather than late (T160, T192).
+  private int? DaysLate()
+  {
+    if (!_canCredit || _selectedEditor is null)
+    {
+      return null;
+    }
+
+    try
+    {
+      return FilingLateness.DaysLate(_dataJson, FormSchemaParser.Parse(SchemaJson).ObservationDateField, FilingLateness.Today(), _programmeStartsOn);
+    }
+    catch (Exception)
+    {
+      // An unreadable schema is ActivityForm's to surface; the check line just says nothing about lateness.
+      return null;
+    }
+  }
+
+  private void ClearRefusal()
+  {
+    _refusal = null;
+    _refusedFieldKeys = [];
+    _refusalLines = [];
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusSummary && _summary is not null)
+    {
+      _focusSummary = false;
+      await _summary.FocusAsync();
+    }
+    else if (_focusHeading && !_loading && !_busy)
+    {
+      _focusHeading = false;
+      await PageFocus.FocusHeadingAsync(JS);
+    }
   }
 
   private async Task SaveDraftAsync()
@@ -214,21 +403,16 @@
 
   private async Task CreateOrTransitionAsync(bool submit)
   {
-    if (_busy)
+    if (_busy || _selectedType is null)
     {
-      return;
-    }
-
-    if (_selectedActivityTypeId <= 0)
-    {
-      _error = "Select an activity type first.";
       return;
     }
 
     _busy = true;
     _submitPressed = submit;
-    _error = null;
-    _refusedFieldKeys = [];
+    var typeId = _selectedType.Id;
+    var handOffName = _handOffName;
+    var words = _words;
 
     ClaimsPrincipal user;
     string userId;
@@ -242,7 +426,7 @@
         ?? throw new InvalidOperationException("The current user identifier is missing.");
 
       created = await Sender.Send(new CreateActivityCommand(
-        _selectedActivityTypeId,
+        typeId,
         userId,
         userId,
         _dataJson,
@@ -250,13 +434,22 @@
     }
     catch (Exception exception)
     {
+      _busy = false;
+      if (_leftWhileBusy)
+      {
+        _leftWhileBusy = false;
+        await LoadAsync();
+        return;
+      }
+
       // Nothing was created, so the page stays, keeps what was typed, and says that nothing was saved (T127). The remount
       // refreshes the form's option lists, since the person just refused may have fallen off them (T102), and marks the
-      // fields the refusal names (T263).
-      _error = $"Nothing was saved. {AsSentence(RefusalText.Of(exception))}";
+      // fields the refusal names (T263), each with its own part of it (C8). The summary takes the focus.
+      _refusal = RefusalText.Of(exception);
       _refusedFieldKeys = ActivityFieldsRefusedException.FieldKeysOf(exception);
+      _refusalLines = SplitRefusal(_refusal, _refusedFieldKeys);
       _formGeneration++;
-      _busy = false;
+      _focusSummary = true;
       return;
     }
 
@@ -264,16 +457,23 @@
     // the same encounter cannot be filed twice (T143). A refused submit is retried on the activity's own page, which sends
     // the edits as a patched transition, so nothing here can create again (T127). _busy stays set until the router
     // replaces this page, so a press in between does nothing.
-    var notice = await FinishCreatedAsync(created, submit, user, userId);
+    var notice = await FinishCreatedAsync(created, submit, user, userId, words, handOffName);
 
-    if (_disposed)
+    if (_disposed || _leftWhileBusy)
     {
       // The author went elsewhere while this ran. The activity is on their list, and the notice would have no page to
       // show on, so neither is left behind.
+      if (!_disposed)
+      {
+        _busy = false;
+        _leftWhileBusy = false;
+        await LoadAsync();
+      }
+
       return;
     }
 
-    Notices.Post(created.Id, notice.Kind, notice.Message, notice.RefusedFieldKeys);
+    Notices.Post(created.Id, notice.Kind, notice.Message, notice.RefusedFieldKeys, notice.Refusal);
 
     // In the circuit (no forceLoad), or the notice is lost with the scope that holds it. Replacing this page's history
     // entry means Back from the activity does not return to an empty form, where typing the encounter again would file
@@ -283,11 +483,33 @@
 
   public void Dispose() => _disposed = true;
 
-  // What became of an activity the create has just filed, after sending the move that submits it if Submit was pressed.
+  // The refusal cut one field a line, by the labels of the form the page is showing (C8).
+  private IReadOnlyList<RefusalLine> SplitRefusal(string refusal, IReadOnlyList<string> keys)
+  {
+    try
+    {
+      var fields = FormSchemaParser.Parse(SchemaJson).Sections.SelectMany(section => section.Fields).ToList();
+      return FieldRefusals.Split(refusal, keys, key =>
+        fields.FirstOrDefault(field => string.Equals(field.Key, key, StringComparison.Ordinal))?.Label);
+    }
+    catch (Exception)
+    {
+      return FieldRefusals.Split(refusal, [], _ => null);
+    }
+  }
+
+  // What became of an activity the create has just filed, after sending the move that submits it if the move was pressed.
   // Judged against the workflow the activity is pinned to, which the create returns: that is the version the server
   // evaluates the move against. The state the activity is in is named by the label the server carried from that same
-  // version (ActivityDto.CurrentStateLabel), never worked out here (T220).
-  private async Task<ActivityNotice> FinishCreatedAsync(ActivityDto created, bool submit, ClaimsPrincipal user, string userId)
+  // version (ActivityDto.CurrentStateLabel), never worked out here (T220). The result is the move's own sentence
+  // (MoveOutcome, E4), and whose inbox it is now in when it went to a person (Spec § 1, "Result").
+  private async Task<ActivityNotice> FinishCreatedAsync(
+    ActivityDto created,
+    bool submit,
+    ClaimsPrincipal user,
+    string userId,
+    FilingWords? words,
+    string? handOffName)
   {
     Workflow workflow;
     string? transitionKey;
@@ -311,12 +533,14 @@
       // (the generic mini_cex, dops, cbd and acat) that is the submission itself, so no button may say it was not
       // submitted. Nor may either say "Submitted" when nothing moved (T148). The state's own name is true in every case:
       // the label the server carried from the pinned workflow, as every other page prints it (T220).
-      return new ActivityNotice("success", $"Filed. It is now {created.CurrentStateLabel}.");
+      return new ActivityNotice(
+        "success",
+        WithInbox($"Filed. It is now {created.CurrentStateLabel}.", HandOffOf(created, workflow, created.CurrentState, null), words, handOffName));
     }
 
     if (!submit)
     {
-      return new ActivityNotice("success", "Draft saved. It has not been submitted.");
+      return new ActivityNotice("success", $"Draft saved. It has not been submitted. {FilingWords.NobodysInboxSentence}");
     }
 
     ActivityDto moved;
@@ -339,16 +563,57 @@
     {
       // The submit's refusal. The usual one is a required field the author owns that is still empty. A move out of the
       // initial state that leads on was theirs to take, so the activity is waiting on them: a draft, whatever its state
-      // is called. The fields it names go with it, so the draft's page marks the ones "below" means (T263); none, when it
-      // names none, as for every other notice.
-      return new ActivityNotice(
-        "warning",
-        $"Saved as a draft, but not submitted: {AsSentence(RefusalText.Of(exception))} Fix the fields below and submit again.",
-        ActivityFieldsRefusedException.FieldKeysOf(exception) is { Count: > 0 } refused ? refused : null);
+      // is called. The fields it names go with it, so the draft's page marks the ones "below" means (T263), and the
+      // refusal's own words, for its summary's lines (C8).
+      var refusal = RefusalText.Of(exception);
+      var refused = ActivityFieldsRefusedException.FieldKeysOf(exception);
+      var message = refused.Count switch
+      {
+        0 => $"{RefusalWords.SavedNotSubmitted.TrimEnd('.')}: {AsSentence(refusal)}",
+        var count => RefusalWords.ForSubmitAfterCreate(count).ToString()
+      };
+
+      return new ActivityNotice("warning", message, refused.Count > 0 ? refused : null, refusal);
     }
 
-    return new ActivityNotice("success", $"Submitted. It is now {moved.CurrentStateLabel}.");
+    // The move's result, from where it left the activity: "Submitted. It is now Requested.", "Logged." (E4).
+    var state = workflow.States.FirstOrDefault(candidate => string.Equals(candidate.Key, moved.CurrentState, StringComparison.Ordinal));
+    var outcome = new MoveOutcome(
+      transitionKey,
+      moved.CurrentState,
+      moved.CurrentStateLabel,
+      state?.Terminal ?? false,
+      !workflow.HasOutgoingTransition(moved.CurrentState));
+
+    return new ActivityNotice(
+      "success",
+      WithInbox(outcome.ResultSentence, HandOffOf(created, workflow, null, transitionKey), words, handOffName));
   }
+
+  // The hand-off field of the pinned version: of the move made, or, when the create was the filing, of the state it is in.
+  private static string? HandOffOf(ActivityDto created, Workflow workflow, string? state, string? transitionKey)
+  {
+    try
+    {
+      var schema = FormSchemaParser.Parse(created.SchemaJson);
+      return transitionKey is not null
+        ? MoveHandOff.NomineeFieldFor(workflow, schema, transitionKey, created.CurrentState)
+        : FilingWords.HandOffFieldFor(workflow, schema, state!);
+    }
+    catch (Exception)
+    {
+      return null;
+    }
+  }
+
+  // "… It is in Fatima Khumalo's Activity inbox." when the move handed it to the person the form named: the pinned
+  // version's hand-off field is the one the page resolved the name for, so the name is the person the data names.
+  private static string WithInbox(string sentence, string? pinnedHandOff, FilingWords? words, string? handOffName)
+    => pinnedHandOff is not null &&
+       string.Equals(pinnedHandOff, words?.HandOffFieldKey, StringComparison.Ordinal) &&
+       !string.IsNullOrWhiteSpace(handOffName)
+      ? $"{sentence} {FilingWords.InboxSentence(handOffName)}"
+      : sentence;
 
   // The move that submits what the author has just created: the first of the moves the server offers them on it that
   // leads on towards a terminal state (Workflow.TransitionsLeadingOn), in workflow order. The key is not always "submit"
@@ -377,33 +642,36 @@
       .FirstOrDefault(offered.Contains);
   }
 
-  // Whether creating the selected type would file it for this author: no move out of its initial state that leads on is
-  // theirs (the test the server's create applies, and ResolveSubmitMoveAsync after it). Decides only whether "Save draft"
-  // is offered. It is judged against the activity as it would be built, which cannot know the scope the create will
+  // The author's move out of the selected type's initial state that leads on, as the page can judge it, and the words for
+  // it: the button, the check line (T342, E4, C11). No such move means the create is the filing (T148), and "Save draft"
+  // is not offered. It is judged against the activity as it would be built, which cannot know the scope the create will
   // stamp, so a `scope:institution` or `scope:speciality` rule reads false here: the page may offer less than the server
-  // would allow, never more, as ResolveEditableFieldKeys does. Submit is always offered, and the move it sends is the
-  // server's answer, not this one.
-  private bool PredictCreateIsTheFiling(ClaimsPrincipal user)
+  // would allow, never more, as ResolveEditableFieldKeys does. The move the button sends is the server's answer, not
+  // this one (ResolveSubmitMoveAsync).
+  private FilingWords? PredictWords(ClaimsPrincipal user)
   {
-    var workflowJson = _selectedEditor?.PublishedWorkflowJson ?? _selectedEditor?.DraftWorkflowJson;
     var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrWhiteSpace(workflowJson) || string.IsNullOrWhiteSpace(userId))
+    if (string.IsNullOrWhiteSpace(WorkflowJson) || string.IsNullOrWhiteSpace(userId) || _selectedEditor is null)
     {
-      return false;
+      return null;
     }
 
     try
     {
-      var workflow = WorkflowParser.Parse(workflowJson);
+      var workflow = WorkflowParser.Parse(WorkflowJson);
+      var schema = FormSchemaParser.Parse(SchemaJson);
       var candidate = BuildCandidate(workflow, userId);
 
-      return !workflow.TransitionsLeadingOn(workflow.InitialState)
-        .Any(transition => WorkflowEvaluator.Evaluate(workflow, candidate, transition.Key, user).Allowed);
+      var move = workflow.TransitionsLeadingOn(workflow.InitialState)
+        .FirstOrDefault(transition => WorkflowEvaluator.Evaluate(workflow, candidate, transition.Key, user).Allowed);
+      _createIsTheFiling = move is null;
+      return FilingWords.For(workflow, schema, move);
     }
     catch (Exception)
     {
       // An unparseable workflow is ActivityForm's error to surface. Offer both buttons and let the server decide.
-      return false;
+      _createIsTheFiling = false;
+      return null;
     }
   }
 
@@ -416,7 +684,7 @@
   }
 
   // T070 step 8: lock the fields this creator does not own, so a trainee filing a CPSA WBA gets the
-  // Request section and sees Entrustment/Feedback disabled instead of filling in a rating the server
+  // Request section and sees Entrustment/Feedback as locked sections instead of filling in a rating the server
   // then silently strips (CreateDraftAsync filters the submitted data to the same set).
   //
   // This is the cheap slice the task recommends: the schema and workflow are the ones this page has
@@ -431,14 +699,13 @@
   // differ, the UI is the stricter; the create-time filter is the gate either way.
   private IReadOnlySet<string>? ResolveEditableFieldKeys(ClaimsPrincipal user)
   {
-    var schemaJson = _selectedEditor?.PublishedSchemaJson ?? _selectedEditor?.DraftSchemaJson;
-    var workflowJson = _selectedEditor?.PublishedWorkflowJson ?? _selectedEditor?.DraftWorkflowJson;
     var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
     // No identity means no subject/creator rule can match, and an empty set would lock the entire
     // creation form rather than part of it. Fall back to no restriction and let the server filter.
-    if (string.IsNullOrWhiteSpace(schemaJson) ||
-        string.IsNullOrWhiteSpace(workflowJson) ||
+    if (_selectedEditor is null ||
+        string.IsNullOrWhiteSpace(SchemaJson) ||
+        string.IsNullOrWhiteSpace(WorkflowJson) ||
         string.IsNullOrWhiteSpace(userId))
     {
       return null;
@@ -446,10 +713,10 @@
 
     try
     {
-      var workflow = WorkflowParser.Parse(workflowJson);
+      var workflow = WorkflowParser.Parse(WorkflowJson);
 
       return FieldPermissionEvaluator.GetWritableFieldKeys(
-        FormSchemaParser.Parse(schemaJson),
+        FormSchemaParser.Parse(SchemaJson),
         workflow,
         BuildCandidate(workflow, userId),
         user,
@@ -465,7 +732,8 @@
   // The activity that would be created if the form were submitted now. The type's Scope is carried over from the editor
   // DTO so a `scope:global` rule reads as it will server-side. The institution and speciality the create will stamp on
   // the activity are not known here (T101 moved every other `scope:` rule onto them), so those rules read false: the
-  // predictions made with this candidate err towards offering less.
+  // predictions made with this candidate err towards offering less. The data is the empty form (see
+  // ResolveEditableFieldKeys), never what is typed.
   private Activity BuildCandidate(Workflow workflow, string userId)
     => new()
     {
@@ -477,6 +745,6 @@
       CurrentState = workflow.InitialState,
       SubjectUserId = userId,
       CreatedByUserId = userId,
-      DataJson = _dataJson
+      DataJson = "{}"
     };
 }

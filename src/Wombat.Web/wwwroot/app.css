@@ -1440,6 +1440,348 @@ textarea[aria-invalid="true"] {
   outline-offset: 2px;
 }
 
+/* Flow 03: Log an activity and the form (T342) */
+/* The activity form and Log an activity (R3-C-Log, R3-C-Activity's form parts, R3-Spec § 4). After the cards, because a
+   locked section is a .detail-card that changes its ground and frame (the round-2 review, T9). Spacing on the scale;
+   44px controls are 2.75rem (T3). The page's own column and the phone rules are scoped to these pages (T7). */
+
+/* Log an activity's column: the notice, the summary, the form, the check line and the action bar, 24px apart. An alert
+   in it takes the column's gap, not its own margin. */
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 52rem;
+  min-width: 0;
+}
+
+.form-column > .alert,
+.form-column > .validation-summary-errors {
+  margin: 0;
+}
+
+.form-column .alert p {
+  margin: 0;
+}
+
+.form-column .alert p + p {
+  margin-top: var(--space-xs);
+}
+
+/* The form: its sections in the schema's order, each a card one deep (E6). */
+.activity-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.form-section-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  justify-content: space-between;
+}
+
+.form-section-head h2,
+.form-section-lockhead h2 {
+  margin: 0;
+}
+
+.form-section-owner {
+  align-items: center;
+  color: var(--muted-text);
+  display: inline-flex;
+  font-size: 0.9rem;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+/* Someone else's section, not filled in yet (C14): not an empty state. Its head row (lock, title, owner) is on the
+   header ground; its body is on the page's ground; the frame is dashed. No inputs. */
+.form-section--locked {
+  background: var(--background-color);
+  border: 1px dashed var(--input-border);
+  box-shadow: none;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.form-section-lockhead {
+  align-items: center;
+  background: var(--header-bg);
+  border-bottom: 1px dashed var(--input-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  justify-content: space-between;
+  padding: 0.75rem var(--space-lg);
+}
+
+.form-section-lockhead .form-section-owner {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.form-section-lockbody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.form-section-empty {
+  color: var(--muted-text);
+  margin: 0;
+}
+
+/* A field's help under its control, the chosen option printed in full under a select (T323), and the required mark,
+   hidden from a screen reader, which hears aria-required instead. */
+.field-help {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.field-readback {
+  font-size: 0.9rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.required-mark {
+  color: var(--danger-color);
+}
+
+/* A filled section's values, read out (T6: .details-list--stacked); running text keeps its lines. */
+.form-readout-value {
+  white-space: pre-line;
+}
+
+/* The entrustment ladder, read-only (RungRow): its rungs abreast in one row, however many the ladder has, the chosen one
+   filled and named. Pending rungs are dashed on the page's ground. */
+.rung-row {
+  display: grid;
+  gap: var(--space-sm);
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rung {
+  align-items: center;
+  background: var(--surface-color);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  font-size: 1.1rem;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: var(--space-xs);
+}
+
+.rung--pending {
+  background: transparent;
+  border-style: dashed;
+  color: var(--muted-text);
+  font-weight: 600;
+}
+
+.rung.is-chosen {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: var(--on-fill);
+}
+
+.rung-check {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.rung-descriptor {
+  background: var(--info-bg);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: var(--radius-sm);
+  margin: var(--space-sm) 0 0;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.rung-descriptor b {
+  display: block;
+}
+
+/* A refusal summary's lines, each a link to its field's input (C8). */
+.refusal-summary-list {
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.1rem;
+}
+
+/* The check line above the action bar (SubmitCheck, C11), on Log an activity and the author's draft alike: body text on
+   the info tint (11.84:1), the action blue as its stripe. */
+.submit-check {
+  background: var(--info-bg);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: var(--radius-md);
+  margin: 0;
+  padding: 0.75rem var(--space-md);
+}
+
+/* The action bar of a form with workflow moves (Log an activity; ActivityWorkflowActions on the activity page): the move
+   that leads on first and filled, Save draft outlined, the other moves outlined, Cancel last and quiet at the far end; no
+   rule above it, since the check line leads into it. */
+.form-actions--moves {
+  border-top: 0;
+  justify-content: flex-start;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.form-actions--moves .btn-quiet--danger {
+  margin-left: auto;
+}
+
+/* A quiet button: words on no ground, underlined. Neutral (the link colour, 6.70:1 on white; "Keep the request") or,
+   with --danger, the danger colour (5.95:1 on white, 5.65:1 on the page) for Cancel (T4). */
+.btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--link-color);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.btn-quiet--danger {
+  color: var(--danger-color);
+}
+
+/* A move the actor cannot complete from here (T107, C4): aria-disabled, never natively disabled, so it keeps its place
+   in the tab order and its reason is read (A10). The running move is aria-disabled too, and keeps the focus (C10). */
+.btn.is-unavailable {
+  cursor: not-allowed;
+}
+
+.btn[aria-disabled="true"].is-running {
+  cursor: progress;
+}
+
+/* Why each unavailable move cannot be made, under the bar, each named by its button's aria-describedby. */
+.move-reasons {
+  color: var(--text-color);
+  flex-basis: 100%;
+  font-size: 0.9rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.move-reasons li + li {
+  margin-top: var(--space-xs);
+}
+
+/* The instrument picker (InstrumentPicker, Q1): a card a group, its types as links. */
+.instrument-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.instrument-group-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: space-between;
+}
+
+.instrument-group-head h2,
+.instrument-group p {
+  margin: 0;
+}
+
+.instrument-picker {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.instrument-link {
+  align-items: center;
+  background: var(--surface-color);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  color: var(--link-color);
+  display: flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  justify-content: space-between;
+  min-height: 2.75rem;
+  padding: var(--space-sm) 0.75rem;
+  text-decoration: none;
+}
+
+.instrument-link:hover {
+  background: var(--hover-bg);
+  text-decoration: underline;
+}
+
+/* Below 641px: one card deep and no deeper, inputs the column's width, and every control 44px; the bar stacks, the move
+   on top and Cancel last (Spec § 3). Scoped to the form, the picker and the bar, flow 03's own classes. */
+@media (max-width: 640.98px) {
+  .activity-form .detail-card {
+    padding: var(--space-md);
+  }
+
+  .activity-form .form-section--locked {
+    padding: 0;
+  }
+
+  .form-section-lockhead,
+  .form-section-lockbody {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+
+  .activity-form .form-control {
+    min-height: 2.75rem;
+  }
+
+  .activity-form .form-select {
+    min-height: 2.75rem;
+  }
+
+  .form-actions--moves .btn {
+    min-height: 2.75rem;
+  }
+
+  .form-actions--moves {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-actions--moves .btn-quiet--danger {
+    margin-left: 0;
+  }
+
+  .rung-row {
+    gap: var(--space-xs);
+  }
+}
+
 /* ── Dashboard grid ───────────────────────────────── */
 /* Three tracks from 1100px, two to 901px, one below (T335, flow 01; the round-2 review, S22(b)). Until T335 it was
    auto-fit on 320px tracks, which need 1,008px: at 1280px the content column is 974px (1280 less the 250px sidebar and
@@ -1853,6 +2195,271 @@ textarea[aria-invalid="true"] {
   }
 }
 
+/* Flow 03: the activity page (T342) */
+/* A record page with a workflow (R3-C-Activity; DESIGN.md § Page-level patterns): the status card, About and the form's
+   sections in .details-grid with the action bar under them, then the history. Rebuilt from the canvas's flow03.css as
+   round-2-review.md § For the build says: spacing on the scale (2.75rem for 44px), .detail-card, .detail-card--emphasis
+   and .details-list reused, the status card's frame --border-color (T8), and the phone rules scoped to .activity-page. */
+
+/* The status card, "Who has it now" (Q3; ActivityStatus). A .detail-card, so its frame is the cards' hairline (T8); its
+   4px stripe says whose move it is: the viewer's is .detail-card--emphasis, the action blue (T6); someone else's the
+   control edge; done green; declined red. Every stripe is 3:1 or more on the page (R3-Spec § 5). */
+.activity-status {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.activity-status--others {
+  border-left: 4px solid var(--input-border);
+}
+
+.activity-status--done {
+  border-left: 4px solid var(--success-color);
+}
+
+.activity-status--declined {
+  border-left: 4px solid var(--danger-color);
+}
+
+.activity-status-main {
+  display: flex;
+  flex: 1 1 26rem;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.activity-status-label {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.activity-status-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.activity-status-headline {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.activity-status-body {
+  margin: 0;
+}
+
+.activity-status-meta {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* The note the last move carried (a return, a decline), as its writer wrote it: body text on header-bg, 11.36:1. */
+.activity-status-quote {
+  background: var(--header-bg);
+  border-left: 4px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.activity-status-quote p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.activity-status-quote cite {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.85rem;
+  font-style: normal;
+}
+
+.activity-status-action {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+/* A card's own heading on this page: About, History. */
+.activity-card-title {
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-md);
+}
+
+.activity-grid {
+  margin-bottom: var(--space-lg);
+}
+
+.activity-about {
+  align-self: start;
+}
+
+/* C13: a credit warning under About's Credit. */
+.activity-about .field-warning {
+  margin-top: var(--space-xs);
+}
+
+.activity-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+/* The bar and, under it, the note panel. */
+.activity-moves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* The note panel (A6): opened under the bar by a move that needs a note. */
+.note-panel {
+  border-left: 4px solid var(--secondary-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.note-panel-title {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* The note's refusal (RefusalSummary, id note-summary) takes the panel's gap, not its own margin. */
+.note-panel .validation-summary-errors {
+  margin: 0;
+}
+
+/* History (A7, B13): a real table, a note a full-width row of its own under its move. */
+.history-table .has-note td {
+  border-bottom: 0;
+}
+
+.history-table .history-note {
+  padding-top: 0;
+  white-space: pre-line;
+}
+
+.history-late {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.85rem;
+}
+
+.history-details {
+  display: none;
+}
+
+.history-details summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  min-height: 2.75rem;
+}
+
+/* The flex summary has no native marker (list-item is gone); its chevron turns down while the list is open (A7). The
+   turn is a transition, which the reduced-motion rule below takes to 0. */
+.history-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-details-marker {
+  flex: none;
+  transition: transform var(--motion-fast) ease;
+}
+
+.history-details[open] .history-details-marker {
+  transform: rotate(90deg);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  list-style: none;
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+}
+
+.history-row {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: 0.75rem;
+}
+
+.history-row b {
+  font-weight: 600;
+}
+
+.history-row span {
+  white-space: pre-line;
+}
+
+.history-meta {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.history-zone {
+  margin: var(--space-sm) 0 0;
+}
+
+/* Below 641px, on this page only: the table hides and the <details> holds the moves; the card's action stacks, each
+   control 44px (DESIGN.md § Page-level patterns; T7). The bar's own phone rules are the form's, above. */
+@media (max-width: 640.98px) {
+  .activity-page .history-table-container {
+    display: none;
+  }
+
+  .activity-page .history-details {
+    display: block;
+  }
+
+  /* A multi-choice field's rows, 44px, each label filling its row so the tick is pressed anywhere on it (the build
+     review's A8; flow 02's Remember me, T339). */
+  .activity-form .check-grid .form-check {
+    min-height: 2.75rem;
+  }
+
+  .activity-form .check-grid .form-check-input {
+    height: 1.25rem;
+    width: 1.25rem;
+  }
+
+  .activity-form .check-grid .form-check label {
+    align-items: center;
+    display: inline-flex;
+    flex: 1;
+    min-height: 2.75rem;
+  }
+
+  .activity-page .activity-status-action {
+    flex-basis: 100%;
+    flex-direction: column;
+  }
+
+  .activity-page .activity-status-action .btn {
+    min-height: 2.75rem;
+  }
+}
+
 /* ── System pages ─────────────────────────────────── */
 /* Access denied, Page not found and the error page (T335, flow 01; DESIGN.md § System pages). Signed in, the page is its
    header and one panel in the shell's content column (R2-Denied-In): what happened, what to do, and the way on. Signed
@@ -1977,6 +2584,114 @@ textarea[aria-invalid="true"] {
     margin-top: 0.375rem;
   }
 }
+
+/* Flow 03: My activities and Needs you (T342) */
+/* My activities (R3-C-Mine): Needs you in a card, then All activities; each list headed by an h2 that takes the focus
+   after a page turn or a Try again (tabindex="-1"). */
+.list-section + .list-section {
+  margin-top: var(--space-lg);
+}
+
+.list-section-title {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-md);
+}
+
+/* Needs you's rule: what is in it and what is not (R3-Spec § 1). Muted, 5.09:1 on the surface. */
+.needs-you-rule {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0 0 var(--space-md);
+}
+
+/* Needs you's rows (NeedsYouList, on My activities and Home's card): a .stack-list of rows, each ruled and carrying
+   .detail-card--emphasis's stripe (secondary-color, 4.86:1 on the surface), its link and badge on a line and why it is
+   here under them. Rows sit closer than the stack's cards. */
+.needs-you {
+  gap: var(--space-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.needs-you-row {
+  align-items: flex-start;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.needs-you-row .activity-link {
+  flex: 1 1 16rem;
+}
+
+.needs-you-why {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* An activity's link: its name, and on a second line whom it goes to or is discussed with (muted, 5.09:1). The ", "
+   between them is visually hidden (A16). */
+.activity-link {
+  font-weight: 600;
+}
+
+.activity-link-to {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+/* The stacked table (DataTable's Stack; A8): below 641px each row is a block of its cells. The header row stays in the
+   table, visually hidden, so a screen reader still has each cell's column; the table carries explicit roles, which a
+   row laid out as a grid would otherwise lose. A labelled cell shows its column's name before its value, as generated
+   content with empty alternative text, so the name is not read twice. Scoped by the modifier: only My activities uses
+   it. */
+@media (max-width: 640.98px) {
+  .clinic-table--stack thead {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .clinic-table--stack tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .clinic-table--stack tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .clinic-table--stack td {
+    border: 0;
+    padding: 0;
+  }
+
+  .clinic-table--stack td[data-label]::before {
+    color: var(--muted-text);
+    content: attr(data-label) ": ";
+    content: attr(data-label) ": " / "";
+    font-weight: 600;
+  }
+}
+/* end Flow 03: My activities and Needs you */
 
 /* ── Pager ─────────────────────────────────────────── */
 .pager {

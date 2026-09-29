@@ -75,7 +75,7 @@ public sealed class NomineeGateTransitionTests
     private const string NomineeLabel = "Assessing consultant";
 
     /// <summary>The fragment every nominee refusal carries, so a test can tell the gate apart from any other refusal.</summary>
-    private const string NomineeRefusal = "cannot be named here";
+    private const string NomineeRefusal = "be named as ";
 
     /// <summary>How the refusal names the stale assessor while they are still in the activity's institution.</summary>
     private const string AssessorName = "First assessor-1";
@@ -109,7 +109,7 @@ public sealed class NomineeGateTransitionTests
         var message = await RefusedTransitionAsync(
             options, draft.Id, "submit", TraineeId, """{ "presenting_problem": "Revised before submitting" }""");
 
-        message.Should().StartWith($"{NomineeLabel}: {expectedName} {NomineeRefusal}.");
+        message.Should().StartWith($"{NomineeLabel}: {expectedName} ").And.Contain(NomineeRefusal);
 
         var stored = await StoredAsync(options, draft.Id);
         stored.CurrentState.Should().Be("draft");
@@ -169,7 +169,7 @@ public sealed class NomineeGateTransitionTests
         var draftId = await InsertPreT102DraftAsync(options, CpsaTypeId, storedNominee);
 
         var message = await RefusedTransitionAsync(options, draftId, "submit", TraineeId);
-        message.Should().StartWith($"{NomineeLabel}: {expectedName} {NomineeRefusal}.");
+        message.Should().StartWith($"{NomineeLabel}: {expectedName} ").And.Contain(NomineeRefusal);
         (await StoredAsync(options, draftId)).CurrentState.Should().Be("draft");
 
         var repaired = await TransitionAsync(
@@ -514,7 +514,7 @@ public sealed class NomineeGateTransitionTests
         var message = await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(new CreateActivityInput(
             LegacyTypeId, TraineeId, TraineeId, RequestData(RegistrarId), Principal(TraineeId))));
 
-        message.Should().StartWith($"{NomineeLabel}: First registrar-2 {NomineeRefusal}.");
+        message.Should().StartWith($"{NomineeLabel}: First registrar-2 ").And.Contain(NomineeRefusal);
 
         await using var verify = new ApplicationDbContext(options);
         (await verify.Activities.CountAsync()).Should().Be(0);
@@ -551,7 +551,7 @@ public sealed class NomineeGateTransitionTests
 
         var message = await RefusedTransitionAsync(
             options, request.Id, "cancel", TraineeId, $$"""{ "assessor_user_id": "{{ElsewhereAssessorId}}" }""");
-        message.Should().StartWith($"{NomineeLabel}: that person {NomineeRefusal}.");
+        message.Should().StartWith($"{NomineeLabel}: that person ").And.Contain(NomineeRefusal);
         ReadString((await StoredAsync(options, request.Id)).DataJson, "assessor_user_id").Should().Be(AssessorId);
 
         (await TransitionAsync(options, request.Id, "cancel", TraineeId)).CurrentState.Should().Be("cancelled");
@@ -618,7 +618,7 @@ public sealed class NomineeGateTransitionTests
 
         var message = await RefusedTransitionAsync(options, draft.Id, "submit", TraineeId);
 
-        message.Should().StartWith($"{NomineeLabel}: {AssessorName} {NomineeRefusal}.");
+        message.Should().StartWith($"{NomineeLabel}: {AssessorName} ").And.Contain(NomineeRefusal);
         (await StoredAsync(options, draft.Id)).CurrentState.Should().Be("draft");
     }
 
@@ -669,7 +669,7 @@ public sealed class NomineeGateTransitionTests
         var message = await RefusedTransitionAsync(
             options, draft.Id, "submit", TraineeId, $$"""{ "assessor_user_id": "{{nominee}}" }""");
 
-        message.Should().StartWith($"{NomineeLabel}: {expectedName} {NomineeRefusal}.");
+        message.Should().StartWith($"{NomineeLabel}: {expectedName} ").And.Contain(NomineeRefusal);
         var stored = await StoredAsync(options, draft.Id);
         stored.CurrentState.Should().Be("draft");
         ReadString(stored.DataJson, "assessor_user_id").Should().Be(AssessorId);
@@ -687,7 +687,7 @@ public sealed class NomineeGateTransitionTests
 
         var message = await RefusedTransitionAsync(
             options, draft.Id, "cancel", TraineeId, $$"""{ "assessor_user_id": "{{RegistrarId}}" }""");
-        message.Should().StartWith($"{NomineeLabel}: First registrar-2 {NomineeRefusal}.");
+        message.Should().StartWith($"{NomineeLabel}: First registrar-2 ").And.Contain(NomineeRefusal);
 
         var stored = await StoredAsync(options, draft.Id);
         stored.CurrentState.Should().Be("draft");
@@ -713,7 +713,7 @@ public sealed class NomineeGateTransitionTests
         var message = await RefusedTransitionAsync(
             options, request.Id, "reassign", AssessorId, $$"""{ "assessor_user_id": "{{ElsewhereAssessorId}}" }""");
 
-        message.Should().StartWith($"{NomineeLabel}: that person {NomineeRefusal}.");
+        message.Should().StartWith($"{NomineeLabel}: that person ").And.Contain(NomineeRefusal);
         var stored = await StoredAsync(options, request.Id);
         ReadString(stored.DataJson, "assessor_user_id").Should().Be(AssessorId);
         stored.Transitions.Select(transition => transition.TransitionKey).Should().Equal("create", "submit");

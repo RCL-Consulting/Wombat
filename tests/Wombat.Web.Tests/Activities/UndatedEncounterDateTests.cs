@@ -51,7 +51,9 @@ public sealed class UndatedEncounterDateTests : TestContext
     {
         var cut = RenderActivityView(Reflection(new DateOnly(2026, 3, 20), declared: false));
 
-        Text(cut.Find("#activity-encounter-date")).Should().Be("Encounter date: not recorded (created 2026-03-20)");
+        // T342: About's Encounter row; its dd carries the id.
+        Text(cut.Find("#activity-encounter-date")).Should().Be("not recorded (created 2026-03-20)");
+        cut.Find("#activity-encounter-date").PreviousElementSibling!.TextContent.Trim().Should().Be("Encounter");
     }
 
     [Fact]
@@ -59,7 +61,7 @@ public sealed class UndatedEncounterDateTests : TestContext
     {
         var cut = RenderActivityView(Reflection(new DateOnly(2026, 3, 20), declared: true));
 
-        Text(cut.Find("#activity-encounter-date")).Should().Be("Encounter date: 2026-03-20");
+        Text(cut.Find("#activity-encounter-date")).Should().Be("2026-03-20");
     }
 
     [Fact]
@@ -148,7 +150,7 @@ public sealed class UndatedEncounterDateTests : TestContext
         }));
 
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 31));
-        cut.WaitForState(() => cut.Markup.Contains("Activity details"));
+        cut.WaitForState(() => cut.Markup.Contains("Who has it now"));
 
         return cut;
     }

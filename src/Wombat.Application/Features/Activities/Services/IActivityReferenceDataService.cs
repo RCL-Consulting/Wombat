@@ -113,6 +113,15 @@ public interface IActivityReferenceDataService
     Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleLevelOptionsAsync(
         string? scaleKey,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// <see cref="GetEntrustmentScaleLevelOptionsAsync" />'s rungs with each one's descriptor (T342, B12): the same ladder,
+    /// resolved the same way, in order. <c>Order</c> is what is stored (5 on the CPSA ladder), <c>Label</c> what a person
+    /// reads ("4"): the page maps a stored value to "Rated 4" through it. Empty when unresolved.
+    /// </summary>
+    Task<IReadOnlyList<Wombat.Application.Features.Epas.EntrustmentRung>> GetEntrustmentScaleRungsAsync(
+        string? scaleKey,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record ActivityCatalogueOption(

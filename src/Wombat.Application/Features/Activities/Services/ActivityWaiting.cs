@@ -18,9 +18,10 @@ namespace Wombat.Application.Features.Activities.Services;
 /// </para>
 /// <list type="bullet">
 /// <item>
-/// <b>Actionable by the caller</b> (<see cref="LoadActionableAsync" />): some move out of the activity's state is one the
-/// caller may make, by the act gate (<see cref="IWorkflowEvaluator" />). The inbox lists these; the Assessor's and the
-/// Trainee's cards count and list the same rows, so a card cannot disagree with the page it links to.
+/// <b>Actionable by the caller</b> (<see cref="LoadActionableAsync" />): some move out of the activity's state that leads
+/// on is one the caller may make, by the act gate (<see cref="IWorkflowEvaluator" />). By the arms of the rule that are
+/// not the author's, the inbox lists these, and the Assessor's and the Trainee's cards count and list the same rows, so a
+/// card cannot disagree with the page it links to; by the author's arms, Needs you lists them (T342, B6).
 /// </item>
 /// <item>
 /// <b>Awaiting a reviewer</b> (<see cref="AwaitsReviewer" />): the state is not terminal, and some move out of it belongs
@@ -71,13 +72,19 @@ public static class ActivityWaiting
     /// Whether each row is loaded with its transitions: the inbox's credit column reads them; the act gate and the cards
     /// do not, so they leave them in the database.
     /// </param>
+    /// <param name="arms">
+    /// Which arms of each move's actor rule may admit the caller (T342, B6): <see cref="ActorArms.Author" /> for Needs
+    /// you, the caller's own drafts and returned work; <see cref="ActorArms.NotAuthor" /> for the Activity inbox, the work
+    /// that waits on the caller as someone else's assessor, reviewer or admin; <see cref="ActorArms.All" /> for both.
+    /// </param>
     public static async Task<IReadOnlyList<ActionableActivity>> LoadActionableAsync(
         IQueryable<Activity> activities,
         IApplicationDbContext dbContext,
         IWorkflowEvaluator workflowEvaluator,
         ClaimsPrincipal principal,
         bool withTransitions = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        ActorArms arms = ActorArms.All)
     {
         ArgumentNullException.ThrowIfNull(activities);
         ArgumentNullException.ThrowIfNull(workflowEvaluator);
@@ -85,7 +92,7 @@ public static class ActivityWaiting
 
         var movable = await LoadMovableAsync(dbContext, cancellationToken);
 
-        IQueryable<Activity> query = movable.NarrowToCaller(activities.AsNoTracking(), principal)
+        IQueryable<Activity> query = movable.NarrowToCaller(activities.AsNoTracking(), principal, arms)
             .Include(activity => activity.ActivityType);
         if (withTransitions)
         {
@@ -99,25 +106,104 @@ public static class ActivityWaiting
 
         return candidates
             .Select(activity => (Activity: activity, Workflow: movable.WorkflowOf(activity.ActivityTypeId, activity.SchemaVersion)))
-            .Where(row => row.Workflow is { } workflow && IsActionableBy(workflow, row.Activity, principal, workflowEvaluator))
+            .Where(row => row.Workflow is { } workflow && IsActionableBy(workflow, row.Activity, principal, workflowEvaluator, arms))
             .Select(row => new ActionableActivity(row.Activity, row.Workflow!))
             .ToList();
     }
 
-    /// <summary>Whether some move out of the activity's state, in <paramref name="workflow" />, is one the caller may make.</summary>
+    /// <summary>
+    /// Whether some move out of the activity's state that leads on (<see cref="Workflow.TransitionsLeadingOn" />), in
+    /// <paramref name="workflow" />, is one the caller may make by the <paramref name="arms" /> asked for.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Only the moves that lead on (T342, B6). A withdrawal is not work waiting on anyone: a requested Mini-CEX whose
+    /// registrar may only cancel it (cancel goes into a dead end) is with its assessor, not with her, so it is neither in
+    /// her Needs you nor in her inbox (Step 3.12), while the assessor's Complete keeps it in his. Until T342 any move
+    /// counted, so every request a trainee had sent sat in her own Activity inbox beside the work waiting on her.
+    /// </para>
+    /// <para>
+    /// The arms are cut from the rule before the act gate judges it (<see cref="RestrictTo(Workflow, ActorArms)" />), so
+    /// the gate still decides each arm that is left, exactly as it decides the move.
+    /// </para>
+    /// </remarks>
     public static bool IsActionableBy(
         Workflow workflow,
         Activity activity,
         ClaimsPrincipal principal,
-        IWorkflowEvaluator workflowEvaluator)
+        IWorkflowEvaluator workflowEvaluator,
+        ActorArms arms = ActorArms.All)
     {
         ArgumentNullException.ThrowIfNull(workflow);
         ArgumentNullException.ThrowIfNull(activity);
 
-        return workflow.Transitions.Any(transition =>
-            transition.From.Contains(activity.CurrentState, StringComparer.Ordinal) &&
-            workflowEvaluator.Evaluate(workflow, activity, transition.Key, principal).Allowed);
+        var leadingOn = workflow.TransitionsLeadingOn(activity.CurrentState).Select(transition => transition.Key).ToList();
+        if (leadingOn.Count == 0)
+        {
+            return false;
+        }
+
+        var judged = RestrictTo(workflow, arms);
+        return leadingOn.Any(key => workflowEvaluator.Evaluate(judged, activity, key, principal).Allowed);
     }
+
+    /// <summary>
+    /// <paramref name="workflow" /> with every move's actor rule cut to the <paramref name="arms" /> asked for; the
+    /// workflow itself for <see cref="ActorArms.All" />.
+    /// </summary>
+    public static Workflow RestrictTo(Workflow workflow, ActorArms arms)
+    {
+        ArgumentNullException.ThrowIfNull(workflow);
+
+        return arms == ActorArms.All
+            ? workflow
+            : workflow with
+            {
+                Transitions = workflow.Transitions
+                    .Select(transition => transition with { Actor = RestrictTo(transition.Actor, arms) })
+                    .ToList()
+            };
+    }
+
+    /// <summary>
+    /// An actor rule cut to the <paramref name="arms" /> asked for (T342, B6). A disjunction is cut arm by arm; any other
+    /// rule is kept or dropped whole, by whether it is the author's (<see cref="IsAuthorArm" />). A dropped rule admits
+    /// nobody: an empty disjunction, which both the act gate and <see cref="ReachOf" /> read as no one.
+    /// </summary>
+    public static ActorRule RestrictTo(ActorRule rule, ActorArms arms)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+
+        return arms switch
+        {
+            ActorArms.All => rule,
+            _ when rule is CombinedActorRule { CombinationKind: ActorRuleCombinationKind.Any } any
+                => new CombinedActorRule(
+                    ActorRuleCombinationKind.Any,
+                    any.Rules.Select(child => RestrictTo(child, arms)).Where(child => !IsNobody(child)).ToList()),
+            ActorArms.Author => IsAuthorArm(rule) ? rule : Nobody,
+            _ => IsAuthorArm(rule) ? Nobody : rule
+        };
+    }
+
+    /// <summary>
+    /// Whether an arm of an actor rule is the activity's author's: <c>subject</c>, <c>creator</c>, or a conjunction
+    /// confined to one of them (<c>subject+scope:institution</c> is still the author, only narrowed). A disjunction is
+    /// the author's when each of its arms is.
+    /// </summary>
+    public static bool IsAuthorArm(ActorRule rule) => rule switch
+    {
+        SubjectUserActorRule or CreatorUserActorRule => true,
+        CombinedActorRule { CombinationKind: ActorRuleCombinationKind.All } all => all.Rules.Any(IsAuthorArm),
+        CombinedActorRule { CombinationKind: ActorRuleCombinationKind.Any } any => any.Rules.Count > 0 && any.Rules.All(IsAuthorArm),
+        _ => false
+    };
+
+    /// <summary>The rule no one matches: a disjunction of nothing.</summary>
+    private static readonly ActorRule Nobody = new CombinedActorRule(ActorRuleCombinationKind.Any, []);
+
+    private static bool IsNobody(ActorRule rule)
+        => rule is CombinedActorRule { CombinationKind: ActorRuleCombinationKind.Any, Rules.Count: 0 };
 
     /// <summary>
     /// Whether an activity pinned to <paramref name="workflow" /> and in <paramref name="stateKey" /> awaits a reviewer: the
@@ -248,6 +334,22 @@ public static class ActivityWaiting
 public sealed record ActionableActivity(Activity Activity, Workflow Workflow);
 
 /// <summary>
+/// Which arms of a move's actor rule the actionable read lets admit the caller (T342, B6): the author's own
+/// (<c>subject</c>, <c>creator</c>), everyone else's (<c>field:</c>, <c>role:</c>, <c>scope:</c>), or both.
+/// </summary>
+public enum ActorArms
+{
+    /// <summary>Every arm: what the caller may move, whoever they are to the activity.</summary>
+    All = 0,
+
+    /// <summary>The author's arms only: the caller's own drafts and the work returned to them. Needs you.</summary>
+    Author = 1,
+
+    /// <summary>Every arm but the author's: the work that waits on the caller for someone else. The Activity inbox.</summary>
+    NotAuthor = 2
+}
+
+/// <summary>
 /// The rows an actor rule could admit a caller on, told from the columns alone (<see cref="ActivityWaiting.ReachOf" />).
 /// </summary>
 [Flags]
@@ -335,8 +437,13 @@ public sealed class WaitingStates
     /// <c>@</c> is reached on every row, as a held role is. A caller with no id is admitted by no <c>subject</c>,
     /// <c>creator</c> or <c>field:</c> arm, as in the gate.
     /// </para>
+    /// <para>
+    /// Only the moves that lead on are asked (<see cref="Workflow.TransitionsLeadingOn" />), each cut to the
+    /// <paramref name="arms" /> asked for, as the act gate is asked of them (<see cref="ActivityWaiting.IsActionableBy" />,
+    /// T342, B6).
+    /// </para>
     /// </remarks>
-    public IQueryable<Activity> NarrowToCaller(IQueryable<Activity> activities, ClaimsPrincipal principal)
+    public IQueryable<Activity> NarrowToCaller(IQueryable<Activity> activities, ClaimsPrincipal principal, ActorArms arms = ActorArms.All)
     {
         ArgumentNullException.ThrowIfNull(activities);
         ArgumentNullException.ThrowIfNull(principal);
@@ -348,9 +455,9 @@ public sealed class WaitingStates
 
         var reaches = _waiting
             .Select(entry => (entry.ActivityTypeId, entry.State, Reach: Effective(_workflows[(entry.ActivityTypeId, entry.Version)]
-                .Transitions
-                .Where(transition => transition.From.Contains(entry.State, StringComparer.Ordinal))
-                .Aggregate(CallerReach.None, (reach, transition) => reach | ActivityWaiting.ReachOf(transition.Actor, principal)))))
+                .TransitionsLeadingOn(entry.State)
+                .Aggregate(CallerReach.None, (reach, transition)
+                    => reach | ActivityWaiting.ReachOf(ActivityWaiting.RestrictTo(transition.Actor, arms), principal)))))
             .ToList();
 
         CallerReach Effective(CallerReach reach)

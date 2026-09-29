@@ -11,7 +11,6 @@ using Wombat.Application.Features.Dashboards.Assessor;
 using Wombat.Application.Features.Dashboards.Coordinator;
 using Wombat.Application.Features.Dashboards.SpecialityAdmin;
 using Wombat.Application.Features.Dashboards.SubSpecialityAdmin;
-using Wombat.Application.Features.Dashboards.Trainee;
 using Wombat.Web.Components.Pages.Dashboards;
 using Wombat.Web.Services;
 
@@ -56,38 +55,8 @@ public sealed class WaitingCardsTests : TestContext
         Text(mahlangu.ParentElement!).Should().Be("Mini-CEX (Paediatrics) — Nomsa Mahlangu");
     }
 
-    /// <summary>
-    /// The T297 review: the Trainee's Activity inbox card lists the inbox's rows, which for a trainee who also assesses
-    /// hold other trainees' requests. Such a row says whose it is, in its text and its link's name, as the Assessor's card
-    /// does (T250); the caller's own row stays a plain link.
-    /// </summary>
-    [Fact]
-    public void TheTraineesInboxCard_NamesTheTraineeOnARowThatIsNotTheCallersOwn()
-    {
-        _auth.SetRoles("Trainee", "Assessor");
-        Services.AddSingleton<IScopedSender>(new Sender(new TraineeDashboardSummaryDto(
-            null,
-            [
-                new ActivityInboxItem(21, "Mini-CEX (Paediatrics)", "requested", "Requested", When, SubjectName: "Nomsa Mahlangu"),
-                new ActivityInboxItem(22, "Reflective Exercise (Paediatrics)", "draft", "Draft", When)
-            ],
-            [],
-            [],
-            IsPendingTrainee: false)));
-
-        var cut = RenderComponent<TraineeDashboard>();
-        cut.WaitForState(() => cut.FindAll("a[href='/activities/22']").Count == 1);
-
-        // Read by row: the card is itself a link to the inbox (DashboardCard's Href), so each row's link is nested in it,
-        // and the HTML parser that reads the markup back splits the nesting, and the row's inner span with it.
-        var theirs = cut.Find("a[href='/activities/21']");
-        theirs.GetAttribute("aria-label").Should().Be("Mini-CEX (Paediatrics) for Nomsa Mahlangu");
-        Text(theirs.Closest("li")!).Should().Contain("Mini-CEX (Paediatrics) — Nomsa Mahlangu");
-
-        var own = cut.Find("a[href='/activities/22']");
-        own.HasAttribute("aria-label").Should().BeFalse("her own row needs no name");
-        Text(own.Closest("li")!).Should().NotContain("—", "her own row names nobody");
-    }
+    // The T297 review's test of the Trainee's Activity inbox card, which named another trainee's row, went with the card:
+    // since T342 it is Needs you, the caller's own work only (NeedsYouCardTests).
 
     /// <summary>
     /// T335, flow 01 (R2-Landing-Assessor, S20): what waits on the Assessor is one card, "Waiting for your rating", its

@@ -374,13 +374,15 @@ Gap: none
 
 ### Step A.2.7 — Dr Mahlangu leaves a draft and a request waiting
 Role: Trainee — Dr Nomsa Mahlangu
-Route: /activities/new → /activities/{ActivityId:int} → /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int} → /activities/new →
+  /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int} → /activities/mine
 Do: File two Mini-CEX (Paediatrics) activities, each with every request field filled, an EPA the list offers, and Dr
-  Khumalo as assessor.
+  Khumalo as assessor. Then open My activities.
   - The first: the encounter on `D−3`, then Save draft.
-  - The second: the encounter on `D−2`, then Submit.
-Expect: The first reads "Draft saved. It has not been submitted." The second reads "Submitted. It is now Requested.",
-  and is in Dr Khumalo's inbox. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
+  - The second: the encounter on `D−2`, then Submit to Fatima Khumalo.
+Expect: The first reads "Draft saved. It has not been submitted. It is in nobody's inbox until you submit it." The
+  second reads "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." My activities' Needs you
+  lists the first and not the second. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Both Mini-CEX (Paediatrics) have PAED-002 (the list offers 9),
   Khumalo as assessor, Ward, a presenting problem and complexity Moderate. Activity 26 (encounter 2026-09-25), Save
   draft: "Draft saved. It has not been submitted." Activity 27 (encounter 2026-09-26), Submit: "Submitted. It is now
@@ -738,8 +740,9 @@ Gap: none
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Open the address of Dr Mahlangu's submitted Mini-CEX from A.2.7.
-Expect: "Activity unavailable": the requested activity could not be loaded. Nothing of it is shown, and nothing on the
-  page speaks of permission.
+Expect: The page is headed "Activity unavailable" and reads "This activity does not exist, or you cannot open it.", with
+  Go to My activities: the same page an id that does not exist shows, so nothing of the activity is shown and nothing
+  tells her it exists (T101, C7).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): /activities/27 (Dr Mahlangu's requested Mini-CEX) stays at its
   address, tab "Activity · Wombat", and shows only "Activity unavailable / The requested activity could not be
   loaded."; nothing of the activity and no word of permission.
@@ -920,7 +923,7 @@ Gap: none (F-A.6.5a is fixed by T339: a lock is refused in a wrong password's wo
 
 ### Step A.6.6 — Dr Patel cannot be named as an assessor while locked
 Role: Trainee — Dr Anele Dlamini
-Route: /activities/new
+Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) and open its assessor list. Then leave without saving.
 Expect: KGK's other assessors are listed (Dr Zulu, Dr Naidoo, Dr Botha and Dr Khumalo), but not Dr Patel, and never
   herself (T102). Nothing is saved.
@@ -992,22 +995,27 @@ Each step below names only what is particular to its pages.
 
 ### Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone
 Role: Trainee — Dr Anele Dlamini
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: At desktop width, using only Tab, Shift+Tab, the arrow keys, Space and Enter, file a Mini-CEX (Paediatrics):
-  - choose the type and press Submit with the form empty;
+  - choose the type in the picker and press Submit with the form empty;
   - on the draft that opens, choose an EPA the list offers, Dr Patel as assessor, the encounter on `D−20`, the setting
     Ward, a presenting problem and the complexity Moderate;
   - then submit it.
-Expect: Focus follows the page's order: activity type, the request fields, Save draft, Submit. Each control is
-  labelled, and says it is required. Its help text is read with it (T193).
+Expect: Focus follows the page's order. On the picker, Tab reaches Mini-CEX (Paediatrics) under Rated by an assessor,
+  and Enter opens its form. There the order is the seed's: EPA, Assessor, Date observed, Clinical setting, Presenting
+  problem, Case complexity, then Submit and Save draft. Each control is labelled, and says it is required. Its help text
+  is read with it (T193).
   - The focus ring is visible on every control, and never on the page heading (T048).
   - Only EPAs whose tool list names the Mini-CEX are offered (T122).
-  - The empty Submit keeps the activity as a draft and opens it: "Saved as a draft, but not submitted: … Fix the fields
-    below and submit again." The fields the refusal names are marked (T127, T263), and the focus is never left on the
-    page body (T234).
+  - The empty Submit keeps the activity as a draft and opens it: the summary "Saved as a draft, but not submitted.
+    Fix the 6 fields below and submit again." takes the focus, each of its lines a link to its field. The fields it
+    names are marked (T127, T263, C8), and the focus is never left on the page body (T234).
+  - The button reads Submit until Dr Patel is named, then Submit to Mohammed Patel.
   - Typing `D−20` announces the late-filing warning ("This encounter was 20 days ago. It can still be filed, …") from
-    its live region (D15, T160).
-  - Submitted, it reads Requested, and its history records the filing as 20 days after the encounter.
+    its live region (D15, T160), and on the draft the line above the actions adds "Filed today, 20 days after the
+    encounter: it will be recorded as late."
+  - Submitted, it reads "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox.", and its history
+    records the filing as 20 days after the encounter.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): At 1280 px, keyboard only. Tab to Log an activity, Enter: the
   focus on the h1, with no ring. Tab: Activity type (Mini-CEX by ArrowDown), then EPA, Assessor, Date observed (three
   segments and the picker), Clinical setting, Presenting problem, Case complexity, Save draft, Submit. Every label
@@ -1029,8 +1037,9 @@ Route: /activities/inbox → /activities/{ActivityId:int}
 Do: At 390 px, open Dr Dlamini's Mini-CEX from Activity inbox. Rate the supervision at `3b`, write the three
   feedback fields, and complete it.
 Expect: The inbox lists it with an action named for it. On the activity, her request is read-only to him, and the
-  six-rung ladder and the feedback fields fit the width. Complete and Decline are reachable without scrolling
-  sideways. Once completed, it reads Completed and is read-only to both of them. Nobody is emailed (Step 3.3).
+  six-rung ladder and the feedback fields fit the width. Complete, Discard changes and Decline are reachable without
+  scrolling sideways, and the history folds into "All N moves", the same moves as stacked blocks (A7). Once completed,
+  it reads "Completed." and is read-only to both of them. Nobody is emailed (Step 3.3).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): At 390 px. The bar: Wombat, "Acting as Assessor", Menu (44 px).
   Menu opens the head "Acting as Assessor", Home, Activity inbox and My data rights (44 px rows), and at its foot
   "Mohammed Patel" and Sign out (44 px); Close folds it, and following Activity inbox folds it too. Home: "Waiting for
@@ -1049,8 +1058,9 @@ Gap: F-A.7.2b, T323 (still: the nested form cards leave 208 px inputs that cut o
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
-Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. The tables of My
-  activities and "Your requests" scroll inside their containers, and each row's action stays reachable.
+Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. My activities'
+  rows stack, each cell but the link and the state labelled by its column (T342), and the table of "Your requests"
+  scrolls inside its container; each row's link or action stays reachable.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): At 390 px. The bar reads "Acting as Trainee"; the menu's eight
   rows are 44 px, with Anele Dlamini and Sign out at its foot. Home's cards stack at 16 to 374. My progress (the menu
   folds on the way): four trajectory charts 308 px wide, the Annexure A table (500 px) scrolling in its 358 px

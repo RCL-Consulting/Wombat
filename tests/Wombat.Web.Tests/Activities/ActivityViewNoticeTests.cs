@@ -136,7 +136,7 @@ public sealed class ActivityViewNoticeTests : WombatTestContext
 
         cut.Markup.Should().NotContain(NoticeText, "the load of the next activity is still running");
         release.SetResult();
-        cut.WaitForState(() => _sender.Loads == 2 && cut.Markup.Contains("Activity details"), AsyncWorkTimeout);
+        cut.WaitForState(() => _sender.Loads == 2 && cut.Markup.Contains("Who has it now"), AsyncWorkTimeout);
         cut.Markup.Should().NotContain(NoticeText);
     }
 
@@ -162,7 +162,7 @@ public sealed class ActivityViewNoticeTests : WombatTestContext
         Notices.Post(ActivityId, "warning", NoticeText);
         var cut = RenderPage();
 
-        cut.Find("#epa_id").Input("12");
+        cut.Find("#epa_id-in").Input("12");
 
         cut.Find(".alert-warning").TextContent.Trim().Should().Be(NoticeText);
     }
@@ -206,7 +206,7 @@ public sealed class ActivityViewNoticeTests : WombatTestContext
     private IRenderedComponent<ActivityView> RenderPage()
     {
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, ActivityId));
-        cut.WaitForState(() => cut.Markup.Contains("Activity details"));
+        cut.WaitForState(() => cut.Markup.Contains("Who has it now"));
 
         return cut;
     }

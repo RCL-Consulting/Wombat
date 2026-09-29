@@ -649,10 +649,11 @@ Do: Read the menu. Follow Review your account, then open My activities and Log a
 Expect: The sidebar reads "Acting as Pending trainee" over Home, Log an activity and My activities, then My data rights
   under the rule. It has no MSF reports, My committee reviews, My progress or Export portfolio, because those pages do
   not admit a pending trainee (T141). My account lists her role as "Pending trainee", and her institution, Kgosi Kgari
-  Teaching Hospital. My activities reads "No activities yet". Log an activity opens the type picker
-  with the eleven instruments of Step 2.42: her invitation's Paediatrics scope selects them, and with no curriculum yet
-  no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee) does not open this
-  page.") with Go to Home (T335).
+  Teaching Hospital. My activities reads "No activities yet" and "Log an activity to ask an assessor to rate an
+  encounter, or to log a teaching session.", with Log an activity. Log an activity opens its instrument picker: the
+  eleven instruments of Step 2.42, in its three groups. Her invitation's Paediatrics scope selects them, and with no
+  curriculum yet no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee)
+  does not open this page.") with Go to Home (T335).
 
 Step 2.26 — Mbatha resends Dr du Plessis's invitation
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

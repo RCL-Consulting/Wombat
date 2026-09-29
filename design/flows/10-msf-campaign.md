@@ -569,8 +569,7 @@ Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress
 Do: Open My activities, then My progress.
 Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
-  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My progress
-  reads:
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credit "—" (D8). My progress reads:
   - semester targets "1 of 10 EPAs met this semester", and training year 4;
   - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
     own and counts towards no target.";

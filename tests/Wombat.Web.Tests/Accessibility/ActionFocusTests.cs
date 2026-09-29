@@ -12,7 +12,10 @@ using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Commands.DiscardActivityTypeDraft;
 using Wombat.Application.Features.Activities.Commands.PublishActivityTypeDraft;
 using Wombat.Application.Features.Activities.Commands.SaveActivityTypeDraft;
+using Wombat.Application.Features.Activities.Commands.SaveActivityDraft;
+using Wombat.Application.Features.Activities.Commands.TransitionActivity;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Queries.GetActivityById;
 using Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Common.Security;
@@ -61,6 +64,7 @@ using Wombat.Domain.DataRights;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Account;
+using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Pages.Admin.ActivityTypes;
 using Wombat.Web.Components.Pages.Admin.Adoptions;
 using Wombat.Web.Components.Pages.Admin.Assessors;
@@ -1053,6 +1057,95 @@ public sealed class ActionFocusTests : TestContext
                 Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.InProgress)),
             cut => Named(cut, "Reinstate"),
             cut => Named(cut, "Reinstate").Click()),
+
+        // T342, flow 03 (C10, A10): the pressed move keeps the focus as "Submitting…", aria-disabled; once it has moved,
+        // the result region takes the focus; a refusal naming no field leaves the focus on the button.
+        ["ActivityView Submit"] = new(
+            (test, hold) => test.ActivityPage(new Sender(hold, request => request is TransitionActivityCommand, request => request switch
+            {
+                GetActivityByIdQuery => ActivityDraft(),
+                _ => null
+            })),
+            cut => Named(cut, "Submit", "Submitting…"),
+            cut => Named(cut, "Submit", "Submitting…").Click()),
+
+        // E3: Save draft is held to the same rule.
+        ["ActivityView Save draft"] = new(
+            (test, hold) => test.ActivityPage(new Sender(hold, request => request is SaveActivityDraftCommand, request => request switch
+            {
+                GetActivityByIdQuery => ActivityDraft(),
+                _ => null
+            })),
+            cut => Named(cut, "Save draft", "Saving…"),
+            cut =>
+            {
+                cut.Find("#notes-in").Input("Typed.");
+                Named(cut, "Save draft", "Saving…").Click();
+            }),
+    };
+
+    /// <summary>
+    /// A2 (T342): arriving from Log an activity, the result the filing handed over takes the focus once the activity has
+    /// loaded, after FocusOnNavigate's h1 (the T265 pattern): autofocus in the HTML, and a focus call once drawn.
+    /// </summary>
+    [Fact]
+    public void OnArrivalFromLogAnActivity_TheHandedOverResultTakesTheFocus()
+    {
+        ActivityPage(new Sender(new Hold(), _ => false, request => request is GetActivityByIdQuery ? ActivityDraft() : null),
+            notices => notices.Post(8, "success", "Submitted. It is now Requested."));
+
+        var cut = (IRenderedComponent<ActivityView>)_lastPage!;
+        var region = cut.FindComponent<ActionResult>();
+        region.Find(".action-result").HasAttribute("autofocus").Should().BeTrue();
+        region.Find(".action-result").TextContent.Should().Contain("Submitted. It is now Requested.");
+        cut.WaitForAssertion(() => FocusCalls().Should().ContainSingle()
+            .Which.Arguments[0].Should().BeOfType<ElementReference>()
+            .Which.Id.Should().Be(region.Instance.Element.Id));
+    }
+
+    /// <summary>A2 (T342): a submit refused straight after the create arrives as the refusal summary, which takes the focus.</summary>
+    [Fact]
+    public void OnArrivalWithARefusedSubmit_TheRefusalSummaryTakesTheFocus()
+    {
+        ActivityPage(new Sender(new Hold(), _ => false, request => request is GetActivityByIdQuery ? ActivityDraft() : null),
+            notices => notices.Post(
+                8, "warning", "Saved as a draft, but not submitted. Fix the field below and submit again.", ["notes"],
+                "Notes: A value is required."));
+
+        var cut = _lastPage!;
+        var summary = cut.Find("#refusal-summary");
+        summary.HasAttribute("autofocus").Should().BeTrue();
+        summary.QuerySelector("strong")!.TextContent.Should().Be("Saved as a draft, but not submitted.");
+        summary.TextContent.Should().Contain("Fix the field below and submit again.");
+        summary.QuerySelector("a")!.TextContent.Should().Be("Notes: A value is required.");
+        cut.WaitForAssertion(() => FocusCalls().Should().ContainSingle());
+    }
+
+    private IRenderedFragment? _lastPage;
+
+    private IRenderedFragment ActivityPage(IScopedSender sender, Action<ActivityNotices>? arrive = null)
+    {
+        Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
+        Services.AddScoped<ActivityNotices>();
+        Services.AddSingleton(sender);
+        arrive?.Invoke(Services.GetRequiredService<ActivityNotices>());
+        SetRendererInfo(new RendererInfo("Server", isInteractive: true));
+        var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 8));
+        cut.WaitForState(() => cut.FindAll(".form-actions--moves button").Count > 0);
+        _lastPage = cut;
+        return cut;
+    }
+
+    // The caller's own draft (admin-1 is the subject here), one field to write, and a Submit.
+    private static ActivityDetailDto ActivityDraft() => new(
+        new ActivityDto(
+            8, 4, "reflection", "Reflection", null, 1, TypeSchemaJson, TypeWorkflowJson, "[]", "{}", "admin-1", 4, "admin-1",
+            "draft", "Draft", "{}", null, null, new DateOnly(2026, 1, 1), false, Created, Created, []),
+        ["notes"],
+        [new ActivityActionDto("submit", false) { TargetStateLabel = "Done", ResultSentence = "Done.", TargetIsFinal = true }])
+    {
+        Holder = new ActivityHolderDto(ActivityHolderKind.Author, "admin-1", "Ada Admin", true, Created),
+        SubjectName = "Ada Admin"
     };
 
     // ---- rendering ----

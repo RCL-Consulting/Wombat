@@ -1,0 +1,63 @@
+@*
+  "Who has it now" (T342, flow 03, Q3; R3-Spec § 1 "Status card", § 4 ActivityStatus): the activity page's first card.
+  The state's badge and one headline ending in a full stop, a quoted note when the last move carried one (a return, a
+  decline), the body, a meta line, and the page's one action for this state. Its stripe says whose move it is: the
+  viewer's (.activity-status--yours, the emphasis stripe), someone else's, done, or declined. It replaces the old summary
+  card and the header's "State:" line. The words are ActivityPageModel.Status's.
+*@
+<section class="@View.ToneClass" aria-labelledby="activity-status-head">
+  <div class="activity-status-main">
+    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-head" id="activity-status-head">
+      <span class="@View.BadgeClass">@View.Badge</span>
+      <span class="activity-status-headline">@View.Headline</span>
+    </p>
+    @if (!string.IsNullOrWhiteSpace(View.Quote))
+    {
+      <blockquote class="activity-status-quote">
+        <p>@View.Quote</p>
+        @if (!string.IsNullOrWhiteSpace(View.QuoteBy))
+        {
+          <cite>@View.QuoteBy</cite>
+        }
+      </blockquote>
+    }
+    @if (!string.IsNullOrWhiteSpace(View.Body))
+    {
+      <p class="activity-status-body">@View.Body</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(View.Meta))
+    {
+      <p class="activity-status-meta">@View.Meta</p>
+    }
+  </div>
+
+  @if (View.Action != ActivityStatusAction.None && View.ActionLabel is { } label)
+  {
+    <div class="activity-status-action">
+      @switch (View.Action)
+      {
+        case ActivityStatusAction.FileAgain:
+          <a class="btn btn-primary" href="@View.ActionHref"><Icon Name="copy" />@label</a>
+          break;
+        case ActivityStatusAction.OpenProgress:
+          <a class="btn btn-outline" href="@View.ActionHref">@label</a>
+          break;
+        case ActivityStatusAction.Cancel:
+          @* C11: quiet, and behind the page's ConfirmDialog; the dialog hands the focus back here on Keep. *@
+          <button type="button" class="btn btn-quiet btn-quiet--danger" disabled="@Busy" @onclick="OnCancel">@label</button>
+          break;
+      }
+    </div>
+  }
+</section>
+
+@code {
+  [Parameter, EditorRequired] public ActivityStatusView View { get; set; } = default!;
+
+  /// <summary>Cancel request… was pressed.</summary>
+  [Parameter] public EventCallback OnCancel { get; set; }
+
+  /// <summary>A move is running: Cancel would race it.</summary>
+  [Parameter] public bool Busy { get; set; }
+}

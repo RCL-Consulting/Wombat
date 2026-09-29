@@ -82,6 +82,9 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
 
         Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
         Services.AddScoped<ActivityNotices>();
+
+        // The Cancel dialog opens through the browser (ConfirmDialog.ShowAsync).
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]
@@ -89,13 +92,14 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     {
         var cut = RenderPage(new FakeSender(Detail(Assessor())));
 
-        cut.Find("#overall_level").HasAttribute("disabled").Should().BeFalse();
-        cut.Find("#strengths").HasAttribute("disabled").Should().BeFalse();
-        cut.Find("#epa_id").HasAttribute("disabled").Should()
-            .BeTrue("the assessor must not be able to redirect which EPA gets credited");
+        cut.Find("#overall_level-in").HasAttribute("disabled").Should().BeFalse();
+        cut.Find("#strengths-in").HasAttribute("disabled").Should().BeFalse();
+        cut.FindAll("select#epa_id-in, input#epa_id-in, #epa_id-in select").Should()
+            .BeEmpty("the assessor must not be able to redirect which EPA gets credited: it is read out (T342)");
+        cut.Find("#epa_id-in dt").TextContent.Trim().Should().Be("EPA");
 
-        cut.Markup.Should().Contain("alert-info");
         cut.Find("#discard-changes").Should().NotBeNull();
+        cut.FindAll(".submit-check").Should().BeEmpty("the check line is the author's, on a draft (T342)");
     }
 
     [Fact]
@@ -109,7 +113,7 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
             .Should().BeEmpty("a non-bound user's view of an activity is read-only");
 
         cut.FindAll("#discard-changes").Should().BeEmpty();
-        cut.Markup.Should().NotContain("alert-info");
+        cut.FindAll(".form-actions--moves").Should().BeEmpty("there is nothing this reader can do");
     }
 
     [Fact]
@@ -122,7 +126,11 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
 
         cut.FindAll("#discard-changes").Should().BeEmpty();
 
-        ClickAction(cut, "Cancel");
+        // C11: Cancel is quiet and behind the ConfirmDialog; the dialog's confirm sends it.
+        cut.FindAll("button").Single(button => button.TextContent.Trim().StartsWith("Cancel", StringComparison.Ordinal) &&
+                                              button.ClassList.Contains("btn-quiet")).Click();
+        sender.Transitions.Should().BeEmpty("the dialog asks first");
+        cut.Find("dialog .btn-danger").Click();
 
         var command = sender.Transitions.Should().ContainSingle().Subject;
         command.TransitionKey.Should().Be("cancel");
@@ -135,8 +143,8 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         var sender = new FakeSender(Detail(Assessor()), Detail(NoOne(), state: "completed"));
         var cut = RenderPage(sender);
 
-        cut.Find("#overall_level").Input("5");
-        cut.Find("#strengths").Input("Clear structured handover.");
+        cut.Find("#overall_level-in").Input("5");
+        cut.Find("#strengths-in").Input("Clear structured handover.");
 
         ClickAction(cut, "Complete");
 
@@ -163,14 +171,16 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         var sender = new FakeSender(Detail(Assessor()), Detail(NoOne(), state: "completed"));
         var cut = RenderPage(sender);
 
-        cut.Find("#overall_level").Input("5");
+        cut.Find("#overall_level-in").Input("5");
         ClickAction(cut, "Complete");
 
         cut.WaitForState(() => cut.FindAll("#discard-changes").Count == 0);
 
         sender.LoadCount.Should().Be(2, "the writable set and the action list belong to the new state");
         // The new state by its label (T220).
-        cut.Markup.Should().Contain("State: Completed");
+        cut.Find(".activity-status .badge").TextContent.Trim().Should().Be("Completed");
+        cut.Find(".action-result").TextContent.Should().Contain("It is now Completed.",
+            "a move with no result sentence of its own says the state it reached (T342, Spec § 1)");
     }
 
     [Fact]
@@ -182,12 +192,12 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         };
         var cut = RenderPage(sender);
 
-        cut.Find("#overall_level").Input("5");
+        cut.Find("#overall_level-in").Input("5");
         ClickAction(cut, "Complete");
 
         cut.WaitForState(() => cut.Markup.Contains("A value is required"));
 
-        cut.Find("#overall_level").GetAttribute("value").Should()
+        cut.Find("#overall_level-in").GetAttribute("value").Should()
             .Be("5", "a rejected transition must not discard the assessor's work");
     }
 
@@ -196,15 +206,16 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     {
         var cut = RenderPage(new FakeSender(Detail(Assessor())));
 
-        cut.Find("#discard-changes").HasAttribute("disabled").Should().BeTrue("nothing has changed yet");
+        // A10: unavailable by aria-disabled, never natively disabled, so it stays reachable (T342).
+        cut.Find("#discard-changes").GetAttribute("aria-disabled").Should().Be("true", "nothing has changed yet");
 
-        cut.Find("#overall_level").Input("5");
-        cut.Find("#discard-changes").HasAttribute("disabled").Should().BeFalse();
+        cut.Find("#overall_level-in").Input("5");
+        cut.Find("#discard-changes").HasAttribute("aria-disabled").Should().BeFalse();
 
         cut.Find("#discard-changes").Click();
 
-        cut.Find("#overall_level").GetAttribute("value").Should().BeEmpty();
-        cut.Find("#discard-changes").HasAttribute("disabled").Should().BeTrue();
+        cut.Find("#overall_level-in").GetAttribute("value").Should().BeEmpty();
+        cut.Find("#discard-changes").GetAttribute("aria-disabled").Should().Be("true");
     }
 
     [Fact]
@@ -213,11 +224,11 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         var sender = new FakeSender(Detail(Assessor(), dataJson: """{"epa_id":"3","assessor_user_id":"assessor-1","overall_level":"4"}"""));
         var cut = RenderPage(sender);
 
-        cut.Find("#overall_level").Input("5");
-        cut.Find("#overall_level").Input("4");
+        cut.Find("#overall_level-in").Input("5");
+        cut.Find("#overall_level-in").Input("4");
 
-        cut.Find("#discard-changes").HasAttribute("disabled").Should()
-            .BeTrue("the diff the server would receive is empty");
+        cut.Find("#discard-changes").GetAttribute("aria-disabled").Should()
+            .Be("true", "the diff the server would receive is empty");
 
         ClickAction(cut, "Complete");
 
@@ -278,13 +289,19 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         cut.Markup.Should().Contain("Wrong patient encounter.");
         // T220: the move and the states by their labels, each read from its own column, since "Declined" in the State
         // column would also satisfy a search of the markup for "Decline".
-        var history = cut.FindAll("table").Single(table => table.QuerySelector("caption")?.TextContent == "Workflow history");
+        var history = cut.Find("table.history-table");
         var headers = history.QuerySelectorAll("thead th").Select(cell => cell.TextContent.Trim()).ToList();
-        var rows = history.QuerySelectorAll("tbody tr");
-        rows.Select(row => row.QuerySelectorAll("td")[headers.IndexOf("Action")].TextContent.Trim())
+        var rows = MoveRows(history);
+        rows.Select(row => row.QuerySelectorAll("td")[headers.IndexOf("Move")].TextContent.Trim())
             .Should().Equal("Submit", "Decline");
-        rows.Select(row => row.QuerySelectorAll("td")[headers.IndexOf("State")].TextContent.Trim())
+        rows.Select(row => row.QuerySelectorAll("td")[headers.IndexOf("From → to")].TextContent.Trim())
             .Should().Equal("Draft → Requested", "Requested → Declined");
+
+        // A7, B13: the note is its own full-width row under its move, not a column.
+        var note = history.QuerySelector("tbody td[colspan]")!;
+        note.GetAttribute("colspan").Should().Be("5");
+        note.TextContent.Trim().Should().Be("Note: Wrong patient encounter.");
+        note.ParentElement!.PreviousElementSibling!.QuerySelector("td")!.TextContent.Trim().Should().Be("Decline");
     }
 
     /// <summary>
@@ -303,9 +320,9 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
 
         var cut = RenderPage(new FakeSender(Detail(NoOne(), transitions: transitions)));
 
-        var history = cut.FindAll("table").Single(table => table.QuerySelector("caption")?.TextContent == "Workflow history");
-        var actorColumn = history.QuerySelectorAll("thead th").Select(cell => cell.TextContent.Trim()).ToList().IndexOf("Actor");
-        history.QuerySelectorAll("tbody tr")
+        var history = cut.Find("table.history-table");
+        var actorColumn = history.QuerySelectorAll("thead th").Select(cell => cell.TextContent.Trim()).ToList().IndexOf("By");
+        MoveRows(history)
             .Select(row => row.QuerySelectorAll("td")[actorColumn].TextContent.Trim())
             .Should().Equal("Thandi Nkosi", "Dr Ruth Mokoena");
         history.TextContent.Should().NotContain("assessor-1").And.NotContain("trainee-1");
@@ -316,7 +333,8 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
     {
         var cut = RenderPage(new FakeSender(Detail(NoOne())));
 
-        cut.Markup.Should().Contain("No workflow actions have been recorded yet.");
+        cut.Markup.Should().Contain("No moves have been recorded yet.");
+        cut.FindAll("table.history-table").Should().BeEmpty();
     }
 
     private IRenderedComponent<ActivityView> RenderPage(FakeSender sender)
@@ -324,10 +342,14 @@ public sealed class ActivityViewAssessorSurfaceTests : TestContext
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 7));
-        cut.WaitForState(() => cut.Markup.Contains("Activity details"));
+        cut.WaitForState(() => cut.Markup.Contains("Who has it now"));
 
         return cut;
     }
+
+    // The history's move rows, without the full-width note rows under them.
+    private static List<AngleSharp.Dom.IElement> MoveRows(AngleSharp.Dom.IElement history)
+        => history.QuerySelectorAll("tbody tr").Where(row => row.QuerySelector("td[colspan]") is null).ToList();
 
     private static void ClickAction(IRenderedComponent<ActivityView> cut, string label)
         => cut.FindAll("button")

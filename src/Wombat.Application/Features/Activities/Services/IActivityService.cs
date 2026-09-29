@@ -13,6 +13,21 @@ public interface IActivityService
     Task<ActivityDto> TransitionAsync(TransitionActivityInput input, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Saves an activity's data without a move (T342, B5, E3): the caller's writable fields in the current state, and only
+    /// while the activity is with the caller, meaning they have a move out of its state that leads on (T342, R1). Checked
+    /// for format only (<c>validation: draft</c>) and through the encounter-date, nominee and EPA-to-tool gates for what
+    /// the save changes. No history row, no credit.
+    /// </summary>
+    /// <remarks>
+    /// The refusals are a move's: <see cref="ActivityFieldsRefusedException" />, naming the fields, for a field the caller
+    /// may not change, a malformed value, a refused date, a refused nominee, or an EPA the instrument may not be filed on;
+    /// a plain <see cref="InvalidOperationException" /> for an activity the caller cannot read ("The activity could not be
+    /// found."), or one on which they have nothing to write in its state, or no move that leads on from it ("You cannot
+    /// change this activity while it is Requested.": the author of a request already handed to its reviewer).
+    /// </remarks>
+    Task<ActivityDto> SaveDraftAsync(SaveActivityDraftInput input, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Builds a batch of activities, drives each straight to the terminal state named by a single
     /// transition, and <b>stages them in the caller's unit of work without saving</b>. Returns how many
     /// were staged. (T121)

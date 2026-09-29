@@ -17,6 +17,7 @@ using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Infrastructure.Activities;
 using Wombat.Web.Components.Pages.Activities;
+using Wombat.Web.Components.Shared;
 using Wombat.Web.Components.Shared.Activities;
 using Wombat.Web.Services;
 using Wombat.Web.Tests.Accessibility;
@@ -83,7 +84,7 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
     private const string RequiredRefusal = "Presenting problem: A value is required.";
 
     private const string NomineeRefusal =
-        "Assessor: Dr Gone cannot be named here. Only an active Assessor at the trainee's institution can be; choose someone else.";
+        "Assessor: Dr Gone cannot be named as an assessor. Choose someone else.";
 
     private static readonly string[] ControlIds = ["assessor_user_id", "presenting_problem", "reflection", "overall_level", "observed_on"];
 
@@ -96,6 +97,8 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
 
     public RefusedFieldMarkingTests()
     {
+        // A type chosen on the same page moves the focus to its h1 (T342, A4): the one script call these tests allow.
+        JSInterop.SetupVoid(PageFocus.FocusHeadingIdentifier);
         Services.AddSingleton<IActivityReferenceDataService>(_referenceData);
         Services.AddSingleton<IWorkflowEvaluator, WorkflowEvaluator>();
         Services.AddSingleton<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
@@ -121,9 +124,39 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         cut.WaitForState(() => cut.FindAll($"#{NewActivity.RefusalAlertId}").Count == 1);
 
         cut.Find($"#{NewActivity.RefusalAlertId}").TextContent.Should().Contain(RequiredRefusal);
-        ShouldBeMarked(cut.Find("#presenting_problem"), NewActivity.RefusalAlertId, "presenting_problem has no help text");
+        ShouldBeMarked(cut.Find("#presenting_problem-in"), NewActivity.RefusalAlertId, "presenting_problem has no help text");
         OnlyTheseAreMarked(cut, "presenting_problem");
         IdReferences.Broken(cut).Should().BeEmpty("the refused field names an alert that is on the page");
+
+        // T342 (flow 03, C8): the field shows its own part of the refusal under it, which it names before the summary,
+        // and the summary's line links to its input.
+        cut.Find("#presenting_problem-msg").TextContent.Trim().Should().Be("A value is required.");
+        cut.Find("#presenting_problem-in").GetAttribute("aria-describedby").Should().Be(
+            $"presenting_problem-msg {NewActivity.RefusalAlertId}");
+        var link = cut.Find($"#{NewActivity.RefusalAlertId} a");
+        link.GetAttribute("href").Should().Be("#presenting_problem-in");
+        link.TextContent.Trim().Should().Be(RequiredRefusal);
+    }
+
+    [Fact]
+    public void NewActivity_ChangingARefusedField_DropsItsMarkAndMessageAtOnce()
+    {
+        // Spec § 3: "A changed value drops a refusal's mark at once and the hints return." The summary stays until the
+        // page's next action; the field no longer claims to be wrong.
+        SignIn("trainee-1");
+        var sender = new NewSender { CreateFailure = Refused(RequiredRefusal, "presenting_problem") };
+        var cut = SelectTheType(sender);
+
+        ClickButton(cut, "Submit");
+        cut.WaitForState(() => cut.FindAll($"#{NewActivity.RefusalAlertId}").Count == 1);
+        OnlyTheseAreMarked(cut, "presenting_problem");
+
+        cut.Find("#presenting_problem-in").Input("Fever for three days");
+
+        OnlyTheseAreMarked(cut);
+        cut.FindAll("#presenting_problem-msg").Should().BeEmpty();
+        cut.Find("#presenting_problem-in").HasAttribute("aria-describedby").Should().BeFalse();
+        IdReferences.Broken(cut).Should().BeEmpty();
     }
 
     [Fact]
@@ -133,14 +166,17 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         var sender = new NewSender { CreateFailure = Refused(NomineeRefusal, "assessor_user_id") };
         var cut = SelectTheType(sender);
 
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         ClickButton(cut, "Save draft");
         cut.WaitForState(() => cut.FindAll($"#{NewActivity.RefusalAlertId}").Count == 1);
 
-        var select = cut.Find("#assessor_user_id");
+        var select = cut.Find("#assessor_user_id-in");
         ShouldBeMarked(select, NewActivity.RefusalAlertId);
         select.GetAttribute("aria-describedby").Should().Be(
-            $"assessor_user_id-help {NewActivity.RefusalAlertId}", "the help text is read first, then the refusal (T193)");
+            $"assessor_user_id-help assessor_user_id-msg {NewActivity.RefusalAlertId}",
+            "the help text is read first, then the field's own message, then the summary (T193, T342)");
+        cut.Find("#assessor_user_id-msg").TextContent.Trim().Should().Be(
+            "Dr Gone cannot be named as an assessor. Choose someone else.");
         OnlyTheseAreMarked(cut, "assessor_user_id");
         IdReferences.Broken(cut).Should().BeEmpty();
     }
@@ -174,11 +210,11 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         cut.WaitForState(() => cut.Markup.Contains(RequiredRefusal, StringComparison.Ordinal));
         OnlyTheseAreMarked(cut, "presenting_problem");
 
-        cut.Find("#presenting_problem").Input("Fever for three days");
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#presenting_problem-in").Input("Fever for three days");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         sender.CreateFailure = Refused(NomineeRefusal, "assessor_user_id");
         ClickButton(cut, "Submit");
-        cut.WaitForState(() => cut.Markup.Contains("cannot be named here", StringComparison.Ordinal));
+        cut.WaitForState(() => cut.Markup.Contains("cannot be named as an assessor", StringComparison.Ordinal));
 
         cut.Markup.Should().NotContain(RequiredRefusal);
         OnlyTheseAreMarked(cut, "assessor_user_id");
@@ -197,11 +233,12 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         cut.WaitForState(() => cut.FindAll($"#{NewActivity.RefusalAlertId}").Count == 1);
         OnlyTheseAreMarked(cut, "presenting_problem");
 
-        cut.Find("#activity-type").Change(OtherTypeId.ToString(CultureInfo.InvariantCulture));
+        NewActivityPage.NavigateTo(this, "cbd_cpsa");
         cut.WaitForState(() => sender.EditorLoads.Contains(OtherTypeId));
+        cut.WaitForState(() => cut.FindAll("#presenting_problem-in").Count == 1);
 
         cut.FindAll($"#{NewActivity.RefusalAlertId}").Should().BeEmpty();
-        cut.FindAll("#presenting_problem").Should().ContainSingle("guard: the other type has a field of the same key");
+        cut.FindAll("#presenting_problem-in").Should().ContainSingle("guard: the other type has a field of the same key");
         OnlyTheseAreMarked(cut);
         IdReferences.Broken(cut).Should().BeEmpty("no field names the alert that went");
     }
@@ -219,8 +256,9 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
 
         var notice = _notices.Take(7);
         notice.Should().NotBeNull();
-        notice!.Message.Should().Contain(RequiredRefusal).And.Contain("Fix the fields below");
+        notice!.Message.Should().Be("Saved as a draft, but not submitted. Fix the field below and submit again.");
         notice.RefusedFieldKeys.Should().Equal("presenting_problem");
+        notice.Refusal.Should().Be(RequiredRefusal, "the draft's page lists it one field a line (T342, C8)");
     }
 
     // ---- /activities/{id}: a refused move ---------------------------------------------------------------------------
@@ -236,7 +274,7 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         cut.WaitForState(() => cut.FindAll($"#{ActivityView.ActionRefusalAlertId}").Count == 1);
 
         cut.Find($"#{ActivityView.ActionRefusalAlertId}").TextContent.Should().Contain(RequiredRefusal);
-        ShouldBeMarked(cut.Find("#presenting_problem"), ActivityView.ActionRefusalAlertId, "presenting_problem has no help text");
+        ShouldBeMarked(cut.Find("#presenting_problem-in"), ActivityView.ActionRefusalAlertId, "presenting_problem has no help text");
         OnlyTheseAreMarked(cut, "presenting_problem");
         IdReferences.Broken(cut).Should().BeEmpty();
     }
@@ -248,13 +286,15 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         var sender = new ViewSender(Detail()) { TransitionFailure = Refused(NomineeRefusal, "assessor_user_id") };
         var cut = RenderActivityView(sender);
 
-        cut.Find("#assessor_user_id").Change("assessor-gone");
+        cut.Find("#assessor_user_id-in").Change("assessor-gone");
         ClickButton(cut, "Submit");
         cut.WaitForState(() => cut.FindAll($"#{ActivityView.ActionRefusalAlertId}").Count == 1);
 
-        var select = cut.Find("#assessor_user_id");
+        var select = cut.Find("#assessor_user_id-in");
         ShouldBeMarked(select, ActivityView.ActionRefusalAlertId);
-        select.GetAttribute("aria-describedby").Should().Be($"assessor_user_id-help {ActivityView.ActionRefusalAlertId}");
+        // Its own part of the refusal under it, named after its help and before the summary, as on Log an activity (C8).
+        select.GetAttribute("aria-describedby").Should().Be($"assessor_user_id-help assessor_user_id-msg {ActivityView.ActionRefusalAlertId}");
+        cut.Find("#assessor_user_id-msg").TextContent.Should().NotBeNullOrWhiteSpace();
         OnlyTheseAreMarked(cut, "assessor_user_id");
         IdReferences.Broken(cut).Should().BeEmpty();
     }
@@ -270,7 +310,7 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         cut.WaitForState(() => cut.Markup.Contains(RequiredRefusal, StringComparison.Ordinal));
         OnlyTheseAreMarked(cut, "presenting_problem");
 
-        cut.Find("#presenting_problem").Input("Fever for three days");
+        cut.Find("#presenting_problem-in").Input("Fever for three days");
         sender.TransitionFailure = null;
         ClickButton(cut, "Submit");
         cut.WaitForState(() => sender.Transitions.Count == 2);
@@ -293,10 +333,10 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         OnlyTheseAreMarked(cut, "presenting_problem");
 
         cut.SetParametersAndRender(parameters => parameters.Add(page => page.ActivityId, 8));
-        cut.WaitForState(() => sender.Loads.Contains(8) && cut.Markup.Contains("Activity details", StringComparison.Ordinal));
+        cut.WaitForState(() => sender.Loads.Contains(8) && cut.Markup.Contains("Who has it now", StringComparison.Ordinal));
 
         cut.FindAll($"#{ActivityView.ActionRefusalAlertId}").Should().BeEmpty();
-        cut.FindAll("#presenting_problem").Should().ContainSingle("guard: the second activity's form is shown");
+        cut.FindAll("#presenting_problem-in").Should().ContainSingle("guard: the second activity's form is shown");
         OnlyTheseAreMarked(cut);
         IdReferences.Broken(cut).Should().BeEmpty("no field names the alert that went");
     }
@@ -310,13 +350,14 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         _notices.Post(
             7,
             "warning",
-            $"Saved as a draft, but not submitted: {RequiredRefusal} Fix the fields below and submit again.",
-            ["presenting_problem"]);
+            "Saved as a draft, but not submitted. Fix the field below and submit again.",
+            ["presenting_problem"],
+            RequiredRefusal);
 
         var cut = RenderActivityView(new ViewSender(Detail()));
 
         cut.Find($"#{ActivityView.NoticeAlertId}").TextContent.Should().Contain(RequiredRefusal);
-        ShouldBeMarked(cut.Find("#presenting_problem"), ActivityView.NoticeAlertId);
+        ShouldBeMarked(cut.Find("#presenting_problem-in"), ActivityView.NoticeAlertId);
         OnlyTheseAreMarked(cut, "presenting_problem");
         IdReferences.Broken(cut).Should().BeEmpty();
     }
@@ -329,7 +370,9 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
 
         var cut = RenderActivityView(new ViewSender(Detail()));
 
-        cut.Find($"#{ActivityView.NoticeAlertId}").TextContent.Should().Contain("Draft saved");
+        // T342: an outcome that refused nothing is the result region's, which no field names.
+        cut.Find("#activity-result").TextContent.Should().Contain("Draft saved");
+        cut.FindAll($"#{ActivityView.NoticeAlertId}").Should().BeEmpty();
         OnlyTheseAreMarked(cut);
     }
 
@@ -346,7 +389,10 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         ClickButton(cut, "Submit");
         cut.WaitForState(() => cut.FindAll($"#{ActivityView.ActionRefusalAlertId}").Count == 1);
 
-        cut.FindAll($"#{ActivityView.NoticeAlertId}").Should().BeEmpty("the notice described the activity as it arrived");
+        // T342: one summary for every refusal that names fields; the move's now stands in the notice's place.
+        var summary = cut.Find($"#{ActivityView.ActionRefusalAlertId}");
+        summary.TextContent.Should().Contain("Not submitted.");
+        summary.TextContent.Should().NotContain("Saved as a draft", "the notice described the activity as it arrived");
         OnlyTheseAreMarked(cut, "assessor_user_id");
         IdReferences.Broken(cut).Should().BeEmpty();
     }
@@ -359,13 +405,15 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         SignIn("trainee-1");
         var sender = new ViewSender(Detail(editable: [])) { TransitionFailure = Refused(RequiredRefusal, "presenting_problem") };
         var cut = RenderActivityView(sender);
-        cut.Find("#presenting_problem").HasAttribute("disabled").Should().BeTrue("guard: the read-only form is shown");
+        cut.FindAll("#presenting_problem-in input, input#presenting_problem-in").Should().BeEmpty(
+            "guard: the read-only form is shown, its values read out (T342)");
 
         ClickButton(cut, "Submit");
         cut.WaitForState(() => cut.FindAll($"#{ActivityView.ActionRefusalAlertId}").Count == 1);
 
-        ShouldBeMarked(cut.Find("#presenting_problem"), ActivityView.ActionRefusalAlertId);
-        OnlyTheseAreMarked(cut, "presenting_problem");
+        // A read-out has no control to mark: the refusal is said under its value, its own part of it (G10).
+        cut.Find("#presenting_problem-in .validation-message").TextContent.Trim().Should().Be("A value is required.");
+        OnlyTheseAreMarked(cut);
     }
 
     // ---- the form: every control a refusal can name ---------------------------------------------------------------
@@ -393,13 +441,13 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
 
         foreach (var id in new[] { "title", "notes", "count", "seen_on", "setting" })
         {
-            ShouldBeMarked(cut.Find($"#{id}"), "the-refusal");
+            ShouldBeMarked(cut.Find($"#{id}-in"), "the-refusal");
         }
 
-        cut.Find("#title").GetAttribute("aria-describedby").Should().Be("title-help the-refusal");
-        cut.Find("#untouched").HasAttribute("aria-invalid").Should().BeFalse();
-        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#untouched")).Should().BeFalse();
-        cut.Find("#untouched").HasAttribute("aria-describedby").Should().BeFalse();
+        cut.Find("#title-in").GetAttribute("aria-describedby").Should().Be("title-help the-refusal");
+        cut.Find("#untouched-in").HasAttribute("aria-invalid").Should().BeFalse();
+        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#untouched-in")).Should().BeFalse();
+        cut.Find("#untouched-in").HasAttribute("aria-describedby").Should().BeFalse();
     }
 
     [Fact]
@@ -417,7 +465,7 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
 
         var cut = RenderForm(schemaJson, ["settings"], "the-refusal");
 
-        cut.Find("fieldset fieldset").GetAttribute("aria-describedby").Should().Be("settings-help the-refusal");
+        cut.Find("section fieldset").GetAttribute("aria-describedby").Should().Be("settings-help the-refusal");
         cut.FindAll("input[type=checkbox]").Should().HaveCount(2)
             .And.OnlyContain(checkbox => !checkbox.HasAttribute("aria-invalid"));
     }
@@ -459,8 +507,8 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         if (refused)
         {
             cut.FindAll(".field-warning").Should().BeEmpty("the server refused the date, so it cannot still be filed");
-            ShouldBeMarked(cut.Find("#observed_on"), "the-refusal");
-            cut.Find("#observed_on").GetAttribute("aria-describedby").Should().Be("observed_on-filing-notice the-refusal");
+            ShouldBeMarked(cut.Find("#observed_on-in"), "the-refusal");
+            cut.Find("#observed_on-in").GetAttribute("aria-describedby").Should().Be("observed_on-filing-notice the-refusal");
         }
         else
         {
@@ -473,7 +521,7 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
     {
         var cut = RenderForm(SchemaJson, ["presenting_problem"], refusalId: null);
 
-        var input = cut.Find("#presenting_problem");
+        var input = cut.Find("#presenting_problem-in");
         input.GetAttribute("aria-invalid").Should().Be("true");
         input.HasAttribute("aria-describedby").Should().BeFalse();
         IdReferences.Broken(cut).Should().BeEmpty();
@@ -502,10 +550,10 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         where TComponent : IComponent
     {
         ControlIds
-            .Where(id => cut.FindAll($"#{id}").Count == 1)
+            .Where(id => cut.FindAll($"#{id}-in").Count == 1)
             .Where(id =>
             {
-                var control = cut.Find($"#{id}");
+                var control = cut.Find($"#{id}-in");
                 return control.GetAttribute("aria-invalid") == "true" || InvalidFieldStyleTests.ShowsInvalid(control);
             })
             .Should().BeEquivalentTo(ids);
@@ -528,7 +576,7 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
             .Add(form => form.FiledOn, filedOn)
             .Add(form => form.RefusedFieldKeys, refusedFieldKeys)
             .Add(form => form.RefusalId, refusalId));
-        cut.WaitForState(() => cut.FindAll(".form-container").Count > 0);
+        cut.WaitForState(() => cut.FindAll(".activity-form").Count > 0);
 
         return cut;
     }
@@ -545,7 +593,7 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 7));
-        cut.WaitForState(() => cut.Markup.Contains("Activity details", StringComparison.Ordinal));
+        cut.WaitForState(() => cut.Markup.Contains("Who has it now", StringComparison.Ordinal));
 
         return cut;
     }
@@ -554,18 +602,14 @@ public sealed class RefusedFieldMarkingTests : WombatTestContext
     {
         Services.AddSingleton<IScopedSender>(sender);
 
-        var cut = RenderComponent<NewActivity>();
-        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
-
-        cut.Find("#activity-type").Change("2");
-        cut.WaitForState(() => cut.FindAll("#assessor_user_id option").Count > 1);
-
-        return cut;
+        return NewActivityPage.Open(this, "mini_cex_cpsa", "#assessor_user_id-in option[value='assessor-1']");
     }
 
+    // A move's button reads "Submit to Dr Gone" once the hand-off field names someone (T342, C3), so "Submit" matches it.
     private static void ClickButton<TComponent>(IRenderedComponent<TComponent> cut, string label)
         where TComponent : IComponent
-        => cut.FindAll("button").First(button => button.TextContent.Trim() == label).Click();
+        => cut.FindAll("button").First(button =>
+            button.TextContent.Trim() == label || button.TextContent.Trim().StartsWith($"{label} to ", StringComparison.Ordinal)).Click();
 
     private static ActivityDetailDto Detail(IReadOnlyList<string>? editable = null)
     {

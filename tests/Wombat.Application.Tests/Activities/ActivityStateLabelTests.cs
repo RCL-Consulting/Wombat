@@ -7,6 +7,7 @@ using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityById;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
+using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Dashboards.Assessor;
 using Wombat.Application.Features.Dashboards.Trainee;
 using Wombat.Domain.Activities;
@@ -46,7 +47,7 @@ public sealed class ActivityStateLabelTests
         var submitted = await SubmittedAuditAsync(options);
 
         await using var db = new ApplicationDbContext(options);
-        var detail = await new GetActivityByIdQueryHandler(Service(db), new FakeUserDirectory())
+        var detail = await new GetActivityByIdQueryHandler(Service(db), new FakeUserDirectory(), db)
             .Handle(new GetActivityByIdQuery(submitted, Principal(TraineeId)), CancellationToken.None);
 
         detail!.Activity.CurrentState.Should().Be("submitted", "the key stays for logic");
@@ -64,7 +65,7 @@ public sealed class ActivityStateLabelTests
         await TransitionAsync(options, submitted, "sign_off", AssessorId, """{ "supervisor_comments": "A complete cycle." }""");
 
         await using var db = new ApplicationDbContext(options);
-        var detail = await new GetActivityByIdQueryHandler(Service(db), new FakeUserDirectory())
+        var detail = await new GetActivityByIdQueryHandler(Service(db), new FakeUserDirectory(), db)
             .Handle(new GetActivityByIdQuery(submitted, Principal(TraineeId)), CancellationToken.None);
 
         detail!.Activity.CurrentStateLabel.Should().Be("Signed off");
@@ -80,8 +81,8 @@ public sealed class ActivityStateLabelTests
         var submitted = await SubmittedAuditAsync(options);
 
         await using var db = new ApplicationDbContext(options);
-        var rows = await new ListActivitiesBySubjectQueryHandler(db)
-            .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None);
+        var rows = (await new ListActivitiesBySubjectQueryHandler(db, new FakeUserDirectory())
+            .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None)).Items;
 
         var row = rows.Should().ContainSingle(item => item.Id == submitted).Subject;
         row.CurrentState.Should().Be("submitted");
@@ -118,18 +119,21 @@ public sealed class ActivityStateLabelTests
         recent.CurrentStateLabel.Should().Be("Awaiting supervisor");
     }
 
+    /// <summary>
+    /// A trainee's draft is on Home's Needs you card, which lists what <c>ListNeedsYouQuery</c> lists (T342, B6): it left the
+    /// Activity inbox card, which now lists only the work that waits on her for someone else.
+    /// </summary>
     [Fact]
-    public async Task TheTraineesDashboardInbox_NamesADraftByItsLabel()
+    public async Task TheTraineesNeedsYou_NamesADraftByItsLabel()
     {
         var options = await SeededAsync();
         var draft = await CreateAuditAsync(options);
 
         await using var db = new ApplicationDbContext(options);
-        var summary = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
-            new GetTraineeDashboardSummaryQuery(Principal(TraineeId, WombatRoles.Trainee), new DateOnly(2026, 3, 20)),
-            CancellationToken.None);
+        var needsYou = await new ListNeedsYouQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
+            new ListNeedsYouQuery(Principal(TraineeId, WombatRoles.Trainee)), CancellationToken.None);
 
-        summary.Inbox.Should().ContainSingle(item => item.ActivityId == draft)
+        needsYou.Should().ContainSingle(item => item.Id == draft)
             .Which.CurrentStateLabel.Should().Be("Draft");
     }
 
@@ -160,11 +164,11 @@ public sealed class ActivityStateLabelTests
         await PublishRenamedVersionAsync(options, "With the reviewer");
 
         await using var db = new ApplicationDbContext(options);
-        var mine = await new ListActivitiesBySubjectQueryHandler(db)
-            .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None);
+        var mine = (await new ListActivitiesBySubjectQueryHandler(db, new FakeUserDirectory())
+            .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None)).Items;
         var inbox = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), new FakeUserDirectory())
             .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
-        var detail = await new GetActivityByIdQueryHandler(Service(db), new FakeUserDirectory())
+        var detail = await new GetActivityByIdQueryHandler(Service(db), new FakeUserDirectory(), db)
             .Handle(new GetActivityByIdQuery(submitted, Principal(TraineeId)), CancellationToken.None);
 
         mine.Single(item => item.Id == submitted).CurrentStateLabel.Should().Be("Awaiting supervisor");
@@ -189,8 +193,8 @@ public sealed class ActivityStateLabelTests
         }
 
         await using var db = new ApplicationDbContext(options);
-        var rows = await new ListActivitiesBySubjectQueryHandler(db)
-            .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None);
+        var rows = (await new ListActivitiesBySubjectQueryHandler(db, new FakeUserDirectory())
+            .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None)).Items;
 
         rows.Single(item => item.Id == draft).CurrentStateLabel.Should().Be("archived");
     }

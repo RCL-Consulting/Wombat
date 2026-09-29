@@ -35,7 +35,7 @@
       <p id="@BodyId">@Body</p>
       @FormContent
       <div class="dialog-actions">
-        <button type="button" class="btn btn-outline" autofocus @onclick="CancelAsync">Cancel</button>
+        <button type="button" class="btn btn-outline" autofocus @onclick="CancelAsync">@CancelLabel</button>
         <button type="submit" class="btn @(DangerAction ? "btn-danger" : "btn-primary")">@ConfirmLabel</button>
       </div>
     </form>
@@ -49,7 +49,7 @@
         @* While the confirmed action runs, the dialog stays open and the confirm button keeps the focus: it is not disabled,
            a second press sends nothing, and aria-disabled says so (DESIGN.md § Button system, T234 review). Cancel would
            race it, so Cancel is disabled. *@
-        <button type="button" class="btn btn-outline" disabled="@_confirming" @onclick="CancelAsync">Cancel</button>
+        <button type="button" class="btn btn-outline" disabled="@_confirming" @onclick="CancelAsync">@CancelLabel</button>
         <button type="button" class="btn @(DangerAction ? "btn-danger" : "btn-primary")"
                 aria-disabled="@InFlight.AriaDisabled(_confirming)" @onclick="ConfirmAsync">@ConfirmLabel</button>
       </FormActions>
@@ -67,6 +67,12 @@
   [Parameter] public string Title { get; set; } = "Confirm";
   [Parameter] public string Body { get; set; } = string.Empty;
   [Parameter] public string ConfirmLabel { get; set; } = "Confirm";
+
+  /// <summary>
+  /// The safe button's words: "Keep the request", "Keep the draft" (T342, flow 03, A5). "Cancel" by default, so every
+  /// other dialog reads as it did.
+  /// </summary>
+  [Parameter] public string CancelLabel { get; set; } = "Cancel";
   [Parameter] public bool DangerAction { get; set; }
   [Parameter] public EventCallback OnConfirm { get; set; }
   [Parameter] public EventCallback OnCancel { get; set; }

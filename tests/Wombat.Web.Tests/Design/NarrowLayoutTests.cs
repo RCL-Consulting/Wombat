@@ -85,6 +85,45 @@ public sealed partial class NarrowLayoutTests
     }
 
     [Fact]
+    public void AtPhoneWidth_TheActivityFormsControlsAre44Px_OneCardDeep_AndItsActionBarStacks()
+    {
+        // T342, flow 03 (Spec § 3): below 641px every control of the form is 44px, a section card pads 16px, and the bar
+        // stacks with the move on top. Scoped to the form and its bar (the round-2 review, T7), not every page's controls.
+        const string phone = "@media (max-width: 640.98px)";
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, phone, ".activity-form .form-control").Declarations.Should().Contain("min-height: 2.75rem", "a 44px target");
+        Rule(rules, phone, ".activity-form .form-select").Declarations.Should().Contain("min-height: 2.75rem");
+        Rule(rules, phone, ".form-actions--moves .btn").Declarations.Should().Contain("min-height: 2.75rem");
+        Rule(rules, phone, ".form-actions--moves").Declarations.Should().Contain(["flex-direction: column", "align-items: stretch"]);
+        Rule(rules, phone, ".activity-form .detail-card").Declarations.Should().Contain("padding: var(--space-md)");
+        Rule(rules, string.Empty, ".instrument-link").Declarations.Should().Contain("min-height: 2.75rem",
+            "a type's link is a 44px target at every width");
+    }
+
+    [Fact]
+    public void AtPhoneWidth_AMultiChoiceRowIs44Px_ItsLabelFillingTheRow()
+    {
+        // T342, the build review's A8: flow 02's Remember-me rows, scoped to the activity form's checkbox grid.
+        const string phone = "@media (max-width: 640.98px)";
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, phone, ".activity-form .check-grid .form-check").Declarations.Should().Contain("min-height: 2.75rem");
+        Rule(rules, phone, ".activity-form .check-grid .form-check label").Declarations.Should().Contain(
+            ["min-height: 2.75rem", "display: inline-flex", "flex: 1"]);
+    }
+
+    [Fact]
+    public void ThePhoneHistory_DrawsItsOwnDisclosureMarker_TurningDownWhenOpen()
+    {
+        // T342, the build review's A7: the flex summary drops the native triangle, so its chevron turns while open.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, ".history-details[open] .history-details-marker").Declarations.Should().Contain("transform: rotate(90deg)");
+        Rule(rules, string.Empty, ".history-details-marker").Declarations.Should().Contain("transition: transform var(--motion-fast) ease");
+    }
+
+    [Fact]
     public void AtPhoneWidth_TheReferenceIsOneColumn_AndTheErrorPanelPads16Px()
     {
         // R2-Error-Narrow: each label over its value, in a block padded 12px, in a panel padded 16px. Two columns left the

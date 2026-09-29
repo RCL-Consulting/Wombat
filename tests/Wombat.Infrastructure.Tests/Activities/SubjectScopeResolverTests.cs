@@ -139,7 +139,7 @@ public sealed class SubjectScopeResolverTests
 
         var refused = () => Service(db).CreateDraftAsync(new CreateActivityInput(
             NomineeTypeId, SubjectId, SubjectId, """{ "assessor_user_id": "assessor-at-20" }""", Principal(SubjectId)));
-        await refused.Should().ThrowAsync<InvalidOperationException>().WithMessage("*cannot be named here*");
+        await refused.Should().ThrowAsync<InvalidOperationException>().WithMessage("*be named as*");
     }
 
     // ---- fixture --------------------------------------------------------------------------------------------------

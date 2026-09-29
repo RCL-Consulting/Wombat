@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
@@ -149,6 +150,8 @@ public sealed class ActivityReferenceDataServiceTests
         options.Should().ContainSingle();
         options[0].Value.Should().Be("moved-away");
         options[0].Label.Should().EndWith("(not on the current list)");
+        // T342 (C4): by name alone, as the Spec draws it, not with the address the offered people carry.
+        options[0].Label.Should().Be("First moved-away (not on the current list)");
     }
 
     [Fact]
@@ -276,6 +279,38 @@ public sealed class ActivityReferenceDataServiceTests
 
         (await service.GetEntrustmentScaleLevelOptionsAsync(null)).Should().BeEmpty();
         (await service.GetEntrustmentScaleLevelOptionsAsync("nonexistent")).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetScaleRungs_CarryEachRungsDescriptor_BesideItsOrderAndLabel()
+    {
+        // T342, B12: the rung row prints the College's descriptor, and "Rated 4" of a stored 5 is the Label of Order 5.
+        await using var db = CreateDb();
+        db.Set<EntrustmentScale>().Add(new EntrustmentScale { Id = 3, Name = "CPSA v11.1" });
+        db.Set<EntrustmentLevel>().AddRange(
+            new EntrustmentLevel { Id = 20, ScaleId = 3, Order = 5, Label = "4", Description = "  Supervision at a distance.  " },
+            new EntrustmentLevel { Id = 21, ScaleId = 3, Order = 4, Label = "3b", Description = "Indirect supervision, on call." },
+            new EntrustmentLevel { Id = 22, ScaleId = 3, Order = 6, Label = "5", Description = "   " },
+            new EntrustmentLevel { Id = 23, ScaleId = 99, Order = 5, Label = "Other scale" });
+        await db.SaveChangesAsync();
+
+        var service = new ActivityReferenceDataService(db);
+
+        var rungs = await service.GetEntrustmentScaleRungsAsync("CPSA v11.1");
+
+        rungs.Should().Equal(
+            new EntrustmentRung(4, "3b", "Indirect supervision, on call."),
+            new EntrustmentRung(5, "4", "Supervision at a distance."),
+            new EntrustmentRung(6, "5", null));
+        rungs.Single(rung => rung.Order == 5).Label.Should().Be("4", "a stored 5 reads as the rung \"4\"");
+
+        // The same ladder the level options read, in the same order.
+        (await service.GetEntrustmentScaleLevelOptionsAsync("CPSA v11.1"))
+            .Select(option => (option.Value, option.Label))
+            .Should().Equal(rungs.Select(rung => (rung.Order.ToString(), rung.Label)));
+
+        (await service.GetEntrustmentScaleRungsAsync(null)).Should().BeEmpty();
+        (await service.GetEntrustmentScaleRungsAsync("nonexistent")).Should().BeEmpty();
     }
 
     private static TraineeProfile ActiveProfile(int id, string userId, int institutionId)

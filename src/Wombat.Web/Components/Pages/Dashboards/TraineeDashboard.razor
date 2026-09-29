@@ -91,38 +91,25 @@
       }
     </DashboardCard>
 
-    <DashboardCard Title="Activity inbox" Icon="inbox" Href="/activities/inbox" IsLoading="IsLoading">
+    @* Needs you (T342, flow 03, E8; R3-C-Mine "home-card"): exactly My activities' Needs you, the same rows in the same
+       words (NeedsYouList), read by the same code (the summary's NeedsYou is ListNeedsYouQuery's read; T297's rule as
+       flow 03 restates it). It lists the first few and counts them all; My activities has the rest. Until T342 it was the
+       Activity inbox card, the inbox's rows, which since T342 leave out the author's own work. *@
+    <DashboardCard Title="Needs you" Icon="inbox" IsLoading="IsLoading"
+                   Count="@(Summary?.NeedsYou.Count is > 0 ? Summary.NeedsYou.Count : null)"
+                   CountWords="@(Summary?.NeedsYou.Count is > 0 ? ActivityListWords.ItemCount(Summary.NeedsYou.Count) : null)">
       @if (Summary is { } summary)
       {
-        if (summary.Inbox.Count == 0)
+        if (summary.NeedsYou.Count == 0)
         {
-          <p class="muted">No pending items.</p>
+          <p class="muted">Nothing needs you. Requests you have filed are in My activities.</p>
         }
         else
         {
-          <ul class="list-unstyled">
-            @foreach (var item in summary.Inbox)
-            {
-              <li class="list-row">
-                @* Another trainee's row, for a trainee who also assesses, says whose it is, as the Assessor's card does (T250,
-                   T297 review); the caller's own names nobody. *@
-                @if (item.SubjectName is { } subjectName)
-                {
-                  <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {subjectName}")">@item.ActivityTypeName</a> &mdash; @subjectName</span>
-                }
-                else
-                {
-                  <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                }
-                @* The badge's colour is the state's key, mapped onto a badge app.css defines (BadgeFor, T266); its words are
-                   the state's label (T220). The inbox holds no finished work, so none of these is done. *@
-                <span class="badge @BadgeFor.ActivityState(item.CurrentState, isFinished: false)">@item.CurrentStateLabel</span>
-              </li>
-            }
-          </ul>
+          <NeedsYouList Items="@summary.NeedsYou.Take(GetTraineeDashboardSummaryQueryHandler.NeedsYouListed).ToList()" />
         }
         <div class="dashboard-card-footer">
-          <a href="/activities/inbox" class="btn btn-sm btn-outline">Open inbox &rarr;</a>
+          <a href="/activities/mine">Open My activities</a>
         </div>
       }
     </DashboardCard>

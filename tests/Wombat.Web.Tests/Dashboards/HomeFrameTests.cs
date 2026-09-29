@@ -143,7 +143,7 @@ public sealed class HomeFrameTests : WombatTestContext
     {
         var cut = RenderHome(Reads.Hang, WombatRoles.Trainee);
 
-        CardTitles(cut).Should().StartWith(["Curriculum targets", "Activity inbox"]);
+        CardTitles(cut).Should().StartWith(["Curriculum targets", "Needs you"]);
         cut.FindAll(".dashboard-grid a").Should().BeEmpty();
         cut.FindAll(".detail-card--interactive").Should().BeEmpty();
     }

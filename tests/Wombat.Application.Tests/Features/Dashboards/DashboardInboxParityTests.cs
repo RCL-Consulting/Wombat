@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Dashboards.Assessor;
 using Wombat.Application.Features.Dashboards.Trainee;
 using Wombat.Application.Tests.TestHelpers;
@@ -19,9 +20,9 @@ using Wombat.Tests.Shared;
 namespace Wombat.Application.Tests.Features.Dashboards;
 
 /// <summary>
-/// T297: the Assessor's and the Trainee's cards list what the Activity Inbox they link to lists, for every shipped
-/// workflow and every caller: the trainee's card the inbox's first rows, the assessor's the inbox's rows less their own
-/// portfolio. Before T297 each card selected by literal state keys and disagreed with the inbox on every rated CPSA
+/// T297: the Assessor's and the Trainee's cards list what the pages they link to list, for every shipped workflow and
+/// every caller: the assessor's the Activity Inbox's rows less their own portfolio; the trainee's, since T342 Needs you,
+/// the rows of My activities' Needs you (ListNeedsYouQuery), where until then it was the inbox's first rows. Before T297 each card selected by literal state keys and disagreed with the inbox on every rated CPSA
 /// instrument.
 /// </summary>
 /// <remarks>
@@ -90,12 +91,13 @@ public sealed class DashboardInboxParityTests
             var assessor = await AssessorCardAsync(db, principal);
             var notOwn = inbox.Where(row => row.SubjectUserId != callerId).ToList();
 
-            trainee.Inbox.Select(item => item.ActivityId).Should().Equal(
-                inbox.Take(5).Select(row => row.Id),
-                $"{seedKey}: the {who}'s Activity inbox card is the first rows of the inbox it opens");
-            trainee.Inbox.Select(item => item.CurrentStateLabel).Should().Equal(
-                inbox.Take(5).Select(row => row.CurrentStateLabel),
-                $"{seedKey}: the {who}'s card names each state as the inbox does");
+            // T342 (flow 03, E8): the Trainee's card is Needs you, and it is My activities' Needs you: the same rows, in
+            // the same order, named and worded alike (T297's rule, restated).
+            var needsYou = await NeedsYouAsync(db, principal);
+            trainee.NeedsYou.Should().BeEquivalentTo(
+                needsYou,
+                options => options.WithStrictOrdering(),
+                $"{seedKey}: the {who}'s Needs you card is My activities' Needs you");
 
             assessor.PendingRequestCount.Should().Be(
                 notOwn.Count,
@@ -116,6 +118,10 @@ public sealed class DashboardInboxParityTests
     private static async Task<IReadOnlyList<ActivitySummaryDto>> InboxAsync(ApplicationDbContext db, ClaimsPrincipal principal)
         => await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
             .Handle(new ListActivitiesByActorInboxQuery(principal), CancellationToken.None);
+
+    private static async Task<IReadOnlyList<ActivitySummaryDto>> NeedsYouAsync(ApplicationDbContext db, ClaimsPrincipal principal)
+        => await new ListNeedsYouQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
+            .Handle(new ListNeedsYouQuery(principal), CancellationToken.None);
 
     private static async Task<TraineeDashboardSummaryDto> TraineeCardAsync(ApplicationDbContext db, ClaimsPrincipal principal)
         => await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)

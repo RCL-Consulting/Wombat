@@ -29,13 +29,13 @@ public sealed class TraineeDashboardQueryTests
 
         result.IsPendingTrainee.Should().BeTrue();
         result.CurriculumTargets.Should().BeNull();
-        result.Inbox.Should().BeEmpty();
+        result.NeedsYou.Should().BeEmpty();
         result.RecentActivities.Should().BeEmpty();
         result.UpcomingDeadlines.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task Trainee_WithActivities_ReturnsCurriculumProgressAndInbox()
+    public async Task Trainee_WithActivities_ReturnsCurriculumProgressAndRecentActivities()
     {
         await using var db = CreateDb();
         SeedTraineeData(db);
@@ -92,7 +92,7 @@ public sealed class TraineeDashboardQueryTests
     }
 
     [Fact]
-    public async Task AnActivityInATerminalStateOfItsPinnedWorkflow_IsNeitherInTheInboxNorDue()
+    public async Task AnActivityInATerminalStateOfItsPinnedWorkflow_IsNeitherInNeedsYouNorDue()
     {
         // T203: finished is a terminal state of the activity's PINNED workflow, not the literal "completed". A
         // discussed reflective exercise and an accepted teaching session are done; a Mini-CEX in "accepted" is not.
@@ -114,20 +114,23 @@ public sealed class TraineeDashboardQueryTests
         var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
 
-        // The inbox card is what the trainee can move (T297): she may cancel the accepted Mini-CEX and submit the draft. The
-        // version-2 discussion waits on its supervisor's sign-off, so it is still due but not hers to move.
-        result.Inbox.Select(item => item.ActivityId).Should().BeEquivalentTo([5, 6]);
+        // Home's card is Needs you (T342, E8): her draft is hers to submit, so it is there; the accepted Mini-CEX she may
+        // only cancel, so it is not (T342, B6). The version-2 discussion waits on its supervisor's sign-off, so it is still
+        // due but not hers to move. The card is ListNeedsYouQuery's rows (T297's rule, restated).
+        result.NeedsYou.Select(row => row.Id).Should().Equal(6);
+        (await NeedsYouAsync(db, "trainee-1")).Select(row => row.Id).Should().Equal(result.NeedsYou.Select(row => row.Id));
         result.UpcomingDeadlines.Select(item => item.ActivityId).Should().BeEquivalentTo([5, 6, 7]);
     }
 
     /// <summary>
     /// T297, Steps 3.12 and 3.16: the card listed a declined request, which has no move left, and dropped a reflection
     /// awaiting discussion, which she may still cancel, while the inbox it opens did the opposite. It lists what the inbox
-    /// lists. A declined request is shown, with its badge, on Recent activities and on My Activities. No mail announces it:
-    /// <c>AssessmentDeclinedEmail</c> has no sender (T320).
+    /// lists. T342 (B6): a request or a reflection she may only cancel is with its assessor, so it is on neither the card
+    /// nor Needs you, and a declined one has no move left. A declined request is shown, with its badge, on Recent
+    /// activities and on My Activities. No mail announces it: <c>AssessmentDeclinedEmail</c> has no sender (T320).
     /// </summary>
     [Fact]
-    public async Task ADeclinedCpsaRequest_IsNotOnTheInboxCard_AndASubmittedReflectiveExerciseIs()
+    public async Task ADeclinedCpsaRequest_AndOneSheMayOnlyCancel_AreNotOnTheCard()
     {
         await using var db = CreateDb();
         ShippedSeeds.AddType(db, 21, "mini_cex_cpsa", "Mini-CEX (Paediatrics)");
@@ -141,32 +144,33 @@ public sealed class TraineeDashboardQueryTests
         var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
 
-        result.Inbox.Select(item => (item.ActivityId, item.CurrentStateLabel))
-            .Should().Equal((2, "Requested"), (3, "Awaiting discussion"));
+        result.NeedsYou.Should().BeEmpty();
+        (await NeedsYouAsync(db, "trainee-1")).Should().BeEmpty();
         result.RecentActivities.Select(item => item.ActivityId).Should().Contain(1, "the decline is shown with its badge there");
     }
 
     /// <summary>
-    /// The T297 review: for a trainee who is also an assessor the card lists other trainees' requests beside her own, and
-    /// a row that is someone else's says whose, as the inbox and the Assessor's card do (T250). Her own row names nobody.
+    /// T342 (flow 03, E8): for a trainee who is also an assessor, Home's Trainee card is her own work that waits on her,
+    /// Needs you, and never another trainee's request that waits on her rating: that is the Assessor's inbox. Until T342
+    /// the card was the Activity inbox's first rows and listed it, naming the trainee (the T297 review).
     /// </summary>
     [Fact]
-    public async Task ARowThatIsAnotherTraineesWork_NamesTheTrainee_AndTheCallersOwnNamesNobody()
+    public async Task ForATraineeWhoAlsoAssesses_TheCardIsHerOwnWork_NotTheRequestsWaitingOnHer()
     {
         await using var db = CreateDb();
         ShippedSeeds.AddType(db, 21, "mini_cex_cpsa", "Mini-CEX (Paediatrics)");
         AddOwn(db, 1, 21, version: 1, "requested", """{ "assessor_user_id": "assessor-botha" }""");
         AddOwn(db, 2, 21, version: 1, "requested", """{ "assessor_user_id": "trainee-1" }""", subjectUserId: "trainee-2");
+        AddOwn(db, 3, 21, version: 1, "draft", """{ "assessor_user_id": "assessor-botha" }""");
         await db.SaveChangesAsync();
 
-        var names = new FakeUserDirectory(("trainee-1", "Sipho Ndlovu"), ("trainee-2", "Nomsa Mahlangu"));
+        var names = new FakeUserDirectory(("trainee-1", "Sipho Ndlovu"), ("trainee-2", "Nomsa Mahlangu"), ("assessor-botha", "Sarah Botha"));
+        var principal = CreatePrincipal("trainee-1", [WombatRoles.Trainee, WombatRoles.Assessor]);
         var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), names).Handle(
-            new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", [WombatRoles.Trainee, WombatRoles.Assessor])),
-            CancellationToken.None);
+            new GetTraineeDashboardSummaryQuery(principal), CancellationToken.None);
 
-        result.Inbox.Select(item => (item.ActivityId, item.SubjectName)).Should().BeEquivalentTo(
-            [(1, (string?)null), (2, "Nomsa Mahlangu")]);
-        names.Lookups.Should().ContainSingle().Which.Should().Equal(["trainee-2"], "one lookup, for the rows that are not her own");
+        result.NeedsYou.Select(row => row.Id).Should().Equal(3);
+        result.NeedsYou.Single().NomineeName.Should().Be("Sarah Botha", "the row carries what My activities' row carries");
     }
 
     [Fact]
@@ -211,10 +215,18 @@ public sealed class TraineeDashboardQueryTests
         var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
 
-        result.Inbox.Select(item => item.ActivityId).Should().Equal(1);
+        result.NeedsYou.Should().BeEmpty("her own request waits on its assessor, and the others' are not hers (T342)");
         result.UpcomingDeadlines.Select(item => item.ActivityId).Should().Equal(1);
         result.RecentActivities.Select(item => item.ActivityId).Should().Equal(1);
     }
+
+    private static async Task<IReadOnlyList<Wombat.Application.Features.Activities.Dtos.ActivitySummaryDto>> NeedsYouAsync(
+        ApplicationDbContext db, string userId)
+        => await new Wombat.Application.Features.Activities.Queries.ListNeedsYou.ListNeedsYouQueryHandler(
+                db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
+            .Handle(
+                new Wombat.Application.Features.Activities.Queries.ListNeedsYou.ListNeedsYouQuery(CreatePrincipal(userId, ["Trainee"])),
+                CancellationToken.None);
 
     private const int ReflectiveTypeId = 11;
     private const int TeachingTypeId = 12;

@@ -84,18 +84,22 @@ committee decides on.
 
 ### Step 3.1 — Dr Dlamini starts a Mini-CEX and saves it as a draft
 Role: Trainee — Dr Anele Dlamini
-Route: / → /activities/new
-Do: From the dashboard, log an activity and choose Mini-CEX (Paediatrics). Fill in the EPA PAED-001, the assessor Dr
-  David Naidoo, the date observed `D−10`, the setting Emergency unit and the complexity Moderate. Leave the presenting
-  problem empty, and save the draft.
-Expect: The type select offers eleven types, and no name appears twice: the ten hand-filed `*_cpsa` instruments and KGK
-  Teaching Session Log. Multi-Source Feedback and Learner Feedback are not offered (T162). The form has three sections:
-  Request, Entrustment and Feedback. Only Request can be filled in; the other two are locked. The EPA picker offers the
-  nine EPAs whose list names the Mini-CEX: PAED-001 to 004, 006 to 008, 012 and 013. It does not offer PAED-010 (T122).
-  The Assessor picker offers exactly KGK's active Assessors, by name and address: Dr Botha, Dr Khumalo, Dr Naidoo,
-  Dr Patel and Dr Zulu. It never offers Dr Dlamini or another registrar, nor Prof Mbatha, Mr Smit, Dr Mokoena,
-  Dr Sithole or Dr van Rensburg (T102). No lateness warning shows for `D−10`. Saving opens the activity's page, State:
-  Draft, with "Draft saved. It has not been submitted." (T127).
+Route: / → /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
+Do: From the dashboard, log an activity and choose Mini-CEX (Paediatrics) in the picker. Fill in the EPA PAED-001, the
+  assessor Dr David Naidoo, the date observed `D−10`, the setting Emergency unit and the complexity Moderate. Leave the
+  presenting problem empty, and save the draft.
+Expect: The picker offers eleven types, and no name appears twice: the ten hand-filed `*_cpsa` instruments and KGK
+  Teaching Session Log, in Step 2.42's three groups. Multi-Source Feedback and Learner Feedback are not offered (T162).
+  Mini-CEX (Paediatrics), under Rated by an assessor, opens its form, which has three sections: Request, Entrustment and
+  Feedback. Only Request can be filled in. Entrustment and Feedback are locked, and once Dr Naidoo is named each reads
+  "David Naidoo fills this in"; the primary button then reads Submit to David Naidoo. The EPA picker offers the nine
+  EPAs whose list names the Mini-CEX: PAED-001 to 004, 006 to 008, 012 and 013. It does not offer PAED-010 (T122). The
+  Assessor picker offers exactly KGK's active Assessors, by name and address: Dr Botha, Dr Khumalo, Dr Naidoo, Dr Patel
+  and Dr Zulu. It never offers Dr Dlamini or another registrar, nor Prof Mbatha, Mr Smit, Dr Mokoena, Dr Sithole or Dr
+  van Rensburg (T102). No lateness warning shows for `D−10`. Save draft opens the activity's page with the focused
+  result "Draft saved. It has not been submitted. It is in nobody's inbox until you submit it." (T127). Its status card,
+  "Who has it now", is badged Draft and reads "With you. Not submitted yet."; there is no "State:" line and no summary
+  card (T342).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): From Home ("Trainee · Semester 2, 2026") its header's Log an
   activity. The type select offers 11 types once each (the ten `*_cpsa` and KGK Teaching Session Log), no MSF or
   Learner Feedback. Request, Entrustment and Feedback, the last two disabled. EPA picker PAED-001 to 004, 006 to 008,
@@ -107,11 +111,16 @@ Gap: none
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int}
 Do: Find the draft in My activities and open it. Press Submit without filling in the presenting problem.
-Expect: My activities lists the draft as Mini-CEX (Paediatrics), PAED-001 with its title, encounter date `D−10`, Draft,
-  credited "—". On the draft's page, the Request fields are open. The page offers Submit and Cancel, and Discard changes
-  stays disabled until something is typed. The history has one row: Create (Draft → Draft), by Dr Dlamini. The submit
-  is refused with "Presenting problem: A value is required.", the field is marked (T263), and the activity stays a
-  draft.
+Expect: My activities opens with Needs you, badged 1: the draft, linked as "Mini-CEX (Paediatrics) · PAED-001 · `D−10`"
+  with "to David Naidoo" under it, badged Draft, and "Not submitted yet. It is in nobody's inbox until you submit it."
+  All activities (1) lists it again: Who has it now "You", State Draft, Credit "—". On the draft's page the Request
+  fields are open, and the status card reads "With you. Not submitted yet." and "Finish the request and submit it. It is
+  in nobody's inbox until you submit it." The actions read Submit to David Naidoo, Save draft, Discard changes (marked
+  unavailable until something is typed) and, last and quiet, Cancel this draft…. Above them: "When you submit: it goes
+  to David Naidoo's Activity inbox and stays Requested until David Naidoo acts on it." The history has one row: Create,
+  — → Draft, by Anele Dlamini. The submit is refused: the summary "Not submitted. It is still a draft. Fix the field
+  below and submit again." takes the focus, and its line "Presenting problem: A value is required." links to the field,
+  which is marked and reads "A value is required." (T263). The activity stays a draft.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): My activities: one row, Mini-CEX (Paediatrics), PAED-001 with
   its title, 2026-09-18, Draft, credited "—". Request fields open; Submit and Cancel, Discard changes disabled; history
   one row, Create Draft → Draft, Anele Dlamini. Submit refused: "Presenting problem: A value is required.", the field
@@ -122,9 +131,12 @@ Gap: none
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Type the presenting problem "Two-year-old with bronchiolitis and rising work of breathing" and submit.
-Expect: State: Requested. The page is now read-only to her, and Cancel is the only action. The history adds Submit
-  (Draft → Requested). It carries no lateness note, because ten days is on time (D15). No email is sent: Wombat mails
-  nobody when an activity moves, so Dr Naidoo learns of the request from his inbox.
+Expect: The focused result reads "Submitted. It is now Requested. It is in David Naidoo's Activity inbox." The status
+  card, badged Requested, reads "With David Naidoo since …" and "Nothing for you to do. You can cancel the request until
+  David Naidoo acts on it.", and its one action is Cancel request…, quiet. The page is read-only to her: Request reads
+  "Filled in by Anele Dlamini, `D`", and Entrustment and Feedback are locked, "David Naidoo fills this in". The history
+  adds Submit, Draft → Requested. It carries no lateness note, because ten days is on time (D15). No email is sent:
+  Wombat mails nobody when an activity moves, so Dr Naidoo learns of the request from his inbox.
 Note: The AssessmentRequested, AssessmentCompleted and AssessmentDeclined email templates exist, but nothing in the
   product sends them.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): State: Requested; every field disabled; Cancel the only action.
@@ -136,8 +148,10 @@ Gap: none
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Look for Dr Dlamini's Mini-CEX in the inbox, then open its address directly, using the id from Step 3.1.
-Expect: The inbox reads "Inbox clear", because no request names him yet. The activity's page reads "Activity
-  unavailable", exactly as it does for an id that does not exist, so walking ids discloses nothing (T101).
+Expect: The inbox reads "Inbox clear" and "Nothing is waiting for you to rate, discuss or review.", because no request
+  names him yet. The activity's page is headed "Activity unavailable" and reads "This activity does not exist, or you
+  cannot open it.", with Go to My activities. It reads exactly so for an id that does not exist, so walking ids
+  discloses nothing (T101, C7).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Inbox: "Inbox clear" / "There are no activities waiting for
   your action." /activities/1 and /activities/99999 both read "Activity unavailable" / "The requested activity could
   not be loaded.", text identical (tab "Activity · Wombat" on both).
@@ -149,11 +163,14 @@ Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{Act
 Do: Choose Switch to Assessor in the sidebar, then open Activity inbox from the menu and Dr Dlamini's Mini-CEX in it.
   Rate the supervision the encounter required at rung 4, write what was done well, the areas for development and the
   agreed plan, and complete it.
-Expect: The inbox row names Anele Dlamini, PAED-001, `D−10` and Requested. On the page, only Entrustment and Feedback
-  can be filled in, and Complete and Decline are offered. The rating offers the six rungs by the College's labels, 1, 2,
-  3a, 3b, 4 and 5 (D32). After Complete, the state is Completed and the page is read-only. The history's Complete row
-  reads Requested → Completed, by David Naidoo, credited "1 item". Year 3's minimum on PAED-001 is rung 4, so the
-  encounter counts at the minimum.
+Expect: The inbox row names Anele Dlamini, PAED-001, `D−10` and Requested. On the page, the status card reads "Your
+  move. Anele Dlamini asked you on …" and "Complete it, or decline it with a note Anele Dlamini will read." Request is
+  read-only, "Filled in by Anele Dlamini, `D`"; only Entrustment and Feedback can be filled in. The actions are
+  Complete, Discard changes and Decline. The rating offers the six rungs by the College's labels, 1, 2, 3a, 3b, 4 and 5
+  (D32). After Complete, the focused result reads "Completed.", the status card reads "Done. You completed it on …" and
+  "Rated 4. Credited 1 item to PAED-001.", and the page is read-only. The history's Complete row reads Requested →
+  Completed, by David Naidoo, credited "1 item". Year 3's minimum on PAED-001 is rung 4, so the encounter counts at the
+  minimum.
 Note: Dr Naidoo also holds CommitteeMember, so his sessions open acting as a Committee member, whose menu has no
   Activity inbox. The switch is stored with his account, so he acts as Assessor until Step 4.5 switches back.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Home opened "Committee member · Semester 2, 2026", sidebar
@@ -168,8 +185,11 @@ Gap: none (the inbox row itself was not read; Home's card, which lists the inbox
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int}
 Do: Open My activities, then the Mini-CEX.
-Expect: The row reads Completed, credited "1 item". The page is read-only. It shows rung 4 and Dr Naidoo's feedback, and
-  offers no action. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete.
+Expect: Needs you is gone. Under All activities the row reads Who has it now "Done", State Completed, Credit "1 item".
+  The page is read-only. Its status card, badged Completed, reads "Done. David Naidoo completed it on …" and "Rated 4.
+  Credited 1 item to PAED-001.", with Open My progress, a link. Entrustment shows rung 4 chosen, and Feedback Dr
+  Naidoo's three texts, "Filled in by David Naidoo, `D`". No move is offered. The history holds Create, Submit and
+  Complete, with Dr Naidoo as the actor of the Complete.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Row: Mini-CEX, PAED-001, 2026-09-18, Completed, "1 item". Page:
   every field disabled, rating 4 and Dr Naidoo's three feedback texts shown, no action button. History Create, Submit,
   Complete (David Naidoo, "1 item").
@@ -201,12 +221,14 @@ Gap: none
 
 ### Step 3.8 — A future encounter date is refused
 Role: Trainee — Dr Sipho Ndlovu
-Route: /activities/new
-Do: Start a Mini-CEX (Paediatrics) for an encounter on the ward. Fill in the EPA PAED-002, the assessor Dr Fatima
-  Khumalo, the setting Ward, the presenting problem "Nine-month-old with gastroenteritis and moderate dehydration" and
-  the complexity Low. By mistake, type the date observed as `D+1`. Submit.
-Expect: The submit is refused with "Nothing was saved. Date observed: The date cannot be after today (`D`)." The date
-  field is marked and names the alert, and everything typed is kept (T160, T263). No activity exists.
+Route: /activities/new → /activities/new?type=mini_cex_cpsa
+Do: Start a Mini-CEX (Paediatrics) for an encounter on the ward, from Log an activity's picker. Fill in the EPA
+  PAED-002, the assessor Dr Fatima Khumalo, the setting Ward, the presenting problem "Nine-month-old with
+  gastroenteritis and moderate dehydration" and the complexity Low. By mistake, type the date observed as `D+1`. Submit.
+Expect: The submit is refused. The summary "Nothing was saved. Everything you typed is kept below." takes the focus, and
+  its line "Date observed: The date cannot be after today (`D`)." links to the date field. The field is marked, reads
+  "The date cannot be after today (`D`).", and names the summary; everything typed is kept (T160, T263, C8). No activity
+  exists.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Alert "Nothing was saved. Date observed: The date cannot be
   after today (2026-09-28)." The date field aria-invalid, its aria-describedby naming activity-refusal; every typed
   value kept. No activity was created (the next one filed is id 2).
@@ -214,13 +236,14 @@ Gap: none
 
 ### Step 3.9 — A date before the programme started is refused
 Role: Trainee — Dr Sipho Ndlovu
-Route: /activities/new
+Route: /activities/new?type=mini_cex_cpsa
 Do: Change the date observed to `J−1d`, the day before his programme started (2026-01-14 on a replay in 2026), and
   submit again.
-Expect: As the date is typed, the field is marked, and below it reads "This date is before the trainee's programme
-  started (`J`), and will not be accepted." The submit is refused with "Nothing was saved. Date observed: The date
-  cannot be before the trainee's programme started (`J`)." A Mini-CEX can credit, so its date is held to the programme
-  start (T160, T192). No activity exists.
+Expect: Once the date is entered, the field is marked, and below it reads "This date is before your programme started
+  (`J`), and will not be accepted.": worded to him, the registrar (C12). The submit is refused: "Nothing was saved.
+  Everything you typed is kept below.", with the line "Date observed: The date cannot be before your programme started
+  (`J`)." A Mini-CEX can credit, so its date is held to the programme start (T160, T192). No activity exists. An
+  assessor or the committee reading such a form reads "the trainee's programme" instead.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Typing 2026-01-14 marked the field and showed "This date is
   before the trainee's programme started (2026-01-15), and will not be accepted." Submit refused: "Nothing was saved.
   Date observed: The date cannot be before the trainee's programme started (2026-01-15)." No activity created.
@@ -228,12 +251,14 @@ Gap: none
 
 ### Step 3.10 — A late filing is warned about and recorded, never refused
 Role: Trainee — Dr Sipho Ndlovu
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: Change the date observed to `D−20`, the day the encounter happened, and submit.
-Expect: No lateness warning shows yet. The field still carries the last refusal's mark, which stays until the next action
-  (T263), and a refused date is never called fileable. Step 3.12's fresh form shows the warning. The submit succeeds:
-  "Submitted. It is now Requested." In the history, the Submit row's time carries "Filed 20 days after the encounter"
-  (D15, T160).
+Expect: Changing the date drops the last refusal's mark at once (T263), and the field warns: "This encounter was 20 days
+  ago. It can still be filed, but a filing more than 14 days after the encounter is recorded as late." The line above
+  the actions adds "Filed today, 20 days after the encounter: it will be recorded as late." Submit to Fatima Khumalo
+  succeeds: "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." The status card adds "Filed 20
+  days after the encounter: recorded as late.", About's Filed reads "`D`, 20 days after the encounter (late)", and in
+  the history the Submit row's time carries "Filed 20 days after the encounter" (D15, T160).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Typing 2026-09-08 cleared the hint and showed no lateness
   warning; the field stayed aria-invalid. Submit opened activity 2 (R2) with "Submitted. It is now Requested."; the
   Submit row's time reads "2026-09-28 15:37 Filed 20 days after the encounter".
@@ -242,11 +267,17 @@ Gap: none
 ### Step 3.11 — Dr Khumalo declines the request, with a reason
 Role: Assessor — Dr Fatima Khumalo
 Route: /activities/inbox → /activities/{ActivityId:int}
-Do: Open Dr Ndlovu's Mini-CEX. Press Decline and apply it with the note left empty. Then apply it with the note "I was
+Do: Open Dr Ndlovu's Mini-CEX. Press Decline and send it with the reason left empty. Then send it with the reason "I was
   not on the ward that day; Dr Botha observed this encounter. Please send it to her."
-Expect: Decline opens a transition note. Applied with the note empty, it is refused with "Decline requires a note."
-  Applied with the note, the state is Declined. The page is read-only, with no action left. The history's Decline row
-  shows her note, credited "—". Her inbox no longer lists the request.
+Expect: The status card reads "Your move. Sipho Ndlovu asked you on …". Decline opens the note panel under the actions,
+  "Decline this request", and moves the focus into "Reason for Sipho Ndlovu", with "Sipho Ndlovu reads it on the
+  activity's page. It is kept with the activity's history." under it. Sent empty with Decline with this note, it is
+  refused: the panel stays open, with the note as typed, and its summary reads "Not declined." and "Reason for Sipho
+  Ndlovu: Decline requires a note."; the activity stays Requested. Keep the request would close the panel and hand the
+  focus back to Decline. Sent with the reason, the result reads "Declined." The status card, badged Declined, reads
+  "Closed. You declined it on …", quotes her reason, and reads "It credits nothing, and nothing more can happen to it."
+  The page is read-only, with no move left. The history's Decline row, Requested → Declined, is credited "—", with her
+  note on a row of its own under it. Her inbox no longer lists the request.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Inbox row: Sipho Ndlovu, PAED-002, 2026-09-08, Requested.
   Decline opened the transition note with Cancel and Apply. Empty Apply: "Decline requires a note.", still Requested,
   and the note panel closed, so Decline had to be pressed again. With the note: State Declined, nothing enabled, no
@@ -256,16 +287,23 @@ Gap: [F-3.11a, T299] (still) A refused note-carrying move closes the note panel,
 
 ### Step 3.12 — Dr Ndlovu reads the decline and files the encounter again, naming Dr Botha
 Role: Trainee — Dr Sipho Ndlovu
-Route: / → /activities/{ActivityId:int} → /activities/new → /activities/{ActivityId:int}
-Do: Open the declined Mini-CEX from the dashboard's Recent activities. Then file the same encounter as a new Mini-CEX,
-  `D−20`, PAED-002, naming Dr Sarah Botha, and submit.
-Expect: Recent activities lists the Mini-CEX with a red Declined badge. The Activity inbox card does not list it, as the
-  inbox it opens does not: nothing can move a declined request on (T297). No mail tells him of the decline (T320), so
-  Recent activities, while it is among his five newest, and My activities are where he finds it. Its page reads
-  State: Declined, offers no action, and shows Dr Khumalo's note in the history. The re-filing is a new activity. As
-  `D−20` is typed, the field warns: "This encounter was 20 days ago. It can still be filed, but a filing more than 14
-  days after the encounter is recorded as late." Its own Submit row records "Filed 20 days after the encounter". It
-  ends Requested, and the Activity inbox card lists it, as the inbox does: he may still cancel it.
+Route: / → /activities/{ActivityId:int} → /activities/new?from={ActivityId} → /activities/{ActivityId:int}
+Do: Open the declined Mini-CEX from the dashboard's Recent activities. Then file the same encounter again from its page,
+  File it again, to someone else, naming Dr Sarah Botha, and submit.
+Expect: Recent activities lists the Mini-CEX with a red Declined badge. Home's Needs you card reads "Nothing needs you.
+  Requests you have filed are in My activities.": a declined request has no move left (T297). No mail tells him of the
+  decline (T320), so Recent activities, while it is among his five newest, and My activities are where he finds it. Its
+  page's status card, badged Declined, reads "Closed. Fatima Khumalo declined it on …", quotes her reason, and reads "It
+  credits nothing, and nothing more can happen to it. To be assessed on this encounter, file it again and name someone
+  else.", with File it again, to someone else. That opens Log an activity on the Mini-CEX, under the notice "Copied from
+  your request to Fatima Khumalo, which was declined. The EPA, date and request are as you filed them. Name someone
+  else, then submit. Nothing is saved until you do." Everything is copied but the assessor, which is empty, and the date
+  field shows at once "This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the
+  encounter is recorded as late." The button reads Submit until Dr Botha is named, then Submit to Sarah Botha. The
+  re-filing is a new activity: "Submitted. It is now Requested. It is in Sarah Botha's Activity inbox." Its own Submit
+  row records "Filed 20 days after the encounter". The two now share type, EPA and date, so each name adds its assessor:
+  "Mini-CEX (Paediatrics) · PAED-002 · `D−20` · Fatima Khumalo" and "… · Sarah Botha" (E7). Needs you lists neither: the
+  new request is with Dr Botha, and he may cancel it from its page.
 Note: Declined is a dead end by design: the seed's workflow has no move out of it. The declined record is kept.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Home: Activity inbox card "No pending items."; Recent
   activities "Mini-CEX (Paediatrics)" with a red Declined badge (badge-declined), linking to /activities/2. That page:
@@ -300,14 +338,18 @@ Gap: none
 
 ### Step 3.14 — Dr Ndlovu submits a reflective exercise to Dr Botha
 Role: Trainee — Dr Sipho Ndlovu
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=reflective_exercise_cpsa → /activities/{ActivityId:int}
 Do: File a Reflective Exercise (Paediatrics) on a critical incident. Fill in the EPA PAED-001, the supervisor
   Dr Botha and the date of the incident `D−20`. For what happened, write "A three-year-old in septic shock waited
   90 minutes for antibiotics after triage". Add the analysis, what he learned and a one-line plan, then submit.
-Expect: The EPA picker offers only PAED-001, 003, 008 and 014, the EPAs whose list names the reflective exercise (D45).
-  The form has no Entrustment section, because the exercise is unrated (D6), and its Discussion section is locked. No
-  lateness warning shows for `D−20`: a reflective exercise credits nothing, so its filing is late for nobody (T160).
-  The submit reads "Submitted. It is now Awaiting discussion.", and the Submit row carries no lateness note.
+Expect: He finds it under Discussed or reviewed, not rated. The EPA picker offers only PAED-001, 003, 008 and 014, the
+  EPAs whose list names the reflective exercise (D45). Reflection's fields follow the seed: EPA, Supervisor or mentor,
+  Date of the case or incident, Reflecting on (Critical incident), then the four answers "What happened", "What went
+  well, and what could have gone differently", "What I learned" and "What I will do differently". The form has no
+  Entrustment section, because the exercise is unrated (D6). Discussion is locked, "Sarah Botha fills this in" once she
+  is named. No lateness warning shows for `D−20`: a reflective exercise credits nothing, so its filing is late for
+  nobody (T160). Submit to Sarah Botha reads "Submitted. It is now Awaiting discussion. It is in Sarah Botha's Activity
+  inbox.", and the Submit row carries no lateness note.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): EPA picker PAED-001, 003, 008, 014. Sections Reflection (EPA,
   supervisor, date, prompt, what happened, analysis, learning, what I will do differently) and Discussion (disabled);
   no Entrustment. No warning for 2026-09-08. Activity 4 (R4): "Submitted. It is now Awaiting discussion."; Submit row
@@ -320,9 +362,12 @@ Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{Act
 Do: Choose Switch to Assessor in the sidebar, then open Dr Ndlovu's reflection from Activity inbox. Return it with the
   note "Please say what you would do differently at triage, and what you will read before your next take." Then choose
   Switch to Committee member in the sidebar.
-Expect: The inbox lists the reflection as Awaiting discussion. The page offers Record Discussion and Return, and only the
-  Discussion field is open. Return asks for a note. Once it is returned, the state is Draft and the page offers
-  Dr Botha nothing. The history's Return row (Awaiting discussion → Draft) carries her note.
+Expect: The inbox lists the reflection as Awaiting discussion. The page offers Record Discussion and Return, and only
+  the Discussion field is open. Its status card reads "Your move. Sipho Ndlovu asked you on …" and "Record the
+  discussion, or return it with a note Sipho Ndlovu will read." Return opens the note panel, "Return: add a note", with "Note to Sipho Ndlovu"; Return
+  with this note sends it. Once it is returned, the result reads "It is now Draft.", the status card reads "With Sipho
+  Ndlovu. Sarah Botha returned it on …" and "It is in nobody's inbox until Sipho Ndlovu submits it.", quoting her note,
+  and the page offers Dr Botha nothing. The history's Return row (Awaiting discussion → Draft) carries her note.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Inbox row: Reflective Exercise, Sipho Ndlovu, PAED-001,
   2026-09-08, Awaiting discussion. Enabled: Record Discussion, Return and the Discussion field only. Return opened a
   transition note; applied: State Draft, nothing enabled and no action for her; Return row Awaiting discussion → Draft,
@@ -331,13 +376,19 @@ Gap: none
 
 ### Step 3.16 — Dr Ndlovu finds the returned reflection in his inbox and submits it again
 Role: Trainee — Dr Sipho Ndlovu
-Route: / → /activities/inbox → /activities/{ActivityId:int}
-Do: From the dashboard's Activity inbox card, open the inbox, then the reflection. Expand "What I will do differently":
-  "Start the sepsis bundle at triage; read the paediatric sepsis guideline before my next take". Submit again.
-Expect: The dashboard card lists the reflection as Draft. The inbox page lists it and nothing else of his. His fields are
-  open again, with Submit and Cancel. After the submit, the state is Awaiting discussion. The history reads Create,
-  Submit, Return and Submit, and neither Submit row carries a lateness note. Home's Activity inbox card then lists the
-  reflection as Awaiting discussion, as the inbox does (he may still cancel it), and not the declined Mini-CEX (T297).
+Route: / → /activities/{ActivityId:int} → /activities/inbox
+Do: From the dashboard's Needs you card, open the reflection. Expand "What I will do differently": "Start the sepsis
+  bundle at triage; read the paediatric sepsis guideline before my next take". Submit again. Then type the Activity
+  inbox's address.
+Expect: Needs you, badged 1, lists the reflection alone, linked as "Reflective Exercise (Paediatrics) · PAED-001 ·
+  `D−20`" with "with Sarah Botha" under it, badged Draft: "Returned to you by Sarah Botha on `D`. Change it and submit
+  again." It does not list the declined Mini-CEX (T297). On its page the status card reads "With you. Sarah Botha
+  returned it on …", quotes her note, and reads "Change your reflection and submit it again." His fields are open again,
+  with Submit to Sarah Botha, Save draft, Discard changes and Cancel this draft…. The submit reads "Submitted. It is now
+  Awaiting discussion. It is in Sarah Botha's Activity inbox." The history reads Create, Submit, Return and Submit, and
+  neither Submit row carries a lateness note. Needs you no longer lists it. The Activity inbox is not his: it reads
+  "Nothing here is yours to act on." and "This inbox holds work that assessors rate, discuss or review. Your drafts and
+  work returned to you are under My activities, in Needs you.", with Open My activities (T342).
 Note: A re-submission after a return is not a new filing (`Workflow.LeftInitialStateLeadingOn`, `ActivityService.IsTheFiling`).
   On this type nothing shows it, because a reflective exercise records no lateness at all.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Home's Activity inbox card: "Reflective Exercise (Paediatrics)"
@@ -364,12 +415,15 @@ Gap: none
 
 ### Step 3.18 — Dr du Plessis logs a teaching session
 Role: Trainee — Dr Pieter du Plessis
-Route: /activities/new → /activities/{ActivityId:int}
-Do: Choose KGK Teaching Session Log. Fill in the topic "Recognising the sick child: a triage refresher", the EPA
-  PAED-015, the date delivered `D−6`, the audience Interns and the learning objectives. Submit.
+Route: /activities/new → /activities/new?type=kgk_teaching_log → /activities/{ActivityId:int}
+Do: Choose KGK Teaching Session Log, under Logged by you. Fill in the topic "Recognising the sick child: a triage
+  refresher", the EPA PAED-015, the date delivered `D−6`, the audience Interns and the learning objectives. Log it.
 Expect: The form is Act 1's: one section, Teaching session, with six fields, the first five required and Supervising
   consultant optional, and no rating. The EPA picker offers all 15 PAED EPAs: the type is not a College instrument, so
-  no tool list binds it (D21). The submit reads "Submitted. It is now Logged." The Log row is credited "—", and no
+  no tool list binds it (D21). The primary button reads Log, since the Supervising consultant receives nothing, with
+  Save draft after it, and above them "When you log it: it is Logged at once, and credits nothing. Nobody else acts on
+  it." The result reads "Logged." The status card, badged Logged, reads "Done. Logged on …" and "A KGK teaching session
+  log credits nothing, and nobody else acts on it." The history's Log row reads Draft → Logged, credited "—", and no
   lateness is recorded.
 Note: No seeded CPSA instrument is a procedure log; the generic `procedure_log` belongs to the Demo speciality. KGK's
   own self-logged type stands in for procedure-style logging.
@@ -380,13 +434,13 @@ Gap: none
 
 ### Step 3.19 — Dr du Plessis logs two more sessions, one from before his programme
 Role: Trainee — Dr Pieter du Plessis
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=kgk_teaching_log → /activities/{ActivityId:int}
 Do: Log two more sessions:
   - "Neonatal jaundice for fourth-year students": PAED-004, `D−13`, Medical students.
   - "Oral rehydration for nursing staff", taught as a medical officer before admission: PAED-015, `J−1y−56d`
     (20 November 2024 on a replay in 2026), Nursing staff.
-Expect: Both sessions are Logged. `J−1y−56d` is before his programme started (`J−1y`), and it is accepted with no
-  hint. A type that credits nothing is held only to "not after today" (T160).
+Expect: Each reads "Logged.". `J−1y−56d` is before his programme started (`J−1y`), and it is accepted with no hint. A
+  type that credits nothing is held only to "not after today" (T160).
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Activity 6 (R6, PAED-004, 2026-09-15, Medical students) and
   activity 7 (R7, PAED-015, 2024-11-20, Nursing staff) both "Submitted. It is now Logged."; no hint or warning shown
   for either date.
@@ -394,11 +448,15 @@ Gap: none
 
 ### Step 3.20 — Dr du Plessis abandons a draft started on the wrong instrument
 Role: Trainee — Dr Pieter du Plessis
-Route: /activities/new → /activities/{ActivityId:int} → /activities/mine
+Route: /activities/new → /activities/new?type=dops_cpsa → /activities/{ActivityId:int} → /activities/mine
 Do: Start a DOPS (Paediatrics) by mistake. Choose only the EPA PAED-002 and save the draft. Then cancel it from its page.
-Expect: The draft saves with its other required fields empty, because saving a draft checks formats only (T105). Cancel
-  asks for no note and moves the draft to Cancelled, with nothing offered after it. My activities lists it as Cancelled,
-  credited "—", beside the three Logged sessions.
+Expect: The draft saves with its other required fields empty, because saving a draft checks formats only (T105): "Draft
+  saved. It has not been submitted. It is in nobody's inbox until you submit it." Cancel this draft…, last among the
+  actions, opens "Cancel this draft?": "A cancelled draft cannot be reopened, and it credits nothing.", with Keep the
+  draft and Cancel draft. It asks for no note. Cancel draft reads "Cancelled."; the page's subtitle reads "Pieter du
+  Plessis's draft, cancelled", the status card, badged Cancelled, reads "Closed. You cancelled it on …" and "It was never
+  submitted, and it credits nothing.", and nothing is offered after it. My activities has no Needs you. All activities lists the DOPS as Cancelled, Who has it now "Closed", Credit "—",
+  beside the three Logged sessions, each "Done".
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Activity 8 (R8) saved with only the EPA: "Draft saved. It has
   not been submitted." Cancel asked for no note and moved it to Cancelled, nothing enabled and no action; history
   Create, Cancel (Draft → Cancelled). My activities: DOPS PAED-002 "not recorded (created 2026-09-28)" Cancelled "—",
@@ -407,23 +465,28 @@ Gap: none
 
 ### Step 3.21 — Dr du Plessis asks Dr Khumalo for a CBD
 Role: Trainee — Dr Pieter du Plessis
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=cbd_cpsa → /activities/{ActivityId:int}
 Do: File a Case-Based Discussion (Paediatrics). Fill in the EPA PAED-002, the assessor Dr Khumalo, the date `D−5`, the
   case discussed (a toddler with a first febrile seizure) and the focus Clinical reasoning. Submit.
-Expect: The CBD ends Requested. It stays that way to the end of the act; Step 3.51 reads it from Dr Khumalo's side.
+Expect: Submit to Fatima Khumalo reads "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." The
+  CBD ends Requested. It stays that way to the end of the act; Step 3.51 reads it from Dr Khumalo's side.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): CBD EPA picker PAED-001 to 005, 008, 009, 011 to 015; focus
   options include Clinical reasoning. Activity 9 (R9), Khumalo, 2026-09-23: "Submitted. It is now Requested."
 Gap: none
 
 ### Step 3.22 — Dr du Plessis asks Dr Patel to review his portfolio
 Role: Trainee — Dr Pieter du Plessis
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=portfolio_review_cpsa → /activities/{ActivityId:int}
 Do: File a Portfolio and Logbook Review (Paediatrics). Fill in the EPA PAED-015, the reviewer Dr Patel, the review
   period `D−60` to `D−1`, and the note for the reviewer "Three teaching sessions logged; please review them with my
   logbook". Leave the export's file name empty, since it is optional. Submit.
-Expect: The EPA picker offers PAED-015 only, the one EPA whose list names the portfolio review (D45). The form has no
-  rating, and its Review section is locked. The submit reads "Submitted. It is now Awaiting review." The encounter date
-  is the period's last day, `D−1`. The review stays Awaiting review to the end of the act.
+Expect: The EPA picker offers PAED-015 only, the one EPA whose list names the portfolio review (D45). Review request's
+  fields follow the seed: EPA, Reviewer, Review period from, Review period to, Portfolio export (file name) and Notes
+  for your reviewer, the last two optional. The form has no rating, and its Review section is locked, "Mohammed Patel
+  fills this in" once he is named. Submit to Mohammed Patel reads "Submitted. It is now Awaiting review. It is in
+  Mohammed Patel's Activity inbox." The status card reads "With Mohammed Patel since …", with Cancel request…. About
+  reads Encounter `D−1`, the period's last day, and Credit "None: a portfolio and logbook review credits nothing". The
+  review stays Awaiting review to the end of the act.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): EPA picker PAED-015 only. Sections Review request (open) and
   Review (disabled: date, evidence checkboxes, comments, actions); no rating. Period 2026-07-30 to 2026-09-27, export
   file name empty. Activity 10 (R10): "Submitted. It is now Awaiting review."; Encounter date 2026-09-27; Cancel
@@ -432,12 +495,14 @@ Gap: none
 
 ### Step 3.23 — Dr Mahlangu files a DOPS, and the EPA picker follows the tool lists
 Role: Trainee — Dr Nomsa Mahlangu
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=dops_cpsa → /activities/{ActivityId:int}
 Do: File a DOPS (Paediatrics) for a lumbar puncture on a four-month-old with suspected meningitis. First look for
   PAED-010 in the EPA picker. Then choose PAED-002, the assessor Dr Patel, the date `D−8`, the procedure "Lumbar
   puncture", the setting Ward and the complexity Moderate. Submit.
-Expect: The EPA picker offers the eight EPAs whose list names the DOPS, PAED-001 to PAED-008. It does not offer
-  PAED-010, whose list is Direct observation and MSF only (T122); the old runbook filed this DOPS there. The DOPS ends
+Expect: Request's fields follow the seed: EPA, Assessor, Date observed, Procedure, Clinical setting and Procedure
+  complexity. The EPA picker offers the eight EPAs whose list names the DOPS, PAED-001 to PAED-008. It does not offer
+  PAED-010, whose list is Direct observation and MSF only (T122); the old runbook filed this DOPS there. Submit to
+  Mohammed Patel reads "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox." The DOPS ends
   Requested.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): DOPS EPA picker PAED-001 to 008, no PAED-010. Filed PAED-002,
   Patel, 2026-09-20, "Lumbar puncture", Ward, Moderate: activity 11 (R11), "Submitted. It is now Requested."
@@ -463,7 +528,7 @@ Gap: none
 
 ### Step 3.25 — Dr Molefe files six workplace-based assessments
 Role: Trainee — Dr Lerato Molefe
-Route: /activities/new → /activities/{ActivityId:int} → /activities/mine
+Route: /activities/new → /activities/new?type=… → /activities/{ActivityId:int} → /activities/mine
 Do: File and submit each of these, filling in every Request field. The clinical context below is the presenting
   problem, the procedure, the case discussed or the context:
   - Mini-CEX, PAED-001, Dr Zulu, `D−12`, Emergency unit, complexity High: status epilepticus in a five-year-old.
@@ -473,9 +538,12 @@ Do: File and submit each of these, filling in every Request field. The clinical 
     diabetes.
   - CBD, PAED-012, Dr Khumalo, `D−5`, focus Ethics and consent: a transfusion refused on religious grounds.
   - Direct Observation, PAED-010, Dr Zulu, `D−4`, activity observed Ward round: leading the Monday ward round.
-Expect: Each ends Requested, with no lateness warning, since all six are within 14 days. My activities lists the six as
-  Requested, credited "—". The Direct Observation's EPA picker offers PAED-010, because its list names Direct
-  observation. The Mini-CEX and DOPS pickers do not offer it.
+Expect: Each ends Requested, with no lateness warning, since all six are within 14 days, and each result adds its
+  assessor's inbox: "It is in Thandi Zulu's Activity inbox." and so on. My activities has no Needs you: all six are with
+  their assessors. All activities lists the six, newest encounter first, as Requested, credit "—", Who has it now naming
+  each assessor: Thandi Zulu, Fatima Khumalo, Sarah Botha, Mohammed Patel, David Naidoo and Thandi Zulu. The Direct
+  Observation's EPA picker offers PAED-010, because its list names Direct observation. The Mini-CEX and DOPS pickers do
+  not offer it.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Activities 12 to 17 (R12 Mini-CEX 001 Zulu, R13 CBD 001 Naidoo,
   R14 DOPS 001 Patel, R15 Mini-CEX 012 Botha, R16 CBD 012 Khumalo, R17 Direct Observation 010 Zulu), each "Submitted.
   It is now Requested.", no warning. PAED-010 offered only by the Direct Observation picker (not Mini-CEX, CBD or
@@ -505,7 +573,7 @@ Gap: none
 
 ### Step 3.27 — Dr Dlamini files three more
 Role: Trainee — Dr Anele Dlamini
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=… → /activities/{ActivityId:int}
 Do: File and submit:
   - CBD, PAED-001, Dr Zulu, `D−9`, focus Management plan: diabetic ketoacidosis in a nine-year-old.
   - Clinical Case Analysis, PAED-001, Dr Botha, `D−6`, case "Anaphylaxis, 7-year-old, emergency unit", documents
@@ -513,7 +581,7 @@ Do: File and submit:
     was repeated before the second-line drugs.
   - Mini-CEX, PAED-004, Dr Khumalo, `D−2`, Neonatal unit, complexity Moderate: a term neonate with respiratory
     distress.
-Expect: Each ends Requested.
+Expect: Each ends Requested, its result adding its assessor's inbox: Thandi Zulu's, Sarah Botha's and Fatima Khumalo's.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Activity 18 (R18, CBD 001 Zulu, 2026-09-19), 19 (R19, CCA 001
   Botha, 2026-09-22; its date is "Date of the review", its documents "Documentation reviewed") and 20 (R20, Mini-CEX
   004 Khumalo, 2026-09-26): each "Submitted. It is now Requested.", no warning.
@@ -537,10 +605,11 @@ Gap: none
 
 ### Step 3.29 — Dr Mahlangu asks Dr Zulu for a Mini-CEX, which is left unrated
 Role: Trainee — Dr Nomsa Mahlangu
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics): PAED-004, Dr Zulu, `D−3`, Neonatal unit, "Term neonate with jaundice on day three",
   complexity Low. Submit. Dr Zulu does not act on it.
-Expect: The Mini-CEX ends Requested.
+Expect: Submit to Thandi Zulu reads "Submitted. It is now Requested. It is in Thandi Zulu's Activity inbox." The
+  Mini-CEX ends Requested.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Activity 21 (R21) opened with "Submitted. It is now
   Requested.", State: Requested, encounter 2026-09-25, PAED-004. The EPA picker offered the nine Mini-CEX EPAs.
 Gap: none
@@ -877,8 +946,7 @@ Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress
 Do: Open My activities, then My progress.
 Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
-  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credited "—" (D8). My progress
-  reads:
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credit "—" (D8). My progress reads:
   - semester targets "1 of 10 EPAs met this semester", and training year 4;
   - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
     own and counts towards no target.";
@@ -925,7 +993,7 @@ Expect:
   - Curriculum targets, "Semester 2, 2026 · July to November": "1 / 10" semester targets met and "0 / 5" yearly targets
     met (2026). Below them are the five EPAs furthest short, largest shortfall first: PAED-002, PAED-003, PAED-005,
     PAED-010 and PAED-012, each "0 of 3 this semester".
-  - Activity inbox: "No pending items."
+  - Needs you: "Nothing needs you. Requests you have filed are in My activities.", with Open My activities (T342).
   - Recent activities: her four WBAs, each Completed, in green.
   - Upcoming deadlines: "No deadlines in the next 14 days."
   - My authorisations links to its page, and the header offers "Log an activity" (T335: the Actions card is gone).

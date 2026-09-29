@@ -1,0 +1,12 @@
+@* The check line above a form's action bar (T342, flow 03; Spec § 1, "Check line"; C11): what the primary move will do,
+   by the target state's label and the person's name, before it is pressed. Plain text, not a live region: it is read in
+   its place, above the button, and it changes as the hand-off field is filled. FilingWords writes its words. *@
+<p class="submit-check"><strong>@Lead</strong> @Text</p>
+
+@code {
+  /// <summary>"When you submit:", "When you log it:".</summary>
+  [Parameter, EditorRequired] public string Lead { get; set; } = default!;
+
+  /// <summary>"it goes to Fatima Khumalo's Activity inbox and stays Requested until Fatima Khumalo acts on it."</summary>
+  [Parameter, EditorRequired] public string Text { get; set; } = default!;
+}

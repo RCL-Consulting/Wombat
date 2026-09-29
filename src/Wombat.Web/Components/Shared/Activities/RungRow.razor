@@ -1,0 +1,51 @@
+@using Wombat.Application.Features.Epas
+@* The entrustment ladder, read-only (T342, flow 03; R3-C-Log and R3-C-Activity, "RungRow"; B12, A12). Where the reader
+   cannot write the scale field, its value is shown on its ladder rather than as a disabled select: every rung in view,
+   the chosen one filled and named "chosen" in words (so it is not told by colour alone), and its descriptor under the
+   row. Before the section is filled in the rungs are pending: drawn dashed, and hidden from a screen reader, which reads
+   the ladder once from the list's name instead of six empty items. The value stored is the rung's Order (5 is the rung
+   labelled "4"), so the rung is found by its Order and shown by its Label. *@
+<ol class="rung-row" aria-label="@AriaLabel">
+  @foreach (var rung in Rungs)
+  {
+    if (Pending)
+    {
+      <li class="rung rung--pending" aria-hidden="true">@rung.Label</li>
+    }
+    else if (IsChosen(rung))
+    {
+      <li class="rung is-chosen">@rung.Label<span class="visually-hidden">, </span><span class="rung-check">chosen</span></li>
+    }
+    else
+    {
+      <li class="rung">@rung.Label</li>
+    }
+  }
+</ol>
+@if (!Pending && Chosen is { Description: { Length: > 0 } description } chosen)
+{
+  <p class="rung-descriptor"><b>@chosen.Label</b>@description</p>
+}
+
+@code {
+  /// <summary>The scale field's label, which names the list.</summary>
+  [Parameter, EditorRequired] public string Label { get; set; } = default!;
+
+  /// <summary>The ladder, lowest first.</summary>
+  [Parameter, EditorRequired] public IReadOnlyList<EntrustmentRung> Rungs { get; set; } = [];
+
+  /// <summary>The stored value: the chosen rung's Order, as text. Null or empty when none is chosen.</summary>
+  [Parameter] public string? Value { get; set; }
+
+  /// <summary>True while the section is not filled in: the ladder is shown, nothing is chosen (A12).</summary>
+  [Parameter] public bool Pending { get; set; }
+
+  private EntrustmentRung? Chosen => Rungs.FirstOrDefault(IsChosen);
+
+  private bool IsChosen(EntrustmentRung rung)
+    => !string.IsNullOrWhiteSpace(Value) &&
+       string.Equals(rung.Order.ToString(System.Globalization.CultureInfo.InvariantCulture), Value.Trim(), StringComparison.Ordinal);
+
+  private string AriaLabel
+    => Pending ? $"{Label}: {string.Join(", ", Rungs.Select(rung => rung.Label))}" : Label;
+}

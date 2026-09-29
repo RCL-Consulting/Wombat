@@ -40,4 +40,8 @@ internal class StubActivityReferenceDataService : IActivityReferenceDataService
     public virtual Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleLevelOptionsAsync(
         string? scaleKey, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([]);
+
+    public virtual Task<IReadOnlyList<Wombat.Application.Features.Epas.EntrustmentRung>> GetEntrustmentScaleRungsAsync(
+        string? scaleKey, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Wombat.Application.Features.Epas.EntrustmentRung>>([]);
 }

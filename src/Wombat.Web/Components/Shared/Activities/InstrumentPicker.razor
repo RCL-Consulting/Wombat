@@ -1,0 +1,95 @@
+@using Wombat.Application.Features.Activities.Dtos
+@* What Log an activity offers before a type is chosen (T342, flow 03, Q1; R3-C-Log "picker"; B8). Each type the caller
+   may file is a link to its own form (/activities/new?type=<key>), grouped by its shape (ActivityTypeShapes.Of): rated by
+   an assessor, discussed or reviewed without a rating, or logged by the registrar alone. A group says how many it holds
+   and, in one line, what filing one of its types means. An empty group is not drawn. The links are the list the page
+   already loaded, which is scope- and ladder-filtered, so a type the caller may not file is not here (T111, T123). *@
+@if (Types.Count == 0)
+{
+  @* Nothing the caller may file: an empty state, not a blank page (the build review's G7). *@
+  <div class="detail-card detail-card--empty">
+    <p class="state-panel-title">@EmptyTitle</p>
+    <p class="state-panel-copy">@EmptyBody</p>
+  </div>
+}
+<div class="stack-list">
+  @foreach (var group in Groups)
+  {
+    <section class="detail-card instrument-group" aria-labelledby="@group.Id">
+      <div class="instrument-group-head">
+        <h2 id="@group.Id">@group.Title</h2>
+        <span class="text-muted">@CountText(group.Items.Count)</span>
+      </div>
+      <p class="text-muted">@group.Text</p>
+      <ul class="instrument-picker">
+        @foreach (var item in group.Items)
+        {
+          <li>
+            <a class="instrument-link" href="@HrefFor(item)">@item.Name<Icon Name="chevron-right" /></a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>
+
+@code {
+  /// <summary>The types the caller may file, as <c>ListActivityTypesQuery</c> returned them.</summary>
+  [Parameter, EditorRequired] public IReadOnlyList<ActivityTypeListItemDto> Types { get; set; } = [];
+
+  /// <summary>The empty state's title, when the caller may file no type.</summary>
+  public const string EmptyTitle = "Nothing can be filed yet.";
+
+  /// <summary>The empty state's line.</summary>
+  public const string EmptyBody =
+    "No activity type is open to you. If you expected one, ask your programme administrator which ones your programme uses.";
+
+  /// <summary>A type's form: the page's own address with the type's key.</summary>
+  public static string HrefFor(ActivityTypeListItemDto item)
+  {
+    ArgumentNullException.ThrowIfNull(item);
+    return $"/activities/new?type={Uri.EscapeDataString(item.Key)}";
+  }
+
+  private static string CountText(int count) => count == 1 ? "1 type" : $"{count} types";
+
+  private static readonly (ActivityTypeShape Shape, string Id, string Title)[] Order =
+  [
+    (ActivityTypeShape.Rated, "group-rated", "Rated by an assessor"),
+    (ActivityTypeShape.DiscussedOrReviewed, "group-discussed", "Discussed or reviewed, not rated"),
+    (ActivityTypeShape.LoggedByYou, "group-logged", "Logged by you")
+  ];
+
+  private IEnumerable<PickerGroup> Groups
+  {
+    get
+    {
+      foreach (var (shape, id, title) in Order)
+      {
+        var items = Types
+          .Where(item => item.Shape == shape)
+          .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+          .ToList();
+        if (items.Count > 0)
+        {
+          yield return new PickerGroup(id, title, TextFor(shape, items), items);
+        }
+      }
+    }
+  }
+
+  // The line under a group's heading, in the boards' words. "Credits nothing" is said of the logged group only when it is
+  // true of every type in it (CreditsNothing, from the published counts_for).
+  private static string TextFor(ActivityTypeShape shape, IReadOnlyList<ActivityTypeListItemDto> items) => shape switch
+  {
+    ActivityTypeShape.Rated =>
+      "You name an assessor. They rate the encounter on 1, 2, 3a, 3b, 4, 5 and write feedback. Completed, it counts towards the EPA.",
+    ActivityTypeShape.DiscussedOrReviewed =>
+      "You name a supervisor or reviewer, who discusses or reviews it with you. No rating.",
+    _ => items.All(item => item.CreditsNothing)
+      ? "Only you fill it in. It is logged at once, and credits nothing."
+      : "Only you fill it in. It is logged at once."
+  };
+
+  private sealed record PickerGroup(string Id, string Title, string Text, IReadOnlyList<ActivityTypeListItemDto> Items);
+}

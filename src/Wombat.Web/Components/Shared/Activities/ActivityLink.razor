@@ -1,0 +1,16 @@
+@*
+  An activity's link on My activities and in Needs you (T342, flow 03; R3-C-Mine): its name ("Type · EPA · date") and,
+  on a second line, whom it goes to or is discussed with. A visually hidden ", " stands between the two, so the link is
+  read "Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25, to David Naidoo" and not as one run-on word (A16). Its words are
+  its name; an aria-label, which starts with them, is added only where another link on the page would read the same
+  (T280; ActivityRowNames.Links).
+*@
+@{ var line = ActivityListWords.NomineeLine(Item); var words = ActivityRowNames.LinkWords(Item); var label = Name is not null && Name != words ? Name : null; }
+<a class="activity-link" href="/activities/@Item.Id" aria-label="@label">@ActivityListWords.NameOf(Item)@if (line is not null){<span class="visually-hidden">, </span><span class="activity-link-to">@line</span>}</a>
+
+@code {
+  [Parameter, EditorRequired] public ActivitySummaryDto Item { get; set; } = default!;
+
+  /// <summary>The link's name on its page (<c>ActivityRowNames.Links</c>); null when its own words are its name.</summary>
+  [Parameter] public string? Name { get; set; }
+}

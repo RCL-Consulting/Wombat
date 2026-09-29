@@ -5,7 +5,9 @@ using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Dashboards.Assessor;
 using Wombat.Application.Features.Dashboards.Coordinator;
@@ -114,10 +116,16 @@ public sealed class DashboardWaitingPostgresTests : IAsyncLifetime
                 card.RecentDecisions.Select(item => (item.ActivityId, item.FinalStateLabel, item.IsFinished))
                     .Should().Equal((declined, "Declined", false));
 
+                // T342 (B6, E8): the two waiting on him she may only cancel, so they are with him; her draft is hers to
+                // submit, so it is Needs you, and Home's card is Needs you, on Postgres as in memory; the decline has no
+                // move left.
                 var trainee = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), names)
                     .Handle(new GetTraineeDashboardSummaryQuery(Principal(TraineeId, [WombatRoles.Trainee], InstitutionId)), CancellationToken.None);
-                trainee.Inbox.Select(item => item.ActivityId).Should().Equal(
-                    [portfolioReview, miniCex, draft], "she may cancel the two waiting on him and submit her draft; the decline has no move left");
+                trainee.NeedsYou.Select(row => row.Id).Should().Equal(draft);
+                var needsYou = await new ListNeedsYouQueryHandler(db, new WorkflowEvaluator(), names)
+                    .Handle(new ListNeedsYouQuery(Principal(TraineeId, [WombatRoles.Trainee], InstitutionId)), CancellationToken.None);
+                needsYou.Select(row => (row.Id, row.Holder!.Kind, row.NomineeName)).Should().ContainSingle()
+                    .Which.Should().Be((draft, ActivityHolderKind.Author, AssessorId), "the assessor has no name on record, so his id is shown");
 
                 var coordinator = await new GetCoordinatorDashboardSummaryQueryHandler(
                         db, Options.Create(new DashboardThresholds { CoordinatorStallDays = 7 }), names)
@@ -136,6 +144,64 @@ public sealed class DashboardWaitingPostgresTests : IAsyncLifetime
                         Principal("t297-sub-speciality-admin", [WombatRoles.SubSpecialityAdmin], InstitutionId, subSpecialityId: SubSpecialityId),
                         new DateOnly(2026, 9, 23)), CancellationToken.None);
                 subSpeciality.PendingReviewCount.Should().Be(2);
+            }
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    /// <summary>
+    /// T342 (B6, G12) on PostgreSQL: a trainee holding no other role has nothing in her Activity inbox while she holds a
+    /// draft, a reflection returned to her and a request she may only cancel. The first two are hers by the author's arm,
+    /// so they are Needs you; the third is with its assessor. The inbox reads only the arms that are not the author's.
+    /// </summary>
+    [Fact]
+    public async Task ATraineesInbox_OnPostgres_IsEmpty_BesideHerDraftHerReturnedReflectionAndHerCancellableRequest()
+    {
+        try
+        {
+            var schema = await _schemas.CreateAsync();
+            await using (var db = NewContext(schema))
+            {
+                await db.Database.MigrateAsync();
+            }
+
+            var now = DateTime.UtcNow;
+            int draft, returned;
+            await using (var db = NewContext(schema))
+            {
+                var miniCexType = AddType(db, "mini_cex_cpsa", "Mini-CEX (Paediatrics)");
+                var reflectionType = AddType(db, "reflective_exercise_cpsa", "Reflective Exercise (Paediatrics)");
+
+                var namesHim = $$"""{ "assessor_user_id": "{{AssessorId}}" }""";
+                var unsent = Add(db, miniCexType, "draft", TraineeId, InstitutionId, namesHim, now.AddDays(-3),
+                    Move("create", "draft", "draft", TraineeId, now.AddDays(-3)));
+                var sentBack = Add(db, reflectionType, "draft", TraineeId, InstitutionId, namesHim, now.AddDays(-1),
+                    Move("create", "draft", "draft", TraineeId, now.AddDays(-4)),
+                    Move("submit", "draft", "submitted", TraineeId, now.AddDays(-2)),
+                    Move("return", "submitted", "draft", AssessorId, now.AddDays(-1)));
+                Add(db, miniCexType, "requested", TraineeId, InstitutionId, namesHim, now.AddDays(-2),
+                    Move("create", "draft", "draft", TraineeId, now.AddDays(-5)),
+                    Move("submit", "draft", "requested", TraineeId, now.AddDays(-2)));
+                await db.SaveChangesAsync();
+                (draft, returned) = (unsent.Id, sentBack.Id);
+            }
+
+            var names = new FakeUserDirectory((TraineeId, "Nomsa Mahlangu"));
+            var trainee = Principal(TraineeId, [WombatRoles.Trainee], InstitutionId);
+
+            await using (var db = NewContext(schema))
+            {
+                var inbox = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), names)
+                    .Handle(new ListActivitiesByActorInboxQuery(trainee), CancellationToken.None);
+                inbox.Should().BeEmpty("nothing waits on her as anyone's assessor or reviewer");
+
+                // Guard: the rows are there and hers to move, so the empty inbox is not an empty database.
+                var needsYou = await new ListNeedsYouQueryHandler(db, new WorkflowEvaluator(), names)
+                    .Handle(new ListNeedsYouQuery(trainee), CancellationToken.None);
+                needsYou.Select(row => row.Id).Should().BeEquivalentTo([draft, returned]);
             }
         }
         finally

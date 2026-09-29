@@ -35,7 +35,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/account/profile` | Account/Profile.razor | Any signed-in user | 2.19, 2.41, A.4.1, A.4.2, A.4.6, A.7.14 |
 | `/account/register` | Account/Register.razor | Anyone, signed in or not | 1.8, 1.9, 1.10, 2.8, 2.9, 2.10, 2.11, 2.17, 2.18, 2.27 |
 | `/activities/inbox` | Activities/ActivityInbox.razor | Any signed-in user | 3.4, 3.5, 3.11, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.33, 3.51, 5.25, 6.18, A.4.3, A.7.2 |
-| `/activities/mine` | Activities/MyActivities.razor | Any signed-in user | 2.19, 3.2, 3.6, 3.20, 3.25, 3.48, 5.28, 6.19, 6.24, 6.41, A.7.3 |
+| `/activities/mine` | Activities/MyActivities.razor | Any signed-in user | 2.19, 3.2, 3.6, 3.20, 3.25, 3.48, 5.28, 6.19, 6.24, 6.41, A.2.7, A.7.3 |
 | `/activities/new` | Activities/NewActivity.razor | Any signed-in user | 2.19, 2.42, 2.43, 3.1, 3.8, 3.9, 3.10, 3.12, 3.14, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.25, 3.27, 3.29, 5.22, 5.24, 6.16, 6.19, 6.20, 6.27, 6.37, A.2.7, A.6.6, A.7.1 |
 | `/activities/{ActivityId:int}` | Activities/ActivityView.razor | Any signed-in user; an activity opens only to its subject, its author, the people it names and their overseers, and reads "Activity unavailable" to anyone else | 3.2, 3.3, 3.4, 3.5, 3.6, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.24, 3.25, 3.26, 3.27, 3.28, 3.29, 3.33, 4.17, 5.24, 5.25, 6.16, 6.18, A.2.7, A.5.6, A.7.1, A.7.2 |
 | `/admin/activity-types` | Admin/ActivityTypes/ActivityTypesList.razor | Administrator, CollegeAdmin, InstitutionalAdmin; each row offers Edit where the caller may write the type and View elsewhere, and New activity type only to a caller with a scope to create in (T300) | 1.24, 1.26, 1.31, 6.14a |
@@ -402,7 +402,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Set my processing preferences, and ask for and download a copy of my data | A.1.1, A.1.2, A.1.5 | `/`, `/account/data-rights`, `/account/data-rights/download/{id:guid}` |
 | Ask for access and withdraw it; ask for a correction and read the decision | A.1.6, A.1.7, A.1.9 | `/account/data-rights` |
 | Ask for my personal data to be erased | A.1.11, A.1.13 | `/account/data-rights`, `/account/session-ended`, `/account/login` |
-| Leave a draft and a request waiting, and be reminded | A.2.7 | `/activities/new`, `/activities/{ActivityId:int}` |
+| Leave a draft and a request waiting, and be reminded | A.2.7 | `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine` |
 | Sign in with a password an administrator set, and choose my own | A.4.6 | `/account/login`, `/`, `/account/profile`, `/account/change-password` |
 | Meet the pages that are not mine: an administrator's page, another's activity, a forged switch, an unknown address, the error page | A.5.1, A.5.3, A.5.4, A.5.6, A.5.8 | `/admin/users`, `/admin/jobs`, `/access-denied`, `/dashboard/switch/{role}`, `/not-found`, `/account/login`, `/activities/{ActivityId:int}`, `/Error` |
 | Name an assessor when one is locked out | A.6.6 | `/activities/new` |

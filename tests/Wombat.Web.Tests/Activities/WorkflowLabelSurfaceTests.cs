@@ -72,8 +72,9 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     {
         var cut = RenderActivity(SubmittedAudit());
 
-        Text(cut.Find(".page-subtitle")).Should().Be("State: Awaiting supervisor");
-        Text(cut.Find("#activity-state")).Should().Be("State: Awaiting supervisor");
+        // T342 (Q3): the status card's badge says the state, by its label; the header's "State:" line is gone.
+        Text(cut.Find(".activity-status .badge")).Should().Be("Awaiting supervisor");
+        Text(cut.Find(".page-subtitle")).Should().NotContain("State:");
     }
 
     /// <summary>
@@ -94,10 +95,11 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     {
         var cut = RenderActivity(SubmittedAudit());
 
-        var history = cut.FindAll("table").Single(table => table.QuerySelector("caption")?.TextContent == "Workflow history");
+        var history = cut.Find("table.history-table");
         var rows = history.QuerySelectorAll("tbody tr");
-        Cells(history, rows, "Action").Should().Equal("Create", "Submit");
-        Cells(history, rows, "State").Should().Equal("Draft → Draft", "Draft → Awaiting supervisor");
+        Cells(history, rows, "Move").Should().Equal("Create", "Submit");
+        // T342 (R3): the create row comes from nothing.
+        Cells(history, rows, "From → to").Should().Equal("— → Draft", "Draft → Awaiting supervisor");
     }
 
     [Fact]
@@ -114,7 +116,9 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     [Fact]
     public void MyActivities_ShowsTheStateByItsLabel()
     {
-        Services.AddSingleton<IScopedSender>(new FakeSender().On<ListActivitiesBySubjectQuery>(_ => ListRows()));
+        Services.AddSingleton<IScopedSender>(new FakeSender()
+            .On<ListActivitiesBySubjectQuery>(_ => new ActivityListPageDto(ListRows(), 1, 20, ListRows().Count))
+            .On<Wombat.Application.Features.Activities.Queries.ListNeedsYou.ListNeedsYouQuery>(_ => (IReadOnlyList<ActivitySummaryDto>)[]));
         var cut = RenderComponent<MyActivities>();
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == 1);
 
@@ -138,7 +142,8 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     {
         Services.AddSingleton<IScopedSender>(new FakeSender().On<GetTraineeDashboardSummaryQuery>(_ => new TraineeDashboardSummaryDto(
             null,
-            [new ActivityInboxItem(41, "Clinical Audit (Paediatrics)", "draft", "Draft", new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))],
+            // T342: Home's card is Needs you, the rows ListNeedsYouQuery reads.
+            [TestSupport.ActivityRows.Row(41, typeName: "Clinical Audit (Paediatrics)")],
             [
                 new RecentActivityItem(42, "Clinical Audit (Paediatrics)", "submitted", "Awaiting supervisor", IsFinished: false, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc)),
                 new RecentActivityItem(44, "Teaching session", "accepted", "Accepted", IsFinished: true, new DateTime(2026, 3, 19, 8, 0, 0, DateTimeKind.Utc))
@@ -291,7 +296,7 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     {
         Services.AddSingleton<IScopedSender>(new FakeSender().On<GetActivityByIdQuery>(_ => detail));
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, detail.Activity.Id));
-        cut.WaitForState(() => cut.Markup.Contains("Activity details"));
+        cut.WaitForState(() => cut.Markup.Contains("Who has it now"));
         return cut;
     }
 

@@ -167,4 +167,38 @@ public static class FilingLateness
         => daysAfterEncounter is int days && EncounterDatePolicy.IsLateFiling(days)
             ? $"Filed {days} days after the encounter"
             : null;
+
+    /// <summary>
+    /// How many days late a filing on <paramref name="filedOn" /> would be, for the check line of Log an activity and of the
+    /// author's draft (T342; the build review's D6): the encounter date as it stands in <paramref name="dataJson" />, under
+    /// the schema's <paramref name="dateKey" />; null when it is not late, not a date, or before the programme start, which
+    /// is refused rather than late (T160, T192). The caller asks only for a type that can credit (<see cref="WarnsFor" />).
+    /// </summary>
+    public static int? DaysLate(string? dataJson, string? dateKey, DateOnly filedOn, DateOnly? programmeStartsOn)
+    {
+        if (string.IsNullOrWhiteSpace(dateKey) || string.IsNullOrWhiteSpace(dataJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            if (System.Text.Json.Nodes.JsonNode.Parse(dataJson) is not System.Text.Json.Nodes.JsonObject data ||
+                !data.TryGetPropertyValue(dateKey, out var node) ||
+                node is not System.Text.Json.Nodes.JsonValue value ||
+                !value.TryGetValue<string>(out var text) ||
+                !DateOnly.TryParse(text, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var encounteredOn) ||
+                (programmeStartsOn is DateOnly start && encounteredOn < start))
+            {
+                return null;
+            }
+
+            var days = EncounterDatePolicy.DaysAfterEncounter(encounteredOn, filedOn);
+            return EncounterDatePolicy.IsLateFiling(days) ? days : null;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
 }

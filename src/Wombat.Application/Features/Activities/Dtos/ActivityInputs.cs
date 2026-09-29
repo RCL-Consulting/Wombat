@@ -41,6 +41,19 @@ public sealed record TransitionActivityInput(
     string? DataPatchJson,
     string? Note);
 
+/// <summary>
+/// A draft's data saved without a move (T342, B5, E3): <c>IActivityService.SaveDraftAsync</c>.
+/// </summary>
+/// <param name="DataPatchJson">
+/// The fields to write, as a JSON object, merged over the stored data as a move's patch is. The page may send the whole
+/// form or only what changed: a field the caller may not write is refused only when its value differs from the stored one.
+/// </param>
+public sealed record SaveActivityDraftInput(
+    int ActivityId,
+    string ActorUserId,
+    ClaimsPrincipal Principal,
+    string DataPatchJson);
+
 public sealed record WorkflowEvaluationResult(
     bool Allowed,
     string? Reason)

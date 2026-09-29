@@ -96,11 +96,11 @@ public sealed class LateFilingWarningTests : TestContext
         region.GetAttribute("role").Should().Be("status");
         region.TextContent.Trim().Should().BeEmpty();
 
-        cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-15)));
+        cut.Find("#observed_on-in").Change(Iso(FiledOn.AddDays(-15)));
 
         var warning = cut.Find(WarningSelector);
         warning.TextContent.Should().Contain("15 days ago").And.Contain("recorded as late");
-        cut.Find("#observed_on").GetAttribute("aria-describedby").Should().Be("observed_on-filing-notice");
+        cut.Find("#observed_on-in").GetAttribute("aria-describedby").Should().Be("observed_on-filing-notice");
         cut.Find("#observed_on-filing-notice").GetAttribute("role").Should().Be("status");
     }
 
@@ -109,7 +109,7 @@ public sealed class LateFilingWarningTests : TestContext
     {
         var cut = RenderForm(FiledOn);
 
-        cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-14)));
+        cut.Find("#observed_on-in").Change(Iso(FiledOn.AddDays(-14)));
 
         cut.FindAll(WarningSelector).Should().BeEmpty();
     }
@@ -119,10 +119,10 @@ public sealed class LateFilingWarningTests : TestContext
     {
         var cut = RenderForm(FiledOn);
 
-        cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-30)));
+        cut.Find("#observed_on-in").Change(Iso(FiledOn.AddDays(-30)));
         cut.FindAll(WarningSelector).Should().ContainSingle();
 
-        cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-2)));
+        cut.Find("#observed_on-in").Change(Iso(FiledOn.AddDays(-2)));
         cut.FindAll(WarningSelector).Should().BeEmpty();
     }
 
@@ -131,10 +131,10 @@ public sealed class LateFilingWarningTests : TestContext
     {
         var cut = RenderForm(FiledOn);
 
-        cut.Find("#follow_up_on").Input(Iso(FiledOn.AddDays(-30)));
+        cut.Find("#follow_up_on-in").Change(Iso(FiledOn.AddDays(-30)));
 
         cut.FindAll(".field-warning").Should().BeEmpty();
-        cut.Find("#follow_up_on").HasAttribute("aria-describedby").Should().BeFalse();
+        cut.Find("#follow_up_on-in").HasAttribute("aria-describedby").Should().BeFalse();
     }
 
     [Fact]
@@ -165,11 +165,11 @@ public sealed class LateFilingWarningTests : TestContext
         // ever be announced in it.
         var cut = RenderForm(FiledOn, creditRulesJson: NonCreditingRules);
 
-        cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-30)));
+        cut.Find("#observed_on-in").Change(Iso(FiledOn.AddDays(-30)));
 
         cut.FindAll("#observed_on-filing-notice").Should().BeEmpty();
         cut.FindAll(".field-warning").Should().BeEmpty();
-        cut.Find("#observed_on").HasAttribute("aria-describedby").Should().BeFalse();
+        cut.Find("#observed_on-in").HasAttribute("aria-describedby").Should().BeFalse();
     }
 
     [Theory]
@@ -181,7 +181,7 @@ public sealed class LateFilingWarningTests : TestContext
         // not take the form down with them.
         var cut = RenderForm(FiledOn, creditRulesJson: creditRulesJson);
 
-        cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-30)));
+        cut.Find("#observed_on-in").Change(Iso(FiledOn.AddDays(-30)));
 
         cut.FindAll(".field-warning").Should().BeEmpty();
         cut.FindAll(".alert").Should().BeEmpty("guard: the form rendered rather than failing to load");
@@ -194,17 +194,17 @@ public sealed class LateFilingWarningTests : TestContext
     {
         var cut = RenderForm(FiledOn, programmeStartsOn: ProgrammeStart);
 
-        cut.Find("#observed_on").Input(Iso(ProgrammeStart.AddDays(-1)));
+        cut.Find("#observed_on-in").Change(Iso(ProgrammeStart.AddDays(-1)));
 
         cut.Find(HintSelector).TextContent.Should()
             .Contain("before the trainee's programme started (2026-01-01)").And.Contain("will not be accepted");
         cut.FindAll(WarningSelector).Should().BeEmpty("the server refuses it, so it cannot 'still be filed'");
-        cut.Find("#observed_on").GetAttribute("aria-describedby").Should().Be("observed_on-filing-notice");
+        cut.Find("#observed_on-in").GetAttribute("aria-describedby").Should().Be("observed_on-filing-notice");
 
         // A predicted refusal marks the value itself as wrong, not only a note beside it.
-        cut.Find("#observed_on").GetAttribute("aria-invalid").Should().Be("true");
-        cut.Find("#observed_on").ClassList.Should().Contain("input-validation-error");
-        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#observed_on")).Should().BeTrue("the input shows it, not only the hint (T236)");
+        cut.Find("#observed_on-in").GetAttribute("aria-invalid").Should().Be("true");
+        cut.Find("#observed_on-in").ClassList.Should().Contain("input-validation-error");
+        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#observed_on-in")).Should().BeTrue("the input shows it, not only the hint (T236)");
     }
 
     [Fact]
@@ -213,15 +213,15 @@ public sealed class LateFilingWarningTests : TestContext
         // The server's bound is "not before" the start: the day itself is accepted, and it is 266 days before the filing.
         var cut = RenderForm(FiledOn, programmeStartsOn: ProgrammeStart);
 
-        cut.Find("#observed_on").Input(Iso(ProgrammeStart));
+        cut.Find("#observed_on-in").Change(Iso(ProgrammeStart));
 
         cut.FindAll(HintSelector).Should().BeEmpty();
         cut.Find(WarningSelector).TextContent.Should().Contain("266 days ago");
 
         // A late filing is accepted, so the value is not marked invalid.
-        cut.Find("#observed_on").HasAttribute("aria-invalid").Should().BeFalse();
-        cut.Find("#observed_on").ClassList.Should().NotContain("input-validation-error");
-        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#observed_on")).Should().BeFalse();
+        cut.Find("#observed_on-in").HasAttribute("aria-invalid").Should().BeFalse();
+        cut.Find("#observed_on-in").ClassList.Should().NotContain("input-validation-error");
+        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#observed_on-in")).Should().BeFalse();
     }
 
     [Fact]
@@ -229,13 +229,13 @@ public sealed class LateFilingWarningTests : TestContext
     {
         var cut = RenderForm(FiledOn, programmeStartsOn: ProgrammeStart);
 
-        cut.Find("#observed_on").Input(Iso(ProgrammeStart.AddDays(-10)));
+        cut.Find("#observed_on-in").Change(Iso(ProgrammeStart.AddDays(-10)));
         cut.FindAll(HintSelector).Should().ContainSingle();
 
-        cut.Find("#observed_on").Input(Iso(FiledOn.AddDays(-2)));
+        cut.Find("#observed_on-in").Change(Iso(FiledOn.AddDays(-2)));
         cut.FindAll(HintSelector).Should().BeEmpty();
         cut.FindAll(WarningSelector).Should().BeEmpty();
-        cut.Find("#observed_on").HasAttribute("aria-invalid").Should().BeFalse();
+        cut.Find("#observed_on-in").HasAttribute("aria-invalid").Should().BeFalse();
     }
 
     [Fact]
@@ -245,7 +245,7 @@ public sealed class LateFilingWarningTests : TestContext
         // the date (EncounterDateGate), so lateness is the true thing to say.
         var cut = RenderForm(FiledOn, programmeStartsOn: null);
 
-        cut.Find("#observed_on").Input(Iso(ProgrammeStart.AddDays(-1)));
+        cut.Find("#observed_on-in").Change(Iso(ProgrammeStart.AddDays(-1)));
 
         cut.FindAll(HintSelector).Should().BeEmpty();
         cut.Find(WarningSelector).TextContent.Should().Contain("days ago");
@@ -257,7 +257,7 @@ public sealed class LateFilingWarningTests : TestContext
         // A research output or reflective exercise may be dated from before admission: the server does not bound it.
         var cut = RenderForm(FiledOn, creditRulesJson: NonCreditingRules, programmeStartsOn: ProgrammeStart);
 
-        cut.Find("#observed_on").Input(Iso(ProgrammeStart.AddDays(-1)));
+        cut.Find("#observed_on-in").Change(Iso(ProgrammeStart.AddDays(-1)));
 
         cut.FindAll("#observed_on-filing-notice").Should().BeEmpty();
         cut.FindAll(".validation-message").Should().BeEmpty();
@@ -280,7 +280,7 @@ public sealed class LateFilingWarningTests : TestContext
     {
         var cut = RenderForm(FiledOn, programmeStartsOn: ProgrammeStart);
 
-        cut.Find("#follow_up_on").Input(Iso(ProgrammeStart.AddDays(-1)));
+        cut.Find("#follow_up_on-in").Change(Iso(ProgrammeStart.AddDays(-1)));
 
         cut.FindAll(".validation-message").Should().BeEmpty();
     }
@@ -294,15 +294,12 @@ public sealed class LateFilingWarningTests : TestContext
         Services.AddSingleton<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
         Services.AddSingleton<IScopedSender>(new CreatePageSender());
 
-        var cut = RenderComponent<NewActivity>();
-        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
-        cut.Find("#activity-type").Change("2");
-        cut.WaitForState(() => cut.FindAll("#observed_on").Count == 1);
+        var cut = NewActivityPage.Open(this, "mini_cex_cpsa", "#observed_on-in");
 
-        cut.Find("#observed_on").Input(Iso(FilingLateness.Today().AddDays(-14)));
+        cut.Find("#observed_on-in").Change(Iso(FilingLateness.Today().AddDays(-14)));
         cut.FindAll(WarningSelector).Should().BeEmpty();
 
-        cut.Find("#observed_on").Input(Iso(FilingLateness.Today().AddDays(-15)));
+        cut.Find("#observed_on-in").Change(Iso(FilingLateness.Today().AddDays(-15)));
         cut.Find(WarningSelector).TextContent.Should().Contain("15 days ago");
     }
 
@@ -316,16 +313,15 @@ public sealed class LateFilingWarningTests : TestContext
         Services.AddSingleton<IFieldPermissionEvaluator, FieldPermissionEvaluator>();
         Services.AddSingleton<IScopedSender>(sender);
 
-        var cut = RenderComponent<NewActivity>();
-        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
-        cut.Find("#activity-type").Change("2");
-        cut.WaitForState(() => cut.FindAll("#observed_on").Count == 1);
+        var cut = NewActivityPage.Open(this, "mini_cex_cpsa", "#observed_on-in");
 
-        cut.Find("#observed_on").Input(Iso(startedOn.AddDays(-1)));
-        cut.Find(HintSelector).TextContent.Should().Contain($"programme started ({Iso(startedOn)})");
+        cut.Find("#observed_on-in").Change(Iso(startedOn.AddDays(-1)));
+        // To the author, "your programme" (C12), as the server's refusal says it to them.
+        cut.Find(HintSelector).TextContent.Trim().Should().Be(
+            $"This date is before your programme started ({Iso(startedOn)}), and will not be accepted.");
         cut.FindAll(WarningSelector).Should().BeEmpty();
 
-        cut.Find("#observed_on").Input(Iso(startedOn));
+        cut.Find("#observed_on-in").Change(Iso(startedOn));
         cut.FindAll(HintSelector).Should().BeEmpty();
         cut.Find(WarningSelector).TextContent.Should().Contain("100 days ago");
 
@@ -343,7 +339,7 @@ public sealed class LateFilingWarningTests : TestContext
         Services.AddSingleton<IScopedSender>(new CreatePageSender());
 
         var cut = RenderComponent<NewActivity>();
-        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
+        cut.WaitForState(() => cut.FindAll(".instrument-link").Count > 0);
 
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Warning &&
@@ -397,7 +393,8 @@ public sealed class LateFilingWarningTests : TestContext
         var cut = RenderPage(sender);
 
         // The stored date is handed on at the submit, where the server judges it whether it changed or not.
-        cut.Find(HintSelector).TextContent.Should().Contain($"programme started ({Iso(startedOn)})");
+        cut.Find(HintSelector).TextContent.Trim().Should().Be(
+            $"This date is before your programme started ({Iso(startedOn)}), and will not be accepted.");
         cut.FindAll(WarningSelector).Should().BeEmpty();
         sender.ProgrammeStartAskedFor.Should().Equal(TraineeId);
     }
@@ -456,7 +453,7 @@ public sealed class LateFilingWarningTests : TestContext
 
         var cut = RenderPage(detail);
 
-        cut.Find("#observed_on").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
+        cut.Find("#observed_on-in").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
         cut.FindAll(".field-warning").Should().BeEmpty();
     }
 
@@ -496,7 +493,7 @@ public sealed class LateFilingWarningTests : TestContext
 
         var cut = RenderPage(detail);
 
-        cut.Find("#observed_on").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
+        cut.Find("#observed_on-in").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
         cut.FindAll("#observed_on-filing-notice").Should().BeEmpty();
         cut.FindAll(".field-warning").Should().BeEmpty();
     }
@@ -532,7 +529,7 @@ public sealed class LateFilingWarningTests : TestContext
 
         var cut = RenderPage(detail);
 
-        cut.Find("#observed_on").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
+        cut.Find("#observed_on-in").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
         cut.FindAll(".field-warning").Should().BeEmpty();
     }
 
@@ -574,7 +571,7 @@ public sealed class LateFilingWarningTests : TestContext
 
         var cut = RenderPage(detail);
 
-        cut.Find("#observed_on").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
+        cut.Find("#observed_on-in").HasAttribute("disabled").Should().BeFalse("guard: the date can still be typed in");
         cut.FindAll(".field-warning").Should().BeEmpty();
     }
 
@@ -692,7 +689,7 @@ public sealed class LateFilingWarningTests : TestContext
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 11));
-        cut.WaitForState(() => cut.Markup.Contains("Activity details"));
+        cut.WaitForState(() => cut.Markup.Contains("Who has it now"));
 
         return cut;
     }

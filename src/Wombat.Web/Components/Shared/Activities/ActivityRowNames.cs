@@ -32,6 +32,30 @@ public static class ActivityRowNames
         return RowNames.Distinct(activities, activity => activity.Id, activity => Base(activity, withSubject), [.. tieBreakers]);
     }
 
+    /// <summary>
+    /// Each activity link's accessible name on My activities and in Needs you (T342, flow 03; T280, A16), by activity id:
+    /// the words the link shows, its name and, after a visually hidden ", ", its second line ("Mini-CEX (Paediatrics) ·
+    /// PAED-003 · 2026-09-25, to David Naidoo"; <see cref="ActivityListWords" />). The name already carries the nominee
+    /// where two share the rest (E7), so a name two links still share is rare: two drafts saved with neither EPA nor date.
+    /// Those add their state, then are numbered in list order (<see cref="RowNames.Distinct{TItem, TKey}" />), and only
+    /// those need an <c>aria-label</c>: every other link's own words are its name. One activity listed twice on a page
+    /// (in Needs you and in All activities) is one id, one name.
+    /// </summary>
+    public static IReadOnlyDictionary<int, string> Links(IEnumerable<ActivitySummaryDto> activities)
+        => RowNames.Distinct(
+            activities.DistinctBy(activity => activity.Id),
+            activity => activity.Id,
+            LinkWords,
+            activity => $", {activity.CurrentStateLabel}");
+
+    /// <summary>What a link reads when nothing else on its list shares it: its name, then ", " and its second line.</summary>
+    public static string LinkWords(ActivitySummaryDto activity)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        var name = ActivityListWords.NameOf(activity);
+        return ActivityListWords.NomineeLine(activity) is { } line ? $"{name}, {line}" : name;
+    }
+
     private static string Base(ActivitySummaryDto activity, bool withSubject)
     {
         var parts = new List<string>

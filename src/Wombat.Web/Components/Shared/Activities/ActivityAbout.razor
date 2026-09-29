@@ -1,0 +1,32 @@
+@*
+  The activity page's About card (T342, flow 03; R3-C-Activity, C13): who, what EPA, when, and what it credits, as a
+  .details-list. It also holds what the old summary card carried: the form's version, only where a move's reason names
+  it (T107), and the credit warnings (T108 credited nothing, T109 across scales, the paused EPA of D48) as
+  .field-warning under Credit. Standing page content, so no warning carries a role (T193). The rows are
+  ActivityPageModel.About's.
+*@
+<section class="detail-card activity-about" aria-labelledby="activity-about-title">
+  <h2 id="activity-about-title" class="activity-card-title">About</h2>
+  <dl class="details-list">
+    @foreach (var row in Rows)
+    {
+      <div>
+        <dt>@row.Label</dt>
+        <dd id="@row.Id">
+          @row.Value
+          @if (row.Warnings is { Count: > 0 } warnings)
+          {
+            @foreach (var warning in warnings)
+            {
+              <p class="field-warning">@warning</p>
+            }
+          }
+        </dd>
+      </div>
+    }
+  </dl>
+</section>
+
+@code {
+  [Parameter, EditorRequired] public IReadOnlyList<ActivityAboutRow> Rows { get; set; } = [];
+}

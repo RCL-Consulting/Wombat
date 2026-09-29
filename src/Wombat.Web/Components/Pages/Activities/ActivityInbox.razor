@@ -2,13 +2,27 @@
 @attribute [Authorize]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<ActivityInbox> Logger
 
 <PageTitle>Activity inbox · Wombat</PageTitle>
 
-<PageHeader Title="Activity inbox" Subtitle="Activities that the current user can act on." />
+@* T342, flow 03 (R3-C-Mine "inbox-empty"): the page says what the inbox is for, not "the current user". A registrar's own
+   drafts and returned work are not here (the query leaves out the author's arms): they are My activities' Needs you. *@
+@* The subtitle is role-neutral: the inbox is the assessor's, and the Speciality admin's and the Coordinator's too (the
+   build review's G6). *@
+<PageHeader Title="Activity inbox" Subtitle="@Subtitle" />
 
 @{ var rowNames = ActivityRowNames.For(_items, withSubject: true); }
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="Inbox clear" EmptyBody="There are no activities waiting for your action.">
+@* Empty, the inbox speaks to who is reading it: to a registrar with no role that acts on others' work, where their own
+   work is instead; to an assessor, that nothing waits on them. *@
+<StatePanel IsLoading="_loading"
+            LoadError="@_error"
+            OnRetry="LoadAsync"
+            IsEmpty="@(!_loading && _items.Count == 0)"
+            EmptyTitle="@(_registrarOnly ? RegistrarEmptyTitle : AssessorEmptyTitle)"
+            EmptyBody="@(_registrarOnly ? RegistrarEmptyBody : AssessorEmptyBody)"
+            EmptyActions="@(_registrarOnly ? OpenMyActivities : null)">
+  <ChildContent>
   <DataTable Items="_items">
     <HeaderRow>
       @* T137. The EPA and the encounter date, so three requests from one trainee are three different things at a
@@ -41,27 +55,60 @@
       </tr>
     </Row>
   </DataTable>
+  </ChildContent>
 </StatePanel>
 
 @code {
+  /// <summary>What the inbox is for, to whoever reads it.</summary>
+  public const string Subtitle = "Work waiting for you to rate, review or record.";
+
+  public const string RegistrarEmptyTitle = "Nothing here is yours to act on.";
+  public const string RegistrarEmptyBody = "This inbox holds work that assessors rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs you.";
+  public const string AssessorEmptyTitle = "Inbox clear";
+  public const string AssessorEmptyBody = "Nothing is waiting for you to rate, discuss or review.";
+
+  /// <summary>The load failure's words: never the exception's text (T272; the page printed it until T342).</summary>
+  public const string LoadFailed = "Could not load the Activity inbox. Nothing has changed. Try again, or come back in a few minutes.";
+
   private readonly List<ActivitySummaryDto> _items = [];
   private bool _loading = true;
   private string? _error;
+  private bool _registrarOnly;
 
-  protected override async Task OnInitializedAsync()
+  private static readonly RenderFragment OpenMyActivities = @<a class="btn btn-outline" href="/activities/mine">Open My activities</a>;
+
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
   {
+    _loading = true;
+    _error = null;
+    _items.Clear();
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _registrarOnly = IsRegistrarOnly(authState.User);
       _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox.ListActivitiesByActorInboxQuery(authState.User)));
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      Logger.LogError(exception, "The Activity inbox could not be read.");
+      _error = LoadFailed;
     }
     finally
     {
       _loading = false;
     }
   }
+
+  /// <summary>
+  /// A registrar and nothing else (T342, lane D): a Trainee or a pending one, holding no role through which others' work
+  /// can wait on them. Such a caller's inbox is always empty, since it leaves out the author's own arms, so its empty state
+  /// sends them to Needs you. Anyone holding another role gets the assessor's words.
+  /// </summary>
+  private static bool IsRegistrarOnly(System.Security.Claims.ClaimsPrincipal user)
+    => (user.IsInRole(WombatRoles.Trainee) || user.IsInRole(WombatRoles.PendingTrainee)) &&
+       WombatRoles.All
+         .Where(role => role != WombatRoles.Trainee && role != WombatRoles.PendingTrainee)
+         .All(role => !user.IsInRole(role));
 }

@@ -118,6 +118,7 @@ public sealed class ActivityService : IActivityService
             activity.DataJson,
             ProgrammeCalendar.DateOf(utcNow),
             activityType.CreditRulesJson,
+            writerIsSubject: IsTheSubject(input.CreatedByUserId, activity),
             cancellationToken));
 
         // T122. A create always writes the credit target, and for a type whose initial state is already `requested`
@@ -434,6 +435,7 @@ public sealed class ActivityService : IActivityService
                 mergedDataJson,
                 ProgrammeCalendar.DateOf(utcNow),
                 version.CreditRulesJson,
+                writerIsSubject: IsTheSubject(input.ActorUserId, activity),
                 cancellationToken));
         }
 
@@ -533,6 +535,133 @@ public sealed class ActivityService : IActivityService
         // One of the two holds owns the transaction and the other joined it (ICreditHold), so committing both commits it once.
         await epaHold.CommitAsync(cancellationToken);
         await traineeHold.CommitAsync(cancellationToken);
+        return Map(activity);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// <para>
+    /// A move's write without the move (T342, B5, E3): the same pieces <see cref="TransitionAsync" /> writes data with, in
+    /// the same order, and no others. The writable set is the caller's in the CURRENT state, with the state gate
+    /// (<see cref="IFieldPermissionEvaluator.GetWritableFieldKeys" />): so a save is possible exactly where the caller has
+    /// a field to write, which for a registrar is her draft (and a reflection returned to it), and never a request she has
+    /// handed on, a dead end or a terminal record. The caller must also have a move out of the state that leads on
+    /// (<see cref="ActivityWaiting.IsActionableBy" />, T342 R1): a field the state leaves writable by default is not
+    /// enough, since the author of a type whose reviewing state declares no <c>editable_by</c> keeps her fields there. A
+    /// caller failing either is refused outright, before anything else ("You cannot change this activity while it is
+    /// Requested."). An assessor with fields of their own in a state
+    /// may keep them, which a move would also have let them write; nobody may change another's (the merge refuses a
+    /// changed field the caller cannot write).
+    /// </para>
+    /// <para>
+    /// Validation is <c>draft</c> (formats only), and the three gates judge only what the save CHANGES: a save is never a
+    /// hand-on, so the D20 clause for unchanged values (<see cref="UnchangedFieldsHandedOn" />) never applies. The
+    /// encounter date by <see cref="EncounterDateGate" />; a nominee by <see cref="NomineeGate" />; a credit target by
+    /// <see cref="ToolPermissionGate" />, when credit can still be reached from the current state, as a move judges a
+    /// changed target when credit can be reached from its target. The submit later judges the rest, as it always has.
+    /// </para>
+    /// <para>
+    /// No history row and no credit. The encounter date and the EPA are re-stamped from the saved data, as every write
+    /// stamps them (T119, T137). Every throwable check runs before the first mutation, so a refusal leaves nothing for the
+    /// audit pipeline's catch to commit.
+    /// </para>
+    /// </remarks>
+    public async Task<ActivityDto> SaveDraftAsync(SaveActivityDraftInput input, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(input.Principal);
+
+        var activity = await FindActivityAsync(input.ActivityId, cancellationToken);
+        if (activity is null || !IsReadableBy(activity, input.Principal))
+        {
+            // As GetDetailAsync answers: one outcome for "no such activity" and "not yours" (T101).
+            throw new InvalidOperationException("The activity could not be found.");
+        }
+
+        var version = GetPinnedVersion(activity);
+        var schema = FormSchemaParser.Parse(version.SchemaJson);
+        var workflow = WorkflowParser.Parse(version.WorkflowJson);
+
+        // Two conditions, one refusal (T342, R1). A field to write is not enough: a type whose reviewing state declares no
+        // `editable_by` leaves the author's default `subject|creator` in force there, so the author of a teaching session
+        // in `submitted`, or of a legacy Mini-CEX in `requested`, would edit what the reviewer is reading, with no trace.
+        // The caller must also have a move out of the state that leads on (ActivityWaiting.IsActionableBy): the one reading
+        // of "this is with you now" that Needs you and the inbox share. A registrar's draft (and a reflection returned to
+        // it) and a CPSA assessor's request pass it; a withdrawal alone (cancel) does not.
+        var writableFieldKeys = _fieldPermissionEvaluator.GetWritableFieldKeys(schema, workflow, activity, input.Principal);
+        if (writableFieldKeys.Count == 0 ||
+            !ActivityWaiting.IsActionableBy(workflow, activity, input.Principal, _workflowEvaluator))
+        {
+            throw new InvalidOperationException(
+                $"You cannot change this activity while it is {workflow.StateLabel(activity.CurrentState)}.");
+        }
+
+        var mergedDataJson = MergeWritableKeys(
+            schema,
+            workflow,
+            activity.DataJson,
+            string.IsNullOrWhiteSpace(input.DataPatchJson) ? EmptyObjectJson : input.DataPatchJson,
+            writableFieldKeys,
+            activity.CurrentState);
+        ThrowIfActorFieldNamesSubject(schema, workflow, mergedDataJson, activity.SubjectUserId);
+
+        ThrowIfInvalid(schema, _schemaValidator.Validate(schema, mergedDataJson, SchemaValidationMode.Draft));
+
+        var utcNow = UtcNow();
+
+        if (!string.IsNullOrWhiteSpace(schema.ObservationDateField) &&
+            EncounterDateGate.Changed(activity, schema, activity.DataJson, mergedDataJson))
+        {
+            ThrowIfInvalid(schema, await EncounterDateGate.ValidateAsync(
+                _dbContext,
+                activity,
+                schema,
+                mergedDataJson,
+                ProgrammeCalendar.DateOf(utcNow),
+                version.CreditRulesJson,
+                writerIsSubject: IsTheSubject(input.ActorUserId, activity),
+                cancellationToken));
+        }
+
+        if (workflow.CanReachTerminal(activity.CurrentState))
+        {
+            var (changedTargets, _) = CompareGatedTargets(
+                ToolPermissionGate.GatedTargets(version.CreditRulesJson, schema), activity.DataJson, mergedDataJson);
+            if (changedTargets.Count > 0)
+            {
+                await ToolPermissionGate.EnsurePermittedAsync(
+                    _dbContext,
+                    activity.ActivityType.WbaToolKey,
+                    version.CreditRulesJson,
+                    schema,
+                    activity.SubjectUserId,
+                    ObservationDateResolver.Resolve(activity, schema, mergedDataJson).ObservedOn,
+                    mergedDataJson,
+                    cancellationToken,
+                    changedTargets.Contains);
+            }
+        }
+
+        var requiredRolesByField = ActorFieldRules.RequiredRolesByNomineeField(schema, workflow);
+        await NomineeGate.EnsurePermittedAsync(
+            _dbContext,
+            schema,
+            requiredRolesByField,
+            NomineeGate.ChangedFields(requiredRolesByField.Keys, activity.DataJson, mergedDataJson),
+            mergedDataJson,
+            activity.InstitutionId,
+            activity.SubjectUserId,
+            cancellationToken);
+
+        var epaId = await EvidenceEpaResolver.ResolveAsync(_dbContext, schema, mergedDataJson, cancellationToken);
+
+        // The first mutation. Nothing below it awaits before the save, and nothing can fail.
+        StampObservedOn(activity, schema, mergedDataJson);
+        activity.EpaId = epaId;
+        activity.DataJson = mergedDataJson;
+        activity.UpdatedOn = utcNow;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return Map(activity);
     }
 
@@ -722,6 +851,7 @@ public sealed class ActivityService : IActivityService
                 activity.DataJson,
                 ProgrammeCalendar.DateOf(utcNow),
                 creditRulesJson: null,
+                writerIsSubject: false,
                 cancellationToken));
 
             // T102, as at create: every nominee a system-written record carries is judged, before AddRange. msf_cpsa has
@@ -841,19 +971,79 @@ public sealed class ActivityService : IActivityService
         // layer used to build a synthetic ActivityType for this, defaulting Scope to Global and
         // ScopeId to null, so every `scope:` rule evaluated false in the button list while the server
         // would have allowed the transition. (T070)
-        var availableActions = workflow.Transitions
+        var allowed = workflow.Transitions
             .Where(transition => transition.From.Contains(activity.CurrentState, StringComparer.Ordinal))
             .Where(transition => _workflowEvaluator.Evaluate(workflow, activity, transition.Key, principal).Allowed)
-            .Select(transition => new ActivityActionDto(
-                transition.Key,
-                transition.RequiresNote,
-                ExplainUnreachable(schema, workflow, activity, transition, principal, writableFieldKeys)))
+            .ToList();
+
+        // T342 (B2, C3, E4): whom each move hands the activity to, by the stored data, and where it leaves it. One lookup
+        // for every person named.
+        var handOffFields = allowed.ToDictionary(
+            transition => transition,
+            transition => MoveHandOff.NomineeFieldFor(workflow, schema, transition));
+        var names = await NamesOfAsync(
+            handOffFields.Values
+                .OfType<string>()
+                .Select(field => ActorRuleMatcher.ReadUserFieldValue(activity.DataJson, field)),
+            cancellationToken);
+
+        var availableActions = allowed
+            .Select(transition =>
+            {
+                var handOffField = handOffFields[transition];
+                var nominee = handOffField is null ? null : ActorRuleMatcher.ReadUserFieldValue(activity.DataJson, handOffField);
+                var outcome = MoveOutcome.For(workflow, transition);
+
+                return new ActivityActionDto(
+                    transition.Key,
+                    transition.RequiresNote,
+                    ExplainUnreachable(schema, workflow, activity, transition, principal, writableFieldKeys))
+                {
+                    HandOffFieldKey = handOffField,
+                    HandsToName = string.IsNullOrEmpty(nominee) ? null : names.GetValueOrDefault(nominee),
+                    TargetStateLabel = outcome.TargetStateLabel,
+                    TargetIsTerminal = outcome.TargetIsTerminal,
+                    TargetIsFinal = outcome.TargetIsFinal,
+                    ResultSentence = outcome.ResultSentence
+                };
+            })
             .ToList();
 
         return new ActivityDetailDto(
             Map(activity),
             OrderBySchema(schema, writableFieldKeys),
             availableActions);
+    }
+
+    /// <summary>
+    /// "First Last" for each user id named, in one query; an id with no user, or a user with no name, is left out, so a
+    /// button never reads "Submit to 3f2c…" (T342).
+    /// </summary>
+    private async Task<IReadOnlyDictionary<string, string>> NamesOfAsync(
+        IEnumerable<string?> userIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = userIds
+            .Where(id => !string.IsNullOrEmpty(id))
+            .Select(id => id!)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (ids.Length == 0)
+        {
+            return new Dictionary<string, string>(StringComparer.Ordinal);
+        }
+
+        var users = await _dbContext.Set<WombatIdentityUser>()
+            .AsNoTracking()
+            .Where(entity => ids.Contains(entity.Id))
+            .Select(entity => new { entity.Id, entity.FirstName, entity.LastName })
+            .ToListAsync(cancellationToken);
+
+        return users
+            .Select(user => (user.Id, Name: $"{user.FirstName} {user.LastName}".Trim()))
+            .Where(user => user.Name.Length > 0)
+            .ToDictionary(user => user.Id, user => user.Name, StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -1232,26 +1422,7 @@ public sealed class ActivityService : IActivityService
             return EmptyDirectives;
         }
 
-        using var stored = JsonDocument.Parse(activity.DataJson);
-        using var merged = JsonDocument.Parse(mergedDataJson);
-
-        var judge = new HashSet<int>();
-        var unchangedFieldTargets = new List<(int Index, string SourceField)>();
-        for (var index = 0; index < targets.Count; index++)
-        {
-            var matchRule = targets[index];
-            var before = CreditTargetResolver.DescribeTarget(matchRule, stored.RootElement);
-            var after = CreditTargetResolver.DescribeTarget(matchRule, merged.RootElement);
-
-            if (before != after)
-            {
-                judge.Add(index);
-            }
-            else if (after.SourceField is not null)
-            {
-                unchangedFieldTargets.Add((index, after.SourceField));
-            }
-        }
+        var (judge, unchangedFieldTargets) = CompareGatedTargets(targets, activity.DataJson, mergedDataJson);
 
         if (unchangedFieldTargets.Count == 0)
         {
@@ -1277,6 +1448,41 @@ public sealed class ActivityService : IActivityService
         }
 
         return judge;
+    }
+
+    /// <summary>
+    /// Which gated targets a write changes, as the credit engine would resolve them (<c>5</c> and <c>"5"</c> are the same
+    /// target), and which it leaves unchanged while reading them from a field. Shared by a move
+    /// (<see cref="DirectivesToJudge" />) and a draft save (<see cref="SaveDraftAsync" />, T342), so both judge "changed"
+    /// alike.
+    /// </summary>
+    private static (HashSet<int> Changed, List<(int Index, string SourceField)> UnchangedFieldTargets) CompareGatedTargets(
+        IReadOnlyList<CurriculumItemMatchRule> targets,
+        string storedDataJson,
+        string mergedDataJson)
+    {
+        using var stored = JsonDocument.Parse(storedDataJson);
+        using var merged = JsonDocument.Parse(mergedDataJson);
+
+        var changed = new HashSet<int>();
+        var unchangedFieldTargets = new List<(int Index, string SourceField)>();
+        for (var index = 0; index < targets.Count; index++)
+        {
+            var matchRule = targets[index];
+            var before = CreditTargetResolver.DescribeTarget(matchRule, stored.RootElement);
+            var after = CreditTargetResolver.DescribeTarget(matchRule, merged.RootElement);
+
+            if (before != after)
+            {
+                changed.Add(index);
+            }
+            else if (after.SourceField is not null)
+            {
+                unchangedFieldTargets.Add((index, after.SourceField));
+            }
+        }
+
+        return (changed, unchangedFieldTargets);
     }
 
     /// <summary>
@@ -1415,6 +1621,10 @@ public sealed class ActivityService : IActivityService
             mergedDataJson,
             new HashSet<string>(StringComparer.Ordinal) { schema.ObservationDateField }).Count > 0;
     }
+
+    /// <summary>Whether the writer is the person the activity is about: the one who reads "your programme" (T342, C12).</summary>
+    private static bool IsTheSubject(string actorUserId, Activity activity)
+        => string.Equals(actorUserId?.Trim(), activity.SubjectUserId, StringComparison.Ordinal);
 
     private static bool IsTheAuthor(string actorUserId, Activity activity)
         => string.Equals(actorUserId, activity.SubjectUserId, StringComparison.Ordinal) ||

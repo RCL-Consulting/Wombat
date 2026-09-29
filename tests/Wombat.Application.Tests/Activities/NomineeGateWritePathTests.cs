@@ -57,7 +57,7 @@ public sealed class NomineeGateWritePathTests
     private const string BoundRecordTypeKey = "bound_reviewed_record_under_test";
 
     /// <summary>The fragment every nominee-gate refusal carries.</summary>
-    private const string GateRefusal = "cannot be named here";
+    private const string GateRefusal = "be named as ";
 
     /// <summary>Fix 1's message, after the field label. It must win wherever it applies.</summary>
     private const string SelfNominationRefusal =
@@ -298,7 +298,7 @@ public sealed class NomineeGateWritePathTests
             StageInput(RecordTypeKey, NonAssessorId)));
 
         // Led by the label, and named: the person belongs to the trainee's own institution.
-        message.Should().StartWith($"Reviewing consultant: First {NonAssessorId} {GateRefusal}");
+        message.Should().StartWith($"Reviewing consultant: First {NonAssessorId} ").And.Contain(GateRefusal);
         await AssertNoActivitiesAsync(options);
     }
 
@@ -314,7 +314,7 @@ public sealed class NomineeGateWritePathTests
         var message = await ShouldBeRefusedAsync(options, service => service.StageCompletedAsync(
             StageInput(RecordTypeKey, AssessorId, OtherInstitutionAssessorId)));
 
-        message.Should().StartWith($"Reviewing consultant: that person {GateRefusal}");
+        message.Should().StartWith($"Reviewing consultant: that person ").And.Contain(GateRefusal);
         message.Should().NotContain(OtherInstitutionAssessorId);
         await AssertNoActivitiesAsync(options);
     }

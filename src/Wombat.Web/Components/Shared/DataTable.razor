@@ -10,15 +10,18 @@
 else
 {
   <div class="table-container shadow">
-    <table class="clinic-table">
+    @* Stack (T342, flow 03, A8): below 641px each row is a block, its header row visually hidden but still read. The
+       roles are explicit, as display: grid on a row drops a table's semantics in some browsers; the caller's rows
+       carry role="row", role="columnheader" and role="cell". *@
+    <table class="clinic-table @StackClass" role="@(Stack ? "table" : null)">
       @if (!string.IsNullOrWhiteSpace(Caption))
       {
         <caption>@Caption</caption>
       }
-      <thead>
+      <thead role="@(Stack ? "rowgroup" : null)">
         @HeaderRow
       </thead>
-      <tbody>
+      <tbody role="@(Stack ? "rowgroup" : null)">
         @foreach (var item in Items)
         {
           @Row(item)
@@ -34,4 +37,9 @@ else
   [Parameter, EditorRequired] public RenderFragment<TItem> Row { get; set; } = default!;
   [Parameter] public RenderFragment? Empty { get; set; }
   [Parameter] public string? Caption { get; set; }
+
+  /// <summary>The stacked table below 641px (<c>.clinic-table--stack</c>, DESIGN.md § Table system; T342).</summary>
+  [Parameter] public bool Stack { get; set; }
+
+  private string? StackClass => Stack ? "clinic-table--stack" : null;
 }

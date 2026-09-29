@@ -4,7 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Application.Common.Users;
+using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
@@ -18,8 +18,11 @@ public sealed record GetTraineeDashboardSummaryQuery(ClaimsPrincipal Principal, 
 public sealed class GetTraineeDashboardSummaryQueryHandler
     : IRequestHandler<GetTraineeDashboardSummaryQuery, TraineeDashboardSummaryDto>
 {
-    /// <summary>How many of the inbox's rows the Activity inbox card lists: its first, the newest.</summary>
-    public const int InboxListed = 5;
+    /// <summary>
+    /// How many of the Needs you rows Home's card lists: its first, the most recently updated. The summary carries them
+    /// all, so the card's count is the whole of it (T342, lane D).
+    /// </summary>
+    public const int NeedsYouListed = 5;
 
     private readonly IApplicationDbContext _dbContext;
     private readonly IWorkflowEvaluator _workflowEvaluator;
@@ -52,33 +55,14 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
         var curriculumTargets = await TraineeQuotaProgressReader.ReadAsync(
             _dbContext, userId, request.AsOf ?? QuotaCalendar.Today(), cancellationToken);
 
-        // T297: the Activity inbox card lists what /activities/inbox lists, read by the same code: the activities the
-        // caller can move now, newest first. Until T297 it listed the states keyed requested, accepted, declined or draft,
-        // so it kept a declined CPSA request, which has no move left, and dropped a reflection awaiting discussion, which
-        // the trainee may still cancel (Steps 3.12, 3.16). A declined request is shown, with its badge, on Recent
-        // activities (while it is among the five newest) and on My Activities. No mail announces it:
-        // AssessmentDeclinedEmail has no sender (T320).
-        var actionable = (await ActivityWaiting.LoadActionableAsync(
-                _dbContext.Set<Activity>(), _dbContext, _workflowEvaluator, request.Principal, cancellationToken: cancellationToken))
-            .Take(InboxListed)
-            .ToList();
-
-        // For a caller who is also an assessor the inbox holds other trainees' work, which the card names, as the inbox
-        // and the Assessor's card do (T250); the caller's own rows need no name. One lookup, and none for a trainee alone.
-        var names = await UserDisplayNames.ResolveAsync(
-            _users,
-            actionable.Select(row => row.Activity.SubjectUserId).Where(subject => subject != userId),
-            cancellationToken);
-
-        var inbox = actionable
-            .Select(row => new ActivityInboxItem(
-                row.Activity.Id,
-                row.Activity.ActivityType.Name,
-                row.Activity.CurrentState,
-                PinnedWorkflows.StateLabel(row.Workflow, row.Activity.CurrentState),
-                row.Activity.UpdatedOn,
-                row.Activity.SubjectUserId == userId ? null : names.NameOf(row.Activity.SubjectUserId)))
-            .ToList();
+        // T297, restated by flow 03 (T342, E8; lane D): Home's card is Needs you, and it lists what My activities' Needs
+        // you section lists, read by the same code (NeedsYou.ReadAsync, ListNeedsYouQuery's own read): the caller's
+        // drafts and the work returned to them. Until T342 it was the Activity inbox card, which listed the inbox's rows,
+        // the moves others make on a registrar's work; since T342 those exclude the author's arms, so for a registrar alone
+        // the card would always have been empty. A declined request is shown, with its badge, on Recent activities (while
+        // it is among the five newest) and on My activities. No mail announces it: AssessmentDeclinedEmail has no sender
+        // (T320).
+        var needsYou = await NeedsYou.ReadAsync(_dbContext, _workflowEvaluator, _users, request.Principal, cancellationToken);
 
         // T203: an activity is finished in a terminal state of its PINNED workflow (D44, ActivityCompletion), not in the
         // literal "completed". A discussed reflective exercise, a recorded MSF row, a logged procedure and an accepted
@@ -183,7 +167,7 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
 
         return new TraineeDashboardSummaryDto(
             curriculumTargets,
-            inbox,
+            needsYou,
             recentActivities,
             upcomingDeadlines.OrderBy(d => d.DueDate).Take(5).ToList(),
             IsPendingTrainee: false);

@@ -1,71 +1,175 @@
 @page "/activities/mine"
 @attribute [Authorize]
+@using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject
+@using Wombat.Application.Features.Activities.Queries.ListNeedsYou
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<MyActivities> Logger
 
 <PageTitle>My activities · Wombat</PageTitle>
 
-<PageHeader Title="My activities" Subtitle="Activities created for the current user.">
+@* T342, flow 03 (R3-C-Mine): Needs you first when there is any, then every activity a page at a time. The subtitle is the
+   list's order: ListActivitiesBySubjectQuery orders by the encounter date, newest first. *@
+<PageHeader Title="My activities" Subtitle="Everything you have filed or logged, newest encounter first.">
   <Actions>
-    <a class="btn btn-primary" href="/activities/new">Log an activity</a>
+    <a class="btn btn-primary home-action" href="/activities/new">Log an activity</a>
   </Actions>
 </PageHeader>
 
-@{ var rowNames = ActivityRowNames.For(_items, withSubject: false); }
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No activities yet" EmptyBody="Create the first activity from the activity catalogue.">
-  <DataTable Items="_items">
-    <HeaderRow>
-      @* T137. The EPA and the encounter date are what tell one activity from its siblings: a released MSF campaign
-         records one row per EPA, all of one type, one state and one date. The credit column is T106 item 14, so a
-         registrar can see across the whole list which completions counted. *@
-      <tr>
-        <th>Type</th>
-        <th>EPA</th>
-        <th>Encounter date</th>
-        <th>State</th>
-        <th>Credited</th>
-        <th><span class="visually-hidden">Actions</span></th>
-      </tr>
-    </HeaderRow>
-    <Row Context="item">
-      <tr>
-        <td>@item.ActivityTypeName</td>
-        <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="@item.EpaInForce" /></td>
-        <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
-        <td>@item.CurrentStateLabel</td>
-        <td>@CreditOutcome.Label(item.CreditedItemCount)</td>
-        <td>
-          @* T239: named by its row, "View Mini-CEX, PAED-003, encounter date 2026-09-01". *@
-          <div class="actions-cell">
-            <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")" aria-label="@($"View {rowNames[item.Id]}")">View</a>
-          </div>
-        </td>
-      </tr>
-    </Row>
-  </DataTable>
+<StatePanel IsLoading="_loading"
+            LoadError="@_error"
+            OnRetry="LoadAsync"
+            FocusAfterRetry="FocusContentAsync"
+            IsEmpty="@(_page is { TotalCount: 0 } && _needsYou.Count == 0)"
+            EmptyTitle="No activities yet"
+            EmptyBody="Log an activity to ask an assessor to rate an encounter, or to log a teaching session.">
+  <EmptyActions>
+    <a class="btn btn-outline" href="/activities/new">Log an activity</a>
+  </EmptyActions>
+  <ChildContent>
+    @if (_needsYou.Count > 0)
+    {
+      <section class="detail-card list-section" aria-labelledby="needs-you-heading">
+        @* The count is a badge to the eye and words to a screen reader, "2 items", not a bare figure (A16). *@
+        <h2 id="needs-you-heading" class="list-section-title" tabindex="-1" @ref="_needsYouHeading">
+          Needs you <span class="badge @BadgeFor.State(BadgeState.Submitted)" aria-hidden="true">@_needsYou.Count</span><span class="visually-hidden">, @ActivityListWords.ItemCount(_needsYou.Count)</span>
+        </h2>
+        <p class="needs-you-rule">Your drafts, and work returned to you. A request you can still cancel is with its assessor, so it is not here: it is under All activities.</p>
+        <NeedsYouList Items="_needsYou" Names="_names" />
+      </section>
+    }
+    @if (_page is { TotalCount: > 0 } list)
+    {
+      <section class="list-section" aria-labelledby="all-activities-heading">
+        <h2 id="all-activities-heading" class="list-section-title" tabindex="-1" @ref="_allHeading">All activities (@list.TotalCount)</h2>
+        @* A8: stacked below 641px. The Activity cell's link and the State cell's badge say what they are; the other two
+           cells are labelled by their column there (data-label), a label the screen reader, which has the header, skips. *@
+        <DataTable Items="list.Items" Stack="true">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">Activity</th>
+              <th scope="col" role="columnheader">Who has it now</th>
+              <th scope="col" role="columnheader">State</th>
+              <th scope="col" role="columnheader">Credit</th>
+            </tr>
+          </HeaderRow>
+          <Row Context="item">
+            <tr role="row">
+              <td role="cell">
+                <ActivityLink Item="item" Name="@NameOf(item)" />
+                @* T231: an EPA not in force now is marked, in the picker's own words. The name carries only its code. *@
+                @if (item.EpaInForce == false && !string.IsNullOrWhiteSpace(item.EpaCode))
+                {
+                  <div class="muted text-sm">@item.EpaCode @EpaOptionLabel.NoLongerInUse</div>
+                }
+              </td>
+              <td role="cell" data-label="Who has it now">@ActivityListWords.WhoHasIt(item)</td>
+              <td role="cell"><span class="badge @BadgeFor.ActivityState(item.CurrentState, item.Holder?.Kind == ActivityHolderKind.Done)">@item.CurrentStateLabel</span></td>
+              @* T106 item 14 (T108's three values): what each completion credited. *@
+              <td role="cell" data-label="Credit">@CreditOutcome.Label(item.CreditedItemCount)</td>
+            </tr>
+          </Row>
+        </DataTable>
+        <PagerControls Page="list.Page" PageSize="list.PageSize" TotalCount="list.TotalCount" OnPageChanged="GoToPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+      </section>
+    }
+  </ChildContent>
 </StatePanel>
 
 @code {
-  private readonly List<ActivitySummaryDto> _items = [];
+  /// <summary>
+  /// The load failure's words (R3-Spec § 1, Load error): never the exception's text, which for a database failure is EF's
+  /// own (T272; the page printed it until T342).
+  /// </summary>
+  public const string LoadFailed = "Could not load your activities. Nothing has changed. Try again, or come back in a few minutes.";
+
+  private IReadOnlyList<ActivitySummaryDto> _needsYou = [];
+  private ActivityListPageDto? _page;
+  private IReadOnlyDictionary<int, string> _names = new Dictionary<int, string>();
+  private int _pageSize = ListActivitiesBySubjectQuery.DefaultPageSize;
   private bool _loading = true;
   private string? _error;
+  private bool _focusAllAfterRender;
+  private ElementReference _needsYouHeading;
+  private ElementReference _allHeading;
 
-  protected override async Task OnInitializedAsync()
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  /// <summary>Reads Needs you and the first page; Try again reads both again.</summary>
+  private async Task LoadAsync()
   {
+    _loading = true;
+    _error = null;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-        ?? throw new InvalidOperationException("The current user identifier is missing.");
-      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject.ListActivitiesBySubjectQuery(userId, authState.User)));
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _needsYou = await Sender.Send(new ListNeedsYouQuery(user));
+      await ReadPageAsync(user, 1);
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      Logger.LogError(exception, "My activities could not be read.");
+      _error = LoadFailed;
     }
     finally
     {
       _loading = false;
     }
   }
+
+  private async Task ReadPageAsync(System.Security.Claims.ClaimsPrincipal user, int page)
+  {
+    var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+      ?? throw new InvalidOperationException("The current user identifier is missing.");
+    _page = await Sender.Send(new ListActivitiesBySubjectQuery(userId, user, page, _pageSize));
+    // One name per link over both lists, so an activity in Needs you reads the same in All activities (T280).
+    _names = ActivityRowNames.Links(_needsYou.Concat(_page.Items));
+  }
+
+  private async Task GoToPageAsync(int page)
+  {
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      await ReadPageAsync(user, page);
+      // The pager's button may now be disabled or gone from under the focus: the list's heading takes it, and says
+      // which list it is.
+      _focusAllAfterRender = true;
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "A page of My activities could not be read.");
+      _error = LoadFailed;
+    }
+  }
+
+  private Task ChangePageSizeAsync(int pageSize)
+  {
+    _pageSize = pageSize;
+    return GoToPageAsync(1);
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusAllAfterRender && _page is { TotalCount: > 0 })
+    {
+      _focusAllAfterRender = false;
+      await _allHeading.FocusAsync();
+    }
+  }
+
+  /// <summary>After a Try again that read: the first list's heading.</summary>
+  private async ValueTask FocusContentAsync()
+  {
+    if (_needsYou.Count > 0)
+    {
+      await _needsYouHeading.FocusAsync();
+    }
+    else if (_page is { TotalCount: > 0 })
+    {
+      await _allHeading.FocusAsync();
+    }
+  }
+
+  private string? NameOf(ActivitySummaryDto item) => _names.TryGetValue(item.Id, out var name) ? name : null;
 }

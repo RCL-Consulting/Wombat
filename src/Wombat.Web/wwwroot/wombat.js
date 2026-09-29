@@ -138,3 +138,31 @@ document.addEventListener("change", function (event) {
         window.wombat.revealCurrentNavItem();
     }
 });
+
+// Moves the focus to the element with this id (T342, flow 03; the build review's A1). A refusal summary's links name
+// their field's input by fragment (#observed_on-in), but the page's <base href="/"> resolves a bare fragment against the
+// site's root, so a followed link navigated to Home and lost what was typed. The link's handler prevents that and calls
+// this instead; the href stays for a page with no circuit. An element that cannot take the focus of itself (a fieldset,
+// a read-out) is made programmatically focusable first, as Blazor's FocusOnNavigate does, and brought into view.
+window.wombat.focusElement = function (element) {
+    if (!(element instanceof HTMLElement)) {
+        return false;
+    }
+
+    if (!element.hasAttribute("tabindex") && !element.matches("a[href], button, input, select, textarea, summary")) {
+        element.setAttribute("tabindex", "-1");
+    }
+
+    element.focus();
+    return document.activeElement === element;
+};
+
+window.wombat.focusById = function (id) {
+    return window.wombat.focusElement(document.getElementById(id));
+};
+
+// The page's h1, after a load that did not change the page (T342, A3, A4): Log an activity's ?type= changes, and the
+// activity page's Try again. FocusOnNavigate moves the focus only when the page itself changes.
+window.wombat.focusHeading = function () {
+    return window.wombat.focusElement(document.querySelector("h1"));
+};

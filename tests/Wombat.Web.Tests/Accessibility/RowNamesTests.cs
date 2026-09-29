@@ -194,6 +194,28 @@ public sealed class RowNamesTests
         mine[3].Should().Be("Mini-CEX, PAED-003, encounter date 2026-09-01 (2 of 2)");
     }
 
+    /// <summary>
+    /// T342 (flow 03; T280, A16): an activity link's name is its words, the name, ", " and its second line; two alike add
+    /// their state, then a number. One activity listed twice on a page, in Needs you and in All activities, has one name.
+    /// </summary>
+    [Fact]
+    public void ActivityLinks_AreNamedByTheirWords_AndTwoAlikeAreToldApart()
+    {
+        var draft = TestSupport.ActivityRows.Row(1);
+        var cancelled = TestSupport.ActivityRows.Row(2, "cancelled", "Cancelled");
+        var reflection = TestSupport.ActivityRows.Returned(3);
+        var twin = TestSupport.ActivityRows.Row(4);
+
+        var names = ActivityRowNames.Links([draft, reflection, draft, cancelled, reflection, twin]);
+
+        names.Should().HaveCount(4, "an activity in both lists is one link, one name");
+        names[3].Should().Be("Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-09, with Sarah Botha");
+        ActivityRowNames.LinkWords(reflection).Should().Be(names[3], "a name no other link has is the link's own words");
+        names[2].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25, to David Naidoo, Cancelled");
+        names[1].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25, to David Naidoo, Draft (1 of 2)");
+        names[4].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25, to David Naidoo, Draft (2 of 2)");
+    }
+
     private sealed record Row(int Id, string Name, string Detail);
 
     private static CommitteeReviewListItemDto Review(

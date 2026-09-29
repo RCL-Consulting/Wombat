@@ -134,7 +134,7 @@ public sealed class EncounterDateBoundsTests
             CreateInput(CpsaTypeId, TraineeId, CpsaRequest(ProgrammeStart.AddDays(-1)))));
 
         message.Should().Be(
-            $"Date observed: The date cannot be before the trainee's programme started ({Iso(ProgrammeStart)}).");
+            $"Date observed: The date cannot be before your programme started ({Iso(ProgrammeStart)}).");
         await AssertNoActivitiesAsync(options);
     }
 
@@ -180,7 +180,7 @@ public sealed class EncounterDateBoundsTests
         hinted.Should().Be(ProgrammeStart);
         (await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
             CreateInput(CpsaTypeId, TraineeId, CpsaRequest(hinted!.Value.AddDays(-1))))))
-            .Should().EndWith($"before the trainee's programme started ({Iso(hinted!.Value)}).");
+            .Should().EndWith($"before your programme started ({Iso(hinted!.Value)}).");
         (await CreateAsync(options, CpsaTypeId, CpsaRequest(hinted!.Value))).ObservedOn.Should().Be(hinted);
     }
 
@@ -226,7 +226,7 @@ public sealed class EncounterDateBoundsTests
         var message = await ShouldBeRefusedAsync(options, service => service.TransitionAsync(
             TransitionInput(draft.Id, "cancel", TraineeId, DatePatch(ProgrammeStart.AddDays(-10)))));
 
-        message.Should().Contain("before the trainee's programme started");
+        message.Should().Contain("before your programme started");
         (await StoredAsync(options, draft.Id)).CurrentState.Should().Be("draft");
     }
 
@@ -255,7 +255,7 @@ public sealed class EncounterDateBoundsTests
         var message = await ShouldBeRefusedAsync(options, service => service.TransitionAsync(
             TransitionInput(draft.Id, "submit", TraineeId, patch: null)));
 
-        message.Should().Contain("before the trainee's programme started");
+        message.Should().Contain("before your programme started");
         (await StoredAsync(options, draft.Id)).CurrentState.Should().Be("draft");
     }
 
@@ -270,7 +270,7 @@ public sealed class EncounterDateBoundsTests
         // Guard: the date really is refusable now, or the completion below would pass for the wrong reason.
         (await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
             CreateInput(CpsaTypeId, TraineeId, CpsaRequest(Today.AddDays(-30))))))
-            .Should().Contain("before the trainee's programme started");
+            .Should().Contain("before your programme started");
 
         var completed = await TransitionAsync(options, draft.Id, "complete", AssessorId, CompletionPatch);
 
@@ -411,7 +411,7 @@ public sealed class EncounterDateBoundsTests
         // Guard: the same date on a type that can credit is refused, so the acceptance below is the predicate's doing.
         (await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
             CreateInput(CpsaTypeId, TraineeId, CpsaRequest(beforeTheProgramme)))))
-            .Should().Contain("before the trainee's programme started");
+            .Should().Contain("before your programme started");
 
         var draft = await CreateAsync(options, ResearchOutputTypeId, ResearchOutput(beforeTheProgramme));
         (await StoredAsync(options, draft.Id)).ObservedOn.Should().Be(beforeTheProgramme);

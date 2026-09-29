@@ -225,7 +225,8 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         sender.Creates.Should().ContainSingle();
         sender.Transitions.Should().BeEmpty("Save draft files the draft and moves nothing");
         LeftForTheActivity();
-        TakeNotice().Should().Be(new ActivityNotice("success", "Draft saved. It has not been submitted."));
+        TakeNotice().Should().Be(new ActivityNotice(
+            "success", "Draft saved. It has not been submitted. It is in nobody's inbox until you submit it."));
     }
 
     [Fact]
@@ -309,12 +310,16 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         sender.Transitions.Should().ContainSingle().Which.TransitionKey.Should().Be("submit");
         LeftForTheActivity();
 
+        // A refusal that names no field by key (a plain InvalidOperationException) keeps its words in the message, and
+        // carries them for the draft's summary too (T342, C8).
         var notice = TakeNotice();
         notice.Should().Be(new ActivityNotice(
             "warning",
-            $"Saved as a draft, but not submitted: {Refusal} Fix the fields below and submit again."));
+            $"Saved as a draft, but not submitted: {Refusal}",
+            null,
+            Refusal));
         notice!.Message.Should().NotContain("..", "the refusal already ends as a sentence");
-        cut.FindAll(".alert-danger").Should().BeEmpty("the refusal is said on the draft's page, not on the one being left");
+        cut.FindAll(".alert-danger, #refusal-summary").Should().BeEmpty("the refusal is said on the draft's page, not on the one being left");
 
         // "Let them retry" here would be T127's duplicate: the page is leaving, and nothing on it creates again.
         PressEverythingAgain(cut, pressed: "Submit");
@@ -331,8 +336,26 @@ public sealed class NewActivitySubmitFlowTests : TestContext
 
         Click(cut, "Submit");
 
-        TakeNotice()!.Message.Should().Be(
-            "Saved as a draft, but not submitted: The EPA is closed. Fix the fields below and submit again.");
+        TakeNotice()!.Message.Should().Be("Saved as a draft, but not submitted: The EPA is closed.");
+    }
+
+    [Theory]
+    [InlineData(new[] { "epa_id" }, "Saved as a draft, but not submitted. Fix the field below and submit again.")]
+    [InlineData(new[] { "epa_id", "assessor_user_id" }, "Saved as a draft, but not submitted. Fix the 2 fields below and submit again.")]
+    public void Submit_RefusedForFields_CountsThemAndCarriesTheRefusalForTheDraftsSummary(string[] keys, string expected)
+    {
+        // Spec § 1: "Saved as a draft, but not submitted." · "Fix the 6 fields below and submit again." The draft's page
+        // lists the refusal one field a line from the words the notice carries (T342, C8), and marks the fields (T263).
+        var sender = new FlowSender(DraftBornWorkflow) { TransitionFailure = new ActivityFieldsRefusedException(Refusal, keys) };
+        var cut = SelectTheType(sender);
+
+        Click(cut, "Submit");
+
+        var notice = TakeNotice()!;
+        notice.Kind.Should().Be("warning");
+        notice.Message.Should().Be(expected);
+        notice.RefusedFieldKeys.Should().Equal(keys);
+        notice.Refusal.Should().Be(Refusal);
     }
 
     [Fact]
@@ -345,14 +368,17 @@ public sealed class NewActivitySubmitFlowTests : TestContext
 
         Click(cut, "Submit");
 
-        cut.WaitForAssertion(() => cut.Find(".alert-danger").TextContent.Trim()
-            .Should().Be("Nothing was saved. EPA: not permitted for this tool."));
+        cut.WaitForAssertion(() => cut.Find("#refusal-summary").TextContent.Should()
+            .Contain("Nothing was saved.").And.Contain("Everything you typed is kept below.")
+            .And.Contain("EPA: not permitted for this tool."));
         sender.Transitions.Should().BeEmpty("the create was refused, so there was nothing to submit");
         sender.Reads.Should().Be(0);
-        Navigation.History.Should().BeEmpty("nothing was created, so the page stays");
+        Navigation.History.Should().OnlyContain(
+            entry => entry.Uri.StartsWith("/activities/new", StringComparison.Ordinal), "nothing was created, so the page stays");
         TakeNotice().Should().BeNull();
-        ActionButtons(cut).Should().OnlyContain(button => !button.HasAttribute("disabled"), "the author may try again");
-        cut.Find("#activity-type").HasAttribute("disabled").Should().BeFalse();
+        ActionButtons(cut).Should().OnlyContain(
+            button => !button.HasAttribute("disabled") && !button.HasAttribute("aria-disabled"), "the author may try again");
+        ActionButtons(cut).Select(button => button.TextContent.Trim()).Should().Equal("Submit", "Save draft");
     }
 
     [Fact]
@@ -378,11 +404,15 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         var sender = new FlowSender(StraightToTerminalWorkflow);
         var cut = SelectTheType(sender);
 
-        Click(cut, "Submit");
+        // The button is the move's own label (E4, C3): this move is "record".
+        ActionButtons(cut).Select(button => button.TextContent.Trim()).Should().Equal("Record", "Save draft");
+        Click(cut, "Record");
 
         sender.Transitions.Should().ContainSingle().Which.TransitionKey.Should().Be("record");
         LeftForTheActivity();
-        TakeNotice().Should().Be(new ActivityNotice("success", "Submitted. It is now Recorded."));
+
+        // A move into a state no move leaves reads as that state (MoveOutcome, T342 E4): nothing more can happen to it.
+        TakeNotice().Should().Be(new ActivityNotice("success", "Recorded."));
     }
 
     [Fact]
@@ -441,7 +471,9 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         Click(cut, "Submit");
 
         sender.Transitions.Should().ContainSingle().Which.TransitionKey.Should().Be("send");
-        TakeNotice().Should().Be(new ActivityNotice("success", "Submitted. It is now With the assessor."));
+
+        // The result is the pinned move's own (MoveOutcome, E4): only a move keyed "submit" reads "Submitted.".
+        TakeNotice().Should().Be(new ActivityNotice("success", "It is now With the assessor."));
     }
 
     /// <summary>
@@ -493,8 +525,8 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         var cut = SelectTheType(sender);
 
         var submitting = FindButton(cut, "Submit").ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
-        cut.WaitForAssertion(() => cut.Find("#activity-type").HasAttribute("disabled").Should().BeTrue(
-            "the type the outcome is judged against cannot change while it runs"));
+        cut.WaitForAssertion(() => NewActivityPage.Primary(cut).GetAttribute("aria-disabled").Should().Be("true",
+            "a second press sends nothing while it runs"));
 
         DisposeComponents();
         release.SetResult();
@@ -502,7 +534,8 @@ public sealed class NewActivitySubmitFlowTests : TestContext
 
         sender.Creates.Should().ContainSingle();
         sender.Transitions.Should().ContainSingle("the author pressed Submit; leaving the page does not withdraw that");
-        Navigation.History.Should().BeEmpty("the author's own click is not undone");
+        Navigation.History.Should().OnlyContain(
+            entry => entry.Uri.StartsWith("/activities/new", StringComparison.Ordinal), "the author's own click is not undone");
         TakeNotice().Should().BeNull("there is no page coming to show it");
     }
 
@@ -523,22 +556,24 @@ public sealed class NewActivitySubmitFlowTests : TestContext
     }
 
     /// <summary>
-    /// Everything on the page that could act, pressed again after a create succeeded: the type picker and the other button
-    /// are disabled until the router replaces the page, and every press is ignored. The button pressed is not disabled
-    /// (T234): it has the focus, and a browser drops the focus of a button it disables, to the page.
+    /// Everything on the page that could act, pressed again after a create succeeded: the other button is disabled until
+    /// the router replaces the page, and every press is ignored. The button pressed is not disabled (T234): it has the
+    /// focus, and a browser drops the focus of a button it disables, to the page. It says it is running (Spec § 1).
     /// </summary>
     private static void PressEverythingAgain(IRenderedComponent<NewActivity> cut, string pressed)
     {
-        cut.WaitForAssertion(() => ActionButtons(cut).Where(button => button.TextContent.Trim() != pressed)
+        var index = pressed == "Submit" ? 0 : 1;
+        cut.WaitForAssertion(() => ActionButtons(cut).Where((_, position) => position != index)
             .Should().OnlyContain(button => button.HasAttribute("disabled"),
                 "the page is leaving for the activity, so it offers nothing more"));
-        FindButton(cut, pressed).HasAttribute("disabled").Should().BeFalse("it has the focus (T234)");
-        FindButton(cut, pressed).GetAttribute("aria-disabled").Should().Be("true", "a press does nothing now (T234 review)");
-        cut.Find("#activity-type").HasAttribute("disabled").Should().BeTrue();
+        var pressedButton = ActionButtons(cut)[index];
+        pressedButton.HasAttribute("disabled").Should().BeFalse("it has the focus (T234)");
+        pressedButton.GetAttribute("aria-disabled").Should().Be("true", "a press does nothing now (T234 review)");
+        pressedButton.TextContent.Trim().Should().Be(pressed == "Submit" ? "Submitting…" : "Saving…");
 
-        foreach (var label in ActionButtons(cut).Select(button => button.TextContent.Trim()).ToList())
+        foreach (var position in Enumerable.Range(0, ActionButtons(cut).Count))
         {
-            Click(cut, label);
+            ActionButtons(cut)[position].Click();
         }
     }
 
@@ -546,13 +581,7 @@ public sealed class NewActivitySubmitFlowTests : TestContext
     {
         Services.AddSingleton<IScopedSender>(sender);
 
-        var cut = RenderComponent<NewActivity>();
-        cut.WaitForState(() => cut.FindAll("#activity-type option").Count > 1);
-
-        cut.Find("#activity-type").Change("2");
-        cut.WaitForState(() => cut.FindAll("#epa_id").Count == 1);
-
-        return cut;
+        return NewActivityPage.Open(this, "mini_cex", "#epa_id-in");
     }
 
     private static void Click(IRenderedComponent<NewActivity> cut, string label)
@@ -562,9 +591,7 @@ public sealed class NewActivitySubmitFlowTests : TestContext
         => ActionButtons(cut).First(button => button.TextContent.Trim() == label);
 
     private static IReadOnlyList<IElement> ActionButtons(IRenderedComponent<NewActivity> cut)
-        => cut.FindAll("button")
-            .Where(button => button.TextContent.Trim() is "Save draft" or "Submit")
-            .ToList();
+        => NewActivityPage.MoveButtons(cut);
 
     /// <summary>
     /// Answers the page's queries with one type, and records the commands. A create lands in the initial state of the

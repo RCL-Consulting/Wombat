@@ -1,3 +1,4 @@
+using Wombat.Tests.Shared;
 using System.Globalization;
 using System.Security.Claims;
 using FluentAssertions;
@@ -223,11 +224,11 @@ public sealed class EvidenceEpaMigrationPostgresTests : IAsyncLifetime
             }
 
             await using var db = NewContext(fixture.Schema);
-            var rows = await new ListActivitiesBySubjectQueryHandler(db).Handle(
+            var rows = (await new ListActivitiesBySubjectQueryHandler(db, FakeUserDirectory.Empty).Handle(
                 new ListActivitiesBySubjectQuery(
                     TraineeId,
                     new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, TraineeId)], "test"))),
-                CancellationToken.None);
+                CancellationToken.None)).Items;
 
             rows.Should().HaveCount(fixture.Activities.Count);
 

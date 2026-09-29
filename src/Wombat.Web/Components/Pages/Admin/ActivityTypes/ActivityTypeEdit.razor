@@ -504,7 +504,8 @@
 
           <div class="detail-card">
             <h3>Live preview</h3>
-            <ActivityForm SchemaJson="@CurrentDraftSchemaJson" DataJson="@_previewDataJson" DataJsonChanged="OnPreviewChanged" />
+            @* Its sections' headings sit under this h3 (T342; the build review's G8). *@
+            <ActivityForm SchemaJson="@CurrentDraftSchemaJson" DataJson="@_previewDataJson" DataJsonChanged="OnPreviewChanged" SectionHeadingLevel="4" />
           </div>
         </div>
       }

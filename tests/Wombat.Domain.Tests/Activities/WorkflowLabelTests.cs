@@ -88,4 +88,28 @@ public sealed class WorkflowLabelTests
     public void ARecordedMoveTheWorkflowDoesNotDeclare_IsNamedByItsKey()
         // A row the pinned version cannot account for is shown as it was stored, not dressed up as a move it knows.
         => Assert.Equal("complete_legacy", ClinicalAuditShape.TransitionLabel("complete_legacy"));
+
+    /// <summary>
+    /// T342: every move key the shipped seeds declare, as an instruction in running text. The runbook lane found the page
+    /// reading "Record discussion it" from the label; <see cref="WorkflowTransition.ImperativeFor" /> is the phrase.
+    /// </summary>
+    [Theory]
+    [InlineData("complete", "complete it")]
+    [InlineData("decline", "decline it")]
+    [InlineData("return", "return it")]
+    [InlineData("accept", "accept it")]
+    [InlineData("approve", "approve it")]
+    [InlineData("verify", "verify it")]
+    [InlineData("reject", "reject it")]
+    [InlineData("review", "review it")]
+    [InlineData("record", "record it")]
+    [InlineData("record_discussion", "record the discussion")]
+    [InlineData("sign_off", "sign it off")]
+    [InlineData("Sign-Off", "sign it off")]
+    public void AMove_ReadsAsAnInstructionAboutTheActivity(string key, string phrase)
+        => Assert.Equal(phrase, WorkflowTransition.ImperativeFor(key));
+
+    [Fact]
+    public void AKeyOfSeparatorsOnly_HasNoPhrase()
+        => Assert.Null(WorkflowTransition.ImperativeFor("__"));
 }

@@ -4,161 +4,261 @@
 @using Wombat.Application.Features.Activities.Services
 @using Wombat.Domain.Activities
 @using Wombat.Domain.Activities.Schema
+@using Wombat.Domain.Activities.Workflow
+@using Wombat.Domain.Identity
 @inject IServiceScopeFactory ScopeFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
+@* The activity form (T342, flow 03; DESIGN.md § Form system). The schema's sections in its own order (E6: the College's
+   seeds are never reordered), each a card one deep, named by its heading. A section the reader may write is a form; one
+   they may not write is not: filled, its values are read-outs; not filled yet, it is a locked section, a dashed frame
+   whose head row says who fills it in (C14), with no inputs in it. *@
 @if (!string.IsNullOrWhiteSpace(_loadError))
 {
   <Alert Kind="danger">@_loadError</Alert>
 }
 else if (_schema is not null)
 {
-  <div class="form-container">
-    @foreach (var formSection in _schema.Sections)
+  var sections = VisibleSections().ToList();
+  var anyNotOpen = sections.Any(section => section.Kind != SectionKind.Open);
+
+  <div class="activity-form">
+    @if (sections.Any(section => section.Kind == SectionKind.Open && section.Fields.Any(field => field.Required && !IsFieldLocked(field.Key))))
     {
-      if (!IsVisible(formSection.ShowIf))
+      @* Above the first section, so it is read before the first mark it explains (A15). *@
+      <p class="field-help"><span class="required-mark">*</span> marks a field you must fill in.</p>
+    }
+
+    @foreach (var section in sections)
+    {
+      var headingId = ActivityFieldIds.Section(section.Section.Key);
+
+      if (section.Kind == SectionKind.Locked)
       {
-        continue;
-      }
-
-      <fieldset class="detail-card detail-card--compact mb-3">
-        <legend>@formSection.Title</legend>
-
-        <div class="form-grid">
-          @foreach (var field in formSection.Fields)
-          {
-            if (!IsVisible(field.ShowIf))
+        <section class="detail-card form-section form-section--locked" aria-labelledby="@headingId">
+          <div class="form-section-lockhead">
+            @SectionHeading(headingId, section.Section.Title)
+            @if (LockedOwnerLine(section.Section) is { } ownerLine)
             {
-              continue;
+              <p class="form-section-owner"><Icon Name="lock" />@ownerLine</p>
             }
-
-            if (!IsSingleControl(field.Type))
+          </div>
+          <div class="form-section-lockbody">
+            @foreach (var field in section.Fields.Where(field => field.Type == FieldType.Scale))
             {
-              // A multi-choice field is several controls, and a file field (not wired: a seed holds a document as a link, D34) or an unsupported type
-              // is none, so none has one control for a <label for> to name. Each is a fieldset named by its legend
-              // instead (DESIGN.md § Form system, T177), its help text announced with the group, and the refusal that named
-              // it (T263). Its checkboxes are not marked: a native one takes no border, and the refusal says it.
-              var helpId = string.IsNullOrWhiteSpace(field.HelpText) ? null : FieldHelp.Id(field.Key);
-
-              <fieldset class="form-group @(field.Type == FieldType.MultiChoice ? "full-width" : null)" aria-describedby="@FieldHelp.DescribedBy(field.Key, field.HelpText, RefusalIdFor(field.Key))">
-                <legend>
-                  @field.Label
-                  @if (field.Required)
-                  {
-                    <span aria-hidden="true">*</span>
-                    <span class="visually-hidden">required</span>
-                  }
-                </legend>
-
-                @if (field.Type == FieldType.MultiChoice)
-                {
-                  <div class="check-grid">
-                    @foreach (var option in GetOptions(field))
-                    {
-                      <div class="form-check">
-                        <input
-                          id="@($"{field.Key}-{option.Value}")"
-                          class="form-check-input"
-                          type="checkbox"
-                          checked="@GetMultiChoiceValues(field.Key).Contains(option.Value, StringComparer.Ordinal)"
-                          disabled="@IsFieldLocked(field.Key)"
-                          @onchange="args => ToggleMultiChoice(field.Key, option.Value, args.Value is bool checkedValue && checkedValue)" />
-                        <label for="@($"{field.Key}-{option.Value}")">@option.Label</label>
-                      </div>
-                    }
-                  </div>
-                }
-                else if (field.Type == FieldType.File)
-                {
-                  <div class="detail-card detail-card--empty-compact">
-                    File uploads are represented in the schema, but storage wiring lands in a later pass.
-                  </div>
-                }
-                else
-                {
-                  <div class="detail-card detail-card--empty-compact">
-                    Unsupported field type: @field.Type
-                  </div>
-                }
-
-                @if (helpId is not null)
-                {
-                  <small id="@helpId" class="page-subtitle">@field.HelpText</small>
-                }
-              </fieldset>
-
-              continue;
-            }
-
-            <FormField Label="@field.Label" InputId="@field.Key" HelpText="@field.HelpText" Required="@field.Required">
-              <ChildContent>
-              @switch (field.Type)
+              if (RungsFor(field) is { Count: > 0 } rungs)
               {
-                case FieldType.Text:
-                case FieldType.Signature:
-                case FieldType.ProcedureRef:
-                  <input id="@field.Key" class="@ControlClass("form-control", field.Key)" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
-                  break;
-                case FieldType.LongText:
-                  <textarea id="@field.Key" class="@ControlClass("form-control", field.Key)" rows="4" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
-                  break;
-                case FieldType.Number:
-                case FieldType.Likert:
-                case FieldType.Rating:
-                  <input id="@field.Key" class="@ControlClass("form-control", field.Key)" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
-                  break;
-                case FieldType.Date:
-                  <input id="@field.Key" class="@ControlClass("form-control", field.Key)" type="date" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
-                  break;
-                case FieldType.Choice:
-                case FieldType.Epa:
-                case FieldType.User:
-                  <select id="@field.Key" class="@ControlClass("form-select", field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
-                    <option value="">Select…</option>
-                    @foreach (var option in GetOptions(field))
+                <RungRow Label="@field.Label" Rungs="rungs" Pending="true" />
+              }
+            }
+            <p class="form-section-empty">@(LockedSectionsClosed || OwnerOf(section.Section).Kind == SectionOwnerKind.Author ? "Not filled in." : "Not filled in yet.")</p>
+            @foreach (var field in section.Fields.Where(field => IsRefused(field.Key)))
+            {
+              <p id="@ActivityFieldIds.Input(field.Key)" class="validation-message" tabindex="-1">@RefusalLineFor(field)</p>
+            }
+          </div>
+        </section>
+      }
+      else if (section.Kind == SectionKind.Filled)
+      {
+        <section class="detail-card form-section" aria-labelledby="@headingId">
+          <div class="form-section-head">
+            @SectionHeading(headingId, section.Section.Title)
+            @if (SectionAttributions?.GetValueOrDefault(section.Section.Key) is { Length: > 0 } attribution)
+            {
+              <p class="form-section-owner">@attribution</p>
+            }
+          </div>
+          <dl class="details-list details-list--stacked">
+            @foreach (var field in section.Fields)
+            {
+              <div id="@ActivityFieldIds.Input(field.Key)" tabindex="-1">
+                <dt>@field.Label</dt>
+                @ReadoutValue(field)
+              </div>
+            }
+          </dl>
+        </section>
+      }
+      else
+      {
+        <section class="detail-card form-section" aria-labelledby="@headingId">
+          <div class="form-section-head">
+            @SectionHeading(headingId, section.Section.Title)
+            @if (anyNotOpen)
+            {
+              <p class="form-section-owner">You fill this in</p>
+            }
+          </div>
+
+          <div class="form-grid">
+            @foreach (var field in section.Fields)
+            {
+              if (IsFieldLocked(field.Key))
+              {
+                @* A field the reader may read but not change, among the ones they may: text, not a disabled control
+                   (DESIGN.md § Form system, T302). *@
+                <dl id="@ActivityFieldIds.Input(field.Key)" tabindex="-1" class="form-group @(IsWide(field.Type) ? "full-width" : null)">
+                  <dt>@field.Label</dt>
+                  @ReadoutValue(field)
+                </dl>
+                continue;
+              }
+
+              if (!IsSingleControl(field.Type))
+              {
+                // A multi-choice field is several controls, and a file field (not wired: a seed holds a document as a link, D34) or an unsupported type
+                // is none, so none has one control for a <label for> to name. Each is a fieldset named by its legend
+                // instead (DESIGN.md § Form system, T177), its help text announced with the group, and the refusal that named
+                // it (T263). Its checkboxes are not marked: a native one takes no border, and the refusal says it. The
+                // fieldset carries the input id, so a refusal summary's link lands on it (C8), and tabindex="-1", so the
+                // link can give it the focus (T342, A2). So do a read-out and a locked section's refusal line.
+                var helpId = string.IsNullOrWhiteSpace(field.HelpText) ? null : FieldHelp.Id(field.Key);
+
+                <fieldset id="@ActivityFieldIds.Input(field.Key)" tabindex="-1" class="form-group @(field.Type == FieldType.MultiChoice ? "full-width" : null)" aria-describedby="@DescribedBy(field)">
+                  <legend>
+                    @field.Label
+                    @if (field.Required)
                     {
-                      <option value="@option.Value" selected="@string.Equals(GetString(field.Key), option.Value, StringComparison.Ordinal)">@option.Label</option>
+                      <span class="required-mark" aria-hidden="true">*</span>
+                      <span class="visually-hidden">required</span>
                     }
-                  </select>
-                  break;
-                case FieldType.Scale:
-                  var scaleOptions = GetOptions(field);
-                  if (scaleOptions.Count > 0)
+                  </legend>
+
+                  @if (field.Type == FieldType.MultiChoice)
                   {
-                    <select id="@field.Key" class="@ControlClass("form-select", field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                    <div class="check-grid">
+                      @foreach (var option in GetOptions(field))
+                      {
+                        <div class="form-check">
+                          <input
+                            id="@($"{field.Key}-{option.Value}")"
+                            class="form-check-input"
+                            type="checkbox"
+                            checked="@GetMultiChoiceValues(field.Key).Contains(option.Value, StringComparer.Ordinal)"
+                            @onchange="args => ToggleMultiChoice(field.Key, option.Value, args.Value is bool checkedValue && checkedValue)" />
+                          <label for="@($"{field.Key}-{option.Value}")">@option.Label</label>
+                        </div>
+                      }
+                    </div>
+                  }
+                  else if (field.Type == FieldType.File)
+                  {
+                    <div class="detail-card detail-card--empty-compact">
+                      File uploads are represented in the schema, but storage wiring lands in a later pass.
+                    </div>
+                  }
+                  else
+                  {
+                    <div class="detail-card detail-card--empty-compact">
+                      Unsupported field type: @field.Type
+                    </div>
+                  }
+
+                  @if (helpId is not null)
+                  {
+                    <small id="@helpId" class="page-subtitle">@field.HelpText</small>
+                  }
+                  @if (FieldMessageFor(field.Key) is { } groupMessage)
+                  {
+                    <p id="@ActivityFieldIds.Message(field.Key)" class="validation-message">@groupMessage</p>
+                  }
+                </fieldset>
+
+                continue;
+              }
+
+              var inputId = ActivityFieldIds.Input(field.Key);
+
+              <div class="form-group @(IsWide(field.Type) ? "full-width" : null)">
+                @* The mark is seen; aria-required says it to a screen reader, on the control itself (T342, flow 03). *@
+                <label for="@inputId">@field.Label@if (field.Required){<span class="required-mark" aria-hidden="true"> *</span>}</label>
+                @switch (field.Type)
+                {
+                  case FieldType.Text:
+                  case FieldType.Signature:
+                  case FieldType.ProcedureRef:
+                    <input id="@inputId" class="@ControlClass("form-control", field.Key)" value="@GetString(field.Key)" aria-required="@AriaRequired(field)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                    break;
+                  case FieldType.LongText:
+                    <textarea id="@inputId" class="@ControlClass("form-control", field.Key)" rows="4" aria-required="@AriaRequired(field)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())">@GetString(field.Key)</textarea>
+                    break;
+                  case FieldType.Number:
+                  case FieldType.Likert:
+                  case FieldType.Rating:
+                    <input id="@inputId" class="@ControlClass("form-control", field.Key)" type="number" value="@GetString(field.Key)" aria-required="@AriaRequired(field)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                    break;
+                  case FieldType.Date:
+                    @* On change, not on every keystroke: the encounter date's notices are shown once a date has been
+                       entered, not while a year is half typed (Spec § 1, "Hint"). *@
+                    <input id="@inputId" class="@ControlClass("form-control", field.Key)" type="date" value="@GetString(field.Key)" aria-required="@AriaRequired(field)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @onchange="args => ChangeDate(field.Key, args.Value?.ToString())" />
+                    break;
+                  case FieldType.Choice:
+                  case FieldType.Epa:
+                  case FieldType.User:
+                    @* A native select, each option's full text (T323): nothing is cut off, and the chosen one is printed
+                       in full under it. *@
+                    <select id="@inputId" class="@ControlClass("form-select", field.Key)" aria-required="@AriaRequired(field)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
                       <option value="">Select…</option>
-                      @foreach (var option in scaleOptions)
+                      @foreach (var option in GetOptions(field))
                       {
                         <option value="@option.Value" selected="@string.Equals(GetString(field.Key), option.Value, StringComparison.Ordinal)">@option.Label</option>
                       }
                     </select>
-                  }
-                  else
-                  {
-                    <input id="@field.Key" class="@ControlClass("form-control", field.Key)" type="number" value="@GetString(field.Key)" disabled="@IsFieldLocked(field.Key)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
-                  }
-                  break;
-              }
-              </ChildContent>
-              <ValidationContent>
+                    break;
+                  case FieldType.Scale:
+                    @* The writer of a scale keeps today's select; the rung row with radios is flow 04's. *@
+                    var scaleOptions = GetOptions(field);
+                    if (scaleOptions.Count > 0)
+                    {
+                      <select id="@inputId" class="@ControlClass("form-select", field.Key)" aria-required="@AriaRequired(field)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @onchange="args => UpdateValue(field.Key, args.Value?.ToString())">
+                        <option value="">Select…</option>
+                        @foreach (var option in scaleOptions)
+                        {
+                          <option value="@option.Value" selected="@string.Equals(GetString(field.Key), option.Value, StringComparison.Ordinal)">@option.Label</option>
+                        }
+                      </select>
+                    }
+                    else
+                    {
+                      <input id="@inputId" class="@ControlClass("form-control", field.Key)" type="number" value="@GetString(field.Key)" aria-required="@AriaRequired(field)" aria-describedby="@DescribedBy(field)" aria-invalid="@AriaInvalid(field.Key)" @oninput="args => UpdateValue(field.Key, args.Value?.ToString())" />
+                    }
+                    break;
+                }
+
+                @if (field.Type is FieldType.Epa or FieldType.User && ChosenLabel(field) is { } readback)
+                {
+                  @* The select says the same to a screen reader; this is for the eye, where a long option is cut off. *@
+                  <p class="field-readback" aria-hidden="true">@readback</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(field.HelpText))
+                {
+                  <p id="@FieldHelp.Id(field.Key)" class="field-help">@field.HelpText</p>
+                }
+
+                @if (FieldMessageFor(field.Key) is { } message)
+                {
+                  <p id="@ActivityFieldIds.Message(field.Key)" class="validation-message">@message</p>
+                }
+
                 @if (NoticesFilingDate(field.Key))
                 {
                   @* T160, D15. The lateness is a soft warning, never a refusal: the date the author types is the one T119
                      protects, and a registrar refused for filing late types today's date instead. The live region is always
-                     present, so a screen reader hears what appears in it as the date is typed.
-                     T192: a date before the programme started is not late but refused, so it says that instead, as a hint
-                     the server's refusal will confirm. Telling the author it "can still be filed" beside that refusal is
-                     the contradiction this replaces. T263: a date the server has refused is not called fileable either, even
-                     where the page could not predict it (no programme start read, or one changed since): the alert names
-                     it and the input is marked, so the warning stays away until the page's next action clears the mark. *@
-                  <div id="@FilingDateNoticeId(field.Key)" role="status">
-                    @if (BeforeProgrammeStart(field.Key) is DateOnly startedOn)
+                     present, so a screen reader hears what appears in it once a date is entered (A3).
+                     T192, C9: a date before the programme started is not late but refused, so it says that instead, as a
+                     predicted refusal: the field's own validation message, and the control marked invalid. It is worded
+                     for its reader (C12). T263: a date the server has refused is not called fileable either, even where the
+                     page could not predict it: the summary names it and the input is marked, so the warning stays away
+                     until the date is changed. Both wait for a date to be entered, or show at once on a form that opens
+                     with one (File it again, a draft; Spec § 1). *@
+                  <div id="@ActivityFieldIds.FilingNotice(field.Key)" role="status">
+                    @if (_dateEntered && BeforeProgrammeStart(field.Key) is DateOnly startedOn)
                     {
-                      <div class="validation-message">
-                        This date is before the trainee's programme started (@IsoDate(startedOn)), and will not be accepted.
-                      </div>
+                      <p class="validation-message">@ProgrammeStartWording.Hint(ReaderIsSubject, startedOn)</p>
                     }
-                    else if (!IsRefused(field.Key) && LateFilingDaysAfter(field.Key) is int daysLate)
+                    else if (_dateEntered && !IsRefused(field.Key) && LateFilingDaysAfter(field.Key) is int daysLate)
                     {
                       <p class="field-warning">
                         This encounter was @daysLate days ago. It can still be filed, but a filing more than
@@ -167,11 +267,11 @@ else if (_schema is not null)
                     }
                   </div>
                 }
-              </ValidationContent>
-            </FormField>
-          }
-        </div>
-      </fieldset>
+              </div>
+            }
+          </div>
+        </section>
+      }
     }
   </div>
 }
@@ -223,6 +323,10 @@ else if (_schema is not null)
   /// behaviour exactly: every field follows <see cref="ReadOnly" /> alone. An empty set locks
   /// every field, which is what keeps non-bound users read-only on the detail page.
   /// </summary>
+  /// <remarks>
+  /// A field the actor may not write has no control (T342, flow 03): among writable fields it is a read-out; a section
+  /// with none the actor may write is read-outs when it holds anything, and a locked section when it holds nothing.
+  /// </remarks>
   [Parameter] public IReadOnlySet<string>? EditableFieldKeys { get; set; }
 
   /// <summary>
@@ -251,13 +355,14 @@ else if (_schema is not null)
   /// otherwise (T160, D15).
   /// </summary>
   /// <remarks>
-  /// While it is set, the encounter date field (the schema's <c>observation_date_field</c>) warns, without refusing, as
-  /// soon as the date typed is more than <see cref="EncounterDatePolicy.LateFilingDays" /> days before it: the lateness
-  /// the filing's history row will record. The create page passes today; an activity's page passes today only to its
-  /// author while it is still in its initial state; the builder preview passes nothing. A parameter rather than a clock
-  /// read here, so the page decides whether this is a filing and a test can fix the day. Whether the type can file late
-  /// at all is this form's to decide, from <see cref="CreditRulesJson" />: only a type that can credit records lateness,
-  /// so only its form warns (<see cref="FilingLateness.WarnsFor" />).
+  /// While it is set, the encounter date field (the schema's <c>observation_date_field</c>) warns, without refusing, once
+  /// a date more than <see cref="EncounterDatePolicy.LateFilingDays" /> days before it has been entered, or at once when
+  /// the form opens with one (T342: File it again, a draft): the lateness the filing's history row will record. The
+  /// create page passes today; an activity's page passes today only to its author while it is still in its initial
+  /// state; the builder preview passes nothing. A parameter rather than a clock read here, so the page decides whether
+  /// this is a filing and a test can fix the day. Whether the type can file late at all is this form's to decide, from
+  /// <see cref="CreditRulesJson" />: only a type that can credit records lateness, so only its form warns
+  /// (<see cref="FilingLateness.WarnsFor" />).
   /// </remarks>
   [Parameter] public DateOnly? FiledOn { get; set; }
 
@@ -268,12 +373,18 @@ else if (_schema is not null)
   /// <remarks>
   /// Read only where <see cref="FiledOn" /> is: while the encounter date of a form that may be the filing is typed, on a
   /// type that can credit. There the server refuses a date before this day (<c>EncounterDateGate</c>), whether the date
-  /// was just typed or is being handed on unchanged, so the form says so in place of the lateness warning. A hint, never
-  /// a refusal: the page passes what the server reads (<c>GetProgrammeStartForTraineeQuery</c>, resolved once, as
-  /// <see cref="FiledOn" /> is), and the server stays the rule. Null shows no hint and leaves the lateness warning as it
-  /// was.
+  /// was just typed or is being handed on unchanged, so the form says so in place of the lateness warning, as a predicted
+  /// refusal (C9): the field's validation message and the invalid marks. The page passes what the server reads
+  /// (<c>GetProgrammeStartForTraineeQuery</c>, resolved once, as <see cref="FiledOn" /> is), and the server stays the rule.
+  /// Null shows no hint and leaves the lateness warning as it was.
   /// </remarks>
   [Parameter] public DateOnly? ProgrammeStartsOn { get; set; }
+
+  /// <summary>
+  /// Whether the reader is the activity's subject (T342, C12): the programme hint then says "your programme", and to
+  /// anyone else "the trainee's programme", as the server's refusal does (<see cref="ProgrammeStartWording" />).
+  /// </summary>
+  [Parameter] public bool ReaderIsSubject { get; set; }
 
   /// <summary>
   /// The fields the server's last refusal of this form named, by schema key (T263): <c>ActivityFieldsRefusedException</c>'s
@@ -281,22 +392,76 @@ else if (_schema is not null)
   /// </summary>
   /// <remarks>
   /// Each is marked as <see cref="PredictsRefusal" /> marks the encounter date, with <c>.input-validation-error</c> and
-  /// <c>aria-invalid="true"</c>, and names <see cref="RefusalId" /> after its help and its notice. The page holds the set
-  /// until its next action, as it holds the refusal's alert, so a field stays marked while the alert that names it is on
-  /// the page. A locked field the refusal names is marked too: which field stopped the move is worth showing to someone
-  /// who cannot fill it in. A key this form does not render (hidden by <c>show_if</c>, or not in the schema) marks nothing.
-  /// A refused encounter date shows no lateness warning while it is marked: "It can still be filed" beside the refusal
-  /// would contradict it (DESIGN.md § Alerts).
+  /// <c>aria-invalid="true"</c>, shows its own part of <see cref="RefusalMessage" /> under it, and names
+  /// <see cref="RefusalId" /> after its help and its message. A field whose value is changed since drops its marks and
+  /// its message at once, and the form's hints come back (T342, Spec § 3); a new set from the page marks afresh. A locked
+  /// field the refusal names is marked too: which field stopped the move is worth showing to someone who cannot fill it
+  /// in. A key this form does not render (hidden by <c>show_if</c>, or not in the schema) marks nothing. A refused
+  /// encounter date shows no lateness warning while it is marked: "It can still be filed" beside the refusal would
+  /// contradict it (DESIGN.md § Alerts).
   /// </remarks>
   [Parameter] public IReadOnlyCollection<string>? RefusedFieldKeys { get; set; }
 
   /// <summary>
-  /// The id of the alert that shows the refusal <see cref="RefusedFieldKeys" /> came from. Each refused control names it
-  /// with <c>aria-describedby</c>, so the refusal is read with the field and not only announced once (DESIGN.md § Alerts).
+  /// The refusal <see cref="RefusedFieldKeys" /> came from, as the server words it ("Date observed: The date cannot be
+  /// after today (2026-09-29)."), so each refused field shows its own part under its control (T342, C8;
+  /// <see cref="FieldRefusals.Split" />). Null marks the fields without a message.
+  /// </summary>
+  [Parameter] public string? RefusalMessage { get; set; }
+
+  /// <summary>
+  /// The id of the summary that shows the refusal <see cref="RefusedFieldKeys" /> came from (<c>refusal-summary</c>).
+  /// Each refused control names it with <c>aria-describedby</c>, so the refusal is read with the field and not only
+  /// announced once (DESIGN.md § Alerts).
   /// </summary>
   [Parameter] public string? RefusalId { get; set; }
 
+  /// <summary>
+  /// The person who fills in a locked section (T342, C14): "Fatima Khumalo fills this in". Null names nobody: "The
+  /// assessor you name fills this in" (the hand-off field's label in place of "assessor" where
+  /// <see cref="HandOffFieldKey" /> is given).
+  /// </summary>
+  [Parameter] public string? LockedOwnerName { get; set; }
+
+  /// <summary>
+  /// A closed record (declined, cancelled): a locked section then reads "Fatima Khumalo was to fill this in." (C11).
+  /// </summary>
+  [Parameter] public bool LockedSectionsClosed { get; set; }
+
+  /// <summary>
+  /// The entrustment ladder for the read-only rung row, with each rung's descriptor (T342, B12;
+  /// <c>IActivityReferenceDataService.GetEntrustmentScaleRungsAsync</c>). Null shows the ladder the scale field's own
+  /// options give, without descriptors.
+  /// </summary>
+  [Parameter] public IReadOnlyList<Wombat.Application.Features.Epas.EntrustmentRung>? Rungs { get; set; }
+
+  /// <summary>
+  /// The line a filled section's head carries, by section key: "Filled in by David Naidoo, 2026-09-29" (T342, Spec § 2).
+  /// A section with no entry carries none.
+  /// </summary>
+  [Parameter] public IReadOnlyDictionary<string, string>? SectionAttributions { get; set; }
+
+  /// <summary>
+  /// The <c>user</c> field whose person the page's primary move hands the activity to (<c>MoveHandOff</c>), or null. Its
+  /// label names the owner of a locked section while nobody is named ("The assessor you name fills this in"), and the
+  /// name it holds is reported through <see cref="HandOffNameChanged" />.
+  /// </summary>
+  [Parameter] public string? HandOffFieldKey { get; set; }
+
+  /// <summary>
+  /// The name of the person <see cref="HandOffFieldKey" /> names now, from the picker's own options, whenever it changes
+  /// (T342, B2): null while nobody is named, or the one named is no longer on the list. Log an activity puts it on its
+  /// button ("Submit to Fatima Khumalo") and its check line without a round trip.
+  /// </summary>
+  [Parameter] public EventCallback<string?> HandOffNameChanged { get; set; }
+
   [Parameter] public EventCallback<string> DataJsonChanged { get; set; }
+
+  /// <summary>
+  /// The level of each section's heading: 2 on the activity pages, under their h1; the builder's live preview, under its
+  /// own h3, passes 4 (T342; the build review's G8).
+  /// </summary>
+  [Parameter] public int SectionHeadingLevel { get; set; } = 2;
 
   private FormSchema? _schema;
   private JsonObject _data = [];
@@ -312,10 +477,33 @@ else if (_schema is not null)
   // to the programme start (T192). Asked once per load, with the rules, rather than on every render of every field.
   private bool _canCredit;
 
+  // Whether an encounter date has been entered here, or the form opened with one: its notices wait for it (Spec § 1).
+  private bool _dateEntered;
+  private bool _openedWithData;
+
+  // The refusal as last given, and the fields changed since: a changed field drops its marks at once (Spec § 3).
+  private IReadOnlyCollection<string>? _refusedFor;
+  private string? _refusalMessageFor;
+  private readonly HashSet<string> _changedSinceRefusal = new(StringComparer.Ordinal);
+  private IReadOnlyDictionary<string, RefusalLine> _refusalLines = new Dictionary<string, RefusalLine>(StringComparer.Ordinal);
+
+  // What HandOffNameChanged last said, so it speaks only on a change.
+  private string? _reportedHandOffName;
+  private bool _handOffReported;
+
   private readonly Dictionary<string, IReadOnlyList<ActivityCatalogueOption>> _catalogueOptionsByField = [];
 
   // Which load owns the option lists. A newer load supersedes an older one still awaiting its queries.
   private int _loadVersion;
+
+  private enum SectionKind
+  {
+    Open,
+    Filled,
+    Locked
+  }
+
+  private sealed record VisibleSection(FormSection Section, IReadOnlyList<Wombat.Domain.Activities.Schema.FormField> Fields, SectionKind Kind);
 
   protected override async Task OnParametersSetAsync()
   {
@@ -349,9 +537,17 @@ else if (_schema is not null)
         _loadedOptionsKey = optionsKey;
         _narrowedEpaFieldKeys = ResolveNarrowedEpaFieldKeys(_schema);
         _canCredit = FilingLateness.WarnsFor(CreditRulesJson);
+        if (!_openedWithData)
+        {
+          // A form that opens with an encounter date shows its notices at once (File it again, a draft).
+          _openedWithData = true;
+          _dateEntered = _schema.ObservationDateField is { } dateKey && !string.IsNullOrWhiteSpace(GetString(dateKey));
+        }
+
         await LoadOptionsAsync();
       }
 
+      TakeRefusal();
       _loadError = null;
     }
     catch (Exception exception)
@@ -364,24 +560,46 @@ else if (_schema is not null)
       _canCredit = false;
       _loadedOptionsKey = null;
     }
+
+    await ReportHandOffNameAsync();
   }
+
+  // A new refusal from the page marks its fields afresh, and splits its words one field a line.
+  private void TakeRefusal()
+  {
+    if (ReferenceEquals(_refusedFor, RefusedFieldKeys) &&
+        string.Equals(_refusalMessageFor, RefusalMessage, StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    _refusedFor = RefusedFieldKeys;
+    _refusalMessageFor = RefusalMessage;
+    _changedSinceRefusal.Clear();
+    _refusalLines = FieldRefusals.Split(RefusalMessage, RefusedFieldKeys, LabelOf)
+      .Where(line => line.FieldKey is not null)
+      .GroupBy(line => line.FieldKey!, StringComparer.Ordinal)
+      .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+  }
+
+  private string? LabelOf(string key)
+    => _schema?.Sections.SelectMany(section => section.Fields)
+      .FirstOrDefault(field => string.Equals(field.Key, key, StringComparison.Ordinal))?.Label;
 
   /// <summary>
   /// A field is locked when the whole form is read-only, or when a writable set was supplied and
-  /// does not name it. The <c>disabled</c> attribute is only a hint to the browser — the guards in
-  /// <see cref="UpdateValue" /> and <see cref="ToggleMultiChoice" /> call this too, so a forged
-  /// event on a locked field changes nothing.
+  /// does not name it. A locked field has no control (T342), and the guards in <see cref="UpdateValue" /> and
+  /// <see cref="ToggleMultiChoice" /> call this too, so a forged event on a locked field changes nothing.
   /// </summary>
   private bool IsFieldLocked(string key)
     => ReadOnly || (EditableFieldKeys is not null && !EditableFieldKeys.Contains(key));
 
   /// <summary>
-  /// The field types rendered as exactly one control with the field's key as its id, which is what
-  /// <c>FormField</c>'s <c>&lt;label for&gt;</c> names. Every other type renders as a fieldset named by its
-  /// legend (T177). The list and the markup's switch must agree both ways. A type listed here with no case leaves
-  /// a label naming nothing, and a type with a case left off the list shows "Unsupported field type" in its place.
-  /// <c>ActivityFormLabelTests</c> renders every <see cref="FieldType" /> and pins which ones are groups, so either
-  /// drift fails it.
+  /// The field types rendered as exactly one control whose id is <see cref="ActivityFieldIds.Input" />, which the
+  /// <c>&lt;label for&gt;</c> names. Every other type renders as a fieldset named by its legend (T177). The list and the
+  /// markup's switch must agree both ways. A type listed here with no case leaves a label naming nothing, and a type with
+  /// a case left off the list shows "Unsupported field type" in its place. <c>ActivityFormLabelTests</c> renders every
+  /// <see cref="FieldType" /> and pins which ones are groups, so either drift fails it.
   /// </summary>
   private static bool IsSingleControl(FieldType type)
     => type is FieldType.Text or FieldType.Signature or FieldType.ProcedureRef
@@ -390,6 +608,241 @@ else if (_schema is not null)
       or FieldType.Date
       or FieldType.Choice or FieldType.Epa or FieldType.User
       or FieldType.Scale;
+
+  // The fields that take the grid's whole row: running text and the EPA, whose options are long (the boards).
+  private static bool IsWide(FieldType type)
+    => type is FieldType.Text or FieldType.Signature or FieldType.ProcedureRef or FieldType.LongText or FieldType.Epa
+      or FieldType.MultiChoice;
+
+  /// <summary>
+  /// The schema's sections the reader sees, in the schema's order, each with its visible fields and what it is to the
+  /// reader: open (they may write a field of it), filled (they may write none, and it holds a value) or locked (they may
+  /// write none, and it holds nothing yet).
+  /// </summary>
+  private IEnumerable<VisibleSection> VisibleSections()
+  {
+    foreach (var section in _schema!.Sections)
+    {
+      if (!IsVisible(section.ShowIf))
+      {
+        continue;
+      }
+
+      var fields = section.Fields.Where(field => IsVisible(field.ShowIf)).ToList();
+      var kind = fields.Any(field => !IsFieldLocked(field.Key))
+        ? SectionKind.Open
+        : fields.Any(HasValue)
+          ? SectionKind.Filled
+          : SectionKind.Locked;
+      yield return new VisibleSection(section, fields, kind);
+    }
+  }
+
+  private bool HasValue(Wombat.Domain.Activities.Schema.FormField field)
+    => field.Type == FieldType.MultiChoice
+      ? GetMultiChoiceValues(field.Key).Count > 0
+      : !string.IsNullOrWhiteSpace(GetString(field.Key));
+
+  /// <summary>
+  /// The owner line of a section nobody has filled in yet (C11, C14), from the section's own <c>editable_by</c>, which
+  /// falls back to <c>subject|creator</c> as <c>FieldPermissionEvaluator</c> reads it (T342; the build review's G2):
+  /// <list type="bullet">
+  ///   <item>the author's own section: no owner line (the body says "Not filled in.");</item>
+  ///   <item>a <c>field:</c> owner: the person the field names ("Fatima Khumalo fills this in"), or, while nobody is named,
+  ///   the field by its label ("The assessor you name fills this in");</item>
+  ///   <item>a <c>role:</c> owner: the role by its label ("A coordinator fills this in"), since nobody is named.</item>
+  /// </list>
+  /// A closed record says who was to ("... was to fill this in.").
+  /// </summary>
+  private string? LockedOwnerLine(FormSection section)
+  {
+    var owner = OwnerOf(section);
+    switch (owner.Kind)
+    {
+      case SectionOwnerKind.Field:
+      {
+        var name = FieldOwnerName(owner.Key!);
+        var who = name ?? $"The {FieldNoun(owner.Key!)}";
+        return LockedSectionsClosed
+          ? $"{who} was to fill this in."
+          : name is null ? $"{who} you name fills this in" : $"{who} fills this in";
+      }
+
+      case SectionOwnerKind.Role:
+      {
+        var role = ActivityPageModel.Article(WombatRoleLabels.For(owner.Key!).ToLowerInvariant());
+        var who = char.ToUpperInvariant(role[0]) + role[1..];
+        return LockedSectionsClosed ? $"{who} was to fill this in." : $"{who} fills this in";
+      }
+
+      default:
+        return null;
+    }
+  }
+
+  private static readonly ActorRule AuthorRule = ActorRuleParser.Parse("subject|creator");
+
+  private enum SectionOwnerKind
+  {
+    Author,
+    Field,
+    Role
+  }
+
+  private readonly record struct SectionOwner(SectionOwnerKind Kind, string? Key);
+
+  // Who a section's rule names, for its owner line: a field's person first, then a role, else its author. A rule that
+  // names the author among others (subject|field:assessor_user_id) is owned by the other: the line is for a section its
+  // reader cannot fill in.
+  private static SectionOwner OwnerOf(FormSection section) => OwnerOf(section.EditableBy ?? AuthorRule);
+
+  private static SectionOwner OwnerOf(ActorRule rule)
+  {
+    var terms = Terms(rule).ToList();
+    if (terms.OfType<FieldUserActorRule>().FirstOrDefault() is { } field)
+    {
+      return new SectionOwner(SectionOwnerKind.Field, field.Field);
+    }
+
+    return terms.OfType<NamedRoleActorRule>().FirstOrDefault() is { } role
+      ? new SectionOwner(SectionOwnerKind.Role, role.Role)
+      : new SectionOwner(SectionOwnerKind.Author, null);
+  }
+
+  private static IEnumerable<ActorRule> Terms(ActorRule rule)
+    => rule is CombinedActorRule combined ? combined.Rules.SelectMany(Terms) : [rule];
+
+  // The person a field names: the page's name for its hand-off field (the one it resolved, and knows is still offered,
+  // D1), else the field's own option for the value it holds; null while nobody on the list is named.
+  private string? FieldOwnerName(string fieldKey)
+  {
+    var isHandOff = HandOffFieldKey is null || string.Equals(HandOffFieldKey, fieldKey, StringComparison.Ordinal);
+    if (isHandOff && !string.IsNullOrWhiteSpace(LockedOwnerName))
+    {
+      return LockedOwnerName;
+    }
+
+    if (HandOffFieldKey is not null && isHandOff)
+    {
+      return null;
+    }
+
+    var field = _schema?.Sections.SelectMany(section => section.Fields)
+      .FirstOrDefault(candidate => string.Equals(candidate.Key, fieldKey, StringComparison.Ordinal));
+    return field is null ? null : NomineeNames.NameOf(GetString(fieldKey), GetOptions(field));
+  }
+
+  private string FieldNoun(string fieldKey)
+    => LabelOf(fieldKey) is { Length: > 0 } label ? label.Trim().ToLowerInvariant() : FilingWords.DefaultNoun;
+
+  // A section's heading, at the level the host gives: h2 on the activity pages, lower under the builder's own headings
+  // (T342; the build review's G8).
+  private RenderFragment SectionHeading(string id, string title) => __builder =>
+  {
+    __builder.OpenElement(0, $"h{Math.Clamp(SectionHeadingLevel, 2, 6)}");
+    __builder.AddAttribute(1, "id", id);
+    __builder.AddContent(2, title);
+    __builder.CloseElement();
+  };
+
+  /// <summary>A read-out's value, as the reader sees it: an option's label, never the id it stores (T191, T199).</summary>
+  private RenderFragment ReadoutValue(Wombat.Domain.Activities.Schema.FormField field) => __builder =>
+  {
+    if (field.Type == FieldType.Scale && HasValue(field) && RungsFor(field) is { Count: > 0 } rungs)
+    {
+      <dd><RungRow Label="@field.Label" Rungs="rungs" Value="@GetString(field.Key)" /></dd>
+    }
+    else if (ReadoutText(field) is { Length: > 0 } text)
+    {
+      <dd class="form-readout-value">@text</dd>
+    }
+    else
+    {
+      <dd class="text-muted">Not filled in.</dd>
+    }
+
+    // A read-out has no control to mark, so a refusal that named it is said under its value (T263: which field stopped
+    // the move is worth showing to someone who cannot fill it in): its own words when the page gave them, or a pointer
+    // to the refusal that did.
+    if (IsRefused(field.Key))
+    {
+      <dd id="@ActivityFieldIds.Message(field.Key)" class="validation-message">@(FieldMessageFor(field.Key) ?? "Named in the refusal above.")</dd>
+    }
+  };
+
+  private string ReadoutText(Wombat.Domain.Activities.Schema.FormField field)
+  {
+    if (field.Type == FieldType.MultiChoice)
+    {
+      var options = GetOptions(field);
+      return string.Join(", ", GetMultiChoiceValues(field.Key).Select(value =>
+        options.FirstOrDefault(option => string.Equals(option.Value, value, StringComparison.Ordinal))?.Label ?? value));
+    }
+
+    // A person is read out as the record names them: the stored value where the page gave one, never a working copy it
+    // could not have changed (T102: only a stored id is ever looked up).
+    var stored = field.Type == FieldType.User && StoredDataJson is not null
+      ? StoredValueOf(field.Key) ?? string.Empty
+      : GetString(field.Key);
+    if (string.IsNullOrWhiteSpace(stored))
+    {
+      return string.Empty;
+    }
+
+    if (field.Type is FieldType.Choice or FieldType.Epa or FieldType.User or FieldType.Scale ||
+        !string.IsNullOrWhiteSpace(field.CatalogueKey))
+    {
+      var label = GetOptions(field).FirstOrDefault(option => string.Equals(option.Value, stored, StringComparison.Ordinal))?.Label;
+      return label ?? (field.Type == FieldType.User ? "Unknown person" : stored);
+    }
+
+    return stored;
+  }
+
+  /// <summary>The label of the option chosen in a select, for the read-back under it (T323).</summary>
+  private string? ChosenLabel(Wombat.Domain.Activities.Schema.FormField field)
+  {
+    var value = GetString(field.Key);
+    return string.IsNullOrEmpty(value)
+      ? null
+      : GetOptions(field).FirstOrDefault(option => string.Equals(option.Value, value, StringComparison.Ordinal))?.Label;
+  }
+
+  /// <summary>
+  /// The scale field's ladder: the page's rungs, with descriptors, for the rated field and any field on the rated field's
+  /// scale (the page reads the rated field's ladder alone; the build review's G5); else the field's own options.
+  /// </summary>
+  private IReadOnlyList<Wombat.Application.Features.Epas.EntrustmentRung> RungsFor(Wombat.Domain.Activities.Schema.FormField field)
+  {
+    if (Rungs is { Count: > 0 } && IsOnTheRatedScale(field))
+    {
+      return Rungs;
+    }
+
+    return GetOptions(field)
+      .Select(option => int.TryParse(option.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var order)
+        ? new Wombat.Application.Features.Epas.EntrustmentRung(order, option.Label, null)
+        : null)
+      .OfType<Wombat.Application.Features.Epas.EntrustmentRung>()
+      .ToList();
+  }
+
+  private bool IsOnTheRatedScale(Wombat.Domain.Activities.Schema.FormField field)
+  {
+    if (_schema?.RatedLevelField is not { } ratedKey)
+    {
+      return false;
+    }
+
+    if (string.Equals(field.Key, ratedKey, StringComparison.Ordinal))
+    {
+      return true;
+    }
+
+    var ratedScale = _schema.Sections.SelectMany(section => section.Fields)
+      .FirstOrDefault(candidate => string.Equals(candidate.Key, ratedKey, StringComparison.Ordinal))?.ScaleKey;
+    return !string.IsNullOrWhiteSpace(ratedScale) && string.Equals(field.ScaleKey, ratedScale, StringComparison.Ordinal);
+  }
 
   /// <summary>
   /// Whether this field is the encounter date of a form that may be the filing, of a type that can credit, and the actor
@@ -405,9 +858,6 @@ else if (_schema is not null)
        string.Equals(_schema.ObservationDateField, key, StringComparison.Ordinal) &&
        !IsFieldLocked(key);
 
-  // Named in the date's aria-describedby, so built as the help's id is: a key is free text (T193).
-  private static string FilingDateNoticeId(string key) => $"{FieldHelp.IdPart(key)}-filing-notice";
-
   /// <summary>
   /// <see cref="ProgrammeStartsOn" /> when the typed encounter date is before it, which the server refuses (T192);
   /// otherwise null. Asked first, so a date before the programme is never also called late: the lateness warning says it
@@ -421,14 +871,22 @@ else if (_schema is not null)
       : null;
 
   /// <summary>
-  /// Whether the field shows the programme-start hint, a refusal the server will confirm: the input is then marked
+  /// Whether the field shows the programme-start hint, a refusal the server will confirm (C9): the input is then marked
   /// invalid (<c>aria-invalid</c>, <c>.input-validation-error</c>) as well as described by the hint, so a screen reader
   /// hears that the value is wrong and not only that there is a note beside it.
   /// </summary>
-  private bool PredictsRefusal(string key) => NoticesFilingDate(key) && BeforeProgrammeStart(key) is not null;
+  private bool PredictsRefusal(string key) => NoticesFilingDate(key) && _dateEntered && BeforeProgrammeStart(key) is not null;
 
-  /// <summary>Whether the server's last refusal of this form named the field (T263).</summary>
-  private bool IsRefused(string key) => RefusedFieldKeys?.Contains(key) == true;
+  /// <summary>Whether the server's last refusal of this form named the field, and it has not been changed since (T263).</summary>
+  private bool IsRefused(string key) => RefusedFieldKeys?.Contains(key) == true && !_changedSinceRefusal.Contains(key);
+
+  /// <summary>The field's own part of the refusal, shown under its control, while it is marked.</summary>
+  private string? FieldMessageFor(string key)
+    => IsRefused(key) && _refusalLines.TryGetValue(key, out var line) ? line.FieldMessage : null;
+
+  // A locked section's line for a field the refusal named, with its label, since the field has no control to sit under.
+  private string RefusalLineFor(Wombat.Domain.Activities.Schema.FormField field)
+    => _refusalLines.TryGetValue(field.Key, out var line) ? line.Text : field.Label;
 
   /// <summary>
   /// Whether the control is marked invalid: the page predicts the server will refuse what is typed (T192), or the server
@@ -443,24 +901,25 @@ else if (_schema is not null)
   /// <summary><c>aria-invalid</c> while the control is marked invalid; left off otherwise, never "false".</summary>
   private string? AriaInvalid(string key) => IsMarkedInvalid(key) ? "true" : null;
 
-  /// <summary>The refusal's alert id, for a field it named; null for any other field, or when the page gave no id.</summary>
+  /// <summary><c>aria-required</c> on a required field's control, which the visible mark is hidden from (T342).</summary>
+  private static string? AriaRequired(Wombat.Domain.Activities.Schema.FormField field) => field.Required ? "true" : null;
+
+  /// <summary>The refusal summary's id, for a field it named; null for any other field, or when the page gave no id.</summary>
   private string? RefusalIdFor(string key)
     => IsRefused(key) && !string.IsNullOrWhiteSpace(RefusalId) ? RefusalId : null;
 
-  // The server's refusal prints the start as an ISO date, so the hint does too: the two read as the same fact.
-  private static string IsoDate(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
   /// <summary>
-  /// What a field's control names with <c>aria-describedby</c> (T193): its help text, which <c>FormField</c> renders with
-  /// an id but cannot link itself, then the filing-date notice's live region while the field has one (T160, T192), then
-  /// the alert of a refusal that named the field (T263). Null when none is there, so no control names an element that
+  /// What a field's control names with <c>aria-describedby</c> (T193): its help text, then its own refusal message while
+  /// it has one (T342, Spec § 1), then the filing-date notice's live region while the field has one (T160, T192), then
+  /// the summary of a refusal that named the field (T263). Null when none is there, so no control names an element that
   /// does not exist.
   /// </summary>
   private string? DescribedBy(Wombat.Domain.Activities.Schema.FormField field)
     => FieldHelp.DescribedBy(
       field.Key,
       field.HelpText,
-      NoticesFilingDate(field.Key) ? FilingDateNoticeId(field.Key) : null,
+      FieldMessageFor(field.Key) is null ? null : ActivityFieldIds.Message(field.Key),
+      NoticesFilingDate(field.Key) ? ActivityFieldIds.FilingNotice(field.Key) : null,
       RefusalIdFor(field.Key));
 
   /// <summary>
@@ -528,7 +987,7 @@ else if (_schema is not null)
           !string.IsNullOrEmpty(working) &&
           !listed.Any(option => string.Equals(option.Value, working, StringComparison.Ordinal)))
       {
-        return [.. listed, new ActivityCatalogueOption(working, "Not available (choose someone else)")];
+        return [.. listed, new ActivityCatalogueOption(working, NomineeNames.NotAvailableLabel)];
       }
 
       return listed;
@@ -571,7 +1030,19 @@ else if (_schema is not null)
     };
   }
 
-  private async Task UpdateValue(string key, string? value)
+  // A date is entered on change; the encounter date's notices show from then on (Spec § 1).
+  private async Task ChangeDate(string key, string? value)
+  {
+    if (_schema is not null && string.Equals(_schema.ObservationDateField, key, StringComparison.Ordinal))
+    {
+      _dateEntered = true;
+    }
+
+    await UpdateValue(key, value);
+  }
+
+  // Internal, with ToggleMultiChoice, so a test can send the forged event no locked field renders a control for (G9).
+  internal async Task UpdateValue(string key, string? value)
   {
     if (IsFieldLocked(key))
     {
@@ -587,10 +1058,12 @@ else if (_schema is not null)
       _data[key] = value;
     }
 
+    _changedSinceRefusal.Add(key);
     await DataJsonChanged.InvokeAsync(_data.ToJsonString());
+    await ReportHandOffNameAsync();
   }
 
-  private async Task ToggleMultiChoice(string key, string option, bool selected)
+  internal async Task ToggleMultiChoice(string key, string option, bool selected)
   {
     if (IsFieldLocked(key))
     {
@@ -608,7 +1081,32 @@ else if (_schema is not null)
     }
 
     _data[key] = new JsonArray(values.Select(value => JsonValue.Create(value)).ToArray());
+    _changedSinceRefusal.Add(key);
     await DataJsonChanged.InvokeAsync(_data.ToJsonString());
+  }
+
+  // Tells the page whom the hand-off field names now, once and on each change (T342, B2).
+  private async Task ReportHandOffNameAsync()
+  {
+    if (!HandOffNameChanged.HasDelegate || _schema is null)
+    {
+      return;
+    }
+
+    var field = HandOffFieldKey is null
+      ? null
+      : _schema.Sections.SelectMany(section => section.Fields)
+        .FirstOrDefault(candidate => string.Equals(candidate.Key, HandOffFieldKey, StringComparison.Ordinal));
+    var name = field is null ? null : NomineeNames.NameOf(GetString(field.Key), GetOptions(field));
+
+    if (_handOffReported && string.Equals(name, _reportedHandOffName, StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    _handOffReported = true;
+    _reportedHandOffName = name;
+    await HandOffNameChanged.InvokeAsync(name);
   }
 
   private async Task LoadOptionsAsync()

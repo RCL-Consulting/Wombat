@@ -62,6 +62,12 @@ else
     /// </summary>
     [Parameter] public int? Count { get; set; }
 
+    /// <summary>
+    /// The count in words, which a screen reader reads in place of the bare figure (Home's Needs you, "2 items"; T342,
+    /// A16). Null reads the figure.
+    /// </summary>
+    [Parameter] public string? CountWords { get; set; }
+
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
     private RenderFragment Heading => @<h2 class="dashboard-card-title">
@@ -72,7 +78,15 @@ else
       <span>@Title</span>
       @if (Count is { } count && !IsLoading)
       {
-        <span class="badge @BadgeFor.State(BadgeState.Submitted)">@count</span>
+        @if (CountWords is { } words)
+        {
+          @* The figure to the eye, the words to a screen reader ("2 items", T342, A16). *@
+          <span class="badge @BadgeFor.State(BadgeState.Submitted)" aria-hidden="true">@count</span><span class="visually-hidden">, @words</span>
+        }
+        else
+        {
+          <span class="badge @BadgeFor.State(BadgeState.Submitted)">@count</span>
+        }
       }
     </h2>;
 }

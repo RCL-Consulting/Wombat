@@ -531,7 +531,8 @@ Expect: Each of the first three reads "You cannot open this page", "Your account
   and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home: those pages still
   require the Trainee role (DESIGN § The NavMenu).
   Nothing offers her an activity to file: there is no menu link and no dashboard action. The new-activity page asks
-  only that she is signed in, so it opens when she types its address. She files nothing.
+  only that she is signed in, so it opens when she types its address, on Log an activity's instrument picker. She
+  files nothing.
 Note: No decision says whether a graduate may still file about herself. Nothing refuses her today: the page and
   `ActivityService.CreateDraftAsync` check no role. T281 decides only that an encounter after her last day credits
   nothing.
@@ -570,15 +571,15 @@ Gap: [F-5.23a, T311] (still) A graduate is offered no link to Export portfolio, 
 
 ### Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended
 Role: Trainee — Dr Pieter du Plessis
-Route: /activities/new → /activities/{ActivityId:int}
+Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) on PAED-002 with:
   - encounter date `D−1`;
   - Dr Naidoo as the assessor;
   - a clinical setting, a presenting problem and a case complexity.
   Submit it.
-Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CEX. There is no late-filing warning. The
-  activity reads Requested and appears in Dr Naidoo's inbox. No email is sent: Wombat mails nobody when an activity
-  moves (Step 3.3).
+Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CEX. There is no late-filing warning.
+  Submit to David Naidoo reads "Submitted. It is now Requested. It is in David Naidoo's Activity inbox.", and the
+  activity is in his inbox. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 Note: In the story, his registrar post ended on `D−2` when he resigned to move provinces, but HR tells Prof Mbatha only
   today. He worked `D−1` as a locum shift.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Log an activity → Mini-CEX (Paediatrics): the EPA list offered
@@ -651,8 +652,8 @@ Expect: Each page records that his programme ended on `D−2`:
   - My progress opens with "Your programme ended on <`D−2`>. This page is your record of it and is read-only…". Its
     "Your programme" card reads Ended `D−2`. PAED-002's period holding `D−2` reads "no target (your programme ended
     part-way through) · n−1 recorded".
-  - My activities still lists the `D−1` Mini-CEX as Completed, now credited "None": the take-back's replay re-stamped
-    its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
+  - My activities still lists the `D−1` Mini-CEX as Completed, its Credit now "None": the take-back's replay
+    re-stamped its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
 Actual (2026-09-28, T339 replay, wombat_scenario_t339): Home (Acting as Trainee): the Curriculum targets card reads
   "Your programme ended on 26 September 2026, so no target applies to you any more. Your progress in each period is
   kept on My progress, read-only." and links to /portfolio/progress. My progress: "Your programme ended on 26

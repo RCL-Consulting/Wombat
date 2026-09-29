@@ -49,6 +49,7 @@ public class ActivityWritePathTests
     {
         ["CreateDraftAsync"] = "Write: builds the draft through BuildDraftActivity (T070 filter, self-nomination guard, validation), then the encounter-date bounds (T160), the EPA→tool gate and the nominee gate, before Add.",
         ["TransitionAsync"] = "Write: the actor gate, the T070 merge, the self-nomination guard, Submit validation, the encounter-date bounds (T160), the EPA→tool gate and the nominee gate, before ApplyTransition.",
+        ["SaveDraftAsync"] = "Write (T342, E3): the T101 read gate, the caller's writable set in the current state and a move of theirs that leads on from it (T342, R1), the T070 merge, the self-nomination guard, Draft validation, the encounter-date bounds (T160), the EPA→tool gate and the nominee gate on what the save changes, before the first mutation; no ApplyTransition, no credit.",
         ["StageCompletedAsync"] = "Write: BuildDraftActivity per row, the encounter-date future check (T160), the nominee gate, the actor gate and validation per row, and AddRange only after the whole batch has passed.",
         ["GetDetailAsync"] = "Read: behind the T101 read gate. Writes nothing."
     };

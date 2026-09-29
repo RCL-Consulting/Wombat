@@ -1,6 +1,13 @@
 @if (IsLoading)
 {
-  <Skeleton Count="SkeletonCount" Height="@SkeletonHeight" />
+  @if (LoadingContent is not null)
+  {
+    @LoadingContent
+  }
+  else
+  {
+    <Skeleton Count="SkeletonCount" Height="@SkeletonHeight" />
+  }
 }
 else if (!string.IsNullOrWhiteSpace(LoadError))
 {
@@ -53,6 +60,12 @@ else
   [Parameter] public string EmptyBody { get; set; } = "There is no data to show yet.";
   [Parameter] public RenderFragment? EmptyActions { get; set; }
   [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+  /// <summary>
+  /// A page's own skeleton, drawn in place of the rows of <see cref="Skeleton" /> while it loads: the activity page's is
+  /// the shape of its status card and details grid (T342; the build review's A3).
+  /// </summary>
+  [Parameter] public RenderFragment? LoadingContent { get; set; }
+
   [Parameter] public int SkeletonCount { get; set; } = 4;
   [Parameter] public string SkeletonHeight { get; set; } = "3rem";
 

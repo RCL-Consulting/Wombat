@@ -50,8 +50,10 @@ public sealed partial class FieldGroupTests
             ["ActivityForm.razor", "CampaignEdit.razor", "CurriculumItemsEdit.razor", "MsfRespond.razor", "ReviewDetail.razor",
              "StageMinimaEditor.razor"],
             "guard: the scan finds the field-level groups, or it proves nothing");
+        // An activity form's section is a <section> named by its heading since T342 (flow 03): a card one deep, not a
+        // fieldset, so the clusters left are the curriculum item's edit row and the deferral.
         clusters.Distinct().Should().Contain(
-            ["ActivityForm.razor", "CurriculumItemsEdit.razor", "ReviewDetail.razor"],
+            ["CurriculumItemsEdit.razor", "ReviewDetail.razor"],
             "guard: the scan tells a fieldset of fields (a section, the edit row, a deferral) from a field");
         string.Join(Environment.NewLine, offenders).Should().BeEmpty(
             "a fieldset that is one field is a form group, so its legend reads as that field's label (DESIGN.md § Form " +
@@ -64,7 +66,8 @@ public sealed partial class FieldGroupTests
         // T188 review. A FormField's help is a small.page-subtitle (0.9rem). The groups' help was a body-size p.muted, so
         // Tools' help stood larger than Weight's beside it, and the campaign form's EPA help sat over "Select a trainee
         // first." (a page-subtitle) at two sizes in one field. A group's help and status lines are page-subtitles; a
-        // field-warning is a warning, drawn as one.
+        // field-warning is a warning, drawn as one; and a validation-message is the group's own refusal (T342, flow 03),
+        // drawn as every field's is.
         var web = WebFile();
         var paragraphs = 0;
         var offenders = new List<string>();
@@ -92,6 +95,7 @@ public sealed partial class FieldGroupTests
     [InlineData("""<fieldset class="form-group"><legend>L</legend><p class="@(quiet ? "page-subtitle" : null)">Help</p></fieldset>""", false)]
     [InlineData("""<fieldset class="form-group"><legend>L</legend><p id="x-help" class="page-subtitle">Help</p></fieldset>""", true)]
     [InlineData("""<fieldset class="form-group"><legend>L</legend><div role="status"><p class="field-warning">Hint</p></div></fieldset>""", true)]
+    [InlineData("""<fieldset class="form-group"><legend>L</legend><p id="x-msg" class="validation-message">Refused</p></fieldset>""", true)]
     // A <pre> or a <progress> is not a paragraph.
     [InlineData("""<fieldset class="form-group"><legend>L</legend><pre>x</pre><progress></progress></fieldset>""", true)]
     public void TheScan_ReadsAGroupsParagraphs_AsWritten(string razor, bool helpSized)
@@ -177,9 +181,11 @@ public sealed partial class FieldGroupTests
     /// <summary>A <c>&lt;p&gt;</c> inside a fieldset: its start tag and the line it starts on.</summary>
     private sealed record Paragraph(string StartTag, int Line);
 
-    /// <summary>A paragraph whose class writes out the help's size (page-subtitle) or a warning's own look.</summary>
+    /// <summary>
+    /// A paragraph whose class writes out the help's size (page-subtitle), or a warning's or a refusal's own look.
+    /// </summary>
     private static bool IsHelpSized(string paragraphStartTag)
-        => WrittenClasses(paragraphStartTag).Overlaps(["page-subtitle", "field-warning"]);
+        => WrittenClasses(paragraphStartTag).Overlaps(["page-subtitle", "field-warning", "validation-message"]);
 
     private static List<Fieldset> FieldsetsIn(string razor)
     {

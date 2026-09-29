@@ -143,10 +143,10 @@ public sealed class NomineePickerTests : WombatTestContext
 
         var cut = RenderForm(dataJson: """{"assessor_user_id":"assessor-9"}""", isExistingActivity: true, activityInstitutionId: 42);
 
-        var options = cut.FindAll("#assessor_user_id option");
+        var options = cut.FindAll("#assessor_user_id-in option");
         options.Select(option => option.GetAttribute("value")).Should().Equal("", "assessor-1", "assessor-9");
         options.Single(option => option.HasAttribute("selected")).GetAttribute("value").Should().Be("assessor-9");
-        cut.Find("#assessor_user_id").HasAttribute("disabled").Should().BeFalse();
+        cut.Find("#assessor_user_id-in").HasAttribute("disabled").Should().BeFalse();
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public sealed class NomineePickerTests : WombatTestContext
         string? captured = null;
 
         var cut = RenderForm(dataJson: "{}", onChanged: value => captured = value);
-        cut.Find("#assessor_user_id").Change("assessor-1");
+        cut.Find("#assessor_user_id-in").Change("assessor-1");
 
         captured.Should().Be("""{"assessor_user_id":"assessor-1"}""");
     }
@@ -180,11 +180,9 @@ public sealed class NomineePickerTests : WombatTestContext
         _recorder.UserLabelRequests.Should().Equal(["assessor-9"],
             "only the field with a stored value asks, and only for that value");
 
-        var select = cut.Find("#assessor_user_id");
-        select.HasAttribute("disabled").Should().BeTrue();
-        var options = cut.FindAll("#assessor_user_id option");
-        options.Select(option => option.TextContent.Trim()).Should().Equal("Select…", "Dr Nine");
-        options.Single(option => option.HasAttribute("selected")).GetAttribute("value").Should().Be("assessor-9");
+        // T342 (flow 03): the locked field is read out, the person by name, with no control to offer anyone else.
+        cut.FindAll("#assessor_user_id-in option, select#assessor_user_id-in").Should().BeEmpty();
+        cut.Find("#assessor_user_id-in dd").TextContent.Trim().Should().Be("Dr Nine");
     }
 
     [Fact]
@@ -251,7 +249,10 @@ public sealed class NomineePickerTests : WombatTestContext
 
         _recorder.NomineeScopes.Should().BeEmpty();
         _recorder.UserLabelRequests.Should().BeEmpty();
-        cut.FindAll("#assessor_user_id option").Should().ContainSingle().Which.TextContent.Trim().Should().Be("Select…");
+
+        // Nothing written, nothing to write: a locked section (T342, C14), no control.
+        cut.FindAll("#assessor_user_id-in").Should().BeEmpty();
+        cut.FindAll(".form-section--locked").Should().ContainSingle();
     }
 
     // ---- a working value the list does not hold ----
@@ -270,14 +271,14 @@ public sealed class NomineePickerTests : WombatTestContext
             activityInstitutionId: 42,
             storedDataJson: "{}");
 
-        var options = cut.FindAll("#assessor_user_id option");
+        var options = cut.FindAll("#assessor_user_id-in option");
         options.Select(option => option.GetAttribute("value")).Should().Equal("", "assessor-1", "x");
         var selected = options.Single(option => option.HasAttribute("selected"));
         selected.GetAttribute("value").Should().Be("x");
         selected.TextContent.Trim().Should().Be("Not available (choose someone else)");
         _recorder.UserLabelRequests.Should().BeEmpty("the working value is labelled on the page, never looked up");
 
-        cut.FindAll("#coordinator_user_id option").Select(option => option.GetAttribute("value"))
+        cut.FindAll("#coordinator_user_id-in option").Select(option => option.GetAttribute("value"))
             .Should().Equal(["", "assessor-1"], "an empty field gets no extra option");
     }
 
@@ -294,9 +295,9 @@ public sealed class NomineePickerTests : WombatTestContext
             editableFieldKeys: Writable("notes"),
             storedDataJson: """{"assessor_user_id":"assessor-9"}""");
 
-        var options = cut.FindAll("#assessor_user_id option");
-        options.Select(option => option.GetAttribute("value")).Should().Equal("", "assessor-9");
-        options.Select(option => option.TextContent.Trim()).Should().NotContain("Not available (choose someone else)");
+        // Read out as the stored person, never the working value (T342: a locked field has no control).
+        cut.Find("#assessor_user_id-in dd").TextContent.Trim().Should().Be("Dr Nine");
+        cut.Markup.Should().NotContain("Not available (choose someone else)");
         _recorder.UserLabelRequests.Should().Equal(["assessor-9"]);
     }
 
@@ -307,9 +308,7 @@ public sealed class NomineePickerTests : WombatTestContext
         // named" on a record that names someone.
         var cut = RenderForm(dataJson: """{"assessor_user_id":"ghost-1"}""", readOnly: true);
 
-        var selected = cut.FindAll("#assessor_user_id option").Single(option => option.HasAttribute("selected"));
-        selected.GetAttribute("value").Should().Be("ghost-1");
-        selected.TextContent.Trim().Should().Be("Unknown person");
+        cut.Find("#assessor_user_id-in dd").TextContent.Trim().Should().Be("Unknown person");
     }
 
     [Fact]
@@ -349,7 +348,7 @@ public sealed class NomineePickerTests : WombatTestContext
 
         var cut = RenderForm(dataJson: "{}", schemaJson: withOptions);
 
-        cut.FindAll("#assessor_user_id option").Select(option => option.GetAttribute("value"))
+        cut.FindAll("#assessor_user_id-in option").Select(option => option.GetAttribute("value"))
             .Should().Equal("", "assessor-1");
         _recorder.NomineeScopes.Should().ContainSingle("the directory is still asked even though inline options exist");
     }
@@ -372,7 +371,7 @@ public sealed class NomineePickerTests : WombatTestContext
 
         var cut = RenderForm(dataJson: "{}", schemaJson: withOptions);
 
-        cut.FindAll("#epa_id option").Select(option => option.GetAttribute("value"))
+        cut.FindAll("#epa_id-in option").Select(option => option.GetAttribute("value"))
             .Should().Equal("", "17");
     }
 
@@ -393,7 +392,7 @@ public sealed class NomineePickerTests : WombatTestContext
 
         var cut = RenderForm(dataJson: "{}", schemaJson: choice);
 
-        cut.FindAll("#setting option").Select(option => option.GetAttribute("value"))
+        cut.FindAll("#setting-in option").Select(option => option.GetAttribute("value"))
             .Should().Equal("", "ward", "clinic");
     }
 
@@ -431,14 +430,14 @@ public sealed class NomineePickerTests : WombatTestContext
             activityInstitutionId: 42,
             editableFieldKeys: Writable("assessor_user_id"));
 
-        cut.FindAll("#assessor_user_id option").Should().HaveCount(3);
+        cut.FindAll("#assessor_user_id-in option").Should().HaveCount(3);
 
         cut.SetParametersAndRender(parameters => parameters
             .Add(component => component.EditableFieldKeys, Writable("notes")));
 
         _recorder.UserLabelRequests.Should().Contain("assessor-1");
-        cut.FindAll("#assessor_user_id option").Select(option => option.GetAttribute("value"))
-            .Should().Equal(["", "assessor-1"], "a reader sees who was named and no one else");
+        cut.FindAll("#assessor_user_id-in option").Should().BeEmpty("a reader sees who was named and no one else");
+        cut.Find("#assessor_user_id-in dd").TextContent.Trim().Should().Be("Dr One");
     }
 
     [Fact]
@@ -500,8 +499,8 @@ public sealed class NomineePickerTests : WombatTestContext
             .Add(component => component.ReadOnly, true));
 
         _recorder.UserLabelRequests.Should().Equal(["assessor-1"]);
-        cut.FindAll("#assessor_user_id option").Select(option => option.GetAttribute("value"))
-            .Should().Equal(["", "assessor-1"]);
+        cut.FindAll("#assessor_user_id-in option").Should().BeEmpty();
+        cut.Find("#assessor_user_id-in dd").TextContent.Trim().Should().Be("Dr One");
     }
 
     // ---- each load has a scope of its own, and only the newest load's lists are kept ----
@@ -580,7 +579,7 @@ public sealed class NomineePickerTests : WombatTestContext
         cut.WaitForState(() => cut.RenderCount > rendersBefore, AsyncWorkTimeout);
 
         cut.Markup.Should().NotContain("Not available");
-        cut.FindAll("#assessor_user_id option").Single(option => option.HasAttribute("selected"))
+        cut.FindAll("#assessor_user_id-in option").Single(option => option.HasAttribute("selected"))
             .TextContent.Trim().Should().Be("Dr Nine");
     }
 
@@ -596,7 +595,7 @@ public sealed class NomineePickerTests : WombatTestContext
         """;
 
     private static IReadOnlyList<string?> AssessorOptionValues(IRenderedComponent<ActivityForm> cut)
-        => cut.FindAll("#assessor_user_id option").Select(option => option.GetAttribute("value")).ToList();
+        => cut.FindAll("#assessor_user_id-in option").Select(option => option.GetAttribute("value")).ToList();
 
     /// <remarks>
     /// <paramref name="storedDataJson" /> defaults to what the pages pass: the activity's data on an existing activity

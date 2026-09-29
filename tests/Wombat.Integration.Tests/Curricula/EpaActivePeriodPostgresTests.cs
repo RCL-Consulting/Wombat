@@ -1,3 +1,4 @@
+using Wombat.Tests.Shared;
 using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
@@ -425,11 +426,11 @@ public sealed class EpaActivePeriodPostgresTests : IAsyncLifetime
     private async Task<IReadOnlyDictionary<int, bool?>> InForceByActivityAsync(string schema)
     {
         await using var db = NewContext(schema);
-        var rows = await new ListActivitiesBySubjectQueryHandler(db).Handle(
+        var rows = (await new ListActivitiesBySubjectQueryHandler(db, FakeUserDirectory.Empty).Handle(
             new ListActivitiesBySubjectQuery(
                 TraineeUserId,
                 new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, TraineeUserId)], "IntegrationTest"))),
-            CancellationToken.None);
+            CancellationToken.None)).Items;
 
         return rows.ToDictionary(row => row.Id, row => row.EpaInForce);
     }

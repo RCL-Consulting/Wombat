@@ -403,8 +403,15 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
         // the author's hand-on does judge it, with a message that names the person. Dropping it instead would render a
         // filled field as "Select…" and invite a re-pick nobody asked for. Only a STORED value reaches here, so the
         // label shows nobody the record does not already show (see NomineeOptionScope.StoredValue).
-        var stored = await GetUserOptionAsync(storedValue, cancellationToken);
-        var label = $"{stored?.Label ?? "Unknown person"} (not on the current list)";
+        // By name alone, as flow 03's Spec draws it (T342, C4): "Mohammed Patel (not on the current list)". The address
+        // tells apart two people the list offers; this person is not offered, only kept.
+        var stored = await _dbContext.Set<WombatIdentityUser>()
+            .AsNoTracking()
+            .Where(entity => entity.Id == storedValue)
+            .Select(entity => new { entity.FirstName, entity.LastName, entity.Email })
+            .FirstOrDefaultAsync(cancellationToken);
+        var name = stored is null ? null : NomineeDirectory.FormatLabel(stored.FirstName, stored.LastName, email: null);
+        var label = $"{(string.IsNullOrWhiteSpace(name) ? stored?.Email ?? "Unknown person" : name)} (not on the current list)";
         return [.. options, new ActivityCatalogueOption(storedValue, label)];
     }
 
@@ -442,6 +449,21 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
         string? scaleKey,
         CancellationToken cancellationToken = default)
     {
+        // Value is the Order because that is what gets stored in DataJson and compared by
+        // CreditApplier; Label is the rung as the College prints it. T100: the two are different
+        // numbers on the CPSA ladder (Order 5 is rung "4"), so concatenating them told an assessor
+        // two things and let them believe either.
+        return (await GetEntrustmentScaleRungsAsync(scaleKey, cancellationToken))
+            .Select(rung => new ActivityCatalogueOption(
+                rung.Order.ToString(),
+                rung.Label))
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<EntrustmentRung>> GetEntrustmentScaleRungsAsync(
+        string? scaleKey,
+        CancellationToken cancellationToken = default)
+    {
         if (string.IsNullOrWhiteSpace(scaleKey))
         {
             return [];
@@ -453,15 +475,6 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
         var rungs = await EntrustmentRungLabels.LoadForScaleKeysAsync(
             _dbContext, [scaleKey], cancellationToken);
 
-        // Value is the Order because that is what gets stored in DataJson and compared by
-        // CreditApplier; Label is the rung as the College prints it. T100: the two are different
-        // numbers on the CPSA ladder (Order 5 is rung "4"), so concatenating them told an assessor
-        // two things and let them believe either.
-        return rungs
-            .RungsOf(rungs.ResolveScaleKey(scaleKey))
-            .Select(rung => new ActivityCatalogueOption(
-                rung.Order.ToString(),
-                rung.Label))
-            .ToList();
+        return rungs.RungDetailsOf(rungs.ResolveScaleKey(scaleKey));
     }
 }

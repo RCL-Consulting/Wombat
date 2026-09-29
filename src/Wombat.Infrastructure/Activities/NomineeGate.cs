@@ -99,10 +99,13 @@ internal static class NomineeGate
                 continue;
             }
 
+            // T342 (C4, E2, G4): one neutral sentence for every refused nominee, "Assessor: Mohammed Patel cannot be named
+            // as an assessor. Choose someone else." Until G4 a named person "can no longer" be named, which told a caller
+            // that someone once could (a lockout) and was wrong for someone who never could. The person is named only
+            // within the activity's institution, as before; anyone else is "that person".
             var name = await NameWithinInstitutionAsync(dbContext, userId, institutionId, cancellationToken);
             throw new ActivityFieldsRefusedException(
-                $"{label}: {name ?? "that person"} cannot be named here. Only an active {DescribeRoles(roles)} at the " +
-                "trainee's institution can be; choose someone else.",
+                $"{label}: {name ?? "that person"} cannot be named as {DescribeRoles(roles)}. Choose someone else.",
                 [field]);
         }
     }
@@ -133,9 +136,13 @@ internal static class NomineeGate
         return string.IsNullOrWhiteSpace(name) ? null : name;
     }
 
-    // The shared labels (T335): every role a field may require (WombatRoles.Nominable) reads as this gate's own map read it.
+    // The shared labels (T335): every role a field may require (WombatRoles.Nominable) reads as this gate's own map read it,
+    // in running text since T342: "an assessor", "an assessor and a committee member".
     private static string DescribeRoles(IReadOnlyList<string> roles)
-        => string.Join(" and ", roles.Select(WombatRoleLabels.For));
+        => string.Join(" and ", roles.Select(role => WithArticle(WombatRoleLabels.For(role).ToLowerInvariant())));
+
+    private static string WithArticle(string noun)
+        => noun.Length > 0 && "aeiou".Contains(noun[0]) ? $"an {noun}" : $"a {noun}";
 
     private static IEnumerable<string> OrderBySchema(FormSchema schema, IReadOnlySet<string> fields)
     {

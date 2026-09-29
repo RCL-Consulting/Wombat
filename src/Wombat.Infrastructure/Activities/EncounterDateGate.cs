@@ -1,6 +1,7 @@
 using System.Globalization;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 
@@ -63,6 +64,10 @@ internal static class EncounterDateGate
     /// credit (<see cref="EncounterDatePolicy.CanCredit" />). Null on the system-written path (an MSF release), which gets
     /// the future check only whatever its type: a record nobody typed has nobody who could correct it.
     /// </param>
+    /// <param name="writerIsSubject">
+    /// Whether the person whose write is judged is the activity's subject, who then reads "before your programme
+    /// started"; anyone else reads "before the trainee's programme started" (T342, C12; <see cref="ProgrammeStartWording" />).
+    /// </param>
     public static async Task<IReadOnlyList<ActivityValidationErrorDto>> ValidateAsync(
         IApplicationDbContext dbContext,
         Activity activity,
@@ -70,6 +75,7 @@ internal static class EncounterDateGate
         string dataJson,
         DateOnly today,
         string? creditRulesJson,
+        bool writerIsSubject,
         CancellationToken cancellationToken)
     {
         var (encounteredOn, source) = ObservationDateResolver.Resolve(activity, schema, dataJson);
@@ -103,7 +109,7 @@ internal static class EncounterDateGate
             [
                 new ActivityValidationErrorDto(
                     field,
-                    $"The date cannot be before the trainee's programme started ({Format(profile.ProgrammeStartDate)}).",
+                    ProgrammeStartWording.Refusal(writerIsSubject, profile.ProgrammeStartDate),
                     "before_programme")
             ];
         }

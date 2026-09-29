@@ -259,7 +259,7 @@ public sealed class NomineeDirectoryPostgresTests : IAsyncLifetime
                 if (nominee != SubjectId)
                 {
                     // The subject is refused earlier, by the rule that an actor field may never name the subject.
-                    message.Should().Contain("cannot be named here", $"'{nominee}' must be refused by the nominee gate");
+                    message.Should().Contain("be named as ", $"'{nominee}' must be refused by the nominee gate");
                 }
             }
 
@@ -287,19 +287,19 @@ public sealed class NomineeDirectoryPostgresTests : IAsyncLifetime
             var activityTypeId = await SeedActivityTypeAsync(schema);
 
             (await ShouldBeRefusedAsync(schema, service => service.CreateDraftAsync(CreateInput(activityTypeId, CoordinatorOnly))))
-                .Should().StartWith($"Assessor: First {CoordinatorOnly} cannot be named here.");
+                .Should().StartWith($"Assessor: First {CoordinatorOnly} cannot be named as an assessor.");
             (await ShouldBeRefusedAsync(schema, service => service.CreateDraftAsync(CreateInput(activityTypeId, DeactivatedAsInfinity))))
-                .Should().StartWith($"Assessor: First {DeactivatedAsInfinity} cannot be named here.");
+                .Should().StartWith($"Assessor: First {DeactivatedAsInfinity} cannot be named as an assessor.");
 
             var crossInstitution = await ShouldBeRefusedAsync(schema, service => service.CreateDraftAsync(CreateInput(activityTypeId, OtherInstitution)));
-            crossInstitution.Should().StartWith("Assessor: that person cannot be named here.");
+            crossInstitution.Should().StartWith("Assessor: that person cannot be named as an assessor.");
             crossInstitution.Should().NotContain(OtherInstitution);
 
             // "nominee-case" is a real, ineligible user; "NOMINEE-CASE" is nobody, and must not borrow either name.
             (await ShouldBeRefusedAsync(schema, service => service.CreateDraftAsync(CreateInput(activityTypeId, "NOMINEE-CASE"))))
-                .Should().StartWith("Assessor: that person cannot be named here.");
+                .Should().StartWith("Assessor: that person cannot be named as an assessor.");
             (await ShouldBeRefusedAsync(schema, service => service.CreateDraftAsync(CreateInput(activityTypeId, CaseSensitiveDecoy))))
-                .Should().StartWith($"Assessor: First {CaseSensitiveDecoy} cannot be named here.");
+                .Should().StartWith($"Assessor: First {CaseSensitiveDecoy} cannot be named as an assessor.");
         }
         finally
         {

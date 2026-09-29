@@ -264,8 +264,8 @@ public sealed class ActivityListProjectionTests
     // ---- fixtures ---------------------------------------------------------------------------------------------------
 
     private static async Task<IReadOnlyList<ActivitySummaryDto>> SubjectListAsync(ApplicationDbContext db)
-        => await new ListActivitiesBySubjectQueryHandler(db)
-            .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None);
+        => (await new ListActivitiesBySubjectQueryHandler(db, FakeUserDirectory.Empty)
+            .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None)).Items;
 
     private static ActivitySummaryDto Row(IReadOnlyList<ActivitySummaryDto> rows, int id) => rows.Single(row => row.Id == id);
 

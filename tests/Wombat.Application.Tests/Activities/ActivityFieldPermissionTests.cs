@@ -233,7 +233,7 @@ public sealed class ActivityFieldPermissionTests
         SeedRequestedActivity(dbContext, storedOverallLevel: 2);
 
         IRequestHandler<GetActivityByIdQuery, ActivityDetailDto?> getHandler =
-            new GetActivityByIdQueryHandler(activityService, FakeUserDirectory.Empty);
+            new GetActivityByIdQueryHandler(activityService, FakeUserDirectory.Empty, dbContext);
 
         var assessorView = await getHandler.Handle(
             new GetActivityByIdQuery(700, CreatePrincipal("assessor-1")),
@@ -258,7 +258,7 @@ public sealed class ActivityFieldPermissionTests
         SeedRequestedActivity(dbContext, storedOverallLevel: 2);
 
         IRequestHandler<GetActivityByIdQuery, ActivityDetailDto?> getHandler =
-            new GetActivityByIdQueryHandler(activityService, FakeUserDirectory.Empty);
+            new GetActivityByIdQueryHandler(activityService, FakeUserDirectory.Empty, dbContext);
 
         var strangerView = await getHandler.Handle(
             new GetActivityByIdQuery(700, CreatePrincipal("stranger-1")),

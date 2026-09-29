@@ -116,18 +116,21 @@ public sealed class ActivityFormLabelTests : TestContext
         // breaks no reference, so each type's shape is held here.
         var cut = RenderForm(OneFieldSchema(OneField(type)));
 
-        var control = cut.FindAll("#f").SingleOrDefault();
+        // T342 (flow 03, C8): the id is the key with "-in" after it, which a refusal summary's link lands on. A group
+        // carries it on its fieldset, having no one control.
+        var control = cut.FindAll("#f-in").SingleOrDefault();
         if (GroupTypes.Contains(type))
         {
-            control.Should().BeNull("a {0} field is a group, not one control keyed by the field", type);
+            control.Should().NotBeNull("a {0} field's group carries the field's input id", type);
+            control!.LocalName.Should().Be("fieldset", "a {0} field is a group, not one control keyed by the field", type);
             cut.FindAll("fieldset.form-group > legend").Should().ContainSingle()
                 .Which.TextContent.Should().Contain("The field");
         }
         else
         {
-            control.Should().NotBeNull("a {0} field is one control whose id is the field's key", type);
+            control.Should().NotBeNull("a {0} field is one control whose id is the field's key and -in", type);
             control!.LocalName.Should().BeOneOf("input", "select", "textarea");
-            cut.FindAll("label[for=f]").Should().ContainSingle()
+            cut.FindAll("label[for=f-in]").Should().ContainSingle()
                 .Which.TextContent.Should().Contain("The field");
         }
 
@@ -160,8 +163,8 @@ public sealed class ActivityFormLabelTests : TestContext
             }
             """);
 
-        // The section's own fieldset holds the field's.
-        var group = cut.Find("fieldset fieldset");
+        // The section (a <section> since T342) holds the field's fieldset.
+        var group = cut.Find("section fieldset");
 
         // The legend names the group and says it is required the way FormField says it of a single field.
         var legend = group.QuerySelector("legend")!;
@@ -200,7 +203,7 @@ public sealed class ActivityFormLabelTests : TestContext
             ] } ] }
             """);
 
-        var group = cut.Find("fieldset fieldset");
+        var group = cut.Find("section fieldset");
         group.HasAttribute("aria-describedby").Should().BeFalse();
         group.QuerySelector("legend .visually-hidden").Should().BeNull("an optional field is not marked required");
     }
@@ -215,7 +218,7 @@ public sealed class ActivityFormLabelTests : TestContext
             ] } ] }
             """);
 
-        var group = cut.Find("fieldset fieldset");
+        var group = cut.Find("section fieldset");
         group.QuerySelector("legend")!.TextContent.Trim().Should().Be("PDF upload");
         group.TextContent.Should().Contain("File uploads are represented in the schema");
         group.ClassList.Should().Contain("form-group").And.NotContain("full-width");
@@ -243,19 +246,19 @@ public sealed class ActivityFormLabelTests : TestContext
             .Add(component => component.DataJson, "{}"));
 
     /// <summary>
-    /// What names a field on the rendered form: the label whose <c>for</c> is its key, or else the legend of the
-    /// fieldset holding its controls. Empty when neither exists.
+    /// What names a field on the rendered form: the label whose <c>for</c> is its input id (the key and <c>-in</c>,
+    /// T342), or else the legend of the fieldset holding its controls. Empty when neither exists.
     /// </summary>
     private static string NameOf(IRenderedFragment cut, SchemaField field)
     {
         var label = cut.FindAll("label[for]")
-            .FirstOrDefault(candidate => string.Equals(candidate.GetAttribute("for"), field.Key, StringComparison.Ordinal));
+            .FirstOrDefault(candidate => string.Equals(candidate.GetAttribute("for"), ActivityFieldIds.Input(field.Key), StringComparison.Ordinal));
         if (label is not null)
         {
             return label.TextContent;
         }
 
-        var legend = cut.FindAll("fieldset fieldset > legend")
+        var legend = cut.FindAll("section fieldset > legend")
             .FirstOrDefault(candidate => candidate.TextContent.Contains(field.Label, StringComparison.Ordinal));
         return legend?.TextContent ?? string.Empty;
     }

@@ -126,7 +126,7 @@ beside two or more. A session that ends lands on the sign-in page by a full load
 | Reconnect: failed at narrow width | `states/shell--reconnect-failed-narrow.png` | Dr Zulu | As Reconnect: failed, at 390 px: the dialog 358 px wide, 16 px from each side, and Try again the full width of the dialog's content (318 px inside its 20 px padding), 44 px tall. No change. |
 | Reconnect: paused | `states/shell--reconnect-paused.png` | Dr Zulu | On a page whose connection has never dropped (a fresh sign-in; after a reconnect, .NET 10's `pauseCircuit()` resolves true and does nothing, because only a resume clears its paused flag), run `Blazor.pauseCircuit()` in the browser's console: "Page paused" and "This page is paused. Resume to carry on." with Resume. Resume restores a live circuit. No change. |
 | Reconnect: resume failed | `states/shell--reconnect-resume-failed.png` | Dr Zulu | Pause as above, stop the app, press Resume: "Could not resume", the sentence Connection lost gives, and Try again, which takes the focus from Resume. Restart the app and press Try again: the page resumes, or shows "Reloading the page…" and reloads when the server has nothing to resume it from (needs confirmation: which). No change. |
-| Unhandled error banner | `states/shell--error-banner.png` | Dr Dlamini (Trainee) | New activity reads its type list with no error handling (`NewActivity.OnInitializedAsync`). Hold a read, open Log an activity from the menu, and wait about 60 s (two 30 s command timeouts): its first read (the programme start) times out and is passed over, then the type list's times out and the bar "This page no longer responds; copy anything you need, then reload." with Reload and Dismiss, small (`btn-sm`) buttons with their refresh-cw and x icons, appears beside the sidebar as the circuit ends. `ROLLBACK;`, then Reload. No change. |
+| Unhandled error banner | `states/shell--error-banner.png` | Dr Dlamini (Trainee) | Needs confirmation: until T342 it was reached through New activity, whose type list had no error handling; since T342 that page words its own failure (`new-activity--load-error` under Activities), so the banner needs another page whose read throws unhandled. On such a page, hold a read past its command timeout: the bar "This page no longer responds; copy anything you need, then reload." with Reload and Dismiss, small (`btn-sm`) buttons with their refresh-cw and x icons, appears beside the sidebar as the circuit ends. `ROLLBACK;`, then Reload. No change. |
 | Unhandled error banner at narrow width | `states/shell--error-banner-narrow.png` | Dr Dlamini (Trainee) | As above, at 390 px: the sentence first, then Reload and Dismiss side by side, each half the bar, 44 px high and without their icons. `ROLLBACK;`, then Reload. No change. |
 
 ## Home and the role dashboards
@@ -158,7 +158,7 @@ dashboard Home shows, and the page it lands on says so once ("You are now acting
 | Trainee awaiting admission | `states/home--awaiting-admission.png` | Dr Mahlangu (PendingTrainee) | At Step 2.18: the one Awaiting admission card, and the pending trainee's nav. |
 | Trainee, admitted, nothing filed | `states/home--trainee-first.png` | Dr Molefe | At Step 2.39: "0 / 10", "0 / 5", the five largest shortfalls. |
 | Trainee with activity | `states/home--trainee.png` | Dr Dlamini | At Step 3.50. |
-| Trainee with work returned | `states/home--trainee-returned.png` | Dr Ndlovu | At Step 3.16: the Activity inbox card lists the reflection as Draft. |
+| Trainee with work returned | `states/home--trainee-returned.png` | Dr Ndlovu | At Step 3.16: the Needs you card, badged 1, lists the reflection, "Returned to you by Sarah Botha on `D`. Change it and submit again." |
 | Trainee whose programme ended | `states/home--trainee-ended.png` | Dr du Plessis | At Step 5.28: "Your programme ended on …, so no target applies to you any more." |
 | Former trainee, no role | `states/home--no-role.png` | Dr Molefe (former trainee) | At Step 5.21: no subtitle, and one card, "Your training record", pointing to My progress (T335; the step's expectation, the ended line, is T311's). |
 | Loading | `states/home--loading.png` | Dr Dlamini | Hold a read, then choose Home in the menu: the header, each card's title and a skeleton in each card, and nothing to press in the cards. No change. |
@@ -265,54 +265,64 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 
 | Page | State | Screenshot | Account | How to reach it |
 |---|---|---|---|---|
-| `/activities/new` | No type chosen | `states/new-activity--blank.png` | Dr Dlamini | At Step 3.1, before choosing the type. |
-| `/activities/new` | Before admission | `states/new-activity--pending-trainee.png` | Dr Mahlangu (PendingTrainee) | At Step 2.19. |
-| `/activities/new` | A rated form | `states/new-activity--mini-cex.png` | Dr Molefe | At Step 2.43: Request open, Entrustment and Feedback locked. |
-| `/activities/new` | An unrated form | `states/new-activity--reflective.png` | Dr Ndlovu | At Step 3.14, before submitting: no Entrustment section, Discussion locked. |
-| `/activities/new` | A self-logged form | `states/new-activity--teaching-log.png` | Dr du Plessis | At Step 3.18, before submitting. |
-| `/activities/new` | Refused: a future date | `states/new-activity--refused-future.png` | Dr Ndlovu | At Step 3.8: "Nothing was saved. …", the date field marked. |
-| `/activities/new` | Hint: before the programme | `states/new-activity--before-programme.png` | Dr Ndlovu | At Step 3.9, as `J−1d` is typed. |
+| `/activities/new` | The instrument picker (no type chosen) | `states/new-activity--blank.png` | Dr Dlamini | At Step 3.1, before choosing the type: "Log an activity", "Choose what you are filing. Each opens its own form.", and eleven links in three groups, Rated by an assessor (7 types), Discussed or reviewed, not rated (3) and Logged by you (1). |
+| `/activities/new` | Before admission | `states/new-activity--pending-trainee.png` | Dr Mahlangu (PendingTrainee) | At Step 2.19: the same picker. |
+| `/activities/new` | A rated form | `states/new-activity--mini-cex.png` | Dr Molefe | At Step 2.43: Request open; Entrustment and Feedback locked, "The assessor you name fills this in"; the check line, then Submit and Save draft. |
+| `/activities/new` | A rated form, an assessor named | `states/new-activity--named.png` | Dr Dlamini | At Step 3.1, once Dr Naidoo is named: the locked sections read "David Naidoo fills this in", the check line names his Activity inbox, and the button reads Submit to David Naidoo. No change. |
+| `/activities/new` | An unrated form | `states/new-activity--reflective.png` | Dr Ndlovu | At Step 3.14, before submitting: no Entrustment section, Discussion locked, "Sarah Botha fills this in". |
+| `/activities/new` | A self-logged form | `states/new-activity--teaching-log.png` | Dr du Plessis | At Step 3.18, before logging: one section, the button Log, and "When you log it: it is Logged at once, and credits nothing. Nobody else acts on it." |
+| `/activities/new` | Refused: a future date | `states/new-activity--refused-future.png` | Dr Ndlovu | At Step 3.8: the focused summary "Nothing was saved. Everything you typed is kept below." with its linked line, the date field marked with its own message. |
+| `/activities/new` | Hint: before the programme | `states/new-activity--before-programme.png` | Dr Ndlovu | At Step 3.9, once `J−1d` is entered: "This date is before your programme started (`J`), and will not be accepted.", the field marked. |
 | `/activities/new` | Refused: before the programme | `states/new-activity--refused-before-programme.png` | Dr Ndlovu | At Step 3.9, after Submit. |
-| `/activities/new` | Late filing warning | `states/new-activity--late-warning.png` | Dr Ndlovu | At Step 3.12, as `D−20` is typed. |
+| `/activities/new` | Late filing warning | `states/new-activity--late-warning.png` | Dr Ndlovu | At Step 3.10, once `D−20` is entered: the warning under the date, and the check line's "Filed today, 20 days after the encounter: it will be recorded as late." |
+| `/activities/new` | File it again | `states/new-activity--file-again.png` | Dr Ndlovu | At Step 3.12, after File it again, to someone else: the notice "Copied from your request to Fatima Khumalo, which was declined. …", everything copied but the assessor, the late warning at once, and the button Submit. |
+| `/activities/new` | Submitting | `states/new-activity--submitting.png` | Dr Ndlovu | At Step 3.10: hold a read, press Submit to Fatima Khumalo, and capture within 20 s: the button reads "Submitting…" and Save draft is disabled. `ROLLBACK;`: the submit then completes as the step expects. |
 | `/activities/new` | Picker without a paused EPA | `states/new-activity--paused-epa.png` | Dr Mahlangu | At Step 6.20, the EPA picker open. |
-| `/activities/new` | Loading (no skeleton) | `states/new-activity--loading.png` | Dr Dlamini | Hold a read, open Log an activity from the menu, capture within 20 s: the header and an empty type select. `ROLLBACK;`. No change. |
+| `/activities/new` | Loading | `states/new-activity--loading.png` | Dr Dlamini | Hold a read, open Log an activity from the menu, capture within 20 s: the header and three skeleton cards ("Loading what you can file." to a screen reader). `ROLLBACK;`. No change. |
+| `/activities/new` | Load error | `states/new-activity--load-error.png` | Dr Dlamini | The same, held about 65 s: the programme start's read times out and is passed over, then the type list's, and the page reads "Could not load what you can file. Nothing has changed. Try again, or come back in a few minutes." with Try again. `ROLLBACK;`, then Try again shows the picker. No change. |
 | `/activities/new` | Narrow | `states/new-activity--narrow.png` | Dr Dlamini | At Step A.6.6, at 390 px, with a Mini-CEX chosen. No change. |
-| `/activities/{ActivityId:int}` | Draft saved | `states/activity-view--draft-saved.png` | Dr Dlamini | At Step 3.1: "Draft saved. It has not been submitted." |
-| `/activities/{ActivityId:int}` | Refused submit | `states/activity-view--refused-submit.png` | Dr Dlamini | At Step 3.2: "Presenting problem: A value is required.", the field marked. |
-| `/activities/{ActivityId:int}` | Saved as a draft, not submitted | `states/activity-view--not-submitted.png` | Dr Dlamini | At Step A.7.1, after the empty Submit. |
-| `/activities/{ActivityId:int}` | Requested, the trainee's view | `states/activity-view--requested.png` | Dr Dlamini | At Step 3.3: read-only, Cancel only. |
-| `/activities/{ActivityId:int}` | Submitted notice, late | `states/activity-view--submitted-late.png` | Dr Ndlovu | At Step 3.10: "Submitted. It is now Requested.", the history's "Filed 20 days after the encounter". |
-| `/activities/{ActivityId:int}` | Unavailable | `states/activity-view--unavailable.png` | Dr Patel | At Step 3.4. |
-| `/activities/{ActivityId:int}` | Assessor to rate | `states/activity-view--to-rate.png` | Dr Naidoo | At Step 3.5, before rating: Entrustment and Feedback open, Complete and Decline. |
-| `/activities/{ActivityId:int}` | Completed | `states/activity-view--completed.png` | Dr Dlamini | At Step 3.6. |
-| `/activities/{ActivityId:int}` | Decline note open | `states/activity-view--decline-note.png` | Dr Khumalo | At Step 3.11, Decline pressed. |
-| `/activities/{ActivityId:int}` | Decline without a note | `states/activity-view--decline-refused.png` | Dr Khumalo | At Step 3.11: "Decline requires a note." |
-| `/activities/{ActivityId:int}` | Declined | `states/activity-view--declined.png` | Dr Ndlovu | At Step 3.12, the declined request. |
-| `/activities/{ActivityId:int}` | Awaiting discussion | `states/activity-view--awaiting-discussion.png` | Dr Botha | At Step 3.15, before returning: Record Discussion and Return. |
-| `/activities/{ActivityId:int}` | Returned to the trainee | `states/activity-view--returned.png` | Dr Ndlovu | At Step 3.16, before submitting again. |
-| `/activities/{ActivityId:int}` | Discussed | `states/activity-view--discussed.png` | Dr Ndlovu | After Step 3.17. |
-| `/activities/{ActivityId:int}` | Logged | `states/activity-view--logged.png` | Dr du Plessis | At Step 3.18. |
-| `/activities/{ActivityId:int}` | Cancelled | `states/activity-view--cancelled.png` | Dr du Plessis | At Step 3.20. |
-| `/activities/{ActivityId:int}` | Awaiting review | `states/activity-view--awaiting-review.png` | Dr du Plessis | At Step 3.22. |
-| `/activities/{ActivityId:int}` | Credited nothing, EPA paused | `states/activity-view--credited-nothing.png` | Dr Patel | At Step 6.18, after Complete: the warning, and "(no longer in use)" on the EPA. |
-| `/activities/{ActivityId:int}` | Credited nothing, after the last day | `states/activity-view--after-programme-end.png` | Dr du Plessis | After Step 5.27, his `D−1` Mini-CEX: the same warning, credit None. |
-| `/activities/{ActivityId:int}` | Loading | `states/activity-view--loading.png` | Dr Dlamini | Hold a read, open an activity from My activities. No change. |
-| `/activities/{ActivityId:int}` | Load error | `states/activity-view--load-error.png` | Dr Dlamini | The same, held 35 s. No change. |
-| `/activities/{ActivityId:int}` | Narrow | `states/activity-view--narrow.png` | Dr Patel | At Step A.7.2. |
-| `/activities/mine` | Nothing filed | `states/my-activities--empty.png` | Dr Mahlangu | At Step 2.19: "No activities yet". |
-| `/activities/mine` | A draft | `states/my-activities--draft.png` | Dr Dlamini | At Step 3.2. |
-| `/activities/mine` | Logged and cancelled | `states/my-activities--mixed.png` | Dr du Plessis | At Step 3.20. |
+| `/activities/{ActivityId:int}` | Draft saved | `states/activity-view--draft-saved.png` | Dr Dlamini | At Step 3.1: the focused result "Draft saved. It has not been submitted. It is in nobody's inbox until you submit it." and the status card "With you. Not submitted yet." |
+| `/activities/{ActivityId:int}` | Refused submit | `states/activity-view--refused-submit.png` | Dr Dlamini | At Step 3.2: the focused summary "Not submitted. It is still a draft. Fix the field below and submit again." with its linked line "Presenting problem: A value is required.", the field marked. |
+| `/activities/{ActivityId:int}` | Saved as a draft, not submitted | `states/activity-view--not-submitted.png` | Dr Dlamini | At Step A.7.1, after the empty Submit: "Saved as a draft, but not submitted. Fix the 6 fields below and submit again." |
+| `/activities/{ActivityId:int}` | Submitting | `states/activity-view--submitting.png` | Dr Dlamini | At Step 3.3: hold a read, press Submit to David Naidoo, and capture within 20 s: the button reads "Submitting…", every other action disabled. `ROLLBACK;`: the submit then completes as the step expects. |
+| `/activities/{ActivityId:int}` | Requested, the trainee's view | `states/activity-view--requested.png` | Dr Dlamini | At Step 3.3: "Submitted. It is now Requested. It is in David Naidoo's Activity inbox.", the status card "With David Naidoo since …" with its one action, Cancel request…. |
+| `/activities/{ActivityId:int}` | Cancel request dialog | `states/activity-view--cancel-request-dialog.png` | Dr Dlamini | At Step 3.3, press Cancel request… on the status card: "Cancel this request?", "It leaves David Naidoo's Activity inbox. A cancelled request cannot be reopened, and it credits nothing.", Keep the request and Cancel request. Press Keep the request. No change. |
+| `/activities/{ActivityId:int}` | Submitted notice, late | `states/activity-view--submitted-late.png` | Dr Ndlovu | At Step 3.10: "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox.", the status card's "Filed 20 days after the encounter: recorded as late.", and the history's "Filed 20 days after the encounter". |
+| `/activities/{ActivityId:int}` | Unavailable | `states/activity-view--unavailable.png` | Dr Patel | At Step 3.4: "Activity unavailable", "This activity does not exist, or you cannot open it.", Go to My activities. |
+| `/activities/{ActivityId:int}` | Assessor to rate | `states/activity-view--to-rate.png` | Dr Naidoo | At Step 3.5, before rating: "Your move. Anele Dlamini asked you on …", Entrustment and Feedback open, Complete, Discard changes and Decline. |
+| `/activities/{ActivityId:int}` | Completed | `states/activity-view--completed.png` | Dr Dlamini | At Step 3.6: "Done. David Naidoo completed it on …", "Rated 4. Credited 1 item to PAED-001.", Open My progress. |
+| `/activities/{ActivityId:int}` | Decline note open | `states/activity-view--decline-note.png` | Dr Khumalo | At Step 3.11, Decline pressed: the note panel "Decline this request", the focus in "Reason for Sipho Ndlovu". |
+| `/activities/{ActivityId:int}` | Decline without a note | `states/activity-view--decline-refused.png` | Dr Khumalo | At Step 3.11: the panel stays open, "Not declined." and "Reason for Sipho Ndlovu: Decline requires a note." |
+| `/activities/{ActivityId:int}` | Declined | `states/activity-view--declined.png` | Dr Ndlovu | At Step 3.12, the declined request: "Closed. Fatima Khumalo declined it on …", her reason quoted, and File it again, to someone else. |
+| `/activities/{ActivityId:int}` | Awaiting discussion | `states/activity-view--awaiting-discussion.png` | Dr Botha | At Step 3.15, before returning: "Your move. …", Record Discussion and Return. |
+| `/activities/{ActivityId:int}` | Return note open | `states/activity-view--return-note.png` | Dr Botha | At Step 3.15, Return pressed: the note panel "Return: add a note", "Note to Sipho Ndlovu", Return with this note and Do not return it. |
+| `/activities/{ActivityId:int}` | Returned to the trainee | `states/activity-view--returned.png` | Dr Ndlovu | At Step 3.16, before submitting again: "With you. Sarah Botha returned it on …", her note quoted, his fields open. |
+| `/activities/{ActivityId:int}` | Discussed | `states/activity-view--discussed.png` | Dr Ndlovu | After Step 3.17: "Done. Sarah Botha recorded the discussion on …", "A reflective exercise credits nothing. Nothing more happens to it." |
+| `/activities/{ActivityId:int}` | Logged | `states/activity-view--logged.png` | Dr du Plessis | At Step 3.18: "Logged.", "Done. Logged on …". |
+| `/activities/{ActivityId:int}` | Cancel draft dialog | `states/activity-view--cancel-draft-dialog.png` | Dr du Plessis | At Step 3.20, Cancel this draft… pressed: "Cancel this draft?", "A cancelled draft cannot be reopened, and it credits nothing.", Keep the draft and Cancel draft. |
+| `/activities/{ActivityId:int}` | Cancelled | `states/activity-view--cancelled.png` | Dr du Plessis | At Step 3.20: "Cancelled.", "Closed. You cancelled it on …", "It was never submitted, and it credits nothing." |
+| `/activities/{ActivityId:int}` | Awaiting review | `states/activity-view--awaiting-review.png` | Dr du Plessis | At Step 3.22: "With Mohammed Patel since …", Review locked, About's Credit "None: a portfolio and logbook review credits nothing". |
+| `/activities/{ActivityId:int}` | Completed, EPA paused | `states/activity-view--credited-nothing.png` | Dr Patel | At Step 6.18, after Complete: "Its credit to PAED-012 waits while the EPA is paused.", and About's Credit None with "This activity's EPA is paused: its credit waits." |
+| `/activities/{ActivityId:int}` | Credited nothing, after the last day | `states/activity-view--after-programme-end.png` | Dr du Plessis | After Step 5.27, his `D−1` Mini-CEX: "It counted towards no curriculum requirement.", and About's Credit None with the warning naming its causes. |
+| `/activities/{ActivityId:int}` | Loading | `states/activity-view--loading.png` | Dr Dlamini | Hold a read, open an activity from My activities: "Loading the activity", a skeleton status card and details. No change. |
+| `/activities/{ActivityId:int}` | Load error | `states/activity-view--load-error.png` | Dr Dlamini | The same, held 35 s: "Could not load this activity. Nothing has changed. Try again, or come back in a few minutes." with Try again. No change. |
+| `/activities/{ActivityId:int}` | Narrow | `states/activity-view--narrow.png` | Dr Patel | At Step A.7.2: the history folded into "All N moves". |
+| `/activities/mine` | Nothing filed | `states/my-activities--empty.png` | Dr Mahlangu | At Step 2.19: "No activities yet", "Log an activity to ask an assessor to rate an encounter, or to log a teaching session.", with Log an activity. |
+| `/activities/mine` | A draft | `states/my-activities--draft.png` | Dr Dlamini | At Step 3.2: Needs you, badged 1, above All activities (1). |
+| `/activities/mine` | Work returned | `states/my-activities--returned.png` | Dr Ndlovu | At Step 3.16, before submitting, open My activities: Needs you lists the reflection, "Returned to you by Sarah Botha on `D`. Change it and submit again." No change. |
+| `/activities/mine` | Logged and cancelled | `states/my-activities--mixed.png` | Dr du Plessis | At Step 3.20: no Needs you; Who has it now "Closed" and "Done". |
 | `/activities/mine` | With MSF records | `states/my-activities--msf.png` | Dr Molefe | At Step 3.48. |
 | `/activities/mine` | Credited None after leaving | `states/my-activities--credited-none.png` | Dr du Plessis | At Step 5.28. |
 | `/activities/mine` | A paused EPA | `states/my-activities--paused-epa.png` | Dr Dlamini | At Step 6.19. |
 | `/activities/mine` | Loading | `states/my-activities--loading.png` | Dr Dlamini | Hold a read, then My activities in the menu. No change. |
-| `/activities/mine` | Load error | `states/my-activities--load-error.png` | Dr Dlamini | The same, held 35 s. No change. |
-| `/activities/mine` | Narrow | `states/my-activities--narrow.png` | Dr Dlamini | At Step A.7.3. |
-| `/activities/inbox` | Inbox clear | `states/activity-inbox--empty.png` | Dr Patel | At Step 3.4. |
+| `/activities/mine` | Load error | `states/my-activities--load-error.png` | Dr Dlamini | The same, held 35 s: "Could not load your activities. Nothing has changed. Try again, or come back in a few minutes." with Try again. No change. |
+| `/activities/mine` | Narrow | `states/my-activities--narrow.png` | Dr Dlamini | At Step A.7.3: the rows stacked. |
+| `/activities/inbox` | Inbox clear | `states/activity-inbox--empty.png` | Dr Patel | At Step 3.4: "Inbox clear", "Nothing is waiting for you to rate, discuss or review." |
 | `/activities/inbox` | An assessor's requests | `states/activity-inbox--assessor.png` | Dr Patel | At Step 3.24: two rows. |
-| `/activities/inbox` | A trainee's returned work | `states/activity-inbox--trainee.png` | Dr Ndlovu | At Step 3.16. |
+| `/activities/inbox` | A registrar's inbox | `states/activity-inbox--trainee.png` | Dr Ndlovu | At Step 3.16, its last move: "Nothing here is yours to act on.", pointing to Needs you, with Open My activities. |
 | `/activities/inbox` | A paused EPA | `states/activity-inbox--paused-epa.png` | Dr Patel | At Step 6.18, before opening it. |
 | `/activities/inbox` | Loading | `states/activity-inbox--loading.png` | Dr Patel | Hold a read, then Activity inbox in the menu. No change. |
+| `/activities/inbox` | Load error | `states/activity-inbox--load-error.png` | Dr Patel | The same, held 35 s: "Could not load the Activity inbox. Nothing has changed. Try again, or come back in a few minutes." with Try again. No change. |
 | `/activities/inbox` | Narrow | `states/activity-inbox--narrow.png` | Dr Patel | At Step A.7.2. |
 
 ## Portfolio

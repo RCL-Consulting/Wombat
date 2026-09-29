@@ -473,18 +473,27 @@ Step 3.3 — Dr Dlamini completes the request and submits it
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Type the presenting problem "Two-year-old with bronchiolitis and rising work of breathing" and submit.
-Expect: State: Requested. The page is now read-only to her, and Cancel is the only action. The history adds Submit
-  (Draft → Requested). It carries no lateness note, because ten days is on time (D15). No email is sent: Wombat mails
-  nobody when an activity moves, so Dr Naidoo learns of the request from his inbox.
+Expect: The focused result reads "Submitted. It is now Requested. It is in David Naidoo's Activity inbox." The status
+  card, badged Requested, reads "With David Naidoo since …" and "Nothing for you to do. You can cancel the request until
+  David Naidoo acts on it.", and its one action is Cancel request…, quiet. The page is read-only to her: Request reads
+  "Filled in by Anele Dlamini, `D`", and Entrustment and Feedback are locked, "David Naidoo fills this in". The history
+  adds Submit, Draft → Requested. It carries no lateness note, because ten days is on time (D15). No email is sent:
+  Wombat mails nobody when an activity moves, so Dr Naidoo learns of the request from his inbox.
 
 Step 3.11 — Dr Khumalo declines the request, with a reason
 Role: Assessor — Dr Fatima Khumalo
 Route: /activities/inbox → /activities/{ActivityId:int}
-Do: Open Dr Ndlovu's Mini-CEX. Press Decline and apply it with the note left empty. Then apply it with the note "I was
+Do: Open Dr Ndlovu's Mini-CEX. Press Decline and send it with the reason left empty. Then send it with the reason "I was
   not on the ward that day; Dr Botha observed this encounter. Please send it to her."
-Expect: Decline opens a transition note. Applied with the note empty, it is refused with "Decline requires a note."
-  Applied with the note, the state is Declined. The page is read-only, with no action left. The history's Decline row
-  shows her note, credited "—". Her inbox no longer lists the request.
+Expect: The status card reads "Your move. Sipho Ndlovu asked you on …". Decline opens the note panel under the actions,
+  "Decline this request", and moves the focus into "Reason for Sipho Ndlovu", with "Sipho Ndlovu reads it on the
+  activity's page. It is kept with the activity's history." under it. Sent empty with Decline with this note, it is
+  refused: the panel stays open, with the note as typed, and its summary reads "Not declined." and "Reason for Sipho
+  Ndlovu: Decline requires a note."; the activity stays Requested. Keep the request would close the panel and hand the
+  focus back to Decline. Sent with the reason, the result reads "Declined." The status card, badged Declined, reads
+  "Closed. You declined it on …", quotes her reason, and reads "It credits nothing, and nothing more can happen to it."
+  The page is read-only, with no move left. The history's Decline row, Requested → Declined, is credited "—", with her
+  note on a row of its own under it. Her inbox no longer lists the request.
 
 Step 3.32 — The daily nudge reminds the assessors
 Role: Administrator — devadmin@wombat.local

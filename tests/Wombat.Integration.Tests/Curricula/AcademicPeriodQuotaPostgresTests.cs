@@ -862,7 +862,8 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
                     dashboard.CurriculumTargets.YearTargetsMet, dashboard.CurriculumTargets.YearTargetsApplying)
                 .Should().Be((0, 10, 1, 5));
             dashboard.RecentActivities.Should().HaveCount(3);
-            dashboard.Inbox.Should().BeEmpty();
+            // Every activity here is completed: nothing needs her (T342: Home's card is Needs you, SQL of its own).
+            dashboard.NeedsYou.Should().BeEmpty();
 
             var profiles = await db.TraineeProfiles.AsNoTracking().ToListAsync();
             profiles.Select(profile => profile.UserId).Should().BeEquivalentTo(TraineeUserId, LateStarterUserId);

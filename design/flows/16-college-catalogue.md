@@ -750,22 +750,23 @@ Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Open Dr Dlamini's Mini-CEX from the inbox. Rate it at the rung that Dr Dlamini's PAED-012 card named as the minimum
   now (Step 6.15). Write the three feedback fields, and complete it.
 Expect:
-  - The inbox row and the activity's EPA both read "PAED-012 — Communicating with and counselling patients, caregivers
+  - The inbox row and the request's EPA both read "PAED-012 — Communicating with and counselling patients, caregivers
     and healthcare teams (no longer in use)".
-  - The completion is not refused (D48). The activity reads Completed and is read-only.
-  - The activity page warns that it counted towards no curriculum requirement, and names as one cause an EPA that was
-    not in use at the time. In its history, the completion's Credit reads None.
+  - The completion is not refused (D48): "Completed.". The activity is read-only.
+  - The status card reads "Done. You completed it on …" and "Rated <the rung>. Its credit to PAED-012 waits while the
+    EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
+    its history, the completion's Credit reads None.
 
 Step 6.19 — Dr Dlamini during the pause (act-6-catalogue.md)
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/mine → /activities/new
+Route: /portfolio/progress → /activities/mine → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read her progress and her activities. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without
   saving.
 Expect:
   - **Progress.** No PAED-012 card, and the semester targets line counts `m − 1` EPAs. The rating trajectory for
     PAED-012 still charts every rating on it, the one from Step 6.18 included, under the heading "PAED-012 — … (no
     longer in use)" (T255).
-  - **My activities.** The Mini-CEX shows the same marker, and Credited reads None.
+  - **My activities.** The Mini-CEX carries "PAED-012 (no longer in use)" under its name, and its Credit reads None.
   - **The picker.** It offers eight EPAs, without PAED-012.
 
 Step 6.23 — Dr Kruger restores PAED-012 (act-6-catalogue.md)
@@ -782,7 +783,7 @@ Do: Read her progress and her activities.
 Expect:
   - PAED-012's card is back, with `n + 1` this semester, and one more at the minimum level when observed than in Step
     6.15. The semester targets line counts `m` EPAs again.
-  - The trajectory heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credited reads
+  - The trajectory heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credit reads
     1 item.
   - The credit PAED-012 had earned before the pause was kept, not cancelled. Dr Dlamini holds none from Acts 3-4
     (`n` is 0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged

@@ -124,7 +124,9 @@ public sealed class DashboardLinkAuthorizationTests
 
         var traineeLinks = DeclaredLinks(Path.Combine(DashboardsFolder(), "TraineeDashboard.razor")).ToList();
         traineeLinks.Should().Contain(("TraineeDashboard", "/portfolio/progress"));
-        traineeLinks.Should().OnlyContain(link => link.DeclaredIn == "TraineeDashboard");
+        // T342: Home's Needs you card draws My activities' rows (NeedsYouList), whose links ActivityLink declares.
+        traineeLinks.Should().Contain(("ActivityLink", "/activities/@Item.Id"));
+        traineeLinks.Should().OnlyContain(link => link.DeclaredIn == "TraineeDashboard" || link.DeclaredIn == "ActivityLink");
     }
 
     // The judge is not vacuous: each link T261 took off a dashboard answers no page, and none is offered now.
@@ -372,7 +374,7 @@ public sealed class DashboardLinkAuthorizationTests
         private static TraineeDashboardSummaryDto Trainee(bool pending)
             => new(
                 pending ? null : Targets(),
-                [new ActivityInboxItem(54, "Mini-CEX", "draft", "Draft", When)],
+                [TestSupport.ActivityRows.Row(54)],
                 [new RecentActivityItem(55, "Mini-CEX", "submitted", "Submitted", IsFinished: false, When)],
                 [new UpcomingDeadlineItem(56, "Mini-CEX", "Due", new DateOnly(2026, 3, 27))],
                 IsPendingTrainee: pending);

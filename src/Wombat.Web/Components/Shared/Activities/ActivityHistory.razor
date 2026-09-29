@@ -1,0 +1,97 @@
+@using Wombat.Application.Features.Activities.Dtos
+
+@*
+  The activity's history (T342, flow 03; A7, B13, T325; R3-C-Activity). A real .clinic-table in a .table-container,
+  oldest first: Move, From → to, By, When, Credit. The create row reads "— → Draft". A note is its own full-width row
+  (<td colspan>), under the move it came with, so a long reason never squeezes the columns. A late filing says so under
+  its time (T160, D15). Every time is South African, with its zone. Below 641px the table hides and a native <details>
+  ("All 3 moves") holds the same moves as stacked blocks.
+*@
+<section class="detail-card" aria-labelledby="activity-history-title">
+  <h2 id="activity-history-title" class="activity-card-title">History</h2>
+
+  @if (Rows.Count == 0)
+  {
+    <p class="text-muted">No moves have been recorded yet.</p>
+  }
+  else
+  {
+    <div class="table-container history-table-container">
+      <table class="clinic-table history-table" aria-labelledby="activity-history-title">
+        <thead>
+          <tr>
+            <th scope="col">Move</th>
+            <th scope="col">From → to</th>
+            <th scope="col">By</th>
+            <th scope="col">When</th>
+            <th scope="col">Credit</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var row in Rows)
+          {
+            var hasNote = !string.IsNullOrWhiteSpace(row.Note);
+            @* Each move by the name its button had and each state by its label, from the pinned workflow (T220). *@
+            <tr class="@(hasNote ? "has-note" : null)">
+              <td>@row.TransitionLabel</td>
+              <td>@FromTo(row)</td>
+              <td>@(row.ActorName ?? "—")</td>
+              <td>
+                @ActivityMoments.When(row.OccurredOn)
+                @if (FilingLateness.Label(row.DaysAfterEncounter) is { } late)
+                {
+                  <span class="history-late">@late</span>
+                }
+              </td>
+              <td>@CreditOutcome.Label(row.CreditedItemCount)</td>
+            </tr>
+            @if (hasNote)
+            {
+              <tr>
+                <td class="history-note" colspan="5"><span class="text-muted">Note:</span> @row.Note</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <details class="history-details">
+      @* The summary is a flex row, which drops the browser's own disclosure triangle, so it draws its own: a chevron that
+         turns down while the list is open (T342; the build review's A7). *@
+      <summary><Icon Name="chevron-right" Class="history-details-marker" />All @Rows.Count @(Rows.Count == 1 ? "move" : "moves")</summary>
+      <ol class="history-list">
+        @foreach (var row in Rows)
+        {
+          <li class="history-row">
+            <b>@row.TransitionLabel · @FromTo(row)</b>
+            <span>@(row.ActorName ?? "—") · @ActivityMoments.When(row.OccurredOn)</span>
+            @if (FilingLateness.Label(row.DaysAfterEncounter) is { } late)
+            {
+              <span class="history-meta">@late</span>
+            }
+            <span class="history-meta">Credit @CreditOutcome.Label(row.CreditedItemCount)</span>
+            @if (!string.IsNullOrWhiteSpace(row.Note))
+            {
+              <span>Note: @row.Note</span>
+            }
+          </li>
+        }
+      </ol>
+    </details>
+
+    <p class="text-sm text-muted history-zone">Times are South African time.</p>
+  }
+</section>
+
+@code {
+  [Parameter, EditorRequired] public IReadOnlyList<ActivityTransitionDto> Transitions { get; set; } = [];
+
+  private IReadOnlyList<ActivityTransitionDto> Rows => ActivityPageModel.Ordered(Transitions);
+
+  // The create row runs from the initial state to itself; it is shown as coming from nothing (R3: "— → Draft").
+  private static string FromTo(ActivityTransitionDto row)
+    => string.Equals(row.TransitionKey, Wombat.Domain.Activities.Workflow.Workflow.CreateTransitionKey, StringComparison.Ordinal)
+      ? $"— → {row.ToStateLabel}"
+      : $"{row.FromStateLabel} → {row.ToStateLabel}";
+}

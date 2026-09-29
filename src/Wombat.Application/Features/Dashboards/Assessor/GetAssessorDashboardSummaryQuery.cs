@@ -66,7 +66,8 @@ public sealed class GetAssessorDashboardSummaryQueryHandler
         // moved: the trainee makes both the create and the submit, so a request naming the assessor never counted, and a
         // portfolio review waits in "submitted". "Accepted, needing action" read a state no CPSA workflow has.
         var waiting = (await ActivityWaiting.LoadActionableAsync(
-                _dbContext.Set<Activity>(), _dbContext, _workflowEvaluator, request.Principal, cancellationToken: cancellationToken))
+                _dbContext.Set<Activity>(), _dbContext, _workflowEvaluator, request.Principal, cancellationToken: cancellationToken,
+                arms: ActorArms.NotAuthor))
             .Where(row => row.Activity.SubjectUserId != userId)
             .OrderBy(row => row.Activity.UpdatedOn)
             .ThenBy(row => row.Activity.Id)

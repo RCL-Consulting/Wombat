@@ -1,193 +1,204 @@
 @page "/activities/{ActivityId:int}"
 @attribute [Authorize]
 @using System.Security.Claims
+@using Wombat.Application.Features.Activities.Commands.SaveActivityDraft
 @using Wombat.Application.Features.Activities.Commands.TransitionActivity
 @using Wombat.Application.Features.Activities.Queries.GetActivityById
 @using Wombat.Application.Features.Activities.Services
+@using Wombat.Application.Features.Epas
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ActivityNotices Notices
+@inject IServiceScopeFactory ScopeFactory
 @inject ILogger<ActivityView> Logger
+@inject IJSRuntime JS
+
+@*
+  An activity's page: a record page with a workflow (T342, flow 03; R3-C-Activity; DESIGN.md § Page-level patterns).
+  Header (the activity's name, E2, E7; its people), the result region, the status card ("Who has it now", Q3), About
+  and the form's sections in the details grid with the action bar under them, then the history. Loading, a load error
+  and "Activity unavailable" (for a missing activity and one the reader may not open alike, C7, T101) are its other states.
+*@
 
 <PageTitle>@Heading · Wombat</PageTitle>
 
-@if (_activity is not null)
-{
-  @* The state by its label in the pinned workflow (T220), as the notices and refusals on this page name it (T189). *@
-  <PageHeader Title="@Heading" Subtitle="@($"State: {_activity.CurrentStateLabel}")" />
-}
+<div class="activity-page">
+@* One header above every state, its title changing as the page loads, so the h1 FocusOnNavigate focused on arrival is the
+   one the loaded page shows (T342; the build review's A5). *@
+<PageHeader Title="@Heading" Subtitle="@(_loading || _loadError is not null ? null : _model?.Subtitle)" CurrentCrumb="@(_loading ? "Loading…" : null)" />
 
-@if (_notice is not null)
-{
-  @* What became of an activity filed moments ago on /activities/new, handed over with the navigation (T127). It arrives
-     with the page, already filled, and a status region that arrives filled is often not read; an alert is. A warning here
-     is the submit's refusal, so it is an alert (T193). A success keeps the kind's polite status: the header says the new
-     state as well. *@
-  @* It arrives with the page, where an alert is not reliably announced, so a field a refused submit named points at it
-     as well as being marked (T263; DESIGN.md § Alerts). *@
-  <Alert Kind="@_notice.Kind" Role="@(_notice.Kind == "warning" ? "alert" : null)" Id="@NoticeAlertId">@_notice.Message</Alert>
-}
+@* Always present, filled while the activity loads: a live region added with its words in it is often not read (A6). *@
+<p class="visually-hidden" role="status">@(_loading ? "Loading the activity." : null)</p>
 
-@if (!string.IsNullOrWhiteSpace(_actionError))
-{
-  @* The fields a refused move names are marked in the form below, and each names this alert (T263). *@
-  <Alert Kind="danger" Id="@ActionRefusalAlertId">@_actionError</Alert>
-}
-
-@if (CreditedNothing)
-{
-  @* T108. A completed activity that matched no curriculum item used to be indistinguishable from a
-     credited one at every surface in the product. This is the one place a clinician is certain to
-     look. It cannot fire on an activity type that credits nothing by design: the server only
-     records a count at all when the pinned version declares a non-empty `counts_for`. The third cause is T281: an
-     encounter dated after the trainee's programme ended credits nothing on it, and the page does not know the end (an
-     assessor may not read the trainee's profile), so it names every cause rather than guess. *@
-  <Alert Kind="warning" Role="">
-    This activity is complete, but it counted towards no curriculum requirement. The EPA it was
-    recorded against is most likely not part of this trainee's curriculum, or was not in use at the time,
-    or the encounter is dated after the trainee's programme ended.
-    The record is kept. If it should have counted, raise it with the programme administrator.
-  </Alert>
-}
-
-@if (CreditedAcrossScales)
-{
-  @* T109. The encounter counted towards the required volume, but the supervision level could not be
-     compared: the rating is on one entrustment ladder and the curriculum requirement is on another,
-     where the same number means a different amount of supervision. Refusing the comparison is the
-     safe answer, and saying so is the honest one — an unexplained shortfall on the progress page is
-     how a registrar reaches the end of a year believing a requirement was met. *@
-  <Alert Kind="warning" Role="">
-    This activity counted towards the required number of observations, but not towards the
-    supervision level. The rating was recorded on a different entrustment scale from the one this
-    trainee's curriculum requirement uses, so the two levels are not comparable. Please raise it with
-    the programme administrator: the curriculum item's scale may need to be corrected.
-  </Alert>
-}
-
-<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _activity is null)" EmptyTitle="Activity unavailable" EmptyBody="The requested activity could not be loaded.">
-  @if (_activity is not null)
-  {
-    <div class="details-grid">
-      <aside class="detail-card">
-        <h3>Summary</h3>
-        <p><strong>Type:</strong> @_activity.ActivityTypeName</p>
-        @* The stored encounter date, marked when nobody stated one (T161, D28). It is the date every list, the
-           trajectory and the PDF place this activity on, so the page says what they say. *@
-        <p id="activity-encounter-date"><strong>Encounter date:</strong> <EncounterDateLabel ObservedOn="@_activity.ObservedOn" Declared="@_activity.ObservedOnDeclared" /></p>
-        <p id="activity-state"><strong>State:</strong> @_activity.CurrentStateLabel</p>
-        <p><strong>Version:</strong> @_activity.SchemaVersion</p>
-        <ActivityWorkflowActions Actions="_actions" Busy="_busy" OnTransitionRequested="HandleTransitionAsync" />
-      </aside>
-
-      <section class="detail-card">
-        <h3>Activity details</h3>
-
-        @if (_editable.Count == 0 || !_actions.Any(action => action.IsAvailable))
-        {
-          @* Read-only when no field is writable by this actor in this state (a non-bound user, or a
-             finished activity) AND when there is nothing to submit with. A transition is the only
-             save channel there is, so offering inputs with no action available would let someone
-             type a reflection and lose it on navigation. An action shown disabled (T107) is nothing
-             to submit with. Restore the editable branch here if a standalone save command ever lands
-             (T106 item 1). *@
-          <ActivityDetail SchemaJson="@_activity.SchemaJson"
-                          DataJson="@_activity.DataJson"
-                          SubjectUserId="@_activity.SubjectUserId"
-                          CreditRulesJson="@_activity.CreditRulesJson"
-                          WbaToolKey="@_activity.WbaToolKey"
-                          ActivityInstitutionId="@_activity.InstitutionId"
-                          RefusedFieldKeys="_refusedFieldKeys"
-                          RefusalId="@_refusalAlertId" />
-        }
-        else
-        {
-          <Alert Kind="info">
-            You can fill in the fields that are enabled below. Your entries are submitted together
-            with the action you choose — nothing is stored until then.
-          </Alert>
-
-          @* SubjectUserId, not the principal: the actor here is usually the assessor, and the EPAs
-             that can be credited are the subject's (T108). *@
-          @* Keyed on a generation so a refused move remounts it with fresh option lists (T102): the person the
-             server just refused may have fallen off the list since the page loaded. The working copy survives. *@
-          <ActivityForm @key="_formGeneration"
-                        SchemaJson="@_activity.SchemaJson"
-                        DataJson="@_workingDataJson"
-                        SubjectUserId="@_activity.SubjectUserId"
-                        CreditRulesJson="@_activity.CreditRulesJson"
-                        WbaToolKey="@_activity.WbaToolKey"
-                        EditableFieldKeys="_editable"
-                        IsExistingActivity="true"
-                        ActivityInstitutionId="@_activity.InstitutionId"
-                        StoredDataJson="@_activity.DataJson"
-                        FiledOn="@_filedOn"
-                        ProgrammeStartsOn="@_programmeStartsOn"
-                        RefusedFieldKeys="_refusedFieldKeys"
-                        RefusalId="@_refusalAlertId"
-                        DataJsonChanged="OnDataChanged" />
-
-          <FormActions>
-            <button id="discard-changes" type="button" class="btn btn-outline" disabled="@(!_hasPendingChanges)" @onclick="DiscardChanges">
-              Discard changes
-            </button>
-          </FormActions>
-        }
-      </section>
+@* One panel for loading, a load error and the page, kept across Try again, so the retry's answer takes the focus: the h1
+   once the activity has loaded, the alert again when it fails again (A3; StatePanel.FocusAfterRetry). Never the
+   exception's text: that goes to the log (DESIGN.md § Alerts, load errors). *@
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+  <LoadingContent>
+    <div class="detail-card activity-status activity-status--others" aria-hidden="true">
+      <div class="activity-status-main">
+        <Skeleton Width="9rem" />
+        <Skeleton Width="60%" Height="1.4rem" />
+        <Skeleton Width="80%" />
+      </div>
     </div>
+    <div class="details-grid" aria-hidden="true">
+      <div class="detail-card"><Skeleton Count="4" /></div>
+      <div class="detail-card"><Skeleton Width="30%" Height="1.4rem" /><Skeleton Count="3" /></div>
+    </div>
+  </LoadingContent>
+  <ChildContent>
+@if (_model is null)
+{
+  @* T101, C7: one page for an id that does not exist and one this reader may not open, so the id space discloses
+     nothing. *@
+  <div class="detail-card detail-card--empty">
+    <p class="state-panel-title">This activity does not exist, or you cannot open it.</p>
+    <div class="form-actions">
+      <a class="btn btn-outline" href="/activities/mine">Go to My activities</a>
+    </div>
+  </div>
+}
+else
+{
+  var model = _model;
 
-    <section class="detail-card mt-3">
-      <h3>History</h3>
-      <DataTable TItem="ActivityTransitionDto" Items="_activity.Transitions" Caption="Workflow history">
-        <HeaderRow>
-          <tr>
-            <th>Action</th>
-            <th>State</th>
-            <th>Actor</th>
-            <th>When</th>
-            <th>Credit</th>
-            <th>Note</th>
-          </tr>
-        </HeaderRow>
-        <Row Context="transition">
-          <tr>
-            @* Each move as its button named it and each state by its label, from the pinned workflow (T220). *@
-            <td>@transition.TransitionLabel</td>
-            <td>@($"{transition.FromStateLabel} → {transition.ToStateLabel}")</td>
-            <td>@transition.ActorName</td>
-            <td>
-              @transition.OccurredOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-              @if (FilingLateness.Label(transition.DaysAfterEncounter) is { } lateFiling)
-              {
-                @* T160, D15: recorded on the filing's own row, never a refusal. *@
-                <div class="text-sm">@lateFiling</div>
-              }
-            </td>
-            <td>@CreditLabel(transition.CreditedItemCount)</td>
-            <td>@(string.IsNullOrWhiteSpace(transition.Note) ? "—" : transition.Note)</td>
-          </tr>
-        </Row>
-        <Empty>
-          <div class="detail-card detail-card--empty-compact">No workflow actions have been recorded yet.</div>
-        </Empty>
-      </DataTable>
-    </section>
+  @* The result of a move, a save, or the filing that brought the reader here from Log an activity (Spec § 1, "Result").
+     It takes the focus after every move, and on arrival it wins over FocusOnNavigate's h1 (A2; the T265 pattern). *@
+  <ActionResult @ref="_result" Id="activity-result" FocusOnLoad="_arrivalFocusResult">
+    @if (_resultTitle is not null)
+    {
+      <Alert Kind="@_resultKind" Role="@(_resultKind == "warning" ? "alert" : null)">
+        <strong>@_resultTitle</strong>
+        @if (!string.IsNullOrWhiteSpace(_resultText))
+        {
+          @(" " + _resultText)
+        }
+      </Alert>
+    }
+  </ActionResult>
+
+  @if (_summary is { } summary)
+  {
+    @* A refusal that names fields (Spec § 1, "Refusal"), the one summary Log an activity shows too: it takes the focus,
+       each line links to its field's input, and every field it names points back at it (RefusalSummary.DefaultId). *@
+    <RefusalSummary @ref="_summaryComponent"
+                    Title="@summary.Title"
+                    Text="@summary.Text"
+                    Lines="_refusalLines"
+                    AutoFocus="_arrivalFocusSummary" />
   }
+
+  @if (!string.IsNullOrWhiteSpace(_actionError))
+  {
+    @* A refusal that names no field: read at once, the focus staying on the button pressed (DESIGN.md § Button system). *@
+    <Alert Kind="danger">@_actionError</Alert>
+  }
+
+  <ActivityStatus View="@model.Status(_ratedLabel)" Busy="@(_running is not null)" OnCancel="CancelFromStatusAsync" />
+
+  <div class="details-grid activity-grid">
+    <ActivityAbout Rows="@model.About()" />
+
+    <div class="activity-sections">
+      @if (ShowsEditableForm)
+      {
+        @* SubjectUserId, not the principal: the actor is often the assessor, and the EPAs that can be credited are the
+           subject's (T108). Keyed on a generation, so a refused move remounts it with fresh option lists (T102). *@
+        <ActivityForm @key="_formGeneration"
+                      SchemaJson="@model.Activity.SchemaJson"
+                      DataJson="@_workingDataJson"
+                      SubjectUserId="@model.Activity.SubjectUserId"
+                      CreditRulesJson="@model.Activity.CreditRulesJson"
+                      WbaToolKey="@model.Activity.WbaToolKey"
+                      EditableFieldKeys="_editable"
+                      IsExistingActivity="true"
+                      ActivityInstitutionId="@model.Activity.InstitutionId"
+                      StoredDataJson="@model.Activity.DataJson"
+                      FiledOn="@_filedOn"
+                      ProgrammeStartsOn="@_programmeStartsOn"
+                      RefusedFieldKeys="_refusedFieldKeys"
+                      RefusalMessage="@_refusal"
+                      RefusalId="@_refusalAlertId"
+                      LockedOwnerName="@LockedOwnerName"
+                      LockedSectionsClosed="@model.IsOver"
+                      ReaderIsSubject="@model.ViewerIsSubject"
+                      Rungs="@_rungs"
+                      SectionAttributions="@_attributions"
+                      HandOffFieldKey="@HandOffFieldKey"
+                      HandOffNameChanged="OnHandOffNameChanged"
+                      DataJsonChanged="OnDataChanged" />
+      }
+      else
+      {
+        <ActivityDetail SchemaJson="@model.Activity.SchemaJson"
+                        DataJson="@model.Activity.DataJson"
+                        SubjectUserId="@model.Activity.SubjectUserId"
+                        CreditRulesJson="@model.Activity.CreditRulesJson"
+                        WbaToolKey="@model.Activity.WbaToolKey"
+                        ActivityInstitutionId="@model.Activity.InstitutionId"
+                        RefusedFieldKeys="_refusedFieldKeys"
+                        RefusalMessage="@_refusal"
+                        RefusalId="@_refusalAlertId"
+                        LockedOwnerName="@model.Detail.NomineeName"
+                        LockedSectionsClosed="@model.IsOver"
+                        ReaderIsSubject="@model.ViewerIsSubject"
+                        Rungs="@_rungs"
+                        SectionAttributions="@_attributions"
+                        HandOffFieldKey="@HandOffFieldKey" />
+      }
+
+      @if (CheckLine is { } check)
+      {
+        <SubmitCheck Lead="@check.Lead" Text="@check.Text" />
+      }
+
+      <ActivityWorkflowActions Actions="_actions"
+                               Running="@_running"
+                               OnTransitionRequested="HandleTransitionAsync"
+                               CancelAction="@model.BarCancel"
+                               CancelLabel="@model.CancelLabel"
+                               OnCancelRequested="RequestCancelAsync"
+                               CanSaveDraft="@CanSaveDraft"
+                               CanDiscard="@ShowsEditableForm"
+                               OnSaveDraft="SaveDraftAsync"
+                               HasPendingChanges="@_hasPendingChanges"
+                               OnDiscard="DiscardChanges"
+                               HandsTo="HandsTo"
+                               SubjectName="@model.SubjectName"
+                               NoteRefusal="@_noteRefusal" />
+    </div>
+  </div>
+
+  <ActivityHistory Transitions="@model.Activity.Transitions" />
+
+  var dialog = model.CancelDialog;
+  <ConfirmDialog @ref="_cancelDialog"
+                 Title="@dialog.Title"
+                 Body="@dialog.Body"
+                 CancelLabel="@dialog.Keep"
+                 ConfirmLabel="@dialog.Go"
+                 DangerAction="true"
+                 OnConfirm="ConfirmCancelAsync" />
+}
+  </ChildContent>
 </StatePanel>
+</div>
 
 @code {
   [Parameter] public int ActivityId { get; set; }
 
-  private ActivityDto? _activity;
+  private ActivityPageModel? _model;
   private IReadOnlyList<ActivityActionDto> _actions = [];
+  private IReadOnlyList<EntrustmentRung>? _rungs;
+  private string? _ratedLabel;
 
-  // The field keys this actor may write right now, as the server resolved them (T070). Empty means
-  // the page stays read-only. A set rather than the DTO's list because ActivityForm and
-  // ActivityDataPatch both do a Contains per field.
+  // The field keys this actor may write right now, as the server resolved them (T070). Empty means the page stays
+  // read-only. A set rather than the DTO's list because ActivityForm and ActivityDataPatch both do a Contains per field.
   private IReadOnlySet<string> _editable = new HashSet<string>(StringComparer.Ordinal);
 
-  // The form's working copy. It diverges from _activity.DataJson while the actor types and is
-  // reconciled with the server on every successful load.
+  // The form's working copy. It diverges from the stored data while the actor types and is reconciled with the server on
+  // every successful load.
   private string _workingDataJson = "{}";
   private bool _hasPendingChanges;
 
@@ -204,101 +215,188 @@
   private string? _loadError;
   private string? _actionError;
 
-  // Shown until the next load or the next action. Taken, so it is shown once: reloading the page does not repeat it.
-  private ActivityNotice? _notice;
+  // The result region's words (Spec § 1, "Result"): the move's result sentence, then whose inbox it is in.
+  private string? _resultTitle;
+  private string? _resultText;
+  private string _resultKind = "success";
+  private bool _arrivalFocusResult;
 
-  /// <summary>
-  /// What names the page and its tab: the activity's type (T190), or "Activity" until it has loaded and where it cannot.
-  /// </summary>
-  private string Heading => _activity?.ActivityTypeName ?? "Activity";
+  private ActionResult? _result;
 
+  // A refusal that names fields: its summary, and whether it takes the focus after the next render.
+  private RefusalHeading? _summary;
+  private IReadOnlyList<RefusalLine> _refusalLines = [];
+  private RefusalSummary? _summaryComponent;
+  private bool _focusSummary;
+  private bool _arrivalFocusSummary;
+
+  // A refusal of a move's note, shown in the note panel with the note as typed (A6).
+  private string? _noteRefusal;
+
+  private ConfirmDialog? _cancelDialog;
+  private ActivityActionDto? _pendingCancel;
+
+  // The page's h1, its tab's stem and its last crumb (E2): the activity's name once it has loaded.
+  private string Heading => _loading
+    ? "Loading the activity"
+    : _loadError is not null
+      ? "Activity"
+      : _model?.Heading ?? "Activity unavailable";
+
+  /// <summary>The words of a move offered on this page that the server no longer offers.</summary>
   public const string UnavailableActionMessage =
     "That action is not available here. Reload the page to see what you can do now.";
 
-  /// <summary>The id of a refused move's alert, which each field the refusal names points at (T263).</summary>
-  public const string ActionRefusalAlertId = "activity-action-refusal";
+  /// <summary>The words of a load that failed (Spec § 1, "Load error"). Never the exception's own text.</summary>
+  public const string LoadErrorMessage = "Could not load this activity. Nothing has changed. Try again, or come back in a few minutes.";
 
-  /// <summary>The id of the notice handed over from <c>/activities/new</c>, which the fields a refused submit named point at.</summary>
-  public const string NoticeAlertId = "activity-notice";
+  /// <summary>
+  /// The id every field a refusal names points at (T263): the refusal summary's (<see cref="RefusalSummary.DefaultId" />), for
+  /// a refused move and for the notice of a submit refused straight after the create alike.
+  /// </summary>
+  public const string ActionRefusalAlertId = RefusalSummary.DefaultId;
 
-  // The fields the refusal on show named, and the id of the alert that shows it (T263): a refused move's, or the notice of
-  // a submit refused straight after the create. Set with that alert and cleared with it, so the form marks a field only
-  // while the alert naming it is on the page.
+  /// <inheritdoc cref="ActionRefusalAlertId" />
+  public const string NoticeAlertId = RefusalSummary.DefaultId;
+
+  // The refusal on show, in the server's words, the fields it named, and the id of the summary that shows it (T263, C8).
+  // Set with the summary and cleared with it, so the form marks a field, with its own part of the refusal, only while the
+  // summary naming it is on the page.
+  private string? _refusal;
   private IReadOnlyList<string> _refusedFieldKeys = [];
   private string? _refusalAlertId;
 
-  /// <summary>
-  /// True when a transition on this activity was evaluated for credit and credited nothing (T108).
-  /// </summary>
-  /// <remarks>
-  /// <c>null</c> — credit was never evaluated — is not a warning: it is the permanent state of a
-  /// reflective note, a journal club entry, a procedure log, and of every transition recorded before
-  /// the outcome started being stamped. Only an explicit zero means "we looked, and nothing counted".
-  /// </remarks>
-  private bool CreditedNothing
-    => _activity?.Transitions.Any(transition => transition.CreditedItemCount == 0) == true;
+  // Each filled section's "Filled in by <name>, <date>" (Spec § 2), from the history.
+  private IReadOnlyDictionary<string, string>? _attributions;
+
+  private int _formGeneration;
+
+  // One move at a time (T102): the key of the move running, or ActivityWorkflowActions.SaveDraftKey. Its button keeps the
+  // focus; every other is disabled until it answers (T234, A10).
+  private string? _running;
 
   /// <summary>
-  /// True when a transition counted this activity's volume but refused its supervision level, because
-  /// the rating and the curriculum requirement sit on different entrustment scales (T109).
+  /// Inputs are offered when this actor may write a field here and has a way to keep what they type: a move to send it
+  /// with, or Save draft (E3). A move shown disabled (T107) is nothing to send with.
   /// </summary>
-  /// <remarks>
-  /// Same three-valued contract as <c>CreditedItemCount</c>: <c>null</c> means credit was never
-  /// evaluated and is not a warning. Only a positive count is.
-  /// </remarks>
-  private bool CreditedAcrossScales
-    => _activity?.Transitions.Any(transition => transition.CreditScaleMismatchCount > 0) == true;
+  private bool ShowsEditableForm => _editable.Count > 0 && (_actions.Any(action => action.IsAvailable) || CanSaveDraft);
 
-  // One wording with the activity lists (T137).
-  private static string CreditLabel(int? creditedItemCount) => CreditOutcome.Label(creditedItemCount);
+  /// <summary>Save draft: the author's own draft or returned work, with fields to write (E3; SaveActivityDraftCommand).</summary>
+  private bool CanSaveDraft
+    => _model is { ViewerHolds: true, HolderKind: ActivityHolderKind.Author, InInitialState: true } && _editable.Count > 0;
+
 
   protected override async Task OnParametersSetAsync()
   {
     _loading = true;
     _loadError = null;
-    _actionError = null;
-    _notice = null;
-    ShowRefusedFields([], null);
+    ClearOutcome();
 
+    await LoadOrFailAsync();
+
+    // Taken whatever the load's outcome, so it cannot wait for a later visit; shown only above an activity that loaded.
+    var notice = Notices.Take(ActivityId);
+    if (_loadError is null && _model is not null && notice is not null)
+    {
+      ShowArrival(notice);
+    }
+  }
+
+  private async Task LoadOrFailAsync()
+  {
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await LoadAsync(authState.User);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _loadError = exception.Message;
+      Logger.LogError(exception, "Activity {ActivityId} could not be loaded.", ActivityId);
+      _loadError = LoadErrorMessage;
     }
     finally
     {
       _loading = false;
     }
+  }
 
-    // Taken whatever the load's outcome, so it cannot wait for a later visit; shown only above an activity that loaded.
-    var notice = Notices.Take(ActivityId);
-    _notice = _loadError is null && _activity is not null ? notice : null;
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadOrFailAsync();
+  }
 
-    if (_notice?.RefusedFieldKeys is { Count: > 0 } refused)
+  // After a Try again that read: the h1, whose title is now the activity's name (A3). StatePanel calls it.
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  // What Log an activity handed over with the navigation (T127), shown once as this page's result or refusal (A2).
+  private void ShowArrival(ActivityNotice notice)
+  {
+    // Built from the refusal Log an activity handed over and the fields it named, never from the notice's own words.
+    if (notice.RefusedFieldKeys is { Count: > 0 } refused)
     {
-      ShowRefusedFields(refused, NoticeAlertId);
+      ShowRefusal(RefusalWords.ForSubmitAfterCreate(refused.Count), notice.Refusal, refused);
+      _arrivalFocusSummary = true;
+      _focusSummary = true;
+      return;
+    }
+
+    _resultKind = notice.Kind is "warning" or "danger" or "info" ? notice.Kind : "success";
+
+    // Log an activity's notice is one message: the move's result, then whose inbox it is in. Only the result is bold, as
+    // after a move made here (the build review's D7).
+    var (title, inbox) = ActivityPageModel.SplitResult(notice.Message);
+    _resultTitle = title;
+    _resultText = inbox ?? (notice.Kind == "success" ? InboxSentence() : null);
+    _arrivalFocusResult = true;
+  }
+
+  private void ClearOutcome()
+  {
+    _actionError = null;
+    _resultTitle = null;
+    _resultText = null;
+    _resultKind = "success";
+    _summary = null;
+    _noteRefusal = null;
+    // What arrived with the page was shown once; a later outcome is focused by the move that made it.
+    _arrivalFocusResult = false;
+    _arrivalFocusSummary = false;
+    _refusal = null;
+    _refusalLines = [];
+    _refusedFieldKeys = [];
+    _refusalAlertId = null;
+  }
+
+  // A refusal that names fields: the summary's heading, its lines cut from the server's words by the form's own labels
+  // (FieldRefusals.Split, as Log an activity cuts them), and the fields the form marks, each with its own part.
+  private void ShowRefusal(RefusalHeading heading, string? refusal, IReadOnlyList<string> fieldKeys)
+  {
+    _summary = heading;
+    _refusal = refusal;
+    _refusalLines = FieldRefusals.Split(refusal, fieldKeys, _model!.FieldLabelOrNull);
+    _refusedFieldKeys = fieldKeys;
+    _refusalAlertId = RefusalSummary.DefaultId;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusSummary && _summaryComponent is not null)
+    {
+      _focusSummary = false;
+      await _summaryComponent.FocusAsync();
     }
   }
 
-  private void ShowRefusedFields(IReadOnlyList<string> fieldKeys, string? alertId)
-  {
-    _refusedFieldKeys = fieldKeys;
-    _refusalAlertId = alertId;
-  }
-
   /// <summary>
-  /// Loads the activity together with the two things that need a principal: the writable field set
-  /// and the available transitions. Both are re-read after every transition, because the actions an
-  /// actor may take and the fields they may write are properties of the state just moved to.
+  /// Loads the activity together with the two things that need a principal: the writable field set and the available
+  /// transitions. Both are re-read after every move, because what an actor may do and write belongs to the state moved to.
   /// </summary>
   /// <remarks>
-  /// A null result means the activity does not exist OR this user may not read it (T101) — one
-  /// answer for both, so that walking the id space discloses nothing. Render it as the empty state
-  /// and do NOT surface a message that tells the two apart.
+  /// A null result means the activity does not exist OR this user may not read it (T101) — one answer for both, so that
+  /// walking the id space discloses nothing. Render it as "Activity unavailable" and never tell the two apart.
   /// </remarks>
   private async Task LoadAsync(ClaimsPrincipal user)
   {
@@ -306,7 +404,7 @@
 
     if (detail is null)
     {
-      _activity = null;
+      _model = null;
       _actions = [];
       _editable = new HashSet<string>(StringComparer.Ordinal);
       _workingDataJson = "{}";
@@ -315,7 +413,8 @@
       return;
     }
 
-    _activity = detail.Activity;
+    var viewerId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    _model = ActivityPageModel.From(detail, viewerId);
     _actions = detail.AvailableActions;
     _editable = new HashSet<string>(detail.EditableFieldKeys, StringComparer.Ordinal);
     _workingDataJson = detail.Activity.DataJson;
@@ -328,65 +427,206 @@
       _programmeStartsOn = await FilingLateness.ProgrammeStartAsync(Sender, detail.Activity.SubjectUserId, user, Logger);
       _programmeStartSubjectId = detail.Activity.SubjectUserId;
     }
+
+    _attributions = _model.SectionAttributions();
+    _rungs = await RungsAsync(_model.RatedScaleKey);
+    _ratedLabel = _model.RatedLabel(_rungs);
+  }
+
+  // The rated field's ladder, for "Rated 4" and the rung row (B12). Read in its own scope, as the form reads its options
+  // (T102). A ladder that cannot be read is no rung row, not a failed page.
+  private async Task<IReadOnlyList<EntrustmentRung>?> RungsAsync(string? scaleKey)
+  {
+    if (string.IsNullOrWhiteSpace(scaleKey))
+    {
+      return null;
+    }
+
+    try
+    {
+      await using var scope = ScopeFactory.CreateAsyncScope();
+      var referenceData = scope.ServiceProvider.GetRequiredService<IActivityReferenceDataService>();
+      var rungs = await referenceData.GetEntrustmentScaleRungsAsync(scaleKey);
+      return rungs.Count == 0 ? null : rungs;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "The rungs of scale {ScaleKey} could not be read for activity {ActivityId}.", scaleKey, ActivityId);
+      return null;
+    }
   }
 
   private void OnDataChanged(string dataJson)
   {
     _workingDataJson = dataJson;
 
-    // "Pending" means the diff the server would actually receive is non-empty — retyping a value
-    // back to what is stored leaves nothing to submit.
-    _hasPendingChanges = _activity is not null &&
-      ActivityDataPatch.Build(_activity.DataJson, _workingDataJson, _editable) is not null;
+    // "Pending" means the diff the server would actually receive is non-empty — retyping a value back to what is stored
+    // leaves nothing to submit.
+    _hasPendingChanges = _model is not null &&
+      ActivityDataPatch.Build(_model.Activity.DataJson, _workingDataJson, _editable) is not null;
   }
 
   private void DiscardChanges()
   {
-    if (_activity is null)
+    if (_model is null)
     {
       return;
     }
 
-    _workingDataJson = _activity.DataJson;
+    _workingDataJson = _model.Activity.DataJson;
     _hasPendingChanges = false;
   }
 
-  private int _formGeneration;
+  // "Submit to Fatima Khumalo" (E4, C3; FilingWords.MoveButtonLabel). Where the form below lets this reader write the
+  // hand-off field, the name its own picker gives the value it holds, from the first render (B2, as on Log an activity):
+  // none while nobody on the list is named, so a stored nominee who is no longer offered is not named on the button, the
+  // check line or the locked owner line (the build review's D1; A.6.6). Elsewhere the stored nominee
+  // (ActivityActionDto.HandsToName), whom nobody here can change.
+  private string? HandsTo(ActivityActionDto action)
+  {
+    if (_model is null || action.HandOffFieldKey is not { } handOffField)
+    {
+      return null;
+    }
 
-  // One action at a time. A double-click used to send two transitions; since T102 each refusal also remounts the
-  // form, and two of those at once would race their option loads.
-  private bool _busy;
+    return FormNames(handOffField) ? _liveHandOffName : action.HandsToName;
+  }
+
+  // Whether the name for this field is the form's: the editable form is shown, it reports this field's name, and the
+  // reader may write the field.
+  private bool FormNames(string fieldKey)
+    => ShowsEditableForm &&
+       string.Equals(HandOffFieldKey, fieldKey, StringComparison.Ordinal) &&
+       _editable.Contains(fieldKey);
+
+  // The name the form's picker gives the hand-off field's current value (ActivityForm.HandOffNameChanged).
+  private string? _liveHandOffName;
+
+  private void OnHandOffNameChanged(string? name) => _liveHandOffName = name;
+
+  /// <summary>
+  /// The user field the primary move hands the activity to (ActivityActionDto.HandOffFieldKey), else the field naming who
+  /// acts in the current state: the form names a locked section's owner by its label ("The assessor you name fills this
+  /// in") and reports the name it holds.
+  /// </summary>
+  private string? HandOffFieldKey
+    => PrimaryMove?.HandOffFieldKey ?? _model?.NomineeFieldKey;
+
+  // The move that leads on: the first available one that is neither a note's nor a cancel.
+  private ActivityActionDto? PrimaryMove
+    => _actions.FirstOrDefault(action => action.IsAvailable && !action.RequiresNote && !ActivityPageModel.IsCancel(action));
+
+  // Who fills a locked section: the form's name for the hand-off field where the reader may write it (D1), else the
+  // stored nominee.
+  private string? LockedOwnerName
+    => HandOffFieldKey is { } handOff && FormNames(handOff) ? _liveHandOffName : _model?.Detail.NomineeName;
+
+  /// <summary>
+  /// The check line above the bar, on the author's draft (Spec § 1, "Check line"; C11), in Log an activity's words
+  /// (<see cref="FilingWords.CheckText" />): the move's target state by its label and the person it goes to by name.
+  /// </summary>
+  private (string Lead, string Text)? CheckLine
+  {
+    get
+    {
+      if (!CanSaveDraft || _model is null || PrimaryMove is not { } move)
+      {
+        return null;
+      }
+
+      var noun = move.HandOffFieldKey is { } handOff ? _model.FieldLabel(handOff).Trim().ToLowerInvariant() : FilingWords.DefaultNoun;
+      var words = new FilingWords(
+        move.Label,
+        move.TargetStateLabel,
+        move.HandOffFieldKey,
+        string.IsNullOrWhiteSpace(noun) ? FilingWords.DefaultNoun : noun,
+        move.TargetIsTerminal);
+      return (words.CheckLead, words.CheckText(HandsTo(move), _model.CreditsNothing, DaysLate()));
+    }
+  }
+
+  // How many days late filing it now would be, for the check line, as Log an activity counts it (the build review's D6):
+  // the encounter date as it stands on the form, against the day this move would file it on the South African calendar
+  // (_filedOn, set only while the next move could be the filing), on a type that can credit, for a date not before the
+  // programme start, which is refused rather than late (T160, T192).
+  private int? DaysLate()
+  {
+    if (_model is null || _filedOn is not DateOnly filedOn || _model.CreditsNothing ||
+        _model.Schema?.ObservationDateField is not { } dateKey)
+    {
+      return null;
+    }
+
+    return FilingLateness.DaysLate(_workingDataJson, dateKey, filedOn, _programmeStartsOn);
+  }
+
+  // "It is in Fatima Khumalo's Activity inbox." once a move hands it to someone; "It is in nobody's inbox until you submit
+  // it." for the author's own draft; nothing otherwise (Spec § 1, "Result").
+  private string? InboxSentence()
+  {
+    if (_model is null)
+    {
+      return null;
+    }
+
+    if (_model.Detail.Holder is { Kind: ActivityHolderKind.Person, IsViewer: false, Name: { } name })
+    {
+      return FilingWords.InboxSentence(name);
+    }
+
+    return _model is { ViewerHolds: true, HolderKind: ActivityHolderKind.Author, InInitialState: true }
+      ? ActivityPageModel.NobodysInbox
+      : null;
+  }
+
+  private async Task CancelFromStatusAsync()
+  {
+    if (_model?.CancelAction is { } cancel)
+    {
+      await RequestCancelAsync(cancel);
+    }
+  }
+
+  private async Task RequestCancelAsync(ActivityActionDto cancel)
+  {
+    if (_running is not null || _cancelDialog is null)
+    {
+      return;
+    }
+
+    _pendingCancel = cancel;
+    await _cancelDialog.ShowAsync();
+  }
+
+  private async Task ConfirmCancelAsync()
+  {
+    if (_pendingCancel is { } cancel)
+    {
+      _pendingCancel = null;
+      await HandleTransitionAsync((cancel.TransitionKey, null));
+    }
+  }
 
   private async Task HandleTransitionAsync((string TransitionKey, string? Note) request)
   {
-    if (_activity is null || _busy)
+    if (_model is null || _running is not null)
     {
       return;
     }
 
-    // Only an action the server listed as available is sent (T107). ActivityWorkflowActions gives a disabled one no
-    // handler; this is the page refusing to be the second way in. Nothing is sent, but the actor is told, rather than
-    // pressing a button that silently does nothing.
-    if (!_actions.Any(action => action.IsAvailable &&
-                                string.Equals(action.TransitionKey, request.TransitionKey, StringComparison.Ordinal)))
+    // Only an action the server listed as available is sent (T107). ActivityWorkflowActions gives a greyed one a handler
+    // that returns at once; this is the page refusing to be the second way in, and telling the actor why.
+    var action = _actions.FirstOrDefault(candidate => candidate.IsAvailable &&
+                                                      string.Equals(candidate.TransitionKey, request.TransitionKey, StringComparison.Ordinal));
+    if (action is null)
     {
+      ClearOutcome();
       _actionError = UnavailableActionMessage;
-
-      // That alert no longer says what the refused move did, so the fields it named are not left pointing at it. A
-      // notice's stay marked: the notice is still shown.
-      if (_refusalAlertId == ActionRefusalAlertId)
-      {
-        ShowRefusedFields([], null);
-      }
-
       return;
     }
 
-    _busy = true;
-    _actionError = null;
-    // The notice described the activity as it arrived. It must not sit above the outcome of this move.
-    _notice = null;
-    ShowRefusedFields([], null);
+    _running = action.TransitionKey;
+    ClearOutcome();
 
     try
     {
@@ -394,37 +634,110 @@
       var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("The current user identifier is missing.");
 
-      // The edits ride the transition rather than being saved separately: one command, one
-      // SaveChanges, so an assessor's rating and the move to `completed` are atomic and
-      // CreditApplier — which runs after the merge, on a terminal target state — grades the value
-      // the assessor just entered (T070).
-      //
-      // The patch names only the keys this actor owns and only those whose value actually changed.
-      // That is what keeps ActivityService.MergeWritableKeys from rejecting the transition: it
-      // throws on any patched key the actor does not own whose value differs from what is stored.
-      var dataPatchJson = ActivityDataPatch.Build(_activity.DataJson, _workingDataJson, _editable);
+      // The edits ride the transition rather than being saved separately: one command, one SaveChanges, so an assessor's
+      // rating and the move to `completed` are atomic and CreditApplier grades the value just entered (T070). The patch
+      // names only the keys this actor owns whose value changed, which is what keeps ActivityService.MergeWritableKeys
+      // from refusing the move.
+      var dataPatchJson = ActivityDataPatch.Build(_model.Activity.DataJson, _workingDataJson, _editable);
 
       await Sender.Send(new TransitionActivityCommand(
-        _activity.Id,
-        request.TransitionKey,
+        _model.Activity.Id,
+        action.TransitionKey,
         userId,
         authState.User,
         dataPatchJson,
         request.Note));
 
       await LoadAsync(authState.User);
+
+      _resultTitle = string.IsNullOrWhiteSpace(action.ResultSentence)
+        ? $"It is now {_model?.Activity.CurrentStateLabel}."
+        : action.ResultSentence;
+      _resultText = InboxSentence();
+      _result?.FocusAfterRender();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      // The working copy is deliberately left alone: a rejected transition (a missing required
-      // field, say) must not discard what the actor typed. The remounted form marks the fields the refusal names (T263).
-      _actionError = RefusalText.Of(exception);
-      ShowRefusedFields(ActivityFieldsRefusedException.FieldKeysOf(exception), ActionRefusalAlertId);
+      // The working copy is deliberately left alone: a refused move must not discard what the actor typed. The remounted
+      // form marks the fields the refusal names (T263).
+      var message = RefusalText.Of(exception);
+      var fields = ActivityFieldsRefusedException.FieldKeysOf(exception);
+      if (action.RequiresNote && string.IsNullOrWhiteSpace(request.Note) && fields.Count == 0)
+      {
+        // The note itself was refused: the panel says so, with its note, and takes the focus (A6).
+        _noteRefusal = message;
+      }
+      else if (fields.Count > 0)
+      {
+        ShowRefusal(RefusalWords.ForMove(action, _model!.Activity.CurrentStateLabel, fields.Count), message, fields);
+        _focusSummary = true;
+      }
+      else
+      {
+        _actionError = message;
+      }
+
       _formGeneration++;
     }
     finally
     {
-      _busy = false;
+      _running = null;
+    }
+  }
+
+  // E3: a save without a move, on the author's draft. It writes no history and no credit; its field refusals are shown
+  // like a move's.
+  private async Task SaveDraftAsync()
+  {
+    if (_model is null || _running is not null || !CanSaveDraft)
+    {
+      return;
+    }
+
+    _running = ActivityWorkflowActions.SaveDraftKey;
+    ClearOutcome();
+
+    try
+    {
+      var dataPatchJson = ActivityDataPatch.Build(_model.Activity.DataJson, _workingDataJson, _editable);
+      if (dataPatchJson is null)
+      {
+        _resultTitle = "Nothing to save.";
+        _resultText = "Nothing has changed since it was last saved.";
+        _result?.FocusAfterRender();
+        return;
+      }
+
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The current user identifier is missing.");
+
+      await Sender.Send(new SaveActivityDraftCommand(_model.Activity.Id, userId, authState.User, dataPatchJson));
+      await LoadAsync(authState.User);
+
+      _resultTitle = "Draft saved. It has not been submitted.";
+      _resultText = ActivityPageModel.NobodysInbox;
+      _result?.FocusAfterRender();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      var message = RefusalText.Of(exception);
+      var fields = ActivityFieldsRefusedException.FieldKeysOf(exception);
+      if (fields.Count > 0)
+      {
+        ShowRefusal(RefusalWords.ForSave(_model!.Activity.CurrentStateLabel, fields.Count), message, fields);
+        _focusSummary = true;
+      }
+      else
+      {
+        _actionError = message;
+      }
+
+      _formGeneration++;
+    }
+    finally
+    {
+      _running = null;
     }
   }
 }
