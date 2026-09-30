@@ -402,7 +402,11 @@ public sealed class ActivityPageModel
 
         if (Detail.EpaCode is { } code)
         {
-            rows.Add(new ActivityAboutRow("EPA", string.IsNullOrWhiteSpace(Detail.EpaTitle) ? code : $"{code} — {Detail.EpaTitle}"));
+            // T231, T255: an EPA not in force now is marked as every other page marks it (EpaLabel), in its own muted span.
+            rows.Add(new ActivityAboutRow("EPA", string.IsNullOrWhiteSpace(Detail.EpaTitle) ? code : $"{code} — {Detail.EpaTitle}")
+            {
+                Marker = Detail.EpaInForce == false ? EpaOptionLabel.NoLongerInUse : null,
+            });
         }
 
         rows.Add(encounter);
@@ -858,7 +862,11 @@ public sealed record ActivityStatusView(
 }
 
 /// <summary>A row of the About card, with the credit warnings that sit under its value (C13).</summary>
-public sealed record ActivityAboutRow(string Label, string Value, IReadOnlyList<string>? Warnings = null, string? Id = null);
+public sealed record ActivityAboutRow(string Label, string Value, IReadOnlyList<string>? Warnings = null, string? Id = null)
+{
+    /// <summary>Muted words after the value: "(no longer in use)" beside an EPA that is not in force now (T231).</summary>
+    public string? Marker { get; init; }
+}
 
 /// <summary>Moments as the activity pages state them: South African time, with its zone (A7, B13).</summary>
 public static class ActivityMoments

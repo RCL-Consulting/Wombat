@@ -14,6 +14,10 @@
         <dt>@row.Label</dt>
         <dd id="@row.Id">
           @row.Value
+          @if (row.Marker is { } marker)
+          {
+            <span class="muted">@marker</span>
+          }
           @if (row.Warnings is { Count: > 0 } warnings)
           {
             @foreach (var warning in warnings)

@@ -145,6 +145,12 @@ public sealed class ActivityViewCreditSignalTests : TestContext
 
         CreditWarning(cut).TextContent.Trim().Should().Be("This activity's EPA is paused: its credit waits.");
         cut.Find(".activity-status-body").TextContent.Should().Contain("Its credit to PAED-001 waits while the EPA is paused.");
+
+        // T231: About names the paused EPA as every other EPA surface does, with the marker in its own muted span.
+        var epa = cut.FindAll(".activity-about .details-list > div")
+            .Single(row => row.QuerySelector("dt")!.TextContent.Trim() == "EPA");
+        epa.QuerySelector("dd .muted")!.TextContent.Should().Be("(no longer in use)");
+        epa.QuerySelector("dd")!.TextContent.Should().Contain("PAED-001 — Emergency care");
     }
 
     private IRenderedComponent<ActivityView> RenderPage(ActivityDetailDto detail)
