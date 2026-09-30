@@ -1,0 +1,77 @@
+<!-- @dsCard group="Activities" height=1080 width=974 subtitle="About: who, what EPA, when, and what it credits; a paused EPA marked; the credit warnings under Credit" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ActivityAbout</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The card sits in the details grid's narrow column (1fr of 1fr 2fr): about a third of the 974px content column. */
+  .pv-col { width: 20rem; }
+  .pv-row { display: flex; flex-wrap: wrap; gap: var(--space-lg); align-items: flex-start; }
+</style>
+</head>
+<body>
+<div class="pv-row">
+  <div class="pv-col">
+    <p class="pv-cap">A request filed late (Step 3.10, to Fatima Khumalo)</p>
+    <section class="detail-card activity-about" aria-labelledby="a1">
+      <h2 id="a1" class="activity-card-title">About</h2>
+      <dl class="details-list">
+        <div><dt>Registrar</dt><dd>Sipho Ndlovu</dd></div>
+        <div><dt>Assessor</dt><dd>Fatima Khumalo</dd></div>
+        <div><dt>EPA</dt><dd>PAED-002 — Managing common paediatric presentations</dd></div>
+        <div><dt>Encounter</dt><dd id="activity-encounter-date">2026-09-10</dd></div>
+        <div><dt>Filed</dt><dd>2026-09-30, 20 days after the encounter (late)</dd></div>
+        <div><dt>Credit</dt><dd>None until it is completed</dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <div class="pv-col">
+    <p class="pv-cap">The author's own draft, never filed: who and when</p>
+    <section class="detail-card activity-about" aria-labelledby="a2">
+      <h2 id="a2" class="activity-card-title">About</h2>
+      <dl class="details-list">
+        <div><dt>Registrar</dt><dd>Anele Dlamini</dd></div>
+        <div><dt>Started</dt><dd>2026-09-30</dd></div>
+        <div><dt>Encounter</dt><dd id="activity-encounter-date-2">2026-09-20</dd></div>
+        <div><dt>Credit</dt><dd>None until it is completed</dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <div class="pv-col">
+    <p class="pv-cap">A type that credits nothing (Step 3.22, a portfolio review to Mohammed Patel)</p>
+    <section class="detail-card activity-about" aria-labelledby="a3">
+      <h2 id="a3" class="activity-card-title">About</h2>
+      <dl class="details-list">
+        <div><dt>Registrar</dt><dd>Pieter du Plessis</dd></div>
+        <div><dt>Reviewer</dt><dd>Mohammed Patel</dd></div>
+        <div><dt>EPA</dt><dd>PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</dd></div>
+        <div><dt>Encounter</dt><dd id="activity-encounter-date-3">2026-09-29</dd></div>
+        <div><dt>Filed</dt><dd>2026-09-30</dd></div>
+        <div><dt>Credit</dt><dd>None: a portfolio and logbook review credits nothing</dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <div class="pv-col">
+    <p class="pv-cap">Completed while its EPA is paused (Step 6.18): the EPA marked, the credit's warning standing under Credit, no role</p>
+    <section class="detail-card activity-about" aria-labelledby="a4">
+      <h2 id="a4" class="activity-card-title">About</h2>
+      <dl class="details-list">
+        <div><dt>Registrar</dt><dd>Anele Dlamini</dd></div>
+        <div><dt>Assessor</dt><dd>Mohammed Patel</dd></div>
+        <div><dt>EPA</dt><dd>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams <span class="muted">(no longer in use)</span></dd></div>
+        <div><dt>Encounter</dt><dd id="activity-encounter-date-4">…</dd></div>
+        <div><dt>Filed</dt><dd>…</dd></div>
+        <div><dt>Credit</dt><dd>None<p class="field-warning">This activity's EPA is paused: its credit waits.</p></dd></div>
+      </dl>
+    </section>
+  </div>
+</div>
+</body>
+</html>

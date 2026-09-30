@@ -5,14 +5,15 @@ The wrapper every list and dashboard uses to render its three non-content states
 ## What the consumer provides
 
 ```razor
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(_items.Count == 0)"
-            EmptyTitle="No activities yet" EmptyBody="Create the first activity from the activity catalogue.">
-  <EmptyActions><a class="btn btn-primary" href="/activities/new">New activity</a></EmptyActions>
-  …the content…
+<StatePanel IsLoading="_loading" LoadError="@_error" OnRetry="LoadAsync" FocusAfterRetry="FocusContentAsync"
+            IsEmpty="@(_page is { TotalCount: 0 } && _needsYou.Count == 0)" EmptyTitle="No activities yet"
+            EmptyBody="Log an activity to ask an assessor to rate an encounter, or to log a teaching session.">
+  <EmptyActions><a class="btn btn-outline" href="/activities/new">Log an activity</a></EmptyActions>
+  <ChildContent>…the content…</ChildContent>
 </StatePanel>
 ```
 
-- `IsLoading`: renders `SkeletonCount` (4) `Skeleton`s of `SkeletonHeight` (3rem).
+- `IsLoading`: renders `SkeletonCount` (4) `Skeleton`s of `SkeletonHeight` (3rem), or `LoadingContent` (flow 03, T342), the page's own skeleton in the shape of what loads: the activity page's is a status card (three skeleton lines in `.activity-status--others`) over a details grid of two cards, all `aria-hidden`. A page whose skeleton says nothing to a screen reader keeps a visually hidden `role="status"` line on the page, always there and filled while it loads ("Loading the activity.", "Loading what you can file.").
 - `LoadError`: renders `<Alert Kind="danger">` with the message.
 - `OnRetry` (T339, flow 02, B12): set, the failure offers **Try again** beside its words, as Home's does: the Alert's words and an outline `.btn-sm` with `refresh-cw` in an `.alert-row`, inside an `ActionResult`. Pressed, the page reads again (the skeletons while it runs, so the button is gone); once the answer is drawn the focus moves: a failure again, to the alert drawn again, so it is read again; a success, to `FocusAfterRetry`, the page's own place for its content (My account's Account heading), which a page may leave empty when it has a result to say that takes the focus itself. Unset, the failure is its words alone, as before.
 - `IsEmpty`: renders `div.detail-card.detail-card--empty` with a `.state-panel-title` (`EmptyTitle`, default "Nothing here yet"), a `.state-panel-copy` (`EmptyBody`, default "There is no data to show yet.") and `EmptyActions` in a `.form-actions` row.
@@ -32,5 +33,5 @@ Every pair passes: the empty card's copy (`muted-text`, 5.09:1); the error Alert
 
 ## Known gaps
 
-- **Most load errors still break the rule that a load failure says nothing changed and offers the read again.** Two pages follow it: Home's DashboardFrame ("**Could not load your Home.** Nothing has changed. Try again, or come back in a few minutes.") and, since flow 02, My account ("Could not load your account. Nothing has changed. Try again, or come back in a few minutes.", with `OnRetry`). Every other `LoadError` is printed as the page gives it, with no Try again, and the pages give it the exception's own text: `exception.Message` on the activity inbox, My activities, an activity, the curriculum items editor, the scales, an MSF report and My authorisations; `RefusalText.Of(exception)` on others (Users, a user, Decisions due, My committee reviews, the review schedule). Flows 03 to 18 should give theirs fixed words and `OnRetry`.
+- **Most load errors still break the rule that a load failure says nothing changed and offers the read again.** Six pages follow it: Home's DashboardFrame ("**Could not load your Home.** Nothing has changed. Try again, or come back in a few minutes."); since flow 02, My account ("Could not load your account. …", with `OnRetry`); and since flow 03, Log an activity ("Could not load what you can file. Nothing has changed. Try again, or come back in a few minutes."), an activity ("Could not load this activity. …"), My activities ("Could not load your activities. …") and the Activity inbox ("Could not load the Activity inbox. …"), each with Try again and the exception sent to the log. Every other `LoadError` is printed as the page gives it, with no Try again, and the pages give it the exception's own text: `exception.Message` on the curriculum items editor, the scales, an MSF report and My authorisations; `RefusalText.Of(exception)` on others (Users, a user, Decisions due, My committee reviews, the review schedule). Flows 04 to 18 should give theirs fixed words and `OnRetry`.
 - `.state-panel-title` is a `<div>` at 1.1rem/600 with the body's line height (`panel-title`), not a heading.

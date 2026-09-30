@@ -1,4 +1,4 @@
-<!-- @dsCard group="Feedback" height=780 subtitle="Every list and dashboard renders loading, error and empty explicitly" -->
+<!-- @dsCard group="Feedback" height=1100 subtitle="Every list and dashboard renders loading, error and empty explicitly" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -22,11 +22,11 @@
 <p class="pv-cap">Error without OnRetry: a danger Alert carrying the page's load error (body text on the tint, the danger edge and icon)</p>
 <div class="alert alert-danger" role="alert">The decision panel could not be found.</div>
 
-<p class="pv-cap">Error with OnRetry (My account, T339): fixed words that say nothing changed, and Try again; the answer takes the focus once it has come</p>
+<p class="pv-cap">Error with OnRetry (an activity, flow 03; My account, flow 02): fixed words that say nothing changed, and Try again; the answer takes the focus once it has come</p>
 <div class="action-result" tabindex="-1">
   <div class="alert alert-danger" role="alert">
     <div class="alert-row">
-      <span class="alert-row-text">Could not load your account. Nothing has changed. Try again, or come back in a few minutes.</span>
+      <span class="alert-row-text">Could not load this activity. Nothing has changed. Try again, or come back in a few minutes.</span>
       <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</button>
     </div>
   </div>
@@ -35,10 +35,24 @@
 <p class="pv-cap">Empty: a dashed card with a title, a line of copy, and an optional action row</p>
 <div class="detail-card detail-card--empty">
   <div class="state-panel-title">No activities yet</div>
-  <div class="state-panel-copy">Create the first activity from the activity catalogue.</div>
+  <div class="state-panel-copy">Log an activity to ask an assessor to rate an encounter, or to log a teaching session.</div>
   <div class="form-actions">
-    <a class="btn btn-primary" href="#">New activity</a>
+    <a class="btn btn-outline" href="#">Log an activity</a>
   </div>
+</div>
+
+<p class="pv-cap">LoadingContent (the activity page, flow 03): the page's own skeleton, a status card over the details grid, hidden from a screen reader, which hears the page's status line instead</p>
+<p class="visually-hidden" role="status">Loading the activity.</p>
+<div class="detail-card activity-status activity-status--others" aria-hidden="true">
+  <div class="activity-status-main">
+    <div class="skeleton" style="width:9rem;height:1rem"></div>
+    <div class="skeleton" style="width:60%;height:1.4rem"></div>
+    <div class="skeleton" style="width:80%;height:1rem"></div>
+  </div>
+</div>
+<div class="details-grid" aria-hidden="true">
+  <div class="detail-card"><div class="skeleton" style="width:100%;height:1rem"></div><div class="skeleton" style="width:100%;height:1rem"></div><div class="skeleton" style="width:100%;height:1rem"></div><div class="skeleton" style="width:100%;height:1rem"></div></div>
+  <div class="detail-card"><div class="skeleton" style="width:30%;height:1.4rem"></div><div class="skeleton" style="width:100%;height:1rem"></div><div class="skeleton" style="width:100%;height:1rem"></div><div class="skeleton" style="width:100%;height:1rem"></div></div>
 </div>
 </body>
 </html>

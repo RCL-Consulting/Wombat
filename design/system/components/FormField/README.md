@@ -29,6 +29,7 @@ One labelled field of a form: a `<label for>`, the caller's control, its help te
 - A group of checkboxes or radios is a `fieldset.form-group` with a `<legend>` (reading as a label), its help a `p.page-subtitle` the fieldset names, its checkboxes in a `.check-grid`, each with a unique id. A rating scale is a `.scale-choices` list, lowest point first. Not a FormField.
 - A field the caller may read but not change is text, not a control: a `dl.form-group` with the value and a `.muted .text-sm` line saying who sets it ("Set by a global administrator.").
 - An option is shown by its label, never the key it stores.
+- **An activity form is not built from FormField** (flow 03, T342): ActivityForm renders the schema itself, a card a section, with its own help under the control (`p.field-help`, muted 0.9rem, not `small.page-subtitle`), its required mark as `span.required-mark` (`danger-color`) with `aria-required` on the control, and the chosen option of an EPA or person select printed in full under it (`.field-readback`). A field the reader may not write has no control at all.
 - A password is a `PasswordField` (its own component: the label, the input and a Show toggle beside it), not a FormField; a new password lists the six rules under it (PasswordRules). The old `.password-wrapper` and `PasswordToggleButton` are gone (T339).
 
 ## Invalid and warning states (DESIGN.md § Form system; § Alerts, validation, empty states)
@@ -38,6 +39,7 @@ One labelled field of a form: a `<label for>`, the caller's control, its help te
 - An invalid control is marked on the control too: Blazor's `.invalid` and `aria-invalid="true"`, or `.input-validation-error` plus `aria-invalid` on one the page marks by hand. It gets a `danger-color` border and, with it, a 5px stripe down its left (the 1px border and `inset 4px 0 0 var(--danger-color)`), so the state is not colour alone; a shadow, so the text does not move as the field turns invalid. In a Windows contrast theme the stripe is a 5px left border. A checkbox is not marked.
 - A non-blocking warning is a `.field-warning`: `text-color` on `warning-bg` with a `warning-color` stripe, 0.85rem. "This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the encounter is recorded as late."
 - A warning and a predicted refusal never show together; both live in one `role="status"` region the input names.
+- **A field the server refused shows its own part of the refusal under it** (flow 03, T263, C8): the page hands the form the refusal's words, cut one field a line, and each field it names says its part as a `.validation-message` (`<key>-msg`), takes the invalid marks, and names its help, its message and then the RefusalSummary with `aria-describedby`. A changed value drops its marks and its message at once.
 
 ## Contrast
 

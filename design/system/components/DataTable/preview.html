@@ -1,4 +1,4 @@
-<!-- @dsCard group="Data" height=540 width=960 subtitle="A list page: the search container, then the table with its row actions" -->
+<!-- @dsCard group="Data" height=1180 width=960 subtitle="A list page: the search container, then the table with its row actions; and the stacked table, a block a row below 641px" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,9 +6,20 @@
 <title>DataTable</title>
 <style>
   body { padding: var(--space-lg); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px app.css stacks .clinic-table--stack. This card is wider than a phone, so the phone rendition repeats the
+     media rule's declarations under .pv-phone. */
+  .pv-phone { width: 358px; }
+  .pv-phone .clinic-table--stack thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-phone .clinic-table--stack tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-phone .clinic-table--stack tbody tr:last-child { border-bottom: 0; }
+  .pv-phone .clinic-table--stack td { border: 0; padding: 0; }
+  .pv-phone .clinic-table--stack td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
 </style>
 </head>
 <body>
+<p class="pv-cap">A list with a search and row actions, each named by its row (the pattern; flow 03 redrew My activities, below)</p>
 <div class="search-container shadow mb-3">
   <div class="search-grid">
     <div class="search-field">
@@ -57,6 +68,69 @@
       </tr>
     </tbody>
   </table>
+</div>
+<p class="pv-cap">My activities' All activities (Sipho Ndlovu after Step 3.12): the stacked DataTable, explicit roles, a cell that does not say what it is labelled by its column. The two share type, EPA and date, so each name ends with its assessor (E7) and has no second line.</p>
+<section class="list-section" aria-labelledby="all-activities-heading">
+  <h2 id="all-activities-heading" class="list-section-title" tabindex="-1">All activities (2)</h2>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack" role="table">
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Activity</th>
+          <th scope="col" role="columnheader">Who has it now</th>
+          <th scope="col" role="columnheader">State</th>
+          <th scope="col" role="columnheader">Credit</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+      <tr role="row">
+        <td role="cell"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10 · Sarah Botha</a></td>
+        <td role="cell" data-label="Who has it now">Sarah Botha</td>
+        <td role="cell"><span class="badge badge-submitted">Requested</span></td>
+        <td role="cell" data-label="Credit">—</td>
+      </tr>
+      <tr role="row">
+        <td role="cell"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10 · Fatima Khumalo</a></td>
+        <td role="cell" data-label="Who has it now">Closed</td>
+        <td role="cell"><span class="badge badge-declined">Declined</span></td>
+        <td role="cell" data-label="Credit">—</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<p class="pv-cap">The same at 390px: a block a row, the header row visually hidden but still read, "Who has it now:" and "Credit:" drawn before their values with empty alternative text</p>
+<div class="pv-phone">
+<section class="list-section" aria-labelledby="all-activities-heading-2">
+  <h2 id="all-activities-heading-2" class="list-section-title" tabindex="-1">All activities (2)</h2>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack" role="table">
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Activity</th>
+          <th scope="col" role="columnheader">Who has it now</th>
+          <th scope="col" role="columnheader">State</th>
+          <th scope="col" role="columnheader">Credit</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+      <tr role="row">
+        <td role="cell"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10 · Sarah Botha</a></td>
+        <td role="cell" data-label="Who has it now">Sarah Botha</td>
+        <td role="cell"><span class="badge badge-submitted">Requested</span></td>
+        <td role="cell" data-label="Credit">—</td>
+      </tr>
+      <tr role="row">
+        <td role="cell"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10 · Fatima Khumalo</a></td>
+        <td role="cell" data-label="Who has it now">Closed</td>
+        <td role="cell"><span class="badge badge-declined">Declined</span></td>
+        <td role="cell" data-label="Credit">—</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 </div>
 </body>
 </html>

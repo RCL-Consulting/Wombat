@@ -1,0 +1,70 @@
+<!-- @dsCard group="Activities" height=1000 width=974 subtitle="The history: a real table, oldest first, a note on a row of its own; below 641px folded into All n moves" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ActivityHistory</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px, on .activity-page, app.css hides the table and shows the fold. This card is wider than a phone, so the
+     second rendition sets the same two declarations itself. */
+  .pv-phone { width: 358px; }
+  .pv-phone .history-table-container { display: none; }
+  .pv-phone .history-details { display: block; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Sipho Ndlovu's declined Mini-CEX (Steps 3.10 and 3.11): the create row from nothing, the late filing under its time, the reason on its own row</p>
+<section class="detail-card" aria-labelledby="hist-1">
+  <h2 id="hist-1" class="activity-card-title">History</h2>
+  <div class="table-container history-table-container">
+    <table class="clinic-table history-table" aria-labelledby="hist-1">
+      <thead>
+        <tr><th scope="col">Move</th><th scope="col">From → to</th><th scope="col">By</th><th scope="col">When</th><th scope="col">Credit</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Create</td><td>— → Draft</td><td>Sipho Ndlovu</td><td>2026-09-30 08:01 SAST</td><td>—</td></tr>
+        <tr><td>Submit</td><td>Draft → Requested</td><td>Sipho Ndlovu</td><td>2026-09-30 08:01 SAST<span class="history-late">Filed 20 days after the encounter</span></td><td>—</td></tr>
+        <tr class="has-note"><td>Decline</td><td>Requested → Declined</td><td>Fatima Khumalo</td><td>2026-09-30 08:01 SAST</td><td>—</td></tr>
+        <tr><td class="history-note" colspan="5"><span class="text-muted">Note:</span> I was not on the ward that day; Dr Botha observed this encounter. Please send it to her.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <details class="history-details">
+    <summary><svg class="icon history-details-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>All 3 moves</summary>
+  </details>
+  <p class="text-sm text-muted history-zone">Times are South African time.</p>
+</section>
+
+<p class="pv-cap">The same at 390px (on the activity page): the table hidden, the moves in a native details, open here, its chevron turned down</p>
+<section class="detail-card pv-phone" aria-labelledby="hist-2">
+  <h2 id="hist-2" class="activity-card-title">History</h2>
+  <div class="table-container history-table-container"></div>
+  <details class="history-details" open>
+    <summary><svg class="icon history-details-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>All 3 moves</summary>
+    <ol class="history-list">
+      <li class="history-row">
+        <b>Create · — → Draft</b>
+        <span>Sipho Ndlovu · 2026-09-30 08:01 SAST</span>
+        <span class="history-meta">Credit —</span>
+      </li>
+      <li class="history-row">
+        <b>Submit · Draft → Requested</b>
+        <span>Sipho Ndlovu · 2026-09-30 08:01 SAST</span>
+        <span class="history-meta">Filed 20 days after the encounter</span>
+        <span class="history-meta">Credit —</span>
+      </li>
+      <li class="history-row">
+        <b>Decline · Requested → Declined</b>
+        <span>Fatima Khumalo · 2026-09-30 08:01 SAST</span>
+        <span class="history-meta">Credit —</span>
+        <span>Note: I was not on the ward that day; Dr Botha observed this encounter. Please send it to her.</span>
+      </li>
+    </ol>
+  </details>
+  <p class="text-sm text-muted history-zone">Times are South African time.</p>
+</section>
+</body>
+</html>

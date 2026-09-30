@@ -12,7 +12,9 @@ The list page's table: a `.clinic-table` in a scrolling `.table-container`, with
 </DataTable>
 ```
 
-`Items`, `HeaderRow` and `Row` are required; `Caption` and `Empty` are optional. It renders `div.table-container.shadow > table.clinic-table`. Most pages wrap it in a `StatePanel` for loading, error and empty.
+`Items`, `HeaderRow` and `Row` are required; `Caption`, `Empty` and `Stack` are optional. It renders `div.table-container.shadow > table.clinic-table`. Most pages wrap it in a `StatePanel` for loading, error and empty.
+
+`Stack` (flow 03, T342, A8) makes it **the stacked table**, `table.clinic-table.clinic-table--stack`: below 641px each row is a block of its cells, one under another, instead of a table that scrolls sideways. See below.
 
 ## The list page shape (DESIGN.md § Table system; § Page-level patterns)
 
@@ -28,6 +30,18 @@ PageHeader (title, subtitle, primary action) → `.search-container` with a `.se
 - `tr.is-editing`: a row open for editing and its spanning form row below, tied by a 4px `secondary-color` stripe (`inset 4px 0 0`) on the first cell of each.
 - A table grouped by one column puts each group in its own `<tbody>`, opened by `<th scope="rowgroup" rowspan="n">`.
 
+## The stacked table (DESIGN.md § Page-level patterns, "List page")
+
+My activities' All activities is the first (and only) one: the columns Activity, Who has it now, State and Credit.
+
+- **Below 641px** each `tbody tr` is a grid of its cells, 4px apart, padded 8px by 16px, ruled from the next; the cells lose their padding and rules.
+- **The header row stays in the table**, visually hidden (never `display: none`), so a screen reader still has each cell's column.
+- **The roles are explicit**: DataTable writes `role="table"` on the table and `role="rowgroup"` on its head and body, and the caller's rows carry `role="row"`, `role="columnheader"` and `role="cell"`, since a row laid out as a grid loses its table semantics in some browsers.
+- **A cell whose value does not say what it is** carries `data-label`, its column's name, drawn before the value at weight 600 in `muted-text` as `content: attr(data-label) ": " / ""`: the empty alternative text keeps the name from being read twice. A cell that says what it is (the activity's link, the state's badge) has none.
+- The Activity cell is an `ActivityLink` (NeedsYouList describes it): the activity's name, "Type · EPA · date", and on a second line whom it goes to. An EPA not in force now is marked under the link, "PAED-006 (no longer in use)" (`.muted .text-sm`, T231).
+- **Who has it now** reads "You", the holder's name, "Waiting for <state label>." (a move a role holds, nobody named), "Done" or "Closed" (`ActivityListWords.WhoHasIt`). **Credit** is `CreditOutcome.Label`: "1 item", "None", "—".
+- The list is headed by an `h2.list-section-title`, "All activities (12)", which takes the focus after a page turn (`tabindex="-1"`): the pager's button may be gone from under it. `PagerControls` under it, 20 a page.
+
 ## Rules
 
 - Every `<table>` is a `.clinic-table` in a `.table-container`; never Bootstrap's `.table`, and no inline column widths.
@@ -36,6 +50,10 @@ PageHeader (title, subtitle, primary action) → `.search-container` with a `.se
 - A row with no action says why in a `.muted` span ("Set by the College", "Staged below"); it is never blank.
 - An item open for editing keeps its row read-only ("Editing below") and puts its controls in a second row spanning the table.
 - Measure a table at 1280px against its longest real values before adding a column.
+
+## Known gaps
+
+- Only My activities stacks. The Activity inbox at 390px still scrolls sideways inside its container (A.7.2, as built), and so does every other list.
 
 ## Appearance
 

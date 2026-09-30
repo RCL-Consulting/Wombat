@@ -1,0 +1,58 @@
+<!-- @dsCard group="Activities" height=820 width=974 subtitle="Needs you: the registrar's drafts and returned work, the same rows in the same words on My activities and on Home's card" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NeedsYouList</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">My activities (Pieter du Plessis, Step 3.20, before he cancels the draft): the section's heading counts its rows as a badge to the eye and words to a screen reader</p>
+<section class="detail-card list-section" aria-labelledby="needs-you-heading">
+  <h2 id="needs-you-heading" class="list-section-title" tabindex="-1">
+    Needs you <span class="badge badge-submitted" aria-hidden="true">1</span><span class="visually-hidden">, 1 item</span>
+  </h2>
+  <p class="needs-you-rule">Your drafts, and work returned to you. A request you can still cancel is with its assessor, so it is not here: it is under All activities.</p>
+  <ul class="needs-you stack-list">
+    <li class="needs-you-row detail-card--emphasis">
+      <a class="activity-link" href="#">DOPS (Paediatrics) · PAED-002 · no date</a>
+      <span class="badge badge-draft">Draft</span>
+      <p class="needs-you-why">Not submitted yet. It is in nobody's inbox until you submit it.</p>
+    </li>
+  </ul>
+</section>
+
+<p class="pv-cap">Home's Needs you card (Sipho Ndlovu, Step 3.16): the same rows, the first five of them, its count read as words, its foot to My activities; and empty (Step 3.12)</p>
+<div class="dashboard-grid">
+  <div class="detail-card">
+    <h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg><span>Needs you</span><span class="badge badge-submitted" aria-hidden="true">1</span><span class="visually-hidden">, 1 item</span></h2>
+    <div class="dashboard-card-body">
+      <ul class="needs-you stack-list">
+        <li class="needs-you-row detail-card--emphasis">
+          <a class="activity-link" href="#">Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-10<span class="visually-hidden">, </span><span class="activity-link-to">with Sarah Botha</span></a>
+          <span class="badge badge-draft">Draft</span>
+          <p class="needs-you-why">Returned to you by Sarah Botha on 2026-09-30. Change it and submit again.</p>
+        </li>
+      </ul>
+      <div class="dashboard-card-footer">
+        <a href="#">Open My activities</a>
+      </div>
+    </div>
+  </div>
+  <div class="detail-card">
+    <h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg><span>Needs you</span></h2>
+    <div class="dashboard-card-body">
+      <p class="muted">Nothing needs you. Requests you have filed are in My activities.</p>
+      <div class="dashboard-card-footer">
+        <a href="#">Open My activities</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

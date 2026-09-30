@@ -1,4 +1,4 @@
-<!-- @dsCard group="Actions" height=900 width=960 subtitle="A native modal dialog: what the action does and cannot undo, then Cancel and the action; and its form mode, a real post" -->
+<!-- @dsCard group="Actions" height=1180 width=960 subtitle="A native modal dialog: what the action does and cannot undo, then the safe button and the action; and its form mode, a real post" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -47,6 +47,19 @@
         <button type="submit" class="btn btn-danger">Remove sign-in</button>
       </div>
     </form>
+  </dialog>
+</div>
+<p class="pv-cap">The action mode with CancelLabel (flow 03, Cancel request… on Anele Dlamini's request to David Naidoo): the safe button says what it keeps, and takes the focus</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-c-title" aria-describedby="pv-c-body">
+    <div class="form-container">
+      <h2 id="pv-c-title">Cancel this request?</h2>
+      <p id="pv-c-body">It leaves David Naidoo's Activity inbox. A cancelled request cannot be reopened, and it credits nothing.</p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline">Keep the request</button>
+        <button type="button" class="btn btn-danger">Cancel request</button>
+      </div>
+    </div>
   </dialog>
 </div>
 </body>

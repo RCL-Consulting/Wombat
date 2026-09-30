@@ -17,7 +17,7 @@ A message block in one of four kinds (`success`, `info`, `warning`, `danger`): b
 ## Look (DESIGN.md § Alerts, validation, empty states)
 
 - `.alert`: `text-color` words, a 1px edge in the kind's colour thickened to 4px down the left, `radius-md`, padding 0.75rem 1rem 0.75rem 3rem, `space-lg` below.
-- **Inside a card or a dialog that spaces its blocks with a gap, the alert has no margin of its own**, so a result keeps the container's rhythm: the auth card (its children's margins are zeroed), `.change-password .alert`, `.my-account-card .alert` and `.dialog-form .alert`, all 16px between blocks. A new container with a gap does the same.
+- **Inside a card or a dialog that spaces its blocks with a gap, the alert has no margin of its own**, so a result keeps the container's rhythm: the auth card (its children's margins are zeroed), `.change-password .alert`, `.my-account-card .alert` and `.dialog-form .alert`, all 16px between blocks; and since flow 03 Log an activity's `.form-column > .alert` (24px between blocks; its paragraphs 4px apart). A new container with a gap does the same.
 - `.alert::before`: the kind's 20px Lucide icon, a mask filled with the kind's colour, 1rem in and on the first line: circle-check (success), info (info), triangle-alert (warning), circle-alert (danger). No page writes the icon.
 - Tints and edges: success `success-bg`/`success-color`; info `info-bg`/`secondary-color`; warning `warning-bg`/`warning-color`; danger `danger-bg`/`danger-color`.
 - In a Windows contrast theme the icon is filled with `CanvasText`.
@@ -31,7 +31,9 @@ A message block in one of four kinds (`success`, `info`, `warning`, `danger`): b
 - Never hand-write `<div class="alert …">`: it skips the role default.
 - **A semantic colour is never an alert's words** (T322): the kind is told by the tint, the edge and the icon.
 - An action that is done moves the focus to its result; a refused action leaves the focus where it was, with its refusal as a `danger` Alert.
-- A load error says that nothing changed and offers the read again; it draws nothing the read would have filled. Home's DashboardFrame and My account (StatePanel with `OnRetry`, T339) do; every other StatePanel `LoadError` prints the page's own string with no Try again (StatePanel's Known gaps).
+- **A refusal that names fields is not an Alert** (flow 03, T342): it is a RefusalSummary, which takes the focus and links each line to its field. A refusal that names no field stays a `danger` Alert above the page's cards.
+- **A result on a record page** (flow 03, the activity page): an ActionResult at the head of the page body, `id="activity-result"`, its success Alert `role="status"`, taking the focus after every move: the move's sentence in bold, then, plain, whose inbox it is in. "**Submitted. It is now Requested.** It is in David Naidoo's Activity inbox." A result handed over from another page (Log an activity's filing) arrives with the page, `FocusOnLoad`, and wins over the h1. A standing notice (File it again's "Copied from your request to Fatima Khumalo, which was declined. …") is `Kind="info"` with no role.
+- A load error says that nothing changed and offers the read again; it draws nothing the read would have filled. Home's DashboardFrame, My account (StatePanel with `OnRetry`, T339) and flow 03's four activity pages do; every other StatePanel `LoadError` prints the page's own string with no Try again (StatePanel's Known gaps).
 - A refusal that arrives by URL travels as a code and the page chooses the sentence, so a crafted link cannot put words on Wombat's page. No sentence says "Please" (flow 02, C5).
 
 ## Contrast

@@ -1,4 +1,4 @@
-<!-- @dsCard group="Actions" height=680 width=974 subtitle="Primary in the page header, outline for the rest, danger only in a dialog footer; every button 36px with a 1px edge" -->
+<!-- @dsCard group="Actions" height=780 width=974 subtitle="Primary in the page header, outline for the rest, danger only in a dialog footer; every button 36px with a 1px edge" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -68,14 +68,24 @@
   </section>
 
   <section>
-    <p class="pv-cap">Today's activity page, not the rule: a move the actor cannot complete is shown disabled with its reason as visible text it points at (the rule); every move a primary, in title case (what flows 03 and 04 redesign)</p>
-    <div class="form-actions">
-      <button type="button" class="btn btn-primary">Return</button>
-      <button type="button" class="btn btn-primary" disabled aria-describedby="reason-sign-off">Sign Off</button>
+    <p class="pv-cap">An action bar with workflow moves (flow 03): the move first and filled, the rest outlined, Cancel quiet and last; a move that cannot be completed here is aria-disabled, never disabled, named by its reason</p>
+    <div class="form-actions form-actions--moves">
+      <button type="button" class="btn btn-primary">Submit to David Naidoo</button>
+      <button type="button" class="btn btn-outline">Save draft</button>
+      <button type="button" class="btn btn-outline" aria-disabled="true">Discard changes</button>
+      <button type="button" class="btn btn-quiet btn-quiet--danger">Cancel this draft…</button>
     </div>
-    <ul class="workflow-action-reasons">
-      <li id="reason-sign-off"><strong>Sign Off:</strong> Needs Overall level, which you cannot fill in here.</li>
-    </ul>
+    <div class="form-actions form-actions--moves" style="margin-top: var(--space-md)">
+      <button type="button" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="reason-sign-off">Sign Off</button>
+      <button type="button" class="btn btn-outline" aria-expanded="false">Return</button>
+      <ul class="move-reasons">
+        <li id="reason-sign-off"><strong>Sign Off:</strong> Needs Overall level, which you cannot fill in here.</li>
+      </ul>
+    </div>
+    <div class="pv-row" style="margin-top: var(--space-md)">
+      <button type="button" class="btn btn-quiet">Keep the request</button>
+      <button type="button" class="btn btn-quiet btn-quiet--danger">Cancel request…</button>
+    </div>
   </section>
 </div>
 </body>

@@ -1,0 +1,65 @@
+<!-- @dsCard group="Activities" height=720 width=974 subtitle="The ladder read-only: every rung abreast, the chosen one filled and named, its descriptor under it; pending before the section is filled in" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RungRow</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-card { max-width: 40rem; }
+  /* Below 641px the rungs close to 4px apart (app.css's phone rule); the preview's card is wider, so it sets it here. */
+  .pv-phone { width: 358px; }
+  .pv-phone .rung-row { gap: var(--space-xs); }
+</style>
+</head>
+<body>
+<p class="pv-cap">Chosen: rung 4 (stored as its Order, 5), named "4, chosen", with the College's descriptor</p>
+<div class="detail-card pv-card">
+  <dl class="details-list details-list--stacked">
+    <div><dt>Supervision required for this encounter</dt>
+      <dd>
+        <ol class="rung-row" aria-label="Supervision required for this encounter">
+          <li class="rung">1</li>
+          <li class="rung">2</li>
+          <li class="rung">3a</li>
+          <li class="rung">3b</li>
+          <li class="rung is-chosen">4<span class="visually-hidden">, </span><span class="rung-check">chosen</span></li>
+          <li class="rung">5</li>
+        </ol>
+        <p class="rung-descriptor"><b>4</b>Unsupervised practice. The trainee carries the responsibility for the activity.</p>
+      </dd>
+    </div>
+  </dl>
+</div>
+
+<p class="pv-cap">Pending, in a locked section's body: dashed, hidden from a screen reader, which reads the list's name once</p>
+<div class="detail-card form-section form-section--locked pv-card">
+  <div class="form-section-lockbody">
+    <ol class="rung-row" aria-label="Supervision required for this encounter: 1, 2, 3a, 3b, 4, 5">
+      <li class="rung rung--pending" aria-hidden="true">1</li>
+      <li class="rung rung--pending" aria-hidden="true">2</li>
+      <li class="rung rung--pending" aria-hidden="true">3a</li>
+      <li class="rung rung--pending" aria-hidden="true">3b</li>
+      <li class="rung rung--pending" aria-hidden="true">4</li>
+      <li class="rung rung--pending" aria-hidden="true">5</li>
+    </ol>
+    <p class="form-section-empty">Not filled in yet.</p>
+  </div>
+</div>
+
+<p class="pv-cap">At 390px: the six rungs still abreast, 4px apart; rung 3b chosen</p>
+<div class="detail-card pv-phone">
+  <ol class="rung-row" aria-label="Supervision required for this encounter">
+    <li class="rung">1</li>
+    <li class="rung">2</li>
+    <li class="rung">3a</li>
+    <li class="rung is-chosen">3b<span class="visually-hidden">, </span><span class="rung-check">chosen</span></li>
+    <li class="rung">4</li>
+    <li class="rung">5</li>
+  </ol>
+  <p class="rung-descriptor"><b>3b</b>Indirect supervision, reviewed on the trainee’s initiative. Supervisor available on request; the trainee decides what needs discussion and shows reliable help-seeking. Full management of the activity, supervisor informed rather than consulted.</p>
+</div>
+</body>
+</html>

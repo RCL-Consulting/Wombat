@@ -1,0 +1,96 @@
+<!-- @dsCard group="Activities" height=1320 width=974 subtitle="Who has it now: the state's badge and one headline, a quoted note, the body, and the page's one action; the stripe says whose move it is" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ActivityStatus</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-lg) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-cap + .activity-status { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">The author's draft, to the author (Anele Dlamini, Step 3.1): the viewer's move, the emphasis stripe</p>
+<section class="detail-card activity-status detail-card--emphasis" aria-labelledby="h1">
+  <div class="activity-status-main">
+    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-head" id="h1"><span class="badge badge-draft">Draft</span><span class="activity-status-headline">With you. Not submitted yet.</span></p>
+    <p class="activity-status-body">Finish the request and submit it. It is in nobody's inbox until you submit it.</p>
+  </div>
+</section>
+
+<p class="pv-cap">Requested, to its registrar (Step 3.3): someone else's move; Cancel request… on the card, quiet</p>
+<section class="detail-card activity-status activity-status--others" aria-labelledby="h2">
+  <div class="activity-status-main">
+    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-head" id="h2"><span class="badge badge-submitted">Requested</span><span class="activity-status-headline">With David Naidoo since 2026-09-30 07:58 SAST.</span></p>
+    <p class="activity-status-body">Nothing for you to do. You can cancel the request until David Naidoo acts on it.</p>
+  </div>
+  <div class="activity-status-action">
+    <button type="button" class="btn btn-quiet btn-quiet--danger">Cancel request…</button>
+  </div>
+</section>
+
+<p class="pv-cap">Requested, to the assessor it names, filed late (Step 3.11, Fatima Khumalo)</p>
+<section class="detail-card activity-status detail-card--emphasis" aria-labelledby="h3">
+  <div class="activity-status-main">
+    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-head" id="h3"><span class="badge badge-submitted">Requested</span><span class="activity-status-headline">Your move. Sipho Ndlovu asked you on 2026-09-30 08:01 SAST.</span></p>
+    <p class="activity-status-body">Complete it, or decline it with a note Sipho Ndlovu will read.</p>
+    <p class="activity-status-meta">Filed 20 days after the encounter: recorded as late.</p>
+  </div>
+</section>
+
+<p class="pv-cap">Returned to its registrar (Step 3.16, Sipho Ndlovu): the note quoted, its writer cited</p>
+<section class="detail-card activity-status detail-card--emphasis" aria-labelledby="h4">
+  <div class="activity-status-main">
+    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-head" id="h4"><span class="badge badge-draft">Draft</span><span class="activity-status-headline">With you. Sarah Botha returned it on 2026-09-30 08:03 SAST.</span></p>
+    <blockquote class="activity-status-quote">
+      <p>Please say what you would do differently at triage, and what you will read before your next take.</p>
+      <cite>Sarah Botha</cite>
+    </blockquote>
+    <p class="activity-status-body">Change your reflection and submit it again.</p>
+  </div>
+</section>
+
+<p class="pv-cap">Declined, to its registrar (Step 3.12): the declined stripe, her reason, and File it again</p>
+<section class="detail-card activity-status activity-status--declined" aria-labelledby="h5">
+  <div class="activity-status-main">
+    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-head" id="h5"><span class="badge badge-declined">Declined</span><span class="activity-status-headline">Closed. Fatima Khumalo declined it on 2026-09-30 08:01 SAST.</span></p>
+    <blockquote class="activity-status-quote">
+      <p>I was not on the ward that day; Dr Botha observed this encounter. Please send it to her.</p>
+      <cite>Fatima Khumalo</cite>
+    </blockquote>
+    <p class="activity-status-body">It credits nothing, and nothing more can happen to it. To be assessed on this encounter, file it again and name someone else.</p>
+  </div>
+  <div class="activity-status-action">
+    <a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" /> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>File it again, to someone else</a>
+  </div>
+</section>
+
+<p class="pv-cap">Done, to its registrar (Step 3.6): the done stripe, and Open My progress</p>
+<section class="detail-card activity-status activity-status--done" aria-labelledby="h6">
+  <div class="activity-status-main">
+    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-head" id="h6"><span class="badge badge-completed">Completed</span><span class="activity-status-headline">Done. David Naidoo completed it on 2026-09-30 08:00 SAST.</span></p>
+    <p class="activity-status-body">Rated 4. Credited 1 item to PAED-001.</p>
+  </div>
+  <div class="activity-status-action">
+    <a class="btn btn-outline" href="#">Open My progress</a>
+  </div>
+</section>
+
+<p class="pv-cap">A draft cancelled before it was filed (Step 3.20, Pieter du Plessis)</p>
+<section class="detail-card activity-status activity-status--others" aria-labelledby="h7">
+  <div class="activity-status-main">
+    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-head" id="h7"><span class="badge badge-declined">Cancelled</span><span class="activity-status-headline">Closed. You cancelled it on 2026-09-30 08:06 SAST.</span></p>
+    <p class="activity-status-body">It was never submitted, and it credits nothing.</p>
+  </div>
+</section>
+</body>
+</html>

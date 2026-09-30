@@ -62,6 +62,7 @@
         "circle-plus.svg",
         "clipboard-list.svg",
         "clock.svg",
+        "copy.svg",
         "download.svg",
         "eye-off.svg",
         "eye.svg",
@@ -449,6 +450,12 @@
           "blob": "c2305074bb982b7a4088fd4720f05c08",
           "size": 331,
           "type": "image/svg+xml"
+        },
+        "copy.svg": {
+          "name": "copy.svg",
+          "blob": "81389b9bb3fe801850b9b69573939e89",
+          "size": 208,
+          "type": "image/svg+xml"
         }
       }
     },
@@ -501,8 +508,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-09-28T15:00:00Z",
-    "via": "Claude Code · Wombat@e33b563b",
-    "note": "Re-synced to flow 02 as built (T339, f50dffb2 and 6735fa98): no token value changed; 4 components added (SignInCard, PasswordField, PasswordRules, MyAccount), 7 revised (AuthLayout, Alert, ConfirmDialog, StatePanel, FormField, Icon, and the bundle); 4 icons uploaded (eye, eye-off, building-2, key-round; 58 in all)."
+    "at": "2026-09-30T09:56:07Z",
+    "via": "Claude Code · Wombat@c92f578a",
+    "note": "Re-synced to flow 03 as built (T342, 725237ee with daaf6386, 5fd5abcd and a341b44e): no token value changed; 10 components added (InstrumentPicker, ActivityForm, RungRow, SubmitCheck, RefusalSummary, ActivityStatus, ActivityAbout, ActivityHistory, ActivityWorkflowActions, NeedsYouList), 10 revised (ConfirmDialog, DashboardCard, DataTable, PageHeader, StatePanel, Button, Alert, FormField, Icon, and the bundle); 1 icon uploaded (copy; 59 in all)."
   }
 }

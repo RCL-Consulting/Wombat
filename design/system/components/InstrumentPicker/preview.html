@@ -1,0 +1,71 @@
+<!-- @dsCard group="Activities" height=1080 width=974 subtitle="Log an activity before a type is chosen: every type the caller may file, a card a group, each a link to its own form" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>InstrumentPicker</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Anele Dlamini, a registrar at KGK: eleven types in three groups. The header is PageHeader's; the page's content column starts 24px under its rule.</p>
+<div class="header-container">
+  <div>
+    <h1>Log an activity</h1>
+    <p class="page-subtitle">Choose what you are filing. Each opens its own form.</p>
+  </div>
+</div>
+
+<div class="stack-list">
+  <section class="detail-card instrument-group" aria-labelledby="group-rated">
+    <div class="instrument-group-head">
+      <h2 id="group-rated">Rated by an assessor</h2>
+      <span class="text-muted">7 types</span>
+    </div>
+    <p class="text-muted">You name an assessor. They rate the encounter on 1, 2, 3a, 3b, 4, 5 and write feedback. Completed, it counts towards the EPA.</p>
+    <ul class="instrument-picker">
+      <li><a class="instrument-link" href="#">Case-Based Discussion (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+      <li><a class="instrument-link" href="#">Chart-Stimulated Recall (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+      <li><a class="instrument-link" href="#">Clinical Case Analysis (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+      <li><a class="instrument-link" href="#">Direct Observation (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+      <li><a class="instrument-link" href="#">DOPS (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+      <li><a class="instrument-link" href="#">Mini-CEX (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+      <li><a class="instrument-link" href="#">Random Case Analysis (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+    </ul>
+  </section>
+
+  <section class="detail-card instrument-group" aria-labelledby="group-discussed">
+    <div class="instrument-group-head">
+      <h2 id="group-discussed">Discussed or reviewed, not rated</h2>
+      <span class="text-muted">3 types</span>
+    </div>
+    <p class="text-muted">You name a supervisor or reviewer, who discusses or reviews it with you. No rating.</p>
+    <ul class="instrument-picker">
+      <li><a class="instrument-link" href="#">Clinical Audit (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+      <li><a class="instrument-link" href="#">Portfolio and Logbook Review (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+      <li><a class="instrument-link" href="#">Reflective Exercise (Paediatrics)<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+    </ul>
+  </section>
+
+  <section class="detail-card instrument-group" aria-labelledby="group-logged">
+    <div class="instrument-group-head">
+      <h2 id="group-logged">Logged by you</h2>
+      <span class="text-muted">1 type</span>
+    </div>
+    <p class="text-muted">Only you fill it in. It is logged at once, and credits nothing.</p>
+    <ul class="instrument-picker">
+      <li><a class="instrument-link" href="#">KGK Teaching Session Log<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a></li>
+    </ul>
+  </section>
+</div>
+
+<p class="pv-cap">Nothing the caller may file: an empty state, not a blank page</p>
+<div class="detail-card detail-card--empty">
+  <p class="state-panel-title">Nothing can be filed yet.</p>
+  <p class="state-panel-copy">No activity type is open to you. If you expected one, ask your programme administrator which ones your programme uses.</p>
+</div>
+</body>
+</html>
