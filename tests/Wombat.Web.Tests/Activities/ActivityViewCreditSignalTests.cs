@@ -150,7 +150,7 @@ public sealed class ActivityViewCreditSignalTests : TestContext
         var epa = cut.FindAll(".activity-about .details-list > div")
             .Single(row => row.QuerySelector("dt")!.TextContent.Trim() == "EPA");
         epa.QuerySelector("dd .muted")!.TextContent.Should().Be("(no longer in use)");
-        epa.QuerySelector("dd")!.TextContent.Should().Contain("PAED-001 — Emergency care");
+        epa.QuerySelector("dd")!.TextContent.Should().Contain("PAED-001 — Emergency care (no longer in use)");
     }
 
     private IRenderedComponent<ActivityView> RenderPage(ActivityDetailDto detail)
