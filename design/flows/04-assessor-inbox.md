@@ -24,7 +24,8 @@ there, waits here.
    `design/upload/crop-first/`, or crop its link first. Add flow 03's chosen assessor boards (§ 4) by hand; the script
    does not stage them.
 2. **Start a new canvas** from the main app's Design page, on the Wombat design system v10
-   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not flow 01's, 02's or 03's canvas.
+   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not flow 01's, 02's or 03's canvas. **Done:**
+   https://claude.ai/artifact/8JnYLZp6CTR1Mg38a5v7DX (2026-09-30; `README.md` in the record folder).
 3. **Copy the mark into the canvas before round 1** (`Artifact publish`, `asset: true`, `from_url` = the design
    system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Put the returned `/_blob/` URL in § 1 and in
    `design/flows/04-assessor-inbox/round-1-ask.txt`, where they read `<MARK-URL>`.
@@ -48,7 +49,7 @@ This is flow 04 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   account) and 03 (a registrar files an activity, and the activity page) are designed and built; these pages sit inside
   the shell. Structure first, then fidelity: round 1 is 2–3 structural variations as wireframes of the assessor's Home
   and the inbox, and I pick one before round 2. The activity page is flow 03's: extend it, do not redesign it. The
-  runbook steps follow below in this same message. The brand mark is at <MARK-URL>: use it, never a drawn disc.
+  runbook steps follow below in this same message. The brand mark is at /_blob/89ddc910c53255a32bcbb84e2820bc45: use it, never a drawn disc.
 
 GOAL: A consultant sees what waits for them, oldest first, and how long each has waited; opens it; rates it, declines
   it with a reason, returns a reflection for more work or records the discussion; and is taken on to the next one. Often
