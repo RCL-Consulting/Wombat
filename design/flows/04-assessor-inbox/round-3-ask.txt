@@ -1,0 +1,124 @@
+ROUND 2 REVIEWED: accept with changes. Round 3: apply the decisions and corrections below to round 2, and change
+nothing else. The tokens, the contrast figures, every round 1 decision (A, "Two pages, one list", with corrections a-d;
+Q1-Q7; E1-E5; R1-R4) and every round 2 word not named here hold. The brand mark stays
+/_blob/89ddc910c53255a32bcbb84e2820bc45, never a drawn disc.
+
+DECISIONS (one sentence each):
+  E1: Overdue keeps the code's clock, 7 x 24 h since UpdatedOn (AssessorDueDays), the one clock the dashboard and the
+    stall share. The rule line reads "Oldest first. Overdue once it has waited 7 days." everywhere (Home's card, the
+    inbox's Waiting for you, the Spec), its number read from AssessorDueDays (say so on the Spec). The boards test
+    days >= 7, not days > 7: a whole-day count of 7 always carries Overdue. No cast row changes (they wait 8 days).
+  E2: a fold that is open at 1280 and shut at 390 (the request fold; "What each rung means") is two renderings toggled
+    by CSS at 641 px, no script. Both are read-only; the hidden copy's ids are suffixed; the radios' descriptions sit
+    outside both (C7). State it on the Spec.
+  E3: the rung picker only on the rated level field (rated_level_field) whose ladder loads; the row is as wide as its
+    ladder; one legend per picker. Any other scale field, or a ladder that fails to load, keeps the select. R4 on the
+    Spec reads so: "the writer of the rated level field chooses on the rung row (radios, as wide as its ladder, the
+    descriptors under "What each rung means"); any other scale field, or a ladder that fails to load, keeps the select."
+  E4: the other-role line drops the role. One item: "1 activity waits for you in the Activity inbox, and it is overdue:
+    Mini-CEX (Paediatrics) · PAED-004 · 2026-09-27, from Nomsa Mahlangu, waiting 8 days." + "Open it". Several:
+    "3 activities wait for you in the Activity inbox; 1 is overdue. The oldest: …" + "Open the oldest". Nothing overdue:
+    "1 activity waits for you in the Activity inbox: Mini-CEX (Paediatrics) · PAED-002 · 2026-09-30, from Anele Dlamini,
+    waiting less than a day." (no "overdue" clause; the info tint). No "As an assessor," anywhere (Home, Spec, Steps 3.33).
+  E5: Home's overflow line is "20 more wait in the Activity inbox." (singular "1 more waits in the Activity inbox."),
+    above "Open Activity inbox". It replaces "And 20 more." on the board and the Spec.
+
+CORRECTIONS TO ROUND 2:
+  C1. A move into a final state reads as that state. The result is "Discussed." and "Signed off.", not "It is now
+    Discussed."; "It is now Draft." stays right for Return, which leads on.
+    - discussed: draw "Discussed. Nothing else waits for you."
+    - Spec: give the review's "Signed off. …" beside it; delete the Spec's "to confirm" on Record discussion's
+      sentence.
+    - Steps 3.17: the same words, without "(to confirm)".
+  C2. Two assessors had more waiting in 3.26 and 3.28. Dr Patel also held the portfolio review, Dr Khumalo the CBD.
+    Their completions read "Completed. 1 more waits for you." with that row as the way on; Naidoo, Botha and Zulu read
+    "Nothing else waits for you." Fix both Steps rows (3.26, 3.28).
+  C3. The cast, to the runbook.
+    - Dr Zulu's Recent decisions (switched, and wherever her decisions show), newest first:
+        Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-21, Anele Dlamini, 08:50
+        Direct Observation (Paediatrics) · PAED-010 · 2026-09-26, Lerato Molefe, 08:45
+        Mini-CEX (Paediatrics) · PAED-001 · 2026-09-18, Lerato Molefe, 08:44
+      (round 2 drew the CBD as 2026-09-24). Spec § 7 stops calling them "mine".
+    - Dr Mahlangu's Mini-CEX to Dr Zulu (3.29) plays after 3.28: Create 08:53, Submit 08:55, and "since 2026-09-22
+      08:55" everywhere it shows (switched, committee-line, from-the-line, the Home and inbox rows, Steps 3.33), not
+      08:30.
+    - Dr du Plessis's CBD to Dr Khumalo (3.21) plays before the 08:06 review: its "since" is before 08:06, not 09:05.
+      Draw 08:05 on one-waiting (Home) and wherever the row shows.
+    - 6.18's request (completed-paused, paused-epa): Clinical setting "Outpatient clinic"; Presenting problem
+      "Counselling the parents of a toddler newly diagnosed with type 1 diabetes". A.7.2's request (rated at 390,
+      completed-next at 390, several-overdue): Clinical setting "Ward". Both leave Spec § 7's "mine" list.
+    - Steps 3.30 says once that the ageing leaves a Submit dated before its encounter (09-22 for a 09-27 Mini-CEX; the
+      review filed 09-22 for a period to 09-29), and that the review's "filled in 2026-09-22" is E5's (round 1)
+      consequence.
+    - The volume board (long) states its figures: a 31-character name, a 108-character EPA (PAED-015).
+  C4. About as built. Every type's date row is "Encounter": "Encounter 2026-09-10" for the reflection
+    (awaiting-discussion, return-note, return-refused, returned, discussed), "Encounter 2026-09-29" for the review
+    (awaiting-review), not "Case or incident" or "Period". The review's Credit row reads "None: a portfolio and logbook
+    review credits nothing".
+  C5. Built parts and words where no decision changed them.
+    - The pager (decided-45) is PagerControls as built: "Showing 1–20 of 45", Previous, Next and the "Per page" select.
+    - declined: the locked sections keep the built value "Not filled in." and the pending RungRow, not "Not filled in:
+      the request was declined."
+    - awaiting-review: the review form carries the seed's help under Date of the review, Evidence reviewed and Review
+      comments (portfolio_review_cpsa/schema.json:66, 73, 87), verbatim: Date of the review: "When you completed this
+      review. The record itself is dated the last day of the period reviewed." Evidence reviewed: "What you read.
+      Feedback and reflective entries are in the portfolio export; the logbook, teaching sessions and journal club
+      presentations come from the records the trainee brings." Review comments: "What the portfolio export and the
+      trainee's own records show for this period, and any gaps. A portfolio review is not rated."
+    - Straight apostrophes in app strings ("nobody's", "This activity's EPA is paused", the note help), on every board
+      and the Spec; curly only in the College's seeded text (the descriptors).
+    - Steps: the inbox subtitle's "was" is the built "Work waiting for you to rate, review or record."; the Home card
+      rename (was "Waiting for your rating") is quoted wherever 6.18 and A.7.2 name it.
+  C6. WaitingList is NeedsYouList with an overdue edge. Draw its rows (Home's Waiting for you on every Home state that
+    has rows, and the way on in completed-next and completed-paused) with .needs-you, .needs-you-row (padding space-sm,
+    as built), .needs-you-rule, .needs-you-why; add only .needs-you-row--overdue (the warning stripe) and
+    .needs-you-badges. Home's card and My activities' then share one row. The Spec's new-class table shrinks, names
+    .waiting-more and .card-empty (or uses .text-muted), and says the beside-the-button reason is .move-reasons--beside,
+    a modifier of the built .move-reasons, not a new class.
+  C7. The rung picker keeps its radios (to-rate, rated, completing, from-the-line). One label and one input per rung;
+    is-chosen and checked as conditions on it; the li keyed (@key) so a round trip does not replace the focused radio.
+    Each radio's description is a visually hidden span outside the <details> (the legend stays for the eye); the
+    picker's "chosen" is aria-hidden (the browser says "checked"). The Spec adds: arrow keys move and choose; Tab leaves
+    the group; with none chosen Tab lands on the first. The Spec states the 3.5rem cell (a radio above a 1.1rem label)
+    and keeps the native radio with accent-color, its ring the browser's (4.54), as a sentence for DESIGN.md.
+  C8. 44 px on a phone (every -390 board that has them). Lift Home's "Open Activity inbox" and "All your decisions",
+    the three "Try again" (H-, I-, P-load-error), and the pager's Previous and Next to 2.75rem below 641 px. The note
+    panel's Send and Keep stack at 390 (decline-note, decline-refused, return-note, return-refused, awaiting-review's
+    Return panel), 44 px, the send on top. List them on the Spec.
+  C9. The fold says Hide when open. Two spans, "Show" and "Hide", one hidden per details[open] with display: none. On
+    every fold: the request fold and "What each rung means".
+  C10. Focus rules on the Spec:
+    (a) Decline or Return opens the panel: focus to the note.
+    (b) Keep: focus back to the toggle, aria-expanded="false".
+    (c) Refused: #note-summary takes focus, its link targets #note-in, the panel stays open with the note.
+    (d) A completed move: focus to #activity-result; the next Tab is Open the next.
+    (e) Try again: focus to the region that replaces the error.
+    (f) A page of Decided by you: focus to its h2; Previous on page 1 is aria-disabled, not disabled, so the pressed
+        button keeps its place.
+  C11. Announcements and names.
+    - H-loading: a role="status" "Loading your Home." like the inbox's and the activity's; every such status (and the
+      move bar's busy one) is present before its words arrive.
+    - The alike-rows rule (", Requested", ", waiting since … SAST", "(1 of 2)") holds wherever WaitingList renders:
+      Home, the inbox and the way on. Say so on the Spec.
+    - The Spec marks "Loading the Activity inbox." as new words.
+  C12. The other-role line's other states. Draw two more states of R3-C-Home, at 1280 and 390, with E4's words:
+    committee-line-none-overdue (one item waiting less than a day, the info tint) and committee-line-several (3 waiting,
+    1 overdue, "Open the oldest"). Give their text on the Spec too, and say that a failed read of the line shows nothing
+    and is logged: it never becomes a Home error, which DashboardFrame owns.
+  C13. The Spec's tables.
+    - The way on's hairline is 1.24 on the page (1.30 on the surface).
+    - Add three rows: the other-role line's link on its tint (6.31 on warning-bg, 6.28 on info-bg); muted text on the
+      page ground (4.83) beside the surface's 5.09; the locked head's muted text on header-bg (4.57).
+    - The stacked inbox (every I- state at 390) hides its thead with the built clip rule (app.css:2659), never
+      display: none.
+
+ROUND 3 ASK:
+  - Apply C1–C13 and E1–E5 to the round 2 boards; update the Spec (the messages, the rule line, R4, the new-class
+    table, the focus rules, the contrast rows, the line's three wordings) and the Steps board (3.17, 3.26, 3.28, 3.30,
+    3.33, and the quoted Home card and inbox subtitle).
+  - Redraw as R3-* boards: R3-C-Home, R3-C-Inbox, R3-C-Activity, R3-Spec, R3-Steps, and one wrapper per state and width,
+    keeping round 2's state names so the wrappers map one to one (R2-P-discussed-390 becomes R3-P-discussed-390). The
+    only new wrappers are C12's four: R3-H-committee-line-none-overdue-1280 / -390 and R3-H-committee-line-several-1280
+    / -390.
+  - Keep round 2's boards; put round 3 on its own canvas page. Stop when round 3 is drawn; I will check it item by
+    item.

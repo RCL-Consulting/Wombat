@@ -20,3 +20,4 @@ T350's design, kept beside its brief (`../04-assessor-inbox.md`) so that it outl
 - **Round 2** (2026-09-30, `round-2/`, canvas version `1790766420-7fb9`): 85 files: three component boards (Home, Inbox,
   Activity) with 80 state wrappers (40 states at 1280 and 390), Spec, Steps and `flow04-r2.css`. **Round 2's review:**
   `round-2-review.md` (four reviewers; accept with changes; C1–C13; E1–E5 for the operator; 15 build notes).
+- **The decisions:** accept all (2026-09-30). **Round 3's ask:** `round-3-ask.txt`.

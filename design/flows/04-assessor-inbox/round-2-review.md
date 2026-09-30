@@ -95,6 +95,16 @@ figure on the Spec recomputes [T holds]. Nothing promises an email. What needs a
 | E4 | "As an assessor, …": the waiting read counts every non-author arm (`ActorArms.NotAuthor`), `role:` and `scope:` moves too, so the role is not always true [B9, S11] | Keep E5's one read and word the line without the role: "1 activity waits for you in the Activity inbox, and it is overdue: <name>, from <registrar>, waiting 8 days." / "3 activities wait for you in the Activity inbox; 1 is overdue. The oldest: …" / nothing overdue: "…, from <registrar>, waiting less than a day." Narrowing the read to assessor arms is new code for no gain in the cast |
 | E5 | "And 20 more." is a fragment and says not where [S10, A14] | "20 more wait in the Activity inbox." (singular "1 more waits in the Activity inbox."), above "Open Activity inbox" |
 
+## The operator's answer (2026-09-30)
+
+**Accept all**: C1–C13 go to the canvas as written, and E1–E5 as recommended. E1: keep the code's 7 × 24 h; the rule
+line reads "Oldest first. Overdue once it has waited 7 days.", its number from `AssessorDueDays`; the boards draw
+`days >= 7`. E2: two read-only renderings toggled by CSS at 641 px, no script, the hidden copy's ids suffixed. E3: the
+rung picker only on the rated level field whose ladder loads; other scale fields keep the select; R4 reworded. E4: the
+other-role line drops the role ("1 activity waits for you in the Activity inbox, and it is overdue: …", with its
+several and not-overdue wordings). E5: "20 more wait in the Activity inbox." / "1 more waits in the Activity inbox.".
+The build notes and nits stay for step F. Round 3's ask is `round-3-ask.txt`.
+
 ## For the build (step F), not the canvas
 
 These draw words or behaviour flow 04's build changes on purpose; the boards are right.
