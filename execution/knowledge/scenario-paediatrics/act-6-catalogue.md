@@ -453,7 +453,8 @@ Actual (2026-09-30, T342 replay, wombat_scenario_t342b): Dr Patel's Home reads "
   (CreditedItemCount 0), and Dlamini has no PAED-012 progress row. About's own EPA line reads the title without "(no
   longer in use)".
 Gap: new: the activity page's About card names the paused EPA without "(no longer in use)", which the inbox and the
-  Request section beside it carry (flow 03's About card; the Expect itself is met).
+  Request section beside it carry (flow 03's About card; the Expect itself is met). Fixed in daaf6386 after this
+  replay (bUnit-verified; the replay app ran 725237ee).
 
 ### Step 6.19 — Dr Dlamini during the pause
 Role: Trainee — Dr Anele Dlamini
