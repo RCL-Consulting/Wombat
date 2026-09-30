@@ -48,7 +48,7 @@ Run the loop as flow 02 ran it (`design/flows/03-trainee-files-activity/`, BRIEF
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — the commit.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — `30c29c31` (verbatim steps 0 problems, baseline paths missing 0; staged 87 files, 2.74 MB, plus flow 03's seven assessor boards in `design/upload/flow03-boards/`).
 - [ ] The canvas is created, with the mark copied in before round 1 — its URL.
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/04-assessor-inbox/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 04) — the squash commit.
