@@ -30,10 +30,16 @@ The operator asked to recover the task a machine shutdown had killed (T342 step 
   defaults, may be overruled): the refusal summary keeps a corrected date's line until the next submit.
 - **CLAUDE.md § Multi-agent workflows** (the operator's edit, uncommitted, left for them): followed from step 8 on.
 
-### Next session: T350, flow 04 (an assessor's inbox). **Model: Opus.**
+### Flow 04 started (T350, same session)
 
-- Restate `design/flows/04-assessor-inbox.md` on flow 03's § 1; W for the Assessor dashboard (2–3 structures), fidelity
-  for the activity page, which flow 03 already designed. Known input: the inbox scrolls sideways at 390 (A.7.2).
+- Brief restated (`30c29c31`), canvas https://claude.ai/artifact/8JnYLZp6CTR1Mg38a5v7DX with the mark; round 1 (A picked,
+  Q7: no year minimum for the rater), round 2 (four-sided review, C1–C13, E1–E5), round 3 checked: **the design is
+  final** (`design/flows/04-assessor-inbox/`). The review's 15 build notes are in `round-2-review.md`.
+
+### Next session: T350 step 6, the build. **Model: Opus.**
+
+- Build from `round-3/` in waves (flow 03's `build-lanes.md` as template), with `round-2-review.md`'s build notes;
+  integrate, review, one fix pass, squash; DESIGN.md amended (R1–R4). Then replay, re-sync, lessons (steps 7–9).
 - Or T157 (deploy) if the operator is ready: it now carries flows 02 and 03, neither with a migration.
 
 ### For the operator

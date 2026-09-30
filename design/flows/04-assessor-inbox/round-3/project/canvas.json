@@ -1,0 +1,1995 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "A1-home-1280.dc.html": {
+      "h": 1320,
+      "page": "r1",
+      "title": "A1 Home, Assessor, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 3680
+    },
+    "A2-home-390.dc.html": {
+      "h": 1900,
+      "page": "r1",
+      "title": "A2 Home, Assessor, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 3680
+    },
+    "A3-inbox-1280.dc.html": {
+      "h": 1500,
+      "page": "r1",
+      "title": "A3 Activity inbox, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 3680
+    },
+    "A4-inbox-390.dc.html": {
+      "h": 2000,
+      "page": "r1",
+      "title": "A4 Activity inbox, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 3680
+    },
+    "A5-two-role-1280.dc.html": {
+      "h": 1060,
+      "page": "r1",
+      "title": "A5 Two-role Home, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 3680
+    },
+    "B1-home-1280.dc.html": {
+      "h": 1440,
+      "page": "r1",
+      "title": "B1 Home = inbox, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 6060
+    },
+    "B2-home-390.dc.html": {
+      "h": 2000,
+      "page": "r1",
+      "title": "B2 Home = inbox, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 6060
+    },
+    "B3-two-role-1280.dc.html": {
+      "h": 1180,
+      "page": "r1",
+      "title": "B3 Two-role Home, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 6060
+    },
+    "C1-home-1280.dc.html": {
+      "h": 1180,
+      "page": "r1",
+      "title": "C1 Home summary, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 8440
+    },
+    "C2-home-390.dc.html": {
+      "h": 1500,
+      "page": "r1",
+      "title": "C2 Home summary, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 8440
+    },
+    "C3-inbox-390.dc.html": {
+      "h": 1500,
+      "page": "r1",
+      "title": "C3 Activity inbox, 390",
+      "w": 390,
+      "x": 1830,
+      "y": 8440
+    },
+    "C4-decisions-1280.dc.html": {
+      "h": 1060,
+      "page": "r1",
+      "title": "C4 My decisions, 1280",
+      "w": 1280,
+      "x": 2300,
+      "y": 8440
+    },
+    "C5-next-1280.dc.html": {
+      "h": 1100,
+      "page": "r1",
+      "title": "C5 After a move, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 8440
+    },
+    "C6-two-role-1280.dc.html": {
+      "h": 900,
+      "page": "r1",
+      "title": "C6 Two-role Home, 1280",
+      "w": 1280,
+      "x": 5020,
+      "y": 8440
+    },
+    "Main.dc.html": {
+      "h": 2300,
+      "page": "r1",
+      "title": "Round 1: the three structures",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "P1-to-rate-1280.dc.html": {
+      "h": 2300,
+      "page": "r1",
+      "title": "To rate: the rung picker, nothing chosen (David Naidoo), 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 10320
+    },
+    "P2-rating-3b-390.dc.html": {
+      "h": 3000,
+      "page": "r1",
+      "title": "To rate on a phone: Request folded, 3b chosen, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 10320
+    },
+    "P3-decline-refused-1280.dc.html": {
+      "h": 2500,
+      "page": "r1",
+      "title": "Decline refused: the note panel kept (Fatima Khumalo), 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 10320
+    },
+    "P4-decline-refused-390.dc.html": {
+      "h": 3500,
+      "page": "r1",
+      "title": "Decline refused, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 10320
+    },
+    "P5-return-note-1280.dc.html": {
+      "h": 2500,
+      "page": "r1",
+      "title": "Return: the note panel just opened (Sarah Botha), 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 10320
+    },
+    "P6-completed-next-1280.dc.html": {
+      "h": 2000,
+      "page": "r1",
+      "title": "Completed, and the way on (Mohammed Patel), 1280",
+      "w": 1280,
+      "x": 5020,
+      "y": 10320
+    },
+    "P7-completed-next-390.dc.html": {
+      "h": 3000,
+      "page": "r1",
+      "title": "Completed, and the way on, 390",
+      "w": 390,
+      "x": 6380,
+      "y": 10320
+    },
+    "P8-unavailable-1280.dc.html": {
+      "h": 800,
+      "page": "r1",
+      "title": "Activity unavailable, an Assessor, 1280",
+      "w": 1280,
+      "x": 6850,
+      "y": 10320
+    },
+    "R1-C-Activity.dc.html": {
+      "h": 2200,
+      "page": "r1",
+      "title": "Component: the assessor's activity page, every state",
+      "w": 1280,
+      "x": 8210,
+      "y": 10320
+    },
+    "R1-Spec.dc.html": {
+      "h": 3300,
+      "page": "r1",
+      "title": "Spec",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "R1-Steps.dc.html": {
+      "h": 2350,
+      "page": "r1",
+      "title": "Steps",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "R2-C-Activity.dc.html": {
+      "h": 2700,
+      "page": "r2",
+      "title": "Component: activity page (state enum)",
+      "w": 1280,
+      "x": 2720,
+      "y": 6860
+    },
+    "R2-C-Home.dc.html": {
+      "h": 1000,
+      "page": "r2",
+      "title": "Component: Home (state enum)",
+      "w": 1280,
+      "x": 0,
+      "y": 6860
+    },
+    "R2-C-Inbox.dc.html": {
+      "h": 1300,
+      "page": "r2",
+      "title": "Component: Activity inbox (state enum)",
+      "w": 1280,
+      "x": 1360,
+      "y": 6860
+    },
+    "R2-H-committee-line-1280.dc.html": {
+      "h": 800,
+      "page": "r2",
+      "title": "Home: committee-line, 1280",
+      "w": 1280,
+      "x": 9150,
+      "y": 10020
+    },
+    "R2-H-committee-line-390.dc.html": {
+      "h": 1150,
+      "page": "r2",
+      "title": "Home: committee-line, 390",
+      "w": 390,
+      "x": 10510,
+      "y": 10020
+    },
+    "R2-H-empty-1280.dc.html": {
+      "h": 820,
+      "page": "r2",
+      "title": "Home: empty, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 10020
+    },
+    "R2-H-empty-390.dc.html": {
+      "h": 1150,
+      "page": "r2",
+      "title": "Home: empty, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 10020
+    },
+    "R2-H-load-error-1280.dc.html": {
+      "h": 640,
+      "page": "r2",
+      "title": "Home: load-error, 1280",
+      "w": 1280,
+      "x": 14640,
+      "y": 10020
+    },
+    "R2-H-load-error-390.dc.html": {
+      "h": 900,
+      "page": "r2",
+      "title": "Home: load-error, 390",
+      "w": 390,
+      "x": 16000,
+      "y": 10020
+    },
+    "R2-H-loading-1280.dc.html": {
+      "h": 720,
+      "page": "r2",
+      "title": "Home: loading, 1280",
+      "w": 1280,
+      "x": 12810,
+      "y": 10020
+    },
+    "R2-H-loading-390.dc.html": {
+      "h": 1000,
+      "page": "r2",
+      "title": "Home: loading, 390",
+      "w": 390,
+      "x": 14170,
+      "y": 10020
+    },
+    "R2-H-one-waiting-1280.dc.html": {
+      "h": 900,
+      "page": "r2",
+      "title": "Home: one-waiting, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 10020
+    },
+    "R2-H-one-waiting-390.dc.html": {
+      "h": 1500,
+      "page": "r2",
+      "title": "Home: one-waiting, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 10020
+    },
+    "R2-H-overdue-only-1280.dc.html": {
+      "h": 900,
+      "page": "r2",
+      "title": "Home: overdue-only, 1280",
+      "w": 1280,
+      "x": 5490,
+      "y": 10020
+    },
+    "R2-H-overdue-only-390.dc.html": {
+      "h": 1550,
+      "page": "r2",
+      "title": "Home: overdue-only, 390",
+      "w": 390,
+      "x": 6850,
+      "y": 10020
+    },
+    "R2-H-several-overdue-1280.dc.html": {
+      "h": 960,
+      "page": "r2",
+      "title": "Home: several-overdue, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 10020
+    },
+    "R2-H-several-overdue-390.dc.html": {
+      "h": 1700,
+      "page": "r2",
+      "title": "Home: several-overdue, 390",
+      "w": 390,
+      "x": 5020,
+      "y": 10020
+    },
+    "R2-H-switched-1280.dc.html": {
+      "h": 980,
+      "page": "r2",
+      "title": "Home: switched, 1280",
+      "w": 1280,
+      "x": 7320,
+      "y": 10020
+    },
+    "R2-H-switched-390.dc.html": {
+      "h": 1650,
+      "page": "r2",
+      "title": "Home: switched, 390",
+      "w": 390,
+      "x": 8680,
+      "y": 10020
+    },
+    "R2-H-twenty-five-1280.dc.html": {
+      "h": 1300,
+      "page": "r2",
+      "title": "Home: twenty-five, 1280",
+      "w": 1280,
+      "x": 10980,
+      "y": 10020
+    },
+    "R2-H-twenty-five-390.dc.html": {
+      "h": 2500,
+      "page": "r2",
+      "title": "Home: twenty-five, 390",
+      "w": 390,
+      "x": 12340,
+      "y": 10020
+    },
+    "R2-I-alike-1280.dc.html": {
+      "h": 1250,
+      "page": "r2",
+      "title": "Activity inbox: alike, 1280",
+      "w": 1280,
+      "x": 9150,
+      "y": 12980
+    },
+    "R2-I-alike-390.dc.html": {
+      "h": 2400,
+      "page": "r2",
+      "title": "Activity inbox: alike, 390",
+      "w": 390,
+      "x": 10510,
+      "y": 12980
+    },
+    "R2-I-clear-1280.dc.html": {
+      "h": 900,
+      "page": "r2",
+      "title": "Activity inbox: clear, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 12980
+    },
+    "R2-I-clear-390.dc.html": {
+      "h": 1250,
+      "page": "r2",
+      "title": "Activity inbox: clear, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 12980
+    },
+    "R2-I-clear-with-decisions-1280.dc.html": {
+      "h": 1000,
+      "page": "r2",
+      "title": "Activity inbox: clear-with-decisions, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 12980
+    },
+    "R2-I-clear-with-decisions-390.dc.html": {
+      "h": 1450,
+      "page": "r2",
+      "title": "Activity inbox: clear-with-decisions, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 12980
+    },
+    "R2-I-decided-45-1280.dc.html": {
+      "h": 2400,
+      "page": "r2",
+      "title": "Activity inbox: decided-45, 1280",
+      "w": 1280,
+      "x": 12810,
+      "y": 12980
+    },
+    "R2-I-decided-45-390.dc.html": {
+      "h": 5200,
+      "page": "r2",
+      "title": "Activity inbox: decided-45, 390",
+      "w": 390,
+      "x": 14170,
+      "y": 12980
+    },
+    "R2-I-load-error-1280.dc.html": {
+      "h": 640,
+      "page": "r2",
+      "title": "Activity inbox: load-error, 1280",
+      "w": 1280,
+      "x": 20130,
+      "y": 12980
+    },
+    "R2-I-load-error-390.dc.html": {
+      "h": 900,
+      "page": "r2",
+      "title": "Activity inbox: load-error, 390",
+      "w": 390,
+      "x": 21490,
+      "y": 12980
+    },
+    "R2-I-loading-1280.dc.html": {
+      "h": 900,
+      "page": "r2",
+      "title": "Activity inbox: loading, 1280",
+      "w": 1280,
+      "x": 18300,
+      "y": 12980
+    },
+    "R2-I-loading-390.dc.html": {
+      "h": 1300,
+      "page": "r2",
+      "title": "Activity inbox: loading, 390",
+      "w": 390,
+      "x": 19660,
+      "y": 12980
+    },
+    "R2-I-long-1280.dc.html": {
+      "h": 1300,
+      "page": "r2",
+      "title": "Activity inbox: long, 1280",
+      "w": 1280,
+      "x": 14640,
+      "y": 12980
+    },
+    "R2-I-long-390.dc.html": {
+      "h": 2600,
+      "page": "r2",
+      "title": "Activity inbox: long, 390",
+      "w": 390,
+      "x": 16000,
+      "y": 12980
+    },
+    "R2-I-overdue-1280.dc.html": {
+      "h": 1150,
+      "page": "r2",
+      "title": "Activity inbox: overdue, 1280",
+      "w": 1280,
+      "x": 5490,
+      "y": 12980
+    },
+    "R2-I-overdue-390.dc.html": {
+      "h": 2100,
+      "page": "r2",
+      "title": "Activity inbox: overdue, 390",
+      "w": 390,
+      "x": 6850,
+      "y": 12980
+    },
+    "R2-I-paused-epa-1280.dc.html": {
+      "h": 1250,
+      "page": "r2",
+      "title": "Activity inbox: paused-epa, 1280",
+      "w": 1280,
+      "x": 7320,
+      "y": 12980
+    },
+    "R2-I-paused-epa-390.dc.html": {
+      "h": 2400,
+      "page": "r2",
+      "title": "Activity inbox: paused-epa, 390",
+      "w": 390,
+      "x": 8680,
+      "y": 12980
+    },
+    "R2-I-registrar-only-1280.dc.html": {
+      "h": 640,
+      "page": "r2",
+      "title": "Activity inbox: registrar-only, 1280",
+      "w": 1280,
+      "x": 16470,
+      "y": 12980
+    },
+    "R2-I-registrar-only-390.dc.html": {
+      "h": 900,
+      "page": "r2",
+      "title": "Activity inbox: registrar-only, 390",
+      "w": 390,
+      "x": 17830,
+      "y": 12980
+    },
+    "R2-I-twenty-five-1280.dc.html": {
+      "h": 3400,
+      "page": "r2",
+      "title": "Activity inbox: twenty-five, 1280",
+      "w": 1280,
+      "x": 10980,
+      "y": 12980
+    },
+    "R2-I-twenty-five-390.dc.html": {
+      "h": 7400,
+      "page": "r2",
+      "title": "Activity inbox: twenty-five, 390",
+      "w": 390,
+      "x": 12340,
+      "y": 12980
+    },
+    "R2-I-two-1280.dc.html": {
+      "h": 1100,
+      "page": "r2",
+      "title": "Activity inbox: two, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 12980
+    },
+    "R2-I-two-390.dc.html": {
+      "h": 1900,
+      "page": "r2",
+      "title": "Activity inbox: two, 390",
+      "w": 390,
+      "x": 5020,
+      "y": 12980
+    },
+    "R2-P-awaiting-discussion-1280.dc.html": {
+      "h": 2400,
+      "page": "r2",
+      "title": "Activity: awaiting-discussion, 1280",
+      "w": 1280,
+      "x": 16470,
+      "y": 20840
+    },
+    "R2-P-awaiting-discussion-390.dc.html": {
+      "h": 4300,
+      "page": "r2",
+      "title": "Activity: awaiting-discussion, 390",
+      "w": 390,
+      "x": 17830,
+      "y": 20840
+    },
+    "R2-P-awaiting-review-1280.dc.html": {
+      "h": 3100,
+      "page": "r2",
+      "title": "Activity: awaiting-review, 1280",
+      "w": 1280,
+      "x": 7320,
+      "y": 26600
+    },
+    "R2-P-awaiting-review-390.dc.html": {
+      "h": 5400,
+      "page": "r2",
+      "title": "Activity: awaiting-review, 390",
+      "w": 390,
+      "x": 8680,
+      "y": 26600
+    },
+    "R2-P-completed-last-1280.dc.html": {
+      "h": 2500,
+      "page": "r2",
+      "title": "Activity: completed-last, 1280",
+      "w": 1280,
+      "x": 7320,
+      "y": 20840
+    },
+    "R2-P-completed-last-390.dc.html": {
+      "h": 4500,
+      "page": "r2",
+      "title": "Activity: completed-last, 390",
+      "w": 390,
+      "x": 8680,
+      "y": 20840
+    },
+    "R2-P-completed-next-1280.dc.html": {
+      "h": 2600,
+      "page": "r2",
+      "title": "Activity: completed-next, 1280",
+      "w": 1280,
+      "x": 5490,
+      "y": 20840
+    },
+    "R2-P-completed-next-390.dc.html": {
+      "h": 4700,
+      "page": "r2",
+      "title": "Activity: completed-next, 390",
+      "w": 390,
+      "x": 6850,
+      "y": 20840
+    },
+    "R2-P-completed-paused-1280.dc.html": {
+      "h": 2700,
+      "page": "r2",
+      "title": "Activity: completed-paused, 1280",
+      "w": 1280,
+      "x": 9150,
+      "y": 20840
+    },
+    "R2-P-completed-paused-390.dc.html": {
+      "h": 4900,
+      "page": "r2",
+      "title": "Activity: completed-paused, 390",
+      "w": 390,
+      "x": 10510,
+      "y": 20840
+    },
+    "R2-P-completing-1280.dc.html": {
+      "h": 2800,
+      "page": "r2",
+      "title": "Activity: completing, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 20840
+    },
+    "R2-P-completing-390.dc.html": {
+      "h": 4800,
+      "page": "r2",
+      "title": "Activity: completing, 390",
+      "w": 390,
+      "x": 5020,
+      "y": 20840
+    },
+    "R2-P-decline-note-1280.dc.html": {
+      "h": 3100,
+      "page": "r2",
+      "title": "Activity: decline-note, 1280",
+      "w": 1280,
+      "x": 10980,
+      "y": 20840
+    },
+    "R2-P-decline-note-390.dc.html": {
+      "h": 5100,
+      "page": "r2",
+      "title": "Activity: decline-note, 390",
+      "w": 390,
+      "x": 12340,
+      "y": 20840
+    },
+    "R2-P-decline-refused-1280.dc.html": {
+      "h": 3200,
+      "page": "r2",
+      "title": "Activity: decline-refused, 1280",
+      "w": 1280,
+      "x": 12810,
+      "y": 20840
+    },
+    "R2-P-decline-refused-390.dc.html": {
+      "h": 5300,
+      "page": "r2",
+      "title": "Activity: decline-refused, 390",
+      "w": 390,
+      "x": 14170,
+      "y": 20840
+    },
+    "R2-P-declined-1280.dc.html": {
+      "h": 2300,
+      "page": "r2",
+      "title": "Activity: declined, 1280",
+      "w": 1280,
+      "x": 14640,
+      "y": 20840
+    },
+    "R2-P-declined-390.dc.html": {
+      "h": 4000,
+      "page": "r2",
+      "title": "Activity: declined, 390",
+      "w": 390,
+      "x": 16000,
+      "y": 20840
+    },
+    "R2-P-discussed-1280.dc.html": {
+      "h": 2600,
+      "page": "r2",
+      "title": "Activity: discussed, 1280",
+      "w": 1280,
+      "x": 5490,
+      "y": 26600
+    },
+    "R2-P-discussed-390.dc.html": {
+      "h": 4700,
+      "page": "r2",
+      "title": "Activity: discussed, 390",
+      "w": 390,
+      "x": 6850,
+      "y": 26600
+    },
+    "R2-P-from-the-line-1280.dc.html": {
+      "h": 2500,
+      "page": "r2",
+      "title": "Activity: from-the-line, 1280",
+      "w": 1280,
+      "x": 9150,
+      "y": 26600
+    },
+    "R2-P-from-the-line-390.dc.html": {
+      "h": 4500,
+      "page": "r2",
+      "title": "Activity: from-the-line, 390",
+      "w": 390,
+      "x": 10510,
+      "y": 26600
+    },
+    "R2-P-load-error-1280.dc.html": {
+      "h": 640,
+      "page": "r2",
+      "title": "Activity: load-error, 1280",
+      "w": 1280,
+      "x": 14640,
+      "y": 26600
+    },
+    "R2-P-load-error-390.dc.html": {
+      "h": 900,
+      "page": "r2",
+      "title": "Activity: load-error, 390",
+      "w": 390,
+      "x": 16000,
+      "y": 26600
+    },
+    "R2-P-loading-1280.dc.html": {
+      "h": 1000,
+      "page": "r2",
+      "title": "Activity: loading, 1280",
+      "w": 1280,
+      "x": 12810,
+      "y": 26600
+    },
+    "R2-P-loading-390.dc.html": {
+      "h": 1500,
+      "page": "r2",
+      "title": "Activity: loading, 390",
+      "w": 390,
+      "x": 14170,
+      "y": 26600
+    },
+    "R2-P-rated-1280.dc.html": {
+      "h": 2800,
+      "page": "r2",
+      "title": "Activity: rated, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 20840
+    },
+    "R2-P-rated-390.dc.html": {
+      "h": 4800,
+      "page": "r2",
+      "title": "Activity: rated, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 20840
+    },
+    "R2-P-return-note-1280.dc.html": {
+      "h": 2700,
+      "page": "r2",
+      "title": "Activity: return-note, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 26600
+    },
+    "R2-P-return-note-390.dc.html": {
+      "h": 4800,
+      "page": "r2",
+      "title": "Activity: return-note, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 26600
+    },
+    "R2-P-return-refused-1280.dc.html": {
+      "h": 2800,
+      "page": "r2",
+      "title": "Activity: return-refused, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 26600
+    },
+    "R2-P-return-refused-390.dc.html": {
+      "h": 5000,
+      "page": "r2",
+      "title": "Activity: return-refused, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 26600
+    },
+    "R2-P-returned-1280.dc.html": {
+      "h": 2400,
+      "page": "r2",
+      "title": "Activity: returned, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 26600
+    },
+    "R2-P-returned-390.dc.html": {
+      "h": 4300,
+      "page": "r2",
+      "title": "Activity: returned, 390",
+      "w": 390,
+      "x": 5020,
+      "y": 26600
+    },
+    "R2-P-to-rate-1280.dc.html": {
+      "h": 3000,
+      "page": "r2",
+      "title": "Activity: to-rate, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 20840
+    },
+    "R2-P-to-rate-390.dc.html": {
+      "h": 4700,
+      "page": "r2",
+      "title": "Activity: to-rate, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 20840
+    },
+    "R2-P-unavailable-1280.dc.html": {
+      "h": 720,
+      "page": "r2",
+      "title": "Activity: unavailable, 1280",
+      "w": 1280,
+      "x": 10980,
+      "y": 26600
+    },
+    "R2-P-unavailable-390.dc.html": {
+      "h": 1000,
+      "page": "r2",
+      "title": "Activity: unavailable, 390",
+      "w": 390,
+      "x": 12340,
+      "y": 26600
+    },
+    "R2-Spec.dc.html": {
+      "h": 6400,
+      "page": "r2",
+      "title": "Round 2 spec",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "R2-Steps.dc.html": {
+      "h": 5200,
+      "page": "r2",
+      "title": "Round 2 steps",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "R3-C-Activity.dc.html": {
+      "h": 2700,
+      "page": "r3",
+      "title": "Component: activity page (state enum)",
+      "w": 1280,
+      "x": 2720,
+      "y": 7860
+    },
+    "R3-C-Home.dc.html": {
+      "h": 1000,
+      "page": "r3",
+      "title": "Component: Home (state enum)",
+      "w": 1280,
+      "x": 0,
+      "y": 7860
+    },
+    "R3-C-Inbox.dc.html": {
+      "h": 1300,
+      "page": "r3",
+      "title": "Component: Activity inbox (state enum)",
+      "w": 1280,
+      "x": 1360,
+      "y": 7860
+    },
+    "R3-H-committee-line-1280.dc.html": {
+      "h": 800,
+      "page": "r3",
+      "title": "Home: committee-line, 1280",
+      "w": 1280,
+      "x": 9150,
+      "y": 11020
+    },
+    "R3-H-committee-line-390.dc.html": {
+      "h": 1150,
+      "page": "r3",
+      "title": "Home: committee-line, 390",
+      "w": 390,
+      "x": 10510,
+      "y": 11020
+    },
+    "R3-H-committee-line-none-overdue-1280.dc.html": {
+      "h": 800,
+      "page": "r3",
+      "title": "Home: committee-line-none-overdue, 1280",
+      "w": 1280,
+      "x": 10980,
+      "y": 11020
+    },
+    "R3-H-committee-line-none-overdue-390.dc.html": {
+      "h": 1150,
+      "page": "r3",
+      "title": "Home: committee-line-none-overdue, 390",
+      "w": 390,
+      "x": 12340,
+      "y": 11020
+    },
+    "R3-H-committee-line-several-1280.dc.html": {
+      "h": 820,
+      "page": "r3",
+      "title": "Home: committee-line-several, 1280",
+      "w": 1280,
+      "x": 12810,
+      "y": 11020
+    },
+    "R3-H-committee-line-several-390.dc.html": {
+      "h": 1200,
+      "page": "r3",
+      "title": "Home: committee-line-several, 390",
+      "w": 390,
+      "x": 14170,
+      "y": 11020
+    },
+    "R3-H-empty-1280.dc.html": {
+      "h": 820,
+      "page": "r3",
+      "title": "Home: empty, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 11020
+    },
+    "R3-H-empty-390.dc.html": {
+      "h": 1150,
+      "page": "r3",
+      "title": "Home: empty, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 11020
+    },
+    "R3-H-load-error-1280.dc.html": {
+      "h": 640,
+      "page": "r3",
+      "title": "Home: load-error, 1280",
+      "w": 1280,
+      "x": 18300,
+      "y": 11020
+    },
+    "R3-H-load-error-390.dc.html": {
+      "h": 900,
+      "page": "r3",
+      "title": "Home: load-error, 390",
+      "w": 390,
+      "x": 19660,
+      "y": 11020
+    },
+    "R3-H-loading-1280.dc.html": {
+      "h": 720,
+      "page": "r3",
+      "title": "Home: loading, 1280",
+      "w": 1280,
+      "x": 16470,
+      "y": 11020
+    },
+    "R3-H-loading-390.dc.html": {
+      "h": 1000,
+      "page": "r3",
+      "title": "Home: loading, 390",
+      "w": 390,
+      "x": 17830,
+      "y": 11020
+    },
+    "R3-H-one-waiting-1280.dc.html": {
+      "h": 900,
+      "page": "r3",
+      "title": "Home: one-waiting, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 11020
+    },
+    "R3-H-one-waiting-390.dc.html": {
+      "h": 1500,
+      "page": "r3",
+      "title": "Home: one-waiting, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 11020
+    },
+    "R3-H-overdue-only-1280.dc.html": {
+      "h": 900,
+      "page": "r3",
+      "title": "Home: overdue-only, 1280",
+      "w": 1280,
+      "x": 5490,
+      "y": 11020
+    },
+    "R3-H-overdue-only-390.dc.html": {
+      "h": 1550,
+      "page": "r3",
+      "title": "Home: overdue-only, 390",
+      "w": 390,
+      "x": 6850,
+      "y": 11020
+    },
+    "R3-H-several-overdue-1280.dc.html": {
+      "h": 960,
+      "page": "r3",
+      "title": "Home: several-overdue, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 11020
+    },
+    "R3-H-several-overdue-390.dc.html": {
+      "h": 1700,
+      "page": "r3",
+      "title": "Home: several-overdue, 390",
+      "w": 390,
+      "x": 5020,
+      "y": 11020
+    },
+    "R3-H-switched-1280.dc.html": {
+      "h": 980,
+      "page": "r3",
+      "title": "Home: switched, 1280",
+      "w": 1280,
+      "x": 7320,
+      "y": 11020
+    },
+    "R3-H-switched-390.dc.html": {
+      "h": 1650,
+      "page": "r3",
+      "title": "Home: switched, 390",
+      "w": 390,
+      "x": 8680,
+      "y": 11020
+    },
+    "R3-H-twenty-five-1280.dc.html": {
+      "h": 1300,
+      "page": "r3",
+      "title": "Home: twenty-five, 1280",
+      "w": 1280,
+      "x": 14640,
+      "y": 11020
+    },
+    "R3-H-twenty-five-390.dc.html": {
+      "h": 2500,
+      "page": "r3",
+      "title": "Home: twenty-five, 390",
+      "w": 390,
+      "x": 16000,
+      "y": 11020
+    },
+    "R3-I-alike-1280.dc.html": {
+      "h": 1250,
+      "page": "r3",
+      "title": "Activity inbox: alike, 1280",
+      "w": 1280,
+      "x": 9150,
+      "y": 13980
+    },
+    "R3-I-alike-390.dc.html": {
+      "h": 2400,
+      "page": "r3",
+      "title": "Activity inbox: alike, 390",
+      "w": 390,
+      "x": 10510,
+      "y": 13980
+    },
+    "R3-I-clear-1280.dc.html": {
+      "h": 900,
+      "page": "r3",
+      "title": "Activity inbox: clear, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 13980
+    },
+    "R3-I-clear-390.dc.html": {
+      "h": 1250,
+      "page": "r3",
+      "title": "Activity inbox: clear, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 13980
+    },
+    "R3-I-clear-with-decisions-1280.dc.html": {
+      "h": 1000,
+      "page": "r3",
+      "title": "Activity inbox: clear-with-decisions, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 13980
+    },
+    "R3-I-clear-with-decisions-390.dc.html": {
+      "h": 1450,
+      "page": "r3",
+      "title": "Activity inbox: clear-with-decisions, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 13980
+    },
+    "R3-I-decided-45-1280.dc.html": {
+      "h": 2400,
+      "page": "r3",
+      "title": "Activity inbox: decided-45, 1280",
+      "w": 1280,
+      "x": 12810,
+      "y": 13980
+    },
+    "R3-I-decided-45-390.dc.html": {
+      "h": 5200,
+      "page": "r3",
+      "title": "Activity inbox: decided-45, 390",
+      "w": 390,
+      "x": 14170,
+      "y": 13980
+    },
+    "R3-I-load-error-1280.dc.html": {
+      "h": 640,
+      "page": "r3",
+      "title": "Activity inbox: load-error, 1280",
+      "w": 1280,
+      "x": 20130,
+      "y": 13980
+    },
+    "R3-I-load-error-390.dc.html": {
+      "h": 900,
+      "page": "r3",
+      "title": "Activity inbox: load-error, 390",
+      "w": 390,
+      "x": 21490,
+      "y": 13980
+    },
+    "R3-I-loading-1280.dc.html": {
+      "h": 900,
+      "page": "r3",
+      "title": "Activity inbox: loading, 1280",
+      "w": 1280,
+      "x": 18300,
+      "y": 13980
+    },
+    "R3-I-loading-390.dc.html": {
+      "h": 1300,
+      "page": "r3",
+      "title": "Activity inbox: loading, 390",
+      "w": 390,
+      "x": 19660,
+      "y": 13980
+    },
+    "R3-I-long-1280.dc.html": {
+      "h": 1300,
+      "page": "r3",
+      "title": "Activity inbox: long, 1280 (a 31-character name, a 108-character EPA)",
+      "w": 1280,
+      "x": 14640,
+      "y": 13980
+    },
+    "R3-I-long-390.dc.html": {
+      "h": 2600,
+      "page": "r3",
+      "title": "Activity inbox: long, 390 (a 31-character name, a 108-character EPA)",
+      "w": 390,
+      "x": 16000,
+      "y": 13980
+    },
+    "R3-I-overdue-1280.dc.html": {
+      "h": 1150,
+      "page": "r3",
+      "title": "Activity inbox: overdue, 1280",
+      "w": 1280,
+      "x": 5490,
+      "y": 13980
+    },
+    "R3-I-overdue-390.dc.html": {
+      "h": 2100,
+      "page": "r3",
+      "title": "Activity inbox: overdue, 390",
+      "w": 390,
+      "x": 6850,
+      "y": 13980
+    },
+    "R3-I-paused-epa-1280.dc.html": {
+      "h": 1250,
+      "page": "r3",
+      "title": "Activity inbox: paused-epa, 1280",
+      "w": 1280,
+      "x": 7320,
+      "y": 13980
+    },
+    "R3-I-paused-epa-390.dc.html": {
+      "h": 2400,
+      "page": "r3",
+      "title": "Activity inbox: paused-epa, 390",
+      "w": 390,
+      "x": 8680,
+      "y": 13980
+    },
+    "R3-I-registrar-only-1280.dc.html": {
+      "h": 640,
+      "page": "r3",
+      "title": "Activity inbox: registrar-only, 1280",
+      "w": 1280,
+      "x": 16470,
+      "y": 13980
+    },
+    "R3-I-registrar-only-390.dc.html": {
+      "h": 900,
+      "page": "r3",
+      "title": "Activity inbox: registrar-only, 390",
+      "w": 390,
+      "x": 17830,
+      "y": 13980
+    },
+    "R3-I-twenty-five-1280.dc.html": {
+      "h": 3400,
+      "page": "r3",
+      "title": "Activity inbox: twenty-five, 1280",
+      "w": 1280,
+      "x": 10980,
+      "y": 13980
+    },
+    "R3-I-twenty-five-390.dc.html": {
+      "h": 7400,
+      "page": "r3",
+      "title": "Activity inbox: twenty-five, 390",
+      "w": 390,
+      "x": 12340,
+      "y": 13980
+    },
+    "R3-I-two-1280.dc.html": {
+      "h": 1100,
+      "page": "r3",
+      "title": "Activity inbox: two, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 13980
+    },
+    "R3-I-two-390.dc.html": {
+      "h": 1900,
+      "page": "r3",
+      "title": "Activity inbox: two, 390",
+      "w": 390,
+      "x": 5020,
+      "y": 13980
+    },
+    "R3-P-awaiting-discussion-1280.dc.html": {
+      "h": 2400,
+      "page": "r3",
+      "title": "Activity: awaiting-discussion, 1280",
+      "w": 1280,
+      "x": 16470,
+      "y": 21840
+    },
+    "R3-P-awaiting-discussion-390.dc.html": {
+      "h": 4300,
+      "page": "r3",
+      "title": "Activity: awaiting-discussion, 390",
+      "w": 390,
+      "x": 17830,
+      "y": 21840
+    },
+    "R3-P-awaiting-review-1280.dc.html": {
+      "h": 3100,
+      "page": "r3",
+      "title": "Activity: awaiting-review, 1280",
+      "w": 1280,
+      "x": 7320,
+      "y": 27600
+    },
+    "R3-P-awaiting-review-390.dc.html": {
+      "h": 5400,
+      "page": "r3",
+      "title": "Activity: awaiting-review, 390",
+      "w": 390,
+      "x": 8680,
+      "y": 27600
+    },
+    "R3-P-completed-last-1280.dc.html": {
+      "h": 2500,
+      "page": "r3",
+      "title": "Activity: completed-last, 1280",
+      "w": 1280,
+      "x": 7320,
+      "y": 21840
+    },
+    "R3-P-completed-last-390.dc.html": {
+      "h": 4500,
+      "page": "r3",
+      "title": "Activity: completed-last, 390",
+      "w": 390,
+      "x": 8680,
+      "y": 21840
+    },
+    "R3-P-completed-next-1280.dc.html": {
+      "h": 2600,
+      "page": "r3",
+      "title": "Activity: completed-next, 1280",
+      "w": 1280,
+      "x": 5490,
+      "y": 21840
+    },
+    "R3-P-completed-next-390.dc.html": {
+      "h": 4700,
+      "page": "r3",
+      "title": "Activity: completed-next, 390",
+      "w": 390,
+      "x": 6850,
+      "y": 21840
+    },
+    "R3-P-completed-paused-1280.dc.html": {
+      "h": 2700,
+      "page": "r3",
+      "title": "Activity: completed-paused, 1280",
+      "w": 1280,
+      "x": 9150,
+      "y": 21840
+    },
+    "R3-P-completed-paused-390.dc.html": {
+      "h": 4900,
+      "page": "r3",
+      "title": "Activity: completed-paused, 390",
+      "w": 390,
+      "x": 10510,
+      "y": 21840
+    },
+    "R3-P-completing-1280.dc.html": {
+      "h": 2800,
+      "page": "r3",
+      "title": "Activity: completing, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 21840
+    },
+    "R3-P-completing-390.dc.html": {
+      "h": 4800,
+      "page": "r3",
+      "title": "Activity: completing, 390",
+      "w": 390,
+      "x": 5020,
+      "y": 21840
+    },
+    "R3-P-decline-note-1280.dc.html": {
+      "h": 3100,
+      "page": "r3",
+      "title": "Activity: decline-note, 1280",
+      "w": 1280,
+      "x": 10980,
+      "y": 21840
+    },
+    "R3-P-decline-note-390.dc.html": {
+      "h": 5100,
+      "page": "r3",
+      "title": "Activity: decline-note, 390",
+      "w": 390,
+      "x": 12340,
+      "y": 21840
+    },
+    "R3-P-decline-refused-1280.dc.html": {
+      "h": 3200,
+      "page": "r3",
+      "title": "Activity: decline-refused, 1280",
+      "w": 1280,
+      "x": 12810,
+      "y": 21840
+    },
+    "R3-P-decline-refused-390.dc.html": {
+      "h": 5300,
+      "page": "r3",
+      "title": "Activity: decline-refused, 390",
+      "w": 390,
+      "x": 14170,
+      "y": 21840
+    },
+    "R3-P-declined-1280.dc.html": {
+      "h": 2300,
+      "page": "r3",
+      "title": "Activity: declined, 1280",
+      "w": 1280,
+      "x": 14640,
+      "y": 21840
+    },
+    "R3-P-declined-390.dc.html": {
+      "h": 4000,
+      "page": "r3",
+      "title": "Activity: declined, 390",
+      "w": 390,
+      "x": 16000,
+      "y": 21840
+    },
+    "R3-P-discussed-1280.dc.html": {
+      "h": 2600,
+      "page": "r3",
+      "title": "Activity: discussed, 1280",
+      "w": 1280,
+      "x": 5490,
+      "y": 27600
+    },
+    "R3-P-discussed-390.dc.html": {
+      "h": 4700,
+      "page": "r3",
+      "title": "Activity: discussed, 390",
+      "w": 390,
+      "x": 6850,
+      "y": 27600
+    },
+    "R3-P-from-the-line-1280.dc.html": {
+      "h": 2500,
+      "page": "r3",
+      "title": "Activity: from-the-line, 1280",
+      "w": 1280,
+      "x": 9150,
+      "y": 27600
+    },
+    "R3-P-from-the-line-390.dc.html": {
+      "h": 4500,
+      "page": "r3",
+      "title": "Activity: from-the-line, 390",
+      "w": 390,
+      "x": 10510,
+      "y": 27600
+    },
+    "R3-P-load-error-1280.dc.html": {
+      "h": 640,
+      "page": "r3",
+      "title": "Activity: load-error, 1280",
+      "w": 1280,
+      "x": 14640,
+      "y": 27600
+    },
+    "R3-P-load-error-390.dc.html": {
+      "h": 900,
+      "page": "r3",
+      "title": "Activity: load-error, 390",
+      "w": 390,
+      "x": 16000,
+      "y": 27600
+    },
+    "R3-P-loading-1280.dc.html": {
+      "h": 1000,
+      "page": "r3",
+      "title": "Activity: loading, 1280",
+      "w": 1280,
+      "x": 12810,
+      "y": 27600
+    },
+    "R3-P-loading-390.dc.html": {
+      "h": 1500,
+      "page": "r3",
+      "title": "Activity: loading, 390",
+      "w": 390,
+      "x": 14170,
+      "y": 27600
+    },
+    "R3-P-rated-1280.dc.html": {
+      "h": 2800,
+      "page": "r3",
+      "title": "Activity: rated, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 21840
+    },
+    "R3-P-rated-390.dc.html": {
+      "h": 4800,
+      "page": "r3",
+      "title": "Activity: rated, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 21840
+    },
+    "R3-P-return-note-1280.dc.html": {
+      "h": 2700,
+      "page": "r3",
+      "title": "Activity: return-note, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 27600
+    },
+    "R3-P-return-note-390.dc.html": {
+      "h": 4800,
+      "page": "r3",
+      "title": "Activity: return-note, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 27600
+    },
+    "R3-P-return-refused-1280.dc.html": {
+      "h": 2800,
+      "page": "r3",
+      "title": "Activity: return-refused, 1280",
+      "w": 1280,
+      "x": 1830,
+      "y": 27600
+    },
+    "R3-P-return-refused-390.dc.html": {
+      "h": 5000,
+      "page": "r3",
+      "title": "Activity: return-refused, 390",
+      "w": 390,
+      "x": 3190,
+      "y": 27600
+    },
+    "R3-P-returned-1280.dc.html": {
+      "h": 2400,
+      "page": "r3",
+      "title": "Activity: returned, 1280",
+      "w": 1280,
+      "x": 3660,
+      "y": 27600
+    },
+    "R3-P-returned-390.dc.html": {
+      "h": 4300,
+      "page": "r3",
+      "title": "Activity: returned, 390",
+      "w": 390,
+      "x": 5020,
+      "y": 27600
+    },
+    "R3-P-to-rate-1280.dc.html": {
+      "h": 3000,
+      "page": "r3",
+      "title": "Activity: to-rate, 1280",
+      "w": 1280,
+      "x": 0,
+      "y": 21840
+    },
+    "R3-P-to-rate-390.dc.html": {
+      "h": 4700,
+      "page": "r3",
+      "title": "Activity: to-rate, 390",
+      "w": 390,
+      "x": 1360,
+      "y": 21840
+    },
+    "R3-P-unavailable-1280.dc.html": {
+      "h": 720,
+      "page": "r3",
+      "title": "Activity: unavailable, 1280",
+      "w": 1280,
+      "x": 10980,
+      "y": 27600
+    },
+    "R3-P-unavailable-390.dc.html": {
+      "h": 1000,
+      "page": "r3",
+      "title": "Activity: unavailable, 390",
+      "w": 390,
+      "x": 12340,
+      "y": 27600
+    },
+    "R3-Spec.dc.html": {
+      "h": 7400,
+      "page": "r3",
+      "title": "Round 3 spec",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "R3-Steps.dc.html": {
+      "h": 5600,
+      "page": "r3",
+      "title": "Round 3 steps",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-30T10:23:24Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "https://claude.ai/code/artifact/c96bff42-69c1-4e3c-925a-95bb2292870f",
+      "copiedAt": "2026-09-30T10:23:24Z",
+      "namespace": "wombat",
+      "title": "Wombat",
+      "version": "1790762173-c7ac"
+    }
+  ],
+  "launch": {
+    "page": "r3",
+    "view": "canvas"
+  },
+  "notes": {
+    "intro": {
+      "kind": "title1",
+      "maxW": 4000,
+      "page": "r1",
+      "text": "Round 1: the three structures, the steps, the spec",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "r2act1": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r2",
+      "text": "The assessor's activity page (1 of 2)",
+      "w": 240,
+      "x": 0,
+      "y": 20540
+    },
+    "r2act2": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r2",
+      "text": "The assessor's activity page (2 of 2)",
+      "w": 240,
+      "x": 0,
+      "y": 26300
+    },
+    "r2comp": {
+      "kind": "title1",
+      "maxW": 4000,
+      "page": "r2",
+      "text": "The three components (each draws every state at w 1280 or 390)",
+      "w": 240,
+      "x": 0,
+      "y": 6560
+    },
+    "r2home": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r2",
+      "text": "Home: the Assessor's, and the committee Home's line",
+      "w": 240,
+      "x": 0,
+      "y": 9720
+    },
+    "r2inbox": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r2",
+      "text": "Activity inbox: Waiting for you and Decided by you",
+      "w": 240,
+      "x": 0,
+      "y": 12680
+    },
+    "r2intro": {
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "r2",
+      "text": "Flow 04 round 2: A, \"Two pages, one list\", at full fidelity",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "r3act1": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r3",
+      "text": "The assessor's activity page (1 of 2)",
+      "w": 240,
+      "x": 0,
+      "y": 21540
+    },
+    "r3act2": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r3",
+      "text": "The assessor's activity page (2 of 2)",
+      "w": 240,
+      "x": 0,
+      "y": 27300
+    },
+    "r3comp": {
+      "kind": "title1",
+      "maxW": 4000,
+      "page": "r3",
+      "text": "The three components (each draws every state at w 1280 or 390)",
+      "w": 240,
+      "x": 0,
+      "y": 7560
+    },
+    "r3home": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r3",
+      "text": "Home: the Assessor's, and the committee Home's line",
+      "w": 240,
+      "x": 0,
+      "y": 10720
+    },
+    "r3inbox": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r3",
+      "text": "Activity inbox: Waiting for you and Decided by you",
+      "w": 240,
+      "x": 0,
+      "y": 13680
+    },
+    "r3intro": {
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "r3",
+      "text": "Flow 04 round 3: round 2 with E1–E5 and C1–C13",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "rowA": {
+      "kind": "title1",
+      "maxW": 4940,
+      "page": "r1",
+      "text": "A · Two pages, one list",
+      "w": 240,
+      "x": 0,
+      "y": 3420
+    },
+    "rowB": {
+      "kind": "title1",
+      "maxW": 3110,
+      "page": "r1",
+      "text": "B · Home is the inbox",
+      "w": 240,
+      "x": 0,
+      "y": 5800
+    },
+    "rowC": {
+      "kind": "title1",
+      "maxW": 6300,
+      "page": "r1",
+      "text": "C · A queue you work through",
+      "w": 240,
+      "x": 0,
+      "y": 8180
+    },
+    "rowP": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "r1",
+      "text": "The assessor's activity page, in flow 03's design (common to A, B and C)",
+      "w": 240,
+      "x": 0,
+      "y": 10060
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "R1-Steps.dc.html",
+    "R1-Spec.dc.html",
+    "A1-home-1280.dc.html",
+    "A2-home-390.dc.html",
+    "A3-inbox-1280.dc.html",
+    "A4-inbox-390.dc.html",
+    "A5-two-role-1280.dc.html",
+    "B1-home-1280.dc.html",
+    "B2-home-390.dc.html",
+    "B3-two-role-1280.dc.html",
+    "C1-home-1280.dc.html",
+    "C2-home-390.dc.html",
+    "C3-inbox-390.dc.html",
+    "C4-decisions-1280.dc.html",
+    "C5-next-1280.dc.html",
+    "C6-two-role-1280.dc.html",
+    "P1-to-rate-1280.dc.html",
+    "P2-rating-3b-390.dc.html",
+    "P3-decline-refused-1280.dc.html",
+    "P4-decline-refused-390.dc.html",
+    "P5-return-note-1280.dc.html",
+    "P6-completed-next-1280.dc.html",
+    "P7-completed-next-390.dc.html",
+    "P8-unavailable-1280.dc.html",
+    "R1-C-Activity.dc.html",
+    "R2-Spec.dc.html",
+    "R2-Steps.dc.html",
+    "R2-C-Home.dc.html",
+    "R2-C-Inbox.dc.html",
+    "R2-C-Activity.dc.html",
+    "R2-H-empty-1280.dc.html",
+    "R2-H-empty-390.dc.html",
+    "R2-H-one-waiting-1280.dc.html",
+    "R2-H-one-waiting-390.dc.html",
+    "R2-H-several-overdue-1280.dc.html",
+    "R2-H-several-overdue-390.dc.html",
+    "R2-H-overdue-only-1280.dc.html",
+    "R2-H-overdue-only-390.dc.html",
+    "R2-H-switched-1280.dc.html",
+    "R2-H-switched-390.dc.html",
+    "R2-H-committee-line-1280.dc.html",
+    "R2-H-committee-line-390.dc.html",
+    "R2-H-twenty-five-1280.dc.html",
+    "R2-H-twenty-five-390.dc.html",
+    "R2-H-loading-1280.dc.html",
+    "R2-H-loading-390.dc.html",
+    "R2-H-load-error-1280.dc.html",
+    "R2-H-load-error-390.dc.html",
+    "R2-I-clear-1280.dc.html",
+    "R2-I-clear-390.dc.html",
+    "R2-I-clear-with-decisions-1280.dc.html",
+    "R2-I-clear-with-decisions-390.dc.html",
+    "R2-I-two-1280.dc.html",
+    "R2-I-two-390.dc.html",
+    "R2-I-overdue-1280.dc.html",
+    "R2-I-overdue-390.dc.html",
+    "R2-I-paused-epa-1280.dc.html",
+    "R2-I-paused-epa-390.dc.html",
+    "R2-I-alike-1280.dc.html",
+    "R2-I-alike-390.dc.html",
+    "R2-I-twenty-five-1280.dc.html",
+    "R2-I-twenty-five-390.dc.html",
+    "R2-I-decided-45-1280.dc.html",
+    "R2-I-decided-45-390.dc.html",
+    "R2-I-long-1280.dc.html",
+    "R2-I-long-390.dc.html",
+    "R2-I-registrar-only-1280.dc.html",
+    "R2-I-registrar-only-390.dc.html",
+    "R2-I-loading-1280.dc.html",
+    "R2-I-loading-390.dc.html",
+    "R2-I-load-error-1280.dc.html",
+    "R2-I-load-error-390.dc.html",
+    "R2-P-to-rate-1280.dc.html",
+    "R2-P-to-rate-390.dc.html",
+    "R2-P-rated-1280.dc.html",
+    "R2-P-rated-390.dc.html",
+    "R2-P-completing-1280.dc.html",
+    "R2-P-completing-390.dc.html",
+    "R2-P-completed-next-1280.dc.html",
+    "R2-P-completed-next-390.dc.html",
+    "R2-P-completed-last-1280.dc.html",
+    "R2-P-completed-last-390.dc.html",
+    "R2-P-completed-paused-1280.dc.html",
+    "R2-P-completed-paused-390.dc.html",
+    "R2-P-decline-note-1280.dc.html",
+    "R2-P-decline-note-390.dc.html",
+    "R2-P-decline-refused-1280.dc.html",
+    "R2-P-decline-refused-390.dc.html",
+    "R2-P-declined-1280.dc.html",
+    "R2-P-declined-390.dc.html",
+    "R2-P-awaiting-discussion-1280.dc.html",
+    "R2-P-awaiting-discussion-390.dc.html",
+    "R2-P-return-note-1280.dc.html",
+    "R2-P-return-note-390.dc.html",
+    "R2-P-return-refused-1280.dc.html",
+    "R2-P-return-refused-390.dc.html",
+    "R2-P-returned-1280.dc.html",
+    "R2-P-returned-390.dc.html",
+    "R2-P-discussed-1280.dc.html",
+    "R2-P-discussed-390.dc.html",
+    "R2-P-awaiting-review-1280.dc.html",
+    "R2-P-awaiting-review-390.dc.html",
+    "R2-P-from-the-line-1280.dc.html",
+    "R2-P-from-the-line-390.dc.html",
+    "R2-P-unavailable-1280.dc.html",
+    "R2-P-unavailable-390.dc.html",
+    "R2-P-loading-1280.dc.html",
+    "R2-P-loading-390.dc.html",
+    "R2-P-load-error-1280.dc.html",
+    "R2-P-load-error-390.dc.html",
+    "R3-Spec.dc.html",
+    "R3-Steps.dc.html",
+    "R3-C-Home.dc.html",
+    "R3-C-Inbox.dc.html",
+    "R3-C-Activity.dc.html",
+    "R3-H-empty-1280.dc.html",
+    "R3-H-empty-390.dc.html",
+    "R3-H-one-waiting-1280.dc.html",
+    "R3-H-one-waiting-390.dc.html",
+    "R3-H-several-overdue-1280.dc.html",
+    "R3-H-several-overdue-390.dc.html",
+    "R3-H-overdue-only-1280.dc.html",
+    "R3-H-overdue-only-390.dc.html",
+    "R3-H-switched-1280.dc.html",
+    "R3-H-switched-390.dc.html",
+    "R3-H-committee-line-1280.dc.html",
+    "R3-H-committee-line-390.dc.html",
+    "R3-H-committee-line-none-overdue-1280.dc.html",
+    "R3-H-committee-line-none-overdue-390.dc.html",
+    "R3-H-committee-line-several-1280.dc.html",
+    "R3-H-committee-line-several-390.dc.html",
+    "R3-H-twenty-five-1280.dc.html",
+    "R3-H-twenty-five-390.dc.html",
+    "R3-H-loading-1280.dc.html",
+    "R3-H-loading-390.dc.html",
+    "R3-H-load-error-1280.dc.html",
+    "R3-H-load-error-390.dc.html",
+    "R3-I-clear-1280.dc.html",
+    "R3-I-clear-390.dc.html",
+    "R3-I-clear-with-decisions-1280.dc.html",
+    "R3-I-clear-with-decisions-390.dc.html",
+    "R3-I-two-1280.dc.html",
+    "R3-I-two-390.dc.html",
+    "R3-I-overdue-1280.dc.html",
+    "R3-I-overdue-390.dc.html",
+    "R3-I-paused-epa-1280.dc.html",
+    "R3-I-paused-epa-390.dc.html",
+    "R3-I-alike-1280.dc.html",
+    "R3-I-alike-390.dc.html",
+    "R3-I-twenty-five-1280.dc.html",
+    "R3-I-twenty-five-390.dc.html",
+    "R3-I-decided-45-1280.dc.html",
+    "R3-I-decided-45-390.dc.html",
+    "R3-I-long-1280.dc.html",
+    "R3-I-long-390.dc.html",
+    "R3-I-registrar-only-1280.dc.html",
+    "R3-I-registrar-only-390.dc.html",
+    "R3-I-loading-1280.dc.html",
+    "R3-I-loading-390.dc.html",
+    "R3-I-load-error-1280.dc.html",
+    "R3-I-load-error-390.dc.html",
+    "R3-P-to-rate-1280.dc.html",
+    "R3-P-to-rate-390.dc.html",
+    "R3-P-rated-1280.dc.html",
+    "R3-P-rated-390.dc.html",
+    "R3-P-completing-1280.dc.html",
+    "R3-P-completing-390.dc.html",
+    "R3-P-completed-next-1280.dc.html",
+    "R3-P-completed-next-390.dc.html",
+    "R3-P-completed-last-1280.dc.html",
+    "R3-P-completed-last-390.dc.html",
+    "R3-P-completed-paused-1280.dc.html",
+    "R3-P-completed-paused-390.dc.html",
+    "R3-P-decline-note-1280.dc.html",
+    "R3-P-decline-note-390.dc.html",
+    "R3-P-decline-refused-1280.dc.html",
+    "R3-P-decline-refused-390.dc.html",
+    "R3-P-declined-1280.dc.html",
+    "R3-P-declined-390.dc.html",
+    "R3-P-awaiting-discussion-1280.dc.html",
+    "R3-P-awaiting-discussion-390.dc.html",
+    "R3-P-return-note-1280.dc.html",
+    "R3-P-return-note-390.dc.html",
+    "R3-P-return-refused-1280.dc.html",
+    "R3-P-return-refused-390.dc.html",
+    "R3-P-returned-1280.dc.html",
+    "R3-P-returned-390.dc.html",
+    "R3-P-discussed-1280.dc.html",
+    "R3-P-discussed-390.dc.html",
+    "R3-P-awaiting-review-1280.dc.html",
+    "R3-P-awaiting-review-390.dc.html",
+    "R3-P-from-the-line-1280.dc.html",
+    "R3-P-from-the-line-390.dc.html",
+    "R3-P-unavailable-1280.dc.html",
+    "R3-P-unavailable-390.dc.html",
+    "R3-P-loading-1280.dc.html",
+    "R3-P-loading-390.dc.html",
+    "R3-P-load-error-1280.dc.html",
+    "R3-P-load-error-390.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "r1",
+      "name": "Round 1"
+    },
+    {
+      "id": "r2",
+      "name": "Round 2"
+    },
+    {
+      "id": "r3",
+      "name": "Round 3"
+    }
+  ],
+  "title": "Wombat 04"
+}

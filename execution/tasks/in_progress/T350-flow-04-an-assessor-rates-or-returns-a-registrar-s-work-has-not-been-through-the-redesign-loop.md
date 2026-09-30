@@ -50,7 +50,7 @@ Run the loop as flow 02 ran it (`design/flows/03-trainee-files-activity/`, BRIEF
 
 - [x] The brief is restated, and `check_flow_completeness.py` exits 0 — `30c29c31` (verbatim steps 0 problems, baseline paths missing 0; staged 87 files, 2.74 MB, plus flow 03's seven assessor boards in `design/upload/flow03-boards/`).
 - [x] The canvas is created, with the mark copied in before round 1 — https://claude.ai/artifact/8JnYLZp6CTR1Mg38a5v7DX (mark `/_blob/89ddc910c53255a32bcbb84e2820bc45`, 2026-09-30).
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/04-assessor-inbox/`.
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/04-assessor-inbox/` (A picked; round 2 reviewed from four sides, C1–C13, E1–E5 accepted; round 3 checked, `round-3-check.md`: all hold).
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 04) — the squash commit.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 04, and the baseline is re-captured,
   with `check_baseline_paths.py` at `missing 0` — the Actual lines.

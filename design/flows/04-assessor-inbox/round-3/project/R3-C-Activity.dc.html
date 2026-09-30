@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 04 R3: the assessor&#x27;s activity page, every state</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wombat-root.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow04-r3.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Source Sans 3";src:url("/_blob/83270f069e00592a28bbab89551709ac") format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/_blob/0f0443f8f94c6d5b22c7c70b523127ae") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+body{margin:0}
+.demo-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+</style>
+</helmet>
+<div style="width: {{w}}px; height: {{h}}px; overflow: hidden; position: relative; background-color: var(--background-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/89ddc910c53255a32bcbb84e2820bc45" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span><span>{{u.role}}</span></p>
+<label for="nav-toggle" class="nav-toggle-label"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>Menu</span></label>
+<div class="nav-panel">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">{{u.role}}</span></p>
+<sc-if value="{{u.hasSwitch}}" hint-placeholder-val="{{false}}"><a class="role-switch" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"></path></svg><span>Switch to {{u.switchTo}}</span></a></sc-if>
+</div>
+<nav class="nav-list" aria-label="Main">
+<ul class="nav-items"><sc-for list="{{nav}}" as="n" hint-placeholder-count="2"><li><a class="{{n.cls}}" href="#" aria-current="{{n.cur}}"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></li></sc-for></ul>
+<ul class="nav-items nav-personal"><sc-for list="{{personal}}" as="n" hint-placeholder-count="1"><li><a class="{{n.cls}}" href="#" aria-current="{{n.cur}}"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></li></sc-for></ul>
+</nav>
+</div>
+<div class="account-row"><a class="account-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="account-name">{{u.name}}</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+</header>
+<main><article>
+
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+<sc-if value="{{trail3}}" hint-placeholder-val="{{true}}">
+<li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Activity inbox</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+</sc-if>
+<sc-if value="{{trail2}}" hint-placeholder-val="{{false}}">
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+</sc-if>
+<li class="breadcrumb-current"><span aria-current="page">{{crumb}}</span></li>
+</ol></nav>
+
+<div class="header-container"><div>
+<sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}"><h1 tabindex="-1"><span class="visually-hidden">Loading the activity</span><span class="skeleton" style="display: block; width: 22rem; max-width: 100%; height: 1.75rem" aria-hidden="true"></span></h1></sc-if>
+<sc-if value="{{hasH1}}" hint-placeholder-val="{{true}}"><h1 tabindex="-1">{{h1}}</h1></sc-if>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{true}}"><p class="page-subtitle">{{sub}}</p></sc-if>
+</div></div>
+
+<p class="visually-hidden" role="status">{{loadingWords}}</p>
+<div class="activity-page">
+
+<sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+<div class="detail-card activity-status activity-status--others" aria-hidden="true"><div class="activity-status-main"><div class="skeleton" style="width: 9rem; height: 1rem"></div><div class="skeleton" style="width: 60%; height: 1.4rem"></div><div class="skeleton" style="width: 80%; height: 1rem"></div></div></div>
+<div class="details-grid" aria-hidden="true"><div class="detail-card"><div class="skeleton" style="width: 100%; height: 1rem"></div><div class="skeleton" style="width: 100%; height: 1rem"></div><div class="skeleton" style="width: 100%; height: 1rem"></div><div class="skeleton" style="width: 70%; height: 1rem"></div></div><div class="detail-card"><div class="skeleton" style="width: 30%; height: 1.4rem"></div><div class="skeleton" style="width: 100%; height: 1rem"></div><div class="skeleton" style="width: 100%; height: 1rem"></div><div class="skeleton" style="width: 100%; height: 1rem"></div></div></div>
+</sc-if>
+
+<sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load this activity. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></div></div></div>
+</sc-if>
+
+<sc-if value="{{isNotFound}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty"><p class="state-panel-title">This activity does not exist, or you cannot open it.</p><div class="form-actions"><a class="btn btn-outline" href="#">Go to Activity inbox</a></div></div>
+</sc-if>
+
+<sc-if value="{{isPage}}" hint-placeholder-val="{{true}}">
+
+<sc-if value="{{hasResult}}" hint-placeholder-val="{{false}}">
+<div class="action-result demo-focus" id="activity-result" tabindex="-1" role="status" style="margin-bottom: var(--space-md)"><div class="alert alert-success"><strong>{{res.head}}</strong> {{res.tail}}</div></div>
+<sc-if value="{{hasWayOn}}" hint-placeholder-val="{{false}}">
+<section class="way-on" aria-label="The next activity waiting for you">
+<ul class="needs-you stack-list"><li class="{{way.cls}}">
+<sc-if value="{{way.noAria}}" hint-placeholder-val="{{true}}"><a class="activity-link" href="#">{{way.name}}<span class="visually-hidden">, </span><span class="activity-link-to">from {{way.from}}</span></a></sc-if>
+<sc-if value="{{way.hasAria}}" hint-placeholder-val="{{false}}"><a class="activity-link" href="#" aria-label="{{way.aria}}">{{way.name}}<span class="activity-link-to">from {{way.from}}</span></a></sc-if>
+<span class="needs-you-badges"><span class="{{way.badge}}">{{way.state}}</span><sc-if value="{{way.over}}" hint-placeholder-val="{{false}}"><span class="badge badge-overdue">Overdue</span></sc-if></span>
+<p class="needs-you-why">{{way.waited}}, since {{way.since}}.</p></li></ul>
+<div class="form-actions"><a class="btn btn-primary" href="#" aria-label="{{way.openAria}}">Open the next</a><a class="btn btn-outline" href="#">{{way.back}}</a></div>
+</section>
+</sc-if>
+<sc-if value="{{hasNone}}" hint-placeholder-val="{{false}}"><p class="way-on-none"><a class="btn btn-outline" href="#">Go to Home</a></p></sc-if>
+</sc-if>
+
+<section class="{{st.cls}}" aria-labelledby="activity-status-head">
+<div class="activity-status-main">
+<p class="activity-status-label">Who has it now</p>
+<p class="activity-status-head" id="activity-status-head"><span class="{{st.badge}}">{{st.state}}</span><span class="activity-status-headline">{{st.headline}}</span></p>
+<sc-if value="{{st.hasQuote}}" hint-placeholder-val="{{false}}"><blockquote class="activity-status-quote"><p>{{st.quote}}</p><cite>{{st.quoteBy}}</cite></blockquote></sc-if>
+<sc-if value="{{st.hasBody}}" hint-placeholder-val="{{true}}"><p class="activity-status-body">{{st.body}}</p></sc-if>
+<sc-if value="{{st.hasMeta}}" hint-placeholder-val="{{false}}"><p class="activity-status-meta">{{st.meta}}</p></sc-if>
+</div>
+</section>
+
+<div class="details-grid activity-grid">
+<sc-if value="{{aboutFirst}}" hint-placeholder-val="{{true}}">
+<section class="detail-card activity-about" aria-labelledby="about-h"><h2 class="activity-card-title" id="about-h">About</h2>
+<dl class="details-list"><sc-for list="{{about}}" as="a" hint-placeholder-count="5"><div><dt>{{a.k}}</dt><dd>{{a.v}}<sc-if value="{{a.paused}}" hint-placeholder-val="{{false}}"> <span class="muted">(no longer in use)</span></sc-if><sc-if value="{{a.hasWarn}}" hint-placeholder-val="{{false}}"><p class="field-warning">{{a.warn}}</p></sc-if></dd></div></sc-for></dl>
+</section>
+</sc-if>
+
+<div class="activity-sections">
+<div class="activity-form">
+<sc-if value="{{fills}}" hint-placeholder-val="{{false}}"><p class="field-help" style="margin: 0"><span class="required-mark">*</span> marks a field you must fill in.</p></sc-if>
+<sc-for list="{{sections}}" as="s" hint-placeholder-count="3">
+
+<sc-if value="{{s.isFold}}" hint-placeholder-val="{{false}}">
+<details class="{{s.cls}}"><summary><div class="section-fold-head"><h2 id="{{s.hid}}">{{s.title}}</h2><span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span></div><span class="section-fold-owner">{{s.owner}}</span></summary>
+<div class="section-fold-body"><dl class="details-list details-list--stacked"><sc-for list="{{s.readout}}" as="f" hint-placeholder-count="3"><div><dt>{{f.k}}</dt><dd class="{{f.cls}}">{{f.v}}<sc-if value="{{f.paused}}" hint-placeholder-val="{{false}}"> <span class="muted">(no longer in use)</span></sc-if></dd></div></sc-for></dl></div>
+</details>
+</sc-if>
+
+<sc-if value="{{s.isFilled}}" hint-placeholder-val="{{true}}">
+<section class="{{s.cls}}" aria-labelledby="{{s.hid}}">
+<div class="form-section-head"><h2 id="{{s.hid}}">{{s.title}}</h2><p class="form-section-owner">{{s.owner}}</p></div>
+<dl class="details-list details-list--stacked">
+<sc-if value="{{s.hasRung}}" hint-placeholder-val="{{false}}"><div><dt>{{s.rungLabel}}</dt><dd>
+<ol class="rung-row" aria-label="{{s.rungLabel}}"><sc-for list="{{s.rungs}}" as="r" hint-placeholder-count="6"><li class="{{r.readCls}}">{{r.label}}<sc-if value="{{r.chosen}}" hint-placeholder-val="{{false}}"><span class="visually-hidden">, </span><span class="rung-check">chosen</span></sc-if></li></sc-for></ol>
+<p class="rung-descriptor"><b>{{s.chosen}}</b>{{s.chosenDesc}}</p></dd></div></sc-if>
+<sc-for list="{{s.readout}}" as="f" hint-placeholder-count="3"><div><dt>{{f.k}}</dt><dd class="{{f.cls}}">{{f.v}}<sc-if value="{{f.paused}}" hint-placeholder-val="{{false}}"> <span class="muted">(no longer in use)</span></sc-if></dd></div></sc-for>
+</dl>
+</section>
+</sc-if>
+
+<sc-if value="{{s.isLocked}}" hint-placeholder-val="{{false}}">
+<section class="detail-card form-section form-section--locked" aria-labelledby="{{s.hid}}">
+<div class="form-section-lockhead"><h2 id="{{s.hid}}">{{s.title}}</h2><p class="form-section-owner"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{s.owner}}</p></div>
+<div class="form-section-lockbody"><sc-if value="{{s.hasPending}}" hint-placeholder-val="{{false}}"><ol class="rung-row" aria-label="{{s.pendingLabel}}"><sc-for list="{{s.pending}}" as="r" hint-placeholder-count="6"><li class="rung rung--pending" aria-hidden="true">{{r}}</li></sc-for></ol></sc-if><p class="form-section-empty">{{s.empty}}</p></div>
+</section>
+</sc-if>
+
+<sc-if value="{{s.isOpen}}" hint-placeholder-val="{{false}}">
+<section class="detail-card form-section" aria-labelledby="{{s.hid}}">
+<div class="form-section-head"><h2 id="{{s.hid}}">{{s.title}}</h2><p class="form-section-owner">You fill this in</p></div>
+
+<sc-if value="{{s.hasPicker}}" hint-placeholder-val="{{false}}">
+<fieldset class="rung-picker" aria-describedby="level-help">
+<legend>{{s.rungLabel}}<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+<p class="field-help" id="level-help">The supervision this activity actually required on this occasion - not a judgement of the trainee's worth.</p>
+<ol class="rung-row"><sc-for list="{{s.rungs}}" as="r" hint-placeholder-count="6"><li><label class="{{r.pickCls}}"><sc-if value="{{r.chosen}}" hint-placeholder-val="{{false}}"><input type="radio" name="level" value="{{r.key}}" checked="" aria-describedby="rung-desc-{{r.key}}"></sc-if><sc-if value="{{r.notChosen}}" hint-placeholder-val="{{true}}"><input type="radio" name="level" value="{{r.key}}" aria-describedby="rung-desc-{{r.key}}"></sc-if>{{r.label}}<sc-if value="{{r.chosen}}" hint-placeholder-val="{{false}}"><span class="rung-check" aria-hidden="true">chosen</span></sc-if></label></li></sc-for></ol>
+<sc-for list="{{s.rungs}}" as="r" hint-placeholder-count="6"><span class="visually-hidden" id="rung-desc-{{r.key}}">{{r.desc}}</span></sc-for>
+<sc-if value="{{s.hasChosen}}" hint-placeholder-val="{{false}}"><p class="rung-descriptor"><b>{{s.chosen}}</b>{{s.chosenDesc}}</p></sc-if>
+<sc-if value="{{s.legendTwo}}" hint-placeholder-val="{{true}}"><details class="rung-legend only-wide" open=""><summary><svg class="icon rung-legend-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>What each rung means <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span></summary><dl class="rung-legend-list"><sc-for list="{{s.rungs}}" as="r" hint-placeholder-count="6"><div><dt>{{r.label}}</dt><dd>{{r.desc}}</dd></div></sc-for></dl></details><details class="rung-legend only-narrow"><summary><svg class="icon rung-legend-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>What each rung means <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span></summary><dl class="rung-legend-list"><sc-for list="{{s.rungs}}" as="r" hint-placeholder-count="6"><div><dt>{{r.label}}</dt><dd>{{r.desc}}</dd></div></sc-for></dl></details></sc-if>
+<sc-if value="{{s.legendOne}}" hint-placeholder-val="{{false}}"><details class="rung-legend"><summary><svg class="icon rung-legend-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>What each rung means <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span></summary><dl class="rung-legend-list"><sc-for list="{{s.rungs}}" as="r" hint-placeholder-count="6"><div><dt>{{r.label}}</dt><dd>{{r.desc}}</dd></div></sc-for></dl></details></sc-if>
+</fieldset>
+</sc-if>
+
+<sc-if value="{{s.hasInputs}}" hint-placeholder-val="{{false}}">
+<div class="form-grid">
+<sc-for list="{{s.inputs}}" as="f" hint-placeholder-count="3">
+<sc-if value="{{f.isArea}}" hint-placeholder-val="{{true}}"><div class="form-group full-width"><label for="{{f.id}}-in">{{f.label}}<sc-if value="{{f.req}}" hint-placeholder-val="{{true}}"><span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></sc-if></label>
+<textarea class="form-control" id="{{f.id}}-in" rows="3" aria-required="{{f.reqText}}" aria-describedby="{{f.helpId}}">{{f.value}}</textarea>
+<sc-if value="{{f.hasHelp}}" hint-placeholder-val="{{false}}"><p class="field-help" id="{{f.id}}-help">{{f.help}}</p></sc-if></div></sc-if>
+<sc-if value="{{f.isDate}}" hint-placeholder-val="{{false}}"><div class="form-group"><label for="{{f.id}}-in">{{f.label}}<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+<input class="form-control" id="{{f.id}}-in" type="date" aria-required="true" aria-describedby="{{f.helpId}}">
+<sc-if value="{{f.hasHelp}}" hint-placeholder-val="{{false}}"><p class="field-help" id="{{f.id}}-help">{{f.help}}</p></sc-if></div></sc-if>
+<sc-if value="{{f.isChecks}}" hint-placeholder-val="{{false}}"><fieldset class="form-group full-width" aria-describedby="{{f.helpId}}"><legend>{{f.label}}<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+<div class="check-grid"><sc-for list="{{f.options}}" as="o" hint-placeholder-count="5"><div class="form-check"><input class="form-check-input" type="checkbox" id="{{o.id}}"><label for="{{o.id}}">{{o.label}}</label></div></sc-for></div>
+<sc-if value="{{f.hasHelp}}" hint-placeholder-val="{{false}}"><p class="field-help" id="{{f.id}}-help">{{f.help}}</p></sc-if></fieldset></sc-if>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</sc-if>
+</sc-for>
+</div>
+
+<sc-if value="{{hasBar}}" hint-placeholder-val="{{true}}">
+<div class="activity-moves">
+<div class="form-actions form-actions--moves">
+<sc-for list="{{bar}}" as="b" hint-placeholder-count="3">
+<sc-if value="{{b.isPri}}" hint-placeholder-val="{{true}}"><button type="button" class="btn btn-primary">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isBusy}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-primary is-running demo-focus" aria-disabled="true">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isOut}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isOff}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline" disabled="">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isCannot}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline is-unavailable" aria-disabled="true" aria-describedby="why-discard">{{b.label}}</button><ul class="move-reasons move-reasons--beside"><li id="why-discard">Nothing to discard yet.</li></ul></sc-if>
+<sc-if value="{{b.isToggle}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline" aria-expanded="false" aria-controls="note-panel">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isToggleOpen}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline" aria-expanded="true" aria-controls="note-panel">{{b.label}}</button></sc-if>
+</sc-for>
+<p class="visually-hidden" role="status">{{busyWords}}</p>
+</div>
+
+<sc-if value="{{hasNote}}" hint-placeholder-val="{{false}}">
+<section class="detail-card note-panel" id="note-panel" aria-labelledby="note-panel-title">
+<h2 class="note-panel-title" id="note-panel-title">{{note.title}}</h2>
+<sc-if value="{{note.refused}}" hint-placeholder-val="{{false}}"><div class="validation-summary-errors error-summary demo-focus" id="note-summary" tabindex="-1" role="alert"><strong>{{note.notDone}}</strong> {{note.still}}<ul class="refusal-summary-list"><li><a href="#note-in">{{note.label}}: {{note.need}}</a></li></ul></div></sc-if>
+<div class="form-group"><label for="note-in">{{note.label}}<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+<p class="field-help" id="note-help">{{note.help}}</p>
+<textarea class="{{note.cls}}" id="note-in" rows="4" aria-required="true" aria-invalid="{{note.invalid}}" aria-describedby="{{note.describedby}}"></textarea>
+<sc-if value="{{note.refused}}" hint-placeholder-val="{{false}}"><p class="validation-message" id="note-msg">{{note.need}}</p></sc-if></div>
+<div class="form-actions form-actions--moves">
+<sc-if value="{{note.danger}}" hint-placeholder-val="{{true}}"><button type="button" class="btn btn-danger">{{note.send}}</button></sc-if>
+<sc-if value="{{note.primary}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-primary">{{note.send}}</button></sc-if>
+<button type="button" class="btn btn-quiet">{{note.keep}}</button></div>
+</section>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{aboutLast}}" hint-placeholder-val="{{false}}">
+<section class="detail-card activity-about" aria-labelledby="about-h2"><h2 class="activity-card-title" id="about-h2">About</h2>
+<dl class="details-list"><sc-for list="{{about}}" as="a" hint-placeholder-count="5"><div><dt>{{a.k}}</dt><dd>{{a.v}}<sc-if value="{{a.paused}}" hint-placeholder-val="{{false}}"> <span class="muted">(no longer in use)</span></sc-if><sc-if value="{{a.hasWarn}}" hint-placeholder-val="{{false}}"><p class="field-warning">{{a.warn}}</p></sc-if></dd></div></sc-for></dl>
+</section>
+</sc-if>
+</div>
+</div>
+
+<section class="detail-card" aria-labelledby="hist-h">
+<h2 class="activity-card-title" id="hist-h">History</h2>
+<div class="table-container history-table-container">
+<table class="clinic-table history-table" aria-labelledby="hist-h">
+<thead><tr><th scope="col">Move</th><th scope="col">From → to</th><th scope="col">By</th><th scope="col">When</th><th scope="col">Credit</th></tr></thead>
+<tbody><sc-for list="{{history}}" as="m" hint-placeholder-count="2">
+<tr class="{{m.cls}}"><td>{{m.move}}</td><td>{{m.from}}</td><td>{{m.by}}</td><td>{{m.when}}<sc-if value="{{m.hasLate}}" hint-placeholder-val="{{false}}"><span class="history-late">{{m.late}}</span></sc-if></td><td>{{m.credit}}</td></tr>
+<sc-if value="{{m.hasNote}}" hint-placeholder-val="{{false}}"><tr><td class="history-note" colspan="5"><span class="text-muted">Note:</span> {{m.note}}</td></tr></sc-if>
+</sc-for></tbody></table>
+</div>
+<details class="history-details"><summary><svg class="icon history-details-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>{{historyLabel}}</summary>
+<ol class="history-list"><sc-for list="{{history}}" as="m" hint-placeholder-count="2"><li class="history-row"><b>{{m.move}} · {{m.from}}</b><span>{{m.by}} · {{m.when}}</span><sc-if value="{{m.hasLate}}" hint-placeholder-val="{{false}}"><span class="history-meta">{{m.late}}</span></sc-if><span class="history-meta">Credit {{m.credit}}</span><sc-if value="{{m.hasNote}}" hint-placeholder-val="{{false}}"><span>Note: {{m.note}}</span></sc-if></li></sc-for></ol>
+</details>
+<p class="text-sm text-muted history-zone">Times are South African time.</p>
+</section>
+</sc-if>
+</div>
+
+</article></main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state": {"editor": "enum", "options": ["to-rate", "rated", "completing", "completed-next", "completed-last", "completed-paused", "decline-note", "decline-refused", "declined", "awaiting-discussion", "return-note", "return-refused", "returned", "discussed", "awaiting-review", "from-the-line", "unavailable", "loading", "load-error"], "default": "to-rate"}, "w": {"editor": "int", "default": 1280}, "h": {"editor": "int", "default": 2700}, "$preview": {"width": 1280, "height": 2700}}'>
+class Component extends DCLogic {
+  renderVals() {
+
+    const w = this.props.w || 1280;
+    const h = this.props.h || 1200;
+    const phone = w < 641;
+    const ICON = {
+      home: 'M3 10.5 12 3l9 7.5V21H3z',
+      inbox: 'M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',
+      log: 'M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7ZM14 2v4a2 2 0 0 0 2 2h4M9 15h6M12 18v-6',
+      mine: 'm3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8',
+      reviews: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6',
+      panels: 'm16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2',
+      progress: 'M3 3v16a2 2 0 0 0 2 2h16M19 9l-5 5-4-4-3 3',
+      rights: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'
+    };
+    // The acting role's menu (flow 01), one lit item at most: [label, 'page' | 'true' | ''].
+    const MENU = {
+      assessor: [['Home', 'home'], ['Activity inbox', 'inbox']],
+      committee: [['Home', 'home'], ['Committee reviews', 'reviews'], ['Decision panels', 'panels']],
+      trainee: [['Home', 'home'], ['Log an activity', 'log'], ['My activities', 'mine']]
+    };
+    const frame = (role, name, lit, litKind, switchTo) => {
+      const item = (m) => ({ label: m[0], d: ICON[m[1]], cls: m[0] === lit ? 'nav-link active' : 'nav-link', cur: m[0] === lit ? litKind : 'false' });
+      const personal = (role === 'trainee' ? [['My progress', 'progress']] : []).concat([['My data rights', 'rights']]);
+      return {
+        u: { name: name, role: role === 'assessor' ? 'Assessor' : role === 'committee' ? 'Committee member' : 'Trainee', hasSwitch: !!switchTo, switchTo: switchTo || '' },
+        nav: MENU[role].map(item), personal: personal.map(item)
+      };
+    };
+    const EPA = {
+      'PAED-001': 'PAED-001 — Providing paediatric emergency care to children',
+      'PAED-002': 'PAED-002 — Managing common paediatric presentations',
+      'PAED-004': 'PAED-004 — Managing common neonatal conditions',
+      'PAED-012': 'PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams',
+      'PAED-015': 'PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research'
+    };
+    const STATE_BADGE = { 'Requested': 'badge-submitted', 'Awaiting review': 'badge-submitted', 'Awaiting discussion': 'badge-submitted',
+      'Completed': 'badge-completed', 'Discussed': 'badge-completed', 'Signed off': 'badge-completed', 'Declined': 'badge-declined', 'Draft': 'badge-draft' };
+    // A waiting row. days: 0 = under a day. Overdue: more than 7 whole days since UpdatedOn.
+    const waitRow = (name, from, state, days, since, o) => {
+      o = o || {};
+      const over = days >= 7;
+      return {
+        name: name, from: from, state: state, badge: 'badge ' + STATE_BADGE[state], over: over,
+        cls: 'needs-you-row' + (over ? ' needs-you-row--overdue' : ''),
+        waited: days < 1 ? 'Waiting less than a day' : 'Waiting ' + days + (days === 1 ? ' day' : ' days'),
+        cell: days < 1 ? 'Less than a day' : days + (days === 1 ? ' day' : ' days'),
+        since: since + ' SAST', epa: EPA[name.split(' · ')[1]] || o.epa || '', paused: !!o.paused,
+        hasAria: !!o.aria, noAria: !o.aria, aria: o.aria || ''
+      };
+    };
+    const decRow = (name, reg, state, when, credit) => ({ name: name, reg: reg, state: state, badge: 'badge ' + STATE_BADGE[state],
+      date: when.slice(0, 10), when: when + ' SAST', credit: credit });
+    const countWords = (list) => {
+      const n = list.length, o = list.filter((r) => r.over).length;
+      return n + ' waiting' + (o ? ', ' + o + ' overdue' : '');
+    };
+    const dayBefore = (n) => new Date(Date.UTC(2026, 8, 30) - n * 86400000).toISOString().slice(0, 10);
+    // The cast's rows (runbook, replay day 2026-09-30).
+    const R = {
+      review0: () => waitRow('Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29', 'Pieter du Plessis', 'Awaiting review', 0, '2026-09-30 08:06'),
+      review8: () => waitRow('Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29', 'Pieter du Plessis', 'Awaiting review', 8, '2026-09-22 08:06'),
+      dops: () => waitRow('DOPS (Paediatrics) · PAED-002 · 2026-09-22', 'Nomsa Mahlangu', 'Requested', 0, '2026-09-30 08:12'),
+      mc012: () => waitRow('Mini-CEX (Paediatrics) · PAED-012 · 2026-09-30', 'Anele Dlamini', 'Requested', 0, '2026-09-30 09:58', { paused: true }),
+      mc002: () => waitRow('Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10', 'Anele Dlamini', 'Requested', 0, '2026-09-30 10:27'),
+      cbd: () => waitRow('Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-25', 'Pieter du Plessis', 'Requested', 0, '2026-09-30 08:05'),
+      zulu: () => waitRow('Mini-CEX (Paediatrics) · PAED-004 · 2026-09-27', 'Nomsa Mahlangu', 'Requested', 8, '2026-09-22 08:55'),
+      mc002today: () => waitRow('Mini-CEX (Paediatrics) · PAED-002 · 2026-09-30', 'Anele Dlamini', 'Requested', 0, '2026-09-30 09:20')
+    };
+    const D = {
+      patel: [decRow('Mini-CEX (Paediatrics) · PAED-012 · 2026-09-30', 'Anele Dlamini', 'Completed', '2026-09-30 09:59', '1 item'),
+        decRow('DOPS (Paediatrics) · PAED-001 · 2026-09-21', 'Lerato Molefe', 'Completed', '2026-09-30 08:45', '1 item'),
+        decRow('DOPS (Paediatrics) · PAED-002 · 2026-09-22', 'Nomsa Mahlangu', 'Completed', '2026-09-30 08:20', '1 item')],
+      khumalo: [decRow('Mini-CEX (Paediatrics) · PAED-004 · 2026-09-28', 'Anele Dlamini', 'Completed', '2026-09-30 08:52', '1 item'),
+        decRow('Case-Based Discussion (Paediatrics) · PAED-012 · 2026-09-25', 'Lerato Molefe', 'Completed', '2026-09-30 08:46', '1 item'),
+        decRow('Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10', 'Sipho Ndlovu', 'Declined', '2026-09-30 08:01', '—')],
+      zulu: [decRow('Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-21', 'Anele Dlamini', 'Completed', '2026-09-30 08:50', '1 item'),
+        decRow('Direct Observation (Paediatrics) · PAED-010 · 2026-09-26', 'Lerato Molefe', 'Completed', '2026-09-30 08:45', '1 item'),
+        decRow('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-18', 'Lerato Molefe', 'Completed', '2026-09-30 08:44', '1 item')]
+    };
+    // Volume filler: the cast's names, every row overdue, oldest first.
+    const TYPES = [['Mini-CEX (Paediatrics)', 'Requested'], ['DOPS (Paediatrics)', 'Requested'], ['Case-Based Discussion (Paediatrics)', 'Requested'],
+      ['Reflective Exercise (Paediatrics)', 'Awaiting discussion'], ['Portfolio and Logbook Review (Paediatrics)', 'Awaiting review']];
+    const REGS = ['Anele Dlamini', 'Sipho Ndlovu', 'Nomsa Mahlangu', 'Pieter du Plessis', 'Lerato Molefe'];
+    const CODES = ['PAED-001', 'PAED-002', 'PAED-004', 'PAED-012', 'PAED-015'];
+    const many = (n) => { const out = []; for (let i = 0; i < n; i++) { const d = 32 - i; const t = TYPES[i % 5];
+      out.push(waitRow(t[0] + ' · ' + CODES[(i * 2) % 5] + ' · ' + dayBefore(d + 3), REGS[(i * 3) % 5], t[1], d, dayBefore(d) + ' 0' + (7 + (i % 3)) + ':' + (10 + i))); } return out; };
+    const manyDec = (n) => { const out = []; for (let i = 0; i < n; i++) { const t = TYPES[i % 5];
+      const s = t[1] === 'Awaiting review' ? 'Signed off' : t[1] === 'Awaiting discussion' ? 'Discussed' : (i % 6 === 5 ? 'Declined' : 'Completed');
+      const mm = String(10 + (i % 50)).padStart(2, '0');
+      out.push(decRow(t[0] + ' · ' + CODES[(i * 3) % 5] + ' · ' + dayBefore(i + 4), REGS[(i * 2) % 5], s, dayBefore(i) + ' ' + (10 + (i % 7)) + ':' + mm, s === 'Completed' ? '1 item' : '—')); } return out; };
+
+
+    const state = this.props.state || 'to-rate';
+    const RUNGS = [['1', 'Not entrusted to act. The supervisor performs the activity and thinks aloud; the trainee prepares, observes actively, and may not enact or document decisions.'],
+      ['2', 'Direct supervision. Supervisor present throughout, sharing the task or watching silently, ready to step in. The plan may be entirely the trainee’s, but nothing is acted on without sign-off.'],
+      ['3a', 'Indirect supervision, decisions checked. Supervisor on site or immediately available and reviews findings, working diagnosis and plan before they are enacted. Trainee may act alone on routine assessment, investigation and supportive care within protocol.'],
+      ['3b', 'Indirect supervision, reviewed on the trainee’s initiative. Supervisor available on request; the trainee decides what needs discussion and shows reliable help-seeking. Full management of the activity, supervisor informed rather than consulted.'],
+      ['4', 'Unsupervised practice. The trainee carries the responsibility for the activity.'],
+      ['5', 'Supervises others. The trainee carries the responsibility and can supervise juniors in the activity.']];
+    const DESC = {}; RUNGS.forEach((r) => { DESC[r[0]] = r[1]; });
+    const rungs = (chosen) => RUNGS.map((r) => ({ label: r[0], key: r[0], desc: r[1], chosen: r[0] === chosen, notChosen: r[0] !== chosen,
+      readCls: r[0] === chosen ? 'rung is-chosen' : 'rung', pickCls: 'rung rung-choice' + (r[0] === chosen ? ' is-chosen' : '') }));
+    const hid = (t) => 'sec-' + t.toLowerCase().replace(/[^a-z]+/g, '-');
+    const rd = (rows) => rows.map((r) => ({ k: r[0], v: r[1] || 'Not filled in', cls: r[1] ? 'form-readout-value' : 'form-readout-value text-muted', paused: !!r[2] }));
+    const S = {
+      filled: (title, owner, rows, o) => { o = o || {}; return Object.assign({ cls: 'detail-card form-section', title: title, hid: hid(title), owner: owner, isFilled: true, isFold: false, isLocked: false, isOpen: false,
+        readout: rd(rows), hasRung: !!o.rung, rungLabel: o.rungLabel || '', rungs: o.rung ? rungs(o.rung) : [], chosen: o.rung || '', chosenDesc: o.rung ? DESC[o.rung] : '' }); },
+      locked: (title, owner, empty, pendingLabel) => ({ title: title, hid: hid(title), owner: owner, empty: empty, isLocked: true, isFilled: false, isFold: false, isOpen: false, readout: [],
+        hasPending: !!pendingLabel, pendingLabel: (pendingLabel || '') + ': 1, 2, 3a, 3b, 4, 5', pending: RUNGS.map((r) => r[0]) }),
+      open: (title, o) => Object.assign({ title: title, hid: hid(title), isOpen: true, isFilled: false, isFold: false, isLocked: false, readout: [],
+        hasPicker: false, hasInputs: false, inputs: [], rungs: [] }, o)
+    };
+    const picker = (label, chosen, legendOpen) => ({ hasPicker: true, rungLabel: label, rungs: rungs(chosen), hasChosen: !!chosen, chosen: chosen || '',
+      chosenDesc: chosen ? DESC[chosen] : '', legendTwo: !chosen, legendOne: !!chosen });
+    const area = (id, label, value, o) => { o = o || {}; const opt = !!o.optional;
+      return { id: id, label: label, value: value || '', isArea: true, isDate: false, isChecks: false, req: !opt, reqText: opt ? 'false' : 'true',
+        hasHelp: !!o.help, help: o.help || '', helpId: o.help ? id + '-help' : '' }; };
+    const FB = ['Took a clear history and examined systematically; explained the plan to the parents in plain words.',
+      'Say the escalation criteria out loud before leaving the bedside.',
+      "Review the unit's escalation guideline and discuss one case at next week's handover."];
+    const feedbackOpen = (typed) => S.open('Feedback', { hasInputs: true, inputs: [area('done_well', 'What was done well', typed ? FB[0] : ''),
+      area('develop', 'Areas for development', typed ? FB[1] : ''), area('plan', 'Agreed plan', typed ? FB[2] : '')] });
+    const feedbackFilled = (who) => S.filled('Feedback', 'Filled in by ' + who + ', 2026-09-30', [['What was done well', FB[0]], ['Areas for development', FB[1]], ['Agreed plan', FB[2]]]);
+    const ab = (k, v, o) => { o = o || {}; return { k: k, v: v, paused: !!o.paused, hasWarn: !!o.warn, warn: o.warn || '' }; };
+    const mv = (move, from, by, when, credit, o) => { o = o || {}; return { move: move, from: from, by: by, when: when + ' SAST', credit: credit || '—',
+      hasNote: !!o.note, note: o.note || '', cls: o.note ? 'has-note' : '', hasLate: !!o.late, late: o.late || '' }; };
+    const st = (kind, state, headline, body, o) => { o = o || {}; return {
+      cls: 'detail-card activity-status ' + ({ yours: 'detail-card--emphasis', others: 'activity-status--others', done: 'activity-status--done', declined: 'activity-status--declined' })[kind],
+      badge: 'badge ' + STATE_BADGE[state], state: state, headline: headline, hasBody: !!body, body: body || '', hasMeta: !!o.meta, meta: o.meta || '',
+      hasQuote: !!o.quote, quote: o.quote || '', quoteBy: o.quoteBy || '' }; };
+    const bar = (spec) => spec.map((b) => ({ label: b[1], isPri: b[0] === 'pri', isBusy: b[0] === 'busy', isOut: b[0] === 'out', isOff: b[0] === 'off',
+      isCannot: b[0] === 'cannot', isToggle: b[0] === 'toggle', isToggleOpen: b[0] === 'toggle-open' }));
+    const LATE = 'Filed 20 days after the encounter: recorded as late.';
+
+    // ── The records (runbook rows, replay day 2026-09-30) ─────────────────────────────────────────────────────────
+    const naidoo = {
+      who: frame('assessor', 'David Naidoo', 'Activity inbox', 'true', 'Committee member'),
+      h1: 'Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20', sub: "Anele Dlamini's request to David Naidoo", reg: 'Anele Dlamini', me: 'David Naidoo',
+      rungLabel: 'Supervision required for this encounter', asked: '2026-09-30 07:58 SAST', code: 'PAED-001',
+      request: [['EPA', EPA['PAED-001']], ['Assessor', 'David Naidoo'], ['Date observed', '2026-09-20'], ['Clinical setting', 'Emergency unit'],
+        ['Presenting problem', 'Two-year-old with bronchiolitis and rising work of breathing'], ['Case complexity', 'Moderate']],
+      filledBy: 'Filled in by Anele Dlamini, 2026-09-30',
+      about: [ab('Registrar', 'Anele Dlamini'), ab('Assessor', 'David Naidoo'), ab('EPA', EPA['PAED-001']), ab('Encounter', '2026-09-20'), ab('Filed', '2026-09-30')],
+      hist: [mv('Create', '— → Draft', 'Anele Dlamini', '2026-09-30 07:55'), mv('Submit', 'Draft → Requested', 'Anele Dlamini', '2026-09-30 07:58')],
+      done: '2026-09-30 08:00'
+    };
+    const patelMc = {   // Step A.7.2
+      who: frame('assessor', 'Mohammed Patel', 'Activity inbox', 'true'),
+      h1: 'Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10', sub: "Anele Dlamini's request to Mohammed Patel", reg: 'Anele Dlamini', me: 'Mohammed Patel',
+      rungLabel: 'Supervision required for this encounter', asked: '2026-09-30 10:27 SAST', code: 'PAED-002', meta: LATE,
+      request: [['EPA', EPA['PAED-002']], ['Assessor', 'Mohammed Patel'], ['Date observed', '2026-09-10'], ['Clinical setting', 'Ward'],
+        ['Presenting problem', 'Four-year-old with a first febrile seizure'], ['Case complexity', 'Moderate']],
+      filledBy: 'Filled in by Anele Dlamini, 2026-09-30',
+      about: [ab('Registrar', 'Anele Dlamini'), ab('Assessor', 'Mohammed Patel'), ab('EPA', EPA['PAED-002']), ab('Encounter', '2026-09-10'), ab('Filed', '2026-09-30, 20 days after the encounter (late)')],
+      hist: [mv('Create', '— → Draft', 'Anele Dlamini', '2026-09-30 10:25'), mv('Submit', 'Draft → Requested', 'Anele Dlamini', '2026-09-30 10:27', '—', { late: 'Filed 20 days after the encounter' })],
+      done: '2026-09-30 10:28'
+    };
+    const patelDops = {   // Step 3.24
+      who: frame('assessor', 'Mohammed Patel', 'Activity inbox', 'true'),
+      h1: 'DOPS (Paediatrics) · PAED-002 · 2026-09-22', sub: "Nomsa Mahlangu's request to Mohammed Patel", reg: 'Nomsa Mahlangu', me: 'Mohammed Patel',
+      rungLabel: 'Supervision required for this procedure', code: 'PAED-002',
+      request: [['EPA', EPA['PAED-002']], ['Assessor', 'Mohammed Patel'], ['Date observed', '2026-09-22'], ['Procedure', 'Lumbar puncture'], ['Clinical setting', 'Ward'], ['Procedure complexity', 'Moderate']],
+      filledBy: 'Filled in by Nomsa Mahlangu, 2026-09-30',
+      about: [ab('Registrar', 'Nomsa Mahlangu'), ab('Assessor', 'Mohammed Patel'), ab('EPA', EPA['PAED-002']), ab('Encounter', '2026-09-22'), ab('Filed', '2026-09-30')],
+      hist: [mv('Create', '— → Draft', 'Nomsa Mahlangu', '2026-09-30 08:10'), mv('Submit', 'Draft → Requested', 'Nomsa Mahlangu', '2026-09-30 08:12')],
+      done: '2026-09-30 08:20'
+    };
+    const patelPaused = {   // Step 6.18
+      who: frame('assessor', 'Mohammed Patel', 'Activity inbox', 'true'),
+      h1: 'Mini-CEX (Paediatrics) · PAED-012 · 2026-09-30', sub: "Anele Dlamini's request to Mohammed Patel", reg: 'Anele Dlamini', me: 'Mohammed Patel',
+      rungLabel: 'Supervision required for this encounter', code: 'PAED-012',
+      request: [['EPA', EPA['PAED-012'], true], ['Assessor', 'Mohammed Patel'], ['Date observed', '2026-09-30'], ['Clinical setting', 'Outpatient clinic'],
+        ['Presenting problem', 'Counselling the parents of a toddler newly diagnosed with type 1 diabetes'], ['Case complexity', 'Moderate']],
+      filledBy: 'Filled in by Anele Dlamini, 2026-09-30',
+      about: [ab('Registrar', 'Anele Dlamini'), ab('Assessor', 'Mohammed Patel'), ab('EPA', EPA['PAED-012'], { paused: true }), ab('Encounter', '2026-09-30'), ab('Filed', '2026-09-30')],
+      hist: [mv('Create', '— → Draft', 'Anele Dlamini', '2026-09-30 09:55'), mv('Submit', 'Draft → Requested', 'Anele Dlamini', '2026-09-30 09:58')],
+      done: '2026-09-30 09:59'
+    };
+    const khumalo = {   // Step 3.11
+      who: frame('assessor', 'Fatima Khumalo', 'Activity inbox', 'true'),
+      h1: 'Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10', sub: "Sipho Ndlovu's request to Fatima Khumalo", reg: 'Sipho Ndlovu', me: 'Fatima Khumalo',
+      rungLabel: 'Supervision required for this encounter', asked: '2026-09-30 08:01 SAST', meta: LATE,
+      request: [['EPA', EPA['PAED-002']], ['Assessor', 'Fatima Khumalo'], ['Date observed', '2026-09-10'], ['Clinical setting', 'Ward'],
+        ['Presenting problem', 'Nine-month-old with gastroenteritis and moderate dehydration'], ['Case complexity', 'Low']],
+      filledBy: 'Filled in by Sipho Ndlovu, 2026-09-30',
+      about: [ab('Registrar', 'Sipho Ndlovu'), ab('Assessor', 'Fatima Khumalo'), ab('EPA', EPA['PAED-002']), ab('Encounter', '2026-09-10'), ab('Filed', '2026-09-30, 20 days after the encounter (late)')],
+      hist: [mv('Create', '— → Draft', 'Sipho Ndlovu', '2026-09-30 08:01'), mv('Submit', 'Draft → Requested', 'Sipho Ndlovu', '2026-09-30 08:01', '—', { late: 'Filed 20 days after the encounter' })]
+    };
+    const DECLINE_NOTE = 'I was not on the ward that day; Dr Botha observed this encounter. Please send it to her.';
+    const RETURN_NOTE = 'Please say what you would do differently at triage, and what you will read before your next take.';
+    const botha = {   // Steps 3.15, 3.17
+      who: frame('assessor', 'Sarah Botha', 'Activity inbox', 'true', 'Committee member'),
+      h1: 'Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-10', sub: "Sipho Ndlovu's reflection, for discussion with Sarah Botha", reg: 'Sipho Ndlovu',
+      reflection: (resubmitted) => [['EPA', EPA['PAED-001']], ['Supervisor or mentor', 'Sarah Botha'], ['Date of the case or incident', '2026-09-10'], ['Reflecting on', 'A critical incident'],
+        ['What happened', 'A three-year-old in septic shock waited 90 minutes for antibiotics after triage'],
+        ['What went well, and what could have gone differently', 'I recognised shock and escalated to the consultant; the antibiotics waited for a second cannula attempt.'],
+        ['What I learned', 'The sepsis bundle has to start at triage, not after the first review.'],
+        ['What I will do differently', resubmitted ? 'Start the sepsis bundle at triage; read the paediatric sepsis guideline before my next take' : 'Escalate sooner when access is difficult.']],
+      about: [ab('Registrar', 'Sipho Ndlovu'), ab('Supervisor or mentor', 'Sarah Botha'), ab('EPA', EPA['PAED-001']), ab('Encounter', '2026-09-10'), ab('Credit', 'None: a reflective exercise credits nothing')],
+      hist2: [mv('Create', '— → Draft', 'Sipho Ndlovu', '2026-09-30 08:02'), mv('Submit', 'Draft → Awaiting discussion', 'Sipho Ndlovu', '2026-09-30 08:03')]
+    };
+    const DISCUSSED = 'Discussed triage timing and the sepsis bundle. Sipho Ndlovu will present the paediatric sepsis guideline at the next teaching session.';
+    const review = {   // Dr Patel's portfolio review, aged by Step 3.30
+      who: frame('assessor', 'Mohammed Patel', 'Activity inbox', 'true'),
+      h1: 'Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29', sub: "Pieter du Plessis's request to Mohammed Patel", reg: 'Pieter du Plessis',
+      request: [['EPA', EPA['PAED-015']], ['Reviewer', 'Mohammed Patel'], ['Review period from', '2026-08-01'], ['Review period to', '2026-09-29'], ['Portfolio export (file name)', ''],
+        ['Notes for your reviewer', 'Three teaching sessions logged; please review them with my logbook']],
+      about: [ab('Registrar', 'Pieter du Plessis'), ab('Reviewer', 'Mohammed Patel'), ab('EPA', EPA['PAED-015']), ab('Encounter', '2026-09-29'), ab('Credit', 'None: a portfolio and logbook review credits nothing')],
+      hist: [mv('Create', '— → Draft', 'Pieter du Plessis', '2026-09-22 08:05'), mv('Submit', 'Draft → Awaiting review', 'Pieter du Plessis', '2026-09-22 08:06')]
+    };
+    const zulu = {   // Step 3.33, opened from the committee Home's line
+      who: frame('committee', 'Thandi Zulu', '', 'false', 'Assessor'),
+      h1: 'Mini-CEX (Paediatrics) · PAED-004 · 2026-09-27', sub: "Nomsa Mahlangu's request to Thandi Zulu", reg: 'Nomsa Mahlangu', me: 'Thandi Zulu',
+      rungLabel: 'Supervision required for this encounter', code: 'PAED-004',
+      request: [['EPA', EPA['PAED-004']], ['Assessor', 'Thandi Zulu'], ['Date observed', '2026-09-27'], ['Clinical setting', 'Neonatal unit'],
+        ['Presenting problem', 'Term neonate with jaundice on day three'], ['Case complexity', 'Low']],
+      filledBy: 'Filled in by Nomsa Mahlangu, 2026-09-22',
+      about: [ab('Registrar', 'Nomsa Mahlangu'), ab('Assessor', 'Thandi Zulu'), ab('EPA', EPA['PAED-004']), ab('Encounter', '2026-09-27'), ab('Filed', '2026-09-22')],
+      hist: [mv('Create', '— → Draft', 'Nomsa Mahlangu', '2026-09-22 08:53'), mv('Submit', 'Draft → Requested', 'Nomsa Mahlangu', '2026-09-22 08:55')],
+      done: '2026-09-30 09:10'
+    };
+
+    // ── Building a page ─────────────────────────────────────────────────────────────────────────────────────────────
+    let v = { trail3: true, trail2: false, isLoading: false, isError: false, isNotFound: false, isPage: true, hasH1: true, hasSub: true,
+      hasResult: false, res: {}, hasWayOn: false, way: {}, hasNone: false, st: {}, about: [], sections: [], fills: false,
+      hasBar: false, bar: [], busyWords: '', loadingWords: '', hasNote: false, note: {}, history: [] };
+    const use = (rec) => Object.assign(v, rec.who, { h1: rec.h1, sub: rec.sub });
+    // A section the reader fills: on a phone the filled ones fold, and About goes under the bar (E3).
+    const requestSection = (rec, title) => S.filled(title || 'Request', rec.filledBy || ('Filled in by ' + rec.reg + ', 2026-09-30'), rec.request);
+    const toRate = (rec, chosen, typed) => {
+      use(rec);
+      v.fills = true;
+      v.st = st('yours', 'Requested', 'Your move. ' + rec.reg + ' asked you on ' + rec.asked + '.', 'Complete it, or decline it with a note ' + rec.reg + ' will read.', { meta: rec.meta });
+      v.about = rec.about.concat([ab('Credit', 'None until it is completed')]);
+      v.sections = [requestSection(rec), S.open('Entrustment', picker(rec.rungLabel, chosen, !phone && !chosen)), feedbackOpen(typed)];
+      v.history = rec.hist;
+      v.hasBar = true;
+      v.bar = bar(typed ? [['pri', 'Complete'], ['out', 'Discard changes'], ['toggle', 'Decline']] : [['pri', 'Complete'], ['cannot', 'Discard changes'], ['toggle', 'Decline']]);
+    };
+    const completed = (rec, rung, credit, o) => {
+      o = o || {};
+      use(rec);
+      v.hasResult = true;
+      v.st = st('done', 'Completed', 'Done. You completed it on ' + rec.done + ' SAST.', o.body || ('Rated ' + rung + '. Credited 1 item to ' + rec.code + '.'));
+      v.about = rec.about.concat([ab('Credit', credit, { warn: o.warn })]);
+      v.sections = [requestSection(rec), S.filled('Entrustment', 'Filled in by ' + rec.me + ', 2026-09-30', [], { rung: rung, rungLabel: rec.rungLabel }), feedbackFilled(rec.me)];
+      v.history = rec.hist.concat([mv('Complete', 'Requested → Completed', rec.me, rec.done, o.histCredit || '1 item')]);
+    };
+    const wayOn = (row, head, back) => {
+      v.res = { head: head, tail: '1 more waits for you.' };
+      v.hasWayOn = true;
+      v.way = Object.assign(row, { back: back || 'Back to Activity inbox', openAria: 'Open the next: ' + row.name + ', from ' + row.from });
+    };
+    const nothingLeft = (head) => { v.res = { head: head, tail: 'Nothing else waits for you.' }; v.hasNone = true; };
+    const noteFor = (kind, reg, o) => {
+      o = o || {};
+      const decline = kind === 'decline';
+      v.hasNote = true;
+      v.note = { title: decline ? 'Decline this request' : kind === 'review' ? 'Return this review' : 'Return this reflection',
+        label: 'Note for ' + reg, help: reg + " reads it on the activity's page. It is kept with the activity's history.",
+        send: decline ? 'Decline with this note' : 'Return with this note', danger: decline, primary: !decline,
+        keep: decline ? 'Keep the request' : kind === 'review' ? 'Keep the review' : 'Keep the reflection',
+        refused: !!o.refused, notDone: decline ? 'Not declined.' : 'Not returned.', still: decline ? 'It is still Requested.' : kind === 'review' ? 'It is still Awaiting review.' : 'It is still Awaiting discussion.',
+        need: decline ? 'Decline requires a note.' : 'Return requires a note.',
+        cls: o.refused ? 'form-control input-validation-error' : 'form-control demo-focus', invalid: o.refused ? 'true' : 'false',
+        describedby: o.refused ? 'note-help note-msg note-summary' : 'note-help' };
+    };
+
+    if (state === 'to-rate') { toRate(naidoo, '', false); }
+    if (state === 'rated') { if (phone) { toRate(patelMc, '3b', true); } else { toRate(naidoo, '4', true); } }
+    if (state === 'completing') {
+      toRate(naidoo, '4', true);
+      v.bar = bar([['busy', 'Completing…'], ['off', 'Discard changes'], ['off', 'Decline']]); v.busyWords = 'Completing.';
+    }
+    if (state === 'completed-next') {
+      if (phone) { completed(patelMc, '3b', '1 item'); wayOn(R.review8(), 'Completed.'); }
+      else { completed(patelDops, '3a', '1 item'); wayOn(R.review0(), 'Completed.'); }
+    }
+    if (state === 'completed-last') { completed(naidoo, '4', '1 item'); nothingLeft('Completed.'); }
+    if (state === 'completed-paused') {
+      completed(patelPaused, '4', 'None', { body: 'Rated 4. Its credit to PAED-012 waits while the EPA is paused.', warn: "This activity's EPA is paused: its credit waits.", histCredit: 'None' });
+      wayOn(R.review8(), 'Completed.');
+    }
+    if (state === 'decline-note' || state === 'decline-refused') {
+      toRate(khumalo, '', false);
+      v.bar = bar([['pri', 'Complete'], ['cannot', 'Discard changes'], ['toggle-open', 'Decline']]);
+      noteFor('decline', 'Sipho Ndlovu', { refused: state === 'decline-refused' });
+    }
+    if (state === 'declined') {
+      use(khumalo);
+      v.hasResult = true; nothingLeft('Declined.');
+      v.st = st('declined', 'Declined', 'Closed. You declined it on 2026-09-30 08:01 SAST.', 'It credits nothing, and nothing more can happen to it.', { quote: DECLINE_NOTE, quoteBy: 'Fatima Khumalo' });
+      v.about = khumalo.about.concat([ab('Credit', 'None')]);
+      v.sections = [requestSection(khumalo), S.locked('Entrustment', 'Fatima Khumalo was to fill this in.', 'Not filled in.', 'Supervision required for this encounter'),
+        S.locked('Feedback', 'Fatima Khumalo was to fill this in.', 'Not filled in.')];
+      v.history = khumalo.hist.concat([mv('Decline', 'Requested → Declined', 'Fatima Khumalo', '2026-09-30 08:01', '—', { note: DECLINE_NOTE })]);
+    }
+    if (state === 'awaiting-discussion' || state === 'return-note' || state === 'return-refused') {
+      use(botha);
+      v.fills = true;
+      v.st = st('yours', 'Awaiting discussion', 'Your move. Sipho Ndlovu asked you on 2026-09-30 08:03 SAST.', 'Record the discussion, or return it with a note Sipho Ndlovu will read.');
+      v.about = botha.about;
+      v.sections = [S.filled('Reflection', 'Filled in by Sipho Ndlovu, 2026-09-30', botha.reflection(false)),
+        S.open('Discussion', { hasInputs: true, inputs: [area('discussion', 'Discussion', '', { help: 'What you discussed and agreed. This reflection is not rated.' })] })];
+      v.history = botha.hist2;
+      v.hasBar = true;
+      v.bar = bar([['pri', 'Record discussion'], ['cannot', 'Discard changes'], [state === 'awaiting-discussion' ? 'toggle' : 'toggle-open', 'Return']]);
+      if (state !== 'awaiting-discussion') noteFor('reflection', 'Sipho Ndlovu', { refused: state === 'return-refused' });
+    }
+    if (state === 'returned') {
+      use(botha);
+      v.hasResult = true; nothingLeft('It is now Draft.');
+      v.st = st('others', 'Draft', 'With Sipho Ndlovu. Sarah Botha returned it on 2026-09-30 08:03 SAST.', "It is in nobody's inbox until Sipho Ndlovu submits it.", { quote: RETURN_NOTE, quoteBy: 'Sarah Botha' });
+      v.about = botha.about;
+      v.sections = [S.filled('Reflection', 'Filled in by Sipho Ndlovu, 2026-09-30', botha.reflection(false)), S.locked('Discussion', 'Sarah Botha fills this in', 'Not filled in yet.')];
+      v.history = botha.hist2.concat([mv('Return', 'Awaiting discussion → Draft', 'Sarah Botha', '2026-09-30 08:03', '—', { note: RETURN_NOTE })]);
+    }
+    if (state === 'discussed') {
+      use(botha);
+      v.hasResult = true; nothingLeft('Discussed.');
+      v.st = st('done', 'Discussed', 'Done. You recorded the discussion on 2026-09-30 08:04 SAST.', 'A reflective exercise credits nothing. Nothing more happens to it.');
+      v.about = botha.about;
+      v.sections = [S.filled('Reflection', 'Filled in by Sipho Ndlovu, 2026-09-30', botha.reflection(true)), S.filled('Discussion', 'Filled in by Sarah Botha, 2026-09-30', [['Discussion', DISCUSSED]])];
+      v.history = botha.hist2.concat([mv('Return', 'Awaiting discussion → Draft', 'Sarah Botha', '2026-09-30 08:03', '—', { note: RETURN_NOTE }),
+        mv('Submit', 'Draft → Awaiting discussion', 'Sipho Ndlovu', '2026-09-30 08:04'), mv('Record discussion', 'Awaiting discussion → Discussed', 'Sarah Botha', '2026-09-30 08:04')]);
+    }
+    if (state === 'awaiting-review') {
+      use(review);
+      v.fills = true;
+      v.st = st('yours', 'Awaiting review', 'Your move. Pieter du Plessis asked you on 2026-09-22 08:06 SAST.', 'Sign it off, or return it with a note Pieter du Plessis will read.');
+      v.about = review.about;
+      const EV = ['Teaching sessions', 'Journal club presentations', 'Feedback received', 'Reflective entries', 'Logbook'];
+      v.sections = [S.filled('Review request', 'Filled in by Pieter du Plessis, 2026-09-22', review.request),
+        S.open('Review', { hasInputs: true, inputs: [
+          { id: 'reviewed_on', label: 'Date of the review', isDate: true, isArea: false, isChecks: false, hasHelp: true, helpId: 'reviewed_on-help', help: 'When you completed this review. The record itself is dated the last day of the period reviewed.' },
+          { id: 'evidence', label: 'Evidence reviewed', isChecks: true, isArea: false, isDate: false, options: EV.map((e, i) => ({ id: 'ev-' + i, label: e })), hasHelp: true, helpId: 'evidence-help', help: 'What you read. Feedback and reflective entries are in the portfolio export; the logbook, teaching sessions and journal club presentations come from the records the trainee brings.' },
+          area('comments', 'Review comments', '', { help: "What the portfolio export and the trainee's own records show for this period, and any gaps. A portfolio review is not rated." }), area('actions', 'Agreed actions', '', { optional: true, help: 'Leave blank if there are none.' })] })];
+      v.history = review.hist;
+      v.hasBar = true;
+      v.bar = bar([['pri', 'Sign off'], ['cannot', 'Discard changes'], ['toggle-open', 'Return']]);
+      noteFor('review', 'Pieter du Plessis');
+    }
+    if (state === 'from-the-line') {
+      completed(zulu, '3a', '1 item');
+      nothingLeft('Completed.');
+      v.trail3 = false; v.trail2 = true;
+    }
+    if (state === 'unavailable') {
+      Object.assign(v, frame('assessor', 'Mohammed Patel', 'Activity inbox', 'true'), { h1: 'Activity unavailable', hasSub: false, isPage: false, isNotFound: true });
+    }
+    if (state === 'loading') { Object.assign(v, frame('assessor', 'Mohammed Patel', 'Activity inbox', 'true'), { isLoading: true, isPage: false, hasH1: false, hasSub: false, h1: '', loadingWords: 'Loading the activity.' }); }
+    if (state === 'load-error') { Object.assign(v, frame('assessor', 'Mohammed Patel', 'Activity inbox', 'true'), { isError: true, isPage: false, h1: 'Activity', hasSub: false }); }
+
+    // E3: fold the filled sections and move About under the bar, only while the reader has a section to fill.
+    // E2: a filled section before a section the reader fills is drawn twice, the card for 641px and up and the fold
+    // below it, toggled by CSS with no script; the hidden copy's ids are suffixed.
+    if (v.fills) {
+      const out = [];
+      v.sections.forEach((s) => {
+        if (s.isFilled) {
+          out.push(Object.assign({}, s, { cls: 'detail-card form-section only-wide' }));
+          out.push(Object.assign({}, s, { isFilled: false, isFold: true, hid: s.hid + '-narrow', cls: 'detail-card form-section section-fold only-narrow' }));
+        } else { out.push(s); }
+      });
+      v.sections = out;
+    }
+    const foldNow = phone && v.fills;
+    v.aboutFirst = !foldNow; v.aboutLast = foldNow;
+    v.crumb = v.isLoading ? 'Loading…' : v.h1;
+    v.historyLabel = 'All ' + v.history.length + (v.history.length === 1 ? ' move' : ' moves');
+    v.w = w; v.h = h;
+    return v;
+
+  }
+}
+</script>
+</body>
+</html>

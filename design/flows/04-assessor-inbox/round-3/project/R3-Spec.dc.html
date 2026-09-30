@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 04, round 3: spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wire.css">
+</head>
+<body>
+<x-dc>
+<helmet><style>@font-face{font-family:"Source Sans 3";src:url("/_blob/83270f069e00592a28bbab89551709ac") format("woff2");font-weight:200 900}body{margin:0}</style></helmet>
+<div class="wf-doc" style="width: 1440px; height: 7400px">
+<p class="doc-kicker">Flow 04 · round 3 · 2026-09-30</p>
+<h1 class="doc-h1">Spec: see what waits for me, and rate it, decline it or send it back</h1>
+<p class="doc-lede">Round 2 with E1–E5 and C1–C13 applied, and nothing else changed. The Wombat tokens, <code>ds/wombat/components/bundle.css</code> as flows 01 to 03 built it, and <code>flow04-r3.css</code> for the new classes. Three components each draw every state at 1280 and 390; each state and width has its own board.</p>
+
+<h2 class="doc-h2">1 · Every message, by kind</h2>
+<table class="doc-table"><thead><tr><th>Kind</th><th>Where</th><th>Words</th></tr></thead><tbody>
+<tr><td>Result (focused, <code>role="status"</code>)</td><td>Activity page, after a move</td><td>"<b>Completed.</b> 1 more waits for you." · "<b>Completed.</b> 2 more wait for you." · "<b>Completed.</b> Nothing else waits for you." · "<b>Declined.</b> Nothing else waits for you." · "<b>It is now Draft.</b> Nothing else waits for you." (Return leads on) · "<b>Discussed.</b> Nothing else waits for you." · "<b>Signed off.</b> Nothing else waits for you." / "<b>Signed off.</b> 1 more waits for you." A move into a final state reads as that state (C1). The next row and its buttons follow, <em>outside</em> the region.</td></tr>
+<tr><td>Result, the switch</td><td>Home, after the sidebar's switch</td><td>"You are now acting as Assessor." (flow 01's ActingRoleSwitchAlert, unchanged)</td></tr>
+<tr><td>Refusal</td><td>The note panel</td><td>"<b>Not declined.</b> It is still Requested." · "Note for Sipho Ndlovu: Decline requires a note." / "<b>Not returned.</b> It is still Awaiting discussion." · "Note for Sipho Ndlovu: Return requires a note." Under the note: the same message.</td></tr>
+<tr><td>Hint (rule line)</td><td>Home's card, the inbox's Waiting for you</td><td>"Oldest first. Overdue once it has waited 7 days." Its number is read from <code>AssessorDueDays</code> (7), the one clock the dashboard and the stall share: 7 × 24 h since <code>UpdatedOn</code>; a whole-day count of 7 or more carries Overdue.</td></tr>
+<tr><td>Hint (rule line)</td><td>The inbox's Decided by you</td><td>"Newest first. Everything you completed, declined, discussed or signed off."</td></tr>
+<tr><td>Hint (overflow)</td><td>Home's card, above Open Activity inbox</td><td>"20 more wait in the Activity inbox." · "1 more waits in the Activity inbox."</td></tr>
+<tr><td>Hint (help)</td><td>The form</td><td>"* marks a field you must fill in." · "The supervision this activity actually required on this occasion - not a judgement of the trainee's worth." · "What you discussed and agreed. This reflection is not rated." · "Leave blank if there are none." · "Sipho Ndlovu reads it on the activity's page. It is kept with the activity's history." · The review's seeded help (portfolio_review_cpsa/schema.json:66, 73, 87): "When you completed this review. The record itself is dated the last day of the period reviewed." · "What you read. Feedback and reflective entries are in the portfolio export; the logbook, teaching sessions and journal club presentations come from the records the trainee brings." · "What the portfolio export and the trainee's own records show for this period, and any gaps. A portfolio review is not rated."</td></tr>
+<tr><td>Hint (a greyed move)</td><td>Beside Discard changes</td><td>"Nothing to discard yet."</td></tr>
+<tr><td>Notice (the other-role line, E4)</td><td>A Home, only when work waits in the Activity inbox and the acting role is not Assessor</td><td>One, overdue (warning tint): "1 activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-27, from Nomsa Mahlangu, waiting 8 days." + <b>Open it</b>. Several (warning tint when any is overdue): "3 activities wait for you in the Activity inbox; 1 is overdue. The oldest: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-27, from Nomsa Mahlangu, waiting 8 days." + <b>Open the oldest</b>. None overdue (info tint): "1 activity waits for you in the Activity inbox: Mini-CEX (Paediatrics) · PAED-002 · 2026-09-30, from Anele Dlamini, waiting less than a day." + <b>Open it</b>. Nothing waiting: no line. <b>A failed read of the line shows nothing and is logged; it never becomes a Home error, which DashboardFrame owns.</b></td></tr>
+<tr><td>Status (the card)</td><td>Activity page</td><td>"Your move. Anele Dlamini asked you on 2026-09-30 07:58 SAST." · "Complete it, or decline it with a note Anele Dlamini will read." · "Record the discussion, or return it with a note Sipho Ndlovu will read." · "Sign it off, or return it with a note Pieter du Plessis will read." · "Done. You completed it on 2026-09-30 08:00 SAST." · "Rated 4. Credited 1 item to PAED-001." · "Rated 4. Its credit to PAED-012 waits while the EPA is paused." · "Closed. You declined it on …" + her reason + "It credits nothing, and nothing more can happen to it." · "With Sipho Ndlovu. Sarah Botha returned it on 2026-09-30 08:03 SAST." + her note + "It is in nobody's inbox until Sipho Ndlovu submits it." · "Done. You recorded the discussion on …" · "Filed 20 days after the encounter: recorded as late." No year minimum, no semester count (Q7).</td></tr>
+<tr><td>Empty</td><td>Home, the inbox</td><td>"Nothing is waiting for you." · "No decisions yet." · "Inbox clear" / "Nothing is waiting for you." · Trainee only: "Nothing here is yours to act on." / "This inbox holds work that assessors rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs you."</td></tr>
+<tr><td>Not found</td><td>Activity page</td><td>"Activity unavailable" · "This activity does not exist, or you cannot open it." · Go to Activity inbox (Assessor) / Go to Home (no list owns the page)</td></tr>
+<tr><td>Loading (<code>role="status"</code>, present before its words)</td><td>Home · inbox · activity</td><td>"Loading your Home." (<b>new words</b>) · "Loading the Activity inbox." (<b>new words</b>) · "Loading the activity." (flow 03's)</td></tr>
+<tr><td>Load error</td><td>Home · inbox · activity</td><td>"<b>Could not load your Home.</b> Nothing has changed. Try again, or come back in a few minutes." · "<b>Could not load the Activity inbox.</b> …" · "Could not load this activity. …" Each with Try again, never the exception's text.</td></tr>
+<tr><td>Running</td><td>The bar</td><td>"Completing…", "Declining…", "Returning…", "Recording discussion…", "Signing off…"; the bar's hidden status (present from the first render, empty until a move runs) then says "Completing."</td></tr>
+</tbody></table>
+
+<h2 class="doc-h2">2 · DESIGN.md rules, ready to paste</h2>
+<p><b>R1 § Dashboard page.</b> The Assessor's Home is two cards: "Waiting for you" (the inbox's first five rows, from the same read and in the same order and words; the count in words; no "0" badge; "Open Activity inbox") and "Recent decisions" (five, dated, each linked by its full name; "All your decisions"). A Home may carry one line about another held role's waiting work, only when work waits there; the line holds no switch.</p>
+<p><b>R2 § Page-level patterns, List page.</b> A list page may hold two headed, counted sections, the second paged. The Activity inbox stacks its rows below 641 px; its Waiting column replaces Updated ("8 days", "since … SAST", "Less than a day"). ActivityLink's second line reads "from &lt;registrar&gt;" in the assessor's lists.</p>
+<p><b>R3 § Page-level patterns, Record page with a workflow.</b> The result may carry the way on (WayOn); the live region holds the result's sentence and the count only. On a phone, a reader with a section to fill gets the request fold and About under the bar; every other reader keeps the page's order. Activity unavailable's link goes to the acting role's list, else Home.</p>
+<p><b>R4 § Form system, "The activity form".</b> The writer of the rated level field chooses on the rung row (radios, as wide as its ladder, the descriptors under "What each rung means"); any other scale field, or a ladder that fails to load, keeps the select. Moves are in sentence case everywhere. One note panel for every move that needs a note; danger only for a move that ends the activity.</p>
+<p><b>For DESIGN.md, the rung cell:</b> each rung is a 3.5rem cell, a native radio above its 1.1rem label, the radio kept native with <code>accent-color</code> (<code>secondary-color</code>; <code>on-fill</code> on the chosen rung); its unchecked ring is the browser's (Chromium #767676, 4.54:1 on the surface), not a token.</p>
+
+<h2 class="doc-h2">3 · NEW components and their classes</h2>
+<table class="doc-table"><thead><tr><th>Component</th><th>Extends</th><th>New classes (in <code>flow04-r3.css</code>)</th><th>What it is</th></tr></thead><tbody>
+<tr><td>WaitingList</td><td>NeedsYouList: the built <code>.needs-you</code>, <code>.needs-you-row</code> (padding <code>space-sm</code>), <code>.needs-you-rule</code>, <code>.needs-you-why</code></td><td><code>.needs-you-row--overdue</code> (the warning stripe), <code>.needs-you-badges</code>, <code>.badge-overdue</code>; <code>.waiting-more</code> (the overflow line), <code>.card-empty</code>; in the inbox, DataTable Stack cells <code>td.epa-cell</code>, <code>td.waited-cell</code></td><td>A row: ActivityLink ("Type · EPA · date", then "from &lt;registrar&gt;"), the state's badge, Overdue beside it, then "Waiting 8 days" in <code>.needs-you-why</code>. Home's card and My activities share one row. <b>The alike rule holds wherever it renders (Home, the inbox, the way on):</b> two rows that read the same add ", Requested", then ", waiting since 2026-09-30 08:12 SAST", then "(1 of 2)" to the link's accessible name.</td></tr>
+<tr><td>Recent decisions / Decided by you</td><td>DashboardCard body; DataTable Stack with PagerControls as built</td><td><code>ul.decided-list</code>, <code>li.decided-row</code>, <code>.decided-meta</code>, <code>.decided-date</code></td><td>Five dated rows on Home; the inbox's paged section (Activity, Decision, Decided, Credit), 20 a page, no cut-off; the pager "Showing 1–20 of 45", Previous, Next, "Per page".</td></tr>
+<tr><td>WayOn</td><td>ActionResult (straight after it) and WaitingList's row</td><td><code>section.way-on</code>, <code>p.way-on-none</code></td><td>The next waiting item, Open the next (<code>aria-label</code> "Open the next: &lt;its name&gt;, from &lt;registrar&gt;"), Back to Activity inbox / Back to Home (the owner table). Nothing left: Go to Home.</td></tr>
+<tr><td>The rung picker</td><td>RungRow (its input mode), only on <code>rated_level_field</code> with a loaded ladder</td><td><code>fieldset.rung-picker</code>, <code>label.rung-choice</code>, <code>details.rung-legend</code>, <code>.rung-legend-marker</code>, <code>dl.rung-legend-list</code></td><td>One label and one radio per rung, <code>is-chosen</code> and <code>checked</code> as conditions on them; the <code>li</code> keyed by the rung's order (<code>@key</code>) so a round trip does not replace the focused radio. The row is as wide as its ladder; one legend per picker. Each radio is described by a visually hidden span holding its descriptor, <em>outside</em> the details (the legend stays for the eye); the picker's "chosen" is <code>aria-hidden</code> (the browser says "checked").</td></tr>
+<tr><td>The request fold</td><td>ActivityForm's filled section</td><td><code>details.section-fold</code>, <code>.section-fold-head</code>, <code>.section-fold-show</code>, <code>.section-fold-owner</code>, <code>.section-fold-body</code>, <code>.fold-show</code> / <code>.fold-hide</code></td><td>Below 641 px, only while the reader has a section to fill: the section's title, "Filled in by Anele Dlamini, 2026-09-30", and Show (Hide when open). No gist.</td></tr>
+<tr><td>Open at 1280, shut at 390</td><td>(the request fold; "What each rung means")</td><td><code>.only-wide</code>, <code>.only-narrow</code></td><td><b>Two renderings toggled by CSS at 641 px, no script.</b> Both are read-only; the hidden copy's ids are suffixed (<code>-narrow</code>); the radios' descriptions sit outside both.</td></tr>
+<tr><td>The other-role line</td><td>Alert (warning when any is overdue, info otherwise) with <code>.alert-row</code></td><td><code>section.alert.other-role-line</code></td><td>Its action opens the activity without switching. <b>Its slot on the committee Home is flow 07's to place; flow 04 owns its words.</b> Drawn at the top of the body, under the header.</td></tr>
+<tr><td>A greyed move's reason</td><td>ActivityWorkflowActions' built <code>.move-reasons</code></td><td><code>.move-reasons--beside</code>, a modifier (not a new class)</td><td>"Nothing to discard yet." beside Discard changes, which it describes.</td></tr>
+</tbody></table>
+
+<h2 class="doc-h2">4 · Focus</h2>
+<ul class="doc-list">
+<li>(a) Decline or Return opens the panel: the focus moves to the note (<code>#note-in</code>).</li>
+<li>(b) Keep the request / reflection / review: the focus goes back to the toggle, <code>aria-expanded="false"</code>.</li>
+<li>(c) Refused: <code>#note-summary</code> takes the focus; its link targets <code>#note-in</code>; the panel stays open with the note as typed.</li>
+<li>(d) A completed move: the focus goes to <code>#activity-result</code>; the next Tab is Open the next (or Go to Home).</li>
+<li>(e) Try again: the focus goes to the region that replaces the error.</li>
+<li>(f) A page of Decided by you: the focus goes to its h2; Previous on page 1 is <code>aria-disabled</code>, not disabled, so the pressed button keeps its place.</li>
+<li>The rung picker: arrow keys move and choose; Tab leaves the group; with none chosen, Tab lands on the first rung.</li>
+</ul>
+
+<h2 class="doc-h2">5 · 44 px on a phone (below 641 px)</h2>
+<p>Lifted to 2.75rem: Home's Open Activity inbox and All your decisions; the three Try again (Home, inbox, activity); the pager's Previous and Next; the note panel's Send and Keep, stacked with the send on top (decline-note, decline-refused, return-note, return-refused, awaiting-review's Return panel); the way on's Open the next, Back to … and Go to Home; the other-role line's Open it; the folds' summaries; the rung cells (3.5rem).</p>
+
+<h2 class="doc-h2">6 · Contrast, every new pair (WCAG 2.1 relative luminance on the tokens)</h2>
+<table class="doc-table"><thead><tr><th>Pair</th><th>Needs</th><th>Ratio</th></tr></thead><tbody>
+<tr><td>Overdue badge: <code>text-color</code> on <code>warning-bg</code> · its edge <code>warning-color</code> on <code>warning-bg</code></td><td>4.5 · 3</td><td>11.89 · 5.43</td></tr>
+<tr><td>Overdue beside Requested: <code>warning-bg</code> against <code>info-bg</code></td><td>none (the word and the edge tell them apart)</td><td>1.00: the same lightness. The edges differ (<code>warning-color</code> 5.77, <code>secondary-color</code> 4.86 on the surface) and the words carry it.</td></tr>
+<tr><td>The overdue row's stripe: <code>warning-color</code> on the surface · the row's <code>secondary-color</code></td><td>3</td><td>5.77 · 4.86</td></tr>
+<tr><td>The chosen rung: <code>on-fill</code> on <code>secondary-color</code> (its label and "chosen") · the fill against the surface</td><td>4.5 · 3</td><td>4.86 · 4.86</td></tr>
+<tr><td>A rung's edge: <code>input-border</code> on the surface · on <code>hover-bg</code></td><td>3</td><td>3.80 · 3.60</td></tr>
+<tr><td>A radio: the checked dot (<code>on-fill</code>) on <code>secondary-color</code> · an unchecked ring (the browser's) on the surface</td><td>3</td><td>4.86 · 4.54</td></tr>
+<tr><td>The focus ring on the rung (<code>:focus-within</code>): <code>focus-ring</code> on the surface</td><td>3</td><td>4.86</td></tr>
+<tr><td>The way on: its row's stripe, <code>secondary-color</code> (or <code>warning-color</code>) on the page · its hairline <code>border-color</code></td><td>3 · none</td><td>4.61 (5.47) · 1.24 on the page (1.30 on the surface), decorative</td></tr>
+<tr><td>The other-role line: <code>text-color</code> on <code>warning-bg</code> / <code>info-bg</code> · edge and icon · Open it's label and edge <code>secondary-color</code> on its surface fill · that edge against the tint</td><td>4.5 · 3 · 4.5 · 3</td><td>11.89 / 11.84 · 5.43 / 4.55 · 4.86 · 4.57 / 4.55</td></tr>
+<tr><td>The other-role line's link on its tint: <code>link-color</code> on <code>warning-bg</code> · on <code>info-bg</code></td><td>4.5</td><td>6.31 · 6.28</td></tr>
+<tr><td>The fold's Show / Hide: <code>link-color</code> on the surface · its owner line <code>muted-text</code></td><td>4.5</td><td>6.70 · 5.09</td></tr>
+<tr><td>The waited line, the rule lines, the decided date: <code>muted-text</code> on the surface · on the page's ground</td><td>4.5</td><td>5.09 · 4.83</td></tr>
+<tr><td>The locked head's muted text on <code>header-bg</code></td><td>4.5</td><td>4.57</td></tr>
+<tr><td>The greyed move's reason: <code>text-color</code> on the page</td><td>4.5</td><td>11.99</td></tr>
+</tbody></table>
+<p class="doc-small">The stacked inbox (every I- state at 390) hides its thead with the built clip rule (app.css:2659: <code>clip: rect(0, 0, 0, 0)</code>, 1px), never <code>display: none</code>, so a screen reader keeps each cell's column.</p>
+
+<h2 class="doc-h2">7 · The reads</h2>
+<ul class="doc-list">
+<li><b>ListWaitingForYouQuery(caller)</b>: every activity a move of which, one that leads on, the caller may make now, leaving out the caller's own subject rows; oldest first by <code>UpdatedOn</code>; each row with its state label, <code>UpdatedOn</code> and whether it is overdue (<code>AssessorDueDays</code> × 24 h). Rows and count. <b>Home</b> takes the first five and the count; <b>the inbox</b> all of them. One read, so the two cannot disagree (T297).</li>
+<li><b>ListDecidedByYouQuery(caller, page, 20)</b>: activities the caller moved last that are finished or have no move left, newest first; the total for the pager. Home takes page 1's first five.</li>
+<li><b>The way on's read</b>: ListWaitingForYouQuery less the activity just moved: its first row and its count, read after the move commits.</li>
+<li><b>The other-role line</b>: for a holder of Assessor acting in another role, the same query's count, overdue count and first row. Nothing waiting, or a failed read: no line (the failure is logged).</li>
+<li><b>Each rung press is one round trip</b>: the radio's value is bound on the server over the circuit, an explicit action per press. Only the fill could follow <code>:has(input:checked)</code> with no script; the descriptor under the row is the server's render.</li>
+<li><b>Waiting</b> is one clock, <code>UpdatedOn</code>, counted as the nudge counts it: whole days, rounded down. Under one day: "Waiting less than a day" ("Less than a day" in the inbox's cell). Overdue from 7 whole days.</li>
+<li><b>Step 3.30's ageing</b> ages the Submit history row with <code>UpdatedOn</code> (E5).</li>
+</ul>
+
+<h2 class="doc-h2">8 · The shell on these pages</h2>
+<ul class="doc-list">
+<li>Assessor only (Mohammed Patel, Fatima Khumalo): Home, Activity inbox, then My data rights; no switch.</li>
+<li>Two roles, acting as Assessor (David Naidoo, Sarah Botha, Thandi Zulu after the switch): the same, with "Switch to Committee member".</li>
+<li>Acting as Committee member (Thandi Zulu): Home, Committee reviews, Decision panels, then My data rights; "Switch to Assessor".</li>
+<li>An activity page lights Activity inbox (<code>aria-current="true"</code>) for an Assessor, trail Home › Activity inbox › the activity. Opened from the line by a Committee member: nothing lights, trail Home › the activity.</li>
+</ul>
+
+<h2 class="doc-h2">9 · The volume boards</h2>
+<ul class="doc-list">
+<li><b>long</b>: a 31-character registrar name ("Nomsa Thandeka Mahlangu-Dlamini") and a 108-character EPA title (PAED-015's; 119 with its code).</li>
+<li><b>twenty-five</b>: 25 waiting, every one overdue (8 to 32 days); Home shows five and "20 more wait in the Activity inbox."</li>
+<li><b>decided-45</b>: page 1 of 45 decisions, "Showing 1–20 of 45".</li>
+<li><b>alike</b>: two requests from Anele Dlamini, one EPA, one date, filed 08:12 and 08:15.</li>
+</ul>
+
+<h2 class="doc-h2">10 · Open, for your review</h2>
+<ul class="doc-list">
+<li><b>from-the-line</b> is drawn after Complete (as round 2), so its Entrustment is the read-only RungRow, not the picker; C7 lists it among the picker's states. Say if it should be drawn before Complete instead. With nothing else waiting, it shows "Nothing else waits for you." and Go to Home.</li>
+<li><b>Words the runbook does not give</b>, drawn as mine: the three feedback answers on the rated and completed pages; Sarah Botha's discussion; Sipho Ndlovu's first two reflection answers and his first "What I will do differently"; the case complexity of A.7.2's and 6.18's requests. The volume states use the cast's names as filler.</li>
+</ul>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":7400}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

@@ -21,3 +21,8 @@ T350's design, kept beside its brief (`../04-assessor-inbox.md`) so that it outl
   Activity) with 80 state wrappers (40 states at 1280 and 390), Spec, Steps and `flow04-r2.css`. **Round 2's review:**
   `round-2-review.md` (four reviewers; accept with changes; C1–C13; E1–E5 for the operator; 15 build notes).
 - **The decisions:** accept all (2026-09-30). **Round 3's ask:** `round-3-ask.txt`.
+- **Round 3** (2026-09-30, `round-3/`, canvas version `1790768786-6b8d`): 90 files (three component boards, 84 state
+  wrappers, Spec, Steps and `flow04-r3.css`) plus `canvas.json`; the five unchanged stylesheets are copied from
+  `round-2/`. Checked item by item (`round-3-check.md`): E1–E5 and C1–C13 all hold, the round-2 phrasing they replace is
+  gone, every round-2 state has its R3 wrapper at 1280 and 390 plus the four committee-line wrappers, and nothing else
+  changed. The design is final for step F.
