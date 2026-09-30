@@ -208,6 +208,30 @@ public sealed class LateFilingWarningTests : TestContext
     }
 
     [Fact]
+    public void ADateTheServerRefused_IsNotHintedAsWell_UntilItIsChanged()
+    {
+        // T342 replay: the refusal's own line under the field already says it; the prediction would repeat it.
+        var refused = Iso(ProgrammeStart.AddDays(-1));
+        var cut = RenderComponent<ActivityForm>(parameters => parameters
+            .Add(component => component.SchemaJson, SchemaJson)
+            .Add(component => component.DataJson, $$"""{ "observed_on": "{{refused}}" }""")
+            .Add(component => component.CreditRulesJson, CreditingRules)
+            .Add(component => component.FiledOn, FiledOn)
+            .Add(component => component.ProgrammeStartsOn, ProgrammeStart)
+            .Add(component => component.RefusedFieldKeys, new[] { "observed_on" })
+            .Add(component => component.RefusalMessage,
+                "Date observed: The date cannot be before the trainee's programme started (2026-01-01).")
+            .Add(component => component.DataJsonChanged, EventCallback.Factory.Create<string>(this, _ => { })));
+
+        cut.FindAll(".validation-message").Should().ContainSingle()
+            .Which.TextContent.Should().Contain("cannot be before");
+        cut.FindAll(HintSelector).Should().BeEmpty();
+
+        cut.Find("#observed_on-in").Change(Iso(ProgrammeStart.AddDays(-5)));
+        cut.FindAll(HintSelector).Should().ContainSingle("a changed date is no longer the refused one, so it is predicted");
+    }
+
+    [Fact]
     public void TheDayTheProgrammeStarted_IsAccepted_SoOnlyItsLatenessIsWarnedOf()
     {
         // The server's bound is "not before" the start: the day itself is accepted, and it is 266 days before the filing.

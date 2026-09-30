@@ -251,10 +251,10 @@ else if (_schema is not null)
                      predicted refusal: the field's own validation message, and the control marked invalid. It is worded
                      for its reader (C12). T263: a date the server has refused is not called fileable either, even where the
                      page could not predict it: the summary names it and the input is marked, so the warning stays away
-                     until the date is changed. Both wait for a date to be entered, or show at once on a form that opens
+                     until the date is changed, and so does the predicted refusal, which would repeat the server's. Both wait for a date to be entered, or show at once on a form that opens
                      with one (File it again, a draft; Spec § 1). *@
                   <div id="@ActivityFieldIds.FilingNotice(field.Key)" role="status">
-                    @if (_dateEntered && BeforeProgrammeStart(field.Key) is DateOnly startedOn)
+                    @if (_dateEntered && !IsRefused(field.Key) && BeforeProgrammeStart(field.Key) is DateOnly startedOn)
                     {
                       <p class="validation-message">@ProgrammeStartWording.Hint(ReaderIsSubject, startedOn)</p>
                     }
