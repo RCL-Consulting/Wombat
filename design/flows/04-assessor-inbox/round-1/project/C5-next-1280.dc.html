@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C5 After a move, 1280</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wire.css">
+</head>
+<body>
+<x-dc>
+<helmet><style>@font-face{font-family:"Source Sans 3";src:url("/_blob/83270f069e00592a28bbab89551709ac") format("woff2");font-weight:200 900}body{margin:0}</style></helmet>
+<div class="wf" style="width: 1280px; height: 1100px">
+<div class="wf-screen">
+<aside class="wf-side"><p class="wf-brand"><img src="/_blob/89ddc910c53255a32bcbb84e2820bc45" alt="" width="28" height="28">Wombat</p>
+<div class="wf-role"><span class="wf-role-label">Acting as</span><b>Assessor</b></div>
+<ul class="wf-nav"><li class="wf-nav-item">Home</li><li class="wf-nav-item is-lit">Activity inbox</li><li class="wf-nav-item">My decisions</li></ul><ul class="wf-nav wf-nav--personal"><li class="wf-nav-item">My data rights</li></ul></aside>
+<div class="wf-top"><span>Mohammed Patel</span><span class="wf-btn wf-btn--sm">Sign out</span></div>
+<main class="wf-main"><p class="wf-crumb">Home › Activity inbox › …</p><div class="wf-header"><div><h1 class="wf-h1">Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-19</h1><p class="wf-sub">Pieter du Plessis's request to Mohammed Patel</p></div><span class="wf-header-action"><span class="wf-btn">Next waiting ›</span><span class="wf-n">2</span><span class="wf-small">1 of 1 waiting</span></span></div><div class="wf-result"><span class="wf-n">1</span><p><b>Completed:</b> <a class="wf-link" href="#">DOPS (Paediatrics) · PAED-002 · 2026-09-23</a>, from Nomsa Mahlangu. This is the next waiting for you, and the last.</p></div><div class="wf-card wf-card--mine"><p class="wf-small">Who has it now</p><p><span class="wf-badge">Awaiting review</span> <span class="wf-badge wf-badge--solid">Overdue</span> <b>Your move. Pieter du Plessis asked you on 2026-09-19 11:24 SAST.</b></p><p>Sign it off, or return it with a note Pieter du Plessis will read.</p></div><div class="wf-ghost-page"><div class="wf-ghost-col">About</div><div class="wf-ghost-col wf-ghost-col--wide">Review request (filled) · Review (you fill this in) · Sign off · Return</div></div></main>
+<div class="wf-fold" style="top: 800px"><span>800 px: the fold at 1280×800</span></div>
+</div>
+<section class="wf-notes"><p class="wf-notes-label">C · after Complete: the next item, with the result (Mohammed Patel)</p><ol><li>Question 6: <b>straight to the next</b>. After Complete the page loads the next waiting item, and its result names what was just completed, with a link back to it. It takes the focus. After the last, the inbox, "Inbox clear."</li><li>A queue control in PageHeader's actions on every waiting item: "Next waiting ›" and where you are ("1 of 3 waiting"). NEW: QueueNav.</li><li>Risk: the record just rated is gone from view before its status card is read; the words of the result must carry it.</li></ol></section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

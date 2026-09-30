@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 04 R1: the assessor's activity page (flow 03's design)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wombat-root.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow03.css">
+<link rel="stylesheet" href="flow03-r3.css">
+<link rel="stylesheet" href="flow04.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Source Sans 3";src:url("/_blob/83270f069e00592a28bbab89551709ac") format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/_blob/0f0443f8f94c6d5b22c7c70b523127ae") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div style="width: {{w}}px; height: {{h}}px; overflow: hidden; position: relative; background-color: var(--background-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/89ddc910c53255a32bcbb84e2820bc45" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span><span>Assessor</span></p>
+<label for="nav-toggle" class="nav-toggle-label"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>Menu</span></label>
+<div class="nav-panel">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Assessor</span></p>
+<sc-if value="{{u.hasSwitch}}" hint-placeholder-val="{{false}}"><a class="role-switch" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"></path></svg><span>Switch to Committee member</span></a></sc-if>
+</div>
+<nav class="nav-list" aria-label="Main">
+<ul class="nav-items">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg><span class="nav-label">Activity inbox</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</nav>
+</div>
+<div class="account-row"><a class="account-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="account-name">{{u.name}}</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+</header>
+<main><article>
+
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+<li class="breadcrumb-ancestor"><a href="#">Home</a></li>
+<li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Activity inbox</a></li>
+<li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-current" aria-current="page"><span>{{h1}}</span></li>
+</ol></nav>
+
+<div class="header-container"><div>
+<h1 tabindex="-1">{{h1}}</h1>
+<sc-if value="{{hasSub}}" hint-placeholder-val="{{true}}"><p class="page-subtitle">{{sub}}</p></sc-if>
+</div></div>
+
+<sc-if value="{{isNotFound}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty"><p class="state-panel-title">This activity does not exist, or you cannot open it.</p><p style="margin: var(--space-md) 0 0"><a class="btn btn-outline" href="#">Go to Activity inbox</a></p></div>
+</sc-if>
+
+<sc-if value="{{isPage}}" hint-placeholder-val="{{true}}">
+
+<sc-if value="{{hasResult}}" hint-placeholder-val="{{false}}">
+<div class="action-result demo-focus" id="activity-result" tabindex="-1" role="status">
+<div class="alert alert-success" style="margin-bottom: var(--space-md)"><strong>{{result}}</strong></div>
+<sc-if value="{{hasWayOn}}" hint-placeholder-val="{{false}}">
+<section class="detail-card detail-card--emphasis way-on" aria-labelledby="way-on-h">
+<h2 class="way-on-title" id="way-on-h">{{way.title}}</h2>
+<div class="way-on-item">
+<a class="activity-link" href="#">{{way.name}}<span class="visually-hidden">, </span><span class="activity-link-to">from {{way.from}}</span></a>
+<span class="way-on-badges"><span class="badge badge-submitted">{{way.state}}</span><span class="badge badge-accepted">Overdue</span></span>
+<p class="waited">{{way.waited}}</p>
+</div>
+<div class="form-actions"><a class="btn btn-primary" href="#" aria-label="{{way.aria}}">Open the next</a><a class="btn btn-outline" href="#">Back to Activity inbox</a></div>
+</section>
+</sc-if>
+</div>
+</sc-if>
+
+<section class="{{st.cls}}" aria-labelledby="st-head">
+<div class="activity-status-main">
+<p class="activity-status-label">Who has it now</p>
+<p class="activity-status-head" id="st-head"><span class="{{st.badgeCls}}">{{st.badge}}</span><span class="activity-status-headline">{{st.headline}}</span></p>
+<sc-if value="{{st.hasBody}}" hint-placeholder-val="{{true}}"><p class="activity-status-body">{{st.body}}</p></sc-if>
+<sc-if value="{{st.hasMeta}}" hint-placeholder-val="{{false}}"><p class="activity-status-meta">{{st.meta}}</p></sc-if>
+</div>
+</section>
+
+<div class="details-grid">
+<sc-if value="{{aboutFirst}}" hint-placeholder-val="{{true}}">
+<section class="detail-card" aria-labelledby="about-h" style="align-self: start">
+<h2 id="about-h" style="font-size: 1.1rem; margin: 0 0 var(--space-md)">About</h2>
+<dl class="details-list"><sc-for list="{{about}}" as="a" hint-placeholder-count="5"><div><dt>{{a.k}}</dt><dd>{{a.v}}<sc-if value="{{a.hasWarn}}" hint-placeholder-val="{{false}}"><p class="field-warning">{{a.warn}}</p></sc-if></dd></div></sc-for></dl>
+</section>
+</sc-if>
+
+<div class="stack">
+<sc-for list="{{sections}}" as="sec" hint-placeholder-count="3">
+
+<sc-if value="{{sec.isFold}}" hint-placeholder-val="{{false}}">
+<details class="detail-card request-fold">
+<summary><div class="request-fold-head"><h2>{{sec.title}}</h2><span class="request-fold-open">Show</span></div><span class="request-fold-sum">{{sec.owner}}</span><span class="request-fold-sum">{{sec.gist}}</span></summary>
+<div class="request-fold-body"><dl class="field-readout"><sc-for list="{{sec.readout}}" as="f" hint-placeholder-count="3"><div><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div></sc-for></dl></div>
+</details>
+</sc-if>
+
+<sc-if value="{{sec.isCard}}" hint-placeholder-val="{{true}}">
+<section class="detail-card form-section" aria-labelledby="{{sec.hid}}">
+<div class="form-section-head"><h2 id="{{sec.hid}}">{{sec.title}}</h2><p class="form-section-owner">{{sec.owner}}</p></div>
+
+<sc-if value="{{sec.hasReadout}}" hint-placeholder-val="{{false}}">
+<dl class="field-readout"><sc-for list="{{sec.readout}}" as="f" hint-placeholder-count="3"><div><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div></sc-for></dl>
+</sc-if>
+
+<sc-if value="{{sec.hasRungDone}}" hint-placeholder-val="{{false}}">
+<div><p class="field-help" style="margin-bottom: var(--space-sm)">{{sec.rungLabel}}</p>
+<ol class="rung-row" aria-label="{{sec.rungAria}}"><sc-for list="{{sec.rungs}}" as="r" hint-placeholder-count="6"><li class="{{r.cls}}">{{r.label}}<sc-if value="{{r.chosen}}" hint-placeholder-val="{{false}}"><span class="rung-check">chosen</span></sc-if></li></sc-for></ol>
+<p class="rung-descriptor"><b>{{sec.chosen}}</b>[Rung {{sec.chosen}} descriptor, as the College wrote it]</p></div>
+</sc-if>
+
+<sc-if value="{{sec.hasPicker}}" hint-placeholder-val="{{false}}">
+<fieldset class="rung-picker" aria-describedby="lvl-help">
+<legend>{{sec.rungLegend}} <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden"> required</span></legend>
+<p class="field-help" id="lvl-help">The supervision this activity actually required on this occasion - not a judgement of the trainee's worth.</p>
+<ol class="rung-row"><sc-for list="{{sec.rungs}}" as="r" hint-placeholder-count="6"><li>
+<sc-if value="{{r.chosen}}" hint-placeholder-val="{{false}}"><label class="rung rung-choice is-chosen"><input type="radio" name="level" checked="" aria-describedby="rung-d-{{r.key}}">{{r.label}}<span class="rung-check">chosen</span></label></sc-if>
+<sc-if value="{{r.open}}" hint-placeholder-val="{{true}}"><label class="{{r.cls}}"><input type="radio" name="level" aria-describedby="rung-d-{{r.key}}">{{r.label}}</label></sc-if>
+</li></sc-for></ol>
+<sc-if value="{{sec.hasChosen}}" hint-placeholder-val="{{false}}"><p class="rung-descriptor"><b>{{sec.chosen}}</b>[Rung {{sec.chosen}} descriptor, as the College wrote it]</p></sc-if>
+<sc-if value="{{sec.noneChosen}}" hint-placeholder-val="{{true}}"><p class="rung-prompt">Choose the rung this encounter needed. Each rung's meaning is listed below.</p></sc-if>
+<sc-if value="{{sec.legendOpen}}" hint-placeholder-val="{{true}}">
+<details class="rung-legend" open=""><summary><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>What each rung means</summary>
+<dl class="rung-legend-list"><sc-for list="{{sec.rungs}}" as="r" hint-placeholder-count="6"><div class="{{r.legendCls}}" id="rung-d-{{r.key}}"><dt>{{r.label}}</dt><dd>[Rung {{r.label}} descriptor, as the College wrote it]</dd></div></sc-for></dl>
+</details>
+</sc-if>
+<sc-if value="{{sec.legendShut}}" hint-placeholder-val="{{false}}">
+<details class="rung-legend"><summary><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>What each rung means</summary></details>
+</sc-if>
+</fieldset>
+</sc-if>
+
+<sc-if value="{{sec.hasInputs}}" hint-placeholder-val="{{false}}">
+<div class="form-grid">
+<sc-for list="{{sec.inputs}}" as="f" hint-placeholder-count="3">
+<div class="form-group full-width">
+<label for="{{f.id}}-in">{{f.label}} <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden"> required</span></label>
+<textarea class="form-control" id="{{f.id}}-in" rows="3" aria-required="true" value="{{f.value}}"></textarea>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</sc-if>
+</sc-for>
+
+<div class="activity-moves">
+<sc-if value="{{hasBar}}" hint-placeholder-val="{{true}}">
+<div class="form-actions form-actions--moves">
+<sc-for list="{{bar}}" as="b" hint-placeholder-count="3">
+<sc-if value="{{b.isPri}}" hint-placeholder-val="{{true}}"><button type="button" class="btn btn-primary">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isOut}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isCannot}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline is-unavailable" aria-disabled="true" aria-describedby="why-{{b.key}}">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isToggle}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline" aria-expanded="false" aria-controls="note-panel">{{b.label}}</button></sc-if>
+<sc-if value="{{b.isToggleOpen}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-outline" aria-expanded="true" aria-controls="note-panel">{{b.label}}</button></sc-if>
+</sc-for>
+<sc-if value="{{hasReasons}}" hint-placeholder-val="{{false}}"><ul class="move-reasons"><sc-for list="{{reasons}}" as="r" hint-placeholder-count="1"><li id="why-{{r.key}}">{{r.text}}</li></sc-for></ul></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{hasNote}}" hint-placeholder-val="{{false}}">
+<section class="detail-card note-panel" id="note-panel" aria-labelledby="note-h">
+<h2 class="note-panel-title" id="note-h">{{note.title}}</h2>
+<sc-if value="{{note.refused}}" hint-placeholder-val="{{false}}"><div class="validation-summary-errors error-summary demo-focus" id="note-summary" tabindex="-1" role="alert"><strong>{{note.notDone}}</strong> {{note.still}}<ul style="margin: var(--space-xs) 0 0; padding-left: 1.1rem"><li><a href="#note-in">{{note.label}}: {{note.need}}</a></li></ul></div></sc-if>
+<div class="form-group"><label for="note-in">{{note.label}} <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden"> required</span></label>
+<p class="field-help" id="note-help">{{note.help}}</p>
+<textarea class="{{note.cls}}" id="note-in" rows="4" aria-invalid="{{note.invalid}}" aria-required="true" aria-describedby="{{note.describedby}}" value=""></textarea>
+<sc-if value="{{note.refused}}" hint-placeholder-val="{{false}}"><p class="validation-message" id="note-msg" style="margin: 0">{{note.need}}</p></sc-if></div>
+<div class="form-actions form-actions--moves">
+<sc-if value="{{note.danger}}" hint-placeholder-val="{{true}}"><button type="button" class="btn btn-danger">{{note.send}}</button></sc-if>
+<sc-if value="{{note.primary}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-primary">{{note.send}}</button></sc-if>
+<button type="button" class="btn btn-quiet" style="color: var(--link-color)">{{note.keep}}</button></div>
+</section>
+</sc-if>
+</div>
+
+<sc-if value="{{aboutLast}}" hint-placeholder-val="{{false}}">
+<section class="detail-card" aria-labelledby="about-h2">
+<h2 id="about-h2" style="font-size: 1.1rem; margin: 0 0 var(--space-md)">About</h2>
+<dl class="details-list"><sc-for list="{{about}}" as="a" hint-placeholder-count="5"><div><dt>{{a.k}}</dt><dd>{{a.v}}<sc-if value="{{a.hasWarn}}" hint-placeholder-val="{{false}}"><p class="field-warning">{{a.warn}}</p></sc-if></dd></div></sc-for></dl>
+</section>
+</sc-if>
+
+<section class="detail-card" aria-labelledby="hist-h">
+<h2 id="hist-h" style="font-size: 1.1rem; margin: 0 0 var(--space-md)">History</h2>
+<div class="history-table" role="table" aria-labelledby="hist-h">
+<div role="row"><span role="columnheader">Move</span><span role="columnheader">From → to</span><span role="columnheader">By</span><span role="columnheader">When</span><span role="columnheader">Credit</span></div>
+<sc-for list="{{history}}" as="m" hint-placeholder-count="2">
+<div role="row"><span role="cell" class="{{m.cellCls}}">{{m.move}}</span><span role="cell" class="{{m.cellCls}}">{{m.from}}</span><span role="cell" class="{{m.cellCls}}">{{m.by}}</span><span role="cell" class="{{m.cellCls}}">{{m.when}}</span><span role="cell" class="{{m.cellCls}}">{{m.credit}}</span></div>
+<sc-if value="{{m.hasNote}}" hint-placeholder-val="{{false}}"><div role="row"><span role="cell" class="history-note"><span class="text-muted">Note:</span> {{m.note}}</span></div></sc-if>
+</sc-for>
+</div>
+<details class="history-details"><summary><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>{{historyLabel}}</summary></details>
+<p class="field-help" style="margin-top: var(--space-sm)">Times are South African time.</p>
+</section>
+</div>
+</div>
+</sc-if>
+
+</article></main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["to-rate","rating-3b","decline-refused","return-note","completed-next","unavailable"],"default":"to-rate"},"w":{"editor":"int","default":1280},"h":{"editor":"int","default":2200},"$preview":{"width":1280,"height":2200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const state = this.props.state || 'to-rate';
+    const w = this.props.w || 1280;
+    const h = this.props.h || 2200;
+    const phone = w < 641;
+    const RUNGS = ['1', '2', '3a', '3b', '4', '5'];
+    const PAED001 = 'PAED-001 — Providing paediatric emergency care to children';
+    const PAED002 = 'PAED-002 — Managing common paediatric presentations';
+    const ab = (k, v, warn) => ({ k: k, v: v, hasWarn: !!warn, warn: warn || '' });
+    const mv = (move, from, by, when, credit, note) => ({ move: move, from: from, by: by, when: when, credit: credit || '—',
+      hasNote: !!note, note: note || '', cellCls: note ? 'has-note' : '' });
+    const st = (kind, badgeCls, badge, headline, body, meta) => ({ cls: 'activity-status activity-status--' + kind,
+      badgeCls: 'badge ' + badgeCls, badge: badge, headline: headline, hasBody: !!body, body: body || '', hasMeta: !!meta, meta: meta || '' });
+    const btn = (kind, label, key) => ({ label: label, key: key || '', isPri: kind === 'pri', isOut: kind === 'out',
+      isCannot: kind === 'cannot', isToggle: kind === 'toggle', isToggleOpen: kind === 'toggle-open' });
+    const card = (o) => Object.assign({ isFold: false, isCard: true, hid: 'sec-' + o.title.toLowerCase().replace(/[^a-z]+/g, '-'),
+      hasReadout: false, readout: [], hasRungDone: false, hasPicker: false, hasInputs: false, inputs: [], rungs: [] }, o);
+    const readout = (rows) => rows.map((r) => ({ label: r[0], value: r[1] }));
+    // The rung picker: radios in the rung row; the chosen rung filled and named; its descriptor under the row.
+    const picker = (legend, chosen, legendOpen) => ({
+      hasPicker: true, rungLegend: legend, chosen: chosen || '', hasChosen: !!chosen, noneChosen: !chosen,
+      legendOpen: !!legendOpen, legendShut: !legendOpen,
+      rungs: RUNGS.map((r) => ({ label: r, key: r, chosen: r === chosen, open: r !== chosen,
+        cls: 'rung rung-choice' + (!chosen && r === '1' ? ' is-focus' : ''), legendCls: r === chosen ? 'is-chosen' : '' }))
+    });
+    const rungDone = (label, chosen) => ({ hasRungDone: true, chosen: chosen, rungLabel: label + ', rung ' + chosen + ' chosen',
+      rungAria: label + ': rung ' + chosen + ' chosen',
+      rungs: RUNGS.map((r) => ({ label: r, chosen: r === chosen, cls: r === chosen ? 'rung is-chosen' : 'rung' })) });
+    const fb = (typed) => [
+      { id: 'fb1', label: '[Feedback field 1, from the schema: what was done well]', value: typed ? '[What David Naidoo typed]' : '' },
+      { id: 'fb2', label: '[Feedback field 2: areas for development]', value: typed ? '[What David Naidoo typed]' : '' },
+      { id: 'fb3', label: '[Feedback field 3: the agreed plan]', value: typed ? '[What David Naidoo typed]' : '' }];
+
+    let v = { u: { name: 'David Naidoo', hasSwitch: true }, hasSub: true, isNotFound: false, isPage: true,
+      hasResult: false, result: '', hasWayOn: false, way: {}, st: {}, about: [], sections: [],
+      hasBar: true, bar: [], hasReasons: false, reasons: [], hasNote: false, note: {}, history: [] };
+
+    if (state === 'to-rate' || state === 'rating-3b') {
+      // Step 3.5 / A.7.2: Anele Dlamini's Mini-CEX, to David Naidoo. He acts as Assessor (and holds Committee member).
+      const chosen = state === 'rating-3b' ? '3b' : '';
+      const request = [['EPA', PAED001], ['Assessor', 'David Naidoo'], ['Date observed', '2026-09-20'], ['Clinical setting', 'Emergency unit'],
+        ['Presenting problem', '[Her presenting problem, as she wrote it]'], ['Case complexity', 'Moderate']];
+      Object.assign(v, { h1: 'Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20', sub: "Anele Dlamini's request to David Naidoo",
+        st: st('yours', 'badge-submitted', 'Requested', 'Your move. Anele Dlamini asked you on 2026-09-30 07:58 SAST.',
+          'Complete it, or decline it with a note Anele Dlamini will read.'),
+        about: [ab('Registrar', 'Anele Dlamini'), ab('Assessor', 'David Naidoo'), ab('EPA', PAED001), ab('Encounter', '2026-09-20'), ab('Filed', '2026-09-30'), ab('Credit', 'None until it is completed')],
+        history: [mv('Create', '— → Draft', 'Anele Dlamini', '2026-09-30 07:50 SAST'), mv('Submit', 'Draft → Requested', 'Anele Dlamini', '2026-09-30 07:58 SAST')] });
+      const reqCard = phone
+        ? { isFold: true, isCard: false, title: 'Request', owner: 'Filled in by Anele Dlamini, 2026-09-30', gist: 'Emergency unit · Moderate · [the first line of her presenting problem]', readout: readout(request) }
+        : card({ title: 'Request', owner: 'Filled in by Anele Dlamini, 2026-09-30', hasReadout: true, readout: readout(request) });
+      v.sections = [reqCard,
+        card(Object.assign({ title: 'Entrustment', owner: 'You fill this in' }, picker('Supervision required for this encounter', chosen, !phone && !chosen))),
+        card({ title: 'Feedback', owner: 'You fill this in', hasInputs: true, inputs: fb(!!chosen) })];
+      if (chosen) {
+        v.bar = [btn('pri', 'Complete'), btn('out', 'Discard changes'), btn('toggle', 'Decline')];
+      } else {
+        v.bar = [btn('pri', 'Complete'), btn('cannot', 'Discard changes', 'discard'), btn('toggle', 'Decline')];
+        v.hasReasons = true; v.reasons = [{ key: 'discard', text: 'Discard changes: nothing to discard yet. It clears what you type here.' }];
+      }
+    } else if (state === 'decline-refused') {
+      // Step 3.11: Fatima Khumalo declines Sipho Ndlovu's Mini-CEX, first with the note empty.
+      const request = [['EPA', PAED002], ['Assessor', 'Fatima Khumalo'], ['Date observed', '2026-09-09'], ['Clinical setting', 'Ward'],
+        ['Presenting problem', 'Nine-month-old with gastroenteritis and moderate dehydration'], ['Case complexity', 'Low']];
+      Object.assign(v, { u: { name: 'Fatima Khumalo', hasSwitch: false }, h1: 'Mini-CEX (Paediatrics) · PAED-002 · 2026-09-09', sub: "Sipho Ndlovu's request to Fatima Khumalo",
+        st: st('yours', 'badge-submitted', 'Requested', 'Your move. Sipho Ndlovu asked you on 2026-09-29 09:12 SAST.',
+          'Complete it, or decline it with a note Sipho Ndlovu will read.', 'Filed 20 days after the encounter: recorded as late.'),
+        about: [ab('Registrar', 'Sipho Ndlovu'), ab('Assessor', 'Fatima Khumalo'), ab('EPA', PAED002), ab('Encounter', '2026-09-09'), ab('Filed', '2026-09-29, 20 days after the encounter (late)'), ab('Credit', 'None until it is completed')],
+        history: [mv('Create', '— → Draft', 'Sipho Ndlovu', '2026-09-29 09:10 SAST'), mv('Submit', 'Draft → Requested', 'Sipho Ndlovu', '2026-09-29 09:12 SAST')] });
+      v.sections = [phone
+        ? { isFold: true, isCard: false, title: 'Request', owner: 'Filled in by Sipho Ndlovu, 2026-09-29', gist: 'Ward · Low · Nine-month-old with gastroenteritis and moderate dehydration', readout: readout(request) }
+        : card({ title: 'Request', owner: 'Filled in by Sipho Ndlovu, 2026-09-29', hasReadout: true, readout: readout(request) }),
+        card(Object.assign({ title: 'Entrustment', owner: 'You fill this in' }, picker('Supervision required for this encounter', '', false))),
+        card({ title: 'Feedback', owner: 'You fill this in', hasInputs: true, inputs: fb(false) })];
+      v.bar = [btn('pri', 'Complete'), btn('cannot', 'Discard changes', 'discard'), btn('toggle-open', 'Decline')];
+      v.hasReasons = true; v.reasons = [{ key: 'discard', text: 'Discard changes: nothing to discard yet. It clears what you type here.' }];
+      v.hasNote = true;
+      v.note = { title: 'Decline this request', label: 'Note for Sipho Ndlovu', help: 'Sipho Ndlovu reads it on the activity’s page. It is kept with the activity’s history.',
+        refused: true, notDone: 'Not declined.', still: 'It is still Requested.', need: 'Decline requires a note.', cls: 'form-control',
+        invalid: 'true', describedby: 'note-help note-msg note-summary', danger: true, primary: false, send: 'Decline with this note', keep: 'Keep the request' };
+    } else if (state === 'return-note') {
+      // Step 3.15: Sarah Botha returns Sipho Ndlovu's reflection. The panel has just opened; the focus is in the note.
+      const refl = [['EPA', PAED001], ['Supervisor or mentor', 'Sarah Botha'], ['Date of the case or incident', '2026-09-09'], ['Reflecting on', 'Critical incident'],
+        ['What happened', 'A three-year-old in septic shock waited 90 minutes for antibiotics after triage'],
+        ['What went well, and what could have gone differently', '[His answer, as he wrote it]'], ['What I learned', '[What he learned, as he wrote it]'], ['What I will do differently', '[His one-line plan, as filed]']];
+      Object.assign(v, { u: { name: 'Sarah Botha', hasSwitch: true }, h1: 'Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-09', sub: "Sipho Ndlovu's reflection, for discussion with Sarah Botha",
+        st: st('yours', 'badge-submitted', 'Awaiting discussion', 'Your move. Sipho Ndlovu asked you on 2026-09-29 14:05 SAST.',
+          'Record the discussion, or return it with a note Sipho Ndlovu will read.'),
+        about: [ab('Registrar', 'Sipho Ndlovu'), ab('Supervisor or mentor', 'Sarah Botha'), ab('EPA', PAED001), ab('Case or incident', '2026-09-09'), ab('Credit', 'None: a reflective exercise credits nothing')],
+        history: [mv('Create', '— → Draft', 'Sipho Ndlovu', '2026-09-29 14:02 SAST'), mv('Submit', 'Draft → Awaiting discussion', 'Sipho Ndlovu', '2026-09-29 14:05 SAST')] });
+      v.sections = [phone
+        ? { isFold: true, isCard: false, title: 'Reflection', owner: 'Filled in by Sipho Ndlovu, 2026-09-29', gist: 'Critical incident · A three-year-old in septic shock waited 90 minutes …', readout: readout(refl) }
+        : card({ title: 'Reflection', owner: 'Filled in by Sipho Ndlovu, 2026-09-29', hasReadout: true, readout: readout(refl) }),
+        card({ title: 'Discussion', owner: 'You fill this in', hasInputs: true, inputs: [{ id: 'disc', label: 'Discussion', value: '' }] })];
+      v.bar = [btn('pri', 'Record discussion'), btn('cannot', 'Discard changes', 'discard'), btn('toggle-open', 'Return')];
+      v.hasReasons = true; v.reasons = [{ key: 'discard', text: 'Discard changes: nothing to discard yet. It clears what you type here.' }];
+      v.hasNote = true;
+      v.note = { title: 'Return this reflection', label: 'Note for Sipho Ndlovu', help: 'Sipho Ndlovu reads it on the activity’s page. It is kept with the activity’s history.',
+        refused: false, cls: 'form-control demo-focus', invalid: 'false', describedby: 'note-help', danger: false, primary: true,
+        send: 'Return with this note', keep: 'Keep the reflection' };
+    } else if (state === 'completed-next') {
+      // Step 3.24: Mohammed Patel (Assessor only) completes Nomsa Mahlangu's DOPS; the portfolio review still waits, overdue.
+      Object.assign(v, { u: { name: 'Mohammed Patel', hasSwitch: false }, h1: 'DOPS (Paediatrics) · PAED-002 · 2026-09-23', sub: "Nomsa Mahlangu's request to Mohammed Patel",
+        hasResult: true, result: 'Completed.', hasWayOn: true,
+        way: { title: '1 more waits for you', name: 'Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-19', from: 'Pieter du Plessis',
+          state: 'Awaiting review', waited: 'Waiting 11 days, since 2026-09-19 11:24 SAST.',
+          aria: 'Open the next: Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-19, from Pieter du Plessis' },
+        st: st('done', 'badge-completed', 'Completed', 'Done. You completed it on 2026-09-30 10:27 SAST.', 'Rated 3a. Credited 1 item to PAED-002.'),
+        about: [ab('Registrar', 'Nomsa Mahlangu'), ab('Assessor', 'Mohammed Patel'), ab('EPA', PAED002), ab('Encounter', '2026-09-23'), ab('Filed', '2026-09-24'), ab('Credit', '1 item')],
+        hasBar: false,
+        history: [mv('Create', '— → Draft', 'Nomsa Mahlangu', '2026-09-24 08:31 SAST'), mv('Submit', 'Draft → Requested', 'Nomsa Mahlangu', '2026-09-24 08:40 SAST'), mv('Complete', 'Requested → Completed', 'Mohammed Patel', '2026-09-30 10:27 SAST', '1 item')] });
+      v.sections = [card({ title: 'Request', owner: 'Filled in by Nomsa Mahlangu, 2026-09-24', hasReadout: true, readout: readout([['Procedure', '[The procedure, as she wrote it]'], ['Clinical setting', 'Ward'], ['Procedure complexity', 'Low']]) }),
+        card(Object.assign({ title: 'Entrustment', owner: 'Filled in by Mohammed Patel, 2026-09-30' }, rungDone('Supervision required for this procedure', '3a'))),
+        card({ title: 'Feedback', owner: 'Filled in by Mohammed Patel, 2026-09-30', hasReadout: true, readout: readout([['[Feedback field 1, from the schema]', '[What Mohammed Patel wrote]'], ['[Feedback field 2]', '[What Mohammed Patel wrote]'], ['[Feedback field 3]', '[What Mohammed Patel wrote]']]) })];
+    } else if (state === 'unavailable') {
+      Object.assign(v, { u: { name: 'Mohammed Patel', hasSwitch: false }, h1: 'Activity unavailable', hasSub: false, isNotFound: true, isPage: false });
+    }
+    v.aboutFirst = !phone; v.aboutLast = phone;
+    v.historyLabel = 'All ' + v.history.length + (v.history.length === 1 ? ' move' : ' moves');
+    v.w = w; v.h = h;
+    return v;
+  }
+}
+</script>
+</body>
+</html>

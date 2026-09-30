@@ -1,0 +1,56 @@
+/* Wombat :root, from the design system's tokens.json (round-3 sheet with T322). Loaded before ds/wombat/components/bundle.css,
+   which is app.css and the layout stylesheets less their :root. Canvas support file for flow 03, round 2. */
+:root {
+  --primary-color: rgb(44 62 80);
+  --secondary-color: rgb(45 108 223);
+  --on-fill: rgb(255 255 255);
+  --background-color: rgb(248 249 250);
+  --surface-color: rgb(255 255 255);
+  --text-color: rgb(51 51 51);
+  --muted-text: rgb(104 111 119);
+  --link-color: rgb(11 92 171);
+  --link-hover: rgb(8 74 138);
+  --border-color: rgb(222 226 230);
+  --input-border: rgb(123 132 141);
+  --focus-ring: rgb(45 108 223);
+  --header-bg: rgb(241 243 245);
+  --hover-bg: rgb(248 249 250);
+  --success-color: rgb(26 115 64);
+  --success-bg: rgb(232 245 233);
+  --warning-color: rgb(154 84 0);
+  --warning-bg: rgb(255 248 225);
+  --danger-color: rgb(184 50 42);
+  --danger-bg: rgb(255 245 245);
+  --info-bg: rgb(243 248 255);
+  --scrim: rgb(0 0 0 / 0.35);
+  --shadow-color: rgb(0 0 0 / 0.1);
+  --sidebar-gradient-start: rgb(5 39 103);
+  --sidebar-gradient-end: rgb(58 6 71);
+  --nav-text: rgb(215 215 215);
+  --nav-text-strong: rgb(255 255 255);
+  --nav-group-label: rgb(185 195 224);
+  --nav-active-bg: rgb(255 255 255 / 0.32);
+  --nav-hover-bg: rgb(255 255 255 / 0.1);
+  --nav-brand-bg: rgb(0 0 0 / 0.4);
+  --nav-divider: rgb(255 255 255 / 0.18);
+  --nav-focus-ring: rgb(255 255 255);
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 999px;
+  --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.1);
+  --shadow-dialog: 0 10px 25px rgb(0 0 0 / 0.25);
+  --shadow-bar: 0 -1px 2px rgb(0 0 0 / 0.2);
+  --sidebar-width: 250px;
+  --motion-fast: 150ms;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono: Consolas, "Courier New", monospace;
+}

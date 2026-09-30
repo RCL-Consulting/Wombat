@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 04, round 1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wire.css">
+</head>
+<body>
+<x-dc>
+<helmet><style>@font-face{font-family:"Source Sans 3";src:url("/_blob/83270f069e00592a28bbab89551709ac") format("woff2");font-weight:200 900}body{margin:0}</style></helmet>
+<div class="wf-doc" style="width: 1280px; height: 2300px">
+<p class="doc-kicker">Flow 04 · round 1 · 2026-09-30</p>
+<h1 class="doc-h1">See what waits for me, and rate it, decline it or send it back</h1>
+<p class="doc-lede">Three structures for the assessor's Home, the Activity inbox and their decisions, as wireframes (no colour or type choices), and the assessor's activity page drawn once in flow 03's design. Pick one structure; round 2 draws it at full fidelity.</p>
+
+<div class="doc-cols">
+<section class="doc-var"><p class="doc-var-tag">A</p><h2>Two pages, one list</h2>
+<p>Keep Home and the inbox. Home's card <b>is</b> the inbox's first five rows, from one read, in one order, in one set of words. Decisions become a second section of the inbox.</p>
+<dl>
+<dt>1 · Decisions</dt><dd>Recent decisions (5, dated) on Home; everything under "Decided by you" in the inbox, paged, no cut-off.</dd>
+<dt>2 · Home vs inbox</dt><dd>Both. Home adds what the inbox lacks: the decisions and, later, figures of its own.</dd>
+<dt>3 · Two roles</dt><dd>A line on the other view's Home, naming the oldest, with Open it (no switch) and Switch to Assessor.</dd>
+<dt>4 · Overdue</dt><dd>Badge beside the state, oldest first, and the count "3 · 1 overdue".</dd>
+<dt>Pages</dt><dd>Home, Activity inbox (two sections), the activity.</dd>
+</dl></section>
+
+<section class="doc-var"><p class="doc-var-tag">B</p><h2>Home is the inbox</h2>
+<p>For the Assessor, one page: Home lists what waits, then what they decided. "Activity inbox" leaves the Assessor's menu. A two-role consultant's other Home carries the rows themselves.</p>
+<dl>
+<dt>1 · Decisions</dt><dd>"Decided by you" on Home, paged, no cut-off.</dd>
+<dt>2 · Home vs inbox</dt><dd>Merged. Nothing can disagree because there is one list.</dd>
+<dt>3 · Two roles</dt><dd>A card of the waiting rows on the committee Home; they open and are rated without switching.</dd>
+<dt>4 · Overdue</dt><dd>As A.</dd>
+<dt>Pages</dt><dd>Home (a list page), the activity.</dd>
+</dl></section>
+
+<section class="doc-var"><p class="doc-var-tag">C</p><h2>A queue you work through</h2>
+<p>Home is a summary and a start ("Start with the oldest"). The activity page carries you on: after a move it opens the next item itself. Decisions get a page of their own.</p>
+<dl>
+<dt>1 · Decisions</dt><dd>My decisions, a third menu item, searchable, paged.</dd>
+<dt>2 · Home vs inbox</dt><dd>Both, but Home shows no list, only figures and the oldest.</dd>
+<dt>3 · Two roles</dt><dd>A count on the sidebar's switch, on every page.</dd>
+<dt>4 · Overdue</dt><dd>A group heading the inbox, plus the badge and the count.</dd>
+<dt>Pages</dt><dd>Home, Activity inbox (grouped), My decisions, the activity (with Next waiting).</dd>
+</dl></section>
+</div>
+
+<h2 class="doc-h2">Steps per journey (presses and taps; typing not counted)</h2>
+<table class="doc-table">
+<thead><tr><th>Journey</th><th>Today</th><th>A</th><th>B</th><th>C</th></tr></thead>
+<tbody>
+<tr><td>Rate a Mini-CEX from Home, 1280</td><td>4 (5 via the inbox)</td><td>3</td><td>3</td><td>3 if it is the oldest, else 4</td></tr>
+<tr><td>Decline with a reason (refused once, then sent), 1280 or 390</td><td>4 (5 via the inbox)</td><td>4</td><td>4</td><td>4</td></tr>
+<tr><td>Return a reflection, then record the discussion (two-role Sarah Botha, two sittings)</td><td>11</td><td>5</td><td>5</td><td>9</td></tr>
+<tr><td>Rate on a phone, from sign-in, 390</td><td>6 via the inbox (4 from Home's card), and a sideways scroll</td><td>3</td><td>3</td><td>3 if it is the oldest, else 5</td></tr>
+<tr><td>Two-role consultant finds and rates an overdue request, 1280</td><td>6, if she knows to switch</td><td>3</td><td>3</td><td>5</td></tr>
+<tr><td>… the same at 390</td><td>8</td><td>3</td><td>3</td><td>7</td></tr>
+<tr><td>On to the next waiting item after a move</td><td>2 (Activity inbox, the row)</td><td>1</td><td>1</td><td>0</td></tr>
+</tbody></table>
+<p class="doc-small">The step lists are on "Steps". Each rating counts one press for the rung (today: two, to open the select and pick). Switching back after the work is counted where the runbook does it (Sarah Botha, Thandi Zulu).</p>
+
+<h2 class="doc-h2">Common to all three (drawn once, below)</h2>
+<ul class="doc-list">
+<li><b>Question 5, the rung:</b> radios in the rung row, six abreast at every width (about 50px each at 390px), the chosen one filled and named "chosen", its descriptor under the row; "What each rung means" lists all six, open at 1280 until a rung is chosen, folded on a phone. Each radio is described by its own rung's descriptor for a screen reader.</li>
+<li><b>Question 6, the way on:</b> the result, "Completed.", takes the focus as today; under it, in the same region, "1 more waits for you", the next item's row, <b>Open the next</b> (named for it) and Back to Activity inbox. With nothing left: "Nothing else waits for you." and Go to Home. (C goes further and opens it.)</li>
+<li><b>Question 7, the phone:</b> the rater sees the rating first. At 390px the Request folds into one line (who filled it in, its gist) above Entrustment, and About moves below the bar. 1280 is flow 03's order, unchanged.</li>
+<li><b>Moves' labels</b> in sentence case: Complete, Decline, Record discussion, Sign off, Return, on the buttons and in the history.</li>
+<li><b>One note panel</b> for Decline and Return: "Decline this request" / "Return this reflection", "Note for Sipho Ndlovu" with the red <code>*</code>, the same help, "Decline with this note" (danger: it ends the request) / "Return with this note" (primary: it does not), "Keep the request" / "Keep the reflection".</li>
+<li><b>Discard changes</b> says why it is greyed. The Request reads names without emails. "Activity unavailable" offers Go to Activity inbox to an Assessor.</li>
+</ul>
+
+<h2 class="doc-h2">Recommendation: A</h2>
+<p><b>A</b> makes T297 structural (one component, one read, one order) without moving the shell flow 01 settled; a two-role consultant keeps the same menu in each view and is told on the Home she opens to, with one press to the request. Decisions sit where the work is. <b>B</b> is the fewest pages and the shortest phone path, but it takes a nav item from the Assessor that the Coordinator's and committee's pages link to, and turns one role's Home into a list page while every other role's is a dashboard. <b>C</b>'s straight-to-next saves a press but takes the rated record off the screen before its status card is read, and its count on the switch costs a read on every page. If you like B's two-role card, it fits A: A5's line can list the rows.</p>
+<p class="doc-pick">Your pick: A, B or C (or A with B's two-role card). Then round 2 draws it on the tokens, every screen and state, at 1280 and 390.</p>
+</div></x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2300}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-09-30T10:23:24Z"
+ },
+ "title": "Wombat 04",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 2300,
+   "title": "Round 1: the three structures"
+  },
+  "R1-Steps.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 1280,
+   "h": 2350,
+   "title": "Steps"
+  },
+  "R1-Spec.dc.html": {
+   "x": 2720,
+   "y": 0,
+   "w": 1280,
+   "h": 3300,
+   "title": "Spec"
+  },
+  "A1-home-1280.dc.html": {
+   "x": 0,
+   "y": 3680,
+   "w": 1280,
+   "h": 1320,
+   "title": "A1 Home, Assessor, 1280"
+  },
+  "A2-home-390.dc.html": {
+   "x": 1360,
+   "y": 3680,
+   "w": 390,
+   "h": 1900,
+   "title": "A2 Home, Assessor, 390"
+  },
+  "A3-inbox-1280.dc.html": {
+   "x": 1830,
+   "y": 3680,
+   "w": 1280,
+   "h": 1500,
+   "title": "A3 Activity inbox, 1280"
+  },
+  "A4-inbox-390.dc.html": {
+   "x": 3190,
+   "y": 3680,
+   "w": 390,
+   "h": 2000,
+   "title": "A4 Activity inbox, 390"
+  },
+  "A5-two-role-1280.dc.html": {
+   "x": 3660,
+   "y": 3680,
+   "w": 1280,
+   "h": 1060,
+   "title": "A5 Two-role Home, 1280"
+  },
+  "B1-home-1280.dc.html": {
+   "x": 0,
+   "y": 6060,
+   "w": 1280,
+   "h": 1440,
+   "title": "B1 Home = inbox, 1280"
+  },
+  "B2-home-390.dc.html": {
+   "x": 1360,
+   "y": 6060,
+   "w": 390,
+   "h": 2000,
+   "title": "B2 Home = inbox, 390"
+  },
+  "B3-two-role-1280.dc.html": {
+   "x": 1830,
+   "y": 6060,
+   "w": 1280,
+   "h": 1180,
+   "title": "B3 Two-role Home, 1280"
+  },
+  "C1-home-1280.dc.html": {
+   "x": 0,
+   "y": 8440,
+   "w": 1280,
+   "h": 1180,
+   "title": "C1 Home summary, 1280"
+  },
+  "C2-home-390.dc.html": {
+   "x": 1360,
+   "y": 8440,
+   "w": 390,
+   "h": 1500,
+   "title": "C2 Home summary, 390"
+  },
+  "C3-inbox-390.dc.html": {
+   "x": 1830,
+   "y": 8440,
+   "w": 390,
+   "h": 1500,
+   "title": "C3 Activity inbox, 390"
+  },
+  "C4-decisions-1280.dc.html": {
+   "x": 2300,
+   "y": 8440,
+   "w": 1280,
+   "h": 1060,
+   "title": "C4 My decisions, 1280"
+  },
+  "C5-next-1280.dc.html": {
+   "x": 3660,
+   "y": 8440,
+   "w": 1280,
+   "h": 1100,
+   "title": "C5 After a move, 1280"
+  },
+  "C6-two-role-1280.dc.html": {
+   "x": 5020,
+   "y": 8440,
+   "w": 1280,
+   "h": 900,
+   "title": "C6 Two-role Home, 1280"
+  },
+  "P1-to-rate-1280.dc.html": {
+   "x": 0,
+   "y": 10320,
+   "w": 1280,
+   "h": 2300,
+   "title": "To rate: the rung picker, nothing chosen (David Naidoo), 1280"
+  },
+  "P2-rating-3b-390.dc.html": {
+   "x": 1360,
+   "y": 10320,
+   "w": 390,
+   "h": 3000,
+   "title": "To rate on a phone: Request folded, 3b chosen, 390"
+  },
+  "P3-decline-refused-1280.dc.html": {
+   "x": 1830,
+   "y": 10320,
+   "w": 1280,
+   "h": 2500,
+   "title": "Decline refused: the note panel kept (Fatima Khumalo), 1280"
+  },
+  "P4-decline-refused-390.dc.html": {
+   "x": 3190,
+   "y": 10320,
+   "w": 390,
+   "h": 3500,
+   "title": "Decline refused, 390"
+  },
+  "P5-return-note-1280.dc.html": {
+   "x": 3660,
+   "y": 10320,
+   "w": 1280,
+   "h": 2500,
+   "title": "Return: the note panel just opened (Sarah Botha), 1280"
+  },
+  "P6-completed-next-1280.dc.html": {
+   "x": 5020,
+   "y": 10320,
+   "w": 1280,
+   "h": 2000,
+   "title": "Completed, and the way on (Mohammed Patel), 1280"
+  },
+  "P7-completed-next-390.dc.html": {
+   "x": 6380,
+   "y": 10320,
+   "w": 390,
+   "h": 3000,
+   "title": "Completed, and the way on, 390"
+  },
+  "P8-unavailable-1280.dc.html": {
+   "x": 6850,
+   "y": 10320,
+   "w": 1280,
+   "h": 800,
+   "title": "Activity unavailable, an Assessor, 1280"
+  },
+  "R1-C-Activity.dc.html": {
+   "x": 8210,
+   "y": 10320,
+   "w": 1280,
+   "h": 2200,
+   "title": "Component: the assessor's activity page, every state"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "R1-Steps.dc.html",
+  "R1-Spec.dc.html",
+  "A1-home-1280.dc.html",
+  "A2-home-390.dc.html",
+  "A3-inbox-1280.dc.html",
+  "A4-inbox-390.dc.html",
+  "A5-two-role-1280.dc.html",
+  "B1-home-1280.dc.html",
+  "B2-home-390.dc.html",
+  "B3-two-role-1280.dc.html",
+  "C1-home-1280.dc.html",
+  "C2-home-390.dc.html",
+  "C3-inbox-390.dc.html",
+  "C4-decisions-1280.dc.html",
+  "C5-next-1280.dc.html",
+  "C6-two-role-1280.dc.html",
+  "P1-to-rate-1280.dc.html",
+  "P2-rating-3b-390.dc.html",
+  "P3-decline-refused-1280.dc.html",
+  "P4-decline-refused-390.dc.html",
+  "P5-return-note-1280.dc.html",
+  "P6-completed-next-1280.dc.html",
+  "P7-completed-next-390.dc.html",
+  "P8-unavailable-1280.dc.html",
+  "R1-C-Activity.dc.html"
+ ],
+ "notes": {
+  "intro": {
+   "x": 0,
+   "y": -260,
+   "text": "Round 1: the three structures, the steps, the spec",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "rowA": {
+   "x": 0,
+   "y": 3420,
+   "text": "A · Two pages, one list",
+   "kind": "title1",
+   "maxW": 4940
+  },
+  "rowB": {
+   "x": 0,
+   "y": 5800,
+   "text": "B · Home is the inbox",
+   "kind": "title1",
+   "maxW": 3110
+  },
+  "rowC": {
+   "x": 0,
+   "y": 8180,
+   "text": "C · A queue you work through",
+   "kind": "title1",
+   "maxW": 6300
+  },
+  "rowP": {
+   "x": 0,
+   "y": 10060,
+   "text": "The assessor's activity page, in flow 03's design (common to A, B and C)",
+   "kind": "title1",
+   "maxW": 9490
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Wombat",
+   "namespace": "wombat",
+   "artifact": "https://claude.ai/code/artifact/c96bff42-69c1-4e3c-925a-95bb2292870f",
+   "version": "1790762173-c7ac",
+   "copiedAt": "2026-09-30T10:23:24Z"
+  }
+ ]
+}

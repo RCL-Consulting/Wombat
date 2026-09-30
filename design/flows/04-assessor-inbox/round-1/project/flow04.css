@@ -1,0 +1,86 @@
+/* Flow 04, round 1: the NEW classes the assessor's activity page proposes for app.css. Loaded after
+   ds/wombat/components/bundle.css (app.css as flow 03 built it). Every colour a :root token; spacing on the scale, with
+   the shell's 6/10/12px literals only inside a row or a control. */
+
+/* ── The rung picker (NEW: RungRow's input mode, "RungPicker"): the rater chooses on the ladder itself ──────────────
+   Each rung is a native radio inside its label, six abreast at every width (about 50px each at 390px). The chosen one
+   is filled like RungRow's chosen rung, and says "chosen" in words. In the build the fill comes from
+   :has(input:checked), so choosing costs no server round trip; the descriptor shown under the row is chosen the same way. */
+.rung-picker { border: 0; display: flex; flex-direction: column; gap: var(--space-sm); margin: 0; min-width: 0; padding: 0; }
+.rung-picker legend { font-weight: 600; margin-bottom: var(--space-xs); padding: 0; }
+.rung-choice {
+  cursor: pointer;
+  gap: 2px;
+  min-height: 3.5rem;
+  position: relative;
+}
+.rung-choice input { accent-color: var(--secondary-color); height: 1rem; margin: 0; width: 1rem; }
+.rung-choice.is-chosen input { accent-color: var(--on-fill); }
+.rung-choice:hover { background: var(--hover-bg); }
+.rung-choice.is-chosen:hover { background: var(--secondary-color); }
+.rung-choice.is-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.rung-prompt { color: var(--muted-text); font-size: 0.9rem; margin: 0; }
+
+/* All six rungs and what they mean: a native <details>, open until a rung is chosen at 1280, folded on a phone. */
+.rung-legend { border: 1px solid var(--border-color); border-radius: var(--radius-md); }
+.rung-legend summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: 0 0.75rem;
+}
+.rung-legend-list { display: flex; flex-direction: column; gap: var(--space-sm); margin: 0; padding: 0 0.75rem 0.75rem; }
+.rung-legend-list > div { display: grid; gap: var(--space-md); grid-template-columns: 2.5rem 1fr; }
+.rung-legend-list dt { font-weight: 700; }
+.rung-legend-list dd { margin: 0; }
+.rung-legend-list .is-chosen dt,
+.rung-legend-list .is-chosen dd { font-weight: 700; }
+
+/* ── The Request folded, for the rater on a phone (NEW: a mode of ActivityForm's filled section) ─────────────────── */
+.request-fold { padding: 0; }
+.request-fold > summary {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  list-style: none;
+  min-height: 44px;
+  padding: var(--space-md);
+}
+.request-fold > summary::-webkit-details-marker { display: none; }
+.request-fold-head { align-items: center; display: flex; gap: var(--space-sm); justify-content: space-between; }
+.request-fold-head h2 { font-size: 1.25rem; margin: 0; }
+.request-fold-open { color: var(--link-color); font-size: 0.9rem; font-weight: 600; white-space: nowrap; }
+.request-fold-sum { color: var(--muted-text); font-size: 0.9rem; }
+.request-fold-body { border-top: 1px solid var(--border-color); padding: var(--space-md); }
+
+/* ── The way on (NEW: WayOn, inside the move's ActionResult) ─────────────────────────────────────────────────────── */
+.way-on {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: var(--space-lg);
+}
+.way-on-title { font-size: 1.1rem; margin: 0; }
+.way-on-item {
+  align-items: flex-start;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  padding: 0.75rem var(--space-md);
+}
+.way-on-item .activity-link { flex: 1 1 20rem; }
+.way-on-badges { align-items: center; display: flex; flex-wrap: wrap; gap: 6px; }
+.waited { color: var(--muted-text); flex-basis: 100%; font-size: 0.9rem; margin: 0; }
+.way-on .form-actions { margin-top: 0; }
+
+@media (max-width: 640.98px) {
+  .rung-choice { min-height: 3.5rem; padding: 2px; }
+  .way-on .form-actions { align-items: stretch; flex-direction: column; }
+  .way-on .form-actions .btn { min-height: 44px; }
+}

@@ -10,3 +10,9 @@ T350's design, kept beside its brief (`../04-assessor-inbox.md`) so that it outl
   boards (`design/upload/flow03-boards/`) and the rest of `design/upload/`.
 - **Before round 1:** the canvas held no `project/canvas.json`; its version was `1790763313-683b`. A round has drawn only
   if that changes.
+- **Round 1** (2026-09-30, `round-1/`, canvas version `1790764233-784e`): drawn from the one message; 26 boards.
+  `Main` holds the three structures, their step counts and the canvas's pick (A); `R1-Steps` and `R1-Spec`; A is "Two
+  pages, one list" (A1–A5), B "Home is the inbox" (B1–B3), C "A queue you work through" (C1–C6); the assessor's
+  activity page is drawn once, `R1-C-Activity` (six states) shown by P1–P8.
+- **Round 1's review:** `round-1-review.md`. Recommendation: A, no borrowing, with four corrections (no switch in the
+  other-role line; the way on's "Back to" follows the owner table; the waiting clock is `UpdatedOn`; a short live region).

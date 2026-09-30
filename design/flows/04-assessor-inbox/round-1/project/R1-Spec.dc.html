@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 04, round 1: spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wire.css">
+</head>
+<body>
+<x-dc>
+<helmet><style>@font-face{font-family:"Source Sans 3";src:url("/_blob/83270f069e00592a28bbab89551709ac") format("woff2");font-weight:200 900}body{margin:0}</style></helmet>
+<div class="wf-doc" style="width: 1280px; height: 3300px">
+<p class="doc-kicker">Flow 04 · round 1</p><h1 class="doc-h1">Spec: components, rules, edge cases, accessibility</h1>
+
+<h2 class="doc-h2">What the activity page changes (only what flow 04 may)</h2>
+<table class="doc-table"><thead><tr><th>Change</th><th>What it is</th><th>Why</th></tr></thead><tbody>
+<tr><td>The rung picker</td><td>RungRow gains an input mode: <code>fieldset.rung-picker</code>, legend = the field's label with a red <code>*</code>, the College's help under it, six <code>label.rung.rung-choice</code> each holding a native radio, abreast in <code>ol.rung-row</code>. The chosen: filled, "chosen" in words; its descriptor in <code>p.rung-descriptor</code> under the row. <code>details.rung-legend</code> "What each rung means": all six descriptors, open at 1280 until a choice, folded at 390. Each radio <code>aria-describedby</code> its descriptor.</td><td>The rater sees what each rung means while choosing; one press instead of two; the same ladder the registrar reads. The fill and the descriptor follow <code>:has(input:checked)</code>: no round trip per rung.</td></tr>
+<tr><td>Moves' labels</td><td>Complete, Decline, Record discussion, Sign off, Return: sentence case on the bar, in the history and in the reasons. A label per move key in the workflow (a small map beside <code>WorkflowTransition.LabelFor</code>, or a <code>label</code> in the DSL).</td><td>Voice: sentence case everywhere. Retires the one exception the README records.</td></tr>
+<tr><td>The note panels</td><td>One pattern: title "Decline this request" / "Return this reflection" (or "… review"); label "Note for &lt;registrar&gt;" with the form's red <code>*</code> and a hidden "required"; the same help; send "Decline with this note" (<code>.btn-danger</code>) / "Return with this note" (<code>.btn-primary</code>); keep "Keep the request" / "Keep the reflection". Refusal: "Not declined. It is still Requested." and the field's line.</td><td>T349. The weights differ on purpose, by one rule: danger only where the move ends the activity.</td></tr>
+<tr><td>Where About and the Request sit on a phone</td><td>Below 641px, for a reader with a section to fill: the filled sections before it fold into <code>details.request-fold</code> ("Request", who filled it in, a one-line gist, Show); About moves under the bar, before the history. 1280 unchanged.</td><td>The rater reaches the rating in one screen, between patients.</td></tr>
+<tr><td>The way on</td><td>NEW <code>WayOn</code> inside the move's ActionResult: "1 more waits for you" (h2 at the h3 size), the next item's row (WaitingList's row), Open the next (<code>aria-label</code> "Open the next: &lt;its name&gt;, from &lt;registrar&gt;"), Back to Activity inbox. None left: "Nothing else waits for you." and Go to Home.</td><td>After every move the assessor is offered the next one, and told how many are left.</td></tr>
+<tr><td>Activity unavailable</td><td>The same words; its link goes to the acting role's list: Activity inbox for an Assessor, My activities for a Trainee, else Go to Home.</td><td>An Assessor has no My activities.</td></tr>
+<tr><td>Discard changes</td><td>Greyed (<code>aria-disabled</code>, in the tab order) with its reason in <code>ul.move-reasons</code>: "Discard changes: nothing to discard yet. It clears what you type here."</td><td>T349: a disabled action says why.</td></tr>
+<tr><td>The Request's people</td><td>"David Naidoo", never with the email.</td><td>§ 6: no email beside a name the reader knows.</td></tr>
+</tbody></table>
+
+<h2 class="doc-h2">Components</h2>
+<p><b>From the system:</b> MainLayout, MainLayoutPhone, NavMenu (the switch), PageHeader, Breadcrumbs, DashboardCard (with <code>CountWords</code>), DashboardFrame, DataTable with Stack, PagerControls, StatePanel, Skeleton, Alert, ActionResult, badges (Requested, Awaiting review, Awaiting discussion: <code>badge-submitted</code>; Overdue: <code>badge-accepted</code>; Completed, Discussed, Signed off: <code>badge-completed</code>; Declined: <code>badge-declined</code>), ActivityStatus, ActivityAbout, ActivityForm, RungRow, ActivityWorkflowActions, RefusalSummary, ActivityHistory, ActivityLink, Icon.</p>
+<p><b>NEW:</b> <code>WaitingList</code> (A, B, C's inbox; the assessor's NeedsYouList: a row = ActivityLink with "from &lt;registrar&gt;", state badge, Overdue badge beside it, "Waiting 11 days", and on the inbox the EPA and "since …"), read by one query (<code>ListWaitingForYouQuery</code>) for Home and the inbox; <code>DecidedList</code> (the decisions: link, decision badge, when, credit; paged); <code>WayOn</code>; RungRow's picker mode; <code>request-fold</code>; A's <code>OtherRoleNotice</code> (the line on the other view's Home), B's other-role card (WaitingList in a DashboardCard), C's <code>QueueNav</code> and the switch's count. CSS: <code>flow04.css</code>.</p>
+
+<h2 class="doc-h2">DESIGN.md rules each variation changes</h2>
+<table class="doc-table"><thead><tr><th>Rule</th><th>A</th><th>B</th><th>C</th></tr></thead><tbody>
+<tr><td>§ Dashboard page</td><td>The Assessor's cards become "Waiting for you" (WaitingList, the inbox's first rows) and "Recent decisions" (dated, with a link); an other-role line may sit above a Home's grid.</td><td>The Assessor's Home is a list page, not a dashboard; a Home may carry another held role's waiting work.</td><td>The Assessor's Home is figures and a start, no list.</td></tr>
+<tr><td>§ Page-level patterns, "List page"</td><td>A list page may hold two sections, each headed and counted (Waiting for you; Decided by you, paged).</td><td>The same, on Home.</td><td>A list may group its rows (Overdue, Waiting). My decisions is a new list page.</td></tr>
+<tr><td>§ Page-level patterns, "Record page with a workflow"</td><td colspan="3">The result may carry the way on (all). On a phone the rater's page folds filled sections and moves About below the bar (all). C adds a queue control to the header and opens the next item after a move.</td></tr>
+<tr><td>§ Form system, "The activity form"</td><td colspan="3">A writer of a scale chooses on the ladder (radios in the rung row), not a select; moves in sentence case; one note-panel pattern.</td></tr>
+<tr><td>NavMenu</td><td>Unchanged.</td><td>The Assessor's menu loses Activity inbox.</td><td>The Assessor's menu gains My decisions; the switch may carry a count.</td></tr>
+</tbody></table>
+
+<h2 class="doc-h2">Edge cases</h2>
+<ul class="doc-list">
+<li><b>25 rows waiting:</b> Home's card shows the first five and "and 20 more", its count "25 · 4 overdue"; the inbox shows all 25 in one page (25 a page), oldest first. C's Home is unchanged by volume.</li>
+<li><b>Every row overdue:</b> the card's stripe and count say "25 · 25 overdue"; every row keeps its state badge with Overdue beside it; no row loses its state. C's groups collapse to one, Overdue.</li>
+<li><b>Two requests from one registrar on one EPA and date:</b> the two links read the same to the eye ("Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Anele Dlamini"); the line under each says when it reached you ("Waiting 3 days, since 2026-09-27 08:10 SAST"), and each link's accessible name adds it ("…, filed 2026-09-27 08:10"), then "(1 of 2)" where the times match too (T280).</li>
+<li><b>A two-role consultant with work in both views:</b> each Home carries the other role's line (A) or card (B); C's switch counts only the other role's inbox. The committee's wording is flow 07's.</li>
+<li><b>A request on a paused EPA:</b> it stays in the list and on the card; the inbox's EPA column and About read "(no longer in use)"; completing it is not refused (D48); the status card reads "Its credit to PAED-012 waits while the EPA is paused."; Recent decisions shows it Completed, credit None.</li>
+<li><b>An assessor who is also a registrar:</b> their own requests never enter their inbox (the query leaves out the author's own work, T342); their acting role picks the Home; a Trainee's Home shows Needs you, an Assessor's shows Waiting for you; the other-role line (A) works both ways.</li>
+<li><b>Long names:</b> a 120-character EPA wraps under the link in muted text on the inbox, never on Home's card (which shows the code); a 30-character registrar name wraps on its own line.</li>
+<li><b>12 recent decisions:</b> Home shows 5; the rest are one link away (A, B: the section; C: the page). None is out of reach.</li>
+<li><b>No email on arrival (T320):</b> no copy says or implies one; the count, the order and the Overdue badge are the notice. The 5-day nudge is not mentioned on the page.</li>
+</ul>
+
+<h2 class="doc-h2">Accessibility review (WCAG 2.1 AA)</h2>
+<ul class="doc-list">
+<li><b>Row actions named per row (2.4.4, 2.4.6):</b> every row's link is the activity's name plus "from &lt;registrar&gt;" (a hidden ", " between the lines), unique on the page by filing time and "(1 of 2)" (T280). Open the next names its item. Home's rows meet it, which they do not today.</li>
+<li><b>The count read as words (1.3.1):</b> the badge is <code>aria-hidden</code>; a hidden ", 3 waiting, 1 overdue" follows the title (DashboardCard <code>CountWords</code>); the inbox's section headings the same.</li>
+<li><b>Overdue not by colour alone (1.4.1):</b> a word, "Overdue", in a badge beside the state; the stripe only repeats it.</li>
+<li><b>Focus after each move (2.4.3, 3.2.2):</b> the result region (<code>#activity-result</code>, <code>tabindex="-1"</code>, <code>role="status"</code>) takes it; the way on is inside it, so "Completed. 1 more waits for you" is read at once and Tab reaches Open the next. A refused note: the note summary. Keep the request: back to Decline. In C, the next page's result takes it on arrival.</li>
+<li><b>Focus after the way on:</b> Open the next loads the next activity; its h1 takes the focus (FocusOnNavigate). Back to Activity inbox: its h1.</li>
+<li><b>The note panel named (4.1.2):</b> <code>section#note-panel</code> <code>aria-labelledby</code> its h2; its toggle <code>aria-expanded</code>, <code>aria-controls</code>; the note labelled "Note for Sipho Ndlovu, required", described by its help and, when refused, by its message and the summary.</li>
+<li><b>The rung picker by keyboard (2.1.1):</b> one radio group, a <code>fieldset</code> named by its legend: Tab enters on the chosen rung (or the first), arrow keys move and choose, Space chooses; each radio is described by its own rung's descriptor, so "3b, radio, 4 of 6, [descriptor]". The focus ring is on the whole rung (<code>:focus-within</code>). Targets 50×56px at 390px.</li>
+<li><b>Greyed moves (4.1.2):</b> <code>aria-disabled</code>, in the tab order, described by their reason.</li>
+<li><b>390px (1.4.10):</b> nothing scrolls sideways: the inbox stacks, the six rungs fit (6 × ≈50px + 5 × 4px in 326px), feedback fields are full width, the bar stacks, the history folds.</li>
+<li><b>Times (T325):</b> every time is "2026-09-30 10:27 SAST"; waits are days, with the SAST time under them.</li>
+</ul>
+
+<h2 class="doc-h2">Open for round 2</h2>
+<ul class="doc-list">
+<li>The College's six rung descriptors and the Mini-CEX's three feedback labels, as the College wrote them (placeholders here).</li>
+<li>"Waiting since" is when the item last reached the assessor (its latest Submit), not "untouched": an assessor has no Save draft. Confirm that is the dashboard's threshold clock.</li>
+<li>B and A5 both open an activity outside the acting role's navigation; the crumb then reads Home › the activity. Confirm that is acceptable for a request that names the reader.</li>
+</ul>
+</div></x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3300}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+/* Flow 03, round 3: changes to flow03.css (loaded after it). Every colour a :root token. */
+
+/* C14: a locked section is not an empty state. Its head row (lock, title, owner) sits on header-bg; its body stays on the
+   page's ground; the frame stays dashed input-border. .detail-card--empty is centred, muted and has no head row. */
+.form-section--locked {
+  background: var(--background-color);
+  border: 1px dashed var(--input-border);
+  box-shadow: none;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+}
+.form-section-lockhead {
+  align-items: center;
+  background: var(--header-bg);
+  border-bottom: 1px dashed var(--input-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  justify-content: space-between;
+  padding: 0.75rem var(--space-lg);
+}
+.form-section-lockhead h2 { margin: 0; }
+.form-section-lockhead .form-section-owner { color: var(--text-color); font-weight: 600; }
+.form-section-lockbody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+}
+.form-section-holds { color: var(--muted-text); font-size: 0.9rem; margin: 0; }
+
+/* C13: a credit warning inside About. */
+.details-list .field-warning { margin-top: var(--space-xs); }
+
+/* C10: the running move keeps the focus; its label says so. */
+.btn[aria-disabled="true"].is-running { cursor: progress; }
+
+@media (max-width: 640.98px) {
+  .form-section-lockhead,
+  .form-section-lockbody { padding-left: var(--space-md); padding-right: var(--space-md); }
+}

@@ -1,0 +1,312 @@
+/* Flow 03, round 2: the NEW classes this flow proposes for app.css. Every colour is a :root token; spacing on the scale,
+   with the shell's 6/10/12px literals only inside a row or a control. Loaded after ds/wombat/components/bundle.css. */
+
+/* ── The status card (NEW: ActivityStatus) ──────────────────────────────────────────────────────────────────────────
+   Who has the activity now, what happens next, and the page's one action. Replaces the summary card and the state under
+   the h1. The 4px left stripe says whose move it is; the badge says the state; the words say both. */
+.activity-status {
+  align-items: flex-start;
+  background: var(--surface-color);
+  border: 1px solid var(--input-border);
+  border-left-width: 4px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
+}
+.activity-status--yours { border-left-color: var(--secondary-color); }
+.activity-status--others { border-left-color: var(--input-border); }
+.activity-status--done { border-left-color: var(--success-color); }
+.activity-status--declined { border-left-color: var(--danger-color); }
+.activity-status-main {
+  display: flex;
+  flex: 1 1 26rem;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+.activity-status-label {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+}
+.activity-status-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: 0;
+}
+.activity-status-headline {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.activity-status-body,
+.activity-status-meta { margin: 0; }
+.activity-status-meta { color: var(--muted-text); font-size: 0.9rem; }
+.activity-status-quote {
+  background: var(--header-bg);
+  border-left: 4px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  white-space: pre-line;
+}
+.activity-status-quote cite { color: var(--muted-text); display: block; font-size: 0.85rem; font-style: normal; }
+.activity-status-action { display: flex; flex: none; flex-wrap: wrap; gap: 0.75rem; }
+
+/* ── A form section, open or someone else's (NEW: FormSection, LockedSection) ───────────────────────────────────────── */
+.form-section { display: flex; flex-direction: column; gap: var(--space-md); }
+.form-section-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  justify-content: space-between;
+}
+.form-section-head h2 { margin: 0; }
+.form-section-owner {
+  align-items: center;
+  color: var(--muted-text);
+  display: inline-flex;
+  font-size: 0.9rem;
+  gap: 6px;
+  margin: 0;
+}
+/* Someone else's, not filled in yet: no inputs, a dashed frame on the page's ground. */
+.form-section--locked {
+  background: var(--background-color);
+  border: 1px dashed var(--input-border);
+  box-shadow: none;
+}
+.form-section-empty { color: var(--muted-text); margin: 0; }
+.stack { display: flex; flex-direction: column; gap: var(--space-lg); min-width: 0; }
+.field-readout { display: flex; flex-direction: column; gap: var(--space-md); margin: 0; }
+.field-readout > div { display: flex; flex-direction: column; gap: 2px; }
+.field-readout dt { color: var(--muted-text); font-weight: 500; }
+.field-readout dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+.field-readout dd.is-empty { color: var(--muted-text); }
+.field-help { color: var(--muted-text); font-size: 0.9rem; margin: 0; }
+.field-readback { font-size: 0.9rem; margin: 0; overflow-wrap: anywhere; }
+.required-mark { color: var(--danger-color); }
+
+/* ── The rung row (NEW: RungRow): the entrustment ladder, read-only for the registrar ───────────────────────────── */
+.rung-row {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rung {
+  align-items: center;
+  background: var(--surface-color);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  font-size: 1.1rem;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-xs);
+}
+.rung--pending { background: transparent; border-style: dashed; color: var(--muted-text); font-weight: 600; }
+.rung.is-chosen {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: var(--on-fill);
+}
+.rung-check { font-size: 0.75rem; font-weight: 600; }
+.rung-descriptor {
+  background: var(--info-bg);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: var(--radius-sm);
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+}
+.rung-descriptor b { display: block; }
+/* The assessor's rung row: each rung a radio in its label (flow 04). */
+.rung-choice { cursor: pointer; gap: 2px; }
+.rung-choice input { margin: 0; }
+
+/* ── The line before Submit (NEW: SubmitCheck) ─────────────────────────────────────────────────────────────────── */
+.submit-check {
+  background: var(--info-bg);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: var(--radius-md);
+  margin: var(--space-lg) 0 0;
+  padding: 0.75rem var(--space-md);
+}
+
+/* ── The action bar: one filled move first, Cancel last and quiet (FormActions, modifier NEW) ──────────────────── */
+.form-actions--moves { justify-content: flex-start; margin-top: var(--space-md); }
+.form-actions--moves .btn-quiet { margin-left: auto; }
+.btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--danger-color);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.btn.is-unavailable { cursor: not-allowed; opacity: 0.65; }
+.move-reasons { color: var(--text-color); flex-basis: 100%; font-size: 0.9rem; list-style: none; margin: 0; padding: 0; }
+
+/* ── The note panel (NEW: NotePanel): a move that needs a note opens it inline, and a refusal keeps it open ──────── */
+.note-panel {
+  border-left: 4px solid var(--secondary-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+.note-panel .form-actions { margin-top: 0; }
+
+/* ── The instrument picker (NEW: InstrumentPicker): links, grouped by the type's shape ─────────────────────────── */
+.instrument-group { display: flex; flex-direction: column; gap: var(--space-md); }
+.instrument-group-head { align-items: baseline; display: flex; gap: var(--space-sm); justify-content: space-between; }
+.instrument-group-head h2 { margin: 0; }
+.instrument-group p { margin: 0; }
+.instrument-picker {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.instrument-link {
+  align-items: center;
+  background: var(--surface-color);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  color: var(--link-color);
+  display: flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  justify-content: space-between;
+  min-height: 44px;
+  padding: var(--space-sm) 0.75rem;
+  text-decoration: none;
+}
+.instrument-link:hover { background: var(--hover-bg); text-decoration: underline; }
+
+/* ── History: the table from 641px, stacked blocks behind a native <details> below it (NEW: HistoryRow) ─────────── */
+.history-table { display: grid; grid-template-columns: max-content max-content minmax(8rem, 1fr) max-content max-content; }
+.history-table > [role="row"] { display: contents; }
+.history-table [role="columnheader"] {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  padding: var(--space-sm) var(--space-md);
+}
+.history-table [role="cell"] { border-bottom: 1px solid var(--border-color); padding: var(--space-sm) var(--space-md); }
+.history-table .history-note {
+  border-bottom: 1px solid var(--border-color);
+  grid-column: 1 / -1;
+  padding: 0 var(--space-md) var(--space-sm);
+  white-space: pre-line;
+}
+.history-table .has-note { border-bottom: 0; }
+.history-late { color: var(--muted-text); display: block; font-size: 0.85rem; }
+.history-details { display: none; }
+.history-details summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  min-height: 44px;
+}
+.history-list { display: flex; flex-direction: column; gap: var(--space-sm); list-style: none; margin: var(--space-sm) 0 0; padding: 0; }
+.history-row {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.75rem;
+}
+.history-row b { font-weight: 600; }
+.history-row .history-meta { color: var(--muted-text); font-size: 0.9rem; }
+@media (max-width: 640.98px) {
+  .history-table { display: none; }
+  .history-details { display: block; }
+}
+
+/* ── Needs you (NEW: NeedsYouList), on My activities and Home's card ───────────────────────────────────────────── */
+.needs-you { display: flex; flex-direction: column; gap: var(--space-sm); list-style: none; margin: 0; padding: 0; }
+.needs-you-row {
+  align-items: flex-start;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  padding: 0.75rem var(--space-md);
+}
+.needs-you-row .activity-link { flex: 1 1 20rem; }
+.needs-you-why { flex-basis: 100%; margin: 0; }
+.activity-link { font-weight: 600; }
+.activity-link-to { color: var(--muted-text); display: block; font-size: 0.9rem; font-weight: 400; }
+.section-title-row { align-items: baseline; display: flex; flex-wrap: wrap; gap: var(--space-sm); justify-content: space-between; margin-bottom: var(--space-md); }
+.section-title-row h2 { margin: 0; }
+.section-rule { color: var(--muted-text); font-size: 0.9rem; margin: 0 0 var(--space-md); }
+
+/* ── DataTable stacked below 641px (clinic-table modifier, NEW) ────────────────────────────────────────────────── */
+@media (max-width: 640.98px) {
+  .clinic-table--stack thead { display: none; }
+  .clinic-table--stack tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: 0.75rem var(--space-md); }
+  .clinic-table--stack td { border: 0; padding: 0; }
+  .clinic-table--stack td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; font-weight: 500; }
+}
+
+/* ── Page bits ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+.form-column { max-width: 52rem; }
+.form-column > .detail-card + .detail-card { margin-top: var(--space-lg); }
+.demo-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.epa-listbox {
+  background: var(--surface-color);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dialog);
+  list-style: none;
+  margin: 0;
+  max-height: 26rem;
+  overflow: auto;
+  padding: var(--space-xs) 0;
+}
+.epa-listbox li { padding: 6px 0.75rem; }
+.epa-listbox li.is-current { background: var(--secondary-color); color: var(--on-fill); }
+.dialog-demo {
+  align-items: flex-start;
+  background: var(--scrim);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding-top: 12rem;
+  position: absolute;
+  z-index: 5;
+}
+.dialog-demo .dialog-card { background: var(--surface-color); display: block; position: static; }
+.skeleton-h1 { height: 1.75rem; width: 22rem; max-width: 100%; }
+@media (max-width: 640.98px) {
+  .activity-status { padding: var(--space-md); }
+  .activity-status-action { flex-basis: 100%; flex-direction: column; }
+  .activity-status-action .btn { min-height: 44px; }
+  .form-actions--moves { flex-direction: column; align-items: stretch; }
+  .form-actions--moves .btn { min-height: 44px; }
+  .form-actions--moves .btn-quiet { margin-left: 0; }
+  .detail-card { padding: var(--space-md); }
+  .form-control, .form-select { min-height: 44px; }
+  .rung-row { gap: 4px; }
+  .header-container .btn { min-height: 44px; width: 100%; }
+  .dialog-demo { padding-top: 6rem; }
+}
