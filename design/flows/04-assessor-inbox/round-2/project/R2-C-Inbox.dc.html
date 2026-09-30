@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 04 R2: the Activity inbox, every state</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="wombat-root.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow04-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Source Sans 3";src:url("/_blob/83270f069e00592a28bbab89551709ac") format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/_blob/0f0443f8f94c6d5b22c7c70b523127ae") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+body{margin:0}
+.demo-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+</style>
+</helmet>
+<div style="width: {{w}}px; height: {{h}}px; overflow: hidden; position: relative; background-color: var(--background-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/89ddc910c53255a32bcbb84e2820bc45" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span><span>{{u.role}}</span></p>
+<label for="nav-toggle" class="nav-toggle-label"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>Menu</span></label>
+<div class="nav-panel">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">{{u.role}}</span></p>
+<sc-if value="{{u.hasSwitch}}" hint-placeholder-val="{{false}}"><a class="role-switch" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"></path></svg><span>Switch to {{u.switchTo}}</span></a></sc-if>
+</div>
+<nav class="nav-list" aria-label="Main">
+<ul class="nav-items"><sc-for list="{{nav}}" as="n" hint-placeholder-count="2"><li><a class="{{n.cls}}" href="#" aria-current="{{n.cur}}"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></li></sc-for></ul>
+<ul class="nav-items nav-personal"><sc-for list="{{personal}}" as="n" hint-placeholder-count="1"><li><a class="{{n.cls}}" href="#" aria-current="{{n.cur}}"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></li></sc-for></ul>
+</nav>
+</div>
+<div class="account-row"><a class="account-link" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="account-name">{{u.name}}</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+</header>
+<main><article>
+
+<sc-if value="{{hasCrumb}}" hint-placeholder-val="{{false}}">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li><li class="breadcrumb-current"><span aria-current="page">Activity inbox</span></li></ol></nav>
+</sc-if>
+<div class="header-container"><div><h1 tabindex="-1">Activity inbox</h1><p class="page-subtitle">What waits for you to rate, review or discuss.</p></div></div>
+
+<sc-if value="{{isRegistrar}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty"><p class="state-panel-title">Nothing here is yours to act on.</p><p class="state-panel-copy">This inbox holds work that assessors rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs you.</p><div class="form-actions"><a class="btn btn-outline" href="#">Open My activities</a></div></div>
+</sc-if>
+
+<sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+<section class="list-section" aria-busy="true"><h2 class="list-section-title">Waiting for you</h2>
+<div class="table-container shadow" aria-hidden="true" style="padding: var(--space-md)"><div class="skeleton" style="width: 100%; height: 2rem"></div><div class="skeleton" style="width: 100%; height: 3rem"></div><div class="skeleton" style="width: 100%; height: 3rem"></div><div class="skeleton" style="width: 70%; height: 3rem"></div></div></section>
+<section class="list-section" aria-busy="true"><h2 class="list-section-title">Decided by you</h2>
+<div class="table-container shadow" aria-hidden="true" style="padding: var(--space-md)"><div class="skeleton" style="width: 100%; height: 2rem"></div><div class="skeleton" style="width: 100%; height: 3rem"></div><div class="skeleton" style="width: 60%; height: 3rem"></div></div></section>
+<p class="visually-hidden" role="status">Loading the Activity inbox.</p>
+</sc-if>
+
+<sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load the Activity inbox.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></div></div></div>
+</sc-if>
+
+<sc-if value="{{isLists}}" hint-placeholder-val="{{true}}">
+<section class="list-section" aria-labelledby="waiting-h">
+<h2 class="list-section-title" id="waiting-h" tabindex="-1">Waiting for you<sc-if value="{{hasWaiting}}" hint-placeholder-val="{{true}}"><span class="badge badge-submitted">{{count}}</span></sc-if></h2>
+<sc-if value="{{hasWaiting}}" hint-placeholder-val="{{true}}">
+<p class="waiting-rule">Oldest first. Overdue once it has waited more than 7 days.</p>
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack" role="table" aria-labelledby="waiting-h">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Waiting</th></tr></thead>
+<tbody role="rowgroup"><sc-for list="{{waiting}}" as="r" hint-placeholder-count="2"><tr role="row">
+<td role="cell">
+<sc-if value="{{r.hasAria}}" hint-placeholder-val="{{false}}"><a class="activity-link" href="#" aria-label="{{r.aria}}">{{r.name}}<span class="activity-link-to">from {{r.from}}</span></a></sc-if>
+<sc-if value="{{r.noAria}}" hint-placeholder-val="{{true}}"><a class="activity-link" href="#">{{r.name}}<span class="visually-hidden">, </span><span class="activity-link-to">from {{r.from}}</span></a></sc-if>
+</td>
+<td role="cell" class="epa-cell" data-label="EPA">{{r.epa}}<sc-if value="{{r.paused}}" hint-placeholder-val="{{false}}"> <span class="muted">(no longer in use)</span></sc-if></td>
+<td role="cell"><span class="waiting-badges"><span class="{{r.badge}}">{{r.state}}</span><sc-if value="{{r.over}}" hint-placeholder-val="{{false}}"><span class="badge badge-overdue">Overdue</span></sc-if></span></td>
+<td role="cell" class="waited-cell" data-label="Waiting"><b>{{r.cell}}</b><span>since {{r.since}}</span></td>
+</tr></sc-for></tbody></table>
+</div>
+</sc-if>
+<sc-if value="{{noWaiting}}" hint-placeholder-val="{{false}}"><div class="detail-card detail-card--empty"><p class="state-panel-title">Inbox clear</p><p class="state-panel-copy">Nothing is waiting for you.</p></div></sc-if>
+</section>
+
+<section class="list-section" aria-labelledby="decided-h">
+<h2 class="list-section-title" id="decided-h" tabindex="-1">Decided by you<sc-if value="{{hasDecided}}" hint-placeholder-val="{{true}}"><span class="badge badge-draft">{{decidedWords}}</span></sc-if></h2>
+<sc-if value="{{hasDecided}}" hint-placeholder-val="{{true}}">
+<p class="waiting-rule">Newest first. Everything you completed, declined, discussed or signed off.</p>
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack" role="table" aria-labelledby="decided-h">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">Decision</th><th scope="col" role="columnheader">Decided</th><th scope="col" role="columnheader">Credit</th></tr></thead>
+<tbody role="rowgroup"><sc-for list="{{decided}}" as="d" hint-placeholder-count="3"><tr role="row">
+<td role="cell"><a class="activity-link" href="#">{{d.name}}<span class="visually-hidden">, </span><span class="activity-link-to">from {{d.reg}}</span></a></td>
+<td role="cell"><span class="{{d.badge}}">{{d.state}}</span></td>
+<td role="cell" data-label="Decided">{{d.when}}</td>
+<td role="cell" data-label="Credit">{{d.credit}}</td>
+</tr></sc-for></tbody></table>
+</div>
+<sc-if value="{{hasPager}}" hint-placeholder-val="{{false}}">
+<nav class="pager" aria-label="Decided by you, pages"><span class="pager-info">{{pager}}</span><span class="pager-actions"><button type="button" class="btn btn-outline btn-sm" disabled="">Previous</button><button type="button" class="btn btn-outline btn-sm">Next</button></span></nav>
+</sc-if>
+</sc-if>
+<sc-if value="{{noDecided}}" hint-placeholder-val="{{false}}"><div class="detail-card detail-card--empty"><p class="state-panel-title">No decisions yet.</p></div></sc-if>
+</section>
+</sc-if>
+
+</article></main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state": {"editor": "enum", "options": ["clear", "clear-with-decisions", "two", "overdue", "paused-epa", "alike", "twenty-five", "decided-45", "long", "registrar-only", "loading", "load-error"], "default": "two"}, "w": {"editor": "int", "default": 1280}, "h": {"editor": "int", "default": 1300}, "$preview": {"width": 1280, "height": 1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+
+    const w = this.props.w || 1280;
+    const h = this.props.h || 1200;
+    const phone = w < 641;
+    const ICON = {
+      home: 'M3 10.5 12 3l9 7.5V21H3z',
+      inbox: 'M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',
+      log: 'M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7ZM14 2v4a2 2 0 0 0 2 2h4M9 15h6M12 18v-6',
+      mine: 'm3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8',
+      reviews: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6',
+      panels: 'm16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2',
+      progress: 'M3 3v16a2 2 0 0 0 2 2h16M19 9l-5 5-4-4-3 3',
+      rights: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'
+    };
+    // The acting role's menu (flow 01), one lit item at most: [label, 'page' | 'true' | ''].
+    const MENU = {
+      assessor: [['Home', 'home'], ['Activity inbox', 'inbox']],
+      committee: [['Home', 'home'], ['Committee reviews', 'reviews'], ['Decision panels', 'panels']],
+      trainee: [['Home', 'home'], ['Log an activity', 'log'], ['My activities', 'mine']]
+    };
+    const frame = (role, name, lit, litKind, switchTo) => {
+      const item = (m) => ({ label: m[0], d: ICON[m[1]], cls: m[0] === lit ? 'nav-link active' : 'nav-link', cur: m[0] === lit ? litKind : 'false' });
+      const personal = (role === 'trainee' ? [['My progress', 'progress']] : []).concat([['My data rights', 'rights']]);
+      return {
+        u: { name: name, role: role === 'assessor' ? 'Assessor' : role === 'committee' ? 'Committee member' : 'Trainee', hasSwitch: !!switchTo, switchTo: switchTo || '' },
+        nav: MENU[role].map(item), personal: personal.map(item)
+      };
+    };
+    const EPA = {
+      'PAED-001': 'PAED-001 — Providing paediatric emergency care to children',
+      'PAED-002': 'PAED-002 — Managing common paediatric presentations',
+      'PAED-004': 'PAED-004 — Managing common neonatal conditions',
+      'PAED-012': 'PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams',
+      'PAED-015': 'PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research'
+    };
+    const STATE_BADGE = { 'Requested': 'badge-submitted', 'Awaiting review': 'badge-submitted', 'Awaiting discussion': 'badge-submitted',
+      'Completed': 'badge-completed', 'Discussed': 'badge-completed', 'Signed off': 'badge-completed', 'Declined': 'badge-declined', 'Draft': 'badge-draft' };
+    // A waiting row. days: 0 = under a day. Overdue: more than 7 whole days since UpdatedOn.
+    const waitRow = (name, from, state, days, since, o) => {
+      o = o || {};
+      const over = days > 7;
+      return {
+        name: name, from: from, state: state, badge: 'badge ' + STATE_BADGE[state], over: over,
+        cls: 'waiting-row' + (over ? ' waiting-row--overdue' : ''),
+        waited: days < 1 ? 'Waiting less than a day' : 'Waiting ' + days + (days === 1 ? ' day' : ' days'),
+        cell: days < 1 ? 'Less than a day' : days + (days === 1 ? ' day' : ' days'),
+        since: since + ' SAST', epa: EPA[name.split(' · ')[1]] || o.epa || '', paused: !!o.paused,
+        hasAria: !!o.aria, aria: o.aria || ''
+      };
+    };
+    const decRow = (name, reg, state, when, credit) => ({ name: name, reg: reg, state: state, badge: 'badge ' + STATE_BADGE[state],
+      date: when.slice(0, 10), when: when + ' SAST', credit: credit });
+    const countWords = (list) => {
+      const n = list.length, o = list.filter((r) => r.over).length;
+      return n + ' waiting' + (o ? ', ' + o + ' overdue' : '');
+    };
+    const dayBefore = (n) => new Date(Date.UTC(2026, 8, 30) - n * 86400000).toISOString().slice(0, 10);
+    // The cast's rows (runbook, replay day 2026-09-30).
+    const R = {
+      review0: () => waitRow('Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29', 'Pieter du Plessis', 'Awaiting review', 0, '2026-09-30 08:06'),
+      review8: () => waitRow('Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29', 'Pieter du Plessis', 'Awaiting review', 8, '2026-09-22 08:06'),
+      dops: () => waitRow('DOPS (Paediatrics) · PAED-002 · 2026-09-22', 'Nomsa Mahlangu', 'Requested', 0, '2026-09-30 08:12'),
+      mc012: () => waitRow('Mini-CEX (Paediatrics) · PAED-012 · 2026-09-30', 'Anele Dlamini', 'Requested', 0, '2026-09-30 09:58', { paused: true }),
+      mc002: () => waitRow('Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10', 'Anele Dlamini', 'Requested', 0, '2026-09-30 10:27'),
+      cbd: () => waitRow('Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-25', 'Pieter du Plessis', 'Requested', 0, '2026-09-30 09:05'),
+      zulu: () => waitRow('Mini-CEX (Paediatrics) · PAED-004 · 2026-09-27', 'Nomsa Mahlangu', 'Requested', 8, '2026-09-22 08:30')
+    };
+    const D = {
+      patel: [decRow('Mini-CEX (Paediatrics) · PAED-012 · 2026-09-30', 'Anele Dlamini', 'Completed', '2026-09-30 09:59', '1 item'),
+        decRow('DOPS (Paediatrics) · PAED-001 · 2026-09-21', 'Lerato Molefe', 'Completed', '2026-09-30 08:45', '1 item'),
+        decRow('DOPS (Paediatrics) · PAED-002 · 2026-09-22', 'Nomsa Mahlangu', 'Completed', '2026-09-30 08:20', '1 item')],
+      khumalo: [decRow('Mini-CEX (Paediatrics) · PAED-004 · 2026-09-28', 'Anele Dlamini', 'Completed', '2026-09-30 08:52', '1 item'),
+        decRow('Case-Based Discussion (Paediatrics) · PAED-012 · 2026-09-25', 'Lerato Molefe', 'Completed', '2026-09-30 08:46', '1 item'),
+        decRow('Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10', 'Sipho Ndlovu', 'Declined', '2026-09-30 08:01', '—')],
+      zulu: [decRow('Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-24', 'Anele Dlamini', 'Completed', '2026-09-30 08:50', '1 item'),
+        decRow('Direct Observation (Paediatrics) · PAED-010 · 2026-09-23', 'Lerato Molefe', 'Completed', '2026-09-30 08:45', '1 item'),
+        decRow('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-21', 'Lerato Molefe', 'Completed', '2026-09-30 08:44', '1 item')]
+    };
+    // Volume filler: the cast's names, every row overdue, oldest first.
+    const TYPES = [['Mini-CEX (Paediatrics)', 'Requested'], ['DOPS (Paediatrics)', 'Requested'], ['Case-Based Discussion (Paediatrics)', 'Requested'],
+      ['Reflective Exercise (Paediatrics)', 'Awaiting discussion'], ['Portfolio and Logbook Review (Paediatrics)', 'Awaiting review']];
+    const REGS = ['Anele Dlamini', 'Sipho Ndlovu', 'Nomsa Mahlangu', 'Pieter du Plessis', 'Lerato Molefe'];
+    const CODES = ['PAED-001', 'PAED-002', 'PAED-004', 'PAED-012', 'PAED-015'];
+    const many = (n) => { const out = []; for (let i = 0; i < n; i++) { const d = 32 - i; const t = TYPES[i % 5];
+      out.push(waitRow(t[0] + ' · ' + CODES[(i * 2) % 5] + ' · ' + dayBefore(d + 3), REGS[(i * 3) % 5], t[1], d, dayBefore(d) + ' 0' + (7 + (i % 3)) + ':' + (10 + i))); } return out; };
+    const manyDec = (n) => { const out = []; for (let i = 0; i < n; i++) { const t = TYPES[i % 5];
+      const s = t[1] === 'Awaiting review' ? 'Signed off' : t[1] === 'Awaiting discussion' ? 'Discussed' : (i % 6 === 5 ? 'Declined' : 'Completed');
+      const mm = String(10 + (i % 50)).padStart(2, '0');
+      out.push(decRow(t[0] + ' · ' + CODES[(i * 3) % 5] + ' · ' + dayBefore(i + 4), REGS[(i * 2) % 5], s, dayBefore(i) + ' ' + (10 + (i % 7)) + ':' + mm, s === 'Completed' ? '1 item' : '—')); } return out; };
+
+
+    const state = this.props.state || 'two';
+    let v = Object.assign(frame('assessor', 'Mohammed Patel', 'Activity inbox', 'page'), {
+      hasCrumb: false, isRegistrar: false, isLoading: false, isError: false, isLists: true, waiting: [], decided: [], decidedTotal: 0, hasPager: false, pager: '' });
+    if (state === 'clear') { /* Dr Patel, Step 3.4 */ }
+    if (state === 'clear-with-decisions') { Object.assign(v, frame('assessor', 'Fatima Khumalo', 'Activity inbox', 'page')); v.decided = [D.khumalo[2]]; }
+    if (state === 'two') { v.waiting = [R.review0(), R.dops()]; }
+    if (state === 'overdue') { v.waiting = [R.review8()]; v.decided = D.patel; }
+    if (state === 'paused-epa') { v.waiting = [R.review8(), R.mc012()]; v.decided = [D.patel[1], D.patel[2]]; }
+    if (state === 'alike') {
+      const a = (t) => 'Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Anele Dlamini, Requested, waiting since 2026-09-30 ' + t + ' SAST';
+      v.waiting = [waitRow('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20', 'Anele Dlamini', 'Requested', 0, '2026-09-30 08:12', { aria: a('08:12') }),
+        waitRow('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20', 'Anele Dlamini', 'Requested', 0, '2026-09-30 08:15', { aria: a('08:15') })];
+      v.decided = D.patel;
+    }
+    if (state === 'twenty-five') { v.waiting = many(25); v.decided = D.patel; }
+    if (state === 'decided-45') { v.decided = manyDec(20); v.decidedTotal = 45; v.hasPager = true; v.pager = '1–20 of 45'; }
+    if (state === 'long') {
+      v.waiting = [waitRow('Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29', 'Nomsa Thandeka Mahlangu-Dlamini', 'Awaiting review', 9, '2026-09-21 07:40'),
+        waitRow('Mini-CEX (Paediatrics) · PAED-015 · 2026-09-28', 'Nomsa Thandeka Mahlangu-Dlamini', 'Requested', 0, '2026-09-30 08:40')];
+      v.decided = D.patel;
+    }
+    if (state === 'registrar-only') { Object.assign(v, frame('trainee', 'Sipho Ndlovu', '', 'false')); Object.assign(v, { hasCrumb: true, isRegistrar: true, isLists: false }); }
+    if (state === 'loading') { Object.assign(v, { isLists: false, isLoading: true }); }
+    if (state === 'load-error') { Object.assign(v, { isLists: false, isError: true }); }
+    v.waiting.forEach((r) => { r.noAria = !r.hasAria; });
+    v.count = countWords(v.waiting);
+    v.hasWaiting = v.waiting.length > 0; v.noWaiting = !v.hasWaiting;
+    if (!v.decidedTotal) v.decidedTotal = v.decided.length;
+    v.decidedWords = v.decidedTotal + (v.decidedTotal === 1 ? ' decision' : ' decisions');
+    v.hasDecided = v.decided.length > 0; v.noDecided = !v.hasDecided;
+    v.w = w; v.h = h;
+    return v;
+
+  }
+}
+</script>
+</body>
+</html>
