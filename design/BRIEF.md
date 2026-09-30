@@ -933,6 +933,34 @@ already teach is here.
 - **Keeping capture names held.** Observed: the replay kept every existing name; `check_baseline_paths.py` read missing
   0 with no repointing, where flow 01's replay broke 101 citations.
 
+**Flow 03 (T342, 2026-09-28 to 09-30): what the third flow added**
+
+Flow 03 ran the loop over three days: a W flow's three structures, three rounds, a four-sided review, the build
+(`725237ee`), the replay (254 of 325 steps with no gap) and the re-sync (design system version 10). Its record is
+`design/flows/03-trainee-files-activity/`. Only what flows 01 and 02 did not already teach is here.
+
+- **The integrator's own ask can be wrong.** Observed: round 2's ask carried a correction (2) that the code refutes:
+  the portfolio review has a named reviewer. The four-sided review caught it. *Changed:* nothing; the reviewer on the
+  code checks the ask as well as the boards.
+- **A replay can die mid-act, and the per-act dumps are the recovery.** Observed: a machine shutdown killed act 3's
+  agent after about 45 of its 57 steps; it had written no Actual line, and its database was half-played. The post-act-2
+  dump was restored into a new database (the tool never drops one) and act 3 was replayed from its start; acts 1–2
+  stood. *Changed:* the replay brief has each agent write its Actual lines per phase, and the integrator commits each
+  act as it lands.
+- **A password changed mid-replay strands the earlier snapshots.** Observed: the appendix changed two cast members'
+  passwords, and act 2's for Dr du Plessis was kept nowhere, so the states agents could not sign him in on the
+  post-act-2 snapshot; they copied his hash across by SQL. *Changed:* the replay brief keeps every password a cast
+  member ever had (`WB_PW_<SURNAME>_<ACT>`), never overwriting one.
+- **The states capture finds what the replay does not.** Observed: the replay's steps passed, but the states rows,
+  which look at every transient state, found a refusal shown twice under one field and a missing space in the replay's
+  own fix. *Changed:* republish before the states capture so the replay's fixes are in it, and re-take any state a
+  later fix changes.
+- **Check the bundle against app.css on every re-sync.** Observed: flow 02's re-sync had lost the `:root` extras'
+  closing brace, nesting the whole bundle in `:root`; flow 03's reviewer found it by comparing the bundle's app.css part
+  byte for byte. *Changed:* nothing; keep that check in the re-sync's review.
+- **One implementer and one Sonnet review were enough for the re-sync.** Observed: 40 files, two must-fixes (both the
+  upload's wording) and four nits, all fixed before the publish. CLAUDE.md § Multi-agent workflows now sizes this.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)

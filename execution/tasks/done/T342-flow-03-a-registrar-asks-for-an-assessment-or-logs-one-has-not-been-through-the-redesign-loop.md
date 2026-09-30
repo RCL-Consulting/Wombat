@@ -1,12 +1,13 @@
 ---
 id: T342
 title: Flow 03, a registrar asks for an assessment or logs one, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-28
 started: 2026-09-28
+completed: 2026-09-30
 ---
 
 # T342 — Flow 03, a registrar asks for an assessment or logs one, has not been through the redesign loop
@@ -55,7 +56,7 @@ Run the loop as flow 02 ran it (`design/flows/02-sign-in-and-account/`, BRIEF §
   with `check_baseline_paths.py` at `missing 0` — the Actual lines (`3ae97b4b`…`bf84372a`: 325 steps, 254 with no gap;
   acts 3–A on `wombat_scenario_t342b` after a shutdown); 65 flow 03 states re-taken; three small defects the replay and
   states found fixed (`daaf6386`, `5fd5abcd`, `a341b44e`, Web 2,860), T348 filed; `check_baseline_paths` missing 0.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number: 10 (`b05f3862`; files as version 9, the index last; copy.svg uploaded, 59 icons). Lessons in BRIEF § 11 "Flow 03".
 
 ## Related
 

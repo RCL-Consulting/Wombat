@@ -43,6 +43,9 @@ Accounts and passwords:
     lower-case letter, and a symbol.
   - Keep it ONLY in <G>\replay-pw.env as KEY=value lines (WB_PW_<SURNAME>=...), which later acts read into their
     scripts' environment. This is a new file for this replay; never read any other replay's password file.
+  - A step that changes a cast member's password adds a key and never overwrites one: WB_PW_<SURNAME> stays the
+    current password, and the one it replaces is kept as WB_PW_<SURNAME>_<ACT> (the act that set it), so the earlier
+    snapshots can still be signed in to (BRIEF § 11, flow 03).
   - Never print a password to the console or into your reply, and never write one into the runbook or any tracked file.
   - Never open pwd_DO_NOT_COMMIT.txt or recovery\.
 - Registration and MSF links come from the log's Stub email lines. Never write a token into the runbook.
@@ -54,6 +57,9 @@ SQL checks:
   powershell -File tools\scenario-replay.ps1 sql wombat_scenario_t342 <file.sql>
 - If a step's Note prescribes an UPDATE (ageing a row) and the session refuses to run it, mark that step not-played,
   citing T337, and play on.
+
+Write your Actual and Gap lines into the act file as you go, at the end of each phase, not only at the end of the act:
+a replay can be killed part-way (BRIEF § 11, flow 03), and the lines already written are what survives.
 
 For EVERY step in your act, in order:
 1. Play its Role, Route and Do as written.
