@@ -242,6 +242,36 @@ public sealed partial class StylesheetRuleTests
         skeleton.Value("background").Should().Be("var(--header-bg)", "a still header-bg block (S17)");
     }
 
+    // ---- flow 04: two renderings, and the fold's words (T350) ----
+
+    [Fact]
+    public void TheTwoRenderings_AreOneEachSideOfThePhoneBreakpoint_HiddenOnly()
+    {
+        // Round 2, E2: what is open at 1280 and shut at 390 is two read-only renderings toggled by CSS at 641 px, never a
+        // script. Each rule only hides, so the element keeps its own class's display where it shows; !important, so a
+        // later flex or block of the same weight cannot bring the away copy back.
+        var css = Stylesheet.AppCss();
+
+        var wide = css.RulesFor(".only-wide", "@media (max-width: 640.98px)").Should().ContainSingle().Which;
+        wide.Declarations.Should().Equal(new CssDeclaration("display", "none", Important: true));
+        var narrow = css.RulesFor(".only-narrow", "@media (min-width: 641px)").Should().ContainSingle().Which;
+        narrow.Declarations.Should().Equal(new CssDeclaration("display", "none", Important: true));
+
+        css.Rules.Where(rule => rule.Selectors.Contains(".only-wide") || rule.Selectors.Contains(".only-narrow"))
+            .Should().HaveCount(2, "nothing else sets either class's display, on any width");
+    }
+
+    [Fact]
+    public void AFoldsSummary_SaysShowWhileShut_AndHideWhileOpen()
+    {
+        // C9: both words are in the summary; one is hidden by the details' own open attribute, so no script keeps them.
+        var rule = Stylesheet.AppCss().Rules.Should().ContainSingle(rule =>
+            rule.AtRule.Length == 0 && rule.Selectors.Contains("details[open] > summary .fold-show")).Which;
+
+        rule.Selectors.Should().BeEquivalentTo(["details[open] > summary .fold-show", "details:not([open]) > summary .fold-hide"]);
+        rule.Declarations.Should().Equal(new CssDeclaration("display", "none", Important: false));
+    }
+
     // ---- helpers ----
 
     private static IEnumerable<string> Definitions(string css) => Definition().Matches(css).Select(match => match.Groups["name"].Value);

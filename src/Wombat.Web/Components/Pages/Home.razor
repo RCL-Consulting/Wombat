@@ -18,6 +18,10 @@
 
     <PageHeader Title="Home" Subtitle="@HomeFrame.Subtitle(role, _today)" Actions="@HeaderAction(HomeFrame.ActionFor(role))" />
 
+    @* The other-role line (T350, flow 04; note 7, E4): the work waiting in the Activity inbox, for a holder of Assessor
+       acting in another role, above whichever dashboard that role draws. It draws nothing otherwise. *@
+    <OtherRoleLine />
+
     @switch (role)
     {
       case WombatRoles.Administrator:

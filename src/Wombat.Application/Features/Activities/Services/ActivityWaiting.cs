@@ -20,8 +20,9 @@ namespace Wombat.Application.Features.Activities.Services;
 /// <item>
 /// <b>Actionable by the caller</b> (<see cref="LoadActionableAsync" />): some move out of the activity's state that leads
 /// on is one the caller may make, by the act gate (<see cref="IWorkflowEvaluator" />). By the arms of the rule that are
-/// not the author's, the inbox lists these, and the Assessor's and the Trainee's cards count and list the same rows, so a
-/// card cannot disagree with the page it links to; by the author's arms, Needs you lists them (T342, B6).
+/// not the author's, less the caller's own subject rows, <see cref="WaitingForYou" /> lists these, oldest first: the
+/// Activity inbox, the Assessor's Home and the activity page's way on, so a card cannot disagree with the page it links to
+/// (T350, note 5); by the author's arms, Needs you lists them (T342, B6).
 /// </item>
 /// <item>
 /// <b>Awaiting a reviewer</b> (<see cref="AwaitsReviewer" />): the state is not terminal, and some move out of it belongs
@@ -61,7 +62,8 @@ public static class ActivityWaiting
 {
     /// <summary>
     /// The activities in <paramref name="activities" /> that <paramref name="principal" /> can move now, most recently
-    /// updated first, each with the pinned workflow that says so: the rows of the caller's Activity Inbox.
+    /// updated first, each with the pinned workflow that says so. Each reader orders them its own way: Needs you as they
+    /// come, <see cref="WaitingForYou" /> oldest first (T350, note 5).
     /// </summary>
     /// <param name="activities">
     /// Where to look: <c>Set&lt;Activity&gt;()</c>, passed by the handler so that the read boundary's scan

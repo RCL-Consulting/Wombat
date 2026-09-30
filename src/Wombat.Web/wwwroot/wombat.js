@@ -157,8 +157,23 @@ window.wombat.focusElement = function (element) {
     return document.activeElement === element;
 };
 
+// A target that is not displayed cannot take the focus (T350 build review, A4, G1): on a phone a filled section's card is
+// .only-wide, and its copy is the fold's, suffixed -narrow, which is opened first.
 window.wombat.focusById = function (id) {
-    return window.wombat.focusElement(document.getElementById(id));
+    var element = document.getElementById(id);
+    if (element instanceof HTMLElement && element.getClientRects().length === 0) {
+        var narrow = document.getElementById(id + "-narrow");
+        if (narrow instanceof HTMLElement) {
+            var fold = narrow.closest("details");
+            if (fold) {
+                fold.open = true;
+            }
+
+            element = narrow;
+        }
+    }
+
+    return window.wombat.focusElement(element);
 };
 
 // The page's h1, after a load that did not change the page (T342, A3, A4): Log an activity's ?type= changes, and the

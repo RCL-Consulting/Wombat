@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityById;
-using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Wombat.Application.Features.Activities.Queries.ListWaitingForYou;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Dashboards.Assessor;
@@ -70,7 +70,7 @@ public sealed class ActivityStateLabelTests
 
         detail!.Activity.CurrentStateLabel.Should().Be("Signed off");
         var signOff = detail.Activity.Transitions.Last();
-        signOff.TransitionLabel.Should().Be("Sign Off").And.Be(new ActivityActionDto("sign_off", false).Label);
+        signOff.TransitionLabel.Should().Be("Sign off").And.Be(new ActivityActionDto("sign_off", false).Label);
         (signOff.FromStateLabel, signOff.ToStateLabel).Should().Be(("Awaiting supervisor", "Signed off"));
     }
 
@@ -96,8 +96,8 @@ public sealed class ActivityStateLabelTests
         var submitted = await SubmittedAuditAsync(options);
 
         await using var db = new ApplicationDbContext(options);
-        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), new FakeUserDirectory())
-            .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
+        var rows = (await new ListWaitingForYouQueryHandler(db, new WorkflowEvaluator(), new FakeUserDirectory(), Options.Create(new DashboardThresholds()), TimeProvider.System)
+            .Handle(new ListWaitingForYouQuery(Principal(AssessorId)), CancellationToken.None)).Items;
 
         rows.Should().ContainSingle(item => item.Id == submitted)
             .Which.CurrentStateLabel.Should().Be("Awaiting supervisor");
@@ -145,12 +145,12 @@ public sealed class ActivityStateLabelTests
         await TransitionAsync(options, submitted, "sign_off", AssessorId, """{ "supervisor_comments": "A complete cycle." }""");
 
         await using var db = new ApplicationDbContext(options);
-        var summary = await new GetAssessorDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), new FakeUserDirectory(), Options.Create(new DashboardThresholds()))
+        var summary = await new GetAssessorDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), new FakeUserDirectory(), Options.Create(new DashboardThresholds()), TimeProvider.System)
             .Handle(new GetAssessorDashboardSummaryQuery(Principal(AssessorId)), CancellationToken.None);
 
-        var decision = summary.RecentDecisions.Should().ContainSingle(item => item.ActivityId == submitted).Subject;
-        decision.FinalState.Should().Be("signed_off", "the badge's colour class");
-        decision.FinalStateLabel.Should().Be("Signed off");
+        var decision = summary.Decisions.Items.Should().ContainSingle(item => item.Id == submitted).Subject;
+        decision.CurrentState.Should().Be("signed_off", "the badge's colour class");
+        decision.CurrentStateLabel.Should().Be("Signed off");
     }
 
     /// <summary>
@@ -166,8 +166,8 @@ public sealed class ActivityStateLabelTests
         await using var db = new ApplicationDbContext(options);
         var mine = (await new ListActivitiesBySubjectQueryHandler(db, new FakeUserDirectory())
             .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None)).Items;
-        var inbox = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), new FakeUserDirectory())
-            .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
+        var inbox = (await new ListWaitingForYouQueryHandler(db, new WorkflowEvaluator(), new FakeUserDirectory(), Options.Create(new DashboardThresholds()), TimeProvider.System)
+            .Handle(new ListWaitingForYouQuery(Principal(AssessorId)), CancellationToken.None)).Items;
         var detail = await new GetActivityByIdQueryHandler(Service(db), new FakeUserDirectory(), db)
             .Handle(new GetActivityByIdQuery(submitted, Principal(TraineeId)), CancellationToken.None);
 

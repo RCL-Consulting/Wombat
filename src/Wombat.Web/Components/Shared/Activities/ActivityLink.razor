@@ -3,14 +3,31 @@
   on a second line, whom it goes to or is discussed with. A visually hidden ", " stands between the two, so the link is
   read "Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25, to David Naidoo" and not as one run-on word (A16). Its words are
   its name; an aria-label, which starts with them, is added only where another link on the page would read the same
-  (T280; ActivityRowNames.Links).
+  (T280; ActivityRowNames.Links). On an assessor's list (FromSubject) the second line is the registrar's, "from Anele
+  Dlamini", in place of the nominee, who there is the reader (T350, R2; note 12).
 *@
-@{ var line = ActivityListWords.NomineeLine(Item); var words = ActivityRowNames.LinkWords(Item); var label = Name is not null && Name != words ? Name : null; }
-<a class="activity-link" href="/activities/@Item.Id" aria-label="@label">@ActivityListWords.NameOf(Item)@if (line is not null){<span class="visually-hidden">, </span><span class="activity-link-to">@line</span>}</a>
+@{
+  var line = FromSubject ? ActivityListWords.FromLine(Item) : ActivityListWords.NomineeLine(Item);
+  var words = FromSubject ? ActivityRowNames.WaitingLinkWords(Item) : ActivityRowNames.LinkWords(Item);
+  var label = Name is not null && Name != words ? Name : null;
+}
+<a class="activity-link" href="/activities/@Item.Id" aria-label="@label" tabindex="@(OutOfTabOrder ? "-1" : null)">@ActivityListWords.NameOf(Item)@if (line is not null){<span class="visually-hidden">, </span><span class="activity-link-to">@line</span>}</a>
 
 @code {
   [Parameter, EditorRequired] public ActivitySummaryDto Item { get; set; } = default!;
 
   /// <summary>The link's name on its page (<c>ActivityRowNames.Links</c>); null when its own words are its name.</summary>
   [Parameter] public string? Name { get; set; }
+
+  /// <summary>
+  /// Whether the second line says whose activity it is, "from &lt;SubjectName&gt;" (<c>ActivityListWords.FromLine</c>),
+  /// in place of whom it goes to: the assessor's lists, waiting and decided (T350, R2).
+  /// </summary>
+  [Parameter] public bool FromSubject { get; set; }
+
+  /// <summary>
+  /// Left out of the tab order, still a link for a pointer and a screen reader's browse mode: the way on's row, whose
+  /// button beside it, "Open the next", opens the same activity and is the next Tab after the result (T350, C10 d).
+  /// </summary>
+  [Parameter] public bool OutOfTabOrder { get; set; }
 }

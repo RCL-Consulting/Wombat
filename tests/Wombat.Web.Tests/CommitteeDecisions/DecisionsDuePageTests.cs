@@ -294,7 +294,7 @@ public sealed partial class DecisionsDuePageTests : WombatTestContext
         var cut = RenderComponent<DecisionsDue>();
 
         cut.FindAll("#due-items tbody tr").Should().HaveCount(20);
-        Text(cut.Find(".pager-info")).Should().Be("Showing 1-20 of 25");
+        Text(cut.Find(".pager-info")).Should().Be("Showing 1–20 of 25");
         cut.FindAll(".pager-actions button").Single(button => button.TextContent.Trim() == "Next").Click();
         cut.FindAll("#due-items tbody tr").Should().HaveCount(5);
     }

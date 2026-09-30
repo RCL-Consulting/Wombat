@@ -4,12 +4,16 @@
   While the dashboard's read runs (IsLoading) the card is drawn with its title and a skeleton in place of its content, so
   the frame is there at once (R2-Landing-Loading; T335, flow 01, S22(c)). It offers nothing while it loads: its content
   is not rendered, and a card that links (Href) is not a link until the read returns.
+
+  One stripe per card (T350, flow 04, nit T15): a card that wants attention (Warning) draws the warning stripe in place of
+  the emphasis one, never both. A card with a HeadingId is a section named by its title (the Assessor's "Waiting for you",
+  #card-waiting), so a screen reader lists it as a region.
 *@
 @{
     var linked = !string.IsNullOrEmpty(Href) && !IsLoading;
     var css = "detail-card";
-    if (Emphasis) css += " detail-card--emphasis";
     if (Warning) css += " detail-card--warning";
+    else if (Emphasis) css += " detail-card--emphasis";
     if (linked) css += " detail-card--interactive";
     if (Span == 2) css += " dashboard-span-2";
     if (Span == 3) css += " dashboard-span-3";
@@ -24,11 +28,68 @@
     </div>
   </a>
 }
+else if (HeadingId is not null)
+{
+  <section class="@css" aria-labelledby="@HeadingId">
+    @Heading
+    <div class="dashboard-card-body">
+      @Body
+    </div>
+  </section>
+}
 else
 {
   <div class="@css">
     @Heading
     <div class="dashboard-card-body">
+      @Body
+    </div>
+  </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = default!;
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public bool Emphasis { get; set; }
+
+    /// <summary>The card wants attention: the warning stripe, in place of <see cref="Emphasis" />'s (nit T15).</summary>
+    [Parameter] public bool Warning { get; set; }
+
+    [Parameter] public int Span { get; set; }
+
+    /// <summary>The dashboard's read has not returned: the title and a skeleton, nothing to act on.</summary>
+    [Parameter] public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// A count the title carries as its badge, as the Trainee's "Needs you 2" (R2-Landing-Assessor). Not shown while the
+    /// card loads.
+    /// </summary>
+    [Parameter] public int? Count { get; set; }
+
+    /// <summary>
+    /// The count in words, which a screen reader reads in place of the bare figure (Home's Needs you, "2 items"; T342,
+    /// A16). Null reads the figure.
+    /// </summary>
+    [Parameter] public string? CountWords { get; set; }
+
+    /// <summary>
+    /// The count in words as the title's badge, shown as it reads: "2 waiting, 1 overdue" (T350, flow 04, note 13; R1). A
+    /// mode beside <see cref="Count" />'s figure-plus-<see cref="CountWords" />: here the words are the badge, to the eye
+    /// and to a screen reader alike. Null or empty shows no badge, so a card with nothing in it carries no "0". Not shown
+    /// while the card loads.
+    /// </summary>
+    [Parameter] public string? BadgeWords { get; set; }
+
+    /// <summary>
+    /// The title's id (T350, flow 04): the card is then a <c>section</c> named by it (<c>aria-labelledby</c>), as the
+    /// Assessor's cards are (<c>#card-waiting</c>, <c>#card-decisions</c>). Null: a plain card, as before.
+    /// </summary>
+    [Parameter] public string? HeadingId { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private RenderFragment Body => @<text>
       @if (IsLoading)
       {
         <div class="dashboard-card-skeleton" aria-hidden="true">
@@ -41,42 +102,19 @@ else
       {
         @ChildContent
       }
-    </div>
-  </div>
-}
+    </text>;
 
-@code {
-    [Parameter, EditorRequired] public string Title { get; set; } = default!;
-    [Parameter] public string? Icon { get; set; }
-    [Parameter] public string? Href { get; set; }
-    [Parameter] public bool Emphasis { get; set; }
-    [Parameter] public bool Warning { get; set; }
-    [Parameter] public int Span { get; set; }
-
-    /// <summary>The dashboard's read has not returned: the title and a skeleton, nothing to act on.</summary>
-    [Parameter] public bool IsLoading { get; set; }
-
-    /// <summary>
-    /// A count the title carries as its badge, as the Assessor's "Waiting for your rating 2" (R2-Landing-Assessor). Not
-    /// shown while the card loads.
-    /// </summary>
-    [Parameter] public int? Count { get; set; }
-
-    /// <summary>
-    /// The count in words, which a screen reader reads in place of the bare figure (Home's Needs you, "2 items"; T342,
-    /// A16). Null reads the figure.
-    /// </summary>
-    [Parameter] public string? CountWords { get; set; }
-
-    [Parameter] public RenderFragment? ChildContent { get; set; }
-
-    private RenderFragment Heading => @<h2 class="dashboard-card-title">
+    private RenderFragment Heading => @<h2 class="dashboard-card-title" id="@HeadingId">
       @if (!string.IsNullOrEmpty(Icon))
       {
         <Icon Name="@Icon" Size="18" />
       }
       <span>@Title</span>
-      @if (Count is { } count && !IsLoading)
+      @if (!string.IsNullOrEmpty(BadgeWords) && !IsLoading)
+      {
+        <span class="badge @BadgeFor.State(BadgeState.Submitted)">@BadgeWords</span>
+      }
+      else if (Count is { } count && !IsLoading)
       {
         @if (CountWords is { } words)
         {

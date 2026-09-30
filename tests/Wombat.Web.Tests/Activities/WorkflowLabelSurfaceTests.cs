@@ -7,7 +7,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityById;
-using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Wombat.Application.Features.Activities.Queries.ListWaitingForYou;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Dashboards.Assessor;
@@ -128,7 +128,9 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     [Fact]
     public void TheInbox_ShowsTheStateByItsLabel()
     {
-        Services.AddSingleton<IScopedSender>(new FakeSender().On<ListActivitiesByActorInboxQuery>(_ => ListRows()));
+        Services.AddSingleton<IScopedSender>(new FakeSender()
+            .On<ListWaitingForYouQuery>(_ => new WaitingForYouDto(ListRows(), 0, 7))
+            .On<Wombat.Application.Features.Activities.Queries.ListDecidedByYou.ListDecidedByYouQuery>(_ => new ActivityListPageDto([], 1, 20, 0)));
         var cut = RenderComponent<ActivityInbox>();
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == 1);
 
@@ -171,13 +173,12 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     {
         _auth.SetRoles("Assessor");
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "assessor-1"));
-        Services.AddSingleton<IScopedSender>(new FakeSender().On<GetAssessorDashboardSummaryQuery>(_ => new AssessorDashboardSummaryDto(
-            0,
+        Services.AddSingleton<IScopedSender>(new FakeSender().On<GetAssessorDashboardSummaryQuery>(_ => ActivityRows.AssessorHome(
             [],
             [
-                new RecentDecisionItem(43, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "signed_off", "Signed off", IsFinished: true, new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc)),
-                new RecentDecisionItem(45, "Teaching session", "Thandi Nkosi", "accepted", "Accepted", IsFinished: true, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc)),
-                new RecentDecisionItem(46, "Mini-CEX", "Thandi Nkosi", "declined", "Declined", IsFinished: false, new DateTime(2026, 3, 19, 8, 0, 0, DateTimeKind.Utc))
+                ActivityRows.Decided(43, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "signed_off", "Signed off", isFinished: true, new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc)),
+                ActivityRows.Decided(45, "Teaching session", "Thandi Nkosi", "accepted", "Accepted", isFinished: true, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc)),
+                ActivityRows.Decided(46, "Mini-CEX", "Thandi Nkosi", "declined", "Declined", isFinished: false, new DateTime(2026, 3, 19, 8, 0, 0, DateTimeKind.Utc))
             ])));
 
         var cut = RenderComponent<AssessorDashboard>();
@@ -197,19 +198,18 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     /// <summary>
     /// The card of what waits on the assessor printed the key <c>accepted</c> as its badge's words (T220 review). It prints
     /// the state's label, coloured by the state's key since T297 put every waiting state on it, and says in words when the
-    /// work is overdue.
+    /// work is overdue: since T350 (note 14) in a badge of its own beside the state's, never in its place.
     /// </summary>
     [Fact]
     public void TheAssessorDashboard_BadgesAWaitingAssessmentByItsLabel_AndSaysWhenItIsOverdue()
     {
         _auth.SetRoles("Assessor");
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "assessor-1"));
-        Services.AddSingleton<IScopedSender>(new FakeSender().On<GetAssessorDashboardSummaryQuery>(_ => new AssessorDashboardSummaryDto(
-            3,
+        Services.AddSingleton<IScopedSender>(new FakeSender().On<GetAssessorDashboardSummaryQuery>(_ => ActivityRows.AssessorHome(
             [
-                new AwaitingReviewItem(45, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Utc), IsOverdue: true),
-                new AwaitingReviewItem(44, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false),
-                new AwaitingReviewItem(46, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "submitted", "Awaiting supervisor", new DateTime(2026, 3, 22, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false)
+                ActivityRows.Waiting(45, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", overdue: true, since: new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Utc)),
+                ActivityRows.Waiting(44, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", since: new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc)),
+                ActivityRows.Waiting(46, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "submitted", "Awaiting supervisor", since: new DateTime(2026, 3, 22, 8, 0, 0, DateTimeKind.Utc))
             ],
             [])));
 
@@ -223,9 +223,10 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
         Text(audit).Should().Be("Awaiting supervisor");
         audit.ClassList.Should().Contain("badge-submitted");
 
-        var overdue = BadgeFor(cut, 45);
-        Text(overdue).Should().Be("Overdue");
-        overdue.ClassList.Should().Contain("badge-accepted", "overdue work wants attention");
+        var overdue = BadgesFor(cut, 45);
+        overdue.Select(Text).Should().Equal(["Requested", "Overdue"], "Overdue stands beside the state, never in its place");
+        overdue[0].ClassList.Should().Contain("badge-submitted");
+        overdue[1].ClassList.Should().Contain("badge-overdue", "overdue work wants attention, in the warning tint");
     }
 
     // ---- helpers -----------------------------------------------------------------------------------------------------
@@ -318,6 +319,11 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
     private static IElement BadgeFor(IRenderedFragment cut, int activityId)
         => cut.FindAll("li").Single(item => item.QuerySelector($"a[href='/activities/{activityId}']") is not null)
             .QuerySelector(".badge")!;
+
+    /// <summary>Every badge on the list item that links to activity <paramref name="activityId" />, in order.</summary>
+    private static List<IElement> BadgesFor(IRenderedFragment cut, int activityId)
+        => cut.FindAll("li").Single(item => item.QuerySelector($"a[href='/activities/{activityId}']") is not null)
+            .QuerySelectorAll(".badge").ToList();
 
     private static string Text(IElement element)
         => string.Join(" ", element.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));

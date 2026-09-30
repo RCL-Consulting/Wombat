@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Dashboards.Assessor;
@@ -9,12 +8,16 @@ using Wombat.Domain.Activities;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Tests.Shared;
+using static Wombat.Application.Tests.TestHelpers.AssessorReads;
 
 namespace Wombat.Application.Tests.Features.Dashboards;
 
 /// <summary>
 /// The assessor dashboard reads what waits on the caller, and what the caller decided, from each activity's PINNED
-/// workflow (T297), as it reads "finished" (T203, D44): never from a state's key.
+/// workflow (T297), as it reads "finished" (T203, D44): never from a state's key. Since T350 (notes 5 and 6) both are the
+/// Activity inbox's own reads: every waiting row (<c>WaitingForYou</c>), and "Decided by you"'s first page of five
+/// (<c>DecidedByYou</c>). The reads' own rules are <c>ListWaitingForYouQueryTests</c>' and
+/// <c>ListDecidedByYouQueryTests</c>'; these hold what Home carries of them.
 /// </summary>
 /// <remarks>
 /// Until T297 "Pending requests" counted only activities in a state keyed <c>requested</c> that the assessor had created
@@ -24,23 +27,7 @@ namespace Wombat.Application.Tests.Features.Dashboards;
 /// </remarks>
 public sealed class AssessorDashboardQueryTests
 {
-    private const string AssessorId = "assessor-1";
-    private const string TraineeId = "trainee-1";
-
-    private const int ReflectiveTypeId = 1;
-    private const int TeachingTypeId = 2;
-    private const int WbaTypeId = 3;
-    private const int MsfTypeId = 4;
-    private const int ProcedureLogTypeId = 5;
-    private const int RelabelledWbaTypeId = 6;
-
-    private const int CpsaMiniCexTypeId = 21;
-    private const int CpsaPortfolioReviewTypeId = 22;
-    private const int CpsaReflectiveTypeId = 23;
-
-    private static readonly string NamesTheAssessor = $$"""{ "assessor_user_id": "{{AssessorId}}" }""";
-
-    // ---- Pending requests: the inbox's rows, less the caller's own portfolio ---------------------------------------
+    // ---- Waiting for you: the inbox's rows, less the caller's own portfolio ----------------------------------------
 
     /// <summary>
     /// The Verification's case: a Mini-CEX the trainee filed and submitted naming the assessor, with no move of his, is
@@ -59,7 +46,7 @@ public sealed class AssessorDashboardQueryTests
         AddFiled(db, 32, CpsaPortfolioReviewTypeId, "submitted", TraineeId, NamesTheAssessor, now.AddDays(-1),
             Move("create", "draft", "draft", TraineeId, now.AddDays(-2)),
             Move("submit", "draft", "submitted", TraineeId, now.AddDays(-1)));
-        // His own draft (he is also a trainee): he may submit it, so it is in his inbox, but it is his own portfolio.
+        // His own draft (he is also a trainee): he may submit it, but it is his own portfolio.
         AddFiled(db, 33, CpsaMiniCexTypeId, "draft", AssessorId, """{ "assessor_user_id": "assessor-2" }""", now.AddHours(-5),
             Move("create", "draft", "draft", AssessorId, now.AddHours(-5)));
         // A trainee's draft naming him: nothing he can move until she submits it.
@@ -69,9 +56,10 @@ public sealed class AssessorDashboardQueryTests
 
         var result = await Handle(db, CreatePrincipal(AssessorId, "Assessor", "Trainee"));
 
-        result.PendingRequestCount.Should().Be(2);
-        result.AwaitingReview.Select(item => item.ActivityId).Should().Equal([31, 32], "oldest first");
-        result.RecentDecisions.Should().BeEmpty("he has moved none of them");
+        result.Waiting.Count.Should().Be(2);
+        result.Waiting.Items.Select(item => item.Id).Should().Equal([31, 32], "oldest first");
+        result.Decisions.Items.Should().BeEmpty("he has moved none of them");
+        result.Decisions.TotalCount.Should().Be(0);
     }
 
     [Fact]
@@ -88,13 +76,44 @@ public sealed class AssessorDashboardQueryTests
 
         var result = await Handle(db, directory: directory);
 
-        result.AwaitingReview.Select(item => (item.ActivityId, item.SubjectName, item.CurrentState, item.CurrentStateLabel, item.IsOverdue))
+        result.Waiting.Items.Select(item => (item.Id, item.SubjectName, item.CurrentState, item.CurrentStateLabel, item.IsOverdue))
             .Should().Equal(
                 (42, "Nomsa Mahlangu", "requested", "Requested", true),
                 (43, "Pieter du Plessis", "submitted", "Awaiting review", false),
                 (41, "Pieter du Plessis", "submitted", "Awaiting discussion", false));
-        result.AwaitingReview[0].WaitingSince.Should().BeCloseTo(now.AddDays(-10), TimeSpan.FromSeconds(1));
-        result.PendingRequestCount.Should().Be(3);
+        result.Waiting.Items[0].UpdatedOn.Should().BeCloseTo(now.AddDays(-10), TimeSpan.FromSeconds(1));
+        result.Waiting.OverdueCount.Should().Be(1);
+        result.Waiting.DueDays.Should().Be(7, "the rule line's number is AssessorDueDays (E1)");
+    }
+
+    /// <summary>
+    /// Home carries every waiting row, not the first ten as the card used to: it lists five and says how many more wait in
+    /// the inbox (E5). And "Recent decisions" is the decided read's first page, at five, with the total.
+    /// </summary>
+    [Fact]
+    public async Task Home_CarriesEveryWaitingRow_AndTheDecidedReadsFirstPageOfFive()
+    {
+        await using var db = CreateDb();
+        SeedTypes(db);
+        // Twelve requests waiting on him, and seven decisions.
+        for (var id = 1; id <= 12; id++)
+        {
+            AddActedOn(db, id, WbaTypeId, version: 1, "requested");
+        }
+
+        for (var id = 21; id <= 27; id++)
+        {
+            AddActedOn(db, id, WbaTypeId, version: 1, "completed");
+        }
+
+        await db.SaveChangesAsync();
+
+        var result = await Handle(db);
+
+        result.Waiting.Count.Should().Be(12);
+        result.Decisions.TotalCount.Should().Be(7);
+        result.Decisions.PageSize.Should().Be(GetAssessorDashboardSummaryQueryHandler.DecisionsListed);
+        result.Decisions.Items.Select(item => item.Id).Should().Equal([21, 22, 23, 24, 25], "newest move first");
     }
 
     [Fact]
@@ -115,16 +134,15 @@ public sealed class AssessorDashboardQueryTests
 
         var result = await Handle(db);
 
-        // A discussed reflective exercise, an accepted teaching session and a recorded MSF row are all finished; the
-        // literal "completed" saw none of them. The declined and cancelled requests have no move left.
-        result.RecentDecisions.Select(item => item.ActivityId).Should().BeEquivalentTo([1, 2, 3, 4, 5, 6]);
-        // Each says whether it is finished, by the same test, for its badge (T266 review): the declined and cancelled
-        // requests are decisions but not finished work, and the teaching session's "accepted" is.
-        result.RecentDecisions.Where(item => item.IsFinished).Select(item => item.ActivityId).Should().BeEquivalentTo([1, 2, 3, 4]);
+        // Six decisions, of which Home shows the newest five (ListDecidedByYouQueryTests holds all six).
+        result.Decisions.TotalCount.Should().Be(6);
+        result.Decisions.Items.Select(item => item.Id).Should().Equal(1, 2, 3, 4, 5);
+        // Each says whether it is finished, by the same test, for its badge (T266 review): the declined request is a
+        // decision but not finished work, and the teaching session's "accepted" is.
+        result.Decisions.Items.Where(item => item.IsFinished).Select(item => item.Id).Should().BeEquivalentTo([1, 2, 3, 4]);
         // The teaching session finishes in "accepted", so it is not an assessment waiting on him; the legacy Mini-CEX's
         // "accepted" and "requested" and the reflection awaiting discussion are, oldest first.
-        result.AwaitingReview.Select(item => item.ActivityId).Should().Equal(9, 8, 7);
-        result.PendingRequestCount.Should().Be(3);
+        result.Waiting.Items.Select(item => item.Id).Should().Equal(9, 8, 7);
     }
 
     [Fact]
@@ -139,79 +157,12 @@ public sealed class AssessorDashboardQueryTests
 
         var result = await Handle(db);
 
-        result.RecentDecisions.Select(item => item.ActivityId).Should().Equal(1);
-        result.AwaitingReview.Select(item => item.ActivityId).Should().Equal([2], "on version 2 the sign-off is his to make");
-    }
-
-    /// <summary>
-    /// A decision is an activity the caller moved last and that is finished or has no move left (T297). One he returned
-    /// is back with its author, so it is not his decision; nor is one the trainee withdrew after he had moved it.
-    /// </summary>
-    [Fact]
-    public async Task ARecentDecision_IsWhatHeMovedLast_ThatIsFinishedOrHasNoMoveLeft()
-    {
-        await using var db = CreateDb();
-        SeedCpsaTypes(db);
-        var now = DateTime.UtcNow;
-        AddFiled(db, 51, CpsaMiniCexTypeId, "completed", TraineeId, NamesTheAssessor, now.AddDays(-1),
-            Move("submit", "draft", "requested", TraineeId, now.AddDays(-2)),
-            Move("complete", "requested", "completed", AssessorId, now.AddDays(-1)));
-        AddFiled(db, 52, CpsaMiniCexTypeId, "declined", TraineeId, NamesTheAssessor, now.AddHours(-3),
-            Move("submit", "draft", "requested", TraineeId, now.AddDays(-2)),
-            Move("decline", "requested", "declined", AssessorId, now.AddHours(-3)));
-        // Returned by him: back in draft with the trainee, a move left.
-        AddFiled(db, 53, CpsaReflectiveTypeId, "draft", TraineeId, NamesTheAssessor, now.AddHours(-2),
-            Move("submit", "draft", "submitted", TraineeId, now.AddDays(-2)),
-            Move("return", "submitted", "draft", AssessorId, now.AddHours(-2)));
-        // Returned by him, then withdrawn by the trainee: the last move is hers.
-        AddFiled(db, 54, CpsaReflectiveTypeId, "cancelled", TraineeId, NamesTheAssessor, now.AddHours(-1),
-            Move("submit", "draft", "submitted", TraineeId, now.AddDays(-2)),
-            Move("return", "submitted", "draft", AssessorId, now.AddHours(-2)),
-            Move("cancel", "draft", "cancelled", TraineeId, now.AddHours(-1)));
-        await db.SaveChangesAsync();
-
-        var result = await Handle(db);
-
-        result.RecentDecisions.Select(item => (item.ActivityId, item.FinalStateLabel, item.IsFinished))
-            .Should().Equal((52, "Declined", false), (51, "Completed", true));
-        result.RecentDecisions[0].DecidedOn.Should().BeCloseTo(now.AddHours(-3), TimeSpan.FromSeconds(1));
-    }
-
-    /// <summary>
-    /// The T297 review: the decisions were found among the fifty activities he moved last, so fifty portfolio reviews he
-    /// returned to their trainees, each with a move left, crowded his older decisions off the card. They are read a page
-    /// at a time, newest move first, until the card is full or nothing is left.
-    /// </summary>
-    [Fact]
-    public async Task OlderDecisions_AreNotCrowdedOff_ByMoreRecentMovesThatLeftAMoveToMake()
-    {
-        await using var db = CreateDb();
-        SeedCpsaTypes(db);
-        var now = DateTime.UtcNow;
-        var returned = GetAssessorDashboardSummaryQueryHandler.LastMovedRead + 5;
-        for (var id = 1; id <= returned; id++)
-        {
-            AddFiled(db, id, CpsaPortfolioReviewTypeId, "draft", TraineeId, NamesTheAssessor, now.AddMinutes(-id),
-                Move("submit", "draft", "submitted", TraineeId, now.AddDays(-3)),
-                Move("return", "submitted", "draft", AssessorId, now.AddMinutes(-id)));
-        }
-
-        AddFiled(db, 1001, CpsaMiniCexTypeId, "declined", TraineeId, NamesTheAssessor, now.AddDays(-1),
-            Move("submit", "draft", "requested", TraineeId, now.AddDays(-2)),
-            Move("decline", "requested", "declined", AssessorId, now.AddDays(-1)));
-        AddFiled(db, 1002, CpsaMiniCexTypeId, "completed", TraineeId, NamesTheAssessor, now.AddDays(-2),
-            Move("submit", "draft", "requested", TraineeId, now.AddDays(-3)),
-            Move("complete", "requested", "completed", AssessorId, now.AddDays(-2)));
-        await db.SaveChangesAsync();
-
-        var result = await Handle(db);
-
-        result.RecentDecisions.Select(item => item.ActivityId).Should().Equal(
-            [1001, 1002], "a returned review has a move left, so it is not a decision, however recent");
+        result.Decisions.Items.Select(item => item.Id).Should().Equal(1);
+        result.Waiting.Items.Select(item => item.Id).Should().Equal([2], "on version 2 the sign-off is his to make");
     }
 
     [Fact]
-    public async Task AnAssessorWhoIsAlsoATrainee_SeesNoneOfTheirOwnPortfolio_OnlyWhatTheyAssessOrRaisedForOthers()
+    public async Task AnAssessorWhoIsAlsoATrainee_SeesNoneOfTheirOwnPortfolio_OnlyWhatTheyDecidedForOthers()
     {
         await using var db = CreateDb();
         SeedTypes(db);
@@ -224,19 +175,21 @@ public sealed class AssessorDashboardQueryTests
         AddOwn(db, 13, WbaTypeId, "requested");
         AddOwn(db, 14, WbaTypeId, "accepted");
         AddOwn(db, 15, WbaTypeId, "completed");
-        // Assessor work: a Mini-CEX the caller completed, and one the caller raised, finished, for a trainee.
+        // Assessor work: a Mini-CEX the caller completed. And a procedure the caller logged for a trainee, born in its
+        // terminal state: a create is not a decision, whoever makes it (T350 build review, R1; until then a create for
+        // someone else counted, on a Mini-CEX drawn born "completed", which its workflow cannot do).
         AddActedOn(db, 1, WbaTypeId, version: 1, "completed");
         var now = DateTime.UtcNow;
         db.Activities.Add(new Activity
         {
-            Id = 16, ActivityTypeId = WbaTypeId, SchemaVersion = 1,
-            SubjectUserId = TraineeId, CreatedByUserId = AssessorId, CurrentState = "completed", DataJson = "{}",
+            Id = 16, ActivityTypeId = ProcedureLogTypeId, SchemaVersion = 1,
+            SubjectUserId = TraineeId, CreatedByUserId = AssessorId, CurrentState = "logged", DataJson = "{}",
             CreatedOn = now.AddDays(-2), UpdatedOn = now.AddMinutes(-16),
             Transitions =
             [
                 new ActivityTransition
                 {
-                    Id = 16, ActivityId = 16, FromState = "completed", ToState = "completed", TransitionKey = "create",
+                    Id = 16, ActivityId = 16, FromState = "logged", ToState = "logged", TransitionKey = "create",
                     ActorUserId = AssessorId, OccurredOn = now.AddMinutes(-16)
                 }
             ]
@@ -245,9 +198,9 @@ public sealed class AssessorDashboardQueryTests
 
         var result = await Handle(db, CreatePrincipal(AssessorId, "Assessor", "Trainee"));
 
-        result.RecentDecisions.Select(item => item.ActivityId).Should().BeEquivalentTo([1, 16]);
-        result.AwaitingReview.Should().BeEmpty();
-        result.PendingRequestCount.Should().Be(0);
+        result.Decisions.Items.Select(item => item.Id).Should().BeEquivalentTo([1]);
+        result.Waiting.Items.Should().BeEmpty();
+        result.Waiting.Count.Should().Be(0);
     }
 
     /// <summary>
@@ -281,16 +234,16 @@ public sealed class AssessorDashboardQueryTests
 
         var result = await Handle(db);
 
-        result.AwaitingReview.Select(item => (item.ActivityId, item.CurrentStateLabel))
+        result.Waiting.Items.Select(item => (item.Id, item.CurrentStateLabel))
             .Should().BeEquivalentTo([(1, "Accepted for observation"), (2, "Accepted")]);
     }
 
     /// <summary>
-    /// Each row says whose it is by name, looked up once for the page (T142's rule), and by the id only when that user has
-    /// no name on record. Until T250 both lists carried the subject's user id in <c>SubjectName</c>.
+    /// Each row says whose it is by name, looked up once per read (T142's rule), and by the id only when that user has no
+    /// name on record. Until T250 both lists carried the subject's user id in <c>SubjectName</c>.
     /// </summary>
     [Fact]
-    public async Task EachRow_NamesItsSubject_InOneLookup_AndByTheIdOnlyWhenNoNameIsOnRecord()
+    public async Task EachRow_NamesItsSubject_InOneLookupPerRead_AndByTheIdOnlyWhenNoNameIsOnRecord()
     {
         await using var db = CreateDb();
         SeedTypes(db);
@@ -303,160 +256,19 @@ public sealed class AssessorDashboardQueryTests
 
         var result = await Handle(db, directory: directory);
 
-        result.AwaitingReview.Select(item => (item.ActivityId, item.SubjectName))
+        result.Waiting.Items.Select(item => (item.Id, item.SubjectName))
             .Should().Equal((1, "Thandi Nkosi"));
-        result.RecentDecisions.Select(item => (item.ActivityId, item.SubjectName))
+        result.Decisions.Items.Select(item => (item.Id, item.SubjectName))
             .Should().BeEquivalentTo([(2, "Sipho Dlamini"), (3, "Thandi Nkosi"), (4, "trainee-gone")]);
-        directory.Lookups.Should().ContainSingle()
-            .Which.Should().BeEquivalentTo([TraineeId, "trainee-2", "trainee-gone"]);
+        directory.Lookups.Should().HaveCount(2, "one for the waiting rows, one for the decisions");
+        directory.Lookups[0].Should().Contain(TraineeId).And.NotContain(["trainee-2", "trainee-gone"]);
+        directory.Lookups[1].Should().Contain([TraineeId, "trainee-2", "trainee-gone"]);
     }
 
     private static async Task<AssessorDashboardSummaryDto> Handle(
         ApplicationDbContext db, ClaimsPrincipal? principal = null, FakeUserDirectory? directory = null)
         => await new GetAssessorDashboardSummaryQueryHandler(
-                db, new WorkflowEvaluator(), directory ?? FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()))
+                db, new WorkflowEvaluator(), directory ?? FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()),
+                TimeProvider.System)
             .Handle(new GetAssessorDashboardSummaryQuery(principal ?? CreatePrincipal(AssessorId)), CancellationToken.None);
-
-    /// <summary>An activity of the caller's own, created by them, as <c>ActivityService</c> writes one.</summary>
-    private static void AddOwn(ApplicationDbContext db, int id, int typeId, string state)
-    {
-        var now = DateTime.UtcNow;
-        db.Activities.Add(new Activity
-        {
-            Id = id, ActivityTypeId = typeId, SchemaVersion = 1,
-            SubjectUserId = AssessorId, CreatedByUserId = AssessorId, CurrentState = state,
-            DataJson = """{ "assessor_user_id": "assessor-2" }""",
-            CreatedOn = now.AddDays(-1), UpdatedOn = now.AddMinutes(-id),
-            Transitions =
-            [
-                new ActivityTransition
-                {
-                    Id = id, ActivityId = id, FromState = state, ToState = state, TransitionKey = "create",
-                    ActorUserId = AssessorId, OccurredOn = now.AddMinutes(-id)
-                }
-            ]
-        });
-    }
-
-    /// <summary>
-    /// The shapes <see cref="FinishingWorkflows" /> copies, each with the version row a publish writes, so a move on an
-    /// activity pinned to it is judged against that row; the reflective exercise has a second version.
-    /// </summary>
-    private static void SeedTypes(ApplicationDbContext db)
-    {
-        db.ActivityTypes.AddRange(
-            new ActivityType
-            {
-                Id = ReflectiveTypeId, Key = "reflective_exercise", Name = "Reflective exercise",
-                Scope = ActivityScope.Global, Version = 2,
-                WorkflowJson = FinishingWorkflows.ReflectiveExerciseWithSignOff
-            },
-            new ActivityType
-            {
-                Id = TeachingTypeId, Key = "teaching_session", Name = "Teaching session",
-                Scope = ActivityScope.Global, Version = 1, WorkflowJson = FinishingWorkflows.TeachingSession
-            },
-            new ActivityType
-            {
-                Id = WbaTypeId, Key = "mini_cex", Name = "Mini-CEX",
-                Scope = ActivityScope.Global, Version = 1, WorkflowJson = FinishingWorkflows.Wba
-            },
-            new ActivityType
-            {
-                Id = MsfTypeId, Key = "msf", Name = "MSF",
-                Scope = ActivityScope.Global, Version = 1, WorkflowJson = FinishingWorkflows.Msf
-            },
-            new ActivityType
-            {
-                Id = ProcedureLogTypeId, Key = "procedure_log", Name = "Procedure log",
-                Scope = ActivityScope.Global, Version = 1, WorkflowJson = FinishingWorkflows.ProcedureLog
-            });
-
-        db.Set<ActivityTypeVersion>().AddRange(
-            new ActivityTypeVersion
-            {
-                Id = 1, ActivityTypeId = ReflectiveTypeId, Version = 1, WorkflowJson = FinishingWorkflows.ReflectiveExercise
-            },
-            new ActivityTypeVersion
-            {
-                Id = 2, ActivityTypeId = ReflectiveTypeId, Version = 2,
-                WorkflowJson = FinishingWorkflows.ReflectiveExerciseWithSignOff
-            },
-            new ActivityTypeVersion { Id = 3, ActivityTypeId = TeachingTypeId, Version = 1, WorkflowJson = FinishingWorkflows.TeachingSession },
-            new ActivityTypeVersion { Id = 4, ActivityTypeId = WbaTypeId, Version = 1, WorkflowJson = FinishingWorkflows.Wba },
-            new ActivityTypeVersion { Id = 5, ActivityTypeId = MsfTypeId, Version = 1, WorkflowJson = FinishingWorkflows.Msf },
-            new ActivityTypeVersion { Id = 6, ActivityTypeId = ProcedureLogTypeId, Version = 1, WorkflowJson = FinishingWorkflows.ProcedureLog });
-    }
-
-    /// <summary>The shipped CPSA seeds KGK runs: a rated Mini-CEX, a portfolio review and a reflective exercise.</summary>
-    private static void SeedCpsaTypes(ApplicationDbContext db)
-    {
-        ShippedSeeds.AddType(db, CpsaMiniCexTypeId, "mini_cex_cpsa", "Mini-CEX (Paediatrics)");
-        ShippedSeeds.AddType(db, CpsaPortfolioReviewTypeId, "portfolio_review_cpsa", "Portfolio and Logbook Review (Paediatrics)");
-        ShippedSeeds.AddType(db, CpsaReflectiveTypeId, "reflective_exercise_cpsa", "Reflective Exercise (Paediatrics)");
-    }
-
-    /// <summary>An activity of another user's that the assessor has made a move on, naming him as its assessor.</summary>
-    private static void AddActedOn(
-        ApplicationDbContext db, int id, int typeId, int version, string state, string subject = TraineeId)
-    {
-        var now = DateTime.UtcNow;
-        db.Activities.Add(new Activity
-        {
-            Id = id, ActivityTypeId = typeId, SchemaVersion = version,
-            SubjectUserId = subject, CreatedByUserId = subject, CurrentState = state, DataJson = NamesTheAssessor,
-            CreatedOn = now.AddDays(-2), UpdatedOn = now.AddMinutes(-id),
-            Transitions =
-            [
-                new ActivityTransition
-                {
-                    Id = id, ActivityId = id, FromState = "draft", ToState = state, TransitionKey = "move",
-                    ActorUserId = AssessorId, OccurredOn = now.AddMinutes(-id)
-                }
-            ]
-        });
-    }
-
-    /// <summary>An activity filed by <paramref name="subject" /> about themselves, with the moves given.</summary>
-    private static void AddFiled(
-        ApplicationDbContext db,
-        int id,
-        int typeId,
-        string state,
-        string subject,
-        string dataJson,
-        DateTime updatedOn,
-        params ActivityTransition[] moves)
-    {
-        var activity = new Activity
-        {
-            Id = id, ActivityTypeId = typeId, SchemaVersion = 1,
-            SubjectUserId = subject, CreatedByUserId = subject, CurrentState = state, DataJson = dataJson,
-            CreatedOn = updatedOn.AddDays(-1), UpdatedOn = updatedOn
-        };
-        foreach (var move in moves)
-        {
-            activity.Transitions.Add(move);
-        }
-
-        db.Activities.Add(activity);
-    }
-
-    private static ActivityTransition Move(string key, string from, string to, string actor, DateTime occurredOn) => new()
-    {
-        FromState = from, ToState = to, TransitionKey = key, ActorUserId = actor, OccurredOn = occurredOn
-    };
-
-    private static ClaimsPrincipal CreatePrincipal(string userId, params string[] roles)
-        => new(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                .. (roles.Length == 0 ? ["Assessor"] : roles).Select(role => new Claim(ClaimTypes.Role, role))
-            ],
-            "test"));
-
-    private static ApplicationDbContext CreateDb()
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options);
 }

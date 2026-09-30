@@ -1,0 +1,48 @@
+@*
+  Waiting for you (T350, flow 04; C6, R1; R3-C-Home, R3-C-Inbox, R3-C-Activity's way on): what waits on the reader as
+  someone else's assessor or reviewer, each row its link ("Type · EPA · date", then "from <registrar>"), its state's
+  badge with Overdue in words beside it, never in its place (note 14), and how long it has waited. NeedsYouList's row
+  with an overdue edge: the built .needs-you and .needs-you-row, plus .needs-you-row--overdue's warning stripe. The rows
+  are ListWaitingForYouQuery's, oldest first; the words are WaitingWords'. Two links that read the same are told apart by
+  their accessible names (ActivityRowNames.Waiting, note 9; C11), wherever this renders.
+*@
+<ul class="needs-you stack-list">
+  @foreach (var item in Items)
+  {
+    <li @key="item.Id" class="needs-you-row @(item.IsOverdue ? "needs-you-row--overdue" : "")">
+      <ActivityLink Item="item" FromSubject="true" Name="@NameOf(item)" OutOfTabOrder="@LinksOutOfTabOrder" />
+      @* Nothing here is finished: every row has a move that leads on, and it is the reader's. *@
+      <span class="needs-you-badges"><span class="badge @BadgeFor.ActivityState(item.CurrentState, isFinished: false)">@item.CurrentStateLabel</span>@if (item.IsOverdue)
+        {<span class="badge @BadgeFor.Overdue">Overdue</span>}</span>
+      <p class="needs-you-why">@(WithSince ? WaitingWords.WaitedSince(item) : WaitingWords.Waited(item))</p>
+    </li>
+  }
+</ul>
+
+@code {
+  [Parameter, EditorRequired] public IReadOnlyList<ActivitySummaryDto> Items { get; set; } = [];
+
+  /// <summary>
+  /// Whether each row says since when it has waited, "Waiting 8 days, since 2026-09-22 08:06 SAST.": the activity page's
+  /// way on, which shows one row with no Waiting column beside it.
+  /// </summary>
+  [Parameter] public bool WithSince { get; set; }
+
+  /// <summary>
+  /// The links' names on the page (<c>ActivityRowNames.Waiting</c>), when the page names these rows among more than it
+  /// passes here: Home passes its first five of the inbox's rows. Null: named among these rows.
+  /// </summary>
+  [Parameter] public IReadOnlyDictionary<int, string>? Names { get; set; }
+
+  /// <summary>
+  /// The rows' links out of the tab order: the activity page's way on, where "Open the next" opens the same activity and
+  /// is the next Tab after the result (T350, C10 d; <c>ActivityLink.OutOfTabOrder</c>).
+  /// </summary>
+  [Parameter] public bool LinksOutOfTabOrder { get; set; }
+
+  private IReadOnlyDictionary<int, string> _names = new Dictionary<int, string>();
+
+  protected override void OnParametersSet() => _names = Names ?? ActivityRowNames.Waiting(Items);
+
+  private string? NameOf(ActivitySummaryDto item) => _names.TryGetValue(item.Id, out var name) ? name : null;
+}

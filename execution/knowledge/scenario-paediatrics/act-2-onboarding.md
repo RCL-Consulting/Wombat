@@ -594,10 +594,11 @@ Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and 
 Expect: Under the header an info alert reads "You are now acting as Assessor." and takes the focus; on Home it offers no
   Switch back. The sidebar reads "Acting as Assessor", with "Switch to Committee member" under it, and the menu changes
   to the Assessor's: Home and Activity inbox, then My data rights. Home's subtitle reads "Assessor · Semester N, YYYY".
-  The Assessor dashboard has two cards: "Waiting for your rating", badged 0, which reads "Nothing is waiting for your
-  rating." with "Open inbox →" (T297, T335), and Recent decisions, "No decisions yet.". The reload shows no alert: it is
-  said once. Signing out lands on the sign-in page with "You have signed out." After signing in again she lands acting
-  as Assessor, with no alert, because the choice is stored with her account, not in the browser (T317). The
+  The Assessor dashboard has two cards: "Waiting for you", with no badge, which reads "Nothing is waiting for you." with
+  "Open Activity inbox" (T297, T335, T350), and Recent decisions, "No decisions yet.", with no "All your decisions".
+  Nothing waits in her inbox, so the Committee member's Home shows no line about it (T350). The reload shows no alert:
+  it is said once. Signing out lands on the sign-in page with "You have signed out." After signing in again she lands
+  acting as Assessor, with no alert, because the choice is stored with her account, not in the browser (T317). The
   Administrator address writes nothing and says nothing: she is still acting as Assessor, since a role she does not hold
   is never shown or stored. Switch to Committee member brings back the Committee member's sidebar and menu, "Committee
   member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
@@ -628,8 +629,10 @@ Gap: none
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
 Route: /account/login → /
 Do: Each signs in and reads the dashboard and nav.
-Expect: Each sees "Assessor · Semester N, YYYY" on Home, and the empty Assessor dashboard of Step 2.34. The sidebar
-  reads "Acting as Assessor" with no switch, over Home and Activity inbox, then My data rights.
+Expect: Each sees "Assessor · Semester N, YYYY" on Home, and the empty Assessor dashboard of Step 2.34: "Waiting for
+  you" with no badge and no "0", "Nothing is waiting for you.", "Open Activity inbox"; Recent decisions, "No decisions
+  yet." (T350). The sidebar reads "Acting as Assessor" with no switch, over Home and Activity inbox, then My data
+  rights.
 Actual (2026-09-29, T342 replay, wombat_scenario_t342): Each: Home, "Assessor · Semester 2, 2026"; the sidebar "Acting
   as Assessor" with no switch, over Home and Activity inbox, then My data rights; "Waiting for your rating" 0, "Nothing
   is waiting for your rating.", "Open inbox →", and Recent decisions "No decisions yet.".

@@ -420,7 +420,7 @@ Expect: Within a minute of her admission the tab moves to the sign-in page, whic
   and a role change ends open sessions (T279). Signed in again, she sees
   "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 
-Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:706)
+Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:709)
 Role: Every role in this act — each person onboarded here, signed in as themselves
 Route: /account/profile → /account/profile/submit → /account/profile
 Do: Each opens My account (the name in the top bar). Dr Khumalo changes her first name from "Fatma" to "Fatima" and
@@ -547,9 +547,10 @@ Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:951)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
-Expect: He lands on his Assessor dashboard. "Waiting for your rating" is badged 1 and lists Dr du Plessis's Portfolio
-  and Logbook Review, badged Overdue, as his inbox lists it (T297, T335). Dr Dlamini's
-  assessor list names him again (checked at A.7.1).
+Expect: He lands on his Assessor dashboard. "Waiting for you", in the warning stripe, is badged "1 waiting, 1 overdue"
+  and lists Dr du Plessis's Portfolio and Logbook Review, from Pieter du Plessis, Awaiting review with Overdue beside
+  it, "Waiting 8 days", as his inbox lists it, "8 days" over "since `D−8` … SAST" (T297, T335, T350). Recent decisions
+  lists the three he decided on `D`. Dr Dlamini's assessor list names him again (checked at A.7.1).
 
 Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appendix-cross-cutting.md:247)
 Role: Trainee — Dr Sipho Ndlovu (the browser left signed in at A.1.11)
@@ -559,7 +560,7 @@ Expect: The tab leaves for the sign-in page by itself, which says "Your session 
   information notice. Signing in is refused in the words an unknown address gets, "Invalid email or password.", with
   no mention of an erasure (T156). No email is sent to him.
 
-Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1214)
+Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1220)
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
 Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
@@ -567,7 +568,7 @@ Do: At 390 px, open the sign-in page and the forgot-password page. Then verify D
 Expect: The sign-in card fits the width. Every field, toggle, button and link on the sign-in and forgot pages is
   44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's result fits the width.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1253)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1259)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

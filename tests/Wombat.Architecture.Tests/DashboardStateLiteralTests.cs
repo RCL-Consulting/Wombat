@@ -86,7 +86,9 @@ public sealed class DashboardStateLiteralTests
     {
         DashboardSources().Select(Path.GetFileName).Should().Contain(
             ["GetCoordinatorDashboardSummaryQuery.cs", "GetAssessorDashboardSummaryQuery.cs", "GetTraineeDashboardSummaryQuery.cs",
-             "GetSpecialityAdminDashboardSummaryQuery.cs", "GetSubSpecialityAdminDashboardSummaryQuery.cs"]);
+             "GetSpecialityAdminDashboardSummaryQuery.cs", "GetSubSpecialityAdminDashboardSummaryQuery.cs",
+             .. SharedReads]);
+        DashboardSources().Should().OnlyContain(path => File.Exists(path), "a shared read that moved must be followed (T350)");
 
         string[] offenders =
         [
@@ -216,13 +218,21 @@ public sealed class DashboardStateLiteralTests
                 : new string(match.Value.Select(character => character == '\n' ? '\n' : ' ').ToArray()),
             RegexOptions.Singleline);
 
+    /// <summary>
+    /// Every source under <c>Features/Dashboards</c>, and the two shared reads the Assessor's Home makes through since
+    /// T350 (notes 5 and 6), which the Activity inbox makes too: a literal state there is a card's literal state.
+    /// </summary>
     private static IReadOnlyList<string> DashboardSources()
         => Directory.GetFiles(
                 Path.Combine(SolutionRoot(), "src", "Wombat.Application", "Features", "Dashboards"),
                 "*.cs",
                 SearchOption.AllDirectories)
+            .Concat(SharedReads.Select(name =>
+                Path.Combine(SolutionRoot(), "src", "Wombat.Application", "Features", "Activities", "Services", name)))
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToList();
+
+    private static readonly string[] SharedReads = ["WaitingForYou.cs", "DecidedByYou.cs"];
 
     private static string SolutionRoot()
     {

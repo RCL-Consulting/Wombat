@@ -1,0 +1,65 @@
+@using Wombat.Application.Features.Activities.Queries.ListWaitingForYou
+@using Wombat.Web.Navigation
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<OtherRoleLine> Logger
+
+@*
+  The other-role line (T350, flow 04; note 7, Q3, E4, C12; R3-H-committee-line*; DESIGN.md § Dashboard page, R1): on Home,
+  between the header and the acting role's dashboard, one line about the work waiting in the Activity inbox, for someone
+  who holds Assessor and is acting in another role. It says how much waits, whether any is overdue, and the oldest, with
+  "Open it" or "Open the oldest", which opens the activity with no switch: the activity page admits every role, and the
+  sidebar's switch stays the one way to change role.
+
+  - Its read is the inbox's own (ListWaitingForYouQuery), so the line and the inbox cannot disagree (T297); its words are
+    WaitingWords'. It names no role (E4): the read counts every arm that is not the author's, not only the assessor's.
+  - Warning tint when any is overdue, info otherwise. Nothing waiting: no line.
+  - A failed read shows nothing and is logged (C12): the line is a courtesy beside the dashboard, and a Home error is
+    DashboardFrame's to say, about the dashboard the acting role reads.
+  - Not a live region: it arrives with the page, and a screen reader finds it by its name.
+*@
+@if (_waiting is { Oldest: { } oldest } waiting && WaitingWords.OtherRoleLine(waiting) is { } words)
+{
+  var action = WaitingWords.OtherRoleAction(waiting);
+  <section class="alert @(waiting.OverdueCount > 0 ? "alert-warning" : "alert-info") other-role-line" aria-label="@RegionName">
+    <div class="alert-row">
+      <span class="alert-row-text">@words</span>
+      <a class="btn btn-outline btn-sm" href="/activities/@oldest.Id" aria-label="@($"{action}: {ActivityRowNames.WaitingLinkWords(oldest)}")">@action</a>
+    </div>
+  </section>
+}
+
+@code {
+  /// <summary>The line's accessible name: what it is about, and where that work is.</summary>
+  public const string RegionName = "Waiting for you in the Activity inbox";
+
+  private WaitingForYouDto? _waiting;
+
+  /// <summary>
+  /// The acting role, as Routes cascades it (T335, flow 01). Resolved from the principal, by the same resolver, where
+  /// nothing cascades it (a test's render).
+  /// </summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  protected override async Task OnInitializedAsync()
+  {
+    var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+    var acting = Acting ?? ActingRoleResolver.Resolve(user);
+    // Only for a holder of Assessor acting as something else: an Assessor acting as Assessor has the inbox's card.
+    if (!acting.Holds(WombatRoles.Assessor) || acting.Role == WombatRoles.Assessor)
+    {
+      return;
+    }
+
+    try
+    {
+      _waiting = await Sender.Send(new ListWaitingForYouQuery(user));
+    }
+    catch (Exception exception)
+    {
+      // C12: never a Home error. The line is simply not drawn.
+      Logger.LogError(exception, "The other-role line's waiting read failed; Home shows no line.");
+      _waiting = null;
+    }
+  }
+}

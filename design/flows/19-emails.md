@@ -486,14 +486,16 @@ Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Open Dr Ndlovu's Mini-CEX. Press Decline and send it with the reason left empty. Then send it with the reason "I was
   not on the ward that day; Dr Botha observed this encounter. Please send it to her."
 Expect: The status card reads "Your move. Sipho Ndlovu asked you on …". Decline opens the note panel under the actions,
-  "Decline this request", and moves the focus into "Reason for Sipho Ndlovu", with "Sipho Ndlovu reads it on the
-  activity's page. It is kept with the activity's history." under it. Sent empty with Decline with this note, it is
-  refused: the panel stays open, with the note as typed, and its summary reads "Not declined." and "Reason for Sipho
-  Ndlovu: Decline requires a note."; the activity stays Requested. Keep the request would close the panel and hand the
-  focus back to Decline. Sent with the reason, the result reads "Declined." The status card, badged Declined, reads
-  "Closed. You declined it on …", quotes her reason, and reads "It credits nothing, and nothing more can happen to it."
-  The page is read-only, with no move left. The history's Decline row, Requested → Declined, is credited "—", with her
-  note on a row of its own under it. Her inbox no longer lists the request.
+  "Decline this request", and moves the focus into "Note for Sipho Ndlovu", marked required, with "Sipho Ndlovu reads
+  it on the activity's page. It is kept with the activity's history." under it. Sent empty with Decline with this note,
+  it is refused: the panel stays open, with the note as typed, and its summary reads "Not declined. It is still
+  Requested." and "Note for Sipho Ndlovu: Decline requires a note."; the activity stays Requested (T350). Keep the
+  request would close the panel and hand the focus back to Decline. Sent with the reason, the result reads "Declined.
+  Nothing else waits for you.", with Go to Home after it. The status card, badged Declined, reads "Closed. You declined
+  it on …", quotes her reason, and reads "It credits nothing, and nothing more can happen to it." The page is
+  read-only, with no move left. The history's Decline row, Requested → Declined, is credited "—", with her note on a
+  row of its own under it. Her inbox's Waiting for you reads "Inbox clear", and Decided by you ("1 decision") holds the
+  request, Declined, decided "… SAST", Credit "—".
 
 Step 3.32 — The daily nudge reminds the assessors
 Role: Administrator — devadmin@wombat.local

@@ -255,9 +255,9 @@ Workflows can also be simpler — a Research Output might just be `draft → sub
 A state's `label` is the only name a person sees for it, read from the activity's **pinned** version: a submitted
 `clinical_audit_cpsa` is "Awaiting supervisor" on its page, in the lists, on the dashboards, in a committee's evidence
 snapshot (frozen there as `CommitteeEvidence.SourceStateLabel`) and in the portfolio PDF, as it is in every refusal and
-notice. A transition declares no label; it is named from its key in words (`WorkflowTransition.LabelFor`: `sign_off` is
-"Sign Off"), on its button, in a refusal and in the history. The history's create row, which no workflow declares, is
-"Create". The DTOs carry both (`CurrentState` and `CurrentStateLabel`, and each history row's `FromStateLabel`,
+notice. A transition declares no label; it is named from its key in words, in sentence case
+(`WorkflowTransition.LabelFor`: `sign_off` is "Sign off", T350), on its button, in a refusal and in the history. The
+history's create row, which no workflow declares, is "Create". The DTOs carry both (`CurrentState` and `CurrentStateLabel`, and each history row's `FromStateLabel`,
 `ToStateLabel` and `TransitionLabel`); `PinnedWorkflows` resolves them. The stored key is shown only where the pinned
 version cannot name it: a state or move it does not declare, or a type with no workflow that parses. A key never reaches
 a page otherwise, except as a badge's colour class. The subject-access report's JSON keeps the stored key, as it keeps

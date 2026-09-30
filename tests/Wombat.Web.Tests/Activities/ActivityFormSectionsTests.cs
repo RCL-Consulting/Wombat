@@ -127,13 +127,14 @@ public sealed class ActivityFormSectionsTests : TestContext
     }
 
     [Fact]
-    public void AnAssessorWhoMayWriteTheScale_KeepsTheSelect()
+    public void AnAssessorWhoMayWriteTheRatedScale_ChoosesOnTheRungRow()
     {
-        // The writer's rung row, with radios, is flow 04's; until then the assessor keeps today's select.
+        // T350, flow 04 (round 2, E3): the writer of the rated level field, with its ladder loaded, chooses on radios in
+        // the rung row; the first radio keeps the field's input id (RatedLevelPickerTests has the rest).
         var cut = Render(dataJson: """{ "observed_on": "2026-09-09" }""", writable: ["entrustment_level", "feedback"], rungs: Ladder);
 
-        cut.Find("#entrustment_level-in").LocalName.Should().Be("input", "the stub offers no levels, so the unbound fallback");
-        cut.FindAll("ol.rung-row").Should().BeEmpty();
+        cut.Find("#entrustment_level-in").GetAttribute("type").Should().Be("radio");
+        cut.FindAll("fieldset.rung-picker ol.rung-row input[type=radio]").Should().HaveCount(6);
     }
 
     [Theory]

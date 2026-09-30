@@ -952,9 +952,10 @@ Gap: none
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
-Expect: He lands on his Assessor dashboard. "Waiting for your rating" is badged 1 and lists Dr du Plessis's Portfolio
-  and Logbook Review, badged Overdue, as his inbox lists it (T297, T335). Dr Dlamini's
-  assessor list names him again (checked at A.7.1).
+Expect: He lands on his Assessor dashboard. "Waiting for you", in the warning stripe, is badged "1 waiting, 1 overdue"
+  and lists Dr du Plessis's Portfolio and Logbook Review, from Pieter du Plessis, Awaiting review with Overdue beside
+  it, "Waiting 8 days", as his inbox lists it, "8 days" over "since `D−8` … SAST" (T297, T335, T350). Recent decisions
+  lists the three he decided on `D`. Dr Dlamini's assessor list names him again (checked at A.7.1).
 Actual (2026-09-30, T342 replay, wombat_scenario_t342b): Signed in afresh he lands on /, "Assessor · Semester 2,
   2026". "Waiting for your rating", badged 1, lists "Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis"
   badged Overdue, linked to /activities/10, with "Open inbox →"; the inbox lists that review alone. Recent decisions
@@ -1047,10 +1048,15 @@ Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: At 390 px, open Dr Dlamini's Mini-CEX from Activity inbox. Rate the supervision at `3b`, write the three
   feedback fields, and complete it.
-Expect: The inbox lists it with an action named for it. On the activity, her request is read-only to him, and the
-  six-rung ladder and the feedback fields fit the width. Complete, Discard changes and Decline are reachable without
-  scrolling sideways, and the history folds into "All N moves", the same moves as stacked blocks (A7). Once completed,
-  it reads "Completed." and is read-only to both of them. Nobody is emailed (Step 3.3).
+Expect: Home's "Waiting for you" is badged "2 waiting, 1 overdue". The inbox's rows stack, nothing scrolling sideways:
+  the review first, then "Mini-CEX (Paediatrics) · PAED-002 · `D−20`", from Anele Dlamini, each row its own link named
+  for it, with no Open button (T350). On the activity, her request is read-only to him and folded: "Request", "Filled in
+  by Anele Dlamini, `D`" and Show, reading Hide while open. Entrustment comes first, the rung picker's six radios
+  abreast, then the three feedback fields, all fitting the width. Complete, Discard changes and Decline stack, each 44
+  px tall, reachable without scrolling sideways, and About sits under them. The history folds into "All N moves", the
+  same moves as stacked blocks (A7). Once completed, the result reads "Completed. 1 more waits for you.", with the
+  review's row, Open the next and Back to Activity inbox; the completed page folds nothing, and it is read-only to both
+  of them. Nobody is emailed (Step 3.3).
 Actual (2026-09-30, T342 replay, wombat_scenario_t342b): At 390 px. The bar: Wombat, "Acting as Assessor", Menu (44
   px). Menu opens the head "Acting as Assessor", Home, Activity inbox and My data rights (44 px rows), and at its foot
   "Mohammed Patel" and Sign out; Close folds it, and following Activity inbox folds it too. Home: "Waiting for your

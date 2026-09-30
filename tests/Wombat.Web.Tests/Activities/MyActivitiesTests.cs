@@ -6,7 +6,6 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Dtos;
-using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Domain.Identity;
@@ -18,8 +17,7 @@ namespace Wombat.Web.Tests.Activities;
 
 /// <summary>
 /// T342, flow 03 (R3-C-Mine, R3-Spec § 1): My activities opens with Needs you when there is any, then All activities a
-/// page at a time, each row its activity's link, who has it now, its state and its credit; and the Activity inbox tells a
-/// registrar, who has nothing in it, where their own work is.
+/// page at a time, each row its activity's link, who has it now, its state and its credit.
 /// </summary>
 public sealed class MyActivitiesTests : TestContext
 {
@@ -160,13 +158,13 @@ public sealed class MyActivitiesTests : TestContext
         var cut = Render(sender);
 
         Text(cut.Find("#all-activities-heading")).Should().Be("All activities (45)");
-        cut.Find(".pager-info").TextContent.Should().Be("Showing 1-20 of 45");
+        cut.Find(".pager-info").TextContent.Should().Be("Showing 1–20 of 45");
         sender.Pages.Should().Equal(1);
 
         cut.FindAll(".pager-actions button").Single(button => button.TextContent == "Next").Click();
 
         cut.WaitForAssertion(() => sender.Pages.Should().Equal(1, 2));
-        cut.Find(".pager-info").TextContent.Should().Be("Showing 21-40 of 45");
+        cut.Find(".pager-info").TextContent.Should().Be("Showing 21–40 of 45");
         // The button pressed may now be disabled: the list's heading takes the focus.
         cut.WaitForAssertion(() => JSInterop.Invocations[FocusIdentifier].Should().ContainSingle());
     }
@@ -192,56 +190,8 @@ public sealed class MyActivitiesTests : TestContext
         cut.Find(".alert button").TextContent.Trim().Should().Be("Try again");
     }
 
-    // ---- the inbox -------------------------------------------------------------------------------------------------
-
-    [Fact]
-    public void TheInbox_SaysWhatItIsFor_NotTheCurrentUser()
-    {
-        _auth.SetRoles(WombatRoles.Assessor);
-        var cut = RenderInbox();
-
-        cut.Find(".page-subtitle").TextContent.Trim().Should().Be("Work waiting for you to rate, review or record.");
-        cut.Markup.Should().NotContain("current user");
-    }
-
-    [Theory]
-    [InlineData(WombatRoles.Trainee)]
-    [InlineData(WombatRoles.PendingTrainee)]
-    public void AnEmptyInbox_SendsARegistrarToNeedsYou(string role)
-    {
-        _auth.SetRoles(role);
-        var cut = RenderInbox();
-
-        cut.Find(".state-panel-title").TextContent.Should().Be("Nothing here is yours to act on.");
-        cut.Find(".state-panel-copy").TextContent.Should().Be(
-            "This inbox holds work that assessors rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs you.");
-        cut.Find(".detail-card--empty a[href='/activities/mine']").TextContent.Trim().Should().Be("Open My activities");
-    }
-
-    [Theory]
-    [InlineData(WombatRoles.Assessor)]
-    [InlineData(WombatRoles.CommitteeMember)]
-    [InlineData(WombatRoles.Trainee, WombatRoles.Assessor)]
-    public void AnEmptyInbox_TellsAnAssessorItIsClear(params string[] roles)
-    {
-        _auth.SetRoles(roles);
-        var cut = RenderInbox();
-
-        cut.Find(".state-panel-title").TextContent.Should().Be("Inbox clear");
-        cut.Find(".state-panel-copy").TextContent.Should().Be("Nothing is waiting for you to rate, discuss or review.");
-        cut.FindAll(".detail-card--empty a").Should().BeEmpty();
-    }
-
-    [Fact]
-    public void TheInboxsLoadFailure_NeverShowsTheException()
-    {
-        _auth.SetRoles(WombatRoles.Assessor);
-        Services.AddSingleton<IScopedSender>(new Sender([], [], fail: new InvalidOperationException("Npgsql: connection refused")));
-        var cut = RenderComponent<ActivityInbox>();
-
-        cut.WaitForAssertion(() => cut.Find(".alert").TextContent.Should().Contain(ActivityInbox.LoadFailed));
-        cut.Markup.Should().NotContain("Npgsql");
-    }
+    // The Activity inbox's tests, the registrar's empty state among them, moved to ActivityInboxTests when T350 (flow 04)
+    // redrew the page in two sections.
 
     // ---- helpers -----------------------------------------------------------------------------------------------------
 
@@ -252,14 +202,6 @@ public sealed class MyActivitiesTests : TestContext
     {
         Services.AddSingleton<IScopedSender>(sender);
         var cut = RenderComponent<MyActivities>();
-        cut.WaitForState(() => cut.FindAll(".skeleton").Count == 0);
-        return cut;
-    }
-
-    private IRenderedComponent<ActivityInbox> RenderInbox()
-    {
-        Services.AddSingleton<IScopedSender>(new Sender([], []));
-        var cut = RenderComponent<ActivityInbox>();
         cut.WaitForState(() => cut.FindAll(".skeleton").Count == 0);
         return cut;
     }
@@ -289,7 +231,6 @@ public sealed class MyActivitiesTests : TestContext
             {
                 ListNeedsYouQuery => needsYou,
                 ListActivitiesBySubjectQuery query => Page(query),
-                ListActivitiesByActorInboxQuery => Array.Empty<ActivitySummaryDto>(),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
             return Task.FromResult((TResponse)answer);

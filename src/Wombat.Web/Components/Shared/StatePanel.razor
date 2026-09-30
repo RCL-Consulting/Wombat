@@ -34,7 +34,8 @@ else if (!string.IsNullOrWhiteSpace(LoadError))
 }
 else if (IsEmpty)
 {
-  <div class="detail-card detail-card--empty">
+  @* Focusable by script only: a Try again whose answer is this state focuses it (T350 build review, D4). *@
+  <div class="detail-card detail-card--empty" tabindex="-1" @ref="_empty">
     <div class="state-panel-title">@EmptyTitle</div>
     <div class="state-panel-copy">@EmptyBody</div>
     @if (EmptyActions is not null)
@@ -52,6 +53,10 @@ else
 
 @code {
   private ActionResult? _result;
+  private ElementReference _empty;
+
+  /// <summary>The empty state's element, which a Try again answered by it focuses. A test matches a focus call to it.</summary>
+  public ElementReference EmptyElement => _empty;
 
   [Parameter] public bool IsLoading { get; set; }
   [Parameter] public string? LoadError { get; set; }
@@ -84,6 +89,15 @@ else
   // A retry has answered and the panel has not yet moved the focus.
   private bool _focusAfterRetry;
 
+  // The page's own read failed (a page turn) and the failure, once drawn, takes the focus.
+  private bool _focusFailure;
+
+  /// <summary>
+  /// For a page whose own later read fails, a page turn (T350 build review, A3): the failure replaces the content and
+  /// the pressed button with it, so once it is drawn it takes the focus and is read, as a failed Try again's is.
+  /// </summary>
+  public void FocusFailureAfterRender() => _focusFailure = true;
+
   private async Task RetryAsync()
   {
     // The button is gone while the read runs (the skeleton), so the focus is moved once the answer is drawn.
@@ -93,19 +107,30 @@ else
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (!_focusAfterRetry || IsLoading)
+    if ((!_focusAfterRetry && !_focusFailure) || IsLoading)
     {
       return;
     }
 
+    var afterRetry = _focusAfterRetry;
     _focusAfterRetry = false;
+    _focusFailure = false;
     if (!string.IsNullOrWhiteSpace(LoadError))
     {
-      // Failed again: the alert, drawn again, takes the focus, so the failure is read again.
+      // Failed (again): the alert, drawn again, takes the focus, so the failure is read.
       if (_result is not null)
       {
         await _result.Element.FocusAsync();
       }
+    }
+    else if (!afterRetry)
+    {
+      // A failure asked for and not drawn: nothing to move to.
+    }
+    else if (IsEmpty)
+    {
+      // The empty state is the region that replaces the error, and the page's own region is not drawn (D4).
+      await _empty.FocusAsync();
     }
     else if (FocusAfterRetry is not null)
     {

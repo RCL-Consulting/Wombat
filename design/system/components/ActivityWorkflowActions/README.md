@@ -60,7 +60,7 @@ The focus starts on the keep button, goes back to the opener on Keep, and to the
 
 ## Results
 
-The page shows a move's result in its ActionResult at the head (`id="activity-result"`), which takes the focus: its sentence in bold, then whose inbox it is in, plain. "**Submitted. It is now Requested.** It is in David Naidoo's Activity inbox.", "**Completed.**", "**Declined.**", "**Logged.**", "**Cancelled.**", "**It is now Draft.**" (a return). Save draft: "**Draft saved. It has not been submitted.** It is in nobody's inbox until you submit it."; nothing changed: "**Nothing to save.** Nothing has changed since it was last saved." A move the server no longer offers: "That action is not available here. Reload the page to see what you can do now."
+The page shows a move's result in its ActionResult at the head (`id="activity-result"`), which takes the focus: its sentence in bold, then whose inbox it is in, plain. "**Submitted. It is now Requested.** It is in David Naidoo's Activity inbox.", "**Completed.**", "**Declined.**", "**Logged.**", "**Cancelled.**", "**Returned to Sipho Ndlovu.** Nothing else waits for you." (a return, made by the assessor; T350 build review, D5). Save draft: "**Draft saved. It has not been submitted.** It is in nobody's inbox until you submit it."; nothing changed: "**Nothing to save.** Nothing has changed since it was last saved." A move the server no longer offers: "That action is not available here. Reload the page to see what you can do now."
 
 ## Rules (DESIGN.md § Form system, "The action bar"; § Page-level patterns, "Record page with a workflow")
 

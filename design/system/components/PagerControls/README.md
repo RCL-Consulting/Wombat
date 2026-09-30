@@ -1,6 +1,6 @@
 # PagerControls
 
-The one pager: a "Showing 1-20 of 137" summary, Previous and Next, and a "Per page" select, under every list that can grow.
+The one pager: a "Showing 1–20 of 137" summary, Previous and Next, and a "Per page" select, under every list that can grow.
 
 ## What the consumer provides
 

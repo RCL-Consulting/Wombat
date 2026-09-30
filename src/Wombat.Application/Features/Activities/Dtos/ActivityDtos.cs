@@ -138,7 +138,7 @@ public sealed record ActivityTypeEditorDto(
 /// </param>
 /// <param name="ToStateLabel">The same, for <paramref name="ToState" />.</param>
 /// <param name="TransitionLabel">
-/// <paramref name="TransitionKey" /> as its button named the move (<c>PinnedWorkflows.TransitionLabel</c>): "Sign Off",
+/// <paramref name="TransitionKey" /> as its button named the move (<c>PinnedWorkflows.TransitionLabel</c>): "Sign off",
 /// "Create" for the create row, the key only for a move the pinned workflow does not declare (T220).
 /// </param>
 public sealed record ActivityTransitionDto(
@@ -451,10 +451,36 @@ public sealed record ActivitySummaryDto(
 {
     /// <summary>
     /// Whose activity it is, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
-    /// inbox's Subject column (T142). Filled by <c>ListActivitiesByActorInboxQuery</c> in one lookup for the page. Null
-    /// on the subject's own list, which is all one person and does not show them.
+    /// assessor's link's second line, "from Anele Dlamini" (T142; T350, R2). Filled by the waiting and the decided reads
+    /// (<c>WaitingForYou</c>, <c>DecidedByYou</c>) in one lookup for the rows they return. Null on the subject's own list,
+    /// which is all one person and does not show them.
     /// </summary>
     public string? SubjectName { get; init; }
+
+    /// <summary>
+    /// Whether it has waited on the caller for <c>DashboardThresholds.AssessorDueDays</c> × 24 h or more since
+    /// <see cref="UpdatedOn" /> (T350, round 2 E1): the Overdue badge beside the state, and the row's warning edge. So a
+    /// whole-day count of 7 (<see cref="WaitedDays" />) always carries it. Set by the waiting read only.
+    /// </summary>
+    public bool IsOverdue { get; init; }
+
+    /// <summary>
+    /// How long it has waited on the caller, in whole days since <see cref="UpdatedOn" />, rounded down as the assessor
+    /// nudge counts them: 0 is under a day ("Waiting less than a day"). Null outside the waiting read (T350, note 10).
+    /// </summary>
+    public int? WaitedDays { get; init; }
+
+    /// <summary>
+    /// When the caller made the move that left it where it is (UTC; the page formats it in SAST): "Decided by you"'s
+    /// Decided column and its order (T350, Q1). Null outside the decided read.
+    /// </summary>
+    public DateTime? DecidedOn { get; init; }
+
+    /// <summary>
+    /// Whether its state is a terminal state of its pinned workflow (<c>ActivityCompletion</c>, D44): the decided row's
+    /// badge is green when it is, whatever the key is called (T266 review). Set by the decided read only; false elsewhere.
+    /// </summary>
+    public bool IsFinished { get; init; }
 
     /// <summary>
     /// Who has it now (<c>ActivityHolders</c>, T342, B7): the "Who has it now" column. Filled by
@@ -499,6 +525,25 @@ public sealed record ActivitySummaryDto(
     /// Filled by the two queries that fill <see cref="Holder" />; null from the inbox, and for a pin that no longer parses.
     /// </summary>
     public ActivityTypeShape? Shape { get; init; }
+}
+
+/// <summary>
+/// What waits on the caller as someone else's assessor, reviewer or admin (T350, note 5; E5): the one read Home's "Waiting
+/// for you", the Activity inbox, the activity page's way on and the other-role line share (<c>WaitingForYou</c>), so no
+/// two of them can disagree (T297).
+/// </summary>
+/// <param name="Items">Every such activity, oldest first by <c>UpdatedOn</c>, then id. Home takes the first five.</param>
+/// <param name="OverdueCount">How many of them are <see cref="ActivitySummaryDto.IsOverdue" />.</param>
+/// <param name="DueDays">
+/// <c>DashboardThresholds.AssessorDueDays</c>, the number in the rule line "Overdue once it has waited 7 days." (E1).
+/// </param>
+public sealed record WaitingForYouDto(IReadOnlyList<ActivitySummaryDto> Items, int OverdueCount, int DueDays)
+{
+    /// <summary>How many wait: "2 waiting".</summary>
+    public int Count => Items.Count;
+
+    /// <summary>The one that has waited longest, or null when nothing waits: the other-role line's row.</summary>
+    public ActivitySummaryDto? Oldest => Items.FirstOrDefault();
 }
 
 public sealed record ActivityValidationErrorDto(

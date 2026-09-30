@@ -33,11 +33,13 @@ internal static class PageAccess
 
     /// <summary>
     /// The routed page an href opens, or null when none answers it. A literal route wins over a parameterised one, as in
-    /// the router: /activities/new is not /activities/{Id}.
+    /// the router: /activities/new is not /activities/{Id}. A fragment or a query is not part of the route: Home's "All your
+    /// decisions" (/activities/inbox#decided-h, T350) opens the inbox.
     /// </summary>
     public static Type? PageFor(string href)
     {
-        var path = "/" + href.TrimStart('/');
+        var end = href.IndexOfAny(['#', '?']);
+        var path = "/" + (end < 0 ? href : href[..end]).TrimStart('/');
 
         return Pages.FirstOrDefault(p => string.Equals(p.Template, path, StringComparison.OrdinalIgnoreCase)).Page
             ?? Pages.FirstOrDefault(p => Matches(p.Template, path)).Page;

@@ -12,22 +12,32 @@ public sealed record WorkflowTransition(
     TransitionValidation Validation)
 {
     /// <summary>
-    /// The name a person sees for a move: its key split into words at '_' and '-', in title case, so <c>sign_off</c> is
-    /// "Sign Off". A key that is nothing but separators is named as it is.
+    /// The name a person sees for a move: its key split into words at '_' and '-', in sentence case, so <c>sign_off</c> is
+    /// "Sign off" and <c>record_discussion</c> "Record discussion". A key that is nothing but separators is named as it is.
     /// </summary>
     /// <remarks>
     /// The DSL declares no label for a transition, so its button on the activity's page is named from the key, and a
     /// refusal of the move names it by the same text (T189), and so does the activity's history once it is made
-    /// (<see cref="Workflow.TransitionLabel" />, T220). This is the one implementation of all three. Invariant culture,
-    /// so the name does not depend on the server's locale.
+    /// (<see cref="Workflow.TransitionLabel" />, T220). This is the one implementation of all three. Sentence case, as
+    /// every other label in the product is (T350, round 1 E1): the first word capitalised and every later word in lower
+    /// case, but a word written wholly in capitals (an acronym, "MSF") is kept as written, as title case kept it.
+    /// Invariant culture, so the name does not depend on the server's locale.
     /// </remarks>
     public static string LabelFor(string transitionKey)
     {
         var words = string.Join(" ", transitionKey.Split('-', '_')).Trim();
-        return string.IsNullOrWhiteSpace(words)
-            ? transitionKey
-            : CultureInfo.InvariantCulture.TextInfo.ToTitleCase(words);
+        if (string.IsNullOrWhiteSpace(words))
+        {
+            return transitionKey;
+        }
+
+        var sentence = string.Join(" ", words.Split(' ').Select(word => IsAcronym(word) ? word : word.ToLowerInvariant()));
+        return char.ToUpperInvariant(sentence[0]) + sentence[1..];
     }
+
+    // A word of two or more letters, every one a capital: kept as written by the sentence case (T350).
+    private static bool IsAcronym(string word)
+        => word.Length > 1 && word.All(character => !char.IsLetter(character) || char.IsUpper(character)) && word.Any(char.IsLetter);
 
     /// <summary>
     /// A move as an instruction about the activity, in lower case, for running text: "complete it", "decline it", "return

@@ -1,0 +1,162 @@
+@using Wombat.Application.Features.Epas
+@* The rater's rung picker (T350, flow 04; Q5; round 2, E3 and C7; R3-C-Activity's to-rate and rated states; DESIGN.md
+   § Form system, "The activity form", R4). The writer of the rated level field chooses on the rung row: one native radio
+   inside one label per rung, the row as wide as its ladder, the chosen rung filled and its descriptor under the row.
+   ActivityForm draws it only on the schema's rated_level_field and only when the page's ladder loaded; any other scale
+   field, or a ladder that failed, keeps the select (E3). Named for the rated level, not "RungPicker": the curriculum
+   item form's RungPicker (Pages/Admin/Curricula) is another component, and the two names would be one in those pages.
+
+   A press is one round trip through the form's UpdateValue: the value is bound on the server, and the descriptor under
+   the row is the server's render (Spec § 7). Each li is keyed by its rung's Order, so the round trip patches the radio
+   the keyboard is on rather than replacing it: arrow keys move and choose, Tab leaves the group, and with none chosen
+   Tab lands on the first rung (the browser's own radio group, Spec § 4).
+
+   Each radio is described by its rung's descriptor, a visually hidden span outside both "What each rung means" folds, so
+   it is read whichever fold is shut (C7). The fold is open at 1280 until a rung is chosen and shut at 390: two read-only
+   renderings toggled by CSS at 641 px, no script (round 2, E2), the narrow one carrying no id (so none to suffix); once
+   a rung is chosen, one, shut. "chosen" is aria-hidden: the browser says "checked". *@
+<div class="form-group full-width">
+  @* A radiogroup, where ARIA permits aria-invalid, which it does not on a radio (the build review's A5). *@
+  <fieldset class="form-group rung-picker" role="radiogroup" aria-describedby="@DescribedBy" aria-invalid="@(Invalid ? "true" : null)">
+    <legend>@Label@if (Required){<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span>}</legend>
+    @if (!string.IsNullOrWhiteSpace(HelpText))
+    {
+      <small id="@HelpId" class="page-subtitle">@HelpText</small>
+    }
+    <ol class="rung-row">
+      @for (var index = 0; index < Rungs.Count; index++)
+      {
+        var rung = Rungs[index];
+        var order = OrderOf(rung);
+        var chosen = IsChosen(rung);
+        <li @key="rung.Order">
+          <label class="@(chosen ? "rung rung-choice is-chosen" : "rung rung-choice")">
+            <input type="radio"
+                   id="@RadioId(index, rung)"
+                   name="@Name"
+                   value="@order"
+                   checked="@chosen"
+                   aria-describedby="@RadioDescribedBy(rung)"
+                   @onchange="() => OnChoose.InvokeAsync(order)" />
+            @rung.Label
+            @if (chosen)
+            {
+              <span class="rung-check" aria-hidden="true">chosen</span>
+            }
+          </label>
+        </li>
+      }
+    </ol>
+    @foreach (var rung in Rungs.Where(HasDescription))
+    {
+      <span class="visually-hidden" id="@DescriptionIdOf(rung)">@rung.Description</span>
+    }
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+      <p id="@MessageId" class="validation-message">@Message</p>
+    }
+  </fieldset>
+
+  @if (Chosen is { } chosenRung && HasDescription(chosenRung))
+  {
+    <p class="rung-descriptor"><b>@chosenRung.Label</b>@chosenRung.Description</p>
+  }
+
+  @if (Rungs.Any(HasDescription))
+  {
+    if (Chosen is null)
+    {
+      <details class="rung-legend only-wide" open>@LegendBody</details>
+      <details class="rung-legend only-narrow">@LegendBody</details>
+    }
+    else
+    {
+      <details class="rung-legend">@LegendBody</details>
+    }
+  }
+</div>
+
+@code {
+  /// <summary>The scale field's schema key: the radios' name, and the root of every id the picker gives.</summary>
+  [Parameter, EditorRequired] public string FieldKey { get; set; } = default!;
+
+  /// <summary>The field's label, the group's legend.</summary>
+  [Parameter, EditorRequired] public string Label { get; set; } = default!;
+
+  /// <summary>The ladder, lowest first, with the College's descriptors (the page's <c>Rungs</c>).</summary>
+  [Parameter, EditorRequired] public IReadOnlyList<EntrustmentRung> Rungs { get; set; } = [];
+
+  /// <summary>The value on the form: the chosen rung's Order, as text (5 is the rung labelled "4"). Empty for none.</summary>
+  [Parameter] public string? Value { get; set; }
+
+  [Parameter] public bool Required { get; set; }
+
+  /// <summary>The field's help text (the College's), shown under the legend and named first by the group.</summary>
+  [Parameter] public string? HelpText { get; set; }
+
+  /// <summary>What the group names with <c>aria-describedby</c>, as the form builds it for every field; null for none.</summary>
+  [Parameter] public string? DescribedBy { get; set; }
+
+  /// <summary>The field's own part of a refusal, shown under the row while the field is marked (T263).</summary>
+  [Parameter] public string? Message { get; set; }
+
+  /// <summary>Whether the field is marked invalid (refused, and not changed since): the group then says so.</summary>
+  [Parameter] public bool Invalid { get; set; }
+
+  /// <summary>A rung was chosen: its Order, as text.</summary>
+  [Parameter] public EventCallback<string> OnChoose { get; set; }
+
+  private string Name => FieldHelp.IdPart(FieldKey);
+
+  private string HelpId => FieldHelp.Id(FieldKey);
+
+  private string MessageId => ActivityFieldIds.Message(FieldKey);
+
+  private EntrustmentRung? Chosen => Rungs.FirstOrDefault(IsChosen);
+
+  private static string OrderOf(EntrustmentRung rung) => rung.Order.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+  private bool IsChosen(EntrustmentRung rung)
+    => !string.IsNullOrWhiteSpace(Value) && string.Equals(OrderOf(rung), Value.Trim(), StringComparison.Ordinal);
+
+  private static bool HasDescription(EntrustmentRung rung) => !string.IsNullOrWhiteSpace(rung.Description);
+
+  // The first radio carries the field's input id, so flow 03's refusal summary link still lands on the field (T342, C8);
+  // the others the id with their rung's Order after it (build-contracts.md).
+  private string RadioId(int index, EntrustmentRung rung)
+    => index == 0 ? ActivityFieldIds.Input(FieldKey) : $"{ActivityFieldIds.Input(FieldKey)}-{OrderOf(rung)}";
+
+  // A rung with no descriptor names nothing: no aria-describedby pointing at an empty or missing span (nit A7).
+  private static string? DescriptionIdOf(EntrustmentRung rung) => HasDescription(rung) ? DescriptionId(rung) : null;
+
+  // A radio names its descriptor, and while the field is refused its message too: the summary link lands on a radio, and
+  // some screen reader and browser pairs read no group description on a member (the build review's A5).
+  private string? RadioDescribedBy(EntrustmentRung rung)
+  {
+    var ids = new[] { DescriptionIdOf(rung), string.IsNullOrWhiteSpace(Message) ? null : MessageId }
+      .Where(id => id is not null);
+    var joined = string.Join(" ", ids);
+    return joined.Length == 0 ? null : joined;
+  }
+
+  /// <summary>The id of the visually hidden descriptor a rung's radio is described by: <c>rung-desc-5</c>.</summary>
+  public static string DescriptionId(EntrustmentRung rung) => $"rung-desc-{OrderOf(rung)}";
+
+  // One fold's summary and list, drawn in each rendering; neither carries an id (C9: Show while shut, Hide while open).
+  private RenderFragment LegendBody => @<text>
+    <summary>
+      <Icon Name="chevron-right" Class="rung-legend-marker" />
+      What each rung means
+      <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span>
+    </summary>
+    <dl class="rung-legend-list">
+      @foreach (var rung in Rungs.Where(HasDescription))
+      {
+        <div>
+          <dt>@rung.Label</dt>
+          <dd>@rung.Description</dd>
+        </div>
+      }
+    </dl>
+  </text>;
+}

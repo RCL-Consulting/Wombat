@@ -75,7 +75,7 @@ public sealed class TransitionRefusalLabelTests
         var message = await RefusedAsync(options, service => service.TransitionAsync(
             new TransitionActivityInput(902, "sign_off", AssessorId, Principal(AssessorId), null, null)));
 
-        message.Should().Be("Sign Off is not available while the activity is Draft.");
+        message.Should().Be("Sign off is not available while the activity is Draft.");
         message.Should().StartWith(new ActivityActionDto("sign_off", RequiresNote: false).Label + " ",
             "the refusal names the move by the text on its button");
     }
@@ -114,7 +114,7 @@ public sealed class TransitionRefusalLabelTests
         var message = await RefusedAsync(options, service => service.StageCompletedAsync(new RecordCompletedActivitiesInput(
             "clinical_audit_cpsa", TraineeId, CoordinatorId, "sign_off", [AuditRequest], Principal(CoordinatorId))));
 
-        message.Should().Be("Sign Off is not available while the activity is Draft.");
+        message.Should().Be("Sign off is not available while the activity is Draft.");
     }
 
     // ---- T263 ----------------------------------------------------------------------------------------------------

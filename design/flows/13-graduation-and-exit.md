@@ -566,8 +566,13 @@ Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{Act
 Do: He has acted as a Committee member since Step 4.5: choose Switch to Assessor in the sidebar, then open Dr du
   Plessis's Mini-CEX from Activity inbox and rate it `3b`, PAED-002's minimum in training year 2. Write what was done
   well, what to develop and the agreed plan, and complete it. Then choose Switch to Committee member in the sidebar.
-Expect: The activity reads Completed and is read-only to both of them. It credits PAED-002 in the semester that holds
-  `D−1` (checked in Step 5.26), and My activities reads it credited "1 item". Nobody is emailed.
+Expect: Before the switch, his Committee member's Home carries, under the header, the line "1 activity waits for you
+  in the Activity inbox: Mini-CEX (Paediatrics) · PAED-002 · `D−1`, from Pieter du Plessis, waiting less than a day.",
+  with Open it (T350). After it, Home's "Waiting for you" is badged "1 waiting", and the inbox lists the Mini-CEX as
+  "Mini-CEX (Paediatrics) · PAED-002 · `D−1`", from Pieter du Plessis, Requested. He rates it on the rung picker. After
+  Complete the result reads "Completed. Nothing else waits for you.", with Go to Home. The activity reads Completed and
+  is read-only to both of them. It credits PAED-002 in the semester that holds `D−1` (checked in Step 5.26), and My
+  activities reads it credited "1 item". Nobody is emailed.
 
 Step 5.26 — Dr du Plessis sees it counted (act-5-graduation.md)
 Role: Trainee — Dr Pieter du Plessis

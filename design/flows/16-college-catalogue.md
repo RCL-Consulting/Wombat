@@ -750,9 +750,11 @@ Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Open Dr Dlamini's Mini-CEX from the inbox. Rate it at the rung that Dr Dlamini's PAED-012 card named as the minimum
   now (Step 6.15). Write the three feedback fields, and complete it.
 Expect:
-  - The inbox row and the request's EPA both read "PAED-012 — Communicating with and counselling patients, caregivers
-    and healthcare teams (no longer in use)".
-  - The completion is not refused (D48): "Completed.". The activity is read-only.
+  - The inbox's Waiting for you lists Dr du Plessis's portfolio review first, Overdue since Step 3.30's ageing, then
+    "Mini-CEX (Paediatrics) · PAED-012 · `D`", from Anele Dlamini (T350). The row's EPA cell and the request's EPA both
+    read "PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams (no longer in use)".
+  - He rates it on the rung picker. The completion is not refused (D48): "Completed. 1 more waits for you.", with the
+    review's row, Open the next and Back to Activity inbox under it (T350). The activity is read-only.
   - The status card reads "Done. You completed it on …" and "Rated <the rung>. Its credit to PAED-012 waits while the
     EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
     its history, the completion's Credit reads None.

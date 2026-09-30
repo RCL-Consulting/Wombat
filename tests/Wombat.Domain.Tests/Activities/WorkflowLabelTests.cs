@@ -55,12 +55,22 @@ public sealed class WorkflowLabelTests
         Assert.Equal("Draft", workflow.StateLabel("draft"));
     }
 
+    /// <summary>
+    /// T350 (round 1, E1): a move is named in sentence case, as every other label is: "Record discussion", "Sign off", on
+    /// its button, in its reason, in a refusal and in the history, for every type.
+    /// </summary>
     [Theory]
     [InlineData("submit", "Submit")]
-    [InlineData("sign_off", "Sign Off")]
-    [InlineData("request-changes", "Request Changes")]
-    [InlineData("record_discussion", "Record Discussion")]
-    public void AMove_IsNamedFromItsKey_InWords_InTitleCase(string transitionKey, string label)
+    [InlineData("complete", "Complete")]
+    [InlineData("sign_off", "Sign off")]
+    [InlineData("record_discussion", "Record discussion")]
+    [InlineData("request-changes", "Request changes")]
+    [InlineData("hand_it-back", "Hand it back")]
+    [InlineData("Sign-Off", "Sign off")]
+    [InlineData("sign off", "Sign off")]
+    [InlineData("_submit_", "Submit")]
+    [InlineData("request_MSF", "Request MSF")]
+    public void AMove_IsNamedFromItsKey_InWords_InSentenceCase(string transitionKey, string label)
         => Assert.Equal(label, WorkflowTransition.LabelFor(transitionKey));
 
     [Theory]
@@ -71,7 +81,7 @@ public sealed class WorkflowLabelTests
 
     [Theory]
     [InlineData("submit", "Submit")]
-    [InlineData("sign_off", "Sign Off")]
+    [InlineData("sign_off", "Sign off")]
     public void ARecordedMoveTheWorkflowDeclares_IsNamedAsItsButtonWas(string transitionKey, string label)
     {
         // T220: the history names a move as its button named it and a refusal of it did (T189).

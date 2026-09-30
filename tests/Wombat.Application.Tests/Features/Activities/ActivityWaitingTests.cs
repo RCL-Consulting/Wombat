@@ -246,7 +246,7 @@ public sealed class ActivityWaitingTests
     /// T342 (B6): the read now asks only the moves that lead on, and the Activity inbox only the arms that are not the
     /// author's. For everyone who is neither a row's subject nor its creator, that changes nothing: over every shipped
     /// workflow, filed in every state, the inbox read admits exactly the rows the read before T342 admitted (any move out of
-    /// the state, any arm). An assessor's Complete, Record Discussion and Sign Off all lead on, and a Decline or a Return
+    /// the state, any arm). An assessor's Complete, Record discussion and Sign off all lead on, and a Decline or a Return
     /// never stood alone.
     /// </summary>
     [Fact]

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
@@ -9,11 +10,14 @@ using Wombat.Application.Features.Activities.Commands.SaveActivityDraft;
 using Wombat.Application.Features.Activities.Commands.TransitionActivity;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityById;
+using Wombat.Application.Features.Activities.Queries.ListWaitingForYou;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
+using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Shared;
 using Wombat.Web.Components.Shared.Activities;
+using Wombat.Web.Navigation;
 using Wombat.Web.Services;
 using Wombat.Web.Tests.TestSupport;
 
@@ -216,6 +220,10 @@ public sealed class ActivityPageTests : TestContext
         cut.WaitForAssertion(() => cut.Find("#activity-result").TextContent.Should()
             .Contain("Submitted. It is now Requested.").And.Contain("It is in Fatima Khumalo's Activity inbox."));
         cut.Find("#activity-result .alert-success strong").TextContent.Should().Be("Submitted. It is now Requested.");
+
+        // T350: a move made as its author has no way on, and the page reads nothing more for one.
+        sender.WaitingReads.Should().Be(0);
+        cut.FindAll(".way-on, .way-on-none").Should().BeEmpty();
     }
 
     [Fact]
@@ -366,7 +374,7 @@ public sealed class ActivityPageTests : TestContext
     public void AnActivityThatDoesNotExist_OrCannotBeOpened_IsOnePage_ActivityUnavailable()
     {
         // C7, T101: the query answers null for both, and the page never tells them apart.
-        var cut = Render(new PageSender((ActivityDetailDto?)null), waitFor: "Activity unavailable");
+        var cut = Render(new PageSender((ActivityDetailDto?)null), waitFor: "Activity unavailable", acting: Acting(WombatRoles.Trainee));
 
         cut.Find("h1").TextContent.Trim().Should().Be("Activity unavailable");
         TabTitle.Of(this, cut).Should().Be("Activity unavailable · Wombat");
@@ -526,6 +534,215 @@ public sealed class ActivityPageTests : TestContext
         ActivityPageModel.SplitResult("Logged.").Should().Be(("Logged.", (string?)null));
     }
 
+
+    // ---- T350, flow 04: the assessor's side (R3-C-Activity; R3-Spec § 1, § 3, § 4; DESIGN.md R3) ----
+
+    [Fact]
+    public void AfterACompletion_TheResultSaysWhatIsLeft_AndTheWayOnFollowsItOutsideTheLiveRegion()
+    {
+        // Q6, C1, C2 (R3-P-completed-next): "Completed. 1 more waits for you.", then the next row, Open the next named for
+        // it, and Back to the acting role's list. The activity just moved is left out of the read.
+        SignIn(Assessor);
+        var sender = new PageSender(ToRate(), Completed()) { Waiting = Waiting(Moved7(), Review9()) };
+        var cut = Render(sender, acting: Acting(WombatRoles.Assessor));
+
+        Button(cut, "Complete").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll(".way-on").Should().ContainSingle());
+        sender.WaitingReads.Should().Be(1, "one more read, after the move commits");
+        var result = cut.Find("#activity-result");
+        Words(result).Should().Be("Completed. 1 more waits for you.", "the live region holds the sentence and the count only");
+        result.QuerySelector(".alert")!.GetAttribute("role").Should().Be("status");
+        result.QuerySelector("strong")!.TextContent.Should().Be("Completed.");
+        result.QuerySelectorAll(".way-on, a, button").Should().BeEmpty();
+
+        var wayOn = cut.Find("section.way-on");
+        wayOn.GetAttribute("aria-label").Should().Be("The next activity waiting for you");
+        result.NextElementSibling!.ClassList.Should().Contain("way-on", "straight after the result, outside it");
+        var row = wayOn.QuerySelector("li.needs-you-row")!;
+        row.ClassList.Should().Contain("needs-you-row--overdue");
+        row.QuerySelector(".activity-link")!.TextContent.Should().Contain("Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29")
+            .And.Contain("from Pieter du Plessis");
+        row.QuerySelector(".needs-you-badges")!.TextContent.Should().Contain("Awaiting review").And.Contain("Overdue");
+        row.QuerySelector(".needs-you-why")!.TextContent.Trim().Should().Be("Waiting 8 days, since 2026-09-22 08:06 SAST.");
+
+        var buttons = wayOn.QuerySelectorAll(".form-actions a").ToList();
+        buttons.Select(button => button.TextContent.Trim()).Should().Equal("Open the next", "Back to Activity inbox");
+        buttons[0].ClassList.Should().Contain("btn-primary");
+        buttons[0].GetAttribute("href").Should().Be("/activities/9");
+        buttons[0].GetAttribute("aria-label").Should().Be(
+            "Open the next: Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29, from Pieter du Plessis");
+        buttons[1].GetAttribute("href").Should().Be("/activities/inbox");
+
+        // C10 d: the result takes the focus; the next Tab is Open the next, the row's own link being out of the tab order.
+        wayOn.QuerySelectorAll("a[href]:not([tabindex='-1']), button").First().TextContent.Trim().Should().Be("Open the next");
+        row.QuerySelector(".activity-link")!.GetAttribute("tabindex").Should().Be("-1");
+        cut.WaitForAssertion(() => JSInterop.Invocations.Should().Contain(call =>
+            call.Identifier == "Blazor._internal.domWrapper.focus" &&
+            ((Microsoft.AspNetCore.Components.ElementReference)call.Arguments[0]!).Id == cut.FindComponent<ActionResult>().Instance.Element.Id));
+    }
+
+    [Theory]
+    [InlineData("Completed.", "Completed. Nothing else waits for you.")]
+    [InlineData("Discussed.", "Discussed. Nothing else waits for you.")]
+    public void WithNothingLeft_TheResultSaysSo_AndTheWayOnIsGoToHome(string sentence, string expected)
+    {
+        // C1 (R3-P-completed-last, R3-P-discussed): a move into a final state reads as that state (a Return: the next
+        // test). Nothing left: no row, and Go to Home.
+        SignIn(Assessor);
+        var sender = new PageSender(ToRate(sentence), Completed()) { Waiting = Waiting(Moved7()) };
+        var cut = Render(sender, acting: Acting(WombatRoles.Assessor));
+
+        Button(cut, "Complete").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll(".way-on-none").Should().ContainSingle());
+        Words(cut.Find("#activity-result")).Should().Be(expected);
+        cut.FindAll("section.way-on").Should().BeEmpty();
+        var home = cut.Find("p.way-on-none a");
+        home.TextContent.Trim().Should().Be("Go to Home");
+        home.GetAttribute("href").Should().Be("/");
+        cut.Find("#activity-result").NextElementSibling!.ClassList.Should().Contain("way-on-none");
+    }
+
+    [Fact]
+    public void AReturn_SaysItWentBackToTheRegistrar_ByName_NotTheStateItLeftBehind()
+    {
+        // T350 build review, D5: "It is now Draft." was the only result that named no act, and "Draft" read as the
+        // assessor's own. A Return names the act and the person it went back to; the status card below still says Draft.
+        SignIn(Assessor);
+        var toReturn = ToRate() with
+        {
+            AvailableActions = [new ActivityActionDto("return", false) { TargetStateLabel = "Draft", ResultSentence = "It is now Draft." }]
+        };
+        var sender = new PageSender(toReturn, Returned()) { Waiting = Waiting(Moved7()) };
+        var cut = Render(sender, acting: Acting(WombatRoles.Assessor));
+
+        Button(cut, "Return").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll(".way-on-none").Should().ContainSingle());
+        Words(cut.Find("#activity-result")).Should().Be("Returned to Sipho Ndlovu. Nothing else waits for you.");
+    }
+
+    [Fact]
+    public void FromTheOtherRoleLine_ACommitteeMembersWayOn_GoesBackToHome_AndHerTrailIsHomeThenTheActivity()
+    {
+        // § 8 (R3-P-from-the-line): Dr Zulu, acting as Committee member, opens the Mini-CEX from her Home's line. No list
+        // owns the page for her acting role: nothing is lit, the trail is Home › the activity, and Back to Home.
+        SignIn(Assessor);
+        var zulu = ActingRoleResolver.Resolve(WombatRoles.CommitteeMember, [WombatRoles.CommitteeMember, WombatRoles.Assessor]);
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.Role, WombatRoles.CommitteeMember), new Claim(ClaimTypes.Role, WombatRoles.Assessor)], "Test"));
+        NavOwners.TrailTo(typeof(ActivityView), zulu.Role, NavItems.For(zulu, user)).Should().Equal(new Crumb("Home", "/"));
+        NavOwners.Lit(typeof(ActivityView), zulu.Role, NavItems.For(zulu, user)).Current.Should().Be(NavCurrent.None);
+
+        var sender = new PageSender(ToRate(), Completed()) { Waiting = Waiting(Moved7(), Review9()) };
+        var cut = Render(sender, acting: zulu);
+        Button(cut, "Complete").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll(".way-on").Should().ContainSingle());
+        var back = cut.FindAll(".way-on .form-actions a").Last();
+        back.TextContent.Trim().Should().Be("Back to Home");
+        back.GetAttribute("href").Should().Be("/");
+    }
+
+    [Fact]
+    public void AWayOnReadThatFails_CostsOnlyTheTailAndTheWayOn_NeverTheResult()
+    {
+        SignIn(Assessor);
+        var sender = new PageSender(ToRate(), Completed()) { WaitingFailure = new InvalidOperationException("Npgsql: gone") };
+        var cut = Render(sender, acting: Acting(WombatRoles.Assessor));
+
+        Button(cut, "Complete").Click();
+
+        cut.WaitForAssertion(() => Words(cut.Find("#activity-result")).Should().Be("Completed."));
+        cut.FindAll(".way-on, .way-on-none").Should().BeEmpty();
+        cut.Markup.Should().NotContain("Npgsql");
+    }
+
+    [Theory]
+    [InlineData(WombatRoles.Assessor, "Go to Activity inbox", "/activities/inbox")]
+    [InlineData(WombatRoles.Trainee, "Go to My activities", "/activities/mine")]
+    [InlineData(WombatRoles.CommitteeMember, "Go to Home", "/")]
+    public void ActivityUnavailable_GoesToTheActingRolesList_ElseHome(string role, string label, string href)
+    {
+        // Round 1, E4; R3 (R3-P-unavailable).
+        var cut = Render(new PageSender((ActivityDetailDto?)null), waitFor: "Activity unavailable", acting: Acting(role));
+
+        var link = cut.Find(".detail-card--empty a");
+        link.TextContent.Trim().Should().Be(label);
+        link.GetAttribute("href").Should().Be(href);
+    }
+
+    [Fact]
+    public void AReaderWithASectionToFill_HasAboutTwice_TheSecondUnderTheBarForAPhone_AndTheFormFolds()
+    {
+        // Round 1, E3; round 2, E2: About for 641px and up where it is, and under the bar below it, its ids suffixed.
+        SignIn(Assessor);
+        var cut = Render(new PageSender(ToRate()), acting: Acting(WombatRoles.Assessor));
+
+        var abouts = cut.FindAll(".activity-about").ToList();
+        abouts.Should().HaveCount(2);
+        abouts[0].ClassList.Should().Contain("only-wide").And.NotContain("only-narrow");
+        abouts[0].GetAttribute("aria-labelledby").Should().Be("activity-about-title");
+        abouts[1].ClassList.Should().Contain("only-narrow").And.NotContain("only-wide");
+        abouts[1].GetAttribute("aria-labelledby").Should().Be("activity-about-title-narrow");
+        abouts[1].QuerySelector("#activity-about-title-narrow").Should().NotBeNull();
+        abouts[1].QuerySelector("#activity-encounter-date-narrow").Should().NotBeNull();
+        abouts[1].PreviousElementSibling!.ClassList.Should().Contain("activity-sections", "under the bar");
+        cut.FindAll("[id]").GroupBy(element => element.Id).Where(group => group.Count() > 1).Should().BeEmpty("no id twice");
+        cut.FindComponent<ActivityForm>().Instance.FoldFilledSections.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TheAuthorWritingTheirOwnDraft_KeepsFlow03sOrder_AboutOnce_AndNoFold()
+    {
+        var cut = Render(new PageSender(Draft()), acting: Acting(WombatRoles.Trainee));
+
+        cut.FindAll(".activity-about").Should().ContainSingle().Which.ClassList.Should().NotContain("only-wide");
+        cut.FindComponent<ActivityForm>().Instance.FoldFilledSections.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AnAssessorReadingWhatIsDone_KeepsThePagesOrder_AboutOnce_AndNoFold()
+    {
+        SignIn(Assessor);
+        var cut = Render(new PageSender(Completed()), acting: Acting(WombatRoles.Assessor));
+
+        cut.FindAll(".activity-about").Should().ContainSingle().Which.ClassList.Should().NotContain("only-wide");
+        cut.FindComponent<ActivityDetail>().Instance.FoldFilledSections.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TheStatusCardsRegion_IsNamedByItsLabel_WhoHasItNow()
+    {
+        // Nit A10: a short name for the region, not the whole headline.
+        var cut = Render(new PageSender(Requested()));
+
+        var card = cut.Find(".activity-status");
+        var labelledBy = card.GetAttribute("aria-labelledby");
+        labelledBy.Should().Be("activity-status-label");
+        cut.Find($"#{labelledBy}").TextContent.Trim().Should().Be("Who has it now");
+    }
+
+    [Fact]
+    public void TheNotePanel_OnThePage_SpeaksOfTheRequest_AndARefusedNoteSaysItIsStillRequested()
+    {
+        // Note 4 and note 3's wiring (R3-P-decline-note, R3-P-decline-refused): the part is the form's first section's.
+        SignIn(Assessor);
+        var sender = new PageSender(ToRate()) { TransitionFailure = new InvalidOperationException("Decline requires a note.") };
+        var cut = Render(sender, acting: Acting(WombatRoles.Assessor));
+
+        Button(cut, "Decline").Click();
+        cut.Find("#note-panel-title").TextContent.Should().Be("Decline this request");
+        cut.Find("label[for='note-in']").TextContent.Trim().Should().Be("Note for Sipho Ndlovu *");
+        Button(cut, "Keep the request").Should().NotBeNull();
+
+        Button(cut, "Decline with this note").Click();
+
+        cut.WaitForAssertion(() => cut.Find("#note-summary strong").TextContent.Should().Be("Not declined. It is still Requested."));
+        cut.Find("#note-summary a").TextContent.Should().Be("Note for Sipho Ndlovu: Decline requires a note.");
+    }
+
     // ---- helpers ----
 
     private static string StatusLine(IRenderedComponent<ActivityView> cut)
@@ -537,13 +754,25 @@ public sealed class ActivityPageTests : TestContext
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, userId));
     }
 
-    private IRenderedComponent<ActivityView> Render(PageSender sender, string waitFor = "Who has it now")
+    private IRenderedComponent<ActivityView> Render(PageSender sender, string waitFor = "Who has it now", ActingRole? acting = null)
     {
         Services.AddSingleton<IScopedSender>(sender);
-        var cut = RenderComponent<ActivityView>(parameters => parameters.Add(page => page.ActivityId, 7));
+        var cut = RenderComponent<ActivityView>(parameters =>
+        {
+            parameters.Add(page => page.ActivityId, 7);
+            if (acting is not null)
+            {
+                parameters.AddCascadingValue(acting);
+            }
+        });
         cut.WaitForState(() => cut.Markup.Contains(waitFor));
         return cut;
     }
+
+    private static ActingRole Acting(string role) => ActingRoleResolver.Resolve(role, [role]);
+
+    // An element's words, its whitespace collapsed.
+    private static string Words(AngleSharp.Dom.IElement element) => Regex.Replace(element.TextContent, @"\s+", " ").Trim();
 
     private static string Text(AngleSharp.Dom.IElement scope, string selector)
         => scope.QuerySelector(selector)!.TextContent.Trim();
@@ -640,6 +869,33 @@ public sealed class ActivityPageTests : TestContext
             [CreateRow(), SubmitRow(daysAfterEncounter)],
             actions ?? [CancelAction()]);
 
+    /// <summary>
+    /// The request to its assessor, the viewer (T350): theirs to complete or decline, the Entrustment and Feedback theirs
+    /// to write. <paramref name="completeSentence" /> is the Complete move's result sentence.
+    /// </summary>
+    private static ActivityDetailDto ToRate(string completeSentence = "Completed.")
+        => Detail("requested", "Requested",
+            new ActivityHolderDto(ActivityHolderKind.Person, Assessor, "Fatima Khumalo", true, Submitted),
+            [CreateRow(), SubmitRow()],
+            [
+                new ActivityActionDto("complete", false) { TargetStateLabel = "Completed", ResultSentence = completeSentence, TargetIsFinal = true },
+                new ActivityActionDto("decline", true) { TargetStateLabel = "Declined", ResultSentence = "Declined.", TargetIsFinal = true }
+            ],
+            editable: ["overall_level", "strengths", "improvements", "plan"]);
+
+    // What waits for the assessor after the move: this activity (7), which the page leaves out, and the others.
+    private static WaitingForYouDto Waiting(params ActivitySummaryDto[] items)
+        => new(items, items.Count(item => item.IsOverdue), 7);
+
+    private static ActivitySummaryDto Moved7() => ActivityRows.Waiting(7, subjectName: "Sipho Ndlovu");
+
+    // Dr Patel's portfolio review, aged by Step 3.30: waiting 8 days since 2026-09-22 08:06 SAST.
+    private static ActivitySummaryDto Review9()
+        => ActivityRows.Waiting(
+            9, typeName: "Portfolio and Logbook Review (Paediatrics)", subjectName: "Pieter du Plessis", state: "awaiting_review",
+            stateLabel: "Awaiting review", waitedDays: 8, overdue: true, since: new DateTime(2026, 9, 22, 6, 6, 0, DateTimeKind.Utc),
+            epaCode: "PAED-015", observedOn: new DateOnly(2026, 9, 29));
+
     private static ActivityDetailDto Declined()
         => Detail("declined", "Declined", new ActivityHolderDto(ActivityHolderKind.Closed, null, null, false, Moved),
             [CreateRow(), SubmitRow(), Row(3, "requested", "declined", "decline", "Requested", "Declined", Assessor, "Fatima Khumalo", Moved, "Not my patient.")],
@@ -697,6 +953,13 @@ public sealed class ActivityPageTests : TestContext
 
         public Exception? LoadFailure { get; set; }
 
+        /// <summary>What <see cref="ListWaitingForYouQuery" /> answers after a move (T350, the way on).</summary>
+        public WaitingForYouDto? Waiting { get; set; }
+
+        public Exception? WaitingFailure { get; set; }
+
+        public int WaitingReads { get; private set; }
+
         /// <summary>Held, the first load waits for it: the page is seen loading.</summary>
         public TaskCompletionSource? Gate { get; set; }
 
@@ -731,6 +994,14 @@ public sealed class ActivityPageTests : TestContext
                     }
 
                     return Task.FromResult((TResponse)(object)_details[^1]!.Activity);
+                case ListWaitingForYouQuery:
+                    WaitingReads++;
+                    if (WaitingFailure is not null)
+                    {
+                        throw WaitingFailure;
+                    }
+
+                    return Task.FromResult((TResponse)(object)Waiting!);
                 case SaveActivityDraftCommand save:
                     Saves.Add(save);
                     if (SaveFailure is not null)

@@ -199,6 +199,25 @@ public sealed class DashboardLinkAuthorizationTests
         home.Markup.Should().NotContain("You also act as");
     }
 
+    // T350, flow 04 (note 7, E4): acting as Committee member, a holder of Assessor is shown the other-role line, whose one
+    // link opens the waiting activity, a page the Committee member is let in to, with no switch.
+    [Fact]
+    public async Task TheOtherRoleLine_OpensAPageTheActingRoleIsAdmittedTo_AndOffersNoSwitch()
+    {
+        var zulu = ActingRoleResolver.Resolve(WombatRoles.CommitteeMember, [WombatRoles.CommitteeMember, WombatRoles.Assessor]);
+
+        var home = RenderHome(zulu, stored: null, WombatRoles.CommitteeMember, WombatRoles.Assessor);
+
+        home.Dashboards.Should().Equal(typeof(CommitteeMemberDashboard));
+        home.Markup.Should().Contain("other-role-line");
+        home.Hrefs.Should().Contain("/activities/57");
+        home.Hrefs.Should().NotContain(href => href.StartsWith("/dashboard/switch/", StringComparison.Ordinal));
+        foreach (var href in home.Hrefs)
+        {
+            (await RefusalOf(PageFor(href)!, WombatRoles.CommitteeMember)).Should().BeNull($"Home offers {href}");
+        }
+    }
+
     // Where nothing cascades it (a render outside Routes), Home resolves the same way from the principal: the stored
     // choice while it is held, else the precedence.
     [Theory]
@@ -362,11 +381,14 @@ public sealed class DashboardLinkAuthorizationTests
             GetCoordinatorDashboardSummaryQuery => new CoordinatorDashboardSummaryDto(
                 [new StalledRequestItem(51, "Mini-CEX", "Thandi Nkosi", When)],
                 [new ExpiringInvitationItem(1, "new.trainee@wombat.local", WombatRoles.Trainee, new DateOnly(2026, 3, 22))]),
-            GetAssessorDashboardSummaryQuery => new AssessorDashboardSummaryDto(
-                2,
-                [new AwaitingReviewItem(52, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", When, IsOverdue: false)],
-                [new RecentDecisionItem(53, "Mini-CEX", "Thandi Nkosi", "completed", "Completed", IsFinished: true, When)]),
-            GetTraineeDashboardSummaryQuery query => Trainee(
+            GetAssessorDashboardSummaryQuery => TestSupport.ActivityRows.AssessorHome(
+                [TestSupport.ActivityRows.Waiting(52, typeName: "Mini-CEX", subjectName: "Thandi Nkosi", since: When)],
+                [TestSupport.ActivityRows.Decided(53, typeName: "Mini-CEX", subjectName: "Thandi Nkosi", decidedOn: When)]),
+            // T350: the other-role line's read, for a holder of Assessor acting in another role.
+            Wombat.Application.Features.Activities.Queries.ListWaitingForYou.ListWaitingForYouQuery =>
+                new Wombat.Application.Features.Activities.Dtos.WaitingForYouDto(
+                    [TestSupport.ActivityRows.Waiting(57, typeName: "Mini-CEX", subjectName: "Thandi Nkosi", since: When)], 0, 7),
+                        GetTraineeDashboardSummaryQuery query => Trainee(
                 pending: query.Principal.IsInRole(WombatRoles.PendingTrainee) && !query.Principal.IsInRole(WombatRoles.Trainee)),
             _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
         };

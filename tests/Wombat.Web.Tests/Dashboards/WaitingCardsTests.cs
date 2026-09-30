@@ -59,29 +59,29 @@ public sealed class WaitingCardsTests : TestContext
     // since T342 it is Needs you, the caller's own work only (NeedsYouCardTests).
 
     /// <summary>
-    /// T335, flow 01 (R2-Landing-Assessor, S20): what waits on the Assessor is one card, "Waiting for your rating", its
-    /// count as its badge and its rows under it. Until T335 "Pending requests" counted them, "Awaiting your review" listed
-    /// them, and an Actions card linked the inbox a third time.
+    /// T335, flow 01 (R2-Landing-Assessor, S20): what waits on the Assessor is one card, its count its badge and its rows
+    /// under it. Until T335 "Pending requests" counted them, "Awaiting your review" listed them, and an Actions card linked
+    /// the inbox a third time. Since T350 (flow 04, R1) the card is "Waiting for you", its count in words, its foot "Open
+    /// Activity inbox" (AssessorHomeTests holds the rest).
     /// </summary>
     [Fact]
     public void TheAssessorsWaitingWork_IsOneCard_ItsCountTheBadge()
     {
         _auth.SetRoles("Assessor");
-        Services.AddSingleton<IScopedSender>(new Sender(new AssessorDashboardSummaryDto(
-            12,
-            [new AwaitingReviewItem(21, "Mini-CEX (Paediatrics)", "Nomsa Mahlangu", "requested", "Requested", When, IsOverdue: true)],
+        Services.AddSingleton<IScopedSender>(new Sender(TestSupport.ActivityRows.AssessorHome(
+            [TestSupport.ActivityRows.Waiting(21, subjectName: "Nomsa Mahlangu", waitedDays: 12, overdue: true, since: When)],
             [])));
 
         var cut = RenderComponent<AssessorDashboard>();
         cut.WaitForState(() => cut.FindAll(".detail-card").Count > 0 && cut.FindAll(".skeleton").Count == 0);
 
-        Titles(cut).Should().Equal("Waiting for your rating", "Recent decisions");
+        Titles(cut).Should().Equal("Waiting for you", "Recent decisions");
         var waiting = cut.FindAll(".detail-card").First();
-        waiting.QuerySelector("h2 .badge")!.TextContent.Should().Be("12", "the count is the inbox's, whatever the card lists");
+        waiting.QuerySelector("h2 .badge")!.TextContent.Should().Be("1 waiting, 1 overdue", "the count is the inbox's, in words");
         waiting.ClassList.Should().Contain("detail-card--warning", "one row is overdue");
         waiting.QuerySelectorAll("li a").Select(link => link.GetAttribute("href")).Should().Equal("/activities/21");
         waiting.QuerySelector(".dashboard-card-footer a")!.GetAttribute("href").Should().Be("/activities/inbox");
-        cut.Markup.Should().NotContainAny(["Pending requests", "Awaiting your review", "Open my inbox"]);
+        cut.Markup.Should().NotContainAny(["Pending requests", "Awaiting your review", "Open my inbox", "Waiting for your rating"]);
     }
 
     /// <summary>

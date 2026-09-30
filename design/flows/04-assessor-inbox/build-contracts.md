@@ -131,3 +131,20 @@ with the merge. [A1] `.badge-overdue`, `.needs-you-row--overdue`, `.needs-you-ba
 `.move-reasons--beside`. [D] `.rung-picker`, `.rung-choice`, `.rung-legend`, `.rung-legend-marker`, `.rung-legend-list`,
 `.section-fold`, `.section-fold-head`, `.section-fold-show`, `.section-fold-owner`, `.section-fold-body`. The overdue
 card uses the built `.detail-card--warning` in place of `--emphasis`, never both (nit T15).
+
+## As built after wave 1 (the integrator, 2026-09-30; wave 2 builds on these)
+
+Wave 1 (lanes A1 `36155275`, A2 `6bb0b564`, merged on `t350`, all six suites green) built every name above as written,
+plus:
+- `WaitingWords.WaitedSince(item)`: "Waiting 8 days, since 2026-09-22 08:06 SAST." — what `WaitingList`'s `WithSince` renders.
+- `ActivityRowNames.WaitingLinkWords(item)`: "<name>, from <registrar>" — the accessible name `ActivityLink` and
+  `OtherRoleLine` both use.
+- `WaitingWords.OtherRoleLine(...)` returns `string?`: null when nothing waits (the line renders nothing).
+- `NotePanelWords.PartOf(authorPart)` ("review request" → "review"; empty → "activity") and `NotePanelWords.SendClass(action)`
+  ("btn-danger" when the move is final, else "btn-primary").
+- Test builders for wave 2: `ActivityRows.Waiting`, `ActivityRows.Decided`, `ActivityRows.AssessorHome`
+  (`tests/Wombat.Web.Tests/TestSupport/ActivityRows.cs`); Application fixtures in `TestHelpers/AssessorReads.cs`.
+- The alike rule keeps `RowNames.Distinct`'s semantics: a tie-breaker that says the same of every alike row is skipped
+  (so two Requested rows are told apart by their SAST time, not ", Requested").
+- `AssessorDashboard.razor` and `ActivityInbox.razor` compile against the new shapes but are not redrawn (lane B).
+  `ActivityWorkflowActions.razor` still uses its own note words (lane C wires `NotePanelWords` and `RefusalWords.ForNote`).

@@ -513,29 +513,35 @@ Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and 
 Expect: Under the header an info alert reads "You are now acting as Assessor." and takes the focus; on Home it offers no
   Switch back. The sidebar reads "Acting as Assessor", with "Switch to Committee member" under it, and the menu changes
   to the Assessor's: Home and Activity inbox, then My data rights. Home's subtitle reads "Assessor · Semester N, YYYY".
-  The Assessor dashboard has two cards: "Waiting for your rating", badged 0, which reads "Nothing is waiting for your
-  rating." with "Open inbox →" (T297, T335), and Recent decisions, "No decisions yet.". The reload shows no alert: it is
-  said once. Signing out lands on the sign-in page with "You have signed out." After signing in again she lands acting
-  as Assessor, with no alert, because the choice is stored with her account, not in the browser (T317). The
+  The Assessor dashboard has two cards: "Waiting for you", with no badge, which reads "Nothing is waiting for you." with
+  "Open Activity inbox" (T297, T335, T350), and Recent decisions, "No decisions yet.", with no "All your decisions".
+  Nothing waits in her inbox, so the Committee member's Home shows no line about it (T350). The reload shows no alert:
+  it is said once. Signing out lands on the sign-in page with "You have signed out." After signing in again she lands
+  acting as Assessor, with no alert, because the choice is stored with her account, not in the browser (T317). The
   Administrator address writes nothing and says nothing: she is still acting as Assessor, since a role she does not hold
   is never shown or stored. Switch to Committee member brings back the Committee member's sidebar and menu, "Committee
   member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
   role Step 3.33 starts from.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:749)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:786)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
-Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for your
-  rating", open Dr Mahlangu's Mini-CEX, rate it 3a with feedback, and complete it.
+Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
+  open Dr Mahlangu's Mini-CEX (the Activity inbox lists it too), rate it 3a with feedback, and complete it.
 Expect: The sidebar first reads "Acting as Committee member", with "Switch to Assessor" under it, and Home "Committee
-  member · Semester N, YYYY" under its heading. After the switch Home reads "You are now acting as Assessor." in an info
-  alert under the header, and "Assessor · Semester N, YYYY"; the sidebar reads "Acting as Assessor" over Home and
-  Activity inbox, and "Waiting for your rating" is badged 1: this Mini-CEX.
-  The card lists it, "Mini-CEX (Paediatrics) — Nomsa Mahlangu", badged Overdue: it has waited past the
-  assessor's seven days since Step 3.30 aged it. After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's
-  minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
+  member · Semester N, YYYY" under its heading. Under the header, above the committee cards, a warning line reads "1
+  activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · `D−3`, from
+  Nomsa Mahlangu, waiting 8 days.", with Open it (T350). After the switch Home reads "You are now acting as Assessor."
+  in an info alert under the header, and "Assessor · Semester N, YYYY", with no such line; the sidebar reads "Acting
+  as Assessor" over Home and Activity inbox, and "Waiting for you", in the warning stripe, is badged "1 waiting, 1
+  overdue": this Mini-CEX, "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu, Requested with Overdue
+  beside it, "Waiting 8 days": it has waited past the assessor's seven days since Step 3.30 aged it. The inbox lists it
+  with "8 days" over "since `D−8` … SAST"; the page's status card reads "Your move. Nomsa Mahlangu asked you on `D−8` …
+  SAST.", the same moment. She rates it on the rung picker. After Complete the result reads "Completed. Nothing else
+  waits for you.", with Go to Home, and Home then reads "Nothing is waiting for you." The Mini-CEX is Completed,
+  credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
 
-Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1104)
+Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1151)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
@@ -551,7 +557,7 @@ Expect:
   - Her menu is Home, Committee reviews and Decision panels, then My data rights. Programme trainees is flow 06's, and
     the menu offers no page before it is built.
 
-Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:714)
+Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:751)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /not-found
 Do: Look in the menu for a page of stalled requests. Then type the address the menu once linked,
@@ -675,7 +681,7 @@ Route: /
 Do: Read the menu.
 Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1068)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1074)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
@@ -683,7 +689,7 @@ Expect: The dashboard's cards stack. On My progress, each EPA's figures and traj
   rows stack, each cell but the link and the state labelled by its column (T342), and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1253)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1259)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

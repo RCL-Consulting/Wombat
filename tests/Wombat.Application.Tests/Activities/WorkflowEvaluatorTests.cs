@@ -128,7 +128,7 @@ public sealed class WorkflowEvaluatorTests
 
         var refused = _evaluator.Evaluate(CreateWorkflow("subject"), activity, "sign_off", principal);
         refused.Allowed.Should().BeFalse();
-        refused.Reason.Should().Be("Sign Off is not available while the activity is Draft.");
+        refused.Reason.Should().Be("Sign off is not available while the activity is Draft.");
 
         activity.CurrentState = "archived";
         _evaluator.Evaluate(CreateWorkflow("subject"), activity, "act", principal)

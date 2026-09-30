@@ -1813,7 +1813,7 @@ textarea[aria-invalid="true"] {
   }
 }
 
-/* A card's title, under Home's h1: its icon, its words, and a count as its badge ("Waiting for your rating 2"). */
+/* A card's title, under Home's h1: its icon, its words, and a count as its badge ("Needs you 2", "2 waiting, 1 overdue"). */
 .dashboard-card-title {
   align-items: center;
   display: flex;
@@ -2693,6 +2693,149 @@ textarea[aria-invalid="true"] {
 }
 /* end Flow 03: My activities and Needs you */
 
+/* Flow 04: the waiting row (T350) */
+/* WaitingList (C6; R1): NeedsYouList's row with an overdue edge, on the Assessor's Home, in the Activity inbox and in the
+   activity page's way on. The built .needs-you, .needs-you-row, .needs-you-rule and .needs-you-why; this adds only the
+   overdue row's warning stripe (warning-color, 5.77:1 on the surface), the badges' group and the link's wrap. Overdue
+   is a badge in words beside the state's, never in its place (note 14): warning-bg with its warning-color edge, the
+   text 11.89:1 on it and the edge 5.43:1. */
+.needs-you-row--overdue {
+  border-left-color: var(--warning-color);
+}
+
+/* A long name ("Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29") wraps inside the row at 390px
+   rather than pushing the badges off it. */
+.needs-you-row .activity-link {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.needs-you-badges {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.badge-overdue {
+  background: var(--warning-bg);
+  border-color: var(--warning-color);
+}
+/* end Flow 04: the waiting row */
+
+/* Flow 04: the Assessor's Home and the inbox (T350) */
+/* Home's "Waiting for you" (R1): past five rows, how many more wait in the inbox (E5), above the card's foot; and a
+   card's empty words. Both muted, 5.09:1 on the surface. */
+.waiting-more {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: var(--space-sm) 0 0;
+}
+
+.card-empty {
+  color: var(--muted-text);
+  margin: 0;
+}
+
+/* Home's "Recent decisions" (R1): a ruled row per decision, its link (name, then "from <registrar>") on the left and its
+   badge over its day on the right; at 390 the badge and the day sit on one line under the link. */
+.decided-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.decided-row {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+}
+
+.decided-row:last-child {
+  border-bottom: 0;
+}
+
+.decided-row .activity-link {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* One align-items (nit T2: the canvas's second was dead). */
+.decided-meta {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.decided-date {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* The inbox's cells (R2): the Waiting cell, "8 days" over "since 2026-09-22 08:06 SAST" (muted, 5.09:1); and the EPA
+   cell, whose 108-character PAED-015 title wraps inside it. */
+.waited-cell b {
+  display: block;
+  font-weight: 600;
+}
+
+.waited-cell span {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.85rem;
+}
+
+.epa-cell {
+  max-width: 22rem;
+  overflow-wrap: anywhere;
+}
+
+/* The other-role line (E4; C12): an Alert under Home's header, above the acting role's dashboard. Its text on the tint is
+   11.89:1 (warning-bg) or 11.84:1 (info-bg); its button keeps .btn-outline's surface fill. */
+.other-role-line {
+  margin-bottom: var(--space-lg);
+}
+
+/* A pager's end is aria-disabled, not disabled (C10 f): it keeps its place and focus, and looks unavailable. */
+.pager .btn[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+@media (max-width: 640.98px) {
+  /* C8: 44px on a phone. Home's "Open Activity inbox" and "All your decisions", the Try again of Home and of a StatePanel
+     (the inbox, the activity page), the pager's Previous and Next, and the other-role line's action. */
+  .dashboard-card-footer .btn,
+  .alert-row .btn,
+  .pager .btn {
+    min-height: 2.75rem;
+  }
+
+  .other-role-line .alert-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .epa-cell {
+    max-width: none;
+  }
+
+  .decided-meta {
+    align-items: center;
+    flex-direction: row;
+    gap: var(--space-sm);
+  }
+}
+/* end Flow 04: the Assessor's Home and the inbox */
+
 /* ── Pager ─────────────────────────────────────────── */
 .pager {
   align-items: center;
@@ -2831,6 +2974,231 @@ textarea[aria-invalid="true"] {
 [hidden] {
   display: none !important;
 }
+
+/* Flow 04: two renderings and the fold's words (T350, E2, C9) */
+/* What is open at 1280 and shut at 390 (the request fold, "What each rung means") is drawn twice, both read-only, and CSS
+   shows one each side of the phone breakpoint: never a script (round 2, E2). Each hides only, so an element keeps the
+   display its own class gives it; !important as [hidden] has it, so a later flex or block of equal weight cannot show the
+   copy that is meant to be away. The narrow copy's ids are suffixed -narrow by the page that draws it. */
+@media (max-width: 640.98px) {
+  .only-wide {
+    display: none !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .only-narrow {
+    display: none !important;
+  }
+}
+
+/* A fold's summary says Show while it is shut and Hide while it is open (C9): both words are in the markup, one hidden. */
+details[open] > summary .fold-show,
+details:not([open]) > summary .fold-hide {
+  display: none;
+}
+/* end Flow 04: two renderings and the fold's words */
+
+/* Flow 04: the rung picker and the request fold (T350) */
+/* The rater's rung picker (RatedLevelPicker; Q5, round 2 E3 and C7): the read-only rung row's cells, each a label round
+   a native radio. A cell is 3.5rem, a radio above its 1.1rem label, at every width (44 px and more on a phone, C8). The
+   radio stays native, coloured by accent-color: the secondary colour, and the on-fill colour on the chosen rung's fill;
+   its unchecked ring is the browser's (4.54:1 on the surface), not a token. The ring of focus is on the cell. A fieldset
+   is at least as wide as its content by default; at 0 the six cells share whatever width the section has, at 390 too. */
+.rung-picker {
+  min-width: 0;
+}
+
+.rung-choice {
+  cursor: pointer;
+  gap: var(--space-xs);
+  min-height: 3.5rem;
+}
+
+.rung-choice input {
+  accent-color: var(--secondary-color);
+  height: 1rem;
+  margin: 0;
+  width: 1rem;
+}
+
+.rung-choice:hover {
+  background: var(--hover-bg);
+}
+
+.rung-choice.is-chosen,
+.rung-choice.is-chosen:hover {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: var(--on-fill);
+}
+
+.rung-choice.is-chosen input {
+  accent-color: var(--on-fill);
+}
+
+.rung-choice:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* "What each rung means": a native details under the row, the College's descriptors by rung. Open at 1280 until a rung
+   is chosen and shut at 390 (two renderings, E2); its chevron turns while it is open, and the reduced-motion rule takes
+   the turn to 0. The summary is 44 px at every width. */
+.rung-legend {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.rung-legend > summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  list-style: none;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+}
+
+.rung-legend > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rung-legend-marker {
+  flex: none;
+  transition: transform var(--motion-fast) ease;
+}
+
+.rung-legend[open] .rung-legend-marker {
+  transform: rotate(90deg);
+}
+
+.rung-legend .section-fold-show {
+  margin-left: auto;
+}
+
+.rung-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.rung-legend-list > div {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: 2rem 1fr;
+}
+
+.rung-legend-list dt {
+  font-weight: 700;
+}
+
+.rung-legend-list dd {
+  margin: 0;
+}
+
+/* The request fold (round 1 E3, round 2 E2): below 641 px, for a reader with a section to fill, a filled section is a
+   native details, shut: its title, "Filled in by …" and Show (Hide while open, C9), with no gist. The card's own padding
+   moves to the summary and the body, so the whole head is the 44 px target (C8). */
+.section-fold {
+  gap: 0;
+  padding: 0;
+}
+
+.section-fold > summary {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  list-style: none;
+  min-height: 2.75rem;
+  padding: var(--space-md);
+}
+
+.section-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.section-fold-head {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: space-between;
+}
+
+.section-fold-head > * {
+  margin: 0;
+}
+
+.section-fold-show {
+  color: var(--link-color);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  white-space: nowrap;
+}
+
+.section-fold-owner {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.section-fold-body {
+  border-top: 1px solid var(--border-color);
+  padding: var(--space-md);
+}
+/* end Flow 04: the rung picker and the request fold */
+
+/* Flow 04: the way on and the move bar (T350) */
+/* The way on (WayOn; round 1, Q6; R3): straight after a move's result on the activity page, outside its live region. The
+   next row (WaitingList's, with since when), then "Open the next" and "Back to …" on the form-actions' hairline
+   (border-color, decorative: 1.24:1 on the page); nothing left, "Go to Home" alone. Gap on the scale (nit T3). */
+.way-on {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.way-on .form-actions {
+  margin-top: 0;
+}
+
+.way-on-none {
+  margin: 0 0 var(--space-lg);
+}
+
+/* A greyed move's reason beside it (note 11; round 1, E4): "Nothing to discard yet." sits in the bar's row next to
+   Discard changes, which names it with aria-describedby. A modifier of the built .move-reasons, which otherwise takes a
+   row of its own under the bar; text-color on the page, 11.99:1. */
+.move-reasons--beside {
+  align-self: center;
+  flex-basis: auto;
+}
+
+/* Below 641px (C8): the way on's buttons stack, 44px, "Open the next" on top; a greyed move's reason sits under its
+   button in the stacked bar. The note panel's Send and Keep stack at 44px, the send on top, by the bar's own phone rule
+   (.form-actions--moves). */
+@media (max-width: 640.98px) {
+  .activity-page .way-on .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .activity-page .way-on .btn,
+  .activity-page .way-on-none .btn {
+    min-height: 2.75rem;
+  }
+
+  .activity-page .move-reasons--beside {
+    align-self: flex-start;
+    margin-top: calc(-1 * var(--space-xs));
+  }
+}
+/* end Flow 04: the way on and the move bar */
 
 .shadow {
   box-shadow: var(--shadow-raised);

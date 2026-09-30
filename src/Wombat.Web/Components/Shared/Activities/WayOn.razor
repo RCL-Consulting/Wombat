@@ -1,0 +1,39 @@
+@*
+  The way on (T350, flow 04; round 1, Q6 and correction d; round 2, C1, C10 d; R3-C-Activity; DESIGN.md § Page-level
+  patterns, "Record page with a workflow", R3): straight after a move's result on the activity page, outside its live
+  region, which holds only the result's sentence and what is left ("Completed. 1 more waits for you.").
+  - Something still waits: the next row (WaitingList's, with since when), "Open the next", named for its item, and
+    "Back to" the acting role's list by the owner table (NavOwners.OwnerFor), else "Back to Home".
+  - Nothing left: "Go to Home".
+  No automatic advance (Q6). The row's link is out of the tab order, so the next Tab after the focused result is "Open
+  the next" (C10 d); a pointer and a screen reader's browse mode still have it.
+*@
+@if (Next is { } next)
+{
+  <section class="way-on" aria-label="The next activity waiting for you">
+    <WaitingList Items="@([next])" WithSince="true" LinksOutOfTabOrder="true" />
+    <div class="form-actions">
+      <a class="btn btn-primary" href="/activities/@next.Id" aria-label="@OpenLabel(next)">Open the next</a>
+      <a class="btn btn-outline" href="@BackHref">@BackLabel</a>
+    </div>
+  </section>
+}
+else
+{
+  <p class="way-on-none"><a class="btn btn-outline" href="@HomeHref">Go to Home</a></p>
+}
+
+@code {
+  /// <summary>The first row still waiting for the reader, the activity just moved left out; null when nothing waits.</summary>
+  [Parameter] public ActivitySummaryDto? Next { get; set; }
+
+  /// <summary>"Back to Activity inbox": the acting role's list the page is under (the owner table), else "Back to Home".</summary>
+  [Parameter] public string BackLabel { get; set; } = "Back to Home";
+
+  [Parameter] public string BackHref { get; set; } = HomeHref;
+
+  private const string HomeHref = "/";
+
+  /// <summary>"Open the next: Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Anele Dlamini" (Spec § 3).</summary>
+  public static string OpenLabel(ActivitySummaryDto next) => $"Open the next: {ActivityRowNames.WaitingLinkWords(next)}";
+}

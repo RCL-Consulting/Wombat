@@ -6,7 +6,8 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Dtos;
-using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Wombat.Application.Features.Activities.Queries.ListDecidedByYou;
+using Wombat.Application.Features.Activities.Queries.ListWaitingForYou;
 using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Dashboards.Assessor;
@@ -103,18 +104,32 @@ public sealed class DashboardWaitingPostgresTests : IAsyncLifetime
 
             await using (var db = NewContext(schema))
             {
-                var inbox = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), names)
-                    .Handle(new ListActivitiesByActorInboxQuery(assessor), CancellationToken.None);
-                inbox.Select(row => row.Id).Should().Equal([portfolioReview, miniCex, elsewhere], "what he can move, newest first");
+                // T350 (note 5): one waiting read, oldest first, for the inbox and Home alike.
+                var inbox = await new ListWaitingForYouQueryHandler(
+                        db, new WorkflowEvaluator(), names, Options.Create(new DashboardThresholds()), TimeProvider.System)
+                    .Handle(new ListWaitingForYouQuery(assessor), CancellationToken.None);
+                inbox.Items.Select(row => (row.Id, row.CurrentStateLabel, row.IsOverdue, row.WaitedDays)).Should().Equal(
+                    [(elsewhere, "Requested", true, 9), (miniCex, "Requested", true, 8), (portfolioReview, "Awaiting review", false, 2)],
+                    "what he can move, oldest first");
+                inbox.OverdueCount.Should().Be(2);
+                inbox.Items.Select(row => row.SubjectName).Should().Equal("Other Trainee", "Nomsa Mahlangu", "Nomsa Mahlangu");
 
                 var card = await new GetAssessorDashboardSummaryQueryHandler(
-                        db, new WorkflowEvaluator(), names, Options.Create(new DashboardThresholds()))
+                        db, new WorkflowEvaluator(), names, Options.Create(new DashboardThresholds()), TimeProvider.System)
                     .Handle(new GetAssessorDashboardSummaryQuery(assessor), CancellationToken.None);
-                card.PendingRequestCount.Should().Be(3);
-                card.AwaitingReview.Select(item => (item.ActivityId, item.CurrentStateLabel, item.IsOverdue))
-                    .Should().Equal((elsewhere, "Requested", true), (miniCex, "Requested", true), (portfolioReview, "Awaiting review", false));
-                card.RecentDecisions.Select(item => (item.ActivityId, item.FinalStateLabel, item.IsFinished))
+                card.Waiting.Items.Select(item => item.Id).Should().Equal(inbox.Items.Select(row => row.Id));
+                card.Decisions.Items.Select(item => (item.Id, item.CurrentStateLabel, item.IsFinished))
                     .Should().Equal((declined, "Declined", false));
+
+                // T350 (note 6): "Decided by you", paged, on PostgreSQL: the latest move's actor by time then id, its time,
+                // and a page past the end served as the last.
+                var decided = await new ListDecidedByYouQueryHandler(db, names)
+                    .Handle(new ListDecidedByYouQuery(assessor, Page: 4, PageSize: 1), CancellationToken.None);
+                (decided.Page, decided.TotalCount).Should().Be((1, 1));
+                var decision = decided.Items.Should().ContainSingle().Subject;
+                decision.Id.Should().Be(declined);
+                decision.DecidedOn.Should().BeCloseTo(now.AddDays(-1), TimeSpan.FromSeconds(1));
+                decision.SubjectName.Should().Be("Nomsa Mahlangu");
 
                 // T342 (B6, E8): the two waiting on him she may only cancel, so they are with him; her draft is hers to
                 // submit, so it is Needs you, and Home's card is Needs you, on Postgres as in memory; the decline has no
@@ -194,9 +209,10 @@ public sealed class DashboardWaitingPostgresTests : IAsyncLifetime
 
             await using (var db = NewContext(schema))
             {
-                var inbox = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), names)
-                    .Handle(new ListActivitiesByActorInboxQuery(trainee), CancellationToken.None);
-                inbox.Should().BeEmpty("nothing waits on her as anyone's assessor or reviewer");
+                var inbox = await new ListWaitingForYouQueryHandler(
+                        db, new WorkflowEvaluator(), names, Options.Create(new DashboardThresholds()), TimeProvider.System)
+                    .Handle(new ListWaitingForYouQuery(trainee), CancellationToken.None);
+                inbox.Items.Should().BeEmpty("nothing waits on her as anyone's assessor or reviewer");
 
                 // Guard: the rows are there and hers to move, so the empty inbox is not an empty database.
                 var needsYou = await new ListNeedsYouQueryHandler(db, new WorkflowEvaluator(), names)

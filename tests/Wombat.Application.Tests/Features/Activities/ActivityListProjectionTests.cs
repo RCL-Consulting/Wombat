@@ -2,7 +2,9 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Dtos;
-using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Options;
+using Wombat.Application.Features.Activities.Queries.ListWaitingForYou;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Tests.Shared;
 using Wombat.Domain.Activities;
@@ -188,8 +190,9 @@ public sealed class ActivityListProjectionTests
     {
         await using var db = await SeededAsync();
 
-        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
-            .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
+        var rows = (await new ListWaitingForYouQueryHandler(
+                db, new WorkflowEvaluator(), FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()), TimeProvider.System)
+            .Handle(new ListWaitingForYouQuery(Principal(AssessorId)), CancellationToken.None)).Items;
 
         rows.Select(row => row.Id).Should().BeEquivalentTo([3, 6, 8], "only the requested activities naming this assessor are actionable");
 
@@ -212,8 +215,9 @@ public sealed class ActivityListProjectionTests
         await using var db = await SeededAsync();
         await DeactivateAsync(db, WardRoundEpaId);
 
-        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
-            .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
+        var rows = (await new ListWaitingForYouQueryHandler(
+                db, new WorkflowEvaluator(), FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()), TimeProvider.System)
+            .Handle(new ListWaitingForYouQuery(Principal(AssessorId)), CancellationToken.None)).Items;
 
         rows.Single(row => row.Id == 6).EpaInForce.Should().BeFalse("PAED-002 is deactivated");
         rows.Single(row => row.Id == 8).EpaInForce.Should().BeTrue("PAED-001 is in force");
@@ -230,8 +234,9 @@ public sealed class ActivityListProjectionTests
     {
         await using var db = await SeededAsync();
 
-        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
-            .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
+        var rows = (await new ListWaitingForYouQueryHandler(
+                db, new WorkflowEvaluator(), FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()), TimeProvider.System)
+            .Handle(new ListWaitingForYouQuery(Principal(AssessorId)), CancellationToken.None)).Items;
 
         rows.Single(row => row.Id == 8).CreditedItemCount.Should().Be(2);
         rows.Single(row => row.Id == 3).CreditedItemCount.Should().BeNull("its only move evaluated nothing");
@@ -250,15 +255,18 @@ public sealed class ActivityListProjectionTests
         await db.SaveChangesAsync();
         var users = new FakeUserDirectory((TraineeId, "Thandi Nkosi"), ("someone-else", "Sipho Mahlangu"));
 
-        var rows = await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), users)
-            .Handle(new ListActivitiesByActorInboxQuery(Principal(AssessorId)), CancellationToken.None);
+        var rows = (await new ListWaitingForYouQueryHandler(
+                db, new WorkflowEvaluator(), users, Options.Create(new DashboardThresholds()), TimeProvider.System)
+            .Handle(new ListWaitingForYouQuery(Principal(AssessorId)), CancellationToken.None)).Items;
 
         rows.Single(row => row.Id == 3).SubjectName.Should().Be("Thandi Nkosi");
         rows.Single(row => row.Id == 8).SubjectName.Should().Be("Thandi Nkosi");
         rows.Single(row => row.Id == 6).SubjectName.Should().Be("departed-trainee", "no user by that id exists any more");
 
+        // T350: the names are read with the row details', in one lookup, which also names the assessor the rows wait on.
         users.Lookups.Should().ContainSingle()
-            .Which.Should().BeEquivalentTo([TraineeId, "departed-trainee"], "activity 1 is complete, so not in this inbox");
+            .Which.Should().Contain([TraineeId, "departed-trainee"])
+            .And.NotContain("someone-else", "activity 1 is complete, so not in this inbox");
     }
 
     // ---- fixtures ---------------------------------------------------------------------------------------------------

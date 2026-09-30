@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Dtos;
-using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Wombat.Application.Features.Activities.Queries.ListWaitingForYou;
 using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Dashboards.Assessor;
 using Wombat.Application.Features.Dashboards.Trainee;
@@ -21,7 +21,8 @@ namespace Wombat.Application.Tests.Features.Dashboards;
 
 /// <summary>
 /// T297: the Assessor's and the Trainee's cards list what the pages they link to list, for every shipped workflow and
-/// every caller: the assessor's the Activity Inbox's rows less their own portfolio; the trainee's, since T342 Needs you,
+/// every caller: the assessor's the Activity inbox's rows, one read since T350 (note 5), Home's first five the inbox's
+/// first five in the same order; the trainee's, since T342 Needs you,
 /// the rows of My activities' Needs you (ListNeedsYouQuery), where until then it was the inbox's first rows. Before T297 each card selected by literal state keys and disagreed with the inbox on every rated CPSA
 /// instrument.
 /// </summary>
@@ -89,7 +90,6 @@ public sealed class DashboardInboxParityTests
             var inbox = await InboxAsync(db, principal);
             var trainee = await TraineeCardAsync(db, principal);
             var assessor = await AssessorCardAsync(db, principal);
-            var notOwn = inbox.Where(row => row.SubjectUserId != callerId).ToList();
 
             // T342 (flow 03, E8): the Trainee's card is Needs you, and it is My activities' Needs you: the same rows, in
             // the same order, named and worded alike (T297's rule, restated).
@@ -99,25 +99,31 @@ public sealed class DashboardInboxParityTests
                 options => options.WithStrictOrdering(),
                 $"{seedKey}: the {who}'s Needs you card is My activities' Needs you");
 
-            assessor.PendingRequestCount.Should().Be(
-                notOwn.Count,
-                $"{seedKey}: the {who}'s Pending requests counts the inbox's rows less their own portfolio");
-            assessor.AwaitingReview.Select(item => item.ActivityId).Should().Equal(
-                notOwn.OrderBy(row => row.UpdatedOn).ThenBy(row => row.Id).Take(10).Select(row => row.Id),
-                $"{seedKey}: the {who}'s waiting list is those rows, oldest first");
+            // T350 (note 5, E5): Home and the inbox are one read. The inbox leaves out the caller's own portfolio and lists
+            // oldest first; Home's card lists its first five, in the same order, and counts them all.
+            inbox.Items.Should().OnlyContain(
+                row => row.SubjectUserId != callerId, $"{seedKey}: the {who}'s own portfolio is not waiting on them");
+            inbox.Items.Select(row => row.Id).Should().Equal(
+                inbox.Items.OrderBy(row => row.UpdatedOn).ThenBy(row => row.Id).Select(row => row.Id),
+                $"{seedKey}: the {who}'s inbox is oldest first");
+            assessor.Waiting.Count.Should().Be(inbox.Count, $"{seedKey}: the {who}'s Home counts the inbox's rows");
+            assessor.Waiting.Items.Take(5).Select(item => item.Id).Should().Equal(
+                inbox.Items.Take(5).Select(row => row.Id),
+                $"{seedKey}: the {who}'s Home lists the inbox's first five, in its order");
         }
 
         // Not vacuous: wherever the workflow hands a move to a named assessor, the assessor has something waiting.
         if (workflow.Transitions.Any(transition => fields.Count > 0 && NamesAField(transition.Actor)))
         {
-            (await AssessorCardAsync(db, callers["assessor"])).PendingRequestCount.Should().BePositive(
+            (await AssessorCardAsync(db, callers["assessor"])).Waiting.Count.Should().BePositive(
                 $"{seedKey} hands a move to its named assessor");
         }
     }
 
-    private static async Task<IReadOnlyList<ActivitySummaryDto>> InboxAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
-            .Handle(new ListActivitiesByActorInboxQuery(principal), CancellationToken.None);
+    private static async Task<WaitingForYouDto> InboxAsync(ApplicationDbContext db, ClaimsPrincipal principal)
+        => await new ListWaitingForYouQueryHandler(
+                db, new WorkflowEvaluator(), FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()), TimeProvider.System)
+            .Handle(new ListWaitingForYouQuery(principal), CancellationToken.None);
 
     private static async Task<IReadOnlyList<ActivitySummaryDto>> NeedsYouAsync(ApplicationDbContext db, ClaimsPrincipal principal)
         => await new ListNeedsYouQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty)
@@ -129,7 +135,7 @@ public sealed class DashboardInboxParityTests
 
     private static async Task<AssessorDashboardSummaryDto> AssessorCardAsync(ApplicationDbContext db, ClaimsPrincipal principal)
         => await new GetAssessorDashboardSummaryQueryHandler(
-                db, new WorkflowEvaluator(), FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()))
+                db, new WorkflowEvaluator(), FakeUserDirectory.Empty, Options.Create(new DashboardThresholds()), TimeProvider.System)
             .Handle(new GetAssessorDashboardSummaryQuery(principal), CancellationToken.None);
 
     private static void Add(
@@ -149,7 +155,7 @@ public sealed class DashboardInboxParityTests
             SpecialityId = SpecialityId,
             SubSpecialityId = SubSpecialityId,
             CreatedOn = Clock.AddDays(-30),
-            // Distinct, so the inbox's newest-first and the waiting list's oldest-first each have one order.
+            // Distinct, so the waiting list's oldest-first has one order.
             UpdatedOn = Clock.AddMinutes(-id)
         });
     }

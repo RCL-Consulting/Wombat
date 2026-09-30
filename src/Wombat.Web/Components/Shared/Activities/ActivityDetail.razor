@@ -15,6 +15,7 @@
               Rungs="@Rungs"
               SectionAttributions="@SectionAttributions"
               HandOffFieldKey="@HandOffFieldKey"
+              FoldFilledSections="@FoldFilledSections"
               ReadOnly="true" />
 
 @code {
@@ -46,4 +47,7 @@
   // locked section's owner while nobody is named ("The assessor was to fill this in.").
   [Parameter] public IReadOnlyDictionary<string, string>? SectionAttributions { get; set; }
   [Parameter] public string? HandOffFieldKey { get; set; }
+
+  // T350 (round 1, E3; build-contracts.md): the page's FoldFilledSections, forwarded as the editable page passes it.
+  [Parameter] public bool FoldFilledSections { get; set; }
 }

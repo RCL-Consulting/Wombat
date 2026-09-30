@@ -5,9 +5,10 @@
   viewer's (.activity-status--yours, the emphasis stripe), someone else's, done, or declined. It replaces the old summary
   card and the header's "State:" line. The words are ActivityPageModel.Status's.
 *@
-<section class="@View.ToneClass" aria-labelledby="activity-status-head">
+@* The region's name is its label, "Who has it now", not the whole headline (T350, nit A10). *@
+<section class="@View.ToneClass" aria-labelledby="activity-status-label">
   <div class="activity-status-main">
-    <p class="activity-status-label">Who has it now</p>
+    <p class="activity-status-label" id="activity-status-label">Who has it now</p>
     <p class="activity-status-head" id="activity-status-head">
       <span class="@View.BadgeClass">@View.Badge</span>
       <span class="activity-status-headline">@View.Headline</span>

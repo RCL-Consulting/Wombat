@@ -171,8 +171,9 @@ public sealed class RowNamesTests
 
         var names = ActivityRowNames.For([first, second], withSubject: true);
 
-        names.Values.Should().OnlyHaveUniqueItems();
-        names[1].Should().StartWith("Mini-CEX for Thandi Nkosi, PAED-003, encounter date 2026-09-01, updated ");
+        // In South African time with its zone, never the server's (T350, note 8): 08:00 UTC is 10:00 SAST.
+        names[1].Should().Be("Mini-CEX for Thandi Nkosi, PAED-003, encounter date 2026-09-01, updated 2026-09-01 10:00 SAST");
+        names[2].Should().Be("Mini-CEX for Thandi Nkosi, PAED-003, encounter date 2026-09-01, updated 2026-09-01 11:30 SAST");
     }
 
     [Fact]

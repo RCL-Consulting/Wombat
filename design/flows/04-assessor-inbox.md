@@ -270,7 +270,7 @@ ATTACHED: act-3/3.24-1-patel-home.png, act-3/3.24-2-patel-inbox-two.png, states/
 | 3.5 | `/dashboard/switch/{role}` → `/activities/inbox` → `/activities/{ActivityId:int}` | Dr Naidoo switches, rates Dr Dlamini's Mini-CEX at rung 4 and completes it | the row names the registrar, EPA, date and state; "Your move."; only Entrustment and Feedback open; the six rungs; "Completed.", credited 1 item |
 | 3.11 | `/activities/inbox` → `/activities/{ActivityId:int}` | Dr Khumalo declines, first with no note, then with a reason | the note panel; "Not declined." with the panel still open; Declined, her reason quoted; the request gone from her inbox |
 | 3.13 | `/dashboard/switch/{role}` → `/activities/inbox` → `/activities/{ActivityId:int}` | Dr Botha completes the re-filed Mini-CEX at 3a, then switches back | Completed, credited 1 item; each switch's one-time alert |
-| 3.15 | `/activities/inbox` → `/activities/{ActivityId:int}` | Dr Botha returns a reflection with a note | Awaiting discussion; Record Discussion and Return; the note panel; "It is now Draft."; nothing left for her |
+| 3.15 | `/activities/inbox` → `/activities/{ActivityId:int}` | Dr Botha returns a reflection with a note | Awaiting discussion; Record Discussion and Return; the note panel; "Returned to Sipho Ndlovu."; nothing left for her |
 | 3.17 | `/activities/inbox` → `/activities/{ActivityId:int}` | she records the discussion on the re-submitted reflection | Discussed, read-only; credited "—", with no "counted towards no requirement" warning |
 | 3.24 | `/` → `/activities/inbox` → `/activities/{ActivityId:int}` | Dr Patel goes from Home to the inbox and completes a DOPS | Home's two rows, oldest first, as the inbox holds them; the DOPS Completed; the review still waiting; Recent decisions |
 | 3.26 | `/activities/inbox` → `/activities/{ActivityId:int}` | five consultants complete Dr Molefe's six | each inbox holds only that assessor's own requests |
@@ -426,95 +426,115 @@ describes the product as it is today, after flow 03 (re-synced 2026-09-30). `D` 
 (`act-3-operations.md` § The clock in this act).
 
 ```text
-Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:627)
+Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:628)
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
 Route: /account/login → /
 Do: Each signs in and reads the dashboard and nav.
-Expect: Each sees "Assessor · Semester N, YYYY" on Home, and the empty Assessor dashboard of Step 2.34. The sidebar
-  reads "Acting as Assessor" with no switch, over Home and Activity inbox, then My data rights.
+Expect: Each sees "Assessor · Semester N, YYYY" on Home, and the empty Assessor dashboard of Step 2.34: "Waiting for
+  you" with no badge and no "0", "Nothing is waiting for you.", "Open Activity inbox"; Recent decisions, "No decisions
+  yet." (T350). The sidebar reads "Acting as Assessor" with no switch, over Home and Activity inbox, then My data
+  rights.
 
-Step 3.4 — An assessor who was not named cannot open the request (act-3-operations.md:158)
+Step 3.4 — An assessor who was not named cannot open the request (act-3-operations.md:159)
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Look for Dr Dlamini's Mini-CEX in the inbox, then open its address directly, using the id from Step 3.1.
-Expect: The inbox reads "Inbox clear" and "Nothing is waiting for you to rate, discuss or review.", because no request
-  names him yet. The activity's page is headed "Activity unavailable" and reads "This activity does not exist, or you
-  cannot open it.", with Go to My activities. It reads exactly so for an id that does not exist, so walking ids
-  discloses nothing (T101, C7).
+Expect: The inbox's subtitle reads "What waits for you to rate, review or discuss." Its section Waiting for you reads
+  "Inbox clear" and "Nothing is waiting for you.", because no request names him yet, and its section Decided by you
+  reads "No decisions yet." (T350). The activity's page is headed "Activity unavailable" and reads "This activity does
+  not exist, or you cannot open it.", with Go to Activity inbox, the list his acting role opens activities from (T350).
+  It reads exactly so for an id that does not exist, so walking ids discloses nothing (T101, C7).
 
-Step 3.5 — Dr Naidoo rates the Mini-CEX and completes it (act-3-operations.md:172)
+Step 3.5 — Dr Naidoo rates the Mini-CEX and completes it (act-3-operations.md:174)
 Role: Assessor — Dr David Naidoo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Choose Switch to Assessor in the sidebar, then open Activity inbox from the menu and Dr Dlamini's Mini-CEX in it.
   Rate the supervision the encounter required at rung 4, write what was done well, the areas for development and the
   agreed plan, and complete it.
-Expect: The inbox row names Anele Dlamini, PAED-001, `D−10` and Requested. On the page, the status card reads "Your
-  move. Anele Dlamini asked you on …" and "Complete it, or decline it with a note Anele Dlamini will read." Request is
-  read-only, "Filled in by Anele Dlamini, `D`"; only Entrustment and Feedback can be filled in. The actions are
-  Complete, Discard changes and Decline. The rating offers the six rungs by the College's labels, 1, 2, 3a, 3b, 4 and 5
-  (D32). After Complete, the focused result reads "Completed.", the status card reads "Done. You completed it on …" and
-  "Rated 4. Credited 1 item to PAED-001.", and the page is read-only. The history's Complete row reads Requested →
-  Completed, by David Naidoo, credited "1 item". Year 3's minimum on PAED-001 is rung 4, so the encounter counts at the
-  minimum.
+Expect: The inbox's row is its own link, "Mini-CEX (Paediatrics) · PAED-001 · `D−10`" with "from Anele Dlamini" under
+  it; the EPA cell "PAED-001 — Providing paediatric emergency care to children"; Requested; Waiting "Less than a day"
+  over "since … SAST". The row has no Open button, and the table no Subject, Encounter date or Updated column (T350).
+  On the page, the status card reads "Your move. Anele Dlamini asked you on …" and "Complete it, or decline it with a
+  note Anele Dlamini will read." Request is read-only, "Filled in by Anele Dlamini, `D`", and its Assessor reads "David
+  Naidoo", with no email; only Entrustment and Feedback can be filled in. The actions are Complete, Discard changes
+  (greyed, "Nothing to discard yet." beside it) and Decline. The rating is the rung picker: six radios labelled by the
+  College's rungs, 1, 2, 3a, 3b, 4 and 5 (D32), with "What each rung means" open under them; choosing 4 marks it
+  "chosen" and puts its descriptor, "Unsupervised practice. …", under the row (T350). After Complete, the focused
+  result reads "Completed. Nothing else waits for you.", with Go to Home after it; the status card reads "Done. You
+  completed it on …" and "Rated 4. Credited 1 item to PAED-001.", and the page is read-only. The history's Complete row
+  reads Requested → Completed, by David Naidoo, credited "1 item". Year 3's minimum on PAED-001 is rung 4, so the
+  encounter counts at the minimum; nothing on the page says the minimum (Q7), so that is the tester's check.
 
-Step 3.11 — Dr Khumalo declines the request, with a reason (act-3-operations.md:292)
+Step 3.11 — Dr Khumalo declines the request, with a reason (act-3-operations.md:299)
 Role: Assessor — Dr Fatima Khumalo
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Open Dr Ndlovu's Mini-CEX. Press Decline and send it with the reason left empty. Then send it with the reason "I was
   not on the ward that day; Dr Botha observed this encounter. Please send it to her."
 Expect: The status card reads "Your move. Sipho Ndlovu asked you on …". Decline opens the note panel under the actions,
-  "Decline this request", and moves the focus into "Reason for Sipho Ndlovu", with "Sipho Ndlovu reads it on the
-  activity's page. It is kept with the activity's history." under it. Sent empty with Decline with this note, it is
-  refused: the panel stays open, with the note as typed, and its summary reads "Not declined." and "Reason for Sipho
-  Ndlovu: Decline requires a note."; the activity stays Requested. Keep the request would close the panel and hand the
-  focus back to Decline. Sent with the reason, the result reads "Declined." The status card, badged Declined, reads
-  "Closed. You declined it on …", quotes her reason, and reads "It credits nothing, and nothing more can happen to it."
-  The page is read-only, with no move left. The history's Decline row, Requested → Declined, is credited "—", with her
-  note on a row of its own under it. Her inbox no longer lists the request.
+  "Decline this request", and moves the focus into "Note for Sipho Ndlovu", marked required, with "Sipho Ndlovu reads
+  it on the activity's page. It is kept with the activity's history." under it. Sent empty with Decline with this note,
+  it is refused: the panel stays open, with the note as typed, and its summary reads "Not declined. It is still
+  Requested." and "Note for Sipho Ndlovu: Decline requires a note."; the activity stays Requested (T350). Keep the
+  request would close the panel and hand the focus back to Decline. Sent with the reason, the result reads "Declined.
+  Nothing else waits for you.", with Go to Home after it. The status card, badged Declined, reads "Closed. You declined
+  it on …", quotes her reason, and reads "It credits nothing, and nothing more can happen to it." The page is
+  read-only, with no move left. The history's Decline row, Requested → Declined, is credited "—", with her note on a
+  row of its own under it. Her inbox's Waiting for you reads "Inbox clear", and Decided by you ("1 decision") holds the
+  request, Declined, decided "… SAST", Credit "—".
 
-Step 3.13 — Dr Botha completes Dr Ndlovu's Mini-CEX (act-3-operations.md:355)
+Step 3.13 — Dr Botha completes Dr Ndlovu's Mini-CEX (act-3-operations.md:364)
 Role: Assessor — Dr Sarah Botha
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, then open Activity inbox from the menu and Dr Ndlovu's re-filed Mini-CEX
   in it. Rate it 3a with feedback and complete it. Then choose Switch to Committee member in the sidebar.
-Expect: The Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-002 is 3a, so it counts at the minimum.
-  The declined request stays Declined and credits nothing. Each switch lands on Home with its one-time info alert, "You
+Expect: The inbox lists the re-filed Mini-CEX alone under Waiting for you. She rates it on the rung picker, choosing
+  3a. After Complete the result reads "Completed. Nothing else waits for you." (T350). The Mini-CEX is Completed,
+  credited "1 item". Year 1's minimum on PAED-002 is 3a, so it counts at the minimum. The declined request stays
+  Declined and credits nothing. Each switch lands on Home with its one-time info alert, "You
   are now acting as Assessor." and then "You are now acting as Committee member." (Step 2.34), and the sidebar ends
   reading "Acting as Committee member".
 
-Step 3.15 — Dr Botha returns the reflection for more detail (act-3-operations.md:400)
+Step 3.15 — Dr Botha returns the reflection for more detail (act-3-operations.md:411)
 Role: Assessor — Dr Sarah Botha
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, then open Dr Ndlovu's reflection from Activity inbox. Return it with the
   note "Please say what you would do differently at triage, and what you will read before your next take." Then choose
   Switch to Committee member in the sidebar.
-Expect: The inbox lists the reflection as Awaiting discussion. The page offers Record Discussion and Return, and only
-  the Discussion field is open. Its status card reads "Your move. Sipho Ndlovu asked you on …" and "Record the
-  discussion, or return it with a note Sipho Ndlovu will read." Return opens the note panel, "Return: add a note", with "Note to Sipho Ndlovu"; Return
-  with this note sends it. Once it is returned, the result reads "It is now Draft.", the status card reads "With Sipho
-  Ndlovu. Sarah Botha returned it on …" and "It is in nobody's inbox until Sipho Ndlovu submits it.", quoting her note,
-  and the page offers Dr Botha nothing. The history's Return row (Awaiting discussion → Draft) carries her note.
+Expect: The inbox lists the reflection under Waiting for you, badged Awaiting discussion. The page offers Record
+  discussion, Discard changes (greyed, "Nothing to discard yet." beside it) and Return, and only the Discussion field is
+  open. Its status card reads "Your move. Sipho Ndlovu asked you on …" and "Record the discussion, or return it with a
+  note Sipho Ndlovu will read." Return opens the note panel, "Return this reflection", with the focus in "Note for Sipho
+  Ndlovu", marked required; Return with this note (primary) sends it, and Keep the reflection would close the panel
+  (T350). Once it is returned, the result reads "Returned to Sipho Ndlovu. Nothing else waits for you.", with Go to Home after
+  it; the status card reads "With Sipho Ndlovu. Sarah Botha returned it on …" and "It is in nobody's inbox until Sipho
+  Ndlovu submits it.", quoting her note, and the page offers Dr Botha nothing. The history's Return row (Awaiting
+  discussion → Draft) carries her note.
 
-Step 3.17 — Dr Botha records the discussion (act-3-operations.md:450)
+Step 3.17 — Dr Botha records the discussion (act-3-operations.md:466)
 Role: Assessor — Dr Sarah Botha
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, then open the re-submitted reflection from Activity inbox, write the
   discussion notes, and record the discussion. Then choose Switch to Committee member in the sidebar.
-Expect: The state is Discussed, finished and read-only to both of them. The Record Discussion row is credited "—":
+Expect: The result reads "Discussed. Nothing else waits for you.", with Go to Home after it (T350). The state is
+  Discussed, finished and read-only to both of them. The Record discussion row is credited "—":
   the exercise credits nothing (D7), and no "counted towards no curriculum requirement" banner shows (T108). Dr Ndlovu's
   progress does not change.
 
-Step 3.24 — Dr Patel completes Dr Mahlangu's DOPS (act-3-operations.md:576)
+Step 3.24 — Dr Patel completes Dr Mahlangu's DOPS (act-3-operations.md:593)
 Role: Assessor — Dr Mohammed Patel
 Route: / → /activities/inbox → /activities/{ActivityId:int}
 Do: From the dashboard, open the inbox, then the DOPS. Rate it 3a with feedback, and complete it.
-Expect: Home (Assessor view): "Waiting for your rating" is badged 2 and lists the same two rows as the inbox, oldest
-  first: Pieter du Plessis's portfolio review (Awaiting review), then Nomsa Mahlangu's DOPS
-  (Requested) (T297). The inbox holds those two rows. After Complete, the DOPS is Completed, credited "1 item". Year 1's
-  minimum on PAED-002 is 3a, so it counts at the minimum. The portfolio review stays in his inbox, Home's card is then
-  badged 1, and Recent decisions lists the DOPS as Completed.
+Expect: Home (Assessor view): "Waiting for you" is badged "2 waiting", with the rule line "Oldest first. Overdue once
+  it has waited 7 days.", and lists the same two rows as the inbox, in the same order, oldest first (T297, T350):
+  "Portfolio and Logbook Review (Paediatrics) · PAED-015 · `D−1`", from Pieter du Plessis, Awaiting review, "Waiting
+  less than a day"; then "DOPS (Paediatrics) · PAED-002 · `D−8`", from Nomsa Mahlangu, Requested. The inbox's Waiting
+  for you holds those two rows, in that order. He rates the DOPS 3a on the rung picker. After Complete the result
+  reads "Completed. 1 more waits for you.", and under it the review's row, Open the next and Back to Activity inbox
+  (T350). The DOPS is Completed, credited "1 item". Year 1's minimum on PAED-002 is 3a, so it counts at the minimum.
+  The portfolio review stays in his inbox, Home's card is then badged "1 waiting", and Recent decisions lists "DOPS
+  (Paediatrics) · PAED-002 · `D−8`", from Nomsa Mahlangu, Completed, dated `D`.
 
-Step 3.26 — The consultants complete Dr Molefe's six (act-3-operations.md:620)
+Step 3.26 — The consultants complete Dr Molefe's six (act-3-operations.md:641)
 Role: Assessor — Dr Thandi Zulu, Dr David Naidoo, Dr Mohammed Patel, Dr Sarah Botha and Dr Fatima Khumalo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Each consultant opens their own requests from Activity inbox and completes them with feedback, rating:
@@ -525,43 +545,58 @@ Do: Each consultant opens their own requests from Activity inbox and completes t
   - Dr Khumalo: rung 5.
   Dr Zulu and Dr Botha act as Committee members: each first chooses Switch to Assessor in the sidebar, and after rating
   chooses Switch to Committee member (Step 3.13). Dr Naidoo still acts as Assessor, his choice from Step 3.5.
-Expect: Each inbox holds only that assessor's own requests. All six end Completed, each credited "1 item". Year 4's
+Expect: Each inbox's Waiting for you holds only that assessor's own requests. Each rates on the rung picker. After each
+  Complete the result says what is left: Dr Zulu reads "Completed. 1 more waits for you." after her first, with the
+  second's row and Open the next, and "Completed. Nothing else waits for you." after her second; Dr Patel reads
+  "Completed. 1 more waits for you.", with Dr du Plessis's portfolio review as the next row; Dr Khumalo reads the same,
+  with Dr du Plessis's CBD (Step 3.21) still waiting; Dr Naidoo and Dr Botha read "Completed. Nothing else waits for
+  you.", with Go to Home (T350). All six end Completed, each credited "1 item". Year 4's
   minimum is rung 5 on PAED-001, PAED-010 and PAED-012. So Dr Patel's rung 4 counts towards the target, but not at the
   minimum.
 
-Step 3.28 — The consultants complete Dr Dlamini's three (act-3-operations.md:657)
+Step 3.28 — The consultants complete Dr Dlamini's three (act-3-operations.md:683)
 Role: Assessor — Dr Thandi Zulu, Dr Sarah Botha and Dr Fatima Khumalo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Each completes their own from Activity inbox with feedback, rating: Dr Zulu 3b on the CBD, Dr Botha 4 on the CCA,
   and Dr Khumalo 4 on the Mini-CEX. Dr Zulu and Dr Botha first choose Switch to Assessor in the sidebar, and after
   rating choose Switch to Committee member (Step 3.13).
-Expect: All three end Completed, each credited "1 item". Dr Dlamini's PAED-001 now holds three encounters this semester.
+Expect: Each rates on the rung picker. Dr Khumalo, who also holds Dr du Plessis's CBD, reads "Completed. 1 more waits
+  for you.", with the CBD's row as the next; Dr Zulu and Dr Botha read "Completed. Nothing else waits for you." (T350).
+  All three end Completed, each credited "1 item". Dr Dlamini's PAED-001 now holds three encounters this semester.
   Two are at year 3's minimum of rung 4; the CBD at 3b counts towards the target only. Her PAED-004 holds one, at the
   minimum.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:749)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:786)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
-Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for your
-  rating", open Dr Mahlangu's Mini-CEX, rate it 3a with feedback, and complete it.
+Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
+  open Dr Mahlangu's Mini-CEX (the Activity inbox lists it too), rate it 3a with feedback, and complete it.
 Expect: The sidebar first reads "Acting as Committee member", with "Switch to Assessor" under it, and Home "Committee
-  member · Semester N, YYYY" under its heading. After the switch Home reads "You are now acting as Assessor." in an info
-  alert under the header, and "Assessor · Semester N, YYYY"; the sidebar reads "Acting as Assessor" over Home and
-  Activity inbox, and "Waiting for your rating" is badged 1: this Mini-CEX.
-  The card lists it, "Mini-CEX (Paediatrics) — Nomsa Mahlangu", badged Overdue: it has waited past the
-  assessor's seven days since Step 3.30 aged it. After Complete, the Mini-CEX is Completed, credited "1 item". Year 1's
-  minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
+  member · Semester N, YYYY" under its heading. Under the header, above the committee cards, a warning line reads "1
+  activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · `D−3`, from
+  Nomsa Mahlangu, waiting 8 days.", with Open it (T350). After the switch Home reads "You are now acting as Assessor."
+  in an info alert under the header, and "Assessor · Semester N, YYYY", with no such line; the sidebar reads "Acting
+  as Assessor" over Home and Activity inbox, and "Waiting for you", in the warning stripe, is badged "1 waiting, 1
+  overdue": this Mini-CEX, "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu, Requested with Overdue
+  beside it, "Waiting 8 days": it has waited past the assessor's seven days since Step 3.30 aged it. The inbox lists it
+  with "8 days" over "since `D−8` … SAST"; the page's status card reads "Your move. Nomsa Mahlangu asked you on `D−8` …
+  SAST.", the same moment. She rates it on the rung picker. After Complete the result reads "Completed. Nothing else
+  waits for you.", with Go to Home, and Home then reads "Nothing is waiting for you." The Mini-CEX is Completed,
+  credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
 
-Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:1082)
+Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:1126)
 Role: Assessor — Dr Fatima Khumalo
 Route: / → /activities/inbox
-Do: Read the dashboard, then follow "Open inbox →". Then read the menu.
+Do: Read the dashboard, then follow "Open Activity inbox". Then read the menu.
 Expect:
-  - Waiting for your rating, badged 1: "Case-Based Discussion (Paediatrics) — Pieter du Plessis", Requested (T297,
-    T335). The inbox lists it as Requested.
-  - Recent decisions, the activities she moved last, newest first: Mini-CEX (Paediatrics) — Anele Dlamini, Completed,
-    in green; Case-Based Discussion (Paediatrics) — Lerato Molefe, Completed; Mini-CEX (Paediatrics) — Sipho Ndlovu,
-    Declined, in red.
+  - Waiting for you, badged "1 waiting": "Case-Based Discussion (Paediatrics) · PAED-002 · `D−5`", from Pieter du
+    Plessis, Requested, "Waiting less than a day" (T297, T335, T350). The inbox's Waiting for you lists it alone, as
+    Requested, "Less than a day" over "since … SAST".
+  - Recent decisions, the activities she moved last, newest first, each linked by its full name with its registrar,
+    its decision's badge and its day: "Mini-CEX (Paediatrics) · PAED-004 · `D−2`", from Anele Dlamini, Completed, in
+    green; "Case-Based Discussion (Paediatrics) · PAED-012 · `D−5`", from Lerato Molefe, Completed; "Mini-CEX
+    (Paediatrics) · PAED-002 · `D−20`", from Sipho Ndlovu, Declined, in red; its foot "All your decisions". The inbox's
+    Decided by you, "3 decisions", lists the same three, each with its moment (SAST) and its credit.
   - The inbox lights Activity inbox in the menu: Home and Activity inbox, then My data rights. There is no Recent
     activities: the flow 01 pick dropped it, with its placeholder.
 
@@ -571,8 +606,13 @@ Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{Act
 Do: He has acted as a Committee member since Step 4.5: choose Switch to Assessor in the sidebar, then open Dr du
   Plessis's Mini-CEX from Activity inbox and rate it `3b`, PAED-002's minimum in training year 2. Write what was done
   well, what to develop and the agreed plan, and complete it. Then choose Switch to Committee member in the sidebar.
-Expect: The activity reads Completed and is read-only to both of them. It credits PAED-002 in the semester that holds
-  `D−1` (checked in Step 5.26), and My activities reads it credited "1 item". Nobody is emailed.
+Expect: Before the switch, his Committee member's Home carries, under the header, the line "1 activity waits for you
+  in the Activity inbox: Mini-CEX (Paediatrics) · PAED-002 · `D−1`, from Pieter du Plessis, waiting less than a day.",
+  with Open it (T350). After it, Home's "Waiting for you" is badged "1 waiting", and the inbox lists the Mini-CEX as
+  "Mini-CEX (Paediatrics) · PAED-002 · `D−1`", from Pieter du Plessis, Requested. He rates it on the rung picker. After
+  Complete the result reads "Completed. Nothing else waits for you.", with Go to Home. The activity reads Completed and
+  is read-only to both of them. It credits PAED-002 in the semester that holds `D−1` (checked in Step 5.26), and My
+  activities reads it credited "1 item". Nobody is emailed.
 
 Step 6.18 — Dr Patel completes the Mini-CEX during the pause (act-6-catalogue.md:433)
 Role: Assessor — Dr Mohammed Patel
@@ -580,9 +620,11 @@ Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Open Dr Dlamini's Mini-CEX from the inbox. Rate it at the rung that Dr Dlamini's PAED-012 card named as the minimum
   now (Step 6.15). Write the three feedback fields, and complete it.
 Expect:
-  - The inbox row and the request's EPA both read "PAED-012 — Communicating with and counselling patients, caregivers
-    and healthcare teams (no longer in use)".
-  - The completion is not refused (D48): "Completed.". The activity is read-only.
+  - The inbox's Waiting for you lists Dr du Plessis's portfolio review first, Overdue since Step 3.30's ageing, then
+    "Mini-CEX (Paediatrics) · PAED-012 · `D`", from Anele Dlamini (T350). The row's EPA cell and the request's EPA both
+    read "PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams (no longer in use)".
+  - He rates it on the rung picker. The completion is not refused (D48): "Completed. 1 more waits for you.", with the
+    review's row, Open the next and Back to Activity inbox under it (T350). The activity is read-only.
   - The status card reads "Done. You completed it on …" and "Rated <the rung>. Its credit to PAED-012 waits while the
     EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
     its history, the completion's Credit reads None.
@@ -599,17 +641,23 @@ Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:951)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
-Expect: He lands on his Assessor dashboard. "Waiting for your rating" is badged 1 and lists Dr du Plessis's Portfolio
-  and Logbook Review, badged Overdue, as his inbox lists it (T297, T335). Dr Dlamini's
-  assessor list names him again (checked at A.7.1).
+Expect: He lands on his Assessor dashboard. "Waiting for you", in the warning stripe, is badged "1 waiting, 1 overdue"
+  and lists Dr du Plessis's Portfolio and Logbook Review, from Pieter du Plessis, Awaiting review with Overdue beside
+  it, "Waiting 8 days", as his inbox lists it, "8 days" over "since `D−8` … SAST" (T297, T335, T350). Recent decisions
+  lists the three he decided on `D`. Dr Dlamini's assessor list names him again (checked at A.7.1).
 
-Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1045)
+Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1046)
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: At 390 px, open Dr Dlamini's Mini-CEX from Activity inbox. Rate the supervision at `3b`, write the three
   feedback fields, and complete it.
-Expect: The inbox lists it with an action named for it. On the activity, her request is read-only to him, and the
-  six-rung ladder and the feedback fields fit the width. Complete, Discard changes and Decline are reachable without
-  scrolling sideways, and the history folds into "All N moves", the same moves as stacked blocks (A7). Once completed,
-  it reads "Completed." and is read-only to both of them. Nobody is emailed (Step 3.3).
+Expect: Home's "Waiting for you" is badged "2 waiting, 1 overdue". The inbox's rows stack, nothing scrolling sideways:
+  the review first, then "Mini-CEX (Paediatrics) · PAED-002 · `D−20`", from Anele Dlamini, each row its own link named
+  for it, with no Open button (T350). On the activity, her request is read-only to him and folded: "Request", "Filled in
+  by Anele Dlamini, `D`" and Show, reading Hide while open. Entrustment comes first, the rung picker's six radios
+  abreast, then the three feedback fields, all fitting the width. Complete, Discard changes and Decline stack, each 44
+  px tall, reachable without scrolling sideways, and About sits under them. The history folds into "All N moves", the
+  same moves as stacked blocks (A7). Once completed, the result reads "Completed. 1 more waits for you.", with the
+  review's row, Open the next and Back to Activity inbox; the completed page folds nothing, and it is read-only to both
+  of them. Nobody is emailed (Step 3.3).
 ```

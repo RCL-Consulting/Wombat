@@ -3,7 +3,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityById;
-using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
+using Wombat.Application.Features.Activities.Queries.ListWaitingForYou;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Tests.TestHelpers;
@@ -236,8 +236,10 @@ public sealed class NeedsYouAndMyActivitiesTests
             .Handle(new ListNeedsYouQuery(Principal(userId, WombatRoles.Trainee)), CancellationToken.None);
 
     private static async Task<IReadOnlyList<ActivitySummaryDto>> InboxAsync(ApplicationDbContext db, ClaimsPrincipal principal)
-        => await new ListActivitiesByActorInboxQueryHandler(db, new WorkflowEvaluator(), People)
-            .Handle(new ListActivitiesByActorInboxQuery(principal), CancellationToken.None);
+        => (await new ListWaitingForYouQueryHandler(
+                db, new WorkflowEvaluator(), People,
+                Microsoft.Extensions.Options.Options.Create(new Wombat.Application.Common.Options.DashboardThresholds()), TimeProvider.System)
+            .Handle(new ListWaitingForYouQuery(principal), CancellationToken.None)).Items;
 
     private static async Task<ActivityListPageDto> MineAsync(ApplicationDbContext db, int page = 1, int pageSize = 20)
         => await new ListActivitiesBySubjectQueryHandler(db, People)

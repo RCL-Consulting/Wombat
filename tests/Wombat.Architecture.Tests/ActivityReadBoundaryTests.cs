@@ -48,6 +48,9 @@ public class ActivityReadBoundaryTests
         "ActivitySummaryDto",
         // T342: My activities' page of rows, which holds ActivitySummaryDto rows in a record the unwrap cannot see into.
         "ActivityListPageDto",
+        // T350: the waiting read's rows, held the same way; and the Assessor's Home, which holds it and a decided page.
+        "WaitingForYouDto",
+        "AssessorDashboardSummaryDto",
         "EpaTrajectoryDto",
         "TrajectoryPointDto"
     ];
@@ -71,23 +74,35 @@ public class ActivityReadBoundaryTests
         ["Wombat.Application.Features.Epas.UpdateEpaCommandHandler"] =
             "Reactivating an EPA credits the completions filed while it was inactive (T196, D48), as the rebuild would. Reads activities only on reactivation, after the EPA-owner check (CollegeAdmin or owning InstitutionalAdmin), and only completions that could hold paused credit: pinned to rules that credit, in a terminal state, with a transition since the pause began (ResumedEpaCredit.LoadCandidatesAsync). Returns the EPA and a count; no activity row reaches a caller.",
 
-        ["Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox.ListActivitiesByActorInboxQueryHandler"] =
-            "Filters every row through IWorkflowEvaluator, i.e. the ACT gate, which IsReadableBy is a superset of (ActivityWaiting.LoadActionableAsync, T297). Narrower than the read rule by construction.",
+        ["Wombat.Application.Features.Activities.Services.WaitingForYou"] =
+            "The shared waiting read (T350, note 5) behind ListWaitingForYouQuery and the Assessor's Home. Filters every row through IWorkflowEvaluator, i.e. the ACT gate, which IsReadableBy is a superset of (ActivityWaiting.LoadActionableAsync, T297). Narrower than the read rule by construction.",
+
+        ["Wombat.Application.Features.Activities.Services.DecidedByYou"] =
+            "The shared decided read (T350, note 6) behind ListDecidedByYouQuery and the Assessor's Home. Its rows are those the caller moved last - the past-actor arm of IsReadableBy, which the list filter deliberately omits.",
 
         ["Wombat.Application.Features.CommitteeDecisions.StartCommitteeReviewCommandHandler"] =
             "Builds the review evidence snapshot after CommitteeDecisionAuthorization.DemandStartableReview, which admits a member of this panel, a Coordinator of the institution this panel belongs to, or a global Administrator - it waived every Coordinator anywhere until T101 finding E, which is what made this reason worth stating - and after CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync, which refuses anyone but an Administrator a review whose trainee does not train at the panel's institution (T182). Stores labels and dates, never DataJson.",
 
-        ["Wombat.Application.Features.Dashboards.Assessor.GetAssessorDashboardSummaryQueryHandler"] =
-            "Its waiting card is the inbox's rows, filtered through IWorkflowEvaluator, the ACT gate, as ListActivitiesByActorInboxQueryHandler's are (ActivityWaiting.LoadActionableAsync, T297). Its decisions are rows the caller moved last - the past-actor arm of IsReadableBy, which the list filter deliberately omits.",
-
         ["Wombat.Application.Features.Dashboards.Trainee.GetTraineeDashboardSummaryQueryHandler"] =
-            "Its own reads are confined to SubjectUserId == the signed-in user, which is the subject arm of the read rule. Its Activity inbox card is the inbox's rows, filtered through IWorkflowEvaluator, the ACT gate, as ListActivitiesByActorInboxQueryHandler's are (ActivityWaiting.LoadActionableAsync, T297).",
+            "Its own reads are confined to SubjectUserId == the signed-in user, which is the subject arm of the read rule. Its Needs you card is ListNeedsYouQuery's rows (NeedsYou.ReadAsync, T342), filtered through IWorkflowEvaluator, the ACT gate (ActivityWaiting.LoadActionableAsync, T297).",
 
         ["Wombat.Application.Features.Dashboards.SpecialityAdmin.GetSpecialityAdminDashboardSummaryQueryHandler"] =
             "T101 REVIEW FINDING, not an approval: hand-rolls the SpecialityId stamp comparison instead of calling WhereReadableBy, making it a fourth copy of the oversight rule. It already differs - no Administrator arm, and no IsInRole(SpecialityAdmin) gate on the speciality claim - and is safe only because SpecialityAdminDashboard.razor is role-gated, which nothing here states. Replace the inline Where with WhereReadableBy and delete this entry.",
 
         ["Wombat.Application.Features.Dashboards.SubSpecialityAdmin.GetSubSpecialityAdminDashboardSummaryQueryHandler"] =
             "T101 REVIEW FINDING, not an approval: same hand-rolled stamp comparison as the SpecialityAdmin dashboard, and on the same dashboard its trainee tiles derive scope live from Curriculum.SubSpecialityId while this tile reads the frozen stamp, so the two disagree about a transferred trainee. Replace the inline Where with WhereReadableBy and delete this entry."
+    };
+
+    /// <summary>
+    /// The static readers two or more handlers make their reads through (T350): a handler that calls one reads no
+    /// <c>Set&lt;Activity&gt;()</c> itself, so the scan asks each reader what it would ask the handler. An entry that is no
+    /// longer a type fails <see cref="Every_shared_reader_still_exists" />.
+    /// </summary>
+    private static readonly HashSet<string> SharedReaders = new(StringComparer.Ordinal)
+    {
+        "Wombat.Application.Features.Activities.Queries.ListNeedsYou.NeedsYou",
+        "Wombat.Application.Features.Activities.Services.WaitingForYou",
+        "Wombat.Application.Features.Activities.Services.DecidedByYou"
     };
 
     // ─── The boundary itself ─────────────────────────────────────────────────
@@ -102,7 +117,7 @@ public class ActivityReadBoundaryTests
         using var module = ModuleDefinition.ReadModule(ApplicationAssembly.Location);
 
         var violations = AllTypes(module)
-            .Where(IsRequestHandler)
+            .Where(type => IsRequestHandler(type) || SharedReaders.Contains(type.FullName))
             .Where(type => !ScopeExemptHandlers.ContainsKey(type.FullName))
             .Where(type => CallsAny(type, IsActivityDbSetCall))
             .Where(type => !CallsAny(type, IsReadScopeCall))
@@ -136,6 +151,18 @@ public class ActivityReadBoundaryTests
         stale.Should().BeEmpty(
             because: "an exemption that no longer applies must be deleted, not left standing as a " +
                      "licence for whatever takes that type's name next. (T101)");
+    }
+
+    /// <summary>The shared readers the scan asks must exist, and each must read activity rows, or it guards nothing.</summary>
+    [Fact]
+    public void Every_shared_reader_still_exists()
+    {
+        using var module = ModuleDefinition.ReadModule(ApplicationAssembly.Location);
+        var byName = AllTypes(module).ToDictionary(type => type.FullName, StringComparer.Ordinal);
+
+        SharedReaders
+            .Where(name => !byName.TryGetValue(name, out var type) || !CallsAny(type, IsActivityDbSetCall))
+            .Should().BeEmpty(because: "a shared reader the scan names must be a type that reads activity rows (T350)");
     }
 
     // ─── The shape ───────────────────────────────────────────────────────────

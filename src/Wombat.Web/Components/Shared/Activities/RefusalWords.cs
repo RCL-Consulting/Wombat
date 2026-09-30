@@ -42,20 +42,43 @@ public static class RefusalWords
     public static RefusalHeading ForSubmitAfterCreate(int fieldCount)
         => new(SavedNotSubmitted, FixText(fieldCount, "submit"));
 
-    /// <summary>"Not submitted.", "Not declined.", "Not completed."; "Return was not made." for a move with no word for it.</summary>
+    /// <summary>
+    /// The note panel's refused summary's title (T350, note 3; Spec § 1, "Refusal"): what did not happen and the state the
+    /// activity is still in, as <see cref="ForMove" /> words it: "Not declined. It is still Requested.", "Not returned. It is
+    /// still Awaiting discussion.". The panel has one field, the note, so it has no "Fix …" text of its own; the line under
+    /// the title is the refusal's.
+    /// </summary>
+    public static string ForNote(ActivityActionDto action, string currentStateLabel)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return $"{NotDone(action)} It is still {StateInWords(currentStateLabel)}.";
+    }
+
+    /// <summary>
+    /// "Not submitted.", "Not returned.", "Not declined.", "Not completed.", "Not signed off."; "Verify was not made." for a
+    /// move with no word for it.
+    /// </summary>
     public static string NotDone(ActivityActionDto action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        if (string.Equals(action.TransitionKey, "submit", StringComparison.Ordinal))
+        // The moves that lead on, which no target state names: a submit, and a return to the author (T350, note 3).
+        if (LeadingOnWords.TryGetValue(action.TransitionKey, out var words))
         {
-            return "Not submitted.";
+            return words;
         }
 
         // A move that ends the activity reads as the state it would have ended in (MoveOutcome.TargetIsFinal, T342).
         var ends = action.TargetIsFinal && !string.IsNullOrWhiteSpace(action.TargetStateLabel);
         return ends ? $"Not {action.TargetStateLabel.Trim().ToLowerInvariant()}." : $"{action.Label} was not made.";
     }
+
+    private static readonly IReadOnlyDictionary<string, string> LeadingOnWords = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["submit"] = "Not submitted.",
+        ["return"] = "Not returned."
+    };
 
     /// <summary>"Fix the field below and submit again.", "Fix the 2 fields below and save again."; null for no field.</summary>
     public static string? FixText(int fieldCount, string verb)

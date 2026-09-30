@@ -91,25 +91,47 @@ public sealed record FilingWords(
 
     /// <summary>
     /// What a pressed move's button says while it runs (Spec § 1, "Running"; T234): "Submitting…", "Completing…",
-    /// "Logging…"; "Working…" for a label of more than one word, which has no one -ing form.
+    /// "Logging…"; for a label of more than one word, the first word's -ing form with the rest kept, "Recording
+    /// discussion…", "Signing off…" (T350, note 2). "Working…" only for a first word it cannot form: none, or one that is
+    /// not all letters.
     /// </summary>
     public static string Running(string moveLabel)
     {
-        var word = (moveLabel ?? string.Empty).Trim();
-        if (word.Contains(' ', StringComparison.Ordinal) || word.Length == 0)
+        var label = (moveLabel ?? string.Empty).Trim();
+        var space = label.IndexOf(' ', StringComparison.Ordinal);
+        var word = space < 0 ? label : label[..space];
+        var rest = space < 0 ? string.Empty : label[space..];
+        if (word.Length == 0 || !word.All(char.IsLetter))
         {
             return "Working…";
         }
 
+        return IngForm(word) + rest + "…";
+    }
+
+    // A verb's -ing form, its first letter's case kept. The table holds the verbs whose last consonant doubles, which no
+    // spelling rule can tell from the letters alone ("submit" doubles, "visit" does not); cancel doubles as South African
+    // English spells it. Beyond the seeds' moves it holds the ones a builder is likely to name (the T350 build review, D3
+    // and G6: "Refering…"); a doubling verb outside it takes the plain -ing, the limit DESIGN.md states.
+    private static readonly HashSet<string> DoublesItsLastConsonant = new(StringComparer.Ordinal)
+    {
+        "submit", "log", "cancel", "refer", "prefer", "defer", "confer", "transfer", "admit", "commit", "permit", "omit",
+        "emit", "begin", "regret", "stop", "drop", "plan", "flag", "tag", "run", "set", "get", "put", "ship", "rerun",
+        "reset", "upset", "equip"
+    };
+
+    private static string IngForm(string word)
+    {
         var ing = word.ToLowerInvariant() switch
         {
-            "submit" => "Submitting",
-            "log" => "Logging",
-            "cancel" => "Cancelling",
-            _ when word.EndsWith('e') => word[..^1] + "ing",
-            _ => word + "ing"
+            var lower when DoublesItsLastConsonant.Contains(lower) => lower + lower[^1] + "ing",
+            var lower when lower.EndsWith("ie", StringComparison.Ordinal) => lower[..^2] + "ying",
+            var lower when lower.EndsWith("ee", StringComparison.Ordinal) || lower.EndsWith("ye", StringComparison.Ordinal)
+                || lower.EndsWith("oe", StringComparison.Ordinal) => lower + "ing",
+            var lower when lower.Length > 2 && lower.EndsWith('e') => lower[..^1] + "ing",
+            var lower => lower + "ing"
         };
-        return ing + "…";
+        return char.IsUpper(word[0]) ? char.ToUpperInvariant(ing[0]) + ing[1..] : ing;
     }
 
     /// <summary>The check line's lead: "When you submit:", "When you log it:".</summary>

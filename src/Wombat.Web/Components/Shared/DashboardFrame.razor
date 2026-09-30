@@ -3,15 +3,18 @@
   S22(c); T329). DESIGN.md § Dashboard page.
 
   - Loading: the grid and its cards at once, each card its title and a skeleton (DashboardCard's IsLoading), and the grid
-    marked busy. Nothing is offered until the read returns.
+    marked busy. Nothing is offered until the read returns. A status says so, "Loading your Home." (T350, flow 04, C11):
+    the region is on the page from the first render, empty once the read has answered, so its words are announced when
+    they come rather than arriving with a region a screen reader has not yet seen.
   - Failed: one danger Alert with fixed words and Try again, which reads again, and no cards: a card drawn empty would say
     there is nothing, and one drawn as a skeleton would say it is still coming. The failure's own text is the log's, not
     the page's.
   - Otherwise: the grid and its cards.
 
   Try again is an action whose button goes with the alert, so its answer (the cards, or the alert again) takes the focus
-  once it has come (ActionResult; DESIGN.md § Button system, T234).
+  once it has come (ActionResult; DESIGN.md § Button system, T234): the region that replaces the error (C10 e).
 *@
+<p class="visually-hidden" role="status">@(IsLoading ? LoadingWords : null)</p>
 <ActionResult @ref="_result">
   @if (Failed)
   {
@@ -34,6 +37,9 @@
 </ActionResult>
 
 @code {
+  /// <summary>What the status says while the dashboard reads (T350, C11; R3-Spec § 1, Loading).</summary>
+  public const string LoadingWords = "Loading your Home.";
+
   private ActionResult? _result;
 
   /// <summary>The dashboard's read has not returned yet.</summary>

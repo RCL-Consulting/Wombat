@@ -6,7 +6,6 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Dtos;
-using Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Epas;
@@ -18,7 +17,8 @@ namespace Wombat.Web.Tests.Activities;
 /// <summary>
 /// T137 and T106 item 14: /activities/mine and /activities/inbox show the EPA and the encounter date, and the trainee's
 /// list shows what each completion credited. Since T342 (flow 03) My activities shows the EPA and the date in each row's
-/// link, its name; the inbox keeps its columns (MyActivitiesTests holds the rest of the new page).
+/// link, its name (MyActivitiesTests holds the rest of the new page). Since T350 (flow 04) the inbox's columns are
+/// ActivityInboxTests'.
 /// </summary>
 /// <remarks>
 /// The symptom T137 was filed on, verbatim: a released MSF campaign covering three EPAs listed as three rows reading
@@ -95,36 +95,6 @@ public sealed class ActivityListColumnsTests : TestContext
         cut.Markup.Should().NotContain(":44", "the audit clock (06:44 UTC) is no column, in any time zone");
     }
 
-    [Fact]
-    public void Inbox_ShowsTheEpaAndTheEncounterDate()
-    {
-        var cut = RenderInbox(
-            Row(1, "requested", creditedItemCount: null) with { EpaCode = "PAED-004", EpaTitle = "Resuscitate a child", ObservedOn = new DateOnly(2026, 3, 11) },
-            Row(2, "requested", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null, ObservedOnDeclared = false, ObservedOn = new DateOnly(2026, 3, 12) });
-
-        var rows = BodyRows(cut);
-        Column(cut, rows, "EPA").Should().Equal("PAED-004 — Resuscitate a child", "—");
-        Column(cut, rows, "Encounter date").Should().Equal("2026-03-11", "not recorded (created 2026-03-12)");
-
-        // The inbox keeps its subject and its waiting clock.
-        cut.FindAll("th").Select(header => header.TextContent.Trim()).Should().Contain(["Subject", "Updated"]);
-    }
-
-    /// <summary>
-    /// T142. The Subject column printed the trainee's user id. It shows the name the query resolved, and nothing here
-    /// looks one up.
-    /// </summary>
-    [Fact]
-    public void Inbox_NamesTheSubject_NotTheirUserId()
-    {
-        var cut = RenderInbox(
-            Row(1, "requested", creditedItemCount: null) with { SubjectName = "Thandi Nkosi" },
-            Row(2, "requested", creditedItemCount: null) with { SubjectUserId = "departed-trainee", SubjectName = "departed-trainee" });
-
-        Column(cut, BodyRows(cut), "Subject").Should().Equal("Thandi Nkosi", "departed-trainee");
-        cut.Markup.Should().NotContain("trainee-1", "the first row's user id is not on the page");
-    }
-
     /// <summary>
     /// T231. An EPA that is not in force now reads "(no longer in use)", the words and the flag of the activity's own
     /// picker (<c>EpaOptionLabel</c>, D48), in a muted span. An EPA in force, and an activity about no EPA, read as before.
@@ -145,22 +115,6 @@ public sealed class ActivityListColumnsTests : TestContext
         BodyRows(cut).ToList()[1].QuerySelector(".muted").Should().NotBeNull("only the EPA that is not in force is marked");
     }
 
-    /// <summary>T231. The inbox marks it too: an assessor asked to act on an activity whose EPA was deactivated.</summary>
-    [Fact]
-    public void Inbox_MarksAnEpaThatIsNoLongerInForce()
-    {
-        var cut = RenderInbox(
-            Row(1, "requested", creditedItemCount: null) with { EpaId = 5006, EpaCode = "PAED-006", EpaTitle = "Manage a sick neonate", EpaInForce = false },
-            Row(2, "requested", creditedItemCount: null),
-            Row(3, "requested", creditedItemCount: null) with { EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null });
-
-        Column(cut, BodyRows(cut), "EPA").Should().Equal(
-            EpaOptionLabel.For("PAED-006", "Manage a sick neonate", inForce: false),
-            "PAED-001 — Take a history",
-            "—");
-        MarkersIn(cut).Should().Equal([EpaOptionLabel.NoLongerInUse], "only the EPA that is not in force is marked, and muted");
-    }
-
     /// <summary>
     /// T239, restated by T342 (T280): a row is its activity's link, and the link's words are its name. No View button, and
     /// no Actions column.
@@ -179,30 +133,7 @@ public sealed class ActivityListColumnsTests : TestContext
         cut.FindAll("thead th").Select(header => header.TextContent.Trim()).Should().NotContain("Actions");
     }
 
-    /// <summary>T239. The inbox's Open names whose activity it is too; two that read the same add when each was updated.</summary>
-    [Fact]
-    public void Inbox_NamesEachRowsOpen_ByItsTypeSubjectEpaAndEncounterDate()
-    {
-        var cut = RenderInbox(
-            Row(1, "requested", creditedItemCount: null) with { SubjectName = "Thandi Nkosi" },
-            Row(2, "requested", creditedItemCount: null) with { SubjectName = "Sam Smit", EpaId = null, EpaCode = null, EpaTitle = null, EpaInForce = null },
-            Row(3, "requested", creditedItemCount: null) with { SubjectName = "Thandi Nkosi", UpdatedOn = new DateTime(2026, 3, 21, 6, 44, 0, DateTimeKind.Utc) });
-
-        var names = LinkNames(cut, "Open");
-        names[1].Should().Be("Open Mini-CEX (CPSA) for Sam Smit, encounter date 2026-03-10");
-        names[0].Should().StartWith("Open Mini-CEX (CPSA) for Thandi Nkosi, PAED-001, encounter date 2026-03-10, updated ");
-        names.Should().OnlyHaveUniqueItems();
-        cut.FindAll("thead th").Last().TextContent.Trim().Should().Be("Actions");
-    }
-
     // ---- helpers ----------------------------------------------------------------------------------------------------
-
-    /// <summary>The accessible name of each row's link whose visible text is <paramref name="label" />.</summary>
-    private static IReadOnlyList<string> LinkNames<T>(IRenderedComponent<T> cut, string label) where T : Microsoft.AspNetCore.Components.IComponent
-        => cut.FindAll("tbody td .actions-cell a")
-            .Where(link => link.TextContent.Trim() == label)
-            .Select(link => Accessibility.AccessibleNames.NameOf(cut, link))
-            .ToList();
 
     private static ActivitySummaryDto Msf(int id, int epaId, string code, string title) => new(
         id,
@@ -264,24 +195,6 @@ public sealed class ActivityListColumnsTests : TestContext
         return cut;
     }
 
-    private IRenderedComponent<ActivityInbox> RenderInbox(params ActivitySummaryDto[] rows)
-    {
-        Services.AddSingleton<IScopedSender>(new FakeSender(rows));
-        var cut = RenderComponent<ActivityInbox>();
-        cut.WaitForState(() => cut.FindAll("tbody tr").Count == rows.Length);
-        return cut;
-    }
-
-    /// <summary>The text of every muted span in the EPA column's cells (an undated encounter is muted too).</summary>
-    private static IReadOnlyList<string> MarkersIn<T>(IRenderedComponent<T> cut) where T : Microsoft.AspNetCore.Components.IComponent
-    {
-        var index = cut.FindAll("thead th").Select(cell => cell.TextContent.Trim()).ToList().IndexOf("EPA");
-        return BodyRows(cut)
-            .SelectMany(row => row.QuerySelectorAll("td")[index].QuerySelectorAll("span.muted"))
-            .Select(span => span.TextContent.Trim())
-            .ToList();
-    }
-
     private static IReadOnlyList<IElement> BodyRows<T>(IRenderedComponent<T> cut) where T : Microsoft.AspNetCore.Components.IComponent
         => cut.FindAll("tbody tr");
 
@@ -306,7 +219,6 @@ public sealed class ActivityListColumnsTests : TestContext
             {
                 // T342 (B7): My activities' list comes a page at a time.
                 ListActivitiesBySubjectQuery => Task.FromResult((TResponse)(object)new ActivityListPageDto(_rows, 1, 20, _rows.Count)),
-                ListActivitiesByActorInboxQuery => Task.FromResult((TResponse)(object)_rows),
                 ListNeedsYouQuery => Task.FromResult((TResponse)(object)Array.Empty<ActivitySummaryDto>()),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

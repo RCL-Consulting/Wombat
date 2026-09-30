@@ -17,7 +17,10 @@
 > - **Redesigned so far:** flow 01, the shell (2026-09-27, T335, `b347e11c`); flow 02, sign-in and account (2026-09-28,
 >   T339, `f50dffb2`: § Account / auth page); flow 03, a registrar files an activity (2026-09-29, T342, `725237ee`:
 >   § Form system "The activity form", § Alerts "An action's outcome on a record page", § Page-level patterns "List
->   page" and "Record page with a workflow", § Dashboard page).
+>   page" and "Record page with a workflow", § Dashboard page); flow 04, an assessor works their inbox (2026-09-30,
+>   T350: § Form system "The activity form" (R4, the rung picker and the request fold), § Badges (Overdue),
+>   § Page-level patterns "List page" (R2, the Activity inbox) and "Record page with a workflow" (R3, the way on, the
+>   note panel), § Dashboard page (R1, the Assessor's Home and the other-role line).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -972,6 +975,12 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
 .btn[aria-disabled="true"].is-running /* the move running: keeps the focus (T234, C10) */
 .move-reasons     /* under the bar: why each unavailable move cannot be made, named by its button's aria-describedby */
 .instrument-group, .instrument-group-head, .instrument-picker, .instrument-link /* the instrument picker (Q1) */
+
+/* The rater's form (T350, flow 04), in app.css under "Flow 04: the rung picker and the request fold (T350)" */
+.rung-picker      /* the rated level field's fieldset.form-group (RatedLevelPicker): min-width 0, so six cells fit at 390 */
+.rung-choice      /* a rung cell round its native radio: 3.5rem, accent-color, filled when .is-chosen, ring on :focus-within */
+.rung-legend, .rung-legend-marker, .rung-legend-list /* "What each rung means": a details, its chevron, the descriptors */
+.section-fold, .section-fold-head, .section-fold-show, .section-fold-owner, .section-fold-body /* the request fold */
 ```
 
 **Rules:**
@@ -1156,7 +1165,38 @@ reordered). Log an activity is `NewActivity.razor`. Drawn in `design/flows/03-tr
   rung of the ladder abreast, the chosen one filled (`--secondary-color`, `--on-fill`) and named in words ("4, chosen"),
   its descriptor under the row (`.rung-descriptor`). Before the section is filled the rungs are pending: dashed, and
   `aria-hidden`, the list named "Entrustment level: 1, 2, 3a, 3b, 4, 5" (A12). The value stored is the rung's Order (5 is
-  "4"). A writer of the scale keeps the select; radios are flow 04's.
+  "4").
+- **The rung picker** (`RatedLevelPicker`; T350, flow 04, R4; round 2, E3 and C7). The writer of the rated level field
+  (the schema's `rated_level_field`) chooses on the rung row: radios, as wide as its ladder, the descriptors under "What
+  each rung means". Any other scale field, or a ladder that fails to load, keeps the select; the builder's preview and
+  Log an activity pass no ladder, so they keep it too. It is a `fieldset.form-group.rung-picker` whose legend is the
+  field's label (with the visually hidden "required": a group cannot carry `aria-required`), the College's help under
+  it, then one `label.rung.rung-choice` round one native radio per rung (`name` the field's key, `value` the rung's
+  Order), `is-chosen` and `checked` as conditions on them, each `li` keyed by its rung's Order (`@key`) so a press, one
+  round trip through the form's update, patches the radio the keyboard is on. The browser's radio group does the keys:
+  arrows move and choose, Tab leaves the group, and with none chosen Tab lands on the first rung. The first radio
+  carries the field's input id (`<key>-in`), so a refusal summary's link lands on the field; the others `<key>-in-<Order>`.
+  Each radio is described by its rung's descriptor, a visually hidden span `rung-desc-<Order>` outside both folds (a rung
+  with no descriptor names none), and while the field is refused by its message (`<key>-msg`) too; the refused group is
+  `role="radiogroup"` with `aria-invalid`, which ARIA does not permit on a radio (T350 build review, A5); the "chosen" beside the filled rung is `aria-hidden` (the browser says "checked"). The
+  chosen rung's descriptor is under the row (`.rung-descriptor`, as RungRow's). "What each rung means" is a
+  `details.rung-legend` under that: with no rung chosen, open at 1280 and shut at 390 (two read-only renderings,
+  `.only-wide` and `.only-narrow`, toggled by CSS at 641 px, never a script; neither carries an id); once one is chosen,
+  one, shut. Its summary says Show while shut and Hide while open (`.fold-show` / `.fold-hide`).
+  - **The rung cell:** each rung is a 3.5rem cell, a native radio above its 1.1rem label, at every width; the radio kept
+    native with `accent-color` (`--secondary-color`; `--on-fill` on the chosen rung); its unchecked ring is the
+    browser's (Chromium #767676, 4.54:1 on the surface), not a token. The focus ring is on the cell (`:focus-within`).
+- **The request fold** (T350; round 1, E3; round 2, E2). While the reader has a section to fill, the activity page passes
+  `FoldFilledSections`, and each filled read-only section is drawn twice: its card, `.only-wide`, and a
+  `details.detail-card.form-section.section-fold.only-narrow`, shut, whose summary is the title, "Filled in by …"
+  (`.section-fold-owner`) and Show / Hide (`.section-fold-show`), with no gist, and whose body (`.section-fold-body`) is
+  the same read-outs. Every id in the fold is its card's with `-narrow` after it. A refusal naming one of a fold's fields
+  opens it, and `wombat.focusById`, given an id whose element is not displayed, focuses its `-narrow` copy, opening that
+  copy's fold first: so on a phone a refusal summary's link reaches the field (T350 build review, A4, G1). Every other
+  reader keeps the sections as they are. The folds' summaries, like "What each rung means", are 44 px at every width.
+- **A person is read by name** (T350, note 15; round 1, E4): a read-out of a `user` field is "Fatima Khumalo", not the
+  directory's "Fatima Khumalo (fatima@kgk)" (`NomineeNames.NameOfLabel`). The picker's options and the read-back under
+  it keep the address, which tells two people apart while picking.
 - **Hints.** Only a type whose credit rules can credit carries either (`EncounterDatePolicy.CanCredit`). The late-filing
   warning (`.field-warning`) sits in the date's always-present `role="status"` region (A3). A date before the programme
   started is a predicted refusal (C9): the field's own `.validation-message`, worded for its reader
@@ -1170,8 +1210,12 @@ reordered). Log an activity is `NewActivity.razor`. Drawn in `design/flows/03-tr
   (`MoveHandOff`; E4, C3; `FilingWords.MoveButtonLabel`): the name is the picker's own option for the value on the
   form, reported by `HandOffNameChanged`, so a nominee picked or changed names the button at once, saved or not. A
   pressed move keeps the focus, `aria-disabled="true"` and `.is-running` while it runs, and reads its -ing form
-  (`FilingWords.Running`: "Submitting…", "Logging…", "Completing…"; "Working…" for a label of more than one word;
-  "Saving…" for Save draft), and a visually hidden status says "Submitting."; every button it would race is disabled
+  (`FilingWords.Running`: "Submitting…", "Logging…", "Completing…"; for a label of more than one word the first word's
+  -ing form with the rest kept, "Recording discussion…", "Signing off…", T350 note 2; a verb whose last consonant doubles
+  is spelled from a table of the seeds' and the likely builder verbs, "Submitting…", "Referring…", "Admitting…", and one
+  outside it takes the plain -ing, the T350 build review's D3; "Working…" only for a first word it cannot form; "Saving…"
+  for Save draft), and a visually hidden status says "Submitting." ("Recording discussion.");
+  every button it would race is disabled
   (T234). The status region is always on the page, empty until a move runs (A6). Below 641px every control of the form
   is 44px (`2.75rem`), a multi-choice checkbox row too, its label filling the row as flow 02's Remember me does (A8), a
   section pads 16px, and the bar stacks, the move on top.
@@ -1296,8 +1340,11 @@ reads. None of them is counted as inactive either; the admin trainees list is wh
 Each dashboard card is a `<DashboardCard>` — a shared component that wraps `.detail-card` and adds `Title`, `Icon` (Lucide name), `Href` (turns it into `.detail-card--interactive`), `Emphasis` / `Warning` (left stripe variants), and `Span` (1/2/3, the `.dashboard-span-*` modifiers). Reach for `<DashboardCard>` first; drop to raw `<div class="detail-card">` only when the card does not have a titled strip. At 900px and below the `.dashboard-grid` is a single column.
 
 - **Its title is an `<h2 class="dashboard-card-title">`** (2026-09-27, T335, flow 01): the icon, the words and, where the
-  card counts something, the count as a `badge-submitted` badge (`Count`: "Waiting for your rating 2",
-  R2-Landing-Assessor). Home's `<h1>` is the page's one; until T335 the cards' `<h3>` skipped a level.
+  card counts something, the count as a `badge-submitted` badge: a figure read as words (`Count` with `CountWords`,
+  the Trainee's "Needs you 2", ", 2 items"), or the words themselves (`BadgeWords`, the Assessor's "2 waiting, 1
+  overdue"; T350, note 13). Home's `<h1>` is the page's one; until T335 the cards' `<h3>` skipped a level. A card
+  draws one stripe: `Warning` in place of `Emphasis`, never both (T350, nit T15); with a `HeadingId` it is a
+  `section` named by its title.
 - **`IsLoading`** draws the card as its title and a skeleton (`.dashboard-card-skeleton`, three lines, `aria-hidden`),
   and not its content. A card that links is not a link while it loads, and a count is not shown: nothing is offered
   before the read returns (R2-Landing-Loading).
@@ -1427,7 +1474,10 @@ T019 introduces a small builder-specific extension to the shared system:
   - **The result** is an `ActionResult` at the head of the page body, `role="status"` on its success alert, and it takes
     the focus after every move. Its first sentence is the move's result, in bold (`ActivityActionDto.ResultSentence`:
     "Submitted. It is now Requested.", "Logged.", "Cancelled."); the second, when there is one, says whose inbox it is in
-    ("It is in Fatima Khumalo's Activity inbox.", "It is in nobody's inbox until you submit it."). A result handed over
+    ("It is in Fatima Khumalo's Activity inbox.", "It is in nobody's inbox until you submit it."). After a move made as
+    someone other than the author, the second says what is left for the reader instead ("1 more waits for you.",
+    "Nothing else waits for you."), and the way on follows the result, outside it (T350, R3, § Page-level patterns
+    "Record page with a workflow"). A result handed over
     from another page (Log an activity's filing) arrives with the page and wins over `FocusOnNavigate`'s h1:
     `FocusOnLoad` (the T265 pattern; A2).
   - **A refusal that names fields** is one summary, the `RefusalSummary` component (Components/Shared/Activities), the
@@ -1496,6 +1546,7 @@ skeleton does not pulse; it is a still `--header-bg` block, the same size (§ Ac
 .badge-accepted  /* warning: --warning-bg ground, --warning-color edge */
 .badge-completed /* success: --success-bg ground, --success-color edge */
 .badge-declined  /* danger: --danger-bg ground, --danger-color edge */
+.badge-overdue   /* warning: --warning-bg ground, --warning-color edge; "Overdue" beside a state's badge (T350) */
 ```
 
 - **A badge's words are body text on its tint**, 11.2:1 or more (T322). Until 2026-09-27 a state badge was its state's
@@ -1519,6 +1570,9 @@ fifteen keys the seeded workflows use.
 
 - `BadgeFor.State(BadgeState)` is the five: `Draft` grey, `Submitted` blue, `Accepted` amber, `Completed` green,
   `Declined` red.
+- `BadgeFor.Overdue` is "Overdue" on a waiting activity (T350, flow 04, note 14): amber, drawn **beside** the state's
+  badge, never in its place, the two grouped in `.needs-you-badges`. Until T350 the Assessor's Home replaced the state's
+  badge with an amber one reading "Overdue", so an overdue row never said what state it waited in.
 - `BadgeFor.ActivityState(key, isFinished)` is the dashboards' activity states. Done is green, and done is a terminal
   state of the activity's **pinned** workflow (`ActivityCompletion`, D44), which the dashboard queries send as
   `IsFinished`; never a key's name. `teaching_session` finishes in `accepted`, which on a Mini-CEX is a supervisor's work
@@ -2325,6 +2379,16 @@ so it needs 3:1 against its ground; the ok and warn dots were 2.87 and 2.57:1 un
 ```
 
 `PagerControls.razor` is the one component for pagination. Use it on every list that can grow.
+- **Words.** "Showing 1–20 of 137", the range with an en dash; "Per page:" over 10, 20, 50 or 100 (T350 build review,
+  D1).
+- **Its ends.** Previous on the first page and Next on the last are `aria-disabled="true"`, never `disabled`: the pressed
+  button keeps its place and its focus, and a press there sends nothing (T350, C10 f).
+- **The focus is the page's job.** After a page turn the page focuses its list's heading, which says which list turned.
+  A change of page size leaves the focus on the select (Chrome and Edge fire `change` on every arrow of a closed
+  select). A page turn whose read fails focuses the failure (`StatePanel.FocusFailureAfterRender`) (T350 build review,
+  A1, A3).
+- **Its name.** Given `Label`, the pager is a `nav` landmark by that name: the Activity inbox's is "Decided by you,
+  pages". Without one it is a plain block, as on My activities and Decisions due (D2).
 
 ## The reconnect dialog and the error bar
 
@@ -2548,8 +2612,8 @@ form's trainee is a picker since T182.
 history, the activity lists, the dashboards' badges, the committee's evidence snapshot and the portfolio PDF all print
 the label the query carried from the activity's pinned workflow (`CurrentStateLabel`, `FromStateLabel`, `ToStateLabel`,
 `TransitionLabel`, `FinalStateLabel`, `SourceStateLabel`), so a page names a state as the refusals and notices on it do
-(T189): "Awaiting supervisor", not `submitted`. A move is named as its button is ("Sign Off"). Razor never works a label
-out. The key appears only as what picks a badge's colour (`BadgeFor.ActivityState(item.CurrentState, item.IsFinished)`,
+(T189): "Awaiting supervisor", not `submitted`. A move is named as its button is, in sentence case ("Sign off", T350).
+Razor never works a label out. The key appears only as what picks a badge's colour (`BadgeFor.ActivityState(item.CurrentState, item.IsFinished)`,
 § Badges), and as text only where the pinned workflow cannot name it.
 
 **A committee review's state is shown by its label, never by the enum's name** (T250). The schedule, the review page,
@@ -2638,7 +2702,9 @@ activities (`/activities/mine`) is headed "My activities", "Everything you have 
 - **An activity's link** (`ActivityLink`, `.activity-link`) is its name, "Type · EPA · date" (`DisplayName`, E7, E9),
   with a second line (`.activity-link-to`): "to David Naidoo" for work that goes to its nominee, "with Sarah Botha" for
   work discussed or reviewed with them (the type's shape, `ActivityTypeShape.DiscussedOrReviewed`: the reflection, the
-  portfolio review). No second line when there is no nominee, or when the name already ends with them (E7). A visually
+  portfolio review). In an assessor's lists (the Activity inbox, the Assessor's Home, the way on; `FromSubject`, T350)
+  the second line is "from Anele Dlamini", the registrar the work comes from. No second line when there is no nominee,
+  or when the name already ends with them (E7). A visually
   hidden ", " stands between the two lines, so the link reads as two phrases; a name two links on the page would still
   share adds an `aria-label` that starts with the link's words and adds its state, then "(1 of 2)"
   (`ActivityRowNames.Links`, T280).
@@ -2646,12 +2712,38 @@ activities (`/activities/mine`) is headed "My activities", "Everything you have 
   session." with Log an activity. **Loading**: skeletons. **Load error**: `StatePanel`'s alert with Try again, "Could not
   load your activities. Nothing has changed. Try again, or come back in a few minutes.", never the exception's text.
 
-**The Activity inbox for a registrar** (T342): subtitle "Work waiting for an assessor's rating or review." Its query
-leaves out the author's own arms, so a caller holding no role but Trainee (or PendingTrainee) always finds it empty, and
-its empty state says where their work is: "Nothing here is yours to act on." · "This inbox holds work that assessors
-rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs you." with Open My
-activities. Anyone holding another role reads "Inbox clear" · "Nothing is waiting for you to rate, discuss or review."
-Its load error is worded as My activities', never the exception's text.
+**A list page may hold two headed, counted sections, the second paged** (2026-09-30, T350, flow 04, R2; R3-C-Inbox,
+round 1 Q1). The Activity inbox (`/activities/inbox`) is headed "Activity inbox", "What waits for you to rate, review or
+discuss.", with no header action. Then:
+
+- **Waiting for you** (`section.list-section`, `h2#waiting-h`, `tabindex="-1"`): its count in words as the heading's
+  badge, "2 waiting, 1 overdue" (none when nothing waits), the rule line "Oldest first. Overdue once it has waited 7
+  days.", then a stacked `DataTable` of every row of `ListWaitingForYouQuery` (the read Home's card and the activity
+  page's way on share, T297) with the columns **Activity, EPA, State, Waiting**. The Activity cell is the link, its name
+  "Type · EPA · date" and its second line "from <registrar>" (**`ActivityLink`'s second line reads "from <registrar>"
+  in the assessor's lists**, `FromSubject`); the EPA cell (`td.epa-cell`) is "Code — Title", "(no longer in use)" for a
+  paused EPA; the State cell is the state's badge with "Overdue" beside it (`.needs-you-badges`); **the Waiting column
+  replaces Updated**: "8 days" or "Less than a day" over "since 2026-09-22 08:06 SAST" (`td.waited-cell`, South African
+  time with its zone, never the server's). Only the EPA and Waiting cells carry `data-label`; the link and the badges
+  say what they are. Empty: "Inbox clear" · "Nothing is waiting for you."
+- **Decided by you** (`h2#decided-h`, `tabindex="-1"`, the target of Home's "All your decisions"): "45 decisions" as its
+  badge, the rule line "Newest first. Everything you completed, declined, discussed or signed off.", a stacked table of
+  **Activity, Decision, Decided, Credit** (the decision's badge, its SAST moment, `CreditOutcome.Label`), 20 a page
+  under `PagerControls`. A page turn puts the focus on the section's heading; **the pager's Previous and Next are
+  `aria-disabled` at its ends, never `disabled`**, so the pressed button keeps its place and its focus, and a press there
+  sends nothing (C10 f). Empty: "No decisions yet."
+- **Loading**: each section's heading over skeletons, and a status "Loading the Activity inbox." present from the first
+  render (C11). **Load error**: `StatePanel`'s alert with Try again, "Could not load the Activity inbox. Nothing has
+  changed. Try again, or come back in a few minutes.", never the exception's text; Try again's answer puts the focus on
+  "Waiting for you".
+- **Two links that would read the same** add their state, then ", waiting since … SAST" (or ", decided … SAST"), then
+  "(1 of 2)" to their accessible name, one naming over both sections (`AssessorRowNames`; C11).
+
+**The Activity inbox for a registrar** (T342): its reads leave out the author's own arms, so a caller holding no role
+but Trainee (or PendingTrainee) always finds it empty, and its empty state says where their work is: "Nothing here is
+yours to act on." · "This inbox holds work that assessors rate, discuss or review. Your drafts and work returned to you
+are under My activities, in Needs you." with Open My activities. Unchanged by T350 but for the subtitle. Anyone holding
+another role gets the two sections.
 
 **The stacked table** (`.clinic-table--stack`, `DataTable`'s `Stack`; T342, A8). Below 641px each row is a block of its
 cells, one under another. The `thead` stays in the table, visually hidden (never `display: none`), so a screen reader
@@ -2697,11 +2789,13 @@ when a report is selected.
 <PageHeader Title="Mini-CEX (Paediatrics) · PAED-002 · 2026-09-09"      <!-- h1, tab and last crumb (E2, E7) -->
             Subtitle="Sipho Ndlovu's request to Fatima Khumalo" />     <!-- its people; no "State:" line -->
 <ActionResult Id="activity-result" />                                  <!-- the result -->
+<WayOn />                                                              <!-- after another's move: the next row (T350) -->
 <RefusalSummary />                                                     <!-- a refusal that names fields (§ Alerts) -->
 <section class="detail-card activity-status …">                        <!-- "Who has it now" -->
 <div class="details-grid activity-grid">
   <ActivityAbout />                                                    <!-- .details-list -->
   <div class="activity-sections"> the form's sections · SubmitCheck · the action bar · the note panel </div>
+  <ActivityAbout Class="only-narrow" IdSuffix="-narrow" />             <!-- a filler's phone only (T350) -->
 </div>
 <ActivityHistory />                                                    <!-- the table; <details> below 641px -->
 ```
@@ -2756,17 +2850,61 @@ when a report is selected.
   system): "When you submit: it goes to Fatima Khumalo's Activity inbox and stays Requested until Fatima Khumalo acts on
   it.", with the late clause counted as Log an activity counts it (`FilingLateness.DaysLate`, D6).
 - **The result** of a move is its sentence in bold, then whose inbox it is in, plain; the notice Log an activity hands over
-  is shown the same way (`ActivityPageModel.SplitResult`, D7).
+  is shown the same way (`ActivityPageModel.SplitResult`, D7). A move the reader made as someone other than its author
+  (an assessor, a supervisor, a reviewer) is followed by what is left for them instead: see R3 below.
 - **Who filled in each section.** A filled section's head says "Filled in by Sipho Ndlovu, 2026-09-29"
   (`ActivityPageModel.SectionAttributions`, handed to the form as `SectionAttributions`): the last person who moved the
   record out of a state in which they could write that section (its `editable_by` within the state's, both
   `subject|creator` when unset; a `role:` or `scope:` term matches anyone, since the page has no one's claims), with that
   move's date on the South African calendar; the create where the create is the filing; a cancelled draft names its
   author without a date. A locked section names who fills it in (§ Form system).
-- **The note panel** (`.detail-card.note-panel`, `id="note-panel"`) opens under the bar for a move that needs a note: its
-  heading ("Decline this request"), the note labelled for its reader ("Reason for Sipho Ndlovu", `id="note-in"`; the
-  focus moves into it), "<Move> with this note" and the quiet "Keep the request", which closes it and hands the focus
-  back to the toggle. A refused move keeps it open with the note as typed.
+- **The note panel** (`.detail-card.note-panel`, `id="note-panel"`, `aria-labelledby="note-panel-title"`) opens under the
+  bar for a move that needs a note. **One note panel for every move that needs a note; danger only for a move that ends
+  the activity** (R4; T350, note 4, round 1 E2). Its words are `NotePanelWords`', the part being the first word of the
+  form's first section (`ActivityPageModel.AuthorPart`): the heading "Decline this request", "Return this reflection",
+  "Return this review"; the note labelled "Note for Sipho Ndlovu" (`id="note-in"`), its help under the label in
+  `.field-help#note-help`, "Sipho Ndlovu reads it on the activity's page. It is kept with the activity's history."; the
+  send "Decline with this note" (`.btn-danger`, the move ends it) or "Return with this note" (`.btn-primary`, it leads
+  on); and the quiet "Keep the request" / "Keep the reflection" / "Keep the review". Focus (C10 a–c): the toggle moves it
+  into the note; Keep hands it back to the toggle (`aria-expanded="false"`); a refusal of the note keeps the panel open
+  with the note as typed, and its summary (`#note-summary`, `RefusalWords.ForNote`: "Not declined. It is still
+  Requested.", "Not returned. It is still Awaiting discussion.") takes the focus, its one line "Note for Sipho Ndlovu:
+  Decline requires a note." a link to `#note-in`. The note is `aria-required`, with no hidden "required" beside the
+  eye's mark (A7), and `aria-describedby="note-help"`, then `"note-help note-msg"` once refused, never the summary (A8);
+  the toggle's `aria-controls` is there only while the panel is (A9). Below 641px the send and Keep stack at 44px, the
+  send on top (the bar's own phone rule).
+- **Discard changes** with nothing to discard stays in the tab order, `aria-disabled` and `.is-unavailable`, and says why
+  beside it: "Nothing to discard yet." in `ul.move-reasons.move-reasons--beside > li#why-discard`, which the button names
+  with `aria-describedby` (T350, note 11; round 1, E4). `.move-reasons--beside` is a modifier of the built
+  `.move-reasons`: it sits in the bar's row, not on one of its own.
+- **R3 (T350, flow 04; R3-C-Activity, R3-Spec § 1, § 3, § 4): the result may carry the way on (`WayOn`); the live region
+  holds the result's sentence and the count only. On a phone, a reader with a section to fill gets the request fold and
+  About under the bar; every other reader keeps the page's order. Activity unavailable's link goes to the acting role's
+  list, else Home.**
+  - After a move the reader made as someone other than its author, the page reads `ListWaitingForYouQuery` once more,
+    less the activity just moved (R3-Spec § 7). `#activity-result` holds `ResultSentence` in bold and
+    `WaitingWords.MoreForYou`: "Completed. 1 more waits for you.", "Discussed. Nothing else waits for you.", "Returned to
+    Sipho Ndlovu. Nothing else waits for you." (a move into a final state reads as that state, C1; a Return names the
+    act and the registrar it went back to, `WaitingWords.ReturnedTo`, where "It is now Draft." named no act and read as
+    the assessor's own draft; the status card still says Draft; T350 build review, D5). A move made
+    as the author keeps flow 03's "It is in Fatima Khumalo's Activity inbox.". A read that fails is logged and costs only
+    the count and the way on, never the result.
+  - `WayOn` sits straight after the result, outside it: `section.way-on` (`aria-label="The next activity waiting for
+    you"`) holds the next row (`WaitingList`, with "Waiting 8 days, since 2026-09-22 08:06 SAST."), then "Open the next"
+    (`.btn-primary`, `aria-label="Open the next: <name>, from <registrar>"`) and "Back to <list>", the acting role's list
+    by the owner table (`NavOwners.OwnerFor(typeof(ActivityView), role)`: Activity inbox for an Assessor), else "Back to
+    Home". Nothing left: `p.way-on-none` with "Go to Home". No automatic advance (Q6). The result takes the focus; the
+    row's own link is out of the tab order (`WaitingList.LinksOutOfTabOrder`), so the next Tab is Open the next (C10 d).
+    Below 641px the way on's buttons stack at 44px.
+  - A reader with a section to fill who is not the activity's author gets, below 641px, the filled sections folded
+    (`ActivityForm.FoldFilledSections`, § Form system) and About under the bar: About is drawn twice, `.only-wide` where
+    it always is and `.only-narrow` after the sections, the second's ids suffixed `-narrow`. The author's own draft and
+    every reader with nothing to fill keep the one About in its place.
+  - "Activity unavailable" goes to the acting role's list by the same owner table ("Go to Activity inbox" for an
+    Assessor, "Go to My activities" for a Trainee), else "Go to Home".
+  - The status card's region is named by its label, "Who has it now" (`aria-labelledby="activity-status-label"`, A10).
+    It shows the rater no year minimum and no semester count, before or after rating (Q7).
+  - Opened by a Committee member from the other-role line, nothing is lit and the trail is Home › the activity (§ 8).
 - **The history** is a real `.clinic-table.history-table` in a `.table-container`, oldest first: Move, From → to, By,
   When, Credit. The create row reads "— → Draft"; a late filing says "Filed 20 days after the encounter" under its time;
   a note is its own row under its move, one `<td colspan="5">` ("Note: …"), so a long reason never squeezes the columns.
@@ -2846,21 +2984,49 @@ Dashboards are a composition, not a standalone page pattern.
     (`DashboardCard`'s `IsLoading`). Nothing is offered until the read returns: no card's content, no card that links.
     Until T335 the page showed a column of bare skeletons. A dashboard with two frames (the trainee's, pending or not)
     draws the acting role's until its summary says which.
+    A status (`role="status"`, visually hidden) says "Loading your Home." while it reads: present from the first render,
+    empty once the read has answered, so the words are announced when they come (T350, C11).
   - **Failed:** one `danger` `Alert`, "**Could not load your Home.** Nothing has changed. Try again, or come back in a
     few minutes.", with a Try again button (outline, small, the `refresh-cw` icon) that reads again, and **no cards**: a
     card drawn empty says there is nothing, and a skeleton says it is still coming. The exception is logged, never shown
     (until T335 each dashboard printed its message, which for a database failure is EF's text, T272). Try again's button
     goes with the alert, so the answer (the cards, or the alert again) takes the focus once it has come: the frame is an
-    `ActionResult` (§ Button system, T234).
+    `ActionResult` (§ Button system, T234): the region that replaces the error (T350, C10 e). Below 641px the card
+    footers' buttons, every Try again and the pager's buttons are 44px tall (T350, C8).
   - **Guard the eager reads.** The frame renders before the summary, so a card's parameters are read while it is null: a
     title, stripe or count that reads it is written `Summary?.…` (the Coordinator's warning stripe, the admins' coverage
     title, which is "Curriculum coverage" until it knows the semester), and a card's content only
     `@if (Summary is { } summary)`. `HomeFrameTests` renders every role's Home with a read that never returns, and with
     one that fails.
 - **The cards** belong to later flows (S20); today's are kept, less the duplicates the boards drop:
-  - the Assessor's work waiting is one card, "Waiting for your rating", its count (`PendingRequestCount`) as its badge,
-    its rows under it and "Open inbox →" at its foot. "Pending requests", "Awaiting your review" and the Actions card,
-    three ways to one inbox, are gone;
+  - **the Assessor's Home is two cards** (2026-09-30, T350, flow 04, R1; R3-C-Home), each the Activity inbox's own read,
+    so a card and the section it opens cannot disagree (T297):
+    - **"Waiting for you"** (`#card-waiting`, spanning two): the inbox's first five rows, from the same read
+      (`WaitingForYou`) and in the same order and words (`WaitingList`, `WaitingWords`): each row its link ("Type · EPA
+      · date", then "from <registrar>"), its state's badge with "Overdue" beside it, never in its place, and "Waiting 8
+      days". `WaitingList` is `NeedsYouList`'s row (§ List page) with an overdue edge: `.needs-you-row--overdue` puts
+      the warning colour on the stripe. Over the rows the rule line, "Oldest first. Overdue once it has waited 7 days." (the number is
+      `AssessorDueDays`); past five, "20 more wait in the Activity inbox." (`.waiting-more`); at its foot "Open Activity
+      inbox". The count is the title's badge in words, "2 waiting, 1 overdue" (`DashboardCard`'s `BadgeWords`), and
+      there is no "0" badge: empty, the card says "Nothing is waiting for you." (`.card-empty`). The stripe is the
+      warning one when any row is overdue, in place of the emphasis one, never both (`DashboardCard`'s `Warning`).
+    - **"Recent decisions"** (`#card-decisions`): the five newest decisions (`DecidedByYou`'s first page), each linked
+      by its full name with "from <registrar>", its decision's badge over its South African day (`.decided-list`,
+      `.decided-row`, `.decided-meta`, `.decided-date`); "All your decisions" to the inbox's second section
+      (`/activities/inbox#decided-h`); empty, "No decisions yet.".
+    Until T350 the first card was "Waiting for your rating", ten rows each its type and its trainee with "Overdue" in
+    place of the state, and "Open inbox →"; before T335, "Pending requests", "Awaiting your review" and an Actions card
+    were three ways to one inbox.
+  - **A Home may carry one line about another held role's waiting work** (T350, R1; note 7, E4, C12): the other-role
+    line (`OtherRoleLine`, `section.alert.other-role-line`, named "Waiting for you in the Activity inbox"), between the
+    header and the acting role's dashboard, only for someone who holds Assessor and acts in another role, and only when
+    work waits: "1 activity waits for you in the Activity inbox, and it is overdue: <name>, from <registrar>, waiting 8
+    days." / "3 activities wait for you in the Activity inbox; 1 is overdue. The oldest: …" / "1 activity waits for you
+    in the Activity inbox: …, waiting less than a day.", warning-tinted when any is overdue, info otherwise. Its one
+    action, "Open it" or "Open the oldest", opens the activity; **the line holds no switch** (the sidebar's is the one
+    way to change role). It names no role, since the read counts every arm that is not the author's. A failed read
+    draws no line and is logged: it is never a Home error, which the frame owns. The committee Home places it; flow 04
+    owns its words.
   - the Administrator's job status is in System health only (spanning two), beside Users across institutions. The
     Maintenance card, four nav links over again, is gone; its fifth, Curriculum progress, is a header link on Curricula,
     the page that owns it, for the Administrator its page admits;
@@ -3451,7 +3617,9 @@ h1..h5, .page-subtitle
 
 /* ── System pages ─────────────────────────────────── */
 .system-panel, .system-card-page, .system-card, .reference-block (+ ≤640px),
-  "Flow 03: My activities and Needs you (T342)": .list-section, .list-section-title, .needs-you-rule, .needs-you, .needs-you-row, .needs-you-why, .activity-link, .activity-link-to, .clinic-table--stack (≤640px)
+  "Flow 03: My activities and Needs you (T342)": .list-section, .list-section-title, .needs-you-rule, .needs-you, .needs-you-row, .needs-you-why, .activity-link, .activity-link-to, .clinic-table--stack (≤640px),
+  "Flow 04: the waiting row (T350)": .needs-you-row--overdue, .needs-you-row .activity-link (wraps), .needs-you-badges, .badge-overdue,
+  "Flow 04: the Assessor's Home and the inbox (T350)": .card-empty, .waiting-more, .decided-list, .decided-row, .decided-meta, .decided-date, .waited-cell, .epa-cell, .other-role-line, .pager .btn[aria-disabled="true"] (+ ≤640px: 44px card footers, Try again and pager)
 
 /* ── Pager ─────────────────────────────────────────── */
 .pager, .pager-info, .pager-actions, .pager-page-size, .pager-page-size-label, .pager-page-size-select
@@ -3463,7 +3631,10 @@ h1..h5, .page-subtitle
 .state-panel-title, .state-panel-copy, .skeleton, @keyframes skeleton-pulse
 
 /* ── Utilities ─────────────────────────────────────── */
-[hidden] (display: none !important; T339), .shadow, .text-center, .mb-3, .font-mono, .code-block (a stored text block shown verbatim, T266), .visually-hidden
+[hidden] (display: none !important; T339), .shadow, .text-center, .mb-3, .font-mono, .code-block (a stored text block shown verbatim, T266), .visually-hidden,
+  "Flow 04: two renderings and the fold's words (T350, E2, C9)": .only-wide (hidden ≤640.98px), .only-narrow (hidden ≥641px), .fold-show, .fold-hide,
+  "Flow 04: the rung picker and the request fold (T350)": .rung-picker, .rung-choice, .rung-legend, .rung-legend-marker, .rung-legend-list, .section-fold, .section-fold-head, .section-fold-show, .section-fold-owner, .section-fold-body,
+  "Flow 04: the way on and the move bar (T350)": .way-on, .way-on-none, .move-reasons--beside (+ ≤640px: 44px note panel and way on)
 
 /* ── Accessibility ────────────────────────────────── */
 fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fieldset.form-group (+ > legend),

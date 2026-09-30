@@ -1,94 +1,207 @@
 @page "/activities/inbox"
 @attribute [Authorize]
+@using Wombat.Application.Features.Activities.Queries.ListDecidedByYou
+@using Wombat.Application.Features.Activities.Queries.ListWaitingForYou
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<ActivityInbox> Logger
+@inject NavigationManager Navigation
 
 <PageTitle>Activity inbox · Wombat</PageTitle>
 
-@* T342, flow 03 (R3-C-Mine "inbox-empty"): the page says what the inbox is for, not "the current user". A registrar's own
-   drafts and returned work are not here (the query leaves out the author's arms): they are My activities' Needs you. *@
-@* The subtitle is role-neutral: the inbox is the assessor's, and the Speciality admin's and the Coordinator's too (the
-   build review's G6). *@
+@*
+  The Activity inbox (T350, flow 04; R3-C-Inbox; DESIGN.md § List page, R2; round 1, Q1): what waits on the reader, then
+  what they decided, two headed and counted sections, the second a page at a time.
+  - "Waiting for you": every row of ListWaitingForYouQuery, the read the Assessor's Home and the activity page's way on
+    share (T297), oldest first. Each row is its link (the name, then "from <registrar>"), its EPA, its state's badge with
+    Overdue beside it, and how long it has waited ("8 days" over "since 2026-09-22 08:06 SAST"): the Waiting column
+    replaces Updated, which printed the server's clock (note 8).
+  - "Decided by you": ListDecidedByYouQuery, newest first, 20 a page under PagerControls; a page turn puts the focus on
+    the section's heading (C10 f).
+  The registrar's empty state is unchanged but for the subtitle (note 12): a caller holding no role but Trainee finds
+  both sections empty, since the reads leave out the author's own arms and their own subject rows.
+*@
 <PageHeader Title="Activity inbox" Subtitle="@Subtitle" />
 
-@{ var rowNames = ActivityRowNames.For(_items, withSubject: true); }
-@* Empty, the inbox speaks to who is reading it: to a registrar with no role that acts on others' work, where their own
-   work is instead; to an assessor, that nothing waits on them. *@
-<StatePanel IsLoading="_loading"
+@* Present from the first render, so its words are announced when they come (C11). *@
+<p class="visually-hidden" role="status">@(_loading ? LoadingWords : null)</p>
+
+<StatePanel @ref="_panel"
+            IsLoading="_loading"
             LoadError="@_error"
             OnRetry="LoadAsync"
-            IsEmpty="@(!_loading && _items.Count == 0)"
-            EmptyTitle="@(_registrarOnly ? RegistrarEmptyTitle : AssessorEmptyTitle)"
-            EmptyBody="@(_registrarOnly ? RegistrarEmptyBody : AssessorEmptyBody)"
-            EmptyActions="@(_registrarOnly ? OpenMyActivities : null)">
+            FocusAfterRetry="FocusWaitingAsync"
+            IsEmpty="@(_registrarOnly && _waiting is { Count: 0 } && _decided is { TotalCount: 0 })"
+            EmptyTitle="@RegistrarEmptyTitle"
+            EmptyBody="@RegistrarEmptyBody"
+            EmptyActions="@OpenMyActivities">
+  <LoadingContent>
+    <section class="list-section" aria-busy="true">
+      <h2 class="list-section-title">Waiting for you</h2>
+      <Skeleton Count="3" Height="3rem" />
+    </section>
+    <section class="list-section" aria-busy="true">
+      <h2 class="list-section-title">Decided by you</h2>
+      <Skeleton Count="2" Height="3rem" />
+    </section>
+  </LoadingContent>
   <ChildContent>
-  <DataTable Items="_items">
-    <HeaderRow>
-      @* T137. The EPA and the encounter date, so three requests from one trainee are three different things at a
-         glance. "Updated" stays: in an inbox, how long something has waited is the point. The subject is named by
-         the query, not looked up here (T142). *@
-      <tr>
-        <th>Type</th>
-        <th>Subject</th>
-        <th>EPA</th>
-        <th>Encounter date</th>
-        <th>State</th>
-        <th>Updated</th>
-        <th><span class="visually-hidden">Actions</span></th>
-      </tr>
-    </HeaderRow>
-    <Row Context="item">
-      <tr>
-        <td>@item.ActivityTypeName</td>
-        <td>@item.SubjectName</td>
-        <td><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="@item.EpaInForce" /></td>
-        <td><EncounterDateLabel ObservedOn="@item.ObservedOn" Declared="@item.ObservedOnDeclared" /></td>
-        <td>@item.CurrentStateLabel</td>
-        <td>@item.UpdatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-        <td>
-          @* T239: named by its row, "Open Mini-CEX for Thandi Nkosi, PAED-003, encounter date 2026-09-01". *@
-          <div class="actions-cell">
-            <a class="btn btn-outline btn-sm" href="@($"/activities/{item.Id}")" aria-label="@($"Open {rowNames[item.Id]}")">Open</a>
-          </div>
-        </td>
-      </tr>
-    </Row>
-  </DataTable>
+    <section class="list-section" aria-labelledby="waiting-h">
+      <h2 id="waiting-h" class="list-section-title" tabindex="-1" @ref="_waitingHeading">
+        Waiting for you
+        @if (_waiting is { Count: > 0 } waiting)
+        {
+          <span class="badge @BadgeFor.State(BadgeState.Submitted)">@WaitingWords.Count(waiting)</span>
+        }
+      </h2>
+      @if (_waiting is { Count: > 0 } rows)
+      {
+        <p class="needs-you-rule">@WaitingWords.RuleLine(rows.DueDays)</p>
+        @* Stacked below 641px (A8). The link and the badges say what they are; the EPA and the wait are labelled by their
+           column there (data-label, nit A13), a label a screen reader, which has the hidden header, skips. *@
+        <DataTable Items="rows.Items" Stack="true">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">Activity</th>
+              <th scope="col" role="columnheader">EPA</th>
+              <th scope="col" role="columnheader">State</th>
+              <th scope="col" role="columnheader">Waiting</th>
+            </tr>
+          </HeaderRow>
+          <Row Context="item">
+            <tr role="row" @key="item.Id">
+              <td role="cell"><ActivityLink Item="item" FromSubject="true" Name="@NameOf(item)" /></td>
+              @* T231: an EPA not in force now is marked "(no longer in use)", in the picker's own words. *@
+              <td role="cell" class="epa-cell" data-label="EPA"><ActivityEpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="@item.EpaInForce" /></td>
+              @* Nothing here is finished: each row has a move that leads on, and it is the reader's. Overdue beside the
+                 state's badge, never in its place (note 14). *@
+              <td role="cell"><span class="needs-you-badges"><span class="badge @BadgeFor.ActivityState(item.CurrentState, isFinished: false)">@item.CurrentStateLabel</span>@if (item.IsOverdue)
+                {<span class="badge @BadgeFor.Overdue">Overdue</span>}</span></td>
+              <td role="cell" class="waited-cell" data-label="Waiting"><b>@WaitingWords.WaitedCell(item)</b><span>@WaitingWords.Since(item)</span></td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+      else
+      {
+        <div class="detail-card detail-card--empty">
+          <p class="state-panel-title">@ClearTitle</p>
+          <p class="state-panel-copy">@ClearBody</p>
+        </div>
+      }
+    </section>
+
+    <section class="list-section" aria-labelledby="decided-h">
+      <h2 id="decided-h" class="list-section-title" tabindex="-1" @ref="_decidedHeading">
+        Decided by you
+        @if (_decided is { TotalCount: > 0 } counted)
+        {
+          <span class="badge @BadgeFor.State(BadgeState.Draft)">@WaitingWords.DecidedCount(counted.TotalCount)</span>
+        }
+      </h2>
+      @if (_decided is { TotalCount: > 0 } page)
+      {
+        <p class="needs-you-rule">@WaitingWords.DecidedRule</p>
+        <DataTable Items="page.Items" Stack="true">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">Activity</th>
+              <th scope="col" role="columnheader">Decision</th>
+              <th scope="col" role="columnheader">Decided</th>
+              <th scope="col" role="columnheader">Credit</th>
+            </tr>
+          </HeaderRow>
+          <Row Context="item">
+            <tr role="row" @key="item.Id">
+              <td role="cell"><ActivityLink Item="item" FromSubject="true" Name="@NameOf(item)" /></td>
+              @* Green when the pinned workflow is finished, whatever its last state is called (D44), red when declined
+                 (BadgeFor, T266). *@
+              <td role="cell"><span class="badge @BadgeFor.ActivityState(item.CurrentState, item.IsFinished)">@item.CurrentStateLabel</span></td>
+              <td role="cell" data-label="Decided">@(item.DecidedOn is { } decidedOn ? ActivityMoments.When(decidedOn) : "—")</td>
+              @* T108's three values: what the decision credited. *@
+              <td role="cell" data-label="Credit">@CreditOutcome.Label(item.CreditedItemCount)</td>
+            </tr>
+          </Row>
+        </DataTable>
+        <PagerControls Page="page.Page" PageSize="page.PageSize" TotalCount="page.TotalCount" Label="Decided by you, pages"
+                       OnPageChanged="TurnPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+      }
+      else
+      {
+        <div class="detail-card detail-card--empty">
+          <p class="state-panel-title">@NoDecisions</p>
+        </div>
+      }
+    </section>
   </ChildContent>
 </StatePanel>
 
 @code {
-  /// <summary>What the inbox is for, to whoever reads it.</summary>
-  public const string Subtitle = "Work waiting for you to rate, review or record.";
+  /// <summary>What the inbox is for, to whoever reads it (note 12; C5).</summary>
+  public const string Subtitle = "What waits for you to rate, review or discuss.";
 
   public const string RegistrarEmptyTitle = "Nothing here is yours to act on.";
   public const string RegistrarEmptyBody = "This inbox holds work that assessors rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs you.";
-  public const string AssessorEmptyTitle = "Inbox clear";
-  public const string AssessorEmptyBody = "Nothing is waiting for you to rate, discuss or review.";
+
+  /// <summary>"Waiting for you" with nothing in it.</summary>
+  public const string ClearTitle = "Inbox clear";
+  public const string ClearBody = "Nothing is waiting for you.";
+
+  /// <summary>"Decided by you" with nothing in it.</summary>
+  public const string NoDecisions = "No decisions yet.";
+
+  /// <summary>The status while the page reads (C11; R3-Spec § 1, new words).</summary>
+  public const string LoadingWords = "Loading the Activity inbox.";
 
   /// <summary>The load failure's words: never the exception's text (T272; the page printed it until T342).</summary>
   public const string LoadFailed = "Could not load the Activity inbox. Nothing has changed. Try again, or come back in a few minutes.";
 
-  private readonly List<ActivitySummaryDto> _items = [];
+  private WaitingForYouDto? _waiting;
+  private ActivityListPageDto? _decided;
+  private IReadOnlyDictionary<int, string> _names = new Dictionary<int, string>();
+  private int _pageSize = Wombat.Application.Features.Activities.Services.DecidedByYou.DefaultPageSize;
   private bool _loading = true;
   private string? _error;
   private bool _registrarOnly;
+  private bool _focusDecidedAfterRender;
+  private ElementReference _waitingHeading;
+  private ElementReference _decidedHeading;
+  private StatePanel? _panel;
+
+  /// <summary>The fragment Home's "All your decisions" names (<c>/activities/inbox#decided-h</c>).</summary>
+  public const string DecidedFragment = "decided-h";
+
+  /// <summary>"Waiting for you"'s heading, which a Try again's answer focuses. A test matches a focus call to it.</summary>
+  public ElementReference WaitingHeading => _waitingHeading;
+
+  /// <summary>"Decided by you"'s heading, which a page turn focuses (C10 f). A test matches a focus call to it.</summary>
+  public ElementReference DecidedHeading => _decidedHeading;
 
   private static readonly RenderFragment OpenMyActivities = @<a class="btn btn-outline" href="/activities/mine">Open My activities</a>;
 
-  protected override Task OnInitializedAsync() => LoadAsync();
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+    // The build review's A2: arrived by "All your decisions", the reader lands on that section once it is drawn. Its
+    // heading does not exist while the page reads, so the browser's own jump to the fragment finds nothing, and
+    // FocusOnNavigate leaves the focus on the h1.
+    if (_error is null && string.Equals(new Uri(Navigation.Uri).Fragment.TrimStart('#'), DecidedFragment, StringComparison.Ordinal))
+    {
+      _focusDecidedAfterRender = true;
+    }
+  }
 
+  /// <summary>Reads both sections, the second from its first page; Try again reads both again.</summary>
   private async Task LoadAsync()
   {
     _loading = true;
     _error = null;
-    _items.Clear();
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _registrarOnly = IsRegistrarOnly(authState.User);
-      _items.AddRange(await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivitiesByActorInbox.ListActivitiesByActorInboxQuery(authState.User)));
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _registrarOnly = IsRegistrarOnly(user);
+      _waiting = await Sender.Send(new ListWaitingForYouQuery(user));
+      await ReadDecidedAsync(user, 1);
     }
     catch (Exception exception)
     {
@@ -101,10 +214,63 @@
     }
   }
 
+  private async Task ReadDecidedAsync(System.Security.Claims.ClaimsPrincipal user, int page)
+  {
+    _decided = await Sender.Send(new ListDecidedByYouQuery(user, page, _pageSize));
+    // One name per link over both sections, so no two links on the page read the same (note 9; C11).
+    _names = AssessorRowNames.For(_waiting?.Items ?? [], _decided.Items);
+  }
+
+  // C10 f: after a page turn the section's heading takes the focus and says which list turned; the pressed button keeps
+  // its place (PagerControls' ends are aria-disabled, never disabled).
+  private Task TurnPageAsync(int page) => ReadPageAsync(page, focusHeading: true);
+
+  // The build review's A1: a change of size leaves the focus on the select. Chrome and Edge fire change on every arrow of
+  // a closed select, so moving it would stop the reader stepping from 20 to 50 to 100.
+  private Task ChangePageSizeAsync(int pageSize)
+  {
+    _pageSize = pageSize;
+    return ReadPageAsync(1, focusHeading: false);
+  }
+
+  private async Task ReadPageAsync(int page, bool focusHeading)
+  {
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      await ReadDecidedAsync(user, page);
+      _focusDecidedAfterRender = focusHeading;
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "A page of the Activity inbox's decisions could not be read.");
+      _error = LoadFailed;
+      // The build review's A3: the failure replaces both sections and the pressed button; it takes the focus.
+      _panel?.FocusFailureAfterRender();
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusDecidedAfterRender && _error is null && !_loading)
+    {
+      _focusDecidedAfterRender = false;
+      await _decidedHeading.FocusAsync();
+    }
+  }
+
+  /// <summary>
+  /// After a Try again that read: the first section's heading (C10 e). A registrar's empty state is focused by the panel
+  /// itself, which draws it in the sections' place (the build review's D4).
+  /// </summary>
+  private async ValueTask FocusWaitingAsync() => await _waitingHeading.FocusAsync();
+
+  private string? NameOf(ActivitySummaryDto item) => _names.TryGetValue(item.Id, out var name) ? name : null;
+
   /// <summary>
   /// A registrar and nothing else (T342, lane D): a Trainee or a pending one, holding no role through which others' work
   /// can wait on them. Such a caller's inbox is always empty, since it leaves out the author's own arms, so its empty state
-  /// sends them to Needs you. Anyone holding another role gets the assessor's words.
+  /// sends them to Needs you. Anyone holding another role gets the two sections.
   /// </summary>
   private static bool IsRegistrarOnly(System.Security.Claims.ClaimsPrincipal user)
     => (user.IsInRole(WombatRoles.Trainee) || user.IsInRole(WombatRoles.PendingTrainee)) &&

@@ -68,6 +68,12 @@ public static class BadgeFor
     });
 
     /// <summary>
+    /// "Overdue", worded beside a waiting activity's state badge and never in its place (T350, note 14; R1, R2): amber,
+    /// the tint of wanting attention. Until T350 Home replaced the state's badge with an amber one reading "Overdue".
+    /// </summary>
+    public const string Overdue = "badge-overdue";
+
+    /// <summary>
     /// A line of a review's agenda (T131 slice 4; DESIGN.md § Badges, "Committee agenda"): the shades of "still due" share
     /// the grey badge and are told apart by their label, and so do the two of "decided".
     /// </summary>

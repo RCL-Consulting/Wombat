@@ -1,10 +1,29 @@
+@*
+  The one pager (DESIGN.md § Pager). At either end its Previous or Next is aria-disabled, never disabled (T350, flow 04,
+  C10 f): a natively disabled button drops the focus, so the Next pressed onto the last page would leave the reader on the
+  page body. An aria-disabled button keeps its place and its focus, says it is unavailable, and a press sends nothing. The
+  page that holds the pager moves the focus to its list's heading once the new page is drawn.
+  Given a Label, the pager is a navigation landmark by that name ("Decided by you, pages", R3-C-Inbox; T350 build review,
+  D2); without one, a plain block.
+*@
 @if (TotalCount > 0)
 {
-  <div class="pager">
+  @if (string.IsNullOrWhiteSpace(Label))
+  {
+    <div class="pager">@Body</div>
+  }
+  else
+  {
+    <nav class="pager" aria-label="@Label">@Body</nav>
+  }
+}
+
+@code {
+  private RenderFragment Body => @<text>
     <div class="pager-info">@SummaryText</div>
     <div class="pager-actions">
-      <button type="button" class="btn btn-outline btn-sm" disabled="@(Page <= 1)" @onclick="() => ChangePageAsync(Page - 1)">Previous</button>
-      <button type="button" class="btn btn-outline btn-sm" disabled="@(Page >= TotalPages)" @onclick="() => ChangePageAsync(Page + 1)">Next</button>
+      <button type="button" class="btn btn-outline btn-sm" aria-disabled="@(AtFirst ? "true" : null)" @onclick="PreviousAsync">Previous</button>
+      <button type="button" class="btn btn-outline btn-sm" aria-disabled="@(AtLast ? "true" : null)" @onclick="NextAsync">Next</button>
     </div>
     <div class="pager-page-size">
       <span class="pager-page-size-label">Per page:</span>
@@ -15,11 +34,12 @@
         }
       </select>
     </div>
-  </div>
-}
+  </text>;
 
-@code {
   private static readonly int[] _pageSizes = [10, 20, 50, 100];
+
+  /// <summary>The landmark's name; null or empty for a plain block.</summary>
+  [Parameter] public string? Label { get; set; }
 
   [Parameter] public int Page { get; set; } = 1;
   [Parameter] public int PageSize { get; set; } = 20;
@@ -29,15 +49,25 @@
 
   private int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)Math.Max(1, PageSize)));
 
+  private bool AtFirst => Page <= 1;
+
+  private bool AtLast => Page >= TotalPages;
+
   private string SummaryText
   {
     get
     {
       var start = ((Math.Max(Page, 1) - 1) * Math.Max(PageSize, 1)) + 1;
       var end = Math.Min(TotalCount, Math.Max(Page, 1) * Math.Max(PageSize, 1));
-      return $"Showing {start}-{end} of {TotalCount}";
+      // An en dash, as DESIGN.md § Pager writes it (the build review's D1).
+      return $"Showing {start}–{end} of {TotalCount}";
     }
   }
+
+  // An end's button is aria-disabled, so it can still be pressed: a press there sends nothing (C10 f).
+  private Task PreviousAsync() => AtFirst ? Task.CompletedTask : ChangePageAsync(Page - 1);
+
+  private Task NextAsync() => AtLast ? Task.CompletedTask : ChangePageAsync(Page + 1);
 
   private Task ChangePageAsync(int nextPage)
     => OnPageChanged.InvokeAsync(Math.Max(1, Math.Min(nextPage, TotalPages)));

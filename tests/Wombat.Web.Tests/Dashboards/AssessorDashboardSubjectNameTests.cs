@@ -8,13 +8,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Dashboards.Assessor;
 using Wombat.Web.Components.Pages.Dashboards;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.TestSupport;
 
 namespace Wombat.Web.Tests.Dashboards;
 
 /// <summary>
-/// The assessor's dashboard says whose each assessment is, by the name its query carried, as the coordinator's cards do
-/// (T250). Until T250 the query put the subject's user id in <c>SubjectName</c> and the page left it out, so a card of
-/// three Mini-CEX rows did not say whose any of them was.
+/// The assessor's dashboard says whose each assessment is, by the name its query carried (T250). Since T350 (flow 04, R1,
+/// R2) each row is its activity's link, its full name "Type · EPA · date" and, on a second line, "from &lt;registrar&gt;",
+/// as the Activity inbox's are. Until T250 the query put the subject's user id in <c>SubjectName</c>; until T350 a row was
+/// its type, linked and labelled "Mini-CEX for Thandi Nkosi", then " — Thandi Nkosi".
 /// </summary>
 public sealed class AssessorDashboardSubjectNameTests : TestContext
 {
@@ -24,39 +26,48 @@ public sealed class AssessorDashboardSubjectNameTests : TestContext
         auth.SetAuthorized("assessor@test");
         auth.SetRoles("Assessor");
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "assessor-1"));
-        Services.AddSingleton<IScopedSender>(new Sender(new AssessorDashboardSummaryDto(
-            1,
-            [new AwaitingReviewItem(44, "Mini-CEX", "Thandi Nkosi", "requested", "Requested", new DateTime(2026, 3, 21, 8, 0, 0, DateTimeKind.Utc), IsOverdue: false)],
-            [new RecentDecisionItem(43, "Mini-CEX", "Sipho Dlamini", "completed", "Completed", IsFinished: true, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc))])));
     }
 
     [Fact]
-    public void EachRow_NamesWhoseAssessmentItIs()
+    public void EachRow_IsItsLink_FromWhoseAssessmentItIs()
     {
-        var cut = RenderComponent<AssessorDashboard>();
-        cut.WaitForState(() => cut.FindAll(".badge").Count >= 2);
+        Services.AddSingleton<IScopedSender>(new Sender(ActivityRows.AssessorHome(
+            [ActivityRows.Waiting(44, subjectName: "Thandi Nkosi")],
+            [ActivityRows.Decided(43, subjectName: "Sipho Dlamini")])));
+        var cut = Render();
 
-        Text(RowFor(cut, 44)).Should().Be("Mini-CEX — Thandi Nkosi Requested");
-        Text(RowFor(cut, 43)).Should().Be("Mini-CEX — Sipho Dlamini Completed");
+        var waiting = cut.Find("a[href='/activities/44']");
+        waiting.TextContent.Should().Be("Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Thandi Nkosi");
+        waiting.QuerySelector(".activity-link-to")!.TextContent.Should().Be("from Thandi Nkosi");
+        waiting.HasAttribute("aria-label").Should().BeFalse("its own words name it");
+
+        var decided = cut.Find("a[href='/activities/43']");
+        decided.TextContent.Should().Be("Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Sipho Dlamini");
+        decided.HasAttribute("aria-label").Should().BeFalse();
+        cut.Markup.Should().NotContain("trainee-43").And.NotContain("trainee-44", "no user id is on the page");
     }
 
+    // Note 9, C11: links that read the same across both cards are told apart by their names, the state first.
     [Fact]
-    public void EachRowsLink_IsNamedByItsInstrumentAndItsTrainee()
+    public void LinksThatReadTheSame_AreToldApartByTheirNames()
     {
-        // Several rows of one instrument would otherwise give a screen reader several links all called "Mini-CEX". The name
-        // starts with the visible label, as the MSF campaign list's row links do (T206).
-        var cut = RenderComponent<AssessorDashboard>();
-        cut.WaitForState(() => cut.FindAll(".badge").Count >= 2);
+        Services.AddSingleton<IScopedSender>(new Sender(ActivityRows.AssessorHome(
+            [ActivityRows.Waiting(50), ActivityRows.Waiting(51, since: ActivityRows.When.AddMinutes(3))],
+            [ActivityRows.Decided(52)])));
+        var cut = Render();
 
-        cut.Find("a[href='/activities/44']").GetAttribute("aria-label").Should().Be("Mini-CEX for Thandi Nkosi");
-        cut.Find("a[href='/activities/43']").GetAttribute("aria-label").Should().Be("Mini-CEX for Sipho Dlamini");
+        cut.FindAll("a.activity-link").Select(link => link.GetAttribute("aria-label")).Should().Equal(
+            "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Anele Dlamini, Requested, waiting since 2026-09-29 09:30 SAST",
+            "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Anele Dlamini, Requested, waiting since 2026-09-29 09:33 SAST",
+            "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Anele Dlamini, Completed");
     }
 
-    private static IElement RowFor(IRenderedFragment cut, int activityId)
-        => cut.FindAll("li").Single(item => item.QuerySelector($"a[href='/activities/{activityId}']") is not null);
-
-    private static string Text(IElement element)
-        => string.Join(" ", element.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+    private IRenderedComponent<AssessorDashboard> Render()
+    {
+        var cut = RenderComponent<AssessorDashboard>();
+        cut.WaitForState(() => cut.FindAll(".skeleton").Count == 0);
+        return cut;
+    }
 
     private sealed class Sender(AssessorDashboardSummaryDto summary) : IScopedSender
     {

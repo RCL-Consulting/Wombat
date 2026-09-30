@@ -61,10 +61,12 @@ else if (_schema is not null)
       }
       else if (section.Kind == SectionKind.Filled)
       {
-        <section class="detail-card form-section" aria-labelledby="@headingId">
+        var attribution = SectionAttributions?.GetValueOrDefault(section.Section.Key);
+
+        <section class="@(FoldFilledSections ? "detail-card form-section only-wide" : "detail-card form-section")" aria-labelledby="@headingId">
           <div class="form-section-head">
             @SectionHeading(headingId, section.Section.Title)
-            @if (SectionAttributions?.GetValueOrDefault(section.Section.Key) is { Length: > 0 } attribution)
+            @if (!string.IsNullOrEmpty(attribution))
             {
               <p class="form-section-owner">@attribution</p>
             }
@@ -74,11 +76,43 @@ else if (_schema is not null)
             {
               <div id="@ActivityFieldIds.Input(field.Key)" tabindex="-1">
                 <dt>@field.Label</dt>
-                @ReadoutValue(field)
+                @ReadoutValue(field, string.Empty)
               </div>
             }
           </dl>
         </section>
+
+        @if (FoldFilledSections)
+        {
+          @* The request fold (T350; round 1, E3; round 2, E2): for a reader with a section to fill, a filled section is
+             drawn twice, the card above for 641 px and up and this fold below it, shut, toggled by CSS with no script.
+             Its summary is the title, who filled it in and Show (Hide while open), with no gist; its body the same
+             read-outs. Every id in it is suffixed -narrow, so neither copy's ids name the other's parts. A refusal naming
+             one of its fields opens it, so on a phone the refusal line is on the screen (the build review's A4, G1). *@
+          <details class="detail-card form-section section-fold only-narrow" open="@section.Fields.Any(field => IsRefused(field.Key))">
+            <summary>
+              <div class="section-fold-head">
+                @SectionHeading(headingId + NarrowSuffix, section.Section.Title)
+                <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span>
+              </div>
+              @if (!string.IsNullOrEmpty(attribution))
+              {
+                <span class="section-fold-owner">@attribution</span>
+              }
+            </summary>
+            <div class="section-fold-body">
+              <dl class="details-list details-list--stacked">
+                @foreach (var field in section.Fields)
+                {
+                  <div id="@(ActivityFieldIds.Input(field.Key) + NarrowSuffix)">
+                    <dt>@field.Label</dt>
+                    @ReadoutValue(field, NarrowSuffix)
+                  </div>
+                }
+              </dl>
+            </div>
+          </details>
+        }
       }
       else
       {
@@ -100,8 +134,23 @@ else if (_schema is not null)
                    (DESIGN.md § Form system, T302). *@
                 <dl id="@ActivityFieldIds.Input(field.Key)" tabindex="-1" class="form-group @(IsWide(field.Type) ? "full-width" : null)">
                   <dt>@field.Label</dt>
-                  @ReadoutValue(field)
+                  @ReadoutValue(field, string.Empty)
                 </dl>
+                continue;
+              }
+
+              if (UsesRungPicker(field))
+              {
+                <RatedLevelPicker FieldKey="@field.Key"
+                                  Label="@field.Label"
+                                  Rungs="Rungs!"
+                                  Value="@GetString(field.Key)"
+                                  Required="@field.Required"
+                                  HelpText="@field.HelpText"
+                                  DescribedBy="@DescribedBy(field)"
+                                  Message="@FieldMessageFor(field.Key)"
+                                  Invalid="@IsMarkedInvalid(field.Key)"
+                                  OnChoose="value => UpdateValue(field.Key, value)" />
                 continue;
               }
 
@@ -207,7 +256,8 @@ else if (_schema is not null)
                     </select>
                     break;
                   case FieldType.Scale:
-                    @* The writer of a scale keeps today's select; the rung row with radios is flow 04's. *@
+                    @* Every scale field but the rated level field whose ladder loaded keeps the select (T350, E3): the
+                       demo types carry up to six scale fields, and only the rated field's ladder is read. *@
                     var scaleOptions = GetOptions(field);
                     if (scaleOptions.Count > 0)
                     {
@@ -462,6 +512,16 @@ else if (_schema is not null)
   /// own h3, passes 4 (T342; the build review's G8).
   /// </summary>
   [Parameter] public int SectionHeadingLevel { get; set; } = 2;
+
+  /// <summary>
+  /// The reader has a section to fill (T350; round 1, E3; round 2, E2): each filled read-only section is then also drawn
+  /// as the phone's fold, shown below 641 px in place of its card. The activity page passes it for such a reader only;
+  /// every other reader, Log an activity and the builder's preview keep the sections as they are.
+  /// </summary>
+  [Parameter] public bool FoldFilledSections { get; set; }
+
+  // What every id in a fold's copy ends with, so the twin that is away names nothing of the one in view (E2).
+  private const string NarrowSuffix = "-narrow";
 
   private FormSchema? _schema;
   private JsonObject _data = [];
@@ -745,8 +805,11 @@ else if (_schema is not null)
     __builder.CloseElement();
   };
 
-  /// <summary>A read-out's value, as the reader sees it: an option's label, never the id it stores (T191, T199).</summary>
-  private RenderFragment ReadoutValue(Wombat.Domain.Activities.Schema.FormField field) => __builder =>
+  /// <summary>
+  /// A read-out's value, as the reader sees it: an option's label, never the id it stores (T191, T199). The fold's copy
+  /// passes <see cref="NarrowSuffix" />, so its refusal line's id is its own (T350, E2).
+  /// </summary>
+  private RenderFragment ReadoutValue(Wombat.Domain.Activities.Schema.FormField field, string idSuffix) => __builder =>
   {
     if (field.Type == FieldType.Scale && HasValue(field) && RungsFor(field) is { Count: > 0 } rungs)
     {
@@ -766,7 +829,7 @@ else if (_schema is not null)
     // to the refusal that did.
     if (IsRefused(field.Key))
     {
-      <dd id="@ActivityFieldIds.Message(field.Key)" class="validation-message">@(FieldMessageFor(field.Key) ?? "Named in the refusal above.")</dd>
+      <dd id="@(ActivityFieldIds.Message(field.Key) + idSuffix)" class="validation-message">@(FieldMessageFor(field.Key) ?? "Named in the refusal above.")</dd>
     }
   };
 
@@ -793,7 +856,14 @@ else if (_schema is not null)
         !string.IsNullOrWhiteSpace(field.CatalogueKey))
     {
       var label = GetOptions(field).FirstOrDefault(option => string.Equals(option.Value, stored, StringComparison.Ordinal))?.Label;
-      return label ?? (field.Type == FieldType.User ? "Unknown person" : stored);
+      if (field.Type == FieldType.User)
+      {
+        // A person is read by name, not the directory's "Fatima Khumalo (fatima@kgk)" (T350, note 15; round 1, E4): the
+        // address tells two people apart while picking, and is not what a reader of who was named needs.
+        return label is null ? "Unknown person" : NomineeNames.NameOfLabel(label);
+      }
+
+      return label ?? stored;
     }
 
     return stored;
@@ -807,6 +877,17 @@ else if (_schema is not null)
       ? null
       : GetOptions(field).FirstOrDefault(option => string.Equals(option.Value, value, StringComparison.Ordinal))?.Label;
   }
+
+  /// <summary>
+  /// Whether the field is chosen on the rung picker (T350; Q5; round 2, E3): the schema's rated level field, which the
+  /// reader may write, when the page's ladder for it loaded. Any other scale field, or a ladder that failed, keeps the
+  /// select. The builder's preview and Log an activity pass no ladder, so they keep it too.
+  /// </summary>
+  private bool UsesRungPicker(Wombat.Domain.Activities.Schema.FormField field)
+    => field.Type == FieldType.Scale &&
+       Rungs is { Count: > 0 } &&
+       !IsFieldLocked(field.Key) &&
+       string.Equals(_schema?.RatedLevelField, field.Key, StringComparison.Ordinal);
 
   /// <summary>
   /// The scale field's ladder: the page's rungs, with descriptors, for the rated field and any field on the rated field's

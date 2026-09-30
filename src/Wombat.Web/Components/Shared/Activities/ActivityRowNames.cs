@@ -1,4 +1,3 @@
-using System.Globalization;
 using Wombat.Application.Features.Activities.Dtos;
 
 namespace Wombat.Web.Components.Shared.Activities;
@@ -10,8 +9,9 @@ namespace Wombat.Web.Components.Shared.Activities;
 /// </summary>
 /// <remarks>
 /// Two rows can show the same in every one of those columns (two Mini-CEX on one EPA on one day). A name two rows share
-/// adds each one's state, as the State column says it; in the inbox, then when each was last updated, to the minute, as
-/// its Updated column says it. The subject's own list has no Updated column, so it does not name one. Rows still alike
+/// adds each one's state, as the State column says it; in the inbox, then when each was last updated, to the minute, in
+/// South African time with its zone (T350, note 8). The subject's own list has no Updated column, so it does not name one.
+/// Rows still alike
 /// are numbered in list order (<see cref="RowNames.Distinct{TItem, TKey}" />): two drafts saved in the same minute read
 /// the same in every column.
 /// </remarks>
@@ -25,8 +25,8 @@ public static class ActivityRowNames
         List<Func<ActivitySummaryDto, string>> tieBreakers = [activity => $", {activity.CurrentStateLabel}"];
         if (withSubject)
         {
-            tieBreakers.Add(activity =>
-                $", updated {activity.UpdatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}");
+            // SAST, never the server's zone (T350, note 8): "2026-09-30 08:12 SAST".
+            tieBreakers.Add(activity => $", updated {ActivityMoments.When(activity.UpdatedOn)}");
         }
 
         return RowNames.Distinct(activities, activity => activity.Id, activity => Base(activity, withSubject), [.. tieBreakers]);
@@ -47,6 +47,32 @@ public static class ActivityRowNames
             activity => activity.Id,
             LinkWords,
             activity => $", {activity.CurrentStateLabel}");
+
+    /// <summary>
+    /// Each link's accessible name on a waiting list (<c>WaitingList</c>: the Assessor's Home, the Activity inbox and the
+    /// way on), by activity id (T350, note 9; C11): the words the link shows, its name and ", from &lt;registrar&gt;"
+    /// (<see cref="WaitingLinkWords" />). Two that read the same (two requests from one registrar, on one EPA and date) add
+    /// their state, then ", waiting since 2026-09-30 08:12 SAST", then are numbered in list order, "(1 of 2)"; only those
+    /// need an <c>aria-label</c>. The tie-breakers are on the link, where the list's words are, not on an Open button.
+    /// </summary>
+    public static IReadOnlyDictionary<int, string> Waiting(IEnumerable<ActivitySummaryDto> activities)
+        => RowNames.Distinct(
+            activities.DistinctBy(activity => activity.Id),
+            activity => activity.Id,
+            WaitingLinkWords,
+            activity => $", {activity.CurrentStateLabel}",
+            activity => $", waiting since {ActivityMoments.When(activity.UpdatedOn)}");
+
+    /// <summary>
+    /// What a waiting row's link reads when nothing else on its list shares it: its name, then ", from &lt;registrar&gt;"
+    /// (<see cref="ActivityListWords.FromLine" />), "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Anele Dlamini".
+    /// </summary>
+    public static string WaitingLinkWords(ActivitySummaryDto activity)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        var name = ActivityListWords.NameOf(activity);
+        return ActivityListWords.FromLine(activity) is { } line ? $"{name}, {line}" : name;
+    }
 
     /// <summary>What a link reads when nothing else on its list shares it: its name, then ", " and its second line.</summary>
     public static string LinkWords(ActivitySummaryDto activity)

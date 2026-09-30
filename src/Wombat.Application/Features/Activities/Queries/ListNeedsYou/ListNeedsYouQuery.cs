@@ -20,7 +20,7 @@ namespace Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 /// (<c>Workflow.TransitionsLeadingOn</c>) by the author's arms of its rule (<see cref="ActorArms.Author" />):
 /// submit a draft, file a returned reflection again, log a teaching session. A request they may only cancel is with its
 /// assessor, so it is not here (Step 3.12), and a declined one has no move left. The work that waits on them for
-/// someone else is the Activity inbox's (<c>ListActivitiesByActorInboxQuery</c>, <see cref="ActorArms.NotAuthor" />).
+/// someone else is the Activity inbox's (<c>ListWaitingForYouQuery</c>, <see cref="ActorArms.NotAuthor" />, T350).
 /// </para>
 /// <para>
 /// Each row carries what My activities' rows carry: who has it (the caller), the nominee, the return and the name, read

@@ -5,14 +5,14 @@
   .field-warning under Credit. Standing page content, so no warning carries a role (T193). The rows are
   ActivityPageModel.About's.
 *@
-<section class="detail-card activity-about" aria-labelledby="activity-about-title">
-  <h2 id="activity-about-title" class="activity-card-title">About</h2>
+<section class="@($"detail-card activity-about {Class}".TrimEnd())" aria-labelledby="activity-about-title@(IdSuffix)">
+  <h2 id="activity-about-title@(IdSuffix)" class="activity-card-title">About</h2>
   <dl class="details-list">
     @foreach (var row in Rows)
     {
       <div>
         <dt>@row.Label</dt>
-        <dd id="@row.Id">
+        <dd id="@(row.Id is null ? null : row.Id + IdSuffix)">
           @row.Value
           @if (row.Marker is { } marker)
           {
@@ -33,4 +33,13 @@
 
 @code {
   [Parameter, EditorRequired] public IReadOnlyList<ActivityAboutRow> Rows { get; set; } = [];
+
+  /// <summary>
+  /// The card's rendering class: <c>only-wide</c> or <c>only-narrow</c> where the page draws About twice, first for 641px
+  /// and up and under the bar on a phone, for a reader with a section to fill (T350; round 1, E3; round 2, E2).
+  /// </summary>
+  [Parameter] public string? Class { get; set; }
+
+  /// <summary>Appended to every id the card carries: <c>-narrow</c> on the phone's copy, so no id is on the page twice.</summary>
+  [Parameter] public string IdSuffix { get; set; } = string.Empty;
 }

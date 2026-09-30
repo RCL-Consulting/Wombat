@@ -4,8 +4,10 @@
 @using Wombat.Application.Features.Activities.Commands.SaveActivityDraft
 @using Wombat.Application.Features.Activities.Commands.TransitionActivity
 @using Wombat.Application.Features.Activities.Queries.GetActivityById
+@using Wombat.Application.Features.Activities.Queries.ListWaitingForYou
 @using Wombat.Application.Features.Activities.Services
 @using Wombat.Application.Features.Epas
+@using Wombat.Web.Navigation
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ActivityNotices Notices
@@ -18,6 +20,11 @@
   Header (the activity's name, E2, E7; its people), the result region, the status card ("Who has it now", Q3), About
   and the form's sections in the details grid with the action bar under them, then the history. Loading, a load error
   and "Activity unavailable" (for a missing activity and one the reader may not open alike, C7, T101) are its other states.
+
+  T350 (flow 04; R3-C-Activity; DESIGN.md R3): after a move the reader made as someone other than its author, the result
+  says what is left for them ("Completed. 1 more waits for you.") and the way on (WayOn) follows it, outside its live
+  region. On a phone a reader with a section to fill gets the filled sections folded and About under the bar; every other
+  reader keeps the order. "Activity unavailable" goes back to the acting role's list, else Home.
 *@
 
 <PageTitle>@Heading · Wombat</PageTitle>
@@ -52,10 +59,12 @@
 {
   @* T101, C7: one page for an id that does not exist and one this reader may not open, so the id space discloses
      nothing. *@
+  var (unavailableLabel, unavailableHref) = OwnerList();
+  @* T350 (round 1, E4; R3): back to the list the acting role opens activities from, by the owner table, else Home. *@
   <div class="detail-card detail-card--empty">
     <p class="state-panel-title">This activity does not exist, or you cannot open it.</p>
     <div class="form-actions">
-      <a class="btn btn-outline" href="/activities/mine">Go to My activities</a>
+      <a class="btn btn-outline" href="@unavailableHref">Go to @unavailableLabel</a>
     </div>
   </div>
 }
@@ -78,6 +87,12 @@ else
     }
   </ActionResult>
 
+  @if (_wayOnShown)
+  {
+    var (ownerLabel, ownerHref) = OwnerList();
+    <WayOn Next="@_next" BackLabel="@($"Back to {ownerLabel}")" BackHref="@ownerHref" />
+  }
+
   @if (_summary is { } summary)
   {
     @* A refusal that names fields (Spec § 1, "Refusal"), the one summary Log an activity shows too: it takes the focus,
@@ -97,8 +112,11 @@ else
 
   <ActivityStatus View="@model.Status(_ratedLabel)" Busy="@(_running is not null)" OnCancel="CancelFromStatusAsync" />
 
+  var fills = FillsASection;
   <div class="details-grid activity-grid">
-    <ActivityAbout Rows="@model.About()" />
+    @* A reader with a section to fill has About under the bar on a phone: drawn twice, one each side of 641px, the
+       phone's copy's ids suffixed (T350; round 1, E3; round 2, E2). *@
+    <ActivityAbout Rows="@model.About()" Class="@(fills ? "only-wide" : null)" />
 
     <div class="activity-sections">
       @if (ShowsEditableForm)
@@ -127,6 +145,7 @@ else
                       SectionAttributions="@_attributions"
                       HandOffFieldKey="@HandOffFieldKey"
                       HandOffNameChanged="OnHandOffNameChanged"
+                      FoldFilledSections="@fills"
                       DataJsonChanged="OnDataChanged" />
       }
       else
@@ -145,7 +164,8 @@ else
                         ReaderIsSubject="@model.ViewerIsSubject"
                         Rungs="@_rungs"
                         SectionAttributions="@_attributions"
-                        HandOffFieldKey="@HandOffFieldKey" />
+                        HandOffFieldKey="@HandOffFieldKey"
+                        FoldFilledSections="@fills" />
       }
 
       @if (CheckLine is { } check)
@@ -166,8 +186,15 @@ else
                                OnDiscard="DiscardChanges"
                                HandsTo="HandsTo"
                                SubjectName="@model.SubjectName"
+                               AuthorPart="@model.AuthorPart"
+                               CurrentStateLabel="@model.Activity.CurrentStateLabel"
                                NoteRefusal="@_noteRefusal" />
     </div>
+
+    @if (fills)
+    {
+      <ActivityAbout Rows="@model.About()" Class="only-narrow" IdSuffix="-narrow" />
+    }
   </div>
 
   <ActivityHistory Transitions="@model.Activity.Transitions" />
@@ -187,6 +214,9 @@ else
 
 @code {
   [Parameter] public int ActivityId { get; set; }
+
+  /// <summary>The role the reader acts in: whose list the way on and "Activity unavailable" go back to (T350, R3).</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
 
   private ActivityPageModel? _model;
   private IReadOnlyList<ActivityActionDto> _actions = [];
@@ -222,6 +252,11 @@ else
   private bool _arrivalFocusResult;
 
   private ActionResult? _result;
+
+  // The way on (T350, Q6): shown after a move the reader made as someone other than its author, with the first row still
+  // waiting for them, the activity just moved left out, or none.
+  private bool _wayOnShown;
+  private ActivitySummaryDto? _next;
 
   // A refusal that names fields: its summary, and whether it takes the focus after the next render.
   private RefusalHeading? _summary;
@@ -280,6 +315,22 @@ else
   /// with, or Save draft (E3). A move shown disabled (T107) is nothing to send with.
   /// </summary>
   private bool ShowsEditableForm => _editable.Count > 0 && (_actions.Any(action => action.IsAvailable) || CanSaveDraft);
+
+  /// <summary>
+  /// A reader with a section to fill who is not its author: an assessor, a supervisor or a reviewer with the form open to
+  /// write (T350; round 1, E3). On a phone their filled sections fold and About goes under the bar; the author's own draft
+  /// keeps flow 03's order.
+  /// </summary>
+  private bool FillsASection => ShowsEditableForm && _model is { ViewerIsAuthor: false };
+
+  /// <summary>
+  /// The list the page is under for the acting role (the owner table, <see cref="NavOwners.OwnerFor" />): "Activity
+  /// inbox" for an Assessor, "My activities" for a Trainee; "Home" where no list owns it (T350, R3; round 1, E4).
+  /// </summary>
+  private (string Label, string Href) OwnerList()
+    => NavOwners.OwnerFor(typeof(ActivityView), Acting?.Role) is { } owner
+      ? (owner.Label, owner.Href)
+      : (NavItems.Home.Label, NavItems.Home.Href);
 
   /// <summary>Save draft: the author's own draft or returned work, with fields to write (E3; SaveActivityDraftCommand).</summary>
   private bool CanSaveDraft
@@ -359,6 +410,8 @@ else
     _resultTitle = null;
     _resultText = null;
     _resultKind = "success";
+    _wayOnShown = false;
+    _next = null;
     _summary = null;
     _noteRefusal = null;
     // What arrived with the page was shown once; a later outcome is focused by the move that made it.
@@ -628,6 +681,16 @@ else
     _running = action.TransitionKey;
     ClearOutcome();
 
+    // Made as its author (a submit, a cancel of one's own request), the result says whose inbox it is in (flow 03);
+    // made as anyone else, what is left for them and the way on (T350, Q6). Judged before the move reloads the page.
+    var movedId = _model.Activity.Id;
+    var showsWayOn = !_model.ViewerIsAuthor;
+    // A Return made as anyone else names who it went back to (T350 build review, D5), read before the move reloads the page.
+    var returnedTo = showsWayOn && !action.TargetIsFinal &&
+      string.Equals(action.TransitionKey, WaitingWords.ReturnTransitionKey, StringComparison.Ordinal)
+        ? _model.SubjectName
+        : null;
+
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -650,10 +713,12 @@ else
 
       await LoadAsync(authState.User);
 
-      _resultTitle = string.IsNullOrWhiteSpace(action.ResultSentence)
-        ? $"It is now {_model?.Activity.CurrentStateLabel}."
-        : action.ResultSentence;
-      _resultText = InboxSentence();
+      _resultTitle = returnedTo is not null
+        ? WaitingWords.ReturnedTo(returnedTo)
+        : string.IsNullOrWhiteSpace(action.ResultSentence)
+          ? $"It is now {_model?.Activity.CurrentStateLabel}."
+          : action.ResultSentence;
+      _resultText = showsWayOn ? await WayOnAsync(authState.User, movedId) : InboxSentence();
       _result?.FocusAfterRender();
     }
     catch (Exception exception) when (exception is not OperationCanceledException)
@@ -682,6 +747,34 @@ else
     finally
     {
       _running = null;
+    }
+  }
+
+  /// <summary>
+  /// After a move the reader made as someone other than its author, one more read of what waits for them, less the
+  /// activity just moved (Spec § 7, "The way on's read"): its first row is the way on's, its count the result's tail,
+  /// "1 more waits for you." or "Nothing else waits for you." (<see cref="WaitingWords.MoreForYou" />). The move has
+  /// committed by then, so a read that fails is logged and costs only the tail and the way on, never the result.
+  /// </summary>
+  private async Task<string?> WayOnAsync(ClaimsPrincipal user, int movedId)
+  {
+    try
+    {
+      var waiting = await Sender.Send(new ListWaitingForYouQuery(user));
+      if (waiting is null)
+      {
+        return null;
+      }
+
+      var left = waiting.Items.Where(item => item.Id != movedId).ToList();
+      _next = left.FirstOrDefault();
+      _wayOnShown = true;
+      return WaitingWords.MoreForYou(left.Count);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "What waits for the reader could not be read after a move on activity {ActivityId}.", movedId);
+      return null;
     }
   }
 

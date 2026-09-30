@@ -36,6 +36,16 @@ public static class ActivityListWords
             : $"to {item.NomineeName}";
     }
 
+    /// <summary>
+    /// The assessor's link's second line (T350, R2; note 12): "from Anele Dlamini", the registrar the activity is about, in
+    /// place of the nominee line, who on a waiting or a decided list is the reader. Null when the query named no subject.
+    /// </summary>
+    public static string? FromLine(ActivitySummaryDto item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return string.IsNullOrWhiteSpace(item.SubjectName) ? null : $"from {item.SubjectName}";
+    }
+
     /// <summary>The link's words: the activity's name, or its type's where the query named none.</summary>
     public static string NameOf(ActivitySummaryDto item)
     {

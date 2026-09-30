@@ -15,6 +15,10 @@
     note, and "Keep the request" closes it and hands the focus back to the toggle (A6, C8, C10). A refused move keeps the
     panel open with the note as typed; a refusal of the note itself is summarised in the panel by the one refusal
     summary (RefusalSummary), linked to #note-in.
+  - T350 (flow 04; note 4, round 1 E2): one note panel for every move that needs a note, in NotePanelWords' words
+    ("Decline this request", "Return this reflection", "Note for Sipho Ndlovu", "Keep the review"), the part the form's
+    first section names; its refused title RefusalWords.ForNote's ("Not returned. It is still Awaiting discussion.",
+    note 3). Discard changes with nothing to discard says why beside it (note 11; round 1, E4).
 *@
 
 @if (HasAnything)
@@ -35,8 +39,9 @@
         }
         else if (current.RequiresNote)
         {
+          @* aria-controls only while the panel it names is on the page (T350, nit A9). *@
           <button @ref="_toggles[current.TransitionKey]" type="button" class="btn btn-outline"
-                  aria-expanded="@(IsOpen(current) ? "true" : "false")" aria-controls="@NotePanelId"
+                  aria-expanded="@(IsOpen(current) ? "true" : "false")" aria-controls="@(IsOpen(current) ? NotePanelId : null)"
                   disabled="@RacesTheRunning(current.TransitionKey)" @onclick="() => ToggleNote(current)">
             @LabelOf(current)
           </button>
@@ -88,26 +93,25 @@
     @if (_selected is { } selected)
     {
       <section class="detail-card note-panel" id="@NotePanelId" aria-labelledby="note-panel-title">
-        <h2 id="note-panel-title" class="note-panel-title">@NoteHeading(selected)</h2>
+        <h2 id="note-panel-title" class="note-panel-title">@NotePanelWords.Heading(selected, Part)</h2>
 
         @if (!string.IsNullOrWhiteSpace(NoteRefusal))
         {
           <RefusalSummary @ref="_noteSummary"
                           Id="note-summary"
-                          Title="@RefusalWords.NotDone(selected)"
-                          Lines="@([new RefusalLine("note", $"{NoteLabel(selected)}: {NoteRefusal}", NoteRefusal)])" />
+                          Title="@RefusalWords.ForNote(selected, CurrentStateLabel)"
+                          Lines="@([new RefusalLine("note", $"{NotePanelWords.Label(SubjectName)}: {NoteRefusal}", NoteRefusal)])" />
         }
 
         <div class="form-group">
-          <label for="@NoteInputId">
-            @NoteLabel(selected)
-            <span aria-hidden="true">*</span>
-            <span class="visually-hidden">required</span>
-          </label>
-          <small class="page-subtitle" id="note-help">@SubjectName reads it on the activity's page. It is kept with the activity's history.</small>
-          <textarea @ref="_noteInput" id="@NoteInputId" class="form-control" rows="4" aria-required="true"
+          @* The mark is for the eye; aria-required says "required" to a screen reader, once (T350, nit A7). *@
+          <label for="@NoteInputId">@NotePanelWords.Label(SubjectName)<span class="required-mark" aria-hidden="true"> *</span></label>
+          <p class="field-help" id="note-help">@NotePanelWords.Help(SubjectName)</p>
+          @* The help, and the refusal's own line once there is one; never the summary, which took the focus and was read
+             (T350, nit A8). *@
+          <textarea @ref="_noteInput" id="@NoteInputId" class="form-control @(string.IsNullOrWhiteSpace(NoteRefusal) ? null : "input-validation-error")" rows="4" aria-required="true"
                     aria-invalid="@(string.IsNullOrWhiteSpace(NoteRefusal) ? null : "true")"
-                    aria-describedby="@(string.IsNullOrWhiteSpace(NoteRefusal) ? "note-help" : "note-help note-msg note-summary")"
+                    aria-describedby="@(string.IsNullOrWhiteSpace(NoteRefusal) ? "note-help" : "note-help note-msg")"
                     @bind="_note" @bind:event="oninput"></textarea>
           @if (!string.IsNullOrWhiteSpace(NoteRefusal))
           {
@@ -116,13 +120,13 @@
         </div>
 
         <div class="form-actions form-actions--moves">
-          <button type="button" class="btn @(IsEnding(selected) ? "btn-danger" : "btn-primary") @(IsRunning(selected.TransitionKey) ? "is-running" : null)"
+          <button type="button" class="btn @NotePanelWords.SendClass(selected) @(IsRunning(selected.TransitionKey) ? "is-running" : null)"
                   aria-disabled="@InFlight.AriaDisabled(IsRunning(selected.TransitionKey))"
                   disabled="@RacesTheRunning(selected.TransitionKey)"
                   @onclick="ApplyNoteAsync">
-            @(IsRunning(selected.TransitionKey) ? RunningLabel(selected.Label) : $"{selected.Label} with this note")
+            @(IsRunning(selected.TransitionKey) ? RunningLabel(selected.Label) : NotePanelWords.Send(selected))
           </button>
-          <button type="button" class="btn btn-quiet" disabled="@(Running is not null)" @onclick="CloseNoteAsync">@KeepLabel(selected)</button>
+          <button type="button" class="btn btn-quiet" disabled="@(Running is not null)" @onclick="CloseNoteAsync">@NotePanelWords.Keep(Part)</button>
         </div>
       </section>
     }
@@ -184,11 +188,26 @@
   /// </summary>
   [Parameter] public Func<ActivityActionDto, string?>? HandsTo { get; set; }
 
-  /// <summary>The registrar, who reads the note (A6: "Reason for Sipho Ndlovu").</summary>
+  /// <summary>The registrar, who reads the note ("Note for Sipho Ndlovu"; T350, note 4).</summary>
   [Parameter] public string SubjectName { get; set; } = "the registrar";
 
   /// <summary>A refusal of the note move, shown in the panel with the note kept as typed.</summary>
   [Parameter] public string? NoteRefusal { get; set; }
+
+  /// <summary>
+  /// What the form's first section calls the author's part (<c>ActivityPageModel.AuthorPart</c>): "request", "reflection",
+  /// "review request". Its first word names the panel's heading and Keep ("Keep the review"; T350, note 4).
+  /// </summary>
+  [Parameter] public string? AuthorPart { get; set; }
+
+  /// <summary>The state the activity is in, for a refused note's title: "Not declined. It is still Requested." (note 3).</summary>
+  [Parameter] public string CurrentStateLabel { get; set; } = string.Empty;
+
+  /// <summary>The reason beside a greyed Discard changes, which the button names with aria-describedby (note 11).</summary>
+  public const string DiscardReasonId = "why-discard";
+
+  /// <summary>Why Discard changes is greyed (round 1, E4; Spec § 1, "Hint (a greyed move)").</summary>
+  public const string NothingToDiscard = "Nothing to discard yet.";
 
   private readonly Dictionary<string, ElementReference> _toggles = new(StringComparer.Ordinal);
   private ElementReference _noteInput;
@@ -236,13 +255,18 @@
       return;
     }
     @* A10: not natively disabled, so it keeps its place in the tab order; with nothing to discard it says it is
-       unavailable and does nothing. *@
-    <button id="discard-changes" type="button" class="btn btn-outline"
+       unavailable, does nothing, and says why beside it, which describes it (T350, note 11; round 1, E4). *@
+    <button id="discard-changes" type="button" class="btn btn-outline @(HasPendingChanges ? null : "is-unavailable")"
             disabled="@(Running is not null)"
             aria-disabled="@(HasPendingChanges ? null : "true")"
+            aria-describedby="@(HasPendingChanges ? null : DiscardReasonId)"
             @onclick="DiscardAsync">
       Discard changes
     </button>
+    if (!HasPendingChanges)
+    {
+      <ul class="move-reasons move-reasons--beside"><li id="@DiscardReasonId">@NothingToDiscard</li></ul>
+    }
   };
 
   private string LabelOf(ActivityActionDto action)
@@ -265,19 +289,9 @@
   private bool IsOpen(ActivityActionDto action)
     => _selected is not null && string.Equals(_selected.TransitionKey, action.TransitionKey, StringComparison.Ordinal);
 
-  // A move that ends it (decline) is danger-coloured in its panel; one that leads on (return) is primary.
-  // A move into a state no move leaves (MoveOutcome.TargetIsFinal); not read from the sentence, since R5's "Submitted."
-  // has no "It is now" and still leads on (T342).
-  private static bool IsEnding(ActivityActionDto action) => action.TargetIsFinal;
-
-  private string NoteLabel(ActivityActionDto action)
-    => string.Equals(action.TransitionKey, "decline", StringComparison.Ordinal) ? $"Reason for {SubjectName}" : $"Note to {SubjectName}";
-
-  private static string NoteHeading(ActivityActionDto action)
-    => string.Equals(action.TransitionKey, "decline", StringComparison.Ordinal) ? "Decline this request" : $"{action.Label}: add a note";
-
-  private static string KeepLabel(ActivityActionDto action)
-    => string.Equals(action.TransitionKey, "decline", StringComparison.Ordinal) ? "Keep the request" : $"Do not {action.Label.ToLowerInvariant()} it";
+  // The part the panel's heading and Keep name: "request", "reflection", "review" (NotePanelWords.PartOf, note 4). The
+  // send is danger-coloured only for a move that ends the activity (NotePanelWords.SendClass, MoveOutcome.TargetIsFinal).
+  private string Part => NotePanelWords.PartOf(AuthorPart);
 
   protected override void OnParametersSet()
   {

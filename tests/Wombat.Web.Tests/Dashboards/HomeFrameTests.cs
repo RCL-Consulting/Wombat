@@ -138,6 +138,23 @@ public sealed class HomeFrameTests : WombatTestContext
         grid.QuerySelectorAll("a, button").Should().BeEmpty("no action is offered before the read returns");
     }
 
+    // T350, flow 04 (C11): the frame's status says the Home is loading, on the page from the first render, and is empty
+    // once the read has answered; every role's Home draws it.
+    [Theory]
+    [MemberData(nameof(EveryRoleThatReads))]
+    public void WhileTheReadRuns_AStatusSaysSo_AndIsEmptyOnceItHasAnswered(string role)
+    {
+        RenderHome(Reads.Hang, role).Find("p.visually-hidden[role='status']").TextContent.Should().Be("Loading your Home.");
+    }
+
+    [Fact]
+    public void OnceTheReadHasAnswered_TheStatusIsEmpty()
+    {
+        var cut = RenderHome(Reads.Answer, WombatRoles.Assessor);
+
+        cut.WaitForAssertion(() => cut.Find("p.visually-hidden[role='status']").TextContent.Should().BeEmpty());
+    }
+
     [Fact]
     public void WhileTheReadRuns_ACardThatLinks_IsNoLinkYet()
     {
@@ -191,7 +208,7 @@ public sealed class HomeFrameTests : WombatTestContext
         sender.Reads = Reads.Answer;
         cut.Find(".alert-danger button").Click();
 
-        cut.WaitForAssertion(() => CardTitles(cut).Should().Equal("Waiting for your rating", "Recent decisions"));
+        cut.WaitForAssertion(() => CardTitles(cut).Should().Equal("Waiting for you", "Recent decisions"));
         cut.FindAll(".alert-danger").Should().BeEmpty();
         sender.Count.Should().Be(2);
         JSInterop.VerifyFocusAsyncInvoke().Arguments[0].Should().BeOfType<ElementReference>()
@@ -294,9 +311,8 @@ public sealed class HomeFrameTests : WombatTestContext
             GetSubSpecialityAdminDashboardSummaryQuery => new SubSpecialityAdminDashboardSummaryDto(1, 3, 1, Coverage()),
             GetCommitteeMemberDashboardSummaryQuery => new CommitteeMemberDashboardSummaryDto("Semester 2, 2026", "July to November", [], [], 0),
             GetCoordinatorDashboardSummaryQuery => new CoordinatorDashboardSummaryDto([], []),
-            GetAssessorDashboardSummaryQuery => new AssessorDashboardSummaryDto(
-                1,
-                [new AwaitingReviewItem(52, "Mini-CEX", "Nomsa Mahlangu", "requested", "Requested", When, IsOverdue: false)],
+            GetAssessorDashboardSummaryQuery => ActivityRows.AssessorHome(
+                [ActivityRows.Waiting(52, typeName: "Mini-CEX", subjectName: "Nomsa Mahlangu", since: When)],
                 []),
             GetTraineeDashboardSummaryQuery query => new TraineeDashboardSummaryDto(
                 null, [], [], [],
