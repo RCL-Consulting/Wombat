@@ -26,22 +26,28 @@ The operator asked to start T342. Steps 1–4 are done; the loop now waits on th
 
 - **Round 3** drawn and checked item by item (`round-3-check.md`): all hold. **The design is final.**
 
-- **Step 6 started:** `build-lanes.md` (flow 03's lane rules). Worktrees under `.claude/worktrees/`: `t342`
-  (integration), `t342-lists` (lane A1: Needs you, returned, who has it, My activities paging, E7 names) and
-  `t342-filing` (lane A2: picker shape, move hand-off and result words, File it again query, save-draft command,
-  viewer-aware programme wording, rung descriptors). Wave 1 was running when this was written.
-
 - **Built and squashed:** `725237ee` (T342 step 6). Two waves of lanes, an integration pass, a four-sided review
   (`build-review.md`), one fix pass; all six suites green (Web 2,859, Integration 481). The runbook, states.md and the
   quoted steps follow the pages. DESIGN.md banner lists flow 03. **Filed:** T343–T347 (P3, the review's deferrals).
 
-### Next session: T342 step 7, the replay. **Model: Opus.**
+### Step 7, the replay (2026-09-30, recovered after a shutdown): done
 
-- Replay the whole runbook on a fresh database (`design/flows/02-sign-in-and-account/replay-workflow.js` as template;
-  `tools/scenario-replay.ps1 create/publish/start`); keep capture names; `check_baseline_paths.py`; capture the new
-  states.md rows (picker, file-again, Needs you, the cancel dialogs, submitting). Watch 3.10, 3.12 (File it again),
-  3.16 (Needs you and the empty inbox) and A.2.7 closely. Then step 8 (design system re-sync) and step 9 (lessons).
-- The `t342*` branches and worktrees under `.claude/worktrees/` can be removed once the replay no longer needs them.
+- **The whole runbook is replayed: 325 steps, 254 with no gap** (T339: 246). Acts 1–2 on `wombat_scenario_t342`
+  (09-29); act 3's agent died in a shutdown, so post-act2 was restored into `wombat_scenario_t342b` and acts 3–6 and A
+  ran there (09-30). Commits `3ae97b4b`…`bf84372a`; dumps `scenario-t342-post-act{1..6,A}`; `check_baseline_paths` 0.
+- **Flow 03 findings:** 6.18 About lacked "(no longer in use)": fixed `daaf6386` (bUnit, mutation-checked). 3.10's
+  refusal summary outlives a corrected date until the next submit: for the operator (keep: it reports the last submit).
+  Not defects: "no date" rows sort by their recorded day (E9); a completed page's closed `<dialog>` is inert. States:
+  a refused pre-programme date was hinted twice, fixed `5fd5abcd`; T348 filed (a Log-type draft says "submit").
+- **States: 65 re-taken** (Log an activity 16, the activity page 26, the lists and trainee Homes 23), the two taken
+  before the fixes re-taken on `a341b44e`; `check_baseline_paths` missing 0. **Step 7 is done.** Droppable:
+  `wombat_scenario_t342`, `_t342_states_518{4,6,8}*`. `.scenario-app/bin` is published from `a341b44e`.
+- **Open for the operator:** 3.10 (above). Narrow inbox scrolls sideways where My activities stacks (A.7.2, as built).
+
+### Next session: T342 step 8. **Model: Opus.**
+
+- Step 8 (re-sync the design system, republish: uploads, files, the index last), then step 9 (lessons).
+- The `t342*` branches and worktrees under `.claude/worktrees/` can be removed.
 
 ### For the operator
 

@@ -51,8 +51,10 @@ Run the loop as flow 02 ran it (`design/flows/02-sign-in-and-account/`, BRIEF §
 - [x] The canvas is created, with the mark copied in before round 1 — https://claude.ai/artifact/6Uar9yce4Dxx9iPwgE8JY5 (mark `/_blob/c1b21826d1dc3296fc39cb61b871981e`, 2026-09-29).
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/03-trainee-files-activity/` (A picked; round 2 reviewed from four sides; round 3 checked, `round-3-check.md`).
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 03) — `725237ee` (Domain 804, Application 3,565, Infrastructure 1,011, Architecture 49, Web 2,859, Integration 481).
-- [ ] The whole runbook replays on a fresh database with no regression from flow 03, and the baseline is re-captured,
-  with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 03, and the baseline is re-captured,
+  with `check_baseline_paths.py` at `missing 0` — the Actual lines (`3ae97b4b`…`bf84372a`: 325 steps, 254 with no gap;
+  acts 3–A on `wombat_scenario_t342b` after a shutdown); 65 flow 03 states re-taken; three small defects the replay and
+  states found fixed (`daaf6386`, `5fd5abcd`, `a341b44e`, Web 2,860), T348 filed; `check_baseline_paths` missing 0.
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
