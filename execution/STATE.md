@@ -8,14 +8,14 @@ This is a reset point, not a diary.
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
 replayed journey catalogue with a screenshot baseline, and **three redesign flows are done**: flow 01, the shell (T335,
 `b347e11c`), flow 02, sign-in and account (T339, `f50dffb2`), and flow 03, filing an activity (T342, `725237ee`), each
-designed, built, replayed and in the design system (version 10). Left: flows 04–20, the deploy, the College's answers,
-15 P2s, and P3 polish.
+designed, built, replayed and in the design system (version 10). Flow 04 (T350) is built (`06aa51d7`), its replay under
+way. Left: flows 05–20, the deploy, the College's answers, 15 P2s, and P3 polish.
 
 ## Now
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps, all 80 page templates, last replayed whole against
   flow 03 (T342, `wombat_scenario_t342b`: 254 with no gap); `coverage.md`, `states.md`; baseline in `design/baseline/`.
-- **Open: 77 queued (1 P1, 16 P2, 60 P3), 1 blocked.**
+- **Open: 78 queued (1 P1, 15 P2, 62 P3), T350 in progress, 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T288, T289, T304, T305, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341;
     and T350, flow 04.
@@ -34,7 +34,7 @@ designed, built, replayed and in the design system (version 10). Left: flows 04�
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T350, flow 04, an assessor's inbox (queued). Model: Opus.** Flow 03's loop is its model.
+- **The GUI redesign: T350, flow 04, step 7, the replay (act 1 done; act 2 was running). Opus.** HANDOFF: how to resume.
 
 ## Open questions
 
@@ -56,5 +56,5 @@ designed, built, replayed and in the design system (version 10). Left: flows 04�
 
 ## Recent
 
-- **2026-09-30:** T342, flow 03: replayed (recovered after a shutdown), 3 fixes, design system v10; T348–T350 filed.
+- **2026-09-30:** T342, flow 03, done (v10). T350, flow 04: designed, built (`06aa51d7`), replay started; T348–T352 filed.
 - **2026-09-28:** T339, flow 02 (`f50dffb2`, v7). 09-27: T335, flow 01. 09-26: group 1. Earlier: `git log`, "As built".
