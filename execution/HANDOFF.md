@@ -36,10 +36,15 @@ The operator asked to recover the task a machine shutdown had killed (T342 step 
   Q7: no year minimum for the rater), round 2 (four-sided review, C1–C13, E1–E5), round 3 checked: **the design is
   final** (`design/flows/04-assessor-inbox/`). The review's 15 build notes are in `round-2-review.md`.
 
-### Next session: T350 step 6, the build. **Model: Opus.**
+- **Built and squashed: `06aa51d7`** (T350 step 6). Waves A1/A2 then B/C/D, a runbook-and-docs lane, a four-sided review
+  (`build-review.md`: 0 high, 6 medium), one fix pass; all six suites green (Web 3,041). T351, T352 filed (P3).
 
-- Build from `round-3/` in waves (flow 03's `build-lanes.md` as template), with `round-2-review.md`'s build notes;
-  integrate, review, one fix pass, squash; DESIGN.md amended (R1–R4). Then replay, re-sync, lessons (steps 7–9).
+### Next session: T350 step 7, the replay. **Model: Opus.**
+
+- Replay the whole runbook on a fresh database (`design/flows/03-trainee-files-activity/replay-brief.md`, which keeps
+  every password per act and writes per phase; republish first); capture flow 04's new states.md rows. Watch 3.5, 3.11,
+  3.15, 3.24, 3.30 (the ageing now also ages the history rows), 3.33 (the other-role line) and A.7.2 at 390.
+- Then step 8 (design system re-sync: move labels, the pager, the new components) and step 9 (lessons).
 - Or T157 (deploy) if the operator is ready: it now carries flows 02 and 03, neither with a migration.
 
 ### For the operator

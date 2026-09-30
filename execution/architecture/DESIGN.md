@@ -18,7 +18,7 @@
 >   T339, `f50dffb2`: § Account / auth page); flow 03, a registrar files an activity (2026-09-29, T342, `725237ee`:
 >   § Form system "The activity form", § Alerts "An action's outcome on a record page", § Page-level patterns "List
 >   page" and "Record page with a workflow", § Dashboard page); flow 04, an assessor works their inbox (2026-09-30,
->   T350: § Form system "The activity form" (R4, the rung picker and the request fold), § Badges (Overdue),
+>   T350, `06aa51d7`: § Form system "The activity form" (R4, the rung picker and the request fold), § Badges (Overdue),
 >   § Page-level patterns "List page" (R2, the Activity inbox) and "Record page with a workflow" (R3, the way on, the
 >   note panel), § Dashboard page (R1, the Assessor's Home and the other-role line).
 
