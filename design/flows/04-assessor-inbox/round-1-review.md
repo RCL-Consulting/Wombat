@@ -183,3 +183,13 @@ short.
 | R2 | DESIGN.md § List page | A list page may hold two headed, counted sections, the second paged. The inbox stacks at 390, and Waiting replaces Updated. `ActivityLink`'s second line gains "from <registrar>" in the assessor's lists |
 | R3 | DESIGN.md § Record page with a workflow | The result may carry the way on. On a phone, a reader with a section to fill gets the fold and About under the bar. Activity unavailable's link follows the acting role |
 | R4 | DESIGN.md § Form system, "The activity form" | A writer of a scale chooses on the rung row, not a select (`ActivityForm.razor:210`). Moves are in sentence case. One note-panel pattern |
+
+## The operator's answer (2026-09-30)
+
+**Accept all**: A, "Two pages, one list", with its four corrections (no switch in the other-role line; the way on's
+"Back to" follows the owner table; the waiting clock is `UpdatedOn`; the live region holds the sentence only) and no
+borrowing; Q1–Q7 as recommended (Q7: the registrar's year minimum is not shown to the rater, before or after rating);
+E1–E5; and R1–R4. Round 2's ask is `round-2-ask.txt`, which also carries the review's "check before round 2" fixes: the
+committee menu, one waiting clock and its words under a day, the cast's real rows, the seeded rung descriptors and
+feedback labels, the phone fold only while the reader has a section to fill, and two claims dropped (no round trip per
+rung; other roles' pages linking to the inbox).

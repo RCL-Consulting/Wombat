@@ -1,0 +1,261 @@
+ROUND 1 PICKED: variation A, "Two pages, one list", with four corrections and no borrowing. Round 2: A at full fidelity.
+Drop B's and C's boards from round 2 (keep them on round 1's page).
+
+DECISIONS (one sentence each):
+  Pick: A. Home's "Waiting for you" is the Activity inbox's first five rows, from one read, in one order and one set of
+    words (NEW WaitingList); the inbox holds Waiting for you and Decided by you; a two-role consultant gets one line on
+    the other view's Home. Corrections to A:
+    a. The other-role line has NO switch. A5's "Switch to Assessor" (with returnUrl=/activities/inbox) goes; the
+       sidebar's switch stays the only one, and it lands on Home as flow 01 built it. The line's action is "Open it"
+       (one item) or "Open the oldest" (several), which opens the activity without switching.
+    b. The way on's "Back to" follows the owner table: the acting role's list, else Home. Acting as Assessor it reads
+       "Back to Activity inbox"; acting as Committee member (Dr Zulu opened it from the line) it reads "Back to Home".
+    c. The waiting clock is UpdatedOn, the moment the item last moved, which Overdue, the coordinator's stall and the
+       nudge all read. Not "its latest Submit".
+    d. The live region holds the sentence only: "Completed. 1 more waits for you." The next row and its buttons sit
+       straight after the region, outside it. The focus still lands on the result; Tab reaches Open the next.
+  Q1: Decided by you is the inbox's second section: newest first, 20 a page, all of them (no cut-off); columns
+    Activity, Decision, Decided (date and time, SAST), Credit. Home's Recent decisions keeps five, each dated, with "All
+    your decisions" to that section. A decision stays "moved last by you, and finished or with no move left" (T297).
+  Q2: keep both pages. Home's "Waiting for you" is the inbox's first five rows (same read, order and words), with "Open
+    Activity inbox" at its foot; Home adds Recent decisions.
+  Q3: one line on the other view's Home, only when work waits there, naming how many, whether any is overdue, and the
+    oldest, with Open it / Open the oldest (correction a). The line's place on the committee Home is a slot in flow 07's
+    page: draw it at the top of the body, under the header, and say so on the Spec.
+  Q4: Overdue is a badge BESIDE the state's badge, never in its place; the list is oldest first; the count is words
+    ("2 waiting, 1 overdue") on Home and in the inbox. The rule line reads "Oldest first. Overdue once it has waited
+    more than 7 days." No Overdue group.
+  Q5: the rater chooses on the rung row: radios, the College's labels 1, 2, 3a, 3b, 4, 5, six abreast at every width.
+    The chosen rung is filled and marked "chosen" in words; its descriptor sits under the row. "What each rung means"
+    (a native <details>) is open at 1280 until a rung is chosen, folded at 390, and holds the six seeded descriptors
+    verbatim (below). Each radio is aria-describedby its own descriptor.
+  Q6: the way on sits inside the move's ActionResult: "1 more waits for you" (or "2 more wait for you"), the next item's
+    row, "Open the next" (its accessible name adds the item's name) and "Back to …" (correction b). With nothing left:
+    "Nothing else waits for you." and "Go to Home". No automatic advance.
+  Q7: the registrar's year minimum is NOT shown to the rater: not before the rating, not after it. The completed card
+    reads "Rated 4. Credited 1 item to PAED-001." and nothing more: no "at year 3's minimum", and no semester count
+    ("1 of 3 this semester", T346) on the assessor's side either.
+  E1: moves in sentence case, for every type and both views, on the bar, in the history and in the reasons (quoted in
+    WORDS below). They come from the workflow's own label rule, not a map and not a new DSL label.
+  E2: one note-panel pattern for Decline and Return (words below). Danger weight only for a move that ends the activity
+    (Decline); Return's send is primary.
+  E3: on a phone, ONLY while the reader has a section to fill: each filled section folds to one line (its title,
+    "Filled in by …", Show; no gist of its fields), and About goes under the action bar. Every other state at 390 keeps
+    flow 03's order: the completed, declined, discussed and returned pages do not fold and keep About in its place.
+  E4: "Activity unavailable" links to the acting role's list, else Home ("Go to Activity inbox" for an Assessor). The
+    Request's person fields read the name only ("David Naidoo", never "David Naidoo (naidoo@kgk.wombat.local)"). A greyed
+    Discard changes says why beside it: "Nothing to discard yet."
+  E5: one read (ListWaitingForYouQuery) for Home and the inbox, oldest first by UpdatedOn, leaving out the caller's own
+    subject rows in both. Step 3.30's ageing also ages the Submit row, so the status card's "asked you on" agrees with
+    the row's "since" (Dr Zulu's reads 2026-09-22 in both places).
+  R1–R4: the DESIGN.md rule text, for the Spec board (below).
+
+CORRECTIONS TO ROUND 1 (the review's checks):
+  1. The Committee member's menu is Home, Committee reviews, Decision panels, then My data rights. There is no
+     Decisions due for a Committee member (T131). A5 drew "Home, Decisions due, Committee reviews": redraw it.
+  2. Waiting has one clock, UpdatedOn, counted as the nudge counts it: whole days, rounded down. Under one day it reads
+     "Waiting less than a day" (never "0 days"); then "Waiting 1 day", "Waiting 8 days". In the inbox the Waiting cell
+     reads "Less than a day" / "8 days", with "since 2026-09-22 08:06 SAST" under it. Overdue is more than 7 whole days
+     (7 × 24 h) since UpdatedOn. The nudge mails "… waiting 8 days" only after 5 days, so it never counts under a day.
+  3. The cast's rows are the runbook's (THE CAST'S ROWS below). Every record in the story is filed and decided on the
+     replay day, 2026-09-30: round 1's June, July and August decisions, Dr Patel's Signed off and Declined, and Dr
+     Zulu's "2026-09-16, 9 days" do not exist. Only two items have waited more than a day: Dr du Plessis's portfolio
+     review (Dr Patel's) and Dr Mahlangu's Mini-CEX (Dr Zulu's), both aged by Step 3.30 to 2026-09-22, 8 days.
+  4. The descriptors, the feedback labels and the presenting problems are the seed's and the runbook's, verbatim
+     (WORDS below). No placeholder text where the seed has words.
+  5. The phone fold applies only while the reader has a section to fill (E3). P7's completed page at 390 must not fold.
+  6. Drop two claims from Main and the Spec: that the rung picker needs no round trip (each press is one explicit
+     round trip, which is fine; only the fill can be CSS alone), and that other roles' pages link to the inbox (only
+     the Assessor's Home does).
+  7. The request fold shows no gist ("Emergency unit · Moderate · …"): the section's title, "Filled in by Anele
+     Dlamini, 2026-09-30" and Show.
+  8. Smaller slips: Dr Ndlovu's Mini-CEX is dated 2026-09-10 (P3 had 09-09). The reflection's option reads "A critical
+     incident". The note's label is "Note for Sipho Ndlovu", not "Reason for".
+
+THE CAST'S ROWS (draw these in every state a step names; D = 2026-09-30; every time is SAST):
+  Names in rows: "Type · EPA · date" (the encounter date; a portfolio review's is the period's last day), second line
+  "from <registrar>". EPA names in full where a column or About shows them:
+    PAED-001 Providing paediatric emergency care to children
+    PAED-002 Managing common paediatric presentations
+    PAED-004 Managing common neonatal conditions
+    PAED-012 Communicating with and counselling patients, caregivers and healthcare teams
+    PAED-015 Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research
+  Dr Mohammed Patel (Assessor only):
+    - 2.36 / 3.4: nothing waiting, no decisions. Inbox clear. 3.4's unavailable page.
+    - 3.24, Home and inbox, 2 waiting, 0 overdue, in this order:
+        Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-09-29, from Pieter du Plessis, Awaiting review,
+          waiting less than a day, since 2026-09-30 08:06
+        DOPS (Paediatrics) · PAED-002 · 2026-09-22, from Nomsa Mahlangu, Requested, less than a day (Lumbar puncture,
+          Ward, Moderate)
+      He completes the DOPS at 3a: "Rated 3a. Credited 1 item to PAED-002."; the way on offers the review.
+    - A.6.8, Home: 1 waiting, 1 overdue: the portfolio review, Awaiting review + Overdue, "Waiting 8 days", since
+      2026-09-22 08:06. Recent decisions, newest first, all Completed 2026-09-30: Mini-CEX (Paediatrics) · PAED-012 ·
+      2026-09-30, Anele Dlamini (09:59); DOPS (Paediatrics) · PAED-001 · 2026-09-21, Lerato Molefe; DOPS (Paediatrics) ·
+      PAED-002 · 2026-09-22, Nomsa Mahlangu. Each Credit "1 item".
+    - 6.18, inbox (PAED-012 paused): the review first (Overdue, 8 days), then Mini-CEX (Paediatrics) · PAED-012 ·
+      2026-09-30, from Anele Dlamini, Requested, since 2026-09-30 09:58, its EPA "(no longer in use)". Completed at 4:
+      "Rated 4. Its credit to PAED-012 waits while the EPA is paused."
+    - A.7.2 at 390, Home and inbox: 2 waiting, 1 overdue: the review (Overdue, 8 days), then Mini-CEX (Paediatrics) ·
+      PAED-002 · 2026-09-10, from Anele Dlamini, Requested, since 2026-09-30 10:27. He rates 3b and completes at
+      10:28: "Rated 3b. Credited 1 item to PAED-002."; the way on offers the review.
+    - The review's page (awaiting review): Review request filled in by Pieter du Plessis, 2026-09-30: EPA PAED-015,
+      Reviewer Mohammed Patel, period 2026-08-01 to 2026-09-29, Portfolio export (file name) empty, Notes for your
+      reviewer "Three teaching sessions logged; please review them with my logbook". Review open for him. Sign off,
+      Return. Status "Your move. Pieter du Plessis asked you on 2026-09-22 08:06 SAST." (E5).
+  Dr Fatima Khumalo (Assessor only):
+    - 3.11: Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10, from Sipho Ndlovu, Requested, asked 2026-09-30 08:01 (Ward,
+      "Nine-month-old with gastroenteritis and moderate dehydration", Low). Declined at 08:01 with "I was not on the ward
+      that day; Dr Botha observed this encounter. Please send it to her." Then her inbox is clear, with Decided by you
+      holding that one Declined row (Credit "—").
+    - 3.51, Home: 1 waiting: Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-25, from Pieter du Plessis,
+      Requested, less than a day. Recent decisions, newest first, all 2026-09-30: Mini-CEX (Paediatrics) · PAED-004 ·
+      2026-09-28, Anele Dlamini, Completed; Case-Based Discussion (Paediatrics) · PAED-012 · 2026-09-25, Lerato Molefe,
+      Completed; Mini-CEX (Paediatrics) · PAED-002 · 2026-09-10, Sipho Ndlovu, Declined (08:01). Credits 1 item, 1 item, —.
+  Dr David Naidoo (Committee member and Assessor; acting as Assessor from 3.5):
+    - 3.5: one row: Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20, from Anele Dlamini, Requested, asked 2026-09-30 07:58
+      (Emergency unit, "Two-year-old with bronchiolitis and rising work of breathing", Moderate). Completed at 4, 08:00:
+      "Rated 4. Credited 1 item to PAED-001." Nothing else waits for him.
+  Dr Sarah Botha (Committee member and Assessor; switches each time):
+    - 3.15 / 3.17: Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-10, from Sipho Ndlovu, Awaiting discussion,
+      asked 08:03. Reflecting on "A critical incident"; What happened "A three-year-old in septic shock waited 90 minutes
+      for antibiotics after triage". Returned 08:03 with "Please say what you would do differently at triage, and what
+      you will read before your next take."; re-submitted with "Start the sepsis bundle at triage; read the paediatric
+      sepsis guideline before my next take" added; Discussed 08:04, credit "—". Nothing else waits for her after either.
+  Dr Thandi Zulu (Committee member and Assessor; opens as Committee member):
+    - 3.33: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-27, from Nomsa Mahlangu, Requested, Overdue, "Waiting 8 days",
+      since 2026-09-22 (Neonatal unit, "Term neonate with jaundice on day three", Low). The committee Home's line names
+      it; after the switch her Home lists it; completed at 3a: "Rated 3a. Credited 1 item to PAED-004." Nothing else
+      waits for her.
+  The runbook gives no time for several filings and completions (3.23's DOPS, 3.29's Mini-CEX, 3.24's and 3.33's
+  completions): use any morning time on 2026-09-30, in the order the steps play. Dr Dlamini's presenting problem on
+  A.7.2's Mini-CEX is not given: use "Four-year-old with a first febrile seizure". Filler is fine only for the volume
+  states: 25 waiting (every one overdue), 12 and 45 decisions, the 120-character EPA name, the 30-character registrar
+  name, and two requests from one registrar on one EPA and date; use the cast's names there too.
+
+WORDS (verbatim):
+  Home, Assessor: card "Waiting for you" (was "Waiting for your rating"); its count a badge to the eye and words to a
+    screen reader and beside the title ("2 waiting, 1 overdue"; "1 waiting"); no badge and no "0" when empty, reading
+    "Nothing is waiting for you."; rule line "Oldest first. Overdue once it has waited more than 7 days."; more than
+    five: "And 20 more." above the foot; foot "Open Activity inbox". Card "Recent decisions", five, each dated, the
+    state's badge; empty "No decisions yet."; foot "All your decisions".
+  Activity inbox: h1 "Activity inbox"; one subtitle "What waits for you to rate, review or discuss." (T349). Section
+    "Waiting for you" (count words, rule line; columns Activity, EPA, State, Waiting); empty "Inbox clear" with "Nothing
+    is waiting for you." Section "Decided by you", "Newest first. Everything you completed, declined, discussed or
+    signed off." (columns Activity, Decision, Decided, Credit; pager "1–20 of 45"); empty "No decisions yet." A holder
+    of no role but Trainee keeps flow 03's built empty state: "Nothing here is yours to act on." / "This inbox holds
+    work that assessors rate, discuss or review. Your drafts and work returned to you are under My activities, in Needs
+    you." Load error: "Could not load the Activity inbox. Nothing has changed. Try again, or come back in a few
+    minutes." with Try again. Home's load error: "Could not load your Home. Nothing has changed. Try again, or come back
+    in a few minutes."
+  Two requests alike (one registrar, EPA and date): the link names add ", Requested", then ", waiting since 2026-09-30
+    08:12 SAST", then "(1 of 2)" if still equal.
+  The other-role line, committee Home: "As an assessor, 1 activity waits for you, and it is overdue: Mini-CEX
+    (Paediatrics) · PAED-004 · 2026-09-27, from Nomsa Mahlangu, waiting 8 days." + "Open it". Several: "As an assessor,
+    3 activities wait for you; 1 is overdue. The oldest: …" + "Open the oldest". Nothing waiting: no line.
+  Moves (E1): Complete, Decline, Record discussion, Return, Sign off; the registrar's Submit, Cancel, Accept, Record.
+    Running: "Completing…", "Declining…", "Returning…", "Recording discussion…", "Signing off…".
+  The status card, to rate: "Your move. Anele Dlamini asked you on 2026-09-30 07:58 SAST." / "Complete it, or decline
+    it with a note Anele Dlamini will read." Reflection: "Record the discussion, or return it with a note Sipho Ndlovu
+    will read." Review: "Sign it off, or return it with a note Pieter du Plessis will read." Done: "Done. You completed
+    it on 2026-09-30 08:00 SAST." / "Rated 4. Credited 1 item to PAED-001." Declined: "Closed. You declined it on …",
+    her reason quoted, "It credits nothing, and nothing more can happen to it." Returned: "With Sipho Ndlovu. Sarah Botha
+    returned it on 2026-09-30 08:03 SAST." / "It is in nobody's inbox until Sipho Ndlovu submits it.", her note quoted.
+  Note panel (E2): heading "Decline this request" / "Return this reflection" / "Return this review"; the note labelled
+    "Note for Sipho Ndlovu" with the form's red required mark; help "Sipho Ndlovu reads it on the activity's page. It is
+    kept with the activity's history."; send "Decline with this note" (danger) / "Return with this note" (primary); keep
+    "Keep the request" / "Keep the reflection" / "Keep the review". Refused: "Not declined. It is still Requested." and
+    "Note for Sipho Ndlovu: Decline requires a note."; Return's: "Not returned. It is still Awaiting discussion."
+  The result and the way on: flow 03's result words, then the way-on sentence in the same live region: "Completed. 1
+    more waits for you." / "Declined. Nothing else waits for you." / "It is now Draft. Nothing else waits for you." Then,
+    outside the region: the next row, "Open the next", "Back to Activity inbox" (or "Back to Home"); with nothing left,
+    "Go to Home".
+  Activity unavailable: h1 "Activity unavailable", "This activity does not exist, or you cannot open it.", "Go to
+    Activity inbox" (Assessor) / "Go to Home" (any role with no list that owns the page).
+  The rung picker: legend = the field's label with the red "*": "Supervision required for this encounter" (Mini-CEX),
+    "… for this procedure" (DOPS), "… for this case" (CBD, CCA); help "The supervision this activity actually required
+    on this occasion - not a judgement of the trainee's worth."; details summary "What each rung means". The six
+    descriptors (the College's, seeded):
+    1  Not entrusted to act. The supervisor performs the activity and thinks aloud; the trainee prepares, observes
+       actively, and may not enact or document decisions.
+    2  Direct supervision. Supervisor present throughout, sharing the task or watching silently, ready to step in. The
+       plan may be entirely the trainee’s, but nothing is acted on without sign-off.
+    3a Indirect supervision, decisions checked. Supervisor on site or immediately available and reviews findings,
+       working diagnosis and plan before they are enacted. Trainee may act alone on routine assessment, investigation
+       and supportive care within protocol.
+    3b Indirect supervision, reviewed on the trainee’s initiative. Supervisor available on request; the trainee decides
+       what needs discussion and shows reliable help-seeking. Full management of the activity, supervisor informed
+       rather than consulted.
+    4  Unsupervised practice. The trainee carries the responsibility for the activity.
+    5  Supervises others. The trainee carries the responsibility and can supervise juniors in the activity.
+  Feedback (all required, full width, the body font): "What was done well", "Areas for development", "Agreed plan".
+    Reflection: "Discussion" ("What you discussed and agreed. This reflection is not rated."). Review: "Date of the
+    review", "Evidence reviewed" (Teaching sessions, Journal club presentations, Feedback received, Reflective entries,
+    Logbook), "Review comments", "Agreed actions" (optional, "Leave blank if there are none.").
+  Discard changes, greyed: "Nothing to discard yet." beside it.
+
+ROUND 2 ASK:
+  - Full fidelity on the Wombat design system v10 (design/system: tokens and ds/wombat/components/bundle.css, as round
+    1 loaded them) and flow 03's components as built: the shell (sidebar per acting role, top bar, the active item;
+    Activity inbox lights over an activity page for an Assessor, nothing lights for a Committee member who opened it
+    from the line, and her trail is Home › the activity), PageHeader with its trail, DashboardFrame and DashboardCard,
+    DataTable with Stack and PagerControls, StatePanel, Skeleton, Alert, ActionResult, ActingRoleSwitchAlert, badges
+    (the Overdue badge's tint from flow 01's tokens), Icon (Lucide), ActivityStatus, ActivityAbout, ActivityForm (open,
+    filled, locked), RungRow, ActivityWorkflowActions (the bar, the note panel), RefusalSummary, ActivityHistory (folded
+    into "All N moves" below 641 px). NEW, named on the Spec: WaitingList, WayOn, the rung picker, the request fold, the
+    other-role line. Use the brand mark at /_blob/89ddc910c53255a32bcbb84e2820bc45, never a drawn disc.
+  - Three component boards, each with a "state" enum drawing every state at a "w" of 1280 or 390, as flow 03's
+    R2-C-Activity did; then one wrapper board per state and width (R2-H-<state>-1280 / -390, R2-I-…, R2-P-…):
+    R2-C-Home (the Assessor's Home, and the committee Home's line):
+      empty (Dr Patel, 2.36); one-waiting (Dr Khumalo, 3.51, with her three decisions); several-overdue (Dr Patel,
+      A.7.2: 2 waiting, 1 overdue); overdue-only (Dr Patel, A.6.8); switched (Dr Zulu, 3.33, "You are now acting as
+      Assessor." above the card); committee-line (Dr Zulu acting as Committee member, 3.33: the line above flow 07's
+      cards, drawn as labelled frames; the committee menu of correction 1); twenty-five (every row overdue: five rows,
+      "And 20 more."); loading; load-error.
+    R2-C-Inbox:
+      clear (Dr Patel, 3.4: Inbox clear, no decisions); clear-with-decisions (Dr Khumalo after 3.11); two (Dr Patel,
+      3.24); overdue (Dr Patel, A.6.8); paused-epa (Dr Patel, 6.18); alike (two requests from one registrar on one EPA
+      and date); twenty-five (all overdue, stacked at 390); decided-45 (Decided by you paged, "1–20 of 45"); long (the
+      120-character EPA name and a 30-character registrar name); registrar-only; loading; load-error.
+    R2-C-Activity (the assessor's view):
+      to-rate (Dr Naidoo, 3.5, no rung chosen, the legend open at 1280); rated (a rung chosen: 4 at 1280, 3b at 390 for
+      Dr Patel, A.7.2, with the request fold and About under the bar); completing ("Completing…"); completed-next (Dr
+      Patel, 3.24 at 1280 and A.7.2 at 390: the way on to the review); completed-last (Dr Naidoo, 3.5: "Nothing else
+      waits for you."); completed-paused (Dr Patel, 6.18, the way on to the review); decline-note (Dr Khumalo, 3.11);
+      decline-refused; declined (with "Declined. Nothing else waits for you."); awaiting-discussion (Dr Botha, 3.15);
+      return-note; return-refused; returned; discussed (Dr Botha, 3.17); awaiting-review (Dr Patel's review, Sign off
+      and Return, Review open, the Return panel "Return this review"); from-the-line (Dr Zulu acting as Committee member:
+      trail Home › Mini-CEX (Paediatrics) · PAED-004 · 2026-09-27, no nav item lit, "Back to Home" after Complete);
+      unavailable (Dr Patel, 3.4, "Go to Activity inbox"); loading; load-error.
+    Every state at 1280 AND 390. Nothing scrolls sideways at 390; the inbox stacks its rows (DataTable Stack); the six
+    rungs sit abreast; the bar stacks.
+  - A Spec board:
+    - Every message the pages show, by kind (result, refusal, hint, notice, empty, load error) and its words.
+    - The DESIGN.md rules, as text ready to paste:
+      R1 § Dashboard page: the Assessor's Home is two cards: "Waiting for you" (the inbox's first five rows, from the
+         same read and in the same order and words; the count in words; no "0" badge; "Open Activity inbox") and
+         "Recent decisions" (five, dated, each linked by its full name; "All your decisions"). A Home may carry one line
+         about another held role's waiting work, only when work waits there; the line holds no switch.
+      R2 § Page-level patterns, List page: a list page may hold two headed, counted sections, the second paged. The
+         Activity inbox stacks its rows below 641 px; its Waiting column replaces Updated ("8 days", "since … SAST",
+         "Less than a day"). ActivityLink's second line reads "from <registrar>" in the assessor's lists.
+      R3 § Page-level patterns, Record page with a workflow: the result may carry the way on (WayOn); the live region
+         holds the result's sentence and the count only. On a phone, a reader with a section to fill gets the request
+         fold and About under the bar; every other reader keeps the page's order. Activity unavailable's link goes to
+         the acting role's list, else Home.
+      R4 § Form system, "The activity form": the writer of a scale field chooses on the rung row (radios, six abreast,
+         the descriptors under "What each rung means"), not a select. Moves are in sentence case everywhere. One note
+         panel for every move that needs a note; danger only for a move that ends the activity.
+    - Every NEW component with its proposed class names (WaitingList, WayOn, the rung picker, the request fold, the
+      other-role line) and which existing component it extends.
+    - A contrast figure for every new pair: the Overdue badge beside a state badge, the chosen rung's fill and its
+      "chosen" text, a radio's border and focus ring on the rung row, the way on's frame, the other-role line, the fold's
+      Show.
+    - The reads the pages need, named: ListWaitingForYouQuery (Home and the inbox), the paged decisions read, the way
+      on's read (the same waiting read less the current activity), the committee Home's waiting read for a holder of
+      Assessor. Say plainly that each rung press is one round trip.
+    - The line's slot on the committee Home is flow 07's to place; flow 04 owns its words.
+  - A Steps board: which runbook Expects change, quoting today's words and routes and giving the new ones: 2.36, 3.4,
+    3.5, 3.11, 3.13, 3.15, 3.17, 3.24, 3.26, 3.28, 3.33, 3.51, 5.25, 6.18, A.6.8, A.7.2; and Step 3.30's ageing, which
+    now ages the Submit row too (E5). Also flow 03's quoted steps that name the inbox's subtitle or empty state.
+  - Keep round 1's boards; put round 2 on its own canvas page. Stop when round 2 is drawn; I will review it before any
+    corrections.

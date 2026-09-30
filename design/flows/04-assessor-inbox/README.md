@@ -16,3 +16,4 @@ T350's design, kept beside its brief (`../04-assessor-inbox.md`) so that it outl
   activity page is drawn once, `R1-C-Activity` (six states) shown by P1–P8.
 - **Round 1's review:** `round-1-review.md`. Recommendation: A, no borrowing, with four corrections (no switch in the
   other-role line; the way on's "Back to" follows the owner table; the waiting clock is `UpdatedOn`; a short live region).
+- **The decisions:** accept all (2026-09-30). **Round 2's ask:** `round-2-ask.txt`.
