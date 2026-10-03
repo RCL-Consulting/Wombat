@@ -15,7 +15,7 @@ A small pill that shows a state in words: body text on one of five tints, the ti
 |---|---|---|
 | `badge-draft` | `header-bg` / `input-border` | neutral: not started, nothing wrong yet, a state an institution's own workflow names, or no longer in force |
 | `badge-submitted` | `info-bg` / `secondary-color` | handed on, waiting on someone |
-| `badge-accepted` | `warning-bg` / `warning-color` | in hand, or wanting attention again ("Overdue") |
+| `badge-accepted` | `warning-bg` / `warning-color` | in hand, or wanting attention again |
 | `badge-completed` | `success-bg` / `success-color` | done or succeeded |
 | `badge-declined` | `danger-bg` / `danger-color` | refused, failed, missed or withdrawn |
 
@@ -25,9 +25,13 @@ Each status is mapped onto these in C#: `ActivityState(key, isFinished)` (done i
 
 `badge-standing-met`, `-below` and `-none`: a level against a target ("At or above", "Below", "No decision", "Not comparable"), the only badges that are a comparison. They keep their own class names and are painted as the state badge of their tint (completed, accepted, draft).
 
+## Overdue (`BadgeFor.Overdue`)
+
+`badge-overdue`, "Overdue", painted as `badge-accepted` (`warning-bg`, its `warning-color` edge): a waiting activity that has waited `AssessorDueDays` (7) days or more (flow 04, T350, note 14). It stands **beside** the state's badge, never in its place, the two grouped in `span.needs-you-badges` (4px apart, wrapping): "Requested" "Overdue". Until flow 04 the Assessor's Home replaced the state's badge with an amber `badge-accepted` reading "Overdue", so an overdue row never said what state it waited in. See WaitingList.
+
 ## A count
 
-A DashboardCard's `Count` shows as a `badge-submitted` after the title: "Waiting for your rating 2".
+A DashboardCard's `Count` shows as a `badge-submitted` after the title ("Needs you 2"), read as words where `CountWords` is given (", 2 items"). Its `BadgeWords` (flow 04) is the count in words as the badge itself, to the eye and to a screen reader alike: "2 waiting, 1 overdue". A list section's heading carries its count the same way: the inbox's "1 waiting, 1 overdue" (`badge-submitted`) and "3 decisions" (`badge-draft`).
 
 ## Look
 

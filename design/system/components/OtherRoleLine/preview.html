@@ -1,0 +1,53 @@
+<!-- @dsCard group="Activities" height=620 width=974 subtitle="The other-role line: on another role's Home, how much waits in the Activity inbox and the oldest, with one link and no switch" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OtherRoleLine</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px app.css stacks the line's row and makes its link 44px. This card is wider than a phone, so the phone
+     rendition repeats the media rules' declarations under .pv-phone. */
+  .pv-phone { width: 358px; }
+  .pv-phone .other-role-line .alert-row { align-items: stretch; flex-direction: column; }
+  .pv-phone .alert-row .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Thandi Zulu acting as Committee member, one overdue: the warning tint, "Open it"</p>
+<section class="alert alert-warning other-role-line" aria-label="Waiting for you in the Activity inbox">
+  <div class="alert-row">
+    <span class="alert-row-text">1 activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu, waiting 8 days.</span>
+    <a class="btn btn-outline btn-sm" href="#" aria-label="Open it: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu">Open it</a>
+  </div>
+</section>
+
+<p class="pv-cap">Several, one overdue: the oldest named, "Open the oldest"</p>
+<section class="alert alert-warning other-role-line" aria-label="Waiting for you in the Activity inbox">
+  <div class="alert-row">
+    <span class="alert-row-text">3 activities wait for you in the Activity inbox; 1 is overdue. The oldest: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu, waiting 8 days.</span>
+    <a class="btn btn-outline btn-sm" href="#" aria-label="Open the oldest: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu">Open the oldest</a>
+  </div>
+</section>
+
+<p class="pv-cap">One, not overdue: the info tint</p>
+<section class="alert alert-info other-role-line" aria-label="Waiting for you in the Activity inbox">
+  <div class="alert-row">
+    <span class="alert-row-text">1 activity waits for you in the Activity inbox: Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23, from Anele Dlamini, waiting less than a day.</span>
+    <a class="btn btn-outline btn-sm" href="#" aria-label="Open it: Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23, from Anele Dlamini">Open it</a>
+  </div>
+</section>
+
+<p class="pv-cap">At 390px: the words, then the link at the line's width, 44px</p>
+<div class="pv-phone">
+  <section class="alert alert-warning other-role-line" aria-label="Waiting for you in the Activity inbox">
+    <div class="alert-row">
+      <span class="alert-row-text">1 activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu, waiting 8 days.</span>
+      <a class="btn btn-outline btn-sm" href="#" aria-label="Open it: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu">Open it</a>
+    </div>
+  </section>
+</div>
+</body>
+</html>

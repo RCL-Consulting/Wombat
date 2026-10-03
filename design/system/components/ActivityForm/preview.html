@@ -1,4 +1,4 @@
-<!-- @dsCard group="Activities" height=2480 width=974 subtitle="The activity form: sections one card deep, open, filled or locked by who reads it; the required mark, help, the late warning and a refused field" -->
+<!-- @dsCard group="Activities" height=2900 width=974 subtitle="The activity form: sections one card deep, open, filled or locked by who reads it; the required mark, help, the late warning, a refused field, and the request fold on a phone" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,6 +8,11 @@
   body { padding: var(--space-lg); background: var(--background-color); }
   .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; max-width: 52rem; }
   .pv-cap:first-child { margin-top: 0; }
+  /* The request fold is .only-narrow, which app.css hides from 641px; this card is wider than a phone, so the phone
+     rendition shows it by name. */
+  .pv-phone { width: 358px; }
+  .pv-phone .only-narrow { display: block !important; }
+  .pv-gap { margin-top: var(--space-lg); }
 </style>
 </head>
 <body>
@@ -185,6 +190,39 @@
       <p class="form-section-empty">Not filled in.</p>
     </div>
   </section>
+</div>
+<p class="pv-cap">The request fold at 390px (Mohammed Patel rating Anele Dlamini's request, flow 04): for a reader with a section to fill, a filled section is a native details, shut, "Show" in its head; its card (.only-wide) is away. Every id in it ends -narrow. Opened, "Hide", and the same read-outs, the assessor read by name.</p>
+<div class="pv-phone">
+  <details class="detail-card form-section section-fold only-narrow">
+    <summary>
+      <div class="section-fold-head">
+        <h2 id="pv-sec-request-shut">Request</h2>
+        <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span>
+      </div>
+      <span class="section-fold-owner">Filled in by Anele Dlamini, 2026-10-03</span>
+    </summary>
+  </details>
+</div>
+<div class="pv-phone pv-gap">
+  <details class="detail-card form-section section-fold only-narrow" open>
+    <summary>
+      <div class="section-fold-head">
+        <h2 id="sec-request-narrow">Request</h2>
+        <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span>
+      </div>
+      <span class="section-fold-owner">Filled in by Anele Dlamini, 2026-10-03</span>
+    </summary>
+    <div class="section-fold-body">
+      <dl class="details-list details-list--stacked">
+        <div id="epa_id-in-narrow"><dt>EPA</dt><dd>PAED-002 — Managing common paediatric presentations</dd></div>
+        <div id="assessor_user_id-in-narrow"><dt>Assessor</dt><dd>Mohammed Patel</dd></div>
+        <div id="observed_on-in-narrow"><dt>Date observed</dt><dd>2026-09-13</dd></div>
+        <div id="setting-in-narrow"><dt>Clinical setting</dt><dd>Ward</dd></div>
+        <div id="presenting_problem-in-narrow"><dt>Presenting problem</dt><dd class="form-readout-value">Four-year-old with a first febrile seizure</dd></div>
+        <div id="complexity-in-narrow"><dt>Case complexity</dt><dd>Moderate</dd></div>
+      </dl>
+    </div>
+  </details>
 </div>
 </body>
 </html>

@@ -11,7 +11,7 @@ The activity's history (`Components/Shared/Activities/ActivityHistory.razor`): e
 `section.detail-card` named by its `h2.activity-card-title` "History", then:
 
 - **The table:** `div.table-container.history-table-container > table.clinic-table.history-table`, named by the heading, with the columns **Move**, **From → to**, **By**, **When**, **Credit**.
-  - Move is the move's label as its button had it ("Create", "Submit", "Complete", "Record Discussion"); From → to its states by their labels. **The create row reads "— → Draft"**: it runs from nothing.
+  - Move is the move's label as its button had it ("Create", "Submit", "Complete", "Record discussion"; sentence case since flow 04); From → to its states by their labels. **The create row reads "— → Draft"**: it runs from nothing.
   - By is the mover's name, or "—".
   - When is South African time with its zone, "2026-09-30 07:58 SAST" (`ActivityMoments.When`); a late filing adds "Filed 20 days after the encounter" under it (`span.history-late`, muted 0.85rem, on its own line).
   - Credit is `CreditOutcome.Label`: "1 item", "None", "—".

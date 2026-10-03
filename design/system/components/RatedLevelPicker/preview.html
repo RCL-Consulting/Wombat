@@ -1,0 +1,109 @@
+<!-- @dsCard group="Activities" height=1500 width=974 subtitle="The rater's rung picker: a native radio per rung on the rung row, the chosen one filled, its descriptor under it, and What each rung means" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RatedLevelPicker</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-card { max-width: 40rem; }
+  /* The preview shows each rendering of "What each rung means" by name, whatever the card's width; app.css hides one
+     each side of 641px. */
+  .pv-show { display: block !important; }
+  /* Below 641px the rungs close to 4px apart (app.css's phone rule); this card is wider, so it sets it here. */
+  .pv-phone { width: 358px; }
+  .pv-phone .rung-row { gap: var(--space-xs); }
+</style>
+</head>
+<body>
+<p class="pv-cap">To rate (David Naidoo, Step 3.5): nothing chosen, the College's help under the legend, What each rung means open (the wide rendering)</p>
+<section class="detail-card form-section pv-card" aria-labelledby="sec-entrustment">
+  <div class="form-section-head">
+    <h2 id="sec-entrustment">Entrustment</h2>
+    <p class="form-section-owner">You fill this in</p>
+  </div>
+  <div class="form-group full-width">
+    <fieldset class="form-group rung-picker" role="radiogroup" aria-describedby="overall_level-help">
+      <legend>Supervision required for this encounter<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      <small id="overall_level-help" class="page-subtitle">The supervision this activity actually required on this occasion - not a judgement of the trainee's worth.</small>
+      <ol class="rung-row">
+        <li><label class="rung rung-choice"><input type="radio" id="overall_level-in" name="overall_level" value="1" aria-describedby="rung-desc-1" />1</label></li>
+        <li><label class="rung rung-choice"><input type="radio" id="overall_level-in-2" name="overall_level" value="2" aria-describedby="rung-desc-2" />2</label></li>
+        <li><label class="rung rung-choice"><input type="radio" id="overall_level-in-3" name="overall_level" value="3" aria-describedby="rung-desc-3" />3a</label></li>
+        <li><label class="rung rung-choice"><input type="radio" id="overall_level-in-4" name="overall_level" value="4" aria-describedby="rung-desc-4" />3b</label></li>
+        <li><label class="rung rung-choice"><input type="radio" id="overall_level-in-5" name="overall_level" value="5" aria-describedby="rung-desc-5" />4</label></li>
+        <li><label class="rung rung-choice"><input type="radio" id="overall_level-in-6" name="overall_level" value="6" aria-describedby="rung-desc-6" />5</label></li>
+      </ol>
+      <span class="visually-hidden" id="rung-desc-1">Not entrusted to act. The supervisor performs the activity and thinks aloud; the trainee prepares, observes actively, and may not enact or document decisions.</span>
+      <span class="visually-hidden" id="rung-desc-5">Unsupervised practice. The trainee carries the responsibility for the activity.</span>
+    </fieldset>
+    <details class="rung-legend only-wide pv-show" open>
+      <summary>
+        <svg class="icon rung-legend-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+        What each rung means
+        <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span>
+      </summary>
+      <dl class="rung-legend-list">
+        <div><dt>1</dt><dd>Not entrusted to act. The supervisor performs the activity and thinks aloud; the trainee prepares, observes actively, and may not enact or document decisions.</dd></div>
+        <div><dt>2</dt><dd>Direct supervision. Supervisor present throughout, sharing the task or watching silently, ready to step in. The plan may be entirely the trainee's, but nothing is acted on without sign-off.</dd></div>
+        <div><dt>3a</dt><dd>Indirect supervision, decisions checked. Supervisor on site or immediately available and reviews findings, working diagnosis and plan before they are enacted. Trainee may act alone on routine assessment, investigation and supportive care within protocol.</dd></div>
+        <div><dt>3b</dt><dd>Indirect supervision, reviewed on the trainee’s initiative. Supervisor available on request; the trainee decides what needs discussion and shows reliable help-seeking. Full management of the activity, supervisor informed rather than consulted.</dd></div>
+        <div><dt>4</dt><dd>Unsupervised practice. The trainee carries the responsibility for the activity.</dd></div>
+        <div><dt>5</dt><dd>Supervises others. The trainee carries the responsibility and can supervise juniors in the activity.</dd></div>
+      </dl>
+    </details>
+  </div>
+</section>
+
+<p class="pv-cap">Rung 3b chosen at 390px: the cell filled and named "chosen" (aria-hidden), its descriptor under the row, What each rung means drawn once and shut</p>
+<section class="detail-card form-section pv-phone" aria-labelledby="sec-entrustment-2">
+  <div class="form-section-head">
+    <h2 id="sec-entrustment-2">Entrustment</h2>
+    <p class="form-section-owner">You fill this in</p>
+  </div>
+  <div class="form-group full-width">
+    <fieldset class="form-group rung-picker" role="radiogroup" aria-describedby="overall_level-help-2">
+      <legend>Supervision required for this encounter<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      <small id="overall_level-help-2" class="page-subtitle">The supervision this activity actually required on this occasion - not a judgement of the trainee's worth.</small>
+      <ol class="rung-row">
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-2" value="1" />1</label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-2" value="2" />2</label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-2" value="3" />3a</label></li>
+        <li><label class="rung rung-choice is-chosen"><input type="radio" name="overall_level-2" value="4" checked />3b<span class="rung-check" aria-hidden="true">chosen</span></label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-2" value="5" />4</label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-2" value="6" />5</label></li>
+      </ol>
+    </fieldset>
+    <p class="rung-descriptor"><b>3b</b>Indirect supervision, reviewed on the trainee’s initiative. Supervisor available on request; the trainee decides what needs discussion and shows reliable help-seeking. Full management of the activity, supervisor informed rather than consulted.</p>
+    <details class="rung-legend">
+      <summary>
+        <svg class="icon rung-legend-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+        What each rung means
+        <span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span>
+      </summary>
+    </details>
+  </div>
+</section>
+
+<p class="pv-cap">Complete pressed with no rung chosen: the group a radiogroup marked invalid, its message under the row, each radio described by it too</p>
+<div class="detail-card pv-card">
+  <div class="form-group full-width">
+    <fieldset class="form-group rung-picker" role="radiogroup" aria-describedby="overall_level-help-3 overall_level-msg" aria-invalid="true">
+      <legend>Supervision required for this encounter<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      <small id="overall_level-help-3" class="page-subtitle">The supervision this activity actually required on this occasion - not a judgement of the trainee's worth.</small>
+      <ol class="rung-row">
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-3" value="1" aria-describedby="overall_level-msg" />1</label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-3" value="2" aria-describedby="overall_level-msg" />2</label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-3" value="3" aria-describedby="overall_level-msg" />3a</label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-3" value="4" aria-describedby="overall_level-msg" />3b</label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-3" value="5" aria-describedby="overall_level-msg" />4</label></li>
+        <li><label class="rung rung-choice"><input type="radio" name="overall_level-3" value="6" aria-describedby="overall_level-msg" />5</label></li>
+      </ol>
+      <p id="overall_level-msg" class="validation-message">A value is required.</p>
+    </fieldset>
+  </div>
+</div>
+</body>
+</html>

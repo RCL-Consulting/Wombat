@@ -1,4 +1,4 @@
-<!-- @dsCard group="Activities" height=1760 width=974 subtitle="The action bar: the move first and filled, Save draft, Discard changes, the other moves, Cancel last and quiet; the note panel; Cancel's dialog" -->
+<!-- @dsCard group="Activities" height=1960 width=974 subtitle="The action bar: the move first and filled, Save draft, Discard changes, the other moves, Cancel last and quiet; the note panel; Cancel's dialog" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -22,14 +22,15 @@
 </style>
 </head>
 <body>
-<p class="pv-cap">The author's draft (Anele Dlamini, Step 3.2): the check line, then Submit to David Naidoo, Save draft, Discard changes (aria-disabled: nothing typed yet) and, pushed to the end, Cancel this draft…</p>
+<p class="pv-cap">The author's draft (Anele Dlamini, Step 3.2): the check line, then Submit to David Naidoo, Save draft, Discard changes (aria-disabled, its reason beside it: nothing typed yet) and, pushed to the end, Cancel this draft…</p>
 <div class="activity-sections pv-col">
   <p class="submit-check"><strong>When you submit:</strong> it goes to David Naidoo's Activity inbox and stays Requested until David Naidoo acts on it.</p>
   <div class="activity-moves">
     <div class="form-actions form-actions--moves">
       <button type="button" class="btn btn-primary">Submit to David Naidoo</button>
       <button type="button" class="btn btn-outline">Save draft</button>
-      <button id="discard-changes" type="button" class="btn btn-outline" aria-disabled="true">Discard changes</button>
+      <button id="discard-changes" type="button" class="btn btn-outline is-unavailable" aria-disabled="true" aria-describedby="why-discard">Discard changes</button>
+      <ul class="move-reasons move-reasons--beside"><li id="why-discard">Nothing to discard yet.</li></ul>
       <button type="button" class="btn btn-quiet btn-quiet--danger">Cancel this draft…</button>
       <p class="visually-hidden" role="status"></p>
     </div>
@@ -47,11 +48,12 @@
   </div>
 </div>
 
-<p class="pv-cap">The assessor the request names (David Naidoo, Step 3.5): Complete, Discard changes, then Decline, a toggle for the note panel</p>
+<p class="pv-cap">The assessor the request names (David Naidoo, Step 3.5): Complete, Discard changes with "Nothing to discard yet." beside it, then Decline, a toggle for the note panel</p>
 <div class="activity-moves pv-col">
   <div class="form-actions form-actions--moves">
     <button type="button" class="btn btn-primary">Complete</button>
-    <button id="discard-changes-2" type="button" class="btn btn-outline" aria-disabled="true">Discard changes</button>
+    <button id="discard-changes-2" type="button" class="btn btn-outline is-unavailable" aria-disabled="true" aria-describedby="why-discard-2">Discard changes</button>
+    <ul class="move-reasons move-reasons--beside"><li id="why-discard-2">Nothing to discard yet.</li></ul>
     <button type="button" class="btn btn-outline" aria-expanded="false" aria-controls="note-panel">Decline</button>
   </div>
 </div>
@@ -59,37 +61,33 @@
 <p class="pv-cap">A move that cannot be completed here: shown, aria-disabled, never disabled, named by its reason under the bar</p>
 <div class="activity-moves pv-col">
   <div class="form-actions form-actions--moves">
-    <button type="button" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="action-reason-sign-off">Sign Off</button>
+    <button type="button" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="action-reason-sign-off">Sign off</button>
     <button type="button" class="btn btn-outline" aria-expanded="false" aria-controls="note-panel">Return</button>
     <ul class="move-reasons">
-      <li id="action-reason-sign-off"><strong>Sign Off:</strong> Needs Overall level, which you cannot fill in here.</li>
+      <li id="action-reason-sign-off"><strong>Sign off:</strong> Needs Overall level, which you cannot fill in here.</li>
     </ul>
   </div>
 </div>
 
-<p class="pv-cap">Decline pressed (Fatima Khumalo, Step 3.11): the note panel under the bar, the focus in the note; a refused empty note keeps the panel open with its summary</p>
+<p class="pv-cap">Decline pressed (Fatima Khumalo, Step 3.11), a rung chosen: the note panel under the bar, the focus in the note; a refused empty note keeps the panel open with its summary, which names the state it is still in</p>
 <div class="activity-moves pv-col">
   <div class="form-actions form-actions--moves">
     <button type="button" class="btn btn-primary">Complete</button>
-    <button type="button" class="btn btn-outline" aria-disabled="true">Discard changes</button>
+    <button type="button" class="btn btn-outline">Discard changes</button>
     <button type="button" class="btn btn-outline" aria-expanded="true" aria-controls="note-panel">Decline</button>
   </div>
   <section class="detail-card note-panel" id="note-panel" aria-labelledby="note-panel-title">
     <h2 id="note-panel-title" class="note-panel-title">Decline this request</h2>
     <div id="note-summary" class="validation-summary-errors error-summary" tabindex="-1" role="alert">
-      <strong>Not declined.</strong>
+      <strong>Not declined. It is still Requested.</strong>
       <ul class="refusal-summary-list">
-        <li><a href="#note-in">Reason for Sipho Ndlovu: Decline requires a note.</a></li>
+        <li><a href="#note-in">Note for Sipho Ndlovu: Decline requires a note.</a></li>
       </ul>
     </div>
     <div class="form-group">
-      <label for="note-in">
-        Reason for Sipho Ndlovu
-        <span aria-hidden="true">*</span>
-        <span class="visually-hidden">required</span>
-      </label>
-      <small class="page-subtitle" id="note-help">Sipho Ndlovu reads it on the activity's page. It is kept with the activity's history.</small>
-      <textarea id="note-in" class="form-control input-validation-error pv-focus" rows="4" aria-required="true" aria-invalid="true" aria-describedby="note-help note-msg note-summary"></textarea>
+      <label for="note-in">Note for Sipho Ndlovu<span class="required-mark" aria-hidden="true"> *</span></label>
+      <p class="field-help" id="note-help">Sipho Ndlovu reads it on the activity's page. It is kept with the activity's history.</p>
+      <textarea id="note-in" class="form-control input-validation-error pv-focus" rows="4" aria-required="true" aria-invalid="true" aria-describedby="note-help note-msg"></textarea>
       <p class="validation-message" id="note-msg">Decline requires a note.</p>
     </div>
     <div class="form-actions form-actions--moves">
@@ -99,22 +97,24 @@
   </section>
 </div>
 
-<p class="pv-cap">Return pressed (Sarah Botha, Step 3.15): the move does not end the activity, so its button is the primary</p>
+<p class="pv-cap">Return pressed (Sarah Botha, Step 3.15): Record discussion leads the bar; the panel names the author's part, "Return this reflection"; the move does not end the activity, so its send is the primary</p>
 <div class="activity-moves pv-col">
-  <section class="detail-card note-panel" aria-labelledby="note-panel-title-2">
-    <h2 id="note-panel-title-2" class="note-panel-title">Return: add a note</h2>
+  <div class="form-actions form-actions--moves">
+    <button type="button" class="btn btn-primary">Record discussion</button>
+    <button type="button" class="btn btn-outline is-unavailable" aria-disabled="true" aria-describedby="why-discard-3">Discard changes</button>
+    <ul class="move-reasons move-reasons--beside"><li id="why-discard-3">Nothing to discard yet.</li></ul>
+    <button type="button" class="btn btn-outline" aria-expanded="true" aria-controls="note-panel-2">Return</button>
+  </div>
+  <section class="detail-card note-panel" id="note-panel-2" aria-labelledby="note-panel-title-2">
+    <h2 id="note-panel-title-2" class="note-panel-title">Return this reflection</h2>
     <div class="form-group">
-      <label for="note-in-2">
-        Note to Sipho Ndlovu
-        <span aria-hidden="true">*</span>
-        <span class="visually-hidden">required</span>
-      </label>
-      <small class="page-subtitle" id="note-help-2">Sipho Ndlovu reads it on the activity's page. It is kept with the activity's history.</small>
+      <label for="note-in-2">Note for Sipho Ndlovu<span class="required-mark" aria-hidden="true"> *</span></label>
+      <p class="field-help" id="note-help-2">Sipho Ndlovu reads it on the activity's page. It is kept with the activity's history.</p>
       <textarea id="note-in-2" class="form-control" rows="4" aria-required="true" aria-describedby="note-help-2">Please say what you would do differently at triage, and what you will read before your next take.</textarea>
     </div>
     <div class="form-actions form-actions--moves">
       <button type="button" class="btn btn-primary">Return with this note</button>
-      <button type="button" class="btn btn-quiet">Do not return it</button>
+      <button type="button" class="btn btn-quiet">Keep the reflection</button>
     </div>
   </section>
 </div>
@@ -138,7 +138,8 @@
   <div class="form-actions form-actions--moves">
     <button type="button" class="btn btn-primary">Submit to Sarah Botha</button>
     <button type="button" class="btn btn-outline">Save draft</button>
-    <button type="button" class="btn btn-outline" aria-disabled="true">Discard changes</button>
+    <button type="button" class="btn btn-outline is-unavailable" aria-disabled="true" aria-describedby="why-discard-4">Discard changes</button>
+    <ul class="move-reasons move-reasons--beside"><li id="why-discard-4">Nothing to discard yet.</li></ul>
     <button type="button" class="btn btn-quiet btn-quiet--danger">Cancel this draft…</button>
   </div>
 </div>

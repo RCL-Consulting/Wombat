@@ -21,7 +21,7 @@ The entrustment ladder, read-only (`Components/Shared/Activities/RungRow.razor`)
 ## Rules (DESIGN.md § Form system, "The activity form")
 
 - The rung is shown by the College's label, found by its Order.
-- A writer of the scale keeps the select; rating by the rungs themselves (radios) is flow 04's.
+- A writer of the rated level field chooses on the same row, made writable: RatedLevelPicker (flow 04). A writer of any other scale field keeps the select.
 
 ## Contrast
 

@@ -7,6 +7,7 @@ The activity page's About card (`Components/Shared/Activities/ActivityAbout.razo
 `<ActivityAbout Rows="@model.About()" />`
 
 - `Rows` (required): `ActivityAboutRow(Label, Value, Warnings, Id)` with an optional `Marker`, worked out by `ActivityPageModel.About`.
+- `Class` and `IdSuffix` (flow 04, T350; round 1, E3; round 2, E2): where the page draws About twice. For a reader with a section to fill who is not the author, the page draws it `.only-wide` in its place and again `.only-narrow` after the sections and the bar, so on a phone About comes under the bar; the second copy passes `IdSuffix="-narrow"`, which every id it carries (its title's, each row's) takes, so no id is on the page twice. Every other reader keeps the one About in its place.
 
 ## Markup
 

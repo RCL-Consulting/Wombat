@@ -19,12 +19,12 @@ A refusal that names fields, said once at the head of the work (`Components/Shar
 | Where | Title | Text |
 |---|---|---|
 | Log an activity, a refused create | Nothing was saved. | Everything you typed is kept below. |
-| The activity page, a refused move | Not submitted. It is still a draft. ("Not declined.", "Not completed.": a move that ends the activity reads as the state it would have ended in; "Return was not made." for one with no word) | Fix the field below and submit again. / Fix the 2 fields below and submit again. |
+| The activity page, a refused move | Not submitted. It is still a draft. ("Not returned.", "Not declined.", "Not completed.": a submit and a return have their own words; a move that ends the activity reads as the state it would have ended in; "Verify was not made." for one with no word) | Fix the field below and submit again. / Fix the 2 fields below and submit again. |
 | The activity page, a refused Save draft | Not saved. It is still a draft. | Fix the field below and save again. |
 | The activity page, the submit refused straight after the create | Saved as a draft, but not submitted. | Fix the 6 fields below and submit again. |
-| The note panel | Not declined. | (none) |
+| The note panel | Not declined. It is still Requested. / Not returned. It is still Awaiting discussion. (`RefusalWords.ForNote`, flow 04) | (none) |
 
-Then the lines: "Date observed: The date cannot be after today (2026-09-30).", "Presenting problem: A value is required.", "Reason for Sipho Ndlovu: Decline requires a note."
+Then the lines: "Date observed: The date cannot be after today (2026-09-30).", "Presenting problem: A value is required.", "Note for Sipho Ndlovu: Decline requires a note."
 
 ## Markup
 

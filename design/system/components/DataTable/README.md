@@ -53,7 +53,7 @@ My activities' All activities is the first (and only) one: the columns Activity,
 
 ## Known gaps
 
-- Only My activities stacks. The Activity inbox at 390px still scrolls sideways inside its container (A.7.2, as built), and so does every other list.
+- My activities and the Activity inbox stack (flow 04 stacked both of the inbox's tables: WaitingList). Every other list at 390px still scrolls sideways inside its container.
 
 ## Appearance
 

@@ -508,8 +508,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-09-30T09:56:07Z",
-    "via": "Claude Code · Wombat@c92f578a",
-    "note": "Re-synced to flow 03 as built (T342, 725237ee with daaf6386, 5fd5abcd and a341b44e): no token value changed; 10 components added (InstrumentPicker, ActivityForm, RungRow, SubmitCheck, RefusalSummary, ActivityStatus, ActivityAbout, ActivityHistory, ActivityWorkflowActions, NeedsYouList), 10 revised (ConfirmDialog, DashboardCard, DataTable, PageHeader, StatePanel, Button, Alert, FormField, Icon, and the bundle); 1 icon uploaded (copy; 59 in all)."
+    "at": "2026-10-03T18:18:06Z",
+    "via": "Claude Code · Wombat@930377cd",
+    "note": "Re-synced to flow 04 as built (T350, 06aa51d7): no token value changed; 4 components added (WaitingList, WayOn, OtherRoleLine, RatedLevelPicker); 19 revised (ActivityAbout, ActivityForm, ActivityHistory, ActivityStatus, ActivityWorkflowActions with the note panel, Badge, Button, DashboardCard, DataTable, Icon, MainLayout, NeedsYouList, PagerControls, RefusalSummary, RungRow, StatePanel, the README, tokens' ref, and the bundle); move labels now sentence case; no icon added (59 in all)."
   }
 }

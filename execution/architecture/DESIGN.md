@@ -3025,8 +3025,8 @@ Dashboards are a composition, not a standalone page pattern.
     in the Activity inbox: …, waiting less than a day.", warning-tinted when any is overdue, info otherwise. Its one
     action, "Open it" or "Open the oldest", opens the activity; **the line holds no switch** (the sidebar's is the one
     way to change role). It names no role, since the read counts every arm that is not the author's. A failed read
-    draws no line and is logged: it is never a Home error, which the frame owns. The committee Home places it; flow 04
-    owns its words.
+    draws no line and is logged: it is never a Home error, which the frame owns. `Home.razor` places it above every
+    role's dashboard (it draws only for an Assessor acting as another role); flow 04 owns its words.
   - the Administrator's job status is in System health only (spanning two), beside Users across institutions. The
     Maintenance card, four nav links over again, is gone; its fifth, Curriculum progress, is a header link on Curricula,
     the page that owns it, for the Administrator its page admits;

@@ -59,7 +59,8 @@ Run the loop as flow 02 ran it (`design/flows/03-trainee-files-activity/`, BRIEF
   re-taken on scratch copies (`_s5184`, `_s5186{,b,c}`, `_s5188b`), all hold; 17 reused from the replay's captures
   after checking each, 17 taken fresh; one row reworded (the completed page's history fold). Nothing to fix: the
   pager's unnamed page-size select is T280's.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number: 13 (files as version 12, the index last;
+  4 components added, 19 revised, no icon added; one Sonnet review, its two must-fixes applied; T354 filed).
 
 ## Related
 

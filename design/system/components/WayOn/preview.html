@@ -1,0 +1,68 @@
+<!-- @dsCard group="Activities" height=900 width=974 subtitle="The way on: after an assessor's move, the result and what is left, the next waiting row, Open the next and Back to the list" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WayOn</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  /* Below 641px app.css stacks the way on's buttons at 44px. This card is wider than a phone, so the phone rendition
+     repeats the media rule's declarations under .pv-phone. */
+  .pv-phone { width: 358px; }
+  .pv-phone .way-on .form-actions { align-items: stretch; flex-direction: column; }
+  .pv-phone .way-on .btn, .pv-phone .way-on-none .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Complete pressed (Mohammed Patel): the result takes the focus and says what is left; the next row, its link out of the tab order, then Open the next and Back to Activity inbox</p>
+<div class="activity-page">
+  <div id="activity-result" class="action-result pv-focus" tabindex="-1">
+    <div class="alert alert-success" role="status"><strong>Completed.</strong> 1 more waits for you.</div>
+  </div>
+  <section class="way-on" aria-label="The next activity waiting for you">
+    <ul class="needs-you stack-list">
+      <li class="needs-you-row">
+        <a class="activity-link" href="#" tabindex="-1">Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-02<span class="visually-hidden">, </span><span class="activity-link-to">from Pieter du Plessis</span></a>
+        <span class="needs-you-badges"><span class="badge badge-submitted">Awaiting review</span></span>
+        <p class="needs-you-why">Waiting less than a day, since 2026-10-03 17:22 SAST.</p>
+      </li>
+    </ul>
+    <div class="form-actions">
+      <a class="btn btn-primary" href="#" aria-label="Open the next: Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-02, from Pieter du Plessis">Open the next</a>
+      <a class="btn btn-outline" href="#">Back to Activity inbox</a>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">Return sent (Sarah Botha): the result names the act and whose it is now; nothing else waits, so only Go to Home</p>
+<div class="activity-page">
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-success" role="status"><strong>Returned to Sipho Ndlovu.</strong> Nothing else waits for you.</div>
+  </div>
+  <p class="way-on-none"><a class="btn btn-outline" href="#">Go to Home</a></p>
+</div>
+
+<p class="pv-cap">At 390px: the buttons stacked, 44px, Open the next on top</p>
+<div class="activity-page pv-phone">
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-success" role="status"><strong>Completed.</strong> 1 more waits for you.</div>
+  </div>
+  <section class="way-on" aria-label="The next activity waiting for you">
+    <ul class="needs-you stack-list">
+      <li class="needs-you-row needs-you-row--overdue">
+        <a class="activity-link" href="#" tabindex="-1">Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30<span class="visually-hidden">, </span><span class="activity-link-to">from Nomsa Mahlangu</span></a>
+        <span class="needs-you-badges"><span class="badge badge-submitted">Requested</span><span class="badge badge-overdue">Overdue</span></span>
+        <p class="needs-you-why">Waiting 8 days, since 2026-09-22 08:06 SAST.</p>
+      </li>
+    </ul>
+    <div class="form-actions">
+      <a class="btn btn-primary" href="#" aria-label="Open the next: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu">Open the next</a>
+      <a class="btn btn-outline" href="#">Back to Activity inbox</a>
+    </div>
+  </section>
+</div>
+</body>
+</html>

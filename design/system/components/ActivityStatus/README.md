@@ -11,9 +11,9 @@
 
 ## Markup
 
-`section.detail-card.activity-status` plus its tone, named by its head (`aria-labelledby="activity-status-head"`), 24px above the details grid:
+`section.detail-card.activity-status` plus its tone, named by its label, "Who has it now" (`aria-labelledby="activity-status-label"`; flow 04, nit A10: until then it was named by the whole headline), 24px above the details grid:
 
-- `.activity-status-main` (a column, 8px apart, `flex: 1 1 26rem`): `p.activity-status-label` "Who has it now" (muted, 0.85rem/600); `p.activity-status-head`, the badge (`BadgeFor.ActivityState`) then `span.activity-status-headline` (1.1rem/600, line height 1.35); a `blockquote.activity-status-quote` (the note as its writer wrote it, keeping its lines, on `header-bg` with a 4px `input-border` stripe, `radius-sm`; its writer in `cite`, muted 0.85rem, not italic); `p.activity-status-body`; `p.activity-status-meta` (muted, 0.9rem).
+- `.activity-status-main` (a column, 8px apart, `flex: 1 1 26rem`): `p#activity-status-label.activity-status-label` "Who has it now" (muted, 0.85rem/600); `p.activity-status-head`, the badge (`BadgeFor.ActivityState`) then `span.activity-status-headline` (1.1rem/600, line height 1.35); a `blockquote.activity-status-quote` (the note as its writer wrote it, keeping its lines, on `header-bg` with a 4px `input-border` stripe, `radius-sm`; its writer in `cite`, muted 0.85rem, not italic); `p.activity-status-body`; `p.activity-status-meta` (muted, 0.9rem).
 - `.activity-status-action`, beside the main column (under it where there is no room), holding the one action.
 
 **The stripe** (4px, the card's left edge; its frame is every card's hairline): the viewer's move `.detail-card--emphasis` (`secondary-color`); someone else's `.activity-status--others` (`input-border`); done `.activity-status--done` (`success-color`); declined `.activity-status--declined` (`danger-color`).
@@ -51,6 +51,7 @@ Below 641px the action takes the card's width and each button is 44px.
 ## Rules (DESIGN.md § Page-level patterns, "Record page with a workflow")
 
 - One card answers who has it now; the page header carries no "State:" line.
+- To the rater it shows no year minimum and no semester count, before or after rating (flow 04, Q7).
 - A draft is not private (C2): never "nobody can see it". It is in nobody's inbox.
 - The quote is the note as written, never rewritten.
 
