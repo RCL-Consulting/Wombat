@@ -52,8 +52,10 @@ Run the loop as flow 02 ran it (`design/flows/03-trainee-files-activity/`, BRIEF
 - [x] The canvas is created, with the mark copied in before round 1 — https://claude.ai/artifact/8JnYLZp6CTR1Mg38a5v7DX (mark `/_blob/89ddc910c53255a32bcbb84e2820bc45`, 2026-09-30).
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/04-assessor-inbox/` (A picked; round 2 reviewed from four sides, C1–C13, E1–E5 accepted; round 3 checked, `round-3-check.md`: all hold).
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 04) — `06aa51d7` (Domain 810, Application 3,581, Infrastructure 1,011, Architecture 50, Web 3,041, Integration 481; build-review.md: 0 high, 6 medium fixed or dropped; T351, T352 filed).
-- [ ] The whole runbook replays on a fresh database with no regression from flow 04, and the baseline is re-captured,
-  with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 04, and the baseline is re-captured,
+  with `check_baseline_paths.py` at `missing 0` — the Actual lines (`wombat_scenario_t350`, 2026-09-30 to 10-03: 325 steps,
+  249 with no gap, every other gap an open task; 0 regression-t350, 0 new; `ef64eb8d`, `90cd0112`, `60854d97`, `4b7a04d0`,
+  `9bc09e15`, `8f634de9`, `7c30795d` and the appendix's commit; dumps `scenario-t350-post-act{1..6,A}`).
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
