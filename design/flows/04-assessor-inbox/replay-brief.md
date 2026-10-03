@@ -43,9 +43,10 @@ Accounts and passwords:
     lower-case letter, and a symbol.
   - Keep it ONLY in <G>\replay-pw.env as KEY=value lines (WB_PW_<SURNAME>=...), which later acts read into their
     scripts' environment. This is a new file for this replay; never read any other replay's password file.
-  - A step that changes a cast member's password adds a key and never overwrites one: WB_PW_<SURNAME> stays the
-    current password, and the one it replaces is kept as WB_PW_<SURNAME>_<ACT> (the act that set it), so the earlier
-    snapshots can still be signed in to (BRIEF § 11, flow 03).
+  - A step that changes a cast member's password loses no value: it first copies the old one to
+    WB_PW_<SURNAME>_<ACT> (the act that changed it), then sets WB_PW_<SURNAME> to the new one, so WB_PW_<SURNAME> is
+    always current and the earlier snapshots can still be signed in to (BRIEF § 11, flow 03). A state capture on a
+    snapshot taken before the change uses the _<ACT> key.
   - Never print a password to the console or into your reply, and never write one into the runbook or any tracked file.
   - Never open pwd_DO_NOT_COMMIT.txt or recovery\.
 - Registration and MSF links come from the log's Stub email lines. Never write a token into the runbook.
@@ -74,6 +75,8 @@ For EVERY step in your act, in order:
      sideways scroll at 390 (T323), the inbox's Updated time without its zone (T325), T280's row names on Home), write "Gap: none (T<n> no longer occurs: …)".
    - For a new finding write "Gap: new: <one sentence>".
    - Keep the file's style: lines under 120 characters, continuations indented two spaces.
+   - Play every claim, restarts included: a restart (stop, then start) keeps the old log beside the new one, so it
+     loses nothing. Copied scripts carry stale paths and date helpers; compute every date from D.
 4. Do NOT edit Role, Route, Do, Expect or Note lines. The runbook was just rewritten for flow 04 from the code, and no
    replay has seen it yet.
    - If a step cannot be played as written, or its Expect disagrees with what the built page does, record that in its
@@ -82,6 +85,8 @@ For EVERY step in your act, in order:
    - KEEP THE FILE NAMES THAT ALREADY EXIST for the step when the state is the same (list the folder first:
      <step>-<n>-<slug>.png). Design briefs cite them by name.
    - Add a new file only for a state the step did not capture before.
+   - Full page, taken from the top: scroll to (0, 0) first (the focus stays put), or the fixed sidebar and top bar are
+     drawn part-way down the image. A states capture can then reuse the image instead of retaking it.
    - The folder is gitignored and local only.
    - Say in your notes which captures show a registration link.
 
