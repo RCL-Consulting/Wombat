@@ -31,11 +31,15 @@ The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\
 - The remote is disconnected: no push (2026-10-03).
 - CLAUDE.md § Multi-agent workflows (the operator's edit, still uncommitted, theirs to commit).
 
-### Next session: T355, flow 05 (a registrar reads where they stand). **Model: Opus.**
+### Then: T355, flow 05 (a registrar reads where they stand), started. **Model: Opus.**
 
-- `harness.py task start T355`, then step 1: restate `design/flows/05-trainee-progress.md` as flow 04's was
-  (`design/flows/04-assessor-inbox/` is the latest model; BRIEF § 11 "Flow 04"). Stage with `stage_upload.ps1 -Flow 05`.
-- Step 3 needs the operator: a new canvas from the main app's Design page on the design system **version 13**.
+- **Steps 1–2 done** (`45caa7e8`): the brief restated against `f913dda3` (nine questions; 8 and 9 are the operator's:
+  My progress and My authorisations into the Trainee's menu group, and a "being rebuilt" notice after a version move);
+  `round-1-ask.txt`; staged 90 files plus flow 03's trainee boards by hand (`design/upload/flow03-boards/`, gitignored).
+  Flows 01–04's quoted runbook steps re-synced (77 stale after T350's replay).
+- **Step 3 waits for the operator:** a new canvas from the main app's Design page on the design system version 13; its
+  link. Then step 4 copies the mark (`asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`), the ask's `<MARK-URL>` is
+  filled in, and round 1 is pasted.
 
 ### For the operator
 
