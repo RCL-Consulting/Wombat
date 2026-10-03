@@ -8,12 +8,12 @@ You are playing part of T350 step 7: the acceptance replay of Wombat's whole sce
 is played against flow 04 of the restructure (an assessor works their inbox), which landed on master as 06aa51d7.
 Flows 01 (the shell, b347e11c), 02 (sign-in and account, f50dffb2) and 03 (a registrar files an activity, 725237ee)
 landed earlier.
-- The repo is C:\Users\Renier\Wombat, on branch master. Do not switch branches, do not commit, do not push.
+- The repo is C:\dev\Wombat (moved from C:\Users\Renier\Wombat on 2026-10-03), on branch master. Do not switch branches, do not commit, do not push.
 
 The replay app is ALREADY RUNNING.
 - It is at http://localhost:5180, on database wombat_scenario_t350, published from master. The integrator started it
   with tools\scenario-replay.ps1.
-- It runs in Development. Mail is written to the log C:\Users\Renier\Wombat\.scenario-app\wombat_scenario_t350.log as
+- It runs in Development. Mail is written to the log C:\dev\Wombat\.scenario-app\wombat_scenario_t350.log as
   "Stub email" lines, and emailed links point at :5180.
 - The acts before yours have been played on it, so its state is theirs.
 - If the app has died (no answer on :5180), restart it with:
