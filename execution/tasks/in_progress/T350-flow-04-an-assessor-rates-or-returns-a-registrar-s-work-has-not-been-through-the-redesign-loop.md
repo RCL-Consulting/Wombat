@@ -55,7 +55,10 @@ Run the loop as flow 02 ran it (`design/flows/03-trainee-files-activity/`, BRIEF
 - [x] The whole runbook replays on a fresh database with no regression from flow 04, and the baseline is re-captured,
   with `check_baseline_paths.py` at `missing 0` — the Actual lines (`wombat_scenario_t350`, 2026-09-30 to 10-03: 325 steps,
   249 with no gap, every other gap an open task; 0 regression-t350, 0 new; `ef64eb8d`, `90cd0112`, `60854d97`, `4b7a04d0`,
-  `9bc09e15`, `8f634de9`, `7c30795d` and the appendix's commit; dumps `scenario-t350-post-act{1..6,A}`).
+  `9bc09e15`, `8f634de9`, `7c30795d`, `d5f9dccd`; dumps `scenario-t350-post-act{1..6,A}`). States: flow 04's 34 rows
+  re-taken on scratch copies (`_s5184`, `_s5186{,b,c}`, `_s5188b`), all hold; 17 reused from the replay's captures
+  after checking each, 17 taken fresh; one row reworded (the completed page's history fold). Nothing to fix: the
+  pager's unnamed page-size select is T280's.
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
