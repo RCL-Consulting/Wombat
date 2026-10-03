@@ -1,12 +1,13 @@
 ---
 id: T350
 title: Flow 04, an assessor rates or returns a registrar's work, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-30
 started: 2026-09-30
+completed: 2026-10-03
 ---
 
 # T350 — Flow 04, an assessor rates or returns a registrar's work, has not been through the redesign loop

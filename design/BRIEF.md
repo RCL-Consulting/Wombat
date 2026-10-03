@@ -961,6 +961,39 @@ Flow 03 ran the loop over three days: a W flow's three structures, three rounds,
 - **One implementer and one Sonnet review were enough for the re-sync.** Observed: 40 files, two must-fixes (both the
   upload's wording) and four nits, all fixed before the publish. CLAUDE.md § Multi-agent workflows now sizes this.
 
+**Flow 04 (T350, 2026-09-30 to 10-03): what the fourth flow added**
+
+Flow 04 ran the loop in two sessions: three structures, three rounds (A picked), a four-sided review, the build
+(`06aa51d7`), the replay (325 steps, 249 with no gap, no regression), the states (34 rows, all hold) and the re-sync
+(design system version 13). Its record is `design/flows/04-assessor-inbox/`. Only what flows 01–03 did not already
+teach is here.
+
+- **A dead replay can resume in place.** Observed: the session ended during act 2's real hour's wait (Step 2.26). The
+  plan was to restore post-act1 and replay the act. But the agent had written its lines per phase through 2.25, and the
+  database stood exactly there (checked by SQL against the lines), so act 2 resumed at 2.26 three days later and the
+  wait was already over. *Changed:* before restoring, check whether the database matches the last written step; restore
+  only if it does not, or if a step's open browser session is needed (2.31's tab was re-opened and said so).
+- **Copied scripts carry stale assumptions.** Observed: an act agent reused an earlier replay's scripts. Their date
+  helper filed one extra request (#24, then cancelled), so every later id is one higher than the last replay's. It was
+  harmless because the runbook keys by email, not id. The repo also moved (`C:\dev\Wombat`), which broke every absolute
+  path in the brief. *Changed:* the replay brief says to compute every date from D, and it names the new path.
+- **An agent may skip a claim to protect something that needs no protecting.** Observed: act 6's agent skipped two
+  restart claims (6.2, 6.14) "to keep the log". But `scenario-replay.ps1 start` keeps the old log beside the new one.
+  The integrator restarted the app and played both claims. *Changed:* the replay brief says to play every claim,
+  restarts included.
+- **The states capture can reuse the replay's captures, after opening each.** Observed: 17 of the 34 states were the
+  replay's own images, each opened and checked clause by clause. The other 17 were taken fresh. Some captures could not
+  be reused: a viewport-only shot of a page longer than 800px, and five taken while scrolled, which draw the fixed
+  sidebar part-way down the image. *Changed:* the replay brief says to take full-page shots from the top.
+- **Ageing a row can make an impossible record.** Observed: Step 3.30 ages a request eight days back, but its encounter
+  is three days back, so About reads "Filed" five days before "Encounter". Three states show it. *Changed:* T353.
+- **Compare the live design system with the repo before replacing it.** Observed: 3 of the 30 published files differed
+  from HEAD. All three were the build commit's own edits, never published, not someone's edit on the page. *Changed:*
+  the re-sync reads each published file and compares it with HEAD before the publish.
+- **The re-sync's reviewer checks DESIGN.md too.** Observed: the re-sync copied DESIGN.md's "The committee Home places
+  it" (the other-role line). The code places it in `Home.razor` for every role. The Sonnet reviewer, reading the code,
+  caught it, and DESIGN.md was corrected with the design system. *Changed:* nothing; keep the reviewer on the code.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
