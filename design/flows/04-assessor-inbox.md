@@ -426,7 +426,7 @@ describes the product as it is today, after flow 03 (re-synced 2026-09-30). `D` 
 (`act-3-operations.md` § The clock in this act).
 
 ```text
-Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:628)
+Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:635)
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
 Route: /account/login → /
 Do: Each signs in and reads the dashboard and nav.
@@ -435,7 +435,7 @@ Expect: Each sees "Assessor · Semester N, YYYY" on Home, and the empty Assessor
   yet." (T350). The sidebar reads "Acting as Assessor" with no switch, over Home and Activity inbox, then My data
   rights.
 
-Step 3.4 — An assessor who was not named cannot open the request (act-3-operations.md:159)
+Step 3.4 — An assessor who was not named cannot open the request (act-3-operations.md:158)
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Look for Dr Dlamini's Mini-CEX in the inbox, then open its address directly, using the id from Step 3.1.
@@ -445,7 +445,7 @@ Expect: The inbox's subtitle reads "What waits for you to rate, review or discus
   not exist, or you cannot open it.", with Go to Activity inbox, the list his acting role opens activities from (T350).
   It reads exactly so for an id that does not exist, so walking ids discloses nothing (T101, C7).
 
-Step 3.5 — Dr Naidoo rates the Mini-CEX and completes it (act-3-operations.md:174)
+Step 3.5 — Dr Naidoo rates the Mini-CEX and completes it (act-3-operations.md:173)
 Role: Assessor — Dr David Naidoo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Choose Switch to Assessor in the sidebar, then open Activity inbox from the menu and Dr Dlamini's Mini-CEX in it.
@@ -465,7 +465,7 @@ Expect: The inbox's row is its own link, "Mini-CEX (Paediatrics) · PAED-001 · 
   reads Requested → Completed, by David Naidoo, credited "1 item". Year 3's minimum on PAED-001 is rung 4, so the
   encounter counts at the minimum; nothing on the page says the minimum (Q7), so that is the tester's check.
 
-Step 3.11 — Dr Khumalo declines the request, with a reason (act-3-operations.md:299)
+Step 3.11 — Dr Khumalo declines the request, with a reason (act-3-operations.md:302)
 Role: Assessor — Dr Fatima Khumalo
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Open Dr Ndlovu's Mini-CEX. Press Decline and send it with the reason left empty. Then send it with the reason "I was
@@ -482,7 +482,7 @@ Expect: The status card reads "Your move. Sipho Ndlovu asked you on …". Declin
   row of its own under it. Her inbox's Waiting for you reads "Inbox clear", and Decided by you ("1 decision") holds the
   request, Declined, decided "… SAST", Credit "—".
 
-Step 3.13 — Dr Botha completes Dr Ndlovu's Mini-CEX (act-3-operations.md:364)
+Step 3.13 — Dr Botha completes Dr Ndlovu's Mini-CEX (act-3-operations.md:366)
 Role: Assessor — Dr Sarah Botha
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, then open Activity inbox from the menu and Dr Ndlovu's re-filed Mini-CEX
@@ -494,7 +494,7 @@ Expect: The inbox lists the re-filed Mini-CEX alone under Waiting for you. She r
   are now acting as Assessor." and then "You are now acting as Committee member." (Step 2.34), and the sidebar ends
   reading "Acting as Committee member".
 
-Step 3.15 — Dr Botha returns the reflection for more detail (act-3-operations.md:411)
+Step 3.15 — Dr Botha returns the reflection for more detail (act-3-operations.md:413)
 Role: Assessor — Dr Sarah Botha
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, then open Dr Ndlovu's reflection from Activity inbox. Return it with the
@@ -510,7 +510,7 @@ Expect: The inbox lists the reflection under Waiting for you, badged Awaiting di
   Ndlovu submits it.", quoting her note, and the page offers Dr Botha nothing. The history's Return row (Awaiting
   discussion → Draft) carries her note.
 
-Step 3.17 — Dr Botha records the discussion (act-3-operations.md:466)
+Step 3.17 — Dr Botha records the discussion (act-3-operations.md:471)
 Role: Assessor — Dr Sarah Botha
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, then open the re-submitted reflection from Activity inbox, write the
@@ -520,7 +520,7 @@ Expect: The result reads "Discussed. Nothing else waits for you.", with Go to Ho
   the exercise credits nothing (D7), and no "counted towards no curriculum requirement" banner shows (T108). Dr Ndlovu's
   progress does not change.
 
-Step 3.24 — Dr Patel completes Dr Mahlangu's DOPS (act-3-operations.md:593)
+Step 3.24 — Dr Patel completes Dr Mahlangu's DOPS (act-3-operations.md:598)
 Role: Assessor — Dr Mohammed Patel
 Route: / → /activities/inbox → /activities/{ActivityId:int}
 Do: From the dashboard, open the inbox, then the DOPS. Rate it 3a with feedback, and complete it.
@@ -534,7 +534,7 @@ Expect: Home (Assessor view): "Waiting for you" is badged "2 waiting", with the 
   The portfolio review stays in his inbox, Home's card is then badged "1 waiting", and Recent decisions lists "DOPS
   (Paediatrics) · PAED-002 · `D−8`", from Nomsa Mahlangu, Completed, dated `D`.
 
-Step 3.26 — The consultants complete Dr Molefe's six (act-3-operations.md:641)
+Step 3.26 — The consultants complete Dr Molefe's six (act-3-operations.md:651)
 Role: Assessor — Dr Thandi Zulu, Dr David Naidoo, Dr Mohammed Patel, Dr Sarah Botha and Dr Fatima Khumalo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Each consultant opens their own requests from Activity inbox and completes them with feedback, rating:
@@ -554,7 +554,7 @@ Expect: Each inbox's Waiting for you holds only that assessor's own requests. Ea
   minimum is rung 5 on PAED-001, PAED-010 and PAED-012. So Dr Patel's rung 4 counts towards the target, but not at the
   minimum.
 
-Step 3.28 — The consultants complete Dr Dlamini's three (act-3-operations.md:683)
+Step 3.28 — The consultants complete Dr Dlamini's three (act-3-operations.md:697)
 Role: Assessor — Dr Thandi Zulu, Dr Sarah Botha and Dr Fatima Khumalo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: Each completes their own from Activity inbox with feedback, rating: Dr Zulu 3b on the CBD, Dr Botha 4 on the CCA,
@@ -566,7 +566,7 @@ Expect: Each rates on the rung picker. Dr Khumalo, who also holds Dr du Plessis'
   Two are at year 3's minimum of rung 4; the CBD at 3b counts towards the target only. Her PAED-004 holds one, at the
   minimum.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:786)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:801)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
@@ -584,7 +584,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   waits for you.", with Go to Home, and Home then reads "Nothing is waiting for you." The Mini-CEX is Completed,
   credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
 
-Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:1126)
+Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:1146)
 Role: Assessor — Dr Fatima Khumalo
 Route: / → /activities/inbox
 Do: Read the dashboard, then follow "Open Activity inbox". Then read the menu.
@@ -600,7 +600,7 @@ Expect:
   - The inbox lights Activity inbox in the menu: Home and Activity inbox, then My data rights. There is no Recent
     activities: the flow 01 pick dropped it, with its placeholder.
 
-Step 5.25 — Dr Naidoo rates it (act-5-graduation.md:597)
+Step 5.25 — Dr Naidoo rates it (act-5-graduation.md:600)
 Role: Assessor — Dr David Naidoo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: He has acted as a Committee member since Step 4.5: choose Switch to Assessor in the sidebar, then open Dr du
@@ -629,7 +629,7 @@ Expect:
     EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
     its history, the completion's Credit reads None.
 
-Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:580)
+Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:579)
 Role: Assessor — Dr Fatima Khumalo (the second browser)
 Route: /activities/inbox → /account/session-ended → /account/login → /activities/inbox
 Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
@@ -637,7 +637,7 @@ Expect: The tab leaves for the sign-in page by a full page load, which says "You
   (T279), an information notice. The old password is refused, and "Invalid email or password." takes the notice's
   place. The new one brings her back to her Activity inbox: the return address survives the refusal.
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:951)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:950)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
@@ -646,7 +646,7 @@ Expect: He lands on his Assessor dashboard. "Waiting for you", in the warning st
   it, "Waiting 8 days", as his inbox lists it, "8 days" over "since `D−8` … SAST" (T297, T335, T350). Recent decisions
   lists the three he decided on `D`. Dr Dlamini's assessor list names him again (checked at A.7.1).
 
-Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1046)
+Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1045)
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: At 390 px, open Dr Dlamini's Mini-CEX from Activity inbox. Rate the supervision at `3b`, write the three
