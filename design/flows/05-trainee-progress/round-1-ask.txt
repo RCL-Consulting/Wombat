@@ -5,7 +5,7 @@ This is flow 05 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   designed and built; these pages sit inside the shell. Structure first, then fidelity: round 1 is 2–3 structural
   variations as wireframes of the registrar's Home and My progress, and I pick one before round 2. My activities and
   the activity page are flow 03's: extend them, do not redesign them. The runbook steps follow below in this same
-  message. The brand mark is at <MARK-URL>: use it, never a drawn disc.
+  message. The brand mark is at /_blob/5e32abd7ee425f64c0db739c82470df3: use it, never a drawn disc.
 
 GOAL: A registrar opens Wombat once a week and learns, in under a minute and on a phone if need be:
   - this semester's observation targets and how many she has met; this academic year's;
