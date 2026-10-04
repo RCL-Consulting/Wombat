@@ -359,24 +359,22 @@ Expect:
   - **Appeals:** "No appeal has been lodged against this review."
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Review #1: Start review offered; "No decision has been recorded
   yet."; "In training year 4 on 2026-10-04", "0 at or above · 0 below · 15 with no decision, of 15 EPAs", exit rule "0
-  of 15 EPAs at their exit level by STAR decision ...", all fifteen Not yet, "For information only. ...". The
-  standing's PAED-001, PAED-010 and PAED-012 names link #trajectory-2/-11/-13 (the others plain); Enter on PAED-001 and
-  a click on PAED-012 each moved the focus to that chart's card and the URL stayed /committee/reviews/1 (A1 holds).
-  MSF: Semester 2 PAED-010 and 012 Covered ("Default MSF #1, closed 2026-10-04"), the rest "None released" / "None
-  released yet". Agenda "15 EPAs for 2026 S2, 12 still to stage or defer", EPA/Window/State/Evidence (no Action),
-  windows 2026 S2 x6 and 2026 x9, twelve Due with "Must be decided ...", three As opportunity allows, 0 items each.
-  Snapshot not frozen. Trajectory: three cards (h4), PAED-001 "Lerato Molefe · 3 ratings in the review window,
-  2026-01-01 to 2026-12-31, from Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below.", axis Jan to
-  Dec, no Today, key "Below the minimum: 4 until 2026-01-13, then 5 (training year 4)" (365-day years, T098), each with
-  its "The ratings, oldest first" table. But at 1280 px the trajectory section sits in the details grid's 317 px column
-  beside Appeals: each card is 267 px, the narrow drawing scrolls in a 217 px region (Jan to Sep in view), and the
-  five-column table is squeezed into 215 px of its 477 ("Against the minimum then" wraps a few letters a line; Activity
-  and Assessor off to the right; `4.15-2`); after a link the focused 1,544 px card is centred, its heading above the
-  viewport (`4.15-3`). Sampling names PAED-010 (1 rating) and PAED-012 (2), not PAED-001, "Not counted: 2 records ...
-  (multi-source feedback, for one)". No pending decisions; "No appeal has been lodged against this review."
-Gap: new: at 1280 px the committee page draws Rating trajectory by EPA in the details grid's 317 px column, so every
-  chart is the narrow drawing clipped in a scroll region and its table is squeezed to 215 px with columns cut off; a
-  standing link then centres the tall card with its heading out of view.
+  of 15 EPAs at their exit level by STAR decision ...", all fifteen Not yet, "For information only. ...". MSF: Semester
+  2 PAED-010 and 012 Covered ("Default MSF #1, closed 2026-10-04"), the rest "None released" / "None released yet".
+  Agenda "15 EPAs for 2026 S2, 12 still to stage or defer", no Action column, windows 2026 S2 x6 and 2026 x9, twelve
+  Due with "Must be decided ...", three As opportunity allows, 0 items each. Snapshot not frozen. Trajectory: PAED-001
+  "Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31, from Thandi Zulu, David Naidoo and
+  Mohammed Patel. 2 at the minimum, 1 below.", axis Jan to Dec, no Today, each with "The ratings, oldest first".
+  Sampling names PAED-010 (1) and PAED-012 (2), not PAED-001; MSF not counted. No pending; no appeal. Re-checked on
+  db4c2d0a at 1280 (the review now Ratified, act 4's state): the section is full-width in the details grid (974 px),
+  each chart card 924 px, its table 872 px with no scrolling; but the figure holds 874 px, under the 900 the wide
+  drawing needs, so each chart is the 326 drawing (the 900 shows from a 1306 px viewport). Standing links target
+  #trajectory-2/-11/-13-h; Enter on PAED-010 focused its h4 at y 390 with "Lerato Molefe · 1 rating in the review
+  window, ... At the minimum." under it in view, URL unchanged (4.15-1, -2, -3 retaken).
+Gap: regression partly fixed in db4c2d0a (the section spans the grid, the table is not squeezed, the link lands on the
+  chart's heading with its summary in view), but still: the chart card is nested in the section's card, so its figure
+  is 874 px at 1280 and every chart draws the 326 drawing instead of the 900. New: the table's scroll container
+  (position: relative) paints over the fixed top bar when scrolled under it (4.15-3: Sign out covered).
 
 ## Phase 4.D — Dr Molefe's sitting
 

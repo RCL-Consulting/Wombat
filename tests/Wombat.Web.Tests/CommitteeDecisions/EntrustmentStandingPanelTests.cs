@@ -503,8 +503,9 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         query.EpaId.Should().BeNull("the committee page charts every EPA");
 
         var card = cut.Find("section#trajectory-1");
-        var section = card.ParentElement!.Closest("section.detail-card")!;
+        var section = card.ParentElement!.Closest("section.list-section")!;
         section.QuerySelector("h3")!.TextContent.Should().Be("Rating trajectory by EPA");
+        section.ClassList.Should().NotContain("detail-card", "the charts are cards; their section is not a card around them");
         section.ClassList.Should().Contain("full-width",
             "the charts span the details grid, never its narrow column (the T355 replay's 4.15: a 267 px card at 1280)");
         Text(card.QuerySelector("h4")!.TextContent).Should().Be("PAED-001 — PAED-001 title");

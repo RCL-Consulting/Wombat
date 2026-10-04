@@ -2165,7 +2165,8 @@ textarea[aria-invalid="true"] {
 /* A grid item's default min-width is its content's, so a wide table would stretch the column past a narrow
    viewport and scroll the whole page; at 0 the card keeps the column's width and the table scrolls in its own
    container (T166, 390px). */
-.details-grid > .detail-card {
+.details-grid > .detail-card,
+.details-grid > .list-section {
   min-width: 0;
 }
 
