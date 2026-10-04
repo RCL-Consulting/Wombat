@@ -1672,25 +1672,25 @@ Razor drops a space standing alone before an expression and ran the sentences to
 **The trajectory** (T355, flow 05; Q5, E1, E2, R4; notes 10, 11, 13). `Components/Shared/TrajectoryChart.razor` is the
 one rendering of `GetEpaTrajectoryForTraineeQuery`, changed once for the EPA page and the committee's review page.
 
-- **Drawn twice, never scaled.** Both drawings are in the markup, 900px (`.trajectory-chart--wide`) and 326px
+- **Drawn twice, never scaled.** Both drawings are in the markup, 900px (`.trajectory-chart--wide`) and 322px
   (`--narrow`), each at its own fixed size (`TrajectoryDrawing`, `TrajectoryFrame`). The card, not the viewport, chooses:
   `.trajectory-figure` is a container (`container-type: inline-size`) and `@container (min-width: 900px)` shows the 900
-  drawing, the 326 below it, with no script. The EPA page's card holds 900px only from a viewport of about 1254px, so at
-  1100 it draws 326. `.trajectory-figure` is also a named, focusable scroll region (`role="region"`, "Rating chart for
-  PAED-001", `tabindex="0"`), the floor for a card narrower than 326px, such as the committee's nested card at 390.
-- **One window on a real time axis**, month ticks, every month named at 900 and every other at 326; every semester 2
+  drawing, the 322 below it, with no script. The EPA page's card holds 900px only from a viewport of about 1254px, so at
+  1100 it draws 322. `.trajectory-figure` is also a named, focusable scroll region (`role="region"`, "Rating chart for
+  PAED-001", `tabindex="0"`), the floor for a card narrower than 322px.
+- **One window on a real time axis**, month ticks, every month named at 900 and every other at 322; every semester 2
   (July to December) banded; each semester named. A window longer than about 14 months (a pre-graduation review's) names
-  no month or semester: its axis names quarters at 900 and years at 326, the years stand above the plot where the axis
+  no month or semester: its axis names quarters at 900 and years at 322, the years stand above the plot where the axis
   names quarters, and no two names in a row overlap (T355, build review G1). The EPA page reads the academic year
   containing today (or the one the programme ended in) and draws a "Today" rule; the committee page reads the review's
   window and draws none (decision D2).
 - **The ladder** top to bottom, a gridline through each rung (decorative); the area below the training year's minimum
   shaded (warning-bg, decorative) and edged by a stepped dashed line in warning-color that steps where the training year
-  changed; "Minimum 5" ("Min 5" at 326) and "Exit 5" in text-color, never in warning-color; the exit level a 2.5px
+  changed; "Minimum 5" ("Min 5" at 322) and "Exit 5" in text-color, never in warning-color; the exit level a 2.5px
   primary-color line; a rating on another scale a hollow ring in its own lane under the rungs ("Other scale"), left out of
   the line. Points closer than a dot are set a dot apart, in date order, and a run is set back from the plot's right
   edge; a minimum step off the drawn ladder draws no minimum (R5, R6). No minimum before the programme starts (R2).
-  Rungs and months 13px (12px at 326), nothing under 12px.
+  Rungs and months 13px (12px at 322), nothing under 12px.
 - **The key** ("How to read the chart") names each mark; **the table is always visible** (`table.trajectory-table`,
   stacked below 641px, its caption "The ratings, oldest first"): Encounter as each row's header, Rating ("Independent on
   O-R Scale" for another ladder), Against the minimum then (computed live with the comparer credit uses, at the training

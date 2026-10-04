@@ -9,7 +9,7 @@ namespace Wombat.Web.Components.Shared;
 
 /// <summary>
 /// The two fixed sizes a rating trajectory is drawn at (T355, Q5, E1; R3-C-Trajectory): 900px wide where its card holds
-/// it, 326px below that. Never scaled: each has its own geometry, so a rung and a month stay legible at both.
+/// it, 322px below that. Never scaled: each has its own geometry, so a rung and a month stay legible at both.
 /// </summary>
 /// <param name="Width">The drawing's width, and its viewBox's.</param>
 /// <param name="Left">The plot's left edge; the rungs' names stand to its left.</param>
@@ -20,10 +20,10 @@ namespace Wombat.Web.Components.Shared;
 /// <param name="LaneDrop">From the lowest rung's edge to the other scale's lane.</param>
 /// <param name="AxisDrop">From the lowest rung's edge to the time axis.</param>
 /// <param name="MonthDrop">From the axis to the months' baseline.</param>
-/// <param name="FontSize">The labels' size, for placing them (the stylesheet sets it: 13px, 12px at 326).</param>
-/// <param name="EveryOtherMonth">Whether only every other month is named (the 326 drawing).</param>
-/// <param name="MinimumWord">"Minimum" beside the edge at 900; "Min" at 326.</param>
-/// <param name="LaneWord">The lane's name: "Other scale" at 900; "Other" at 326.</param>
+/// <param name="FontSize">The labels' size, for placing them (the stylesheet sets it: 13px, 12px at 322).</param>
+/// <param name="EveryOtherMonth">Whether only every other month is named (the 322 drawing).</param>
+/// <param name="MinimumWord">"Minimum" beside the edge at 900; "Min" at 322.</param>
+/// <param name="LaneWord">The lane's name: "Other scale" at 900; "Other" at 322.</param>
 public sealed record TrajectoryFrame(
     int Width,
     int Left,
@@ -45,8 +45,8 @@ public sealed record TrajectoryFrame(
     /// </summary>
     public static readonly TrajectoryFrame Wide = new(900, 84, 804, 34, 40, 7, 26, 50, 20, 13, false, "Minimum", "Other scale");
 
-    /// <summary>The 326px drawing (R3-C-Trajectory's 390 board).</summary>
-    public static readonly TrajectoryFrame Narrow = new(326, 44, 268, 30, 32, 6, 22, 42, 18, 12, true, "Min", "Other");
+    /// <summary>The 322px drawing (R3-C-Trajectory's 390 board).</summary>
+    public static readonly TrajectoryFrame Narrow = new(322, 44, 268, 30, 32, 6, 22, 42, 18, 12, true, "Min", "Other");
 }
 
 /// <summary>
@@ -56,7 +56,7 @@ public sealed record TrajectoryFrame(
 /// <remarks>
 /// <list type="bullet">
 /// <item><b>A real time axis</b> over the window read (the EPA page's academic year, the committee's review window, D2), a
-/// tick at each month's start, its name in the middle of its month (every other month at 326). Semester 2 (July to
+/// tick at each month's start, its name in the middle of its month (every other month at 322). Semester 2 (July to
 /// December: December counts into it, D40) is banded; each semester is named at its start. A window longer than about 14
 /// months (a pre-graduation review's, years long) has no room for a month or a semester's name: its axis is named by
 /// quarter, or by year where a quarter's name will not fit, every Semester 2 is still banded, and the years are named
@@ -305,7 +305,7 @@ public sealed class TrajectoryDrawing
 
     /// <summary>
     /// What the axis names in this frame (G1): months for a window of about a year; else quarters where a quarter's span
-    /// holds its name ("Jan"), as at 900 over four years; else years, as at 326.
+    /// holds its name ("Jan"), as at 900 over four years; else years, as at 322.
     /// </summary>
     public static AxisUnit AxisUnitFor(TrajectoryFrame frame, int days)
     {

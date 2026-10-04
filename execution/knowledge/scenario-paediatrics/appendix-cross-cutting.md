@@ -1087,7 +1087,7 @@ Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page fr
 Expect: The dashboard's cards stack, each Furthest short row's figure under its name. On My progress, This period, the
   index and the Entrustment panel stack: each EPA's link is a 44 px block, every cell but the link labelled by its
   column, and each Latest rating link in the panel is 44 px tall (T328); nothing scrolls sideways. The EPA's page draws
-  its chart at 326 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
+  its chart at 322 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
   but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): At 390 px. The bar reads "Acting as Trainee"; the menu's eight
@@ -1152,9 +1152,9 @@ Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
 Expect: The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
-  drawn at 326 px, never scaled, its rungs and months 12 px: in the review's nested card it scrolls sideways in its own
-  named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing else scrolls
-  sideways (T166, T355).
+  a card of its own (its section is not a card around it), drawn at 322 px, never scaled, its rungs and months 12 px,
+  and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
+  scrolls sideways (T166, T355).
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): At 390 px. The bar's "Acting as Committee member" wraps and the
   bar grows to 59 px; the menu's head adds "Switch to Assessor". Committee reviews: the table (878 px) scrolls in its
   container. Review 7 (Dr Molefe's pre-graduation review), trail one 44 px "Committee reviews" link: cards at 16 to

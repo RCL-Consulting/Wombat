@@ -525,7 +525,7 @@ Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page fr
 Expect: The dashboard's cards stack, each Furthest short row's figure under its name. On My progress, This period, the
   index and the Entrustment panel stack: each EPA's link is a 44 px block, every cell but the link labelled by its
   column, and each Latest rating link in the panel is 44 px tall (T328); nothing scrolls sideways. The EPA's page draws
-  its chart at 326 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
+  its chart at 322 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
   but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 

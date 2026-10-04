@@ -777,7 +777,8 @@ Expect:
     rating on it, the one from Step 6.18 included (T255). Activities on this EPA lists the Mini-CEX, "PAED-012 (no
     longer in use)" under its name, Credit None.
   - **My activities.** The Mini-CEX carries "PAED-012 (no longer in use)" under its name, and its Credit reads None, as
-    text. Its status card reads "Rated 4. Its credit to PAED-012 waits while the EPA is paused."
+    text. Its status card reads "Rated 4. Its credit to PAED-012 waits while the EPA is paused.", with no count, and its
+    Open My progress lands on PAED-012's page, named "Open My progress at PAED-012" (T355, build review D1).
   - **The picker.** It offers eight EPAs, without PAED-012.
 
 Step 6.23 — Dr Kruger restores PAED-012 (act-6-catalogue.md)

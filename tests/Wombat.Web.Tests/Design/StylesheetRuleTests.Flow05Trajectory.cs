@@ -16,7 +16,7 @@ public sealed partial class StylesheetRuleTests
     {
         var css = Stylesheet.AppCss();
 
-        // E1: the figure is the container; below 900px of it the 326 drawing shows, from 900px the 900 drawing.
+        // E1: the figure is the container; below 900px of it the 322 drawing shows, from 900px the 900 drawing.
         css.Cascaded(".trajectory-figure")["container-type"].Should().Be("inline-size");
         css.Cascaded(".trajectory-figure .trajectory-chart--wide")["display"].Should().Be("none");
         css.Cascaded(".trajectory-figure .trajectory-chart--narrow")["display"].Should().Be("block");

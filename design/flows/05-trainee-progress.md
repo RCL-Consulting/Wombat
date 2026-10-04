@@ -510,7 +510,7 @@ describes the product as it is today, after flow 04 (re-synced 2026-10-03). `D` 
 January on or before it.
 
 ```text
-Step 2.39 — Dr Molefe, final-year registrar (act-2-onboarding.md:684)
+Step 2.39 — Dr Molefe, final-year registrar (act-2-onboarding.md:688)
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → / → /portfolio/progress
 Do: Sign in, read the dashboard and nav, and open My progress.
@@ -530,7 +530,7 @@ Expect: Home's first card, Your targets, reads "Training year 4 — it sets the 
   "Each semester · 10 EPAs" and "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; Entrustment against
   Annexure A reads "0 at or above · 0 below · 15 with no decision, of 15 EPAs".
 
-Step 2.40 — The other registrars' training years (act-2-onboarding.md:712)
+Step 2.40 — The other registrars' training years (act-2-onboarding.md:722)
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
 Route: /account/login → / → /portfolio/progress
 Do: Each signs in and opens My progress.
@@ -553,7 +553,7 @@ Expect: Needs you is gone. Under All activities the row reads Who has it now "Do
   progress lands on PAED-001's page, `/portfolio/progress/{EpaId}`, whose h1, "PAED-001 — Providing paediatric emergency
   care to children", takes the focus; the menu's My progress is lit.
 
-Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target (act-3-operations.md:229)
+Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target (act-3-operations.md:233)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Open My progress from the menu, then PAED-001 from its index.
@@ -572,7 +572,7 @@ Expect: My progress's subtitle reads "Training year 3 · Semester 2, 2026". The 
   At the minimum.", its chart marking Today, and its table one row: `D−10`, 4, "At or above (4, training year 3)", the
   Mini-CEX, David Naidoo. Activities on this EPA lists the Mini-CEX, Completed, Credit "1 item".
 
-Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback (act-3-operations.md:1093)
+Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback (act-3-operations.md:1104)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Open My activities, then My progress, then PAED-001, PAED-010 and PAED-012 from its index.
@@ -590,7 +590,7 @@ Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback
   "MSF in Semester 2, 2026: covered by a released campaign that closed on `D`." first among their MSF lines, chart their
   ratings, and say under the chart "Multi-source feedback is not plotted.": no chart plots an MSF point (D36).
 
-Step 3.50 — Dr Dlamini's dashboard (act-3-operations.md:1139)
+Step 3.50 — Dr Dlamini's dashboard (act-3-operations.md:1155)
 Role: Trainee — Dr Anele Dlamini
 Route: /
 Do: Open the dashboard and read each card.
@@ -607,7 +607,7 @@ Expect:
     with Open My authorisations. The header offers "Log an activity" (T335: the Actions card is gone), and there is no
     Upcoming deadlines card (T355).
 
-Step 4.40 — Dr Molefe reads her progress against Annexure A (act-4-annual-review.md:867)
+Step 4.40 — Dr Molefe reads her progress against Annexure A (act-4-annual-review.md:879)
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/progress
 Do: Open My progress and read its index's STAR column and "Entrustment against Annexure A".
@@ -621,7 +621,7 @@ Expect: The index's STAR column, headed "STAR against training year 4", reads "A
   Each EPA's name links to its page, and each Latest rating, "4 · Encounter <date>" and the like, is a link to its
   activity (T355). The exit rule says it gates nothing. The page reads the same table as the committee's (T166).
 
-Step 5.15 — Dr Molefe leaves My progress open (act-5-graduation.md:370)
+Step 5.15 — Dr Molefe leaves My progress open (act-5-graduation.md:376)
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → /account/login/submit → / → /portfolio/progress
 Do: In her own browser, sign in and open My progress. Leave the tab open through Step 5.19.
@@ -634,7 +634,7 @@ Expect: The page shows her programme as still running:
   - the period before each window, and her rating trajectories, on each EPA's page (T355), not on My progress.
   Nothing says that her programme has ended.
 
-Step 5.26 — Dr du Plessis sees it counted (act-5-graduation.md:605)
+Step 5.26 — Dr du Plessis sees it counted (act-5-graduation.md:619)
 Role: Trainee — Dr Pieter du Plessis
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Open My progress, then PAED-002 from its index, and read its count for this period.
@@ -642,7 +642,7 @@ Expect: This period's count for PAED-002 includes the `D−1` Mini-CEX: its row 
   the same count, with "Last encounter `D−1`" and "Training year 2: level 3b, the minimum each encounter is judged
   against and your STAR's target." Record the count as n.
 
-Step 6.15 — Dr Dlamini reads her progress before the pause (act-6-catalogue.md:347)
+Step 6.15 — Dr Dlamini reads her progress before the pause (act-6-catalogue.md:353)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Read the page, then open PAED-012's row. Note these, for Steps 6.19 and 6.24:
@@ -655,7 +655,7 @@ Expect: PAED-012 is a row of "Each semester · 10 EPAs". PAED-006's row carries 
   count at the minimum level when observed (no such line while `n` is 0), and "Training year 3: level …, the minimum
   each encounter is judged against and your STAR's target."
 
-Step 6.19 — Dr Dlamini during the pause (act-6-catalogue.md:436)
+Step 6.19 — Dr Dlamini during the pause (act-6-catalogue.md:444)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /activities/{ActivityId:int} →
   /activities/new → /activities/new?type=mini_cex_cpsa
@@ -673,10 +673,11 @@ Expect:
     rating on it, the one from Step 6.18 included (T255). Activities on this EPA lists the Mini-CEX, "PAED-012 (no
     longer in use)" under its name, Credit None.
   - **My activities.** The Mini-CEX carries "PAED-012 (no longer in use)" under its name, and its Credit reads None, as
-    text. Its status card reads "Rated 4. Its credit to PAED-012 waits while the EPA is paused."
+    text. Its status card reads "Rated 4. Its credit to PAED-012 waits while the EPA is paused.", with no count, and its
+    Open My progress lands on PAED-012's page, named "Open My progress at PAED-012" (T355, build review D1).
   - **The picker.** It offers eight EPAs, without PAED-012.
 
-Step 6.24 — Dr Dlamini's credit is counted (act-6-catalogue.md:532)
+Step 6.24 — Dr Dlamini's credit is counted (act-6-catalogue.md:550)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /activities/{ActivityId:int}
 Do: Read her progress and PAED-012's page, then her activities and the Mini-CEX.
@@ -691,7 +692,7 @@ Expect:
     0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged through the
     pause (by SQL, or on her record in Step 6.40).
 
-Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:611)
+Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:632)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/new →
   /activities/new?type=direct_observation_cpsa
@@ -705,14 +706,14 @@ Expect: A KGK-001 row appears first in "Once a year · 6 EPAs": "KGK-001 — Run
   warned. Its level reads "Minimum 3a", and Entrustment "No STAR yet." and "Not in the College's exit rule." The Direct
   Observation picker offers ten EPAs, KGK-001 among them.
 
-Step 6.35 — Dr Ndlovu notes his figures before he moves (act-6-catalogue.md:770)
+Step 6.35 — Dr Ndlovu notes his figures before he moves (act-6-catalogue.md:796)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress
 Do: Read the page, and note each row's count for its current period.
 Expect: Sixteen rows in Your EPAs, "Each semester · 10 EPAs" and "Once a year · 6 EPAs": the 15 national EPAs of 11.1,
   and KGK-001 among the six. PAED-016 is not among them.
 
-Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:804)
+Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:829)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
@@ -724,7 +725,7 @@ Expect:
     PAED-016 and KGK-001 read "0 of 1 in 2026".
   - **The picker.** The Mini-CEX picker offers ten EPAs, PAED-016 among them.
 
-Step 6.39 — Dr Ndlovu's evidence counts on 11.2 (act-6-catalogue.md:849)
+Step 6.39 — Dr Ndlovu's evidence counts on 11.2 (act-6-catalogue.md:875)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress
 Do: Read the page.
@@ -733,7 +734,7 @@ Expect: Each of the 15 EPAs carried over from 11.1 reads the count he noted in S
   target of 2 per academic year. The rows are "Each semester · 10 EPAs" and "Once a year · 7 EPAs", and This period's
   yearly figure is "… of 7" over "EPAs met in 2026".
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1080)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1082)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data
@@ -741,7 +742,7 @@ Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page fr
 Expect: The dashboard's cards stack, each Furthest short row's figure under its name. On My progress, This period, the
   index and the Entrustment panel stack: each EPA's link is a 44 px block, every cell but the link labelled by its
   column, and each Latest rating link in the panel is 44 px tall (T328); nothing scrolls sideways. The EPA's page draws
-  its chart at 326 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
+  its chart at 322 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
   but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 ```

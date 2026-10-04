@@ -39,8 +39,17 @@ public sealed class TrajectoryChartTests : TestContext
         wide.GetAttribute("width").Should().Be("900");
         wide.GetAttribute("viewBox").Should().StartWith("0 0 900 ");
         var narrow = region.QuerySelector("svg.trajectory-chart.trajectory-chart--sized.trajectory-chart--narrow")!;
-        narrow.GetAttribute("width").Should().Be("326");
-        narrow.GetAttribute("viewBox").Should().StartWith("0 0 326 ");
+        narrow.GetAttribute("width").Should().Be("322");
+        narrow.GetAttribute("viewBox").Should().StartWith("0 0 322 ");
+    }
+
+    [Fact]
+    public void ThePhoneDrawing_FitsTheFigureOfACardAt390_SoItsRegionNeverScrolls()
+    {
+        // The T355 replay's A.7.3: at 390 a card's figure is 324px (390, less the 16px gutters, the card's 16px padding and
+        // its edges). The phone drawing was 326, so the focusable region scrolled 2px sideways. It is 322 now; the region
+        // stays the floor only for a card narrower than that.
+        TrajectoryFrame.Narrow.Width.Should().BeLessThanOrEqualTo(324);
     }
 
     [Fact]
@@ -75,7 +84,7 @@ public sealed class TrajectoryChartTests : TestContext
     }
 
     [Fact]
-    public void TheTimeAxis_NamesEveryMonth_At900_AndEveryOtherMonth_At326()
+    public void TheTimeAxis_NamesEveryMonth_At900_AndEveryOtherMonth_At322()
     {
         var cut = Render(MolefePaed001());
 
@@ -97,7 +106,7 @@ public sealed class TrajectoryChartTests : TestContext
 
     /// <summary>
     /// T355, build review G1: the committee's pre-graduation review reads four years (act 5's review #7, 2023-01-15 to
-    /// 2026-12-31). Its axis names quarters at 900 and years at 326, every Semester 2 is banded, no "Semester n, yyyy" is
+    /// 2026-12-31). Its axis names quarters at 900 and years at 322, every Semester 2 is banded, no "Semester n, yyyy" is
     /// named, the years stand above the plot where the axis names quarters, and no two names in a row overlap.
     /// </summary>
     [Fact]
@@ -167,7 +176,7 @@ public sealed class TrajectoryChartTests : TestContext
     public void ARunOfRatingsInTheLastDays_IsSetBackFromThePlotsRightEdge()
     {
         // T355, build review R6: six ratings on 29 to 31 December are set a dot apart; pushed right, the run would pass the
-        // plot's edge (804 at 900, 268 at 326) and sit over "Exit 5". It is set back from it, each still a dot apart.
+        // plot's edge (804 at 900, 268 at 322) and sit over "Exit 5". It is set back from it, each still a dot apart.
         var points = Enumerable.Range(0, 6)
             .Select(index => Point(40 + index, new DateOnly(2026, 12, 29 + (index / 2)), 6, "5", TrajectoryAgainstMinimum.AtOrAbove))
             .ToArray();

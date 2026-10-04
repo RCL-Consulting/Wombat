@@ -596,9 +596,9 @@ Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
 Expect: The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
-  drawn at 326 px, never scaled, its rungs and months 12 px: in the review's nested card it scrolls sideways in its own
-  named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing else scrolls
-  sideways (T166, T355).
+  a card of its own (its section is not a card around it), drawn at 322 px, never scaled, its rungs and months 12 px,
+  and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
+  scrolls sideways (T166, T355).
 
 ### Step A.7.13 — Dr Zulu hears a populated review with a screen reader
 Role: CommitteeMember — Dr Thandi Zulu
