@@ -1,0 +1,464 @@
+ROUND 1 PICKED: V1, "EPA pages: an index, and a page per EPA", borrowing V2's "Credited lately" widened to the
+decisions made on her requests, with six corrections. Round 2: V1 at full fidelity, every state at 1280 and 390.
+Drop V2's and V3's boards from round 2 (keep them, and Main, on round 1's page). The brand mark is at
+/_blob/5e32abd7ee425f64c0db739c82470df3: use it, never a drawn disc.
+
+DECISIONS (the operator's, 2026-10-04; one sentence each):
+  Pick: V1 as reviewed. Home is Your targets, Needs you, Recent decisions and My authorisations; My progress is This
+    period, the EPA index, then the committee's standing panel whole; each EPA has its own page.
+  Q1: This period leads, then the index (count, deadline, cadence, one STAR verdict column), then
+    EntrustmentStandingPanel whole; one place per EPA: its own page, addressed by id (C2).
+  Q2: Home holds the training year, both figures, the five furthest short (each a link to its EPA page, with its date),
+    Needs you, Recent decisions (B1) and My authorisations (the summary and the expiring or below rows). No MSF on
+    Home. Recent activities becomes Recent decisions.
+  Q3: Upcoming deadlines is removed. Its real dates live on the rows: the window's end on each short EPA, and a STAR's
+    expiry on My authorisations (T298).
+  Q4: every figure names its window; the decision cadence is its own label ("Decided each semester", "Decided once a
+    year", "Decided as opportunity allows", or no label); the level names the training year, said once per EPA (C6e).
+  Q5: the trajectory as round 1 drew it (Trajectory-1280/-390): its own size at each width, a time axis, the stepped
+    minimum, the exit line, an other-scale lane, a visible table with Activity and Assessor; one point keeps the
+    year's axis and draws no line; on the committee page the review's window and no "Today" (flow 07 places it).
+  Q6: paused, "(no longer in use)" after the name on a row, an h1 and a chart heading; KGK-001, a neutral badge
+    "Kgosi Kgari Teaching Hospital's own"; PAED-016 and PAED-011 carry NO mark (Q9).
+  Q7: "Open My progress" lands on the EPA's page, whose h1 takes the focus; the card adds the count (C5).
+  Q8: NO menu change. My progress stays a personal link under the rule, with My data rights; My authorisations keeps
+    no menu item and is reached from Home's card, the EPA page and each STAR cell. The Trainee's menu stays Home, Log
+    an activity, My activities, MSF reports, My committee reviews, Export portfolio; rule; My progress, My data
+    rights. Round 1's "moved" outline on My progress goes.
+  Q9: only the rebuilt state after a version move. T304 lands before or with flow 05's build. No move notice, no
+    "Your counts carried over", no move date, no "New in curriculum 11.2", no "Target changed in 11.2".
+  O1: no scheduled-review date for the registrar anywhere (she sees a review only once it is ratified).
+  O2: KGK-001 reads as today in periods before it was added: "2025 academic year: 0 of 1, 1 short".
+  R1–R5: the DESIGN.md rule text, for the Spec board (below).
+
+THE BORROWING (B1): Home's "Recent decisions" card (it replaces Recent activities; round 1's V2 called it Credited
+  lately). It is the one Home surface where a registrar learns of a decline: no mail announces one (T320) and Needs
+  you leaves it out (T297). It lists her requests that someone else last moved and that are finished or have no move
+  left: Completed, Discussed, Signed off and Declined. Newest decision first, five rows, no footer link (Needs you's
+  "Open My activities" stays Home's one way to My activities). Each row: its link named per row ("Type · EPA ·
+  date", "to <assessor>" under it, flow 03's ActivityLink), the decision's badge and its day; then one line by kind:
+  Completed with credit, the EPA's count now ("PAED-001: 3 of 3 this semester, met."); Completed on a paused EPA,
+  "Its credit to PAED-012 waits while the EPA is paused."; Discussed or Signed off, "Credits nothing."; Declined,
+  the link "File it again, to someone else" (its accessible name adds the activity's name). MSF records are not her
+  requests and are not listed. Empty: "No decisions yet." Draw it with flow 04's Recent decisions classes
+  (.decided-list, .decided-row, .decided-meta, .decided-date) and say so on the Spec.
+
+CORRECTIONS TO V1 (the review's; round 2's review checks each by number):
+  C1. Keep EntrustmentStandingPanel WHOLE on My progress, under the index (T166, Step 4.40: "the same table as the
+      committee's"), with its opening sentence and its Latest rating column. The index keeps one verdict column,
+      "STAR against training year N", read from the same standing DTO (EpaStandingDto.YearStatus): the badge (At or
+      above, Below, No decision) and the level; it repeats nothing else of the panel. Its separate "Exit level" column
+      goes. The panel's fixes are made once, for both pages: stacked below 641 px (no sideways scroll), 44 px rating
+      links at 390 (T328), ISO dates in place of "3 Oct 2026", and the EPA name linking to its EPA page when the
+      reader is the trainee herself (on the committee page it targets that page's chart: a parameter).
+  C2. Address the EPA page by EPA id, never by code: /portfolio/progress/{EpaId:int}. An EPA code is unique only in its
+      namespace (national, or one institution's). The same address serves "Open My progress", Home's rows, the index
+      and My activities' Credit link. In the replay the EPA id is the code's number plus one: PAED-006 is 7 (Step
+      6.14), PAED-012 is 13 (Step 6.17), KGK-001 is 17 (Step 6.25), PAED-016 is 18 (Step 6.28); so PAED-001 is
+      /portfolio/progress/2 and PAED-010 is /portfolio/progress/11. An unknown or out-of-scope id is "not found".
+      The owner table gains a row: the EPA page is owned by My progress (it lights; trail Home › My progress ›
+      PAED-010). Its title is the h1's words, "PAED-010 — Leading and operating within a clinical team · Wombat".
+  C3. The EPA page's evidence is read from the activity records, not from the trajectory: a section "Activities on
+      this EPA", every finished activity of hers stamped with the EPA, newest encounter first, in My activities' row
+      words (the link, "to <assessor>", State's badge, Credit "1 item" / "None" / "—"): the rated ones, the credited
+      ones and the MSF that covers the EPA. The trajectory's table stays, as the chart's equivalent (ratings only,
+      oldest first). Round 1's "the chart's table doubles as the evidence" goes.
+  C4. The version move draws only the rebuilt state (Q9). Remove the notice, "carried over", the move date and both
+      11.2 badges from every board.
+  C5. The completed status card changes only by its count, read live when the page loads, in a sentence of its own
+      after flow 03's: "Rated 4. Credited 1 item to PAED-001. PAED-001: 1 of 3 this semester." It names the
+      activity's own window, so an older encounter reads "PAED-001, Semester 1, 2026: 3 of 3, met." It says the count
+      now, not the count this activity made. "Open My progress" keeps its words and place; its href is the EPA page
+      and its accessible name "Open My progress at PAED-001". The paused sentence and the CreditsNothing (MSF) path
+      stay flow 03's, word for word: "Rated 4. Its credit to PAED-012 waits while the EPA is paused." (Step 6.18).
+      Round 1's "Credited 1 item to PAED-012, which is no longer in use; …" and "Recorded. Multi-source feedback
+      counts towards no target." go. My activities' rows change only the Credit cell (C7).
+  C6. Fix the words that misstate the rules:
+      a. December: today's words (MyProgress.razor:87–88), with ISO dates: "The 2026 academic year ended on
+         2026-11-30. Encounters observed in December still count towards semester 2, 2026 and your 2026 yearly
+         targets. Semester 1, 2027 starts on 2027-01-01." Not "Yearly targets start again on 2027-01-15". In December a
+         short row reads "3 more; encounters in December still count towards Semester 2, 2026." (MyProgress.razor:470),
+         on the index, Home's rows and the EPA page alike, never "3 more by 2026-11-30".
+      b. Programme not started: "Your programme starts on 2027-01-15." then today's first-window sentences. Drop "You
+         can log activities before then; they count from it.": a date before the programme start is refused for any
+         type that can credit (Step 3.9).
+      c. KGK-001 has NO decision cadence (Step 6.26): no "Decided …" label at all. Round 1's Marks said "decided once a
+         year".
+      d. PAED-008, 009 and 013: "Decided as opportunity allows" (Act 4's starting state; the seed's
+         decisionOpportunistic), where V1-Progress's "all decided once a year" overwrote them.
+      e. The level is said once per EPA: "Training year 4: level 5, the minimum each encounter is judged against and
+         your STAR's target." Not "Minimum now 5 (training year 4)" beside "Training year 4's target is 5".
+      f. MSF in MsfCoverageText's words at 390 as at 1280, never shortened: "MSF in Semester 2, 2026: covered by a
+         released campaign that closed on 2026-10-03." / "… no released campaign covering this EPA has closed yet."
+         and This period's "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on
+         its own and counts towards no target." Said once on My progress (This period) and once per EPA page; never
+         on a row of the index and never on Home.
+  C7. My activities: only the Credit cell changes. "1 item" becomes a link to the EPA page, its visible text "1 item"
+      and its accessible name "1 item to PAED-001, in My progress"; 44 px at 390. "—" (MSF, D8) and "None" (paused)
+      stay plain text. The MSF rows get NO second line: round 1's "campaign closed" goes (flow 03's rows have none).
+  C8. Accessibility (the review's notes): the index tables have a caption and row headers (th scope="row" on the EPA);
+      the index's stacked link and every activity link on the EPA page are 44 px blocks at 390; the chart's SVG is
+      named for what it adds ("Chart of the 3 ratings in the table below.") and never repeats the section's h2;
+      progress bars keep "n of m" in words beside them; every link is named for its EPA or activity (T280); the load
+      error, Try again and its focus follow My activities (StatePanel, FocusAfterRetry).
+
+NEW IN THIS ASK (the canvas did not draw these; round 2's review checks them too):
+  N1. Home's STAR card is titled "My authorisations", the page's own name, with "Open My authorisations" at its foot
+      (one name for the card and its page). Round 1's "Your STARs" goes.
+  N2. This period holds two figures, the training year line and MSF coverage. Round 1's third figure ("2 of 15 EPAs at
+      or above …, by STAR") and its exit-rule line go: the panel says both, once, directly below (C1).
+  N3. Home and My progress say each figure in the same words, the built ones: "1 of 10" over "EPAs met this
+      semester", "0 of 5" over "EPAs met in 2026"; a row "0 of 3 this semester" or "0 of 1 in 2026". Home's "Semester
+      2, 2026 · July to November" line goes: the header names the semester.
+  N4. The training year on Home (T306), worded as on My progress: "Training year 3 — it sets the minimum level each
+      encounter is judged against."
+  N5. The index groups: "Each semester", "Once a year" and, during a pause only, "No longer in use", each headed with
+      its count ("Each semester · 10 EPAs"); code order inside each, as the committee's table.
+  N6. The "No longer in use" row's sentence: "Paused by the College. It is not a target while it is paused. Its
+      ratings and the credit it had earned are kept, and what is completed on it meanwhile is credited if it is
+      restored." (D48). The paused EPA's page says the same under its h1, as an info Alert, and its Entrustment section
+      reads "While PAED-012 is paused it is not in your standing against Annexure A." (the standing reads items in
+      force only, Step 6.21). No count, no bar.
+
+FACTS CORRECTED (round 1 invented or misstated these; the true values, from the T350 replay's Actual lines, where D is
+  2026-10-03 in every act):
+  F1. Lerato Molefe's PAED-010 has ONE rating: Direct Observation (Paediatrics) · PAED-010 · 2026-09-29, Thandi Zulu,
+      rung 5, at the minimum (Steps 3.25, 3.26). Round 1's "Mini-CEX · 2026-03-12, Fatima Khumalo, 3b", "2026-05-20,
+      Mohammed Patel, 4" and "Direct Observation · 2026-09-24, David Naidoo, 4" are invented; a Mini-CEX cannot be
+      filed on PAED-010 (only the Direct Observation picker offers it, Step 3.25). So: "1 of 3 this semester", "At the
+      minimum level when observed: 1 of 1", "Last encounter 2026-09-29", "Semester 1, 2026: 0 of 3, 3 short"
+      (every Act 3 encounter is dated D−20 to D−1, Act 4's starting state), and the heading "1 rating so far, from
+      Thandi Zulu. At the minimum."
+  F2. The MSF campaign closed on 2026-10-03, not 2026-09-30; both MSF rows are dated 2026-10-03 (Step 3.48).
+  F3. Molefe's six completions, newest encounter first (Steps 3.25, 3.26): Direct Observation (Paediatrics) ·
+      PAED-010 · 2026-09-29, Thandi Zulu, 5; Case-Based Discussion (Paediatrics) · PAED-012 · 2026-09-28, Fatima
+      Khumalo, 5; Mini-CEX (Paediatrics) · PAED-012 · 2026-09-26, Sarah Botha, 5; DOPS (Paediatrics) · PAED-001 ·
+      2026-09-24, Mohammed Patel, 4; Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-22, David Naidoo, 5;
+      Mini-CEX (Paediatrics) · PAED-001 · 2026-09-21, Thandi Zulu, 5. Each Completed, credit "1 item". PAED-001: 3 of
+      3, 2 at the minimum (5); PAED-012: 2 of 3, 2 at it; PAED-010: 1 of 3, 1 at it (Step 3.26's SQL).
+  F4. Molefe's latest ratings (Step 4.40's table): PAED-001 "4 · Encounter 2026-09-24", Direct observation, below the
+      target (Dr Patel's DOPS), not "5 · 2026-09-26 Mini-CEX"; PAED-010 "5 · Encounter 2026-09-29"; PAED-012 "5 ·
+      Encounter 2026-09-28" (a CBD: Conversation), not "—". Her STARs, all issued 2026-10-03 (Step 4.39): PAED-001 5
+      and PAED-012 5, no expiry, At or above, exit Reached; PAED-010 4, expires 2026-10-23, Below the target of 5,
+      Not yet. "You are in training year 4 on 2026-10-03." (Step 4.40), not 2026-10-04.
+  F5. Anele Dlamini's paused PAED-012 has ONE rating: Mini-CEX (Paediatrics) · PAED-012 · 2026-10-03, to Mohammed
+      Patel, rung 4, credit None (Steps 6.16, 6.18, 6.19). Not "2 ratings, from Fatima Khumalo and David Naidoo", and
+      not a My activities row "2026-09-28, to Fatima Khumalo". Her minimum on it is 4 (Step 6.15).
+  F6. No paused EPA beside its STAR: during a pause the standing lists only items in force (Step 6.21), and Molefe has
+      graduated by Act 6.
+  F7. Dlamini has no PAED-015 evidence (Act 4's starting state: four WBAs, PAED-001 three times, PAED-004 once). Her
+      "1 of 10" at Step 3.50 is PAED-001, met: 3 of 3, 2 at the minimum of 4 (Step 3.28). Never draw PAED-015 "1 of 1,
+      met" for her, and never her Step 3.7 PAED-001 "1 of 3" beside her Step 3.50 "1 of 10".
+  F8. The off-scale example is drawn on nobody in the cast: Dlamini has nothing on PAED-005, and PAED-005's tools are
+      CBD, DOPS and MSF (the seed), so no Mini-CEX. Draw it on a placeholder registrar, on a CBD or a DOPS, and mark the
+      board "no replay reaches this".
+  F9. The completed card of Step 3.6 reads "Done. David Naidoo completed it on 2026-10-03 17:15 SAST." (Step 3.6), not
+      "2026-09-24 08:12"; the activity is "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23".
+  F10. The move to 11.2 was saved on 2026-10-03 (Step 6.36), not 2026-10-02; and no board shows it (Q9).
+  F11. Seventeen rows after the move split 10 each semester and 7 once a year (Step 6.37), not 11 and 6; sixteen before
+      it split 10 and 6, KGK-001 among the six (Step 6.35). With KGK-001 the once-a-year heading counts 6, not 5
+      (Step 6.27: "0 of 6 EPAs met in 2026").
+  F12. Real titles: KGK-001 "Running a paediatric outreach clinic at a district hospital" (Step 6.25); PAED-016
+      "Transitioning adolescents with long-term conditions to adult care", 1 per academic year, decided each academic
+      year, level 2, 3a, 3b, 4 for training years 1–4 (Steps 6.28, 6.30); PAED-006 reads "Managing long-term health
+      conditions (LTHCs) in children" from Step 6.14 on. No "[EPA title]" anywhere: every title is in THE CATALOGUE.
+  F13. The seed's values, in place of every "[n]": every yearly target is 1; the year-4 level is 5 for PAED-001–007,
+      010 and 012, and 4 for PAED-008, 009, 011, 013, 014 and 015; the exit level is 5 for those nine and 4 for those
+      six ("level 5: 9 of 9 · level 4: 6 of 6", Step 6.40). KGK-001: minimum 3a with no per-year map, 1 per academic
+      year, Direct observation only, not in the exit rule (Step 6.26).
+  F14. Step 4.40's "Encounter 2026-09-24 · Direct observation; below the target" is PAED-001's latest rating; the
+      boards copied it onto PAED-010.
+  F15. Home's rows in V2 were invented ("Mini-CEX · PAED-001 · 2026-09-26 by Sarah Botha", "Direct Observation ·
+      PAED-010 · 2026-09-24 by David Naidoo", "Mini-CEX · PAED-012 · 2026-09-18 by Fatima Khumalo"); Recent decisions
+      draws F3's rows.
+  F16. Dlamini's Step 3.50 furthest short are PAED-002, 003, 005, 010 and 012, each "0 of 3 this semester"; PAED-004 is
+      1 of 3 and PAED-001 met (Step 3.50). The order is the shortfall, largest first, then the code.
+
+THE CATALOGUE (titles in full wherever an EPA is named; per-semester target / cadence / year-4 level / exit):
+  PAED-001 Providing paediatric emergency care to children (3 a semester; each semester; 5; 5)
+  PAED-002 Managing common paediatric presentations (3; each semester; 5; 5)
+  PAED-003 Providing intensive care to children (3; once a year; 5; 5)
+  PAED-004 Managing common neonatal conditions (3; each semester; 5; 5)
+  PAED-005 Providing neonatal care in intensive and high-care settings (3; each semester; 5; 5)
+  PAED-006 Managing long-term health conditions (LTHCs) [in children from Step 6.14] (2; once a year; 5; 5)
+  PAED-007 Maintaining and promoting the health and well-being of children (1; once a year; 5; 5)
+  PAED-010 Leading and operating within a clinical team (3; each semester; 5; 5)
+  PAED-012 Communicating with and counselling patients, caregivers and healthcare teams (3; each semester; 5; 5)
+  PAED-015 Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and
+    research (1; once a year; 4; 4)
+  Once a year, target 1 in the academic year: PAED-008 Evaluating and managing neurodevelopmental and behavioural
+    presentations in children (as opportunity allows; 4; 4); PAED-009 Providing care for an adolescent patient (as
+    opportunity allows; 4; 4); PAED-011 Managing population health challenges (once a year; 4; 4; 2 a year on 11.2);
+    PAED-013 Managing child protection, legal and ethical aspects of children at risk (as opportunity allows; 4; 4);
+    PAED-014 Providing palliative and end-of-life care (once a year; 4; 4).
+  Levels by training year 1–4: 3a, 3b, 4, 5 where the year-4 level is 5; 2, 3a, 3b, 4 where it is 4. Dlamini (year
+    3) is judged against 4 on PAED-001, 010 and 012; Ndlovu and Mahlangu (year 1) against 3a; du Plessis (year 2)
+    against 3b on PAED-002 (Step 5.26). The six rungs: 1, 2, 3a, 3b, 4, 5.
+
+THE CAST'S ROWS (draw these in every state a step names; D = 2026-10-03; every time is SAST):
+  Lerato Molefe (training year 4):
+    - 2.39, first day: Home and My progress all zeros; furthest short PAED-001 to 005, each "0 of 3 this semester · 3
+      more by 2026-11-30"; Needs you "Nothing needs you. Requests you have filed are in My activities."; Recent
+      decisions "No decisions yet."; My authorisations "No STAR yet." (words below).
+    - 3.48, My activities: eight rows, newest encounter first: the two MSF rows (Multi-Source Feedback (Paediatrics) ·
+      PAED-010 · 2026-10-03 and · PAED-012 · 2026-10-03, Done, Recorded, "—"), then F3's six, each Done, Completed,
+      "1 item" (the link, C7).
+    - 4.39 / 4.40, Home: "1 of 10 EPAs met this semester", "0 of 5 EPAs met in 2026", training year 4; furthest short
+      PAED-002, 003, 004 and 005 ("0 of 3 this semester · 3 more by 2026-11-30") and PAED-006 ("0 of 2 this semester ·
+      2 more by 2026-11-30"). Recent decisions, newest decision first (the runbook gives no times; use Step 3.26's
+      order of play, Zulu, Naidoo, Patel, Botha, Khumalo, all on 2026-10-03): CBD · PAED-012 · 2026-09-28 (to Fatima
+      Khumalo), Mini-CEX · PAED-012 · 2026-09-26 (Sarah Botha), DOPS · PAED-001 · 2026-09-24 (Mohammed Patel), CBD ·
+      PAED-001 · 2026-09-22 (David Naidoo), Direct Observation · PAED-010 · 2026-09-29 (Thandi Zulu); each Completed,
+      with "PAED-012: 2 of 3 this semester.", "PAED-001: 3 of 3 this semester, met." or "PAED-010: 1 of 3 this
+      semester.". My authorisations: "2 at or above · 1 below · 12 with no decision, of 15 EPAs", then the row
+      "PAED-010 — Leading and operating within a clinical team", "4, below training year 4's level of 5 · expires
+      2026-10-23", and "Open My authorisations".
+    - 4.40, My progress: the index (each semester: PAED-001 "3 of 3 this semester", met; 002–005 "0 of 3"; 006 "0 of
+      2"; 007 "0 of 1"; 010 "1 of 3"; 012 "2 of 3"; 015 "0 of 1"; once a year: 008, 009, 011, 013, 014 "0 of 1 in
+      2026"); the verdict column At or above 5 (001, 012), Below 4 (010), No decision (the rest); then the panel: "You
+      are in training year 4 on 2026-10-03.", "2 at or above · 1 below · 12 with no decision, of 15 EPAs", "2 of 15
+      EPAs at their exit level by STAR decision (level 5: 2 of 9 · level 4: 0 of 6)", "For information only. …", and
+      its table as F4.
+    - 5.15, exit met: "15 at or above · 0 below · 0 with no decision, of 15 EPAs"; "15 of 15 … Every EPA is at its exit
+      level."; the figures still "1 of 10" and "0 of 5"; nothing says the programme has ended.
+    - 5.21, her Home as a graduate (no role): "Your training record", "You hold no role at the moment. Your training
+      record is kept, read-only: your progress in each period, and your portfolio to export.", "Open My progress →",
+      word for word (flow 13 owns the rest).
+  Anele Dlamini (training year 3):
+    - 3.6 / 3.7: one completion, Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23, to David Naidoo, rung 4, at the
+      minimum; PAED-001 "1 of 3 this semester", "2 more by 2026-11-30", "At the minimum level when observed: 1 of 1",
+      "Last encounter 2026-09-23", "Semester 1, 2026: 0 of 3, 3 short"; "0 of 10", "0 of 5"; no STAR.
+    - 3.50, Home: as F16; Recent decisions, newest decision first: Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01 (to
+      Fatima Khumalo, "PAED-004: 1 of 3 this semester."), Clinical Case Analysis (Paediatrics) · PAED-001 · 2026-09-27
+      (Sarah Botha), Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-24 (Thandi Zulu, rung 3b), Mini-CEX
+      (Paediatrics) · PAED-001 · 2026-09-23 (David Naidoo); the PAED-001 three each "PAED-001: 3 of 3 this semester,
+      met."; all Completed 2026-10-03. My authorisations "No STAR yet." (her STARs come in Act 4: PAED-001 at 4, Active).
+    - 6.19, during the pause: index "Each semester · 9 EPAs", "1 of 9 EPAs met this semester", "No longer in use · 1
+      EPA" holding PAED-012 (N6); its page as F5; My activities' row "Mini-CEX (Paediatrics) · PAED-012 · 2026-10-03",
+      "PAED-012 (no longer in use)" under it, Done, Completed, Credit None. The completed card: "Done. Mohammed Patel
+      completed it on 2026-10-03 19:13 SAST." / "Rated 4. Its credit to PAED-012 waits while the EPA is paused."
+    - 6.24, restored: PAED-012 "1 of 3 this semester", at the minimum 1 of 1, last encounter 2026-10-03; the card
+      "Rated 4. Credited 1 item to PAED-012. PAED-012: 1 of 3 this semester."; Credit "1 item".
+    - 6.27, KGK-001: it leads Once a year, as built (Step 6.27):
+      "0 of 1 in 2026", "1 more by 2026-11-30", "2025 academic year: 0 of 1, 1 short" (O2); "0 of 6 EPAs met in
+      2026"; the badge; no cadence label; "Minimum 3a" (no training year: it has no per-year map); "Not in the
+      College's exit rule"; no rating yet.
+  Sipho Ndlovu (training year 1):
+    - 3.12, Home: Recent decisions one row, Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13, to Fatima Khumalo,
+      Declined, 2026-10-03, with "File it again, to someone else" (to /activities/new?from=2). Needs you "Nothing needs
+      you. …".
+    - 3.16, Home: Needs you badged 1, "Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-13", "with Sarah Botha",
+      Draft, "Returned to you by Sarah Botha on 2026-10-03. Change it and submit again." (flow 03's row, unchanged).
+      Recent decisions: Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13 · Sarah Botha, Completed ("PAED-002: 1 of 3
+      this semester."), then … · Fatima Khumalo, Declined (two alike, so each name adds its assessor, E7).
+    - 3.17, Home: Recent decisions, three: Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-13, Discussed
+      ("Credits nothing."), then the two Mini-CEX rows as 3.16.
+    - 6.39 (and 6.37, now that T304 lands first): 17 rows, 10 each semester and 7 once a year; every count 0 but
+      PAED-002 "1 of 3 this semester"; PAED-011 "0 of 2 in 2026"; PAED-016 and KGK-001 "0 of 1 in 2026"; "0 of 10 EPAs
+      met this semester", "0 of 7 EPAs met in 2026"; "17 with no decision". No notice, no badge but KGK-001's.
+  Pieter du Plessis (training year 2): A.4.6, withdrawn, keeps the Trainee role: Your targets reads "Your programme
+    ended on 2026-10-01, so no target applies to you any more. Your progress in each period is kept on My progress,
+    read-only." (ISO date; otherwise today's words).
+  Hypothetical, so filler is fine (mark each board "no replay reaches this"): the registrar who also holds Assessor
+    (none in the cast does); started part-way (every start is 15 January, D42); no curriculum; programme not started;
+    no EPA in use; December (use D = 2026-12-07 on Dlamini's Step 3.50 figures); every target met; the other-scale
+    rating (F8); "Not comparable" in the panel; the older-encounter card (C5).
+
+WORDS (verbatim; ISO dates throughout, T325):
+  Home, Trainee (h1 "Home", "Trainee · Semester 2, 2026", header action "Log an activity", as flow 01 built):
+    "Your targets" (span 2, emphasis stripe): the training year line (N4); "1 of 10" over "EPAs met this semester" and
+      "0 of 5" over "EPAs met in 2026" (N3); "Furthest short", five rows, each its own link "PAED-002 — Managing common
+      paediatric presentations", "0 of 3 this semester · 3 more by 2026-11-30" UNDER the name (never beside it), a bar
+      with the figure in words; foot "Open My progress". The card is not a link. All met: "Every target is met for
+      Semester 2, 2026 and the 2026 academic year." in place of the rows. Part-way: "No semester target this semester:
+      you started part-way through it. Semester targets begin with Semester 1, 2027." (no fraction, no bar). No
+      curriculum: "No curriculum assigned yet. Once you are admitted, your targets for each period appear here." No EPA
+      in use: "No EPA on your curriculum is in use at the moment, so no target applies to you." Not started: "Your
+      programme starts on 2027-01-15." Ended: A.4.6's words.
+    "Needs you": flow 03's card and NeedsYouList, unchanged ("Open My activities").
+    "Recent decisions": B1.
+    "My authorisations" (N1): the summary in the panel's words, then each STAR that is below its target or expires
+      within 30 days, a link to its EPA page, "4, below training year 4's level of 5 · expires 2026-10-23"; foot "Open
+      My authorisations". None: "No STAR yet. When the committee issues one, it shows here against training year 3's
+      level."
+    Load error (DashboardFrame, as built): "Could not load your Home. Nothing has changed. Try again, or come back in a
+      few minutes." with Try again. Loading: every card's title over its skeleton; "Loading your Home."
+    The other-role line (flow 04's OtherRoleLine, unchanged, above the cards): "1 activity waits for you in the
+      Activity inbox: …, from …, waiting less than a day." with "Open it"; warning-tinted when one is overdue.
+  My progress (h1 "My progress", subtitle "Training year 4 · Semester 2, 2026"; personal link, lit):
+    "This period": the two figures (N3) with "Semester 2, 2026 ends on 2026-11-30." under them; the training year line;
+      MSF coverage (C6f). December: C6a's Alert above it. Part-way, not started: today's Alert sentences, ISO dates.
+    The index (N5): columns EPA, "Semester 2, 2026" (or "2026 academic year"), "Committee decides", "STAR against
+      training year 4"; a count cell "1 of 3 this semester", its bar, "2 more by 2026-11-30" or "Target met for
+      Semester 2, 2026."; a STAR cell: the badge (badge-standing-met / -below / -none) and "4 · expires 2026-10-23".
+    Then "Entrustment against Annexure A": EntrustmentStandingPanel whole (C1).
+    Empty: "No curriculum items assigned yet. Once you are admitted to a curriculum, your EPAs will appear here." / "No
+      EPA on your curriculum is in use at the moment, so no target applies to you."
+    Load error: "Could not load your progress. Nothing has changed. Try again, or come back in a few minutes." with Try
+      again, nothing drawn under it, never the driver's text. A section that fails apart: "Could not load your
+      standing. Nothing has changed. Try again, or come back in a few minutes." (the verdict cells read "Not loaded");
+      MSF: "Could not load MSF coverage. Your counts above are not affected." Loading: the header, then a skeleton in
+      the page's shape; a hidden status "Loading My progress."
+  The EPA page (h1 "PAED-010 — Leading and operating within a clinical team"; subtitle "3 a semester · Decided each
+    semester · Exit level 5"; trail Home › My progress › PAED-010):
+    "Observations": the figure "1 of 3 this semester", bar, "2 more by 2026-11-30."; "At the minimum level when
+      observed: 1 of 1"; "Last encounter 2026-09-29"; "Semester 1, 2026: 0 of 3, 3 short"; the level line (C6e); MSF
+      coverage. "Entrustment": the STAR "4", Below, "Issued 2026-10-03 · expires 2026-10-23", exit level 5 not yet,
+      "Open My authorisations"; none: "No STAR yet." "Rating trajectory" (the chart and its table). "Activities on this
+      EPA" (C3); none: "No activity on this EPA yet." with Log an activity. Load error: "Could not load this EPA.
+      Nothing has changed. Try again, or come back in a few minutes."
+  The trajectory: heading the EPA; under it "3 ratings in the 2026 academic year, from Thandi Zulu, David Naidoo and
+    Mohammed Patel. 2 at the minimum, 1 below." (up to three names, else "from 4 assessors"; "distinct assessors"
+    goes); one point: "1 rating so far, from David Naidoo. At the minimum."; table caption "The ratings, oldest first";
+    columns Encounter, Rating, Against the minimum then ("At it (5, training year 4)", "Below (5, training year 4)",
+    "Not on the ladder: counts towards the number, not the level"), Activity (linked, named per row), Assessor.
+    "Multi-source feedback is not plotted." under it where the EPA has MSF (D36).
+
+THE ASK, ROUND 2:
+  - Full fidelity on the Wombat design system v13 (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18; design/system:
+    tokens.json and components/bundle.css). Round 1 was drawn with no system loaded: load it now, and use its class
+    names. Compose from what flows 01–04 built: MainLayout and MainLayoutPhone (the sidebar "Acting as Trainee", the
+    rule, the phone bar and CSS-only menu), PageHeader with Breadcrumbs (and CurrentCrumb), DashboardFrame and
+    DashboardCard (.dashboard-grid, .detail-card--emphasis, .dashboard-metric-row, .dashboard-metric-value/-label,
+    .progress-row, .progress-row-head, .progress-bar, .progress-bar-fill.is-complete, .progress-row-meta,
+    .card-empty, .dashboard-card-footer), NeedsYouList (.needs-you-row), WaitingList's Recent decisions classes
+    (.decided-list, .decided-row), OtherRoleLine (.other-role-line), DataTable (.clinic-table in .table-container,
+    Stack below 641 px, .stack-list), PagerControls, StatePanel and Skeleton, Alert (info, warning, danger), Badge
+    (badge-completed, badge-declined, badge-standing-met, badge-standing-below, badge-standing-none), ActivityStatus
+    (.activity-status--done, .activity-status-action), ActivityLink, Icon (Lucide), TrajectoryChart
+    (.trajectory-chart-*), .only-wide / .only-narrow, .fold-show / .fold-hide. NEW, named on the Spec: the EPA page,
+    EpaProgressTable (the index), the trajectory's new form, Recent decisions for the Trainee, the Home STAR card.
+  - Component boards, each with a "state" enum and a "w" of 1280 or 390, as flow 04's R2-C-* did; then one wrapper
+    board per state and width, R2-<letter>-<state>-1280 and -390. Every state at BOTH widths:
+    R2-C-Home (R2-H-…), the Trainee's Home:
+      first-day (Molefe, 2.39); typical (Dlamini, 3.50); with-stars (Molefe, 4.39); decline (Ndlovu, 3.12, one
+      Declined row); returned (Ndlovu, 3.16, Needs you with a row and two decisions); decisions-mixed (Ndlovu, 3.17:
+      Discussed, Completed, Declined); all-met; part-way; december; not-started; no-curriculum; no-epa-in-use;
+      ended (du Plessis, A.4.6); graduate (Molefe, 5.21: "Your training record", unchanged, no Trainee menu);
+      two-role (a registrar who holds Assessor: the other-role line above the cards); loading; load-error.
+    R2-C-Progress (R2-P-…), My progress:
+      first (Molefe, 2.39); counting (Dlamini, 3.7); standing (Molefe, 4.40: the index, then the panel whole); exit-met
+      (Molefe, 5.15: 15 STARs, every one at its exit level, the panel's rows all At or above); paused (Dlamini, 6.19:
+      9 EPAs, "1 of 9", No longer in use); local-item (Dlamini, 6.27: KGK-001 with its badge, 6 once a year);
+      after-move (Ndlovu, 6.39: 17 rows, 10 and 7, nothing marked but KGK-001); december; part-way; not-started;
+      no-curriculum; no-epa-in-use; not-comparable (a STAR on another scale, in the panel's own words); section-error
+      (the standing fails apart, MSF fails as a line, the counts stand); loading; load-error. At 390 the index and the
+      panel both stack: each row's EPA link a 44 px block, each cell but the link labelled by its column, nothing
+      sideways; the 120-character PAED-015 title wraps under itself.
+    R2-C-Epa (R2-E-…), one EPA's page:
+      typical (Molefe, PAED-001 at 4.40: three ratings from three assessors, 3 of 3 met, 2 at the minimum, STAR 5 At or
+      above, exit Reached, the three activities); one-rating (Dlamini, PAED-001 at 3.7, arrived from "Open My
+      progress": the h1 focused); below-star (Molefe, PAED-010 at 4.40: one rating, STAR 4 Below and expiring, the MSF
+      row "—" among the activities, MSF coverage closed 2026-10-03); no-rating (Dlamini, PAED-002 at 3.50);
+      once-a-year (Molefe, PAED-008 at 4.40: "0 of 1 in 2026", "Decided as opportunity allows", level 4, exit 4);
+      paused (Dlamini, PAED-012 at 6.19: N6, one rating, credit None); local-item (Dlamini, KGK-001 at 6.27);
+      other-scale (F8); december; not-found ("not found", never "forbidden"); loading; load-error.
+    R2-C-Trajectory (R2-T-…), drawn once for My progress and the committee page:
+      three (Molefe, PAED-001: 2026-09-21 5 Thandi Zulu, 2026-09-22 5 David Naidoo, 2026-09-24 4 Mohammed Patel; the
+      minimum stepped 4 until 2026-01-13, 5 from 2026-01-14; exit 5; "Today" at 2026-10-03); one (Dlamini, PAED-001:
+      2026-09-23 4, the minimum 3b then 4); other-scale; paused-heading (Dlamini, PAED-012: 2026-10-03 4); committee
+      (Molefe's review page, flow 07's slot: the review's evidence window 2026-01-01 to 2026-12-31 as the axis, no
+      "Today", her name in the heading's second line). At 390 the chart is drawn at 326 px, never scaled, rungs and
+      months 12 px, nothing under 11 px (T323), and its table stacks under it.
+    R2-C-WaysIn (R2-W-…), flow 03's pieces this flow touches:
+      card-count (Dlamini's completed Mini-CEX at 3.6: C5's sentence, "Open My progress" to /portfolio/progress/2);
+      card-count-later (the same page at 3.50: "PAED-001: 3 of 3 this semester, met."); card-older (an encounter in
+      Semester 1); card-paused (6.19: flow 03's words, unchanged); mine-credit (Molefe, 3.48: eight rows, the Credit
+      links, MSF "—" with no second line); mine-paused (Dlamini, 6.19: Credit None, plain text).
+    Nothing scrolls sideways at 390; every target there is 44 px; every badge keeps its pill beside a wrapping link.
+  - A Spec board:
+    - Every message the pages show, by kind (notice, empty, load error, section error, hint) and its words.
+    - The DESIGN.md rules, as text ready to paste:
+      R1 § Dashboard page: the Trainee's Home is Your targets (the training year, both figures in My progress's words,
+         the five furthest short each its own link to its EPA page with its date), Needs you (flow 03's), Recent
+         decisions (B1) and My authorisations (the summary and the STARs below their level or expiring). A card's rows
+         are its links, never one link around them. No MSF on Home.
+      R2 § Page-level patterns: a record page under a personal link (Home › My progress › the EPA), owned by My
+         progress, addressed by the EPA's id; its h1 is "<code> — <title>" and takes the focus on arrival.
+      R3 The progress-figures rule, kept and extended: every figure is "n of m" for a named window; the decision
+         cadence and the level each name their own frame; a waived window shows its count and when targets start,
+         never a fraction or a bar.
+      R4 § Entrustment standing, and the trajectory: changed once, for My progress and the committee page: the panel
+         stacks below 641 px with 44 px rating links and ISO dates; the chart is drawn at its own size at each width
+         with its table visible, an other-scale lane, the stepped minimum and the exit line. The rule that a lone chart
+         scales with its card (DESIGN.md, near line 2777) goes.
+      R5 "My progress once the programme has ended" (flow 13's) holds: the ended view keeps every period read-only;
+         the EPA page shows that EPA's periods the same way.
+    - Every NEW component with its proposed class names, as modifiers of built ones wherever possible (for example
+      .clinic-table--index, .detail-card--paused, .progress-row--waived), and which built component each extends.
+    - A contrast figure for every new pair: the stepped minimum's shading against the chart ground and against a
+      point; the exit line; the hollow point and the other-scale lane; the KGK badge; the muted "(no longer in use)"
+      on a card and in an h1; a 44 px link block's focus ring on a card and on a table row.
+    - The focus rules: the EPA page's h1 on arrival (FocusOnNavigate, no script); Try again keeps the focus while it
+      runs and the answer takes it (This period's heading, the EPA's h1, or the sentence again); the Credit link and
+      "Open My progress" land on the h1; no ?epa query and no scroll script.
+    - The reads, named: the EPA page's read (one EPA's windows, level, STAR, ratings, activities), through T343's
+      query for the activities; the read of the profile's items NOT in force (the "No longer in use" group:
+      TraineeQuotaProgressReader reads .InForce() only); Home's standing summary (the dashboard does not read the
+      standing today); the decisions read (B1). Say which already exist and which are new. The rule "against the
+      minimum then" is CreditTargetResolver's minimum-level-reached, so the table and "At the minimum level when
+      observed: n of m" cannot disagree.
+    - The press counts, as the review re-counted them for V1 (1280 / 390): the weekly look 0 / 0; the evidence behind
+      one short EPA 1 / 1; from a completed Mini-CEX to its EPA's count 0 to read it on the card or in Recent
+      decisions, 1 to the EPA page; the standing before a review 1 / 1; one EPA's trajectory beside its STAR 1 from a
+      My authorisations row, else 2; a paused EPA 1 / 1; KGK-001 1 / 1. Measure the phone heights; do not estimate.
+    - The trajectory's place on the committee page is flow 07's to fix; flow 05 owns the component.
+  - A Steps board: which runbook Expects change, quoting today's words and routes and giving the new ones, as flow
+    04's R2-Steps did: 2.39, 2.40, 3.6, 3.7, 3.12 (the decline found on Home's Recent decisions, not Recent
+    activities), 3.48, 3.50, 4.15 (the committee chart's heading, flow 07's), 4.39, 4.42 and 5.8 (My authorisations
+    from Home's card, "Open My authorisations"), 4.40, 5.15, 5.26, 6.15, 6.19, 6.24, 6.27, 6.35, 6.37 (with T304
+    landed his counts show at once: 6.37 reads as 6.39), 6.39, A.4.6, A.7.3 and A.7.6.
+  - Keep round 1's boards; put round 2 on its own canvas page, with its stylesheet as flow05-r2.css. Stop when round 2
+    is drawn; I will review it before any corrections.
+
+WHAT MUST NOT CHANGE (the fence: flows 01, 03 and 04 decided these):
+  - The shell and Home's frame: "Home", the role and semester under it, the one header action, no dashboard h1 of its
+    own; the Trainee's menu as Q8 keeps it.
+  - My activities' shape: Needs you first when anything does, then All activities a page at a time, newest encounter
+    first; its four columns; rows stacked below 641 px with Who has it now and Credit labelled; each row's link named
+    "Type · EPA · date" with "to <assessor>" under it; its load error sentence and Try again. Only the Credit cell's
+    "1 item" becomes a link (C7).
+  - Needs you's rows and words (NeedsYouList), on My activities and on Home alike.
+  - The activity page and its status card's parts, words and order, but for C5's count sentence and the link's target
+    and accessible name.
+  - "(no longer in use)" as the paused mark; the other-role line (an Assessor holder's, flow 04's words); a graduate's
+    "Your training record" card, word for word.
+  - MsfCoverageText's words (D8, D9): a campaign covers an EPA; MSF counts towards no target and is never plotted.
+
+CONSTRAINTS:
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
+Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
+  over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
+Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
+Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
+  Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
+No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
+Icons: Lucide line icons only, named by their Lucide name.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
+Viewports: 1280×800 and 390×844.
+Also: TrajectoryChart stays SVG or HTML with no script, and every chart has a visible table equivalent.
+  EntrustmentStandingPanel draws the same table on the committee's review page (flow 07): change it once, for both.

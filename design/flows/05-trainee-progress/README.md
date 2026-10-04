@@ -24,3 +24,4 @@ T355's design, kept beside its brief (`../05-trainee-progress.md`) so that it ou
   corrections; Q8, My progress stays a personal link under the rule (no shell change), My authorisations keeps no menu
   item; Q9, only the rebuilt state after a version move, no move notice, and **T304 lands before or with flow 05's
   build**; O1, no scheduled-review date for the registrar; O2, KGK-001 reads as today in periods before it was added.
+- **Round 2's ask:** `round-2-ask.txt` (464 lines): the decisions; B1, C1–C8 and N1–N6 numbered; facts F1–F16 corrected from the runbook; five component boards (Home 17 states, Progress 17, Epa 12, Trajectory 5, WaysIn 6) at 1280 and 390, a Spec and a Steps board.
