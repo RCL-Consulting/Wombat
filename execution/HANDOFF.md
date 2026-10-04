@@ -2,7 +2,7 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-10-03/04 (Opus): T350, flow 04, finished; T355, flow 05, designed (final for the build)
+## Session 2026-10-03/04 (Opus): T350 finished; T304, T305 done; T355, flow 05, designed and built
 
 The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\Wombat`** (moved from
 `C:\Users\Renier\Wombat`), and **it is disconnected from its remote: commit locally, never push.**
@@ -41,9 +41,15 @@ The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\
   per EPA, with V2's Recent decisions); Q8 no menu change; Q9 rebuilt state only, **T304 lands before or with the
   build**; O1, O2. Round 2 reviewed from four sides (C1–C13; E1–E6 accepted). Round 3 checked (`round-3-check.md`):
   **final for step 6** (`c1ac0fd5`). Record: `design/flows/05-trainee-progress/README.md`.
-- **Next: step 6, the build,** from `round-3/` as flow 04's was (`design/flows/04-assessor-inbox/build-lanes.md`,
-  `build-contracts.md`, `review-lanes.md`; round-2-review.md's "For the build" and "Nits"). T304 first or in the same
-  build. The new page is `/portfolio/progress/{EpaId:int}`.
+- **T304 and T305 done first** (the operator's order): `95d4e950`, `a27983fd`, verified by replaying acts 5 and 6 to
+  6.38 on `wombat_scenario_t304` (`1b44bfaf`).
+- **Step 6, the build, done: `b020c942`** (squash of `t355`; lanes A1, A2, B, C, D, runbook-and-docs, a four-sided
+  review in `build-review.md`, one fix pass of 17 items). Suites: Domain 810, Application 3,663, Infrastructure 1,011,
+  Architecture 52, Web 3,222, Integration 484. The operator's build decisions: D1 ISO dates on screens, D2 the committee
+  chart over the review window. DESIGN.md's banner names flow 05.
+- **Next: step 7, the replay** of the whole runbook on a fresh database, as T350's (`design/flows/04-assessor-inbox/
+  replay-brief.md`; publish from master first), then flow 05's states, step 8 (design system re-sync, version 14) and
+  step 9 (BRIEF § 11 "Flow 05"). The squash's message lists the task symptoms the replay must confirm.
 
 ### For the operator
 
@@ -53,13 +59,13 @@ The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\
 
 ### Environment left
 
-- **The replay app on `:5180`** runs `wombat_scenario_t350` (the appendix's end state), published from `5aad596e`. Stop
-  it with `tools/scenario-replay.ps1 stop 5180` when no longer wanted.
+- **The replay app on `:5180`** runs `wombat_scenario_t304` (T304's check, published from `a27983fd`). Stop it
+  (`tools/scenario-replay.ps1 stop 5180`) before step 7's publish.
 - **Replay scratch:** `C:\Users\Renier\AppData\Local\Temp\claude\c--Users-Renier-Wombat\b4d7c8bc-…\scratchpad\g350`
   (`replay-pw.env`, the act and states scripts). Khumalo's and du Plessis's pre-appendix passwords are the `_A` keys.
-- **Droppable databases:** `wombat_scenario_t350_s5184`, `_s5186`, `_s5186b`, `_s5186c`, `_s5188b`; `wombat_scenario_t342`,
+- **Droppable databases:** `wombat_scenario_t304`, `wombat_scenario_t350` (its dumps are kept), `_t350_s5184`, `_s5186`, `_s5186b`, `_s5186c`, `_s5188b`; `wombat_scenario_t342`,
   `_t342b`, `_t342_states_518{4,6,8}*`, and the older `_t339*`, `_t335*`, `_states*`, `_rc*`, `_t292`.
-- **Branches:** `t350*` and `t342*` lanes kept locally (squashed). `verify-master` stays for test runs.
+- **Branches:** `t355*`, `t304`, `t350*` and `t342*` lanes kept locally (squashed); their worktrees are removed. `verify-master` stays for test runs.
 
 ### Traps
 

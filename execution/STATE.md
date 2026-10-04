@@ -33,7 +33,7 @@ flows 05–20 (T355 next), the deploy, the College's answers, 14 P2s, and P3 pol
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T355, flow 05 (a registrar reads where they stand), step 6, the build. Opus.**
+- **The GUI redesign: T355, flow 05 (a registrar reads where they stand), step 7, the replay. Opus.** Built: `b020c942`.
 
 ## Open questions
 
@@ -55,6 +55,6 @@ flows 05–20 (T355 next), the deploy, the College's answers, 14 P2s, and P3 pol
 
 ## Recent
 
-- **2026-10-04:** T304, T305 done (`95d4e950`, `a27983fd`); T355, flow 05, designed (final).
+- **2026-10-04:** T304, T305 done (`95d4e950`, `a27983fd`); T355, flow 05, designed and built (`b020c942`).
 - **2026-10-03:** T350, flow 04, done: replay (no regression), states, design system v13, lessons; T353–T355 filed.
 - **09-30 and before:** T342 (flow 03), T339 (flow 02), T335 (flow 01). Earlier: `git log`.
