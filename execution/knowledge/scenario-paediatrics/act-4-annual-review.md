@@ -366,15 +366,15 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): Review #1: Start review 
   "Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31, from Thandi Zulu, David Naidoo and
   Mohammed Patel. 2 at the minimum, 1 below.", axis Jan to Dec, no Today, each with "The ratings, oldest first".
   Sampling names PAED-010 (1) and PAED-012 (2), not PAED-001; MSF not counted. No pending; no appeal. Re-checked on
-  db4c2d0a at 1280 (the review now Ratified, act 4's state): the section is full-width in the details grid (974 px),
-  each chart card 924 px, its table 872 px with no scrolling; but the figure holds 874 px, under the 900 the wide
-  drawing needs, so each chart is the 326 drawing (the 900 shows from a 1306 px viewport). Standing links target
-  #trajectory-2/-11/-13-h; Enter on PAED-010 focused its h4 at y 390 with "Lerato Molefe · 1 rating in the review
-  window, ... At the minimum." under it in view, URL unchanged (4.15-1, -2, -3 retaken).
-Gap: regression partly fixed in db4c2d0a (the section spans the grid, the table is not squeezed, the link lands on the
-  chart's heading with its summary in view), but still: the chart card is nested in the section's card, so its figure
-  is 874 px at 1280 and every chart draws the 326 drawing instead of the 900. New: the table's scroll container
-  (position: relative) paints over the fixed top bar when scrolled under it (4.15-3: Sign out covered).
+  5f8e6639 at 1280 (the review now Ratified, act 4's state): "Rating trajectory by EPA" is a titled list section, not
+  a card, spanning the details grid (974 px); each chart card 974 px, its figure 924 px, svg.trajectory-chart--wide
+  shown at 900x350 and the narrow one display none, for all three; each table 922 px with no scrolling. Enter on the
+  PAED-010 standing link (#trajectory-11-h) focused its h4 at y 390 with "Lerato Molefe · 1 rating in the review
+  window, 2026-01-01 to 2026-12-31, from Thandi Zulu. At the minimum." under it in view, URL unchanged. At 390 every
+  chart is the 326 drawing (wide hidden), no page scroll sideways (4.15-1, -2, -3 retaken).
+Gap: none (regression fixed in db4c2d0a and 5f8e6639: the section spans the grid as a list section, the chart cards
+  are no longer nested in a card, so each draws the 900 drawing at 1280, and the link lands on the chart's heading).
+  A table scrolled under the fixed top bar paints over it: T356.
 
 ## Phase 4.D — Dr Molefe's sitting
 
