@@ -472,7 +472,8 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
                 .Handle(new RebuildCurriculumProgressCommand(Administrator()), CancellationToken.None);
 
             result.Should().Be(new RebuildCurriculumProgressResult(
-                ActivitiesReplayed: 3, CreditApplications: 3, ProgressRowsWritten: 2, ProgressRowsRemoved: 0, TransitionsStamped: 3));
+                ActivitiesReplayed: 3, CreditApplications: 3, ProgressRowsWritten: 2, ProgressRowsRemoved: 0, TransitionsStamped: 3,
+                ActivitiesCredited: 3));
         }
 
         await using (var db = NewContext(fixture.Schema))

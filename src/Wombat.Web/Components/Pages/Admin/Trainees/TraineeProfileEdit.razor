@@ -60,9 +60,10 @@
              edited: no inputs and no Save profile, which the command would refuse. The header keeps Back to trainees. *@
           <p class="muted">This programme has ended, so its record is archived and cannot be changed.</p>
           <dl class="details-list">
+            @* The stored values, not the form's: an edit left unsaved before Mark complete or Deactivate was never saved. *@
             <div><dt>Curriculum</dt><dd>@_model.CurriculumLabel</dd></div>
-            <div><dt>Programme start date</dt><dd>@_model.ProgrammeStartDate.ToString("yyyy-MM-dd")</dd></div>
-            <div><dt>Expected completion date</dt><dd>@(_model.ExpectedCompletionDate?.ToString("yyyy-MM-dd"))</dd></div>
+            <div><dt>Programme start date</dt><dd>@_model.StoredProgrammeStartDate.ToString("yyyy-MM-dd")</dd></div>
+            <div><dt>Expected completion date</dt><dd>@(_model.StoredExpectedCompletionDate?.ToString("yyyy-MM-dd") ?? "Not set")</dd></div>
           </dl>
         }
         else
@@ -72,14 +73,23 @@
             <ValidationSummary class="validation-summary-errors" />
 
             <div class="form-grid form-grid--wide">
-              <FormField Label="Curriculum" InputId="curriculum-id" Required="true">
-                <InputSelect id="curriculum-id" class="form-select" @bind-Value="_model.CurriculumId">
-                  @foreach (var curriculum in _curricula)
-                  {
-                    <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
-                  }
-                </InputSelect>
-              </FormField>
+              @if (_curricula.Count == 0)
+              {
+                @* An admission into nothing: the institution has no active adoption, or an Administrator is admitting a
+                   registrar with no institution. An empty select would only fail validation (fix pass). *@
+                <p id="curriculum-id-none" class="muted">@NothingAdopted</p>
+              }
+              else
+              {
+                <FormField Label="Curriculum" InputId="curriculum-id" Required="true">
+                  <InputSelect id="curriculum-id" class="form-select" @bind-Value="_model.CurriculumId">
+                    @foreach (var curriculum in _curricula)
+                    {
+                      <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
+                    }
+                  </InputSelect>
+                </FormField>
+              }
 
               <FormField Label="Programme start date" InputId="programme-start-date" Required="true">
                 <InputDate id="programme-start-date" class="form-control" @bind-Value="_model.ProgrammeStartDate" />
@@ -115,7 +125,7 @@
               }
               @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of a button it
                  disables, to the page. A second press sends nothing (SaveAsync). *@
-              <button type="submit" class="btn btn-primary" disabled="@_ending" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
+              <button type="submit" class="btn btn-primary" disabled="@(_ending || _curricula.Count == 0)" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
             </FormActions>
           </EditForm>
         }
@@ -220,6 +230,8 @@
           FullName = $"{profile.FirstName} {profile.LastName}",
           CurriculumId = profile.CurriculumId,
           CurriculumLabel = $"{profile.CurriculumName} ({profile.CurriculumVersion})",
+          StoredProgrammeStartDate = profile.ProgrammeStartDate,
+          StoredExpectedCompletionDate = profile.ExpectedCompletionDate,
           ProgrammeStartDate = profile.ProgrammeStartDate,
           ExpectedCompletionDate = profile.ExpectedCompletionDate,
           IsActive = profile.IsActive,
@@ -277,6 +289,10 @@
     return _curricula.FirstOrDefault();
   }
 
+  private const string NothingAdopted =
+    "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curriculum adoptions, " +
+    "then admit the trainee.";
+
   private string Subtitle => _isAdmission
     ? "Admit a pending trainee into a curriculum."
     : _model?.IsEnded == true
@@ -318,9 +334,18 @@
         _model.ExpectedCompletionDate,
         authState.User));
 
-      // A move, or a change of programme start, says what its replay counted again (T304).
+      // A move, or a change of programme start, says what its replay checked (T304).
       _statusMessage = saved.Message;
+
+      // The form reads the profile as saved: an expected completion left empty is the one the server derived. After a
+      // move the pinned version has changed, and with it what the picker may offer, so it is asked again.
+      _model.CurriculumId = saved.Profile.CurriculumId;
       _model.CurriculumLabel = $"{saved.Profile.CurriculumName} ({saved.Profile.CurriculumVersion})";
+      _model.ProgrammeStartDate = saved.Profile.ProgrammeStartDate;
+      _model.ExpectedCompletionDate = saved.Profile.ExpectedCompletionDate;
+      _model.StoredProgrammeStartDate = saved.Profile.ProgrammeStartDate;
+      _model.StoredExpectedCompletionDate = saved.Profile.ExpectedCompletionDate;
+      _curricula = await Sender.Send(new GetTraineeCurriculumChoicesQuery(_model.Id, authState.User));
       _focusResult = true;
     }
     catch (Exception exception)
@@ -436,8 +461,14 @@
     [Range(1, int.MaxValue)]
     public int CurriculumId { get; set; }
 
-    /// <summary>The curriculum as the read-only details list names it: its name and version.</summary>
+    /// <summary>The curriculum as the read-only details list names it: its name and version, as stored.</summary>
     public string CurriculumLabel { get; set; } = string.Empty;
+
+    /// <summary>The programme start as stored, which the read-only details list shows: the field may hold an unsaved edit.</summary>
+    public DateOnly StoredProgrammeStartDate { get; set; }
+
+    /// <summary>The expected completion as stored.</summary>
+    public DateOnly? StoredExpectedCompletionDate { get; set; }
 
     [Required]
     public DateOnly ProgrammeStartDate { get; set; }
@@ -447,8 +478,11 @@
     public DateOnly? CompletedOn { get; set; }
     public DateOnly? DeactivatedOn { get; set; }
 
-    /// <summary>Ended and archived, so read-only: <c>TraineeProfileDto.IsEnded</c>'s rule, kept as the end actions answer (T305).</summary>
-    public bool IsEnded => !IsActive && (CompletedOn ?? DeactivatedOn) is not null;
+    /// <summary>
+    /// Ended and archived, so read-only (T305): <c>TraineeProfile.IsEnded</c>, an inactive profile. Read from
+    /// <see cref="IsActive" />, which loads from the profile and which the end actions clear when they answer.
+    /// </summary>
+    public bool IsEnded => !IsActive;
 
     /// <summary>
     /// The last day in the programme, which Mark complete and Deactivate each record (T209). Set to today on the South

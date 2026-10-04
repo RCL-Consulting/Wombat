@@ -716,6 +716,13 @@ public sealed class ActivityService : IActivityService
     /// <remarks>
     /// The EPAs are those of every item the directives match, in force or not (<c>CreditTargetResolver.EpasJudgedAsync</c>),
     /// read before the lock: the lock is on the EPA row, and what the plan reads after it is whether the EPA is in force.
+    /// <para>
+    /// They are matched on the trainee's profile as it stands before the trainee's own hold is taken. A profile save that
+    /// moves the trainee to another curriculum version and commits in that window (T304) can leave the plan, which reads
+    /// the moved profile, judging an EPA of the new version's items that was not locked here; it then reads that EPA's
+    /// standing unguarded against a deactivation committing at the same moment. Both must land within milliseconds, and the
+    /// two versions mostly share their EPAs, so it is accepted rather than closed by locking the trainee first.
+    /// </para>
     /// </remarks>
     private async Task<ICreditHold> HoldEpasCreditJudgesAsync(
         CreditSubject? subject,

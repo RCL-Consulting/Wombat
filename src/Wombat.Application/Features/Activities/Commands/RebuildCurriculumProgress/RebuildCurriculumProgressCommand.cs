@@ -95,12 +95,14 @@ public sealed record RebuildCurriculumProgressCommand(
 /// <param name="ProgressRowsWritten">Distinct progress rows (item, trainee, semester) the replay created or incremented.</param>
 /// <param name="ProgressRowsRemoved">Pre-existing progress rows the replay did not reproduce, and which were therefore deleted. A re-bucketing shows up here.</param>
 /// <param name="TransitionsStamped">Transitions whose <c>CreditedItemCount</c> was refreshed (T106 item 12).</param>
+/// <param name="ActivitiesCredited">Of <paramref name="ActivitiesReplayed" />, those that credited at least one item (T304).</param>
 public sealed record RebuildCurriculumProgressResult(
     int ActivitiesReplayed,
     int CreditApplications,
     int ProgressRowsWritten,
     int ProgressRowsRemoved,
-    int TransitionsStamped);
+    int TransitionsStamped,
+    int ActivitiesCredited = 0);
 
 public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<RebuildCurriculumProgressCommand, RebuildCurriculumProgressResult>
 {

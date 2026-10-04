@@ -52,13 +52,13 @@ public sealed class TraineeProfile
     public DateOnly? EndedOn => CompletedOn ?? DeactivatedOn;
 
     /// <summary>
-    /// Whether the programme has ended and its record is archived (T305): the profile is no longer active and records the
-    /// day it ended, a completion or a withdrawal. Mark complete says the profile is archived, so an ended profile is
-    /// read-only: no save changes its curriculum, its adoption or its dates, which the trainee's progress, standing and
-    /// portfolio are read from. A profile deactivated before Wombat recorded the day (T209) records no end, and is not
-    /// archived by this rule.
+    /// Whether the programme has ended and its record is archived (T305): the profile is no longer active. Every way out of
+    /// the programme (Mark complete, Deactivate, an erasure) clears <see cref="IsActive" />, and nothing sets it again.
+    /// Mark complete says the profile is archived, so an ended profile is read-only: no save changes its curriculum, its
+    /// adoption or its dates, which the trainee's progress, standing and portfolio are read from. The one rule: the
+    /// profile's DTO and its page read it from <see cref="IsActive" /> alone too.
     /// </summary>
-    public bool IsEnded => !IsActive && EndedOn is not null;
+    public bool IsEnded => !IsActive;
 
     /// <summary>
     /// Whether <paramref name="day" /> is after the programme's last day (<see cref="EndedOn" />), and so outside it (T281).

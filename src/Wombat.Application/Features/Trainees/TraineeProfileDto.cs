@@ -21,9 +21,9 @@ public sealed record TraineeProfileDto(
 {
     /// <summary>
     /// Whether the programme has ended and the record is archived, read-only (T305): <c>TraineeProfile.IsEnded</c>, the
-    /// rule <see cref="UpdateTraineeProfileCommand" /> refuses a save by, read from the fields this record carries.
+    /// rule <see cref="UpdateTraineeProfileCommand" /> refuses a save by. An inactive profile is an ended one.
     /// </summary>
-    public bool IsEnded => !IsActive && (CompletedOn ?? DeactivatedOn) is not null;
+    public bool IsEnded => !IsActive;
 }
 
 public sealed record PendingTraineeDto(

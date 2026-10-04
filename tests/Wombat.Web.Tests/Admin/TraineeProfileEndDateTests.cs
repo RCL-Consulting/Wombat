@@ -255,11 +255,12 @@ public sealed class TraineeProfileEndDateTests : TestContext
         PageButton(cut, "Save profile").HasAttribute("disabled").Should().BeFalse();
     }
 
-    // ---- T304: the pickers offer what the commands accept; a move says what it counted again ----
+    // ---- T304: the pickers offer what the commands accept; a move says what its replay checked ----
 
     [Fact]
-    public void TheProfilesPicker_OffersThePinnedVersionAndTheActiveAdoptions_FromTheQueryThatSaysSo()
+    public void TheProfilesPicker_ListsWhatTheChoicesQueryAnswers_WithThePinnedVersionChosen()
     {
+        // Wiring only: which versions are offered is the query's rule, which TraineeCurriculumChoicesTests checks.
         var sender = new FakeSender();
         var cut = RenderPage(sender);
 
@@ -270,7 +271,7 @@ public sealed class TraineeProfileEndDateTests : TestContext
     }
 
     [Fact]
-    public void TheAdmitForm_OffersTheActiveAdoptionsVersionAlone()
+    public void TheAdmitForm_ListsWhatTheAdmissionChoicesQueryAnswers()
     {
         var sender = new FakeSender();
         var cut = RenderAdmission(sender);
@@ -281,15 +282,58 @@ public sealed class TraineeProfileEndDateTests : TestContext
     }
 
     [Fact]
-    public void AMove_SaysWhatItsReplayCountedAgain()
+    public void AMove_SaysWhatItsReplayChecked()
     {
-        var cut = RenderPage(new FakeSender { Recount = new TraineeCreditRecount(CurriculumMoved: true, CompletionsCounted: 1) });
+        var cut = RenderPage(new FakeSender { Recount = new TraineeCreditRecount(CurriculumMoved: true, CompletionsChecked: 1, CompletionsCounting: 1) });
 
         cut.Find("#curriculum-id").Change("2");
         PageButton(cut, "Save profile").Closest("form")!.Submit();
 
         cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-success"))
-            .Should().Be("Trainee profile saved. 1 completion was counted again against 11.2."));
+            .Should().Be("Trainee profile saved. 1 completion was checked against 11.2, and 1 counts towards it."));
+    }
+
+    [Fact]
+    public void AfterAMove_ThePickerIsAskedAgain_AndTheFormReadsTheSavedProfile()
+    {
+        // The pinned version has changed, so what the picker may offer has too; and the saved expected completion is the
+        // one the server derived when the field was left empty.
+        var sender = new FakeSender { Recount = new TraineeCreditRecount(CurriculumMoved: true, CompletionsChecked: 1, CompletionsCounting: 1) };
+        var cut = RenderPage(sender);
+
+        cut.Find("#curriculum-id").Change("2");
+        cut.Find("#expected-completion-date").Change(string.Empty);
+        PageButton(cut, "Save profile").Closest("form")!.Submit();
+
+        cut.WaitForAssertion(() => sender.Queries.Count(name => name == nameof(GetTraineeCurriculumChoicesQuery)).Should().Be(2));
+        cut.Find("#curriculum-id").GetAttribute("value").Should().Be("2");
+        cut.Find("#expected-completion-date").GetAttribute("value").Should().Be("2029-01-01", "the saved, derived date");
+    }
+
+    [Fact]
+    public void AnAdmissionWithNothingAdopted_SaysWhatIsMissing_AndCannotBeSent()
+    {
+        var sender = new FakeSender { AdmissionChoices = [] };
+        var cut = RenderAdmission(sender);
+
+        Text(cut.Find("#curriculum-id-none")).Should().Be(
+            "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curriculum adoptions, then admit the trainee.");
+        PageButton(cut, "Admit trainee").HasAttribute("disabled").Should().BeTrue();
+        cut.FindAll("#curriculum-id").Should().BeEmpty("an empty select offers nothing to choose");
+    }
+
+    [Fact]
+    public void AfterMarkComplete_TheReadOnlyDetails_ShowTheStoredDates_NotUnsavedEdits()
+    {
+        var cut = RenderPage(new FakeSender());
+
+        cut.Find("#programme-start-date").Change("2025-06-01");
+        cut.Find("#programme-end-date").Change("2026-09-20");
+        PageButton(cut, "Mark complete").Click();
+        DialogButton(cut, "Mark this programme complete?", "Mark complete").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll("form").Should().BeEmpty());
+        Text(cut.Find("section.detail-card dl.details-list")).Should().Contain("2025-01-01").And.NotContain("2025-06-01");
     }
 
     // ---- T305: an ended profile is read-only ----

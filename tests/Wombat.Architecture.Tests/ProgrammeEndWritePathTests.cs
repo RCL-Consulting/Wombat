@@ -84,6 +84,12 @@ public class ProgrammeEndWritePathTests
     /// or a completion in flight credits against the curriculum or start it replaces. A type that creates a profile sets
     /// both on the new one, which nothing has credited against yet, and is not asked.
     /// </summary>
+    /// <remarks>
+    /// Its blind spots: it sees only calls to the two property setters. A bulk <c>ExecuteUpdate</c>, a
+    /// <c>CurrentValues.SetValues</c> (the replay's own roll-back uses it, which is why that is fine there), or raw SQL
+    /// changes a profile without one. And a type exempted because it creates a profile (<c>newobj</c>) is not asked even
+    /// if it also moves a stored one. A new writer of either kind needs the hold all the same.
+    /// </remarks>
     [Fact]
     public void Whatever_moves_a_stored_profile_holds_it_for_the_move()
     {

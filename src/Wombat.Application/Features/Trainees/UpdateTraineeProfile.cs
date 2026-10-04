@@ -45,27 +45,41 @@ public sealed record UpdateTraineeProfileCommand(
 /// <summary>What a profile save did: the profile as saved, and the recount its replay made, if it replayed (T304).</summary>
 public sealed record UpdateTraineeProfileResult(TraineeProfileDto Profile, TraineeCreditRecount? Recount)
 {
-    /// <summary>The sentence the page shows: the save, and what the replay counted again, against what.</summary>
+    /// <summary>
+    /// The sentence the page shows: the save, and what the replay checked (T304). A completion checked is one credit was
+    /// judged for again; on a move, the ones that count towards the new version are those that credited an item of it.
+    /// </summary>
     public string Message => Recount switch
     {
         null => "Trainee profile saved.",
-        { CompletionsCounted: 0, CurriculumMoved: true } =>
-            $"Trainee profile saved. They have no completions to count against {Profile.CurriculumVersion}.",
-        { CompletionsCounted: 0 } => "Trainee profile saved. They have no completions to count again.",
+        { CompletionsChecked: 0, CurriculumMoved: true } =>
+            $"Trainee profile saved. {TraineeName} has no completions to count against {Profile.CurriculumVersion}.",
+        { CompletionsChecked: 0 } => $"Trainee profile saved. {TraineeName} has no completions to check again.",
         { CurriculumMoved: true } =>
-            $"Trainee profile saved. {Completions(Recount.CompletionsCounted)} counted again against {Profile.CurriculumVersion}.",
-        _ => $"Trainee profile saved. {Completions(Recount.CompletionsCounted)} counted again from the new programme start date."
+            $"Trainee profile saved. {Checked(Recount.CompletionsChecked)} checked against {Profile.CurriculumVersion}, and " +
+            $"{Counting(Recount.CompletionsCounting)} towards it.",
+        _ => $"Trainee profile saved. {Checked(Recount.CompletionsChecked)} checked again from the new programme start date."
     };
 
-    private static string Completions(int count) => count == 1 ? "1 completion was" : $"{count} completions were";
+    private string TraineeName => $"{Profile.FirstName} {Profile.LastName}".Trim();
+
+    private static string Checked(int count) => count == 1 ? "1 completion was" : $"{count} completions were";
+
+    private static string Counting(int count) => count switch
+    {
+        0 => "none counts",
+        1 => "1 counts",
+        _ => $"{count} count"
+    };
 }
 
 /// <summary>
 /// The replay a profile save ran (T304): whether it moved the trainee to another curriculum version (else it changed their
-/// programme start), and how many of their completions credit was judged for again
-/// (<see cref="RebuildCurriculumProgressResult.ActivitiesReplayed" />).
+/// programme start), how many of their completions credit was judged for again
+/// (<see cref="RebuildCurriculumProgressResult.ActivitiesReplayed" />), and how many of those credited an item
+/// (<see cref="RebuildCurriculumProgressResult.ActivitiesCredited" />).
 /// </summary>
-public sealed record TraineeCreditRecount(bool CurriculumMoved, int CompletionsCounted);
+public sealed record TraineeCreditRecount(bool CurriculumMoved, int CompletionsChecked, int CompletionsCounting);
 
 public sealed class UpdateTraineeProfileCommandValidator : AbstractValidator<UpdateTraineeProfileCommand>
 {
@@ -73,14 +87,28 @@ public sealed class UpdateTraineeProfileCommandValidator : AbstractValidator<Upd
     {
         RuleFor(command => command.Id).GreaterThan(0);
         RuleFor(command => command.CurriculumId).GreaterThan(0);
+
+        // Dates a curriculum's window can be added to: the expected completion is derived from the start (fix pass).
+        RuleFor(command => command.ProgrammeStartDate).InclusiveBetween(EarliestDate, LatestDate);
+        RuleFor(command => command.ExpectedCompletionDate!.Value)
+            .InclusiveBetween(EarliestDate, LatestDate)
+            .OverridePropertyName(nameof(UpdateTraineeProfileCommand.ExpectedCompletionDate))
+            .When(command => command.ExpectedCompletionDate.HasValue);
     }
+
+    /// <summary>The earliest programme or completion date a save accepts.</summary>
+    public static readonly DateOnly EarliestDate = new(1900, 1, 1);
+
+    /// <summary>The latest: far enough from <see cref="DateOnly.MaxValue" /> for any curriculum window to be added to it.</summary>
+    public static readonly DateOnly LatestDate = new(2199, 12, 31);
 }
 
 public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateTraineeProfileCommand, UpdateTraineeProfileResult>
 {
     /// <summary>The refusal of a move into anything but the institution's active adoption for the discipline (T304).</summary>
     public const string MoveNotAdopted =
-        "A trainee can be moved only into the curriculum version this institution has adopted for their discipline.";
+        "A trainee can be moved only into the curriculum version this institution has adopted for their discipline, so " +
+        "nothing was saved.";
 
     private readonly IApplicationDbContext _dbContext;
     private readonly IUserAdministrationService _userAdministrationService;
@@ -100,8 +128,10 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
     }
 
     /// <summary>The refusal of a save of an ended profile (T305).</summary>
-    public static string Archived(DateOnly endedOn)
-        => $"This programme ended on {endedOn:yyyy-MM-dd}; its record is archived and cannot be changed.";
+    public static string Archived(DateOnly? endedOn)
+        => endedOn is { } day
+            ? $"This programme ended on {day:yyyy-MM-dd}; its record is archived and cannot be changed."
+            : "This programme has ended; its record is archived and cannot be changed.";
 
     public async Task<UpdateTraineeProfileResult> Handle(UpdateTraineeProfileCommand request, CancellationToken cancellationToken)
     {
@@ -123,10 +153,11 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
         }
 
         // T305: Mark complete archives the profile, and a withdrawal ends it as surely. Refused before anything changes (the
-        // audit trap). This also retires T209's start-after-end check: only an ended profile records an end.
+        // audit trap). This also retires T209's start-after-end check: only an ended profile records an end. After the
+        // scope check, so an admin of another institution learns nothing about the profile's end.
         if (profile.IsEnded)
         {
-            throw new InvalidOperationException(Archived(profile.EndedOn!.Value));
+            throw new InvalidOperationException(Archived(profile.EndedOn));
         }
 
         var curriculum = await _dbContext.Set<Curriculum>()
@@ -150,17 +181,21 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
 
         var replays = moves || request.ProgrammeStartDate != profile.ProgrammeStartDate;
 
+        // Computed before the first change, as the admission computes it: AddMonths can throw, and the audit pipeline's save
+        // would then commit a profile moved without its replay.
+        var expectedCompletionDate = request.ExpectedCompletionDate
+            ?? request.ProgrammeStartDate.AddMonths(AdmitTraineeCommandHandler.GetDefaultCompletionMonths(curriculum));
+
         profile.AdoptionId = adoptionId;
         profile.CurriculumId = curriculum.Id;
         profile.ProgrammeStartDate = request.ProgrammeStartDate;
-        profile.ExpectedCompletionDate = request.ExpectedCompletionDate
-            ?? request.ProgrammeStartDate.AddMonths(AdmitTraineeCommandHandler.GetDefaultCompletionMonths(curriculum));
+        profile.ExpectedCompletionDate = expectedCompletionDate;
 
         TraineeCreditRecount? recount = null;
         if (replays)
         {
             var replayed = await ReplayAsync(profile, cancellationToken);
-            recount = new TraineeCreditRecount(moves, replayed.ActivitiesReplayed);
+            recount = new TraineeCreditRecount(moves, replayed.ActivitiesReplayed, replayed.ActivitiesCredited);
         }
         else
         {

@@ -188,7 +188,7 @@ public sealed class ProgrammeEndCreditRacePostgresTests : IAsyncLifetime
         await completion;
 
         completionWaited.Should().BeTrue("the move holds the profile until its save commits");
-        saved.Message.Should().Be("Trainee profile saved. 1 completion was counted again against T304.2.");
+        saved.Message.Should().Be("Trainee profile saved. 1 completion was checked against T304.2, and 1 counts towards it.");
         (await CreditedCurriculaAsync(fixture)).Should().Equal(
             [move.NewCurriculumId], "both completions credit the version the trainee was moved to, and nothing is left on the old one");
         (await StampAsync(fixture, filed)).Should().Be(1);

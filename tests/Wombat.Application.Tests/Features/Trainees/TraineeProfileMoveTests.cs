@@ -141,8 +141,8 @@ public sealed class TraineeProfileMoveTests
         }
 
         saves.Count.Should().Be(1, "the move and its replay are one save");
-        result.Recount.Should().Be(new TraineeCreditRecount(CurriculumMoved: true, CompletionsCounted: 1));
-        result.Message.Should().Be("Trainee profile saved. 1 completion was counted again against 11.2.");
+        result.Recount.Should().Be(new TraineeCreditRecount(CurriculumMoved: true, CompletionsChecked: 1, CompletionsCounting: 1));
+        result.Message.Should().Be("Trainee profile saved. 1 completion was checked against 11.2, and 1 counts towards it.");
         result.Profile.CurriculumVersion.Should().Be("11.2");
 
         await using var verify = new ApplicationDbContext(options);
@@ -219,8 +219,8 @@ public sealed class TraineeProfileMoveTests
                 CancellationToken.None);
         }
 
-        result.Recount.Should().Be(new TraineeCreditRecount(CurriculumMoved: false, CompletionsCounted: 1));
-        result.Message.Should().Be("Trainee profile saved. 1 completion was counted again from the new programme start date.");
+        result.Recount.Should().Be(new TraineeCreditRecount(CurriculumMoved: false, CompletionsChecked: 1, CompletionsCounting: 1));
+        result.Message.Should().Be("Trainee profile saved. 1 completion was checked again from the new programme start date.");
 
         await using var verify = new ApplicationDbContext(options);
         var stored = await verify.Set<TraineeProfile>().SingleAsync();
@@ -231,18 +231,143 @@ public sealed class TraineeProfileMoveTests
     }
 
     [Theory]
-    [InlineData(0, "Trainee profile saved. They have no completions to count against 11.2.")]
-    [InlineData(2, "Trainee profile saved. 2 completions were counted again against 11.2.")]
-    public void TheMessage_CountsTheCompletionsInPlainWords(int counted, string expected)
+    [InlineData(true, 0, 0, "Trainee profile saved. Thabo Ndlovu has no completions to count against 11.2.")]
+    [InlineData(true, 2, 1, "Trainee profile saved. 2 completions were checked against 11.2, and 1 counts towards it.")]
+    [InlineData(true, 2, 0, "Trainee profile saved. 2 completions were checked against 11.2, and none counts towards it.")]
+    [InlineData(true, 3, 3, "Trainee profile saved. 3 completions were checked against 11.2, and 3 count towards it.")]
+    [InlineData(false, 0, 0, "Trainee profile saved. Thabo Ndlovu has no completions to check again.")]
+    [InlineData(false, 3, 2, "Trainee profile saved. 3 completions were checked again from the new programme start date.")]
+    public void TheMessage_SaysWhatTheReplayChecked_InPlainWords(bool moved, int checkedCount, int counting, string expected)
     {
         var profile = new TraineeProfileDto(
             ProfileId, TraineeId, "t@test", "Thabo", "Ndlovu", V112, "Paediatrics", "11.2", 1, "Paediatrics", 1, "General",
             Start, Expected, IsActive: true);
 
-        new UpdateTraineeProfileResult(profile, new TraineeCreditRecount(true, counted)).Message.Should().Be(expected);
-        new UpdateTraineeProfileResult(profile, new TraineeCreditRecount(false, 0)).Message
-            .Should().Be("Trainee profile saved. They have no completions to count again.");
+        new UpdateTraineeProfileResult(profile, new TraineeCreditRecount(moved, checkedCount, counting)).Message.Should().Be(expected);
     }
+
+    [Fact]
+    public async Task AMoveToAVersionWithoutTheCompletionsEpa_RemovesTheOldTallies_AndSaysNothingCounts()
+    {
+        // 11.2 holds no item for PAED-001: the completion is checked against it and credits nothing, and 11.1's tally goes.
+        var options = await SeededAsync();
+        await CreditAsync(options);
+        await using (var strip = new ApplicationDbContext(options))
+        {
+            strip.CurriculumItems.Remove(await strip.CurriculumItems.SingleAsync(item => item.Id == ItemOn112));
+            await strip.SaveChangesAsync();
+        }
+
+        UpdateTraineeProfileResult result;
+        await using (var db = new ApplicationDbContext(options))
+        {
+            result = await Handler(db).Handle(
+                new UpdateTraineeProfileCommand(ProfileId, V112, Start, Expected, TestPrincipals.Administrator()),
+                CancellationToken.None);
+        }
+
+        result.Recount.Should().Be(new TraineeCreditRecount(CurriculumMoved: true, CompletionsChecked: 1, CompletionsCounting: 0));
+        result.Message.Should().Be("Trainee profile saved. 1 completion was checked against 11.2, and none counts towards it.");
+
+        await using var verify = new ApplicationDbContext(options);
+        (await verify.CurriculumItemProgresses.CountAsync()).Should().Be(0, "11.1's tally does not survive the move");
+        (await verify.ActivityTransitions.SingleAsync(transition => transition.TransitionKey == "complete"))
+            .CreditedItemCount.Should().Be(0);
+    }
+
+    // ---- the order of the refusals, and the dates (fix pass) -------------------------------------------------------
+
+    [Fact]
+    public async Task AnotherInstitutionsEndedProfile_IsRefusedByScope_NotByTheArchive()
+    {
+        // The scope check comes first, so an admin of another institution learns nothing about the profile's end.
+        var options = await SeededAsync();
+        await using (var end = new ApplicationDbContext(options))
+        {
+            (await end.Set<TraineeProfile>().SingleAsync()).Deactivate(new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 1));
+            await end.SaveChangesAsync();
+        }
+
+        await using var db = new ApplicationDbContext(options);
+        var act = () => Handler(db).Handle(
+            new UpdateTraineeProfileCommand(ProfileId, V111, Start, Expected, TestPrincipals.InstitutionalAdmin(InstitutionId + 1)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task AStartWhoseDerivedCompletionCannotBeComputed_IsRefusedBeforeAnyWrite()
+    {
+        // The derived expected completion is the start plus the curriculum window. Computed after the profile was changed,
+        // its overflow left a moved profile for the audit pipeline's save to commit, without its replay.
+        var options = await SeededAsync();
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var act = () => Handler(db).Handle(
+                new UpdateTraineeProfileCommand(ProfileId, V112, DateOnly.MaxValue, ExpectedCompletionDate: null, TestPrincipals.Administrator()),
+                CancellationToken.None);
+
+            await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+            await AssertNothingToCommitAsync(db);
+        }
+
+        await using var verify = new ApplicationDbContext(options);
+        var stored = await verify.Set<TraineeProfile>().SingleAsync();
+        (stored.CurriculumId, stored.AdoptionId, stored.ProgrammeStartDate).Should().Be((V111, Superseded, Start));
+    }
+
+    [Theory]
+    [InlineData(1899, 12, 31, false)]
+    [InlineData(1900, 1, 1, true)]
+    [InlineData(2199, 12, 31, true)]
+    [InlineData(2200, 1, 1, false)]
+    public void TheValidator_KeepsTheDatesInARangeTheWindowCanBeAddedTo(int year, int month, int day, bool valid)
+    {
+        var date = new DateOnly(year, month, day);
+        var validator = new UpdateTraineeProfileCommandValidator();
+
+        validator.Validate(new UpdateTraineeProfileCommand(ProfileId, V111, date, null, TestPrincipals.Administrator()))
+            .IsValid.Should().Be(valid);
+        validator.Validate(new UpdateTraineeProfileCommand(ProfileId, V111, Start, date, TestPrincipals.Administrator()))
+            .IsValid.Should().Be(valid);
+    }
+
+    // ---- a pending move applies to the moved profile alone ---------------------------------------------------------
+
+    [Fact]
+    public async Task APendingMove_AppliesOnlyToTheProfileItNames()
+    {
+        // The trainee also holds an ended profile (2) on 11.1. Credit accrues against the running one (1). A move pending
+        // on the ended profile says nothing about it; one pending on the running profile is what credit plans against.
+        var options = await SeededAsync();
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            var ended = new TraineeProfile
+            {
+                Id = 2, UserId = TraineeId, InstitutionId = InstitutionId, CurriculumId = V111, AdoptionId = Superseded,
+                ProgrammeStartDate = new DateOnly(2020, 1, 1), ExpectedCompletionDate = new DateOnly(2023, 1, 1), IsActive = true
+            };
+            ended.Deactivate(new DateOnly(2022, 1, 1), new DateOnly(2022, 1, 1));
+            seed.Set<TraineeProfile>().Add(ended);
+            await seed.SaveChangesAsync();
+        }
+
+        await using var db = new ApplicationDbContext(options);
+        var applier = new CreditApplier(db);
+
+        (await PlanAsync(applier, new PendingProgrammeMove(2, V112, Start))).Credits.Should().ContainSingle()
+            .Which.CurriculumItemId.Should().Be(ItemOn111, "a move pending on another profile changes nothing for this one");
+        (await PlanAsync(applier, new PendingProgrammeMove(ProfileId, V112, Start))).Credits.Should().ContainSingle()
+            .Which.CurriculumItemId.Should().Be(ItemOn112);
+    }
+
+    private static Task<CreditPlan> PlanAsync(CreditApplier applier, PendingProgrammeMove move)
+        => applier.PlanAsync(
+            new CreditSubject(TraineeId, Observed, ObservedOnDeclared: true, $$"""{ "epa_id": {{EpaId}}, "score": 3 }""",
+                new DateTime(2026, 8, 12, 9, 0, 0, DateTimeKind.Utc)) { PendingMove = move },
+            new ActivityType { CreditRulesJson = CreditsTheEpa, SchemaJson = SchemaJson });
 
     // ---- the hold -------------------------------------------------------------------------------------------------
 

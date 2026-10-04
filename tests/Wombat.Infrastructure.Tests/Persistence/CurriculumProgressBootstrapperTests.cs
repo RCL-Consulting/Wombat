@@ -42,7 +42,8 @@ public sealed class CurriculumProgressBootstrapperTests
             CreditApplications: 4,
             ProgressRowsWritten: 2,
             ProgressRowsRemoved: 0,
-            TransitionsStamped: 3);
+            TransitionsStamped: 3,
+            ActivitiesCredited: 3);
         var sender = new RecordingSender { Result = expected };
         using var shutdown = new CancellationTokenSource();
 

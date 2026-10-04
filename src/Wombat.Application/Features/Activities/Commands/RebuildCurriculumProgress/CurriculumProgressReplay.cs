@@ -100,6 +100,7 @@ internal static class CurriculumProgressReplay
         var creditedKeys = new HashSet<CurriculumItemProgressKey>();
         var stamps = new List<(ActivityTransition Transition, int CreditedItemCount, int ScaleMismatchCount)>();
         var activitiesReplayed = 0;
+        var activitiesCredited = 0;
         var creditApplications = 0;
 
         try
@@ -130,6 +131,11 @@ internal static class CurriculumProgressReplay
                     await creditApplier.PlanAsync(subject, pinnedType, cancellationToken), activity);
 
                 activitiesReplayed++;
+                if (credited.UpdatedRows.Count > 0)
+                {
+                    activitiesCredited++;
+                }
+
                 creditApplications += credited.UpdatedRows.Count;
 
                 foreach (var row in credited.UpdatedRows)
@@ -221,7 +227,8 @@ internal static class CurriculumProgressReplay
             CreditApplications: creditApplications,
             ProgressRowsWritten: creditedKeys.Count,
             ProgressRowsRemoved: removedRows.Count,
-            TransitionsStamped: stamps.Count);
+            TransitionsStamped: stamps.Count,
+            ActivitiesCredited: activitiesCredited);
     }
 
     /// <summary>
