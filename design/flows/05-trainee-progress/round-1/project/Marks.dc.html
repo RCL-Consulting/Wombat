@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marks notices and failures</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#1a1a1a}a:hover{color:#000}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;background:#efefef}
+.wf *{box-sizing:border-box}
+h2{font-size:18px;margin:0;font-weight:600}
+h3{font-size:15px;margin:0;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.cell{display:flex;flex-direction:column;gap:8px}
+.cap{font-size:12.5px;font-weight:700;letter-spacing:.05em}
+.card{background:#fff;border:1px solid #b5b5b5;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.alert{border:1px solid #888;border-left:4px solid #333;border-radius:6px;background:#f2f2f2;padding:12px;display:flex;flex-direction:column;gap:4px}
+.badge{display:inline-block;border:1px solid #777;border-radius:999px;padding:0 8px;font-size:12px;font-weight:600;background:#eee;white-space:nowrap}
+.muted{color:#5a5a5a}.small{font-size:13px}
+.fig{font-size:26px;font-weight:700;line-height:1}
+.note{border:1.5px dashed #444;border-radius:6px;padding:6px 8px;font-size:12px;background:#fafafa;font-style:italic}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1.5px solid #333;border-radius:6px;font-weight:600;font-size:14px;background:#fff;text-decoration:none;align-self:flex-start}
+.sk{background:#ddd;border-radius:4px;height:12px}
+.row{border-top:1px solid #ddd;padding-top:8px;display:flex;flex-direction:column;gap:2px}
+.hdr{border-bottom:2px solid #888;padding-bottom:8px}
+.hdr b{font-size:20px}
+</style>
+</helmet>
+<div class="wf" style="width:1440px;min-height:2700px;padding:40px;display:flex;flex-direction:column;gap:28px">
+<div class="small muted">Shared by all three variations unless a cell says otherwise. Where a variation puts the mark: V1 the index row and the EPA page; V2 the row summary and its open panel; V3 the Observations row and the Entrustment chart.</div>
+
+<h2>Catalogue events</h2>
+<div class="grid">
+<div class="cell"><div class="cap">A PAUSED EPA · ROW, CARD HEADING, CHART HEADING</div>
+<div class="card">
+<div class="row"><a href="#">PAED-012 — [EPA title]</a> <span class="muted">(no longer in use)</span><span class="small">Paused by the College. It counts towards no target while paused; its ratings and STAR are kept.</span></div>
+<div class="row"><b style="font-size:18px">PAED-012 — [EPA title] <span class="muted" style="font-weight:400">(no longer in use)</span></b><span class="small muted">As a page's h1 (V1) or a panel heading (V2): the muted mark after the name, then an info notice, no count, no bar.</span></div>
+<div class="row"><b>PAED-012 — [EPA title] <span class="muted" style="font-weight:400">(no longer in use)</span></b><span class="small muted">2 ratings, from Fatima Khumalo and David Naidoo. Every rating is kept.</span></div>
+</div>
+<div class="note">T312/T255. "Each semester · 9 EPAs" and "of 9" while it is out; back to 10 on restore (6.24).</div></div>
+
+<div class="cell"><div class="cap">THE INSTITUTION'S OWN · KGK-001</div>
+<div class="card">
+<div class="row"><span><a href="#">KGK-001 — [EPA title]</a> <span class="badge">Kgosi Kgari Teaching Hospital's own</span></span><span>0 of 1 in the 2026 academic year</span><span class="small muted">1 more by 2026-11-30 · decided once a year</span></div>
+<div class="row"><span class="small">2025 academic year: 0 of 1, 1 short</span></div>
+</div>
+<div class="note">The badge on every row, card and chart heading. Today a target is read live into closed periods, so 2025 shows "1 short" for an item added in 2026 (6.27). Round 2 question: say "Not on your curriculum then" instead?</div></div>
+
+<div class="cell"><div class="cap">AFTER A MOVE TO A NEW VERSION · NOTICE UNDER THE HEADER</div>
+<div class="alert"><b>You moved to curriculum 11.2 on 2026-10-02.</b><span>Your counts carried over. New: PAED-016, once a year. Changed: PAED-011, now 2 a year in the 2026 academic year.</span></div>
+<div class="card"><div class="row"><span><a href="#">PAED-016 — [EPA title]</a> <span class="badge">New in curriculum 11.2</span></span><span>0 of [n] in the 2026 academic year</span></div>
+<div class="row"><span><a href="#">PAED-011 — [EPA title]</a> <span class="badge">Target changed in 11.2</span></span><span>[n] of 2 in the 2026 academic year</span></div></div>
+<div class="note">Q9: draw only the rebuilt state, plus this info Alert until her next period starts (T304). If the rebuild stays apart: "Your counts are being carried over to curriculum 11.2. Until then each EPA reads 0." and no zeros drawn under it. 17 cards / rows: the groups count 11 and 6.</div></div>
+</div>
+
+<h2>Periods and programme states</h2>
+<div class="grid">
+<div class="cell"><div class="cap">STARTED PART-WAY THROUGH A PERIOD</div>
+<div class="card"><div class="row"><a href="#">PAED-002 — [EPA title]</a><span>2 observed in Semester 2, 2026</span><span class="small muted">No target this semester: you started on 2026-08-18, part-way through it. Targets start with Semester 1, 2027.</span></div>
+<div class="row"><span class="fig" style="font-size:20px">No target</span><span class="small">in Semester 2, 2026 (you started part-way through)</span></div></div>
+<div class="note">No fraction, no bar (DESIGN.md's rule). This period reads "No semester target this semester".</div></div>
+
+<div class="cell"><div class="cap">DECEMBER</div>
+<div class="alert"><b>The 2026 academic year ended on 2026-11-30.</b><span>Encounters observed in December still count towards Semester 2, 2026. Yearly targets start again on 2027-01-15.</span></div>
+<div class="note">Info Alert on My progress's This period, and one line on Home's targets card. Second sentence's end is [as today's page words it].</div></div>
+
+<div class="cell"><div class="cap">FIRST DAY · EVERY TARGET MET · EXIT RULE MET</div>
+<div class="card"><div class="row"><span class="fig">0 of 10</span><span class="small">semester targets met in Semester 2, 2026</span></div>
+<div class="row"><span class="fig">10 of 10</span><span class="small">semester targets met in Semester 2, 2026</span></div>
+<div class="row"><span class="fig">15 of 15</span><span class="small">EPAs at their exit level by STAR decision. Every EPA is at its exit level. For information only.</span></div></div>
+<div class="note">First day: every row "0 of 3 this semester", "No decision"; Home's Furthest short lists PAED-001 to 005. All met: Furthest short gives way to "Every semester target is met for Semester 2, 2026."</div></div>
+
+<div class="cell"><div class="cap">NO CURRICULUM ASSIGNED YET</div>
+<div class="card"><h3>No curriculum assigned yet.</h3><span>[rest of today's sentence: who assigns it]</span></div>
+<div class="note">StatePanel empty, on Home's targets card and in place of My progress's body. No figures drawn.</div></div>
+<div class="cell"><div class="cap">PROGRAMME NOT STARTED</div>
+<div class="card"><h3>Your programme starts on 2027-01-15.</h3><span>Your targets start that day. You can log activities before then; they count from it.</span></div>
+<div class="note">Second sentence to be checked against the rule that refuses a pre-programme date (flow 03).</div></div>
+<div class="cell"><div class="cap">NO EPA ON YOUR CURRICULUM IS IN USE</div>
+<div class="card"><h3>No EPA on your curriculum is in use.</h3><span>Your earlier ratings are kept below.</span></div>
+<div class="note">Charts still listed, each "(no longer in use)".</div></div>
+</div>
+
+<h2>Loading and failure (T329, T272)</h2>
+<div class="grid">
+<div class="cell"><div class="cap">LOADING · THE HEADER FIRST, THEN A SKELETON</div>
+<div class="card"><div class="hdr"><b>My progress</b></div><div class="sk" style="width:40%;height:24px"></div><div class="sk"></div><div class="sk" style="width:80%"></div><div class="sk" style="width:70%;margin-top:12px"></div><div class="sk" style="width:90%"></div></div>
+<div class="note">Skeleton in the page's own shape as StatePanel's LoadingContent; a hidden status "Loading My progress."</div></div>
+<div class="cell"><div class="cap">LOAD ERROR · A SENTENCE UNDER THE HEADER</div>
+<div class="card"><div class="hdr"><b>My progress</b></div><div><b>Could not load your progress.</b> Nothing has changed. Try again, or come back in a few minutes.</div><a class="btn" href="#">Try again</a></div>
+<div class="note">Nothing drawn under it, never the driver's text. Try again keeps the focus while it runs; the answer takes it (This period's heading, or the sentence again). 44 px at 390.</div></div>
+<div class="cell"><div class="cap">A SECTION FAILS APART</div>
+<div class="card"><h3>Entrustment against Annexure A</h3><div><b>Could not load your standing.</b> Nothing has changed. Try again, or come back in a few minutes.</div><a class="btn" href="#">Try again</a>
+<div class="row"><b class="small">Multi-source feedback</b><span class="small">Could not load MSF coverage. Your counts above are not affected.</span></div></div>
+<div class="note">V1/V2: the STAR cells read "Not loaded" and the summary figure is withheld. V3: Entrustment's page body is this. MSF fails as one line.</div></div>
+</div>
+
+<h2>Other roles and endings</h2>
+<div class="grid">
+<div class="cell"><div class="cap">A REGISTRAR WHO ALSO ACTS AS ASSESSOR</div>
+<div class="alert"><span>1 activity waits for you in the Activity inbox: Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu, waiting 2 days.</span><a href="#">Open it</a></div>
+<div class="note">Flow 04's OtherRoleLine, above the Trainee's cards, unchanged in all three.</div></div>
+<div class="cell"><div class="cap">A 120-CHARACTER TITLE</div>
+<div class="card" style="width:358px"><a href="#" style="font-weight:600">PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</a><span>0 of 1 this semester</span></div>
+<div class="note">Wraps under itself; the figure is never beside it. V2's summary row gives it the 1fr column at 1280.</div></div>
+<div class="cell"><div class="cap">AFTER THE PROGRAMME ENDS (FLOW 13)</div>
+<div class="card"><h3>Your training record</h3><span>You hold no role at the moment. Your training record is kept, read-only: your progress in each period, and your portfolio to export.</span><a href="#">Open My progress →</a></div>
+<div class="note">My progress stays under the rule for her; no "This period" figures, each period read-only.</div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>From a completed activity</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#1a1a1a}a:hover{color:#000}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;background:#efefef}
+.wf *{box-sizing:border-box}
+h2{font-size:18px;margin:0;font-weight:600}
+.card{background:#fff;border:1px solid #b5b5b5;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.done{box-shadow:inset 4px 0 0 #333}
+.badge{display:inline-block;border:1px solid #777;border-radius:999px;padding:0 8px;font-size:12px;font-weight:600;background:#eee;white-space:nowrap}
+.muted{color:#5a5a5a}.small{font-size:13px}
+.note{border:1.5px dashed #444;border-radius:6px;padding:8px 10px;font-size:12.5px;background:#fafafa;font-style:italic}
+.tag{font-size:10.5px;font-weight:700;border:1px solid #333;padding:0 4px;border-radius:3px;font-style:normal;letter-spacing:.04em;margin-right:4px}
+.cap{font-size:13px;font-weight:700;letter-spacing:.05em}
+.hl{background:#e8e8e8;outline:2px dashed #333;outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 14px;border:1.5px solid #333;border-radius:6px;font-weight:600;font-size:14px;background:#fff;text-decoration:none}
+table.t{width:100%;border-collapse:collapse;font-size:14px;background:#fff}
+.t th{text-align:left;background:#e3e3e3;padding:8px 10px;font-weight:600}
+.t td{padding:10px;border-top:1px solid #ddd;vertical-align:top}
+.srow{background:#fff;border:1px solid #c8c8c8;border-radius:8px;padding:12px;display:grid;grid-template-columns:8rem 1fr;gap:4px 8px;font-size:14px}
+.srow .full{grid-column:1 / -1}
+.srow .l{color:#5a5a5a}
+.land{border:1px solid #999;border-radius:8px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+</style>
+</helmet>
+<div class="wf" style="width:1440px;min-height:1900px;padding:40px;display:flex;flex-direction:column;gap:28px">
+
+<div class="cap">FLOW 03'S COMPLETED STATUS CARD ("WHO HAS IT NOW"), WITH ITS COUNT (T346) · ALL THREE VARIATIONS</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+<div style="width:880px;display:flex;flex-direction:column;gap:8px"><div class="small muted">1280 · Anele Dlamini, Step 3.6</div>
+<section class="card done">
+<div style="display:flex;gap:10px;align-items:center"><h2>Who has it now</h2><span class="badge">Completed</span></div>
+<div style="font-weight:600">Done. David Naidoo completed it on 2026-09-24 08:12 SAST.</div>
+<div>Rated 4. Credited 1 item to PAED-001: <b>1 of 3 this semester.</b></div>
+<div><a href="#">Open My progress</a></div>
+</section>
+<div class="note"><span class="tag">CHANGED</span>Only the second sentence grows: ": 1 of 3 this semester." The count is the live one for the credited window, read when the page loads. The link keeps its words and its place. Its accessible name: "Open My progress at PAED-001". A completed activity that credited nothing keeps flow 03's words. MSF: "Recorded. Multi-source feedback counts towards no target." A credit to a paused EPA: "Credited 1 item to PAED-012, which is no longer in use; it counts again if the College restores it."</div>
+</div>
+<div style="width:390px;display:flex;flex-direction:column;gap:8px"><div class="small muted">390</div>
+<section class="card done">
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2>Who has it now</h2><span class="badge">Completed</span></div>
+<div style="font-weight:600">Done. David Naidoo completed it on 2026-09-24 08:12 SAST.</div>
+<div>Rated 4. Credited 1 item to PAED-001: <b>1 of 3 this semester.</b></div>
+<a class="btn" href="#">Open My progress</a>
+</section></div>
+</div>
+
+<div class="cap">WHERE "OPEN MY PROGRESS" LANDS · WHAT TAKES THE FOCUS</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+<div class="land"><b>V1 · /portfolio/progress/PAED-001</b>
+<div class="hl" style="padding:6px;font-size:18px;font-weight:600">PAED-001 — Providing paediatric emergency care to children</div>
+<div>Observations: <b>1 of 3</b> this semester · 2 more by 2026-11-30</div>
+<div class="small muted">The h1 takes the focus (FocusOnNavigate); the figure is the next thing read.</div></div>
+<div class="land"><b>V2 · /portfolio/progress?epa=PAED-001</b>
+<div class="small muted">This period card, then:</div>
+<div class="hl" style="padding:6px"><b>⌄ PAED-001 — Providing paediatric emergency care to children</b><br>1 of 3 this semester</div>
+<div class="small muted">That row opens and its summary takes the focus (wombat.focusById); the page scrolls it to the top.</div></div>
+<div class="land"><b>V3 · /portfolio/progress?epa=PAED-001</b>
+<div class="small muted">Observations, This period, then the table:</div>
+<div class="hl" style="padding:6px"><u>PAED-001 — Providing paediatric emergency care to children</u> · 1 of 3 · Evidence open</div>
+<div class="small muted">The row's link takes the focus; its Evidence fold is open; its STAR is one more press, on Entrustment.</div></div>
+</div>
+
+<div class="cap">MY ACTIVITIES (FLOW 03'S DESIGN, UNCHANGED BUT ITS CREDIT CELL) · LERATO MOLEFE, STEP 3.48, AND ANELE DLAMINI DURING THE PAUSE, STEP 6.19</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+<div style="width:880px;display:flex;flex-direction:column;gap:8px">
+<div style="border:1px solid #b5b5b5;border-radius:12px;overflow:hidden"><table class="t">
+<tr><th style="width:40%">Activity</th><th>Who has it now</th><th>State</th><th>Credit</th></tr>
+<tr><td><a href="#">Mini-CEX (Paediatrics) · PAED-001 · 2026-09-26</a><div class="small muted">to Sarah Botha</div></td><td>Done</td><td><span class="badge">Completed</span></td><td><a href="#">1 item</a><div class="small muted">to PAED-001</div></td></tr>
+<tr><td><a href="#">Multi-Source Feedback (Paediatrics) · PAED-010 · 2026-09-30</a><div class="small muted">campaign closed</div></td><td>Done</td><td><span class="badge">Recorded</span></td><td>—</td></tr>
+<tr><td><a href="#">Multi-Source Feedback (Paediatrics) · PAED-012 · 2026-09-30</a><div class="small muted">campaign closed</div></td><td>Done</td><td><span class="badge">Recorded</span></td><td>—</td></tr>
+<tr><td><a href="#">Mini-CEX (Paediatrics) · PAED-012 · 2026-09-28</a><div class="small muted">PAED-012 (no longer in use)</div><div class="small muted">to Fatima Khumalo</div></td><td>Done</td><td><span class="badge">Completed</span></td><td>None</td></tr>
+</table></div>
+<div class="note"><span class="tag">CHANGED</span>Credit "1 item" becomes a link, named "1 item to PAED-001, in My progress", to wherever the variation puts the EPA (V1 its page, V2 its open row, V3 its Observations row). "—" (MSF, D8) and "None" (a paused EPA) stay plain text: nothing to open. Rows, columns, order and words are flow 03's.</div>
+</div>
+<div style="width:390px;display:flex;flex-direction:column;gap:12px"><div class="small muted">390 · stacked (DataTable Stack)</div>
+<div class="srow"><a class="full" href="#" style="min-height:44px;display:flex;align-items:center">Multi-Source Feedback (Paediatrics) · PAED-010 · 2026-09-30</a><span class="l">Who has it now</span><span>Done</span><span class="l">State</span><span><span class="badge">Recorded</span></span><span class="l">Credit</span><span>—</span></div>
+<div class="srow"><a class="full" href="#" style="min-height:44px;display:flex;align-items:center">Mini-CEX (Paediatrics) · PAED-012 · 2026-09-28</a><span class="full small muted">PAED-012 (no longer in use)</span><span class="l">Who has it now</span><span>Done</span><span class="l">State</span><span><span class="badge">Completed</span></span><span class="l">Credit</span><span>None</span></div>
+<div class="srow"><a class="full" href="#" style="min-height:44px;display:flex;align-items:center">Mini-CEX (Paediatrics) · PAED-001 · 2026-09-26</a><span class="l">Who has it now</span><span>Done</span><span class="l">State</span><span><span class="badge">Completed</span></span><span class="l">Credit</span><span><a href="#" style="min-height:44px;display:inline-flex;align-items:center">1 item to PAED-001</a></span></div>
+</div>
+</div>
+<div class="note" style="width:1310px">Checked against the new progress pages: an MSF row's EPA shows its coverage line on that EPA (V1 page / V2 row / V3 header line) and never a count; the paused row's EPA is in "No longer in use" (V1, V2) or headed "(no longer in use)" on Entrustment's chart (V3), and its Credit reads None until the College restores it (Step 6.24 then reads "1 item").</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

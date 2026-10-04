@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>V1 Home 1280</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#1a1a1a}a:hover{color:#000}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;background:#efefef}
+.wf *{box-sizing:border-box}
+.side{width:250px;flex:none;background:#cfcfcf}
+.brand{height:56px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#bdbdbd;font-weight:600;font-size:18px}
+.brand img{width:32px;height:32px}
+.role{padding:12px 16px;font-size:13px;border-bottom:1px solid #aaa}
+.nav{list-style:none;margin:0;padding:8px}
+.nav li{padding:8px 10px;border-radius:4px;font-size:15px}
+.nav li.on{background:#a8a8a8;font-weight:600;box-shadow:inset 3px 0 0 #fff}
+.nav li.rule{padding:0;margin:6px 0;border-top:1px solid #999;border-radius:0}
+.nav li.moved{outline:1.5px dashed #333}
+.top{height:56px;background:#fff;border-bottom:1px solid #bbb;display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:0 24px;font-size:14px}
+.page{padding:24px 24px 48px 32px;display:flex;flex-direction:column;gap:24px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #888;padding-bottom:12px;gap:16px}
+h1{font-size:24px;margin:0;font-weight:600}
+h2{font-size:18px;margin:0;font-weight:600}
+h3{font-size:16px;margin:0;font-weight:600}
+.sub{font-size:14px;color:#555}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1.5px solid #333;border-radius:6px;font-weight:600;font-size:14px;background:#fff;text-decoration:none;white-space:nowrap}
+.btn.fill{background:#333;color:#fff}
+.card{background:#fff;border:1px solid #b5b5b5;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.card.em{box-shadow:inset 4px 0 0 #333}
+.bar{height:8px;border-radius:4px;background:#e0e0e0;overflow:hidden;width:120px;flex:none}.bar i{display:block;height:100%;background:#666}
+.badge{display:inline-block;border:1px solid #777;border-radius:999px;padding:0 8px;font-size:12px;font-weight:600;background:#eee;white-space:nowrap}
+.muted{color:#5a5a5a}.small{font-size:13px}
+.fig{font-size:30px;font-weight:700;line-height:1}
+.note{border:1.5px dashed #444;border-radius:6px;padding:8px 10px;font-size:12.5px;background:#fafafa;font-style:italic}
+.tag{font-size:10.5px;font-weight:700;border:1px solid #333;padding:0 4px;border-radius:3px;font-style:normal;letter-spacing:.04em;margin-right:4px}
+.rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.rows li{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 0;border-top:1px solid #ddd;min-height:44px}
+</style>
+</helmet>
+<div class="wf" style="width:1280px;min-height:1150px;display:flex">
+<div class="side">
+<div class="brand"><img src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="">Wombat</div>
+<div class="role"><div class="muted">Acting as</div><div style="font-weight:600;font-size:16px">Trainee</div></div>
+<ul class="nav"><li class="on">Home</li><li>Log an activity</li><li>My activities</li><li class="moved">My progress</li><li>MSF reports</li><li>My committee reviews</li><li>Export portfolio</li><li class="rule"></li><li>My data rights</li></ul>
+<div class="note" style="margin:8px">Q8: My progress joins the Trainee's group (7 links). For a former trainee it stays under the rule (flow 13).</div>
+</div>
+<div style="flex:1;min-width:0">
+<div class="top"><a href="#">Anele Dlamini</a><a href="#">Sign out</a></div>
+<div class="page">
+<div class="hdr"><div><h1>Home</h1><div class="sub">Trainee · Semester 2, 2026</div></div><a class="btn fill" href="#">Log an activity</a></div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:24px;align-items:start">
+
+<section class="card">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Your targets</h2><span class="small muted"><span class="tag">CHANGED</span>was Curriculum targets</span></div>
+<div>Training year 3 — it sets the minimum level each encounter is judged against.</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div style="display:flex;flex-direction:column;gap:4px"><span class="fig">1 of 10</span><span>semester targets met in Semester 2, 2026</span><span class="small muted">July to November</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span class="fig">0 of 5</span><span>yearly targets met in the 2026 academic year</span><span class="small muted">January to November</span></div>
+</div>
+<h3 style="margin-top:6px">Furthest short</h3>
+<ul class="rows">
+<sc-for list="{{short}}" as="r" hint-placeholder-count="5">
+<li><div style="display:flex;flex-direction:column;min-width:0"><a href="V1-EPA.dc.html">{{r.name}}</a><span class="small muted">{{r.fig}}</span></div><span class="bar"><i style="width:0%"></i></span></li>
+</sc-for>
+</ul>
+<div class="note">Each row is its own link, to its EPA's page; the card is not a link (T280). The count and its date sit under the name, so nothing wraps beside it at 390 (A.7.3).</div>
+<div><a class="btn" href="V1-Progress.dc.html">Open My progress</a></div>
+</section>
+
+<div style="display:flex;flex-direction:column;gap:24px">
+<section class="card">
+<h2>Needs you</h2>
+<div>Nothing needs you. Requests you have filed are in My activities.</div>
+<div><a href="#">Open My activities</a></div>
+<div class="note">Flow 03's NeedsYouList, unchanged. With Recent activities gone it is Home's one way to My activities.</div>
+</section>
+
+<section class="card">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Your STARs</h2><span class="small muted"><span class="tag">NEW</span>was My authorisations</span></div>
+<div>No STAR yet. When the committee issues one, it shows here against training year 3's target.</div>
+<div><a class="btn" href="#">Open My authorisations</a></div>
+<div class="note">Lerato Molefe's reads "2 at or above · 1 below · 12 with no decision, of 15 EPAs", then a row: PAED-010 — [EPA title], "4, below training year 4's target of 5. Expires 2026-10-23." (V1 phone board.)</div>
+</section>
+</div>
+</div>
+<div class="note">Removed: Recent activities (My activities holds every row, newest encounter first) and Upcoming deadlines (T298: its dates are now real, in Furthest short and Your STARs). MSF is not on Home: it counts towards no target (D8).</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1150}}'>
+class Component extends DCLogic {
+renderVals() {
+const t = '[EPA title]';
+return { short: [
+{ name: 'PAED-002 — ' + t, fig: '0 of 3 this semester · 3 more by 2026-11-30' },
+{ name: 'PAED-003 — ' + t, fig: '0 of 3 this semester · 3 more by 2026-11-30' },
+{ name: 'PAED-005 — ' + t, fig: '0 of 3 this semester · 3 more by 2026-11-30' },
+{ name: 'PAED-010 — ' + t, fig: '0 of 3 this semester · 3 more by 2026-11-30' },
+{ name: 'PAED-012 — ' + t, fig: '0 of 3 this semester · 3 more by 2026-11-30' }
+] };
+}
+}
+</script>
+</body>
+</html>

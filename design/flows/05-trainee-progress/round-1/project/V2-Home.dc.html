@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>V2 Home 1280</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#1a1a1a}a:hover{color:#000}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;background:#efefef}
+.wf *{box-sizing:border-box}
+.side{width:250px;flex:none;background:#cfcfcf}
+.brand{height:56px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#bdbdbd;font-weight:600;font-size:18px}
+.brand img{width:32px;height:32px}
+.role{padding:12px 16px;font-size:13px;border-bottom:1px solid #aaa}
+.nav{list-style:none;margin:0;padding:8px}
+.nav li{padding:8px 10px;border-radius:4px;font-size:15px}
+.nav li.on{background:#a8a8a8;font-weight:600;box-shadow:inset 3px 0 0 #fff}
+.nav li.rule{padding:0;margin:6px 0;border-top:1px solid #999;border-radius:0}
+.top{height:56px;background:#fff;border-bottom:1px solid #bbb;display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:0 24px;font-size:14px}
+.page{padding:24px 24px 48px 32px;display:flex;flex-direction:column;gap:24px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #888;padding-bottom:12px;gap:16px}
+h1{font-size:24px;margin:0;font-weight:600}
+h2{font-size:18px;margin:0;font-weight:600}
+.sub{font-size:14px;color:#555}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1.5px solid #333;border-radius:6px;font-weight:600;font-size:14px;background:#fff;text-decoration:none;white-space:nowrap}
+.btn.fill{background:#333;color:#fff}
+.card{background:#fff;border:1px solid #b5b5b5;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.bar{height:8px;border-radius:4px;background:#e0e0e0;overflow:hidden;width:110px;flex:none}.bar i{display:block;height:100%;background:#666}
+.badge{display:inline-block;border:1px solid #777;border-radius:999px;padding:0 8px;font-size:12px;font-weight:600;background:#eee;white-space:nowrap}
+.muted{color:#5a5a5a}.small{font-size:13px}
+.fig{font-size:30px;font-weight:700;line-height:1}
+.note{border:1.5px dashed #444;border-radius:6px;padding:8px 10px;font-size:12.5px;background:#fafafa;font-style:italic}
+.tag{font-size:10.5px;font-weight:700;border:1px solid #333;padding:0 4px;border-radius:3px;font-style:normal;letter-spacing:.04em;margin-right:4px}
+.rows{list-style:none;margin:0;padding:0}
+.rows li{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 0;border-top:1px solid #ddd;min-height:44px}
+.date{font-variant-numeric:tabular-nums;font-weight:600;width:6.5rem;flex:none}
+</style>
+</helmet>
+<div class="wf" style="width:1280px;min-height:1150px;display:flex">
+<div class="side">
+<div class="brand"><img src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="">Wombat</div>
+<div class="role"><div class="muted">Acting as</div><div style="font-weight:600;font-size:16px">Trainee</div></div>
+<ul class="nav"><li class="on">Home</li><li>Log an activity</li><li>My activities</li><li>My progress</li><li>MSF reports</li><li>My committee reviews</li><li>Export portfolio</li><li class="rule"></li><li>My data rights</li></ul>
+</div>
+<div style="flex:1;min-width:0">
+<div class="top"><a href="#">Lerato Molefe</a><a href="#">Sign out</a></div>
+<div class="page">
+<div class="hdr"><div><h1>Home</h1><div class="sub">Trainee · Semester 2, 2026</div></div><a class="btn fill" href="#">Log an activity</a></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start">
+
+<section class="card">
+<h2>Due this semester</h2>
+<div>Training year 4 — it sets the minimum level each encounter is judged against.</div>
+<div style="display:flex;gap:24px"><div><span class="fig">1 of 10</span><div>semester targets met in Semester 2, 2026</div></div><div><span class="fig">0 of 5</span><div>yearly targets met in the 2026 academic year</div></div></div>
+<ul class="rows">
+<sc-for list="{{short}}" as="r" hint-placeholder-count="5">
+<li><div style="display:flex;flex-direction:column"><a href="V2-Progress.dc.html">{{r.n}} — [EPA title]</a><span class="small muted">{{r.f}}</span></div><span class="bar"><i style="width:0%"></i></span></li>
+</sc-for>
+</ul>
+<div><a class="btn" href="V2-Progress.dc.html">Open My progress</a></div>
+<div class="note">A row opens My progress with that EPA's row open (?epa=PAED-002).</div>
+</section>
+
+<section class="card"><h2>Needs you</h2><div>Nothing needs you. Requests you have filed are in My activities.</div><div><a href="#">Open My activities</a></div></section>
+
+<section class="card">
+<div style="display:flex;justify-content:space-between"><h2>Coming up</h2><span class="small muted"><span class="tag">CHANGED</span>was Upcoming deadlines</span></div>
+<ul class="rows">
+<li style="justify-content:flex-start"><span class="date">2026-10-23</span><span>Your STAR for <a href="#">PAED-010 — [EPA title]</a> expires. It is 4, below training year 4's target of 5.</span></li>
+<li style="justify-content:flex-start"><span class="date">[date]</span><span>Your <a href="#">committee review</a> sits. <span class="small muted">From My committee reviews.</span></span></li>
+<li style="justify-content:flex-start"><span class="date">2026-11-30</span><span>Semester 2, 2026 and the 2026 academic year end: 9 semester and 5 yearly targets not met yet.</span></li>
+</ul>
+<div class="note">T298: three real sources, nearest first, 60 days ahead. With none: "Nothing is due before 2026-12-03." It can fill.</div>
+</section>
+
+<section class="card">
+<div style="display:flex;justify-content:space-between"><h2>Credited lately</h2><span class="small muted"><span class="tag">CHANGED</span>was Recent activities</span></div>
+<ul class="rows">
+<li><div style="display:flex;flex-direction:column"><a href="#">Mini-CEX (Paediatrics) · PAED-001 · 2026-09-26</a><span class="small muted">by Sarah Botha · PAED-001: 3 of 3 this semester, met</span></div><span class="badge">Completed</span></li>
+<li><div style="display:flex;flex-direction:column"><a href="#">Direct Observation (Paediatrics) · PAED-010 · 2026-09-24</a><span class="small muted">by David Naidoo · PAED-010: 1 of 3 this semester</span></div><span class="badge">Completed</span></li>
+<li><div style="display:flex;flex-direction:column"><a href="#">Mini-CEX (Paediatrics) · PAED-012 · 2026-09-18</a><span class="small muted">by Fatima Khumalo · PAED-012: 2 of 3 this semester</span></div><span class="badge">Completed</span></li>
+</ul>
+<div class="note">Kept only because it says what each completed activity counted, which My activities does not. Newest encounter first, as My activities. No footer link: Needs you's is the way to My activities.</div>
+</section>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1150}}'>
+class Component extends DCLogic {
+renderVals() {
+return { short: ['PAED-002','PAED-003','PAED-004','PAED-005','PAED-006'].map((n,i) => ({ n, f: (i===4?'0 of 2':'0 of 3') + ' this semester · ' + (i===4?'2':'3') + ' more by 2026-11-30' })) };
+}
+}
+</script>
+</body>
+</html>

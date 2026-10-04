@@ -11,3 +11,12 @@ T355's design, kept beside its brief (`../05-trainee-progress.md`) so that it ou
   and the rest of `design/upload/`.
 - **Before round 1:** the canvas held no `project/canvas.json`; its version was `1791075615-bb97`. A round has drawn only
   if that changes.
+- **Round 1** (2026-10-04, `round-1/`, canvas version `1791076762-5f41`): 16 boards. `Main` compares the three
+  structures with press counts and answers the questions per variation; V1 "EPA pages: an index, and a page per EPA"
+  (V1-Home, V1-Progress, V1-EPA, V1-Phone); V2 "One page: every EPA a row that opens in place" (V2-Home, V2-Progress,
+  V2-Phone); V3 "Weekly Home; My progress in two parts" (V3-Home, V3-Observations, V3-Entrustment, V3-Phone); shared:
+  Trajectory-1280 and -390, WaysIn, Marks.
+- **Round 1's review:** `round-1-review.md`. Recommendation: V1, borrowing V2's "Credited lately" widened to decisions on
+  her requests (the one Home surface for a decline), with six corrections (the committee's standing table kept whole;
+  the EPA page by id; the evidence from the activity records; only the rebuilt state after a version move; the
+  completed card gains only the count; the rule words). Operator's: Q8, Q9, O1, O2.

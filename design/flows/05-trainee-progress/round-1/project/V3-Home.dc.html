@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>V3 Home 1280</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#1a1a1a}a:hover{color:#000}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;background:#efefef}
+.wf *{box-sizing:border-box}
+.side{width:250px;flex:none;background:#cfcfcf}
+.brand{height:56px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#bdbdbd;font-weight:600;font-size:18px}
+.brand img{width:32px;height:32px}
+.role{padding:12px 16px;font-size:13px;border-bottom:1px solid #aaa}
+.nav{list-style:none;margin:0;padding:8px}
+.nav li{padding:8px 10px;border-radius:4px;font-size:15px}
+.nav li.on{background:#a8a8a8;font-weight:600;box-shadow:inset 3px 0 0 #fff}
+.nav li.rule{padding:0;margin:6px 0;border-top:1px solid #999;border-radius:0}
+.top{height:56px;background:#fff;border-bottom:1px solid #bbb;display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:0 24px;font-size:14px}
+.page{padding:24px 24px 48px 32px;display:flex;flex-direction:column;gap:24px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #888;padding-bottom:12px;gap:16px}
+h1{font-size:24px;margin:0;font-weight:600}
+h2{font-size:18px;margin:0;font-weight:600}
+h3{font-size:15px;margin:0;font-weight:600}
+.sub{font-size:14px;color:#555}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1.5px solid #333;border-radius:6px;font-weight:600;font-size:14px;background:#fff;text-decoration:none;white-space:nowrap}
+.btn.fill{background:#333;color:#fff}
+.card{background:#fff;border:1px solid #b5b5b5;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.badge{display:inline-block;border:1px solid #777;border-radius:999px;padding:0 8px;font-size:12px;font-weight:600;background:#eee;white-space:nowrap}
+.muted{color:#5a5a5a}.small{font-size:13px}
+.fig{font-size:30px;font-weight:700;line-height:1}
+.note{border:1.5px dashed #444;border-radius:6px;padding:8px 10px;font-size:12.5px;background:#fafafa;font-style:italic}
+.tag{font-size:10.5px;font-weight:700;border:1px solid #333;padding:0 4px;border-radius:3px;font-style:normal;letter-spacing:.04em;margin-right:4px}
+.due{display:grid;grid-template-columns:7rem minmax(0,1fr);gap:16px;padding:12px 0;border-top:1px solid #ddd}
+.date{font-weight:700;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px}
+</style>
+</helmet>
+<div class="wf" style="width:1280px;min-height:1100px;display:flex">
+<div class="side">
+<div class="brand"><img src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="">Wombat</div>
+<div class="role"><div class="muted">Acting as</div><div style="font-weight:600;font-size:16px">Trainee</div></div>
+<ul class="nav"><li class="on">Home</li><li>Log an activity</li><li>My activities</li><li>MSF reports</li><li>My committee reviews</li><li>Export portfolio</li><li class="rule"></li><li>My progress</li><li>My data rights</li></ul>
+</div>
+<div style="flex:1;min-width:0">
+<div class="top"><a href="#">Lerato Molefe</a><a href="#">Sign out</a></div>
+<div class="page">
+<div class="hdr"><div><h1>Home</h1><div class="sub">Trainee · Semester 2, 2026</div></div><a class="btn fill" href="#">Log an activity</a></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:24px;align-items:start">
+
+<section class="card">
+<div style="display:flex;justify-content:space-between"><h2>This week</h2><span class="small muted"><span class="tag">NEW</span>replaces Curriculum targets and Upcoming deadlines</span></div>
+<div>Training year 4 — it sets the minimum level each encounter is judged against.</div>
+<div style="display:flex;gap:32px"><div><span class="fig">1 of 10</span><div>semester targets met in Semester 2, 2026</div></div><div><span class="fig">0 of 5</span><div>yearly targets met in the 2026 academic year</div></div></div>
+<h3 style="margin-top:4px">Due</h3>
+<div>
+<div class="due"><span class="date">2026-10-23</span><div>Your STAR for <a href="#">PAED-010 — [EPA title]</a> expires. It is 4, below training year 4's target of 5.</div></div>
+<div class="due"><span class="date">[date]</span><div>Your <a href="#">committee review</a> sits.</div></div>
+<div class="due"><span class="date">2026-11-30</span><div>Semester 2, 2026 ends. 9 semester targets not met yet, furthest short first:
+<div class="chips"><a href="#">PAED-002: 0 of 3</a><a href="#">PAED-003: 0 of 3</a><a href="#">PAED-004: 0 of 3</a><a href="#">PAED-005: 0 of 3</a><a href="#">PAED-006: 0 of 2</a><a href="#">4 more</a></div></div></div>
+<div class="due"><span class="date">2026-11-30</span><div>The 2026 academic year ends. 5 yearly targets not met yet.
+<div class="chips"><a href="#">PAED-008: 0 of [n]</a><a href="#">PAED-009: 0 of [n]</a><a href="#">3 more</a></div></div></div>
+</div>
+<div class="note">One dated list, nearest first, from three sources (T298). The short links are named in full for a screen reader: "PAED-002 — [title], 0 of 3 this semester". At 390 the chips wrap; a chip is 44 px tall there.</div>
+<div><a class="btn" href="V3-Observations.dc.html">Open My progress</a></div>
+</section>
+
+<div style="display:flex;flex-direction:column;gap:24px">
+<section class="card"><h2>Needs you</h2><div>Nothing needs you. Requests you have filed are in My activities.</div><div><a href="#">Open My activities</a></div></section>
+<section class="card">
+<div style="display:flex;justify-content:space-between"><h2>Your standing</h2><span class="small muted"><span class="tag">CHANGED</span>was My authorisations</span></div>
+<div><span class="fig">2 of 15</span><div>EPAs at or above training year 4's target, by STAR</div><div class="small muted">1 below · 12 with no decision · 2 at their exit level</div></div>
+<div><a class="btn" href="V3-Entrustment.dc.html">Open Entrustment</a></div>
+</section>
+</div>
+</div>
+<div class="note">Removed: Recent activities. Kept under the rule: My progress (Q8: no move). My authorisations becomes Entrustment, a page under My progress.</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

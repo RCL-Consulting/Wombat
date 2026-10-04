@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>V1 at 390</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#1a1a1a}a:hover{color:#000}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;background:#fff}
+.wf *{box-sizing:border-box}
+.phone{width:390px;background:#efefef;border:1px solid #888;flex:none;align-self:flex-start}
+.pbar{height:56px;background:#9a9a9a;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-weight:600}
+.pbar img{width:28px;height:28px;vertical-align:middle;margin-right:8px}
+.pp{padding:16px;display:flex;flex-direction:column;gap:16px}
+.hdr{border-bottom:2px solid #888;padding-bottom:12px;display:flex;flex-direction:column;gap:8px}
+h1{font-size:22px;margin:0;font-weight:600}
+h2{font-size:18px;margin:0;font-weight:600}
+h3{font-size:16px;margin:0;font-weight:600}
+.sub{font-size:14px;color:#555}
+.back{display:flex;align-items:center;min-height:44px;font-weight:600;font-size:14px}
+.btn{display:flex;align-items:center;justify-content:center;height:44px;padding:0 14px;border:1.5px solid #333;border-radius:6px;font-weight:600;font-size:14px;background:#fff;text-decoration:none}
+.btn.fill{background:#333;color:#fff}
+.card{background:#fff;border:1px solid #b5b5b5;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.bar{height:8px;border-radius:4px;background:#e0e0e0;overflow:hidden;width:100%}.bar i{display:block;height:100%;background:#666}
+.badge{display:inline-block;border:1px solid #777;border-radius:999px;padding:0 8px;font-size:12px;font-weight:600;background:#eee;white-space:nowrap}
+.muted{color:#5a5a5a}.small{font-size:13px}
+.fig{font-size:28px;font-weight:700;line-height:1}
+.note{border:1.5px dashed #444;border-radius:6px;padding:8px 10px;font-size:12.5px;background:#fafafa;font-style:italic}
+.cap{font-size:13px;font-weight:700;letter-spacing:.05em;margin-bottom:8px}
+.lnk{display:flex;flex-direction:column;justify-content:center;min-height:44px;padding:6px 0;border-top:1px solid #ddd}
+.srow{background:#fff;border:1px solid #c8c8c8;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.lab{display:grid;grid-template-columns:7.5rem 1fr;gap:2px 8px;font-size:14px}
+.lab span:nth-child(odd){color:#5a5a5a}
+</style>
+</helmet>
+<div class="wf" style="width:1330px;min-height:2900px;padding:40px;display:flex;gap:40px">
+
+<div><div class="cap">HOME · ANELE DLAMINI</div>
+<div class="phone">
+<div class="pbar"><span><img src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="">Wombat</span><span class="small">Trainee · Menu</span></div>
+<div class="pp">
+<div class="hdr"><h1>Home</h1><div class="sub">Trainee · Semester 2, 2026</div><a class="btn fill" href="#">Log an activity</a></div>
+<section class="card">
+<h2>Your targets</h2>
+<div>Training year 3 — it sets the minimum level each encounter is judged against.</div>
+<div><span class="fig">1 of 10</span><div>semester targets met in Semester 2, 2026</div></div>
+<div><span class="fig">0 of 5</span><div>yearly targets met in the 2026 academic year</div></div>
+<h3>Furthest short</h3>
+<div>
+<sc-for list="{{short}}" as="r" hint-placeholder-count="5">
+<a class="lnk" href="#"><span style="text-decoration:underline">{{r}} — [EPA title]</span><span class="small muted">0 of 3 this semester · 3 more by 2026-11-30</span></a>
+</sc-for>
+</div>
+<a class="btn" href="#">Open My progress</a>
+</section>
+<section class="card"><h2>Needs you</h2><div>Nothing needs you. Requests you have filed are in My activities.</div><a class="lnk" href="#"><span style="text-decoration:underline">Open My activities</span></a></section>
+<section class="card"><h2>Your STARs</h2>
+<div class="note" style="font-style:normal">Lerato Molefe's:</div>
+<div>2 at or above · 1 below · 12 with no decision, of 15 EPAs</div>
+<a class="lnk" href="#"><span style="text-decoration:underline">PAED-010 — [EPA title]</span><span class="small muted">4, below training year 4's target of 5. Expires 2026-10-23.</span></a>
+<a class="btn" href="#">Open My authorisations</a></section>
+<div class="note">≈ 1,350 px. The counts sit under each name, never beside it, so nothing wraps to three lines.</div>
+</div></div></div>
+
+<div><div class="cap">MY PROGRESS · ANELE DLAMINI</div>
+<div class="phone">
+<div class="pbar"><span><img src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="">Wombat</span><span class="small">Trainee · Menu</span></div>
+<div class="pp">
+<div class="hdr"><h1>My progress</h1><div class="sub">Training year 3 · Semester 2, 2026</div></div>
+<section class="card"><h2>This period</h2>
+<div><span class="fig">1 of 10</span><div>semester targets met in Semester 2, 2026 · ends 2026-11-30</div></div>
+<div><span class="fig">0 of 5</span><div>yearly targets met in the 2026 academic year</div></div>
+<div><span class="fig">0 of 15</span><div>EPAs with a STAR</div></div>
+<div class="small">Training year 3 — it sets the minimum level each encounter is judged against.</div>
+<div class="small">Multi-source feedback: 0 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its own and counts towards no target.</div>
+</section>
+<h2>Each semester · 10 EPAs</h2>
+<div class="srow"><a href="#" style="font-weight:600">PAED-001 — Providing paediatric emergency care to children</a>
+<div>1 of 3 this semester</div><div class="bar"><i style="width:33%"></i></div><div class="small muted">2 more by 2026-11-30</div>
+<div class="lab"><span>Decided</span><span>each semester</span><span>STAR</span><span><span class="badge">No decision</span> target 4</span><span>Exit level</span><span>5 · not yet</span></div></div>
+<div class="srow"><a href="#" style="font-weight:600">PAED-003 — [EPA title]</a>
+<div>0 of 3 this semester</div><div class="bar"><i style="width:0%"></i></div><div class="small muted">3 more by 2026-11-30</div>
+<div class="lab"><span>Decided</span><span>once a year</span><span>STAR</span><span><span class="badge">No decision</span> target [n]</span><span>Exit level</span><span>[n] · not yet</span></div></div>
+<div class="srow"><a href="#" style="font-weight:600">PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</a>
+<div>1 of 1 this semester · met</div><div class="bar"><i style="width:100%"></i></div>
+<div class="lab"><span>Decided</span><span>once a year</span><span>STAR</span><span><span class="badge">No decision</span> target [n]</span><span>Exit level</span><span>[n] · not yet</span></div></div>
+<div class="note">…7 more, then Once a year · 5 EPAs. DataTable Stack: each cell labelled by its column but the link. About 230 px a row: ≈ 3,600 px in all, against 11,157 today. The 120-character title wraps over two lines and pushes nothing sideways.</div>
+</div></div></div>
+
+<div><div class="cap">ONE EPA · PAED-001 · ONE ENCOUNTER</div>
+<div class="phone">
+<div class="pbar"><span><img src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="">Wombat</span><span class="small">Trainee · Menu</span></div>
+<div class="pp">
+<div class="hdr"><a class="back" href="#">‹ My progress</a><h1>PAED-001 — Providing paediatric emergency care to children</h1><div class="sub">Target 3 a semester · decided each semester</div></div>
+<section class="card"><h2>Observations</h2>
+<div><span class="fig">1 of 3</span> this semester</div><div class="bar"><i style="width:33%"></i></div>
+<div>2 more by 2026-11-30.</div>
+<div class="lab"><span>Minimum now</span><span>4 (training year 3)</span><span>At the minimum</span><span>1 of 1 this semester</span><span>Last encounter</span><span>2026-09-23</span><span>Semester 1, 2026</span><span>0 of 3, 3 short</span></div>
+<div class="small">Multi-source feedback · Semester 2, 2026: no released campaign covering this EPA has closed yet.</div>
+</section>
+<section class="card"><h2>Entrustment</h2><div><span class="badge">No decision</span></div><div>No STAR yet. Training year 3's target is 4; the exit level is 5.</div></section>
+<section class="card"><h2>Rating trajectory</h2><div class="small muted">1 rating so far, from David Naidoo</div>
+<div style="height:220px;border:1px solid #bbb;border-radius:6px;background:repeating-linear-gradient(45deg,#f3f3f3 0 10px,#e9e9e9 10px 20px);display:flex;align-items:center;justify-content:center;font-size:13px;text-align:center;padding:12px">TrajectoryChart at 358 px, one point (Trajectory-390 board)</div>
+<div class="srow"><a href="#">Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23</a><div class="lab"><span>Rating</span><span>4</span><span>Minimum then</span><span>At it (4, training year 3)</span><span>Assessor</span><span>David Naidoo</span></div></div>
+</section>
+</div></div></div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1330,"height":2900}}'>
+class Component extends DCLogic {
+renderVals() { return { short: ['PAED-002','PAED-003','PAED-005','PAED-010','PAED-012'] }; }
+}
+</script>
+</body>
+</html>

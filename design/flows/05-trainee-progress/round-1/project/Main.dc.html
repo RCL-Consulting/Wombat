@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 05 round 1 comparison</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#1a1a1a}a:hover{color:#000}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;background:#fff}
+.wf *{box-sizing:border-box}
+h1{font-size:30px;margin:0;font-weight:600}
+h2{font-size:20px;margin:0 0 10px;font-weight:600}
+.muted{color:#555}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.v{border:1.5px solid #333;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:8px}
+.v b.k{font-size:13px;letter-spacing:.06em}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+.t th{text-align:left;background:#e6e6e6;padding:8px 10px;font-weight:600;vertical-align:bottom}
+.t td{padding:8px 10px;border-top:1px solid #ccc;vertical-align:top}
+.t td.n{text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+</style>
+</helmet>
+<div class="wf" style="width:1440px;padding:48px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<h1>Flow 05 · Round 1 · Three structures for the registrar's Home and My progress</h1>
+<div class="muted">Wireframes only: no colour or type is chosen yet. The data is Anele Dlamini's (training year 3) and Lerato Molefe's (training year 4), Semester 2, 2026. A title in [brackets] is one the brief does not give.</div>
+</div>
+
+<div class="cols">
+<div class="v"><b class="k">V1 · EPA PAGES</b><h2>An index, and a page per EPA</h2>
+<div>My progress is one table of every EPA (its count for its window, how often the committee decides it, its STAR against the training year's target, the exit level), grouped Each semester / Once a year. Each EPA name opens <b>its own page</b>: count this window and last, the minimum now, its STAR, its trajectory and the activities that counted.</div>
+<div class="muted">Home: Your targets (training year, both figures, the five furthest short with their dates), Needs you, Your STARs. Recent activities and Upcoming deadlines go.</div></div>
+<div class="v"><b class="k">V2 · ONE PAGE</b><h2>Every EPA a row that opens in place</h2>
+<div>My progress is one list ordered by what is due: unmet this semester, unmet this academic year, met, no longer in use. Each row is a native disclosure; open, it holds the same four things as V1's page. The committee's Annexure A table sits folded at the foot.</div>
+<div class="muted">Home: Due this semester, Needs you, Coming up (real dates: window end, STAR expiry, a review scheduled for her), Credited lately (what each recent activity counted).</div></div>
+<div class="v"><b class="k">V3 · WEEKLY HOME</b><h2>Home is the week; My progress in two parts</h2>
+<div>Home becomes the weekly page: one dated Due list merged from every source. My progress splits into <b>Observations</b> (per-window counts, evidence in a fold) and <b>Entrustment</b> (the committee's Annexure A table, the exit rule, then the trajectories). An EPA is in two places, linked both ways.</div>
+<div class="muted">Closest to today's build; EntrustmentStandingPanel moves whole. My progress stays under the rule.</div></div>
+</div>
+
+<div>
+<h2>Presses from Home, per journey</h2>
+<table class="t">
+<tr><th style="width:34%">Journey</th><th>V1 1280</th><th>V1 390</th><th>V2 1280</th><th>V2 390</th><th>V3 1280</th><th>V3 390</th></tr>
+<tr><td>The weekly look: training year, both figures, what is short and by when, a STAR nearing expiry</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>…then the evidence behind one short EPA</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td class="n">2</td></tr>
+<tr><td>From a completed Mini-CEX to its EPA's count (the status card says "1 of 3 this semester": 0 presses to read it)</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>Her standing against Annexure A before a review (all 15 EPAs)</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>…and one EPA's trajectory beside its STAR</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>What a paused EPA did (its row, its ratings kept)</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td class="n">2</td></tr>
+<tr><td>What KGK-001 is and where it came from</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>What the move to 11.2 did to her figures (the notice, PAED-016, PAED-011's new target)</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>Phone scroll, My progress, Anele Dlamini (estimate; today 11,157 px)</td><td></td><td class="n">≈ 3,600</td><td></td><td class="n">≈ 2,400 shut</td><td></td><td class="n">≈ 3,000 + 3,400</td></tr>
+</table>
+<div class="muted" style="margin-top:6px">A press is a link or a disclosure opened. Opening a V2 row is a press with no server trip (native &lt;details&gt;).</div>
+</div>
+
+<div>
+<h2>The questions, answered per variation</h2>
+<table class="t">
+<tr><th style="width:16%">Question</th><th>V1 · EPA pages</th><th>V2 · One page</th><th>V3 · Weekly Home</th></tr>
+<tr><td>1 · What leads; one place or three?</td><td>This period, then the EPA table (shortfall and standing side by side). One place per EPA: its page.</td><td>This period, then rows ordered by what is due. One place per EPA: its open row.</td><td>Observations leads; Entrustment is its own page. Two places per EPA, linked both ways.</td></tr>
+<tr><td>2 · Home vs My progress</td><td>Home: the five furthest short, with dates; STAR summary and the next expiry. My progress: every EPA, every column. No MSF on Home. Recent activities goes.</td><td>Home: the five furthest short; dated Coming up; Credited lately (the count each activity made, which My activities lacks). No MSF on Home.</td><td>Home: a dated Due list from every source and a standing summary. My progress: the full record. No MSF on Home. Recent activities goes.</td></tr>
+<tr><td>3 · Upcoming deadlines</td><td>Removed. Its real dates move into Your targets ("3 more by 2026-11-30") and Your STARs ("expires 2026-10-23").</td><td>Kept as Coming up: window end per unmet target, STAR expiry, a review scheduled for her.</td><td>Becomes the Due list itself, the card Home is built round.</td></tr>
+<tr><td>4 · Three "per"s</td><td colspan="3">Every variation: observation figures always name their window ("this semester", "in the 2026 academic year"); the decision cadence is its own label ("Decided each semester" / "Decided once a year"); a level target always names the training year ("training year 3's target: 4"). Each semester and Once a year are separate groups or tables. PAED-003 reads "3 a semester · decided once a year".</td></tr>
+<tr><td>5 · The trajectory</td><td colspan="3">One component for all three and the committee: a taller chart drawn at its own width (no scaling), labels 13 px at 1280 and 12 px at 390, month ticks on a real time axis, the training year's minimum as a stepped dashed line and the exit level as a solid one. Its table is visible at both widths and names each assessor and links each activity. One point: the point, its month, and "1 rating so far".</td></tr>
+<tr><td>6 · Marks</td><td colspan="3">Paused: "(no longer in use)" in muted text after the name, on a row, a card heading and a chart heading. KGK-001: a neutral badge "Kgosi Kgari Teaching Hospital's own" after the name. PAED-016: a neutral badge "New in curriculum 11.2". See the Marks board.</td></tr>
+<tr><td>7 · "Open My progress"</td><td>Lands on the EPA's page; its h1 takes the focus.</td><td>Lands on My progress with that row open; its summary takes the focus.</td><td>Lands on Observations at that row; the row's link takes the focus.</td></tr>
+<tr><td>8 · Menu</td><td>My progress moves into the Trainee's group, after My activities (7 links). My authorisations stays a page with no menu item, reached from Home's STAR card and each STAR.</td><td>As V1.</td><td>My progress stays under the rule. My authorisations is folded into Entrustment.</td></tr>
+<tr><td>9 · Version move</td><td colspan="3">Draw only the rebuilt state (T304 replays credit in the same save), plus a notice that stays until her next period: "You moved to curriculum 11.2 on 2026-10-02. Your counts carried over. New: PAED-016. Changed: PAED-011, now 2 a year."</td></tr>
+</table>
+</div>
+
+<div>
+<h2>What each variation changes of flow 03's pieces</h2>
+<table class="t">
+<tr><th style="width:24%">Piece (flow 05 may change)</th><th>V1</th><th>V2</th><th>V3</th></tr>
+<tr><td>Home's cards and their order</td><td>Your targets · Needs you · Your STARs</td><td>Due this semester · Needs you · Coming up · Credited lately</td><td>This week · Needs you · Your standing</td></tr>
+<tr><td>Home's second way to My activities</td><td>Gone with Recent activities; Needs you's link stays the one way</td><td>Credited lately has no footer link; its rows open their activities</td><td>Gone with Recent activities</td></tr>
+<tr><td>Where "Open My progress" lands</td><td>The credited EPA's page</td><td>My progress, that row open</td><td>Observations, at that row</td></tr>
+<tr><td>Completed card's count</td><td colspan="3">All three: "Rated 4. Credited 1 item to PAED-001: 1 of 3 this semester." (T346)</td></tr>
+<tr><td>My activities' Credit cell</td><td>"1 item" links to the EPA's page</td><td>"1 item" links to its row, opened</td><td>"1 item" links to Observations at its row</td></tr>
+</table>
+</div>
+
+<div>
+<h2>DESIGN.md rules each one changes</h2>
+<table class="t">
+<tr><th style="width:24%">Rule</th><th>V1</th><th>V2</th><th>V3</th></tr>
+<tr><td>§ Dashboard page</td><td>Trainee's dashboard: three cards; a card's rows are its links, its footer one more</td><td>Four cards; Coming up's sources named</td><td>A dated list as the lead card (new card shape)</td></tr>
+<tr><td>§ Page-level patterns</td><td>New: a record page under a progress list (Home › My progress › PAED-001)</td><td>New: a list of disclosures, one open on arrival by query</td><td>New: a page in two parts, each its own h1 and crumb</td></tr>
+<tr><td>A count against a target for a named window</td><td colspan="3">Kept and extended: the decision cadence and a level target each name their own frame; a waived window shows its count and the window targets start with, never a fraction or bar.</td></tr>
+<tr><td>My progress once the programme has ended (flow 13)</td><td colspan="3">Holds in all three: for a former trainee My progress stays under the rule, with every period read-only and no "this period" figures.</td></tr>
+</table>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+{
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "Main.dc.html": {
+   "h": 1800,
+   "title": "Round 1 · compare the three structures",
+   "w": 1440,
+   "x": 0,
+   "y": 0
+  },
+  "Marks.dc.html": {
+   "h": 2700,
+   "title": "Marks, notices and failures",
+   "w": 1440,
+   "x": 3430,
+   "y": 12000
+  },
+  "Trajectory-1280.dc.html": {
+   "h": 2700,
+   "title": "TrajectoryChart · 1280 (every variation)",
+   "w": 1280,
+   "x": 0,
+   "y": 12000
+  },
+  "Trajectory-390.dc.html": {
+   "h": 3300,
+   "title": "TrajectoryChart · 390",
+   "w": 470,
+   "x": 1360,
+   "y": 12000
+  },
+  "V1-EPA.dc.html": {
+   "h": 1950,
+   "title": "V1 · One EPA, its own page · 1280",
+   "w": 1280,
+   "x": 2720,
+   "y": 2100
+  },
+  "V1-Home.dc.html": {
+   "h": 1150,
+   "title": "V1 · Home (Trainee) · 1280",
+   "w": 1280,
+   "x": 0,
+   "y": 2100
+  },
+  "V1-Phone.dc.html": {
+   "h": 2900,
+   "title": "V1 · Home, My progress, one EPA · 390",
+   "w": 1330,
+   "x": 4080,
+   "y": 2100
+  },
+  "V1-Progress.dc.html": {
+   "h": 2050,
+   "title": "V1 · My progress (the EPA index) · 1280",
+   "w": 1280,
+   "x": 1360,
+   "y": 2100
+  },
+  "V2-Home.dc.html": {
+   "h": 1150,
+   "title": "V2 · Home (Trainee) · 1280",
+   "w": 1280,
+   "x": 0,
+   "y": 5400
+  },
+  "V2-Phone.dc.html": {
+   "h": 2900,
+   "title": "V2 · Home, My progress, a row open · 390",
+   "w": 1330,
+   "x": 2720,
+   "y": 5400
+  },
+  "V2-Progress.dc.html": {
+   "h": 2350,
+   "title": "V2 · My progress, one row open · 1280",
+   "w": 1280,
+   "x": 1360,
+   "y": 5400
+  },
+  "V3-Entrustment.dc.html": {
+   "h": 2100,
+   "title": "V3 · My progress › Entrustment · 1280",
+   "w": 1280,
+   "x": 2720,
+   "y": 8700
+  },
+  "V3-Home.dc.html": {
+   "h": 1100,
+   "title": "V3 · Home (Trainee) · 1280",
+   "w": 1280,
+   "x": 0,
+   "y": 8700
+  },
+  "V3-Observations.dc.html": {
+   "h": 2000,
+   "title": "V3 · My progress › Observations · 1280",
+   "w": 1280,
+   "x": 1360,
+   "y": 8700
+  },
+  "V3-Phone.dc.html": {
+   "h": 2900,
+   "title": "V3 · Home, Observations, Entrustment · 390",
+   "w": 1330,
+   "x": 4080,
+   "y": 8700
+  },
+  "WaysIn.dc.html": {
+   "h": 1900,
+   "title": "From a completed activity · My activities' rows",
+   "w": 1440,
+   "x": 1910,
+   "y": 12000
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-10-04T01:06:49Z",
+  "v": 1
+ },
+ "designSystems": [],
+ "launch": {
+  "view": "canvas"
+ },
+ "notes": {
+  "t1": {
+   "kind": "title1",
+   "maxW": 5400,
+   "text": "V1 · EPA pages: an index, and a page per EPA",
+   "w": 240,
+   "x": 0,
+   "y": 1800
+  },
+  "t2": {
+   "kind": "title1",
+   "maxW": 4050,
+   "text": "V2 · One page: every EPA a row that opens in place",
+   "w": 240,
+   "x": 0,
+   "y": 5100
+  },
+  "t3": {
+   "kind": "title1",
+   "maxW": 5400,
+   "text": "V3 · Weekly Home; My progress in two parts",
+   "w": 240,
+   "x": 0,
+   "y": 8400
+  },
+  "t4": {
+   "kind": "title1",
+   "maxW": 4870,
+   "text": "Shared by all three: the chart, the ways in, the marks",
+   "w": 240,
+   "x": 0,
+   "y": 11700
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "V1-Home.dc.html",
+  "V1-Progress.dc.html",
+  "V1-EPA.dc.html",
+  "V1-Phone.dc.html",
+  "V2-Home.dc.html",
+  "V2-Progress.dc.html",
+  "V2-Phone.dc.html",
+  "V3-Home.dc.html",
+  "V3-Observations.dc.html",
+  "V3-Entrustment.dc.html",
+  "V3-Phone.dc.html",
+  "Trajectory-1280.dc.html",
+  "Trajectory-390.dc.html",
+  "WaysIn.dc.html",
+  "Marks.dc.html"
+ ],
+ "pages": [],
+ "title": "Wombat · Flow 05 · My progress"
+}
