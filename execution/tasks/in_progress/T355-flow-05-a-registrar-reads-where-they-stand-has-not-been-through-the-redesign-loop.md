@@ -56,7 +56,9 @@ Run the loop as flow 04 ran it (`design/flows/04-assessor-inbox/`, BRIEF § 11 "
   (mark `/_blob/5e32abd7ee425f64c0db739c82470df3`, 2026-10-04).
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/05-trainee-progress/`
   (V1 picked; round 2 reviewed from four sides, C1–C13, E1–E6 accepted; round 3 checked, `round-3-check.md`: final).
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 05) — the squash commit and counts.
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 05) — `b020c942` (Domain 810,
+  Application 3,663, Infrastructure 1,011, Architecture 52, Web 3,222, Integration 484; build-review.md: 1 high, 4
+  medium, all fixed with the lows that change what a user meets; D1 ISO dates, D2 the review window; T304 landed first).
 - [ ] The whole runbook replays on a fresh database with no regression from flow 05, the baseline is re-captured, and
   flow 05's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.

@@ -21,7 +21,7 @@
 >   T350, `06aa51d7`: § Form system "The activity form" (R4, the rung picker and the request fold), § Badges (Overdue),
 >   § Page-level patterns "List page" (R2, the Activity inbox) and "Record page with a workflow" (R3, the way on, the
 >   note panel), § Dashboard page (R1, the Assessor's Home and the other-role line); flow 05, a registrar reads where
->   they stand (2026-10-04, T355, squash pending: § Dashboard page (R1, the Trainee's Home), § Page-level patterns
+>   they stand (2026-10-04, T355, `b020c942`: § Dashboard page (R1, the Trainee's Home), § Page-level patterns
 >   "Record page under a personal link" (R2, R5, the EPA page) and "List page" (My activities' Credit link),
 >   § Dashboard layout grid "The progress figures" (R3, and My progress), § Badges "Entrustment standing" (R4, the panel
 >   and the trajectory), § Table system (the paused mark), and § app.css section order (one Progress section).
