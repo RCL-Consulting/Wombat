@@ -1,0 +1,2470 @@
+{
+ "v": 3,
+ "attachments": {},
+ "createdOnFiles": {
+  "at": "2026-10-04T01:06:49Z",
+  "v": 1
+ },
+ "title": "Wombat · Flow 05 · My progress",
+ "pages": [
+  {
+   "id": "r1",
+   "name": "Round 1"
+  },
+  {
+   "id": "r2",
+   "name": "Round 2"
+  },
+  {
+   "id": "r3",
+   "name": "Round 3"
+  }
+ ],
+ "launch": {
+  "view": "canvas",
+  "page": "r3"
+ },
+ "designSystems": [
+  {
+   "title": "Wombat",
+   "namespace": "wombat",
+   "artifact": "https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18",
+   "version": "1791051570-ea7f",
+   "copiedAt": "2026-10-04T02:17:05Z"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1800,
+   "title": "Round 1 · compare the three structures",
+   "page": "r1"
+  },
+  "Marks.dc.html": {
+   "x": 3430,
+   "y": 12000,
+   "w": 1440,
+   "h": 2700,
+   "title": "Marks, notices and failures",
+   "page": "r1"
+  },
+  "Trajectory-1280.dc.html": {
+   "x": 0,
+   "y": 12000,
+   "w": 1280,
+   "h": 2700,
+   "title": "TrajectoryChart · 1280 (every variation)",
+   "page": "r1"
+  },
+  "Trajectory-390.dc.html": {
+   "x": 1360,
+   "y": 12000,
+   "w": 470,
+   "h": 3300,
+   "title": "TrajectoryChart · 390",
+   "page": "r1"
+  },
+  "V1-EPA.dc.html": {
+   "x": 2720,
+   "y": 2100,
+   "w": 1280,
+   "h": 1950,
+   "title": "V1 · One EPA, its own page · 1280",
+   "page": "r1"
+  },
+  "V1-Home.dc.html": {
+   "x": 0,
+   "y": 2100,
+   "w": 1280,
+   "h": 1150,
+   "title": "V1 · Home (Trainee) · 1280",
+   "page": "r1"
+  },
+  "V1-Phone.dc.html": {
+   "x": 4080,
+   "y": 2100,
+   "w": 1330,
+   "h": 2900,
+   "title": "V1 · Home, My progress, one EPA · 390",
+   "page": "r1"
+  },
+  "V1-Progress.dc.html": {
+   "x": 1360,
+   "y": 2100,
+   "w": 1280,
+   "h": 2050,
+   "title": "V1 · My progress (the EPA index) · 1280",
+   "page": "r1"
+  },
+  "V2-Home.dc.html": {
+   "x": 0,
+   "y": 5400,
+   "w": 1280,
+   "h": 1150,
+   "title": "V2 · Home (Trainee) · 1280",
+   "page": "r1"
+  },
+  "V2-Phone.dc.html": {
+   "x": 2720,
+   "y": 5400,
+   "w": 1330,
+   "h": 2900,
+   "title": "V2 · Home, My progress, a row open · 390",
+   "page": "r1"
+  },
+  "V2-Progress.dc.html": {
+   "x": 1360,
+   "y": 5400,
+   "w": 1280,
+   "h": 2350,
+   "title": "V2 · My progress, one row open · 1280",
+   "page": "r1"
+  },
+  "V3-Entrustment.dc.html": {
+   "x": 2720,
+   "y": 8700,
+   "w": 1280,
+   "h": 2100,
+   "title": "V3 · My progress › Entrustment · 1280",
+   "page": "r1"
+  },
+  "V3-Home.dc.html": {
+   "x": 0,
+   "y": 8700,
+   "w": 1280,
+   "h": 1100,
+   "title": "V3 · Home (Trainee) · 1280",
+   "page": "r1"
+  },
+  "V3-Observations.dc.html": {
+   "x": 1360,
+   "y": 8700,
+   "w": 1280,
+   "h": 2000,
+   "title": "V3 · My progress › Observations · 1280",
+   "page": "r1"
+  },
+  "V3-Phone.dc.html": {
+   "x": 4080,
+   "y": 8700,
+   "w": 1330,
+   "h": 2900,
+   "title": "V3 · Home, Observations, Entrustment · 390",
+   "page": "r1"
+  },
+  "WaysIn.dc.html": {
+   "x": 1910,
+   "y": 12000,
+   "w": 1440,
+   "h": 1900,
+   "title": "From a completed activity · My activities' rows",
+   "page": "r1"
+  },
+  "R2-Spec.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 7000,
+   "title": "R2 · Spec",
+   "page": "r2"
+  },
+  "R2-Steps.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 5200,
+   "title": "R2 · Runbook steps",
+   "page": "r2"
+  },
+  "R2-C-Home.dc.html": {
+   "x": 0,
+   "y": 7700,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-C-Home · component (state, w)",
+   "page": "r2"
+  },
+  "R2-H-first-day-1280.dc.html": {
+   "x": 1360,
+   "y": 7700,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-H · first day · Lerato Molefe, 2.39 · 1280",
+   "page": "r2"
+  },
+  "R2-H-typical-1280.dc.html": {
+   "x": 2720,
+   "y": 7700,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-H · typical · Anele Dlamini, 3.50 · 1280",
+   "page": "r2"
+  },
+  "R2-H-with-stars-1280.dc.html": {
+   "x": 4080,
+   "y": 7700,
+   "w": 1280,
+   "h": 1350,
+   "title": "R2-H · with STARs · Lerato Molefe, 4.39 · 1280",
+   "page": "r2"
+  },
+  "R2-H-decline-1280.dc.html": {
+   "x": 5440,
+   "y": 7700,
+   "w": 1280,
+   "h": 1200,
+   "title": "R2-H · a decline · Sipho Ndlovu, 3.12 · 1280",
+   "page": "r2"
+  },
+  "R2-H-returned-1280.dc.html": {
+   "x": 6800,
+   "y": 7700,
+   "w": 1280,
+   "h": 1250,
+   "title": "R2-H · returned · Sipho Ndlovu, 3.16 · 1280",
+   "page": "r2"
+  },
+  "R2-H-decisions-mixed-1280.dc.html": {
+   "x": 8160,
+   "y": 7700,
+   "w": 1280,
+   "h": 1250,
+   "title": "R2-H · decisions mixed · Sipho Ndlovu, 3.17 · 1280",
+   "page": "r2"
+  },
+  "R2-H-all-met-1280.dc.html": {
+   "x": 9520,
+   "y": 7700,
+   "w": 1280,
+   "h": 1000,
+   "title": "R2-H · every target met · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-H-part-way-1280.dc.html": {
+   "x": 10880,
+   "y": 7700,
+   "w": 1280,
+   "h": 900,
+   "title": "R2-H · started part-way · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-H-december-1280.dc.html": {
+   "x": 12240,
+   "y": 7700,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-H · December (D 2026-12-07) · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-H-not-started-1280.dc.html": {
+   "x": 13600,
+   "y": 7700,
+   "w": 1280,
+   "h": 900,
+   "title": "R2-H · not started · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-H-no-curriculum-1280.dc.html": {
+   "x": 14960,
+   "y": 7700,
+   "w": 1280,
+   "h": 900,
+   "title": "R2-H · no curriculum · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-H-no-epa-in-use-1280.dc.html": {
+   "x": 16320,
+   "y": 7700,
+   "w": 1280,
+   "h": 900,
+   "title": "R2-H · no EPA in use · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-H-ended-1280.dc.html": {
+   "x": 17680,
+   "y": 7700,
+   "w": 1280,
+   "h": 900,
+   "title": "R2-H · programme ended · Pieter du Plessis, A.4.6 · 1280",
+   "page": "r2"
+  },
+  "R2-H-graduate-1280.dc.html": {
+   "x": 19040,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-H · graduate · Lerato Molefe, 5.21 · 1280",
+   "page": "r2"
+  },
+  "R2-H-two-role-1280.dc.html": {
+   "x": 20400,
+   "y": 7700,
+   "w": 1280,
+   "h": 1400,
+   "title": "R2-H · also holds Assessor · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-H-loading-1280.dc.html": {
+   "x": 21760,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-H · loading · 1280",
+   "page": "r2"
+  },
+  "R2-H-load-error-1280.dc.html": {
+   "x": 23120,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-H · load error · 1280",
+   "page": "r2"
+  },
+  "R2-H-first-day-390.dc.html": {
+   "x": 0,
+   "y": 9200,
+   "w": 390,
+   "h": 2400,
+   "title": "R2-H · first day · 390",
+   "page": "r2"
+  },
+  "R2-H-typical-390.dc.html": {
+   "x": 470,
+   "y": 9200,
+   "w": 390,
+   "h": 2700,
+   "title": "R2-H · typical · 390",
+   "page": "r2"
+  },
+  "R2-H-with-stars-390.dc.html": {
+   "x": 940,
+   "y": 9200,
+   "w": 390,
+   "h": 3000,
+   "title": "R2-H · with STARs · 390",
+   "page": "r2"
+  },
+  "R2-H-decline-390.dc.html": {
+   "x": 1410,
+   "y": 9200,
+   "w": 390,
+   "h": 2300,
+   "title": "R2-H · a decline · 390",
+   "page": "r2"
+  },
+  "R2-H-returned-390.dc.html": {
+   "x": 1880,
+   "y": 9200,
+   "w": 390,
+   "h": 2600,
+   "title": "R2-H · returned · 390",
+   "page": "r2"
+  },
+  "R2-H-decisions-mixed-390.dc.html": {
+   "x": 2350,
+   "y": 9200,
+   "w": 390,
+   "h": 2600,
+   "title": "R2-H · decisions mixed · 390",
+   "page": "r2"
+  },
+  "R2-H-all-met-390.dc.html": {
+   "x": 2820,
+   "y": 9200,
+   "w": 390,
+   "h": 1900,
+   "title": "R2-H · every target met · no replay · 390",
+   "page": "r2"
+  },
+  "R2-H-part-way-390.dc.html": {
+   "x": 3290,
+   "y": 9200,
+   "w": 390,
+   "h": 1600,
+   "title": "R2-H · part-way · no replay · 390",
+   "page": "r2"
+  },
+  "R2-H-december-390.dc.html": {
+   "x": 3760,
+   "y": 9200,
+   "w": 390,
+   "h": 2800,
+   "title": "R2-H · December · no replay · 390",
+   "page": "r2"
+  },
+  "R2-H-not-started-390.dc.html": {
+   "x": 4230,
+   "y": 9200,
+   "w": 390,
+   "h": 1500,
+   "title": "R2-H · not started · no replay · 390",
+   "page": "r2"
+  },
+  "R2-H-no-curriculum-390.dc.html": {
+   "x": 4700,
+   "y": 9200,
+   "w": 390,
+   "h": 1500,
+   "title": "R2-H · no curriculum · no replay · 390",
+   "page": "r2"
+  },
+  "R2-H-no-epa-in-use-390.dc.html": {
+   "x": 5170,
+   "y": 9200,
+   "w": 390,
+   "h": 1600,
+   "title": "R2-H · no EPA in use · no replay · 390",
+   "page": "r2"
+  },
+  "R2-H-ended-390.dc.html": {
+   "x": 5640,
+   "y": 9200,
+   "w": 390,
+   "h": 1600,
+   "title": "R2-H · programme ended · 390",
+   "page": "r2"
+  },
+  "R2-H-graduate-390.dc.html": {
+   "x": 6110,
+   "y": 9200,
+   "w": 390,
+   "h": 844,
+   "title": "R2-H · graduate · 390",
+   "page": "r2"
+  },
+  "R2-H-two-role-390.dc.html": {
+   "x": 6580,
+   "y": 9200,
+   "w": 390,
+   "h": 2900,
+   "title": "R2-H · also Assessor · no replay · 390",
+   "page": "r2"
+  },
+  "R2-H-loading-390.dc.html": {
+   "x": 7050,
+   "y": 9200,
+   "w": 390,
+   "h": 1300,
+   "title": "R2-H · loading · 390",
+   "page": "r2"
+  },
+  "R2-H-load-error-390.dc.html": {
+   "x": 7520,
+   "y": 9200,
+   "w": 390,
+   "h": 844,
+   "title": "R2-H · load error · 390",
+   "page": "r2"
+  },
+  "R2-C-Progress.dc.html": {
+   "x": 0,
+   "y": 12900,
+   "w": 1280,
+   "h": 3600,
+   "title": "R2-C-Progress · component (state, w)",
+   "page": "r2"
+  },
+  "R2-P-first-1280.dc.html": {
+   "x": 1360,
+   "y": 12900,
+   "w": 1280,
+   "h": 3600,
+   "title": "R2-P · first · Lerato Molefe, 2.39 · 1280",
+   "page": "r2"
+  },
+  "R2-P-counting-1280.dc.html": {
+   "x": 2720,
+   "y": 12900,
+   "w": 1280,
+   "h": 3600,
+   "title": "R2-P · one encounter counted · Anele Dlamini, 3.7 · 1280",
+   "page": "r2"
+  },
+  "R2-P-standing-1280.dc.html": {
+   "x": 4080,
+   "y": 12900,
+   "w": 1280,
+   "h": 3600,
+   "title": "R2-P · standing · Lerato Molefe, 4.40 · 1280",
+   "page": "r2"
+  },
+  "R2-P-exit-met-1280.dc.html": {
+   "x": 5440,
+   "y": 12900,
+   "w": 1280,
+   "h": 3700,
+   "title": "R2-P · exit rule met · Lerato Molefe, 5.15 · 1280",
+   "page": "r2"
+  },
+  "R2-P-paused-1280.dc.html": {
+   "x": 6800,
+   "y": 12900,
+   "w": 1280,
+   "h": 3700,
+   "title": "R2-P · a paused EPA · Anele Dlamini, 6.19 · 1280",
+   "page": "r2"
+  },
+  "R2-P-local-item-1280.dc.html": {
+   "x": 8160,
+   "y": 12900,
+   "w": 1280,
+   "h": 3800,
+   "title": "R2-P · KGK-001 · Anele Dlamini, 6.27 · 1280",
+   "page": "r2"
+  },
+  "R2-P-after-move-1280.dc.html": {
+   "x": 9520,
+   "y": 12900,
+   "w": 1280,
+   "h": 4000,
+   "title": "R2-P · after the move to 11.2 · Sipho Ndlovu, 6.39 · 1280",
+   "page": "r2"
+  },
+  "R2-P-december-1280.dc.html": {
+   "x": 10880,
+   "y": 12900,
+   "w": 1280,
+   "h": 3700,
+   "title": "R2-P · December (D 2026-12-07) · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-P-part-way-1280.dc.html": {
+   "x": 12240,
+   "y": 12900,
+   "w": 1280,
+   "h": 3600,
+   "title": "R2-P · started part-way · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-P-not-started-1280.dc.html": {
+   "x": 13600,
+   "y": 12900,
+   "w": 1280,
+   "h": 3600,
+   "title": "R2-P · not started · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-P-no-curriculum-1280.dc.html": {
+   "x": 14960,
+   "y": 12900,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-P · no curriculum · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-P-no-epa-in-use-1280.dc.html": {
+   "x": 16320,
+   "y": 12900,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-P · no EPA in use · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-P-not-comparable-1280.dc.html": {
+   "x": 17680,
+   "y": 12900,
+   "w": 1280,
+   "h": 3600,
+   "title": "R2-P · not comparable · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-P-section-error-1280.dc.html": {
+   "x": 19040,
+   "y": 12900,
+   "w": 1280,
+   "h": 2600,
+   "title": "R2-P · the standing and MSF fail apart · 1280",
+   "page": "r2"
+  },
+  "R2-P-loading-1280.dc.html": {
+   "x": 20400,
+   "y": 12900,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-P · loading · 1280",
+   "page": "r2"
+  },
+  "R2-P-load-error-1280.dc.html": {
+   "x": 21760,
+   "y": 12900,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-P · load error · 1280",
+   "page": "r2"
+  },
+  "R2-P-first-390.dc.html": {
+   "x": 0,
+   "y": 17060,
+   "w": 390,
+   "h": 8700,
+   "title": "R2-P · first · 390",
+   "page": "r2"
+  },
+  "R2-P-counting-390.dc.html": {
+   "x": 470,
+   "y": 17060,
+   "w": 390,
+   "h": 8700,
+   "title": "R2-P · counting · 390",
+   "page": "r2"
+  },
+  "R2-P-standing-390.dc.html": {
+   "x": 940,
+   "y": 17060,
+   "w": 390,
+   "h": 8700,
+   "title": "R2-P · standing · 390",
+   "page": "r2"
+  },
+  "R2-P-exit-met-390.dc.html": {
+   "x": 1410,
+   "y": 17060,
+   "w": 390,
+   "h": 9000,
+   "title": "R2-P · exit rule met · 390",
+   "page": "r2"
+  },
+  "R2-P-paused-390.dc.html": {
+   "x": 1880,
+   "y": 17060,
+   "w": 390,
+   "h": 8800,
+   "title": "R2-P · paused · 390",
+   "page": "r2"
+  },
+  "R2-P-local-item-390.dc.html": {
+   "x": 2350,
+   "y": 17060,
+   "w": 390,
+   "h": 9400,
+   "title": "R2-P · KGK-001 · 390",
+   "page": "r2"
+  },
+  "R2-P-after-move-390.dc.html": {
+   "x": 2820,
+   "y": 17060,
+   "w": 390,
+   "h": 9900,
+   "title": "R2-P · after the move · 390",
+   "page": "r2"
+  },
+  "R2-P-december-390.dc.html": {
+   "x": 3290,
+   "y": 17060,
+   "w": 390,
+   "h": 9000,
+   "title": "R2-P · December · no replay · 390",
+   "page": "r2"
+  },
+  "R2-P-part-way-390.dc.html": {
+   "x": 3760,
+   "y": 17060,
+   "w": 390,
+   "h": 8700,
+   "title": "R2-P · part-way · no replay · 390",
+   "page": "r2"
+  },
+  "R2-P-not-started-390.dc.html": {
+   "x": 4230,
+   "y": 17060,
+   "w": 390,
+   "h": 8700,
+   "title": "R2-P · not started · no replay · 390",
+   "page": "r2"
+  },
+  "R2-P-no-curriculum-390.dc.html": {
+   "x": 4700,
+   "y": 17060,
+   "w": 390,
+   "h": 844,
+   "title": "R2-P · no curriculum · no replay · 390",
+   "page": "r2"
+  },
+  "R2-P-no-epa-in-use-390.dc.html": {
+   "x": 5170,
+   "y": 17060,
+   "w": 390,
+   "h": 844,
+   "title": "R2-P · no EPA in use · no replay · 390",
+   "page": "r2"
+  },
+  "R2-P-not-comparable-390.dc.html": {
+   "x": 5640,
+   "y": 17060,
+   "w": 390,
+   "h": 8700,
+   "title": "R2-P · not comparable · no replay · 390",
+   "page": "r2"
+  },
+  "R2-P-section-error-390.dc.html": {
+   "x": 6110,
+   "y": 17060,
+   "w": 390,
+   "h": 5000,
+   "title": "R2-P · sections fail apart · 390",
+   "page": "r2"
+  },
+  "R2-P-loading-390.dc.html": {
+   "x": 6580,
+   "y": 17060,
+   "w": 390,
+   "h": 1100,
+   "title": "R2-P · loading · 390",
+   "page": "r2"
+  },
+  "R2-P-load-error-390.dc.html": {
+   "x": 7050,
+   "y": 17060,
+   "w": 390,
+   "h": 844,
+   "title": "R2-P · load error · 390",
+   "page": "r2"
+  },
+  "R2-C-Epa.dc.html": {
+   "x": 0,
+   "y": 27660,
+   "w": 1280,
+   "h": 2200,
+   "title": "R2-C-Epa · component (state, w)",
+   "page": "r2"
+  },
+  "R2-E-typical-1280.dc.html": {
+   "x": 1360,
+   "y": 27660,
+   "w": 1280,
+   "h": 2200,
+   "title": "R2-E · PAED-001 · Lerato Molefe, 4.40 · 1280",
+   "page": "r2"
+  },
+  "R2-E-one-rating-1280.dc.html": {
+   "x": 2720,
+   "y": 27660,
+   "w": 1280,
+   "h": 2000,
+   "title": "R2-E · one rating, arrived from Open My progress · Anele Dlamini, 3.7 · 1280",
+   "page": "r2"
+  },
+  "R2-E-below-star-1280.dc.html": {
+   "x": 4080,
+   "y": 27660,
+   "w": 1280,
+   "h": 2100,
+   "title": "R2-E · PAED-010, below its STAR target · Lerato Molefe, 4.40 · 1280",
+   "page": "r2"
+  },
+  "R2-E-no-rating-1280.dc.html": {
+   "x": 5440,
+   "y": 27660,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-E · PAED-002, no rating · Anele Dlamini, 3.50 · 1280",
+   "page": "r2"
+  },
+  "R2-E-once-a-year-1280.dc.html": {
+   "x": 6800,
+   "y": 27660,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-E · PAED-008, once a year · Lerato Molefe, 4.40 · 1280",
+   "page": "r2"
+  },
+  "R2-E-paused-1280.dc.html": {
+   "x": 8160,
+   "y": 27660,
+   "w": 1280,
+   "h": 2000,
+   "title": "R2-E · PAED-012, paused · Anele Dlamini, 6.19 · 1280",
+   "page": "r2"
+  },
+  "R2-E-local-item-1280.dc.html": {
+   "x": 9520,
+   "y": 27660,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-E · KGK-001 · Anele Dlamini, 6.27 · 1280",
+   "page": "r2"
+  },
+  "R2-E-other-scale-1280.dc.html": {
+   "x": 10880,
+   "y": 27660,
+   "w": 1280,
+   "h": 2100,
+   "title": "R2-E · a rating on another scale · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-E-december-1280.dc.html": {
+   "x": 12240,
+   "y": 27660,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-E · December (D 2026-12-07) · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-E-not-found-1280.dc.html": {
+   "x": 13600,
+   "y": 27660,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-E · not found · 1280",
+   "page": "r2"
+  },
+  "R2-E-loading-1280.dc.html": {
+   "x": 14960,
+   "y": 27660,
+   "w": 1280,
+   "h": 900,
+   "title": "R2-E · loading · 1280",
+   "page": "r2"
+  },
+  "R2-E-load-error-1280.dc.html": {
+   "x": 16320,
+   "y": 27660,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-E · load error · 1280",
+   "page": "r2"
+  },
+  "R2-E-typical-390.dc.html": {
+   "x": 0,
+   "y": 29960,
+   "w": 390,
+   "h": 3900,
+   "title": "R2-E · PAED-001 · 390",
+   "page": "r2"
+  },
+  "R2-E-one-rating-390.dc.html": {
+   "x": 470,
+   "y": 29960,
+   "w": 390,
+   "h": 3300,
+   "title": "R2-E · one rating · 390",
+   "page": "r2"
+  },
+  "R2-E-below-star-390.dc.html": {
+   "x": 940,
+   "y": 29960,
+   "w": 390,
+   "h": 3500,
+   "title": "R2-E · below its STAR target · 390",
+   "page": "r2"
+  },
+  "R2-E-no-rating-390.dc.html": {
+   "x": 1410,
+   "y": 29960,
+   "w": 390,
+   "h": 2100,
+   "title": "R2-E · no rating · 390",
+   "page": "r2"
+  },
+  "R2-E-once-a-year-390.dc.html": {
+   "x": 1880,
+   "y": 29960,
+   "w": 390,
+   "h": 2200,
+   "title": "R2-E · once a year · 390",
+   "page": "r2"
+  },
+  "R2-E-paused-390.dc.html": {
+   "x": 2350,
+   "y": 29960,
+   "w": 390,
+   "h": 3400,
+   "title": "R2-E · paused · 390",
+   "page": "r2"
+  },
+  "R2-E-local-item-390.dc.html": {
+   "x": 2820,
+   "y": 29960,
+   "w": 390,
+   "h": 2200,
+   "title": "R2-E · KGK-001 · 390",
+   "page": "r2"
+  },
+  "R2-E-other-scale-390.dc.html": {
+   "x": 3290,
+   "y": 29960,
+   "w": 390,
+   "h": 3800,
+   "title": "R2-E · another scale · no replay · 390",
+   "page": "r2"
+  },
+  "R2-E-december-390.dc.html": {
+   "x": 3760,
+   "y": 29960,
+   "w": 390,
+   "h": 2200,
+   "title": "R2-E · December · no replay · 390",
+   "page": "r2"
+  },
+  "R2-E-not-found-390.dc.html": {
+   "x": 4230,
+   "y": 29960,
+   "w": 390,
+   "h": 844,
+   "title": "R2-E · not found · 390",
+   "page": "r2"
+  },
+  "R2-E-loading-390.dc.html": {
+   "x": 4700,
+   "y": 29960,
+   "w": 390,
+   "h": 1300,
+   "title": "R2-E · loading · 390",
+   "page": "r2"
+  },
+  "R2-E-load-error-390.dc.html": {
+   "x": 5170,
+   "y": 29960,
+   "w": 390,
+   "h": 844,
+   "title": "R2-E · load error · 390",
+   "page": "r2"
+  },
+  "R2-C-Trajectory.dc.html": {
+   "x": 0,
+   "y": 34560,
+   "w": 1280,
+   "h": 1000,
+   "title": "R2-C-Trajectory · component (state, w)",
+   "page": "r2"
+  },
+  "R2-T-three-1280.dc.html": {
+   "x": 1360,
+   "y": 34560,
+   "w": 1280,
+   "h": 1000,
+   "title": "R2-T · three ratings · Lerato Molefe, PAED-001 · 1280",
+   "page": "r2"
+  },
+  "R2-T-one-1280.dc.html": {
+   "x": 2720,
+   "y": 34560,
+   "w": 1280,
+   "h": 850,
+   "title": "R2-T · one rating · Anele Dlamini, PAED-001 · 1280",
+   "page": "r2"
+  },
+  "R2-T-other-scale-1280.dc.html": {
+   "x": 4080,
+   "y": 34560,
+   "w": 1280,
+   "h": 950,
+   "title": "R2-T · another scale · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-T-paused-heading-1280.dc.html": {
+   "x": 5440,
+   "y": 34560,
+   "w": 1280,
+   "h": 850,
+   "title": "R2-T · paused heading · Anele Dlamini, PAED-012 · 1280",
+   "page": "r2"
+  },
+  "R2-T-committee-1280.dc.html": {
+   "x": 6800,
+   "y": 34560,
+   "w": 1280,
+   "h": 1000,
+   "title": "R2-T · the committee page's slot (flow 07 places it) · 1280",
+   "page": "r2"
+  },
+  "R2-T-three-390.dc.html": {
+   "x": 0,
+   "y": 35720,
+   "w": 390,
+   "h": 1700,
+   "title": "R2-T · three ratings · 390",
+   "page": "r2"
+  },
+  "R2-T-one-390.dc.html": {
+   "x": 470,
+   "y": 35720,
+   "w": 390,
+   "h": 1200,
+   "title": "R2-T · one rating · 390",
+   "page": "r2"
+  },
+  "R2-T-other-scale-390.dc.html": {
+   "x": 940,
+   "y": 35720,
+   "w": 390,
+   "h": 1500,
+   "title": "R2-T · another scale · no replay · 390",
+   "page": "r2"
+  },
+  "R2-T-paused-heading-390.dc.html": {
+   "x": 1410,
+   "y": 35720,
+   "w": 390,
+   "h": 1250,
+   "title": "R2-T · paused heading · 390",
+   "page": "r2"
+  },
+  "R2-T-committee-390.dc.html": {
+   "x": 1880,
+   "y": 35720,
+   "w": 390,
+   "h": 1700,
+   "title": "R2-T · committee · 390",
+   "page": "r2"
+  },
+  "R2-C-WaysIn.dc.html": {
+   "x": 0,
+   "y": 38120,
+   "w": 1280,
+   "h": 1000,
+   "title": "R2-C-WaysIn · component (state, w)",
+   "page": "r2"
+  },
+  "R2-W-card-count-1280.dc.html": {
+   "x": 1360,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-W · the card's count · Anele Dlamini, 3.6 · 1280",
+   "page": "r2"
+  },
+  "R2-W-card-count-later-1280.dc.html": {
+   "x": 2720,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-W · the same card at 3.50 · 1280",
+   "page": "r2"
+  },
+  "R2-W-card-older-1280.dc.html": {
+   "x": 4080,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-W · an older encounter · no replay reaches this · 1280",
+   "page": "r2"
+  },
+  "R2-W-card-paused-1280.dc.html": {
+   "x": 5440,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R2-W · a paused EPA's card · Anele Dlamini, 6.19 · 1280",
+   "page": "r2"
+  },
+  "R2-W-mine-credit-1280.dc.html": {
+   "x": 6800,
+   "y": 38120,
+   "w": 1280,
+   "h": 1300,
+   "title": "R2-W · My activities' Credit links · Lerato Molefe, 3.48 · 1280",
+   "page": "r2"
+  },
+  "R2-W-mine-paused-1280.dc.html": {
+   "x": 8160,
+   "y": 38120,
+   "w": 1280,
+   "h": 1000,
+   "title": "R2-W · My activities, a paused EPA · Anele Dlamini, 6.19 · 1280",
+   "page": "r2"
+  },
+  "R2-W-card-count-390.dc.html": {
+   "x": 0,
+   "y": 39580,
+   "w": 390,
+   "h": 1100,
+   "title": "R2-W · the card's count · 390",
+   "page": "r2"
+  },
+  "R2-W-card-count-later-390.dc.html": {
+   "x": 470,
+   "y": 39580,
+   "w": 390,
+   "h": 1100,
+   "title": "R2-W · the card at 3.50 · 390",
+   "page": "r2"
+  },
+  "R2-W-card-older-390.dc.html": {
+   "x": 940,
+   "y": 39580,
+   "w": 390,
+   "h": 1100,
+   "title": "R2-W · older encounter · no replay · 390",
+   "page": "r2"
+  },
+  "R2-W-card-paused-390.dc.html": {
+   "x": 1410,
+   "y": 39580,
+   "w": 390,
+   "h": 1100,
+   "title": "R2-W · paused card · 390",
+   "page": "r2"
+  },
+  "R2-W-mine-credit-390.dc.html": {
+   "x": 1880,
+   "y": 39580,
+   "w": 390,
+   "h": 2300,
+   "title": "R2-W · Credit links · 390",
+   "page": "r2"
+  },
+  "R2-W-mine-paused-390.dc.html": {
+   "x": 2350,
+   "y": 39580,
+   "w": 390,
+   "h": 1700,
+   "title": "R2-W · a paused EPA's row · 390",
+   "page": "r2"
+  },
+  "R3-Spec.dc.html": {
+   "x": -1600,
+   "y": -320,
+   "w": 1440,
+   "h": 8200,
+   "title": "R3 · Spec",
+   "page": "r3"
+  },
+  "R3-Steps.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 5200,
+   "title": "R3 · Runbook steps",
+   "page": "r3"
+  },
+  "R3-C-Home.dc.html": {
+   "x": 0,
+   "y": 7700,
+   "w": 1280,
+   "h": 1302,
+   "title": "R3-C-Home · component (state, w)",
+   "page": "r3"
+  },
+  "R3-H-first-day-1280.dc.html": {
+   "x": 1360,
+   "y": 7700,
+   "w": 1280,
+   "h": 1048,
+   "title": "R3-H · first day · Lerato Molefe, 2.39 · 1280",
+   "page": "r3"
+  },
+  "R3-H-typical-1280.dc.html": {
+   "x": 2720,
+   "y": 7700,
+   "w": 1280,
+   "h": 1302,
+   "title": "R3-H · typical · Anele Dlamini, 3.50 · 1280",
+   "page": "r3"
+  },
+  "R3-H-with-stars-1280.dc.html": {
+   "x": 4080,
+   "y": 7700,
+   "w": 1280,
+   "h": 1367,
+   "title": "R3-H · with STARs · Lerato Molefe, 4.39 · 1280",
+   "page": "r3"
+  },
+  "R3-H-decline-1280.dc.html": {
+   "x": 5440,
+   "y": 7700,
+   "w": 1280,
+   "h": 1048,
+   "title": "R3-H · a decline · Sipho Ndlovu, 3.12 · 1280",
+   "page": "r3"
+  },
+  "R3-H-returned-1280.dc.html": {
+   "x": 6800,
+   "y": 7700,
+   "w": 1280,
+   "h": 1100,
+   "title": "R3-H · returned · Sipho Ndlovu, 3.16 · 1280",
+   "page": "r3"
+  },
+  "R3-H-decisions-mixed-1280.dc.html": {
+   "x": 8160,
+   "y": 7700,
+   "w": 1280,
+   "h": 1189,
+   "title": "R3-H · decisions mixed · Sipho Ndlovu, 3.17 · 1280",
+   "page": "r3"
+  },
+  "R3-H-all-met-1280.dc.html": {
+   "x": 9520,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · every target met · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-H-part-way-1280.dc.html": {
+   "x": 10880,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · started part-way · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-H-december-1280.dc.html": {
+   "x": 12240,
+   "y": 7700,
+   "w": 1280,
+   "h": 1302,
+   "title": "R3-H · December (D 2026-12-07) · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-H-not-started-1280.dc.html": {
+   "x": 13600,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · not started · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-H-no-curriculum-1280.dc.html": {
+   "x": 14960,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · no curriculum · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-H-no-epa-in-use-1280.dc.html": {
+   "x": 16320,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · no EPA in use · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-H-ended-1280.dc.html": {
+   "x": 17680,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · programme ended · Pieter du Plessis, A.4.6 · 1280",
+   "page": "r3"
+  },
+  "R3-H-graduate-1280.dc.html": {
+   "x": 19040,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · graduate · Lerato Molefe, 5.21 · 1280",
+   "page": "r3"
+  },
+  "R3-H-two-role-1280.dc.html": {
+   "x": 20400,
+   "y": 7700,
+   "w": 1280,
+   "h": 1400,
+   "title": "R3-H · also holds Assessor · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-H-loading-1280.dc.html": {
+   "x": 21760,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · loading · 1280",
+   "page": "r3"
+  },
+  "R3-H-load-error-1280.dc.html": {
+   "x": 23120,
+   "y": 7700,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-H · load error · 1280",
+   "page": "r3"
+  },
+  "R3-H-first-day-390.dc.html": {
+   "x": 0,
+   "y": 9200,
+   "w": 390,
+   "h": 1584,
+   "title": "R3-H · first day · 390",
+   "page": "r3"
+  },
+  "R3-H-typical-390.dc.html": {
+   "x": 470,
+   "y": 9200,
+   "w": 390,
+   "h": 2135,
+   "title": "R3-H · typical · 390",
+   "page": "r3"
+  },
+  "R3-H-with-stars-390.dc.html": {
+   "x": 940,
+   "y": 9200,
+   "w": 390,
+   "h": 2341,
+   "title": "R3-H · with STARs · 390",
+   "page": "r3"
+  },
+  "R3-H-decline-390.dc.html": {
+   "x": 1410,
+   "y": 9200,
+   "w": 390,
+   "h": 1719,
+   "title": "R3-H · a decline · 390",
+   "page": "r3"
+  },
+  "R3-H-returned-390.dc.html": {
+   "x": 1880,
+   "y": 9200,
+   "w": 390,
+   "h": 1924,
+   "title": "R3-H · returned · 390",
+   "page": "r3"
+  },
+  "R3-H-decisions-mixed-390.dc.html": {
+   "x": 2350,
+   "y": 9200,
+   "w": 390,
+   "h": 1952,
+   "title": "R3-H · decisions mixed · 390",
+   "page": "r3"
+  },
+  "R3-H-all-met-390.dc.html": {
+   "x": 2820,
+   "y": 9200,
+   "w": 390,
+   "h": 1351,
+   "title": "R3-H · every target met · no replay · 390",
+   "page": "r3"
+  },
+  "R3-H-part-way-390.dc.html": {
+   "x": 3290,
+   "y": 9200,
+   "w": 390,
+   "h": 1058,
+   "title": "R3-H · part-way · no replay · 390",
+   "page": "r3"
+  },
+  "R3-H-december-390.dc.html": {
+   "x": 3760,
+   "y": 9200,
+   "w": 390,
+   "h": 2237,
+   "title": "R3-H · December · no replay · 390",
+   "page": "r3"
+  },
+  "R3-H-not-started-390.dc.html": {
+   "x": 4230,
+   "y": 9200,
+   "w": 390,
+   "h": 954,
+   "title": "R3-H · not started · no replay · 390",
+   "page": "r3"
+  },
+  "R3-H-no-curriculum-390.dc.html": {
+   "x": 4700,
+   "y": 9200,
+   "w": 390,
+   "h": 1002,
+   "title": "R3-H · no curriculum · no replay · 390",
+   "page": "r3"
+  },
+  "R3-H-no-epa-in-use-390.dc.html": {
+   "x": 5170,
+   "y": 9200,
+   "w": 390,
+   "h": 1034,
+   "title": "R3-H · no EPA in use · no replay · 390",
+   "page": "r3"
+  },
+  "R3-H-ended-390.dc.html": {
+   "x": 5640,
+   "y": 9200,
+   "w": 390,
+   "h": 1002,
+   "title": "R3-H · programme ended · 390",
+   "page": "r3"
+  },
+  "R3-H-graduate-390.dc.html": {
+   "x": 6110,
+   "y": 9200,
+   "w": 390,
+   "h": 844,
+   "title": "R3-H · graduate · 390",
+   "page": "r3"
+  },
+  "R3-H-two-role-390.dc.html": {
+   "x": 6580,
+   "y": 9200,
+   "w": 390,
+   "h": 2493,
+   "title": "R3-H · also Assessor · no replay · 390",
+   "page": "r3"
+  },
+  "R3-H-loading-390.dc.html": {
+   "x": 7050,
+   "y": 9200,
+   "w": 390,
+   "h": 967,
+   "title": "R3-H · loading · 390",
+   "page": "r3"
+  },
+  "R3-H-load-error-390.dc.html": {
+   "x": 7520,
+   "y": 9200,
+   "w": 390,
+   "h": 844,
+   "title": "R3-H · load error · 390",
+   "page": "r3"
+  },
+  "R3-C-Progress.dc.html": {
+   "x": 0,
+   "y": 12900,
+   "w": 1280,
+   "h": 4013,
+   "title": "R3-C-Progress · component (state, w)",
+   "page": "r3"
+  },
+  "R3-P-first-1280.dc.html": {
+   "x": 1360,
+   "y": 12900,
+   "w": 1280,
+   "h": 3890,
+   "title": "R3-P · first · Lerato Molefe, 2.39 · 1280",
+   "page": "r3"
+  },
+  "R3-P-counting-1280.dc.html": {
+   "x": 2720,
+   "y": 12900,
+   "w": 1280,
+   "h": 3931,
+   "title": "R3-P · one encounter counted · Anele Dlamini, 3.7 · 1280",
+   "page": "r3"
+  },
+  "R3-P-standing-1280.dc.html": {
+   "x": 4080,
+   "y": 12900,
+   "w": 1280,
+   "h": 4013,
+   "title": "R3-P · standing · Lerato Molefe, 4.40 · 1280",
+   "page": "r3"
+  },
+  "R3-P-exit-met-1280.dc.html": {
+   "x": 5440,
+   "y": 12900,
+   "w": 1280,
+   "h": 4092,
+   "title": "R3-P · exit rule met · Lerato Molefe, 5.15 · 1280",
+   "page": "r3"
+  },
+  "R3-P-paused-1280.dc.html": {
+   "x": 6800,
+   "y": 12900,
+   "w": 1280,
+   "h": 3984,
+   "title": "R3-P · a paused EPA · Anele Dlamini, 6.19 · 1280",
+   "page": "r3"
+  },
+  "R3-P-local-item-1280.dc.html": {
+   "x": 8160,
+   "y": 12900,
+   "w": 1280,
+   "h": 4267,
+   "title": "R3-P · KGK-001 · Anele Dlamini, 6.27 · 1280",
+   "page": "r3"
+  },
+  "R3-P-after-move-1280.dc.html": {
+   "x": 9520,
+   "y": 12900,
+   "w": 1280,
+   "h": 4384,
+   "title": "R3-P · after the move to 11.2 · Sipho Ndlovu, 6.39 · 1280",
+   "page": "r3"
+  },
+  "R3-P-december-1280.dc.html": {
+   "x": 10880,
+   "y": 12900,
+   "w": 1280,
+   "h": 4278,
+   "title": "R3-P · December (D 2026-12-07) · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-P-part-way-1280.dc.html": {
+   "x": 12240,
+   "y": 12900,
+   "w": 1280,
+   "h": 3960,
+   "title": "R3-P · started part-way · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-P-not-started-1280.dc.html": {
+   "x": 13600,
+   "y": 12900,
+   "w": 1280,
+   "h": 3912,
+   "title": "R3-P · not started · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-P-no-curriculum-1280.dc.html": {
+   "x": 14960,
+   "y": 12900,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-P · no curriculum · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-P-no-epa-in-use-1280.dc.html": {
+   "x": 16320,
+   "y": 12900,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-P · no EPA in use · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-P-not-comparable-1280.dc.html": {
+   "x": 17680,
+   "y": 12900,
+   "w": 1280,
+   "h": 4118,
+   "title": "R3-P · not comparable · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-P-section-error-1280.dc.html": {
+   "x": 19040,
+   "y": 12900,
+   "w": 1280,
+   "h": 2356,
+   "title": "R3-P · the standing and MSF fail apart · 1280",
+   "page": "r3"
+  },
+  "R3-P-loading-1280.dc.html": {
+   "x": 20400,
+   "y": 12900,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-P · loading · 1280",
+   "page": "r3"
+  },
+  "R3-P-load-error-1280.dc.html": {
+   "x": 21760,
+   "y": 12900,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-P · load error · 1280",
+   "page": "r3"
+  },
+  "R3-P-first-390.dc.html": {
+   "x": 0,
+   "y": 17060,
+   "w": 390,
+   "h": 7571,
+   "title": "R3-P · first · 390",
+   "page": "r3"
+  },
+  "R3-P-counting-390.dc.html": {
+   "x": 470,
+   "y": 17060,
+   "w": 390,
+   "h": 7635,
+   "title": "R3-P · counting · 390",
+   "page": "r3"
+  },
+  "R3-P-standing-390.dc.html": {
+   "x": 940,
+   "y": 17060,
+   "w": 390,
+   "h": 7849,
+   "title": "R3-P · standing · 390",
+   "page": "r3"
+  },
+  "R3-P-exit-met-390.dc.html": {
+   "x": 1410,
+   "y": 17060,
+   "w": 390,
+   "h": 7998,
+   "title": "R3-P · exit rule met · 390",
+   "page": "r3"
+  },
+  "R3-P-paused-390.dc.html": {
+   "x": 1880,
+   "y": 17060,
+   "w": 390,
+   "h": 7542,
+   "title": "R3-P · paused · 390",
+   "page": "r3"
+  },
+  "R3-P-local-item-390.dc.html": {
+   "x": 2350,
+   "y": 17060,
+   "w": 390,
+   "h": 8332,
+   "title": "R3-P · KGK-001 · 390",
+   "page": "r3"
+  },
+  "R3-P-after-move-390.dc.html": {
+   "x": 2820,
+   "y": 17060,
+   "w": 390,
+   "h": 8594,
+   "title": "R3-P · after the move · 390",
+   "page": "r3"
+  },
+  "R3-P-december-390.dc.html": {
+   "x": 3290,
+   "y": 17060,
+   "w": 390,
+   "h": 8048,
+   "title": "R3-P · December · no replay · 390",
+   "page": "r3"
+  },
+  "R3-P-part-way-390.dc.html": {
+   "x": 3760,
+   "y": 17060,
+   "w": 390,
+   "h": 7997,
+   "title": "R3-P · part-way · no replay · 390",
+   "page": "r3"
+  },
+  "R3-P-not-started-390.dc.html": {
+   "x": 4230,
+   "y": 17060,
+   "w": 390,
+   "h": 7637,
+   "title": "R3-P · not started · no replay · 390",
+   "page": "r3"
+  },
+  "R3-P-no-curriculum-390.dc.html": {
+   "x": 4700,
+   "y": 17060,
+   "w": 390,
+   "h": 844,
+   "title": "R3-P · no curriculum · no replay · 390",
+   "page": "r3"
+  },
+  "R3-P-no-epa-in-use-390.dc.html": {
+   "x": 5170,
+   "y": 17060,
+   "w": 390,
+   "h": 844,
+   "title": "R3-P · no EPA in use · no replay · 390",
+   "page": "r3"
+  },
+  "R3-P-not-comparable-390.dc.html": {
+   "x": 5640,
+   "y": 17060,
+   "w": 390,
+   "h": 7914,
+   "title": "R3-P · not comparable · no replay · 390",
+   "page": "r3"
+  },
+  "R3-P-section-error-390.dc.html": {
+   "x": 6110,
+   "y": 17060,
+   "w": 390,
+   "h": 3735,
+   "title": "R3-P · sections fail apart · 390",
+   "page": "r3"
+  },
+  "R3-P-loading-390.dc.html": {
+   "x": 6580,
+   "y": 17060,
+   "w": 390,
+   "h": 844,
+   "title": "R3-P · loading · 390",
+   "page": "r3"
+  },
+  "R3-P-load-error-390.dc.html": {
+   "x": 7050,
+   "y": 17060,
+   "w": 390,
+   "h": 844,
+   "title": "R3-P · load error · 390",
+   "page": "r3"
+  },
+  "R3-C-Epa.dc.html": {
+   "x": 0,
+   "y": 27660,
+   "w": 1280,
+   "h": 1876,
+   "title": "R3-C-Epa · component (state, w)",
+   "page": "r3"
+  },
+  "R3-E-typical-1280.dc.html": {
+   "x": 1360,
+   "y": 27660,
+   "w": 1280,
+   "h": 1876,
+   "title": "R3-E · PAED-001 · Lerato Molefe, 4.40 · 1280",
+   "page": "r3"
+  },
+  "R3-E-one-rating-1280.dc.html": {
+   "x": 2720,
+   "y": 27660,
+   "w": 1280,
+   "h": 1509,
+   "title": "R3-E · one rating, arrived from Open My progress · Anele Dlamini, 3.7 · 1280",
+   "page": "r3"
+  },
+  "R3-E-below-star-1280.dc.html": {
+   "x": 4080,
+   "y": 27660,
+   "w": 1280,
+   "h": 1603,
+   "title": "R3-E · PAED-010, below its STAR target · Lerato Molefe, 4.40 · 1280",
+   "page": "r3"
+  },
+  "R3-E-no-rating-1280.dc.html": {
+   "x": 5440,
+   "y": 27660,
+   "w": 1280,
+   "h": 931,
+   "title": "R3-E · PAED-002, no rating · Anele Dlamini, 3.50 · 1280",
+   "page": "r3"
+  },
+  "R3-E-once-a-year-1280.dc.html": {
+   "x": 6800,
+   "y": 27660,
+   "w": 1280,
+   "h": 961,
+   "title": "R3-E · PAED-008, once a year · Lerato Molefe, 4.40 · 1280",
+   "page": "r3"
+  },
+  "R3-E-paused-1280.dc.html": {
+   "x": 8160,
+   "y": 27660,
+   "w": 1280,
+   "h": 1408,
+   "title": "R3-E · PAED-012, paused · Anele Dlamini, 6.19 · 1280",
+   "page": "r3"
+  },
+  "R3-E-local-item-1280.dc.html": {
+   "x": 9520,
+   "y": 27660,
+   "w": 1280,
+   "h": 907,
+   "title": "R3-E · KGK-001 · Anele Dlamini, 6.27 · 1280",
+   "page": "r3"
+  },
+  "R3-E-other-scale-1280.dc.html": {
+   "x": 10880,
+   "y": 27660,
+   "w": 1280,
+   "h": 1718,
+   "title": "R3-E · a rating on another scale · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-E-december-1280.dc.html": {
+   "x": 12240,
+   "y": 27660,
+   "w": 1280,
+   "h": 931,
+   "title": "R3-E · December (D 2026-12-07) · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-E-not-found-1280.dc.html": {
+   "x": 13600,
+   "y": 27660,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-E · not found · 1280",
+   "page": "r3"
+  },
+  "R3-E-loading-1280.dc.html": {
+   "x": 14960,
+   "y": 27660,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-E · loading · 1280",
+   "page": "r3"
+  },
+  "R3-E-load-error-1280.dc.html": {
+   "x": 16320,
+   "y": 27660,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-E · load error · 1280",
+   "page": "r3"
+  },
+  "R3-E-typical-390.dc.html": {
+   "x": 0,
+   "y": 29960,
+   "w": 390,
+   "h": 2712,
+   "title": "R3-E · PAED-001 · 390",
+   "page": "r3"
+  },
+  "R3-E-one-rating-390.dc.html": {
+   "x": 470,
+   "y": 29960,
+   "w": 390,
+   "h": 1837,
+   "title": "R3-E · one rating · 390",
+   "page": "r3"
+  },
+  "R3-E-below-star-390.dc.html": {
+   "x": 940,
+   "y": 29960,
+   "w": 390,
+   "h": 2268,
+   "title": "R3-E · below its STAR target · 390",
+   "page": "r3"
+  },
+  "R3-E-no-rating-390.dc.html": {
+   "x": 1410,
+   "y": 29960,
+   "w": 390,
+   "h": 1208,
+   "title": "R3-E · no rating · 390",
+   "page": "r3"
+  },
+  "R3-E-once-a-year-390.dc.html": {
+   "x": 1880,
+   "y": 29960,
+   "w": 390,
+   "h": 1236,
+   "title": "R3-E · once a year · 390",
+   "page": "r3"
+  },
+  "R3-E-paused-390.dc.html": {
+   "x": 2350,
+   "y": 29960,
+   "w": 390,
+   "h": 1766,
+   "title": "R3-E · paused · 390",
+   "page": "r3"
+  },
+  "R3-E-local-item-390.dc.html": {
+   "x": 2820,
+   "y": 29960,
+   "w": 390,
+   "h": 1220,
+   "title": "R3-E · KGK-001 · 390",
+   "page": "r3"
+  },
+  "R3-E-other-scale-390.dc.html": {
+   "x": 3290,
+   "y": 29960,
+   "w": 390,
+   "h": 2276,
+   "title": "R3-E · another scale · no replay · 390",
+   "page": "r3"
+  },
+  "R3-E-december-390.dc.html": {
+   "x": 3760,
+   "y": 29960,
+   "w": 390,
+   "h": 1229,
+   "title": "R3-E · December · no replay · 390",
+   "page": "r3"
+  },
+  "R3-E-not-found-390.dc.html": {
+   "x": 4230,
+   "y": 29960,
+   "w": 390,
+   "h": 844,
+   "title": "R3-E · not found · 390",
+   "page": "r3"
+  },
+  "R3-E-loading-390.dc.html": {
+   "x": 4700,
+   "y": 29960,
+   "w": 390,
+   "h": 909,
+   "title": "R3-E · loading · 390",
+   "page": "r3"
+  },
+  "R3-E-load-error-390.dc.html": {
+   "x": 5170,
+   "y": 29960,
+   "w": 390,
+   "h": 844,
+   "title": "R3-E · load error · 390",
+   "page": "r3"
+  },
+  "R3-C-Trajectory.dc.html": {
+   "x": 0,
+   "y": 34560,
+   "w": 1280,
+   "h": 923,
+   "title": "R3-C-Trajectory · component (state, w)",
+   "page": "r3"
+  },
+  "R3-T-three-1280.dc.html": {
+   "x": 1360,
+   "y": 34560,
+   "w": 1280,
+   "h": 923,
+   "title": "R3-T · three ratings · Lerato Molefe, PAED-001 · 1280",
+   "page": "r3"
+  },
+  "R3-T-one-1280.dc.html": {
+   "x": 2720,
+   "y": 34560,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-T · one rating · Anele Dlamini, PAED-001 · 1280",
+   "page": "r3"
+  },
+  "R3-T-other-scale-1280.dc.html": {
+   "x": 4080,
+   "y": 34560,
+   "w": 1280,
+   "h": 844,
+   "title": "R3-T · another scale · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-T-paused-heading-1280.dc.html": {
+   "x": 5440,
+   "y": 34560,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-T · paused heading · Anele Dlamini, PAED-012 · 1280",
+   "page": "r3"
+  },
+  "R3-T-committee-1280.dc.html": {
+   "x": 6800,
+   "y": 34560,
+   "w": 1280,
+   "h": 947,
+   "title": "R3-T · the committee page's slot (flow 07 places it) · 1280",
+   "page": "r3"
+  },
+  "R3-T-three-390.dc.html": {
+   "x": 0,
+   "y": 35720,
+   "w": 390,
+   "h": 1222,
+   "title": "R3-T · three ratings · 390",
+   "page": "r3"
+  },
+  "R3-T-one-390.dc.html": {
+   "x": 470,
+   "y": 35720,
+   "w": 390,
+   "h": 844,
+   "title": "R3-T · one rating · 390",
+   "page": "r3"
+  },
+  "R3-T-other-scale-390.dc.html": {
+   "x": 940,
+   "y": 35720,
+   "w": 390,
+   "h": 1093,
+   "title": "R3-T · another scale · no replay · 390",
+   "page": "r3"
+  },
+  "R3-T-paused-heading-390.dc.html": {
+   "x": 1410,
+   "y": 35720,
+   "w": 390,
+   "h": 844,
+   "title": "R3-T · paused heading · 390",
+   "page": "r3"
+  },
+  "R3-T-committee-390.dc.html": {
+   "x": 1880,
+   "y": 35720,
+   "w": 390,
+   "h": 1294,
+   "title": "R3-T · committee · 390",
+   "page": "r3"
+  },
+  "R3-C-WaysIn.dc.html": {
+   "x": 0,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-C-WaysIn · component (state, w)",
+   "page": "r3"
+  },
+  "R3-W-card-count-1280.dc.html": {
+   "x": 1360,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-W · the card's count · Anele Dlamini, 3.6 · 1280",
+   "page": "r3"
+  },
+  "R3-W-card-count-later-1280.dc.html": {
+   "x": 2720,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-W · the same card at 3.50 · 1280",
+   "page": "r3"
+  },
+  "R3-W-card-older-1280.dc.html": {
+   "x": 4080,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-W · an older encounter · no replay reaches this · 1280",
+   "page": "r3"
+  },
+  "R3-W-card-paused-1280.dc.html": {
+   "x": 5440,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-W · a paused EPA's card · Anele Dlamini, 6.19 · 1280",
+   "page": "r3"
+  },
+  "R3-W-mine-credit-1280.dc.html": {
+   "x": 6800,
+   "y": 38120,
+   "w": 1280,
+   "h": 878,
+   "title": "R3-W · My activities' Credit links · Lerato Molefe, 3.48 · 1280",
+   "page": "r3"
+  },
+  "R3-W-mine-paused-1280.dc.html": {
+   "x": 8160,
+   "y": 38120,
+   "w": 1280,
+   "h": 800,
+   "title": "R3-W · My activities, a paused EPA · Anele Dlamini, 6.19 · 1280",
+   "page": "r3"
+  },
+  "R3-W-card-count-390.dc.html": {
+   "x": 0,
+   "y": 39580,
+   "w": 390,
+   "h": 844,
+   "title": "R3-W · the card's count · 390",
+   "page": "r3"
+  },
+  "R3-W-card-count-later-390.dc.html": {
+   "x": 470,
+   "y": 39580,
+   "w": 390,
+   "h": 844,
+   "title": "R3-W · the card at 3.50 · 390",
+   "page": "r3"
+  },
+  "R3-W-card-older-390.dc.html": {
+   "x": 940,
+   "y": 39580,
+   "w": 390,
+   "h": 844,
+   "title": "R3-W · older encounter · no replay · 390",
+   "page": "r3"
+  },
+  "R3-W-card-paused-390.dc.html": {
+   "x": 1410,
+   "y": 39580,
+   "w": 390,
+   "h": 844,
+   "title": "R3-W · paused card · 390",
+   "page": "r3"
+  },
+  "R3-W-mine-credit-390.dc.html": {
+   "x": 1880,
+   "y": 39580,
+   "w": 390,
+   "h": 1797,
+   "title": "R3-W · Credit links · 390",
+   "page": "r3"
+  },
+  "R3-W-mine-paused-390.dc.html": {
+   "x": 2350,
+   "y": 39580,
+   "w": 390,
+   "h": 1262,
+   "title": "R3-W · a paused EPA's row · 390",
+   "page": "r3"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "V1-Home.dc.html",
+  "V1-Progress.dc.html",
+  "V1-EPA.dc.html",
+  "V1-Phone.dc.html",
+  "V2-Home.dc.html",
+  "V2-Progress.dc.html",
+  "V2-Phone.dc.html",
+  "V3-Home.dc.html",
+  "V3-Observations.dc.html",
+  "V3-Entrustment.dc.html",
+  "V3-Phone.dc.html",
+  "Trajectory-1280.dc.html",
+  "Trajectory-390.dc.html",
+  "WaysIn.dc.html",
+  "Marks.dc.html",
+  "R2-Spec.dc.html",
+  "R2-Steps.dc.html",
+  "R2-C-Home.dc.html",
+  "R2-H-first-day-1280.dc.html",
+  "R2-H-typical-1280.dc.html",
+  "R2-H-with-stars-1280.dc.html",
+  "R2-H-decline-1280.dc.html",
+  "R2-H-returned-1280.dc.html",
+  "R2-H-decisions-mixed-1280.dc.html",
+  "R2-H-all-met-1280.dc.html",
+  "R2-H-part-way-1280.dc.html",
+  "R2-H-december-1280.dc.html",
+  "R2-H-not-started-1280.dc.html",
+  "R2-H-no-curriculum-1280.dc.html",
+  "R2-H-no-epa-in-use-1280.dc.html",
+  "R2-H-ended-1280.dc.html",
+  "R2-H-graduate-1280.dc.html",
+  "R2-H-two-role-1280.dc.html",
+  "R2-H-loading-1280.dc.html",
+  "R2-H-load-error-1280.dc.html",
+  "R2-H-first-day-390.dc.html",
+  "R2-H-typical-390.dc.html",
+  "R2-H-with-stars-390.dc.html",
+  "R2-H-decline-390.dc.html",
+  "R2-H-returned-390.dc.html",
+  "R2-H-decisions-mixed-390.dc.html",
+  "R2-H-all-met-390.dc.html",
+  "R2-H-part-way-390.dc.html",
+  "R2-H-december-390.dc.html",
+  "R2-H-not-started-390.dc.html",
+  "R2-H-no-curriculum-390.dc.html",
+  "R2-H-no-epa-in-use-390.dc.html",
+  "R2-H-ended-390.dc.html",
+  "R2-H-graduate-390.dc.html",
+  "R2-H-two-role-390.dc.html",
+  "R2-H-loading-390.dc.html",
+  "R2-H-load-error-390.dc.html",
+  "R2-C-Progress.dc.html",
+  "R2-P-first-1280.dc.html",
+  "R2-P-counting-1280.dc.html",
+  "R2-P-standing-1280.dc.html",
+  "R2-P-exit-met-1280.dc.html",
+  "R2-P-paused-1280.dc.html",
+  "R2-P-local-item-1280.dc.html",
+  "R2-P-after-move-1280.dc.html",
+  "R2-P-december-1280.dc.html",
+  "R2-P-part-way-1280.dc.html",
+  "R2-P-not-started-1280.dc.html",
+  "R2-P-no-curriculum-1280.dc.html",
+  "R2-P-no-epa-in-use-1280.dc.html",
+  "R2-P-not-comparable-1280.dc.html",
+  "R2-P-section-error-1280.dc.html",
+  "R2-P-loading-1280.dc.html",
+  "R2-P-load-error-1280.dc.html",
+  "R2-P-first-390.dc.html",
+  "R2-P-counting-390.dc.html",
+  "R2-P-standing-390.dc.html",
+  "R2-P-exit-met-390.dc.html",
+  "R2-P-paused-390.dc.html",
+  "R2-P-local-item-390.dc.html",
+  "R2-P-after-move-390.dc.html",
+  "R2-P-december-390.dc.html",
+  "R2-P-part-way-390.dc.html",
+  "R2-P-not-started-390.dc.html",
+  "R2-P-no-curriculum-390.dc.html",
+  "R2-P-no-epa-in-use-390.dc.html",
+  "R2-P-not-comparable-390.dc.html",
+  "R2-P-section-error-390.dc.html",
+  "R2-P-loading-390.dc.html",
+  "R2-P-load-error-390.dc.html",
+  "R2-C-Epa.dc.html",
+  "R2-E-typical-1280.dc.html",
+  "R2-E-one-rating-1280.dc.html",
+  "R2-E-below-star-1280.dc.html",
+  "R2-E-no-rating-1280.dc.html",
+  "R2-E-once-a-year-1280.dc.html",
+  "R2-E-paused-1280.dc.html",
+  "R2-E-local-item-1280.dc.html",
+  "R2-E-other-scale-1280.dc.html",
+  "R2-E-december-1280.dc.html",
+  "R2-E-not-found-1280.dc.html",
+  "R2-E-loading-1280.dc.html",
+  "R2-E-load-error-1280.dc.html",
+  "R2-E-typical-390.dc.html",
+  "R2-E-one-rating-390.dc.html",
+  "R2-E-below-star-390.dc.html",
+  "R2-E-no-rating-390.dc.html",
+  "R2-E-once-a-year-390.dc.html",
+  "R2-E-paused-390.dc.html",
+  "R2-E-local-item-390.dc.html",
+  "R2-E-other-scale-390.dc.html",
+  "R2-E-december-390.dc.html",
+  "R2-E-not-found-390.dc.html",
+  "R2-E-loading-390.dc.html",
+  "R2-E-load-error-390.dc.html",
+  "R2-C-Trajectory.dc.html",
+  "R2-T-three-1280.dc.html",
+  "R2-T-one-1280.dc.html",
+  "R2-T-other-scale-1280.dc.html",
+  "R2-T-paused-heading-1280.dc.html",
+  "R2-T-committee-1280.dc.html",
+  "R2-T-three-390.dc.html",
+  "R2-T-one-390.dc.html",
+  "R2-T-other-scale-390.dc.html",
+  "R2-T-paused-heading-390.dc.html",
+  "R2-T-committee-390.dc.html",
+  "R2-C-WaysIn.dc.html",
+  "R2-W-card-count-1280.dc.html",
+  "R2-W-card-count-later-1280.dc.html",
+  "R2-W-card-older-1280.dc.html",
+  "R2-W-card-paused-1280.dc.html",
+  "R2-W-mine-credit-1280.dc.html",
+  "R2-W-mine-paused-1280.dc.html",
+  "R2-W-card-count-390.dc.html",
+  "R2-W-card-count-later-390.dc.html",
+  "R2-W-card-older-390.dc.html",
+  "R2-W-card-paused-390.dc.html",
+  "R2-W-mine-credit-390.dc.html",
+  "R2-W-mine-paused-390.dc.html",
+  "R3-Spec.dc.html",
+  "R3-Steps.dc.html",
+  "R3-C-Home.dc.html",
+  "R3-H-first-day-1280.dc.html",
+  "R3-H-typical-1280.dc.html",
+  "R3-H-with-stars-1280.dc.html",
+  "R3-H-decline-1280.dc.html",
+  "R3-H-returned-1280.dc.html",
+  "R3-H-decisions-mixed-1280.dc.html",
+  "R3-H-all-met-1280.dc.html",
+  "R3-H-part-way-1280.dc.html",
+  "R3-H-december-1280.dc.html",
+  "R3-H-not-started-1280.dc.html",
+  "R3-H-no-curriculum-1280.dc.html",
+  "R3-H-no-epa-in-use-1280.dc.html",
+  "R3-H-ended-1280.dc.html",
+  "R3-H-graduate-1280.dc.html",
+  "R3-H-two-role-1280.dc.html",
+  "R3-H-loading-1280.dc.html",
+  "R3-H-load-error-1280.dc.html",
+  "R3-H-first-day-390.dc.html",
+  "R3-H-typical-390.dc.html",
+  "R3-H-with-stars-390.dc.html",
+  "R3-H-decline-390.dc.html",
+  "R3-H-returned-390.dc.html",
+  "R3-H-decisions-mixed-390.dc.html",
+  "R3-H-all-met-390.dc.html",
+  "R3-H-part-way-390.dc.html",
+  "R3-H-december-390.dc.html",
+  "R3-H-not-started-390.dc.html",
+  "R3-H-no-curriculum-390.dc.html",
+  "R3-H-no-epa-in-use-390.dc.html",
+  "R3-H-ended-390.dc.html",
+  "R3-H-graduate-390.dc.html",
+  "R3-H-two-role-390.dc.html",
+  "R3-H-loading-390.dc.html",
+  "R3-H-load-error-390.dc.html",
+  "R3-C-Progress.dc.html",
+  "R3-P-first-1280.dc.html",
+  "R3-P-counting-1280.dc.html",
+  "R3-P-standing-1280.dc.html",
+  "R3-P-exit-met-1280.dc.html",
+  "R3-P-paused-1280.dc.html",
+  "R3-P-local-item-1280.dc.html",
+  "R3-P-after-move-1280.dc.html",
+  "R3-P-december-1280.dc.html",
+  "R3-P-part-way-1280.dc.html",
+  "R3-P-not-started-1280.dc.html",
+  "R3-P-no-curriculum-1280.dc.html",
+  "R3-P-no-epa-in-use-1280.dc.html",
+  "R3-P-not-comparable-1280.dc.html",
+  "R3-P-section-error-1280.dc.html",
+  "R3-P-loading-1280.dc.html",
+  "R3-P-load-error-1280.dc.html",
+  "R3-P-first-390.dc.html",
+  "R3-P-counting-390.dc.html",
+  "R3-P-standing-390.dc.html",
+  "R3-P-exit-met-390.dc.html",
+  "R3-P-paused-390.dc.html",
+  "R3-P-local-item-390.dc.html",
+  "R3-P-after-move-390.dc.html",
+  "R3-P-december-390.dc.html",
+  "R3-P-part-way-390.dc.html",
+  "R3-P-not-started-390.dc.html",
+  "R3-P-no-curriculum-390.dc.html",
+  "R3-P-no-epa-in-use-390.dc.html",
+  "R3-P-not-comparable-390.dc.html",
+  "R3-P-section-error-390.dc.html",
+  "R3-P-loading-390.dc.html",
+  "R3-P-load-error-390.dc.html",
+  "R3-C-Epa.dc.html",
+  "R3-E-typical-1280.dc.html",
+  "R3-E-one-rating-1280.dc.html",
+  "R3-E-below-star-1280.dc.html",
+  "R3-E-no-rating-1280.dc.html",
+  "R3-E-once-a-year-1280.dc.html",
+  "R3-E-paused-1280.dc.html",
+  "R3-E-local-item-1280.dc.html",
+  "R3-E-other-scale-1280.dc.html",
+  "R3-E-december-1280.dc.html",
+  "R3-E-not-found-1280.dc.html",
+  "R3-E-loading-1280.dc.html",
+  "R3-E-load-error-1280.dc.html",
+  "R3-E-typical-390.dc.html",
+  "R3-E-one-rating-390.dc.html",
+  "R3-E-below-star-390.dc.html",
+  "R3-E-no-rating-390.dc.html",
+  "R3-E-once-a-year-390.dc.html",
+  "R3-E-paused-390.dc.html",
+  "R3-E-local-item-390.dc.html",
+  "R3-E-other-scale-390.dc.html",
+  "R3-E-december-390.dc.html",
+  "R3-E-not-found-390.dc.html",
+  "R3-E-loading-390.dc.html",
+  "R3-E-load-error-390.dc.html",
+  "R3-C-Trajectory.dc.html",
+  "R3-T-three-1280.dc.html",
+  "R3-T-one-1280.dc.html",
+  "R3-T-other-scale-1280.dc.html",
+  "R3-T-paused-heading-1280.dc.html",
+  "R3-T-committee-1280.dc.html",
+  "R3-T-three-390.dc.html",
+  "R3-T-one-390.dc.html",
+  "R3-T-other-scale-390.dc.html",
+  "R3-T-paused-heading-390.dc.html",
+  "R3-T-committee-390.dc.html",
+  "R3-C-WaysIn.dc.html",
+  "R3-W-card-count-1280.dc.html",
+  "R3-W-card-count-later-1280.dc.html",
+  "R3-W-card-older-1280.dc.html",
+  "R3-W-card-paused-1280.dc.html",
+  "R3-W-mine-credit-1280.dc.html",
+  "R3-W-mine-paused-1280.dc.html",
+  "R3-W-card-count-390.dc.html",
+  "R3-W-card-count-later-390.dc.html",
+  "R3-W-card-older-390.dc.html",
+  "R3-W-card-paused-390.dc.html",
+  "R3-W-mine-credit-390.dc.html",
+  "R3-W-mine-paused-390.dc.html"
+ ],
+ "notes": {
+  "note-ddg0i3": {
+   "bold": false,
+   "kind": "title1",
+   "size": 24,
+   "text": "",
+   "w": 240,
+   "x": 3982,
+   "y": 15018,
+   "page": "r1"
+  },
+  "t1": {
+   "kind": "title1",
+   "maxW": 5400,
+   "text": "V1 · EPA pages: an index, and a page per EPA",
+   "w": 240,
+   "x": 0,
+   "y": 1800,
+   "page": "r1"
+  },
+  "t2": {
+   "kind": "title1",
+   "maxW": 4050,
+   "text": "V2 · One page: every EPA a row that opens in place",
+   "w": 240,
+   "x": 0,
+   "y": 5100,
+   "page": "r1"
+  },
+  "t3": {
+   "kind": "title1",
+   "maxW": 5400,
+   "text": "V3 · Weekly Home; My progress in two parts",
+   "w": 240,
+   "x": 0,
+   "y": 8400,
+   "page": "r1"
+  },
+  "t4": {
+   "kind": "title1",
+   "maxW": 4870,
+   "text": "Shared by all three: the chart, the ways in, the marks",
+   "w": 240,
+   "x": 0,
+   "y": 11700,
+   "page": "r1"
+  },
+  "r2t0": {
+   "kind": "title1",
+   "maxW": 2960,
+   "text": "Flow 05 · Round 2 · V1 at full fidelity",
+   "x": 0,
+   "y": -320,
+   "page": "r2"
+  },
+  "r2t1": {
+   "kind": "title1",
+   "maxW": 7900,
+   "text": "Home (Trainee) · 17 states · 1280 above, 390 below",
+   "x": 0,
+   "y": 7400,
+   "page": "r2"
+  },
+  "r2t2": {
+   "kind": "title1",
+   "maxW": 7440,
+   "text": "My progress · 16 states · 1280 above, 390 below",
+   "x": 0,
+   "y": 12600,
+   "page": "r2"
+  },
+  "r2t3": {
+   "kind": "title1",
+   "maxW": 5560,
+   "text": "One EPA's page · 12 states · 1280 above, 390 below",
+   "x": 0,
+   "y": 27360,
+   "page": "r2"
+  },
+  "r2t4": {
+   "kind": "title1",
+   "maxW": 8080,
+   "text": "TrajectoryChart · for My progress and the committee page",
+   "x": 0,
+   "y": 34260,
+   "page": "r2"
+  },
+  "r2t5": {
+   "kind": "title1",
+   "maxW": 9440,
+   "text": "Flow 03's pieces this flow touches · the status card and My activities' Credit",
+   "x": 0,
+   "y": 37820,
+   "page": "r2"
+  },
+  "r3t0": {
+   "kind": "title1",
+   "maxW": 2960,
+   "text": "Flow 05 · Round 3 · corrections applied",
+   "x": 0,
+   "y": -320,
+   "page": "r3"
+  },
+  "r3t1": {
+   "kind": "title1",
+   "maxW": 7900,
+   "text": "Home (Trainee) · 17 states · 1280 above, 390 below",
+   "x": 0,
+   "y": 7400,
+   "page": "r3"
+  },
+  "r3t2": {
+   "kind": "title1",
+   "maxW": 7440,
+   "text": "My progress · 16 states · 1280 above, 390 below",
+   "x": 0,
+   "y": 12600,
+   "page": "r3"
+  },
+  "r3t3": {
+   "kind": "title1",
+   "maxW": 5560,
+   "text": "One EPA's page · 12 states · 1280 above, 390 below",
+   "x": 0,
+   "y": 27360,
+   "page": "r3"
+  },
+  "r3t4": {
+   "kind": "title1",
+   "maxW": 8080,
+   "text": "TrajectoryChart · for My progress and the committee page",
+   "x": 0,
+   "y": 34260,
+   "page": "r3"
+  },
+  "r3t5": {
+   "kind": "title1",
+   "maxW": 9440,
+   "text": "Flow 03's pieces this flow touches · the status card and My activities' Credit",
+   "x": 0,
+   "y": 37820,
+   "page": "r3"
+  }
+ }
+}

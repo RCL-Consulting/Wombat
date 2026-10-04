@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 05 round 3 spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow05-r3.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-doc" style="width:1440px">
+<h1>Flow 05 · Round 3 · Spec</h1>
+<p>Round 2 with E1–E6 and C1–C13 applied, nothing else changed. Every board on this page imports one of five component boards (R3-C-Home, R3-C-Progress, R3-C-Epa, R3-C-Trajectory, R3-C-WaysIn) with a <code>state</code> and a <code>w</code>; the wrappers are R3-&lt;letter&gt;-&lt;state&gt;-1280 and -390, one to one with round 2's. A board whose title says "no replay reaches this" draws a hypothetical state with filler. The stylesheet is flow05-r3.css, loaded in place of flow05-r2.css; its part 3 is what goes to app.css.</p>
+
+<h2>1 · Every message, by kind</h2>
+<table>
+<tr><th style="width:12%">Page</th><th style="width:12%">Kind</th><th style="width:22%">When</th><th>Words</th></tr>
+<tr><td>Home</td><td>Hint</td><td>A furthest-short row</td><td>"0 of 3 this semester · 3 more by 2026-11-30" (under the name); December: "0 of 3 this semester · 3 more; encounters in December still count towards Semester 2, 2026."</td></tr>
+<tr><td>Home</td><td>Notice</td><td>Every target met</td><td>"Every target is met for Semester 2, 2026 and the 2026 academic year."</td></tr>
+<tr><td>Home</td><td>Notice</td><td>Started part-way</td><td>"No semester target this semester: you started part-way through it. Semester targets begin with Semester 1, 2027."</td></tr>
+<tr><td>Home</td><td>Notice</td><td>Programme not started</td><td>"Your programme starts on 2027-01-15."</td></tr>
+<tr><td>Home</td><td>Notice</td><td>Programme ended, Trainee kept (A.4.6)</td><td>"Your programme ended on 2026-10-01, so no target applies to you any more. Your progress in each period is kept on My progress, read-only."</td></tr>
+<tr><td>Home</td><td>Empty</td><td>No curriculum</td><td>"No curriculum assigned yet. Once you are admitted, your targets for each period appear here."</td></tr>
+<tr><td>Home</td><td>Empty</td><td>No EPA in use</td><td>"No EPA on your curriculum is in use at the moment, so no target applies to you."</td></tr>
+<tr><td>Home</td><td>Empty</td><td>Recent decisions</td><td>"No decisions yet."</td></tr>
+<tr><td>Home</td><td>Empty</td><td>My authorisations</td><td>"No STAR yet. When the committee issues one, it shows here against training year 3's level." · on the ended Home: "No STAR yet."</td></tr>
+<tr><td>Home</td><td>Hint</td><td>A decision's line (E5, E6)</td><td>The activity's own window, named when it is not the current one. Current: "PAED-001: 3 of 3 this semester, met." · an older window: "PAED-001, Semester 1, 2026: 3 of 3, met." · a yearly item: "PAED-008: 1 of 1 in 2026, met." · a waived window: "PAED-002: no target this semester · 2 recorded." · paused: "Its credit to PAED-012 waits while the EPA is paused." · credited nothing: "Credits nothing." · Declined alone: the link "File it again, to someone else"</td></tr>
+<tr><td>Home</td><td>Hint</td><td>A STAR row</td><td>"4, below training year 4's level of 5 · expires 2026-10-23"</td></tr>
+<tr><td>Home</td><td>Load error</td><td>DashboardFrame, as built</td><td>"<b>Could not load your Home.</b> Nothing has changed. Try again, or come back in a few minutes." Try again. Loading: "Loading your Home." in the status that is always on the page.</td></tr>
+<tr><td>My progress</td><td>Notice (info Alert)</td><td>December</td><td>"<b>The 2026 academic year ended on 2026-11-30.</b> Encounters observed in December still count towards semester 2, 2026 and your 2026 yearly targets. Semester 1, 2027 starts on 2027-01-01." This period's ends line: "Semester 2, 2026 counts encounters observed in December."</td></tr>
+<tr><td>My progress</td><td>Notice (info Alert)</td><td>Started part-way (MyProgress.razor:94-129)</td><td>"You started the programme on 2026-08-18. That was part-way through the semester, so under the College's rule no semester target applies until semester 1, 2027, which starts on 2027-01-01. Encounters on those EPAs before then stay in your portfolio as evidence, but do not count towards a later semester's target. That was in the second half of the academic year, so under the College's rule no yearly target applies until the 2027 academic year, which starts on 2027-01-01. Encounters on those EPAs before then stay in your portfolio as evidence, but do not count towards a later year's target."</td></tr>
+<tr><td>My progress</td><td>Notice (info Alert)</td><td>Not started</td><td>"Your programme starts on 2027-01-15. Your first semester targets are for semester 1, 2027. Your first yearly targets are for the 2027 academic year."</td></tr>
+<tr><td>My progress</td><td>Hint</td><td>This period, no target of a kind</td><td>"none apply yet" over "Semester targets" / "Yearly targets" (TargetsLine)</td></tr>
+<tr><td>My progress</td><td>Hint</td><td>A count cell</td><td>"1 of 3 this semester" / "0 of 1 in 2026", the bar, then "2 more by 2026-11-30" or "Target met for Semester 2, 2026." / "Target met for the 2026 academic year."; December: "3 more; encounters in December still count towards Semester 2, 2026." and, on a yearly row, "1 more; encounters in December still count towards the 2026 academic year."; waived, one line and no bar: "No target this semester · 2 recorded · targets start with semester 1, 2027" / "No target in 2026 · 0 recorded · targets start with the 2027 academic year"; not started: "No target yet · targets start with semester 1, 2027" / "No target yet · targets start with the 2027 academic year"</td></tr>
+<tr><td>My progress</td><td>Hint</td><td>A paused EPA's row</td><td>"Paused by the College. It is not a target while it is paused. Its ratings and the credit it had earned are kept, and what is completed on it meanwhile is credited if it is restored."</td></tr>
+<tr><td>My progress</td><td>Hint</td><td>The standing panel (EntrustmentStandingPanel, as built)</td><td>The opening paragraph whole; "STAR decisions against training year 4 targets" over the summary; "Exit rule" over ExitLine, ending "Not yet: …" with the unmet codes (and, with KGK-001, "The institution's own EPA is not part of the College's rule, so it is not counted."); "For information only. Recording a Graduate decision or completing the programme does not check the exit rule."; the caption "Each EPA's STAR decision against the training year 4 target and the exit level, with the latest rating."; "None" for no STAR and no rating; RatingWords ("Direct observation; below the target"); not comparable: "Independent on O-R Scale" and "Decided on O-R Scale, not CPSA Paediatric Entrustment Scale v11.1."</td></tr>
+<tr><td>My progress</td><td>Empty</td><td>No curriculum</td><td>"No curriculum items assigned yet." / "Once you are admitted to a curriculum, your EPAs will appear here."</td></tr>
+<tr><td>My progress</td><td>Empty</td><td>No EPA in use</td><td>"No EPA on your curriculum is in use at the moment, so no target applies to you."</td></tr>
+<tr><td>My progress</td><td>Load error</td><td>The page's read</td><td>"<b>Could not load your progress.</b> Nothing has changed. Try again, or come back in a few minutes." Try again; nothing drawn under it. Loading: "Loading My progress."</td></tr>
+<tr><td>My progress</td><td>Section error</td><td>The standing read fails</td><td>"<b>Could not load your standing.</b> Nothing has changed. Try again, or come back in a few minutes." with Try again, under the panel's heading; the index's verdict cells read "Not loaded".</td></tr>
+<tr><td>My progress</td><td>Section error</td><td>The MSF read fails</td><td>"Multi-source feedback: Could not load MSF coverage. Your counts above are not affected." (a line, no button)</td></tr>
+<tr><td>EPA page</td><td>Notice (info Alert)</td><td>Paused</td><td>N6's sentence, under the h1.</td></tr>
+<tr><td>EPA page</td><td>Hint</td><td>Entrustment, paused</td><td>"While PAED-012 is paused it is not in your standing against Annexure A."</td></tr>
+<tr><td>EPA page</td><td>Hint</td><td>The level line</td><td>"Training year 4: level 5, the minimum each encounter is judged against and your STAR's target." · KGK-001: "Minimum 3a"</td></tr>
+<tr><td>EPA page</td><td>Hint</td><td>MSF (CardLine, newest semester first)</td><td>"MSF in Semester 2, 2026: no released campaign covering this EPA has closed yet. MSF in Semester 1, 2026: no campaign covering this EPA that closed in the semester has been released." · covered: "MSF in Semester 2, 2026: covered by a released campaign that closed on 2026-10-03. MSF in Semester 1, 2026: …" · paused: no line.</td></tr>
+<tr><td>EPA page</td><td>Empty</td><td>No STAR · no rating · no activity</td><td>"No STAR yet." · "No rating yet." · "No activity on this EPA yet." with Log an activity</td></tr>
+<tr><td>EPA page</td><td>Loading</td><td>As ActivityView loads</td><td>h1 "Loading this EPA", crumb "Loading…", status "Loading this EPA."</td></tr>
+<tr><td>EPA page</td><td>Load error</td><td>The page's read</td><td>h1 and crumb "EPA"; "<b>Could not load this EPA.</b> Nothing has changed. Try again, or come back in a few minutes."</td></tr>
+<tr><td>EPA page</td><td>Not found</td><td>Unknown or out-of-scope id</td><td>Flow 01's NotFound, word for word: "Page not found" / "There is no page at this address." / "Check the address, or start again from Home." / Go to Home</td></tr>
+<tr><td>Activity page</td><td>Hint</td><td>Completed status card (C5, E5)</td><td>"Rated 4. Credited 1 item to PAED-001. PAED-001: 1 of 3 this semester." · older window: "… PAED-001, Semester 1, 2026: 3 of 3, met." · credited 0: the built "It counted towards no curriculum requirement." and no count · no EPA: no line, and "Open My progress" goes to My progress itself · paused and MSF: flow 03's, unchanged.</td></tr>
+<tr><td>Trajectory</td><td>Hint</td><td>Under the heading</td><td>"3 ratings in the 2026 academic year, from Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below." · "2 ratings in the 2026 academic year, from Sarah Botha and Mohammed Patel. 1 on another scale, 1 below." · one rating only: "1 rating so far, from David Naidoo. At the minimum." · "Multi-source feedback is not plotted."</td></tr>
+</table>
+<h3>New words, with no source in the built code</h3>
+<ul>
+<li>"No rating yet." (the chart's built empty is "No observations to plot.", TrajectoryChart.razor:5)</li>
+<li>"Your EPAs" · "Why it is not counted" · "Semester 2, 2026 counts encounters observed in December."</li>
+<li>The ended Home's "No STAR yet."</li>
+<li>The trajectory key: "How to read the chart", "Below the minimum: …", "Exit level 5", "A rating", "Rated on another scale: counts towards the number, not the level"</li>
+<li>"1 on another scale" in the trajectory summary</li>
+<li>"the" before a yearly window's name: "… towards the 2026 academic year.", "Target met for the 2026 academic year." (the built name is "2026 academic year", QuotaProgress.cs:183)</li>
+<li>"Loading My progress." · "Loading this EPA."</li>
+<li>The chart region's name: "Rating chart for PAED-001"</li>
+<li>The waived decision line: "PAED-002: no target this semester · 2 recorded."</li>
+</ul>
+
+<h2>2 · DESIGN.md rules, ready to paste</h2>
+<h3>R1 § Dashboard page (the Trainee's Home)</h3>
+<div class="paste">The Trainee's Home holds four cards, in this order: Your targets (spanning two, the emphasis stripe), Needs you, Recent decisions (spanning two) and My authorisations.
+- Your targets: "Training year N — it sets the minimum level each encounter is judged against."; the two figures in My progress's words ("1 of 10" over "EPAs met this semester", "0 of 5" over "EPAs met in 2026"); then "Furthest short", the five EPAs furthest short, largest shortfall first, then by code. Each row is its own link to its EPA page, named "Code — Title", with its figure and date under the name, never beside it, and a bar that never stands without the words. Footer: Open My progress.
+- Needs you: flow 03's NeedsYouList, unchanged; its "Open My activities" is Home's one way to My activities.
+- Recent decisions: the registrar's own requests that someone else last moved and that are finished (a terminal state of the pinned workflow) or have no move left: Completed, Discussed, Signed off, Declined, Accepted, Reviewed, Approved, Verified, Rejected, and any other terminal state. Newest decision first, five rows, no footer. Each row: ActivityLink ("Type · EPA · date", "to &lt;assessor&gt;" under it; the assessor joins the name when two rows would share it), the decision's badge (BadgeFor.ActivityState: badge-completed for a finished state, badge-declined for Declined and Rejected) and its day, then one line by kind. The count line follows one rule with the completed card's sentence: the activity's own window, named when it is not the current one ("PAED-001, Semester 1, 2026: 3 of 3, met."), the current one as "PAED-001: 3 of 3 this semester, met."; "Credits nothing." wherever it credited nothing; "File it again, to someone else" for Declined alone. MSF records are not listed. Flow 04's classes (.decided-list, .decided-row, .decided-meta, .decided-date) plus .decided-note.
+- My authorisations: the standing summary in the panel's words, then each STAR below its level or expiring within 30 days, a link to its EPA page; footer Open My authorisations. The card's title is the page's name.
+A card is never one link around other links; a card's rows are its links. No MSF on Home. No Upcoming deadlines: a date is shown on the row it belongs to.</div>
+<h3>R2 § Page-level patterns</h3>
+<div class="paste">A record page under a personal link: the EPA page, /portfolio/progress/{EpaId:int}, owned by My progress for every role, and for a graduate who holds none (one rule in NavOwners.OwnerFor for a page under a personal link; ActiveNavItemTests reads the page's policy, TraineeOrFormerTrainee). It lights My progress with aria-current="true"; the trail is Home › My progress › &lt;code&gt;. Addressed by the EPA's id, never its code (a code is unique only in its namespace). Its h1 is "&lt;code&gt; — &lt;title&gt;", with "(no longer in use)" after it for a paused EPA; the tab is the h1's words, mark included ("PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams (no longer in use) · Wombat"); the crumb stays the code ("PAED-012"). The h1 takes the focus on arrival (FocusOnNavigate). "Open My authorisations" shows only to a Trainee (My authorisations is Roles = "Trainee"); a graduate reads the STAR in the Entrustment section. An unknown or out-of-scope id is "Page not found".</div>
+<h3>R3 The progress figures</h3>
+<div class="paste">A figure is a count against a target for a named window: "1 of 3 this semester", "0 of 1 in 2026", "1 of 10 EPAs met this semester". The decision cadence names its own frame ("Decided each semester", "Decided once a year", "Decided as opportunity allows", or no label where the item has none). A level names its training year, once per EPA: "Training year 4: level 5, the minimum each encounter is judged against and your STAR's target." A waived window shows its count and when targets start ("No target this semester · 2 recorded · targets start with semester 1, 2027"), never a fraction or a bar. Never "n / m", a percentage or a lifetime total; never the bare word "year" beside a training year and an academic year.</div>
+<h3>R4 § Entrustment standing, and the trajectory</h3>
+<div class="paste">EntrustmentStandingPanel and TrajectoryChart are changed once, for My progress and the committee's review page.
+- The panel stacks below 641px (DataTable's Stack: each cell but the EPA labelled by its column); its EPA and rating links are 44px blocks at phone width; its dates are ISO. Its EPA name links to the trainee's EPA page when the reader is the trainee, and to that EPA's chart on the committee page (a parameter). Everything else is the built panel, whole.
+- The chart is drawn twice in the markup, at 900px and at 326px, never scaled. The card, not the viewport, chooses: a container query on .trajectory-figure (container-type: inline-size) shows the 900 drawing where the wrapper holds 900px and the 326 drawing below that, with no script. The EPA page's card holds 900px only from a viewport of about 1254px (sidebar 250, the article's gutters, the card's padding), so at 1100 it draws 326. .trajectory-figure is also a named, focusable scroll region (role="region", aria-label "Rating chart for PAED-001", tabindex="0", as .table-container): the floor for a card narrower than 326px, such as the committee page's nested card (274px inside), where the 326 drawing scrolls sideways in its region and nothing else does.
+- One academic year on a real time axis with month ticks (every other month labelled in the 326 drawing); semester 2 banded; the area below the training year's minimum shaded and edged by a stepped dashed line in warning-color that steps where the training year changed; "Minimum 5" in text-color; the exit level a 2.5px primary-color line; a rating on another scale a hollow point in its own lane. Points closer than a dot are set a dot apart, in date order; the table gives each date. Rungs and months 13px (12px in the 326 drawing), nothing under 11px. Its table is always visible: Encounter, Rating, Against the minimum then, Activity (linked, named per row), Assessor, oldest first. The SVG is named for what it adds ("Chart of the 3 ratings in the table below.").
+The rule that a lone chart scales with its card (near line 2777) is withdrawn.</div>
+<h3>R5 My progress once the programme has ended (flow 13's)</h3>
+<div class="paste">Holds: for a former trainee My progress stays under the rule with every period read-only and no "this period" figures; the EPA page shows that EPA's periods the same way, read-only, with no "n more by" line.</div>
+
+<h2>3 · NEW components and classes</h2>
+<table>
+<tr><th style="width:20%">Component</th><th style="width:22%">Extends</th><th>Classes (flow05-r3.css part 3)</th></tr>
+<tr><td>The EPA page (EpaProgressPage) NEW</td><td>PageHeader + Breadcrumbs (CurrentCrumb), .details-grid, DataTable, StatePanel</td><td>.details-grid--reverse (2fr 1fr; one column at 900px and below), .epa-section-title, .epa-figure-row, .epa-lines, .epa-level-line, .epa-stack, .epa-page-alert, .star-level, .activity-cell-paused, .activity-block-link, .epa-auth-link (a 44px block below 641px)</td></tr>
+<tr><td>EpaProgressTable (the index) NEW</td><td>DataTable, .clinic-table--stack</td><td>.clinic-table--index (th scope="row" on the EPA), .clinic-table .index-caption (it must outrank the built .clinic-table caption, app.css:312-317), .index-section, .epa-link, .count-cell, .count-figure, .count-meta, .verdict-cell, .verdict-level, .cadence-none. A paused EPA is tr.is-paused with .paused-mark, never .detail-card--paused.</td></tr>
+<tr><td>This period</td><td>.detail-card, .dashboard-metric-row</td><td>.period-card, .period-ends, .period-lines, .period-line-term, .section-error</td></tr>
+<tr><td>EntrustmentStandingPanel (changed once)</td><td>the built panel, whole; DataTable Stack; .details-list for its summary and exit rule; .progress-row-meta for its information line</td><td>.standing-panel, .standing-rating-link, .standing-rating-meta</td></tr>
+<tr><td>TrajectoryChart, new form</td><td>.trajectory-chart and its parts (bundle)</td><td>.trajectory-figure (E1: the container and the scroll region), .trajectory-card, .trajectory-head, .trajectory-chart--sized, --wide, --narrow, -band, -below, -minimum, -exit, -rung, -lane, -today, -band-label, -note, -line-label, -minimum-label, -dots, -hollow; .trajectory-key and its swatches; .trajectory-table (its caption rule ties the built one and wins by order: merge it after app.css:312); .trajectory-msf</td></tr>
+<tr><td>Recent decisions (Trainee)</td><td>WaitingList's Recent decisions (.decided-*)</td><td>.decided-note</td></tr>
+<tr><td>Home's Your targets rows</td><td>.progress-row</td><td>.progress-row--link, .progress-row-link, .progress-group-label, .targets-line, .targets-note</td></tr>
+<tr><td>Home's My authorisations card</td><td>DashboardCard, .decided-list</td><td>.stars-summary (rows reuse .decided-row and .decided-note)</td></tr>
+<tr><td>Credit link (My activities)</td><td>DataTable cell</td><td>.credit-link (44px block below 641px)</td></tr>
+<tr><td>Icons</td><td>Icon (Lucide)</td><td>Two new: <code>target</code> (Your targets) and <code>award</code> (My authorisations), copied from Lucide with root id="i".</td></tr>
+</table>
+<h3>Every 44px lift below 641px</h3>
+<ul>
+<li>flow05-r3.css's block-link rule: .progress-row-link, .epa-link, .standing-rating-link, .activity-block-link, .credit-link, .decided-row .activity-link, .decided-note a, .epa-auth-link (display flex, flex-direction column, justify-content center, align-items flex-start, min-height 2.75rem, so a name and its .activity-link-to stack).</li>
+<li>.detail-card--empty .btn at 2.75rem (the EPA page's "Log an activity"; .btn is 2.25rem, bundle.css:378).</li>
+<li>Built, relied on: .dashboard-card-footer .btn and .alert-row .btn (app.css:2816-2817); .breadcrumb-parent a (app.css:3322).</li>
+</ul>
+
+<h2>4 · Contrast, every new pair (WCAG 2.1 relative luminance on the token values)</h2>
+<table>
+<tr><th>Pair</th><th>Needs</th><th>Ratio</th></tr>
+<tr><td>The stepped minimum's line, <code>warning-color</code>, on the chart ground (surface) · on its own shading (warning-bg) · on the semester band (header-bg)</td><td>3</td><td>5.77 · 5.43 · 5.18</td></tr>
+<tr><td>The shading, <code>warning-bg</code>, on surface (decorative: the line carries the meaning, the table repeats it)</td><td>none</td><td>1.06</td></tr>
+<tr><td>The shading on the band, <code>warning-bg</code> on header-bg (decorative: carried by the dashed line)</td><td>none</td><td>1.05</td></tr>
+<tr><td>A point, <code>primary-color</code>, on surface · on the shading · on the band</td><td>3</td><td>10.98 · 10.34 · 9.87</td></tr>
+<tr><td>The exit line, <code>primary-color</code>, on surface · on the band</td><td>3</td><td>10.98 · 9.87</td></tr>
+<tr><td>The line between points, <code>secondary-color</code>, on surface · on the shading · on the band</td><td>3</td><td>4.86 · 4.57 · 4.37</td></tr>
+<tr><td>The hollow point's ring, <code>primary-color</code>, on surface (its lane)</td><td>3</td><td>10.98</td></tr>
+<tr><td>The lane's rule, <code>input-border</code>, on surface</td><td>3</td><td>3.80</td></tr>
+<tr><td>The rung gridlines, <code>border-color</code>, on surface · on the shading (decorative)</td><td>none</td><td>1.30 · 1.23</td></tr>
+<tr><td>Chart labels: rungs and months <code>text-color</code> on surface · on band; band and lane labels <code>muted-text</code> on surface · on band; "Minimum 5" <code>text-color</code> on surface</td><td>4.5</td><td>12.63 · 11.36; 5.09 · 4.57; 12.63</td></tr>
+<tr><td>"Today", <code>muted-text</code>, over the shading (warning-bg)</td><td>4.5</td><td>4.79</td></tr>
+<tr><td>The KGK badge (neutral, badge-draft): text · edge on header-bg</td><td>4.5 · 3</td><td>11.36 · 3.42</td></tr>
+<tr><td>"(no longer in use)", <code>muted-text</code>, on a card (surface) · in an h1 on the page (background) · on a paused row (header-bg)</td><td>4.5</td><td>5.09 · 4.83 · 4.57</td></tr>
+<tr><td>A 44px link block's focus ring, <code>focus-ring</code>, on a card · on a table row (surface) · on a hovered row (hover-bg) · on a paused row (header-bg)</td><td>3</td><td>4.86 · 4.86 · 4.61 · 4.37</td></tr>
+<tr><td>The complete bar, <code>success-color</code>, on its hover-bg track (built)</td><td>3</td><td>5.58</td></tr>
+</table>
+
+<h2>5 · Focus and announcements</h2>
+<ul>
+<li>The EPA page's h1 takes the focus on arrival, by FocusOnNavigate: no script, no ?epa query, no scroll script. "Open My progress", a Home row, an index row, a STAR row and My activities' Credit link all land there. While the EPA page loads its h1 reads "Loading this EPA"; once loaded, the EPA's h1 takes the focus again, so the h1 FocusOnNavigate focused is the loaded page's (ActivityView.razor:35, 275-276).</li>
+<li>The loading status is always on the page, a visually hidden role="status", empty once the read answers and filled only while it runs (DashboardFrame.razor:17; ActivityView.razor:38): "Loading your Home.", "Loading My progress.", "Loading this EPA."</li>
+<li>Try again as built (StatePanel.razor:101-105): the button is gone while the read runs (the skeleton shows), and the answer takes the focus: This period's heading on My progress, the EPA's h1 on its page, Home's ActionResult on Home. Failing again, the alert takes it (FocusFailureAfterRender).</li>
+<li>The standing's own Try again answers into #standing-h, "Entrustment against Annexure A", which has tabindex="-1".</li>
+<li>On Home nothing moves the focus on load; the h1 has it after navigation, as flow 01 built.</li>
+<li>The chart's region (.trajectory-figure) is in the tab order, named "Rating chart for PAED-001", so a keyboard can scroll it where it is narrower than its drawing.</li>
+</ul>
+
+<h2>6 · The reads</h2>
+<table>
+<tr><th style="width:24%">Read</th><th style="width:16%">Exists?</th><th>What it does</th></tr>
+<tr><td>My progress's counts (the index, This period)</td><td>Exists, gains four fields</td><td>TraineeQuotaProgressReader, items .InForce() only. TraineeCurriculumProgressDto gains the decision cadence, the opportunistic flag, the local flag and the exit level, which it does not carry today.</td></tr>
+<tr><td>The "No longer in use" group</td><td>NEW</td><td>The profile's items NOT in force, for the group's row. It does not count them.</td></tr>
+<tr><td>The standing (panel and verdict column)</td><td>Exists</td><td>EpaStandingDto, as the committee's; the index reads YearStatus and the level only.</td></tr>
+<tr><td>Home's standing summary and STAR rows</td><td>NEW on Home</td><td>The dashboard does not read the standing today: one summary query plus the STARs below their level or expiring within 30 days.</td></tr>
+<tr><td>Recent decisions (B1, E6)</td><td>NEW</td><td>The registrar's own requests last moved by someone else that are finished (a terminal state of the pinned workflow) or have no move left; newest decision first; five; with each one's credited EPA's count now, for the activity's own window.</td></tr>
+<tr><td>The EPA page's activities</td><td>NEW</td><td>An EPA filter on ListActivitiesBySubjectQuery (it has none, ListActivitiesBySubjectQuery.cs:23-27), its E7 names (the assessor added where two rows share type, EPA and date) taken over the whole list. "Finished" means a terminal state, so a Declined or cancelled request is never on the page.</td></tr>
+<tr><td>The trajectory</td><td>Exists, gains fields</td><td>TrajectoryPointDto gains the assessor's name, the activity's name, the training year at each encounter, the stepped minimum, the exit level and the other scale's label. EpaTrajectoryDto is shared with the committee's ReviewDetail. "In the 2026 academic year" needs From/To, which MyProgress does not pass today.</td></tr>
+<tr><td>The EPA page's other parts</td><td>NEW</td><td>One EPA's windows (this and the last), its level for the training year, its STAR.</td></tr>
+<tr><td>The completed card's count (C5, E5)</td><td>NEW</td><td>The credited EPA's count for the activity's own window, read live when the page loads.</td></tr>
+</table>
+<p>"Against the minimum then" in the chart's table is computed live with the comparer credit uses (EntrustmentLevelComparer, Domain/Epas/EntrustmentLevelComparison.cs), at the training year of each encounter, over the window the chart reads, the 2026 academic year. "At the minimum level when observed: n of m" is the stored tally for this semester (MinimumLevelReachedCount of Count, CreditApplier.cs:234-238). The two read different windows.</p>
+
+<h2>7 · Presses and phone heights</h2>
+<table>
+<tr><th>Journey</th><th>1280</th><th>390</th></tr>
+<tr><td>The weekly look</td><td>0</td><td>0</td></tr>
+<tr><td>The evidence behind one short EPA</td><td>1</td><td>1</td></tr>
+<tr><td>From a completed Mini-CEX to its EPA's count</td><td>0 to read it (card or Recent decisions); 1 to the EPA page</td><td>0; 1</td></tr>
+<tr><td>The standing before a review</td><td>1</td><td>1</td></tr>
+<tr><td>One EPA's trajectory beside its STAR</td><td>1 from a My authorisations row, else 2</td><td>1, else 2</td></tr>
+<tr><td>A paused EPA</td><td>1</td><td>1</td></tr>
+<tr><td>KGK-001</td><td>1</td><td>1</td></tr>
+</table>
+<h3>Measured height of each 390 board (px)</h3>
+<p>Each component rendered at 390×844 in Chromium with bundle.css, flow05-r3.css and the three fonts, reading the document's scroll height. 844 means the page fits the screen (the shell's min-height). No board scrolls sideways.</p>
+<table>
+<tr><th>Home</th><th>px</th><th>My progress</th><th>px</th><th>EPA page</th><th>px</th><th>Trajectory · ways in</th><th>px</th></tr>
+<tr><td>first-day</td><td>1584</td><td>first</td><td>7571</td><td>typical</td><td>2712</td><td>T three</td><td>1222</td></tr>
+<tr><td>typical</td><td>2135</td><td>counting</td><td>7635</td><td>one-rating</td><td>1837</td><td>T one</td><td>844</td></tr>
+<tr><td>with-stars</td><td>2341</td><td>standing</td><td>7849</td><td>below-star</td><td>2268</td><td>T other-scale</td><td>1093</td></tr>
+<tr><td>decline</td><td>1719</td><td>exit-met</td><td>7998</td><td>no-rating</td><td>1208</td><td>T paused-heading</td><td>844</td></tr>
+<tr><td>returned</td><td>1924</td><td>paused</td><td>7542</td><td>once-a-year</td><td>1236</td><td>T committee</td><td>1294</td></tr>
+<tr><td>decisions-mixed</td><td>1952</td><td>local-item</td><td>8332</td><td>paused</td><td>1766</td><td>W card-count</td><td>844</td></tr>
+<tr><td>all-met</td><td>1351</td><td>after-move</td><td>8594</td><td>local-item</td><td>1220</td><td>W card-count-later</td><td>844</td></tr>
+<tr><td>part-way</td><td>1058</td><td>december</td><td>8048</td><td>other-scale</td><td>2276</td><td>W card-older</td><td>844</td></tr>
+<tr><td>december</td><td>2237</td><td>part-way</td><td>7997</td><td>december</td><td>1229</td><td>W card-paused</td><td>844</td></tr>
+<tr><td>not-started</td><td>954</td><td>not-started</td><td>7637</td><td>not-found</td><td>844</td><td>W mine-credit</td><td>1797</td></tr>
+<tr><td>no-curriculum</td><td>1002</td><td>no-curriculum</td><td>844</td><td>loading</td><td>909</td><td>W mine-paused</td><td>1262</td></tr>
+<tr><td>no-epa-in-use</td><td>1034</td><td>no-epa-in-use</td><td>844</td><td>load-error</td><td>844</td><td></td><td></td></tr>
+<tr><td>ended</td><td>1002</td><td>not-comparable</td><td>7914</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>graduate</td><td>844</td><td>section-error</td><td>3735</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>two-role</td><td>2493</td><td>loading</td><td>844</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>loading</td><td>967</td><td>load-error</td><td>844</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>load-error</td><td>844</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p>Against round 1's starting point (My progress at 390 for Anele Dlamini, 11,157px today): R3-P-counting, her page, is 7,635px with the whole standing panel under the index.</p>
+
+<h2>8 · Boundaries (closed)</h2>
+<ul>
+<li>The trajectory's place on the committee page is flow 07's to fix; flow 05 owns the component (R3-T-committee draws its slot: the review's window, no "Today", her name in the heading's line; at 390 the review's nested card, 274px inside).</li>
+<li>Round 2's open points are closed: the values are C1's (the cast's latest ratings); the words C1's (the panel, built) and C2's (part-way and not started, built); the loading title C8's ("Loading this EPA"); the denominator C4's ("0 of 2"); the Discussed tint E6's (badge-completed).</li>
+<li>The graduate's menu is drawn as personal links only (My progress, My data rights); flow 13 owns it.</li>
+</ul>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":8200}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

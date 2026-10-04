@@ -29,3 +29,7 @@ T355's design, kept beside its brief (`../05-trainee-progress.md`) so that it ou
 - **Round 2's review:** `round-2-review.md` (four Sonnet reviewers T, B, S, A; one Opus synthesis): accept with changes; C1–C13 for round 3; E1–E6 for the operator.
 - **The decisions** (the operator, 2026-10-04): accept all: C1–C13 for round 3; E1–E6 as recommended.
 - **Round 3's ask:** `round-3-ask.txt` (232 lines): E1–E6 and C1–C13, each naming the round-2 phrasing it replaces; R3 boards on their own page, 112 wrappers renamed, no new state; `flow05-r3.css`.
+- **Round 3** (2026-10-04, `round-3/`, canvas version `1791094162-9f6b`): 121 files (five R3 component boards, 112
+  wrappers, R3-Spec, R3-Steps, `flow05-r3.css`, `canvas.json`; pages r1, r2, r3). Checked item by item
+  (`round-3-check.md`): E1–E6, C1–C10, C12, C13 and the closing instructions hold; the three partly rows are explained
+  there (C11's specimen slot left by the ask; two hunks that C2 and C8 asked for). **The design is final for step 6.**

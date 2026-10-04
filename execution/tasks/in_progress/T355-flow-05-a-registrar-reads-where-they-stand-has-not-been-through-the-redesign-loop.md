@@ -54,7 +54,8 @@ Run the loop as flow 04 ran it (`design/flows/04-assessor-inbox/`, BRIEF § 11 "
   03's five trainee boards, R3-C-Mine, R3-C-Activity and two stylesheets in `design/upload/flow03-boards/`).
 - [x] The canvas is created, with the mark copied in before round 1 — https://claude.ai/artifact/VkYiJc32Tn8USxWMrftScj
   (mark `/_blob/5e32abd7ee425f64c0db739c82470df3`, 2026-10-04).
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/05-…/`.
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/05-trainee-progress/`
+  (V1 picked; round 2 reviewed from four sides, C1–C13, E1–E6 accepted; round 3 checked, `round-3-check.md`: final).
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 05) — the squash commit and counts.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 05, the baseline is re-captured, and
   flow 05's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.

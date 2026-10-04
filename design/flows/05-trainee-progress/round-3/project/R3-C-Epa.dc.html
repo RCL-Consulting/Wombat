@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>One EPA's page · component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow05-r3.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-frame r2-frame--{{w}}">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Trainee</span></p>
+<label class="nav-toggle-label" for="nav-toggle"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Trainee</span></p></div>
+<div class="nav-list">
+<ul class="nav-items">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 12h8M12 8v8" /></svg><span class="nav-label">Log an activity</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13" /></svg><span class="nav-label">My activities</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF reports</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">My committee reviews</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg><span class="nav-label">Export portfolio</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="{{navProgress}}" href="#" aria-current="{{navCurrent}}"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6" /></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</div>
+</nav>
+<div class="account-row"><a class="account-link" href="#" title="{{m.person}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">{{m.person}}</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main>
+<article>
+
+<sc-if value="{{notFound}}" hint-placeholder-val="{{false}}">
+<div class="header-container"><div><h1 class="page-title-with-icon" tabindex="-1"><svg class="icon page-title-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>Page not found</h1></div></div>
+<div class="system-panel"><p>There is no page at this address.</p><p class="muted">Check the address, or start again from Home.</p><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg>Go to Home</a></div></div>
+</sc-if>
+
+<sc-if value="{{found}}" hint-placeholder-val="{{true}}">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+<li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>My progress</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+<li class="breadcrumb-current"><span aria-current="page">{{m.crumb}}</span></li>
+</ol></nav>
+<div class="header-container"><div>
+<h1 tabindex="-1">{{m.title}}<sc-if value="{{m.paused}}" hint-placeholder-val="{{false}}"> <span class="paused-mark">(no longer in use)</span></sc-if><sc-if value="{{m.local}}" hint-placeholder-val="{{false}}"> <span class="badge badge-draft">Kgosi Kgari Teaching Hospital's own</span></sc-if></h1>
+<sc-if value="{{m.sub}}" hint-placeholder-val="{{true}}"><p class="page-subtitle">{{m.sub}}</p></sc-if>
+</div></div>
+
+<p class="visually-hidden" role="status">{{status}}</p>
+<sc-if value="{{loading}}" hint-placeholder-val="{{false}}">
+<div aria-hidden="true" class="epa-stack">
+<div class="details-grid details-grid--reverse">
+<div class="detail-card"><div class="skeleton" style="width:30%;height:1.4rem"></div><div class="skeleton" style="width:50%;height:2.2rem;margin-top:1rem"></div><div class="skeleton" style="width:100%;height:1rem;margin-top:1rem"></div><div class="skeleton" style="width:90%;height:1rem;margin-top:0.5rem"></div><div class="skeleton" style="width:80%;height:1rem;margin-top:0.5rem"></div></div>
+<div class="detail-card"><div class="skeleton" style="width:50%;height:1.4rem"></div><div class="skeleton" style="width:40%;height:2.2rem;margin-top:1rem"></div><div class="skeleton" style="width:100%;height:1rem;margin-top:1rem"></div></div>
+</div>
+<div class="detail-card"><div class="skeleton" style="width:30%;height:1.4rem"></div><div class="skeleton" style="width:100%;height:12rem;margin-top:1rem"></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{failed}}" hint-placeholder-val="{{false}}">
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load this EPA.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</sc-if>
+
+<sc-if value="{{body}}" hint-placeholder-val="{{true}}">
+<sc-if value="{{m.alert}}" hint-placeholder-val="{{false}}"><div class="alert alert-info epa-page-alert">{{m.alert}}</div></sc-if>
+<div class="epa-stack">
+<div class="details-grid details-grid--reverse">
+<section class="detail-card" aria-labelledby="obs-h">
+<h2 class="epa-section-title" id="obs-h">Observations</h2>
+<sc-if value="{{m.fig}}" hint-placeholder-val="{{true}}">
+<div class="epa-figure-row"><span class="dashboard-metric-value">{{m.fig}}</span><span>{{m.figWin}}</span>
+<div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{m.max}}" aria-valuenow="{{m.now}}" aria-label="{{m.figAria}}"><div class="{{m.fillClass}}" style="{{m.fill}}"></div></div></div>
+<p class="progress-row-meta">{{m.figMeta}}</p>
+</sc-if>
+<div class="epa-lines">
+<sc-for list="{{m.lines}}" as="l" hint-placeholder-count="3"><p>{{l}}</p></sc-for>
+<p class="epa-level-line">{{m.level}}</p>
+<sc-if value="{{m.msf}}" hint-placeholder-val="{{true}}"><p>{{m.msf}}</p></sc-if>
+</div>
+</section>
+<section class="detail-card" aria-labelledby="ent-h">
+<h2 class="epa-section-title" id="ent-h">Entrustment</h2>
+<sc-if value="{{m.star}}" hint-placeholder-val="{{true}}">
+<div class="star-level"><span class="dashboard-metric-value">{{m.star}}</span><span class="{{m.starClass}}">{{m.starBadge}}</span></div>
+<dl class="details-list" style="margin-top:var(--space-md)">
+<sc-for list="{{m.starRows}}" as="d" hint-placeholder-count="3"><div><dt>{{d.t}}</dt><dd>{{d.v}}</dd></div></sc-for>
+</dl>
+<p style="margin:var(--space-md) 0 0"><a class="epa-auth-link" href="#">Open My authorisations</a></p>
+</sc-if>
+<sc-for list="{{m.entText}}" as="t" hint-placeholder-count="0"><p style="margin:0 0 var(--space-sm)">{{t}}</p></sc-for>
+</section>
+</div>
+
+<sc-if value="{{m.traj}}" hint-placeholder-val="{{true}}">
+<dc-import name="R3-C-Trajectory" state="{{m.traj}}" w="{{w}}" mode="epa" hint-size="100%,640px"></dc-import>
+</sc-if>
+<sc-if value="{{m.noTraj}}" hint-placeholder-val="{{false}}">
+<section class="detail-card" aria-labelledby="traj-none-h"><h2 class="epa-section-title" id="traj-none-h">Rating trajectory</h2><p class="card-empty">No rating yet.</p></section>
+</sc-if>
+
+<section class="list-section" aria-labelledby="acts-h">
+<h2 class="list-section-title" id="acts-h">Activities on this EPA</h2>
+<sc-if value="{{m.hasActs}}" hint-placeholder-val="{{true}}">
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack" role="table">
+<caption class="visually-hidden">Every finished activity of yours on this EPA, newest encounter first</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Credit</th></tr></thead>
+<tbody role="rowgroup">
+<sc-for list="{{m.acts}}" as="a" hint-placeholder-count="2">
+<tr role="row"><td role="cell"><a class="activity-link activity-block-link" href="#">{{a.name}}<sc-if value="{{a.to}}" hint-placeholder-val="{{true}}"><span class="visually-hidden">, </span><span class="activity-link-to">{{a.to}}</span></sc-if></a><sc-if value="{{a.paused}}" hint-placeholder-val="{{false}}"><span class="activity-cell-paused">{{a.paused}}</span></sc-if></td>
+<td role="cell"><span class="{{a.badgeClass}}">{{a.state}}</span></td>
+<td role="cell" data-label="Credit">{{a.credit}}</td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</sc-if>
+<sc-if value="{{m.noActs}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty"><div class="state-panel-title">No activity on this EPA yet.</div><div class="form-actions" style="justify-content:center"><a class="btn btn-outline" href="#">Log an activity</a></div></div>
+</sc-if>
+</section>
+</div>
+</sc-if>
+</sc-if>
+</article>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["typical","one-rating","below-star","no-rating","once-a-year","paused","local-item","other-scale","december","not-found","loading","load-error"],"default":"typical"},"w":{"editor":"enum","options":["1280","390"],"default":"1280"},"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'typical';
+const w = String(this.props.w ?? '1280');
+const lvl = (ty, l) => 'Training year ' + ty + ': level ' + l + ', the minimum each encounter is judged against and your STAR\'s target.';
+const S1 = ' MSF in Semester 1, 2026: no campaign covering this EPA that closed in the semester has been released.';
+const NOMSF = 'MSF in Semester 2, 2026: no released campaign covering this EPA has closed yet.' + S1;
+const comp = (name, to, credit) => ({ name, to, state: 'Completed', badgeClass: 'badge badge-completed', credit: credit || '1 item', paused: null });
+const fig = (n, max, win, meta) => ({ fig: n + ' of ' + max, figWin: win, max, now: n, figAria: n + ' of ' + max + ' ' + win, fill: 'width:' + Math.min(100, Math.round(100 * n / max)) + '%', fillClass: n >= max ? 'progress-bar-fill is-complete' : 'progress-bar-fill', figMeta: meta });
+const P001 = 'PAED-001 — Providing paediatric emergency care to children';
+const P002 = 'PAED-002 — Managing common paediatric presentations';
+const S = {
+'typical': Object.assign({ person: 'Lerato Molefe', crumb: 'PAED-001', title: P001, sub: '3 a semester · Decided each semester · Exit level 5' }, fig(3, 3, 'this semester', 'Target met for Semester 2, 2026.'), {
+  lines: ['At the minimum level when observed: 2 of 3', 'Last encounter 2026-09-24', 'Semester 1, 2026: 0 of 3, 3 short'], level: lvl(4, 5), msf: NOMSF,
+  star: '5', starBadge: 'At or above', starClass: 'badge badge-standing-met', starRows: [{ t: 'Issued', v: '2026-10-03' }, { t: 'Exit level', v: '5 · reached' }], traj: 'three',
+  acts: [comp('DOPS (Paediatrics) · PAED-001 · 2026-09-24', 'to Mohammed Patel'), comp('Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-22', 'to David Naidoo'), comp('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-21', 'to Thandi Zulu')] }),
+'one-rating': Object.assign({ person: 'Anele Dlamini', crumb: 'PAED-001', title: P001, sub: '3 a semester · Decided each semester · Exit level 5' }, fig(1, 3, 'this semester', '2 more by 2026-11-30.'), {
+  lines: ['At the minimum level when observed: 1 of 1', 'Last encounter 2026-09-23', 'Semester 1, 2026: 0 of 3, 3 short'], level: lvl(3, 4), msf: NOMSF, entText: ['No STAR yet.'], traj: 'one',
+  acts: [comp('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23', 'to David Naidoo')] }),
+'below-star': Object.assign({ person: 'Lerato Molefe', crumb: 'PAED-010', title: 'PAED-010 — Leading and operating within a clinical team', sub: '3 a semester · Decided each semester · Exit level 5' }, fig(1, 3, 'this semester', '2 more by 2026-11-30.'), {
+  lines: ['At the minimum level when observed: 1 of 1', 'Last encounter 2026-09-29', 'Semester 1, 2026: 0 of 3, 3 short'], level: lvl(4, 5), msf: 'MSF in Semester 2, 2026: covered by a released campaign that closed on 2026-10-03.' + S1,
+  star: '4', starBadge: 'Below', starClass: 'badge badge-standing-below', starRows: [{ t: 'Issued', v: '2026-10-03' }, { t: 'Expires', v: '2026-10-23' }, { t: 'Exit level', v: '5 · not yet' }], traj: 'below',
+  acts: [{ name: 'Multi-Source Feedback (Paediatrics) · PAED-010 · 2026-10-03', to: null, state: 'Recorded', badgeClass: 'badge badge-completed', credit: '—', paused: null }, comp('Direct Observation (Paediatrics) · PAED-010 · 2026-09-29', 'to Thandi Zulu')] }),
+'no-rating': Object.assign({ person: 'Anele Dlamini', crumb: 'PAED-002', title: P002, sub: '3 a semester · Decided each semester · Exit level 5' }, fig(0, 3, 'this semester', '3 more by 2026-11-30.'), {
+  lines: ['Semester 1, 2026: 0 of 3, 3 short'], level: lvl(3, 4), msf: NOMSF, entText: ['No STAR yet.'], traj: null, acts: [] }),
+'december': Object.assign({ person: 'Anele Dlamini', crumb: 'PAED-002', title: P002, sub: '3 a semester · Decided each semester · Exit level 5' }, fig(0, 3, 'this semester', '3 more; encounters in December still count towards Semester 2, 2026.'), {
+  lines: ['Semester 1, 2026: 0 of 3, 3 short'], level: lvl(3, 4), msf: NOMSF, entText: ['No STAR yet.'], traj: null, acts: [] }),
+'once-a-year': Object.assign({ person: 'Lerato Molefe', crumb: 'PAED-008', title: 'PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children', sub: '1 a year · Decided as opportunity allows · Exit level 4' }, fig(0, 1, 'in 2026', '1 more by 2026-11-30.'), {
+  lines: ['2025 academic year: 0 of 1, 1 short'], level: lvl(4, 4), msf: NOMSF, entText: ['No STAR yet.'], traj: null, acts: [] }),
+'paused': { person: 'Anele Dlamini', crumb: 'PAED-012', title: 'PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams', paused: true, sub: '3 a semester · Decided each semester · Exit level 5',
+  alert: 'Paused by the College. It is not a target while it is paused. Its ratings and the credit it had earned are kept, and what is completed on it meanwhile is credited if it is restored.',
+  fig: null, lines: [], level: lvl(3, 4), msf: null, entText: ['While PAED-012 is paused it is not in your standing against Annexure A.'], traj: 'paused-heading',
+  acts: [{ name: 'Mini-CEX (Paediatrics) · PAED-012 · 2026-10-03', to: 'to Mohammed Patel', state: 'Completed', badgeClass: 'badge badge-completed', credit: 'None', paused: 'PAED-012 (no longer in use)' }] },
+'local-item': Object.assign({ person: 'Anele Dlamini', crumb: 'KGK-001', title: 'KGK-001 — Running a paediatric outreach clinic at a district hospital', local: true, sub: '1 a year · Not in the College\'s exit rule' }, fig(0, 1, 'in 2026', '1 more by 2026-11-30.'), {
+  lines: ['2025 academic year: 0 of 1, 1 short'], level: 'Minimum 3a', msf: NOMSF, entText: ['No STAR yet.', 'Not in the College\'s exit rule.'], traj: null, acts: [] }),
+'other-scale': Object.assign({ person: '[Registrar]', crumb: 'PAED-005', title: 'PAED-005 — Providing neonatal care in intensive and high-care settings', sub: '3 a semester · Decided each semester · Exit level 5' }, fig(2, 3, 'this semester', '1 more by 2026-11-30.'), {
+  lines: ['At the minimum level when observed: 0 of 2', 'Last encounter 2026-09-12', 'Semester 1, 2026: 0 of 3, 3 short'], level: lvl(3, 4), msf: NOMSF, entText: ['No STAR yet.'], traj: 'other-scale',
+  acts: [comp('Case-Based Discussion (Paediatrics) · PAED-005 · 2026-09-12', 'to Mohammed Patel'), comp('DOPS (Paediatrics) · PAED-005 · 2026-08-10', 'to Sarah Botha')] }),
+'loading': { person: 'Anele Dlamini', crumb: 'Loading…', title: 'Loading this EPA', sub: null },
+'load-error': { person: 'Anele Dlamini', crumb: 'EPA', title: 'EPA', sub: null },
+'not-found': { person: 'Anele Dlamini' }
+};
+const m = Object.assign({ lines: [], entText: [], acts: [], traj: null, star: null, paused: false, local: false, alert: null, fig: null }, S[state] || S['typical']);
+m.noTraj = !m.traj;
+m.hasActs = m.acts.length > 0; m.noActs = !m.hasActs;
+const notFound = state === 'not-found';
+const loading = state === 'loading', failed = state === 'load-error';
+return { w, m, notFound, found: !notFound, loading, failed, body: !notFound && !loading && !failed, status: loading ? 'Loading this EPA.' : '',
+  navProgress: notFound ? 'nav-link' : 'nav-link active', navCurrent: notFound ? null : 'true' };
+}
+}
+</script>
+</body>
+</html>
