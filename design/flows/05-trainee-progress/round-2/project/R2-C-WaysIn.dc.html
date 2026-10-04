@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ways in from flow 03 · component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow05-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-frame r2-frame--{{w}}">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Trainee</span></p>
+<label class="nav-toggle-label" for="nav-toggle"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Trainee</span></p></div>
+<div class="nav-list">
+<ul class="nav-items">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 12h8M12 8v8" /></svg><span class="nav-label">Log an activity</span></a></li>
+<li><a class="nav-link active" href="#" aria-current="{{navCurrent}}"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13" /></svg><span class="nav-label">My activities</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF reports</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">My committee reviews</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg><span class="nav-label">Export portfolio</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6" /></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</div>
+</nav>
+<div class="account-row"><a class="account-link" href="#" title="{{m.person}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">{{m.person}}</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main>
+<article>
+
+<sc-if value="{{card}}" hint-placeholder-val="{{true}}">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+<li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>My activities</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+<li class="breadcrumb-current"><span aria-current="page">{{m.activity}}</span></li>
+</ol></nav>
+<div class="header-container"><div><h1 tabindex="-1">{{m.activity}}</h1><p class="page-subtitle">{{m.people}}</p></div></div>
+<section class="detail-card activity-status activity-status--done" aria-labelledby="status-label">
+<div class="activity-status-main">
+<p class="activity-status-label" id="status-label">Who has it now</p>
+<p class="activity-status-head"><span class="badge badge-completed">Completed</span><span class="activity-status-headline">{{m.headline}}</span></p>
+<p class="activity-status-body">{{m.body}}</p>
+</div>
+<div class="activity-status-action"><a class="btn btn-outline" href="#" aria-label="{{m.openAria}}">Open My progress</a></div>
+</section>
+<div class="detail-card detail-card--empty-compact">About, the form's sections and the history follow, as flow 03 built them: unchanged.</div>
+</sc-if>
+
+<sc-if value="{{mine}}" hint-placeholder-val="{{false}}">
+<div class="header-container"><div><h1 tabindex="-1">My activities</h1></div></div>
+<section class="list-section" aria-labelledby="all-h">
+<h2 id="all-h" class="list-section-title" tabindex="-1">All activities ({{m.count}})</h2>
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack" role="table">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">Who has it now</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Credit</th></tr></thead>
+<tbody role="rowgroup">
+<sc-for list="{{m.rows}}" as="r" hint-placeholder-count="6">
+<tr role="row">
+<td role="cell"><a class="activity-link" href="#">{{r.name}}<sc-if value="{{r.to}}" hint-placeholder-val="{{true}}"><span class="visually-hidden">, </span><span class="activity-link-to">{{r.to}}</span></sc-if></a><sc-if value="{{r.paused}}" hint-placeholder-val="{{false}}"><span class="activity-cell-paused">{{r.paused}}</span></sc-if></td>
+<td role="cell" data-label="Who has it now">Done</td>
+<td role="cell"><span class="badge badge-completed">{{r.state}}</span></td>
+<td role="cell" data-label="Credit"><sc-if value="{{r.link}}" hint-placeholder-val="{{true}}"><a class="credit-link" href="#" aria-label="{{r.aria}}">1 item</a></sc-if><sc-if value="{{r.plain}}" hint-placeholder-val="{{false}}">{{r.plain}}</sc-if></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<nav class="pager" aria-label="All activities, pages"><div class="pager-info">Showing 1–{{m.count}} of {{m.count}}</div><div class="pager-actions"><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Previous</button><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Next</button></div><div class="pager-page-size"><span class="pager-page-size-label">Per page:</span><select class="form-select form-select-sm pager-page-size-select"><option>10</option><option selected="selected">20</option><option>50</option><option>100</option></select></div></nav>
+</section>
+</sc-if>
+</article>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["card-count","card-count-later","card-older","card-paused","mine-credit","mine-paused"],"default":"card-count"},"w":{"editor":"enum","options":["1280","390"],"default":"1280"},"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'card-count';
+const w = String(this.props.w ?? '1280');
+const done = (name, to, epa) => ({ name, to, state: 'Completed', link: true, aria: '1 item to ' + epa + ', in My progress', plain: null, paused: null });
+const msf = (epa) => ({ name: 'Multi-Source Feedback (Paediatrics) · ' + epa + ' · 2026-10-03', to: null, state: 'Recorded', link: false, plain: '—', paused: null });
+const dlaminiCard = { person: 'Anele Dlamini', activity: 'Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23', people: 'Anele Dlamini’s request to David Naidoo', headline: 'Done. David Naidoo completed it on 2026-10-03 17:15 SAST.', openAria: 'Open My progress at PAED-001' };
+const S = {
+'card-count': Object.assign({}, dlaminiCard, { body: 'Rated 4. Credited 1 item to PAED-001. PAED-001: 1 of 3 this semester.' }),
+'card-count-later': Object.assign({}, dlaminiCard, { body: 'Rated 4. Credited 1 item to PAED-001. PAED-001: 3 of 3 this semester, met.' }),
+'card-older': { person: '[Registrar]', activity: 'Mini-CEX (Paediatrics) · PAED-001 · 2026-05-14', people: '[Registrar]’s request to David Naidoo', headline: 'Done. David Naidoo completed it on 2026-05-20 10:02 SAST.', body: 'Rated 4. Credited 1 item to PAED-001. PAED-001, Semester 1, 2026: 3 of 3, met.', openAria: 'Open My progress at PAED-001' },
+'card-paused': { person: 'Anele Dlamini', activity: 'Mini-CEX (Paediatrics) · PAED-012 · 2026-10-03', people: 'Anele Dlamini’s request to Mohammed Patel', headline: 'Done. Mohammed Patel completed it on 2026-10-03 19:13 SAST.', body: 'Rated 4. Its credit to PAED-012 waits while the EPA is paused.', openAria: 'Open My progress at PAED-012' },
+'mine-credit': { person: 'Lerato Molefe', rows: [msf('PAED-010'), msf('PAED-012'),
+  done('Direct Observation (Paediatrics) · PAED-010 · 2026-09-29', 'to Thandi Zulu', 'PAED-010'),
+  done('Case-Based Discussion (Paediatrics) · PAED-012 · 2026-09-28', 'to Fatima Khumalo', 'PAED-012'),
+  done('Mini-CEX (Paediatrics) · PAED-012 · 2026-09-26', 'to Sarah Botha', 'PAED-012'),
+  done('DOPS (Paediatrics) · PAED-001 · 2026-09-24', 'to Mohammed Patel', 'PAED-001'),
+  done('Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-22', 'to David Naidoo', 'PAED-001'),
+  done('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-21', 'to Thandi Zulu', 'PAED-001')] },
+'mine-paused': { person: 'Anele Dlamini', rows: [
+  { name: 'Mini-CEX (Paediatrics) · PAED-012 · 2026-10-03', to: 'to Mohammed Patel', state: 'Completed', link: false, plain: 'None', paused: 'PAED-012 (no longer in use)' },
+  done('Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01', 'to Fatima Khumalo', 'PAED-004'),
+  done('Clinical Case Analysis (Paediatrics) · PAED-001 · 2026-09-27', 'to Sarah Botha', 'PAED-001'),
+  done('Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-24', 'to Thandi Zulu', 'PAED-001'),
+  done('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23', 'to David Naidoo', 'PAED-001')] }
+};
+const m = Object.assign({ rows: [] }, S[state] || S['card-count']);
+m.count = m.rows.length;
+const mine = state.indexOf('mine') === 0;
+return { w, m, mine, card: !mine, navCurrent: mine ? 'page' : 'true' };
+}
+}
+</script>
+</body>
+</html>

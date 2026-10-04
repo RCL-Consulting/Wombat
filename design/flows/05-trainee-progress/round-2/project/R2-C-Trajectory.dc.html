@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TrajectoryChart · component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow05-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{frameClass}}">
+<div style="{{boxStyle}}">
+<section class="detail-card trajectory-card" aria-labelledby="{{headId}}">
+<div class="trajectory-head">
+<sc-if value="{{epaMode}}" hint-placeholder-val="{{false}}"><h2 class="epa-section-title" id="{{headId}}">Rating trajectory</h2></sc-if>
+<sc-if value="{{listMode}}" hint-placeholder-val="{{true}}"><h3 id="{{headId}}">{{c.epa}}<sc-if value="{{c.paused}}" hint-placeholder-val="{{false}}"> <span class="paused-mark">(no longer in use)</span></sc-if></h3></sc-if>
+<p>{{c.summary}}</p>
+</div>
+<ul class="trajectory-key" aria-label="How to read the chart">
+<li><span class="trajectory-key-swatch trajectory-key-swatch--below" aria-hidden="true"></span>Below the minimum: {{c.minText}}</li>
+<li><span class="trajectory-key-swatch trajectory-key-swatch--exit" aria-hidden="true"></span>Exit level {{c.exit}}</li>
+<li><span class="trajectory-key-swatch trajectory-key-swatch--dot" aria-hidden="true"></span>A rating</li>
+<sc-if value="{{c.hasHollow}}" hint-placeholder-val="{{false}}"><li><span class="trajectory-key-swatch trajectory-key-swatch--hollow" aria-hidden="true"></span>Rated on another scale: counts towards the number, not the level</li></sc-if>
+</ul>
+
+<sc-if value="{{wide}}" hint-placeholder-val="{{true}}">
+<svg class="trajectory-chart trajectory-chart--sized" width="900" height="350" viewBox="0 0 900 350" role="img" aria-label="{{c.aria}}">
+<rect class="trajectory-chart-band" x="431" y="12" width="373" height="312"></rect>
+<text class="trajectory-chart-band-label" x="68" y="26">Semester 1, 2026</text>
+<text class="trajectory-chart-band-label" x="435" y="26">Semester 2, 2026</text>
+<path class="trajectory-chart-below" d="{{g.shade}}"></path>
+<path class="trajectory-chart-rung" d="M64 54H804M64 94H804M64 134H804M64 174H804M64 214H804M64 254H804"></path>
+<line class="trajectory-chart-lane" x1="64" x2="804" y1="277" y2="277"></line>
+<text class="trajectory-chart-y-label" x="54" y="59" text-anchor="end">5</text>
+<text class="trajectory-chart-y-label" x="54" y="99" text-anchor="end">4</text>
+<text class="trajectory-chart-y-label" x="54" y="139" text-anchor="end">3b</text>
+<text class="trajectory-chart-y-label" x="54" y="179" text-anchor="end">3a</text>
+<text class="trajectory-chart-y-label" x="54" y="219" text-anchor="end">2</text>
+<text class="trajectory-chart-y-label" x="54" y="259" text-anchor="end">1</text>
+<text class="trajectory-chart-note" x="54" y="305" text-anchor="end">Other scale</text>
+<path class="trajectory-chart-minimum" d="{{g.minLine}}"></path>
+<line class="trajectory-chart-exit" x1="64" x2="804" y1="{{g.exitY}}" y2="{{g.exitY}}"></line>
+<text class="trajectory-chart-line-label" x="810" y="{{g.exitLabelY}}">Exit {{c.exit}}</text>
+<text class="trajectory-chart-minimum-label" x="810" y="{{g.minLabelY}}">Minimum {{c.minNow}}</text>
+<line class="trajectory-chart-axis" x1="64" x2="804" y1="324" y2="324"></line>
+<path class="trajectory-chart-axis" d="M64 324V329M127 324V329M184 324V329M246 324V329M307 324V329M370 324V329M431 324V329M494 324V329M557 324V329M617 324V329M680 324V329M741 324V329M804 324V329"></path>
+<text class="trajectory-chart-x-label" x="92" y="344" text-anchor="middle">Jan</text>
+<text class="trajectory-chart-x-label" x="155" y="344" text-anchor="middle">Feb</text>
+<text class="trajectory-chart-x-label" x="212" y="344" text-anchor="middle">Mar</text>
+<text class="trajectory-chart-x-label" x="275" y="344" text-anchor="middle">Apr</text>
+<text class="trajectory-chart-x-label" x="336" y="344" text-anchor="middle">May</text>
+<text class="trajectory-chart-x-label" x="399" y="344" text-anchor="middle">Jun</text>
+<text class="trajectory-chart-x-label" x="459" y="344" text-anchor="middle">Jul</text>
+<text class="trajectory-chart-x-label" x="522" y="344" text-anchor="middle">Aug</text>
+<text class="trajectory-chart-x-label" x="585" y="344" text-anchor="middle">Sep</text>
+<text class="trajectory-chart-x-label" x="646" y="344" text-anchor="middle">Oct</text>
+<text class="trajectory-chart-x-label" x="709" y="344" text-anchor="middle">Nov</text>
+<text class="trajectory-chart-x-label" x="770" y="344" text-anchor="middle">Dec</text>
+<sc-if value="{{c.today}}" hint-placeholder-val="{{true}}"><line class="trajectory-chart-today" x1="{{g.todayX}}" x2="{{g.todayX}}" y1="34" y2="324"></line><text class="trajectory-chart-note" x="{{g.todayLabelX}}" y="318">Today</text></sc-if>
+<path class="trajectory-chart-line" d="{{g.line}}"></path>
+<path class="trajectory-chart-hollow" d="{{g.hollow}}"></path>
+<path class="trajectory-chart-dots" d="{{g.dots}}"></path>
+</svg>
+</sc-if>
+
+<sc-if value="{{narrow}}" hint-placeholder-val="{{false}}">
+<svg class="trajectory-chart trajectory-chart--sized trajectory-chart--narrow" width="326" height="286" viewBox="0 0 326 286" role="img" aria-label="{{c.aria}}">
+<rect class="trajectory-chart-band" x="155" y="8" width="113" height="256"></rect>
+<text class="trajectory-chart-band-label" x="48" y="22">Semester 1, 2026</text>
+<text class="trajectory-chart-band-label" x="159" y="22">Semester 2, 2026</text>
+<path class="trajectory-chart-below" d="{{g.shade}}"></path>
+<path class="trajectory-chart-rung" d="M44 46H268M44 78H268M44 110H268M44 142H268M44 174H268M44 206H268"></path>
+<line class="trajectory-chart-lane" x1="44" x2="268" y1="225" y2="225"></line>
+<text class="trajectory-chart-y-label" x="34" y="50" text-anchor="end">5</text>
+<text class="trajectory-chart-y-label" x="34" y="82" text-anchor="end">4</text>
+<text class="trajectory-chart-y-label" x="34" y="114" text-anchor="end">3b</text>
+<text class="trajectory-chart-y-label" x="34" y="146" text-anchor="end">3a</text>
+<text class="trajectory-chart-y-label" x="34" y="178" text-anchor="end">2</text>
+<text class="trajectory-chart-y-label" x="34" y="210" text-anchor="end">1</text>
+<text class="trajectory-chart-note" x="34" y="248" text-anchor="end">Other</text>
+<path class="trajectory-chart-minimum" d="{{g.minLine}}"></path>
+<line class="trajectory-chart-exit" x1="44" x2="268" y1="{{g.exitY}}" y2="{{g.exitY}}"></line>
+<text class="trajectory-chart-line-label" x="274" y="{{g.exitLabelY}}">Exit {{c.exit}}</text>
+<text class="trajectory-chart-minimum-label" x="274" y="{{g.minLabelY}}">Min {{c.minNow}}</text>
+<line class="trajectory-chart-axis" x1="44" x2="268" y1="264" y2="264"></line>
+<path class="trajectory-chart-axis" d="M44 264V269M63 264V269M80 264V269M99 264V269M118 264V269M137 264V269M155 264V269M174 264V269M193 264V269M212 264V269M231 264V269M249 264V269M268 264V269"></path>
+<text class="trajectory-chart-x-label" x="53" y="282" text-anchor="middle">Jan</text>
+<text class="trajectory-chart-x-label" x="89" y="282" text-anchor="middle">Mar</text>
+<text class="trajectory-chart-x-label" x="126" y="282" text-anchor="middle">May</text>
+<text class="trajectory-chart-x-label" x="164" y="282" text-anchor="middle">Jul</text>
+<text class="trajectory-chart-x-label" x="202" y="282" text-anchor="middle">Sep</text>
+<text class="trajectory-chart-x-label" x="239" y="282" text-anchor="middle">Nov</text>
+<sc-if value="{{c.today}}" hint-placeholder-val="{{true}}"><line class="trajectory-chart-today" x1="{{g.todayX}}" x2="{{g.todayX}}" y1="30" y2="264"></line><text class="trajectory-chart-note" x="{{g.todayLabelX}}" y="258">Today</text></sc-if>
+<path class="trajectory-chart-line" d="{{g.line}}"></path>
+<path class="trajectory-chart-hollow" d="{{g.hollow}}"></path>
+<path class="trajectory-chart-dots" d="{{g.dots}}"></path>
+</svg>
+</sc-if>
+
+<div class="table-container">
+<table class="clinic-table clinic-table--stack trajectory-table" role="table">
+<caption>The ratings, oldest first</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Encounter</th><th scope="col" role="columnheader">Rating</th><th scope="col" role="columnheader">Against the minimum then</th><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">Assessor</th></tr></thead>
+<tbody role="rowgroup">
+<sc-for list="{{c.rows}}" as="r" hint-placeholder-count="3">
+<tr role="row"><td role="cell" data-label="Encounter">{{r.date}}</td><td role="cell" data-label="Rating">{{r.rating}}</td><td role="cell" data-label="Against the minimum then">{{r.against}}</td><td role="cell"><a class="activity-link activity-block-link" href="#">{{r.activity}}</a></td><td role="cell" data-label="Assessor">{{r.assessor}}</td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<sc-if value="{{c.msf}}" hint-placeholder-val="{{false}}"><p class="trajectory-msf">Multi-source feedback is not plotted.</p></sc-if>
+</section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["three","one","other-scale","paused-heading","committee"],"default":"three"},"w":{"editor":"enum","options":["1280","390"],"default":"1280"},"mode":{"editor":null,"default":"board"},"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'three';
+const w = String(this.props.w ?? '1280');
+const mode = this.props.mode ?? 'board';
+const wide = w !== '390';
+const RUNGS = ['5','4','3b','3a','2','1'];
+const G = wide ? { left: 64, right: 804, rh: 40, top: 34, laneY: 300, r: 7, fs: 13 } : { left: 44, right: 268, rh: 32, top: 30, laneY: 244, r: 6, fs: 12 };
+const doy = (s) => (Date.UTC(+s.slice(0,4), +s.slice(5,7) - 1, +s.slice(8,10)) - Date.UTC(2026, 0, 1)) / 86400000;
+const X = (s) => G.left + (G.right - G.left) * doy(s) / 365;
+const Y = (r) => G.top + G.rh * RUNGS.indexOf(r) + G.rh / 2;
+const edge = (r) => G.top + G.rh * (RUNGS.indexOf(r) + 1);
+const f = (n) => Math.round(n);
+const MOLEFE = { steps: [[null, '2026-01-14', '4'], ['2026-01-14', null, '5']], minText: '4 until 2026-01-13, then 5 (training year 4)', minNow: '5', exit: '5' };
+const DLAMINI = { steps: [[null, '2026-01-14', '3b'], ['2026-01-14', null, '4']], minText: '3b until 2026-01-13, then 4 (training year 3)', minNow: '4', exit: '5' };
+const P001 = 'PAED-001 — Providing paediatric emergency care to children';
+const molefe001 = [
+  { date: '2026-09-21', rating: '5', against: 'At it (5, training year 4)', activity: 'Mini-CEX (Paediatrics) · PAED-001 · 2026-09-21', assessor: 'Thandi Zulu' },
+  { date: '2026-09-22', rating: '5', against: 'At it (5, training year 4)', activity: 'Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-22', assessor: 'David Naidoo' },
+  { date: '2026-09-24', rating: '4', against: 'Below (5, training year 4)', activity: 'DOPS (Paediatrics) · PAED-001 · 2026-09-24', assessor: 'Mohammed Patel' }
+];
+const C = {
+'three': Object.assign({ epa: P001, summary: '3 ratings in the 2026 academic year, from Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below.', rows: molefe001, today: true }, MOLEFE),
+'committee': Object.assign({ epa: P001, summary: 'Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31, from Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below.', rows: molefe001, today: false }, MOLEFE),
+'one': Object.assign({ epa: P001, summary: '1 rating so far, from David Naidoo. At the minimum.', rows: [{ date: '2026-09-23', rating: '4', against: 'At it (4, training year 3)', activity: 'Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23', assessor: 'David Naidoo' }], today: true }, DLAMINI),
+'other-scale': Object.assign({ epa: 'PAED-005 — Providing neonatal care in intensive and high-care settings', summary: '2 ratings so far, from Sarah Botha and Mohammed Patel. 1 on another scale, 1 below.', rows: [
+  { date: '2026-08-10', rating: '[rating] on [scale]', against: 'Not on the ladder: counts towards the number, not the level', activity: 'DOPS (Paediatrics) · PAED-005 · 2026-08-10', assessor: 'Sarah Botha', off: true },
+  { date: '2026-09-12', rating: '3b', against: 'Below (4, training year 3)', activity: 'Case-Based Discussion (Paediatrics) · PAED-005 · 2026-09-12', assessor: 'Mohammed Patel' }], today: true }, DLAMINI),
+'paused-heading': Object.assign({ epa: 'PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams', paused: true, summary: '1 rating so far, from Mohammed Patel. At the minimum.', rows: [{ date: '2026-10-03', rating: '4', against: 'At it (4, training year 3)', activity: 'Mini-CEX (Paediatrics) · PAED-012 · 2026-10-03', assessor: 'Mohammed Patel' }], today: true }, DLAMINI),
+'below': Object.assign({ epa: 'PAED-010 — Leading and operating within a clinical team', summary: '1 rating so far, from Thandi Zulu. At the minimum.', rows: [{ date: '2026-09-29', rating: '5', against: 'At it (5, training year 4)', activity: 'Direct Observation (Paediatrics) · PAED-010 · 2026-09-29', assessor: 'Thandi Zulu' }], today: true, msf: true }, MOLEFE)
+};
+const c = Object.assign({ paused: false, msf: false }, C[state] || C['three']);
+const n = c.rows.length;
+c.aria = 'Chart of the ' + (n === 1 ? '1 rating' : n + ' ratings') + ' in the table below.';
+c.hasHollow = c.rows.some(r => r.off);
+// geometry: the stepped minimum, the shading under it, the points (set apart when closer than a dot)
+let minLine = '', shade = '';
+c.steps.forEach((s, i) => {
+  const xa = s[0] ? X(s[0]) : G.left, xb = s[1] ? X(s[1]) : G.right, yb = edge(s[2]);
+  minLine += (i === 0 ? 'M' + f(xa) + ' ' + f(yb) : 'V' + f(yb)) + 'H' + f(xb);
+});
+shade = minLine + 'V' + f(G.top + G.rh * 6) + 'H' + G.left + 'Z';
+let prev = -999; const pts = [];
+c.rows.forEach(r => { const x = Math.max(X(r.date), prev + 2 * G.r + 3); prev = x; pts.push({ x, y: r.off ? G.laneY : Y(r.rating), off: !!r.off }); });
+const circ = (p) => 'M' + f(p.x - G.r) + ' ' + f(p.y) + 'a' + G.r + ' ' + G.r + ' 0 1 0 ' + (2 * G.r) + ' 0a' + G.r + ' ' + G.r + ' 0 1 0 ' + (-2 * G.r) + ' 0';
+const on = pts.filter(p => !p.off);
+const lastMin = c.steps[c.steps.length - 1][2];
+const g = {
+  minLine, shade,
+  dots: on.map(circ).join('') || 'M0 0',
+  hollow: pts.filter(p => p.off).map(circ).join('') || 'M0 0',
+  line: on.length > 1 ? 'M' + on.map(p => f(p.x) + ' ' + f(p.y)).join('L') : 'M0 0',
+  exitY: f(Y(c.exit)), exitLabelY: f(Y(c.exit) + G.fs * 0.35),
+  minLabelY: f(edge(lastMin) + G.fs * 1.25),
+  todayX: f(X('2026-10-03')), todayLabelX: f(X('2026-10-03') + 4)
+};
+const listMode = mode !== 'epa';
+return {
+  c, g, wide, narrow: !wide, epaMode: !listMode, listMode,
+  headId: 'trajectory-' + state + '-' + w,
+  frameClass: listMode ? 'r2-frame r2-frame--' + w + ' r2-loose' : '',
+  boxStyle: listMode ? (wide ? 'width:974px' : 'width:358px') : ''
+};
+}
+}
+</script>
+</body>
+</html>

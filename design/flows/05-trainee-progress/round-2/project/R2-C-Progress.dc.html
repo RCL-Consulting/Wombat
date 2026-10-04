@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My progress · component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow05-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-frame r2-frame--{{w}}">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Trainee</span></p>
+<label class="nav-toggle-label" for="nav-toggle"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Trainee</span></p></div>
+<div class="nav-list">
+<ul class="nav-items">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 12h8M12 8v8" /></svg><span class="nav-label">Log an activity</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13" /></svg><span class="nav-label">My activities</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF reports</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">My committee reviews</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg><span class="nav-label">Export portfolio</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6" /></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</div>
+</nav>
+<div class="account-row"><a class="account-link" href="#" title="{{m.person}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">{{m.person}}</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main>
+<article>
+<div class="header-container"><div><h1 tabindex="-1">My progress</h1><sc-if value="{{m.subtitle}}" hint-placeholder-val="{{true}}"><p class="page-subtitle">{{m.subtitle}}</p></sc-if></div></div>
+
+<sc-if value="{{loading}}" hint-placeholder-val="{{false}}">
+<p class="visually-hidden" role="status">Loading My progress.</p>
+<div aria-hidden="true">
+<div class="detail-card"><div class="skeleton" style="width:9rem;height:1.2rem"></div><div style="display:flex;gap:2rem;margin:1rem 0"><div class="skeleton" style="width:8rem;height:2.4rem"></div><div class="skeleton" style="width:8rem;height:2.4rem"></div></div><div class="skeleton" style="width:80%;height:1rem"></div><div class="skeleton" style="width:70%;height:1rem;margin-top:0.5rem"></div></div>
+<div class="skeleton" style="width:8rem;height:1.4rem;margin:1.5rem 0 1rem"></div>
+<div class="skeleton" style="width:100%;height:3rem"></div><div class="skeleton" style="width:100%;height:3rem;margin-top:0.5rem"></div><div class="skeleton" style="width:100%;height:3rem;margin-top:0.5rem"></div><div class="skeleton" style="width:100%;height:3rem;margin-top:0.5rem"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{failed}}" hint-placeholder-val="{{false}}">
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load your progress.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</sc-if>
+
+<sc-if value="{{m.empty}}" hint-placeholder-val="{{false}}">
+<div class="detail-card detail-card--empty"><div class="state-panel-title">{{m.emptyTitle}}</div><sc-if value="{{m.emptyCopy}}" hint-placeholder-val="{{true}}"><div class="state-panel-copy">{{m.emptyCopy}}</div></sc-if></div>
+</sc-if>
+
+<sc-if value="{{body}}" hint-placeholder-val="{{true}}">
+<sc-for list="{{m.alerts}}" as="a" hint-placeholder-count="0"><div class="{{a.cls}}" style="margin-bottom:var(--space-lg)"><strong>{{a.strong}}</strong> {{a.text}}</div></sc-for>
+
+<section class="detail-card period-card" aria-labelledby="period-h">
+<h2 class="dashboard-card-title" id="period-h" tabindex="-1">This period</h2>
+<div class="dashboard-metric-row">
+<div class="dashboard-metric"><span class="dashboard-metric-value">{{m.sem}}</span><span class="dashboard-metric-label">{{m.semLabel}}</span></div>
+<div class="dashboard-metric"><span class="dashboard-metric-value">{{m.yr}}</span><span class="dashboard-metric-label">{{m.yrLabel}}</span></div>
+</div>
+<p class="period-ends">{{m.ends}}</p>
+<div class="period-lines">
+<p>{{m.tyLine}}</p>
+<sc-if value="{{m.msfOk}}" hint-placeholder-val="{{true}}"><p><span class="period-line-term">Multi-source feedback:</span> {{m.msf}}</p></sc-if>
+<sc-if value="{{m.sectionError}}" hint-placeholder-val="{{false}}"><p class="section-error"><span class="period-line-term">Multi-source feedback:</span> Could not load MSF coverage. Your counts above are not affected.</p></sc-if>
+</div>
+</section>
+
+<section class="index-section" aria-labelledby="index-h">
+<h2 id="index-h">Your EPAs</h2>
+<sc-for list="{{m.groups}}" as="g" hint-placeholder-count="2">
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="index-caption">{{g.caption}}</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">{{g.window}}</th><th scope="col" role="columnheader">Committee decides</th><th scope="col" role="columnheader">{{m.verdictHead}}</th></tr></thead>
+<tbody role="rowgroup">
+<sc-for list="{{g.rows}}" as="r" hint-placeholder-count="5">
+<tr role="row">
+<th scope="row" role="rowheader"><a class="epa-link" href="#">{{r.name}}</a><sc-if value="{{r.local}}" hint-placeholder-val="{{false}}"><span class="badge badge-draft">Kgosi Kgari Teaching Hospital's own</span></sc-if></th>
+<td role="cell" class="count-cell" data-label="{{g.window}}"><span class="count-figure">{{r.count}}</span><sc-if value="{{r.bar}}" hint-placeholder-val="{{true}}"><div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{r.max}}" aria-valuenow="{{r.now}}" aria-label="{{r.aria}}"><div class="{{r.fillClass}}" style="{{r.fill}}"></div></div></sc-if><p class="count-meta">{{r.meta}}</p></td>
+<td role="cell" data-label="Committee decides"><span class="{{r.cadClass}}">{{r.cadence}}</span></td>
+<td role="cell" class="verdict-cell" data-label="{{m.verdictHead}}"><sc-if value="{{r.vBadge}}" hint-placeholder-val="{{true}}"><span class="{{r.vClass}}">{{r.vBadge}}</span></sc-if><span class="verdict-level">{{r.level}}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</sc-for>
+<sc-if value="{{m.paused}}" hint-placeholder-val="{{false}}">
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="index-caption">No longer in use · 1 EPA</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">Why it is not counted</th></tr></thead>
+<tbody role="rowgroup"><tr role="row" class="is-paused"><th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams <span class="paused-mark">(no longer in use)</span></a></th><td role="cell">Paused by the College. It is not a target while it is paused. Its ratings and the credit it had earned are kept, and what is completed on it meanwhile is credited if it is restored.</td></tr></tbody>
+</table>
+</div>
+</sc-if>
+</section>
+
+<section class="standing-panel" aria-labelledby="standing-h">
+<h2 id="standing-h">Entrustment against Annexure A</h2>
+<sc-if value="{{m.panelOk}}" hint-placeholder-val="{{true}}">
+<p>{{m.p.intro}}</p>
+<p class="standing-summary">{{m.p.summary}}</p>
+<p>{{m.p.exit}}</p>
+<p class="muted">For information only: the exit rule gates nothing.</p>
+<div class="table-container shadow">
+<table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="visually-hidden">Your STARs against training year {{m.tyN}}'s levels and the exit level</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">Year {{m.tyN}} target</th><th scope="col" role="columnheader">STAR decision</th><th scope="col" role="columnheader">Against target</th><th scope="col" role="columnheader">Exit level</th><th scope="col" role="columnheader">Latest rating</th></tr></thead>
+<tbody role="rowgroup">
+<sc-for list="{{m.p.rows}}" as="r" hint-placeholder-count="5">
+<tr role="row">
+<th scope="row" role="rowheader"><a class="epa-link" href="#">{{r.name}}</a></th>
+<td role="cell" data-label="Year {{m.tyN}} target">{{r.target}}</td>
+<td role="cell" data-label="STAR decision">{{r.star}}<sc-if value="{{r.starMeta}}" hint-placeholder-val="{{true}}"><span class="standing-rating-meta">{{r.starMeta}}</span></sc-if></td>
+<td role="cell" data-label="Against target"><span class="{{r.aClass}}">{{r.against}}</span></td>
+<td role="cell" data-label="Exit level">{{r.exit}}</td>
+<td role="cell" data-label="Latest rating"><sc-if value="{{r.latest}}" hint-placeholder-val="{{true}}"><a class="standing-rating-link" href="#">{{r.latest}}</a><span class="standing-rating-meta">{{r.latestMeta}}</span></sc-if><sc-if value="{{r.noLatest}}" hint-placeholder-val="{{false}}">None yet</sc-if></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</sc-if>
+<sc-if value="{{m.sectionError}}" hint-placeholder-val="{{false}}">
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load your standing.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</sc-if>
+</section>
+</sc-if>
+</article>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["first","counting","standing","exit-met","paused","local-item","after-move","december","part-way","not-started","no-curriculum","no-epa-in-use","not-comparable","section-error","loading","load-error"],"default":"standing"},"w":{"editor":"enum","options":["1280","390"],"default":"1280"},"$preview":{"width":1280,"height":3200}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'standing';
+const w = String(this.props.w ?? '1280');
+// The catalogue: title, per-window target, window ('s' semester, 'y' academic year), cadence, year-4 level (exit = year-4 level)
+const CAT = {
+'PAED-001': ['Providing paediatric emergency care to children', 3, 's', 'Each semester', 5],
+'PAED-002': ['Managing common paediatric presentations', 3, 's', 'Each semester', 5],
+'PAED-003': ['Providing intensive care to children', 3, 's', 'Once a year', 5],
+'PAED-004': ['Managing common neonatal conditions', 3, 's', 'Each semester', 5],
+'PAED-005': ['Providing neonatal care in intensive and high-care settings', 3, 's', 'Each semester', 5],
+'PAED-006': ['Managing long-term health conditions (LTHCs) in children', 2, 's', 'Once a year', 5],
+'PAED-007': ['Maintaining and promoting the health and well-being of children', 1, 's', 'Once a year', 5],
+'PAED-010': ['Leading and operating within a clinical team', 3, 's', 'Each semester', 5],
+'PAED-012': ['Communicating with and counselling patients, caregivers and healthcare teams', 3, 's', 'Each semester', 5],
+'PAED-015': ['Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research', 1, 's', 'Once a year', 4],
+'KGK-001': ['Running a paediatric outreach clinic at a district hospital', 1, 'y', null, null],
+'PAED-008': ['Evaluating and managing neurodevelopmental and behavioural presentations in children', 1, 'y', 'As opportunity allows', 4],
+'PAED-009': ['Providing care for an adolescent patient', 1, 'y', 'As opportunity allows', 4],
+'PAED-011': ['Managing population health challenges', 1, 'y', 'Once a year', 4],
+'PAED-013': ['Managing child protection, legal and ethical aspects of children at risk', 1, 'y', 'As opportunity allows', 4],
+'PAED-014': ['Providing palliative and end-of-life care', 1, 'y', 'Once a year', 4],
+'PAED-016': ['Transitioning adolescents with long-term conditions to adult care', 1, 'y', 'Once a year', 4]
+};
+const LV = { 5: ['3a','3b','4','5'], 4: ['2','3a','3b','4'] };
+const SEM = ['PAED-001','PAED-002','PAED-003','PAED-004','PAED-005','PAED-006','PAED-007','PAED-010','PAED-012','PAED-015'];
+const YR = ['PAED-008','PAED-009','PAED-011','PAED-013','PAED-014'];
+const name = (c) => c + ' — ' + CAT[c][0];
+const level = (c, ty) => CAT[c][4] ? LV[CAT[c][4]][ty - 1] : '3a';
+let dec = false, mode = 'count';
+const row = (c, n, opts) => {
+  opts = opts || {};
+  const cat = CAT[c]; const max = opts.max || cat[1]; const yearly = cat[2] === 'y';
+  const win = yearly ? 'in 2026' : 'this semester';
+  const r = { name: name(c), local: c === 'KGK-001', cadence: cat[3] || '—', cadClass: cat[3] ? '' : 'cadence-none', max, now: n, aria: c + ': ' + n + ' of ' + max + ' ' + win, bar: true };
+  if (mode === 'waived') { r.count = (n === 1 ? '1 observed' : n + ' observed') + (yearly ? ' in 2026' : ' in Semester 2, 2026'); r.bar = false; r.meta = yearly ? 'No target in 2026: you started part-way through it.' : 'No target this semester: you started part-way through it.'; }
+  else if (mode === 'notstarted') { r.count = 'No target yet'; r.bar = false; r.meta = yearly ? 'Targets start with the 2027 academic year.' : 'Targets start with Semester 1, 2027.'; }
+  else {
+    r.count = n + ' of ' + max + ' ' + win;
+    const met = n >= max;
+    r.fill = 'width:' + Math.min(100, Math.round(100 * n / max)) + '%';
+    r.fillClass = met ? 'progress-bar-fill is-complete' : 'progress-bar-fill';
+    r.meta = met ? (yearly ? 'Target met for the 2026 academic year.' : 'Target met for Semester 2, 2026.') : (dec ? (max - n) + ' more; encounters in December still count towards Semester 2, 2026.' : (max - n) + ' more by 2026-11-30');
+  }
+  r.vBadge = 'No decision'; r.vClass = 'badge badge-standing-none'; r.level = '';
+  if (opts.v) { r.vBadge = opts.v[0]; r.vClass = 'badge ' + opts.v[1]; r.level = opts.v[2]; }
+  return r;
+};
+const AT = (lvl) => ['At or above', 'badge-standing-met', lvl];
+const BELOW = (lvl) => ['Below', 'badge-standing-below', lvl];
+const NOTLOADED = ['', '', 'Not loaded'];
+const prow = (c, ty, o) => {
+  o = o || {};
+  return { name: name(c), target: o.target || level(c, ty), star: o.star || '—', starMeta: o.starMeta || null, against: o.against || 'No decision', aClass: 'badge ' + (o.aClass || 'badge-standing-none'), exit: o.exit || (CAT[c][4] ? 'Not yet' : 'Not in the exit rule'), latest: o.latest || null, latestMeta: o.latestMeta || '', noLatest: !o.latest };
+};
+const ty = (n) => 'Training year ' + n + ' — it sets the minimum level each encounter is judged against.';
+const MSF = (n, of) => n + ' of ' + of + ' EPAs covered by a released campaign that closed this semester. MSF is tracked on its own and counts towards no target.';
+const exitLine = (a, of, l5, n5, l4, n4, all) => a + ' of ' + of + ' EPAs at their exit level by STAR decision (level 5: ' + l5 + ' of ' + n5 + ' · level 4: ' + l4 + ' of ' + n4 + ').' + (all ? ' Every EPA is at its exit level.' : '');
+const base = (o) => Object.assign({ person: 'Lerato Molefe', tyN: 4, sem: '0 of 10', yr: '0 of 5', semLabel: 'EPAs met this semester', yrLabel: 'EPAs met in 2026', ends: 'Semester 2, 2026 ends on 2026-11-30.', msf: MSF(0, 15), alerts: [], paused: false, sectionError: false, empty: false, today: '2026-10-03' }, o);
+const molefeRows = (v) => {
+  const counts = { 'PAED-001': 3, 'PAED-010': 1, 'PAED-012': 2 };
+  return [{ caption: 'Each semester · 10 EPAs', window: 'Semester 2, 2026', rows: SEM.map(c => row(c, counts[c] || 0, { v: v ? v(c) : null })) },
+          { caption: 'Once a year · 5 EPAs', window: '2026 academic year', rows: YR.map(c => row(c, 0, { v: v ? v(c) : null })) }];
+};
+const molefeV = (c) => c === 'PAED-001' || c === 'PAED-012' ? AT('5') : c === 'PAED-010' ? BELOW('4 · expires 2026-10-23') : null;
+const molefePanel = (o) => Object.assign({ intro: 'You are in training year 4 on 2026-10-03.', summary: '2 at or above · 1 below · 12 with no decision, of 15 EPAs', exit: exitLine(2, 15, 2, 9, 0, 6), rows: SEM.concat(YR).map(c =>
+  c === 'PAED-001' ? prow(c, 4, { star: '5', starMeta: 'Issued 2026-10-03', against: 'At or above', aClass: 'badge-standing-met', exit: 'Reached', latest: '4 · Encounter 2026-09-24', latestMeta: 'Direct observation; below the target' }) :
+  c === 'PAED-010' ? prow(c, 4, { star: '4', starMeta: 'Issued 2026-10-03, expires 2026-10-23', against: 'Below', aClass: 'badge-standing-below', latest: '5 · Encounter 2026-09-29', latestMeta: 'Direct observation' }) :
+  c === 'PAED-012' ? prow(c, 4, { star: '5', starMeta: 'Issued 2026-10-03', against: 'At or above', aClass: 'badge-standing-met', exit: 'Reached', latest: '5 · Encounter 2026-09-28', latestMeta: 'Conversation' }) :
+  prow(c, 4)) }, o);
+const zeroPanel = (tyN, day, list) => ({ intro: 'You are in training year ' + tyN + ' on ' + day + '.', summary: '0 at or above · 0 below · ' + list.length + ' with no decision, of ' + list.length + ' EPAs', exit: exitLine(0, 15, 0, 9, 0, 6), rows: list.map(c => prow(c, tyN)) });
+const dlaminiPanel = (list, extra) => Object.assign({ intro: 'You are in training year 3 on 2026-10-03.', summary: '1 at or above · 0 below · ' + (list.length - 1) + ' with no decision, of ' + list.length + ' EPAs', exit: exitLine(0, 15, 0, 9, 0, 6), rows: list.map(c =>
+  c === 'PAED-001' ? prow(c, 3, { star: '4', starMeta: 'Issued 2026-10-03', against: 'At or above', aClass: 'badge-standing-met', latest: '3b · Encounter 2026-09-24', latestMeta: 'Conversation; below the target' }) :
+  c === 'PAED-004' ? prow(c, 3, { latest: '[rating] · Encounter 2026-10-01', latestMeta: 'Direct observation' }) :
+  c === 'PAED-012' && extra ? prow(c, 3, { latest: '4 · Encounter 2026-10-03', latestMeta: 'Direct observation' }) :
+  prow(c, 3)) }, extra || {});
+const dlaminiV = (c) => c === 'PAED-001' ? AT('4') : null;
+let m;
+switch (state) {
+case 'first':
+  m = base({ groups: [{ caption: 'Each semester · 10 EPAs', window: 'Semester 2, 2026', rows: SEM.map(c => row(c, 0)) }, { caption: 'Once a year · 5 EPAs', window: '2026 academic year', rows: YR.map(c => row(c, 0)) }], p: zeroPanel(4, '2026-10-03', SEM.concat(YR)) }); break;
+case 'counting':
+  m = base({ person: 'Anele Dlamini', tyN: 3, groups: [{ caption: 'Each semester · 10 EPAs', window: 'Semester 2, 2026', rows: SEM.map(c => row(c, c === 'PAED-001' ? 1 : 0)) }, { caption: 'Once a year · 5 EPAs', window: '2026 academic year', rows: YR.map(c => row(c, 0)) }], p: zeroPanel(3, '2026-10-03', SEM.concat(YR)) });
+  m.p.rows[0] = prow('PAED-001', 3, { latest: '4 · Encounter 2026-09-23', latestMeta: 'Direct observation' }); break;
+case 'standing': case 'section-error': case 'not-comparable':
+  m = base({ sem: '1 of 10', msf: MSF(2, 15), groups: molefeRows(state === 'section-error' ? () => NOTLOADED : molefeV), p: molefePanel() });
+  if (state === 'section-error') { m.sectionError = true; }
+  if (state === 'not-comparable') {
+    m.person = '[Registrar]';
+    m.groups[0].rows[8] = row('PAED-012', 2, { v: ['Not comparable', 'badge-standing-none', '[level] on [scale]'] });
+    m.p.summary = '1 at or above · 1 below · 1 not comparable · 12 with no decision, of 15 EPAs';
+    m.p.exit = exitLine(1, 15, 1, 9, 0, 6);
+    m.p.rows[8] = prow('PAED-012', 4, { star: '[level] on [scale]', starMeta: 'Issued 2026-10-03', against: 'Not comparable', aClass: 'badge-standing-none', exit: 'Not comparable', latest: '5 · Encounter 2026-09-28', latestMeta: 'Conversation' });
+  }
+  break;
+case 'exit-met':
+  m = base({ sem: '1 of 10', msf: MSF(2, 15), groups: molefeRows((c) => AT(String(CAT[c][4]))), p: { intro: 'You are in training year 4 on 2026-10-03.', summary: '15 at or above · 0 below · 0 with no decision, of 15 EPAs', exit: exitLine(15, 15, 9, 9, 6, 6, true), rows: SEM.concat(YR).map(c => prow(c, 4, { star: String(CAT[c][4]), starMeta: 'Issued 2026-10-03', against: 'At or above', aClass: 'badge-standing-met', exit: 'Reached',
+    latest: c === 'PAED-001' ? '4 · Encounter 2026-09-24' : c === 'PAED-010' ? '5 · Encounter 2026-09-29' : c === 'PAED-012' ? '5 · Encounter 2026-09-28' : null,
+    latestMeta: c === 'PAED-001' ? 'Direct observation; below the target' : c === 'PAED-012' ? 'Conversation' : 'Direct observation' })) } }); break;
+case 'paused': {
+  const sem9 = SEM.filter(c => c !== 'PAED-012');
+  m = base({ person: 'Anele Dlamini', tyN: 3, sem: '1 of 9', msf: MSF(0, 14), paused: true,
+    groups: [{ caption: 'Each semester · 9 EPAs', window: 'Semester 2, 2026', rows: sem9.map(c => row(c, c === 'PAED-001' ? 3 : c === 'PAED-004' ? 1 : 0, { v: dlaminiV(c) })) }, { caption: 'Once a year · 5 EPAs', window: '2026 academic year', rows: YR.map(c => row(c, 0)) }],
+    p: dlaminiPanel(sem9.concat(YR)) });
+  m.p.exit = exitLine(0, 14, 0, 8, 0, 6); break; }
+case 'local-item': {
+  const yr6 = ['KGK-001'].concat(YR);
+  m = base({ person: 'Anele Dlamini', tyN: 3, sem: '1 of 10', yr: '0 of 6', msf: MSF(0, 16),
+    groups: [{ caption: 'Each semester · 10 EPAs', window: 'Semester 2, 2026', rows: SEM.map(c => row(c, c === 'PAED-001' ? 3 : (c === 'PAED-004' || c === 'PAED-012') ? 1 : 0, { v: dlaminiV(c) })) }, { caption: 'Once a year · 6 EPAs', window: '2026 academic year', rows: yr6.map(c => row(c, 0)) }],
+    p: dlaminiPanel(SEM.concat(YR).concat(['KGK-001']), { }) });
+  m.p.rows[8] = prow('PAED-012', 3, { latest: '4 · Encounter 2026-10-03', latestMeta: 'Direct observation' }); break; }
+case 'after-move': {
+  const yr7 = ['KGK-001','PAED-008','PAED-009','PAED-011','PAED-013','PAED-014','PAED-016'];
+  m = base({ person: 'Sipho Ndlovu', tyN: 1, yr: '0 of 7', msf: MSF(0, 17),
+    groups: [{ caption: 'Each semester · 10 EPAs', window: 'Semester 2, 2026', rows: SEM.map(c => row(c, c === 'PAED-002' ? 1 : 0)) }, { caption: 'Once a year · 7 EPAs', window: '2026 academic year', rows: yr7.map(c => row(c, 0, { max: c === 'PAED-011' ? 2 : 1 })) }],
+    p: { intro: 'You are in training year 1 on 2026-10-03.', summary: '0 at or above · 0 below · 17 with no decision, of 17 EPAs', exit: exitLine(0, 16, 0, 9, 0, 7), rows: SEM.concat(yr7).map(c => prow(c, 1, c === 'PAED-002' ? { latest: '[rating] · Encounter 2026-09-13', latestMeta: 'Direct observation' } : {})) } }); break; }
+case 'december':
+  dec = true;
+  m = base({ person: 'Anele Dlamini', tyN: 3, sem: '1 of 10', today: '2026-12-07',
+    alerts: [{ cls: 'alert alert-info', strong: 'The 2026 academic year ended on 2026-11-30.', text: 'Encounters observed in December still count towards semester 2, 2026 and your 2026 yearly targets. Semester 1, 2027 starts on 2027-01-01.' }],
+    ends: 'Semester 2, 2026 counts encounters observed in December.',
+    groups: [{ caption: 'Each semester · 10 EPAs', window: 'Semester 2, 2026', rows: SEM.map(c => row(c, c === 'PAED-001' ? 3 : c === 'PAED-004' ? 1 : 0)) }, { caption: 'Once a year · 5 EPAs', window: '2026 academic year', rows: YR.map(c => row(c, 0)) }],
+    p: zeroPanel(3, '2026-12-07', SEM.concat(YR)) }); break;
+case 'part-way':
+  mode = 'waived';
+  m = base({ person: '[Registrar]', tyN: 1, sem: 'No target', semLabel: 'this semester: you started part-way through it', yr: 'No target', yrLabel: 'in 2026: you started part-way through it',
+    alerts: [{ cls: 'alert alert-info', strong: 'You started on 2026-08-18, part-way through Semester 2, 2026.', text: 'No target applies to you this semester or in the 2026 academic year. Your encounters are counted, and targets begin with Semester 1, 2027.' }],
+    groups: [{ caption: 'Each semester · 10 EPAs', window: 'Semester 2, 2026', rows: SEM.map(c => row(c, c === 'PAED-002' ? 2 : 0)) }, { caption: 'Once a year · 5 EPAs', window: '2026 academic year', rows: YR.map(c => row(c, 0)) }],
+    p: zeroPanel(1, '2026-10-03', SEM.concat(YR)) }); break;
+case 'not-started':
+  mode = 'notstarted';
+  m = base({ person: '[Registrar]', tyN: 1, sem: 'No target', semLabel: 'this semester: your programme has not started', yr: 'No target', yrLabel: 'in 2026: your programme has not started', ends: 'Your first semester is Semester 1, 2027.',
+    alerts: [{ cls: 'alert alert-info', strong: 'Your programme starts on 2027-01-15.', text: "[Today's first-window sentences, with ISO dates.]" }],
+    groups: [{ caption: 'Each semester · 10 EPAs', window: 'Semester 1, 2027', rows: SEM.map(c => row(c, 0)) }, { caption: 'Once a year · 5 EPAs', window: '2027 academic year', rows: YR.map(c => row(c, 0)) }],
+    p: zeroPanel(1, '2026-10-03', SEM.concat(YR)) }); break;
+case 'no-curriculum':
+  m = base({ person: '[Registrar]', empty: true, emptyTitle: 'No curriculum items assigned yet.', emptyCopy: 'Once you are admitted to a curriculum, your EPAs will appear here.', subtitle: 'Semester 2, 2026' }); break;
+case 'no-epa-in-use':
+  m = base({ person: '[Registrar]', tyN: 2, empty: true, emptyTitle: 'No EPA on your curriculum is in use at the moment, so no target applies to you.', emptyCopy: null }); break;
+default:
+  m = base({ groups: [], subtitle: null, p: zeroPanel(4, '2026-10-03', []) });
+}
+if (m.subtitle === undefined) m.subtitle = 'Training year ' + m.tyN + ' · Semester 2, 2026';
+m.tyLine = ty(m.tyN);
+m.verdictHead = 'STAR against training year ' + m.tyN;
+m.msfOk = !m.sectionError;
+m.panelOk = !m.sectionError;
+const loading = state === 'loading', failed = state === 'load-error';
+return { w, m, loading, failed, body: !loading && !failed && !m.empty };
+}
+}
+</script>
+</body>
+</html>

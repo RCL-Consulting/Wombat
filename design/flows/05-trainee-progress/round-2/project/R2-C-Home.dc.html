@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home (Trainee) · component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow05-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-frame r2-frame--{{w}}">
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/5e32abd7ee425f64c0db739c82470df3" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<sc-if value="{{hasRole}}" hint-placeholder-val="{{true}}"><p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Trainee</span></p></sc-if>
+<label class="nav-toggle-label" for="nav-toggle"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<sc-if value="{{hasRole}}" hint-placeholder-val="{{true}}">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Trainee</span></p>
+<sc-if value="{{twoRole}}" hint-placeholder-val="{{false}}"><a class="role-switch" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg><span>Switch to Assessor</span></a></sc-if>
+</div>
+</sc-if>
+<div class="nav-list">
+<sc-if value="{{hasRole}}" hint-placeholder-val="{{true}}">
+<ul class="nav-items">
+<li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 12h8M12 8v8" /></svg><span class="nav-label">Log an activity</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13" /></svg><span class="nav-label">My activities</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF reports</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">My committee reviews</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg><span class="nav-label">Export portfolio</span></a></li>
+</ul>
+</sc-if>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6" /></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</div>
+</nav>
+<div class="account-row"><a class="account-link" href="#" title="{{m.person}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">{{m.person}}</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main>
+<article>
+<div class="header-container">
+<div><h1 tabindex="-1">Home</h1><sc-if value="{{hasRole}}" hint-placeholder-val="{{true}}"><p class="page-subtitle">Trainee · Semester 2, 2026</p></sc-if></div>
+<sc-if value="{{hasRole}}" hint-placeholder-val="{{true}}"><div class="actions-cell"><a class="btn btn-primary home-action" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 12h8M12 8v8" /></svg>Log an activity</a></div></sc-if>
+</div>
+
+<sc-if value="{{loading}}" hint-placeholder-val="{{false}}">
+<p class="visually-hidden" role="status">Loading your Home.</p>
+<div class="action-result" tabindex="-1"><div class="dashboard-grid" aria-busy="true">
+<div class="detail-card detail-card--emphasis dashboard-span-2"><h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg><span>Your targets</span></h2><div class="dashboard-card-body"><div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton" style="width:70%;height:1rem"></div><div class="skeleton" style="width:50%;height:1rem"></div><div class="skeleton" style="width:60%;height:1rem"></div></div></div></div>
+<div class="detail-card"><h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg><span>Needs you</span></h2><div class="dashboard-card-body"><div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton" style="width:70%;height:1rem"></div><div class="skeleton" style="width:50%;height:1rem"></div><div class="skeleton" style="width:60%;height:1rem"></div></div></div></div>
+<div class="detail-card dashboard-span-2"><h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5M12 7v5l4 2" /></svg><span>Recent decisions</span></h2><div class="dashboard-card-body"><div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton" style="width:70%;height:1rem"></div><div class="skeleton" style="width:50%;height:1rem"></div><div class="skeleton" style="width:60%;height:1rem"></div></div></div></div>
+<div class="detail-card"><h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6" /><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" /></svg><span>My authorisations</span></h2><div class="dashboard-card-body"><div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton" style="width:70%;height:1rem"></div><div class="skeleton" style="width:50%;height:1rem"></div><div class="skeleton" style="width:60%;height:1rem"></div></div></div></div>
+</div></div>
+</sc-if>
+
+<sc-if value="{{failed}}" hint-placeholder-val="{{false}}">
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load your Home.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</sc-if>
+
+<sc-if value="{{graduate}}" hint-placeholder-val="{{false}}">
+<div class="action-result" tabindex="-1"><div class="dashboard-grid">
+<section class="detail-card detail-card--emphasis dashboard-span-3" aria-labelledby="card-record"><h2 class="dashboard-card-title" id="card-record"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg><span>Your training record</span></h2>
+<div class="dashboard-card-body"><p>You hold no role at the moment. Your training record is kept, read-only: your progress in each period, and your portfolio to export.</p><div class="dashboard-card-footer"><a href="#" class="btn btn-sm btn-outline">Open My progress →</a></div></div></section>
+</div></div>
+</sc-if>
+
+<sc-if value="{{cards}}" hint-placeholder-val="{{true}}">
+<sc-if value="{{twoRole}}" hint-placeholder-val="{{false}}">
+<section class="alert alert-info other-role-line" aria-label="Waiting for you in the Activity inbox"><div class="alert-row"><span class="alert-row-text">1 activity waits for you in the Activity inbox: Mini-CEX (Paediatrics) · PAED-001 · 2026-10-03, from Nomsa Mahlangu, waiting less than a day.</span><a class="btn btn-outline btn-sm" href="#" aria-label="Open it: Mini-CEX (Paediatrics) · PAED-001 · 2026-10-03, from Nomsa Mahlangu">Open it</a></div></section>
+</sc-if>
+<div class="action-result" tabindex="-1"><div class="dashboard-grid">
+
+<section class="detail-card detail-card--emphasis dashboard-span-2" aria-labelledby="card-targets">
+<h2 class="dashboard-card-title" id="card-targets"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg><span>Your targets</span></h2>
+<div class="dashboard-card-body">
+<sc-if value="{{m.ty}}" hint-placeholder-val="{{true}}"><p class="targets-line">{{m.ty}}</p></sc-if>
+<sc-if value="{{m.metrics}}" hint-placeholder-val="{{true}}">
+<div class="dashboard-metric-row">
+<div class="dashboard-metric"><span class="dashboard-metric-value">{{m.sem}}</span><span class="dashboard-metric-label">EPAs met this semester</span></div>
+<div class="dashboard-metric"><span class="dashboard-metric-value">{{m.yr}}</span><span class="dashboard-metric-label">EPAs met in 2026</span></div>
+</div>
+</sc-if>
+<sc-for list="{{m.notes}}" as="n" hint-placeholder-count="0"><p class="targets-note">{{n}}</p></sc-for>
+<sc-if value="{{m.hasShort}}" hint-placeholder-val="{{true}}">
+<h3 class="progress-group-label">Furthest short</h3>
+<div>
+<sc-for list="{{m.short}}" as="r" hint-placeholder-count="5">
+<div class="progress-row progress-row--link">
+<a class="progress-row-link" href="#">{{r.name}}</a>
+<div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{r.max}}" aria-valuenow="{{r.now}}" aria-label="{{r.aria}}"><div class="progress-bar-fill" style="{{r.fill}}"></div></div>
+<p class="progress-row-meta">{{r.meta}}</p>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<div class="dashboard-card-footer"><a href="#" class="btn btn-sm btn-outline">Open My progress</a></div>
+</div>
+</section>
+
+<section class="detail-card" aria-labelledby="card-needs">
+<sc-if value="{{m.needsRow}}" hint-placeholder-val="{{false}}">
+<h2 class="dashboard-card-title" id="card-needs"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg><span>Needs you</span><span class="badge badge-submitted" aria-hidden="true">1</span><span class="visually-hidden">, 1 item</span></h2>
+<div class="dashboard-card-body">
+<ul class="needs-you stack-list"><li class="needs-you-row detail-card--emphasis"><a class="activity-link" href="#">Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-13<span class="visually-hidden">, </span><span class="activity-link-to">with Sarah Botha</span></a><span class="badge badge-draft">Draft</span><p class="needs-you-why">Returned to you by Sarah Botha on 2026-10-03. Change it and submit again.</p></li></ul>
+<div class="dashboard-card-footer"><a href="#">Open My activities</a></div>
+</div>
+</sc-if>
+<sc-if value="{{m.needsEmpty}}" hint-placeholder-val="{{true}}">
+<h2 class="dashboard-card-title" id="card-needs-0"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z" /></svg><span>Needs you</span></h2>
+<div class="dashboard-card-body"><p class="muted">Nothing needs you. Requests you have filed are in My activities.</p><div class="dashboard-card-footer"><a href="#">Open My activities</a></div></div>
+</sc-if>
+</section>
+
+<section class="detail-card dashboard-span-2" aria-labelledby="card-decisions">
+<h2 class="dashboard-card-title" id="card-decisions"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5M12 7v5l4 2" /></svg><span>Recent decisions</span></h2>
+<div class="dashboard-card-body">
+<sc-if value="{{m.hasDecisions}}" hint-placeholder-val="{{true}}">
+<ul class="decided-list">
+<sc-for list="{{m.decisions}}" as="d" hint-placeholder-count="4">
+<li class="decided-row">
+<a class="activity-link" href="#">{{d.name}}<sc-if value="{{d.to}}" hint-placeholder-val="{{true}}"><span class="visually-hidden">, </span><span class="activity-link-to">{{d.to}}</span></sc-if></a>
+<span class="decided-meta"><span class="{{d.badgeClass}}">{{d.badge}}</span><span class="decided-date">{{d.date}}</span></span>
+<sc-if value="{{d.note}}" hint-placeholder-val="{{true}}"><p class="decided-note">{{d.note}}</p></sc-if>
+<sc-if value="{{d.again}}" hint-placeholder-val="{{false}}"><p class="decided-note"><a href="#" aria-label="{{d.againAria}}">File it again, to someone else</a></p></sc-if>
+</li>
+</sc-for>
+</ul>
+</sc-if>
+<sc-if value="{{m.noDecisions}}" hint-placeholder-val="{{false}}"><p class="card-empty">No decisions yet.</p></sc-if>
+</div>
+</section>
+
+<section class="detail-card" aria-labelledby="card-stars">
+<h2 class="dashboard-card-title" id="card-stars"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6" /><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" /></svg><span>My authorisations</span></h2>
+<div class="dashboard-card-body">
+<sc-if value="{{m.starSummary}}" hint-placeholder-val="{{false}}"><p class="stars-summary">{{m.starSummary}}</p>
+<ul class="decided-list">
+<sc-for list="{{m.stars}}" as="s" hint-placeholder-count="1"><li class="decided-row"><a class="activity-link" href="#">{{s.name}}</a><p class="decided-note">{{s.line}}</p></li></sc-for>
+</ul>
+</sc-if>
+<sc-if value="{{m.starEmpty}}" hint-placeholder-val="{{true}}"><p class="card-empty">{{m.starEmpty}}</p></sc-if>
+<div class="dashboard-card-footer"><a href="#" class="btn btn-sm btn-outline">Open My authorisations</a></div>
+</div>
+</section>
+
+</div></div>
+</sc-if>
+</article>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["first-day","typical","with-stars","decline","returned","decisions-mixed","all-met","part-way","december","not-started","no-curriculum","no-epa-in-use","ended","graduate","two-role","loading","load-error"],"default":"typical"},"w":{"editor":"enum","options":["1280","390"],"default":"1280"},"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'typical';
+const w = String(this.props.w ?? '1280');
+const T = {
+'001':'PAED-001 — Providing paediatric emergency care to children','002':'PAED-002 — Managing common paediatric presentations','003':'PAED-003 — Providing intensive care to children','004':'PAED-004 — Managing common neonatal conditions','005':'PAED-005 — Providing neonatal care in intensive and high-care settings','006':'PAED-006 — Managing long-term health conditions (LTHCs) in children','010':'PAED-010 — Leading and operating within a clinical team','012':'PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams'
+};
+const DEC = '3 more; encounters in December still count towards Semester 2, 2026.';
+const row = (c, n, m, dec) => ({ name: T[c], max: m, now: n, fill: 'width:' + Math.round(100 * n / m) + '%', aria: 'PAED-' + c + ': ' + n + ' of ' + m + ' this semester', meta: dec ? (m - n) + ' more; encounters in December still count towards Semester 2, 2026.' : n + ' of ' + m + ' this semester · ' + (m - n) + ' more by 2026-11-30' });
+const ty = (n) => 'Training year ' + n + ' — it sets the minimum level each encounter is judged against.';
+const comp = (name, to, note) => ({ name, to, badge: 'Completed', badgeClass: 'badge badge-completed', date: '2026-10-03', note, again: false });
+const base = { person: 'Anele Dlamini', ty: ty(3), metrics: true, sem: '1 of 10', yr: '0 of 5', notes: [], short: [], needsRow: false, decisions: [], starSummary: null, stars: [], starEmpty: "No STAR yet. When the committee issues one, it shows here against training year 3's level." };
+const dlaminiShort = (dec) => ['002','003','005','010','012'].map(c => row(c, 0, 3, dec));
+const dlaminiDecisions = [
+  comp('Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01', 'to Fatima Khumalo', 'PAED-004: 1 of 3 this semester.'),
+  comp('Clinical Case Analysis (Paediatrics) · PAED-001 · 2026-09-27', 'to Sarah Botha', 'PAED-001: 3 of 3 this semester, met.'),
+  comp('Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-24', 'to Thandi Zulu', 'PAED-001: 3 of 3 this semester, met.'),
+  comp('Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23', 'to David Naidoo', 'PAED-001: 3 of 3 this semester, met.')
+];
+const ndlovuShort = ['001','003','004','005','010'].map(c => row(c, 0, 3));
+const declined = { name: 'Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13', to: 'to Fatima Khumalo', badge: 'Declined', badgeClass: 'badge badge-declined', date: '2026-10-03', note: null, again: true, againAria: 'File it again, to someone else: Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13' };
+const ndlovu = { person: 'Sipho Ndlovu', ty: ty(1), sem: '0 of 10', yr: '0 of 5', short: ndlovuShort, starEmpty: "No STAR yet. When the committee issues one, it shows here against training year 1's level." };
+const S = {
+'first-day': { person: 'Lerato Molefe', ty: ty(4), sem: '0 of 10', yr: '0 of 5', short: ['001','002','003','004','005'].map(c => row(c, 0, 3)), starEmpty: "No STAR yet. When the committee issues one, it shows here against training year 4's level." },
+'typical': { short: dlaminiShort(false), decisions: dlaminiDecisions },
+'with-stars': { person: 'Lerato Molefe', ty: ty(4), short: ['002','003','004','005'].map(c => row(c, 0, 3)).concat([row('006', 0, 2)]),
+  decisions: [
+    comp('Case-Based Discussion (Paediatrics) · PAED-012 · 2026-09-28', 'to Fatima Khumalo', 'PAED-012: 2 of 3 this semester.'),
+    comp('Mini-CEX (Paediatrics) · PAED-012 · 2026-09-26', 'to Sarah Botha', 'PAED-012: 2 of 3 this semester.'),
+    comp('DOPS (Paediatrics) · PAED-001 · 2026-09-24', 'to Mohammed Patel', 'PAED-001: 3 of 3 this semester, met.'),
+    comp('Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-22', 'to David Naidoo', 'PAED-001: 3 of 3 this semester, met.'),
+    comp('Direct Observation (Paediatrics) · PAED-010 · 2026-09-29', 'to Thandi Zulu', 'PAED-010: 1 of 3 this semester.')
+  ],
+  starSummary: '2 at or above · 1 below · 12 with no decision, of 15 EPAs', stars: [{ name: T['010'], line: "4, below training year 4's level of 5 · expires 2026-10-23" }], starEmpty: null },
+'decline': Object.assign({}, ndlovu, { decisions: [declined] }),
+'returned': Object.assign({}, ndlovu, { needsRow: true, decisions: [
+    comp('Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13 · Sarah Botha', null, 'PAED-002: 1 of 3 this semester.'),
+    Object.assign({}, declined, { name: 'Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13 · Fatima Khumalo', to: null, againAria: 'File it again, to someone else: Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13 · Fatima Khumalo' })
+  ] }),
+'decisions-mixed': Object.assign({}, ndlovu, { decisions: [
+    { name: 'Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-13', to: 'to Sarah Botha', badge: 'Discussed', badgeClass: 'badge badge-completed', date: '2026-10-03', note: 'Credits nothing.', again: false },
+    comp('Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13 · Sarah Botha', null, 'PAED-002: 1 of 3 this semester.'),
+    Object.assign({}, declined, { name: 'Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13 · Fatima Khumalo', to: null, againAria: 'File it again, to someone else: Mini-CEX (Paediatrics) · PAED-002 · 2026-09-13 · Fatima Khumalo' })
+  ] }),
+'all-met': { person: '[Registrar]', sem: '10 of 10', yr: '5 of 5', notes: ['Every target is met for Semester 2, 2026 and the 2026 academic year.'], decisions: dlaminiDecisions.slice(0, 2) },
+'part-way': { person: '[Registrar]', metrics: false, notes: ['No semester target this semester: you started part-way through it. Semester targets begin with Semester 1, 2027.'] },
+'december': { short: dlaminiShort(true), decisions: dlaminiDecisions },
+'not-started': { person: '[Registrar]', metrics: false, ty: null, notes: ['Your programme starts on 2027-01-15.'] },
+'no-curriculum': { person: '[Registrar]', metrics: false, ty: null, notes: ['No curriculum assigned yet. Once you are admitted, your targets for each period appear here.'] },
+'no-epa-in-use': { person: '[Registrar]', metrics: false, notes: ['No EPA on your curriculum is in use at the moment, so no target applies to you.'] },
+'ended': { person: 'Pieter du Plessis', metrics: false, ty: null, notes: ['Your programme ended on 2026-10-01, so no target applies to you any more. Your progress in each period is kept on My progress, read-only.'], starEmpty: "No STAR yet." },
+'graduate': { person: 'Lerato Molefe' },
+'two-role': { person: '[Registrar who also assesses]', short: dlaminiShort(false), decisions: dlaminiDecisions },
+'loading': {}, 'load-error': {}
+};
+const m = Object.assign({}, base, S[state] || {});
+m.hasShort = m.metrics && m.short.length > 0;
+m.needsEmpty = !m.needsRow;
+m.hasDecisions = m.decisions.length > 0;
+m.noDecisions = !m.hasDecisions;
+const graduate = state === 'graduate';
+return {
+  w, m, graduate,
+  hasRole: !graduate,
+  twoRole: state === 'two-role',
+  loading: state === 'loading',
+  failed: state === 'load-error',
+  cards: !graduate && state !== 'loading' && state !== 'load-error'
+};
+}
+}
+</script>
+</body>
+</html>

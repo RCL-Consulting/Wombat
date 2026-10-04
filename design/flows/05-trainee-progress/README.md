@@ -25,3 +25,4 @@ T355's design, kept beside its brief (`../05-trainee-progress.md`) so that it ou
   item; Q9, only the rebuilt state after a version move, no move notice, and **T304 lands before or with flow 05's
   build**; O1, no scheduled-review date for the registrar; O2, KGK-001 reads as today in periods before it was added.
 - **Round 2's ask:** `round-2-ask.txt` (464 lines): the decisions; B1, C1–C8 and N1–N6 numbered; facts F1–F16 corrected from the runbook; five component boards (Home 17 states, Progress 17, Epa 12, Trajectory 5, WaysIn 6) at 1280 and 390, a Spec and a Steps board.
+- **Round 2** (2026-10-04, `round-2/`, canvas version `1791080399-d995`): 121 files: five component boards (R2-C-Home, -Progress, -Epa, -Trajectory, -WaysIn) with 112 state wrappers (56 states at 1280 and 390), R2-Spec, R2-Steps, `flow05-r2.css` and `canvas.json`. Round 1's boards are kept on the canvas.

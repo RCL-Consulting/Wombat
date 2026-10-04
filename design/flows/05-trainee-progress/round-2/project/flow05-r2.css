@@ -1,0 +1,202 @@
+/* Wombat · flow 05 · round 2 — flow05-r2.css
+   Loaded after ds/wombat/components/bundle.css (flows 01–04 as built). Three parts:
+   1. :root and @font-face, compiled from ds/wombat/tokens.json as the design system's page compiles tokens.css
+      (the canvas has no tokens.css of its own). Not a proposal: the built tokens, unchanged.
+   2. The canvas frame (.r2-*): only for drawing boards; never shipped.
+   3. NEW for flow 05: every rule below "NEW" goes to app.css. Each extends a built class (named in its comment).
+      No colour outside :root: every colour is a token. */
+
+/* ── 1. Tokens (ds/wombat/tokens.json, Light) ─────────────────────────────── */
+@font-face { font-family: "Source Sans 3"; src: url("ds/wombat/fonts/SourceSans3VF-Upright.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Source Sans 3"; src: url("ds/wombat/fonts/SourceSans3VF-Italic.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: italic; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("ds/wombat/fonts/fraunces-var.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+:root {
+  --primary-color: rgb(44 62 80);
+  --secondary-color: rgb(45 108 223);
+  --on-fill: rgb(255 255 255);
+  --background-color: rgb(248 249 250);
+  --surface-color: rgb(255 255 255);
+  --text-color: rgb(51 51 51);
+  --muted-text: rgb(104 111 119);
+  --link-color: rgb(11 92 171);
+  --link-hover: rgb(8 74 138);
+  --border-color: rgb(222 226 230);
+  --input-border: rgb(123 132 141);
+  --focus-ring: rgb(45 108 223);
+  --header-bg: rgb(241 243 245);
+  --hover-bg: rgb(248 249 250);
+  --success-color: rgb(26 115 64);
+  --success-bg: rgb(232 245 233);
+  --warning-color: rgb(154 84 0);
+  --warning-bg: rgb(255 248 225);
+  --danger-color: rgb(184 50 42);
+  --danger-bg: rgb(255 245 245);
+  --info-bg: rgb(243 248 255);
+  --scrim: rgb(0 0 0 / 0.35);
+  --shadow-color: rgb(0 0 0 / 0.1);
+  --sidebar-gradient-start: rgb(5 39 103);
+  --sidebar-gradient-end: rgb(58 6 71);
+  --nav-text: rgb(215 215 215);
+  --nav-text-strong: rgb(255 255 255);
+  --nav-group-label: rgb(185 195 224);
+  --nav-active-bg: rgb(255 255 255 / 0.32);
+  --nav-hover-bg: rgb(255 255 255 / 0.1);
+  --nav-brand-bg: rgb(0 0 0 / 0.4);
+  --nav-divider: rgb(255 255 255 / 0.18);
+  --nav-focus-ring: rgb(255 255 255);
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 999px;
+  --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.1);
+  --shadow-dialog: 0 10px 25px rgb(0 0 0 / 0.25);
+  --shadow-bar: 0 -1px 2px rgb(0 0 0 / 0.2);
+  --sidebar-width: 250px;
+  --motion-fast: 150ms;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: Consolas, "Courier New", monospace;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+}
+
+/* ── 2. Canvas frame (boards only) ────────────────────────────────────────── */
+.r2-frame { box-sizing: border-box; }
+.r2-frame *, .r2-frame *::before, .r2-frame *::after { box-sizing: border-box; }
+.r2-frame--1280 { width: 1280px; }
+.r2-frame--390 { width: 390px; }
+.r2-frame .page { min-height: 800px; }
+.r2-loose { padding: var(--space-lg); background: var(--background-color); }
+.r2-frame--390.r2-loose { padding: var(--space-md); }
+
+/* ── 3. NEW for flow 05 ───────────────────────────────────────────────────── */
+
+/* Home · Your targets: a furthest-short row is its own link, the figure UNDER the name (extends .progress-row). */
+.progress-row--link { border-top: 1px solid var(--border-color); margin: 0; padding: var(--space-sm) 0; }
+.progress-row--link:first-of-type { border-top: 0; }
+.progress-row-link { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.progress-row--link .progress-bar { margin-top: var(--space-xs); max-width: 16rem; }
+.progress-row--link .progress-row-meta { margin-top: var(--space-xs); }
+.progress-row--waived .progress-row-meta { margin-top: 0; }
+.progress-group-label { color: var(--muted-text); font-size: 0.9rem; font-weight: 600; margin: var(--space-md) 0 0; }
+.targets-line { margin: 0 0 var(--space-xs); }
+.targets-note { margin: var(--space-sm) 0 0; }
+
+/* Recent decisions (Trainee) and My authorisations' rows: flow 04's .decided-row, plus one line by kind under the link. */
+.decided-note { color: var(--text-color); flex: 1 0 100%; font-size: 0.9rem; margin: 0; }
+.decided-note a { display: inline-block; }
+.stars-summary { margin: 0 0 var(--space-xs); }
+
+/* My progress · This period (extends .detail-card and .dashboard-metric-row). */
+.period-card .dashboard-metric-row { margin-top: 0; }
+.period-ends { color: var(--muted-text); font-size: 0.9rem; margin: 0 0 var(--space-md); }
+.period-lines { border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: var(--space-sm); padding-top: var(--space-md); }
+.period-lines p { margin: 0; }
+.period-line-term { font-weight: 600; }
+.section-error { margin: 0; }
+
+/* The EPA index (EpaProgressTable): DataTable, stacked below 641px (extends .clinic-table--stack). */
+.index-section { display: flex; flex-direction: column; gap: var(--space-lg); margin-top: var(--space-lg); }
+.index-section > h2 { margin: 0; }
+.index-caption { caption-side: top; color: var(--text-color); font-size: 1.1rem; font-weight: 600; padding: var(--space-md); text-align: left; }
+.clinic-table--index tbody th { background: transparent; border-bottom: 1px solid var(--border-color); font-weight: 400; padding: var(--space-md); text-align: left; vertical-align: top; width: 34%; }
+.epa-link { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.count-cell .progress-bar { margin: var(--space-xs) 0; max-width: 9rem; }
+.count-figure { font-weight: 600; }
+.count-meta { color: var(--muted-text); font-size: 0.85rem; margin: 0; }
+.verdict-cell .badge { margin-right: var(--space-sm); }
+.verdict-level { white-space: nowrap; }
+.paused-mark { color: var(--muted-text); font-weight: 400; }
+.cadence-none { color: var(--muted-text); }
+.clinic-table--index tr.is-paused th, .clinic-table--index tr.is-paused td { background: var(--header-bg); }
+
+/* EntrustmentStandingPanel, changed once for My progress and the committee page: stacks, 44px links, ISO dates. */
+.standing-panel { margin-top: var(--space-lg); }
+.standing-panel > h2 { margin: 0 0 var(--space-sm); }
+.standing-panel p { margin: 0 0 var(--space-sm); }
+.standing-summary { font-weight: 600; }
+.standing-rating-link { display: inline-block; }
+.standing-rating-meta { color: var(--muted-text); display: block; font-size: 0.85rem; }
+
+/* The EPA page (NEW): Observations wide, Entrustment narrow (extends .details-grid). */
+.details-grid--reverse { grid-template-columns: 2fr 1fr; }
+.epa-figure-row { align-items: baseline; display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-md); }
+.epa-figure-row .progress-bar { flex: 1 1 10rem; max-width: 16rem; }
+.epa-section-title { font-size: 1.1rem; margin: 0 0 var(--space-md); }
+.epa-lines { display: flex; flex-direction: column; gap: var(--space-sm); margin: var(--space-md) 0 0; }
+.epa-lines p { margin: 0; }
+.epa-level-line { border-top: 1px solid var(--border-color); padding-top: var(--space-md); }
+.epa-stack { display: flex; flex-direction: column; gap: var(--space-lg); }
+.epa-page-alert { margin-bottom: var(--space-lg); }
+.star-level { align-items: baseline; display: flex; gap: var(--space-md); }
+.activity-cell-paused { color: var(--muted-text); display: block; font-size: 0.9rem; }
+
+/* TrajectoryChart's new form: drawn at its own size at each width, never scaled (replaces the lone-chart scaling rule). */
+.trajectory-card { display: flex; flex-direction: column; gap: var(--space-md); }
+.trajectory-head > * { margin: 0; }
+.trajectory-head p { color: var(--muted-text); margin-top: var(--space-xs); }
+.trajectory-chart.trajectory-chart--sized { height: auto; max-width: none; overflow: visible; }
+.trajectory-chart-band { fill: var(--header-bg); }
+.trajectory-chart-below { fill: var(--warning-bg); }
+.trajectory-chart-minimum { fill: none; stroke: var(--warning-color); stroke-dasharray: 6 4; stroke-width: 2; }
+.trajectory-chart-exit { stroke: var(--primary-color); stroke-width: 2.5; }
+.trajectory-chart-rung { stroke: var(--border-color); stroke-width: 1; }
+.trajectory-chart-lane { stroke: var(--input-border); stroke-dasharray: 2 3; stroke-width: 1; }
+.trajectory-chart-today { stroke: var(--muted-text); stroke-dasharray: 1 3; stroke-width: 1.5; }
+.trajectory-chart .trajectory-chart-x-label, .trajectory-chart .trajectory-chart-y-label { fill: var(--text-color); font-size: 13px; }
+.trajectory-chart .trajectory-chart-y-label { font-weight: 600; }
+.trajectory-chart .trajectory-chart-band-label, .trajectory-chart .trajectory-chart-note { fill: var(--muted-text); font-size: 13px; }
+.trajectory-chart .trajectory-chart-line-label { fill: var(--text-color); font-size: 13px; font-weight: 600; }
+.trajectory-chart .trajectory-chart-minimum-label { fill: var(--warning-color); font-size: 13px; font-weight: 600; }
+.trajectory-chart .trajectory-chart-dots { fill: var(--primary-color); stroke: var(--surface-color); stroke-width: 2; }
+.trajectory-chart .trajectory-chart-hollow { fill: var(--surface-color); stroke: var(--primary-color); stroke-width: 2.5; }
+.trajectory-chart--narrow .trajectory-chart-x-label, .trajectory-chart--narrow .trajectory-chart-y-label,
+.trajectory-chart--narrow .trajectory-chart-band-label, .trajectory-chart--narrow .trajectory-chart-line-label,
+.trajectory-chart--narrow .trajectory-chart-minimum-label { font-size: 12px; }
+.trajectory-chart--narrow .trajectory-chart-note { font-size: 11px; }
+.trajectory-key { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-lg); font-size: 0.9rem; list-style: none; margin: 0; padding: 0; }
+.trajectory-key li { align-items: center; display: inline-flex; gap: var(--space-sm); }
+.trajectory-key-swatch { display: inline-block; flex: none; height: 0.75rem; width: 1.5rem; }
+.trajectory-key-swatch--below { background: var(--warning-bg); border-top: 2px dashed var(--warning-color); }
+.trajectory-key-swatch--exit { background: var(--primary-color); height: 3px; }
+.trajectory-key-swatch--dot { background: var(--primary-color); border-radius: 50%; height: 0.75rem; width: 0.75rem; }
+.trajectory-key-swatch--hollow { border: 2.5px solid var(--primary-color); border-radius: 50%; height: 0.75rem; width: 0.75rem; }
+.trajectory-table caption { caption-side: top; font-weight: 600; padding: 0 0 var(--space-sm); text-align: left; }
+.trajectory-msf { color: var(--muted-text); font-size: 0.9rem; margin: 0; }
+
+/* A 44px block link at phone width: the index's EPA, every activity link on the EPA page, the panel's rating links,
+   Home's furthest-short and STAR rows, the Credit link (T328). */
+@media (max-width: 640.98px) {
+  .progress-row-link, .epa-link, .standing-rating-link, .activity-block-link, .credit-link, .decided-row .activity-link, .decided-note a {
+    align-items: center; display: flex; flex-wrap: wrap; min-height: 2.75rem;
+  }
+  .clinic-table--index tbody th { border: 0; padding: 0; width: auto; }
+  .clinic-table--stack caption.index-caption { padding: var(--space-sm) var(--space-md); }
+  .clinic-table--stack th[scope="row"] { display: block; }
+  .details-grid--reverse { grid-template-columns: minmax(0, 1fr); }
+  .trajectory-card.detail-card { padding: var(--space-md); }
+  .verdict-level { white-space: normal; }
+  .dashboard-metric-row { gap: var(--space-lg); }
+}
+@media (max-width: 900px) {
+  .details-grid--reverse { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Canvas text boards (Spec, Steps). */
+.r2-doc { background: var(--surface-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.5; padding: var(--space-2xl); }
+.r2-doc h1 { font-size: 2rem; margin: 0 0 var(--space-sm); }
+.r2-doc h2 { border-top: 2px solid var(--secondary-color); font-size: 1.4rem; margin: var(--space-2xl) 0 var(--space-md); padding-top: var(--space-md); }
+.r2-doc h3 { font-size: 1.1rem; margin: var(--space-lg) 0 var(--space-sm); }
+.r2-doc p, .r2-doc li { max-width: 70rem; }
+.r2-doc table { border-collapse: collapse; font-size: 0.95rem; margin: var(--space-sm) 0 var(--space-md); width: 100%; }
+.r2-doc th, .r2-doc td { border-bottom: 1px solid var(--border-color); padding: var(--space-sm) var(--space-md); text-align: left; vertical-align: top; }
+.r2-doc th { background: var(--header-bg); font-weight: 600; }
+.r2-doc code, .r2-doc .mono { font-family: var(--font-mono); font-size: 0.875rem; }
+.r2-doc .paste { background: var(--header-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); white-space: pre-wrap; }
+.r2-doc .was { color: var(--muted-text); }
