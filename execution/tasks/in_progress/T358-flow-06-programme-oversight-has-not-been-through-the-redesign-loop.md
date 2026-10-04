@@ -1,11 +1,12 @@
 ---
 id: T358
 title: Flow 06, programme oversight, has not been through the redesign loop
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-04
+started: 2026-10-04
 ---
 
 # T358 — Flow 06, programme oversight, has not been through the redesign loop
