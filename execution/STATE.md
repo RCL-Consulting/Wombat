@@ -15,7 +15,7 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps, 80 page templates, last replayed against flow 05
   (T355, `wombat_scenario_t355`: 256 no gap, no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 81 queued (1 P1, 15 P2, 65 P3), none in progress, 1 blocked.**
+- **Open: 80 queued (1 P1, 14 P2, 65 P3), T358 in progress, 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T356, T358.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -33,7 +33,7 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T358, flow 06 (programme oversight), step 1, the brief. Opus.**
+- **The GUI redesign: T358, flow 06 (programme oversight): brief done (`2f29c158`); step 3, a new canvas, needs the operator. Opus.**
 
 ## Open questions
 
@@ -55,6 +55,6 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
 
 ## Recent
 
-- **2026-10-04:** T304, T305 done; T355, flow 05, done (`b020c942`; replay, states, design system v15); T356–T358.
+- **2026-10-04:** T358 started, its brief restated (`2f29c158`); T304, T305 done; T355, flow 05, done (`b020c942`; replay, states, design system v15); T356–T358.
 - **2026-10-03:** T350, flow 04, done: replay (no regression), states, design system v13, lessons; T353–T355 filed.
 - **09-30 and before:** T342 (flow 03), T339 (flow 02), T335 (flow 01). Earlier: `git log`.

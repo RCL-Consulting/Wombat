@@ -6,6 +6,7 @@ Queued tasks that wait on another are listed after the ready ones.
 
 | lane | id | pri | title | model | waits on |
 |---|---|---|---|---|---|
+| in_progress | [T358](tasks/in_progress/T358-flow-06-programme-oversight-has-not-been-through-the-redesign-loop.md) | P2 | Flow 06, programme oversight, has not been through the redesign loop |  |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |  |
 | queued | [T288](tasks/queued/T288-an-institutionaladmin-can-create-an-sso-group-mapping-that-grants-roles-to-another-institution-s-users.md) | P2 | An InstitutionalAdmin can create an SSO group mapping that grants role |  |  |
@@ -22,7 +23,6 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T334](tasks/queued/T334-the-builder-lets-the-college-edit-the-system-managed-msf-and-learner-feedback-types-whose-data-the-releases-write.md) | P2 | The builder lets the College edit the system-managed MSF and learner-f |  |  |
 | queued | [T341](tasks/queued/T341-account-outcomes-ride-in-the-address-so-a-crafted-link-can-show-a-fixed-notice-or-reopen-the-remove-dialog.md) | P2 | Account outcomes ride in the address, so a crafted link can show a fix |  |  |
 | queued | [T356](tasks/queued/T356-a-scrolled-table-paints-over-the-fixed-top-bar-covering-sign-out.md) | P2 | A scrolled table paints over the fixed top bar, covering Sign out |  |  |
-| queued | [T358](tasks/queued/T358-flow-06-programme-oversight-has-not-been-through-the-redesign-loop.md) | P2 | Flow 06, programme oversight, has not been through the redesign loop |  |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |  |
@@ -105,11 +105,11 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
 ## Recent commits
 
 ```
+2f29c158 docs(design): flow 06's brief restated for the restructure (T358 step 1)
+ef65c336 docs(execution): T355, flow 05, done; T358 (flow 06) filed; state and handoff
 29d013d2 docs(design): BRIEF § 11 "Flow 05": six lessons (T355 step 9)
 f2a22044 docs(design): the design system re-synced to flow 05 as built and republished (T355 step 8, version 15)
 426cdc17 docs(progress): stale comments after the replay's fixes: the phone drawing is 322, no nested card, the links target the heading (T355 step 8)
-c1997d5c docs(execution): handoff rewritten within its cap (a NUL byte had crept into a path)
-0ded9858 docs(execution): handoff: T355's replay and states done; step 8 running
 ```
 
 ## For the reviewer
@@ -138,6 +138,8 @@ _Nothing flagged._
 #### Commits
 
 ```
+2f29c158 docs(design): flow 06's brief restated for the restructure (T358 step 1)
+ef65c336 docs(execution): T355, flow 05, done; T358 (flow 06) filed; state and handoff
 29d013d2 docs(design): BRIEF § 11 "Flow 05": six lessons (T355 step 9)
 f2a22044 docs(design): the design system re-synced to flow 05 as built and republished (T355 step 8, version 15)
 426cdc17 docs(progress): stale comments after the replay's fixes: the phone drawing is 322, no nested card, the links target the heading (T355 step 8)
@@ -166,7 +168,5 @@ c422ccf4 docs(design): flow 05's build plan, and the operator's D1 (ISO dates on
 63e4878b docs(execution): T304 and T305 started (lanes moved)
 a27983fd fix(trainees): T304/T305 review fixes: derived date before any write, truthful recount, page states
 95d4e950 fix(trainees): a profile save keeps its pin, replays a move, and refuses an ended profile (T304, T305)
-55c50fa0 docs(execution): handoff: flow 05's design final; step 6 next, with T304
-c1ac0fd5 docs(design): flow 05's round 3 saved and checked item by item: final for step 6 (T355 step 5)
 ```
-_24 more; see `git log`._
+_26 more; see `git log`._
