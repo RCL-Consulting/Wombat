@@ -59,8 +59,12 @@ Run the loop as flow 04 ran it (`design/flows/04-assessor-inbox/`, BRIEF § 11 "
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 05) — `b020c942` (Domain 810,
   Application 3,663, Infrastructure 1,011, Architecture 52, Web 3,222, Integration 484; build-review.md: 1 high, 4
   medium, all fixed with the lows that change what a user meets; D1 ISO dates, D2 the review window; T304 landed first).
-- [ ] The whole runbook replays on a fresh database with no regression from flow 05, the baseline is re-captured, and
-  flow 05's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 05, the baseline is re-captured, and
+  flow 05's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines (`wombat_scenario_t355`,
+  2026-10-04: 325 steps, 256 with no gap, every other gap an open task; three regressions the replay found fixed and
+  re-checked: 4.15's chart section (`db4c2d0a`, `5f8e6639`), A.7.3's phone chart (`b389f7d2`); T306's Home half, T298,
+  T346, T280 at 3.12, T328, T323 and F-6.37a/T304 no longer occur; T356 filed; dumps `scenario-t355-post-act{1..6,A}`).
+  States: 37 rows, 36 hold (17 reused after checking, 19 taken on scratch copies), December not reachable in October.
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
