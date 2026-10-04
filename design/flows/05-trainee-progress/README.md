@@ -33,3 +33,4 @@ T355's design, kept beside its brief (`../05-trainee-progress.md`) so that it ou
   wrappers, R3-Spec, R3-Steps, `flow05-r3.css`, `canvas.json`; pages r1, r2, r3). Checked item by item
   (`round-3-check.md`): E1–E6, C1–C10, C12, C13 and the closing instructions hold; the three partly rows are explained
   there (C11's specimen slot left by the ask; two hunks that C2 and C8 asked for). **The design is final for step 6.**
+- **Build plan** (`build-lanes.md`, `build-contracts.md`, `review-lanes.md`): lanes A1 counts, A2 decisions (wave 1); B home, C progress, D epa (wave 2); a runbook-and-docs lane after integration; 16 build notes. **The operator's build decisions (2026-10-04):** D1, ISO dates on every screen (`QuotaText.Iso`; `MsfCoverageText` and `ProgrammeEnded` too), long dates kept in the portfolio PDF and the coordinator's text; D2, the committee page's trajectory charts the review's window with no Today line, as drawn.
