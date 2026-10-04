@@ -1,0 +1,415 @@
+@page "/portfolio/progress/{EpaId:int}"
+@* T252: the Trainee role, or a trainee profile held, as My progress (R2): a graduate reads each EPA of their record here. *@
+@attribute [Authorize(Policy = "TraineeOrFormerTrainee")]
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject
+@using Wombat.Application.Features.Curricula.GetEpaProgressForTrainee
+@using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Web.Components.Shared.Progress
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<EpaProgress> Logger
+@inject IJSRuntime JS
+
+@*
+  One EPA of the registrar's own curriculum (T355, flow 05; R2; round 1 correction 2; R3-C-Epa). A record page under My
+  progress, a personal link: My progress is lit for every acting role, and for a graduate who holds none (E3), and the trail
+  is Home › My progress › the code. Addressed by the EPA's id, never its code; an id that is no item of the caller's
+  curriculum, another institution's or an unknown one, is flow 01's "Page not found", word for word, so an id confirms
+  nothing.
+
+  - The h1 is "<code> — <title>", "(no longer in use)" after it for a paused EPA, and an institution's own EPA's badge; the
+    tab is the h1's words, mark included (C5); the crumb is the code. One header above every state, its words changing as
+    the page loads, so the h1 FocusOnNavigate focused on arrival ("Loading this EPA") is the loaded page's (C8; the
+    activity page's pattern).
+  - Observations: the count of this window, its bar and its line, then the lines under it, the level line, and MSF's
+    CardLine whole (C4). A paused EPA has no count (N6's Alert says why) and no MSF line; an ended programme lists every
+    period read-only, with no "n more by" (R5).
+  - Entrustment: the STAR from the standing, by EPA id, and "Open My authorisations" for a holder of the Trainee role only
+    (E4: that page admits no one else).
+  - Rating trajectory: the chart over the academic year containing today, or the one the programme ended in, with Today.
+  - Activities on this EPA: every finished activity of the caller's on it, newest encounter first, each a 44px link.
+  Every read is the caller's own record, and any that fails is the page's load error, in fixed words (T329, T272).
+*@
+
+<PageTitle>@Heading · Wombat</PageTitle>
+
+<PageHeader Title="@Heading" Subtitle="@Subtitle" CurrentCrumb="@Crumb" Icon="@(_notFound ? "search" : null)"
+            Page="@(_notFound ? typeof(NotFound) : null)" TitleContent="@TitleContent" />
+
+@* Always present, filled while the EPA loads: a live region added with its words in it is often not read (C8). *@
+<p class="visually-hidden" role="status">@(_loading ? EpaPageWords.LoadingStatus : null)</p>
+
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+  <LoadingContent>
+    <div class="epa-stack" aria-hidden="true">
+      <div class="details-grid details-grid--reverse">
+        <div class="detail-card"><Skeleton Width="30%" Height="1.4rem" /><Skeleton Width="50%" Height="2.2rem" /><Skeleton Count="3" /></div>
+        <div class="detail-card"><Skeleton Width="50%" Height="1.4rem" /><Skeleton Width="40%" Height="2.2rem" /><Skeleton /></div>
+      </div>
+      <div class="detail-card"><Skeleton Width="30%" Height="1.4rem" /><Skeleton Height="12rem" /></div>
+    </div>
+  </LoadingContent>
+  <ChildContent>
+    @if (_notFound || _model is null)
+    {
+      @* Flow 01's NotFound, word for word (T233, T335): an id that is not the caller's to read is no page at all. *@
+      <div class="system-panel">
+        <p>There is no page at this address.</p>
+        <p class="muted">Check the address, or start again from Home.</p>
+        <div class="actions-cell">
+          <a class="btn btn-primary" href="/"><Icon Name="home" />Go to Home</a>
+        </div>
+      </div>
+    }
+    else
+    {
+      var model = _model;
+      var item = model.Item;
+
+      @if (!item.EpaInForce)
+      {
+        @* N6, under the h1: why a paused EPA has no count here (D48). Standing page content, so no role. *@
+        <div class="epa-page-alert">
+          <Alert Kind="info">@ProgressWords.PausedRow</Alert>
+        </div>
+      }
+
+      <div class="epa-stack">
+        <div class="details-grid details-grid--reverse">
+          <section class="detail-card" aria-labelledby="obs-h">
+            <h2 class="epa-section-title" id="obs-h">Observations</h2>
+            @if (item.EpaInForce && model.Ended is null)
+            {
+              var current = item.Current;
+              @if (ProgressWords.HasBar(item))
+              {
+                <div class="epa-figure-row">
+                  <span class="dashboard-metric-value">@current.Count of @current.Target</span>
+                  <span>@ProgressWords.WindowWords(item)</span>
+                  <div class="progress-bar"
+                       role="progressbar"
+                       aria-valuemin="0"
+                       aria-valuemax="@current.Target"
+                       aria-valuenow="@Math.Min(current.Count, current.Target)"
+                       aria-label="@ProgressWords.Figure(item)">
+                    <div class="progress-bar-fill @(current.IsMet ? "is-complete" : string.Empty)" style="width:@current.PercentOfTarget%"></div>
+                  </div>
+                </div>
+              }
+              <p class="progress-row-meta">@CountLine(item, model.AsOf)</p>
+            }
+            <div class="epa-lines">
+              @foreach (var line in Lines(model))
+              {
+                <p>@line</p>
+              }
+              <p class="epa-level-line">@EpaPageWords.LevelLine(item, model.TraineeStage)</p>
+              @if (item.EpaInForce && _msfCoverage is not null && MsfCoverageText.CardLine(_msfCoverage, item.EpaId) is { } msfLine)
+              {
+                <p>@msfLine</p>
+              }
+            </div>
+          </section>
+
+          <section class="detail-card" aria-labelledby="ent-h">
+            <h2 class="epa-section-title" id="ent-h">Entrustment</h2>
+            @if (!item.EpaInForce)
+            {
+              <p>@EpaPageWords.PausedEntrustment(item.EpaCode)</p>
+            }
+            else if (_standing?.Decision is { } decision)
+            {
+              <div class="star-level">
+                <span class="dashboard-metric-value">@decision.LevelLabel</span>
+                <span class="badge @BadgeFor.Standing(_standing.YearStatus)">@VerdictWords(_standing.YearStatus)</span>
+              </div>
+              <dl class="details-list">
+                <div><dt>Issued</dt><dd>@QuotaText.Iso(decision.IssuedOn)</dd></div>
+                @if (decision.ExpiresOn is { } expires)
+                {
+                  <div><dt>Expires</dt><dd>@QuotaText.Iso(expires)</dd></div>
+                }
+                @if (!item.IsLocal)
+                {
+                  <div><dt>Exit level</dt><dd>@ExitWords(_standing)</dd></div>
+                }
+              </dl>
+              @if (item.IsLocal)
+              {
+                <p>@EpaPageWords.NotInExitRule</p>
+              }
+              @if (_holdsTraineeRole)
+              {
+                @* E4: My authorisations admits the Trainee role alone; a graduate reads the STAR here. *@
+                <p><a class="epa-auth-link" href="/portfolio/authorisations">Open My authorisations</a></p>
+              }
+            }
+            else
+            {
+              <p>@EpaPageWords.NoStar</p>
+              @if (item.IsLocal)
+              {
+                <p>@EpaPageWords.NotInExitRule</p>
+              }
+            }
+          </section>
+        </div>
+
+        @if (_trajectory is not null)
+        {
+          <TrajectoryChart Trajectory="_trajectory" HeadingLevel="2" Title="Rating trajectory" Today="@TodayOf(model)" MsfBeside="@HasMsf" />
+        }
+
+        <section class="list-section" aria-labelledby="acts-h">
+          <h2 class="list-section-title" id="acts-h">Activities on this EPA</h2>
+          @if (_activities.Count > 0)
+          {
+            @* Stacked below 641px (DataTable's Stack, written out for its hidden caption): the link and the badge say what
+               they are, and the Credit cell is labelled by its column. *@
+            <div class="table-container shadow">
+              <table class="clinic-table clinic-table--stack" role="table">
+                <caption class="visually-hidden">@EpaPageWords.ActivitiesCaption</caption>
+                <thead role="rowgroup">
+                  <tr role="row">
+                    <th scope="col" role="columnheader">Activity</th>
+                    <th scope="col" role="columnheader">State</th>
+                    <th scope="col" role="columnheader">Credit</th>
+                  </tr>
+                </thead>
+                <tbody role="rowgroup">
+                  @foreach (var activity in _activities)
+                  {
+                    <tr role="row">
+                      <td role="cell">
+                        <ActivityLink Item="activity" Name="@NameOf(activity)" Block="true" />
+                        @if (activity.EpaInForce == false && !string.IsNullOrWhiteSpace(activity.EpaCode))
+                        {
+                          <span class="activity-cell-paused">@activity.EpaCode @EpaOptionLabel.NoLongerInUse</span>
+                        }
+                      </td>
+                      <td role="cell"><span class="badge @BadgeFor.ActivityState(activity.CurrentState, activity.Holder?.Kind == ActivityHolderKind.Done)">@activity.CurrentStateLabel</span></td>
+                      <td role="cell" data-label="Credit">@CreditOutcome.Label(activity.CreditedItemCount)</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @* The list reads its first page of the largest size, newest first; past it, the page says how many it shows of
+               how many, rather than a caption claiming every one (T355, build review R1, D4). *@
+            @if (EpaPageWords.Truncated(_activities.Count, _activitiesTotal) is { } truncated)
+            {
+              <p class="progress-row-meta">@truncated</p>
+            }
+          }
+          else
+          {
+            <div class="detail-card detail-card--empty">
+              <div class="state-panel-title">@EpaPageWords.NoActivity</div>
+              <div class="form-actions">
+                <a class="btn btn-outline" href="@NavItems.LogAnActivity.Href">@NavItems.LogAnActivity.Label</a>
+              </div>
+            </div>
+          }
+        </section>
+      </div>
+    }
+  </ChildContent>
+</StatePanel>
+
+@code {
+  [Parameter] public int EpaId { get; set; }
+
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _notFound;
+  private EpaProgressDto? _model;
+  private EpaStandingDto? _standing;
+  private EpaTrajectoryDto? _trajectory;
+  private MsfCoverageDto? _msfCoverage;
+  private IReadOnlyList<ActivitySummaryDto> _activities = [];
+  private int _activitiesTotal;
+  private IReadOnlyDictionary<int, string> _names = new Dictionary<int, string>();
+  private bool _holdsTraineeRole;
+
+  /// <summary>
+  /// The h1's words, which the tab and the crumb share (C5, C8): "Loading this EPA" while it loads, "EPA" when it failed,
+  /// "Page not found" for an id that is not the caller's, else "PAED-012 — … (no longer in use)", the mark included, as
+  /// the h1 reads (<see cref="TitleContent" /> draws the mark in its own span).
+  /// </summary>
+  private string Heading => _loading ? EpaPageWords.Loading : _loadError is not null ? EpaPageWords.ErrorHeading : _notFound || _model is null ? "Page not found" : EpaOptionLabel.For(_model.Item.EpaCode, _model.Item.EpaTitle, _model.Item.EpaInForce);
+
+  /// <summary>The page's own crumb: "Loading…", "EPA", or the EPA's code (C5).</summary>
+  private string? Crumb => _loading ? "Loading…" : _loadError is not null ? EpaPageWords.ErrorHeading : _model?.Item.EpaCode;
+
+  private string? Subtitle => _loading || _loadError is not null || _model is null ? null : EpaPageWords.Subtitle(_model.Item);
+
+  /// <summary>The loaded EPA's h1: its name, its paused mark muted (C13) and an institution's own EPA's badge.</summary>
+  private RenderFragment? TitleContent => _loading || _loadError is not null || _model is null ? null : __builder =>
+  {
+    var item = _model.Item;
+    <EpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="@item.EpaInForce" />
+    @if (ProgressWords.LocalBadge(item) is { } badge)
+    {
+      <text> </text><span class="badge @BadgeFor.State(BadgeState.Draft)">@badge</span>
+    }
+  };
+
+  /// <summary>Whether multi-source feedback sits beside this EPA, so its chart says MSF is not plotted (D8, D36).</summary>
+  private bool HasMsf => _activities.Any(activity => activity.ActivityTypeKey == MsfEvidenceKinds.MsfActivityTypeKey);
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    await LoadOrFailAsync();
+  }
+
+  private async Task LoadOrFailAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await LoadAsync(authState.User);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Never the exception's text on the page: it goes to the log (T329, T272).
+      Logger.LogError(exception, "EPA {EpaId}'s page could not be loaded.", EpaId);
+      _loadError = EpaPageWords.LoadError;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task LoadAsync(ClaimsPrincipal user)
+  {
+    _notFound = false;
+    _model = null;
+    _standing = null;
+    _trajectory = null;
+    _msfCoverage = null;
+    _activities = [];
+    _activitiesTotal = 0;
+    _names = new Dictionary<int, string>();
+    _holdsTraineeRole = user.IsInRole(WombatRoles.Trainee);
+
+    var model = await Sender.Send(new GetEpaProgressForTraineeQuery(user, EpaId));
+    if (model is null)
+    {
+      _notFound = true;
+      return;
+    }
+
+    var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+      ?? throw new InvalidOperationException("Current user identifier missing.");
+
+    // An ended programme is read as on its last day (T252, R5): its standing's training year, its MSF semesters and the
+    // academic year its chart draws.
+    var endedOn = model.Ended?.EndedOn;
+    var standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(userId, user, endedOn));
+    var (from, to) = TrajectoryWindow.AcademicYearOf(model.AsOf);
+    var trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(userId, user, from, to, model.Item.EpaId));
+    var coverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(userId, user, To: endedOn));
+    var activities = await Sender.Send(
+      new ListActivitiesBySubjectQuery(userId, user, 1, ListActivitiesBySubjectQuery.MaxPageSize) { EpaId = model.Item.EpaId });
+
+    _model = model;
+    _standing = standing?.Epas.FirstOrDefault(epa => epa.EpaId == model.Item.EpaId);
+    _trajectory = trajectories.FirstOrDefault(trajectory => trajectory.EpaId == model.Item.EpaId)
+      ?? new EpaTrajectoryDto(model.Item.EpaId, model.Item.EpaCode, model.Item.EpaTitle, model.Item.EpaInForce, null, null, [], [])
+      {
+        WindowFrom = from,
+        WindowTo = to
+      };
+    _msfCoverage = coverage;
+    _activities = activities.Items;
+    _activitiesTotal = activities.TotalCount;
+    _names = ActivityRowNames.Links(_activities);
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadOrFailAsync();
+  }
+
+  // After a Try again that read: the h1, now the EPA's name (Spec § 5). StatePanel calls it.
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  private string? NameOf(ActivitySummaryDto activity) => _names.TryGetValue(activity.Id, out var name) ? name : null;
+
+  /// <summary>
+  /// The line under the figure: "2 more by 2026-11-30." (the board's full stop added to <see cref="ProgressWords.CountMeta" />,
+  /// whose index cell has none), "Target met for Semester 2, 2026.", December's, or a waived window's one line.
+  /// </summary>
+  private static string CountLine(TraineeCurriculumProgressDto item, DateOnly asOf)
+  {
+    var meta = ProgressWords.CountMeta(item, asOf);
+    return item.Current.Applies && !meta.EndsWith('.') ? $"{meta}." : meta;
+  }
+
+  /// <summary>
+  /// The lines under the count (C4): at the minimum when observed and the last encounter, which are this window's credited
+  /// tally, then the window before; for an ended programme every period, read-only (R5); none for a paused EPA (N6).
+  /// </summary>
+  private static IEnumerable<string> Lines(EpaProgressDto model)
+  {
+    var item = model.Item;
+    if (!item.EpaInForce)
+    {
+      yield break;
+    }
+
+    if (model.Ended is { } ended)
+    {
+      IReadOnlyList<QuotaWindowDto> periods = item.Periods ?? (item.Previous is { } previous ? [item.Current, previous] : [item.Current]);
+      foreach (var period in periods)
+      {
+        yield return $"{period.Name}: {ProgressWords.EndedPeriodLine(period, ended.Today)}";
+      }
+
+      yield break;
+    }
+
+    if (ProgressWords.AtMinimum(item.Current) is { } atMinimum)
+    {
+      yield return atMinimum;
+    }
+
+    if (ProgressWords.LastEncounter(item.Current) is { } last)
+    {
+      yield return last;
+    }
+
+    if (item.Previous is { } before)
+    {
+      yield return ProgressWords.PreviousLine(before);
+    }
+  }
+
+  /// <summary>Today, for the chart's rule: the day an ended programme's page is read, else the day the figures are for.</summary>
+  private static DateOnly TodayOf(EpaProgressDto model) => model.Ended?.Today ?? model.AsOf;
+
+  /// <summary>The STAR against the training year's level, in the panel's words (T166).</summary>
+  private static string VerdictWords(EntrustmentStandingStatus status) => status switch
+  {
+    EntrustmentStandingStatus.AtOrAbove => "At or above",
+    EntrustmentStandingStatus.Below => "Below",
+    EntrustmentStandingStatus.NoDecision => "No decision",
+    _ => "Not comparable"
+  };
+
+  /// <summary>"5 · reached", "5 · not yet", "5 · not comparable": the exit level and whether the STAR reaches it.</summary>
+  private static string ExitWords(EpaStandingDto epa) => epa.ExitStatus switch
+  {
+    EntrustmentStandingStatus.AtOrAbove => $"{epa.ExitLevelLabel} · reached",
+    EntrustmentStandingStatus.NotComparable => $"{epa.ExitLevelLabel} · not comparable",
+    _ => $"{epa.ExitLevelLabel} · not yet"
+  };
+}

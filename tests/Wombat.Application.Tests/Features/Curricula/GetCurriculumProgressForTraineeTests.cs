@@ -728,6 +728,81 @@ public sealed class GetCurriculumProgressForTraineeTests
         summary.Items.Select(item => item.CurriculumItemId).Should().Equal(20);
     }
 
+    /// <summary>
+    /// T355, C10: the index names each item's decision cadence in its own words, a local item's owner, and the exit level,
+    /// none of which the row carried. PAED-001 is observed each semester and decided once a year: the cadence is the
+    /// item's own (Annexure B), never its quota window.
+    /// </summary>
+    [Fact]
+    public async Task EachItemCarriesItsCadence_ItsOwner_AndItsExitLevel()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        SeedCpsaLadderAndPinItem1(db);
+        var semester = db.CurriculumItems.Local.Single(item => item.Id == SemesterItemId);
+        semester.DecisionCadence = QuotaPeriod.AcademicYear;
+        semester.MinimumLevelOrder = 6;
+        semester.MinimumLevelByStageJson = """{ "3": 5 }""";
+        var year = db.CurriculumItems.Local.Single(item => item.Id == YearItemId);
+        year.DecisionCadence = QuotaPeriod.AcademicYear;
+        year.DecisionIsOpportunistic = true;
+        db.Epas.Add(new Epa { Id = 4, SubSpecialityId = 1, OwningInstitutionId = 1, Code = "KGK-001", Title = "Our own extra" });
+        db.CurriculumItems.Add(new CurriculumItem { Id = 4, CurriculumId = 1, EpaId = 4, OwningInstitutionId = 1, RequiredCount = 1, QuotaPeriod = QuotaPeriod.AcademicYear, MinimumLevelOrder = 3, WindowMonths = 12 });
+        db.SaveChanges();
+
+        var items = (await Read(db)).Items.ToDictionary(item => item.EpaCode);
+
+        items["PAED-001"].Should().Match<TraineeCurriculumProgressDto>(item =>
+            item.DecisionCadence == QuotaPeriod.AcademicYear && !item.DecisionIsOpportunistic &&
+            item.OwningInstitutionName == null && !item.IsLocal &&
+            item.ExitLevelOrder == 6 && item.ExitLevelLabel == "5" &&
+            item.EffectiveMinimumLevelLabel == "4" && item.MinimumByTrainingYear && item.EpaInForce);
+        items["PAED-002"].Should().Match<TraineeCurriculumProgressDto>(item =>
+            item.DecisionCadence == QuotaPeriod.AcademicYear && item.DecisionIsOpportunistic &&
+            item.ExitLevelOrder == 3 && item.ExitLevelLabel == "3" && !item.MinimumByTrainingYear);
+        items["KGK-001"].Should().Match<TraineeCurriculumProgressDto>(item =>
+            item.DecisionCadence == null && item.OwningInstitutionName == "KGK" && item.IsLocal &&
+            !item.MinimumByTrainingYear,
+            "the trainee's own institution's item names its owner, for the badge \"KGK's own\"");
+    }
+
+    /// <summary>
+    /// T355, Spec § 6 (D48): an item whose EPA is paused is listed in the summary's "No longer in use" group and counted in
+    /// none of its figures, while another institution's local item is in neither list.
+    /// </summary>
+    [Fact]
+    public async Task APausedItemIsListedApart_AndCountedNowhere_AndAnotherInstitutionsLocalItemNeither()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        AddRow(db, SemesterItemId, 2026, 2, counts: 3, reached: 3, lastObservedOn: new DateOnly(2026, 8, 12));
+        db.Epas.Add(new Epa { Id = 3, SubSpecialityId = 1, OwningInstitutionId = 2, Code = "LOCAL-2", Title = "Someone else's extra" });
+        db.CurriculumItems.Add(new CurriculumItem { Id = 3, CurriculumId = 1, EpaId = 3, OwningInstitutionId = 2, RequiredCount = 1, MinimumLevelOrder = 3, WindowMonths = 12 });
+        db.SaveChanges();
+        db.Epas.Single(epa => epa.Id == 1).Deactivate(DateTime.MinValue);
+        db.Epas.Single(epa => epa.Id == 3).Deactivate(DateTime.MinValue);
+        db.SaveChanges();
+
+        var summary = await Read(db);
+
+        summary.Paused.Should().Equal(
+            new PausedItemDto(SemesterItemId, 1, "PAED-001", "Clerk an acute admission", QuotaPeriod.Semester));
+        summary.Items.Select(item => item.EpaCode).Should().Equal("PAED-002");
+        summary.SemesterTargetsMet.Should().Be(0, "its met target is not counted while it is paused");
+        summary.SemesterTargetsApplying.Should().Be(0);
+        summary.HasSemesterItems.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task NothingPaused_ListsNoPausedItem()
+    {
+        await using var db = CreateDb();
+        SeedCurriculum(db);
+        db.SaveChanges();
+
+        (await Read(db)).Paused.Should().BeEmpty();
+    }
+
     private static async Task<TraineeCurriculumProgressSummaryDto> ReadSpan(
         ApplicationDbContext db, DateOnly periodsFrom, DateOnly? asOf = null)
     {

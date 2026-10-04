@@ -2,10 +2,18 @@
 @using MediatR
 @using Wombat.Application.Features.Dashboards.Trainee
 @using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Web.Components.Shared.Progress
 @attribute [Authorize(Roles = "Trainee,PendingTrainee")]
 @rendermode InteractiveServer
 @inherits RoleDashboard<TraineeDashboardSummaryDto>
 
+@*
+  The Trainee's Home (T355, flow 05, R1; Q2, Q3): four cards in this order, Your targets (spanning two, the emphasis
+  stripe), Needs you, Recent decisions (spanning two) and My authorisations. A card is never one link around other links:
+  its rows are its links (T280). One read behind DashboardFrame, so a failure is Home's one load error (note 3), and
+  nothing moves the focus on load (Spec § 5). Recent activities and Upcoming deadlines are retired (Q3; T298): a date is
+  shown on the row it belongs to.
+*@
 <DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
   @if (Pending)
   {
@@ -23,78 +31,71 @@
   {
     @* No Actions card: its Log an activity and Request an assessment both opened /activities/new, which Home's header
        now offers as "Log an activity" (T335, flow 01; A-Spec § e). *@
-    <DashboardCard Title="Curriculum targets" Icon="book" Href="/portfolio/progress" Emphasis="true" Span="2" IsLoading="IsLoading">
+    <DashboardCard Title="Your targets" Icon="target" HeadingId="card-targets" Emphasis="true" Span="2" IsLoading="IsLoading">
       @if (Summary is { } summary)
       {
-        if (summary.CurriculumTargets is null)
+        var targets = summary.CurriculumTargets;
+        if (targets is not null && TrainingYear(targets) is { } stage)
         {
-          <p class="muted">No curriculum assigned yet. Once you are admitted, your targets for each period appear here.</p>
+          @* The training year sets the minimum each encounter is judged against (T306); never the bare word "year" (R3). *@
+          <p class="targets-line">@ProgressWords.TrainingYearLine(stage)</p>
         }
-        else if (summary.CurriculumTargets.Ended is { } ended)
+        if (targets is not null && ShowsFigures(targets))
         {
-          @* T252: a withdrawn trainee keeps the Trainee role and lands here. Their programme is over, so no target is owed;
-             the card says so and points to the record, rather than reading "No curriculum assigned yet". *@
-          <p class="muted">@EndedLine(ended) Your progress in each period is kept on My progress, read-only.</p>
-        }
-        else if (summary.CurriculumTargets is not { Items.Count: > 0 } targets)
-        {
-          @* Admitted, but no item is in force: every EPA on the curriculum is inactive (T158), or it has none yet. *@
-          <p class="muted">No EPA on your curriculum is in use at the moment, so no target applies to you.</p>
-        }
-        else
-        {
-          <p class="progress-row-meta">@targets.CurrentSemesterName · @targets.CurrentSemesterMonths</p>
+          @* The two figures in My progress's words (R3): "1 of 10" over "EPAs met this semester", never "n / m". *@
           <div class="dashboard-metric-row">
             @if (targets.HasSemesterItems)
             {
+              var (value, label) = ProgressWords.SemesterFigure(targets);
               <div class="dashboard-metric">
-                <span class="dashboard-metric-value">@(targets.SemesterTargetsApplying > 0 ? $"{targets.SemesterTargetsMet} / {targets.SemesterTargetsApplying}" : "—")</span>
-                <span class="dashboard-metric-label">@(targets.SemesterTargetsApplying > 0 ? "semester targets met" : "no semester target applies yet")</span>
+                <span class="dashboard-metric-value">@value</span>
+                <span class="dashboard-metric-label">@label</span>
               </div>
             }
             @if (targets.HasYearItems)
             {
+              var (value, label) = ProgressWords.YearFigure(targets);
               <div class="dashboard-metric">
-                <span class="dashboard-metric-value">@(targets.YearTargetsApplying > 0 ? $"{targets.YearTargetsMet} / {targets.YearTargetsApplying}" : "—")</span>
-                <span class="dashboard-metric-label">@(targets.YearTargetsApplying > 0 ? $"yearly targets met ({targets.AsOf.Year})" : "no yearly target applies yet")</span>
+                <span class="dashboard-metric-value">@value</span>
+                <span class="dashboard-metric-label">@label</span>
               </div>
             }
           </div>
-          if (targets.ProgrammeNotStarted)
-          {
-            <p class="progress-row-meta">Your programme starts on @QuotaText.LongDate(targets.ProgrammeStartDate).</p>
-          }
-          else if (targets.SemesterTargetsStart is not null || targets.YearTargetsStart is not null)
-          {
-            <p class="progress-row-meta">
-              You started part-way through a period.@(targets.SemesterTargetsStart is { } semesterStart ? $" Semester targets begin with {semesterStart.Name}." : string.Empty)@(targets.YearTargetsStart is { } yearStart ? $" Yearly targets begin with {yearStart.Name}." : string.Empty)
-            </p>
-          }
-          foreach (var item in targets.Items
-                      .Where(entry => entry.Current.Applies && !entry.Current.IsMet)
-                      .OrderByDescending(entry => entry.Current.Shortfall)
-                      .ThenBy(entry => entry.EpaCode, StringComparer.Ordinal)
-                      .Take(5))
-          {
-            <div class="progress-row">
-              <div class="progress-row-head">
-                <span>@item.EpaCode — @item.EpaTitle</span>
-                <span class="muted">@item.Current.Count of @item.Current.Target @(item.IsPerSemester ? "this semester" : $"in {item.Current.Start.Year}")</span>
-              </div>
-              <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="@item.Current.Target" aria-valuenow="@Math.Min(item.Current.Count, item.Current.Target)"
-                   aria-label="@($"{item.EpaCode}: {item.Current.Count} of {item.Current.Target} {(item.IsPerSemester ? "this semester" : $"in {item.Current.Start.Year}")}")">
-                <div class="progress-bar-fill" style="width:@item.Current.PercentOfTarget%"></div>
-              </div>
-            </div>
-          }
         }
+        foreach (var note in TargetNotes(targets))
+        {
+          <p class="targets-note">@note</p>
+        }
+        if (targets is not null && FurthestShort(targets) is { Count: > 0 } shortRows)
+        {
+          @* Note 12: a list, as its sibling cards' rows are. Each row is its own link to its EPA page, its figure and date
+             under the name, never beside it, and a bar that never stands without the words (R1; C3's December form). *@
+          <h3 class="progress-group-label">Furthest short</h3>
+          <ul class="list-unstyled">
+            @foreach (var item in shortRows)
+            {
+              <li @key="item.CurriculumItemId" class="progress-row progress-row--link">
+                <a class="progress-row-link" href="@ProgressLinks.Epa(item.EpaId)">@item.EpaCode — @item.EpaTitle</a>
+                <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="@item.Current.Target"
+                     aria-valuenow="@Math.Min(item.Current.Count, item.Current.Target)"
+                     aria-label="@($"{item.EpaCode}: {ProgressWords.Figure(item)}")">
+                  <div class="progress-bar-fill" style="width:@item.Current.PercentOfTarget%"></div>
+                </div>
+                <p class="progress-row-meta">@ProgressWords.ShortRow(item, targets.AsOf)</p>
+              </li>
+            }
+          </ul>
+        }
+        <div class="dashboard-card-footer">
+          <a href="/portfolio/progress" class="btn btn-sm btn-outline">Open My progress</a>
+        </div>
       }
     </DashboardCard>
 
     @* Needs you (T342, flow 03, E8; R3-C-Mine "home-card"): exactly My activities' Needs you, the same rows in the same
        words (NeedsYouList), read by the same code (the summary's NeedsYou is ListNeedsYouQuery's read; T297's rule as
-       flow 03 restates it). It lists the first few and counts them all; My activities has the rest. Until T342 it was the
-       Activity inbox card, the inbox's rows, which since T342 leave out the author's own work. *@
+       flow 03 restates it). It lists the first few and counts them all; My activities has the rest. Its "Open My
+       activities" is Home's one way to My activities (T355, R1). *@
     <DashboardCard Title="Needs you" Icon="inbox" IsLoading="IsLoading"
                    Count="@(Summary?.NeedsYou.Count is > 0 ? Summary.NeedsYou.Count : null)"
                    CountWords="@(Summary?.NeedsYou.Count is > 0 ? ActivityListWords.ItemCount(Summary.NeedsYou.Count) : null)">
@@ -106,77 +107,104 @@
         }
         else
         {
-          <NeedsYouList Items="@summary.NeedsYou.Take(GetTraineeDashboardSummaryQueryHandler.NeedsYouListed).ToList()" />
+          <NeedsYouList Items="@summary.NeedsYou.Take(GetTraineeDashboardSummaryQueryHandler.NeedsYouListed).ToList()" Names="LinkNames" />
         }
+        @* A button as the sibling footers are, so it takes their 44px lift at phone width: Home's one way to My activities
+           (R1; T355, build review A2). *@
         <div class="dashboard-card-footer">
-          <a href="/activities/mine">Open My activities</a>
+          <a href="/activities/mine" class="btn btn-sm btn-outline">Open My activities</a>
         </div>
       }
     </DashboardCard>
 
-    <DashboardCard Title="Recent activities" Icon="file-text" IsLoading="IsLoading">
+    @* Recent decisions (T355, R1; B1, E6): what someone else decided on her own requests, newest decision first, five, no
+       footer. Flow 04's decided rows: the link, the decision's badge and its day, then one line by kind (CountLineWords),
+       or File it again for a declined request alone (E5). *@
+    <DashboardCard Title="Recent decisions" Icon="history" HeadingId="card-decisions" Span="2" IsLoading="IsLoading">
       @if (Summary is { } summary)
       {
-        if (summary.RecentActivities.Count == 0)
+        if (summary.RecentDecisions.Count == 0)
         {
-          <p class="muted">No activities yet.</p>
+          <p class="card-empty">@TraineeHomeWords.NoDecisions</p>
         }
         else
         {
-          <ul class="list-unstyled">
-            @foreach (var item in summary.RecentActivities)
+          <ul class="decided-list">
+            @foreach (var item in summary.RecentDecisions)
             {
-              <li class="list-row">
-                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                @* Green when the pinned workflow is finished, whatever its last state is called (D44, T266 review). *@
-                <span class="badge @BadgeFor.ActivityState(item.CurrentState, item.IsFinished)">@item.CurrentStateLabel</span>
+              <li @key="item.Id" class="decided-row">
+                <ActivityLink Item="item" Name="@NameOf(item)" />
+                @* Green when the pinned workflow is finished, whatever its last state is called (D44), red when declined
+                   (BadgeFor, T266); the day is South African. *@
+                <span class="decided-meta">
+                  <span class="badge @BadgeFor.ActivityState(item.CurrentState, item.IsFinished)">@item.CurrentStateLabel</span>
+                  @if (item.DecidedOn is { } decidedOn)
+                  {
+                    <span class="decided-date">@ActivityListWords.DateOf(decidedOn)</span>
+                  }
+                </span>
+                @if (IsDeclined(item))
+                {
+                  @* E5: the way to be assessed on the encounter after all, named for its row. It lands on Log an
+                     activity's h1 (note 7). *@
+                  <p class="decided-note"><a href="/activities/new?from=@item.Id" aria-label="@TraineeHomeWords.FileAgainName(item)">File it again, to someone else</a></p>
+                }
+                else if (CountLineWords.ForDecision(item) is { } line)
+                {
+                  <p class="decided-note">@line</p>
+                }
               </li>
             }
           </ul>
+        }
+      }
+    </DashboardCard>
+
+    @* My authorisations (T355, R1): the standing summary in the panel's words (StandingWords), then each STAR below its
+       level or expiring within 30 days, a link to its EPA page. The card's title is the page's name; the card is no link
+       around its links (T280). *@
+    <DashboardCard Title="My authorisations" Icon="award" HeadingId="card-stars" IsLoading="IsLoading">
+      @if (Summary is { } summary)
+      {
+        var standing = summary.Standing;
+        if (standing is not null && standing.Epas.Any(epa => epa.Decision is not null))
+        {
+          <p class="stars-summary">@StandingWords.YearLine(standing)</p>
+          var stars = TraineeHomeWords.StarRows(standing, standing.AsOf);
+          if (stars.Count > 0)
+          {
+            <ul class="decided-list">
+              @foreach (var epa in stars)
+              {
+                <li @key="epa.EpaId" class="decided-row">
+                  <a class="activity-link" href="@ProgressLinks.Epa(epa.EpaId)">@epa.EpaCode — @epa.EpaTitle</a>
+                  <p class="decided-note">@TraineeHomeWords.StarRow(epa, standing.TargetYear)</p>
+                </li>
+              }
+            </ul>
+          }
+        }
+        else
+        {
+          <p class="card-empty">@TraineeHomeWords.NoStar(StarYear(summary), Ended(summary))</p>
         }
         <div class="dashboard-card-footer">
-          <a href="/activities/mine" class="btn btn-sm btn-outline">All activities &rarr;</a>
+          <a href="/portfolio/authorisations" class="btn btn-sm btn-outline">Open My authorisations</a>
         </div>
       }
-    </DashboardCard>
-
-    <DashboardCard Title="Upcoming deadlines" Icon="calendar" IsLoading="IsLoading">
-      @if (Summary is { } summary)
-      {
-        if (summary.UpcomingDeadlines.Count == 0)
-        {
-          <p class="muted">No deadlines in the next 14 days.</p>
-        }
-        else
-        {
-          <ul class="list-unstyled">
-            @foreach (var item in summary.UpcomingDeadlines)
-            {
-              <li class="list-row">
-                <a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>
-                <span class="muted">@item.DueDate.ToString("d MMM")</span>
-              </li>
-            }
-          </ul>
-        }
-      }
-    </DashboardCard>
-
-    <DashboardCard Title="My authorisations" Icon="award" Href="/portfolio/authorisations" IsLoading="IsLoading">
-      <p class="muted">Statements of Awarded Responsibility (STAR) granted by committee review.</p>
-      <div class="dashboard-card-footer">
-        <a href="/portfolio/authorisations" class="btn btn-sm btn-outline">View authorisations &rarr;</a>
-      </div>
     </DashboardCard>
   }
 </DashboardFrame>
 
 @code {
+  /// <summary>How many rows "Furthest short" lists (R1): the five furthest short, largest shortfall first.</summary>
+  public const int FurthestShortListed = 5;
+
   /// <summary>The acting role, as Routes cascades it: it says which frame to draw before the read has returned.</summary>
   [CascadingParameter] public ActingRole? Acting { get; set; }
 
   /// <summary>
-  /// A pending trainee's one card, or a trainee's six. Once the summary has come it says (the handler's reading: Pending
+  /// A pending trainee's one card, or a trainee's four. Once the summary has come it says (the handler's reading: Pending
   /// trainee without Trainee); until then the acting role does, so the frame drawn while the read runs is the one it lands
   /// on.
   /// </summary>
@@ -186,7 +214,98 @@
   protected override IRequest<TraineeDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
     => new GetTraineeDashboardSummaryQuery(user);
 
-  /// <summary>How the programme ended, in the words of the progress page's notice (T252, <see cref="QuotaText.ProgrammeEnded" />).</summary>
-  private static string EndedLine(ProgrammeEndDto ended)
-    => $"{QuotaText.ProgrammeEnded(ended)}, so no target applies to you any more.";
+  // One naming over both lists, so an activity reads the same in Needs you and Recent decisions, as My activities names
+  // its two lists (T280; ActivityRowNames.Links). Named as the page draws, from the summary it draws.
+  private IReadOnlyDictionary<int, string> LinkNames => Summary is { } summary
+    ? ActivityRowNames.Links(summary.NeedsYou.Concat(summary.RecentDecisions))
+    : new Dictionary<int, string>();
+
+  private string? NameOf(ActivitySummaryDto item) => LinkNames.TryGetValue(item.Id, out var name) ? name : null;
+
+  /// <summary>
+  /// A declined request: its row offers File it again, and no count (E5, E6). Read by the pinned workflow, the rule File it
+  /// again copies by, not a state key (T355, build review R4).
+  /// </summary>
+  private static bool IsDeclined(ActivitySummaryDto item) => item.Declined;
+
+  /// <summary>
+  /// The training year to name over the figures (T306): none before the programme starts, and none once it has ended,
+  /// when no target applies any more.
+  /// </summary>
+  private static int? TrainingYear(TraineeCurriculumProgressSummaryDto targets)
+    => targets.Ended is null && !targets.ProgrammeNotStarted ? targets.TraineeStage : null;
+
+  /// <summary>
+  /// The two figures show only where a target of either kind applies today: never on an ended record (R5), before the
+  /// start, with no EPA in use (T158), or where the start waives both kinds (the part-way notice says so).
+  /// </summary>
+  private static bool ShowsFigures(TraineeCurriculumProgressSummaryDto targets)
+    => targets.Ended is null &&
+       !targets.ProgrammeNotStarted &&
+       targets.Items.Count > 0 &&
+       targets.SemesterTargetsApplying + targets.YearTargetsApplying > 0;
+
+  /// <summary>
+  /// The targets card's notices and empties, in Spec § 1's words (TraineeHomeWords): no curriculum; the programme ended
+  /// (A.4.6); not started; no EPA in use; every target met (note 15); started part-way (C2).
+  /// </summary>
+  private static IEnumerable<string> TargetNotes(TraineeCurriculumProgressSummaryDto? targets)
+  {
+    if (targets is null)
+    {
+      yield return TraineeHomeWords.NoCurriculum;
+      yield break;
+    }
+
+    if (targets.Ended is { } ended)
+    {
+      // T252: a withdrawn trainee keeps the Trainee role and lands here. Their programme is over, so no target is owed.
+      yield return TraineeHomeWords.Ended(ended);
+      yield break;
+    }
+
+    if (TraineeHomeWords.NotStarted(targets) is { } notStarted)
+    {
+      yield return notStarted;
+      yield break;
+    }
+
+    if (targets.Items.Count == 0)
+    {
+      // Admitted, but no item is in force: every EPA on the curriculum is paused (T158), or it has none yet.
+      yield return TraineeHomeWords.NoEpaInUse;
+      yield break;
+    }
+
+    if (TraineeHomeWords.AllMet(targets) is { } allMet)
+    {
+      yield return allMet;
+    }
+
+    if (TraineeHomeWords.PartWay(targets) is { } partWay)
+    {
+      yield return partWay;
+    }
+  }
+
+  /// <summary>
+  /// "Furthest short" (R1): the items whose current window holds a target not yet met, largest shortfall first, then by
+  /// code, the first five. A waived window has no target to be short of; an ended record lists none (R5).
+  /// </summary>
+  private static IReadOnlyList<TraineeCurriculumProgressDto> FurthestShort(TraineeCurriculumProgressSummaryDto targets)
+    => targets.Ended is not null
+      ? []
+      : targets.Items
+          .Where(item => item.Current.Applies && !item.Current.IsMet)
+          .OrderByDescending(item => item.Current.Shortfall)
+          .ThenBy(item => item.EpaCode, StringComparer.Ordinal)
+          .Take(FurthestShortListed)
+          .ToList();
+
+  /// <summary>The programme has ended: My authorisations' empty says only "No STAR yet." (Spec § 1).</summary>
+  private static bool Ended(TraineeDashboardSummaryDto summary) => summary.CurriculumTargets?.Ended is not null;
+
+  /// <summary>The training year a STAR would be read against, for the empty's sentence; none before the start.</summary>
+  private static int? StarYear(TraineeDashboardSummaryDto summary)
+    => summary.Standing is { ProgrammeNotStarted: false } standing ? standing.TargetYear : null;
 }

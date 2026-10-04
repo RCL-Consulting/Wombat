@@ -20,6 +20,7 @@ using Wombat.Web.Components.Pages.Admin.EntrustmentScales;
 using Wombat.Web.Components.Pages.Admin.Institutions;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
+using Wombat.Web.Components.Pages.Portfolio;
 using Wombat.Web.Components.Shared;
 using Wombat.Web.Navigation;
 using Wombat.Web.Services;
@@ -191,6 +192,78 @@ public sealed class ActiveNavItemTests : TestContext
     [Fact]
     public void CurriculumProgress_LightsCurricula_ForTheAdministrator()
         => LitLabel(WombatRoles.Administrator, typeof(CurriculumProgressRebuild)).Should().Be("Curricula");
+
+    // ---- a page under a personal link (T355, E3) ----
+
+    /// <summary>
+    /// The EPA page is under My progress whatever the acting role, and for a graduate who holds none: My progress is a
+    /// personal link, offered to whoever holds the Trainee role or a trainee record, so a per-role entry would light nothing
+    /// for a registrar acting as Assessor or for a graduate (E3).
+    /// </summary>
+    public static TheoryData<string?, bool> TraineeRecordHolders() => new()
+    {
+        { WombatRoles.Trainee, false },
+        { WombatRoles.Assessor, true },
+        { null, true }
+    };
+
+    [Theory]
+    [MemberData(nameof(TraineeRecordHolders))]
+    public void TheEpaPage_LightsMyProgress_WhateverTheActingRole_AndWithNone(string? role, bool withRecord)
+    {
+        var menu = withRecord ? MenuFor(role, TraineeRecord()) : MenuFor(role);
+
+        NavOwners.Lit(typeof(EpaProgress), role, menu).Should().Be((NavItems.MyProgress, NavCurrent.Owner));
+        var cut = RenderComponent<NavMenu>(parameters => parameters
+            .AddCascadingValue(ActingAs(role))
+            .AddCascadingValue(menu)
+            .AddCascadingValue(new RouteData(typeof(EpaProgress), new Dictionary<string, object?>())));
+        Lit(cut).Should().Equal(("My progress", "true"));
+    }
+
+    [Theory]
+    [MemberData(nameof(TraineeRecordHolders))]
+    public void TheEpaPagesTrail_IsHome_MyProgress_ThenItsCode(string? role, bool withRecord)
+    {
+        var cut = RenderComponent<PageHeader>(parameters => parameters
+            .Add(header => header.Title, "PAED-001 — Providing paediatric emergency care to children")
+            .Add(header => header.CurrentCrumb, "PAED-001")
+            .AddCascadingValue(ActingAs(role))
+            .AddCascadingValue(withRecord ? MenuFor(role, TraineeRecord()) : MenuFor(role))
+            .AddCascadingValue(new RouteData(typeof(EpaProgress), new Dictionary<string, object?>())));
+
+        Crumbs(cut).Should().Equal(("Home", "/"), ("My progress", "/portfolio/progress"), ("PAED-001", null));
+    }
+
+    [Fact]
+    public void AnEntryNamingRoles_UnderAPersonalLink_KeepsItsRoles()
+    {
+        // T355, build review R7, G5: the any-role rule is for an entry declared UnderAPersonalLink, not for every entry
+        // whose item is personal. My authorisations is under My progress for the Trainee alone, as its policy admits.
+        NavOwners.OwnerFor(typeof(MyAuthorisations), WombatRoles.Trainee).Should().Be(NavItems.MyProgress);
+        NavOwners.OwnerFor(typeof(MyAuthorisations), WombatRoles.Assessor).Should().BeNull();
+        NavOwners.OwnerFor(typeof(MyAuthorisations), null).Should().BeNull();
+        NavOwners.OwnerFor(typeof(EpaProgress), WombatRoles.Assessor).Should().Be(NavItems.MyProgress);
+        NavOwners.OwnerFor(typeof(EpaProgress), null).Should().Be(NavItems.MyProgress);
+    }
+
+    [Fact]
+    public async Task APageUnderAPersonalLink_AdmitsWhomTheLinkIsOfferedTo()
+    {
+        // The rule names no role, so EveryOwner_IsNamedOnlyForARoleThePageAdmits has none to check: the page's policy,
+        // TraineeOrFormerTrainee, is held to My progress's offer here instead (T252).
+        foreach (var (page, owners) in NavOwners.Table.Where(entry => entry.Value.Any(owner => NavOwners.IsPersonal(owner.Item))))
+        {
+            foreach (var owner in owners.Where(owner => owner.Roles.Count == 0))
+            {
+                (await RefusalOf(page, Holder([WombatRoles.Trainee]))).Should().BeNull($"{page.Name} admits a Trainee");
+                (await RefusalOf(page, Holder([WombatRoles.Assessor], TraineeRecord()))).Should().BeNull($"{page.Name} admits a record holder");
+                (await RefusalOf(page, Holder([], TraineeRecord()))).Should().BeNull($"{page.Name} admits a graduate with no role");
+                (await RefusalOf(page, Holder([WombatRoles.Assessor]))).Should().NotBeNull($"{page.Name} refuses an Assessor with no record");
+                MenuFor(WombatRoles.Assessor).Offers(owner.Item).Should().BeFalse("nor is its link offered to them");
+            }
+        }
+    }
 
     [Theory]
     [InlineData(typeof(Profile))]

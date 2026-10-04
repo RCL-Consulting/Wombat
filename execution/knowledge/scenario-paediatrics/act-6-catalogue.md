@@ -346,14 +346,16 @@ The College takes PAED-012 out of use while it revises it. By D48:
 
 ### Step 6.15 — Dr Dlamini reads her progress before the pause
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress
-Do: Read the page. Note these, for Steps 6.19 and 6.24:
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
+Do: Read the page, then open PAED-012's row. Note these, for Steps 6.19 and 6.24:
   - PAED-012's count this semester (`n`);
-  - its count at the minimum level when observed;
-  - the rung it names as the minimum now;
-  - the "Semester targets" line's count of EPAs (`m`).
-Expect: PAED-012 is among the "Each semester" cards, with a target of 3 per semester. PAED-006's card carries the title
-  corrected in Step 6.14. The "This period" card reads "Semester targets: … of `m` EPAs met this semester".
+  - on its page, its count at the minimum level when observed, and the level its training year line names;
+  - the count under "EPAs met this semester" (`m`).
+Expect: PAED-012 is a row of "Each semester · 10 EPAs". PAED-006's row carries the title corrected in Step 6.14,
+  "PAED-006 — Managing long-term health conditions (LTHCs) in children". This period reads "… of `m`" over "EPAs met
+  this semester". PAED-012's page (`/portfolio/progress/{EpaId}`) reads "3 a semester" under its h1, its count `n`, its
+  count at the minimum level when observed (no such line while `n` is 0), and "Training year 3: level …, the minimum
+  each encounter is judged against and your STAR's target."
 Note: A trainee reads only their own progress.
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): PAED-012's card reads "0 of 3 this semester", "3 more by 30
   November 2026.", "Target: 3 per semester (6 a year). Minimum now 4." and no "at the minimum level" line: n = 0,
@@ -433,14 +435,24 @@ Gap: none (the earlier replay's About card without "(no longer in use)" no longe
 
 ### Step 6.19 — Dr Dlamini during the pause
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/mine → /activities/new → /activities/new?type=mini_cex_cpsa
-Do: Read her progress and her activities. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without
-  saving.
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /activities/{ActivityId:int} →
+  /activities/new → /activities/new?type=mini_cex_cpsa
+Do: Read her progress and PAED-012's page, then her activities and the Mini-CEX. Then start a Mini-CEX (Paediatrics) and
+  open its EPA picker. Leave without saving.
 Expect:
-  - **Progress.** No PAED-012 card, and the semester targets line counts `m − 1` EPAs. The rating trajectory for
-    PAED-012 still charts every rating on it, the one from Step 6.18 included, under the heading "PAED-012 — … (no
-    longer in use)" (T255).
-  - **My activities.** The Mini-CEX carries "PAED-012 (no longer in use)" under its name, and its Credit reads None.
+  - **Progress.** PAED-012 is no row of "Each semester · 9 EPAs", and This period reads "1 of 9" over "EPAs met this
+    semester" (`m − 1`). Under "No longer in use · 1 EPA", PAED-012's row reads "PAED-012 — Communicating with and
+    counselling patients, caregivers and healthcare teams (no longer in use)", its mark muted (`.paused-mark`, never
+    bold), a link to its page, beside "Paused by the College. It is not a target while it is paused. Its ratings and the
+    credit it had earned are kept, and what is completed on it meanwhile is credited if it is restored." (T355).
+  - **Its page.** The h1 and the tab read "PAED-012 — … (no longer in use)", the mark muted, and the same sentence
+    stands under it as an information alert, with no count. Entrustment reads "While PAED-012 is paused it is not in
+    your standing against Annexure A." The trajectory, headed "Rating trajectory (no longer in use)", still charts every
+    rating on it, the one from Step 6.18 included (T255). Activities on this EPA lists the Mini-CEX, "PAED-012 (no
+    longer in use)" under its name, Credit None.
+  - **My activities.** The Mini-CEX carries "PAED-012 (no longer in use)" under its name, and its Credit reads None, as
+    text. Its status card reads "Rated 4. Its credit to PAED-012 waits while the EPA is paused.", with no count, and its
+    Open My progress lands on PAED-012's page, named "Open My progress at PAED-012" (T355, build review D1).
   - **The picker.** It offers eight EPAs, without PAED-012.
 Note: T158: progress, pickers and dashboards list only EPAs in force. T231 and T255 mark what was recorded against an
   EPA that is not.
@@ -462,12 +474,14 @@ Gap: none
 
 ### Step 6.21 — Dr Molefe's record during the pause
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
-Route: /portfolio/progress
-Do: Read her record.
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
+Do: Read her record. Then open PAED-012's page by its address (`/portfolio/progress/{EpaId}`, PAED-012's id from Step
+  6.15): her record does not link it while it is paused.
 Expect: The record opens with its notice that she completed her programme and that the page is read-only.
   - It lists no PAED-012 card while PAED-012 is paused, as every progress page leaves out an EPA not in force (T158).
   - Her "Entrustment against Annexure A" panel has no PAED-012 row either: the standing reads only items in force.
-  - Any rating trajectory she has on PAED-012 still charts, headed "(no longer in use)" (T255).
+  - No chart is on My progress (T355). PAED-012's page is headed "PAED-012 — … (no longer in use)", and its rating
+    trajectory, headed "Rating trajectory (no longer in use)", still charts her ratings on it (T255).
   - PAED-006's card carries the title corrected in Step 6.14. Her other cards and periods are as Act 5 left them.
 Note: The TraineeOrFormerTrainee policy admits her without the Trainee role (T252).
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): Menu Home, My progress, My data rights. "You completed your
@@ -518,16 +532,18 @@ Gap: none
 
 ### Step 6.24 — Dr Dlamini's credit is counted
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/mine
-Do: Read her progress and her activities.
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /activities/{ActivityId:int}
+Do: Read her progress and PAED-012's page, then her activities and the Mini-CEX.
 Expect:
-  - PAED-012's card is back, with `n + 1` this semester, and one more at the minimum level when observed than in Step
-    6.15. The semester targets line counts `m` EPAs again.
-  - The trajectory heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credit reads
-    1 item.
-  - The credit PAED-012 had earned before the pause was kept, not cancelled. Dr Dlamini holds none from Acts 3-4
-    (`n` is 0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged
-    through the pause (by SQL, or on her record in Step 6.40).
+  - PAED-012's row is back in "Each semester · 10 EPAs", with `n + 1` this semester, and "No longer in use" is gone.
+    This period reads "… of `m`" over "EPAs met this semester" again. Its page reads one more at the minimum level when
+    observed than in Step 6.15, and "Last encounter `D`".
+  - Its h1, its trajectory's heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credit
+    reads "1 item", a link to PAED-012's page. Its status card reads "Rated 4. Credited 1 item to PAED-012. PAED-012:
+    `n + 1` of 3 this semester."
+  - The credit PAED-012 had earned before the pause was kept, not cancelled. Dr Dlamini holds none from Acts 3-4 (`n` is
+    0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged through the
+    pause (by SQL, or on her record in Step 6.40).
 Note: D48.
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): PAED-012's card is back: "1 of 3 this semester" (n + 1), "At the
   minimum level when observed: 1 of 1. Last encounter date: 2026-10-04." "1 of 10 EPAs met this semester" (m). No marker
@@ -595,11 +611,17 @@ Gap: none
 
 ### Step 6.27 — Dr Dlamini is measured against KGK-001
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/new → /activities/new?type=direct_observation_cpsa
-Do: Read her progress. Then start a Direct Observation (Paediatrics) and open its EPA picker. Leave without saving.
-Expect: A KGK-001 card appears under "Once a year", reading 0 of 1 for the current year, and the yearly targets line
-  counts one more EPA. Its line for the year before reads "0 of 1, 1 short": a target is read live, into periods that
-  have already closed, as the items page warned. The Direct Observation picker offers ten EPAs, KGK-001 among them.
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/new →
+  /activities/new?type=direct_observation_cpsa
+Do: Read her progress, then KGK-001's page from its row. Then start a Direct Observation (Paediatrics) and open its EPA
+  picker. Leave without saving.
+Expect: A KGK-001 row appears first in "Once a year · 6 EPAs": "KGK-001 — Running a paediatric outreach clinic at a
+  district hospital", with the badge "Kgosi Kgari Teaching Hospital's own", "0 of 1 in 2026" over "1 more by
+  2026-11-30", and a dash where the other rows say when a committee decides them. This period reads "0 of 6" over "EPAs
+  met in 2026", one EPA more. KGK-001's page reads "1 a year · Not in the College's exit rule" under its h1, and "2025
+  academic year: 0 of 1, 1 short": a target is read live, into periods that have already closed, as the items page
+  warned. Its level reads "Minimum 3a", and Entrustment "No STAR yet." and "Not in the College's exit rule." The Direct
+  Observation picker offers ten EPAs, KGK-001 among them.
 Note: A trainee reads only their own progress. An institution's own item measures only that institution's registrars.
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): A KGK-001 card under "Once a year": "0 of 1 in 2026", "1 more by
   30 November 2026.", "2025 academic year: 0 of 1, 1 short". "0 of 6 EPAs met in 2026" (was 5); the semester line still
@@ -749,8 +771,9 @@ Gap: none. [F-6.34a, T304] closes: a profile left on 11.1 after the re-adoption 
 ### Step 6.35 — Dr Ndlovu notes his figures before he moves
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress
-Do: Read the page, and note each card's count for its current period.
-Expect: Sixteen cards: the 15 national EPAs of 11.1, and KGK-001. PAED-016 is not among them.
+Do: Read the page, and note each row's count for its current period.
+Expect: Sixteen rows in Your EPAs, "Each semester · 10 EPAs" and "Once a year · 6 EPAs": the 15 national EPAs of 11.1,
+  and KGK-001 among the six. PAED-016 is not among them.
 Note: Count his tallies too, as `t`: `SELECT count(*) FROM "CurriculumItemProgresses" p JOIN "CurriculumItems" i ON
   i."Id" = p."CurriculumItemId" JOIN "Curricula" c ON c."Id" = i."CurriculumId" JOIN "AspNetUsers" u ON u."Id" =
   p."TraineeUserId" WHERE u."Email" = 'ndlovu@kgk.wombat.local' AND c."Version" = '11.1';`
@@ -784,10 +807,11 @@ Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect:
-  - **The cards.** Seventeen: 11.2's 16 national items (PAED-016 once a year, and PAED-011 at 2 per academic year,
-    among them) and KGK-001.
-  - **The counts.** His evidence counts on 11.2 at once: PAED-002 reads 1 of 3 this semester, as in Step 6.35, and
-    PAED-016 and KGK-001 read 0.
+  - **The rows.** Seventeen, in "Each semester · 10 EPAs" and "Once a year · 7 EPAs": 11.2's 16 national items (PAED-016
+    once a year, and PAED-011 at 2 per academic year, among them) and KGK-001. Nothing notes the move and nothing marks
+    a row as new: KGK-001's badge is the only mark (T355, Q9).
+  - **The counts.** His evidence counts on 11.2 at once: PAED-002 reads "1 of 3 this semester", as in Step 6.35, and
+    PAED-016 and KGK-001 read "0 of 1 in 2026".
   - **The picker.** The Mini-CEX picker offers ten EPAs, PAED-016 among them.
 Note: The move replays his credit in its own save (Step 6.36), so no rebuild is needed (T304).
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): Seventeen cards: ten "Each semester" and seven "Once a year"
@@ -828,7 +852,9 @@ Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress
 Do: Read the page.
 Expect: Each of the 15 EPAs carried over from 11.1 reads the count he noted in Step 6.35 for its current period.
-  PAED-016 and KGK-001 read 0. PAED-011's card measures its count against a target of 2 per academic year.
+  PAED-016 and KGK-001 read "0 of 1 in 2026". PAED-011's row reads "0 of 2 in 2026": it measures its count against a
+  target of 2 per academic year. The rows are "Each semester · 10 EPAs" and "Once a year · 7 EPAs", and This period's
+  yearly figure is "… of 7" over "EPAs met in 2026".
 Note: A trainee reads only their own progress.
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): Each of the 15 carried-over EPAs reads what Step 6.35 noted:
   PAED-002 "1 of 3 this semester", every other 0. PAED-016 and KGK-001 read "0 of 1 in 2026", PAED-011 "0 of 2 in
@@ -861,9 +887,10 @@ Role: Trainee — Dr Pieter du Plessis
 Route: /portfolio/progress → /activities/mine
 Do: Read his record and his activities.
 Expect:
-  - My progress still opens with the notice that his programme ended on the day Act 5 recorded, and is read-only.
-  - PAED-002's period holding that day still reads "no target (your programme ended part-way through)", with the
-    count Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
+  - My progress still opens with the notice that his programme ended on the day Act 5 recorded, "Your programme ended on
+    <that day, as `YYYY-MM-DD`>. This page is your record of it and is read-only: …" (T355, D1).
+  - PAED-002's period holding that day still reads "no target (your programme ended part-way through)", with the count
+    Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
   - A KGK-001 card has appeared on his record too, as on Dr Molefe's.
   - My activities lists that Mini-CEX as Completed, its Credit None.
 Note: He keeps the Trainee role after withdrawing (Act 5), so he reads his own record like any trainee.

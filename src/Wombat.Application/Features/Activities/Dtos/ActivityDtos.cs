@@ -1,3 +1,4 @@
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Workflow;
 
@@ -525,6 +526,37 @@ public sealed record ActivitySummaryDto(
     /// Filled by the two queries that fill <see cref="Holder" />; null from the inbox, and for a pin that no longer parses.
     /// </summary>
     public ActivityTypeShape? Shape { get; init; }
+
+    /// <summary>
+    /// The count this activity made towards its EPA's item, in the window its encounter counts towards
+    /// (<c>EpaCountLines</c>, T355, C5; E5): the line under a Recent decisions row on the Trainee's Home. Set by
+    /// <c>DecidedOnYours</c> only; null elsewhere, and null for an activity about no EPA or an EPA that is no in-force item
+    /// of the trainee's curriculum.
+    /// </summary>
+    public EpaCountLineDto? CountLine { get; init; }
+
+    /// <summary>
+    /// Whether its EPA's page under My progress opens for the caller (<c>TraineeQuotaProgressReader.EpasWithAPageAsync</c>):
+    /// the EPA is an item of the curriculum their preferred profile holds. My activities links the Credit cell to that page
+    /// only then (T355, build review G4). Set by <c>ListActivitiesBySubjectQuery</c> for the caller's own list; false
+    /// elsewhere.
+    /// </summary>
+    public bool EpaPageOpens { get; init; }
+
+    /// <summary>
+    /// Whether the decision was a decline, by its pinned workflow (<c>ActivityDecline</c>, the rule File it again reads;
+    /// E6: the rule, not a list): its row offers File it again and no count line (T355, build review R4). Set by
+    /// <c>DecidedOnYours</c> only; false elsewhere.
+    /// </summary>
+    public bool Declined { get; init; }
+
+    /// <summary>
+    /// Whether its pinned credit rules can credit anything (<c>EncounterDatePolicy.CanCredit</c>, a non-empty
+    /// <c>counts_for</c>): only such a type's nothing-credited completion "waits while the EPA is paused"; a reflection
+    /// stamped with an EPA credits nothing by design (T355, build review R4). Set by <c>DecidedOnYours</c> only; false
+    /// elsewhere.
+    /// </summary>
+    public bool CanCredit { get; init; }
 }
 
 /// <summary>

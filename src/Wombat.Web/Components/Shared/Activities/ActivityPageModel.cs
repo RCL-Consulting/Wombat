@@ -2,10 +2,12 @@ using System.Globalization;
 using System.Text.Json;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Activities.Workflow;
 using Wombat.Domain.Curricula;
+using Wombat.Web.Components.Shared.Progress;
 using Wombat.Web.Navigation;
 
 namespace Wombat.Web.Components.Shared.Activities;
@@ -215,7 +217,13 @@ public sealed class ActivityPageModel
                "Cancel request");
 
     /// <summary>The status card (Q3, R3-Spec § 1 "Status card").</summary>
-    public ActivityStatusView Status(string? ratedLabel)
+    /// <param name="ratedLabel">The rating as its rung reads, "4", for "Rated 4."; null for none.</param>
+    /// <param name="countLine">
+    /// The count the completed activity made, read for its registrar as part of the page's load (T355, C5; E5;
+    /// <c>GetActivityCountLineQuery</c>); null when it was not read, read nothing, or failed (note 4). Only the completed card
+    /// reads it.
+    /// </param>
+    public ActivityStatusView Status(string? ratedLabel, EpaCountLineDto? countLine = null)
     {
         var holder = Detail.Holder;
         var badgeClass = "badge " + BadgeFor.ActivityState(Activity.CurrentState, HolderKind == ActivityHolderKind.Done);
@@ -317,11 +325,11 @@ public sealed class ActivityPageModel
             }
 
             default:
-                return DoneStatus(badgeClass, badge, ratedLabel);
+                return DoneStatus(badgeClass, badge, ratedLabel, countLine);
         }
     }
 
-    private ActivityStatusView DoneStatus(string badgeClass, string badge, string? ratedLabel)
+    private ActivityStatusView DoneStatus(string badgeClass, string badge, string? ratedLabel, EpaCountLineDto? countLine)
     {
         var move = LastMove;
         string headline;
@@ -350,30 +358,51 @@ public sealed class ActivityPageModel
 
         var rated = ratedLabel is null ? string.Empty : $"Rated {ratedLabel}. ";
         var code = Detail.EpaCode;
+        var credited = move?.CreditedItemCount;
         string credit;
-        if (Detail.EpaInForce == false)
+        string? count = null;
+        if (Detail.EpaInForce == false && credited is null or 0)
         {
+            // Note 2: the credit waits only where the pause AND the credit say so; a completion credited before the pause
+            // reads as credited.
             credit = code is null ? "Its credit waits while its EPA is paused." : $"Its credit to {code} waits while the EPA is paused.";
         }
-        else if (move?.CreditedItemCount is int count)
+        else if (credited is int items)
         {
-            credit = count == 0
+            credit = items == 0
                 ? "It counted towards no curriculum requirement."
-                : $"Credited {CreditOutcome.Label(count)}{(code is null ? string.Empty : $" to {code}")}.";
+                : $"Credited {CreditOutcome.Label(items)}{(code is null ? string.Empty : $" to {code}")}.";
+
+            // C5, E5: what that credit made of the EPA's count, in the activity's own window; none where it credited
+            // nothing (the built sentence stands alone).
+            count = items > 0 ? CountLineWords.ForCard(countLine) : null;
         }
         else
         {
             credit = string.Empty;
         }
 
-        var body = (rated + credit).Trim();
+        var body = string.Join(" ", new[] { rated.Trim(), credit, count ?? string.Empty }.Where(part => part.Length > 0));
+
+        // The registrar's next look is at their progress (Step 3.6): at the EPA's own page when the count read named it
+        // (E5; Q7), else My progress itself. The words and the place are flow 03's; the name says where it lands. A paused
+        // EPA has no count (its count is read nowhere, D48), but its page opens, so the card lands there too, from the
+        // activity's own EPA, as R3-W-card-paused draws it (T355, build review D1: the board wins).
+        (int Id, string Code)? landing = countLine is not null
+            ? (countLine.EpaId, countLine.EpaCode)
+            : Detail.EpaInForce == false && Activity.EpaId is int pausedId && code is not null
+                ? (pausedId, code)
+                : null;
+        var landsOnEpa = ViewerIsSubject && landing is not null;
         return new ActivityStatusView(
             ActivityStatusTone.Done, badgeClass, badge, headline,
             Body: body.Length == 0 ? null : body,
-            // The registrar's next look is at their progress (Step 3.6).
             Action: ViewerIsSubject ? ActivityStatusAction.OpenProgress : ActivityStatusAction.None,
             ActionLabel: ViewerIsSubject ? "Open My progress" : null,
-            ActionHref: ViewerIsSubject ? "/portfolio/progress" : null);
+            ActionHref: ViewerIsSubject ? landsOnEpa ? ProgressLinks.Epa(landing!.Value.Id) : "/portfolio/progress" : null)
+        {
+            ActionAriaLabel = landsOnEpa ? ProgressLinks.OpenAt(landing!.Value.Code) : null
+        };
     }
 
     /// <summary>The About card's rows (§ Page-level patterns, "Record page with a workflow"; C13).</summary>
@@ -851,6 +880,12 @@ public sealed record ActivityStatusView(
     string? ActionLabel = null,
     string? ActionHref = null)
 {
+    /// <summary>
+    /// The action's accessible name where its words alone do not say where it goes: "Open My progress at PAED-001" when it
+    /// lands on the EPA's page (T355, E5; <c>ProgressLinks.OpenAt</c>). Null: its words are its name.
+    /// </summary>
+    public string? ActionAriaLabel { get; init; }
+
     public string ToneClass => Tone switch
     {
         // The viewer's move reuses the emphasis card's stripe (T6); the frame is every card's hairline (T8).

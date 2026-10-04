@@ -1,0 +1,183 @@
+@* My progress's EPA index, "Your EPAs" (T355, flow 05; R3-C-Progress; Q1, R3, C7): one table per group, "Each semester ·
+   10 EPAs" and "Once a year · 7 EPAs", each row an EPA whose name is its link to the EPA's page (round 1, correction 2),
+   its count for the window containing today, when a committee decides it (Q4; notes 8, 9), and its STAR against the
+   training year's level, read from the standing by EPA id. Then "No longer in use", the paused EPAs, read and never
+   counted (D48; Spec § 6), each with why it is not a target (N6).
+
+   DataTable's Stack, written out (DESIGN.md § Table system, A8): below 641px each row is a block, its EPA a row header
+   and each other cell labelled by its column (data-label), the header row visually hidden but read. The roles are
+   explicit, as display: grid on a row drops a table's semantics in some browsers. The caption is the group's name
+   (.clinic-table .index-caption, which outranks the built caption rule, C7).
+
+   A count is a figure against a target for a named window, never "n / m", a percentage or a lifetime total (R3); a
+   waived or not-started window is its one line, with no figure and no bar. The words are ProgressWords', the one class
+   Home, this page and the EPA page say a count in. *@
+@using Wombat.Application.Features.Curricula.Quota
+
+@foreach (var group in Groups)
+{
+  var window = ProgressWords.WindowHeading(group[0]);
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+      <caption class="index-caption">@ProgressWords.GroupCaption(group[0].QuotaPeriod, group.Count)</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">@window</th>
+          <th scope="col" role="columnheader">Committee decides</th>
+          <th scope="col" role="columnheader">@VerdictHeading</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        @foreach (var item in group)
+        {
+          var current = item.Current;
+          <tr role="row">
+            <th scope="row" role="rowheader">
+              <a class="epa-link" href="@ProgressLinks.Epa(item.EpaId)"><EpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="true" /></a>
+              @if (ProgressWords.LocalBadge(item) is { } local)
+              {
+                @* The institution's own EPA (KGK-001): a neutral badge in words, never a colour alone. *@
+                <span class="badge @BadgeFor.State(BadgeState.Draft)">@local</span>
+              }
+            </th>
+            <td role="cell" class="count-cell" data-label="@window">
+              @if (ProgressWords.HasBar(item))
+              {
+                <span class="count-figure">@ProgressWords.Figure(item)</span>
+                <div class="progress-bar"
+                     role="progressbar"
+                     aria-valuemin="0"
+                     aria-valuemax="@current.Target"
+                     aria-valuenow="@Math.Min(current.Count, current.Target)"
+                     aria-label="@($"{item.EpaCode}: {ProgressWords.Figure(item)}")">
+                  <div class="progress-bar-fill @(current.IsMet ? "is-complete" : string.Empty)" style="width:@current.PercentOfTarget%"></div>
+                </div>
+                <p class="count-meta">@ProgressWords.CountMeta(item, Summary.AsOf)</p>
+              }
+              else
+              {
+                @* Waived or not started (C2): its count and when targets start, one line, no fraction and no bar (R3). *@
+                <span class="count-figure">@ProgressWords.CountMeta(item, Summary.AsOf)</span>
+              }
+            </td>
+            <td role="cell" data-label="Committee decides">
+              @if (ProgressWords.Cadence(item) is { } cadence)
+              {
+                @cadence
+              }
+              else
+              {
+                @* KGK-001 has no cadence: a dash to the eye, its words to a screen reader (note 8). *@
+                <span class="cadence-none" aria-hidden="true">—</span><span class="visually-hidden">@ProgressWords.NoCadence</span>
+              }
+            </td>
+            <td role="cell" class="verdict-cell" data-label="@VerdictHeading">
+              @if (StandingFailed)
+              {
+                @* C8: the standing's read failed; its section says so with Try again, and each cell says it is not loaded,
+                   never "No decision", which would be a claim. *@
+                <span class="verdict-level">@NotLoaded</span>
+              }
+              else if (StandingOf(item.EpaId) is { } standing)
+              {
+                <span class="badge @BadgeFor.Standing(standing.YearStatus)">@EntrustmentStandingPanel.StatusWords(standing.YearStatus)</span>
+                @if (VerdictLevel(standing) is { } level)
+                {
+                  @* A space between the two, so a screen reader does not run the badge into the level. *@
+                  @(" ")<span class="verdict-level">@level</span>
+                }
+              }
+              else if (Standing is not null)
+              {
+                @* The standing read but holds no row for this EPA: no decision on record, said as the panel says it, never
+                   an empty cell under its stacked column label (T355, build review A3). *@
+                <span class="badge @BadgeFor.Standing(EntrustmentStandingStatus.NoDecision)">@EntrustmentStandingPanel.StatusWords(EntrustmentStandingStatus.NoDecision)</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (Summary.Paused.Count > 0)
+{
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+      <caption class="index-caption">@ProgressWords.PausedCaption(Summary.Paused.Count)</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Why it is not counted</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        @foreach (var paused in Summary.Paused)
+        {
+          @* C13: a paused EPA is tr.is-paused with the paused mark, never .detail-card--paused. Its page still opens: its
+             ratings and the credit it had earned are kept (D48). *@
+          <tr role="row" class="is-paused">
+            <th scope="row" role="rowheader">@PausedName(paused)</th>
+            <td role="cell" data-label="Why it is not counted">@ProgressWords.PausedRow</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@code {
+  /// <summary>The verdict cell's words when the standing could not be read (R3-Spec § 1, Section error).</summary>
+  public const string NotLoaded = "Not loaded";
+
+  /// <summary>The trainee's counts: every item in force, by kind, and the paused ones.</summary>
+  [Parameter, EditorRequired] public TraineeCurriculumProgressSummaryDto Summary { get; set; } = default!;
+
+  /// <summary>The standing, read by EPA id for the STAR column; null when there is none to read.</summary>
+  [Parameter] public EntrustmentStandingDto? Standing { get; set; }
+
+  /// <summary>The standing's read failed: every verdict cell reads <see cref="NotLoaded" />.</summary>
+  [Parameter] public bool StandingFailed { get; set; }
+
+  /// <summary>
+  /// The training year the STAR column is judged against, as the standing reads it ("STAR against training year 4");
+  /// null before any is known.
+  /// </summary>
+  [Parameter] public int? TrainingYear { get; set; }
+
+  private string VerdictHeading => TrainingYear is { } year ? $"STAR against training year {year}" : "STAR decision";
+
+  // Each kind its own table, semester first, as the College frames them (Annexure B); an empty kind draws none.
+  private IEnumerable<IReadOnlyList<TraineeCurriculumProgressDto>> Groups
+    => new[]
+      {
+        Summary.Items.Where(item => item.IsPerSemester).ToList(),
+        Summary.Items.Where(item => !item.IsPerSemester).ToList()
+      }
+      .Where(group => group.Count > 0);
+
+  // A paused EPA's name, a link to its page with the paused mark (EpaLabel's, C13).
+  private static RenderFragment PausedName(PausedItemDto paused) => __builder =>
+  {
+    <a class="epa-link" href="@ProgressLinks.Epa(paused.EpaId)"><EpaLabel Code="@paused.EpaCode" Title="@paused.EpaTitle" InForce="false" /></a>
+  };
+
+  private EpaStandingDto? StandingOf(int epaId) => Standing?.Epas.FirstOrDefault(epa => epa.EpaId == epaId);
+
+  /// <summary>
+  /// The STAR's level beside its verdict: "5", "4 · expires 2026-10-23", or on another ladder "Independent on O-R Scale"
+  /// (C11's slot). Null with no STAR: the badge, "No decision", says it.
+  /// </summary>
+  private static string? VerdictLevel(EpaStandingDto standing)
+  {
+    if (standing.Decision is not { } decision)
+    {
+      return null;
+    }
+
+    var level = decision.OtherLadderName is { } ladder ? $"{decision.LevelLabel} on {ladder}" : decision.LevelLabel;
+    return decision.ExpiresOn is { } expires ? $"{level} · expires {QuotaText.Iso(expires)}" : level;
+  }
+}

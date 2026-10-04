@@ -139,12 +139,23 @@ public sealed class ActivityViewCreditSignalTests : TestContext
     [Fact]
     public void ACompletionOnAPausedEpa_SaysItsCreditWaits()
     {
-        // D48, T196: an EPA deactivated after the completion pauses its credit; About says so (C13), as does the card.
-        var detail = Completion(creditedItemCount: 1) with { EpaCode = "PAED-001", EpaTitle = "Emergency care", EpaInForce = false };
+        // D48, T196: an EPA deactivated after the completion pauses its credit; About says so (C13). The card's sentence
+        // keys on the credit and the pause together (T355, note 2): one that credited nothing waits; one credited before
+        // the pause says what it credited, as Home's Recent decisions row does.
+        var detail = Completion(creditedItemCount: 0) with { EpaCode = "PAED-001", EpaTitle = "Emergency care", EpaInForce = false };
         var cut = RenderPage(detail);
 
-        CreditWarning(cut).TextContent.Trim().Should().Be("This activity's EPA is paused: its credit waits.");
         cut.Find(".activity-status-body").TextContent.Should().Contain("Its credit to PAED-001 waits while the EPA is paused.");
+    }
+
+    [Fact]
+    public void ACompletionCreditedBeforeItsEpaWasPaused_IsFlaggedInAbout_AndTheCardSaysWhatItCredited()
+    {
+        var cut = RenderPage(Completion(creditedItemCount: 1) with { EpaCode = "PAED-001", EpaTitle = "Emergency care", EpaInForce = false });
+
+        CreditWarning(cut).TextContent.Trim().Should().Be("This activity's EPA is paused: its credit waits.");
+        cut.Find(".activity-status-body").TextContent.Should().Contain("Credited 1 item to PAED-001.")
+            .And.NotContain("waits", "note 2: a completion credited before the pause does not read as waiting");
 
         // T231: About names the paused EPA as every other EPA surface does, with the marker in its own muted span.
         var epa = cut.FindAll(".activity-about .details-list > div")

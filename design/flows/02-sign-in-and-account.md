@@ -420,7 +420,7 @@ Expect: Within a minute of her admission the tab moves to the sign-in page, whic
   and a role change ends open sessions (T279). Signed in again, she sees
   "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 
-Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:716)
+Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:726)
 Role: Every role in this act — each person onboarded here, signed in as themselves
 Route: /account/profile → /account/profile/submit → /account/profile
 Do: Each opens My account (the name in the top bar). Dr Khumalo changes her first name from "Fatma" to "Fatima" and
@@ -522,10 +522,11 @@ Role: Trainee — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password → /account/profile
 Do: Sign in with the password Prof Mbatha set. Then change it, from My account (the name in the top bar), to one of
   his own. Record it in `pwd_DO_NOT_COMMIT.txt`.
-Expect: He lands on his Trainee dashboard, which still says that his programme ended (Step 5.28). The change lands on
-  My account with "Password updated."
+Expect: He lands on his Trainee dashboard, whose Your targets card still says that his programme ended (Step 5.28):
+  "Your programme ended on <Step 5.28's `D−2`, as `YYYY-MM-DD`>, so no target applies to you any more. Your progress in
+  each period is kept on My progress, read-only." (T355, D1). The change lands on My account with "Password updated."
 
-Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:645)
+Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:646)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/logout-confirm → / → /account/logout → / → /account/logout-confirm → /account/logout/submit → /account/login → /msf/campaigns → /account/login → /msf/campaigns
 Do: Open the sign-out confirmation by its address and press Cancel. Type `/account/logout` and press Cancel. Open the
@@ -536,14 +537,14 @@ Expect: A "Sign out" page, with no nav: "You are signed in as Pieter Smit (smit@
   "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it. The
   audit log records a Logout.
 
-Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:915)
+Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:916)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/session-ended → /account/login
 Do: Wait up to a minute on the page he had open, then sign in.
 Expect: The tab leaves for the sign-in page, which says "Your session has ended. Sign in again.", an information
   notice. Signing in is refused: "Invalid email or password." (T287).
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:950)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:951)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
@@ -560,7 +561,7 @@ Expect: The tab leaves for the sign-in page by itself, which says "Your session 
   information notice. Signing in is refused in the words an unknown address gets, "Invalid email or password.", with
   no mention of an erasure (T156). No email is sent to him.
 
-Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1225)
+Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1232)
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
 Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
@@ -568,7 +569,7 @@ Do: At 390 px, open the sign-in page and the forgot-password page. Then verify D
 Expect: The sign-in card fits the width. Every field, toggle, button and link on the sign-in and forgot pages is
   44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's result fits the width.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1264)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1271)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
@@ -587,7 +588,7 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus
   ring. Muted text passes on the page background since T086.
 
-Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:468)
+Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:457)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /account/session-ended → /account/login
 Do: Go back to the tab left open at Step 5.15 and wait up to a minute.

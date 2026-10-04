@@ -67,6 +67,12 @@ public static class NavOwners
     public sealed record Owner(IReadOnlyList<string> Roles, NavItem Item);
 
     private static readonly string[] CatalogueAuthors = [WombatRoles.Administrator, WombatRoles.CollegeAdmin, WombatRoles.InstitutionalAdmin];
+    /// <summary>
+    /// An owner that is a personal link names no role (T355, E3): the link belongs to the person, not the acting role, so
+    /// it owns its pages whatever the role, none included (<see cref="OwnerFor" />).
+    /// </summary>
+    public static readonly IReadOnlyList<string> UnderAPersonalLink = [];
+
     private static readonly string[] PanelKeepers = [WombatRoles.Administrator, WombatRoles.InstitutionalAdmin, WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin];
 
     /// <summary>
@@ -137,6 +143,10 @@ public static class NavOwners
         // A trainee's STARs are part of their record, reached from Home.
         [typeof(MyAuthorisations)] = [new([WombatRoles.Trainee], NavItems.MyProgress)],
 
+        // One EPA of the registrar's record (T355, R2), under My progress: a personal link, so it is the owner whatever
+        // the acting role, and for a graduate who holds none (E3). The roles are its policy's, TraineeOrFormerTrainee's.
+        [typeof(EpaProgress)] = [new(UnderAPersonalLink, NavItems.MyProgress)],
+
         // Reached from the Institutional admin's Home only. Flow 09 places the entrustment work; until then it is under no list.
         [typeof(EntrustmentDecisionsPage)] = [],
     };
@@ -181,10 +191,21 @@ public static class NavOwners
     }
 
     /// <summary>The item <paramref name="page" /> is under for <paramref name="role" /> in the table, or null.</summary>
+    /// <remarks>
+    /// One rule for a page under a personal link (T355, E3): an entry declared <see cref="UnderAPersonalLink" /> is owned
+    /// whatever the acting role, and with none (a graduate), since the menu offers the link whatever the role. Whether it
+    /// is lit is then the menu's to say (<see cref="Lit" />): only where the person is offered the link. An entry that names
+    /// roles keeps them, whatever item it is under: My authorisations is under My progress for the Trainee alone (T355,
+    /// build review R7, G5).
+    /// </remarks>
     public static NavItem? OwnerFor(Type page, string? role)
-        => role is not null && Table.TryGetValue(page, out var owners)
-            ? owners.FirstOrDefault(owner => owner.Roles.Contains(role, StringComparer.Ordinal))?.Item
+        => Table.TryGetValue(page, out var owners)
+            ? owners.FirstOrDefault(owner => (owner.Roles.Count == 0 && IsPersonal(owner.Item))
+                || (role is not null && owner.Roles.Contains(role, StringComparer.Ordinal)))?.Item
             : null;
+
+    /// <summary>Whether <paramref name="item" /> is a personal link, the person's rather than the role's (D8).</summary>
+    public static bool IsPersonal(NavItem item) => item == NavItems.MyProgress || item == NavItems.MyDataRights;
 
     /// <summary>
     /// The crumbs before a page's own (D5; R2-Detail-*), or null when the page draws no trail: Home, a list the acting

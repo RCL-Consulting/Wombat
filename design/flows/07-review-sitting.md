@@ -125,7 +125,7 @@ RULES THE DESIGN MUST SHOW:
   taken from a single form." and "None of the named items is about PAED-002."
 - A formative check-in has no Decision, Agenda, Pending or Appeals card. The chair closes it ("Close review").
 
-DATA VOLUMES: none (a snapshot of 0 items; "No rating by a named assessor to chart for this trainee"); typical (8
+DATA VOLUMES: none (a snapshot of 0 items; "No rating by a named assessor to chart in this review's window"); typical (8
 snapshot lines, 3 staged, 9 deferred, 3 optional); heavy (a pre-graduation review with 13 staged decisions, and 15
 agenda lines).
 
@@ -255,7 +255,8 @@ Expect:
   - **Decision card:** "No decision has been recorded yet."
   - **Entrustment against Annexure A** reads training year 4 on `D`, and "0 at or above · 0 below · 15 with no decision,
     of 15 EPAs". The exit rule reads "0 of 15 EPAs at their exit level by STAR decision", names all fifteen as "Not
-    yet", and says it is for information only (T166).
+    yet", and says it is for information only (T166). The names of PAED-001, PAED-010 and PAED-012 link to their charts
+    on the page (T355).
   - **Multi-source feedback by EPA** marks Covered, in the semester Act 3's campaign closed in, each EPA that campaign
     covered. The other cells read "None released" or "None released yet" (T168).
   - **Agenda** lists the 15 EPAs:
@@ -265,11 +266,14 @@ Expect:
     - Evidence 0 items each;
     - no Action column, because the review has not started.
   - **Evidence snapshot:** "No evidence has been frozen yet …"
-  - **Rating trajectory by EPA** charts PAED-001, PAED-010 and PAED-012 on the ladder's rungs.
+  - **Rating trajectory by EPA** charts PAED-001, PAED-010 and PAED-012 on the ladder's rungs, each over the review's
+    window and with no Today. Each chart's line names the trainee, the window and the assessors, PAED-001's reading
+    "Lerato Molefe · 3 ratings in the review window, `<Y>`-01-01 to `<Y>`-12-31, from Thandi Zulu, David Naidoo and
+    Mohammed Patel. 2 at the minimum, 1 below.", and the table of its ratings is under it (T355, T323).
   - **Sampling concentration warnings,** above the cards, name PAED-010 (one rating) and PAED-012 (two), each with
     "Fewer than three distinct assessors across this EPA's evidence." PAED-001, rated by three assessors on three
-    instruments, is not named. The card says her two MSF records are not counted, because no named assessor rated
-    them (T135, D44).
+    instruments, is not named. The card says her two MSF records are not counted, because no named assessor rated them
+    (T135, D44).
   - **Pending entrustment decisions:** "No pending entrustment decisions have been staged for this review."
   - **Appeals:** "No appeal has been lodged against this review."
 
@@ -476,7 +480,7 @@ Expect:
   - **The snapshot** holds his two teaching sessions logged this year, his CBD still Requested, his cancelled DOPS and
     his portfolio review still Awaiting review, each with its state (T138). The session logged for `J−1y−56d` is outside
     the window and not in it.
-  - **Rating trajectory:** "No rating by a named assessor to chart for this trainee."
+  - **Rating trajectory:** "No rating by a named assessor to chart in this review's window."
   - **Recorded:** the decision reads "Satisfactory with Observations", with "Conditions: At least two Mini-CEX before
     the next sitting." and "Present: Thandi Zulu (chair), David Naidoo".
   - **Ratified:** the state reads Ratified, and the pending card says "Nothing was staged when the review was ratified,
@@ -591,8 +595,10 @@ Expect: The page says "Decision ratified." and the review reads Ratified. Every 
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
-Expect: The review's cards stack. The evidence tables scroll inside their containers, and each EPA's trajectory chart
-  fits the width (T166).
+Expect: The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
+  drawn at 326 px, never scaled, its rungs and months 12 px: in the review's nested card it scrolls sideways in its own
+  named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing else scrolls
+  sideways (T166, T355).
 
 ### Step A.7.13 — Dr Zulu hears a populated review with a screen reader
 Role: CommitteeMember — Dr Thandi Zulu

@@ -16,6 +16,11 @@ The other sections are an index, kept by hand. The step lists below were generat
 act and appendix files on 2026-09-26: 324 steps, 68 page files, 80 templates, all 80 played. Step 6.14a (T300) was
 added by hand afterwards, so the files now hold 325. Of the 11 endpoints Wombat.Web maps outside the router, steps name
 9. T335 (flow 01, 2026-09-27) deleted the placeholder page and its template, so 67 page files and 79 templates remain.
+T355 (flow 05, 2026-10-04) added one EPA's page under My progress, `/portfolio/progress/{EpaId:int}`, so 68 page
+files and 80 templates. Its build closes, for its replay to confirm, five gaps the steps record: F-2.39a (T306, the
+training year on Home, 2.39), T280 at 3.12 (no card is one link around its rows), F-A.7.3a (T328, the standing table's
+rating links 44 px at 390, A.7.3), F-6.37a (T304, counts carried at a version move, 6.37, already closed by T304's own
+replay) and F-A.7.6a (T323, each chart drawn at its own size and scrolled in its named region, A.7.6).
 
 ## Pages
 
@@ -37,7 +42,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/activities/inbox` | Activities/ActivityInbox.razor | Any signed-in user | 3.4, 3.5, 3.11, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.33, 3.51, 5.25, 6.18, A.4.3, A.7.2 |
 | `/activities/mine` | Activities/MyActivities.razor | Any signed-in user | 2.19, 3.2, 3.6, 3.20, 3.25, 3.48, 5.28, 6.19, 6.24, 6.41, A.2.7, A.7.3 |
 | `/activities/new` | Activities/NewActivity.razor | Any signed-in user | 2.19, 2.42, 2.43, 3.1, 3.8, 3.9, 3.10, 3.12, 3.14, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.25, 3.27, 3.29, 5.22, 5.24, 6.16, 6.19, 6.20, 6.27, 6.37, A.2.7, A.6.6, A.7.1 |
-| `/activities/{ActivityId:int}` | Activities/ActivityView.razor | Any signed-in user; an activity opens only to its subject, its author, the people it names and their overseers, and reads "Activity unavailable" to anyone else | 3.2, 3.3, 3.4, 3.5, 3.6, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.24, 3.25, 3.26, 3.27, 3.28, 3.29, 3.33, 4.17, 5.24, 5.25, 6.16, 6.18, A.2.7, A.5.6, A.7.1, A.7.2 |
+| `/activities/{ActivityId:int}` | Activities/ActivityView.razor | Any signed-in user; an activity opens only to its subject, its author, the people it names and their overseers, and reads "Activity unavailable" to anyone else | 3.2, 3.3, 3.4, 3.5, 3.6, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.24, 3.25, 3.26, 3.27, 3.28, 3.29, 3.33, 4.17, 5.24, 5.25, 6.16, 6.18, 6.19, 6.24, A.2.7, A.5.6, A.7.1, A.7.2 |
 | `/admin/activity-types` | Admin/ActivityTypes/ActivityTypesList.razor | Administrator, CollegeAdmin, InstitutionalAdmin; each row offers Edit where the caller may write the type and View elsewhere, and New activity type only to a caller with a scope to create in (T300) | 1.24, 1.26, 1.31, 6.14a |
 | `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` | Admin/ActivityTypes/ActivityTypeEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin; a type the caller may not write opens read-only, and Scope offers only the scopes the caller may write: an InstitutionalAdmin her institution, a CollegeAdmin his College's specialities and sub-specialities (T300, D52) | 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 6.14a, A.7.9, A.7.14 |
 | `/admin/adoptions` | Admin/Adoptions/AdoptionsList.razor | Administrator, InstitutionalAdmin | 1.20, 6.32 |
@@ -89,12 +94,13 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/not-found` | NotFound.razor | Anyone, signed in or not | 1.23, A.5.4, A.5.5 |
 | `/portfolio/authorisations` | Portfolio/MyAuthorisations.razor | Trainee | 4.39, 4.42, 5.8, 5.22 |
 | `/portfolio/export`, `/portfolio/export/{TraineeUserId}` | Portfolio/ExportPortfolio.razor | Any signed-in user; the export admits a trainee to her own portfolio, and staff to a trainee they oversee | 5.9, 5.10, 5.12, 5.23 |
+| `/portfolio/progress/{EpaId:int}` | Portfolio/EpaProgress.razor | Trainee, or a former trainee (trainee record); the caller's own curriculum's EPAs only, any other id "Page not found". Reached from My progress's index, Home's Furthest short and My authorisations rows, My activities' Credit links, a completed activity's Open My progress, and an ended record's EPA codes (T355) | 3.6, 3.7, 3.48, 5.26, 6.15, 6.19, 6.21, 6.24, 6.27, A.7.3 |
 | `/portfolio/progress` | Portfolio/MyProgress.razor | Trainee, or a former trainee (trainee record) | 2.19, 2.39, 2.40, 3.7, 3.48, 4.40, 5.15, 5.19, 5.20, 5.26, 5.28, 6.15, 6.19, 6.21, 6.24, 6.27, 6.35, 6.37, 6.39, 6.40, 6.41, A.7.3, A.7.4 |
 | `/portfolio/verify` | Portfolio/VerifyExport.razor | Anyone, signed in or not (a static page) | 5.13, 5.14, 5.23, A.7.12 |
 
 ## Not played
 
-No template is unplayed. Every one of the 79 templates is named by at least one step's `Route:` line, so this section
+No template is unplayed. Every one of the 80 templates is named by at least one step's `Route:` line, so this section
 has no rows. A row added here must name, in backticks, a template that no step plays, with its reason (T294).
 
 ## Flows and states not played
@@ -133,7 +139,6 @@ state, `states.md` is where it belongs.
 | A re-submission after a return, on a type that credits | No seeded type both credits and returns. 3.14–3.17 play the return on a reflective exercise, where lateness is never recorded. | A seed that credits and returns |
 | A seeded procedure-log instrument | The CPSA catalogue has none; the generic `procedure_log` belongs to the Demo speciality. KGK's teaching log stands in (3.18, 3.19). | The College |
 | The Random Case Analysis, Chart-Stimulated Recall and Clinical Audit instruments, filed | Offered to a registrar (2.42) but never filed. | A later replay |
-| The Trainee dashboard's "Upcoming deadlines" card with a row | It reads `DataJson` keys holding `due_date`, which no seeded or KGK type has (3.50 plays it empty). | Reported at 3.50 |
 | A learner-feedback campaign (`learner_feedback_cpsa` on PAED-015) | Outside every act's brief. | A later replay |
 | MSF patient respondents | `CreateMsfTemplateCommandValidator` requires patient responses to be off, so the Patient group is never offered (3.36). | By design |
 | An MSF report blocked from release (short of responses or groups); `/msf/respond` refusing an expired, revoked or unrecognised link | The story's campaign is released. Only "already used" (3.40) and "request closed" (3.45) are played. | `states.md` |
@@ -165,7 +170,7 @@ whether each deserves a link.
 | `/committee/panels` | Coordinator: the page admits him, but his menu has no Decision panels (DESIGN.md) | 2.32 |
 | `/account/logout-confirm`, `/account/logout` | Everyone: only the error page's Sign out links to the confirmation address (on the replay no failure leads there, A.5.8), and nothing links to `/account/logout`; everywhere else the account row's Sign out posts to `/account/logout/submit` and signs out at once | A.4.7 |
 | `/Error` | Everyone: on the replay (Development) no failure leads to it | A.5.8 |
-| `/portfolio/authorisations` | Trainee: reached only from the dashboard's My authorisations card, not from the menu, which lights My progress on it | 4.39, 4.42, 5.8 |
+| `/portfolio/authorisations` | Trainee: reached from Home's My authorisations card (its Open My authorisations; its STAR rows open the EPA page) and from an EPA page's Entrustment, not from the menu, which lights My progress on it (T355) | 4.39, 4.42, 5.8 |
 
 ## Endpoints
 
@@ -386,8 +391,8 @@ and Assessor) appears under each role for the jobs done in it.
 | Log a teaching session I gave | 3.18, 3.19 | `/activities/new`, `/activities/{ActivityId:int}` |
 | Ask for a portfolio review | 3.22 | `/activities/new`, `/activities/{ActivityId:int}` |
 | Abandon a draft started on the wrong instrument | 3.20 | `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine` |
-| Follow my activities and what each credited | 3.6, 3.48 | `/activities/mine`, `/activities/{ActivityId:int}` |
-| See my progress against this period's targets | 3.7, 3.48, 5.15, 5.26 | `/portfolio/progress` |
+| Follow my activities and what each credited | 3.6, 3.48 | `/activities/mine`, `/activities/{ActivityId:int}`, `/portfolio/progress/{EpaId:int}` |
+| See my progress against this period's targets, and each EPA's own page: its count, level, STAR, chart and activities | 3.7, 3.48, 5.15, 5.26 | `/portfolio/progress`, `/portfolio/progress/{EpaId:int}` |
 | Read my dashboard | 3.50 | `/` |
 | Read my released MSF report | 3.47 | `/msf/my-reports`, `/msf/my-reports/{CampaignId:int}` |
 | Read my STARs and download a certificate | 4.39, 4.42, 5.8 | `/`, `/portfolio/authorisations` |
@@ -396,8 +401,8 @@ and Assessor) appears under each role for the jobs done in it.
 | Appeal a committee decision | 4.43 | `/committee/my-reviews` |
 | Export my portfolio | 5.9 | `/portfolio/export` |
 | Leave the programme part-way: an encounter after my last day stops counting, and I keep my record | 5.24, 5.26, 5.28, 6.41 | `/activities/new`, `/activities/{ActivityId:int}`, `/portfolio/progress`, `/`, `/activities/mine` |
-| See an EPA paused and restored in my progress and pickers | 6.15, 6.16, 6.19, 6.20, 6.24 | `/portfolio/progress`, `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine` |
-| See my institution's own EPA among my targets | 6.27 | `/portfolio/progress`, `/activities/new` |
+| See an EPA paused and restored in my progress and pickers | 6.15, 6.16, 6.19, 6.20, 6.24 | `/portfolio/progress`, `/portfolio/progress/{EpaId:int}`, `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine` |
+| See my institution's own EPA among my targets | 6.27 | `/portfolio/progress`, `/portfolio/progress/{EpaId:int}`, `/activities/new` |
 | Read my progress after moving to a new curriculum version | 6.35, 6.37, 6.39 | `/portfolio/progress`, `/activities/new` |
 | Set my processing preferences, and ask for and download a copy of my data | A.1.1, A.1.2, A.1.5 | `/`, `/account/data-rights`, `/account/data-rights/download/{id:guid}` |
 | Ask for access and withdraw it; ask for a correction and read the decision | A.1.6, A.1.7, A.1.9 | `/account/data-rights` |
@@ -406,7 +411,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Sign in with a password an administrator set, and choose my own | A.4.6 | `/account/login`, `/`, `/account/profile`, `/account/change-password` |
 | Meet the pages that are not mine: an administrator's page, another's activity, a forged switch, an unknown address, the error page | A.5.1, A.5.3, A.5.4, A.5.6, A.5.8 | `/admin/users`, `/admin/jobs`, `/access-denied`, `/dashboard/switch/{role}`, `/not-found`, `/account/login`, `/activities/{ActivityId:int}`, `/Error` |
 | Name an assessor when one is locked out | A.6.6 | `/activities/new` |
-| File an assessment with the keyboard alone, and use my pages on a phone | A.7.1, A.7.3 | `/activities/new`, `/activities/{ActivityId:int}`, `/`, `/portfolio/progress`, `/activities/mine`, `/account/data-rights` |
+| File an assessment with the keyboard alone, and use my pages on a phone | A.7.1, A.7.3 | `/activities/new`, `/activities/{ActivityId:int}`, `/`, `/portfolio/progress`, `/portfolio/progress/{EpaId:int}`, `/activities/mine`, `/account/data-rights` |
 
 ### PendingTrainee (each registrar between registration and admission)
 
@@ -421,7 +426,7 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Be emailed that my programme is complete | 5.18 | None: the email is read in the application log |
 | Be signed out when my programme is marked complete, and told why | 5.19 | `/portfolio/progress`, `/account/session-ended`, `/account/login` |
-| Read my read-only record of the programme | 5.20, 6.21, 6.40 | `/account/login`, `/account/login/submit`, `/portfolio/progress` |
+| Read my read-only record of the programme | 5.20, 6.21, 6.40 | `/account/login`, `/account/login/submit`, `/portfolio/progress`, `/portfolio/progress/{EpaId:int}` |
 | See what Home and the menu offer me now | 5.21 | `/` |
 | Find the pages that still need the Trainee role | 5.22 | `/committee/my-reviews`, `/portfolio/authorisations`, `/msf/my-reports`, `/access-denied`, `/activities/new` |
 | Export my portfolio as a graduate, and check it verifies | 5.23 | `/portfolio/export`, `/portfolio/verify` |

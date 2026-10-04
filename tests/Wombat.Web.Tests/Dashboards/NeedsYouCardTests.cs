@@ -50,6 +50,8 @@ public sealed class NeedsYouCardTests : TestContext
         var footer = card.QuerySelector(".dashboard-card-footer a")!;
         footer.GetAttribute("href").Should().Be("/activities/mine");
         footer.TextContent.Trim().Should().Be("Open My activities");
+        footer.ClassList.Should().Contain(["btn", "btn-sm", "btn-outline"],
+            "a button as the sibling footers are, which the phone rule lifts to 44px (T355, build review A2)");
         cut.Markup.Should().NotContain("/activities/inbox", "the registrar's inbox holds nothing of hers");
     }
 
@@ -77,7 +79,7 @@ public sealed class NeedsYouCardTests : TestContext
 
     private IRenderedComponent<TraineeDashboard> RenderHome(IReadOnlyList<ActivitySummaryDto> needsYou)
     {
-        Services.AddSingleton<IScopedSender>(new Sender(new TraineeDashboardSummaryDto(null, needsYou, [], [], IsPendingTrainee: false)));
+        Services.AddSingleton<IScopedSender>(new Sender(new TraineeDashboardSummaryDto(null, needsYou, [], null, IsPendingTrainee: false)));
         var cut = RenderComponent<TraineeDashboard>();
         cut.WaitForState(() => cut.FindAll(".skeleton").Count == 0);
         return cut;

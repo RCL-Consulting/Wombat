@@ -1,334 +1,236 @@
-@using System.Globalization
+@using Wombat.Application.Features.Curricula.Quota
+@*
+  One EPA's rating trajectory, in its new form (T355, flow 05; Q5, E1, E2, R4; notes 10, 11, 13; R3-C-Trajectory). The one
+  rendering of GetEpaTrajectoryForTraineeQuery's EpaTrajectoryDto, for the trainee's EPA page and the committee's review
+  page alike, so the chart is drawn and said one way on both.
 
-@if (Points.Count == 0)
-{
-  <p class="muted">No observations to plot.</p>
-}
-else
-{
-  <svg class="trajectory-chart"
-       viewBox="0 0 @Width @Height"
-       role="img"
-       aria-label="@AriaLabel"
-       preserveAspectRatio="xMidYMid meet">
-    <g class="trajectory-chart-grid">
-      @foreach (var tick in AxisTicks)
-      {
-        var y = YScale(tick.Order);
-        <line x1="@Fmt(PlotLeftPx)" y1="@Fmt(y)"
-              x2="@Fmt(Width - RightMargin)" y2="@Fmt(y)" />
-        @RenderYAxisLabel(y, tick.AxisText)
-      }
-    </g>
-
-    <line class="trajectory-chart-axis"
-          x1="@Fmt(PlotLeftPx)" y1="@Fmt(PlotTopPx)"
-          x2="@Fmt(PlotLeftPx)" y2="@Fmt(PlotBottomPx)" />
-    <line class="trajectory-chart-axis"
-          x1="@Fmt(PlotLeftPx)" y1="@Fmt(PlotBottomPx)"
-          x2="@Fmt(Width - RightMargin)" y2="@Fmt(PlotBottomPx)" />
-
-    @if (OnLadderPoints.Count > 1)
+  - A card, id "trajectory-<EpaId>" (the committee's standing panel links an EPA's name to it, R4), headed at the level
+    its page gives (h2 on the EPA page, one below the section's on the committee page, note 10), the summary under it in
+    TrajectoryWords' words, then the key.
+  - Two drawings in the markup, 900px and 326px, never scaled (Q5): a container query on .trajectory-figure, the card's
+    width and not the viewport, shows one (E1). The figure is a named, focusable scroll region, the floor for a card
+    narrower than 326px (the committee's nested card at 390).
+  - The table, always visible, says everything the drawing does: each rating, oldest first, its encounter as the row's
+    header (note 11), its rating, how it stood against the minimum of the training year it was observed in (computed live
+    with the comparer credit uses, E2), its activity linked by the name My activities gives it, and its assessor. The SVG
+    is named for what it adds to the table.
+  - Multi-source feedback is never plotted (D8, D36): where the page has MSF beside the EPA it says so under the table.
+*@
+<section class="detail-card trajectory-card" id="@CardId" aria-labelledby="@HeadingId">
+  <div class="trajectory-head">
+    @Heading
+    @if (Trajectory.Points.Count > 0)
     {
-      <polyline class="trajectory-chart-line"
-                points="@BuildPolylinePoints()" />
+      <p>@TrajectoryWords.Summary(Trajectory, ReviewWindow, SubjectName)</p>
     }
+  </div>
 
-    @foreach (var point in Points)
-    {
-      var cx = XScale(point.Date);
-      var cy = YScale(point.Rating);
-      var offLadder = IsOffLadder(point);
-      <circle class="trajectory-chart-dot@(offLadder ? " is-off-scale" : string.Empty)"
-              cx="@Fmt(cx)"
-              cy="@Fmt(cy)"
-              r="4">
-        @* "Encounter …": a bare "not recorded (created …)" in front of the rung reads as though the rating were (T197). *@
-        <title>Encounter @EncounterDate.Label(point.Date, point.DateDeclared) · @RungTextOf(point)@(string.IsNullOrWhiteSpace(point.Label) ? string.Empty : $" · {point.Label}")@(offLadder ? " · not a rung on this scale" : string.Empty)</title>
-      </circle>
-    }
-
-    @RenderXAxisLabel(PlotLeftPx, EarliestDate.ToString("yyyy-MM-dd"), "start")
-    @RenderXAxisLabel(Width - RightMargin, LatestDate.ToString("yyyy-MM-dd"), "end")
-  </svg>
-
-  @* Text/tabular equivalent of the chart for screen readers (WCAG 1.1.1). Visually hidden;
-     the SVG above carries role="img" + aria-label, this table carries the underlying data. *@
-  <table class="visually-hidden">
-    <caption>@AriaLabel</caption>
-    <thead>
-      <tr>
-        <th scope="col">Date</th>
-        <th scope="col">Rating</th>
-        <th scope="col">Evidence type</th>
-      </tr>
-    </thead>
-    <tbody>
-      @foreach (var point in Points.OrderBy(p => p.Date).ThenBy(p => p.Sequence))
+  @if (Trajectory.Points.Count == 0)
+  {
+    <p class="card-empty">@TrajectoryWords.NoRating</p>
+  }
+  else
+  {
+    <ul class="trajectory-key" aria-label="@TrajectoryWords.Key">
+      @if (TrajectoryWords.KeyBelow(Trajectory) is { } below)
       {
-        <tr>
-          <td>@EncounterDate.Label(point.Date, point.DateDeclared)</td>
-          <td>@RungOf(point)@(IsOffLadder(point) ? " (not a rung on this scale)" : string.Empty)</td>
-          <td>@(string.IsNullOrWhiteSpace(point.Label) ? "—" : point.Label)</td>
-        </tr>
+        <li><span class="trajectory-key-swatch trajectory-key-swatch--below" aria-hidden="true"></span>@below</li>
       }
-    </tbody>
-  </table>
-}
+      @if (TrajectoryWords.KeyExit(Trajectory) is { } exit)
+      {
+        <li><span class="trajectory-key-swatch trajectory-key-swatch--exit" aria-hidden="true"></span>@exit</li>
+      }
+      <li><span class="trajectory-key-swatch trajectory-key-swatch--dot" aria-hidden="true"></span>@TrajectoryWords.KeyRating</li>
+      @if (HasOtherScale)
+      {
+        <li><span class="trajectory-key-swatch trajectory-key-swatch--hollow" aria-hidden="true"></span>@TrajectoryWords.KeyOtherScale</li>
+      }
+    </ul>
+
+    <div class="trajectory-figure" role="region" aria-label="@TrajectoryWords.RegionName(Trajectory.EpaCode)" tabindex="0">
+      @Drawing(_wide, "trajectory-chart--wide")
+      @Drawing(_narrow, "trajectory-chart--narrow")
+    </div>
+
+    <div class="table-container">
+      <table class="clinic-table clinic-table--stack trajectory-table" role="table">
+        <caption>The ratings, oldest first</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Encounter</th>
+            <th scope="col" role="columnheader">Rating</th>
+            <th scope="col" role="columnheader">Against the minimum then</th>
+            <th scope="col" role="columnheader">Activity</th>
+            <th scope="col" role="columnheader">Assessor</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          @foreach (var point in OldestFirst)
+          {
+            <tr role="row">
+              <th scope="row" role="rowheader">@EncounterDate.Label(point.ObservedOn, point.ObservedOnDeclared)</th>
+              <td role="cell" data-label="Rating">@TrajectoryWords.RatingCell(point)</td>
+              <td role="cell" data-label="Against the minimum then">@TrajectoryWords.AgainstMinimum(point)</td>
+              <td role="cell"><a class="activity-link activity-block-link" href="/activities/@point.ActivityId">@ActivityNameOf(point)</a></td>
+              <td role="cell" data-label="Assessor">@AssessorOf(point)</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (MsfBeside)
+  {
+    <p class="trajectory-msf">@TrajectoryWords.NotPlotted</p>
+  }
+</section>
 
 @code {
-  [Parameter, EditorRequired] public IReadOnlyList<ChartPoint> Points { get; set; } = Array.Empty<ChartPoint>();
-  [Parameter] public string AriaLabel { get; set; } = "Rating trajectory";
-  [Parameter] public int Width { get; set; } = 600;
-  [Parameter] public int Height { get; set; } = 200;
-  [Parameter] public int MinRating { get; set; } = 1;
+  private TrajectoryDrawing _wide = default!;
+  private TrajectoryDrawing _narrow = default!;
+
+  /// <summary>One EPA's ratings, with the window they were read over and the minimum's steps (T355, C10).</summary>
+  [Parameter, EditorRequired] public EpaTrajectoryDto Trajectory { get; set; } = default!;
+
+  /// <summary>The heading's level (note 10): 2 on the EPA page; one below its section's on the committee page.</summary>
+  [Parameter] public int HeadingLevel { get; set; } = 2;
 
   /// <summary>
-  /// Top of the Y axis. Leave unset to derive it from the data.
+  /// The heading's words, "Rating trajectory" on the EPA page (whose h1 already names the EPA), with "(no longer in use)"
+  /// after it for a paused EPA (C5). Null names the EPA itself, "Code — Title", as the committee page lists one per EPA.
   /// </summary>
-  /// <remarks>
-  /// This used to default to a hard 5, which silently plotted any higher rung off the top of
-  /// the chart. Entrustment scales are data — the paediatric v11.1 ladder has six rungs — so
-  /// the default now grows to fit, while still showing the familiar 1–5 axis for a five-rung
-  /// scale so existing charts are unchanged.
-  /// </remarks>
-  [Parameter] public int? MaxRating { get; set; }
+  [Parameter] public string? Title { get; set; }
 
   /// <summary>
-  /// The rungs of the ladder these ratings are recorded on, in order, resolved server-side from the
-  /// trainee's pinned curriculum item. Leave empty to draw the numeric axis this chart drew before T123.
+  /// Today, for the "Today" rule, drawn only where it falls inside the window. Null draws none: the committee page reads a
+  /// review's window, not today's (decision D2).
   /// </summary>
-  /// <remarks>
-  /// <para>
-  /// A rating is an ordinal on a specific ladder and means nothing without it. Growing the axis to fit
-  /// the DATA — which is what this component did — is not the same as fitting the SCALE: a six-rung
-  /// trainee whose ratings all sit at 3 saw a 1–5 axis, a ladder with its top two rungs missing, until
-  /// somebody earned a 6 and the axis changed shape underneath them.
-  /// </para>
-  /// <para>
-  /// When supplied, this WINS over <see cref="MinRating" /> and <see cref="MaxRating" />. Those remain
-  /// the manual override for a caller that has no scale to hand; a caller that has one should not also
-  /// be second-guessing its extent.
-  /// </para>
-  /// </remarks>
-  [Parameter] public IReadOnlyList<Rung> Rungs { get; set; } = Array.Empty<Rung>();
+  [Parameter] public DateOnly? Today { get; set; }
 
-  private const int DefaultMaxRating = 5;
+  /// <summary>Whether the window is a committee review's (D2): the summary names it, "in the review window, … to …".</summary>
+  [Parameter] public bool ReviewWindow { get; set; }
 
-  /// <summary>
-  /// Axis labels are clipped to the 40px left margin, so a long rung name would overwrite the plot.
-  /// Four characters covers every CPSA rung ("1", "3a", "3b") and falls back to the ordinal for the
-  /// word ladders ("Indirect supervision"). The full label is in the tooltip and the screen-reader
-  /// table unconditionally, so the accessible copy is never poorer than the picture. (T123 D29)
-  /// </summary>
-  private const int MaxAxisLabelChars = 4;
+  /// <summary>The trainee, named in the summary on the committee's page (4.15); null on their own.</summary>
+  [Parameter] public string? SubjectName { get; set; }
 
-  private bool HasRungs => Rungs.Count > 0;
+  /// <summary>Whether the page has multi-source feedback beside this EPA, so the card says it is not plotted (D8, D36).</summary>
+  [Parameter] public bool MsfBeside { get; set; }
 
-  /// <summary>
-  /// The plotted range. With rungs it is the ladder — but always widened to contain every point.
-  /// </summary>
-  /// <remarks>
-  /// The widening is not cosmetic. <c>YScale</c> extrapolates linearly and does not clamp, so a rating
-  /// outside the range maps outside the viewBox and the browser clips it away: <c>svg:not(:root)</c> is
-  /// <c>overflow: hidden</c> by default and nothing overrides it. Before rungs existed the axis grew to
-  /// fit the data, so this could not happen. Pinning the range to the ladder without this would silently
-  /// delete exactly the off-ladder point the component promises to keep and draw hollow — a picture
-  /// missing an observation, with the screen-reader table still listing it.
-  /// </remarks>
-  private int EffectiveMinRating =>
-    HasRungs
-      ? Math.Min(Rungs.Min(rung => rung.Order), Points.Count == 0 ? int.MaxValue : Points.Min(point => point.Rating))
-      : MinRating;
+  /// <summary>The card's id, which the committee's standing panel links an EPA's name to (R4).</summary>
+  public string CardId => $"trajectory-{Trajectory.EpaId}";
 
-  private int EffectiveMaxRating =>
-    HasRungs
-      ? Math.Max(Rungs.Max(rung => rung.Order), Points.Count == 0 ? int.MinValue : Points.Max(point => point.Rating))
-      : MaxRating ?? (Points.Count == 0
-        ? DefaultMaxRating
-        : Math.Max(DefaultMaxRating, Points.Max(point => point.Rating)));
+  private string HeadingId => $"trajectory-{Trajectory.EpaId}-h";
 
-  /// <summary>
-  /// The y-axis gridlines. From the rungs when there are any — they need not be contiguous — otherwise
-  /// one per integer, which is what the numeric axis always was.
-  /// </summary>
-  private IReadOnlyList<(int Order, string AxisText)> AxisTicks
+  private IReadOnlyList<TrajectoryPointDto> OldestFirst
+    => Trajectory.Points.OrderBy(point => point.ObservedOn).ThenBy(point => point.ActivityId).ToList();
+
+  private bool HasOtherScale => Trajectory.Points.Any(_wide.IsOffLadder);
+
+  protected override void OnParametersSet()
   {
-    get
+    _wide = new TrajectoryDrawing(Trajectory, TrajectoryFrame.Wide, Today);
+    _narrow = new TrajectoryDrawing(Trajectory, TrajectoryFrame.Narrow, Today);
+  }
+
+  // The activity's row name; the handler run without a user store leaves it empty, and the type's evidence stands in.
+  private static string ActivityNameOf(TrajectoryPointDto point)
+    => string.IsNullOrWhiteSpace(point.ActivityName) ? point.Source : point.ActivityName;
+
+  private static string AssessorOf(TrajectoryPointDto point)
+    => string.IsNullOrWhiteSpace(point.AssessorName) ? point.AssessorUserId : point.AssessorName;
+
+  /// <summary>The heading at its level, the EPA's name or the page's title with the paused mark (C5, C13).</summary>
+  private RenderFragment Heading => __builder =>
+  {
+    var level = Math.Clamp(HeadingLevel, 2, 6);
+    __builder.OpenElement(0, $"h{level}");
+    __builder.AddAttribute(1, "id", HeadingId);
+    if (Title is not null)
     {
-      if (HasRungs)
+      __builder.AddAttribute(2, "class", "epa-section-title");
+      __builder.AddContent(3, Title);
+      if (!Trajectory.EpaInForce)
       {
-        return Rungs
-          .OrderBy(rung => rung.Order)
-          .Select(rung => (rung.Order, AxisTextFor(rung)))
-          .ToArray();
+        __builder.AddContent(4, " ");
+        __builder.OpenElement(5, "span");
+        __builder.AddAttribute(6, "class", "paused-mark");
+        __builder.AddContent(7, EpaOptionLabel.NoLongerInUse);
+        __builder.CloseElement();
       }
+    }
+    else
+    {
+      __builder.OpenComponent<EpaLabel>(8);
+      __builder.AddComponentParameter(9, nameof(EpaLabel.Code), Trajectory.EpaCode);
+      __builder.AddComponentParameter(10, nameof(EpaLabel.Title), Trajectory.EpaTitle);
+      __builder.AddComponentParameter(11, nameof(EpaLabel.InForce), Trajectory.EpaInForce);
+      __builder.CloseComponent();
+    }
 
-      var ticks = new List<(int, string)>();
-      for (var value = EffectiveMinRating; value <= EffectiveMaxRating; value++)
+    __builder.CloseElement();
+  };
+
+  /// <summary>One of the two drawings (Q5): the same marks, at its own fixed size.</summary>
+  private RenderFragment Drawing(TrajectoryDrawing d, string size) => __builder =>
+  {
+    <svg class="trajectory-chart trajectory-chart--sized @size" width="@d.Width" height="@d.Height"
+         viewBox="0 0 @d.Width @d.Height" role="img" aria-label="@TrajectoryWords.SvgName(Trajectory.Points.Count)">
+      @foreach (var band in d.Bands)
       {
-        ticks.Add((value, value.ToString(CultureInfo.InvariantCulture)));
+        <rect class="trajectory-chart-band" x="@band.Xs" y="@d.BandTop" width="@band.Widths" height="@(d.AxisY - d.BandTop)"></rect>
       }
-
-      return ticks;
-    }
-  }
-
-  /// <summary>
-  /// What a rung is called on the axis, inside the label budget.
-  /// </summary>
-  /// <remarks>
-  /// The ordinal is only safe to substitute when it is not some OTHER rung's name. Ordinals are
-  /// contiguous from 1 and labels are administrator free text, so on a ladder like
-  /// <c>1, 2, 3a, 3b, "4 (independent)", 5</c> the Order-5 rung would fall back to "5" — which is the
-  /// real name of the rung above it, giving two ticks reading "5" at different heights, the lower one
-  /// wrong by a rung. Truncating instead is uglier and always names the right rung. The full label is
-  /// in the tooltip and the screen-reader table either way.
-  /// </remarks>
-  private string AxisTextFor(Rung rung)
-  {
-    if (rung.Label.Length <= MaxAxisLabelChars)
-    {
-      return rung.Label;
-    }
-
-    var ordinal = rung.Order.ToString(CultureInfo.InvariantCulture);
-    var collides = Rungs.Any(other =>
-      other.Order != rung.Order && string.Equals(other.Label, ordinal, StringComparison.Ordinal));
-
-    return collides
-      ? rung.Label[..Math.Max(1, MaxAxisLabelChars - 1)] + "…"
-      : ordinal;
-  }
-
-  /// <summary>
-  /// A plotted rating that is not a rung on the axis ladder. It was recorded against something else —
-  /// the trainee did not create that situation and erasing the point would hide evidence they legitimately
-  /// collected — so it is kept, drawn hollow, and left out of the line that implies a trend. (T123 D30)
-  /// </summary>
-  /// <remarks>
-  /// Two independent reasons, and the first is the one that matters. <c>point.OffLadder</c> is resolved
-  /// server-side from the ladder the activity's PINNED schema declares (T126): it catches the dangerous
-  /// case the ordinal test cannot see — a five-rung "4" plotted against the six-rung CPSA axis is inside
-  /// 1–6, so it draws as rung "3b" and looks entirely normal. The ordinal test stays because it catches
-  /// a different thing: an ordinal that is no rung on the axis at all, whatever ladder it came from.
-  /// </remarks>
-  private bool IsOffLadder(ChartPoint point) =>
-    point.OffLadder || (HasRungs && !Rungs.Any(rung => rung.Order == point.Rating));
-
-  private IReadOnlyList<ChartPoint> OnLadderPoints =>
-    Points.Where(point => !IsOffLadder(point)).ToArray();
-
-  /// <summary>
-  /// The rung as a clinician reads it, falling back to the bare ordinal when the ladder is unknown.
-  /// This is what goes in the screen-reader table, which already has a "Rating" column header.
-  /// </summary>
-  private string RungOf(ChartPoint point)
-  {
-    var rung = HasRungs ? Rungs.FirstOrDefault(r => r.Order == point.Rating) : null;
-    return rung?.Label ?? point.Rating.ToString(CultureInfo.InvariantCulture);
-  }
-
-  /// <summary>
-  /// The same value, qualified, for the SVG tooltip — which has no column header to lean on.
-  /// </summary>
-  private string RungTextOf(ChartPoint point)
-  {
-    var rung = HasRungs ? Rungs.FirstOrDefault(r => r.Order == point.Rating) : null;
-    return rung is null ? $"Rating {point.Rating}" : $"Rung {rung.Label}";
-  }
-
-  private const int LeftMargin = 40;
-  private const int RightMargin = 12;
-  private const int TopMargin = 12;
-  private const int BottomMargin = 28;
-
-  private double PlotLeftPx => LeftMargin;
-  private double PlotTopPx => TopMargin;
-  private double PlotBottomPx => Height - BottomMargin;
-
-  private DateOnly EarliestDate => Points.Min(point => point.Date);
-  private DateOnly LatestDate => Points.Max(point => point.Date);
-
-  private double XScale(DateOnly date)
-  {
-    var plotWidth = Width - LeftMargin - RightMargin;
-    var totalDays = LatestDate.DayNumber - EarliestDate.DayNumber;
-    if (totalDays <= 0)
-    {
-      return LeftMargin + plotWidth / 2.0;
-    }
-
-    var offsetDays = date.DayNumber - EarliestDate.DayNumber;
-    return LeftMargin + plotWidth * ((double)offsetDays / totalDays);
-  }
-
-  private double YScale(double rating)
-  {
-    var plotHeight = PlotBottomPx - PlotTopPx;
-    var range = EffectiveMaxRating - EffectiveMinRating;
-    if (range <= 0)
-    {
-      return PlotTopPx + plotHeight / 2.0;
-    }
-
-    var normalized = (rating - EffectiveMinRating) / range;
-    return PlotBottomPx - plotHeight * normalized;
-  }
-
-  private string BuildPolylinePoints()
-  {
-    var ordered = OnLadderPoints
-      .OrderBy(point => point.Date)
-      .ThenBy(point => point.Sequence)
-      .ToArray();
-    return string.Join(" ", ordered.Select(point =>
-      FormattableString.Invariant($"{XScale(point.Date):0.##},{YScale(point.Rating):0.##}")));
-  }
-
-  private static string Fmt(double value)
-    => value.ToString("0.##", CultureInfo.InvariantCulture);
-
-  // The content is an EntrustmentLevel.Label an administrator can type, not the int this used to
-  // interpolate, so it is encoded exactly as RenderXAxisLabel already encodes its dates.
-  private MarkupString RenderYAxisLabel(double y, string content)
-    => new(FormattableString.Invariant(
-      $"<text class=\"trajectory-chart-y-label\" x=\"{PlotLeftPx - 6:0.##}\" y=\"{y + 4:0.##}\" text-anchor=\"end\">{System.Net.WebUtility.HtmlEncode(content)}</text>"));
-
-  private MarkupString RenderXAxisLabel(double x, string content, string anchor)
-    => new(FormattableString.Invariant(
-      $"<text class=\"trajectory-chart-x-label\" x=\"{x:0.##}\" y=\"{PlotBottomPx + 18:0.##}\" text-anchor=\"{anchor}\">{System.Net.WebUtility.HtmlEncode(content)}</text>"));
-
-  /// <summary>
-  /// One plotted observation. <c>Label</c> is the EVIDENCE SOURCE ("Direct observation"), which is what
-  /// the screen-reader table's third column is headed — it is not, and never was, a rung label.
-  /// <c>DateDeclared</c> is false when nobody stated the encounter date and <c>Date</c> is only the day the
-  /// activity was created; the tooltip and the table then say so (T161, D28, T197).
-  /// </summary>
-  public sealed record ChartPoint(
-    DateOnly Date,
-    int Rating,
-    int Sequence = 0,
-    string? Label = null,
-    bool OffLadder = false,
-    bool DateDeclared = true);
-
-  /// <summary>
-  /// One EPA's trajectory as the chart's points, in the order the query returned them. The one mapping both
-  /// pages that draw a trajectory use (MyProgress, ReviewDetail), so neither can drop a field the other
-  /// carries: the evidence source, the off-ladder mark, and whether the date was stated (T161).
-  /// </summary>
-  public static IReadOnlyList<ChartPoint> PointsOf(EpaTrajectoryDto trajectory)
-    => trajectory.Points
-      .Select((point, index) => new ChartPoint(
-        point.ObservedOn,
-        point.Rating,
-        index,
-        point.Source,
-        point.OffLadder,
-        DateDeclared: point.ObservedOnDeclared))
-      .ToArray();
-
-  /// <summary>One rung of the ladder the axis is drawn from. Order is the position; Label is the name.</summary>
-  public sealed record Rung(int Order, string Label);
+      @foreach (var label in d.SemesterLabels)
+      {
+        @label.Svg("trajectory-chart-band-label")
+      }
+      @if (d.BelowShading is not null)
+      {
+        <path class="trajectory-chart-below" d="@d.BelowShading"></path>
+      }
+      <path class="trajectory-chart-rung" d="@d.RungLines"></path>
+      <line class="trajectory-chart-lane" x1="@d.Left" x2="@d.Right" y1="@d.LaneLineY" y2="@d.LaneLineY"></line>
+      @foreach (var label in d.RungLabels)
+      {
+        @label.Svg("trajectory-chart-y-label", "end")
+      }
+      @d.LaneLabel.Svg("trajectory-chart-note", "end")
+      @if (d.MinimumLine is not null)
+      {
+        <path class="trajectory-chart-minimum" d="@d.MinimumLine"></path>
+      }
+      @if (d.ExitY is { } exitY && d.ExitLabel is { } exitLabel)
+      {
+        <line class="trajectory-chart-exit" x1="@d.Left" x2="@d.Right" y1="@TrajectoryDrawing.Fmt(exitY)" y2="@TrajectoryDrawing.Fmt(exitY)"></line>
+        @exitLabel.Svg("trajectory-chart-line-label")
+      }
+      @if (d.MinimumLabel is { } minimumLabel)
+      {
+        @minimumLabel.Svg("trajectory-chart-minimum-label")
+      }
+      <line class="trajectory-chart-axis" x1="@d.Left" x2="@d.Right" y1="@d.AxisY" y2="@d.AxisY"></line>
+      <path class="trajectory-chart-axis" d="@d.MonthTicks"></path>
+      @foreach (var label in d.MonthLabels)
+      {
+        @label.Svg("trajectory-chart-x-label", "middle")
+      }
+      @if (d.TodayX is { } todayX)
+      {
+        <line class="trajectory-chart-today" x1="@TrajectoryDrawing.Fmt(todayX)" x2="@TrajectoryDrawing.Fmt(todayX)" y1="@d.Top" y2="@d.AxisY"></line>
+        @(new TrajectoryDrawing.Label(todayX + 4, d.AxisY - 6, "Today").Svg("trajectory-chart-note"))
+      }
+      @if (d.Line is not null)
+      {
+        <path class="trajectory-chart-line" d="@d.Line"></path>
+      }
+      @if (d.Hollow is not null)
+      {
+        <path class="trajectory-chart-hollow" d="@d.Hollow"></path>
+      }
+      @if (d.Dots is not null)
+      {
+        <path class="trajectory-chart-dots" d="@d.Dots"></path>
+      }
+    </svg>
+  };
 }

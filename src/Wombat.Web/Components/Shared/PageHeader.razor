@@ -8,7 +8,7 @@
   <div>
     @* An icon before the heading, on the system pages (T335, flow 01: "PageHeader with icon"): aria-hidden, so the
        heading is named by its words alone. *@
-    <h1 class="@(Icon is null ? null : "page-title-with-icon")">@if (Icon is not null){<Icon Name="@Icon" Size="24" Class="@IconClass" />}@Title</h1>
+    <h1 class="@(Icon is null ? null : "page-title-with-icon")">@if (Icon is not null){<Icon Name="@Icon" Size="24" Class="@IconClass" />}@if (TitleContent is not null){@TitleContent}else{@Title}</h1>
     @if (SubtitleContent is not null)
     {
       <p class="page-subtitle">@SubtitleContent</p>
@@ -34,6 +34,13 @@
   private IReadOnlyList<Crumb>? _trail;
 
   [Parameter, EditorRequired] public string Title { get; set; } = default!;
+
+  /// <summary>
+  /// A heading that holds more than its words: an EPA page's "PAED-012 — …" with its "(no longer in use)" mark in a muted
+  /// span and an institution's own EPA's badge (T355, C5). Given, it is drawn in the h1 in place of <see cref="Title" />,
+  /// which still names the crumb and must read as the h1 does, mark included, since the tab is the same words.
+  /// </summary>
+  [Parameter] public RenderFragment? TitleContent { get; set; }
   [Parameter] public string? Subtitle { get; set; }
 
   /// <summary>

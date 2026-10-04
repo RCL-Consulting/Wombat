@@ -229,8 +229,8 @@ Gap: none
 ### Step 5.8 — Dr Molefe reads her final review and keeps a STAR certificate
 Role: Trainee — Dr Lerato Molefe
 Route: /committee/my-reviews → / → /portfolio/authorisations
-Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her dashboard's card,
-  and download the certificate for PAED-001.
+Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her Home's card (its
+  Open My authorisations), and download the certificate for PAED-001.
 Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme complete). Its detail shows:
   - the review type;
   - the decision and its rationale;
@@ -372,10 +372,12 @@ Role: Trainee — Dr Lerato Molefe
 Route: /account/login → /account/login/submit → / → /portfolio/progress
 Do: In her own browser, sign in and open My progress. Leave the tab open through Step 5.19.
 Expect: The page shows her programme as still running:
-  - "This period", and each EPA's target for it, with progress bars;
-  - on each EPA's card, the period before it;
-  - "Entrustment against Annexure A", with the exit rule met as in Step 5.6;
-  - her rating trajectories.
+  - "This period", with "1 of 10" over "EPAs met this semester" and "0 of 5" over "EPAs met in 2026";
+  - Your EPAs, each EPA's count for the window containing `D` with its bar, and every STAR "At or above", at 5 or 4;
+  - "Entrustment against Annexure A", "15 at or above · 0 below · 0 with no decision, of 15 EPAs", with the exit rule
+    met as in Step 5.6: "15 of 15 EPAs at their exit level by STAR decision (level 5: 9 of 9 · level 4: 6 of 6). Every
+    EPA is at its exit level.";
+  - the period before each window, and her rating trajectories, on each EPA's page (T355), not on My progress.
   Nothing says that her programme has ended.
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): Dr Molefe signed in in her own browser and opened My progress
   from the menu (the tab was held open through Step 5.19). "This period" Semester 2, 2026; "1 of 10 EPAs met this
@@ -471,14 +473,16 @@ Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /account/login → /account/login/submit → /portfolio/progress
 Do: Sign in from the page that Step 5.19 left her on. She is returned to My progress. Read it.
 Expect: Her trainee record admits her to the page (T252, `TraineeOrFormerTrainee`).
-  - An information notice reads "You completed your programme on <`D` as a long date>. This page is your record of it
-    and is read-only: no target applies to you any more.", followed by D49's rule.
+  - An information notice reads "You completed your programme on `D`. This page is your record of it and is read-only:
+    no target applies to you any more.", followed by D49's rule. Every date on the page is ISO, `YYYY-MM-DD` (T355, D1).
   - A "Your programme" card gives her start date, Completed `D`, and training year 4 as the year the programme ended.
-  - Each EPA's card lists its periods, newest first. The period holding `D` reads "no target (your programme ended
-    part-way through) · n recorded", and the earlier periods read as met or short.
+  - Each EPA's card, its code a link to its page, lists its periods, newest first. The period holding `D` reads "no
+    target (your programme ended part-way through) · n recorded", and the earlier periods read as met or short.
   - There are no progress bars.
-  - The standing reads the year her programme ended in, with the exit rule met.
-  - Her trajectories are still shown.
+  - The standing reads the year her programme ended in, "You completed your programme on `D`, in training year 4 …",
+    with the exit rule met.
+  - Her trajectories are on each EPA's page, which reads as her record does: every period listed, and no "n more by"
+    (T355).
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): Signing in from the session-ended page returned her to
   /portfolio/progress. Notice: "You completed your programme on 4 October 2026. This page is your record of it and is
   read-only: no target applies to you any more. A period your programme ended in before that period's last month has no
@@ -494,10 +498,10 @@ Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /
 Do: Open Home and read the menu.
 Expect: The sidebar has no "Acting as" head, since she holds no role, and the menu offers Home, then My progress and My
-  data rights under the rule, and nothing else (DESIGN § The NavMenu, D8, T252). The top bar names her, "Lerato
-  Molefe", with Sign out. Home says "You completed your programme on <`D` as a long date>, so no target applies to you
-  any more." and points her to My progress, read-only, as the trainee dashboard's Curriculum targets card does for an
-  ended programme (T252 As built: "Home says the same").
+  data rights under the rule, and nothing else (DESIGN § The NavMenu, D8, T252). The top bar names her, "Lerato Molefe",
+  with Sign out. Home says "You completed your programme on `D`, so no target applies to you any more." and points her
+  to My progress, read-only, as the trainee dashboard's Your targets card does for an ended programme (T252 As built:
+  "Home says the same"; dates ISO, T355).
 Note: The code shows one card, "Your training record", pointing to My progress (T335), but does not say that or when she
   completed her programme (T311).
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): No "Acting as" head; the menu is Home, My progress and My data
@@ -600,10 +604,11 @@ Gap: none
 
 ### Step 5.26 — Dr du Plessis sees it counted
 Role: Trainee — Dr Pieter du Plessis
-Route: /portfolio/progress
-Do: Open My progress and read PAED-002's card for this period.
-Expect: This period's count for PAED-002 includes the `D−1` Mini-CEX, shown as the latest encounter. Record the count
-  as n.
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
+Do: Open My progress, then PAED-002 from its index, and read its count for this period.
+Expect: This period's count for PAED-002 includes the `D−1` Mini-CEX: its row reads "n of 3 this semester", and its page
+  the same count, with "Last encounter `D−1`" and "Training year 2: level 3b, the minimum each encounter is judged
+  against and your STAR's target." Record the count as n.
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): My progress, Semester 2, 2026: PAED-002 "1 of 3 this semester",
   "2 more by 30 November 2026. At the minimum level when observed: 1 of 1. Last encounter date: 2026-10-03.", "Minimum
   now 3b". So n = 1.
@@ -617,8 +622,8 @@ Expect: The confirmation names `D−2` as his last day. It says that encounters 
   nothing, including any already counted, and that neither the day nor the profile can be changed back. After
   confirming:
   - the page says "Trainee profile deactivated. Their last day in the programme is recorded as `D−2`.";
-  - the summary reads Status Inactive, "Left the programme: `D−2`", and the profile's details read-only, as on
-    Step 5.17, with no Save profile (T305);
+  - the summary reads Status Inactive, "Left the programme: `D−2`", and the profile's details read-only, as on Step
+    5.17, with no Save profile (T305);
   - on Trainees he is listed under Completed & closed profiles, with the outcome "Withdrawn `D−2`";
   - in the same save, the credit from the `D−1` Mini-CEX is taken back (T281);
   - he keeps the Trainee role and is not emailed.
@@ -639,14 +644,15 @@ Gap: none
 Role: Trainee — Dr Pieter du Plessis
 Route: /account/login → /account/login/submit → / → /portfolio/progress → /activities/mine
 Do: Sign in, then read Home, My progress and My activities.
-Expect: Each page records that his programme ended on `D−2`:
-  - Home's Curriculum targets card says "Your programme ended on <`D−2` as a long date>, so no target applies to you any
-    more.", and points to My progress.
-  - My progress opens with "Your programme ended on <`D−2`>. This page is your record of it and is read-only…". Its
-    "Your programme" card reads Ended `D−2`. PAED-002's period holding `D−2` reads "no target (your programme ended
-    part-way through) · n−1 recorded".
-  - My activities still lists the `D−1` Mini-CEX as Completed, its Credit now "None": the take-back's replay
-    re-stamped its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
+Expect: Each page records that his programme ended on `D−2`, every date ISO (T355, D1):
+  - Home's Your targets card says "Your programme ended on `D−2`, so no target applies to you any more. Your progress in
+    each period is kept on My progress, read-only.", with no figures and no Furthest short, and ends with Open My
+    progress. My authorisations reads "No STAR yet." alone.
+  - My progress opens with "Your programme ended on `D−2`. This page is your record of it and is read-only…". Its "Your
+    programme" card reads Ended `D−2`. PAED-002's period holding `D−2` reads "no target (your programme ended part-way
+    through) · n−1 recorded".
+  - My activities still lists the `D−1` Mini-CEX as Completed, its Credit now "None": the take-back's replay re-stamped
+    its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
 Actual (2026-10-04, T304 replay, wombat_scenario_t304): Home (Acting as Trainee): the Curriculum targets card reads
   "Your programme ended on 2 October 2026, so no target applies to you any more. Your progress in each period is kept on
   My progress, read-only." and links to /portfolio/progress. My progress: "Your programme ended on 2 October 2026. This

@@ -107,7 +107,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var row = cut.Find("tbody tr");
         Text(row.Children[2].TextContent).Should().StartWith("Supervises others on O-R Scale");
         Text(row.Children[3].QuerySelector(".badge")!.TextContent).Should().Be("Not comparable");
-        Text(row.Children[3].QuerySelector("div")!.TextContent).Should().Be($"Decided on O-R Scale, not {Cpsa}.");
+        Text(row.Children[3].QuerySelector(".standing-rating-meta")!.TextContent).Should().Be($"Decided on O-R Scale, not {Cpsa}.");
         Text(row.Children[4].TextContent).Should().Be("5 Not comparable");
         PageText(cut).Should().Contain("1 not comparable");
     }
@@ -122,7 +122,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
 
         var cell = cut.Find("tbody tr").Children[3];
         Text(cell.QuerySelector(".badge")!.TextContent).Should().Be("Not comparable");
-        Text(cell.QuerySelector("div")!.TextContent).Should().Be("The curriculum sets no ladder for this EPA.");
+        Text(cell.QuerySelector(".standing-rating-meta")!.TextContent).Should().Be("The curriculum sets no ladder for this EPA.");
     }
 
     [Fact]
@@ -139,11 +139,13 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var cut = RenderPanel(Standing(epa));
 
         var cell = cut.Find("tbody tr").Children[5];
-        cell.QuerySelector("a")!.GetAttribute("href").Should().Be("/activities/31");
-        Text(cell.QuerySelector("a")!.TextContent).Should().Be("3b — open this PAED-001 rating");
-        // Under "Latest rating" the date is named as the encounter's, or it reads as though the rating were not recorded.
-        cell.QuerySelectorAll("div").Select(line => Text(line.TextContent)).Should().Equal(
-            "Encounter not recorded (created 2026-03-20)",
+        var link = cell.QuerySelector("a.standing-rating-link")!;
+        link.GetAttribute("href").Should().Be("/activities/31");
+        // T355 (C1): "3b · Encounter …", one 44px block at phone width. Under "Latest rating" the date is named as the
+        // encounter's, or it reads as though the rating were not recorded.
+        Text(link.TextContent).Should().Be("3b · Encounter not recorded (created 2026-03-20) — open this PAED-001 rating");
+        Text(link.QuerySelector(".visually-hidden")!.TextContent).Should().Be("— open this PAED-001 rating");
+        cell.QuerySelectorAll(".standing-rating-meta").Select(line => Text(line.TextContent)).Should().Equal(
             "Direct observation; at or above the target");
     }
 
@@ -162,7 +164,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             .Add(panel => panel.Standing, standing)
             .Add(panel => panel.Self, true));
 
-        PageText(cut).Should().Contain("Your programme starts on 15 January 2027, so the targets shown are for training year 1.");
+        PageText(cut).Should().Contain("Your programme starts on 2027-01-15, so the targets shown are for training year 1.");
     }
 
     [Fact]
@@ -183,7 +185,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             .Add(panel => panel.ProgrammeEnd, new ProgrammeEndDto(Completed: false, EndedOn: new DateOnly(2026, 8, 20), Today: new DateOnly(2026, 9, 23))));
 
         PageText(cut).Should().Contain(
-            "Your programme ended on 20 August 2026, in training year 3, so the targets shown are that year's. " +
+            "Your programme ended on 2026-08-20, in training year 3, so the targets shown are that year's. " +
             "STAR decisions and ratings are shown as they stand today.");
         PageText(cut).Should().NotContain("You are in training year");
     }
@@ -204,7 +206,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             .Add(panel => panel.ProgrammeEnd, new ProgrammeEndDto(Completed: true, EndedOn: new DateOnly(2026, 6, 30), Today: new DateOnly(2026, 9, 23))));
 
         PageText(cut).Should().Contain(
-            "You completed your programme on 30 June 2026, in training year 4, so the targets shown are that year's.");
+            "You completed your programme on 2026-06-30, in training year 4, so the targets shown are that year's.");
     }
 
     [Fact]
@@ -226,7 +228,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
 
         PageText(cut).Should().Contain(
             "Your programme has ended, but Wombat did not record the day it ended, so the targets shown are for training " +
-            "year 3, counted from your start date to 23 September 2026. STAR decisions and ratings are shown as they stand today.");
+            "year 3, counted from your start date to 2026-09-23. STAR decisions and ratings are shown as they stand today.");
         PageText(cut).Should().NotContain("You are in training year");
     }
 
@@ -239,18 +241,36 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             .Add(panel => panel.Self, true)
             .Add(panel => panel.ProgrammeEnd, null));
 
-        PageText(cut).Should().Contain("You are in training year 2 on 1 March 2026.");
+        PageText(cut).Should().Contain("You are in training year 2 on 2026-03-01.");
         PageText(cut).Should().NotContain("programme ended");
     }
 
     [Fact]
-    public void AFailedLoad_SaysSoInThePanel()
+    public void AFailedLoad_SaysSoInThePanel_InFixedWords_NeverTheExceptions()
     {
+        // T355 (T329, T272): the failure's own text is the log's. The committee page offers no Try again of its own.
         var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
             .Add(panel => panel.LoadError, "The database is unavailable."));
 
-        Text(cut.Find(".alert").TextContent).Should().Be("The entrustment standing could not be loaded: The database is unavailable.");
+        Text(cut.Find(".alert.alert-danger").TextContent).Should().Be(EntrustmentStandingPanel.OthersLoadFailed);
+        cut.Markup.Should().NotContain("The database is unavailable.");
+        cut.FindAll("button").Should().BeEmpty();
         cut.FindAll("table").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AFailedLoad_OnTheTraineesOwnPage_OffersTryAgain()
+    {
+        var retried = 0;
+        var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
+            .Add(panel => panel.LoadError, EntrustmentStandingPanel.SelfLoadFailed)
+            .Add(panel => panel.Self, true)
+            .Add(panel => panel.OnRetry, () => retried++));
+
+        Text(cut.Find(".alert.alert-danger .alert-row-text").TextContent).Should().Be(
+            "Could not load your standing. Nothing has changed. Try again, or come back in a few minutes.");
+        cut.Find(".alert-row button").Click();
+        retried.Should().Be(1);
     }
 
     [Theory]
@@ -277,8 +297,8 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var rows = cut.FindAll("tbody tr").ToList();
         Text(rows[0].Children[1].TextContent).Should().Be("3b");
         Text(rows[1].Children[1].FirstChild!.TextContent).Should().Be("5");
-        Text(rows[1].Children[1].QuerySelector("div")!.TextContent).Should().Be("Exit level; no year 2 level set");
-        rows[0].Children[1].QuerySelector("div").Should().BeNull("PAED-001's target is the year's own");
+        Text(rows[1].Children[1].QuerySelector(".standing-rating-meta")!.TextContent).Should().Be("Exit level; no year 2 level set");
+        rows[0].Children[1].QuerySelector(".standing-rating-meta").Should().BeNull("PAED-001's target is the year's own");
         PageText(cut).Should().Contain(
             "Each target is the level the curriculum sets for training year 2: Annexure A's, for the College's EPAs. " +
             "Where it sets none, the EPA's exit level stands in, and the row says so.");
@@ -298,7 +318,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var text = PageText(cut);
         text.Should().Contain("The curriculum sets no level for training year 5, so each EPA's exit level stands in as its target.");
         text.Should().NotContain("Annexure A's, for");
-        cut.FindAll("tbody tr").Select(row => (Text(row.Children[1].FirstChild!.TextContent), Text(row.Children[1].QuerySelector("div")!.TextContent)))
+        cut.FindAll("tbody tr").Select(row => (Text(row.Children[1].FirstChild!.TextContent), Text(row.Children[1].QuerySelector(".standing-rating-meta")!.TextContent)))
             .Should().Equal(("5", "Exit level; no year 5 level set"), ("4", "Exit level; no year 5 level set"));
     }
 
@@ -314,9 +334,10 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             new ExitRuleReadinessDto(1, 1, [new ExitLevelGroupDto(6, "5", 1, 1)], [])));
 
         var rows = cut.FindAll("tbody tr").ToList();
-        rows[0].Children[0].QuerySelectorAll("div").Select(line => Text(line.TextContent)).Should().Equal("PAED-001 title");
-        rows[1].Children[0].QuerySelectorAll("div").Select(line => Text(line.TextContent)).Should().Equal(
-            "LOCAL-020 title", "The institution's own EPA; not in the exit rule");
+        Text(rows[0].Children[0].TextContent).Should().Be("PAED-001 — PAED-001 title");
+        rows[0].Children[0].QuerySelector(".standing-rating-meta").Should().BeNull();
+        Text(rows[1].Children[0].QuerySelector(".standing-rating-meta")!.TextContent)
+            .Should().Be("The institution's own EPA; not in the exit rule");
         PageText(cut).Should().Contain(
             "1 of 1 EPAs at their exit level by STAR decision. Every EPA the rule counts is at its exit level. " +
             "The institution's own EPA is not part of the College's rule, so it is not counted.");
@@ -379,7 +400,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var cut = RenderReview();
 
         PageText(cut).Should().Contain(
-            "The review period's last day, 30 June 2026, falls in training year 1, so the targets shown are that year's. " +
+            "The review period's last day, 2026-06-30, falls in training year 1, so the targets shown are that year's. " +
             "STAR decisions and ratings are shown as they stand today.");
     }
 
@@ -396,8 +417,130 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
 
         sender.Received.OfType<GetEntrustmentStandingForTraineeQuery>().Single().AsOf.Should().BeNull("today is inside the period");
         var text = PageText(cut);
-        text.Should().Contain("In training year 2 on 1 March 2026.");
+        text.Should().Contain("In training year 2 on 2026-03-01.");
         text.Should().NotContain("review period's last day");
+    }
+
+    [Fact]
+    public void OnTheReviewPage_AnEpaNameLinksToItsChart_OnlyWhereThePageDrawsOne()
+    {
+        // T355, R4 (the integrator's wiring after wave 2): the panel links a name to the chart further down the page,
+        // and only for an EPA the page charts; an EPA with no rating in the review's window keeps its name as text.
+        SignIn("chair-1", WombatRoles.CommitteeMember);
+        var charted = new EpaTrajectoryDto(1, "PAED-001", "PAED-001 title", true, null, null, [], []);
+        var sender = ReviewSender(Review(CommitteeReviewState.InProgress, formative: false))
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => new[] { charted })
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => Standing(
+                Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove),
+                Epa("PAED-010", decision: null, year: EntrustmentStandingStatus.NoDecision, exit: EntrustmentStandingStatus.NoDecision) with { EpaId = 10 }));
+        Services.AddSingleton<IScopedSender>(sender);
+
+        var cut = RenderReview();
+
+        var headers = cut.FindAll("tbody tr th[scope='row']").Where(th => th.Closest("section.trajectory-card") is null).ToList();
+        headers.Should().HaveCount(2);
+        headers[0].QuerySelector("a")!.GetAttribute("href").Should().Be("#trajectory-1");
+        cut.FindAll("section#trajectory-1").Should().ContainSingle("the link lands on the chart this page draws");
+        headers[1].QuerySelector("a").Should().BeNull("PAED-010 has no chart on this page");
+    }
+
+    [Fact]
+    public void OnTheReviewPage_PressingAnEpaName_FocusesItsChart_AndNavigatesNowhere()
+    {
+        // T355, build review A1: <base href="/"> would resolve "#trajectory-1" against the site's root, and Blazor would
+        // navigate to Home, losing the chair's unsaved decision. The link keeps its href for a page with no circuit and,
+        // pressed, moves the focus to the chart by script (PageFocus, as RefusalSummary's links do, T342 A1).
+        SignIn("chair-1", WombatRoles.CommitteeMember);
+        JSInterop.SetupVoid(PageFocus.FocusByIdIdentifier, _ => true);
+        var sender = ReviewSender(Review(CommitteeReviewState.InProgress, formative: false))
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => new[] { ChartedTrajectory() })
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => Standing(
+                Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove)));
+        Services.AddSingleton<IScopedSender>(sender);
+        var cut = RenderReview();
+        var navigation = Services.GetRequiredService<FakeNavigationManager>();
+        var before = navigation.Uri;
+
+        var link = cut.Find("tbody th[scope='row'] a.epa-link");
+        link.GetAttribute("href").Should().Be("#trajectory-1");
+        link.Attributes.Select(attribute => attribute.Name).Should().Contain(
+            "blazor:onclick:preventdefault", "the browser must not follow the fragment against <base href=\"/\">");
+
+        link.Click();
+
+        JSInterop.Invocations.Where(call => call.Identifier == PageFocus.FocusByIdIdentifier)
+            .Should().ContainSingle().Which.Arguments.Should().Equal("trajectory-1");
+        navigation.Uri.Should().Be(before, "the link moves the focus, never the page");
+        navigation.History.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TheReviewPage_ChartsTheReviewsWindow_UnderAnH4_NamingTheTrainee_WithNoToday()
+    {
+        // T355, build review G2 (decision D2): the committee page reads the trajectory over the review's own period, heads
+        // each chart one level below its section's h3, names the trainee and the window in the summary, and draws no
+        // "Today", because the window is the review's, not today's.
+        SignIn("chair-1", WombatRoles.CommitteeMember);
+        var review = Review(CommitteeReviewState.InProgress, formative: false, periodTo: new DateOnly(2026, 12, 31)) with
+        {
+            TraineeName = "Lerato Molefe"
+        };
+        var sender = ReviewSender(review)
+            .On<GetEpaTrajectoryForTraineeQuery>(query => new[]
+            {
+                ChartedTrajectory() with { WindowFrom = query.From, WindowTo = query.To }
+            })
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => Standing(
+                Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove)));
+        Services.AddSingleton<IScopedSender>(sender);
+
+        var cut = RenderReview();
+
+        var query = sender.Received.OfType<GetEpaTrajectoryForTraineeQuery>().Single();
+        query.From.Should().Be(review.ReviewPeriodFrom);
+        query.To.Should().Be(review.ReviewPeriodTo);
+        query.EpaId.Should().BeNull("the committee page charts every EPA");
+
+        var card = cut.Find("section#trajectory-1");
+        var section = card.ParentElement!.Closest("section.detail-card")!;
+        section.QuerySelector("h3")!.TextContent.Should().Be("Rating trajectory by EPA");
+        Text(card.QuerySelector("h4")!.TextContent).Should().Be("PAED-001 — PAED-001 title");
+        Text(card.TextContent).Should().Contain(
+            "Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31");
+        card.QuerySelectorAll(".trajectory-chart-today").Should().BeEmpty("the committee page reads a review's window, not today");
+        card.QuerySelectorAll("tbody tr").Should().HaveCount(3, "each rating is a row of the chart's table");
+    }
+
+    /// <summary>
+    /// PAED-001 on the CPSA ladder with three ratings by named assessors, as the handler returns a charted EPA: never with
+    /// no point (it returns only EPAs that have one).
+    /// </summary>
+    private static EpaTrajectoryDto ChartedTrajectory()
+    {
+        var rungs = new[] { "1", "2", "3a", "3b", "4", "5" }
+            .Select((label, index) => new TrajectoryRungDto(index + 1, label))
+            .ToArray();
+        TrajectoryPointDto Point(int id, DateOnly on, int rating, string label) => new(id, on, true, rating, label, "Direct observation", "assessor-a")
+        {
+            AssessorName = "Dr Sipho Mahlangu",
+            ActivityName = $"Mini-CEX (Paediatrics) · PAED-001 · {on:yyyy-MM-dd}",
+            TrainingYear = 4,
+            MinimumLabel = "5",
+            AgainstMinimum = rating >= 6 ? TrajectoryAgainstMinimum.AtOrAbove : TrajectoryAgainstMinimum.Below
+        };
+
+        return new EpaTrajectoryDto(
+            1, "PAED-001", "PAED-001 title", true, 42, Cpsa, rungs,
+            [
+                Point(101, new DateOnly(2026, 2, 10), 4, "3b"),
+                Point(102, new DateOnly(2026, 5, 12), 5, "4"),
+                Point(103, new DateOnly(2026, 9, 21), 6, "5")
+            ])
+        {
+            ExitLevelOrder = 6,
+            ExitLevelLabel = "5",
+            MinimumSteps = [new TrajectoryMinimumStepDto(new DateOnly(2026, 1, 1), 4, 6, "5")]
+        };
     }
 
     [Fact]
@@ -410,10 +553,11 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
 
         var cut = RenderReview();
 
-        cut.FindAll(".alert-danger").Should().BeEmpty("the review itself loaded");
         cut.Markup.Should().Contain("Record decision");
         var section = cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h3")?.TextContent == "Entrustment against Annexure A");
-        Text(section.TextContent).Should().Contain("The entrustment standing could not be loaded: The database is unavailable.");
+        cut.FindAll(".alert-danger").Where(alert => !section.Contains(alert)).Should().BeEmpty("the review itself loaded");
+        Text(section.QuerySelector(".alert-danger")!.TextContent).Should().Be(EntrustmentStandingPanel.OthersLoadFailed);
+        cut.Markup.Should().NotContain("The database is unavailable.", "the failure's text is the log's (T329)");
     }
 
     [Fact]
@@ -441,15 +585,110 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         Badges(cut).Should().Equal("At or above");
     }
 
+    // ─── T355: the panel changed once, for both pages (C1; R4) ─────────────
+
+    [Fact]
+    public void ThePanel_WithNoEpaHref_LeavesTheNameAsText()
+    {
+        // With no EpaHref, or none for a row (an EPA the committee page draws no chart for), the name is text (R4).
+        var cut = RenderPanel(Standing(
+            Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove)));
+
+        var header = cut.Find("tbody tr th[scope='row']");
+        header.GetAttribute("role").Should().Be("rowheader");
+        header.QuerySelector("a").Should().BeNull();
+        Text(header.TextContent).Should().Be("PAED-001 — PAED-001 title");
+    }
+
+    [Fact]
+    public void WithEpaHref_EachEpaNameIsALinkToWhereThePageSays()
+    {
+        var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
+            .Add(panel => panel.Standing, Standing(
+                Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove),
+                Epa("PAED-010", decision: null, year: EntrustmentStandingStatus.NoDecision, exit: EntrustmentStandingStatus.NoDecision) with { EpaId = 10 }))
+            .Add(panel => panel.Self, true)
+            .Add(panel => panel.EpaHref, epa => $"/portfolio/progress/{epa.EpaId}"));
+
+        var links = cut.FindAll("tbody th[scope='row'] a.epa-link");
+        links.Select(link => link.GetAttribute("href")).Should().Equal("/portfolio/progress/1", "/portfolio/progress/10");
+        links.Select(link => Text(link.TextContent)).Should().Equal("PAED-001 — PAED-001 title", "PAED-010 — PAED-010 title");
+        links.SelectMany(link => link.Attributes).Select(attribute => attribute.Name).Should().NotContain(
+            "blazor:onclick", "a route is a real navigation: only an in-page link is pressed by script (A1)");
+    }
+
+    [Fact]
+    public void ThePanel_Stacks_EachCellButTheEpaLabelledByItsColumn()
+    {
+        // R4: DataTable's Stack. The header row stays in the table for a screen reader; below 641px each cell shows its
+        // column's name before its value, and the EPA, the row's header, needs none.
+        var cut = RenderPanel(Standing(
+            Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove)));
+
+        var table = cut.Find("table");
+        table.ClassList.Should().Contain(["clinic-table", "clinic-table--stack"]);
+        table.GetAttribute("role").Should().Be("table");
+        cut.Find("tbody tr").GetAttribute("role").Should().Be("row");
+        cut.FindAll("tbody tr td").Select(cell => cell.GetAttribute("data-label")).Should().Equal(
+            "Year 2 target", "STAR decision", "Against target", "Exit level", "Latest rating");
+        cut.Find("tbody tr th").HasAttribute("data-label").Should().BeFalse();
+        Text(cut.Find("caption").TextContent).Should().Be(
+            "Each EPA's STAR decision against the training year 2 target and the exit level, with the latest rating.");
+    }
+
+    [Fact]
+    public void ADecisionsDates_AreIso_AndAnExpiryIsSaid()
+    {
+        // D1: "Issued 2026-10-03", never "3 Oct 2026".
+        var cut = RenderPanel(Standing(
+            Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove),
+            Epa("PAED-010", decision: "4", year: EntrustmentStandingStatus.Below, exit: EntrustmentStandingStatus.Below) with
+            {
+                Decision = new StandingDecisionDto(42, 5, "4", null, new DateOnly(2026, 10, 3), new DateOnly(2026, 10, 23))
+            }));
+
+        var rows = cut.FindAll("tbody tr").ToList();
+        Text(rows[0].Children[2].QuerySelector(".standing-rating-meta")!.TextContent).Should().Be("Issued 2026-01-15");
+        Text(rows[1].Children[2].QuerySelector(".standing-rating-meta")!.TextContent).Should().Be("Issued 2026-10-03, expires 2026-10-23");
+        PageText(cut).Should().NotContain("Jan 2026").And.NotContain("Oct 2026");
+    }
+
+    [Fact]
+    public void NoStarAndNoRating_ReadNone()
+    {
+        var cut = RenderPanel(Standing(
+            Epa("PAED-003", decision: null, year: EntrustmentStandingStatus.NoDecision, exit: EntrustmentStandingStatus.NoDecision)));
+
+        var row = cut.Find("tbody tr");
+        Text(row.Children[2].TextContent).Should().Be("None");
+        Text(row.Children[5].TextContent).Should().Be("None");
+    }
+
+    [Fact]
+    public void TheSummary_IsStandingWordsYearLine()
+    {
+        // R1: Home's card and the panel say the summary once, in StandingWords' words.
+        var standing = Standing(
+            Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove),
+            Epa("PAED-010", decision: "4", year: EntrustmentStandingStatus.Below, exit: EntrustmentStandingStatus.Below),
+            Epa("PAED-003", decision: null, year: EntrustmentStandingStatus.NoDecision, exit: EntrustmentStandingStatus.NoDecision));
+
+        var cut = RenderPanel(standing);
+
+        var summary = cut.FindAll("dl.details-list > div")
+            .Single(row => Text(row.QuerySelector("dt")!.TextContent) == "STAR decisions against training year 2 targets");
+        Text(summary.QuerySelector("dd")!.TextContent).Should().Be(StandingWords.YearLine(standing));
+        Text(summary.QuerySelector("dd")!.TextContent).Should().Be("1 at or above · 1 below · 1 with no decision, of 3 EPAs");
+    }
+
     // ─── The trainee's progress page ─────────────────────────────────────────
 
     [Fact]
-    public void MyProgress_AsksForTheSignedInTraineesStanding_AsThatTrainee()
+    public void MyProgress_AsksForTheSignedInTraineesStanding_AsThatTrainee_AndLinksEachEpaToItsPage()
     {
         SignIn("trainee-1", WombatRoles.Trainee);
         var sender = new RecordingSender()
-            .On<GetCurriculumProgressForTraineeQuery>(_ => null)
-            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetCurriculumProgressForTraineeQuery>(_ => ProgressSummary(ended: null))
             .On<GetEntrustmentStandingForTraineeQuery>(_ => Standing(
                 Epa("PAED-001", decision: "3a", year: EntrustmentStandingStatus.Below, exit: EntrustmentStandingStatus.Below)))
             .On<GetMsfCoverageForTraineeQuery>(_ => null);
@@ -461,23 +700,21 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var query = sender.Received.OfType<GetEntrustmentStandingForTraineeQuery>().Should().ContainSingle().Subject;
         query.TraineeUserId.Should().Be("trainee-1");
         query.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value.Should().Be("trainee-1");
-        PageText(cut).Should().Contain("You are in training year 2 on 1 March 2026.");
-        Badges(cut).Should().Equal("Below");
+        var panel = cut.Find("section.standing-panel");
+        Text(panel.TextContent).Should().Contain("You are in training year 2 on 2026-03-01.");
+        panel.QuerySelectorAll("tbody .badge").Select(badge => Text(badge.TextContent)).Should().Equal("Below");
+        panel.QuerySelector("tbody th a.epa-link")!.GetAttribute("href").Should().Be("/portfolio/progress/1");
     }
 
     [Fact]
     public void MyProgress_ForAnEndedProgramme_HandsThePanelTheEnd_SoItSaysTheYearTheProgrammeEndedIn()
     {
         // T252: the page reads the standing as on the last day and tells the panel how the programme ended. Without the
-        // end the panel would say "You are in training year 2 on 20 August 2026" beneath a notice that it has ended.
+        // end the panel would say "You are in training year 2 on 2026-08-20" beneath a notice that it has ended.
         SignIn("trainee-1", WombatRoles.Trainee);
         var endedOn = new DateOnly(2026, 8, 20);
         Services.AddSingleton<IScopedSender>(new RecordingSender()
-            .On<GetCurriculumProgressForTraineeQuery>(_ => new TraineeCurriculumProgressSummaryDto(
-                endedOn, new DateOnly(2025, 1, 1), 2, "Semester 2, 2026", "July to November", new DateOnly(2026, 11, 30),
-                false, 0, 0, 0, 0, false, false, false, null, null, [],
-                Ended: new ProgrammeEndDto(Completed: false, EndedOn: endedOn, Today: new DateOnly(2026, 9, 23))))
-            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetCurriculumProgressForTraineeQuery>(_ => ProgressSummary(new ProgrammeEndDto(Completed: false, EndedOn: endedOn, Today: new DateOnly(2026, 9, 23))))
             .On<GetEntrustmentStandingForTraineeQuery>(query => Standing(
                 Epa("PAED-001", decision: "3a", year: EntrustmentStandingStatus.Below, exit: EntrustmentStandingStatus.Below)) with
             {
@@ -488,7 +725,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var cut = RenderComponent<MyProgress>();
         cut.WaitForState(() => cut.Markup.Contains("Entrustment against Annexure A"));
 
-        PageText(cut).Should().Contain("Your programme ended on 20 August 2026, in training year 2, so the targets shown are that year's.");
+        PageText(cut).Should().Contain("Your programme ended on 2026-08-20, in training year 2, so the targets shown are that year's.");
         PageText(cut).Should().NotContain("You are in training year");
     }
 
@@ -498,14 +735,29 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         SignIn("trainee-1", WombatRoles.Trainee);
         Services.AddSingleton<IScopedSender>(new RecordingSender()
             .On<GetCurriculumProgressForTraineeQuery>(_ => null)
-            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
             .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
             .On<GetMsfCoverageForTraineeQuery>(_ => null));
 
         var cut = RenderComponent<MyProgress>();
-        cut.WaitForState(() => cut.Markup.Contains("Curriculum targets"));
+        cut.WaitForState(() => cut.Markup.Contains("No curriculum items assigned yet."));
 
         cut.Markup.Should().NotContain("Entrustment against Annexure A");
+    }
+
+    /// <summary>One in-force semester item (PAED-001, EPA id 1), running or ended.</summary>
+    private static TraineeCurriculumProgressSummaryDto ProgressSummary(ProgrammeEndDto? ended)
+    {
+        var asOf = ended?.EndedOn ?? new DateOnly(2026, 3, 1);
+        var window = new QuotaWindowDto(
+            "Semester 1, 2026", "January to June", new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 30), Wombat.Domain.Curricula.QuotaWindowStatus.Counting,
+            1, 3, IsMet: false, Shortfall: 2, PercentOfTarget: 33, MinimumLevelReachedCount: 1, LastObservedOn: null,
+            LastObservedOnDeclared: false, FirstCountedName: null, FirstCountedOn: null);
+        var item = new TraineeCurriculumProgressDto(
+            100, 1, "PAED-001", "PAED-001 title", Wombat.Domain.Curricula.QuotaPeriod.Semester, 3, window, null, 4, "3b", null,
+            ended is null ? null : [window]);
+        return new TraineeCurriculumProgressSummaryDto(
+            asOf, new DateOnly(2025, 1, 1), 2, "Semester 1, 2026", "January to June", new DateOnly(2026, 6, 30),
+            false, 0, 1, 0, 0, true, false, false, null, null, [item], ended);
     }
 
     // ─── Fixtures ────────────────────────────────────────────────────────────

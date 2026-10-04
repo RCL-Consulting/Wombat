@@ -463,7 +463,7 @@ describes the product as it is today. `D` is the replay day and `J` the programm
 § The clock in this act).
 
 ```text
-Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:735)
+Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:745)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Open Log an activity and read its instrument picker. Open each type in turn to see what it rates, going back by
@@ -482,7 +482,7 @@ Expect: The page is headed "Log an activity", with "Choose what you are filing. 
   Multi-Source Feedback and Learner Feedback (Paediatrics) are not offered, because only the system writes them (T162,
   T164). Nor are the Demo types, which belong to another discipline.
 
-Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:763)
+Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:773)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new?type=mini_cex_cpsa
 Do: Open `/activities/new?type=mini_cex_cpsa`. Read the EPA and Assessor pickers, then leave without saving.
@@ -543,29 +543,37 @@ Expect: The focused result reads "Submitted. It is now Requested. It is in David
 
 Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My Activities (act-3-operations.md:210)
 Role: Trainee — Dr Anele Dlamini
-Route: /activities/mine → /activities/{ActivityId:int}
-Do: Open My activities, then the Mini-CEX.
-Expect: Needs you is gone. Under All activities the row reads Who has it now "Done", State Completed, Credit "1 item".
-  The page is read-only. Its status card, badged Completed, reads "Done. David Naidoo completed it on …" and "Rated 4.
-  Credited 1 item to PAED-001.", with Open My progress, a link. Entrustment shows rung 4 chosen, and Feedback Dr
-  Naidoo's three texts, "Filled in by David Naidoo, `D`". No move is offered. The history holds Create, Submit and
-  Complete, with Dr Naidoo as the actor of the Complete.
+Route: /activities/mine → /activities/{ActivityId:int} → /portfolio/progress/{EpaId:int}
+Do: Open My activities, then the Mini-CEX. Then follow its status card's Open My progress.
+Expect: Needs you is gone. Under All activities the row reads Who has it now "Done", State Completed, and Credit "1
+  item", a link to PAED-001's page under My progress named "1 item to PAED-001, in My progress" (T355). The page is
+  read-only. Its status card, badged Completed, reads "Done. David Naidoo completed it on …" and "Rated 4. Credited 1
+  item to PAED-001. PAED-001: 1 of 3 this semester.", with Open My progress, a link named "Open My progress at PAED-001"
+  (T355). Entrustment shows rung 4 chosen, and Feedback Dr Naidoo's three texts, "Filled in by David Naidoo, `D`". No
+  move is offered. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete. Open My
+  progress lands on PAED-001's page, `/portfolio/progress/{EpaId}`, whose h1, "PAED-001 — Providing paediatric emergency
+  care to children", takes the focus; the menu's My progress is lit.
 
-Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target (act-3-operations.md:226)
+Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target (act-3-operations.md:229)
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress
-Do: Open My progress.
-Expect: The "This period" card reads:
-  - "Semester 2, 2026 · July to November";
-  - semester targets "0 of 10 EPAs met this semester" and yearly targets "0 of 5 EPAs met in 2026";
-  - training year 3;
-  - multi-source feedback "0 of 15 EPAs covered…".
-  The PAED-001 card reads "1 of 3 this semester", with a bar, then "2 more by 30 November 2026. At the minimum level when
-  observed: 1 of 1. Last encounter date: `D−10`." Below that come "Target: 3 per semester (6 a year). Minimum now 4."
-  and "Semester 1, 2026: 0 of 3, 3 short". The Entrustment section shows no STAR yet. The trajectory charts PAED-001:
-  1 observation from 1 distinct assessor.
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
+Do: Open My progress from the menu, then PAED-001 from its index.
+Expect: My progress's subtitle reads "Training year 3 · Semester 2, 2026". The "This period" card reads:
+  - "0 of 10" over "EPAs met this semester" and "0 of 5" over "EPAs met in 2026";
+  - "Semester 2, 2026 ends on 2026-11-30.";
+  - "Training year 3 — it sets the minimum level each encounter is judged against.";
+  - "Multi-source feedback: 0 of 15 EPAs covered by a released campaign that closed this semester. …".
+  Under Your EPAs, PAED-001's row in "Each semester · 10 EPAs" reads "PAED-001 — Providing paediatric emergency care to
+  children" (its link), "1 of 3 this semester" with a bar and "2 more by 2026-11-30", "Decided each semester", and STAR
+  "No decision". No chart is drawn on My progress (T355). PAED-001's page, `/portfolio/progress/{EpaId}`, is headed with
+  the EPA's name, "3 a semester · Decided each semester · Exit level 5" under it. Observations reads "1 of 3 this
+  semester" with a bar, "2 more by 2026-11-30.", "At the minimum level when observed: 1 of 1", "Last encounter `D−10`",
+  "Semester 1, 2026: 0 of 3, 3 short" and "Training year 3: level 4, the minimum each encounter is judged against and
+  your STAR's target." Entrustment reads "No STAR yet." The rating trajectory reads "1 rating so far, from David Naidoo.
+  At the minimum.", its chart marking Today, and its table one row: `D−10`, 4, "At or above (4, training year 3)", the
+  Mini-CEX, David Naidoo. Activities on this EPA lists the Mini-CEX, Completed, Credit "1 item".
 
-Step 3.8 — A future encounter date is refused (act-3-operations.md:249)
+Step 3.8 — A future encounter date is refused (act-3-operations.md:257)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) for an encounter on the ward, from Log an activity's picker. Fill in the EPA
@@ -576,7 +584,7 @@ Expect: The submit is refused. The summary "Nothing was saved. Everything you ty
   "The date cannot be after today (`D`).", and names the summary; everything typed is kept (T160, T263, C8). No activity
   exists.
 
-Step 3.9 — A date before the programme started is refused (act-3-operations.md:266)
+Step 3.9 — A date before the programme started is refused (act-3-operations.md:274)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /activities/new?type=mini_cex_cpsa
 Do: Change the date observed to `J−1d`, the day before his programme started (2026-01-14 on a replay in 2026), and
@@ -587,7 +595,7 @@ Expect: Once the date is entered, the field is marked, and below it reads "This 
   (`J`)." A Mini-CEX can credit, so its date is held to the programme start (T160, T192). No activity exists. An
   assessor or the committee reading such a form reads "the trainee's programme" instead.
 
-Step 3.10 — A late filing is warned about and recorded, never refused (act-3-operations.md:283)
+Step 3.10 — A late filing is warned about and recorded, never refused (act-3-operations.md:291)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: Change the date observed to `D−20`, the day the encounter happened, and submit.
@@ -598,27 +606,32 @@ Expect: Changing the date drops the last refusal's mark at once (T263), and the 
   days after the encounter: recorded as late.", About's Filed reads "`D`, 20 days after the encounter (late)", and in
   the history the Submit row's time carries "Filed 20 days after the encounter" (D15, T160).
 
-Step 3.12 — Dr Ndlovu reads the decline and files the encounter again, naming Dr Botha (act-3-operations.md:331)
+Step 3.12 — Dr Ndlovu reads the decline and files the encounter again, naming Dr Botha (act-3-operations.md:339)
 Role: Trainee — Dr Sipho Ndlovu
-Route: / → /activities/{ActivityId:int} → /activities/new?from={ActivityId} → /activities/{ActivityId:int}
-Do: Open the declined Mini-CEX from the dashboard's Recent activities. Then file the same encounter again from its page,
-  File it again, to someone else, naming Dr Sarah Botha, and submit.
-Expect: Recent activities lists the Mini-CEX with a red Declined badge. Home's Needs you card reads "Nothing needs you.
-  Requests you have filed are in My activities.": a declined request has no move left (T297). No mail tells him of the
-  decline (T320), so Recent activities, while it is among his five newest, and My activities are where he finds it. Its
-  page's status card, badged Declined, reads "Closed. Fatima Khumalo declined it on …", quotes her reason, and reads "It
-  credits nothing, and nothing more can happen to it. To be assessed on this encounter, file it again and name someone
-  else.", with File it again, to someone else. That opens Log an activity on the Mini-CEX, under the notice "Copied from
-  your request to Fatima Khumalo, which was declined. The EPA, date and request are as you filed them. Name someone
-  else, then submit. Nothing is saved until you do." Everything is copied but the assessor, which is empty, and the date
-  field shows at once "This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the
-  encounter is recorded as late." The button reads Submit until Dr Botha is named, then Submit to Sarah Botha. The
-  re-filing is a new activity: "Submitted. It is now Requested. It is in Sarah Botha's Activity inbox." Its own Submit
-  row records "Filed 20 days after the encounter". The two now share type, EPA and date, so each name adds its assessor:
-  "Mini-CEX (Paediatrics) · PAED-002 · `D−20` · Fatima Khumalo" and "… · Sarah Botha" (E7). Needs you lists neither: the
-  new request is with Dr Botha, and he may cancel it from its page.
+Route: / → /activities/{ActivityId:int} → /activities/new?from={ActivityId} → /activities/{ActivityId:int} → /
+Do: Open the declined Mini-CEX from Home's Recent decisions. Then file the same encounter again from its page, File it
+  again, to someone else, naming Dr Sarah Botha, and submit. Then read Home again.
+Expect: Home's Recent decisions holds one row: the link "Mini-CEX (Paediatrics) · PAED-002 · `D−20`", "to Fatima
+  Khumalo" on its second line, a red Declined badge and `D`, and under it "File it again, to someone else", a link of
+  its own named "File it again, to someone else: Mini-CEX (Paediatrics) · PAED-002 · `D−20`" (T355, E5). No card is one
+  link around its rows (T280). Home's Needs you card reads "Nothing needs you. Requests you have filed are in My
+  activities.": a declined request has no move left (T297). No mail tells him of the decline (T320), so Recent decisions
+  and My activities are where he finds it. Its page's status card, badged Declined, reads "Closed. Fatima Khumalo
+  declined it on …", quotes her reason, and reads "It credits nothing, and nothing more can happen to it. To be assessed
+  on this encounter, file it again and name someone else.", with File it again, to someone else. That opens Log an
+  activity on the Mini-CEX, under the notice "Copied from your request to Fatima Khumalo, which was declined. The EPA,
+  date and request are as you filed them. Name someone else, then submit. Nothing is saved until you do." Everything is
+  copied but the assessor, which is empty, and the date field shows at once "This encounter was 20 days ago. It can
+  still be filed, but a filing more than 14 days after the encounter is recorded as late." The button reads Submit until
+  Dr Botha is named, then Submit to Sarah Botha. The re-filing is a new activity: "Submitted. It is now Requested. It is
+  in Sarah Botha's Activity inbox." Its own Submit row records "Filed 20 days after the encounter". The two now share
+  type, EPA and date, so each name adds its assessor: "Mini-CEX (Paediatrics) · PAED-002 · `D−20` · Fatima Khumalo" and
+  "… · Sarah Botha" (E7). Needs you lists neither: the new request is with Dr Botha, and he may cancel it from its page.
+  Back on Home, Recent decisions still lists only the Declined row: the new request is Requested, which is no decision,
+  until Step 3.13 completes it. Your targets' Furthest short reads PAED-001 to PAED-005, each "0 of 3 this semester · 3
+  more by 2026-11-30".
 
-Step 3.14 — Dr Ndlovu submits a reflective exercise to Dr Botha (act-3-operations.md:390)
+Step 3.14 — Dr Ndlovu submits a reflective exercise to Dr Botha (act-3-operations.md:403)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /activities/new → /activities/new?type=reflective_exercise_cpsa → /activities/{ActivityId:int}
 Do: File a Reflective Exercise (Paediatrics) on a critical incident. Fill in the EPA PAED-001, the supervisor
@@ -633,7 +646,7 @@ Expect: He finds it under Discussed or reviewed, not rated. The EPA picker offer
   nobody (T160). Submit to Sarah Botha reads "Submitted. It is now Awaiting discussion. It is in Sarah Botha's Activity
   inbox.", and the Submit row carries no lateness note.
 
-Step 3.16 — Dr Ndlovu finds the returned reflection in his inbox and submits it again (act-3-operations.md:441)
+Step 3.16 — Dr Ndlovu finds the returned reflection in his inbox and submits it again (act-3-operations.md:454)
 Role: Trainee — Dr Sipho Ndlovu
 Route: / → /activities/{ActivityId:int} → /activities/inbox
 Do: From the dashboard's Needs you card, open the reflection. Expand "What I will do differently": "Start the sepsis
@@ -651,7 +664,7 @@ Expect: Needs you, badged 1, lists the reflection alone, linked as "Reflective E
   discuss or review. Your drafts and work returned to you are under My activities, in Needs you.", with Open My
   activities (T342).
 
-Step 3.18 — Dr du Plessis logs a teaching session (act-3-operations.md:491)
+Step 3.18 — Dr du Plessis logs a teaching session (act-3-operations.md:504)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/new?type=kgk_teaching_log → /activities/{ActivityId:int}
 Do: Choose KGK Teaching Session Log, under Logged by you. Fill in the topic "Recognising the sick child: a triage
@@ -664,7 +677,7 @@ Expect: The form is Act 1's: one section, Teaching session, with six fields, the
   log credits nothing, and nobody else acts on it." The history's Log row reads Draft → Logged, credited "—", and no
   lateness is recorded.
 
-Step 3.19 — Dr du Plessis logs two more sessions, one from before his programme (act-3-operations.md:513)
+Step 3.19 — Dr du Plessis logs two more sessions, one from before his programme (act-3-operations.md:526)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/new?type=kgk_teaching_log → /activities/{ActivityId:int}
 Do: Log two more sessions:
@@ -674,7 +687,7 @@ Do: Log two more sessions:
 Expect: Each reads "Logged.". `J−1y−56d` is before his programme started (`J−1y`), and it is accepted with no hint. A
   type that credits nothing is held only to "not after today" (T160).
 
-Step 3.20 — Dr du Plessis abandons a draft started on the wrong instrument (act-3-operations.md:526)
+Step 3.20 — Dr du Plessis abandons a draft started on the wrong instrument (act-3-operations.md:539)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/new?type=dops_cpsa → /activities/{ActivityId:int} → /activities/mine
 Do: Start a DOPS (Paediatrics) by mistake. Choose only the EPA PAED-002 and save the draft. Then cancel it from its page.
@@ -686,7 +699,7 @@ Expect: The draft saves with its other required fields empty, because saving a d
   submitted, and it credits nothing.", and nothing is offered after it. My activities has no Needs you. All activities lists the DOPS as Cancelled, Who has it now "Closed", Credit "—",
   beside the three Logged sessions, each "Done".
 
-Step 3.21 — Dr du Plessis asks Dr Khumalo for a CBD (act-3-operations.md:548)
+Step 3.21 — Dr du Plessis asks Dr Khumalo for a CBD (act-3-operations.md:561)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/new?type=cbd_cpsa → /activities/{ActivityId:int}
 Do: File a Case-Based Discussion (Paediatrics). Fill in the EPA PAED-002, the assessor Dr Khumalo, the date `D−5`, the
@@ -694,7 +707,7 @@ Do: File a Case-Based Discussion (Paediatrics). Fill in the EPA PAED-002, the as
 Expect: Submit to Fatima Khumalo reads "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." The
   CBD ends Requested. It stays that way to the end of the act; Step 3.51 reads it from Dr Khumalo's side.
 
-Step 3.22 — Dr du Plessis asks Dr Patel to review his portfolio (act-3-operations.md:560)
+Step 3.22 — Dr du Plessis asks Dr Patel to review his portfolio (act-3-operations.md:573)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/new?type=portfolio_review_cpsa → /activities/{ActivityId:int}
 Do: File a Portfolio and Logbook Review (Paediatrics). Fill in the EPA PAED-015, the reviewer Dr Patel, the review
@@ -708,7 +721,7 @@ Expect: The EPA picker offers PAED-015 only, the one EPA whose list names the po
   reads Encounter `D−1`, the period's last day, and Credit "None: a portfolio and logbook review credits nothing". The
   review stays Awaiting review to the end of the act.
 
-Step 3.23 — Dr Mahlangu files a DOPS, and the EPA picker follows the tool lists (act-3-operations.md:581)
+Step 3.23 — Dr Mahlangu files a DOPS, and the EPA picker follows the tool lists (act-3-operations.md:594)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new → /activities/new?type=dops_cpsa → /activities/{ActivityId:int}
 Do: File a DOPS (Paediatrics) for a lumbar puncture on a four-month-old with suspected meningitis. First look for
@@ -720,7 +733,7 @@ Expect: Request's fields follow the seed: EPA, Assessor, Date observed, Procedur
   Mohammed Patel reads "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox." The DOPS ends
   Requested.
 
-Step 3.25 — Dr Molefe files six workplace-based assessments (act-3-operations.md:625)
+Step 3.25 — Dr Molefe files six workplace-based assessments (act-3-operations.md:638)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new → /activities/new?type=… → /activities/{ActivityId:int} → /activities/mine
 Do: File and submit each of these, filling in every Request field. The clinical context below is the presenting
@@ -739,7 +752,7 @@ Expect: Each ends Requested, with no lateness warning, since all six are within 
   Observation's EPA picker offers PAED-010, because its list names Direct observation. The Mini-CEX and DOPS pickers do
   not offer it.
 
-Step 3.27 — Dr Dlamini files three more (act-3-operations.md:681)
+Step 3.27 — Dr Dlamini files three more (act-3-operations.md:694)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/new?type=… → /activities/{ActivityId:int}
 Do: File and submit:
@@ -751,7 +764,7 @@ Do: File and submit:
     distress.
 Expect: Each ends Requested, its result adding its assessor's inbox: Thandi Zulu's, Sarah Botha's and Fatima Khumalo's.
 
-Step 3.29 — Dr Mahlangu asks Dr Zulu for a Mini-CEX, which is left unrated (act-3-operations.md:716)
+Step 3.29 — Dr Mahlangu asks Dr Zulu for a Mini-CEX, which is left unrated (act-3-operations.md:729)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics): PAED-004, Dr Zulu, `D−3`, Neonatal unit, "Term neonate with jaundice on day three",
@@ -759,7 +772,7 @@ Do: File a Mini-CEX (Paediatrics): PAED-004, Dr Zulu, `D−3`, Neonatal unit, "T
 Expect: Submit to Thandi Zulu reads "Submitted. It is now Requested. It is in Thandi Zulu's Activity inbox." The
   Mini-CEX ends Requested.
 
-Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended (act-5-graduation.md:575)
+Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended (act-5-graduation.md:559)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) on PAED-002 with:
@@ -771,7 +784,7 @@ Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CE
   Submit to David Naidoo reads "Submitted. It is now Requested. It is in David Naidoo's Activity inbox.", and the
   activity is in his inbox. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 
-Step 6.16 — Dr Dlamini files a Mini-CEX on PAED-012 (act-6-catalogue.md:383)
+Step 6.16 — Dr Dlamini files a Mini-CEX on PAED-012 (act-6-catalogue.md:365)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) and submit it:
@@ -785,29 +798,36 @@ Do: File a Mini-CEX (Paediatrics) and submit it:
 Expect: The EPA picker offers nine EPAs for the Mini-CEX, PAED-012 among them. Submit to Mohammed Patel reads
   "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox."
 
-Step 6.20 — Dr Mahlangu's picker leaves PAED-012 out too (act-6-catalogue.md:481)
+Step 6.20 — Dr Mahlangu's picker leaves PAED-012 out too (act-6-catalogue.md:464)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect: Eight EPAs: PAED-001 to PAED-004, PAED-006 to PAED-008, and PAED-013. PAED-012 is not offered.
 
-Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:631)
+Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:611)
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress → /activities/new → /activities/new?type=direct_observation_cpsa
-Do: Read her progress. Then start a Direct Observation (Paediatrics) and open its EPA picker. Leave without saving.
-Expect: A KGK-001 card appears under "Once a year", reading 0 of 1 for the current year, and the yearly targets line
-  counts one more EPA. Its line for the year before reads "0 of 1, 1 short": a target is read live, into periods that
-  have already closed, as the items page warned. The Direct Observation picker offers ten EPAs, KGK-001 among them.
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/new →
+  /activities/new?type=direct_observation_cpsa
+Do: Read her progress, then KGK-001's page from its row. Then start a Direct Observation (Paediatrics) and open its EPA
+  picker. Leave without saving.
+Expect: A KGK-001 row appears first in "Once a year · 6 EPAs": "KGK-001 — Running a paediatric outreach clinic at a
+  district hospital", with the badge "Kgosi Kgari Teaching Hospital's own", "0 of 1 in 2026" over "1 more by
+  2026-11-30", and a dash where the other rows say when a committee decides them. This period reads "0 of 6" over "EPAs
+  met in 2026", one EPA more. KGK-001's page reads "1 a year · Not in the College's exit rule" under its h1, and "2025
+  academic year: 0 of 1, 1 short": a target is read live, into periods that have already closed, as the items page
+  warned. Its level reads "Minimum 3a", and Entrustment "No STAR yet." and "Not in the College's exit rule." The Direct
+  Observation picker offers ten EPAs, KGK-001 among them.
 
-Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:823)
+Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:804)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect:
-  - **The cards.** Seventeen: 11.2's 16 national items (PAED-016 once a year, and PAED-011 at 2 per academic year,
-    among them) and KGK-001.
-  - **The counts.** His encounters before the move are counted in 11.1's tallies, which this page no longer reads. Until
-    Step 6.38, each card shows only what 11.2 holds for him, which is nothing yet.
+  - **The rows.** Seventeen, in "Each semester · 10 EPAs" and "Once a year · 7 EPAs": 11.2's 16 national items (PAED-016
+    once a year, and PAED-011 at 2 per academic year, among them) and KGK-001. Nothing notes the move and nothing marks
+    a row as new: KGK-001's badge is the only mark (T355, Q9).
+  - **The counts.** His evidence counts on 11.2 at once: PAED-002 reads "1 of 3 this semester", as in Step 6.35, and
+    PAED-016 and KGK-001 read "0 of 1 in 2026".
   - **The picker.** The Mini-CEX picker offers ten EPAs, PAED-016 among them.
 
 Step A.2.7 — Dr Mahlangu leaves a draft and a request waiting (appendix-cross-cutting.md:374)
@@ -822,14 +842,14 @@ Expect: The first reads "Draft saved. It has not been submitted. It is in nobody
   second reads "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." My activities' Needs you
   lists the first and not the second. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 
-Step A.6.6 — Dr Patel cannot be named as an assessor while locked (appendix-cross-cutting.md:929)
+Step A.6.6 — Dr Patel cannot be named as an assessor while locked (appendix-cross-cutting.md:930)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) and open its assessor list. Then leave without saving.
 Expect: KGK's other assessors are listed (Dr Zulu, Dr Naidoo, Dr Botha and Dr Khumalo), but not Dr Patel, and never
   herself (T102). Nothing is saved.
 
-Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone (appendix-cross-cutting.md:1004)
+Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone (appendix-cross-cutting.md:1005)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: At desktop width, using only Tab, Shift+Tab, the arrow keys, Space and Enter, file a Mini-CEX (Paediatrics):

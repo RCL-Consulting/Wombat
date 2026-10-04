@@ -42,7 +42,8 @@
           <a class="btn btn-primary" href="@View.ActionHref"><Icon Name="copy" />@label</a>
           break;
         case ActivityStatusAction.OpenProgress:
-          <a class="btn btn-outline" href="@View.ActionHref">@label</a>
+          @* Its words and place are flow 03's; its name says where it lands, "Open My progress at PAED-001" (T355, E5). *@
+          <a class="btn btn-outline" href="@View.ActionHref" aria-label="@View.ActionAriaLabel">@label</a>
           break;
         case ActivityStatusAction.Cancel:
           @* C11: quiet, and behind the page's ConfirmDialog; the dialog hands the focus back here on Keep. *@

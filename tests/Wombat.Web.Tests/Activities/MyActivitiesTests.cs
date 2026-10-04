@@ -152,6 +152,53 @@ public sealed class MyActivitiesTests : TestContext
     }
 
     [Fact]
+    public void ACreditedRow_LinksItsCreditToTheEpasPage_NamedForWhereItLands()
+    {
+        // T355 (C7; Q7; R3-W-mine-credit): "1 item" is a link to the EPA's page under My progress, named "1 item to
+        // PAED-001, in My progress"; "—" (MSF, which credits nothing towards a target) and "None" stay text.
+        var done = new ActivityHolderDto(ActivityHolderKind.Done, null, null, false, ActivityRows.When);
+        var cut = RenderMine([],
+        [
+            ActivityRows.Row(1, state: "recorded", stateLabel: "Recorded", typeName: "Multi-Source Feedback (Paediatrics)", nominee: null,
+                holder: done, creditedItemCount: null, epaCode: "PAED-010"),
+            ActivityRows.Row(2, state: "completed", stateLabel: "Completed", holder: done, creditedItemCount: 1, epaCode: "PAED-001"),
+            ActivityRows.Row(3, state: "completed", stateLabel: "Completed", holder: done, creditedItemCount: 0, epaCode: "PAED-012",
+                observedOn: new DateOnly(2026, 10, 3)) with { EpaInForce = false }
+        ]);
+
+        var credit = cut.FindAll("tbody tr").Select(row => row.QuerySelectorAll("td")[3]).ToList();
+        credit[0].QuerySelector("a").Should().BeNull();
+        Text(credit[0]).Should().Be("—");
+
+        var link = credit[1].QuerySelector("a.credit-link")!;
+        link.TextContent.Trim().Should().Be("1 item");
+        link.GetAttribute("href").Should().Be("/portfolio/progress/5000");
+        link.GetAttribute("aria-label").Should().Be("1 item to PAED-001, in My progress");
+
+        credit[2].QuerySelector("a").Should().BeNull();
+        Text(credit[2]).Should().Be("None");
+        // Nothing else on the page changes (the fence): the paused mark is flow 03's.
+        Text(cut.FindAll("tbody tr").ToList()[2].QuerySelectorAll("td").First()).Should().Contain("PAED-012 (no longer in use)");
+    }
+
+    [Fact]
+    public void ACreditToAnEpaWhosePageDoesNotOpen_StaysText()
+    {
+        // T355, build review G4: credited under a curriculum she no longer holds (a version move, a removed item), the EPA
+        // has no page under My progress; a link would land on "Page not found".
+        var done = new ActivityHolderDto(ActivityHolderKind.Done, null, null, false, ActivityRows.When);
+        var cut = RenderMine([],
+        [
+            ActivityRows.Row(2, state: "completed", stateLabel: "Completed", holder: done, creditedItemCount: 1, epaCode: "PAED-001")
+                with { EpaPageOpens = false }
+        ]);
+
+        var credit = cut.Find("tbody tr").QuerySelectorAll("td")[3];
+        credit.QuerySelector("a").Should().BeNull();
+        Text(credit).Should().Be("1 item");
+    }
+
+    [Fact]
     public void AllActivities_ComeAPageAtATime()
     {
         var sender = new Sender([], Enumerable.Range(1, 20).Select(id => ActivityRows.Row(id)).ToList(), totalCount: 45);

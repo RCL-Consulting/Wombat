@@ -1,8 +1,14 @@
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Curricula.Quota;
+using Wombat.Application.Features.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.Dashboards.Trainee;
 
+/// <summary>
+/// The Trainee's Home, in one read behind <c>DashboardFrame</c>, so a failure is Home's one load error (T355, R1; note 3):
+/// Your targets, Needs you, Recent decisions and My authorisations. Recent activities and Upcoming deadlines are retired
+/// (Q3; T298): a date is shown on the row it belongs to.
+/// </summary>
 /// <param name="CurriculumTargets">
 /// The trainee's curriculum progress for the current period: the same read model the progress page uses (T130). For a
 /// trainee whose programme has ended, the one they ended on, marked as ended (T252). Null for a pending trainee or one
@@ -13,33 +19,18 @@ namespace Wombat.Application.Features.Dashboards.Trainee;
 /// the code <c>ListNeedsYouQuery</c> reads them with (<c>NeedsYou.ReadAsync</c>; T297's rule, restated by T342). Home's
 /// card lists the first <c>NeedsYouListed</c> and counts them all.
 /// </param>
+/// <param name="RecentDecisions">
+/// What someone else decided on the caller's own requests, newest decision first, the first
+/// <c>RecentDecisionsListed</c> (<c>DecidedOnYours</c>, T355, B1; E6), each with its count line (E5).
+/// </param>
+/// <param name="Standing">
+/// The standing against Annexure A in summary mode (<c>EntrustmentStandingReader</c>, note 3): no latest rating is read.
+/// As on the day the targets are read for (the programme's last day once it has ended). Null for a pending trainee or one
+/// with no profile.
+/// </param>
 public sealed record TraineeDashboardSummaryDto(
     TraineeCurriculumProgressSummaryDto? CurriculumTargets,
     IReadOnlyList<ActivitySummaryDto> NeedsYou,
-    IReadOnlyList<RecentActivityItem> RecentActivities,
-    IReadOnlyList<UpcomingDeadlineItem> UpcomingDeadlines,
+    IReadOnlyList<ActivitySummaryDto> RecentDecisions,
+    EntrustmentStandingDto? Standing,
     bool IsPendingTrainee);
-
-/// <param name="CurrentState">The stored state key: with <paramref name="IsFinished" />, the badge's colour.</param>
-/// <param name="CurrentStateLabel">
-/// The state as the activity's pinned workflow labels it, the key only when that workflow does not declare it: the
-/// badge's text (T220).
-/// </param>
-/// <param name="IsFinished">
-/// Whether the state is a terminal state of the activity's pinned workflow (<c>ActivityCompletion</c>, D44): the badge is
-/// green when it is, whatever the key is called, so a finished teaching session, which ends in <c>accepted</c>, is not
-/// badged as work in hand (T266 review).
-/// </param>
-public sealed record RecentActivityItem(
-    int ActivityId,
-    string ActivityTypeName,
-    string CurrentState,
-    string CurrentStateLabel,
-    bool IsFinished,
-    DateTime CreatedOn);
-
-public sealed record UpcomingDeadlineItem(
-    int ActivityId,
-    string ActivityTypeName,
-    string FieldLabel,
-    DateOnly DueDate);

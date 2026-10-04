@@ -232,7 +232,7 @@ public sealed class DashboardStateLiteralTests
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToList();
 
-    private static readonly string[] SharedReads = ["WaitingForYou.cs", "DecidedByYou.cs"];
+    private static readonly string[] SharedReads = ["WaitingForYou.cs", "DecidedByYou.cs", "DecidedOnYours.cs"];
 
     private static string SolutionRoot()
     {

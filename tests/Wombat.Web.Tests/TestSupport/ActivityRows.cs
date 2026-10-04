@@ -49,7 +49,9 @@ public static class ActivityRows
             Holder = holder ?? new ActivityHolderDto(ActivityHolderKind.Author, "trainee-1", "Sipho Ndlovu", true, When),
             NomineeName = nominee,
             DisplayName = $"{typeName} · {epaCode} · {observed:yyyy-MM-dd}",
-            Shape = shape
+            Shape = shape,
+            // Her own list, its EPA an item of her curriculum (T355, build review G4).
+            EpaPageOpens = true
         };
     }
 
@@ -105,7 +107,10 @@ public static class ActivityRows
             SubjectName = subjectName,
             DisplayName = $"{typeName} · PAED-001 · 2026-09-20",
             DecidedOn = decided,
-            IsFinished = isFinished
+            IsFinished = isFinished,
+            // As DecidedOnYours reads the seeded Mini-CEX: its decline is the assessor's, and it credits (T355, R4).
+            Declined = state == "declined",
+            CanCredit = true
         };
     }
 

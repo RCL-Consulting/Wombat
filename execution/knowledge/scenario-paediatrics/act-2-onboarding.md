@@ -685,14 +685,21 @@ Gap: none
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → / → /portfolio/progress
 Do: Sign in, read the dashboard and nav, and open My progress.
-Expect: Curriculum targets names the current semester and reads "0 / 10" semester targets met and "0 / 5" yearly targets
-  met. The largest shortfalls are PAED-001 to PAED-005, each "0 of 3 this semester", and there is no "started part-way"
-  line (D42). The other cards read: Needs you, "Nothing needs you. Requests you have filed are in My activities.", with
-  Open My activities (T342); "No activities yet."; "No deadlines in the next 14 days."; and My authorisations. The
-  header offers "Log an activity" (T335). The sidebar reads "Acting as Trainee" over Home, Log an activity, My
-  activities, MSF reports, My committee reviews and Export portfolio, then My progress and My data rights under the
-  rule. My progress reads "0 of 10 EPAs met this semester", "0 of 5 EPAs met in <year>" and Training year "4 — it sets
-  the minimum level each encounter is judged against".
+Expect: Home's first card, Your targets, reads "Training year 4 — it sets the minimum level each encounter is judged
+  against." (T306), then "0 of 10" over "EPAs met this semester" and "0 of 5" over "EPAs met in 2026", never "0 / 10"
+  (T355). Under "Furthest short" are PAED-001 to PAED-005, each its name as its own link to its EPA's page, with "0 of 3
+  this semester · 3 more by 2026-11-30" under it; there is no "started part-way" line (D42), and the card ends with Open
+  My progress. The other cards read: Needs you, "Nothing needs you. Requests you have filed are in My activities.", with
+  Open My activities (T342); Recent decisions, "No decisions yet."; and My authorisations, "No STAR yet. When the
+  committee issues one, it shows here against training year 4's level.", with Open My authorisations. There is no Recent
+  activities card and no Upcoming deadlines card (T355). The header offers "Log an activity" (T335). The sidebar reads
+  "Acting as Trainee" over Home, Log an activity, My activities, MSF reports, My committee reviews and Export portfolio,
+  then My progress and My data rights under the rule. My progress's subtitle reads "Training year 4 · Semester 2, 2026".
+  Its This period reads "0 of 10" over "EPAs met this semester", "0 of 5" over "EPAs met in 2026", "Semester 2, 2026
+  ends on 2026-11-30.", "Training year 4 — it sets the minimum level each encounter is judged against." and
+  "Multi-source feedback: 0 of 15 EPAs covered by a released campaign that closed this semester. …". Your EPAs lists
+  "Each semester · 10 EPAs" and "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; Entrustment against
+  Annexure A reads "0 at or above · 0 below · 15 with no decision, of 15 EPAs".
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): Home, "Trainee · Semester 2, 2026", header action "Log an
   activity"; Curriculum targets "Semester 2, 2026 · July to November", "0 / 10" semester and "0 / 5" yearly (2026),
   PAED-001 to 005 each "0 of 3 this semester", no part-way line; Needs you "Nothing needs you. Requests you have filed
@@ -706,8 +713,11 @@ Gap: [F-2.39a, T306] (still) The trainee dashboard shows no training year; only 
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
 Route: /account/login → / → /portfolio/progress
 Do: Each signs in and opens My progress.
-Expect: Each dashboard has Molefe's shape and figures. Training year reads 3 for Dlamini, 2 for du Plessis and 1 for
-  Mahlangu and Ndlovu. Their semester and yearly targets apply now: a start on 15 January is on time for both (D42).
+Expect: Each dashboard has Molefe's shape and figures, with its own training year: Your targets opens "Training year N —
+  it sets the minimum level each encounter is judged against.", as My progress does (T306), My authorisations reads "No
+  STAR yet. When the committee issues one, it shows here against training year N's level.", and My progress's subtitle
+  reads "Training year N · Semester 2, 2026". N is 3 for Dlamini, 2 for du Plessis and 1 for Mahlangu and Ndlovu. Their
+  semester and yearly targets apply now: a start on 15 January is on time for both (D42).
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): Each dashboard has Molefe's shape and figures: "0 / 10", "0 /
   5" (2026), PAED-001 to 005 "0 of 3 this semester", no part-way line, the same Needs you card. My progress: 0 of 10, 0
   of 5 in 2026; Training year 3 (Dlamini), 2 (du Plessis), 1 (Mahlangu), 1 (Ndlovu), right for 2026-10-03.

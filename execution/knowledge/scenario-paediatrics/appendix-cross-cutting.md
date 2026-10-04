@@ -632,8 +632,9 @@ Role: Trainee — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password → /account/profile
 Do: Sign in with the password Prof Mbatha set. Then change it, from My account (the name in the top bar), to one of
   his own. Record it in `pwd_DO_NOT_COMMIT.txt`.
-Expect: He lands on his Trainee dashboard, which still says that his programme ended (Step 5.28). The change lands on
-  My account with "Password updated."
+Expect: He lands on his Trainee dashboard, whose Your targets card still says that his programme ended (Step 5.28):
+  "Your programme ended on <Step 5.28's `D−2`, as `YYYY-MM-DD`>, so no target applies to you any more. Your progress in
+  each period is kept on My progress, read-only." (T355, D1). The change lands on My account with "Password updated."
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): With the password Prof Mbatha set he lands on /, "Trainee ·
   Semester 2, 2026". Curriculum targets reads "Your programme ended on 1 October 2026, so no target applies to you any
   more. Your progress in each period is kept on My progress, read-only."; Needs you reads "Nothing needs you. Requests
@@ -1078,10 +1079,14 @@ Gap: none (T323's sideways scroll and narrow inputs no longer occur: the inbox s
 
 ### Step A.7.3 — Dr Dlamini on her phone
 Role: Trainee — Dr Anele Dlamini
-Route: / → /portfolio/progress → /activities/mine → /account/data-rights
-Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
-Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. My activities'
-  rows stack, each cell but the link and the state labelled by its column (T342), and the table of "Your requests"
+Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
+Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data
+  rights from the menu.
+Expect: The dashboard's cards stack, each Furthest short row's figure under its name. On My progress, This period, the
+  index and the Entrustment panel stack: each EPA's link is a 44 px block, every cell but the link labelled by its
+  column, and each Latest rating link in the panel is 44 px tall (T328); nothing scrolls sideways. The EPA's page draws
+  its chart at 326 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
+  but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): At 390 px. The bar reads "Acting as Trainee"; the menu's eight
   rows are 44 px, with Anele Dlamini and Sign out at its foot. Home's cards stack at 16 to 374. My progress (the menu
@@ -1098,10 +1103,10 @@ Gap: F-A.7.3a, T328 (still: the rating links in the entrustment-against-Annexure
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: / → /portfolio/progress
 Do: At 390 px, sign in, read Home, and open My progress from the menu.
-Expect: Home says that she completed her programme and points her to My progress, as at Step 5.21 (T252). The phone
-  bar shows no "Acting as", since she holds no role, and the menu holds Home, My progress and My data rights, then her
-  name and Sign out at its foot. My progress shows her read-only record of past periods (T252), its cards fitting the
-  width.
+Expect: Home says that she completed her programme and points her to My progress, as at Step 5.21 (T252). The phone bar
+  shows no "Acting as", since she holds no role, and the menu holds Home, My progress and My data rights, then her name
+  and Sign out at its foot. My progress shows her read-only record of past periods (T252), its cards fitting the width;
+  her charts are on each EPA's page, not on My progress (T355).
 Note: The code shows one card, "Your training record", pointing to My progress (T335), but does not say that or when she
   completed her programme (T311).
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): At 390 px. The bar shows Wombat and Menu, with no "Acting as".
@@ -1135,8 +1140,10 @@ Gap: F-A.7.5b, T328 (still: Apply filters comes before the filters it applies).
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
-Expect: The review's cards stack. The evidence tables scroll inside their containers, and each EPA's trajectory chart
-  fits the width (T166).
+Expect: The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
+  drawn at 326 px, never scaled, its rungs and months 12 px: in the review's nested card it scrolls sideways in its own
+  named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing else scrolls
+  sideways (T166, T355).
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): At 390 px. The bar's "Acting as Committee member" wraps and the
   bar grows to 59 px; the menu's head adds "Switch to Assessor". Committee reviews: the table (875 px) scrolls in its
   container. Review 7 (Dr Molefe's pre-graduation review): cards at 16 to 374 with nested cards at 41 to 349; its six

@@ -171,61 +171,14 @@ public sealed class GetFileAgainSourceQueryHandler : IRequestHandler<GetFileAgai
 
     /// <summary>
     /// The move that declined the source, or null when it was not declined: see the remarks on the query. Read under the
-    /// source's pinned workflow; a pinned version that cannot be read is not a decline anyone can act on.
+    /// source's pinned workflow; a pinned version that cannot be read is not a decline anyone can act on. The rule is
+    /// <see cref="ActivityDecline" />, which Home's Recent decisions reads too (T355, build review R4).
     /// </summary>
     private static ActivityTransition? DeclineOf(Activity source)
     {
         var pinned = source.ActivityType.Versions.SingleOrDefault(version => version.Version == source.SchemaVersion);
-        var workflow = pinned is null ? null : PinnedWorkflows.TryParse(pinned.WorkflowJson);
-        if (workflow is null)
-        {
-            return null;
-        }
-
-        var state = workflow.States.FirstOrDefault(candidate =>
-            string.Equals(candidate.Key, source.CurrentState, StringComparison.Ordinal));
-        if (state is null || state.Terminal || workflow.HasOutgoingTransition(state.Key))
-        {
-            return null;
-        }
-
-        var last = source.Transitions
-            .OrderBy(transition => transition.OccurredOn)
-            .ThenBy(transition => transition.Id)
-            .LastOrDefault();
-
-        if (last is null ||
-            !string.Equals(last.ToState, source.CurrentState, StringComparison.Ordinal) ||
-            string.Equals(last.ActorUserId, source.SubjectUserId, StringComparison.Ordinal) ||
-            string.Equals(last.ActorUserId, source.CreatedByUserId, StringComparison.Ordinal))
-        {
-            return null;
-        }
-
-        // R6: the recorded move must be one only the person she named may make.
-        var move = workflow.Transitions.FirstOrDefault(transition =>
-            string.Equals(transition.Key, last.TransitionKey, StringComparison.Ordinal) &&
-            transition.From.Contains(last.FromState, StringComparer.Ordinal) &&
-            string.Equals(transition.To, last.ToState, StringComparison.Ordinal));
-        return move is not null && IsNamedPersonsMove(move.Actor) ? last : null;
+        return ActivityDecline.MoveOf(pinned is null ? null : PinnedWorkflows.TryParse(pinned.WorkflowJson), source);
     }
-
-    /// <summary>
-    /// Whether a move's actor rule admits someone the author named (a <c>field:</c> arm, alone or narrowed) and no arm of
-    /// the author's own (<see cref="ActivityWaiting.IsAuthorArm" />).
-    /// </summary>
-    private static bool IsNamedPersonsMove(ActorRule rule)
-    {
-        var arms = rule is CombinedActorRule { CombinationKind: ActorRuleCombinationKind.Any } any ? any.Rules : [rule];
-        return arms.Count > 0 && !arms.Any(ActivityWaiting.IsAuthorArm) && arms.Any(NamesAField);
-    }
-
-    private static bool NamesAField(ActorRule arm) => arm switch
-    {
-        FieldUserActorRule => true,
-        CombinedActorRule { CombinationKind: ActorRuleCombinationKind.All } all => all.Rules.Any(NamesAField),
-        _ => false
-    };
 
     private async Task<(string DataJson, IReadOnlyList<string> Keys, bool EpaDropped)> CopyAsync(
         Activity source,

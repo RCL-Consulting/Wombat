@@ -178,7 +178,7 @@ public sealed class ActivityInboxTests : TestContext
 
         var epas = cut.FindAll(".epa-cell").Select(Text).ToList();
         epas.Should().Equal("PAED-001 — Take a history", EpaOptionLabel.For("PAED-012", "Communicate with families", inForce: false));
-        cut.FindAll(".epa-cell .muted").Select(mark => mark.TextContent.Trim()).Should().Equal(EpaOptionLabel.NoLongerInUse);
+        cut.FindAll(".epa-cell .paused-mark").Select(mark => mark.TextContent.Trim()).Should().Equal(EpaOptionLabel.NoLongerInUse);
     }
 
     // R3-I-alike (note 9; C11): two requests from one registrar, on one EPA and date, are told apart by their accessible

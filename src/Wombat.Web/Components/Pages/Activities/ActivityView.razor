@@ -3,6 +3,7 @@
 @using System.Security.Claims
 @using Wombat.Application.Features.Activities.Commands.SaveActivityDraft
 @using Wombat.Application.Features.Activities.Commands.TransitionActivity
+@using Wombat.Application.Features.Activities.Queries.GetActivityCountLine
 @using Wombat.Application.Features.Activities.Queries.GetActivityById
 @using Wombat.Application.Features.Activities.Queries.ListWaitingForYou
 @using Wombat.Application.Features.Activities.Services
@@ -110,7 +111,7 @@ else
     <Alert Kind="danger">@_actionError</Alert>
   }
 
-  <ActivityStatus View="@model.Status(_ratedLabel)" Busy="@(_running is not null)" OnCancel="CancelFromStatusAsync" />
+  <ActivityStatus View="@model.Status(_ratedLabel, _countLine)" Busy="@(_running is not null)" OnCancel="CancelFromStatusAsync" />
 
   var fills = FillsASection;
   <div class="details-grid activity-grid">
@@ -222,6 +223,10 @@ else
   private IReadOnlyList<ActivityActionDto> _actions = [];
   private IReadOnlyList<EntrustmentRung>? _rungs;
   private string? _ratedLabel;
+
+  // The count the completed activity made, for its registrar's status card (T355, C5; E5): read as part of the page's own
+  // load, so the card draws once, with the sentence. Null for anyone else, for an unfinished one, and after a failed read.
+  private Wombat.Application.Features.Curricula.Quota.EpaCountLineDto? _countLine;
 
   // The field keys this actor may write right now, as the server resolved them (T070). Empty means the page stays
   // read-only. A set rather than the DTO's list because ActivityForm and ActivityDataPatch both do a Contains per field.
@@ -463,6 +468,7 @@ else
       _workingDataJson = "{}";
       _hasPendingChanges = false;
       _filedOn = null;
+      _countLine = null;
       return;
     }
 
@@ -484,6 +490,24 @@ else
     _attributions = _model.SectionAttributions();
     _rungs = await RungsAsync(_model.RatedScaleKey);
     _ratedLabel = _model.RatedLabel(_rungs);
+    _countLine = _model.ViewerIsSubject && _model.HolderKind == ActivityHolderKind.Done
+      ? await CountLineAsync(user)
+      : null;
+  }
+
+  // The count line's read (T355, note 4): a failure drops the sentence and keeps flow 03's words and the plain link to My
+  // progress, and is logged; it never fails the page.
+  private async Task<Wombat.Application.Features.Curricula.Quota.EpaCountLineDto?> CountLineAsync(ClaimsPrincipal user)
+  {
+    try
+    {
+      return await Sender.Send(new GetActivityCountLineQuery(user, ActivityId));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "The count line of activity {ActivityId} could not be read.", ActivityId);
+      return null;
+    }
   }
 
   // The rated field's ladder, for "Rated 4" and the rung row (B12). Read in its own scope, as the form reads its options

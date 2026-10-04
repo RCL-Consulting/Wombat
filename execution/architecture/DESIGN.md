@@ -20,7 +20,11 @@
 >   page" and "Record page with a workflow", § Dashboard page); flow 04, an assessor works their inbox (2026-09-30,
 >   T350, `06aa51d7`: § Form system "The activity form" (R4, the rung picker and the request fold), § Badges (Overdue),
 >   § Page-level patterns "List page" (R2, the Activity inbox) and "Record page with a workflow" (R3, the way on, the
->   note panel), § Dashboard page (R1, the Assessor's Home and the other-role line).
+>   note panel), § Dashboard page (R1, the Assessor's Home and the other-role line); flow 05, a registrar reads where
+>   they stand (2026-10-04, T355, squash pending: § Dashboard page (R1, the Trainee's Home), § Page-level patterns
+>   "Record page under a personal link" (R2, R5, the EPA page) and "List page" (My activities' Credit link),
+>   § Dashboard layout grid "The progress figures" (R3, and My progress), § Badges "Entrustment standing" (R4, the panel
+>   and the trajectory), § Table system (the paused mark), and § app.css section order (one Progress section).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -721,7 +725,7 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 Two classes, two uses:
 
 - `.clinic-table` — the canonical list table. Header uses `--header-bg`, rows separate with `--border-color`, hover uses `--hover-bg`. Wrap every table in `<div class="table-container shadow">` for the rounded surface + horizontal scroll on narrow screens.
-  Every `<table>` is one, bar a data table only a screen reader reads (the trajectory chart's `.visually-hidden`), and
+  Every `<table>` is one (the trajectory chart's table, once read only by a screen reader, is visible since T355), and
   carries no class app.css does not define: the entrustment decisions list was `class="data-table"` until T226, unstyled
   and 133px wider than the screen at 390px. `Design/NarrowLayoutTests` scans every page.
 - `.table` — do not use. It renders as Bootstrap defaults. Delete every existing occurrence.
@@ -828,12 +832,13 @@ so the page reads the curriculum and both pickers again and keeps the refusal. A
 its refusal moves to the `.action-result` region, which takes the focus; a refused Add that leaves nothing to add puts its
 refusal at the head of the empty state (§ Card system).
 
-**An EPA that is not in force** is marked beside its title in a `.muted` span, on the same line: "(inactive: not in
-force)" on the curriculum editor, which admins read, and "(no longer in use)", the words the activity's own EPA
-picker uses (`EpaOptionLabel`), on the surfaces listed here. The shared `EpaLabel` prints it: an activity's EPA cell on
-My activities and the Inbox (through `ActivityEpaLabel`, T231), the rating trajectory headings on My progress and the
-committee review page, and the EPA on the admin's entrustment decisions list, its revoke confirmation and My
-authorisations (T255). It renders no element of its own, so a heading's text, and its accessible name, carries the
+**An EPA that is not in force** is marked beside its title, on the same line: "(inactive: not in force)" in a
+`.muted` span on the curriculum editor, which admins read, and "(no longer in use)", the words the activity's own EPA
+picker uses (`EpaOptionLabel`), in a `span.paused-mark` (muted, and never bold inside a heading; T355, C13) on the
+surfaces listed here. The shared `EpaLabel` prints it: an activity's EPA cell on My activities and the Inbox (through
+`ActivityEpaLabel`, T231), My progress's "No longer in use" group (`tr.is-paused`, never `.detail-card--paused`), an
+EPA page's h1 and tab and its chart's heading, the rating trajectory headings on the committee review page, and the EPA
+on the admin's entrustment decisions list, its revoke confirmation and My authorisations (T255). It renders no element of its own, so a heading's text, and its accessible name, carries the
 mark. A page that names an EPA passes the flag its DTO carries (`EpaInForce`); the parameter is required. No other
 surface marks it yet: the committee review page's sampling concentration list, its staged STARs (which say "No longer
 fits" instead) and its evidence snapshot headings (frozen at Start) still print a bare "Code — Title".
@@ -1330,6 +1335,31 @@ end waives it (D49, T209: it ended in the window before the window's last month,
 the count and why ("the programme ended part-way through", "after the programme ended"), never a fraction, a bar, "short"
 or "targets start with": the targets did not start later, they stopped.
 
+**The progress figures (T355, flow 05, R3).** A figure is a count against a target for a named window: "1 of 3 this
+semester", "0 of 1 in 2026", "1 of 10 EPAs met this semester". The decision cadence names its own frame ("Decided each
+semester", "Decided once a year", "Decided as opportunity allows", or no label where the item has none: a dash, with "No
+decision cadence" for a screen reader). A level names its training year, once per EPA: "Training year 4: level 5, the
+minimum each encounter is judged against and your STAR's target." A waived window shows its count and when targets
+start ("No target this semester · 2 recorded · targets start with semester 1, 2027"), never a fraction or a bar. Never
+"n / m", a percentage or a lifetime total; never the bare word "year" beside a training year and an academic year. The
+words are `Shared/Progress/ProgressWords`, the one class Home, My progress and the EPA page say a count in; dates are
+ISO (D1).
+
+My progress (`Pages/Portfolio/MyProgress.razor`) is three parts under its header ("Training year 4 · Semester 2, 2026"):
+"This period" (`section.period-card`, `h2#period-h`), the two figures over their labels, the semester's ends line
+(`.period-ends`; in December "Semester 2, 2026 counts encounters observed in December."), then the training-year line
+and MSF's line (`.period-lines`, each term in `.period-line-term`); "Your EPAs" (`section.index-section`), the index,
+`Shared/Progress/EpaProgressTable`: one stacked table per group, its caption the group ("Each semester · 10 EPAs",
+`.clinic-table .index-caption`, which must outrank the built caption rule), each row's EPA a row header whose name links
+to the EPA's page, its count cell a figure, a bar and a line (`.count-cell`, `.count-figure`, `.count-meta`), "Committee
+decides", and its STAR against the training year (`.verdict-cell`: the standing's verdict badge and the level, or "Not
+loaded" when the standing's read failed); then "No longer in use", the paused EPAs, `tr.is-paused` with the paused mark,
+and why each is not counted. The December, part-way and not-started notices are info Alerts above This period. The
+trajectories are on the EPA pages, not here. Loading says "Loading My progress." in a status that is always on the page;
+a failed read is "Could not load your progress. …" with Try again, which answers into This period's heading, never the
+exception's text (T329). A section's own read fails in place: MSF's as a line (`p.section-error`, no button), the
+standing's as the panel's alert with its own Try again, answering into `#standing-h`.
+
 The three staff dashboards' target cards (CommitteeMember, SpecialityAdmin and SubSpecialityAdmin, one
 `EpaTargetCoverageList`) count the same trainees: the current trainees in the caller's scope
 (`TraineeScopeResolver.KeepCurrentAsync`, T238), an active profile on an account that still holds Trainee and that an
@@ -1552,7 +1582,7 @@ skeleton does not pulse; it is a still `--header-bg` block, the same size (§ Ac
 - **A badge's words are body text on its tint**, 11.2:1 or more (T322). Until 2026-09-27 a state badge was its state's
   colour on its own tint: Completed 2.55:1, Accepted 2.42:1, Declined 3.57:1. T166's standing badges had already taken
   body text for that reason; now every badge does, and a standing badge is the state badge of its tint.
-- **A pill keeps its shape in a flex row** (T328). On the dashboards' Recent activities and Recent decisions, a badge
+- **A pill keeps its shape in a flex row** (T328). On the dashboards' Recent decisions (Recent activities until T355), a badge
   beside a link that wrapped took the row's height, a tall pill: a flex item stretches by default. `align-self: center`
   and `flex: none` keep it one line tall and its own width, and `white-space: nowrap` keeps its words on one line.
 
@@ -1609,10 +1639,22 @@ since T335 each is painted as the state badge of its tint.
 .full-width`) after its first pair of cards. The trainee's My progress page shows it as a section with its own `<h2>`,
 and says it to "you" (`Self`). It opens with a sentence naming the training year and a `details-list` of two lines:
 the year-target counts, and the exit rule counted by exit level with the EPAs short of it named. Then a
-`.clinic-table--compact` of six columns: EPA, year target, STAR decision, against target, exit level, latest rating.
+table of six columns: EPA, year target, STAR decision, against target, exit level, latest rating.
 A level on another ladder, or on an unpinned item, is "Not comparable" with the reason under it, never a verdict. The
 panel says the exit rule gates nothing, directly under the rule. Each page loads the panel in its own `try`, so a
 failure shows in the panel and never replaces the page.
+
+Since T355 (flow 05, R4) the panel is changed once, for My progress and the committee's review page, and is otherwise the
+built panel whole. It stacks below 641px (DataTable's Stack: the EPA a row header, each other cell labelled by its
+column; `.clinic-table--stack.clinic-table--index`). Its EPA name links where the page's `EpaHref` says: the trainee's EPA
+page on My progress, that EPA's chart on the committee page; with none it is text. Its rating link
+(`.standing-rating-link`, "4 · Encounter 2026-09-24") is a 44px block at phone width, with its RatingWords under it, and
+every cell's second line (an issue date, a reason, "Reached") is `.standing-rating-meta`. Its dates are ISO ("Issued
+2026-10-03", D1); "None" is the empty STAR and rating; a rating on another ladder reads "Independent on O-R Scale". Its
+summary is `StandingWords.YearLine`, which Home's My authorisations card says too. A failure is fixed words, never the
+exception's text: on My progress "Could not load your standing. …" with Try again under the section's heading,
+answering into `#standing-h`; on the committee page, which offers no Try again, "Could not load the trainee's standing.
+… Reload the page, …".
 
 What the panel must not claim. On the review page the year is read for the review period's last day once that has
 passed (`ReviewPeriodTo`), and the opening sentence says so and that decisions are today's: a review held after its
@@ -1626,6 +1668,39 @@ than passing it off as Annexure A's. An institution's own EPA is a row, marked u
 the College's and counts only the College's EPAs. For someone else, "nothing to show" does not say "no curriculum":
 the same null is what a caller outside the trainee's oversight gets. The exit rule is one sentence built in C#, because
 Razor drops a space standing alone before an expression and ran the sentences together.
+
+**The trajectory** (T355, flow 05; Q5, E1, E2, R4; notes 10, 11, 13). `Components/Shared/TrajectoryChart.razor` is the
+one rendering of `GetEpaTrajectoryForTraineeQuery`, changed once for the EPA page and the committee's review page.
+
+- **Drawn twice, never scaled.** Both drawings are in the markup, 900px (`.trajectory-chart--wide`) and 326px
+  (`--narrow`), each at its own fixed size (`TrajectoryDrawing`, `TrajectoryFrame`). The card, not the viewport, chooses:
+  `.trajectory-figure` is a container (`container-type: inline-size`) and `@container (min-width: 900px)` shows the 900
+  drawing, the 326 below it, with no script. The EPA page's card holds 900px only from a viewport of about 1254px, so at
+  1100 it draws 326. `.trajectory-figure` is also a named, focusable scroll region (`role="region"`, "Rating chart for
+  PAED-001", `tabindex="0"`), the floor for a card narrower than 326px, such as the committee's nested card at 390.
+- **One window on a real time axis**, month ticks, every month named at 900 and every other at 326; every semester 2
+  (July to December) banded; each semester named. A window longer than about 14 months (a pre-graduation review's) names
+  no month or semester: its axis names quarters at 900 and years at 326, the years stand above the plot where the axis
+  names quarters, and no two names in a row overlap (T355, build review G1). The EPA page reads the academic year
+  containing today (or the one the programme ended in) and draws a "Today" rule; the committee page reads the review's
+  window and draws none (decision D2).
+- **The ladder** top to bottom, a gridline through each rung (decorative); the area below the training year's minimum
+  shaded (warning-bg, decorative) and edged by a stepped dashed line in warning-color that steps where the training year
+  changed; "Minimum 5" ("Min 5" at 326) and "Exit 5" in text-color, never in warning-color; the exit level a 2.5px
+  primary-color line; a rating on another scale a hollow ring in its own lane under the rungs ("Other scale"), left out of
+  the line. Points closer than a dot are set a dot apart, in date order, and a run is set back from the plot's right
+  edge; a minimum step off the drawn ladder draws no minimum (R5, R6). No minimum before the programme starts (R2).
+  Rungs and months 13px (12px at 326), nothing under 12px.
+- **The key** ("How to read the chart") names each mark; **the table is always visible** (`table.trajectory-table`,
+  stacked below 641px, its caption "The ratings, oldest first"): Encounter as each row's header, Rating ("Independent on
+  O-R Scale" for another ladder), Against the minimum then (computed live with the comparer credit uses, at the training
+  year of each encounter, E2, and by the activity's pinned credit directive: none where it names no minimum, R3), Activity linked by its row name, Assessor. The SVG is named for what it adds ("Chart of the
+  3 ratings in the table below."). Multi-source feedback is never plotted; where the page has MSF beside the EPA the card
+  says "Multi-source feedback is not plotted."
+- **The heading's level is the page's** (`HeadingLevel`): h2 "Rating trajectory" on the EPA page, with the paused mark;
+  on the committee page each EPA's name, one level below its section's h3, the summary naming the trainee and the
+  review's window ("Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31, from …"). Each card is
+  `id="trajectory-<EpaId>"`, which the standing panel's EPA names link to on the committee page.
 
 **Multi-source feedback coverage** (T168). `Components/Shared/MsfCoveragePanel.razor` renders
 `GetMsfCoverageForTraineeQuery` on the committee review page. It is a full-width card directly after the standing card,
@@ -2699,6 +2774,11 @@ activities (`/activities/mine`) is headed "My activities", "Everything you have 
   heading. Who has it now reads "You", the holder's name, "Waiting for <state label>." (a move a role holds, nobody
   named), "Done" or "Closed". Credit is `CreditOutcome.Label` ("1 item", "None", "—"). An EPA not in force now is marked
   under the link, "PAED-006 (no longer in use)" (T231).
+  - **The Credit cell links to what the credit made** (2026-10-04, T355, flow 05; C7, Q7): where a completion credited
+    an item and names its EPA, "1 item" is a link to that EPA's page under My progress (`ProgressLinks.Epa`,
+    `/portfolio/progress/{EpaId}`), `a.credit-link`, named "1 item to PAED-001, in My progress"
+    (`ProgressLinks.CreditTo`); a 44px block below 641px (§ Dashboard page, the block-link rule). "—" (MSF, which counts
+    towards no target) and "None" stay text. Nothing else on the page changes for it.
 - **An activity's link** (`ActivityLink`, `.activity-link`) is its name, "Type · EPA · date" (`DisplayName`, E7, E9),
   with a second line (`.activity-link-to`): "to David Naidoo" for work that goes to its nominee, "with Sarah Botha" for
   work discussed or reviewed with them (the type's shape, `ActivityTypeShape.DiscussedOrReviewed`: the reflection, the
@@ -2773,10 +2853,45 @@ A details grid whose second card comes and goes with the page's state can give a
 `.details-grid--lone-spans` (`> .detail-card:only-child` spans `1 / -1`, T266). The grid's first column is its narrow
 third, so a lone card sat there with the rest of the row empty: the MSF campaign page, whose Quick template card is only
 on the create page, showed a campaign's card 223px wide at 1000px, in a 694px row, with its invitees table scrolling 143px
-inside it. It is the only page that asks. It is opt-in (T266 review): on a grid of like cards (My authorisations' STARs,
-My progress's trajectories) one card should look like each of several, and a lone trajectory chart, which scales with
-its width, would stand three times as tall; on My MSF reports the list would jump from the whole row to a third of it
-when a report is selected.
+inside it. It is the only page that asks. It is opt-in (T266 review): on a grid of like cards (My authorisations' STARs)
+one card should look like each of several; on My MSF reports the list would jump from the whole row to a third of it
+when a report is selected. (The rule that a lone trajectory chart scales with its card is withdrawn: since T355 the chart
+is drawn at two fixed sizes and never scaled, § Entrustment standing, and the trajectory.)
+
+### Record page under a personal link
+
+> **Added 2026-10-04, T355, flow 05** (R2, R5; R3-C-Epa): one EPA's page, `/portfolio/progress/{EpaId:int}`
+> (`Pages/Portfolio/EpaProgress.razor`). CSS in `app.css`'s Progress section, `/* Flow 05: … (T355) */`, part 5.
+
+- **Owned by My progress for every role, and for a graduate who holds none.** My progress is a personal link, offered to
+  whoever holds the Trainee role or a trainee record whatever the acting role, so a page under it is owned whatever the
+  acting role, none included: one rule in `NavOwners.OwnerFor` (`NavOwners.IsPersonal`; E3), not one entry per role,
+  which would still miss the graduate. It lights My progress with `aria-current="true"`; the trail is Home › My progress ›
+  the code. `ActiveNavItemTests` holds the page's policy, `TraineeOrFormerTrainee`, to the link's offer.
+- **Addressed by the EPA's id, never its code** (a code is unique only in its namespace). An id that is no item of the
+  caller's own curriculum, another institution's or an unknown one, is flow 01's "Page not found", word for word, drawn in
+  place with `Page="typeof(NotFound)"`, so it has no trail.
+- **Named once.** The h1 is "<code> — <title>", with "(no longer in use)" after it in `span.paused-mark` for a paused EPA
+  and an institution's own EPA's badge (`PageHeader.TitleContent`); the tab is the h1's words, mark included ("PAED-012 —
+  Communicating with and counselling patients, caregivers and healthcare teams (no longer in use) · Wombat"); the crumb
+  stays the code.
+- **Focus.** The h1 takes the focus on arrival (FocusOnNavigate): no script, no `?epa=` query, no scroll script. One
+  header stands above every state, so while the page loads its h1 reads "Loading this EPA" (crumb "Loading…", the always
+  present status "Loading this EPA.") and once loaded the same h1, now the EPA's, still has it. Try again answers into the
+  h1 (`PageFocus.FocusHeadingAsync`). No new focus rule beyond that: "File it again" lands on Log an activity's h1, the
+  crumb back on My progress's h1 (flow 01; note 7).
+- **Its parts.** A reversed details grid (`.details-grid--reverse`, 2fr 1fr, one column at 900px and below): Observations
+  (`#obs-h`: the figure, its bar and its line, the lines under it, the level line, MSF's `CardLine` whole) and Entrustment
+  (`#ent-h`: the STAR from the standing, by EPA id, with its issue, expiry and exit level, or "No STAR yet."); then the
+  trajectory (h2 "Rating trajectory") and Activities on this EPA (`#acts-h`, a stacked table of 44px
+  `.activity-block-link`s, or "No activity on this EPA yet." with Log an activity). A paused EPA has N6's info Alert under
+  the h1, no count and no MSF line, and its Entrustment says it is not in the standing.
+- **"Open My authorisations"** (`.epa-auth-link`, a 44px block below 641px) shows only to a holder of the Trainee role:
+  My authorisations is `Roles = "Trainee"`, and a graduate reads the STAR here (E4).
+- **Every read is the caller's own**, and any that fails is the page's load error in fixed words ("Could not load this
+  EPA. …"), the h1 and crumb "EPA", the failure logged, never its text (T329, T272).
+- **Once the programme has ended (R5)**, the page shows that EPA's periods the same way My progress does, every one
+  read-only, with no figure, no bar and no "n more by" line; the chart is the academic year the programme ended in.
 
 ### Record page with a workflow
 
@@ -3037,7 +3152,42 @@ Dashboards are a composition, not a standalone page pattern.
     `NeedsYou` is `ListNeedsYouQuery`'s read, `NeedsYou.ReadAsync`; T297's rule, restated). It lists the first five and
     counts them all, its count a badge read as words (`DashboardCard`'s `CountWords`, "2 items"); its foot is "Open My
     activities" (`/activities/mine`); empty, it says "Nothing needs you. Requests you have filed are in My activities."
-    Recent activities stays as it was (flow 05 owns Home).
+  - **the Trainee's Home is four cards** (2026-10-04, T355, flow 05, R1; R3-C-Home), in this order: **Your targets**
+    (`#card-targets`, spanning two, the emphasis stripe, Lucide `target`), **Needs you**, **Recent decisions**
+    (`#card-decisions`, spanning two) and **My authorisations** (`#card-stars`, `award`). One read behind the frame
+    (`GetTraineeDashboardSummaryQuery`), so a failure is Home's one load error; nothing moves the focus on load.
+    - Your targets: "Training year N — it sets the minimum level each encounter is judged against." (`.targets-line`);
+      the two figures in My progress's words ("1 of 10" over "EPAs met this semester", "0 of 5" over "EPAs met in 2026";
+      `ProgressWords`), only while a target of either kind applies; the card's notices (`.targets-note`, from
+      `TraineeHomeWords`: every target met, started part-way, not started, ended, no curriculum, no EPA in use); then
+      "Furthest short" (`h3.progress-group-label`), a `ul` of `li.progress-row.progress-row--link`: the five EPAs
+      furthest short, largest shortfall first, then by code. Each row is its own link to its EPA page
+      (`a.progress-row-link`, `ProgressLinks.Epa`), named "Code — Title", with its bar and then its figure and date
+      under the name, never beside it ("0 of 3 this semester · 3 more by 2026-11-30"; December's "… 3 more; encounters
+      in December still count towards Semester 2, 2026."; `ProgressWords.ShortRow`); a bar never stands without the
+      words. Footer: Open My progress.
+    - Needs you: flow 03's `NeedsYouList`, unchanged; its "Open My activities" is Home's one way to My activities.
+    - Recent decisions: the registrar's own requests that someone else last moved and that are finished (a terminal
+      state of the pinned workflow) or have no move left: Completed, Discussed, Signed off, Declined, Accepted, Reviewed,
+      Approved, Verified, Rejected, and any other terminal state (`DecidedOnYours`). Newest decision first, five rows,
+      no footer. Each row: `ActivityLink` ("Type · EPA · date", "to <assessor>" under it; the assessor joins the name
+      when two rows would share it), the decision's badge (`BadgeFor.ActivityState`: `badge-completed` for a finished
+      state, `badge-declined` for Declined and Rejected) and its day, then one line by kind (`.decided-note`,
+      `CountLineWords.ForDecision`). The count line follows one rule with the completed card's sentence: the activity's
+      own window, named when it is not the current one ("PAED-001, Semester 1, 2026: 3 of 3, met."), the current one as
+      "PAED-001: 3 of 3 this semester, met."; "Credits nothing." wherever it credited nothing; "Its credit to PAED-012
+      waits while the EPA is paused." where it is paused and credited nothing; "File it again, to someone else" for
+      Declined alone, named for its row ("File it again, to someone else: Mini-CEX (Paediatrics) · PAED-002 ·
+      2026-09-13"). MSF records are not listed. Flow 04's classes (`.decided-list`, `.decided-row`, `.decided-meta`,
+      `.decided-date`) plus `.decided-note`. Empty: "No decisions yet." (`.card-empty`).
+    - My authorisations: the standing summary in the panel's words (`.stars-summary`, `StandingWords.YearLine`: "2 at
+      or above · 1 below · 12 with no decision, of 15 EPAs"), then each STAR below its level or expiring within 30 days,
+      by code, a link to its EPA page named "Code — Title" with its line under it ("4, below training year 4's level of
+      5 · expires 2026-10-23"; `.decided-row`, `.decided-note`). With no STAR: "No STAR yet. When the committee issues
+      one, it shows here against training year 3's level."; on an ended programme "No STAR yet.". Footer: Open My
+      authorisations. The card's title is the page's name.
+    - A card is never one link around other links; a card's rows are its links (T280). No MSF on Home. No Upcoming
+      deadlines and no Recent activities (Q3; T298): a date is shown on the row it belongs to.
 - **Every role has its own case in Home's switch**, and the dashboard it picks admits the role (T261). Until then a
   CollegeAdmin fell through to the trainee's dashboard: "No curriculum assigned yet", beside links to pages that refuse
   a CollegeAdmin. PendingTrainee shares the trainee's dashboard, which branches on it. A signed-in user who holds **no
@@ -3639,7 +3789,18 @@ h1..h5, .page-subtitle
 /* ── Accessibility ────────────────────────────────── */
 fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fieldset.form-group (+ > legend),
 @media (prefers-reduced-motion: reduce)
+
+/* ── Progress ───────────────────────────────────────── */
+"Flow 05: a registrar reads where they stand (T355)", one account in five parts, in the order they were built, so the cascade between them is as built:
+  "1. The Trainee's Home (R1)": .targets-line, .targets-note, .progress-group-label, .progress-row--link (+ .progress-bar, .progress-row-meta), .stars-summary,
+  "2. My progress: This period, the index and the standing (R3, R4)": .period-card .dashboard-metric-row, .period-ends, .period-lines, .period-line-term, .section-error, .index-section, .clinic-table .index-caption, .clinic-table--index (tbody th, tr.is-paused), .count-cell, .count-figure, .count-meta, .verdict-cell, .verdict-level, .cadence-none, .standing-panel, .standing-rating-meta (+ ≤640px: the stacked caption and row header),
+  "3. Block links at phone width (C7, C9)": .progress-row-link, .epa-link, .activity-block-link, .standing-rating-link, .credit-link, .epa-auth-link, .decided-note (+ a) (+ ≤640px: each a 44px block, .decided-row .activity-link, .detail-card--empty .btn),
+  "4. The paused mark (C5, C13)": .paused-mark,
+  "5. The EPA page and the trajectory (R2, R4, R5; E1)": .details-grid--reverse, .epa-stack, .epa-page-alert, .epa-section-title, .epa-figure-row, .epa-lines, .epa-level-line, .star-level, .activity-cell-paused (+ ≤900px: one column), .trajectory-card, .trajectory-head, .trajectory-figure (a container; @container ≥900px shows the wide drawing), .trajectory-chart(--wide|--narrow|--sized), .trajectory-chart-* (band, below, minimum, exit, rung, lane, today, axis, line, dots, hollow, labels), .trajectory-key(-swatch--below|--exit|--dot|--hollow), .trajectory-table (caption, tbody th), .trajectory-msf (+ ≤640px: the stacked table, .trajectory-card.detail-card)
 ```
+
+The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
+rule is in it, none elsewhere.
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

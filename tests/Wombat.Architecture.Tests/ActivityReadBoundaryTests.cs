@@ -86,9 +86,6 @@ public class ActivityReadBoundaryTests
         ["Wombat.Application.Features.CommitteeDecisions.StartCommitteeReviewCommandHandler"] =
             "Builds the review evidence snapshot after CommitteeDecisionAuthorization.DemandStartableReview, which admits a member of this panel, a Coordinator of the institution this panel belongs to, or a global Administrator - it waived every Coordinator anywhere until T101 finding E, which is what made this reason worth stating - and after CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync, which refuses anyone but an Administrator a review whose trainee does not train at the panel's institution (T182). Stores labels and dates, never DataJson.",
 
-        ["Wombat.Application.Features.Dashboards.Trainee.GetTraineeDashboardSummaryQueryHandler"] =
-            "Its own reads are confined to SubjectUserId == the signed-in user, which is the subject arm of the read rule. Its Needs you card is ListNeedsYouQuery's rows (NeedsYou.ReadAsync, T342), filtered through IWorkflowEvaluator, the ACT gate (ActivityWaiting.LoadActionableAsync, T297).",
-
         ["Wombat.Application.Features.Dashboards.SpecialityAdmin.GetSpecialityAdminDashboardSummaryQueryHandler"] =
             "T101 REVIEW FINDING, not an approval: hand-rolls the SpecialityId stamp comparison instead of calling WhereReadableBy, making it a fourth copy of the oversight rule. It already differs - no Administrator arm, and no IsInRole(SpecialityAdmin) gate on the speciality claim - and is safe only because SpecialityAdminDashboard.razor is role-gated, which nothing here states. Replace the inline Where with WhereReadableBy and delete this entry.",
 
@@ -105,7 +102,10 @@ public class ActivityReadBoundaryTests
     {
         "Wombat.Application.Features.Activities.Queries.ListNeedsYou.NeedsYou",
         "Wombat.Application.Features.Activities.Services.WaitingForYou",
-        "Wombat.Application.Features.Activities.Services.DecidedByYou"
+        "Wombat.Application.Features.Activities.Services.DecidedByYou",
+        // T355: Recent decisions on the Trainee's Home, and the standing Home and the query share (note 3).
+        "Wombat.Application.Features.Activities.Services.DecidedOnYours",
+        "Wombat.Application.Features.EntrustmentDecisions.EntrustmentStandingReader"
     };
 
     // ─── The boundary itself ─────────────────────────────────────────────────

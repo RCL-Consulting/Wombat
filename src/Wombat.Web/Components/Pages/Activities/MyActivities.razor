@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject
 @using Wombat.Application.Features.Activities.Queries.ListNeedsYou
+@using Wombat.Web.Components.Shared.Progress
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<MyActivities> Logger
@@ -65,8 +66,21 @@
               </td>
               <td role="cell" data-label="Who has it now">@ActivityListWords.WhoHasIt(item)</td>
               <td role="cell"><span class="badge @BadgeFor.ActivityState(item.CurrentState, item.Holder?.Kind == ActivityHolderKind.Done)">@item.CurrentStateLabel</span></td>
-              @* T106 item 14 (T108's three values): what each completion credited. *@
-              <td role="cell" data-label="Credit">@CreditOutcome.Label(item.CreditedItemCount)</td>
+              @* T106 item 14 (T108's three values): what each completion credited. Where it credited an EPA, the words are a
+                 link to that EPA's page under My progress, named for where it lands (T355, C7; Q7); "—" (MSF) and "None"
+                 stay text. So does a credit to an EPA whose page does not open, an item of no curriculum she now holds
+                 (a version move, a removed item), which would land on "Page not found" (T355, build review G4). *@
+              <td role="cell" data-label="Credit">
+                @if (item is { CreditedItemCount: > 0, EpaPageOpens: true, EpaId: int epaId, EpaCode: { Length: > 0 } epaCode })
+                {
+                  var label = CreditOutcome.Label(item.CreditedItemCount);
+                  <a class="credit-link" href="@ProgressLinks.Epa(epaId)" aria-label="@ProgressLinks.CreditTo(label, epaCode)">@label</a>
+                }
+                else
+                {
+                  @CreditOutcome.Label(item.CreditedItemCount)
+                }
+              </td>
             </tr>
           </Row>
         </DataTable>

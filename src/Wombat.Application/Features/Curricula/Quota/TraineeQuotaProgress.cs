@@ -4,6 +4,7 @@ using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Curricula.Quota;
 
@@ -121,7 +122,56 @@ public sealed record TraineeCurriculumProgressDto(
     IReadOnlyList<QuotaWindowDto>? Periods = null)
 {
     public bool IsPerSemester => QuotaPeriod == QuotaPeriod.Semester;
+
+    /// <summary>
+    /// How often a committee decides this EPA (<see cref="CurriculumItem.DecisionCadence" />, Annexure B), or null where
+    /// the item has none (KGK-001). Independent of <see cref="QuotaPeriod" />: PAED-003 is observed each semester and
+    /// decided once a year, so the index names the cadence in its own words (T355, C10; notes 8, 9).
+    /// </summary>
+    public QuotaPeriod? DecisionCadence { get; init; }
+
+    /// <summary>"Decided as opportunity allows" (<see cref="CurriculumItem.DecisionIsOpportunistic" />; T355, C10).</summary>
+    public bool DecisionIsOpportunistic { get; init; }
+
+    /// <summary>
+    /// The institution whose own item this is ("Kgosi Kgari Teaching Hospital"), or null for the College's (T355, C10).
+    /// Only ever the trainee's own institution: another institution's local item is never read.
+    /// </summary>
+    public string? OwningInstitutionName { get; init; }
+
+    /// <summary>An institution's own item rather than the College's.</summary>
+    public bool IsLocal => OwningInstitutionName is not null;
+
+    /// <summary>
+    /// The EPA's exit level, as the entrustment standing reads it (<see cref="CurriculumItem.MinimumLevelOrder" />), and as
+    /// the rung a clinician reads (T355, C10). Null only from a producer that does not read it.
+    /// </summary>
+    public int? ExitLevelOrder { get; init; }
+
+    /// <inheritdoc cref="ExitLevelOrder" />
+    public string? ExitLevelLabel { get; init; }
+
+    /// <summary>
+    /// Whether <see cref="EffectiveMinimumLevelLabel" /> is the curriculum's level for the training year (Annexure A's per-year
+    /// map names it) rather than the item's flat minimum, which stands in where the map names none (an item with no map,
+    /// such as KGK-001, or a trainee past the years it names). The EPA page says "Training year 4: level 5, …" for the first
+    /// and "Minimum 3a" for the second (T355, C4), as the standing says it (<c>EpaStandingDto.YearTargetIsExitLevel</c>).
+    /// </summary>
+    public bool MinimumByTrainingYear { get; init; }
+
+    /// <summary>
+    /// Whether the EPA is in force now (<see cref="CurriculumItemsInForce" />, D48). Every item of
+    /// <see cref="TraineeCurriculumProgressSummaryDto.Items" /> is; one EPA's page reads its item whether or not it is
+    /// (T355, round 1 correction 2), and a paused one is read but counted nowhere.
+    /// </summary>
+    public bool EpaInForce { get; init; } = true;
 }
+
+/// <summary>
+/// An item of the trainee's curriculum whose EPA is not in force now (D48): My progress's "No longer in use" group (T355,
+/// Spec § 6). Read, never counted: no figure of the summary includes it.
+/// </summary>
+public sealed record PausedItemDto(int CurriculumItemId, int EpaId, string EpaCode, string EpaTitle, QuotaPeriod QuotaPeriod);
 
 /// <summary>
 /// What a registrar opens the progress page to learn: what is expected of them in this period, and whether they
@@ -162,7 +212,15 @@ public sealed record TraineeCurriculumProgressSummaryDto(
     QuotaStartDto? SemesterTargetsStart,
     QuotaStartDto? YearTargetsStart,
     IReadOnlyList<TraineeCurriculumProgressDto> Items,
-    ProgrammeEndDto? Ended = null);
+    ProgrammeEndDto? Ended = null)
+{
+    /// <summary>
+    /// The profile's items whose EPA is not in force now (national, or the trainee's own institution's), by code: the
+    /// complement of <see cref="Items" /> (<see cref="CurriculumItemsInForce.NotInForce" />). Listed so a page can say why
+    /// they are not targets, and counted in no figure above (D48; T355, Spec § 6).
+    /// </summary>
+    public IReadOnlyList<PausedItemDto> Paused { get; init; } = [];
+}
 
 /// <summary>The first window of a kind a trainee is held to: "semester 1, 2027", from 1 January 2027.</summary>
 public sealed record QuotaStartDto(string Name, DateOnly StartsOn);
@@ -277,79 +335,21 @@ public static class TraineeQuotaProgressReader
 
         var stage = profile.GetStage(asOf);
 
-        var items = await dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .InForce()
-            .Where(item => item.CurriculumId == profile.CurriculumId &&
-                           (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId))
-            .OrderBy(item => item.Epa.Code)
-            .Select(item => new
-            {
-                item.Id,
-                item.EpaId,
-                EpaCode = item.Epa.Code,
-                EpaTitle = item.Epa.Title,
-                item.RequiredCount,
-                item.QuotaPeriod,
-                item.MinimumLevelOrder,
-                item.MinimumLevelByStageJson,
-                item.ScaleId
-            })
-            .ToListAsync(cancellationToken);
-
-        var itemIds = items.Select(item => item.Id).ToList();
-        var rows = itemIds.Count == 0
-            ? []
-            : await dbContext.Set<CurriculumItemProgress>()
-                .AsNoTracking()
-                .Where(row => row.TraineeUserId == traineeUserId && itemIds.Contains(row.CurriculumItemId))
-                .Select(row => new QuotaProgressRow(
-                    row.CurriculumItemId,
-                    row.AcademicYear,
-                    row.Semester,
-                    row.CountsSoFar,
-                    row.MinimumLevelReachedCount,
-                    row.LastObservedOn,
-                    row.LastObservedOnDeclared))
-                .ToListAsync(cancellationToken);
-
+        var items = await FactsAsync(ItemsOf(dbContext, profile).InForce(), cancellationToken);
+        var rows = await RowsAsync(dbContext, traineeUserId, items, cancellationToken);
         var rungs = await EntrustmentRungLabels.LoadAsync(dbContext, items.Select(item => item.ScaleId), cancellationToken);
+        var owner = await OwnerNameAsync(dbContext, profile, items, cancellationToken);
 
-        var result = new List<TraineeCurriculumProgressDto>(items.Count);
-        foreach (var item in items)
-        {
-            var progress = QuotaProgressCalculator.For(
-                item.Id, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, programmeEnd, asOf);
+        var result = items
+            .Select(item => Build(item, rows, rungs, owner, profile, stage, asOf, periodsFrom))
+            .ToList();
 
-            var effectiveMinimum = new CurriculumItem
-            {
-                MinimumLevelOrder = item.MinimumLevelOrder,
-                MinimumLevelByStageJson = item.MinimumLevelByStageJson
-            }.GetMinimumLevelForStage(stage);
-
-            var periods = periodsFrom is { } since
-                ? QuotaProgressCalculator
-                    .Since(item.Id, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, programmeEnd, since, asOf)
-                    .Select(QuotaWindowDto.From)
-                    .ToArray()
-                : null;
-
-            result.Add(new TraineeCurriculumProgressDto(
-                item.Id,
-                item.EpaId,
-                item.EpaCode,
-                item.EpaTitle,
-                item.QuotaPeriod,
-                item.RequiredCount,
-                QuotaWindowDto.From(progress.Current),
-                progress.Previous is { } previous && previous.Window.Status != QuotaWindowStatus.NotStarted
-                    ? QuotaWindowDto.From(previous)
-                    : null,
-                effectiveMinimum,
-                rungs.Format(item.ScaleId, effectiveMinimum),
-                TrainingYearChangedWithin(profile, progress.Current.Window, asOf),
-                periods));
-        }
+        // T355, Spec § 6: what is not in force is listed apart, so My progress can say why it is no target. Never counted.
+        var paused = await ItemsOf(dbContext, profile)
+            .NotInForce()
+            .OrderBy(item => item.Epa.Code)
+            .Select(item => new PausedItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.QuotaPeriod))
+            .ToListAsync(cancellationToken);
 
         var semester = AcademicPeriod.Containing(asOf);
         var semesterWindow = QuotaWindow.For(QuotaPeriod.Semester, asOf, profile.ProgrammeStartDate, programmeEnd);
@@ -374,7 +374,210 @@ public static class TraineeQuotaProgressReader
             asOf < profile.ProgrammeStartDate,
             hasSemesterItems ? StartOf(semesterWindow, profile.ProgrammeStartDate) : null,
             hasYearItems ? StartOf(yearWindow, profile.ProgrammeStartDate) : null,
-            result);
+            result)
+        {
+            Paused = paused
+        };
+    }
+
+    /// <summary>
+    /// One item of the profile's curriculum, by its EPA, read by the same code as each row of
+    /// <see cref="ReadForProfileAsync" />, so one EPA's page and My progress's row cannot disagree (T355, round 1
+    /// correction 2). Read whether or not its EPA is in force (<see cref="TraineeCurriculumProgressDto.EpaInForce" />): a
+    /// paused EPA's page still says what it is. Null when the EPA is no item of the profile's curriculum, national or the
+    /// profile's own institution's (another institution's local item is never this trainee's).
+    /// </summary>
+    /// <param name="periodsFrom">As <see cref="ReadForProfileAsync" />'s: given, the item carries every window back to it.</param>
+    public static async Task<TraineeCurriculumProgressDto?> ReadItemAsync(
+        IApplicationDbContext dbContext,
+        TraineeProfile profile,
+        int epaId,
+        DateOnly asOf,
+        DateOnly? periodsFrom,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        var items = await FactsAsync(ItemsOf(dbContext, profile).Where(item => item.EpaId == epaId), cancellationToken);
+        if (items.Count == 0)
+        {
+            return null;
+        }
+
+        // One item per EPA per curriculum, and a national item never shares an EPA with a local one (T223); the lowest
+        // id if that ever failed, so the answer is total.
+        items = [items.OrderBy(item => item.Id).First()];
+        var rows = await RowsAsync(dbContext, profile.UserId, items, cancellationToken);
+        var rungs = await EntrustmentRungLabels.LoadAsync(dbContext, items.Select(item => item.ScaleId), cancellationToken);
+        var owner = await OwnerNameAsync(dbContext, profile, items, cancellationToken);
+
+        return Build(items[0], rows, rungs, owner, profile, profile.GetStage(asOf), asOf, periodsFrom);
+    }
+
+    /// <summary>What a row reads of one item.</summary>
+    private sealed record ItemFacts(
+        int Id,
+        int EpaId,
+        string EpaCode,
+        string EpaTitle,
+        bool EpaInForce,
+        int RequiredCount,
+        QuotaPeriod QuotaPeriod,
+        int MinimumLevelOrder,
+        string? MinimumLevelByStageJson,
+        int? ScaleId,
+        QuotaPeriod? DecisionCadence,
+        bool DecisionIsOpportunistic,
+        bool IsLocal);
+
+    /// <summary>
+    /// The EPAs whose page under My progress opens for <paramref name="traineeUserId" />: every item of their preferred
+    /// profile's curriculum, national or their own institution's, in force or paused, exactly what
+    /// <c>GetEpaProgressForTraineeQuery</c> finds. Empty when they hold no profile. My activities links a credit only to
+    /// such an EPA's page, so a curriculum move or a removed item never makes "Credited 1 item" a link to "Page not
+    /// found" (T355, build review G4).
+    /// </summary>
+    public static async Task<IReadOnlySet<int>> EpasWithAPageAsync(
+        IApplicationDbContext dbContext, string traineeUserId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+
+        var profile = await TraineeScopeResolver.PreferredProfiles(dbContext)
+            .AsNoTracking()
+            .Where(entity => entity.UserId == traineeUserId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (profile is null)
+        {
+            return new HashSet<int>();
+        }
+
+        return (await ItemsOf(dbContext, profile).Select(item => item.EpaId).Distinct().ToListAsync(cancellationToken))
+            .ToHashSet();
+    }
+
+    /// <summary>
+    /// The profile's items: the national core plus the trainee's own institution's local extras. A curriculum row is
+    /// shared by every adopting institution, and another institution's local item is a target this trainee could never
+    /// meet.
+    /// </summary>
+    private static IQueryable<CurriculumItem> ItemsOf(IApplicationDbContext dbContext, TraineeProfile profile)
+        => dbContext.Set<CurriculumItem>()
+            .AsNoTracking()
+            .Where(item => item.CurriculumId == profile.CurriculumId &&
+                           (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId));
+
+    private static Task<List<ItemFacts>> FactsAsync(IQueryable<CurriculumItem> items, CancellationToken cancellationToken)
+        => items
+            .OrderBy(item => item.Epa.Code)
+            .Select(item => new ItemFacts(
+                item.Id,
+                item.EpaId,
+                item.Epa.Code,
+                item.Epa.Title,
+                item.Epa.IsActive,
+                item.RequiredCount,
+                item.QuotaPeriod,
+                item.MinimumLevelOrder,
+                item.MinimumLevelByStageJson,
+                item.ScaleId,
+                item.DecisionCadence,
+                item.DecisionIsOpportunistic,
+                item.OwningInstitutionId != null))
+            .ToListAsync(cancellationToken);
+
+    private static async Task<List<QuotaProgressRow>> RowsAsync(
+        IApplicationDbContext dbContext,
+        string traineeUserId,
+        IReadOnlyCollection<ItemFacts> items,
+        CancellationToken cancellationToken)
+    {
+        var itemIds = items.Select(item => item.Id).ToList();
+        return itemIds.Count == 0
+            ? []
+            : await dbContext.Set<CurriculumItemProgress>()
+                .AsNoTracking()
+                .Where(row => row.TraineeUserId == traineeUserId && itemIds.Contains(row.CurriculumItemId))
+                .Select(row => new QuotaProgressRow(
+                    row.CurriculumItemId,
+                    row.AcademicYear,
+                    row.Semester,
+                    row.CountsSoFar,
+                    row.MinimumLevelReachedCount,
+                    row.LastObservedOn,
+                    row.LastObservedOnDeclared))
+                .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// The name a local item's badge carries ("Kgosi Kgari Teaching Hospital's own", T355 C10): always the profile's own
+    /// institution, the only one whose local items <see cref="ItemsOf" /> reads. Null when no item is local.
+    /// </summary>
+    private static async Task<string?> OwnerNameAsync(
+        IApplicationDbContext dbContext,
+        TraineeProfile profile,
+        IReadOnlyCollection<ItemFacts> items,
+        CancellationToken cancellationToken)
+        => items.Any(item => item.IsLocal)
+            ? await dbContext.Set<Institution>()
+                .AsNoTracking()
+                .Where(institution => institution.Id == profile.InstitutionId)
+                .Select(institution => institution.Name)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+
+    private static TraineeCurriculumProgressDto Build(
+        ItemFacts item,
+        IReadOnlyList<QuotaProgressRow> rows,
+        EntrustmentRungLookup rungs,
+        string? ownerName,
+        TraineeProfile profile,
+        int? stage,
+        DateOnly asOf,
+        DateOnly? periodsFrom)
+    {
+        var programmeEnd = profile.EndedOn;
+        var progress = QuotaProgressCalculator.For(
+            item.Id, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, programmeEnd, asOf);
+
+        var effectiveMinimum = new CurriculumItem
+        {
+            MinimumLevelOrder = item.MinimumLevelOrder,
+            MinimumLevelByStageJson = item.MinimumLevelByStageJson
+        }.GetMinimumLevelForStage(stage);
+
+        var periods = periodsFrom is { } since
+            ? QuotaProgressCalculator
+                .Since(item.Id, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, programmeEnd, since, asOf)
+                .Select(QuotaWindowDto.From)
+                .ToArray()
+            : null;
+
+        return new TraineeCurriculumProgressDto(
+            item.Id,
+            item.EpaId,
+            item.EpaCode,
+            item.EpaTitle,
+            item.QuotaPeriod,
+            item.RequiredCount,
+            QuotaWindowDto.From(progress.Current),
+            progress.Previous is { } previous && previous.Window.Status != QuotaWindowStatus.NotStarted
+                ? QuotaWindowDto.From(previous)
+                : null,
+            effectiveMinimum,
+            rungs.Format(item.ScaleId, effectiveMinimum),
+            TrainingYearChangedWithin(profile, progress.Current.Window, asOf),
+            periods)
+        {
+            DecisionCadence = item.DecisionCadence,
+            DecisionIsOpportunistic = item.DecisionIsOpportunistic,
+            OwningInstitutionName = item.IsLocal ? ownerName ?? $"Institution {profile.InstitutionId}" : null,
+            // The exit level is the item's flat minimum: the level the standing's exit rule reads (T166).
+            ExitLevelOrder = item.MinimumLevelOrder,
+            ExitLevelLabel = rungs.Format(item.ScaleId, item.MinimumLevelOrder),
+            MinimumByTrainingYear = stage is { } year &&
+                                    CurriculumItem.ParseStageOverrides(item.MinimumLevelByStageJson).ContainsKey(year),
+            EpaInForce = item.EpaInForce
+        };
     }
 
     /// <remarks>

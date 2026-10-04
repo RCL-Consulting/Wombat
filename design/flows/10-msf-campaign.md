@@ -566,19 +566,21 @@ Expect: One row: Default MSF (Multi-source feedback), released just now, 6 respo
 
 Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback
 Role: Trainee — Dr Lerato Molefe
-Route: /activities/mine → /portfolio/progress
-Do: Open My activities, then My progress.
+Route: /activities/mine → /portfolio/progress → /portfolio/progress/{EpaId:int}
+Do: Open My activities, then My progress, then PAED-001, PAED-010 and PAED-012 from its index.
 Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
-  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credit "—" (D8). My progress reads:
-  - semester targets "1 of 10 EPAs met this semester", and training year 4;
-  - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Done, Recorded, credit "—" as text (D8). Each
+  WBA's Credit, "1 item", is a link to its EPA's page (T355). My progress reads:
+  - "1 of 10" over "EPAs met this semester", and training year 4;
+  - "Multi-source feedback: 2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
     own and counts towards no target.";
-  - PAED-001: "3 of 3 this semester", "Target met for Semester 2, 2026. At the minimum level when observed: 2 of 3.",
-    minimum now 5;
-  - PAED-012 "2 of 3" and PAED-010 "1 of 3", each with "MSF in Semester 2, 2026: covered by a released campaign that
-    closed on …".
-  The trajectory charts PAED-001 (3 observations from 3 distinct assessors), PAED-010 and PAED-012, and plots no MSF
-  point (D36).
+  - PAED-001's row: "3 of 3 this semester", "Target met for Semester 2, 2026.";
+  - PAED-012's row "2 of 3 this semester" and PAED-010's "1 of 3 this semester", no row carrying an MSF line.
+  PAED-001's page reads "At the minimum level when observed: 2 of 3" and "Training year 4: level 5, the minimum each
+  encounter is judged against and your STAR's target."; its trajectory reads "3 ratings in the 2026 academic year, from
+  Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below." The pages of PAED-010 and PAED-012 each read
+  "MSF in Semester 2, 2026: covered by a released campaign that closed on `D`." first among their MSF lines, chart their
+  ratings, and say under the chart "Multi-source feedback is not plotted.": no chart plots an MSF point (D36).
 
 Step 3.49 — Mr Smit reads the programme's MSF coverage
 Role: Coordinator — Mr Pieter Smit

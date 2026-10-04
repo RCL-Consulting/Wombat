@@ -519,10 +519,14 @@ Expect: The refusal "You are not authorized to access this data-rights request."
 
 Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
-Route: / → /portfolio/progress → /activities/mine → /account/data-rights
-Do: At 390 px, sign in and open her dashboard, My progress, My activities and My data rights from the menu.
-Expect: The dashboard's cards stack. On My progress, each EPA's figures and trajectory fit the width. My activities'
-  rows stack, each cell but the link and the state labelled by its column (T342), and the table of "Your requests"
+Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
+Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data
+  rights from the menu.
+Expect: The dashboard's cards stack, each Furthest short row's figure under its name. On My progress, This period, the
+  index and the Entrustment panel stack: each EPA's link is a 44 px block, every cell but the link labelled by its
+  column, and each Latest rating link in the panel is 44 px tall (T328); nothing scrolls sideways. The EPA's page draws
+  its chart at 326 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
+  but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 
 Step A.7.5 — Mr Smit on his phone (appendix-cross-cutting.md)

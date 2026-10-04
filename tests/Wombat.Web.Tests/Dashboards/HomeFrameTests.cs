@@ -160,7 +160,8 @@ public sealed class HomeFrameTests : WombatTestContext
     {
         var cut = RenderHome(Reads.Hang, WombatRoles.Trainee);
 
-        CardTitles(cut).Should().StartWith(["Curriculum targets", "Needs you"]);
+        // T355, R1: the Trainee's four cards, in their order, drawn before the read returns.
+        CardTitles(cut).Should().Equal("Your targets", "Needs you", "Recent decisions", "My authorisations");
         cut.FindAll(".dashboard-grid a").Should().BeEmpty();
         cut.FindAll(".detail-card--interactive").Should().BeEmpty();
     }
@@ -315,7 +316,7 @@ public sealed class HomeFrameTests : WombatTestContext
                 [ActivityRows.Waiting(52, typeName: "Mini-CEX", subjectName: "Nomsa Mahlangu", since: When)],
                 []),
             GetTraineeDashboardSummaryQuery query => new TraineeDashboardSummaryDto(
-                null, [], [], [],
+                null, [], [], null,
                 IsPendingTrainee: query.Principal.IsInRole(WombatRoles.PendingTrainee) && !query.Principal.IsInRole(WombatRoles.Trainee)),
             _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
         };

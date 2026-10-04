@@ -7,13 +7,14 @@ namespace Wombat.Web.Components.Shared;
 /// The words for MSF coverage (T168), shared by the trainee's progress page and the committee's panel so the two say it
 /// the same way. Every sentence is the College's D9: an EPA is covered when a released campaign COVERING it closed in the
 /// semester, never "a campaign about" it. Nothing here is a target or a shortfall; that waits on Annexure B's cadence.
-/// Built as whole strings, because Razor drops a space standing alone before an expression.
+/// Built as whole strings, because Razor drops a space standing alone before an expression. Dates are ISO, as on every
+/// screen (T325; T355, decision D1): the sentences keep their words whole wherever they are placed (C4).
 /// </summary>
 public static class MsfCoverageText
 {
     /// <summary>
     /// One EPA's line on a progress card, newest semester first: "MSF in Semester 2, 2026: no released campaign covering
-    /// this EPA has closed yet. MSF in Semester 1, 2026: covered by a released campaign that closed on 10 March 2026."
+    /// this EPA has closed yet. MSF in Semester 1, 2026: covered by a released campaign that closed on 2026-03-10."
     /// Null when the coverage does not list the EPA.
     /// </summary>
     public static string? CardLine(MsfCoverageDto coverage, int epaId)
@@ -32,8 +33,8 @@ public static class MsfCoverageText
     }
 
     /// <summary>
-    /// "covered by a released campaign that closed on 10 March 2026", "covered by 2 released campaigns, the latest closed
-    /// on 10 March 2026", or, uncovered, "no released campaign covering this EPA has closed yet" while the semester runs.
+    /// "covered by a released campaign that closed on 2026-03-10", "covered by 2 released campaigns, the latest closed
+    /// on 2026-03-10", or, uncovered, "no released campaign covering this EPA has closed yet" while the semester runs.
     /// </summary>
     /// <remarks>
     /// An uncovered semester that has ended is never worded as final. A campaign is bucketed by the day it closed, and one
@@ -53,8 +54,8 @@ public static class MsfCoverageText
         }
 
         return coverage.Campaigns.Count == 1
-            ? $"covered by a released campaign that closed on {QuotaText.LongDate(latest.ClosedOn)}"
-            : $"covered by {coverage.Campaigns.Count} released campaigns, the latest closed on {QuotaText.LongDate(latest.ClosedOn)}";
+            ? $"covered by a released campaign that closed on {QuotaText.Iso(latest.ClosedOn)}"
+            : $"covered by {coverage.Campaigns.Count} released campaigns, the latest closed on {QuotaText.Iso(latest.ClosedOn)}";
     }
 
     /// <summary>
@@ -71,15 +72,15 @@ public static class MsfCoverageText
     }
 
     /// <summary>
-    /// A cell of the committee's table: "Annual MSF #4, closed 10 Mar 2026", or with more than one, "2 campaigns; the
-    /// latest Annual MSF #6, closed 10 Mar 2026".
+    /// A cell of the committee's table: "Annual MSF #4, closed 2026-03-10", or with more than one, "2 campaigns; the
+    /// latest Annual MSF #6, closed 2026-03-10".
     /// </summary>
     public static string CampaignNote(MsfEpaPeriodCoverageDto coverage)
     {
         ArgumentNullException.ThrowIfNull(coverage);
 
         var latest = coverage.Latest ?? throw new ArgumentException("The EPA was not covered in this semester.", nameof(coverage));
-        var campaign = $"{latest.TemplateName} #{latest.CampaignId}, closed {QuotaText.ShortDate(latest.ClosedOn)}";
+        var campaign = $"{latest.TemplateName} #{latest.CampaignId}, closed {QuotaText.Iso(latest.ClosedOn)}";
         return coverage.Campaigns.Count == 1 ? campaign : $"{coverage.Campaigns.Count} campaigns; the latest {campaign}";
     }
 }

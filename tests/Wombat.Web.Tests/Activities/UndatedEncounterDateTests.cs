@@ -18,7 +18,6 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
-using Wombat.Web.Components.Pages.Portfolio;
 using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.Activities;
@@ -30,8 +29,9 @@ namespace Wombat.Web.Tests.Activities;
 /// </summary>
 /// <remarks>
 /// The seeds that reach this are <c>reflective_note</c> and <c>qi_project</c>, which declare no date field, and any
-/// builder-made type without one. The chart component's own tooltip and table are tested in <c>TrajectoryChartTests</c>;
-/// the progress page and committee review page tests here show that each page hands the flag to it.
+/// builder-made type without one. The chart component's own table is tested in <c>TrajectoryChartTests</c>; the committee
+/// review page test here shows that the page hands the flag to it (the trajectories left My progress for the EPA pages in
+/// T355).
 /// </remarks>
 public sealed class UndatedEncounterDateTests : TestContext
 {
@@ -64,26 +64,10 @@ public sealed class UndatedEncounterDateTests : TestContext
         Text(cut.Find("#activity-encounter-date")).Should().Be("2026-03-20");
     }
 
-    [Fact]
-    public void TheProgressPage_MarksAnUndatedObservationOnTheTrajectory()
-    {
-        Services.AddSingleton<IScopedSender>(new FakeSender(new Dictionary<Type, object?>
-        {
-            [typeof(GetCurriculumProgressForTraineeQuery)] = null,
-            [typeof(GetEpaTrajectoryForTraineeQuery)] = (IReadOnlyList<EpaTrajectoryDto>)[OneDatedOneUndated()],
-            [typeof(GetEntrustmentStandingForTraineeQuery)] = null,
-            [typeof(GetMsfCoverageForTraineeQuery)] = null
-        }));
-
-        var cut = RenderComponent<MyProgress>();
-
-        TrajectoryTableDates(cut).Should().Equal("2026-01-15", "not recorded (created 2026-03-20)");
-    }
-
     /// <summary>
     /// The committee draws the same chart from the same query, so it must be told the same thing: a committee member
-    /// weighing progression is the reader the filing day most misleads. The page maps the points through the chart's
-    /// shared <c>PointsOf</c>; a private mapping that dropped the flag is what this catches.
+    /// weighing progression is the reader the filing day most misleads. The page hands the chart the query's points whole
+    /// (T355); a private mapping that dropped the flag is what this catches.
     /// </summary>
     [Fact]
     public void TheCommitteeReviewPage_MarksAnUndatedObservationOnTheTrajectory()
@@ -134,12 +118,12 @@ public sealed class UndatedEncounterDateTests : TestContext
             new(2, new DateOnly(2026, 3, 20), ObservedOnDeclared: false, 3, "3", "Direct observation", "assessor-a")
         ]);
 
-    /// <summary>The Date column of the chart's screen-reader table, once both observations are drawn.</summary>
+    /// <summary>The Encounter column of the chart's table, each row's header, once both observations are drawn (T355).</summary>
     private static IEnumerable<string> TrajectoryTableDates(IRenderedFragment cut)
     {
-        cut.WaitForState(() => cut.FindAll("table.visually-hidden tbody tr").Count == 2);
+        cut.WaitForState(() => cut.FindAll("table.trajectory-table tbody tr").Count == 2);
 
-        return cut.FindAll("table.visually-hidden tbody tr").Select(row => row.QuerySelector("td")!.TextContent).ToArray();
+        return cut.FindAll("table.trajectory-table tbody tr").Select(row => row.QuerySelector("th")!.TextContent).ToArray();
     }
 
     private IRenderedComponent<ActivityView> RenderActivityView(ActivityDetailDto detail)

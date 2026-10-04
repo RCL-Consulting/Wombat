@@ -216,15 +216,23 @@ public static class QuotaText
     /// <summary>"23 Sep 2026".</summary>
     public static string ShortDate(DateOnly date) => date.ToString("d MMM yyyy", English);
 
+    /// <summary>
+    /// "2026-11-30": the one form a date takes on every screen a registrar reads (T325; T355, decision D1), so no screen
+    /// shows two. <see cref="LongDate" /> and <see cref="ShortDate" /> stay for the printed record (the portfolio PDF) and
+    /// the coordinator's coverage text, which keep their long dates.
+    /// </summary>
+    public static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
     /// <summary>"three per semester" / "one per academic year".</summary>
     public static string TargetPhrase(QuotaPeriod kind, int target)
         => kind == QuotaPeriod.Semester ? $"{target} per semester" : $"{target} per academic year";
 
     /// <summary>
     /// How the trainee's own programme ended, as a clause with no full stop, for each surface that says so to them (T252):
-    /// "You completed your programme on 30 June 2026", "Your programme ended on 20 August 2026", or, for a profile ended
+    /// "You completed your programme on 2026-06-30", "Your programme ended on 2026-08-20", or, for a profile ended
     /// before Wombat recorded the day (T209), "Your programme has ended". One sentence, so My progress, its standing panel
-    /// and the trainee dashboard cannot word the same end differently.
+    /// and the trainee dashboard cannot word the same end differently. Its date is ISO, as every screen's is (T355, D1):
+    /// every caller is a screen.
     /// </summary>
     public static string ProgrammeEnded(ProgrammeEndDto ended)
     {
@@ -232,8 +240,8 @@ public static class QuotaText
 
         return ended switch
         {
-            { EndedOn: { } on, Completed: true } => $"You completed your programme on {LongDate(on)}",
-            { EndedOn: { } on } => $"Your programme ended on {LongDate(on)}",
+            { EndedOn: { } on, Completed: true } => $"You completed your programme on {Iso(on)}",
+            { EndedOn: { } on } => $"Your programme ended on {Iso(on)}",
             _ => "Your programme has ended"
         };
     }

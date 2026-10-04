@@ -123,7 +123,7 @@ public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
     {
         var text = RenderText(Report(withheld: 0, unreadable: 2, unattributed: 0, total: 0, anyWarning: false));
 
-        text.Should().Contain("No rating by a named assessor to chart for this trainee.");
+        text.Should().Contain("No rating by a named assessor to chart in this review's window.");
         text.Should().NotContain("No rated observations on file");
     }
 

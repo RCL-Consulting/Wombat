@@ -11,7 +11,7 @@
   var words = FromSubject ? ActivityRowNames.WaitingLinkWords(Item) : ActivityRowNames.LinkWords(Item);
   var label = Name is not null && Name != words ? Name : null;
 }
-<a class="activity-link" href="/activities/@Item.Id" aria-label="@label" tabindex="@(OutOfTabOrder ? "-1" : null)">@ActivityListWords.NameOf(Item)@if (line is not null){<span class="visually-hidden">, </span><span class="activity-link-to">@line</span>}</a>
+<a class="@(Block ? "activity-link activity-block-link" : "activity-link")" href="/activities/@Item.Id" aria-label="@label" tabindex="@(OutOfTabOrder ? "-1" : null)">@ActivityListWords.NameOf(Item)@if (line is not null){<span class="visually-hidden">, </span><span class="activity-link-to">@line</span>}</a>
 
 @code {
   [Parameter, EditorRequired] public ActivitySummaryDto Item { get; set; } = default!;
@@ -30,4 +30,10 @@
   /// button beside it, "Open the next", opens the same activity and is the next Tab after the result (T350, C10 d).
   /// </summary>
   [Parameter] public bool OutOfTabOrder { get; set; }
+
+  /// <summary>
+  /// A block of its own, 44px below 641px with its two lines stacked (<c>.activity-block-link</c>; T355, C7): a list whose
+  /// row is its link, the EPA page's Activities on this EPA.
+  /// </summary>
+  [Parameter] public bool Block { get; set; }
 }

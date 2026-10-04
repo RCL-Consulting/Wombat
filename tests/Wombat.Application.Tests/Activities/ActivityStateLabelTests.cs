@@ -104,7 +104,7 @@ public sealed class ActivityStateLabelTests
     }
 
     [Fact]
-    public async Task TheTraineesDashboard_ReadsAwaitingSupervisor()
+    public async Task TheTraineesDashboard_ListsNoDecision_OnWorkAwaitingItsSupervisor()
     {
         var options = await SeededAsync();
         var submitted = await SubmittedAuditAsync(options);
@@ -114,9 +114,9 @@ public sealed class ActivityStateLabelTests
             new GetTraineeDashboardSummaryQuery(Principal(TraineeId, WombatRoles.Trainee), new DateOnly(2026, 3, 20)),
             CancellationToken.None);
 
-        var recent = summary.RecentActivities.Should().ContainSingle(item => item.ActivityId == submitted).Subject;
-        recent.CurrentState.Should().Be("submitted", "the badge's colour class");
-        recent.CurrentStateLabel.Should().Be("Awaiting supervisor");
+        // T355 (Q3): Home's Recent activities, which badged it "Awaiting supervisor", is retired for Recent decisions; an
+        // audit awaiting its supervisor has a move left, so nothing is decided on it yet.
+        summary.RecentDecisions.Should().NotContain(item => item.Id == submitted);
     }
 
     /// <summary>

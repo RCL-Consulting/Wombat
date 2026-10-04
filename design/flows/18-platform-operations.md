@@ -368,8 +368,8 @@ Expect:
     whether an EPA was active as of each completion, and runs as one transaction.
   - **The question.** The button asks first: "Rebuild curriculum progress?".
   - **The result.** The page says progress was rebuilt, with five figures: activities re-read, curriculum items
-    credited, semester tallies written, stale tallies removed, and completions re-stamped. Stale tallies removed is at
-    least `t` from Step 6.35.
+    credited, semester tallies written, stale tallies removed, and completions re-stamped. Stale tallies removed is 0:
+    the move left nothing stale (T304).
 
 [appendix-cross-cutting.md]
 ### Step A.2.1 — devadmin reads the scheduled jobs

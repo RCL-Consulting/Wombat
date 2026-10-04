@@ -487,32 +487,36 @@ Do: Open Dr Dlamini's profile, which is on Paediatric EPA Curriculum (11.1). Mov
   months later than it reads, leave the curriculum as it is, and save the profile. Then reopen the profile.
 Expect:
   - The curriculum picker offers 11.1 and 11.2, with 11.1 chosen.
-  - The save is refused: "Trainees must be admitted into the curriculum version this institution has adopted."
-  - Nothing changes: the reopened profile shows the old date, and Dr Dlamini stays on 11.1, as re-adopting leaves
-    registrars on the version they were admitted to (`CurriculumAdminScope`, T211).
+  - The save reads "Trainee profile saved."
+  - Reopened, the profile shows the new date on 11.1. By SQL, profile 3 stays on curriculum 2 and adoption 1: she stays
+    on the version she was admitted to (`CurriculumAdminScope`, T211).
 
 Step 6.35 — Dr Ndlovu notes his figures before he moves (act-6-catalogue.md)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress
-Do: Read the page, and note each card's count for its current period.
-Expect: Sixteen cards: the 15 national EPAs of 11.1, and KGK-001. PAED-016 is not among them.
+Do: Read the page, and note each row's count for its current period.
+Expect: Sixteen rows in Your EPAs, "Each semester · 10 EPAs" and "Once a year · 6 EPAs": the 15 national EPAs of 11.1,
+  and KGK-001 among the six. PAED-016 is not among them.
 
 Step 6.36 — Prof Mbatha moves Dr Ndlovu to 11.2 (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
 Do: Open Dr Ndlovu's profile. Choose Paediatric EPA Curriculum (11.2), keep his programme start (`J`, from Act 2) and
   his expected completion as they read, and save the profile.
-Expect: The save is confirmed, and the profile reads 11.2. From now on, his completions credit 11.2's items.
+Expect: The save reads "Trainee profile saved. N completion(s) was/were checked against 11.2, and M count(s) towards
+  it." The profile reads 11.2. By SQL his PAED-002 tally is on 11.2 and none is left on 11.1. Reopened, the picker
+  offers 11.2 alone. From now on, his completions credit 11.2's items.
 
 Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect:
-  - **The cards.** Seventeen: 11.2's 16 national items (PAED-016 once a year, and PAED-011 at 2 per academic year,
-    among them) and KGK-001.
-  - **The counts.** His encounters before the move are counted in 11.1's tallies, which this page no longer reads. Until
-    Step 6.38, each card shows only what 11.2 holds for him, which is nothing yet.
+  - **The rows.** Seventeen, in "Each semester · 10 EPAs" and "Once a year · 7 EPAs": 11.2's 16 national items (PAED-016
+    once a year, and PAED-011 at 2 per academic year, among them) and KGK-001. Nothing notes the move and nothing marks
+    a row as new: KGK-001's badge is the only mark (T355, Q9).
+  - **The counts.** His evidence counts on 11.2 at once: PAED-002 reads "1 of 3 this semester", as in Step 6.35, and
+    PAED-016 and KGK-001 read "0 of 1 in 2026".
   - **The picker.** The Mini-CEX picker offers ten EPAs, PAED-016 among them.
 
 Step 6.38 — devadmin rebuilds curriculum progress (act-6-catalogue.md)
@@ -528,13 +532,15 @@ Expect:
     whether an EPA was active as of each completion, and runs as one transaction.
   - **The question.** The button asks first: "Rebuild curriculum progress?".
   - **The result.** The page says progress was rebuilt, with five figures: activities re-read, curriculum items
-    credited, semester tallies written, stale tallies removed, and completions re-stamped. Stale tallies removed is at
-    least `t` from Step 6.35.
+    credited, semester tallies written, stale tallies removed, and completions re-stamped. Stale tallies removed is 0:
+    the move left nothing stale (T304).
 
 Step 6.39 — Dr Ndlovu's evidence counts on 11.2 (act-6-catalogue.md)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress
 Do: Read the page.
 Expect: Each of the 15 EPAs carried over from 11.1 reads the count he noted in Step 6.35 for its current period.
-  PAED-016 and KGK-001 read 0. PAED-011's card measures its count against a target of 2 per academic year.
+  PAED-016 and KGK-001 read "0 of 1 in 2026". PAED-011's row reads "0 of 2 in 2026": it measures its count against a
+  target of 2 per academic year. The rows are "Each semester · 10 EPAs" and "Once a year · 7 EPAs", and This period's
+  yearly figure is "… of 7" over "EPAs met in 2026".
 ```

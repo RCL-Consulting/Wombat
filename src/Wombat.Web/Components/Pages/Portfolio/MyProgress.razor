@@ -4,239 +4,88 @@
 @attribute [Authorize(Policy = "TraineeOrFormerTrainee")]
 @rendermode InteractiveServer
 @using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Web.Components.Shared.Progress
+@using Microsoft.Extensions.DependencyInjection
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<MyProgress> Logger
+@inject IServiceProvider ServiceProvider
 
 <PageTitle>My progress · Wombat</PageTitle>
 
+@* T355, flow 05 (R3-C-Progress; Q1, R3): This period, then the EPA index ("Your EPAs", a page per EPA under it), then the
+   standing panel whole. The trajectories are on the EPA pages, not here (Q5). *@
 <PageHeader Title="My progress" Subtitle="@Subtitle" />
 
-<StatePanel IsLoading="@(!_loaded && _error is null)"
-            LoadError="@_error">
-  @if (_summary?.Ended is { } programmeEnd)
+@* C8: on the page from the first render, empty once the read has answered, so its words are announced when they come. *@
+<p class="visually-hidden" role="status">@(_loading ? LoadingWords : null)</p>
+
+<StatePanel IsLoading="_loading"
+            LoadError="@_error"
+            OnRetry="LoadAsync"
+            FocusAfterRetry="FocusContentAsync">
+  @if (_summary is null)
   {
-    @* T252: standing page content, there on every visit, so an info alert with no role (DESIGN.md § Alerts). *@
-    <Alert Kind="info">@EndedNotice(programmeEnd)</Alert>
+    @* The reader returns null when there is no trainee profile at all. Focusable by script only: a Try again answered by
+       it focuses it (T350 build review, D4). *@
+    <div class="detail-card detail-card--empty" tabindex="-1" @ref="_emptyCard">
+      <div class="state-panel-title">No curriculum items assigned yet.</div>
+      <div class="state-panel-copy">Once you are admitted to a curriculum, your EPAs will appear here.</div>
+    </div>
   }
-
-  <section>
-    <h2>Curriculum targets</h2>
-    @if (_summary is null)
-    {
-      <p class="muted">No curriculum items assigned yet. Once you are admitted to a curriculum, your EPAs will appear here.</p>
-    }
-    else if (_summary.Items.Count == 0)
-    {
-      @* Admitted, but no item is in force: every EPA on the curriculum is inactive (T158), or it has none yet. *@
-      <p class="muted">@(_summary.Ended is null ? "No EPA on your curriculum is in use at the moment, so no target applies to you." : "No EPA on your curriculum is in use any more, so there are no targets to show.")</p>
-    }
-    else if (_summary.Ended is { } ended)
-    {
-      @* T252: the programme they ended on, read-only. Every period from the one it ended in back to the start, each in
-         the words the PDF prints (D49 for the last one), and nothing about what is still to do: nothing is. *@
-      <section class="detail-card">
-        <h3>Your programme</h3>
-        <dl class="details-list">
-          <div>
-            <dt>Started</dt>
-            <dd>@QuotaText.LongDate(_summary.ProgrammeStartDate)</dd>
-          </div>
-          <div>
-            <dt>@(ended.Completed ? "Completed" : "Ended")</dt>
-            <dd>@(ended.EndedOn is { } endedOn ? QuotaText.LongDate(endedOn) : "The day was not recorded")</dd>
-          </div>
-          @if (_summary.TraineeStage is { } finalStage)
-          {
-            <div>
-              <dt>Training year</dt>
-              <dd>@finalStage @(ended.EndedOn is null ? "today" : "when your programme ended")</dd>
-            </div>
-          }
-        </dl>
-      </section>
-
-      @MsfCoverageErrorAlert
-
-      @if (HasSemesterItems)
-      {
-        <h3 class="progress-group-title">Each semester</h3>
-        <div class="dashboard-grid">
-          @foreach (var item in _summary.Items.Where(entry => entry.IsPerSemester))
-          {
-            @EndedItemCard(item, ended)
-          }
-        </div>
-      }
-
-      @if (HasYearItems)
-      {
-        <h3 class="progress-group-title">Once a year</h3>
-        <div class="dashboard-grid">
-          @foreach (var item in _summary.Items.Where(entry => !entry.IsPerSemester))
-          {
-            @EndedItemCard(item, ended)
-          }
-        </div>
-      }
-    }
-    else
-    {
-      @if (_summary.IsAfterTeachingYear)
-      {
-        <Alert Kind="info">
-          The @_summary.AsOf.Year academic year ended on 30 November. Encounters observed in December still count towards
-          semester 2, @_summary.AsOf.Year and your @_summary.AsOf.Year yearly targets. Semester 1, @(_summary.AsOf.Year + 1) starts on 1 January.
-        </Alert>
-      }
-
-      @* The College's D14, per kind. The reader sets a start only for a kind the curriculum holds and does not apply
-         today, and D42 usually waives only one of the two kinds, so each sentence speaks for its own kind. *@
-      @if (_summary.SemesterTargetsStart is not null || _summary.YearTargetsStart is not null)
-      {
-        <Alert Kind="info">
-          @if (_summary.ProgrammeNotStarted)
-          {
-            <text>Your programme starts on @QuotaText.LongDate(_summary.ProgrammeStartDate).</text>
-            @if (_summary.SemesterTargetsStart is { } firstSemester)
-            {
-              <text> Your first semester targets are for @firstSemester.Name.</text>
-            }
-            @if (_summary.YearTargetsStart is { } firstYear)
-            {
-              <text> Your first yearly targets are for @firstYear.Name.</text>
-            }
-          }
-          else
-          {
-            <text>You started the programme on @QuotaText.LongDate(_summary.ProgrammeStartDate).</text>
-            @if (_summary.SemesterTargetsStart is { } semesterStart)
-            {
-              <text> That was part-way through the semester, so under the College's rule no semester target applies until @semesterStart.Name, which starts on @QuotaText.LongDate(semesterStart.StartsOn). Encounters on those EPAs before then stay in your portfolio as evidence, but do not count towards a later semester's target.</text>
-            }
-            @if (_summary.YearTargetsStart is { } yearStart)
-            {
-              <text> That was in the second half of the academic year, so under the College's rule no yearly target applies until @yearStart.Name, which starts on @QuotaText.LongDate(yearStart.StartsOn). Encounters on those EPAs before then stay in your portfolio as evidence, but do not count towards a later year's target.</text>
-            }
-            @if (_summary.SemesterTargetsStart is null && HasSemesterItems)
-            {
-              <text> Your semester targets apply now.</text>
-            }
-            @if (_summary.YearTargetsStart is null && HasYearItems)
-            {
-              <text> Your yearly targets apply now.</text>
-            }
-          }
-        </Alert>
-      }
-
-      <section class="detail-card">
-        <h3>This period</h3>
-        <dl class="details-list">
-          <div>
-            <dt>Semester</dt>
-            <dd>@_summary.CurrentSemesterName · @_summary.CurrentSemesterMonths</dd>
-          </div>
-          @if (HasSemesterItems)
-          {
-            <div>
-              <dt>Semester targets</dt>
-              <dd>@TargetsLine(_summary.SemesterTargetsMet, _summary.SemesterTargetsApplying, "this semester")</dd>
-            </div>
-          }
-          @if (HasYearItems)
-          {
-            <div>
-              <dt>Yearly targets</dt>
-              <dd>@TargetsLine(_summary.YearTargetsMet, _summary.YearTargetsApplying, $"in {_summary.AsOf.Year}")</dd>
-            </div>
-          }
-          @if (_summary.TraineeStage is { } stage)
-          {
-            <div>
-              <dt>Training year</dt>
-              <dd>@stage — it sets the minimum level each encounter is judged against</dd>
-            </div>
-          }
-          @if (_msfCoverage is { Epas.Count: > 0 } coverage)
-          {
-            <div>
-              <dt>Multi-source feedback</dt>
-              <dd>@MsfCoverageText.ThisSemesterLine(coverage)</dd>
-            </div>
-          }
-        </dl>
-      </section>
-
-      @MsfCoverageErrorAlert
-
-      @if (HasSemesterItems)
-      {
-        <h3 class="progress-group-title">Each semester</h3>
-        <div class="dashboard-grid">
-          @foreach (var item in _summary.Items.Where(entry => entry.IsPerSemester))
-          {
-            @ItemCard(item)
-          }
-        </div>
-      }
-
-      @if (HasYearItems)
-      {
-        <h3 class="progress-group-title">Once a year</h3>
-        <div class="dashboard-grid">
-          @foreach (var item in _summary.Items.Where(entry => !entry.IsPerSemester))
-          {
-            @ItemCard(item)
-          }
-        </div>
-      }
-    }
-  </section>
-
-  @* T166: the committee's STAR decisions against Annexure A's target for this training year, and the exit rule. The
-     same panel the committee review page shows, in the trainee's own words. Nothing on record is already said by the
-     targets section above, so it is not said twice. *@
-  @if (_standing is not null || _standingError is not null)
+  else if (_summary.Ended is { } programmeEnd)
   {
-    <section class="progress-group-title">
-      <h2>Entrustment against Annexure A</h2>
-      <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" Self="true" ProgrammeEnd="@_summary?.Ended" />
-    </section>
+    @EndedView(_summary, programmeEnd)
   }
-
-  @if (_trajectories is { Count: > 0 })
+  else if (_summary.Items.Count == 0)
   {
-    <section class="progress-group-title">
-      <h2>Rating trajectory</h2>
-      <div class="details-grid">
-        @foreach (var trajectory in _trajectories)
-        {
-          <section class="detail-card">
-            @* An EPA no longer in force still charts what was recorded against it, and says it is no longer in use (T255). *@
-            <h3><EpaLabel Code="@trajectory.EpaCode" Title="@trajectory.EpaTitle" InForce="@trajectory.EpaInForce" /></h3>
-            <p class="muted">
-              @trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")
-              from @trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() distinct assessor@(trajectory.Points.Select(point => point.AssessorUserId).Distinct(StringComparer.Ordinal).Count() == 1 ? string.Empty : "s").
-            </p>
-            <TrajectoryChart Points="@TrajectoryChart.PointsOf(trajectory)"
-                             Rungs="@BuildRungs(trajectory)"
-                             AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
-          </section>
-        }
-      </div>
-    </section>
+    @* Admitted, but no item is in force: every EPA on the curriculum is paused (T158, D48), or it has none yet. *@
+    <div class="detail-card detail-card--empty" tabindex="-1" @ref="_emptyCard">
+      <div class="state-panel-title">No EPA on your curriculum is in use at the moment, so no target applies to you.</div>
+    </div>
+
+    @if (_summary.Paused.Count > 0)
+    {
+      <section class="index-section" aria-labelledby="index-h">
+        <h2 id="index-h">Your EPAs</h2>
+        <EpaProgressTable Summary="_summary" />
+      </section>
+    }
+  }
+  else
+  {
+    @RunningView(_summary)
   }
 </StatePanel>
 
 @code {
+  /// <summary>What the status says while the page reads (T355, C8; R3-Spec § 1, Loading).</summary>
+  public const string LoadingWords = "Loading My progress.";
+
+  /// <summary>
+  /// The page's load failure (R3-Spec § 1, Load error): never the exception's text, which goes to the log (T329, T272).
+  /// </summary>
+  public const string LoadFailed = "Could not load your progress. Nothing has changed. Try again, or come back in a few minutes.";
+
+  /// <summary>
+  /// The MSF read's own failure, a line in This period with no button (R3-Spec § 1, Section error): the counts it sits
+  /// beside are a different read, and stand.
+  /// </summary>
+  public const string MsfLoadFailed = "Could not load MSF coverage. Your counts above are not affected.";
+
   private TraineeCurriculumProgressSummaryDto? _summary;
-  private IReadOnlyList<EpaTrajectoryDto>? _trajectories;
   private EntrustmentStandingDto? _standing;
-  private string? _standingError;
+  private bool _standingFailed;
+  private bool _standingLoading;
   private MsfCoverageDto? _msfCoverage;
-  private string? _msfCoverageError;
-  private bool _loaded;
+  private bool _msfFailed;
+  private bool _loading = true;
   private string? _error;
+
+  private ElementReference _periodHeading;
+  private ElementReference _standingHeading;
+  private ElementReference _endedHeading;
+  private ElementReference _emptyCard;
 
   private bool HasSemesterItems => _summary?.HasSemesterItems == true;
   private bool HasYearItems => _summary?.HasYearItems == true;
@@ -247,95 +96,132 @@
   /// </summary>
   private DateOnly? EndedOn => _summary?.Ended?.EndedOn;
 
-  private string Subtitle => _summary?.Ended is null
-    ? "What your curriculum expects of you this period, and your rating trajectory for each EPA you have evidence against."
-    : "Your record of the programme you ended: what your curriculum held you to in each period, and your rating trajectory for each EPA you have evidence against.";
+  /// <summary>
+  /// "Training year 4 · Semester 2, 2026" (2.40); the semester alone with no curriculum (R3-P-no-curriculum); an ended
+  /// programme keeps flow 13's subtitle, less the trajectories, which are on the EPA pages now (R5). None while loading.
+  /// </summary>
+  private string? Subtitle => _loading || _error is not null
+    ? null
+    : _summary is null
+      ? QuotaText.SemesterName(Wombat.Domain.Curricula.AcademicPeriod.Containing(QuotaCalendar.Today(Clock)))
+      : _summary.Ended is null
+        ? ProgressWords.Subtitle(_summary)
+        : "Your record of the programme you ended: what your curriculum held you to in each period.";
 
-  protected override async Task OnInitializedAsync()
+  // The clock the host registers (Infrastructure's TimeProvider), else the system's: only the no-curriculum subtitle reads
+  // it, since every figure's "today" is the reader's (T325).
+  private TimeProvider Clock => ServiceProvider.GetService<TimeProvider>() ?? TimeProvider.System;
+
+  /// <summary>The training year the index's STAR column is judged against: the standing's, else the summary's.</summary>
+  private int? VerdictYear => _standing?.TargetYear ?? _summary?.TraineeStage;
+
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  /// <summary>
+  /// Reads the page: the counts, which are the page, then the standing and the MSF coverage, each a section of it whose
+  /// failure says so there rather than replacing the counts the trainee came for (T166, T168). Try again reads all three.
+  /// </summary>
+  private async Task LoadAsync()
   {
+    _loading = true;
+    _error = null;
+    System.Security.Claims.ClaimsPrincipal user;
+    string userId;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+      user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("Current user identifier missing.");
-      _summary = await Sender.Send(new GetCurriculumProgressForTraineeQuery(userId, authState.User));
-      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(userId, authState.User));
-      _loaded = true;
+      _summary = await Sender.Send(new GetCurriculumProgressForTraineeQuery(userId, user));
     }
     catch (Exception exception)
     {
-      _error = exception.Message;
+      Logger.LogError(exception, "My progress could not be read.");
+      _error = LoadFailed;
+      _loading = false;
       return;
     }
 
-    // Apart from the rest (T166): the standing is one section of the page, and a failure in it says so there rather
-    // than replacing the targets the trainee came for.
+    await ReadStandingAsync(user, userId);
+
+    // T168: this semester's coverage for This period, and each period's for an ended programme's cards. An ended
+    // programme's cards show the semester it ended in and the one before, as a running one's show this semester (T252).
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-        ?? throw new InvalidOperationException("Current user identifier missing.");
-      // An ended programme is judged against the training year it ended in (T252), not the one its start date would
-      // put the trainee in today.
-      _standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(userId, authState.User, EndedOn));
+      _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(userId, user, To: EndedOn));
+      _msfFailed = false;
     }
     catch (Exception exception)
     {
-      _standingError = exception.Message;
+      Logger.LogError(exception, "My progress could not read the MSF coverage.");
+      _msfCoverage = null;
+      _msfFailed = true;
     }
 
-    // T168: this semester and the one before, beside each quota card. Its own try, like the standing.
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-        ?? throw new InvalidOperationException("Current user identifier missing.");
-      // An ended programme's cards show the semester it ended in and the one before, as a running one's show this
-      // semester and the last (T252).
-      _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(userId, authState.User, To: EndedOn));
-    }
-    catch (Exception exception)
-    {
-      _msfCoverageError = exception.Message;
-    }
+    _loading = false;
   }
 
-  private static string TargetsLine(int met, int applying, string when)
-    => applying == 0
-      ? "none apply yet"
-      : $"{met} of {applying} EPAs met {when}";
-
-  /// <summary>"this semester" or "in 2026": the words after a figure, by the item's window.</summary>
-  private static string WindowWords(TraineeCurriculumProgressDto item)
-    => item.IsPerSemester ? "this semester" : $"in {item.Current.Start.Year}";
-
-  /// <summary>
-  /// The window before this one, in words. A window with no target says why: the programme started part-way through
-  /// it (D14), or ended part-way through it before its last month (D49), or it is after the programme ended. A running
-  /// programme reaches only the first; the others are worded so that no reader can ever make an ended programme read as
-  /// a late start. An ended programme's cards list their periods with <see cref="EndedPeriodLine" /> instead (T252).
-  /// </summary>
-  private static string PreviousLine(QuotaWindowDto previous)
+  private async Task ReadStandingAsync(System.Security.Claims.ClaimsPrincipal user, string userId)
   {
-    if (previous.EndedPartWay)
+    try
     {
-      return $"{previous.Name}: no target (your programme ended part-way through) · {previous.Count} recorded";
+      // An ended programme is judged against the training year it ended in (T252), not the one its start date would put
+      // the trainee in today.
+      _standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(userId, user, EndedOn));
+      _standingFailed = false;
     }
-
-    if (previous.IsAfterProgrammeEnd)
+    catch (Exception exception)
     {
-      return $"{previous.Name}: no target (after your programme ended) · {previous.Count} recorded";
+      Logger.LogError(exception, "My progress could not read the entrustment standing.");
+      _standing = null;
+      _standingFailed = true;
     }
-
-    if (!previous.Applies)
-    {
-      return $"{previous.Name}: no target (you started part-way through) · {previous.Count} recorded";
-    }
-
-    return previous.IsMet
-      ? $"{previous.Name}: {previous.Count} of {previous.Target}, met"
-      : $"{previous.Name}: {previous.Count} of {previous.Target}, {previous.Shortfall} short";
   }
+
+  /// <summary>The standing's own Try again (C8): reads the standing alone; the panel moves the focus once it answers.</summary>
+  private async Task RetryStandingAsync()
+  {
+    _standingLoading = true;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("Current user identifier missing.");
+      await ReadStandingAsync(user, userId);
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "My progress could not read the entrustment standing.");
+      _standingFailed = true;
+    }
+    finally
+    {
+      _standingLoading = false;
+    }
+  }
+
+  /// <summary>After the page's Try again: This period's heading (Spec § 5), else the region that stands in for it.</summary>
+  private async ValueTask FocusContentAsync()
+  {
+    if (_summary is null || (_summary.Ended is null && _summary.Items.Count == 0))
+    {
+      await _emptyCard.FocusAsync();
+    }
+    else if (_summary.Ended is not null)
+    {
+      await _endedHeading.FocusAsync();
+    }
+    else
+    {
+      await _periodHeading.FocusAsync();
+    }
+  }
+
+  /// <summary>After the standing's Try again answered: its heading, "Entrustment against Annexure A" (C8).</summary>
+  private ValueTask FocusStandingAsync() => _standingHeading.FocusAsync();
+
+  /// <summary>The panel's EPA names link to each EPA's page (R4; T355, C1).</summary>
+  private static string? EpaPage(EpaStandingDto epa) => ProgressLinks.Epa(epa.EpaId);
 
   /// <summary>
   /// The notice at the top of an ended programme's page (T252): that it ended, on what day, and that the page is a
@@ -348,71 +234,180 @@
     var how = QuotaText.ProgrammeEnded(ended);
 
     return ended.EndedOn is null
-      ? $"{how}. Wombat did not record the day it ended, so your periods are shown up to {QuotaText.LongDate(ended.Today)}. {record}"
+      ? $"{how}. Wombat did not record the day it ended, so your periods are shown up to {QuotaText.Iso(ended.Today)}. {record}"
       : $"{how}. {record} A period your programme ended in before that period's last month has no target, and no period after it is listed.";
   }
 
   /// <summary>
-  /// T168: the MSF coverage is apart from the targets, like the standing. A failure says so beside the cards and takes
-  /// none of them down with it, whether the programme runs or has ended (T252 review: the ended view dropped it).
+  /// A running programme (R3-C-Progress): the Alerts that apply (December, part-way, not started; C2, C3), This period,
+  /// the EPA index, and the standing panel whole (round 1, correction 1).
   /// </summary>
-  private RenderFragment MsfCoverageErrorAlert => __builder =>
+  private RenderFragment RunningView(TraineeCurriculumProgressSummaryDto summary) => __builder =>
   {
-    @if (!string.IsNullOrWhiteSpace(_msfCoverageError))
+    @if (ProgressWords.DecemberNotice(summary) is { } december)
     {
-      <Alert Kind="warning">Your multi-source feedback coverage could not be loaded: @_msfCoverageError</Alert>
+      @* Its first sentence is the news (R3-P-december): the year has ended. *@
+      var cut = december.IndexOf(". ", StringComparison.Ordinal) + 1;
+      <Alert Kind="info"><strong>@december[..cut]</strong> @december[(cut + 1)..]</Alert>
+    }
+
+    @if (ProgressWords.StartNotice(summary) is { } start)
+    {
+      <Alert Kind="info">@start</Alert>
+    }
+
+    <section class="detail-card period-card" aria-labelledby="period-h">
+      <h2 class="dashboard-card-title" id="period-h" tabindex="-1" @ref="_periodHeading">This period</h2>
+      <div class="dashboard-metric-row">
+        @if (HasSemesterItems)
+        {
+          var semester = ProgressWords.SemesterFigure(summary);
+          <div class="dashboard-metric">
+            <span class="dashboard-metric-value">@semester.Value</span>
+            <span class="dashboard-metric-label">@semester.Label</span>
+          </div>
+        }
+        @if (HasYearItems)
+        {
+          var year = ProgressWords.YearFigure(summary);
+          <div class="dashboard-metric">
+            <span class="dashboard-metric-value">@year.Value</span>
+            <span class="dashboard-metric-label">@year.Label</span>
+          </div>
+        }
+      </div>
+      <p class="period-ends">@ProgressWords.EndsLine(summary)</p>
+      <div class="period-lines">
+        @if (summary.TraineeStage is { } stage)
+        {
+          <p>@ProgressWords.TrainingYearLine(stage)</p>
+        }
+        @* T168, D8, D9: covered means a released campaign COVERING the EPA closed in the semester; MSF counts towards no
+           target, so it is a line of its own, never a count against one. *@
+        @if (_msfFailed)
+        {
+          <p class="section-error"><span class="period-line-term">Multi-source feedback:</span> @MsfLoadFailed</p>
+        }
+        else if (_msfCoverage is { Epas.Count: > 0 } coverage)
+        {
+          <p><span class="period-line-term">Multi-source feedback:</span> @MsfCoverageText.ThisSemesterLine(coverage)</p>
+        }
+      </div>
+    </section>
+
+    <section class="index-section" aria-labelledby="index-h">
+      <h2 id="index-h">Your EPAs</h2>
+      <EpaProgressTable Summary="summary" Standing="_standing" StandingFailed="_standingFailed" TrainingYear="VerdictYear" />
+    </section>
+
+    @StandingSection(summary)
+  };
+
+  /// <summary>
+  /// T166: the committee's STAR decisions against Annexure A's target for this training year, and the exit rule: the same
+  /// panel the committee review page shows, in the trainee's own words, with its own error and Try again under its
+  /// heading (C8), its EPA names linking to each EPA's page (R4).
+  /// </summary>
+  private RenderFragment StandingSection(TraineeCurriculumProgressSummaryDto summary) => __builder =>
+  {
+    @if (_standing is not null || _standingFailed || _standingLoading)
+    {
+      <section class="standing-panel" aria-labelledby="standing-h">
+        <h2 id="standing-h" tabindex="-1" @ref="_standingHeading">Entrustment against Annexure A</h2>
+        <EntrustmentStandingPanel Standing="@_standing"
+                                  LoadError="@(_standingFailed ? EntrustmentStandingPanel.SelfLoadFailed : null)"
+                                  IsLoading="_standingLoading"
+                                  OnRetry="RetryStandingAsync"
+                                  FocusAfterRetry="FocusStandingAsync"
+                                  Self="true"
+                                  ProgrammeEnd="@summary.Ended"
+                                  EpaHref="EpaPage" />
+      </section>
     }
   };
 
   /// <summary>
-  /// One period of an ended programme, in the words the portfolio PDF prints it (T169, T209; its <c>PeriodLine</c>). A
-  /// closed period is met or short. One that has not closed by today is its count so far and nothing more: the trainee
-  /// owes nothing, but an encounter observed before the end can still be credited. Either says how many of its
-  /// encounters met the minimum level when observed, as the PDF does. A waived period says why: the programme started
-  /// part-way through it (D14), or ended part-way through it before its last month (D49).
+  /// An ended programme (T252; flow 13's, as built, R5): the notice, every period of each EPA read-only and newest first,
+  /// with nothing about what is still to do, then the standing as on the last day. Dates ISO (D1). Each EPA's code links
+  /// to its page, which holds its periods and its trajectory now that the chart has left this page (T355).
   /// </summary>
-  private static string EndedPeriodLine(QuotaWindowDto period, DateOnly today)
+  private RenderFragment EndedView(TraineeCurriculumProgressSummaryDto summary, ProgrammeEndDto ended) => __builder =>
   {
-    if (period.IsExempt)
-    {
-      return $"no target (you started part-way through) · {period.Count} recorded";
-    }
+    @* T252: standing page content, there on every visit, so an info alert with no role (DESIGN.md § Alerts). *@
+    <Alert Kind="info">@EndedNotice(ended)</Alert>
 
-    if (period.EndedPartWay)
-    {
-      return $"no target (your programme ended part-way through) · {period.Count} recorded";
-    }
+    <section>
+      <h2 tabindex="-1" @ref="_endedHeading">Curriculum targets</h2>
+      @if (summary.Items.Count == 0)
+      {
+        <p class="muted">No EPA on your curriculum is in use any more, so there are no targets to show.</p>
+      }
+      else
+      {
+        <section class="detail-card">
+          <h3>Your programme</h3>
+          <dl class="details-list">
+            <div>
+              <dt>Started</dt>
+              <dd>@QuotaText.Iso(summary.ProgrammeStartDate)</dd>
+            </div>
+            <div>
+              <dt>@(ended.Completed ? "Completed" : "Ended")</dt>
+              <dd>@(ended.EndedOn is { } endedOn ? QuotaText.Iso(endedOn) : "The day was not recorded")</dd>
+            </div>
+            @if (summary.TraineeStage is { } finalStage)
+            {
+              <div>
+                <dt>Training year</dt>
+                <dd>@finalStage @(ended.EndedOn is null ? "today" : "when your programme ended")</dd>
+              </div>
+            }
+          </dl>
+        </section>
 
-    if (period.IsAfterProgrammeEnd)
-    {
-      return $"no target (after your programme ended) · {period.Count} recorded";
-    }
+        @if (_msfFailed)
+        {
+          <p class="section-error"><span class="period-line-term">Multi-source feedback:</span> @MsfLoadFailed</p>
+        }
 
-    if (!period.Applies)
-    {
-      return "no target (before your programme started)";
-    }
+        @if (HasSemesterItems)
+        {
+          <h3 class="progress-group-title">Each semester</h3>
+          <div class="dashboard-grid">
+            @foreach (var item in summary.Items.Where(entry => entry.IsPerSemester))
+            {
+              @EndedItemCard(item, ended)
+            }
+          </div>
+        }
 
-    var standing = period.HasClosedBy(today)
-      ? (period.IsMet ? ", met" : $", {period.Shortfall} short")
-      : (period.IsMet ? " so far, met" : " so far");
-    var atMinimum = period.Count > 0
-      ? $"; {period.MinimumLevelReachedCount} at the minimum level when observed"
-      : string.Empty;
+        @if (HasYearItems)
+        {
+          <h3 class="progress-group-title">Once a year</h3>
+          <div class="dashboard-grid">
+            @foreach (var item in summary.Items.Where(entry => !entry.IsPerSemester))
+            {
+              @EndedItemCard(item, ended)
+            }
+          </div>
+        }
+      }
+    </section>
 
-    return $"{period.Count} of {period.Target}{standing}{atMinimum}";
-  }
+    @StandingSection(summary)
+  };
 
   /// <summary>
   /// An item of an ended programme (T252): its target, and every period from the one the programme ended in back to its
-  /// start, newest first. No bar and no "more by": nothing is still to do.
+  /// start, newest first, in the words the portfolio PDF prints them (<see cref="ProgressWords.EndedPeriodLine" />). No
+  /// bar and no "more by": nothing is still to do.
   /// </summary>
   private RenderFragment EndedItemCard(TraineeCurriculumProgressDto item, ProgrammeEndDto ended) => __builder =>
   {
     IReadOnlyList<QuotaWindowDto> periods = item.Periods ?? (item.Previous is { } previous ? [item.Current, previous] : [item.Current]);
     <section class="detail-card">
       <div class="progress-row-head">
-        <h3>@item.EpaCode</h3>
+        <h3><a class="epa-link" href="@ProgressLinks.Epa(item.EpaId)" aria-label="@EpaPageWords.Title(item.EpaCode, item.EpaTitle)">@item.EpaCode</a></h3>
       </div>
       <p class="muted">@item.EpaTitle</p>
       <p class="progress-row-meta">
@@ -424,7 +419,7 @@
         {
           <div>
             <dt>@period.Name</dt>
-            <dd>@EndedPeriodLine(period, ended.Today)</dd>
+            <dd>@ProgressWords.EndedPeriodLine(period, ended.Today)</dd>
           </div>
         }
       </dl>
@@ -435,110 +430,4 @@
       }
     </section>
   };
-
-  private RenderFragment ItemCard(TraineeCurriculumProgressDto item) => __builder =>
-  {
-    var current = item.Current;
-    <section class="detail-card">
-      <div class="progress-row-head">
-        <h3>@item.EpaCode</h3>
-        @if (current.Applies)
-        {
-          <span class="muted">@current.Count of @current.Target @WindowWords(item)</span>
-        }
-      </div>
-      <p class="muted">@item.EpaTitle</p>
-
-      @if (current.Applies)
-      {
-        <div class="progress-bar"
-             role="progressbar"
-             aria-valuemin="0"
-             aria-valuemax="@current.Target"
-             aria-valuenow="@Math.Min(current.Count, current.Target)"
-             aria-label="@($"{item.EpaCode}: {current.Count} of {current.Target} {WindowWords(item)}")">
-          <div class="progress-bar-fill @(current.IsMet ? "is-complete" : string.Empty)" style="width:@current.PercentOfTarget%"></div>
-        </div>
-        <p class="progress-row-meta">
-          @if (current.IsMet)
-          {
-            <text>Target met for @current.Name.</text>
-          }
-          else if (_summary is not null && _summary.AsOf > current.NominalEnd)
-          {
-            @* December: the College's year has ended, but December encounters still count (D40). *@
-            <text>@current.Shortfall more; encounters in December still count towards @current.Name.</text>
-          }
-          else
-          {
-            <text>@current.Shortfall more by @QuotaText.LongDate(current.NominalEnd).</text>
-          }
-          @if (current.Count > 0)
-          {
-            <text> At the minimum level when observed: @current.MinimumLevelReachedCount of @current.Count.</text>
-          }
-          @if (current.LastObservedOn is { } last)
-          {
-            @* T219: a date nobody stated is only the day its form was created, and says so in EncounterDate.Label's
-               words, as the trajectory below and the activity pages do. The sentence names the date itself, so "not
-               recorded" cannot read as though the encounter were not. *@
-            <text> Last encounter date: @EncounterDate.Label(last, current.LastObservedOnDeclared).</text>
-          }
-        </p>
-      }
-      else if (current.IsExempt)
-      {
-        <p class="progress-row-meta">
-          No target @WindowWords(item) · @current.Count recorded@(current.FirstCountedName is { } first ? $" · targets start with {first}" : string.Empty)
-        </p>
-      }
-      else if (current.EndedPartWay)
-      {
-        @* D49: the programme ended before this window's last month. Never "targets start with": they stopped. *@
-        <p class="progress-row-meta">
-          No target @WindowWords(item) · @current.Count recorded · your programme ended part-way through
-        </p>
-      }
-      else if (current.IsAfterProgrammeEnd)
-      {
-        <p class="progress-row-meta">
-          No target: this is after your programme ended · @current.Count recorded
-        </p>
-      }
-      else
-      {
-        <p class="progress-row-meta">
-          No target yet@(current.FirstCountedName is { } first ? $" · targets start with {first}" : string.Empty)
-        </p>
-      }
-
-      <p class="progress-row-meta">
-        Target: @QuotaText.TargetPhrase(item.QuotaPeriod, item.Target)@(item.IsPerSemester ? $" ({item.Target * 2} a year)" : string.Empty).
-        Minimum now @item.EffectiveMinimumLevelLabel.
-        @if (item.TrainingYearChangedOn is { } changed)
-        {
-          <text> Your training year changed on @QuotaText.ShortDate(changed), so encounters before then were judged against the previous year's minimum.</text>
-        }
-      </p>
-
-      @if (item.Previous is { } previous)
-      {
-        <p class="progress-row-meta">@PreviousLine(previous)</p>
-      }
-
-      @* T168, D9: covered means a released campaign COVERING this EPA closed in the semester. Beside the quota lines and
-         apart from them: by D8 MSF counts towards no target, so it is never a count against one. *@
-      @if (_msfCoverage is not null && MsfCoverageText.CardLine(_msfCoverage, item.EpaId) is { } msfLine)
-      {
-        <p class="progress-row-meta">@msfLine</p>
-      }
-    </section>
-  };
-
-  // The axis comes from the ladder the trainee's curriculum item is pinned to, resolved server-side.
-  // Empty when nothing is pinned, which draws the numeric axis this chart drew before T123.
-  private static IReadOnlyList<TrajectoryChart.Rung> BuildRungs(EpaTrajectoryDto trajectory)
-    => trajectory.Rungs
-      .Select(rung => new TrajectoryChart.Rung(rung.Order, rung.Label))
-      .ToArray();
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Epas;
 
@@ -32,6 +33,14 @@ public sealed record ListActivitiesBySubjectQuery(
 
     /// <summary>The largest page served.</summary>
     public const int MaxPageSize = 100;
+
+    /// <summary>
+    /// When set, only the subject's activities stamped with this EPA and finished in their pinned workflow (T355, C10):
+    /// the EPA page's "Activities on this EPA". A Declined or cancelled request is a dead end, not finished, so it is never
+    /// listed; an MSF row, finished in <c>recorded</c>, is. Ordered, paged and named as without it: each name by E7 over
+    /// the subject's whole list, not the filtered rows. Null: the list as My activities reads it.
+    /// </summary>
+    public int? EpaId { get; init; }
 }
 
 public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListActivitiesBySubjectQuery, ActivityListPageDto>
@@ -139,15 +148,28 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
                     : null))
             .ToList();
 
-        // E7: the keys more than one of these rows share, counted over the whole list, not the page.
+        // E7: the keys more than one of these rows share, counted over the whole list, not the page, and not the EPA filter
+        // either: a row reads the same on the EPA page as on My activities (T355, C10).
         var shared = facts
             .GroupBy(fact => fact.CollisionKey)
             .Where(group => group.Count() > 1)
             .Select(group => group.Key)
             .ToHashSet();
 
+        if (request.EpaId is int epaId)
+        {
+            // T355 (C10): that EPA's finished activities, by each pin's workflow (D44, ActivityCompletion), never a state's
+            // key: a Declined or cancelled request is a dead end and is left out; a recorded MSF row is finished and kept.
+            var onEpa = facts.Where(fact => fact.EpaId == epaId).ToList();
+            var finished = await ActivityCompletion.LoadFinishedStatesAsync(
+                _dbContext, onEpa.Select(fact => (fact.ActivityTypeId, fact.SchemaVersion)), cancellationToken);
+            facts = onEpa
+                .Where(fact => finished[(fact.ActivityTypeId, fact.SchemaVersion)].Contains(fact.CurrentState))
+                .ToList();
+        }
+
         var pageSize = Math.Clamp(request.PageSize, 1, ListActivitiesBySubjectQuery.MaxPageSize);
-        var pageCount = Math.Max(1, (rows.Count + pageSize - 1) / pageSize);
+        var pageCount = Math.Max(1, (facts.Count + pageSize - 1) / pageSize);
         var page = Math.Clamp(request.Page, 1, pageCount);
         var pageFacts = facts.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
@@ -162,6 +184,13 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
             request.Principal,
             _users,
             cancellationToken);
+
+        // The EPA pages that open for the caller, on their own list only: the Credit cell links there and nowhere else
+        // (T355, build review G4).
+        var callerId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var epaPages = string.Equals(callerId, request.SubjectUserId, StringComparison.Ordinal)
+            ? await TraineeQuotaProgressReader.EpasWithAPageAsync(_dbContext, request.SubjectUserId, cancellationToken)
+            : new HashSet<int>();
 
         var byId = rows.ToDictionary(row => row.Id);
         var items = pageFacts
@@ -192,11 +221,12 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
                     Returned = detail.Returned,
                     DisplayName = detail.DisplayName,
                     DisplayNameHasNominee = detail.DisplayNameHasNominee,
-                    Shape = detail.Shape
+                    Shape = detail.Shape,
+                    EpaPageOpens = row.EpaId is int rowEpaId && epaPages.Contains(rowEpaId)
                 };
             })
             .ToList();
 
-        return new ActivityListPageDto(items, page, pageSize, rows.Count);
+        return new ActivityListPageDto(items, page, pageSize, facts.Count);
     }
 }

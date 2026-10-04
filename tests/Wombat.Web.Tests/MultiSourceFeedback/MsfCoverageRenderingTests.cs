@@ -48,18 +48,20 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
     // ─── My progress ─────────────────────────────────────────────────────────
 
     [Fact]
-    public void EachQuotaCard_SaysBesideItsQuotaLines_WhetherAReleasedCampaignCoveringTheEpaClosed_NewestSemesterFirst()
+    public void EachEndedProgrammesCard_SaysBesideItsPeriods_WhetherAReleasedCampaignCoveringTheEpaClosed_NewestSemesterFirst()
     {
+        // T355: a running programme's per-EPA line is on each EPA's page (CardLine whole, C4); the ended record keeps its
+        // cards, each with its line (T252, R5).
         SignIn("trainee-1", WombatRoles.Trainee);
         var coverage = Coverage(
             [Semester1, Semester2],
             Row(7, "PAED-001", Cell(2026, 1, Campaign(50, new DateOnly(2026, 3, 10))), Cell(2026, 2)),
             Row(8, "PAED-002", Cell(2026, 1), Cell(2026, 2)));
-        var cut = RenderMyProgress(coverage);
+        var cut = RenderMyProgress(coverage, ended: true);
 
         MsfLine(cut, "PAED-001").Should().Be(
             "MSF in Semester 2, 2026: no released campaign covering this EPA has closed yet. " +
-            "MSF in Semester 1, 2026: covered by a released campaign that closed on 10 March 2026.");
+            "MSF in Semester 1, 2026: covered by a released campaign that closed on 2026-03-10.");
         MsfLine(cut, "PAED-002").Should().Be(
             "MSF in Semester 2, 2026: no released campaign covering this EPA has closed yet. " +
             "MSF in Semester 1, 2026: no campaign covering this EPA that closed in the semester has been released.");
@@ -84,10 +86,10 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
             [Semester2],
             Row(7, "PAED-001", Cell(2026, 2, Campaign(51, new DateOnly(2026, 9, 1)), Campaign(50, new DateOnly(2026, 7, 20)))),
             Row(8, "PAED-002", Cell(2026, 2)));
-        var cut = RenderMyProgress(coverage);
+        var cut = RenderMyProgress(coverage, ended: true);
 
         MsfLine(cut, "PAED-001").Should().Be(
-            "MSF in Semester 2, 2026: covered by 2 released campaigns, the latest closed on 1 September 2026.");
+            "MSF in Semester 2, 2026: covered by 2 released campaigns, the latest closed on 2026-09-01.");
     }
 
     [Fact]
@@ -100,8 +102,9 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
             Row(8, "PAED-002", Cell(2026, 1), Cell(2026, 2)));
         var cut = RenderMyProgress(coverage);
 
-        Details(cut.Find("section.detail-card dl.details-list"))["Multi-source feedback"].Should().Be(
-            "1 of 2 EPAs covered by a released campaign that closed this semester. " +
+        // T355: This period's line, its term in .period-line-term (R3-C-Progress).
+        cut.FindAll("section.period-card .period-lines p").Select(Text).Should().Contain(
+            "Multi-source feedback: 1 of 2 EPAs covered by a released campaign that closed this semester. " +
             "MSF is tracked on its own and counts towards no target.");
     }
 
@@ -129,7 +132,10 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
 
         var cut = RenderProgressPage();
 
-        PageText(cut).Should().Contain("Your multi-source feedback coverage could not be loaded: The database is unavailable.");
+        // T355 (R3-Spec § 1, Section error): a line in This period, fixed words, never the exception's text (T329).
+        Text(cut.Find("section.period-card p.section-error")).Should().Be(
+            "Multi-source feedback: Could not load MSF coverage. Your counts above are not affected.");
+        cut.Markup.Should().NotContain("The database is unavailable.");
         cut.FindAll(".progress-bar").Should().HaveCount(2, "the targets the trainee came for are still there");
         cut.Markup.Should().NotContain("MSF in ");
     }
@@ -215,9 +221,9 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
         rows.Select(row => row.Children.Skip(1).Select(Text).ToList()).Should().BeEquivalentTo(
             new[]
             {
-                new[] { "Covered Annual MSF #50, closed 10 Mar 2026", "None released yet" },
+                new[] { "Covered Annual MSF #50, closed 2026-03-10", "None released yet" },
                 new[] { "None released", "None released yet" },
-                new[] { "Covered 2 campaigns; the latest Annual MSF #52, closed 2 May 2026", "None released yet" }
+                new[] { "Covered 2 campaigns; the latest Annual MSF #52, closed 2026-05-02", "None released yet" }
             },
             options => options.WithStrictOrdering());
 
@@ -349,26 +355,30 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
             .Add(panel => panel.ReviewPeriodTo, to)
             .Add(panel => panel.ReviewState, state));
 
-    private IRenderedComponent<MyProgress> RenderMyProgress(MsfCoverageDto coverage)
+    private IRenderedComponent<MyProgress> RenderMyProgress(MsfCoverageDto coverage, bool ended = false)
     {
-        Services.AddSingleton<IScopedSender>(ProgressSender(_ => coverage));
+        Services.AddSingleton<IScopedSender>(ProgressSender(_ => coverage, ended));
         var cut = RenderProgressPage();
-        cut.WaitForState(() => cut.Markup.Contains("Multi-source feedback"));
+        cut.WaitForState(() => cut.Markup.Contains(ended ? "MSF in " : "Multi-source feedback"));
         return cut;
     }
 
     private IRenderedComponent<MyProgress> RenderProgressPage()
     {
         var cut = RenderComponent<MyProgress>();
-        cut.WaitForState(() => cut.Markup.Contains("Curriculum targets"));
+        cut.WaitForState(() => cut.Markup.Contains("Your EPAs") || cut.Markup.Contains("Curriculum targets"));
         return cut;
     }
 
-    /// <summary>Two per-semester items, PAED-001 (EPA 7) and PAED-002 (EPA 8), in semester 2 of 2026.</summary>
-    private static RecordingSender ProgressSender(Func<GetMsfCoverageForTraineeQuery, object?> coverage)
+    /// <summary>
+    /// Two per-semester items, PAED-001 (EPA 7) and PAED-002 (EPA 8), in semester 2 of 2026; or, ended, the same programme
+    /// completed on 2026-09-23 (T252), whose cards keep their MSF lines.
+    /// </summary>
+    private static RecordingSender ProgressSender(Func<GetMsfCoverageForTraineeQuery, object?> coverage, bool ended = false)
         => new RecordingSender()
-            .On<GetCurriculumProgressForTraineeQuery>(_ => ProgressSummary())
-            .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
+            .On<GetCurriculumProgressForTraineeQuery>(_ => ended
+                ? ProgressSummary() with { Ended = new ProgrammeEndDto(Completed: true, EndedOn: new DateOnly(2026, 9, 23), Today: new DateOnly(2026, 9, 23)) }
+                : ProgressSummary())
             .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
             .On(coverage);
 

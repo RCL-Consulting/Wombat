@@ -6,13 +6,17 @@ using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Wombat.Application.Features.Activities.Commands.SaveActivityDraft;
 using Wombat.Application.Features.Activities.Commands.TransitionActivity;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityById;
+using Wombat.Application.Features.Activities.Queries.GetActivityCountLine;
 using Wombat.Application.Features.Activities.Queries.ListWaitingForYou;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Epas;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Shared;
@@ -144,6 +148,131 @@ public sealed class ActivityPageTests : TestContext
         var progress = card.QuerySelector(".activity-status-action a")!;
         progress.TextContent.Trim().Should().Be("Open My progress");
         progress.GetAttribute("href").Should().Be("/portfolio/progress");
+    }
+
+    // ---- the completed card's count and where "Open My progress" lands (T355, C5; E5; R3-W-*) ----
+
+    [Fact]
+    public void ACompletedRequest_AddsTheCountItMade_AndOpensMyProgressAtItsEpa()
+    {
+        // R3-W-card-count: the count read as part of the page's own load, the sentence after the credit, the link to the
+        // EPA's page named for where it lands.
+        var sender = new PageSender(Completed()) { CountLine = Line(isCurrent: true, count: 1) };
+        var cut = Render(sender);
+
+        var card = cut.Find(".activity-status");
+        Text(card, ".activity-status-body").Should().Be("Rated 4. Credited 1 item to PAED-001. PAED-001: 1 of 3 this semester.");
+        var progress = card.QuerySelector(".activity-status-action a")!;
+        progress.TextContent.Trim().Should().Be("Open My progress", "its words and place are flow 03's");
+        progress.GetAttribute("href").Should().Be("/portfolio/progress/2");
+        progress.GetAttribute("aria-label").Should().Be("Open My progress at PAED-001");
+        sender.CountLineReads.Should().ContainSingle().Which.ActivityId.Should().Be(7);
+    }
+
+    [Fact]
+    public void ACompletedRequest_ReadLater_SaysTheCountAsItIsNow()
+    {
+        // R3-W-card-count-later: the window is still the current one; the count is read live.
+        var cut = Render(new PageSender(Completed()) { CountLine = Line(isCurrent: true, count: 3) });
+
+        Text(cut.Find(".activity-status"), ".activity-status-body")
+            .Should().Be("Rated 4. Credited 1 item to PAED-001. PAED-001: 3 of 3 this semester, met.");
+    }
+
+    [Fact]
+    public void ACompletedRequest_InAnOlderWindow_NamesThatWindow()
+    {
+        // R3-W-card-older (round 1 correction 5): the activity's own window, named when it is not the current one.
+        var cut = Render(new PageSender(Completed()) { CountLine = Line(isCurrent: false, count: 3) });
+
+        Text(cut.Find(".activity-status"), ".activity-status-body")
+            .Should().Be("Rated 4. Credited 1 item to PAED-001. PAED-001, Semester 1, 2026: 3 of 3, met.");
+    }
+
+    [Fact]
+    public void APausedEpasCompletion_WaitsInFlow03sWords_AndOpensMyProgressAtThatEpa()
+    {
+        // R3-W-card-paused: flow 03's sentence, unchanged, and no count (the count read names no paused EPA). The paused
+        // EPA's page opens, so "Open My progress" lands there, driven by the activity's EPA, named for where it lands
+        // (T355, build review D1: the board wins).
+        var cut = Render(new PageSender(CompletedOnPausedEpa(credited: 0)));
+
+        var card = cut.Find(".activity-status");
+        Text(card, ".activity-status-body").Should().Be("Rated 4. Its credit to PAED-001 waits while the EPA is paused.");
+        var progress = card.QuerySelector(".activity-status-action a")!;
+        progress.TextContent.Trim().Should().Be("Open My progress");
+        progress.GetAttribute("href").Should().Be($"/portfolio/progress/{CompletedOnPausedEpa(credited: 0).Activity.EpaId}");
+        progress.GetAttribute("aria-label").Should().Be("Open My progress at PAED-001");
+    }
+
+    [Fact]
+    public void ACompletionCreditedBeforeThePause_ReadsAsCredited_NotAsWaiting()
+    {
+        // Note 2: the paused sentence keys on the credit and the pause together.
+        var cut = Render(new PageSender(CompletedOnPausedEpa(credited: 1)));
+
+        Text(cut.Find(".activity-status"), ".activity-status-body").Should().Be("Rated 4. Credited 1 item to PAED-001.");
+    }
+
+    [Fact]
+    public void ACompletionThatCreditedNothing_KeepsTheBuiltSentence_WithNoCount()
+    {
+        // Spec § 1: credited 0 keeps "It counted towards no curriculum requirement." and no count.
+        var cut = Render(new PageSender(Completed(credited: 0)) { CountLine = Line(isCurrent: true, count: 1) });
+
+        Text(cut.Find(".activity-status"), ".activity-status-body")
+            .Should().Be("Rated 4. It counted towards no curriculum requirement.");
+    }
+
+    [Fact]
+    public void ACompletionAboutNoEpaOfHerCurriculum_HasNoCount_AndOpensMyProgressItself()
+    {
+        // The count read answers null (no EPA, or none in force on her curriculum): flow 03's card, the plain link.
+        var cut = Render(new PageSender(Completed()));
+
+        var card = cut.Find(".activity-status");
+        Text(card, ".activity-status-body").Should().Be("Rated 4. Credited 1 item to PAED-001.");
+        var progress = card.QuerySelector(".activity-status-action a")!;
+        progress.GetAttribute("href").Should().Be("/portfolio/progress");
+        progress.HasAttribute("aria-label").Should().BeFalse();
+    }
+
+    [Fact]
+    public void AFailedCountRead_DropsTheSentence_KeepsFlow03sCard_AndIsLogged()
+    {
+        // Note 4: the failure never fails the page, and never shows its text.
+        var logger = new CapturingLogger<ActivityView>();
+        Services.AddSingleton<Microsoft.Extensions.Logging.ILogger<ActivityView>>(logger);
+        var cut = Render(new PageSender(Completed()) { CountLineFailure = new InvalidOperationException("Npgsql: gone") });
+
+        var card = cut.Find(".activity-status");
+        Text(card, ".activity-status-body").Should().Be("Rated 4. Credited 1 item to PAED-001.");
+        card.QuerySelector(".activity-status-action a")!.GetAttribute("href").Should().Be("/portfolio/progress");
+        cut.Markup.Should().NotContain("Npgsql");
+        logger.Entries.Should().ContainSingle(entry => entry.Level == Microsoft.Extensions.Logging.LogLevel.Warning)
+            .Which.Exception.Should().BeOfType<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void TheCountIsReadOnlyForItsRegistrar()
+    {
+        // Her own count, never shown to her assessor (C5): the page does not ask for it.
+        SignIn(Assessor);
+        var sender = new PageSender(Completed()) { CountLine = Line(isCurrent: true, count: 1) };
+        var cut = Render(sender);
+
+        sender.CountLineReads.Should().BeEmpty();
+        Text(cut.Find(".activity-status"), ".activity-status-body").Should().NotContain("this semester");
+        cut.FindAll(".activity-status-action").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TheCountIsNotReadForAnUnfinishedActivity()
+    {
+        var sender = new PageSender(Requested()) { CountLine = Line(isCurrent: true, count: 1) };
+        Render(sender);
+
+        sender.CountLineReads.Should().BeEmpty();
     }
 
     [Fact]
@@ -906,12 +1035,45 @@ public sealed class ActivityPageTests : TestContext
             [CreateRow(), SubmitRow(), Row(3, "requested", "cancelled", "cancel", "Requested", "Cancelled", Subject, "Sipho Ndlovu", Moved)],
             []);
 
-    private static ActivityDetailDto Completed()
+    private static ActivityDetailDto Completed(int credited = 1)
         => Detail("completed", "Completed", new ActivityHolderDto(ActivityHolderKind.Done, null, null, false, Moved),
-            [CreateRow(), SubmitRow(), Row(3, "requested", "completed", "complete", "Requested", "Completed", "assessor-2", "David Naidoo", Moved, credited: 1)],
+            [CreateRow(), SubmitRow(), Row(3, "requested", "completed", "complete", "Requested", "Completed", "assessor-2", "David Naidoo", Moved, credited: credited)],
             [],
             dataJson: """{"epa_id":"12","assessor_user_id":"assessor-2","observed_on":"2026-09-09","overall_level":"5"}""")
             with { NomineeName = "David Naidoo", EpaCode = "PAED-001" };
+
+    /// <summary>A completion on an EPA paused since (D48): what it credited is <paramref name="credited" />.</summary>
+    private static ActivityDetailDto CompletedOnPausedEpa(int credited) => Completed(credited) with { EpaInForce = false };
+
+    /// <summary>
+    /// The count PAED-001's completion made (T355, E5): "PAED-001: 1 of 3 this semester." in the current window, or
+    /// "PAED-001, Semester 1, 2026: 3 of 3, met." in an older one.
+    /// </summary>
+    private static EpaCountLineDto Line(bool isCurrent, int count)
+        => new(
+            2, "PAED-001", QuotaPeriod.Semester,
+            new QuotaWindowDto(
+                isCurrent ? "Semester 2, 2026" : "Semester 1, 2026", "July to November",
+                isCurrent ? new DateOnly(2026, 7, 1) : new DateOnly(2026, 1, 1),
+                isCurrent ? new DateOnly(2026, 11, 30) : new DateOnly(2026, 6, 30),
+                QuotaWindowStatus.Counting, count, 3,
+                IsMet: count >= 3, Shortfall: Math.Max(0, 3 - count), PercentOfTarget: Math.Min(100, count * 100 / 3),
+                MinimumLevelReachedCount: count, LastObservedOn: null, LastObservedOnDeclared: false,
+                FirstCountedName: null, FirstCountedOn: null),
+            IsCurrentWindow: isCurrent);
+
+    private sealed class CapturingLogger<T> : ILogger<T>
+    {
+        public List<(LogLevel Level, Exception? Exception)> Entries { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => Entries.Add((logLevel, exception));
+    }
 
     /// <summary>
     /// The CPSA ladder: order 5 reads "4". And the nominee directory, as the server answers it: Fatima Khumalo is offered.
@@ -959,6 +1121,13 @@ public sealed class ActivityPageTests : TestContext
         public Exception? WaitingFailure { get; set; }
 
         public int WaitingReads { get; private set; }
+
+        /// <summary>What <see cref="GetActivityCountLineQuery" /> answers (T355, E5); null by default, as for no EPA.</summary>
+        public EpaCountLineDto? CountLine { get; set; }
+
+        public Exception? CountLineFailure { get; set; }
+
+        public List<GetActivityCountLineQuery> CountLineReads { get; } = [];
 
         /// <summary>Held, the first load waits for it: the page is seen loading.</summary>
         public TaskCompletionSource? Gate { get; set; }
@@ -1010,6 +1179,14 @@ public sealed class ActivityPageTests : TestContext
                     }
 
                     return Task.FromResult((TResponse)(object)_details[^1]!.Activity);
+                case GetActivityCountLineQuery countLine:
+                    CountLineReads.Add(countLine);
+                    if (CountLineFailure is not null)
+                    {
+                        throw CountLineFailure;
+                    }
+
+                    return Task.FromResult((TResponse)(object)CountLine!);
                 default:
                     // The programme start the form's hint reads (T192): none.
                     return Task.FromResult(default(TResponse)!);

@@ -1,409 +1,477 @@
-using System.Globalization;
+using AngleSharp.Dom;
 using Bunit;
 using FluentAssertions;
+using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Web.Components.Shared;
 
 namespace Wombat.Web.Tests.Charts;
 
+/// <summary>
+/// TrajectoryChart in its new form (T355, flow 05; Q5, E1, E2, R4; notes 10, 11, 13; R3-C-Trajectory's states three, one,
+/// other-scale, paused-heading and committee). Both drawings are in the markup at their fixed sizes inside a named,
+/// focusable region; the table, always visible, says everything the drawing does; the heading's level is the page's.
+/// </summary>
 public sealed class TrajectoryChartTests : TestContext
 {
+    private static readonly DateOnly From = new(2026, 1, 1);
+    private static readonly DateOnly To = new(2026, 12, 31);
+    private static readonly DateOnly D = new(2026, 10, 3);
 
-    // ---- T123 defect 1: the axis comes from the scale, not from the data ----
-
-    private static readonly TrajectoryChart.Rung[] CpsaLadder =
+    /// <summary>The CPSA v11.1 ladder: ordinal 5 is the College's rung "4", ordinal 6 rung "5" (T100).</summary>
+    private static readonly IReadOnlyList<TrajectoryRungDto> CpsaLadder =
     [
         new(1, "1"), new(2, "2"), new(3, "3a"), new(4, "3b"), new(5, "4"), new(6, "5")
     ];
 
-    private static readonly TrajectoryChart.Rung[] WordLadder =
-    [
-        new(1, "Observe only"), new(2, "Direct supervision"), new(3, "Indirect supervision"),
-        new(4, "Independent"), new(5, "Supervises others")
-    ];
+    // ---- the drawings and the region (Q5, E1) ----
 
     [Fact]
-    public void Rungs_DrawTheWholeLadder_EvenWhenNoRatingReachesTheTop()
+    public void BothDrawings_AreInTheMarkup_AtTheirFixedSizes_InsideANamedFocusableRegion()
     {
-        // The defect: a six-rung trainee whose ratings all sit at 3 saw a 1-5 axis -- a ladder with
-        // its top two rungs missing -- because the axis grew to fit the DATA, not the SCALE.
-        var points = new[] { new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 10), 3) };
+        var cut = Render(MolefePaed001());
 
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, CpsaLadder));
+        var region = cut.Find("section.trajectory-card div.trajectory-figure");
+        region.GetAttribute("role").Should().Be("region");
+        region.GetAttribute("aria-label").Should().Be("Rating chart for PAED-001");
+        region.GetAttribute("tabindex").Should().Be("0");
 
-        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(6);
+        var wide = region.QuerySelector("svg.trajectory-chart.trajectory-chart--sized.trajectory-chart--wide")!;
+        wide.GetAttribute("width").Should().Be("900");
+        wide.GetAttribute("viewBox").Should().StartWith("0 0 900 ");
+        var narrow = region.QuerySelector("svg.trajectory-chart.trajectory-chart--sized.trajectory-chart--narrow")!;
+        narrow.GetAttribute("width").Should().Be("326");
+        narrow.GetAttribute("viewBox").Should().StartWith("0 0 326 ");
     }
 
     [Fact]
-    public void Rungs_LabelTheAxisWithTheRung_NotTheOrdinal()
+    public void EachDrawing_IsNamedForWhatItAddsToTheTable()
     {
-        // On this ladder ordinal 5 is the College's rung "4" and ordinal 6 is rung "5". An axis of
-        // bare ordinals labels tick 5 as "5" and means rung 4.
-        var points = new[] { new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 10), 3) };
+        var cut = Render(MolefePaed001());
 
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, CpsaLadder));
+        cut.FindAll("svg[role='img']").Select(svg => svg.GetAttribute("aria-label"))
+            .Should().Equal("Chart of the 3 ratings in the table below.", "Chart of the 3 ratings in the table below.");
+    }
 
-        var labels = cut.FindAll("text.trajectory-chart-y-label")
-            .Select(node => node.TextContent)
+    [Fact]
+    public void TheCard_IsAnchoredByItsEpasId_ForTheStandingPanelsLinks()
+    {
+        var cut = Render(MolefePaed001());
+
+        var card = cut.Find("section.trajectory-card");
+        card.Id.Should().Be("trajectory-2");
+        card.GetAttribute("aria-labelledby").Should().Be("trajectory-2-h");
+        cut.Find("#trajectory-2-h").Should().NotBeNull();
+    }
+
+    // ---- the ladder, the months and the semesters ----
+
+    [Fact]
+    public void TheLadder_IsDrawnWhole_HighestRungFirst_NamedAsTheCollegePrintsIt()
+    {
+        var cut = Render(DlaminiPaed001());
+
+        Labels(Wide(cut), "trajectory-chart-y-label").Should().Equal("5", "4", "3b", "3a", "2", "1");
+        Labels(Narrow(cut), "trajectory-chart-y-label").Should().Equal("5", "4", "3b", "3a", "2", "1");
+    }
+
+    [Fact]
+    public void TheTimeAxis_NamesEveryMonth_At900_AndEveryOtherMonth_At326()
+    {
+        var cut = Render(MolefePaed001());
+
+        Labels(Wide(cut), "trajectory-chart-x-label").Should().Equal(
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+        Labels(Narrow(cut), "trajectory-chart-x-label").Should().Equal("Jan", "Mar", "May", "Jul", "Sep", "Nov");
+    }
+
+    [Fact]
+    public void SemesterTwo_IsBanded_AndEachSemesterIsNamed()
+    {
+        var cut = Render(MolefePaed001());
+
+        var band = Wide(cut).QuerySelector("rect.trajectory-chart-band")!;
+        band.GetAttribute("x").Should().Be("441", "1 July on the 900 drawing's axis, as the board draws it");
+        band.GetAttribute("width").Should().Be("363", "July to December");
+        Labels(Wide(cut), "trajectory-chart-band-label").Should().Equal("Semester 1, 2026", "Semester 2, 2026");
+    }
+
+    /// <summary>
+    /// T355, build review G1: the committee's pre-graduation review reads four years (act 5's review #7, 2023-01-15 to
+    /// 2026-12-31). Its axis names quarters at 900 and years at 326, every Semester 2 is banded, no "Semester n, yyyy" is
+    /// named, the years stand above the plot where the axis names quarters, and no two names in a row overlap.
+    /// </summary>
+    [Fact]
+    public void AReviewWindowOfYears_IsNamedByQuarterOrYear_EverySemesterTwoBanded_WithNoNameOverAnother()
+    {
+        var cut = Render(PreGraduationReview());
+
+        var wide = Wide(cut);
+        Labels(wide, "trajectory-chart-x-label").Should().Equal(
+            "Jan", "Apr", "Jul", "Oct", "Jan", "Apr", "Jul", "Oct", "Jan", "Apr", "Jul", "Oct", "Jan", "Apr", "Jul", "Oct");
+        Labels(wide, "trajectory-chart-band-label").Should().Equal("2023", "2024", "2025", "2026");
+        wide.QuerySelectorAll("rect.trajectory-chart-band").Should().HaveCount(4, "July to December of each year");
+        ShouldNotOverlap(wide, "trajectory-chart-x-label", TrajectoryFrame.Wide, centred: true);
+        ShouldNotOverlap(wide, "trajectory-chart-band-label", TrajectoryFrame.Wide, centred: false);
+
+        var narrow = Narrow(cut);
+        Labels(narrow, "trajectory-chart-x-label").Should().Equal("2023", "2024", "2025", "2026");
+        Labels(narrow, "trajectory-chart-band-label").Should().BeEmpty("the axis already names the years");
+        narrow.QuerySelectorAll("rect.trajectory-chart-band").Should().HaveCount(4);
+        ShouldNotOverlap(narrow, "trajectory-chart-x-label", TrajectoryFrame.Narrow, centred: true);
+
+        cut.Markup.Should().NotContain("Semester 1,").And.NotContain("Semester 2,");
+    }
+
+    [Fact]
+    public void AYearsWindow_KeepsItsMonthsAndSemesters()
+    {
+        TrajectoryDrawing.AxisUnitFor(TrajectoryFrame.Wide, 365).Should().Be(TrajectoryDrawing.AxisUnit.Month);
+        TrajectoryDrawing.AxisUnitFor(TrajectoryFrame.Narrow, 365).Should().Be(TrajectoryDrawing.AxisUnit.Month);
+        TrajectoryDrawing.AxisUnitFor(TrajectoryFrame.Wide, 1447).Should().Be(TrajectoryDrawing.AxisUnit.Quarter);
+        TrajectoryDrawing.AxisUnitFor(TrajectoryFrame.Narrow, 1447).Should().Be(TrajectoryDrawing.AxisUnit.Year);
+    }
+
+    // ---- the minimum, the exit level, Today (R4) ----
+
+    [Fact]
+    public void TheMinimum_StepsWhereTheTrainingYearChanged_AndIsLabelledInWords()
+    {
+        var cut = Render(MolefePaed001());
+
+        // 4 until 2026-01-13, then 5: the edge of rung "4" from 1 January, of rung "5" from 14 January (x 110 at 900).
+        Wide(cut).QuerySelector("path.trajectory-chart-minimum")!.GetAttribute("d").Should().Be("M84 114H110V74H804");
+        Wide(cut).QuerySelector("path.trajectory-chart-below")!.GetAttribute("d").Should().Be("M84 114H110V74H804V274H84Z");
+        Labels(Wide(cut), "trajectory-chart-minimum-label").Should().Equal("Minimum 5");
+        Labels(Narrow(cut), "trajectory-chart-minimum-label").Should().Equal("Min 5");
+        Labels(Wide(cut), "trajectory-chart-line-label").Should().Equal("Exit 5");
+        Wide(cut).QuerySelector("line.trajectory-chart-exit")!.GetAttribute("y1").Should().Be("54");
+    }
+
+    [Fact]
+    public void AMinimumStepOffTheLadder_DrawsNoMinimum_RatherThanRunningThePreviousOn()
+    {
+        // T355, build review R5: a per-year minimum naming an ordinal the drawn ladder has no rung for (a re-pinned scale).
+        var trajectory = MolefePaed001() with
+        {
+            MinimumSteps = [new(From, 3, 5, "4"), new(new DateOnly(2026, 1, 14), 4, 9, "9")]
+        };
+
+        var cut = Render(trajectory);
+
+        cut.FindAll("path.trajectory-chart-minimum").Should().BeEmpty();
+        cut.FindAll("path.trajectory-chart-below").Should().BeEmpty();
+        Labels(Wide(cut), "trajectory-chart-minimum-label").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ARunOfRatingsInTheLastDays_IsSetBackFromThePlotsRightEdge()
+    {
+        // T355, build review R6: six ratings on 29 to 31 December are set a dot apart; pushed right, the run would pass the
+        // plot's edge (804 at 900, 268 at 326) and sit over "Exit 5". It is set back from it, each still a dot apart.
+        var points = Enumerable.Range(0, 6)
+            .Select(index => Point(40 + index, new DateOnly(2026, 12, 29 + (index / 2)), 6, "5", TrajectoryAgainstMinimum.AtOrAbove))
             .ToArray();
+        var cut = Render(MolefePaed001() with { Points = points });
 
-        // Rendered in ladder order, bottom rung first.
-        labels.Should().Equal("1", "2", "3a", "3b", "4", "5");
-    }
-
-    [Fact]
-    public void NoRungs_LeavesEveryExistingAxisExpressionUntouched()
-    {
-        // Every legacy trajectory lands here: curriculum 2 pins nothing, and the generic tools'
-        // scale_key resolves to nothing (T110). The chart must render exactly as it did before.
-        var points = new[]
+        foreach (var (svg, frame) in new[] { (Wide(cut), TrajectoryFrame.Wide), (Narrow(cut), TrajectoryFrame.Narrow) })
         {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 2),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 3)
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points));
-
-        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(5);
-        cut.FindAll("text.trajectory-chart-y-label")
-            .Select(node => node.TextContent)
-            .Should().Equal("1", "2", "3", "4", "5");
-        cut.FindAll("circle.is-off-scale").Should().BeEmpty();
-    }
-
-    [Fact]
-    public void LongRungLabels_FallBackToTheOrdinalOnTheAxis_ButNotInTheAccessibleTable()
-    {
-        // D29: the axis has a 40px margin. "Indirect supervision" would overwrite the plot, so the
-        // axis shows the ordinal -- but the screen-reader table must never be poorer than the picture.
-        var points = new[] { new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 10), 3) };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, WordLadder));
-
-        cut.FindAll("text.trajectory-chart-y-label")
-            .Select(node => node.TextContent)
-            .Should().Equal("1", "2", "3", "4", "5");
-
-        cut.Find("table.visually-hidden").TextContent.Should().Contain("Indirect supervision");
-    }
-
-    [Fact]
-    public void ARatingThatIsNotARungOnTheAxisLadder_IsKeptHollowAndLeftOutOfTheLine()
-    {
-        // D30. A five-rung rating charted against a six-rung axis is the T109 defect drawn as a
-        // picture. Dropping the point would erase evidence the trainee did not mis-record.
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 3),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 4),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 1), 9)
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, CpsaLadder));
-
-        cut.FindAll("circle.trajectory-chart-dot").Count.Should().Be(3, "the observation is real and stays on the page");
-        cut.FindAll("circle.is-off-scale").Count.Should().Be(1);
-
-        // Counting DOM nodes is not enough: YScale extrapolates and does not clamp, so pinning the
-        // axis to the ladder put an off-ladder point at a negative cy, outside the viewBox, where the
-        // browser clips it away. "Kept, drawn hollow" has to mean kept ON THE CANVAS.
-        var cy = double.Parse(
-            cut.Find("circle.is-off-scale").GetAttribute("cy")!, CultureInfo.InvariantCulture);
-        cy.Should().BeInRange(0, 200, "a point outside the 600x200 viewBox is clipped and invisible");
-
-        // Two on-ladder points remain, so the line joins exactly those two.
-        cut.Find("polyline.trajectory-chart-line").GetAttribute("points")!
-            .Split(' ').Should().HaveCount(2);
-
-        var table = cut.Find("table.visually-hidden").TextContent;
-        table.Should().Contain("not a rung on this scale");
-    }
-
-    [Fact]
-    public void ASingleOnLadderPoint_DrawsNoLine_EvenWhenOtherPointsAreOffLadder()
-    {
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 3),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 9)
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, CpsaLadder));
-
-        cut.FindAll("polyline.trajectory-chart-line").Should().BeEmpty();
-    }
-
-    [Fact]
-    public void RungLabelsAreHtmlEncodedOnTheAxis()
-    {
-        // The axis label is emitted as a raw MarkupString and its content is now an
-        // EntrustmentLevel.Label an administrator can type, where it used to be an int.
-        var points = new[] { new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 10), 1) };
-        var ladder = new[] { new TrajectoryChart.Rung(1, "<x>") };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, ladder));
-
-        cut.Markup.Should().NotContain("<x>");
-        cut.Markup.Should().Contain("&lt;x&gt;");
-    }
-
-    [Fact]
-    public void ANonContiguousLadder_DrawsOneTickPerRung_NotOnePerInteger()
-    {
-        // The grid used to be an integer stepper from Min to Max. Nothing guarantees a scale's
-        // Orders are contiguous -- an administrator can delete a rung from the middle.
-        var points = new[] { new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 10), 1) };
-        var ladder = new[]
-        {
-            new TrajectoryChart.Rung(1, "1"),
-            new TrajectoryChart.Rung(4, "3b"),
-            new TrajectoryChart.Rung(6, "5")
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, ladder));
-
-        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(3);
-        cut.FindAll("text.trajectory-chart-y-label")
-            .Select(node => node.TextContent)
-            .Should().Equal("1", "3b", "5");
-    }
-
-
-    [Fact]
-    public void EveryPointLandsInsideTheViewBox_EvenWhenTheLadderDoesNotContainIt()
-    {
-        // The regression that matters. Before the axis came from the scale it grew to fit the data, so
-        // nothing could fall off the canvas. Pinning it to the ladder removed that guarantee.
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 1),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 9)
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, CpsaLadder));
-
-        foreach (var dot in cut.FindAll("circle.trajectory-chart-dot"))
-        {
-            var cy = double.Parse(dot.GetAttribute("cy")!, CultureInfo.InvariantCulture);
-            cy.Should().BeInRange(0, 200);
+            var xs = svg.QuerySelector("path.trajectory-chart-line")!.GetAttribute("d")!
+                .TrimStart('M').Split('L')
+                .Select(pair => double.Parse(pair.Split(' ')[0], System.Globalization.CultureInfo.InvariantCulture))
+                .ToList();
+            xs.Should().HaveCount(6);
+            xs.Should().OnlyContain(x => x <= frame.Right && x >= frame.Left);
+            xs.Zip(xs.Skip(1), (a, b) => b - a).Should().OnlyContain(gap => gap >= (2 * frame.Radius) + 2, "each still a dot apart");
         }
-
-        // The ticks still come from the ladder, not from the widened range.
-        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(6);
     }
 
     [Fact]
-    public void AnOrdinalIsNotSubstitutedOnTheAxisWhenItIsAnotherRungsName()
+    public void Today_IsARule_OnlyWhenThePageGivesOne()
     {
-        // Orders are contiguous from 1 and labels are administrator free text, so on a split ladder one
-        // rung's ordinal can be another rung's LABEL. Printing it gives two ticks reading "5" at
-        // different heights, the lower one wrong by a rung.
-        var points = new[] { new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 10), 1) };
-        var ladder = new[]
-        {
-            new TrajectoryChart.Rung(1, "1"), new TrajectoryChart.Rung(2, "2"),
-            new TrajectoryChart.Rung(3, "3a"), new TrajectoryChart.Rung(4, "3b"),
-            new TrajectoryChart.Rung(5, "4 (independent)"), new TrajectoryChart.Rung(6, "5")
-        };
+        var withToday = Render(MolefePaed001(), today: D);
+        Wide(withToday).QuerySelectorAll("line.trajectory-chart-today").Should().ContainSingle();
+        Labels(Wide(withToday), "trajectory-chart-note").Should().Contain("Today");
 
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.Rungs, ladder));
-
-        var labels = cut.FindAll("text.trajectory-chart-y-label")
-            .Select(node => node.TextContent).ToArray();
-
-        labels.Should().OnlyHaveUniqueItems("two ticks with the same name is worse than a truncated one");
-        labels.Should().HaveCount(6);
-        labels[5].Should().Be("5", "rung 6 keeps its own short label");
-        labels[4].Should().NotBe("5", "that is rung 6's name; rung 5 must not borrow it");
-        cut.Find("table.visually-hidden").TextContent.Should().Contain("1");
+        var committee = Render(MolefePaed001(), today: null);
+        committee.FindAll("line.trajectory-chart-today").Should().BeEmpty("the committee's window is the review's, D2");
+        committee.Markup.Should().NotContain(">Today<");
     }
 
     [Fact]
-    public void EmptyPoints_RendersEmptyPlaceholder()
+    public void TheKey_SaysWhatEachMarkIs()
     {
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, Array.Empty<TrajectoryChart.ChartPoint>()));
+        var cut = Render(MolefePaed001());
 
-        cut.Markup.Should().NotContain("<svg");
-        cut.Markup.Should().Contain("No observations to plot.");
+        var key = cut.Find("ul.trajectory-key");
+        key.GetAttribute("aria-label").Should().Be("How to read the chart");
+        key.QuerySelectorAll("li").Select(Text).Should().Equal(
+            "Below the minimum: 4 until 2026-01-13, then 5 (training year 4)", "Exit level 5", "A rating");
+    }
+
+    // ---- the points ----
+
+    [Fact]
+    public void OneRating_IsOneDot_AndNoLine()
+    {
+        var cut = Render(DlaminiPaed001());
+
+        Wide(cut).QuerySelectorAll("path.trajectory-chart-dots").Should().ContainSingle();
+        cut.FindAll("path.trajectory-chart-line").Should().BeEmpty();
+        cut.FindAll("path.trajectory-chart-hollow").Should().BeEmpty();
     }
 
     [Fact]
-    public void SinglePoint_RendersOneDotAndNoLine()
+    public void ThreeRatings_AreJoinedOldestFirst_EachSetADotApartFromTheOneBefore()
     {
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 3)
-        };
+        var cut = Render(MolefePaed001());
 
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points));
-
-        cut.FindAll("circle.trajectory-chart-dot").Count.Should().Be(1);
-        cut.FindAll("polyline.trajectory-chart-line").Should().BeEmpty();
+        // 21, 22 and 24 September: 2px a day at 900, so the second and third are set a dot (2 x 7 + 3) apart.
+        Wide(cut).QuerySelector("path.trajectory-chart-line")!.GetAttribute("d").Should().Be("M603 54L620 54L637 94");
     }
 
     [Fact]
-    public void MultiplePoints_RendersDotsAndLine()
+    public void ARatingOnAnotherScale_IsHollowInItsOwnLane_LeftOutOfTheLine_AndKeyed()
     {
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 2, 0, "Direct observation"),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 3, 1, "Conversation"),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 1), 5, 2, "Direct observation")
-        };
+        var cut = Render(OtherScalePaed005());
 
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points));
-
-        cut.FindAll("circle.trajectory-chart-dot").Count.Should().Be(3);
-        cut.FindAll("polyline.trajectory-chart-line").Count.Should().Be(1);
-
-        // Y grid lines = MaxRating - MinRating + 1 => 5 ticks for 1..5
-        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(5);
+        Wide(cut).QuerySelector("path.trajectory-chart-hollow")!.GetAttribute("d").Should().Contain(" 300a7 7",
+            "the hollow ring sits in the lane under the rungs");
+        cut.FindAll("path.trajectory-chart-line").Should().BeEmpty("one rating is on the ladder");
+        Labels(Wide(cut), "trajectory-chart-note").Should().Contain("Other scale");
+        Labels(Narrow(cut), "trajectory-chart-note").Should().Contain("Other");
+        cut.Find("ul.trajectory-key").TextContent.Should().Contain("Rated on another scale: counts towards the number, not the level");
     }
 
-    [Fact]
-    public void AxisGrowsToFitRatingsAboveFive()
-    {
-        // Regression (T098): MaxRating defaulted to a hard 5, so a six-rung scale plotted its top
-        // rung off the top of the chart. The axis now grows to fit the data.
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 3),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 6)
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points));
-
-        // 1..6 => 6 ticks
-        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(6);
-    }
+    // ---- the table (E2; note 11) ----
 
     [Fact]
-    public void AxisStaysAtFiveForAFiveRungScale()
+    public void TheTable_ListsEachRatingOldestFirst_ItsEncounterTheRowsHeader()
     {
-        // The familiar 1-5 axis must be unchanged for existing five-rung data.
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 2),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 4)
-        };
+        var cut = Render(MolefePaed001());
 
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points));
-
-        cut.FindAll("g.trajectory-chart-grid line").Count.Should().Be(5);
-    }
-
-    [Fact]
-    public void RendersFirstAndLastDateLabels()
-    {
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 2),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 1), 5)
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points));
-
-        cut.Markup.Should().Contain("2026-01-01");
-        cut.Markup.Should().Contain("2026-03-01");
-    }
-
-    [Fact]
-    public void UsesAriaLabelForAccessibility()
-    {
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 3)
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.AriaLabel, "Rating trajectory for EPA-07"));
-
-        cut.Find("svg").GetAttribute("aria-label").Should().Be("Rating trajectory for EPA-07");
-        cut.Find("svg").GetAttribute("role").Should().Be("img");
-    }
-
-    [Fact]
-    public void RendersVisuallyHiddenTableFallbackForScreenReaders()
-    {
-        var points = new[]
-        {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 1), 2, 0, "Direct observation"),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 2, 1), 4, 1, "Conversation")
-        };
-
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
-            .Add(p => p.Points, points)
-            .Add(p => p.AriaLabel, "Rating trajectory for EPA-07"));
-
-        var table = cut.Find("table.visually-hidden");
-        table.QuerySelector("caption")!.TextContent.Should().Be("Rating trajectory for EPA-07");
+        var table = cut.Find("table.clinic-table.clinic-table--stack.trajectory-table");
+        table.QuerySelector("caption")!.TextContent.Should().Be("The ratings, oldest first");
+        table.QuerySelectorAll("thead th").Select(Text).Should().Equal(
+            "Encounter", "Rating", "Against the minimum then", "Activity", "Assessor");
 
         var rows = table.QuerySelectorAll("tbody tr");
-        rows.Length.Should().Be(2);
-        rows[0].TextContent.Should().Contain("2026-01-01").And.Contain("2").And.Contain("Direct observation");
-        rows[1].TextContent.Should().Contain("2026-02-01").And.Contain("4").And.Contain("Conversation");
+        rows.Select(row => row.QuerySelector("th[scope='row']")!.TextContent).Should().Equal("2026-09-21", "2026-09-22", "2026-09-24");
+        rows.Select(row => row.QuerySelectorAll("td").Select(Text).ToArray()).Should().BeEquivalentTo(new[]
+        {
+            new[] { "5", "At or above (5, training year 4)", "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-21", "Thandi Zulu" },
+            new[] { "5", "At or above (5, training year 4)", "Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-22", "David Naidoo" },
+            new[] { "4", "Below (5, training year 4)", "DOPS (Paediatrics) · PAED-001 · 2026-09-24", "Mohammed Patel" }
+        }, options => options.WithStrictOrdering());
     }
 
-    // ---- T161, D28, T197: a point nobody dated sits on the day it was created, and says so ----
+    [Fact]
+    public void EachActivity_IsA44pxBlockLink_ToItsPage_AndEveryOtherCellIsLabelledByItsColumn()
+    {
+        var cut = Render(MolefePaed001());
+
+        var link = cut.Find("table.trajectory-table tbody tr a");
+        link.ClassList.Should().Contain(["activity-link", "activity-block-link"]);
+        link.GetAttribute("href").Should().Be("/activities/11");
+        cut.Find("table.trajectory-table tbody tr").QuerySelectorAll("td[data-label]")
+            .Select(cell => cell.GetAttribute("data-label")).Should().Equal("Rating", "Against the minimum then", "Assessor");
+    }
 
     [Fact]
-    public void AnUndatedPoint_IsMarkedNotRecorded_WithTheDayItWasCreated_InItsTooltipAndInTheTable()
+    public void ARatingOnAnotherScale_IsNamedOnItsOwnLadder_AndNotJudgedOnThisOne()
     {
-        var points = new[]
+        var cut = Render(OtherScalePaed005());
+
+        var first = cut.Find("table.trajectory-table tbody tr").QuerySelectorAll("td").Select(Text).ToArray();
+        first[0].Should().Be("Independent on O-R Scale");
+        first[1].Should().Be("Not on the ladder: counts towards the number, not the level");
+    }
+
+    [Fact]
+    public void AnUndatedEncounter_IsMarkedNotRecorded_WithTheDayItWasCreated()
+    {
+        var undated = MolefePaed001() with
         {
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 15), 2, 0, "Direct observation"),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 20), 3, 1, "Direct observation", DateDeclared: false)
+            Points = [Point(11, new DateOnly(2026, 3, 20), 6, "5", TrajectoryAgainstMinimum.AtOrAbove) with { ObservedOnDeclared = false }]
         };
 
-        var cut = RenderComponent<TrajectoryChart>(parameters => parameters.Add(p => p.Points, points));
+        Render(undated).Find("table.trajectory-table tbody th").TextContent.Should().Be("not recorded (created 2026-03-20)");
+    }
 
-        // The tooltip names the date as the encounter's: "not recorded (created …) · 3" would read as the rating (T197).
-        cut.FindAll("circle.trajectory-chart-dot title")
-            .Select(title => title.TextContent.Split(" · ")[0])
-            .Should().Equal("Encounter 2026-01-15", "Encounter not recorded (created 2026-03-20)");
+    // ---- the heading (note 10; C5) ----
 
-        cut.FindAll("table.visually-hidden tbody tr")
-            .Select(row => row.QuerySelector("td")!.TextContent)
-            .Should().Equal("2026-01-15", "not recorded (created 2026-03-20)");
+    [Fact]
+    public void OnTheEpaPage_TheHeadingIsAnH2_RatingTrajectory_MarkedWhenPaused()
+    {
+        var paused = MolefePaed001() with { EpaInForce = false };
+
+        var cut = Render(paused, title: "Rating trajectory", level: 2);
+
+        var heading = cut.Find("h2#trajectory-2-h");
+        heading.ClassList.Should().Contain("epa-section-title");
+        heading.TextContent.Should().Be("Rating trajectory (no longer in use)");
+        heading.QuerySelector("span.paused-mark")!.TextContent.Should().Be("(no longer in use)");
     }
 
     [Fact]
-    public void PointsOf_CarriesWhetherEachDateWasStated()
+    public void OnTheCommitteePage_TheHeadingNamesTheEpa_OneLevelBelowItsSection_AndTheSummaryNamesTheTrainee()
     {
-        var trajectory = new Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee.EpaTrajectoryDto(
-            7, "EPA-07", "Emergency triage", true, null, null, [],
-            [
-                new(1, new DateOnly(2026, 1, 15), ObservedOnDeclared: true, 2, "2", "Direct observation", "assessor-a"),
-                new(2, new DateOnly(2026, 3, 20), ObservedOnDeclared: false, 3, "3", "Direct observation", "assessor-a", OffLadder: true)
-            ]);
+        var cut = RenderComponent<TrajectoryChart>(parameters => parameters
+            .Add(chart => chart.Trajectory, MolefePaed001())
+            .Add(chart => chart.HeadingLevel, 4)
+            .Add(chart => chart.ReviewWindow, true)
+            .Add(chart => chart.SubjectName, "Lerato Molefe"));
 
-        TrajectoryChart.PointsOf(trajectory).Should().Equal(
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 1, 15), 2, 0, "Direct observation", false, DateDeclared: true),
-            new TrajectoryChart.ChartPoint(new DateOnly(2026, 3, 20), 3, 1, "Direct observation", true, DateDeclared: false));
+        cut.Find("h4#trajectory-2-h").TextContent.Should().Be("PAED-001 — Providing paediatric emergency care to children");
+        Text(cut.Find(".trajectory-head p")).Should().Be(
+            "Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31, from Thandi Zulu, David Naidoo and " +
+            "Mohammed Patel. 2 at the minimum, 1 below.");
+        cut.FindAll("line.trajectory-chart-today").Should().BeEmpty();
     }
+
+    [Fact]
+    public void NoRating_IsSaid_InTheCard_WithNoDrawing()
+    {
+        var none = MolefePaed001() with { Points = [] };
+
+        var cut = Render(none, title: "Rating trajectory");
+
+        cut.Find("p.card-empty").TextContent.Should().Be("No rating yet.");
+        cut.FindAll("svg").Should().BeEmpty();
+        cut.FindAll("table").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void MultiSourceFeedback_IsSaidNotToBePlotted_WhereThePageHasItBeside()
+    {
+        Render(MolefePaed001(), msf: true).Find("p.trajectory-msf").TextContent.Should().Be("Multi-source feedback is not plotted.");
+        Render(MolefePaed001()).FindAll("p.trajectory-msf").Should().BeEmpty();
+    }
+
+    // ---- the axis' words (T123) ----
+
+    [Fact]
+    public void ARungsName_IsEncodedOnTheAxis()
+    {
+        var trajectory = DlaminiPaed001() with { Rungs = [new(1, "<x>")], Points = [Point(1, new(2026, 3, 10), 1, "<x>", TrajectoryAgainstMinimum.NotGated)] };
+
+        var cut = Render(trajectory);
+
+        cut.Markup.Should().Contain("&lt;x&gt;").And.NotContain("<x>");
+    }
+
+    [Fact]
+    public void ALongRungName_ShowsItsOrdinalOnTheAxis_UnlessThatIsAnotherRungsName()
+    {
+        var ladder = new TrajectoryRungDto[]
+        {
+            new(1, "1"), new(2, "2"), new(3, "3a"), new(4, "3b"), new(5, "4 (independent)"), new(6, "5")
+        };
+        var trajectory = DlaminiPaed001() with { Rungs = ladder, MinimumSteps = [] };
+
+        Labels(Wide(Render(trajectory)), "trajectory-chart-y-label").Should().Equal("5", "4 (…", "3b", "3a", "2", "1");
+    }
+
+    // ---- the cast ----
+
+    private static EpaTrajectoryDto MolefePaed001() => new(
+        2, "PAED-001", "Providing paediatric emergency care to children", true, 1, "CPSA Paediatric Entrustment Scale v11.1",
+        CpsaLadder,
+        [
+            Point(11, new(2026, 9, 21), 6, "5", TrajectoryAgainstMinimum.AtOrAbove, "Thandi Zulu", "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-21", 4, "5"),
+            Point(12, new(2026, 9, 22), 6, "5", TrajectoryAgainstMinimum.AtOrAbove, "David Naidoo", "Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-22", 4, "5"),
+            Point(13, new(2026, 9, 24), 5, "4", TrajectoryAgainstMinimum.Below, "Mohammed Patel", "DOPS (Paediatrics) · PAED-001 · 2026-09-24", 4, "5")
+        ])
+    {
+        ExitLevelOrder = 6,
+        ExitLevelLabel = "5",
+        MinimumSteps = [new(From, 3, 5, "4"), new(new DateOnly(2026, 1, 14), 4, 6, "5")],
+        WindowFrom = From,
+        WindowTo = To
+    };
+
+    /// <summary>Act 5's review #7: Molefe's pre-graduation review, read over 2023-01-15 to 2026-12-31 (D2).</summary>
+    private static EpaTrajectoryDto PreGraduationReview() => MolefePaed001() with
+    {
+        MinimumSteps =
+        [
+            new(new DateOnly(2023, 1, 15), 1, 3, "3a"), new(new DateOnly(2024, 1, 15), 2, 4, "3b"),
+            new(new DateOnly(2025, 1, 14), 3, 5, "4"), new(new DateOnly(2026, 1, 14), 4, 6, "5")
+        ],
+        WindowFrom = new DateOnly(2023, 1, 15),
+        WindowTo = To
+    };
+
+    private static EpaTrajectoryDto DlaminiPaed001() => new(
+        2, "PAED-001", "Providing paediatric emergency care to children", true, 1, "CPSA Paediatric Entrustment Scale v11.1",
+        CpsaLadder,
+        [Point(21, new(2026, 9, 23), 5, "4", TrajectoryAgainstMinimum.AtOrAbove, "David Naidoo", "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-23", 3, "4")])
+    {
+        ExitLevelOrder = 6,
+        ExitLevelLabel = "5",
+        MinimumSteps = [new(From, 2, 4, "3b"), new(new DateOnly(2026, 1, 14), 3, 5, "4")],
+        WindowFrom = From,
+        WindowTo = To
+    };
+
+    private static EpaTrajectoryDto OtherScalePaed005() => DlaminiPaed001() with
+    {
+        EpaId = 5,
+        EpaCode = "PAED-005",
+        EpaTitle = "Providing neonatal care in intensive and high-care settings",
+        Points =
+        [
+            Point(31, new(2026, 8, 10), 4, "3b", TrajectoryAgainstMinimum.NotComparable, "Sarah Botha", "DOPS (Paediatrics) · PAED-005 · 2026-08-10", 3, null)
+                with { OffLadder = true, OtherScaleName = "O-R Scale", OtherScaleRatingLabel = "Independent" },
+            Point(32, new(2026, 9, 12), 4, "3b", TrajectoryAgainstMinimum.Below, "Mohammed Patel", "Case-Based Discussion (Paediatrics) · PAED-005 · 2026-09-12", 3, "4")
+        ]
+    };
+
+    private static TrajectoryPointDto Point(
+        int activityId, DateOnly observedOn, int rating, string ratingLabel, TrajectoryAgainstMinimum against,
+        string assessor = "Thandi Zulu", string activity = "", int? year = null, string? minimum = null)
+        => new(activityId, observedOn, ObservedOnDeclared: true, rating, ratingLabel, "Direct observation", assessor.ToLowerInvariant())
+        {
+            AssessorName = assessor,
+            ActivityName = activity,
+            TrainingYear = year,
+            MinimumLabel = minimum,
+            AgainstMinimum = against
+        };
+
+    private IRenderedComponent<TrajectoryChart> Render(
+        EpaTrajectoryDto trajectory, DateOnly? today = null, string? title = null, int level = 2, bool msf = false)
+        => RenderComponent<TrajectoryChart>(parameters => parameters
+            .Add(chart => chart.Trajectory, trajectory)
+            .Add(chart => chart.Today, today)
+            .Add(chart => chart.Title, title)
+            .Add(chart => chart.HeadingLevel, level)
+            .Add(chart => chart.MsfBeside, msf));
+
+    private static IElement Wide(IRenderedFragment cut) => cut.Find("svg.trajectory-chart--wide");
+
+    private static IElement Narrow(IRenderedFragment cut) => cut.Find("svg.trajectory-chart--narrow");
+
+    private static List<string> Labels(IElement svg, string cssClass)
+        => svg.QuerySelectorAll($"text.{cssClass}").Select(text => text.TextContent).ToList();
+
+    /// <summary>
+    /// No two names in a row overlap: each label's extent at the frame's size (as the drawing measures it), centred on its
+    /// x or starting there, ends before the next begins.
+    /// </summary>
+    private static void ShouldNotOverlap(IElement svg, string cssClass, TrajectoryFrame frame, bool centred)
+    {
+        var extents = svg.QuerySelectorAll($"text.{cssClass}")
+            .Select(text =>
+            {
+                var x = double.Parse(text.GetAttribute("x")!, System.Globalization.CultureInfo.InvariantCulture);
+                var width = TrajectoryDrawing.TextWidth(frame, text.TextContent);
+                return centred ? (Start: x - (width / 2), End: x + (width / 2)) : (Start: x, End: x + width);
+            })
+            .OrderBy(extent => extent.Start)
+            .ToList();
+
+        extents.Zip(extents.Skip(1), (a, b) => b.Start - a.End).Should().OnlyContain(gap => gap > 0, $"no {cssClass} sits over another");
+    }
+
+    private static string Text(IElement element) => string.Join(" ", element.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 }

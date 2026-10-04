@@ -706,21 +706,18 @@
       <h3>Rating trajectory by EPA</h3>
       @if (_trajectories.Count == 0)
       {
-        <p class="muted">No rating by a named assessor to chart for this trainee.</p>
+        <p class="muted">No rating by a named assessor to chart in this review's window.</p>
       }
       else
       {
+        @* T355 (flow 05; R4, decision D2): one chart per EPA in its new form, over the review's own window with no Today,
+           the trainee named in its summary (4.15), each headed one level below this section's h3 and anchored at
+           "trajectory-<EpaId>" for the standing panel's EPA names. An EPA no longer in force still charts what was recorded
+           against it, and says it is no longer in use (T255). Flow 07 places the chart; this only gives it its window. *@
         <div class="stack-list">
           @foreach (var trajectory in _trajectories)
           {
-            <article class="detail-card detail-card--compact">
-              @* An EPA no longer in force still charts what was recorded against it, and says it is no longer in use (T255). *@
-              <h4><EpaLabel Code="@trajectory.EpaCode" Title="@trajectory.EpaTitle" InForce="@trajectory.EpaInForce" /></h4>
-              <p class="muted">@trajectory.Points.Count observation@(trajectory.Points.Count == 1 ? string.Empty : "s")</p>
-              <TrajectoryChart Points="@TrajectoryChart.PointsOf(trajectory)"
-                               Rungs="@BuildRungs(trajectory)"
-                               AriaLabel="@($"Rating trajectory for {trajectory.EpaCode}")" />
-            </article>
+            <TrajectoryChart Trajectory="trajectory" HeadingLevel="4" ReviewWindow="true" SubjectName="@_review.TraineeName" />
           }
         </div>
       }
@@ -879,6 +876,13 @@
   private SamplingConcentrationReportDto? _samplingReport;
   private MsfCampaignsOutsideSnapshotDto _msfOutsideSnapshot = MsfCampaignsOutsideSnapshotDto.None;
   private IReadOnlyList<EpaTrajectoryDto> _trajectories = Array.Empty<EpaTrajectoryDto>();
+
+  /// <summary>
+  /// The standing panel links an EPA's name to its chart further down this page (T355, R4), only when this page draws
+  /// one: an EPA with no rating in the review's window has no chart, so its name stays plain text.
+  /// </summary>
+  private string? ChartHref(EpaStandingDto epa)
+      => _trajectories.Any(trajectory => trajectory.EpaId == epa.EpaId) ? $"#trajectory-{epa.EpaId}" : null;
   private EntrustmentStandingDto? _standing;
   private string? _standingError;
   private MsfCoverageDto? _msfCoverage;
@@ -1102,7 +1106,10 @@
       _pendingDecisionsError = null;
       _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, authState.User));
       _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
-      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(_review.TraineeUserId, authState.User));
+      // The review's window (T355, decision D2): a rating outside the period is not charted here; the evidence lists,
+      // which are the review's record, are unchanged.
+      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(
+        _review.TraineeUserId, authState.User, _review.ReviewPeriodFrom, _review.ReviewPeriodTo));
       // T167: the trainee's curriculum, each EPA with the ladder its level must be on. The same list the stage
       // handler enforces, so the picker cannot offer what the gate refuses.
       _starEpas = await Sender.Send(new ListStarEpaOptionsForReviewQuery(ReviewId, authState.User));
@@ -1534,7 +1541,8 @@
   {
     <section class="detail-card full-width">
       <h3>Entrustment against Annexure A</h3>
-      <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" ReviewPeriodTo="@_review?.ReviewPeriodTo" />
+      <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" ReviewPeriodTo="@_review?.ReviewPeriodTo"
+                                EpaHref="@ChartHref" />
     </section>
   };
 
@@ -1550,13 +1558,6 @@
                         ReviewState="@_review?.State" />
     </section>
   };
-
-  // The axis comes from the ladder the trainee's curriculum item is pinned to, resolved server-side.
-  // Empty when nothing is pinned, which draws the numeric axis this chart drew before T123.
-  private static IReadOnlyList<TrajectoryChart.Rung> BuildRungs(EpaTrajectoryDto trajectory)
-    => trajectory.Rungs
-      .Select(rung => new TrajectoryChart.Rung(rung.Order, rung.Label))
-      .ToArray();
 
   /// <summary>
   /// Sends one of the review's own commands, unless an action is already running (T234 review), then reads again what it

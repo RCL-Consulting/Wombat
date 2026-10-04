@@ -423,9 +423,12 @@ Expect:
 Step 4.39 — Dr Molefe reads her STARs and downloads a certificate
 Role: Trainee — Dr Lerato Molefe
 Route: / → /portfolio/authorisations
-Do: From the dashboard's My authorisations card, view her authorisations. Download the PAED-001 certificate.
-Expect: Three cards, each issued on `D` with the committee's rationale: PAED-001 and PAED-012 at Authorised level `5`,
-  and PAED-010 at `4`.
+Do: From her Home's My authorisations card, Open My authorisations. Download the PAED-001 certificate.
+Expect: Home's My authorisations card reads "2 at or above · 1 below · 12 with no decision, of 15 EPAs" and lists one
+  STAR, "PAED-010 — Leading and operating within a clinical team", a link to its EPA's page, with "4, below training
+  year 4's level of 5 · expires `D+20`" under it; its footer is Open My authorisations (T355). My authorisations holds
+  three cards, each issued on `D` with the committee's rationale: PAED-001 and PAED-012 at Authorised level `5`, and
+  PAED-010 at `4`.
   - PAED-001 and 012 read "No expiry".
   - PAED-010 reads the date `D+20`, with the badge "Expires in 20 days".
   Each Download certificate is named by its EPA. The PAED-001 certificate downloads with Status Active and its evidence
@@ -434,8 +437,8 @@ Expect: Three cards, each issued on `D` with the committee's rationale: PAED-001
 Step 5.8 — Dr Molefe reads her final review and keeps a STAR certificate
 Role: Trainee — Dr Lerato Molefe
 Route: /committee/my-reviews → / → /portfolio/authorisations
-Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her dashboard's card,
-  and download the certificate for PAED-001.
+Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her Home's card (its
+  Open My authorisations), and download the certificate for PAED-001.
 Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme complete). Its detail shows:
   - the review type;
   - the decision and its rationale;

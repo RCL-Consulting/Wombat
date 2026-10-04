@@ -769,6 +769,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         // semester 2, so D14 exempts every target for the rest of 2026 (D42: later than the semester's first month,
         // and on or after 1 July for a yearly target).
         var fixture = await ArrangePaediatricTraineeAsync();
+        var decidedId = 0;
 
         await using (var db = NewContext(fixture.Schema))
         {
@@ -789,9 +790,12 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
                     observedOn: new DateOnly(2026, 3, 10), filedOn: new DateTime(2026, 3, 12, 9, 0, 0, DateTimeKind.Utc)),
                 await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed008.EpaId, score: 4,
                     observedOn: new DateOnly(2026, 3, 10), filedOn: new DateTime(2026, 3, 13, 9, 0, 0, DateTimeKind.Utc)),
+                // Completed by her assessor: the one decision on her requests Home's Recent decisions reads (G8).
                 await AddCompletedActivityAsync(db, fixture, TraineeUserId, fixture.Paed001.EpaId, score: 4,
-                    observedOn: new DateOnly(2026, 8, 4), filedOn: new DateTime(2026, 8, 5, 9, 0, 0, DateTimeKind.Utc)),
+                    observedOn: new DateOnly(2026, 8, 4), filedOn: new DateTime(2026, 8, 5, 9, 0, 0, DateTimeKind.Utc),
+                    completedBy: AssessorOfRecord),
             };
+            decidedId = ids[2];
 
             foreach (var id in ids)
             {
@@ -862,7 +866,9 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             (dashboard.CurriculumTargets!.SemesterTargetsMet, dashboard.CurriculumTargets.SemesterTargetsApplying,
                     dashboard.CurriculumTargets.YearTargetsMet, dashboard.CurriculumTargets.YearTargetsApplying)
                 .Should().Be((0, 10, 1, 5));
-            dashboard.RecentActivities.Should().HaveCount(3);
+            // T355: Recent decisions replaced Recent activities (Q3): the one request her assessor completed, read on real
+            // SQL; the two she completed herself are no decision (T355, build review G8).
+            dashboard.RecentDecisions.Should().ContainSingle().Which.Id.Should().Be(decidedId);
             // Every activity here is completed: nothing needs her (T342: Home's card is Needs you, SQL of its own).
             dashboard.NeedsYou.Should().BeEmpty();
 
@@ -1044,6 +1050,9 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             new CatalogueItem(paed008.Id, paed008.EpaId));
     }
 
+    /// <summary>An assessor who completes a request of hers, so it is a decision on it (T355, build review G8).</summary>
+    private const string AssessorOfRecord = "assessor-pg";
+
     private static async Task<int> AddCompletedActivityAsync(
         ApplicationDbContext db,
         CreditFixture fixture,
@@ -1052,7 +1061,8 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         int score,
         DateOnly observedOn,
         DateTime filedOn,
-        ObservationDateSource source = ObservationDateSource.Declared)
+        ObservationDateSource source = ObservationDateSource.Declared,
+        string? completedBy = null)
     {
         var activity = new Activity
         {
@@ -1085,7 +1095,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             FromState = "submitted",
             ToState = "completed",
             TransitionKey = "complete",
-            ActorUserId = subjectUserId,
+            ActorUserId = completedBy ?? subjectUserId,
             OccurredOn = filedOn
         });
 

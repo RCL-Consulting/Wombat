@@ -160,10 +160,13 @@ dashboard Home shows, and the page it lands on says so once ("You are now acting
 | SpecialityAdmin with figures | `states/home--speciality-admin-figures.png` | Dr Mokoena | At Step 3.53. |
 | SubSpecialityAdmin | `states/home--sub-speciality-admin.png` | Dr Sithole | At Step 3.54. |
 | Trainee awaiting admission | `states/home--awaiting-admission.png` | Dr Mahlangu (PendingTrainee) | At Step 2.18: the one Awaiting admission card, and the pending trainee's nav. |
-| Trainee, admitted, nothing filed | `states/home--trainee-first.png` | Dr Molefe | At Step 2.39: "0 / 10", "0 / 5", the five largest shortfalls. |
-| Trainee with activity | `states/home--trainee.png` | Dr Dlamini | At Step 3.50. |
+| Trainee, admitted, nothing filed | `states/home--trainee-first.png` | Dr Molefe | At Step 2.39: Your targets "Training year 4 — it sets the minimum level each encounter is judged against.", "0 of 10" and "0 of 5", Furthest short PAED-001 to 005, each "0 of 3 this semester · 3 more by 2026-11-30"; Needs you; Recent decisions "No decisions yet."; My authorisations "No STAR yet. When the committee issues one, it shows here against training year 4's level." No Upcoming deadlines (T355). |
+| Trainee with activity | `states/home--trainee.png` | Dr Dlamini | At Step 3.50: Furthest short PAED-002, 003, 005, 010 and 012; Recent decisions, four Completed rows, each with its count line ("PAED-004: 1 of 3 this semester.", "PAED-001: 3 of 3 this semester, met."). |
+| Trainee with a declined request | `states/home--trainee-declined.png` | Dr Ndlovu | At Step 3.12, before opening it: Recent decisions' one row, Declined in red, with "File it again, to someone else" under it in place of a count (T355, E5). |
+| Trainee with STARs | `states/home--trainee-stars.png` | Dr Molefe | At Step 4.39, before opening My authorisations: its card reads "2 at or above · 1 below · 12 with no decision, of 15 EPAs" and lists PAED-010, "4, below training year 4's level of 5 · expires `D+20`" (T355). |
+| Trainee, a decision on a paused EPA | `states/home--trainee-paused.png` | Dr Dlamini | At Step 6.19, Home first: the PAED-012 Mini-CEX's row in Recent decisions reads "Its credit to PAED-012 waits while the EPA is paused." No change. |
 | Trainee with work returned | `states/home--trainee-returned.png` | Dr Ndlovu | At Step 3.16: the Needs you card, badged 1, lists the reflection, "Returned to you by Sarah Botha on `D`. Change it and submit again." |
-| Trainee whose programme ended | `states/home--trainee-ended.png` | Dr du Plessis | At Step 5.28: "Your programme ended on …, so no target applies to you any more." |
+| Trainee whose programme ended | `states/home--trainee-ended.png` | Dr du Plessis | At Step 5.28: Your targets "Your programme ended on `D−2`, so no target applies to you any more. Your progress in each period is kept on My progress, read-only.", no figures and no Furthest short; the Mini-CEX's Recent decisions row "Credits nothing."; My authorisations "No STAR yet." alone. |
 | Former trainee, no role | `states/home--no-role.png` | Dr Molefe (former trainee) | At Step 5.21: no subtitle, and one card, "Your training record", pointing to My progress (T335; the step's expectation, the ended line, is T311's). |
 | Loading | `states/home--loading.png` | Dr Dlamini | Hold a read, then choose Home in the menu: the header, each card's title and a skeleton in each card, and nothing to press in the cards; a screen reader hears "Loading your Home." (T350). No change. |
 | Loading, the assessor's | `states/home--assessor-loading.png` | Dr Patel | The same, as Dr Patel after Step 3.24: Waiting for you and Recent decisions, each its title and a skeleton; "Loading your Home." to a screen reader. `ROLLBACK;`. No change. |
@@ -299,7 +302,8 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 | `/activities/{ActivityId:int}` | Completing | `states/activity-view--completing.png` | Dr Naidoo | At Step 3.5: hold a read, press Complete, and capture within 20 s: the button reads "Completing…", every other action disabled, "Completing." to a screen reader. `ROLLBACK;`: the completion then goes through as the step expects. |
 | `/activities/{ActivityId:int}` | Completed, nothing else waiting | `states/activity-view--completed-last.png` | Dr Naidoo | At Step 3.5, after Complete: the focused result "Completed. Nothing else waits for you.", then Go to Home; the status card "Done. You completed it on …". |
 | `/activities/{ActivityId:int}` | Completed, one more waiting | `states/activity-view--completed-next.png` | Dr Patel | At Step 3.24, after Complete: the focused result "Completed. 1 more waits for you.", then the portfolio review's row with "since … SAST", Open the next (named for the review) and Back to Activity inbox. |
-| `/activities/{ActivityId:int}` | Completed | `states/activity-view--completed.png` | Dr Dlamini | At Step 3.6: "Done. David Naidoo completed it on …", "Rated 4. Credited 1 item to PAED-001.", Open My progress. |
+| `/activities/{ActivityId:int}` | Completed | `states/activity-view--completed.png` | Dr Dlamini | At Step 3.6: "Done. David Naidoo completed it on …", "Rated 4. Credited 1 item to PAED-001. PAED-001: 1 of 3 this semester.", Open My progress, named "Open My progress at PAED-001" (T355). |
+| `/activities/{ActivityId:int}` | Completed on a paused EPA, the trainee's view | `states/activity-view--paused-trainee.png` | Dr Dlamini | At Step 6.19: "Rated 4. Its credit to PAED-012 waits while the EPA is paused.", with no count; Open My progress, named "Open My progress at PAED-012", lands on PAED-012's page (T355, D1). |
 | `/activities/{ActivityId:int}` | Decline note open | `states/activity-view--decline-note.png` | Dr Khumalo | At Step 3.11, Decline pressed: the note panel "Decline this request", the focus in "Note for Sipho Ndlovu", marked required, Decline with this note and Keep the request. |
 | `/activities/{ActivityId:int}` | Decline without a note | `states/activity-view--decline-refused.png` | Dr Khumalo | At Step 3.11: the panel stays open with the note as typed, its summary "Not declined. It is still Requested." and "Note for Sipho Ndlovu: Decline requires a note." |
 | `/activities/{ActivityId:int}` | Declined, the assessor's view | `states/activity-view--declined-by-assessor.png` | Dr Khumalo | At Step 3.11, after Decline with this note: "Declined. Nothing else waits for you.", Go to Home, the status card "Closed. You declined it on …". |
@@ -326,7 +330,7 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 | `/activities/mine` | A draft | `states/my-activities--draft.png` | Dr Dlamini | At Step 3.2: Needs you, badged 1, above All activities (1). |
 | `/activities/mine` | Work returned | `states/my-activities--returned.png` | Dr Ndlovu | At Step 3.16, before submitting, open My activities: Needs you lists the reflection, "Returned to you by Sarah Botha on `D`. Change it and submit again." No change. |
 | `/activities/mine` | Logged and cancelled | `states/my-activities--mixed.png` | Dr du Plessis | At Step 3.20: no Needs you; Who has it now "Closed" and "Done". |
-| `/activities/mine` | With MSF records | `states/my-activities--msf.png` | Dr Molefe | At Step 3.48. |
+| `/activities/mine` | With MSF records | `states/my-activities--msf.png` | Dr Molefe | At Step 3.48: each WBA's Credit "1 item" a link to its EPA's page; the MSF rows' "—" text (T355). |
 | `/activities/mine` | Credited None after leaving | `states/my-activities--credited-none.png` | Dr du Plessis | At Step 5.28. |
 | `/activities/mine` | A paused EPA | `states/my-activities--paused-epa.png` | Dr Dlamini | At Step 6.19. |
 | `/activities/mine` | Loading | `states/my-activities--loading.png` | Dr Dlamini | Hold a read, then My activities in the menu. No change. |
@@ -347,27 +351,41 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 
 | Page | State | Screenshot | Account | How to reach it |
 |---|---|---|---|---|
-| `/portfolio/progress` | Admitted, nothing counted | `states/my-progress--first.png` | Dr Molefe | At Step 2.39. |
-| `/portfolio/progress` | One encounter counted | `states/my-progress--counting.png` | Dr Dlamini | At Step 3.7. |
-| `/portfolio/progress` | Target met, with MSF coverage | `states/my-progress--msf.png` | Dr Molefe | At Step 3.48. |
-| `/portfolio/progress` | Standing with STARs | `states/my-progress--standing.png` | Dr Molefe | At Step 4.40. |
+| `/portfolio/progress` | Admitted, nothing counted | `states/my-progress--first.png` | Dr Molefe | At Step 2.39: This period; Your EPAs, "Each semester · 10 EPAs" and "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; the panel. |
+| `/portfolio/progress` | One encounter counted | `states/my-progress--counting.png` | Dr Dlamini | At Step 3.7: PAED-001's row "1 of 3 this semester", its bar, "2 more by 2026-11-30". |
+| `/portfolio/progress` | Target met, with MSF coverage | `states/my-progress--msf.png` | Dr Molefe | At Step 3.48: "2 of 15 EPAs covered…" in This period, no MSF line on any row; PAED-001 "Target met for Semester 2, 2026." |
+| `/portfolio/progress` | Standing with STARs | `states/my-progress--standing.png` | Dr Molefe | At Step 4.40: the index's STAR column (At or above 5, Below "4 · expires `D+20`", No decision) and the panel. |
 | `/portfolio/progress` | Exit rule met | `states/my-progress--exit-met.png` | Dr Molefe | At Step 5.15. |
-| `/portfolio/progress` | Completed programme, read-only | `states/my-progress--completed.png` | Dr Molefe (former trainee) | At Step 5.20. |
+| `/portfolio/progress` | Completed programme, read-only | `states/my-progress--completed.png` | Dr Molefe (former trainee) | At Step 5.20: every date ISO (T355, D1). |
 | `/portfolio/progress` | Withdrawn, read-only | `states/my-progress--withdrawn.png` | Dr du Plessis | At Step 5.28. |
-| `/portfolio/progress` | A paused EPA | `states/my-progress--paused-epa.png` | Dr Dlamini | At Step 6.19: no PAED-012 card, its trajectory "(no longer in use)". |
-| `/portfolio/progress` | An institution's own item | `states/my-progress--local-item.png` | Dr Dlamini | At Step 6.27. |
+| `/portfolio/progress` | A paused EPA | `states/my-progress--paused-epa.png` | Dr Dlamini | At Step 6.19: "Each semester · 9 EPAs", and "No longer in use · 1 EPA" with PAED-012's row, its mark muted, and why it is not counted (T355). |
+| `/portfolio/progress` | An institution's own item | `states/my-progress--local-item.png` | Dr Dlamini | At Step 6.27: KGK-001 first in "Once a year · 6 EPAs", badged "Kgosi Kgari Teaching Hospital's own", a dash for its cadence. |
 | `/portfolio/progress` | New version after the move | `states/my-progress--after-move.png` | Dr Ndlovu | At Step 6.37: PAED-002 already counts on 11.2, before any rebuild (T304). |
 | `/portfolio/progress` | New version after the rebuild | `states/my-progress--after-rebuild.png` | Dr Ndlovu | At Step 6.39. |
-| `/portfolio/progress` | December notice | `states/my-progress--december.png` | Dr Dlamini | Only when `D` is in December: "The <year> academic year ended on 30 November. …". December replays only: on any other replay it is not shown, and its absence is not a gap. No change. |
-| `/portfolio/progress` | Loading | `states/my-progress--loading.png` | Dr Dlamini | Hold a read, then My progress in the menu. No change. |
-| `/portfolio/progress` | Load error | `states/my-progress--load-error.png` | Dr Dlamini | The same, held 35 s. No change. |
-| `/portfolio/progress` | Narrow, current | `states/my-progress--narrow.png` | Dr Dlamini | At Step A.7.3. |
+| `/portfolio/progress` | December notice | `states/my-progress--december.png` | Dr Dlamini | Only when `D` is in December: "The <year> academic year ended on <year>-11-30. …", and This period's "Semester 2, <year> counts encounters observed in December.". December replays only: on any other replay it is not shown, and its absence is not a gap. No change. |
+| `/portfolio/progress` | Loading | `states/my-progress--loading.png` | Dr Dlamini | Hold a read, then My progress in the menu: a screen reader hears "Loading My progress." No change. |
+| `/portfolio/progress` | Load error | `states/my-progress--load-error.png` | Dr Dlamini | The same, held 35 s: "Could not load your progress. Nothing has changed. Try again, or come back in a few minutes." with Try again. No change. |
+| `/portfolio/progress` | Standing not loaded | `states/my-progress--standing-error.png` | Dr Dlamini | Hold a read on `"EntrustmentDecisions"` alone (`BEGIN; LOCK TABLE "EntrustmentDecisions" IN ACCESS EXCLUSIVE MODE;`), My progress in the menu, wait 35 s: the counts load, each STAR cell reads "Not loaded", and the panel reads "Could not load your standing. Nothing has changed. Try again, or come back in a few minutes." with Try again under its heading (T355, C8). `ROLLBACK;`, then Try again. No change. |
+| `/portfolio/progress` | MSF not loaded | `states/my-progress--msf-error.png` | Dr Molefe | After Step 3.48, the same with `"MsfCampaigns"` locked alone: This period reads "Multi-source feedback: Could not load MSF coverage. Your counts above are not affected." `ROLLBACK;`. No change. |
+| `/portfolio/progress` | Narrow, current | `states/my-progress--narrow.png` | Dr Dlamini | At Step A.7.3: the index and the panel stacked, each EPA's link a 44 px block. |
 | `/portfolio/progress` | Narrow, former trainee | `states/my-progress--narrow-former.png` | Dr Molefe | At Step A.7.4. |
+| `/portfolio/progress/{EpaId:int}` | No rating yet | `states/epa-progress--no-rating.png` | Dr Molefe | At Step 2.39, PAED-001 from the index: "0 of 3 this semester", "3 more by 2026-11-30.", the level line; Entrustment "No STAR yet."; the trajectory "No rating yet."; "No activity on this EPA yet." with Log an activity. No change. |
+| `/portfolio/progress/{EpaId:int}` | One rating | `states/epa-progress--one-rating.png` | Dr Dlamini | At Step 3.7: "1 rating so far, from David Naidoo. At the minimum.", the chart marking Today, its table. |
+| `/portfolio/progress/{EpaId:int}` | Several ratings, one below | `states/epa-progress--typical.png` | Dr Molefe | At Step 3.48, PAED-001: "3 ratings in the 2026 academic year, from Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below." |
+| `/portfolio/progress/{EpaId:int}` | MSF beside the ratings | `states/epa-progress--msf.png` | Dr Molefe | At Step 3.48, PAED-010: its MSF lines in Observations, and "Multi-source feedback is not plotted." under the chart. |
+| `/portfolio/progress/{EpaId:int}` | A STAR below its level | `states/epa-progress--below-star.png` | Dr Molefe | At Step 4.40, PAED-010 from the index: Entrustment "4", Below, Issued `D`, Expires `D+20`, "Exit level 5 · not yet", Open My authorisations. No change. |
+| `/portfolio/progress/{EpaId:int}` | Ended record | `states/epa-progress--ended.png` | Dr Molefe (former trainee) | At Step 5.20, PAED-001 from its card: every period listed read-only, no bar and no "n more by", the STAR, and no Open My authorisations (she holds no Trainee role, E4). No change. |
+| `/portfolio/progress/{EpaId:int}` | Paused | `states/epa-progress--paused.png` | Dr Dlamini | At Step 6.19: the h1 "PAED-012 — … (no longer in use)", the paused sentence as an alert, no count, Entrustment "While PAED-012 is paused it is not in your standing against Annexure A.", the chart headed "Rating trajectory (no longer in use)". |
+| `/portfolio/progress/{EpaId:int}` | An institution's own item | `states/epa-progress--local-item.png` | Dr Dlamini | At Step 6.27: its badge, "1 a year · Not in the College's exit rule", "2025 academic year: 0 of 1, 1 short", "Minimum 3a". |
+| `/portfolio/progress/{EpaId:int}` | Not found | `states/epa-progress--not-found.png` | Dr Dlamini | Typed, any time after Step 2.40: `/portfolio/progress/99999`: "Page not found", "There is no page at this address." with Go to Home, as flow 01's page. No change. |
+| `/portfolio/progress/{EpaId:int}` | Loading | `states/epa-progress--loading.png` | Dr Dlamini | Hold a read, then a row's link on My progress: the h1 "Loading this EPA" and skeletons; a screen reader hears "Loading this EPA." No change. |
+| `/portfolio/progress/{EpaId:int}` | Load error | `states/epa-progress--load-error.png` | Dr Dlamini | The same, held 35 s: the h1 "EPA", "Could not load this EPA. Nothing has changed. Try again, or come back in a few minutes." with Try again. `ROLLBACK;`, then Try again focuses the EPA's h1. No change. |
+| `/portfolio/progress/{EpaId:int}` | Narrow | `states/epa-progress--narrow.png` | Dr Dlamini | At Step A.7.3: the chart drawn at 326 px, never scaled, scrolling in "Rating chart for PAED-…" where narrower, its table stacked under it. |
 | `/portfolio/authorisations` | None yet | `states/my-authorisations--empty.png` | Dr Mahlangu | At Step 4.43, from her dashboard's card: "No active authorisations yet". No change. |
 | `/portfolio/authorisations` | With an expiry | `states/my-authorisations--expiring.png` | Dr Molefe | At Step 4.39: "Expires in 20 days". |
 | `/portfolio/authorisations` | After a revocation | `states/my-authorisations--after-revocation.png` | Dr Dlamini | At Step 4.42. |
 | `/portfolio/authorisations` | Fifteen | `states/my-authorisations--fifteen.png` | Dr Molefe | At Step 5.8. |
-| `/portfolio/authorisations` | Loading | `states/my-authorisations--loading.png` | Dr Molefe | Hold a read, then the dashboard's View authorisations. No change. |
+| `/portfolio/authorisations` | Loading | `states/my-authorisations--loading.png` | Dr Molefe | Hold a read, then Home's Open My authorisations. No change. |
 | `/portfolio/authorisations` | Narrow | `states/my-authorisations--narrow.png` | Dr Molefe | At Step 4.39, at 390 px. No change. |
 | `/portfolio/export` | Own, before export | `states/export-portfolio--own.png` | Dr Molefe | At Step 5.9, before Export: the last twelve months filled in. |
 | `/portfolio/export` | Exported | `states/export-portfolio--exported.png` | Dr Molefe | At Step 5.9. |
@@ -417,7 +435,7 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 | `/committee/reviews` | Preview failed | `states/reviews-schedule--preview-failed.png` | Mr Smit | At Step 4.6, before choosing the trainee: hold a read, choose Dr Molefe, wait 35 s: "The agenda could not be previewed: …". `ROLLBACK;`, then choose another trainee and her again. No change. |
 | `/committee/reviews` | Loading | `states/reviews-schedule--loading.png` | Mr Smit | Hold a read, then Committee reviews in the menu. No change. |
 | `/committee/reviews` | Narrow | `states/reviews-schedule--narrow.png` | Dr Sithole | At Step A.7.8. |
-| `/committee/reviews/{ReviewId:int}` | Scheduled, the chair | `states/review-detail--scheduled.png` | Dr Zulu | At Step 4.15, with the sampling warnings above the cards. |
+| `/committee/reviews/{ReviewId:int}` | Scheduled, the chair | `states/review-detail--scheduled.png` | Dr Zulu | At Step 4.15, with the sampling warnings above the cards; each chart over the review's window, its line naming Lerato Molefe, no Today (T355). |
 | `/committee/reviews/{ReviewId:int}` | Scheduled, no Start | `states/review-detail--scheduled-no-start.png` | Dr Mokoena | At Step 4.9. |
 | `/committee/reviews/{ReviewId:int}` | In progress, the chair | `states/review-detail--in-progress.png` | Dr Zulu | At Step 4.16: staging form, Record decision disabled with its reason. |
 | `/committee/reviews/{ReviewId:int}` | One item named | `states/review-detail--single-item.png` | Dr Zulu | At Step 4.17, one line ticked. |
@@ -452,7 +470,7 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 | `/committee/reviews/{ReviewId:int}` | Appeal dismissed | `states/review-detail--appeal-dismissed.png` | Dr Zulu | Scratch (post-act4): Dr Dlamini lodges an appeal on My committee reviews; Dr Zulu resolves it Dismissed. There is no Upheld outcome since T307 (D51), so `--appeal-upheld` is no longer captured. |
 | `/committee/reviews/{ReviewId:int}` | Entrustment-only, and decided by another panel | `states/review-detail--entrustment-only.png` | Dr Zulu | Scratch (post-act4; the T295 sweep used it, with Semester 1, 2026 as the previous semester): Prof Mbatha creates a second Paediatrics panel sitting as the Neonatal team Clinical Competency Committee (Zulu chair, Botha member); Mr Smit schedules Dr Dlamini before it for the previous semester, type Entrustment-only review, then before the general panel for the same semester. Start the entrustment-only review and capture its decision form (no Category, its note) and the second (`--decided-elsewhere`, PAED-004 and 005 under "Decided by another panel"). Needs confirmation of the sitting-order warning, which may also show. |
 | `/committee/reviews/{ReviewId:int}` | Loading | `states/review-detail--loading.png` | Dr Zulu | Hold a read, open a review from Committee reviews. No change. |
-| `/committee/reviews/{ReviewId:int}` | Narrow | `states/review-detail--narrow.png` | Dr Zulu | At Step A.7.6. |
+| `/committee/reviews/{ReviewId:int}` | Narrow | `states/review-detail--narrow.png` | Dr Zulu | At Step A.7.6: each chart at 326 px, scrolling in its named region inside the nested card (T355, E1). |
 | `/committee/my-reviews` | None yet | `states/my-reviews--empty.png` | Dr Dlamini | At Step 3.50, My committee reviews from the menu: "No decisions yet". No change. |
 | `/committee/my-reviews` | The list and a review | `states/my-reviews--detail.png` | Dr Molefe | At Step 4.41. |
 | `/committee/my-reviews` | The appeal form | `states/my-reviews--appeal-form.png` | Dr Mahlangu | At Step 4.43, before lodging. |
@@ -831,9 +849,12 @@ member can meet it. None is captured.
   "This account signs in through your institution, so it has no password to change here." with Back to My account, in
   place of the form. Every cast account has a password and no linked sign-in; linking needs a provider. The card's
   results alone are reachable as typed codes on My account (§ Typed codes).
-- **Dashboard cards that nothing fills.** The Trainee's "Upcoming deadlines" with a row (it reads `due_date` keys no
-  type has). The Assessor's "Accepted, needing action", which no CPSA or KGK workflow could fill, is now "Waiting for
-  your rating" (T297, T335), read from the inbox, and Steps 3.24, 3.33, 3.51 and A.6.8 fill it.
+- **Dashboard cards that nothing fills.** The Assessor's "Accepted, needing action", which no CPSA or KGK workflow
+  could fill, is now "Waiting for your rating" (T297, T335), read from the inbox, and Steps 3.24, 3.33, 3.51 and A.6.8
+  fill it. The Trainee's "Upcoming deadlines" is gone (T355): a date is shown on the row it belongs to.
+- **Home's Your targets with every target met** ("Every target is met for Semester 2, 2026 and the 2026 academic
+  year."): no registrar meets every target in the story. A December Home ("… 3 more; encounters in December still count
+  towards Semester 2, 2026.") is reached on a December replay only.
 - **Trainee states the admissions never produce.** "No curriculum assigned yet" on Home and "No curriculum items assigned
   yet" on My progress (a Trainee with no profile: admission sets the role and the profile together), "Your programme
   starts on …" (every start is on or before `D`), "You started part-way through a period" (every start is 15 January,
@@ -844,7 +865,8 @@ member can meet it. None is captured.
   Dr Molefe keeps hers, so her Home is "Your training record". A cheap scratch (post-act6), if wanted: devadmin removes
   Dr van Rensburg's one role, CommitteeMember, on his user page, and he signs in again.
 - **An activity counted across scales** ("counted towards the required number of observations, but not towards the
-  supervision level"): every rated instrument and every item uses the v11.1 ladder.
+  supervision level"): every rated instrument and every item uses the v11.1 ladder. So is the EPA page's rating on
+  another scale (a hollow point in its own lane, "[rating] on [scale]" in its table, T355).
 - **A workflow action shown disabled with its reason** (T107): no seeded or KGK workflow leaves a required field its
   mover cannot write.
 - **"Filed. It is now …"**, the notice for a type whose create is its filing: only the Demo generic types are born

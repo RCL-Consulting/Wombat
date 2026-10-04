@@ -253,3 +253,55 @@ Never shipped: `.standing-summary` (no board uses it), `.progress-row--waived` (
 ## As built after wave 1
 
 (The integrator fills this in after merging A1 and A2, from the code, before wave 2 starts.)
+
+## As built after wave 1 (the integrator, 2026-10-04): where the code differs from the above
+
+Wave 2 reads these, not the lines above they replace. A1 is `2305671a`, `ee022706`; A2 is `8424ffd8`; merged into
+`t355` with `TraineeHomeWords` pointed at `QuotaText.Iso`.
+
+**A1 "counts"**
+- `TrajectoryPointDto.OtherScaleRatingLabel` (added): the rating's rung on its own ladder ("Independent"); `RatingLabel`
+  stays the ordinal on the axis's ladder. `TrajectoryWords.RatingCell` writes "Independent on O-R Scale" (C11's slot).
+- `TraineeCurriculumProgressDto.MinimumByTrainingYear` (added): true when Annexure A's per-year map names the year;
+  `LevelLine` reads "Training year 4: level 5, …" when true, KGK-001's "Minimum 3a" when false.
+- `GetEpaTrajectoryForTraineeQueryHandler(IApplicationDbContext, IUserAdministrationService? users = null)`; with no
+  user store (the portfolio PDF), `AssessorName` is the id and `ActivityName` empty.
+- `TraineeQuotaProgressReader.ReadItemAsync(dbContext, profile, epaId, asOf, periodsFrom, ct)` (new), used by
+  `GetEpaProgressForTrainee`.
+- `EpaPageWords.Subtitle(item)` ("3 a semester · Decided each semester · Exit level 5"; KGK-001 "1 a year · Not in
+  the College's exit rule") and `EpaPageWords.NotInExitRule` (added).
+- `TrajectoryWords`: the key is `Key` (title), `KeyBelow(t)`, `KeyExit(t)`, `KeyRating`, `KeyOtherScale`.
+- `ProgressWords.SemesterFigure` / `YearFigure` return `(string Value, string Label)`.
+- Fixed words are `const`s: `NoStar`, `NoActivity`, `Loading`, `LoadingStatus`, `ErrorHeading`, `LoadError`,
+  `NoCadence`, `PausedRow`, `NotPlotted`, `NoRating`.
+- `CountMeta` returns "2 more by 2026-11-30" with no full stop (lane D adds one on the EPA page if the board keeps it).
+- `HasBar(item)` is `Current.Applies && Periods is null` (no bar on an ended programme's record, R5).
+- `StartNotice`, `DecemberNotice`: one string each, null on an ended record; lane C may split December's first sentence
+  into `<strong>`.
+- The trajectory summary keeps "at the minimum" ("2 at the minimum, 1 below."); the table says "At or above" (note 14).
+- `tests/Wombat.Web.Tests/Progress/ProgressFixtures.cs`: a shared fixture builder for lanes C and D.
+- `EpaLabel` marks a paused EPA with `span.paused-mark` (selectors updated in `EpaNoLongerInUseMarkTests` and
+  `ActivityInboxTests`).
+
+**A2 "decisions"**
+- `EntrustmentStandingReader.ReadAsync(dbContext, ClaimsPrincipal principal, traineeUserId, asOf, withLatestRatings,
+  ct)`: the latest ratings go through `WhereReadableBy(principal)`; with `withLatestRatings: false` no activity is read.
+- `GetTraineeDashboardSummaryQueryHandler` takes a fourth parameter, `TimeProvider? clock = null`.
+- `GetActivityCountLineQueryHandler(IApplicationDbContext, TimeProvider)`.
+- `TraineeDashboard.razor` is compile-only (the Recent activities card lists `RecentDecisions` plainly; Upcoming
+  deadlines is gone): lane B rewrites it. `CountLine` is set only by `DecidedOnYours`; the completed card calls
+  `GetActivityCountLineQuery`.
+- `EntrustmentStandingPanel` keeps its private `YearLine`; `StandingWordsTests` asserts the two byte-equal by
+  reflection. Lane C deletes that assertion when the panel switches to `StandingWords.YearLine`.
+- Lane D's EPA page: `new ListActivitiesBySubjectQuery(subjectId, principal, 1, MaxPageSize) { EpaId = … }` (the
+  filter is applied after the full read, so E7 and order are unchanged; `TotalCount` is the filtered count).
+- Words with no board form, as built: "PAED-002, Semester 1, 2026: no target · 2 recorded."; "PAED-008: no target in
+  2026 · 0 recorded."; "…: 1 of 3, 2 short."; `StarRow` "5, at or above training year 4's level of 5", "Independent on
+  O-R Scale", "below its exit level of 3a", " · expires 2026-10-23"; `StarRows` lists STARs below their level or
+  expiring within 30 days, by code; `PartWay` adds the yearly waiver sentence; `AllMet` is null unless one target
+  applies and all are met; `NoStar(null, …)` "No STAR yet.".
+- `app.css`: A1's `/* Flow 05: the paused mark (T355) */` sits after the `.muted` rule; A2's `/* Flow 05: block links at
+  phone width (T355, C7, C9) */` after flow 04's way-on section.
+- Runbook Expects already named for the runbook lane: ProgrammeEnded and MSF dates ISO (3.48, 4.15, 5.20, 5.21, 5.28,
+  6.41, A.4.6); the paused mark's class (6.15, 6.19, 6.24, 6.27); Recent decisions (3.12, 3.50); `coverage.md:136` and
+  `states.md:834` (Upcoming deadlines).

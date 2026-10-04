@@ -571,7 +571,10 @@ Route: /admin/trainees/edit → /admin/trainees → /admin/users/{UserId}
 Do: Set the last day to `D`, press Mark complete and confirm. Then go back to Trainees, and open Dr Molefe in Users.
 Expect: The page says "Trainee marked complete. The Trainee role has been removed and a graduation email sent."
   - The summary reads Status Completed, Completed `D`.
-  - The last-day field, Deactivate and Mark complete are gone.
+  - The last-day field, Deactivate and Mark complete are gone. The page's subtitle reads "The record of a programme
+    that has ended.", and the profile's details read as a list under "This programme has ended, so its record is
+    archived and cannot be changed.": Curriculum Paediatric EPA Curriculum (11.1), Programme start date `J−3y`,
+    Expected completion date `J+1y−1d`. There are no inputs and no Save profile; Back to trainees stays (T305).
   - On Trainees she is no longer under Active profiles. She is listed under Completed & closed profiles with the outcome
     "Completed `D`".
   - Her user page says "This user has no roles.", and its Add role offers no Trainee (T303).

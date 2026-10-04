@@ -2,7 +2,9 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
+using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
@@ -11,6 +13,7 @@ using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Activities;
 
@@ -862,6 +865,360 @@ public sealed class GetEpaTrajectoryForTraineeTests
             "the activity is pinned to v1, which rated on the O-R Scale");
     }
 
+    // ---- T355: the EPA filter, the window, the stepped minimum, "against the minimum then", and the names (C10, E2) ----
+
+    /// <summary>The window's first and last day: the 2026 academic year, as the EPA page asks for it.</summary>
+    private static readonly DateOnly Year2026From = new(2026, 1, 1);
+
+    private static readonly DateOnly Year2026To = new(2026, 12, 31);
+
+    /// <summary>
+    /// A start 3 × 365 days before 2026-01-14, so the training year changes on that day, as it does for the cast's
+    /// Molefe and Dlamini (<see cref="TraineeProfile.StageOn" />, whole 365-day blocks): year 3 to 2026-01-13, year 4 from
+    /// 2026-01-14.
+    /// </summary>
+    private static readonly DateOnly SteppedStart = new(2023, 1, 15);
+
+    [Fact]
+    public async Task TheEpaFilter_ReadsThatEpasRatingsOnly()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        dbContext.Epas.Add(new Epa { Id = 3, SubSpecialityId = 1, Code = "EPA-03", Title = "Ward round", IsActive = true });
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc));
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-b", 3, 4, new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1"), EpaId: 3), CancellationToken.None);
+
+        result.Select(dto => (dto.EpaCode, dto.Points.Count)).Should().Equal(("EPA-03", 1));
+    }
+
+    [Fact]
+    public async Task TheWindowRead_IsReturned_WithTheExitLevel()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedSteppedCurriculumAsync(dbContext, SteppedStart);
+        var cpsa = await SeedCpsaRatedTypeAsync(dbContext);
+
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 5, new DateTime(2025, 12, 31, 9, 0, 0, DateTimeKind.Utc));
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 6, new DateTime(2026, 9, 21, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var trajectory = (await ReadYear2026Async(dbContext)).Should().ContainSingle().Subject;
+
+        trajectory.WindowFrom.Should().Be(Year2026From);
+        trajectory.WindowTo.Should().Be(Year2026To);
+        trajectory.Points.Select(point => point.ObservedOn).Should().Equal(new DateOnly(2026, 9, 21));
+        trajectory.ExitLevelOrder.Should().Be(6);
+        trajectory.ExitLevelLabel.Should().Be("5", "ordinal 6 is the College's rung 5, the item's flat minimum");
+    }
+
+    /// <summary>
+    /// The chart's dashed edge steps where the minimum did: on 2026-01-14, the day <see cref="TraineeProfile.StageOn" />
+    /// moves the trainee from training year 3 to 4 (R4).
+    /// </summary>
+    [Fact]
+    public async Task TheMinimumStepsOnTheDayTheTrainingYearChanges()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedSteppedCurriculumAsync(dbContext, SteppedStart);
+        var cpsa = await SeedCpsaRatedTypeAsync(dbContext);
+
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 6, new DateTime(2026, 9, 21, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var trajectory = (await ReadYear2026Async(dbContext)).Single();
+
+        TraineeProfile.StageOn(SteppedStart, new DateOnly(2026, 1, 13)).Should().Be(3);
+        TraineeProfile.StageOn(SteppedStart, new DateOnly(2026, 1, 14)).Should().Be(4);
+        trajectory.MinimumSteps.Should().Equal(
+            new TrajectoryMinimumStepDto(Year2026From, 3, 5, "4"),
+            new TrajectoryMinimumStepDto(new DateOnly(2026, 1, 14), 4, 6, "5"));
+    }
+
+    /// <summary>
+    /// E2: "against the minimum then" is computed live, at the training year of each encounter, and says what credit said
+    /// of the same rating: each point is planned through <see cref="CreditApplier.PlanAsync" />, the credit path itself,
+    /// and the plan's comparison for the item is the point's verdict (T355, build review R3): above, at and below.
+    /// </summary>
+    [Fact]
+    public async Task AgainstTheMinimumThen_IsWhatCreditDecided_AtTheTrainingYearOfEachEncounter()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedSteppedCurriculumAsync(dbContext, SteppedStart);
+        var cpsa = await SeedCpsaRatedTypeAsync(dbContext);
+
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 6, new DateTime(2026, 1, 10, 9, 0, 0, DateTimeKind.Utc)); // year 3: above 4
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 5, new DateTime(2026, 1, 12, 9, 0, 0, DateTimeKind.Utc)); // year 3: at 4
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 5, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc)); // year 4: below 5
+        await dbContext.SaveChangesAsync();
+
+        var points = (await ReadYear2026Async(dbContext)).Single().Points;
+
+        points.Select(point => (point.TrainingYear, point.MinimumLabel, point.AgainstMinimum)).Should().Equal(
+            (3, "4", TrajectoryAgainstMinimum.AtOrAbove),
+            (3, "4", TrajectoryAgainstMinimum.AtOrAbove),
+            (4, "5", TrajectoryAgainstMinimum.Below));
+
+        (await CreditVerdictsAsync(dbContext, cpsa, points)).Should().Equal(points.Select(point => point.AgainstMinimum));
+    }
+
+    /// <summary>
+    /// R3: a rated type whose pinned credit rules credit the item with no minimum-level field counts the rating by volume
+    /// alone, so a low rating is not "Below" on the chart: credit made no level judgement, and the plan says so.
+    /// </summary>
+    [Fact]
+    public async Task ARatingWhoseCreditRulesNameNoMinimum_IsNotGated_AsCreditCountsIt()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedSteppedCurriculumAsync(dbContext, SteppedStart);
+        var volumeOnly = await SeedActivityTypeAsync(dbContext, "mini_cex_volume");
+        await SeedPinnedVersionAsync(dbContext, volumeOnly, ratedField: "overall", scaleKey: "42", creditRulesJson: VolumeOnlyCreditRules);
+
+        AddRatedActivity(dbContext, volumeOnly, "trainee-1", "assessor-a", 7, 2, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var point = (await ReadYear2026Async(dbContext)).Single().Points.Single();
+
+        point.AgainstMinimum.Should().Be(TrajectoryAgainstMinimum.NotGated);
+        point.MinimumLabel.Should().BeNull();
+        (await CreditVerdictsAsync(dbContext, volumeOnly, [point])).Should().Equal(TrajectoryAgainstMinimum.NotGated);
+    }
+
+    /// <summary>
+    /// R2: before the programme starts no training year's minimum applies, so the chart's minimum begins on the start day
+    /// and a rating dated before it is judged by no minimum, with no minimum named.
+    /// </summary>
+    [Fact]
+    public async Task BeforeTheProgrammeStarts_NoMinimumIsDrawn_AndARatingThenIsNotGated()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var start = new DateOnly(2026, 3, 1);
+        await SeedSteppedCurriculumAsync(dbContext, start);
+        var cpsa = await SeedCpsaRatedTypeAsync(dbContext);
+
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 2, new DateTime(2026, 2, 10, 9, 0, 0, DateTimeKind.Utc));
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 2, new DateTime(2026, 4, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var trajectory = (await ReadYear2026Async(dbContext)).Single();
+
+        trajectory.MinimumSteps.Should().Equal(new TrajectoryMinimumStepDto(start, 1, 3, "3a"));
+        trajectory.Points.Select(point => (point.TrainingYear, point.MinimumLabel, point.AgainstMinimum)).Should().Equal(
+            (null, null, TrajectoryAgainstMinimum.NotGated),
+            (1, "3a", TrajectoryAgainstMinimum.Below));
+    }
+
+    /// <summary>
+    /// What credit decided of each point's level: the activity planned through <see cref="CreditApplier.PlanAsync" />,
+    /// against its pinned version, and the one planned credit's comparison read as the chart's verdict.
+    /// </summary>
+    private static async Task<IReadOnlyList<TrajectoryAgainstMinimum>> CreditVerdictsAsync(
+        ApplicationDbContext dbContext, ActivityType type, IEnumerable<TrajectoryPointDto> points)
+    {
+        var pinned = await dbContext.Set<ActivityTypeVersion>()
+            .SingleAsync(version => version.ActivityTypeId == type.Id && version.Version == type.Version);
+        var asPinned = new ActivityType { Id = type.Id, SchemaJson = pinned.SchemaJson, CreditRulesJson = pinned.CreditRulesJson };
+        var applier = new CreditApplier(dbContext);
+
+        var verdicts = new List<TrajectoryAgainstMinimum>();
+        foreach (var point in points)
+        {
+            var activity = await dbContext.Activities.SingleAsync(row => row.Id == point.ActivityId);
+            var plan = await applier.PlanAsync(CreditSubject.Of(activity), asPinned, CancellationToken.None);
+            var comparison = plan.Credits.Should().ContainSingle().Subject.Comparison;
+            verdicts.Add(comparison.Basis switch
+            {
+                LevelComparisonBasis.NoGate => TrajectoryAgainstMinimum.NotGated,
+                LevelComparisonBasis.ScaleMismatch => TrajectoryAgainstMinimum.NotComparable,
+                _ => comparison.MinimumMet ? TrajectoryAgainstMinimum.AtOrAbove : TrajectoryAgainstMinimum.Below
+            });
+        }
+
+        return verdicts;
+    }
+
+    /// <summary>
+    /// C11's "[rating] on [scale]": a rating recorded on another ladder is not comparable (<see
+    /// cref="LevelComparisonBasis.ScaleMismatch" />, which credit refuses), and carries its own rung and ladder's name.
+    /// </summary>
+    [Fact]
+    public async Task ARatingOnAnotherLadder_IsNotComparable_AndNamesItsOwnRungAndLadder()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedSteppedCurriculumAsync(dbContext, SteppedStart);
+        SeedOrScale(dbContext);
+        var legacy = await SeedActivityTypeAsync(dbContext, "mini_cex_paed");
+        await SeedPinnedVersionAsync(dbContext, legacy, ratedField: "overall", scaleKey: "O-R Scale", creditRulesJson: GatingCreditRules);
+
+        AddRatedActivity(dbContext, legacy, "trainee-1", "assessor-a", 7, 4, new DateTime(2026, 8, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var point = (await ReadYear2026Async(dbContext)).Single().Points.Single();
+
+        point.OffLadder.Should().BeTrue();
+        point.AgainstMinimum.Should().Be(TrajectoryAgainstMinimum.NotComparable);
+        point.OtherScaleName.Should().Be("O-R Scale");
+        point.OtherScaleRatingLabel.Should().Be("Independent", "ordinal 4 on the O-R Scale is its own rung, not CPSA's 3b");
+        point.RatingLabel.Should().Be("3b", "the label on the axis's ladder is unchanged");
+    }
+
+    [Fact]
+    public async Task WithNoCurriculumItemForTheEpa_NoMinimumApplies_AndNothingSteps()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var trajectory = (await ReadYear2026Async(dbContext)).Single();
+
+        trajectory.Points.Single().AgainstMinimum.Should().Be(TrajectoryAgainstMinimum.NotGated);
+        trajectory.Points.Single().MinimumLabel.Should().BeNull();
+        trajectory.MinimumSteps.Should().BeEmpty();
+        trajectory.ExitLevelLabel.Should().BeNull();
+    }
+
+    /// <summary>
+    /// C10, E7: each point names its assessor, and its activity by the name My activities gives the row, read by the same
+    /// code over the subject's whole list.
+    /// </summary>
+    [Fact]
+    public async Task EachPointNamesItsAssessor_AndItsActivityAsMyActivitiesNamesTheRow()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-b", 7, 4, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+        var users = new FakeUserDirectory(("assessor-a", "Thandi Zulu"), ("assessor-b", "David Naidoo"));
+
+        var points = (await new GetEpaTrajectoryForTraineeQueryHandler(dbContext, users).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None)).Single().Points;
+        var rows = (await new ListActivitiesBySubjectQueryHandler(dbContext, users).Handle(
+            new ListActivitiesBySubjectQuery("trainee-1", Principal("trainee-1")), CancellationToken.None)).Items;
+
+        points.Select(point => point.AssessorName).Should().Equal("Thandi Zulu", "David Naidoo");
+        // The form declares no encounter-date field, so the name has no date segment (E9).
+        points.Select(point => point.ActivityName).Should().OnlyContain(name => name.StartsWith("mini_cex · EPA-07"));
+        points.Select(point => point.ActivityName).Should().Equal(
+            points.Select(point => rows.Single(row => row.Id == point.ActivityId).DisplayName),
+            "the chart's table names each activity as My activities names its row");
+    }
+
+    [Fact]
+    public async Task WithNoUserStore_TheAssessorIsTheirId_AndNoActivityIsNamed()
+    {
+        // The portfolio export calls the handler directly for its counts and prints no name from it.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+
+        var point = (await new GetEpaTrajectoryForTraineeQueryHandler(dbContext).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1")), CancellationToken.None)).Single().Points.Single();
+
+        point.AssessorName.Should().Be("assessor-a");
+        point.ActivityName.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AnotherTraineesEpa_ReadsEmpty_ForACallerWhoDoesNotOverseeThem()
+    {
+        // T101: the EPA filter narrows what the caller may read; it never widens it.
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+        AddRatedActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, 3, new DateTime(2026, 2, 1, 9, 0, 0, DateTimeKind.Utc), specialityId: 4);
+        await dbContext.SaveChangesAsync();
+
+        var result = await new GetEpaTrajectoryForTraineeQueryHandler(dbContext, new FakeUserDirectory()).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-2"), Year2026From, Year2026To, EpaId: 7),
+            CancellationToken.None);
+
+        result.Should().BeEmpty();
+    }
+
+    private const string SteppedMap = """{ "1": 3, "2": 4, "3": 5, "4": 6 }""";
+
+    private static Task<IReadOnlyList<EpaTrajectoryDto>> ReadYear2026Async(ApplicationDbContext dbContext)
+        => new GetEpaTrajectoryForTraineeQueryHandler(dbContext, new FakeUserDirectory()).Handle(
+            new GetEpaTrajectoryForTraineeQuery("trainee-1", Principal("trainee-1"), Year2026From, Year2026To, EpaId: 7),
+            CancellationToken.None);
+
+    /// <summary>
+    /// A rated type whose pinned version rates on the CPSA ladder (scale 42), the item's own, and credits the EPA's item
+    /// gated on that rating, as the seeded CPSA tools do (<c>minimum_level_field</c>).
+    /// </summary>
+    private static async Task<ActivityType> SeedCpsaRatedTypeAsync(ApplicationDbContext dbContext)
+    {
+        var cpsa = await SeedActivityTypeAsync(dbContext, "mini_cex_cpsa");
+        await SeedPinnedVersionAsync(dbContext, cpsa, ratedField: "overall", scaleKey: "42", creditRulesJson: GatingCreditRules);
+        return cpsa;
+    }
+
+    /// <summary>Credits the item of the EPA the activity names, gated on the rating, as the seeded CPSA tools' rules do.</summary>
+    private const string GatingCreditRules =
+        """{ "counts_for": [ { "curriculum_item_match": { "epa_field": "epa_id" }, "amount": 1, "minimum_level_field": "overall" } ] }""";
+
+    /// <summary>Credits the item of the EPA the activity names by volume alone: no minimum-level field (R3).</summary>
+    private const string VolumeOnlyCreditRules =
+        """{ "counts_for": [ { "curriculum_item_match": { "epa_field": "epa_id" }, "amount": 1 } ] }""";
+
+    /// <summary>
+    /// The CPSA ladder, an item for EPA 7 pinned to it with Annexure A's per-year map (year 3 at ordinal 5, rung "4"; year
+    /// 4 at ordinal 6, rung "5"; exit "5"), and the trainee's profile from <paramref name="programmeStart" />.
+    /// </summary>
+    private static async Task SeedSteppedCurriculumAsync(ApplicationDbContext dbContext, DateOnly programmeStart)
+    {
+        dbContext.Set<EntrustmentScale>().Add(new EntrustmentScale
+        {
+            Id = 42, Name = "CPSA Paediatric Entrustment Scale v11.1", SeedKey = "cpsa:scale:v11.1"
+        });
+        var labels = new[] { "1", "2", "3a", "3b", "4", "5" };
+        for (var order = 1; order <= labels.Length; order++)
+        {
+            dbContext.Set<EntrustmentLevel>().Add(new EntrustmentLevel
+            {
+                Id = 4200 + order, ScaleId = 42, Order = order, Label = labels[order - 1]
+            });
+        }
+
+        dbContext.Set<Curriculum>().Add(new Curriculum
+        {
+            Id = 55, SubSpecialityId = 1, Name = "Paediatric EPA Curriculum",
+            Version = "11.1", EffectiveFrom = new DateOnly(2026, 1, 1), IsActive = true
+        });
+        dbContext.Set<CurriculumItem>().Add(new CurriculumItem
+        {
+            Id = 555, CurriculumId = 55, EpaId = 7, RequiredCount = 3, QuotaPeriod = QuotaPeriod.Semester,
+            MinimumLevelOrder = 6, MinimumLevelByStageJson = SteppedMap, WindowMonths = 12, ScaleId = 42
+        });
+        dbContext.Set<TraineeProfile>().Add(new TraineeProfile
+        {
+            Id = 5555, UserId = "trainee-1", CurriculumId = 55, InstitutionId = 2,
+            ProgrammeStartDate = programmeStart,
+            ExpectedCompletionDate = programmeStart.AddYears(4),
+            IsActive = true
+        });
+        await dbContext.SaveChangesAsync();
+    }
+
     private static void SeedOrScale(ApplicationDbContext dbContext)
     {
         dbContext.Set<EntrustmentScale>().Add(new EntrustmentScale { Id = 43, Name = "O-R Scale", SeedKey = "demo:scale:o-r" });
@@ -880,7 +1237,8 @@ public sealed class GetEpaTrajectoryForTraineeTests
         ActivityType activityType,
         string? ratedField,
         string scaleKey,
-        int version = 1)
+        int version = 1,
+        string creditRulesJson = "{}")
     {
         var pointer = ratedField is null
             ? string.Empty
@@ -905,7 +1263,7 @@ public sealed class GetEpaTrajectoryForTraineeTests
             Version = version,
             SchemaJson = schemaJson,
             WorkflowJson = "{}",
-            CreditRulesJson = "{}",
+            CreditRulesJson = creditRulesJson,
             PublishedByUserId = "seed-system",
             PublishedOn = DateTime.UtcNow
         });

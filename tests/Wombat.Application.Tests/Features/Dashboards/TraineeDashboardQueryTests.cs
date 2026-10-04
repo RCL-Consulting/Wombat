@@ -3,9 +3,11 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Dashboards.Trainee;
+using Wombat.Application.Tests.Features.EntrustmentDecisions;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Curricula;
+using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
@@ -30,12 +32,12 @@ public sealed class TraineeDashboardQueryTests
         result.IsPendingTrainee.Should().BeTrue();
         result.CurriculumTargets.Should().BeNull();
         result.NeedsYou.Should().BeEmpty();
-        result.RecentActivities.Should().BeEmpty();
-        result.UpcomingDeadlines.Should().BeEmpty();
+        result.RecentDecisions.Should().BeEmpty();
+        result.Standing.Should().BeNull();
     }
 
     [Fact]
-    public async Task Trainee_WithActivities_ReturnsCurriculumProgressAndRecentActivities()
+    public async Task Trainee_WithActivities_ReturnsCurriculumProgressAndTheStanding()
     {
         await using var db = CreateDb();
         SeedTraineeData(db);
@@ -52,7 +54,63 @@ public sealed class TraineeDashboardQueryTests
         item.Current.Name.Should().Be("2026 academic year");
         item.Current.Count.Should().Be(2);
         item.Target.Should().Be(5);
-        result.RecentActivities.Should().HaveCountGreaterThan(0);
+        // T355 (note 3): the standing in the same read, over the same curriculum, as on the same day.
+        result.Standing.Should().NotBeNull();
+        result.Standing!.AsOf.Should().Be(new DateOnly(2026, 9, 23));
+        result.Standing.Epas.Select(epa => epa.EpaCode).Should().Equal("EPA1");
+        // Her draft and her request in hand are no decisions: nobody else has moved them.
+        result.RecentDecisions.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// T355 (note 3): Home's standing is the reader in summary mode, inside the one read behind DashboardFrame: the STAR and
+    /// the year's level, but no latest rating, which Home does not show and need not read.
+    /// </summary>
+    [Fact]
+    public async Task TheStanding_IsReadInSummaryMode_WithNoRating()
+    {
+        await using var db = CreateDb();
+        await EntrustmentStandingReaderTests.SeedRatedAsync(db);
+
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
+            new GetTraineeDashboardSummaryQuery(
+                CreatePrincipal(EntrustmentStandingReaderTests.TraineeUserId, ["Trainee"]),
+                AsOf: EntrustmentStandingReaderTests.YearTwo),
+            CancellationToken.None);
+
+        var epa = result.Standing!.Epas.Should().ContainSingle().Subject;
+        epa.Decision.Should().NotBeNull();
+        epa.YearStatus.Should().Be(EntrustmentStandingStatus.AtOrAbove);
+        epa.LatestRating.Should().BeNull("summary mode reads no rating");
+        result.Standing.TargetYear.Should().Be(2);
+    }
+
+    /// <summary>
+    /// T355 (B1; E6): Home's Recent decisions is DecidedOnYours' first five, newest decision first, and it says whether
+    /// each is finished by its pinned workflow (D44): an accepted teaching session and a discussed reflective exercise are
+    /// done; a declined request is a dead end, decided and not finished.
+    /// </summary>
+    [Fact]
+    public async Task RecentDecisions_AreTheFirstFive_NewestFirst_EachSayingWhetherItIsFinished()
+    {
+        await using var db = CreateDb();
+        SeedFinishingTypes(db);
+        AddDecided(db, 1, TeachingTypeId, version: 1, "accepted", hoursAgo: 1);
+        AddDecided(db, 2, WbaTypeId, version: 1, "declined", hoursAgo: 2);
+        AddDecided(db, 3, ReflectiveTypeId, version: 1, "discussed", hoursAgo: 3);
+        AddDecided(db, 4, WbaTypeId, version: 1, "completed", hoursAgo: 4);
+        AddDecided(db, 5, WbaTypeId, version: 1, "completed", hoursAgo: 5);
+        AddDecided(db, 6, WbaTypeId, version: 1, "completed", hoursAgo: 6);
+        // Discussed on version 2 leads on to a sign-off: a move is left, so it is not decided yet.
+        AddDecided(db, 7, ReflectiveTypeId, version: 2, "discussed", hoursAgo: 0);
+        await db.SaveChangesAsync();
+
+        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
+            new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
+
+        GetTraineeDashboardSummaryQueryHandler.RecentDecisionsListed.Should().Be(5);
+        result.RecentDecisions.Select(item => (item.Id, item.IsFinished))
+            .Should().Equal((1, true), (2, false), (3, true), (4, true), (5, true));
     }
 
     [Fact]
@@ -92,7 +150,7 @@ public sealed class TraineeDashboardQueryTests
     }
 
     [Fact]
-    public async Task AnActivityInATerminalStateOfItsPinnedWorkflow_IsNeitherInNeedsYouNorDue()
+    public async Task AnActivityInATerminalStateOfItsPinnedWorkflow_IsNotInNeedsYou()
     {
         // T203: finished is a terminal state of the activity's PINNED workflow, not the literal "completed". A
         // discussed reflective exercise and an accepted teaching session are done; a Mini-CEX in "accepted" is not.
@@ -119,7 +177,6 @@ public sealed class TraineeDashboardQueryTests
         // due but not hers to move. The card is ListNeedsYouQuery's rows (T297's rule, restated).
         result.NeedsYou.Select(row => row.Id).Should().Equal(6);
         (await NeedsYouAsync(db, "trainee-1")).Select(row => row.Id).Should().Equal(result.NeedsYou.Select(row => row.Id));
-        result.UpcomingDeadlines.Select(item => item.ActivityId).Should().BeEquivalentTo([5, 6, 7]);
     }
 
     /// <summary>
@@ -127,7 +184,7 @@ public sealed class TraineeDashboardQueryTests
     /// awaiting discussion, which she may still cancel, while the inbox it opens did the opposite. It lists what the inbox
     /// lists. T342 (B6): a request or a reflection she may only cancel is with its assessor, so it is on neither the card
     /// nor Needs you, and a declined one has no move left. A declined request is shown, with its badge, on Recent
-    /// activities and on My Activities. No mail announces it: <c>AssessmentDeclinedEmail</c> has no sender (T320).
+    /// decisions (T355, E6) and on My Activities. No mail announces it: <c>AssessmentDeclinedEmail</c> has no sender (T320).
     /// </summary>
     [Fact]
     public async Task ADeclinedCpsaRequest_AndOneSheMayOnlyCancel_AreNotOnTheCard()
@@ -136,7 +193,7 @@ public sealed class TraineeDashboardQueryTests
         ShippedSeeds.AddType(db, 21, "mini_cex_cpsa", "Mini-CEX (Paediatrics)");
         ShippedSeeds.AddType(db, 22, "reflective_exercise_cpsa", "Reflective Exercise (Paediatrics)");
         const string namesBotha = """{ "assessor_user_id": "assessor-botha" }""";
-        AddOwn(db, 1, 21, version: 1, "declined", namesBotha);
+        AddDecided(db, 1, 21, version: 1, "declined", hoursAgo: 1, namesBotha);
         AddOwn(db, 2, 21, version: 1, "requested", namesBotha);
         AddOwn(db, 3, 22, version: 1, "submitted", namesBotha);
         await db.SaveChangesAsync();
@@ -146,7 +203,7 @@ public sealed class TraineeDashboardQueryTests
 
         result.NeedsYou.Should().BeEmpty();
         (await NeedsYouAsync(db, "trainee-1")).Should().BeEmpty();
-        result.RecentActivities.Select(item => item.ActivityId).Should().Contain(1, "the decline is shown with its badge there");
+        result.RecentDecisions.Select(item => item.Id).Should().Equal([1], "the decline is shown with its badge there");
     }
 
     /// <summary>
@@ -174,28 +231,6 @@ public sealed class TraineeDashboardQueryTests
     }
 
     [Fact]
-    public async Task ARecentActivity_SaysWhetherItsPinnedWorkflowIsFinished()
-    {
-        // The badge on Recent activities is green when finished (T266 review), by the test the inbox uses (D44): an
-        // accepted teaching session is done and an accepted Mini-CEX is not; a discussed reflective exercise is done on
-        // version 1 and not on version 2, where a sign-off follows.
-        await using var db = CreateDb();
-        SeedFinishingTypes(db);
-        AddOwn(db, 1, TeachingTypeId, version: 1, "accepted", "{}");
-        AddOwn(db, 2, WbaTypeId, version: 1, "accepted", "{}");
-        AddOwn(db, 3, ReflectiveTypeId, version: 1, "discussed", "{}");
-        AddOwn(db, 4, ReflectiveTypeId, version: 2, "discussed", "{}");
-        AddOwn(db, 5, WbaTypeId, version: 1, "declined", "{}");
-        await db.SaveChangesAsync();
-
-        var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
-            new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
-
-        result.RecentActivities.Select(item => (item.ActivityId, item.IsFinished))
-            .Should().BeEquivalentTo([(1, true), (2, false), (3, true), (4, false), (5, false)]);
-    }
-
-    [Fact]
     public async Task AnotherTraineesActivities_AreInNoneOfTheLists()
     {
         // The architecture test's exemption for this handler rests on its rows being the caller's own
@@ -209,15 +244,15 @@ public sealed class TraineeDashboardQueryTests
         AddOwn(db, 1, WbaTypeId, version: 1, "requested", withDueDate);
         AddOwn(db, 2, WbaTypeId, version: 1, "requested", withDueDate, subjectUserId: "trainee-2");
         AddOwn(db, 3, ReflectiveTypeId, version: 1, "draft", withDueDate, subjectUserId: "trainee-2");
-        AddOwn(db, 4, WbaTypeId, version: 1, "declined", withDueDate, subjectUserId: "trainee-2");
+        AddDecided(db, 4, WbaTypeId, version: 1, "declined", hoursAgo: 1, subjectUserId: "trainee-2");
+        AddDecided(db, 5, WbaTypeId, version: 1, "completed", hoursAgo: 2);
         await db.SaveChangesAsync();
 
         var result = await new GetTraineeDashboardSummaryQueryHandler(db, new WorkflowEvaluator(), FakeUserDirectory.Empty).Handle(
             new GetTraineeDashboardSummaryQuery(CreatePrincipal("trainee-1", ["Trainee"])), CancellationToken.None);
 
         result.NeedsYou.Should().BeEmpty("her own request waits on its assessor, and the others' are not hers (T342)");
-        result.UpcomingDeadlines.Select(item => item.ActivityId).Should().Equal(1);
-        result.RecentActivities.Select(item => item.ActivityId).Should().Equal(1);
+        result.RecentDecisions.Select(item => item.Id).Should().Equal(5);
     }
 
     private static async Task<IReadOnlyList<Wombat.Application.Features.Activities.Dtos.ActivitySummaryDto>> NeedsYouAsync(
@@ -277,6 +312,36 @@ public sealed class TraineeDashboardQueryTests
             Id = id, ActivityTypeId = typeId, SchemaVersion = version,
             SubjectUserId = subjectUserId, CreatedByUserId = subjectUserId, CurrentState = state, DataJson = dataJson,
             CreatedOn = now.AddDays(-1), UpdatedOn = now.AddMinutes(-id)
+        });
+    }
+
+    /// <summary>
+    /// One of her activities that an assessor moved last, <paramref name="hoursAgo" /> hours ago, into
+    /// <paramref name="state" />: what Recent decisions reads (T355).
+    /// </summary>
+    private static void AddDecided(
+        ApplicationDbContext db, int id, int typeId, int version, string state, int hoursAgo,
+        string dataJson = "{}", string subjectUserId = "trainee-1")
+    {
+        var at = DateTime.UtcNow.AddHours(-hoursAgo);
+        db.Activities.Add(new Activity
+        {
+            Id = id, ActivityTypeId = typeId, SchemaVersion = version,
+            SubjectUserId = subjectUserId, CreatedByUserId = subjectUserId, CurrentState = state, DataJson = dataJson,
+            CreatedOn = at.AddDays(-1), UpdatedOn = at,
+            Transitions =
+            [
+                new ActivityTransition
+                {
+                    FromState = "draft", ToState = "submitted", TransitionKey = "submit", ActorUserId = subjectUserId,
+                    OccurredOn = at.AddDays(-1)
+                },
+                new ActivityTransition
+                {
+                    FromState = "submitted", ToState = state, TransitionKey = "move", ActorUserId = "assessor-botha",
+                    OccurredOn = at
+                }
+            ]
         });
     }
 

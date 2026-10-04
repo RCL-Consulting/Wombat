@@ -209,13 +209,16 @@ Gap: none
 
 ### Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My activities
 Role: Trainee — Dr Anele Dlamini
-Route: /activities/mine → /activities/{ActivityId:int}
-Do: Open My activities, then the Mini-CEX.
-Expect: Needs you is gone. Under All activities the row reads Who has it now "Done", State Completed, Credit "1 item".
-  The page is read-only. Its status card, badged Completed, reads "Done. David Naidoo completed it on …" and "Rated 4.
-  Credited 1 item to PAED-001.", with Open My progress, a link. Entrustment shows rung 4 chosen, and Feedback Dr
-  Naidoo's three texts, "Filled in by David Naidoo, `D`". No move is offered. The history holds Create, Submit and
-  Complete, with Dr Naidoo as the actor of the Complete.
+Route: /activities/mine → /activities/{ActivityId:int} → /portfolio/progress/{EpaId:int}
+Do: Open My activities, then the Mini-CEX. Then follow its status card's Open My progress.
+Expect: Needs you is gone. Under All activities the row reads Who has it now "Done", State Completed, and Credit "1
+  item", a link to PAED-001's page under My progress named "1 item to PAED-001, in My progress" (T355). The page is
+  read-only. Its status card, badged Completed, reads "Done. David Naidoo completed it on …" and "Rated 4. Credited 1
+  item to PAED-001. PAED-001: 1 of 3 this semester.", with Open My progress, a link named "Open My progress at PAED-001"
+  (T355). Entrustment shows rung 4 chosen, and Feedback Dr Naidoo's three texts, "Filled in by David Naidoo, `D`". No
+  move is offered. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete. Open My
+  progress lands on PAED-001's page, `/portfolio/progress/{EpaId}`, whose h1, "PAED-001 — Providing paediatric emergency
+  care to children", takes the focus; the menu's My progress is lit.
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): My activities: no Needs you; All activities (1): "Mini-CEX
   (Paediatrics) · PAED-001 · 2026-09-23", to David Naidoo, Done, Completed, "1 item". The page: nothing enabled, no
   move; status Completed, "Done. David Naidoo completed it on 2026-10-03 17:15 SAST.", "Rated 4. Credited 1 item to
@@ -225,17 +228,22 @@ Gap: none
 
 ### Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target
 Role: Trainee — Dr Anele Dlamini
-Route: /portfolio/progress
-Do: Open My progress.
-Expect: The "This period" card reads:
-  - "Semester 2, 2026 · July to November";
-  - semester targets "0 of 10 EPAs met this semester" and yearly targets "0 of 5 EPAs met in 2026";
-  - training year 3;
-  - multi-source feedback "0 of 15 EPAs covered…".
-  The PAED-001 card reads "1 of 3 this semester", with a bar, then "2 more by 30 November 2026. At the minimum level when
-  observed: 1 of 1. Last encounter date: `D−10`." Below that come "Target: 3 per semester (6 a year). Minimum now 4."
-  and "Semester 1, 2026: 0 of 3, 3 short". The Entrustment section shows no STAR yet. The trajectory charts PAED-001:
-  1 observation from 1 distinct assessor.
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
+Do: Open My progress from the menu, then PAED-001 from its index.
+Expect: My progress's subtitle reads "Training year 3 · Semester 2, 2026". The "This period" card reads:
+  - "0 of 10" over "EPAs met this semester" and "0 of 5" over "EPAs met in 2026";
+  - "Semester 2, 2026 ends on 2026-11-30.";
+  - "Training year 3 — it sets the minimum level each encounter is judged against.";
+  - "Multi-source feedback: 0 of 15 EPAs covered by a released campaign that closed this semester. …".
+  Under Your EPAs, PAED-001's row in "Each semester · 10 EPAs" reads "PAED-001 — Providing paediatric emergency care to
+  children" (its link), "1 of 3 this semester" with a bar and "2 more by 2026-11-30", "Decided each semester", and STAR
+  "No decision". No chart is drawn on My progress (T355). PAED-001's page, `/portfolio/progress/{EpaId}`, is headed with
+  the EPA's name, "3 a semester · Decided each semester · Exit level 5" under it. Observations reads "1 of 3 this
+  semester" with a bar, "2 more by 2026-11-30.", "At the minimum level when observed: 1 of 1", "Last encounter `D−10`",
+  "Semester 1, 2026: 0 of 3, 3 short" and "Training year 3: level 4, the minimum each encounter is judged against and
+  your STAR's target." Entrustment reads "No STAR yet." The rating trajectory reads "1 rating so far, from David Naidoo.
+  At the minimum.", its chart marking Today, and its table one row: `D−10`, 4, "At or above (4, training year 3)", the
+  Mini-CEX, David Naidoo. Activities on this EPA lists the Mini-CEX, Completed, Credit "1 item".
 Note: A figure is always "n of m" for a named window, never a lifetime total (T130, DESIGN.md § progress figures).
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): This period: "Semester 2, 2026 · July to November", "0 of 10
   EPAs met this semester", "0 of 5 EPAs met in 2026", training year 3, MSF "0 of 15 EPAs covered…". PAED-001 "1 of 3
@@ -330,23 +338,28 @@ Gap: none
 
 ### Step 3.12 — Dr Ndlovu reads the decline and files the encounter again, naming Dr Botha
 Role: Trainee — Dr Sipho Ndlovu
-Route: / → /activities/{ActivityId:int} → /activities/new?from={ActivityId} → /activities/{ActivityId:int}
-Do: Open the declined Mini-CEX from the dashboard's Recent activities. Then file the same encounter again from its page,
-  File it again, to someone else, naming Dr Sarah Botha, and submit.
-Expect: Recent activities lists the Mini-CEX with a red Declined badge. Home's Needs you card reads "Nothing needs you.
-  Requests you have filed are in My activities.": a declined request has no move left (T297). No mail tells him of the
-  decline (T320), so Recent activities, while it is among his five newest, and My activities are where he finds it. Its
-  page's status card, badged Declined, reads "Closed. Fatima Khumalo declined it on …", quotes her reason, and reads "It
-  credits nothing, and nothing more can happen to it. To be assessed on this encounter, file it again and name someone
-  else.", with File it again, to someone else. That opens Log an activity on the Mini-CEX, under the notice "Copied from
-  your request to Fatima Khumalo, which was declined. The EPA, date and request are as you filed them. Name someone
-  else, then submit. Nothing is saved until you do." Everything is copied but the assessor, which is empty, and the date
-  field shows at once "This encounter was 20 days ago. It can still be filed, but a filing more than 14 days after the
-  encounter is recorded as late." The button reads Submit until Dr Botha is named, then Submit to Sarah Botha. The
-  re-filing is a new activity: "Submitted. It is now Requested. It is in Sarah Botha's Activity inbox." Its own Submit
-  row records "Filed 20 days after the encounter". The two now share type, EPA and date, so each name adds its assessor:
-  "Mini-CEX (Paediatrics) · PAED-002 · `D−20` · Fatima Khumalo" and "… · Sarah Botha" (E7). Needs you lists neither: the
-  new request is with Dr Botha, and he may cancel it from its page.
+Route: / → /activities/{ActivityId:int} → /activities/new?from={ActivityId} → /activities/{ActivityId:int} → /
+Do: Open the declined Mini-CEX from Home's Recent decisions. Then file the same encounter again from its page, File it
+  again, to someone else, naming Dr Sarah Botha, and submit. Then read Home again.
+Expect: Home's Recent decisions holds one row: the link "Mini-CEX (Paediatrics) · PAED-002 · `D−20`", "to Fatima
+  Khumalo" on its second line, a red Declined badge and `D`, and under it "File it again, to someone else", a link of
+  its own named "File it again, to someone else: Mini-CEX (Paediatrics) · PAED-002 · `D−20`" (T355, E5). No card is one
+  link around its rows (T280). Home's Needs you card reads "Nothing needs you. Requests you have filed are in My
+  activities.": a declined request has no move left (T297). No mail tells him of the decline (T320), so Recent decisions
+  and My activities are where he finds it. Its page's status card, badged Declined, reads "Closed. Fatima Khumalo
+  declined it on …", quotes her reason, and reads "It credits nothing, and nothing more can happen to it. To be assessed
+  on this encounter, file it again and name someone else.", with File it again, to someone else. That opens Log an
+  activity on the Mini-CEX, under the notice "Copied from your request to Fatima Khumalo, which was declined. The EPA,
+  date and request are as you filed them. Name someone else, then submit. Nothing is saved until you do." Everything is
+  copied but the assessor, which is empty, and the date field shows at once "This encounter was 20 days ago. It can
+  still be filed, but a filing more than 14 days after the encounter is recorded as late." The button reads Submit until
+  Dr Botha is named, then Submit to Sarah Botha. The re-filing is a new activity: "Submitted. It is now Requested. It is
+  in Sarah Botha's Activity inbox." Its own Submit row records "Filed 20 days after the encounter". The two now share
+  type, EPA and date, so each name adds its assessor: "Mini-CEX (Paediatrics) · PAED-002 · `D−20` · Fatima Khumalo" and
+  "… · Sarah Botha" (E7). Needs you lists neither: the new request is with Dr Botha, and he may cancel it from its page.
+  Back on Home, Recent decisions still lists only the Declined row: the new request is Requested, which is no decision,
+  until Step 3.13 completes it. Your targets' Furthest short reads PAED-001 to PAED-005, each "0 of 3 this semester · 3
+  more by 2026-11-30".
 Note: Declined is a dead end by design: the seed's workflow has no move out of it. The declined record is kept.
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): Home: Needs you "Nothing needs you. Requests you have filed are
   in My activities."; Recent activities "Mini-CEX (Paediatrics)" badged Declined (badge-declined), linking to
@@ -1079,19 +1092,21 @@ Gap: known T270 (still: each scale question prints as "<question>.: <average>", 
 
 ### Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback
 Role: Trainee — Dr Lerato Molefe
-Route: /activities/mine → /portfolio/progress
-Do: Open My activities, then My progress.
+Route: /activities/mine → /portfolio/progress → /portfolio/progress/{EpaId:int}
+Do: Open My activities, then My progress, then PAED-001, PAED-010 and PAED-012 from its index.
 Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback (Paediatrics) rows. The MSF rows are
-  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Recorded, credit "—" (D8). My progress reads:
-  - semester targets "1 of 10 EPAs met this semester", and training year 4;
-  - multi-source feedback "2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
+  PAED-010 and PAED-012, encounter date `D` (the day the campaign closed), Done, Recorded, credit "—" as text (D8). Each
+  WBA's Credit, "1 item", is a link to its EPA's page (T355). My progress reads:
+  - "1 of 10" over "EPAs met this semester", and training year 4;
+  - "Multi-source feedback: 2 of 15 EPAs covered by a released campaign that closed this semester. MSF is tracked on its
     own and counts towards no target.";
-  - PAED-001: "3 of 3 this semester", "Target met for Semester 2, 2026. At the minimum level when observed: 2 of 3.",
-    minimum now 5;
-  - PAED-012 "2 of 3" and PAED-010 "1 of 3", each with "MSF in Semester 2, 2026: covered by a released campaign that
-    closed on …".
-  The trajectory charts PAED-001 (3 observations from 3 distinct assessors), PAED-010 and PAED-012, and plots no MSF
-  point (D36).
+  - PAED-001's row: "3 of 3 this semester", "Target met for Semester 2, 2026.";
+  - PAED-012's row "2 of 3 this semester" and PAED-010's "1 of 3 this semester", no row carrying an MSF line.
+  PAED-001's page reads "At the minimum level when observed: 2 of 3" and "Training year 4: level 5, the minimum each
+  encounter is judged against and your STAR's target."; its trajectory reads "3 ratings in the 2026 academic year, from
+  Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below." The pages of PAED-010 and PAED-012 each read
+  "MSF in Semester 2, 2026: covered by a released campaign that closed on `D`." first among their MSF lines, chart their
+  ratings, and say under the chart "Multi-source feedback is not plotted.": no chart plots an MSF point (D36).
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): My activities: six Completed WBAs ("1 item" each) and two
   Multi-Source Feedback (Paediatrics) rows, PAED-010 and PAED-012, 2026-10-03, Done, Recorded, "—". My progress: "1 of
   10 EPAs met this semester", training year 4, MSF "2 of 15 EPAs covered by a released campaign that closed this
@@ -1126,13 +1141,17 @@ Role: Trainee — Dr Anele Dlamini
 Route: /
 Do: Open the dashboard and read each card.
 Expect:
-  - Curriculum targets, "Semester 2, 2026 · July to November": "1 / 10" semester targets met and "0 / 5" yearly targets
-    met (2026). Below them are the five EPAs furthest short, largest shortfall first: PAED-002, PAED-003, PAED-005,
-    PAED-010 and PAED-012, each "0 of 3 this semester".
+  - Your targets: "Training year 3 — it sets the minimum level each encounter is judged against.", then "1 of 10" over
+    "EPAs met this semester" and "0 of 5" over "EPAs met in 2026". Under Furthest short, largest shortfall first, are
+    PAED-002, PAED-003, PAED-005, PAED-010 and PAED-012, each its own link with "0 of 3 this semester · 3 more by
+    2026-11-30" under it; then Open My progress.
   - Needs you: "Nothing needs you. Requests you have filed are in My activities.", with Open My activities (T342).
-  - Recent activities: her four WBAs, each Completed, in green.
-  - Upcoming deadlines: "No deadlines in the next 14 days."
-  - My authorisations links to its page, and the header offers "Log an activity" (T335: the Actions card is gone).
+  - Recent decisions: her four WBAs, newest decision first, each Completed in green on `D`: PAED-004's, to Fatima
+    Khumalo, reading "PAED-004: 1 of 3 this semester.", then the three PAED-001 rows, each "PAED-001: 3 of 3 this
+    semester, met.". Each row is its own link, and the card wraps none of them (T280).
+  - My authorisations: "No STAR yet. When the committee issues one, it shows here against training year 3's level.",
+    with Open My authorisations. The header offers "Log an activity" (T335: the Actions card is gone), and there is no
+    Upcoming deadlines card (T355).
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): Curriculum targets "Semester 2, 2026 · July to November", "1 /
   10" semester and "0 / 5" yearly targets met (2026), then PAED-002, 003, 005, 010 and 012, each "0 of 3 this
   semester"; Needs you "Nothing needs you. Requests you have filed are in My activities." with Open My activities;

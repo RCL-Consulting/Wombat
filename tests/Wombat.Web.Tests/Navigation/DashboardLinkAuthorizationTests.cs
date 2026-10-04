@@ -349,9 +349,15 @@ public sealed class DashboardLinkAuthorizationTests
             && Regex.IsMatch(razor, @"\[Parameter[^\]]*\]\s*public\s+\S+\s+" + passed.Groups[1].Value + @"\s*\{");
     }
 
-    // "@item.ActivityId" or "@(expression)" is a value the render fills in: one path segment, whatever it holds.
+    // "@item.ActivityId" or "@(expression)" is a value the render fills in: one path segment, whatever it holds. A href
+    // that is wholly one call, "@ProgressLinks.Epa(item.EpaId)", is an address the call builds (T355): a whole path.
     private static Regex PatternFor(string declared)
     {
+        if (Regex.IsMatch(declared, @"^@[A-Za-z_][A-Za-z0-9_.]*\([^)]*\)$"))
+        {
+            return new Regex("^/[^?#]+$");
+        }
+
         var literals = Regex.Split(declared, "@\\([^)]*\\)|@[A-Za-z_][A-Za-z0-9_.]*");
         return new Regex("^" + string.Join("[^/?#]+", literals.Select(Regex.Escape)) + "$");
     }
@@ -397,8 +403,18 @@ public sealed class DashboardLinkAuthorizationTests
             => new(
                 pending ? null : Targets(),
                 [TestSupport.ActivityRows.Row(54)],
-                [new RecentActivityItem(55, "Mini-CEX", "submitted", "Submitted", IsFinished: false, When)],
-                [new UpcomingDeadlineItem(56, "Mini-CEX", "Due", new DateOnly(2026, 3, 27))],
+                // T355: Recent decisions in place of Recent activities and Upcoming deadlines (Q3; T298), a declined one
+                // among them for its File it again; and the standing, with a STAR below its level for My authorisations' row.
+                [
+                    TestSupport.ActivityRows.Decided(55, typeName: "Mini-CEX", subjectName: "Thandi Nkosi", decidedOn: When),
+                    TestSupport.ActivityRows.Decided(56, typeName: "Mini-CEX", subjectName: "Thandi Nkosi", state: "declined",
+                        stateLabel: "Declined", isFinished: false, decidedOn: When, creditedItemCount: null)
+                ],
+                pending
+                    ? null
+                    : Dashboards.TraineeHomeFixtures.Standing(2, [
+                        Dashboards.TraineeHomeFixtures.Epa(1, "EPA 1", "Resuscitate a newborn", star: "2", status: Wombat.Application.Features.EntrustmentDecisions.EntrustmentStandingStatus.Below)
+                    ]),
                 IsPendingTrainee: pending);
 
         // One semester item that applies and is not met: a row of the trainee's targets card.

@@ -2173,9 +2173,8 @@ textarea[aria-invalid="true"] {
    The grid's first column is its narrow one, so a lone card sat in a third of the row with the rest empty beside it: on
    /msf/campaigns/{id} at 1000px, a 223px card in a 694px row, and its invitees table scrolled 143px inside it; at
    1280px, 317px of 974px. With the modifier the card is 694px at 1000px and the table does not scroll. Not on every
-   details grid (T266 review): on a grid of like cards (My authorisations' STARs, My progress's trajectories) one card
-   should look like each of several, and a lone trajectory chart, which scales with its width, would stand three times as
-   tall; and on My MSF reports the list would jump from the whole row to a third of it when a report is selected. */
+   details grid (T266 review): on a grid of like cards (My authorisations' STARs) one card should look like each of
+   several; and on My MSF reports the list would jump from the whole row to a third of it when a report is selected. */
 .details-grid--lone-spans > .detail-card:only-child {
   grid-column: 1 / -1;
 }
@@ -3414,20 +3413,441 @@ fieldset.form-group fieldset.form-group > legend {
   }
 }
 
-/* ── Trajectory chart ─────────────────────────────── */
-.trajectory-chart {
-  display: block;
-  max-width: 100%;
-  height: auto;
+/* ── Progress ───────────────────────────────────────── */
+/* Flow 05: a registrar reads where they stand (T355) */
+/* One account, in five parts: Home, My progress, the block links and the paused mark those pages share, then the EPA
+   page and its trajectory. The parts keep the order they were built in, so the cascade between them is as built;
+   each part opens with its own reasons. DESIGN.md: § Dashboard page, § Entrustment standing, § Record page under a
+   personal link, and the progress figures. */
+
+/* 1. The Trainee's Home (R1) */
+/* Your targets (R1): the training-year line over the two figures, the card's notices, then "Furthest short", a list whose
+   rows are each a link to its EPA page (.progress-row-link, block links' section) with its bar and its figure and date
+   under the name, never beside it. Ruled between rows, as Recent decisions' are. My authorisations' summary line sits
+   over its STAR rows, which reuse .decided-row and .decided-note. */
+.targets-line {
+  margin: 0 0 var(--space-xs);
 }
 
-.trajectory-chart-grid line {
+.targets-note {
+  margin: var(--space-sm) 0 0;
+}
+
+.progress-group-label {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: var(--space-md) 0 0;
+}
+
+.progress-row--link {
+  border-top: 1px solid var(--border-color);
+  margin: 0;
+  padding: var(--space-sm) 0;
+}
+
+.progress-row--link:first-of-type {
+  border-top: 0;
+}
+
+.progress-row--link .progress-bar {
+  margin-top: var(--space-xs);
+  max-width: 16rem;
+}
+
+.progress-row--link .progress-row-meta {
+  margin-top: var(--space-xs);
+}
+
+.stars-summary {
+  margin: 0 0 var(--space-xs);
+}
+
+/* 2. My progress: This period, the index and the standing (R3, R4) */
+/* My progress (R3-C-Progress; Q1, R3): This period, a card of the two figures, the semester's ends line and one line each
+   for the training year and MSF (.period-card on .detail-card and .dashboard-metric-row); then "Your EPAs", the index,
+   one stacked table per group (.clinic-table--index on .clinic-table--stack), its EPA the row header and its count a
+   figure, a bar and a line; then the standing panel whole (.standing-panel). A section's own failure is a line in place
+   (.section-error), the danger alert being the page's. */
+.period-card .dashboard-metric-row {
+  margin-top: 0;
+}
+
+.period-ends {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0 0 var(--space-md);
+}
+
+.period-lines {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+}
+
+.period-lines p {
+  margin: 0;
+}
+
+.period-line-term {
+  font-weight: 600;
+}
+
+.section-error {
+  margin: 0;
+}
+
+.index-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.index-section > h2 {
+  margin: 0;
+}
+
+/* C7: the group's name is the table's caption, in text colour and the size of a card's title. It must outrank the built
+   .clinic-table caption (0,1,1), so it is written (0,2,0), not as .index-caption alone (0,1,0), which lost to it. */
+.clinic-table .index-caption {
+  caption-side: top;
+  color: var(--text-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: var(--space-md);
+  text-align: left;
+}
+
+/* The EPA, each row's header: a name and its link, at the weight of a cell, on the row's own ground. */
+.clinic-table--index tbody th {
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 400;
+  padding: var(--space-md);
+  text-align: left;
+  vertical-align: top;
+  width: 34%;
+}
+
+.count-cell .progress-bar {
+  margin: var(--space-xs) 0;
+  max-width: 9rem;
+}
+
+.count-figure {
+  font-weight: 600;
+}
+
+.count-meta {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.verdict-cell .badge {
+  margin-right: var(--space-sm);
+}
+
+.verdict-level {
+  white-space: nowrap;
+}
+
+/* KGK-001's "Committee decides": a dash, its words for a screen reader beside it (notes 8, 9). */
+.cadence-none {
+  color: var(--muted-text);
+}
+
+/* C13: a paused EPA's row, on the header ground; its name carries .paused-mark (4.57:1 on header-bg, Spec § 4). */
+.clinic-table--index tr.is-paused th,
+.clinic-table--index tr.is-paused td {
+  background: var(--header-bg);
+}
+
+.standing-panel {
+  margin-top: var(--space-lg);
+}
+
+.standing-panel > h2 {
+  margin: 0 0 var(--space-sm);
+}
+
+.standing-panel p {
+  margin: 0 0 var(--space-sm);
+}
+
+/* A cell's second line in the panel: an issue date, a reason, "Reached", and the RatingWords under a rating link. */
+.standing-rating-meta {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640.98px) {
+  /* Stacked, the row header is the block's first line, its padding the row's own. */
+  .clinic-table--index tbody th {
+    border: 0;
+    padding: 0;
+    width: auto;
+  }
+
+  .clinic-table--stack caption.index-caption {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .clinic-table--stack th[scope="row"] {
+    display: block;
+  }
+
+  .verdict-level {
+    white-space: normal;
+  }
+}
+
+/* 3. Block links at phone width (C7, C9) */
+/* The links flow 05's lists are made of: Home's furthest-short rows (.progress-row-link) and STAR rows, the index's and
+   the standing panel's EPA names (.epa-link), the panel's rating link (.standing-rating-link), every activity link on the
+   EPA page (.activity-block-link, beside .activity-link), My activities' Credit link (.credit-link), the EPA page's "Open
+   My authorisations" (.epa-auth-link), and the line under a Recent decisions row (.decided-note) with its "File it
+   again, to someone else". A name is its row's link, so it wraps inside the row rather than widening it. */
+.progress-row-link,
+.epa-link {
+  display: block;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.activity-block-link {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.standing-rating-link,
+.credit-link,
+.epa-auth-link {
+  display: inline-block;
+}
+
+/* One line by kind under a decided row's link and badge (R1; E5, E6): the count it made, "Credits nothing.", the paused
+   sentence, or File it again. In text colour, not muted: it is the row's news, not its metadata. */
+.decided-note {
+  color: var(--text-color);
+  flex: 1 0 100%;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.decided-note a {
+  display: inline-block;
+}
+
+@media (max-width: 640.98px) {
+  /* C7: each link a 44px block whose name and second line (.activity-link-to) stack, never side by side
+     ("…2026-09-13from Thandi Zulu"), the text at the block's start. */
+  .progress-row-link,
+  .epa-link,
+  .standing-rating-link,
+  .activity-block-link,
+  .credit-link,
+  .epa-auth-link,
+  .decided-row .activity-link,
+  .decided-note a {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 2.75rem;
+  }
+
+  /* C9: an empty state's action (the EPA page's "Log an activity") at 44px, as the dashboard footers' are. */
+  .detail-card--empty .btn {
+    min-height: 2.75rem;
+  }
+}
+
+/* 4. The paused mark (C5, C13) */
+/* "(no longer in use)" after a paused EPA's name, wherever EpaLabel names it: a row, a heading, the EPA page's h1 and its
+   chart's heading (C5, C13). Muted, and never bold inside a heading, so it reads as a mark on the name rather than part
+   of it: muted-text is 5.09:1 on a card, 4.83:1 in an h1 on the page and 4.57:1 on a paused row (Spec § 4). */
+.paused-mark {
+  color: var(--muted-text);
+  font-weight: 400;
+}
+
+/* 5. The EPA page and the trajectory (R2, R4, R5; E1) */
+/* The EPA page (R2; R3-C-Epa): Observations wide and Entrustment narrow in a reversed details grid, one column at 900px
+   and below; then the chart and Activities on this EPA, a stack on the spacing scale. */
+.details-grid--reverse {
+  grid-template-columns: 2fr 1fr;
+}
+
+.epa-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.epa-page-alert {
+  margin-bottom: var(--space-lg);
+}
+
+.epa-section-title {
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-md);
+}
+
+/* The figure, its window and its bar on one line, wrapping on a phone; the bar never stands without the words (T280). */
+.epa-figure-row {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.epa-figure-row .progress-bar {
+  flex: 1 1 10rem;
+  max-width: 16rem;
+}
+
+.epa-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0 0;
+}
+
+.epa-lines p {
+  margin: 0;
+}
+
+.epa-level-line {
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-md);
+}
+
+/* The STAR's level and its verdict badge, then its dates in a details list. */
+.star-level {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.activity-cell-paused {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .details-grid--reverse {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* TrajectoryChart's new form (Q5, E1; R4). Both drawings are in the markup, each at its own fixed size and never scaled;
+   the card's width, not the viewport, chooses one: .trajectory-figure is a container, and the 900 drawing shows where it
+   holds 900px, the 326 below. It is also a named, focusable scroll region (role="region", tabindex="0", as
+   .table-container), the floor for a card narrower than 326px: the committee's nested card at 390 scrolls the drawing
+   sideways there and nothing else does. */
+.trajectory-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.trajectory-head > * {
+  margin: 0;
+}
+
+.trajectory-head p {
+  color: var(--muted-text);
+  margin-top: var(--space-xs);
+}
+
+.trajectory-figure {
+  container-type: inline-size;
+  overflow-x: auto;
+}
+
+.trajectory-figure:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.trajectory-figure .trajectory-chart--wide {
+  display: none;
+}
+
+.trajectory-figure .trajectory-chart--narrow {
+  display: block;
+}
+
+@container (min-width: 900px) {
+  .trajectory-figure .trajectory-chart--wide {
+    display: block;
+  }
+
+  .trajectory-figure .trajectory-chart--narrow {
+    display: none;
+  }
+}
+
+.trajectory-chart {
+  display: block;
+}
+
+/* Drawn at its own size: never shrunk to its card (R4; the lone chart that scaled with its card is withdrawn). */
+.trajectory-chart.trajectory-chart--sized {
+  height: auto;
+  max-width: none;
+  overflow: visible;
+}
+
+/* Semester 2 banded (header-bg); the shading under the minimum (warning-bg, decorative: the dashed edge carries it,
+   5.77:1 on the surface, 5.43:1 on its own shading, 5.18:1 on the band); the exit level a 2.5px primary line (10.98:1);
+   the rungs' gridlines decorative (border-color); the other scale's lane its own dotted rule (input-border, 3.80:1). */
+.trajectory-chart-band {
+  fill: var(--header-bg);
+}
+
+.trajectory-chart-below {
+  fill: var(--warning-bg);
+}
+
+.trajectory-chart-minimum {
+  fill: none;
+  stroke: var(--warning-color);
+  stroke-dasharray: 6 4;
+  stroke-width: 2;
+}
+
+.trajectory-chart-exit {
+  stroke: var(--primary-color);
+  stroke-width: 2.5;
+}
+
+.trajectory-chart-rung {
   stroke: var(--border-color);
   stroke-width: 1;
+}
+
+.trajectory-chart-lane {
+  stroke: var(--input-border);
   stroke-dasharray: 2 3;
+  stroke-width: 1;
+}
+
+.trajectory-chart-today {
+  stroke: var(--muted-text);
+  stroke-dasharray: 1 3;
+  stroke-width: 1.5;
 }
 
 .trajectory-chart-axis {
+  fill: none;
   stroke: var(--muted-text);
   stroke-width: 1;
 }
@@ -3438,26 +3858,140 @@ fieldset.form-group fieldset.form-group > legend {
   stroke-width: 2;
 }
 
-.trajectory-chart-dot {
+/* The points: a rating a filled primary dot ringed in the surface; a rating on another scale a hollow ring in its lane,
+   kept rather than dropped (the observation is real) and left out of the line (T123 D30). */
+.trajectory-chart .trajectory-chart-dots {
   fill: var(--primary-color);
   stroke: var(--surface-color);
-  stroke-width: 1.5;
+  stroke-width: 2;
 }
 
-/* A rating that is not a rung on the axis ladder — recorded against a different scale. Kept and drawn
-   hollow rather than dropped, because the trainee did not create the mismatch and the observation is
-   real; excluded from the polyline, because joining two incommensurable ordinals implies a trend that
-   is not there. (T123) */
-.trajectory-chart-dot.is-off-scale {
+.trajectory-chart .trajectory-chart-hollow {
   fill: var(--surface-color);
-  stroke: var(--muted-text);
-  stroke-width: 1.5;
-  stroke-dasharray: 2 2;
+  stroke: var(--primary-color);
+  stroke-width: 2.5;
 }
 
-.trajectory-chart-x-label,
-.trajectory-chart-y-label {
-  fill: var(--muted-text);
-  font-size: 11px;
+/* The words: rungs and months 13px in text-color (12px at 326); the semester names, the lane's and "Today" muted;
+   "Exit 5" and "Minimum 5" in text-color, never in the warning colour, which marks and never words (C7). Nothing under
+   12px (note 13). */
+.trajectory-chart .trajectory-chart-x-label,
+.trajectory-chart .trajectory-chart-y-label {
+  fill: var(--text-color);
   font-family: inherit;
+  font-size: 13px;
 }
+
+.trajectory-chart .trajectory-chart-y-label {
+  font-weight: 600;
+}
+
+.trajectory-chart .trajectory-chart-band-label,
+.trajectory-chart .trajectory-chart-note {
+  fill: var(--muted-text);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.trajectory-chart .trajectory-chart-line-label,
+.trajectory-chart .trajectory-chart-minimum-label {
+  fill: var(--text-color);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.trajectory-chart--narrow .trajectory-chart-x-label,
+.trajectory-chart--narrow .trajectory-chart-y-label,
+.trajectory-chart--narrow .trajectory-chart-band-label,
+.trajectory-chart--narrow .trajectory-chart-note,
+.trajectory-chart--narrow .trajectory-chart-line-label,
+.trajectory-chart--narrow .trajectory-chart-minimum-label {
+  font-size: 12px;
+}
+
+/* The key, "How to read the chart": each mark's swatch beside its words. */
+.trajectory-key {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  gap: var(--space-xs) var(--space-lg);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.trajectory-key li {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-sm);
+}
+
+.trajectory-key-swatch {
+  display: inline-block;
+  flex: none;
+  height: 0.75rem;
+  width: 1.5rem;
+}
+
+.trajectory-key-swatch--below {
+  background: var(--warning-bg);
+  border-top: 2px dashed var(--warning-color);
+}
+
+.trajectory-key-swatch--exit {
+  background: var(--primary-color);
+  height: 3px;
+}
+
+.trajectory-key-swatch--dot {
+  background: var(--primary-color);
+  border-radius: 50%;
+  width: 0.75rem;
+}
+
+.trajectory-key-swatch--hollow {
+  border: 2.5px solid var(--primary-color);
+  border-radius: 50%;
+  width: 0.75rem;
+}
+
+/* The table, always visible, its caption over it. Ties the built .clinic-table caption and wins by order (C7), so it
+   stays after it. The encounter is each row's header, in body weight on no header ground. */
+.trajectory-table caption {
+  caption-side: top;
+  color: var(--text-color);
+  font-weight: 600;
+  padding: 0 0 var(--space-sm);
+  text-align: left;
+}
+
+.trajectory-table tbody th {
+  background-color: transparent;
+  font-weight: 400;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.trajectory-msf {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@media (max-width: 640.98px) {
+  .trajectory-card.detail-card {
+    padding: var(--space-md);
+  }
+
+  /* Stacked, the encounter heads its block, as the other cells' labels head theirs. It wraps there: an undeclared
+     date's "not recorded (created 2026-09-23)" is wider than a 360px card's block (T355, build review D2). */
+  .trajectory-table tbody th {
+    border: 0;
+    display: block;
+    font-weight: 600;
+    padding: 0;
+    white-space: normal;
+  }
+}
+/* end Flow 05 */

@@ -146,11 +146,12 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
             null,
             // T342: Home's card is Needs you, the rows ListNeedsYouQuery reads.
             [TestSupport.ActivityRows.Row(41, typeName: "Clinical Audit (Paediatrics)")],
+            // T355: Recent decisions, in place of Recent activities (Q3).
             [
-                new RecentActivityItem(42, "Clinical Audit (Paediatrics)", "submitted", "Awaiting supervisor", IsFinished: false, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc)),
-                new RecentActivityItem(44, "Teaching session", "accepted", "Accepted", IsFinished: true, new DateTime(2026, 3, 19, 8, 0, 0, DateTimeKind.Utc))
+                ActivityRows.Decided(42, "Clinical Audit (Paediatrics)", "Thandi Nkosi", "signed_off", "Signed off", isFinished: true, new DateTime(2026, 3, 20, 8, 0, 0, DateTimeKind.Utc)),
+                ActivityRows.Decided(44, "Teaching session", "Thandi Nkosi", "accepted", "Accepted", isFinished: true, new DateTime(2026, 3, 19, 8, 0, 0, DateTimeKind.Utc))
             ],
-            [],
+            null,
             IsPendingTrainee: false)));
 
         var cut = RenderComponent<TraineeDashboard>();
@@ -161,8 +162,8 @@ public sealed class WorkflowLabelSurfaceTests : TestContext
         inbox.ClassList.Should().Contain("badge-draft");
 
         var recent = BadgeFor(cut, 42);
-        Text(recent).Should().Be("Awaiting supervisor");
-        recent.ClassList.Should().Contain("badge-submitted", "the state's key picks the colour");
+        Text(recent).Should().Be("Signed off");
+        recent.ClassList.Should().Contain("badge-completed", "a finished state is green, whatever its key (BadgeFor, T266)");
 
         // A teaching session finishes in "accepted": done, so green, not a supervisor's work in hand (D44, T266 review).
         BadgeFor(cut, 44).ClassList.Should().Contain("badge-completed").And.NotContain("badge-accepted");

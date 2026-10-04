@@ -336,7 +336,8 @@ Expect:
   - **Decision card:** "No decision has been recorded yet."
   - **Entrustment against Annexure A** reads training year 4 on `D`, and "0 at or above · 0 below · 15 with no decision,
     of 15 EPAs". The exit rule reads "0 of 15 EPAs at their exit level by STAR decision", names all fifteen as "Not
-    yet", and says it is for information only (T166).
+    yet", and says it is for information only (T166). The names of PAED-001, PAED-010 and PAED-012 link to their charts
+    on the page (T355).
   - **Multi-source feedback by EPA** marks Covered, in the semester Act 3's campaign closed in, each EPA that campaign
     covered. The other cells read "None released" or "None released yet" (T168).
   - **Agenda** lists the 15 EPAs:
@@ -346,11 +347,14 @@ Expect:
     - Evidence 0 items each;
     - no Action column, because the review has not started.
   - **Evidence snapshot:** "No evidence has been frozen yet …"
-  - **Rating trajectory by EPA** charts PAED-001, PAED-010 and PAED-012 on the ladder's rungs.
+  - **Rating trajectory by EPA** charts PAED-001, PAED-010 and PAED-012 on the ladder's rungs, each over the review's
+    window and with no Today. Each chart's line names the trainee, the window and the assessors, PAED-001's reading
+    "Lerato Molefe · 3 ratings in the review window, `<Y>`-01-01 to `<Y>`-12-31, from Thandi Zulu, David Naidoo and
+    Mohammed Patel. 2 at the minimum, 1 below.", and the table of its ratings is under it (T355, T323).
   - **Sampling concentration warnings,** above the cards, name PAED-010 (one rating) and PAED-012 (two), each with
     "Fewer than three distinct assessors across this EPA's evidence." PAED-001, rated by three assessors on three
-    instruments, is not named. The card says her two MSF records are not counted, because no named assessor rated
-    them (T135, D44).
+    instruments, is not named. The card says her two MSF records are not counted, because no named assessor rated them
+    (T135, D44).
   - **Pending entrustment decisions:** "No pending entrustment decisions have been staged for this review."
   - **Appeals:** "No appeal has been lodged against this review."
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): Review #1: Start review offered; "No decision has been
@@ -654,7 +658,7 @@ Expect:
   - **The snapshot** holds his two teaching sessions logged this year, his CBD still Requested, his cancelled DOPS and
     his portfolio review still Awaiting review, each with its state (T138). The session logged for `J−1y−56d` is outside
     the window and not in it.
-  - **Rating trajectory:** "No rating by a named assessor to chart for this trainee."
+  - **Rating trajectory:** "No rating by a named assessor to chart in this review's window."
   - **Recorded:** the decision reads "Satisfactory with Observations", with "Conditions: At least two Mini-CEX before
     the next sitting." and "Present: Thandi Zulu (chair), David Naidoo".
   - **Ratified:** the state reads Ratified, and the pending card says "Nothing was staged when the review was ratified,
@@ -842,9 +846,12 @@ Gap: none
 ### Step 4.39 — Dr Molefe reads her STARs and downloads a certificate
 Role: Trainee — Dr Lerato Molefe
 Route: / → /portfolio/authorisations
-Do: From the dashboard's My authorisations card, view her authorisations. Download the PAED-001 certificate.
-Expect: Three cards, each issued on `D` with the committee's rationale: PAED-001 and PAED-012 at Authorised level `5`,
-  and PAED-010 at `4`.
+Do: From her Home's My authorisations card, Open My authorisations. Download the PAED-001 certificate.
+Expect: Home's My authorisations card reads "2 at or above · 1 below · 12 with no decision, of 15 EPAs" and lists one
+  STAR, "PAED-010 — Leading and operating within a clinical team", a link to its EPA's page, with "4, below training
+  year 4's level of 5 · expires `D+20`" under it; its footer is Open My authorisations (T355). My authorisations holds
+  three cards, each issued on `D` with the committee's rationale: PAED-001 and PAED-012 at Authorised level `5`, and
+  PAED-010 at `4`.
   - PAED-001 and 012 read "No expiry".
   - PAED-010 reads the date `D+20`, with the badge "Expires in 20 days".
   Each Download certificate is named by its EPA. The PAED-001 certificate downloads with Status Active and its evidence
@@ -860,12 +867,16 @@ Gap: none
 ### Step 4.40 — Dr Molefe reads her progress against Annexure A
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/progress
-Do: Open My progress and read "Entrustment against Annexure A".
-Expect: It says "You are in training year 4 on `D`." It then reads "2 at or above · 1 below · 12 with no decision, of
-  15 EPAs". The table shows:
+Do: Open My progress and read its index's STAR column and "Entrustment against Annexure A".
+Expect: The index's STAR column, headed "STAR against training year 4", reads "At or above" with 5 for PAED-001 and
+  PAED-012, "Below" with "4 · expires `D+20`" for PAED-010, and "No decision" for the other twelve (T355). Entrustment
+  against Annexure A says "You are in training year 4 on `D`." It then reads "2 at or above · 1 below · 12 with no
+  decision, of 15 EPAs" and "2 of 15 EPAs at their exit level by STAR decision (level 5: 2 of 9 · level 4: 0 of 6)". The
+  table shows:
   - PAED-001 and 012 at `5`, each "At or above" the target of `5`, with its exit level Reached;
   - PAED-010 at `4`, "Below" the target of `5`, with its issue and expiry dates.
-  The exit rule says it gates nothing. The page reads the same table as the committee's (T166).
+  Each EPA's name links to its page, and each Latest rating, "4 · Encounter <date>" and the like, is a link to its
+  activity (T355). The exit rule says it gates nothing. The page reads the same table as the committee's (T166).
 Actual (2026-10-03, T350 replay, wombat_scenario_t350): My progress (lit): "You are in training year 4 on 3 October
   2026." "2 at or above · 1 below · 12 with no decision, of 15 EPAs". PAED-001 5 "Issued 3 Oct 2026", At or above
   target 5, exit Reached; PAED-012 the same; PAED-010 4 "Issued 3 Oct 2026, expires 23 Oct 2026", Below target 5, Not
@@ -898,7 +909,7 @@ Gap: none
 ### Step 4.42 — Dr Dlamini reads what stands after the revocation
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/authorisations → /committee/my-reviews
-Do: View her authorisations, then her review.
+Do: From her Home's My authorisations card, Open My authorisations. Then open her review.
 Expect: One card, PAED-001 at `4`: the revoked PAED-002 is no longer listed. Her review reads Ratified, Satisfactory
   Progress. The agenda still reads Decided with STAR numbers on PAED-001 and 002, because it records what the sitting
   did.
