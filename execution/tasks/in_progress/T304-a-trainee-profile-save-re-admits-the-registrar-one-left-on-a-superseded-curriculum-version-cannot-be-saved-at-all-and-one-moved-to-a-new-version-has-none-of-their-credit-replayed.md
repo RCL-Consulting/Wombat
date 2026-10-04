@@ -1,11 +1,12 @@
 ---
 id: T304
 title: A trainee profile save re-admits the registrar: one left on a superseded curriculum version cannot be saved at all, and one moved to a new version has none of their credit replayed
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-10-04
 ---
 
 # T304 — A trainee profile save re-admits the registrar: one left on a superseded curriculum version cannot be saved at all, and one moved to a new version has none of their credit replayed

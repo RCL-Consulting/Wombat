@@ -1,11 +1,12 @@
 ---
 id: T305
 title: A completed or withdrawn trainee's profile can still be saved, re-pinning and re-dating the record that Mark complete says it archives
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-10-04
 ---
 
 # T305 — A completed or withdrawn trainee's profile can still be saved, re-pinning and re-dating the record that Mark complete says it archives
