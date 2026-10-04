@@ -2,7 +2,7 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-10-03 (Opus): T350, flow 04, finished (replay, states, design system v13, lessons)
+## Session 2026-10-03/04 (Opus): T350, flow 04, finished; T355, flow 05, designed (final for the build)
 
 The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\Wombat`** (moved from
 `C:\Users\Renier\Wombat`), and **it is disconnected from its remote: commit locally, never push.**
@@ -37,12 +37,13 @@ The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\
   My progress and My authorisations into the Trainee's menu group, and a "being rebuilt" notice after a version move);
   `round-1-ask.txt`; staged 90 files plus flow 03's trainee boards by hand (`design/upload/flow03-boards/`, gitignored).
   Flows 01–04's quoted runbook steps re-synced (77 stale after T350's replay).
-- **Steps 3–4 done** (`578281c3`): canvas https://claude.ai/artifact/VkYiJc32Tn8USxWMrftScj (before round 1: no
-  `project/canvas.json`, version `1791075615-bb97`); mark `/_blob/5e32abd7ee425f64c0db739c82470df3`, written into the
-  ask. Record: `design/flows/05-trainee-progress/README.md`.
-- **Round 1 waits for the operator:** paste `round-1-ask.txt` into the canvas, attaching `design/upload/` (with
-  `flow03-boards/`). Once it has drawn (the version changes), save the boards to `round-1/` and review them as flow 04's
-  `round-1-review.md` did.
+- **Steps 3–5 done:** canvas https://claude.ai/artifact/VkYiJc32Tn8USxWMrftScj. Round 1: V1 picked (an index and a page
+  per EPA, with V2's Recent decisions); Q8 no menu change; Q9 rebuilt state only, **T304 lands before or with the
+  build**; O1, O2. Round 2 reviewed from four sides (C1–C13; E1–E6 accepted). Round 3 checked (`round-3-check.md`):
+  **final for step 6** (`c1ac0fd5`). Record: `design/flows/05-trainee-progress/README.md`.
+- **Next: step 6, the build,** from `round-3/` as flow 04's was (`design/flows/04-assessor-inbox/build-lanes.md`,
+  `build-contracts.md`, `review-lanes.md`; round-2-review.md's "For the build" and "Nits"). T304 first or in the same
+  build. The new page is `/portfolio/progress/{EpaId:int}`.
 
 ### For the operator
 
