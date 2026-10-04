@@ -1,0 +1,231 @@
+ROUND 2 REVIEWED: accept with changes. Round 3: apply the decisions and corrections below to round 2, and change
+nothing else. The tokens, the contrast figures, every earlier decision (V1 as reviewed; B1; C1–C8 and N1–N6 of round 2's
+ask; Q1–Q9; O1, O2; R1–R5; the facts F1–F16) and every round 2 word not named here hold. The brand mark stays
+/_blob/5e32abd7ee425f64c0db739c82470df3, never a drawn disc. "Was" quotes round 2's phrasing: it must be gone.
+
+DECISIONS (the operator's, 2026-10-04; one sentence each):
+  E1: the chart's size is chosen by its card, never by the viewport. Both renderings (900 and 326) are in the markup;
+    a container query on a NEW wrapper, .trajectory-figure (container-type: inline-size), shows the 900 copy where the
+    wrapper holds 900 px and the 326 copy below it, no script, never scaled (Q5). The wrapper is also a named, focusable
+    scroll region (role="region", aria-label "Rating chart for PAED-001", tabindex="0", as .table-container): the floor
+    for a card narrower than 326. Draw the floor on R3-T-committee-390: the card at the committee page's nested width,
+    274 px inside (A.7.6 Actual), its 326 chart scrolling in the region, the table stacked under it. The Spec's R4 says
+    so, and that the EPA page's card holds 900 only from about 1254 px (sidebar 250, gutters, padding), so at 1100 it
+    draws 326. Was R4's "(900px wide; 326px below 641px, its card padded 16px)" and the copy chosen by w.
+  E2: "Against the minimum then" is computed live with the comparer credit uses (EntrustmentLevelComparer,
+    Domain/Epas/EntrustmentLevelComparison.cs), at the training year of each encounter. Spec § 6 says so and names both
+    windows: the chart's table reads the 2026 academic year; "At the minimum level when observed: n of m" is the stored
+    tally for this semester (CreditApplier.cs:234-238). It drops "so they cannot disagree". No board's values change.
+  E3: the EPA page is owned by My progress whatever the acting role, none included: one rule in NavOwners.OwnerFor for a
+    page under a personal link (today it needs the role, NavOwners.cs:184-187). Spec R2 reads "owned by My progress for
+    every role, and for a graduate who holds none"; ActiveNavItemTests reads the page's policy (TraineeOrFormerTrainee).
+  E4: "Open My authorisations" on the EPA page shows only to a Trainee: My authorisations is Roles = "Trainee"
+    (MyAuthorisations.razor:2), the EPA page TraineeOrFormerTrainee. Every E- board's reader is a Trainee, so it stays
+    drawn (as C9's block); the Spec says a graduate reads the STAR in the Entrustment section.
+  E5: a decision's count line (Recent decisions) and the completed card's sentence follow one rule: the activity's own
+    window, named when it is not the current one ("PAED-001, Semester 1, 2026: 3 of 3, met."); the current one reads as
+    drawn ("PAED-001: 3 of 3 this semester, met."). Spec R1 states the rule; Spec § 1 adds the lines the code can
+    produce: a yearly item, "PAED-008: 1 of 1 in 2026, met."; a waived window, no fraction, "PAED-002: no target this
+    semester · 2 recorded." (NEW words); credit 0, the built "It counted towards no curriculum requirement."
+    (ActivityPageModel.cs:361) and no count; no EPA, no line, and "Open My progress" goes to My progress itself.
+  E6: Recent decisions keeps the rule, not a list: her requests that someone else last moved and that are finished (a
+    terminal state of the pinned workflow) or have no move left. With Completed, Discussed, Signed off and Declined that
+    takes in Accepted, Reviewed, Approved, Verified and Rejected. The badge is BadgeFor.ActivityState's
+    (BadgeFor.cs:61-68): badge-completed for a finished state, badge-declined for Declined and Rejected, which answers
+    Spec § 8's "Discussed badge's tint". "Credits nothing." wherever it credited nothing; "File it again, to someone
+    else" stays Declined's alone (ActivityPageModel.cs:293-308). Was "(Completed, Discussed, Signed off, Declined)" in
+    Spec R1 and "in Completed, Discussed, Signed off or Declined" in Spec § 6. No board's rows change.
+
+CORRECTIONS TO ROUND 2:
+  C1. The standing panel, whole, as built (EntrustmentStandingPanel.razor), on every R3-C-Progress state that draws it.
+    - The opening paragraph whole (:28-65): "You are in training year 4 on 2026-10-03. Each target is the level the
+      curriculum sets for training year 4: Annexure A's, for the College's EPAs. The exit level is the level each EPA
+      must reach to finish the programme. A level is compared only on the ladder the curriculum sets for that EPA."
+      Where KGK-001 is a row (local-item, after-move) it adds, after the second sentence, "Where it sets none, the EPA's
+      exit level stands in, and the row says so." (:58-61). not-started opens "Your programme starts on 2027-01-15, so
+      the targets shown are for training year 1." (:29-31); was "You are in training year 1 on 2026-10-03.".
+    - The summary and the exit rule as a .details-list dl (:67-76): "STAR decisions against training year 4 targets"
+      over the summary, "Exit rule" over ExitLine (:210-237). Unmet, it ends "Not yet: " and the unmet codes in code
+      order; standing: "2 of 15 EPAs at their exit level by STAR decision (level 5: 2 of 9 · level 4: 0 of 6). Not yet:
+      PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-008, PAED-009, PAED-010, PAED-011, PAED-013,
+      PAED-014, PAED-015." With KGK-001 it adds "The institution's own EPA is not part of the College's rule, so it is
+      not counted." Was two bare paragraphs (.standing-summary and a p) with no "Not yet".
+    - The information line, .progress-row-meta (:77-79): "For information only. Recording a Graduate decision or
+      completing the programme does not check the exit rule." Was "For information only: the exit rule gates nothing.".
+    - The caption visible, the built one (:83): "Each EPA's STAR decision against the training year 4 target and the
+      exit level, with the latest rating." Was the hidden "Your STARs against training year 4's levels and the exit
+      level".
+    - The cells (:95-158). Exit level is the level over its words: "5" over "Reached" or "Not yet"; KGK-001 "3a" over
+      "Not yet". No STAR and no rating each read "None"; was "—" and "None yet". KGK-001's row adds "The institution's
+      own EPA; not in the exit rule" under its name and "Exit level; no year 3 level set" under its target 3a (year 1
+      for Ndlovu); was "Not in the exit rule" in the exit cell.
+    - Latest rating: the link as drawn ("4 · Encounter 2026-09-24"), then RatingWords whole (:264-272), the source
+      (Direct observation, Conversation or Case analysis: RatedActivityTypes.cs:149-151) and its verdict, on every row:
+      Molefe's PAED-001 "Direct observation; below the target", PAED-010 "Direct observation; at or above the target",
+      PAED-012 "Conversation; at or above the target"; Dlamini's PAED-001 at 3.7 and her PAED-012 at 6.27 "Direct
+      observation; at or above the target"; Ndlovu's PAED-002 the same. Was the source alone ("Direct observation",
+      "Conversation").
+    - Not comparable, with specimen names, not slots: the STAR and the index's verdict "Independent on O-R Scale"; under
+      the badge "Decided on O-R Scale, not CPSA Paediatric Entrustment Scale v11.1." (NotComparableReason, :257-262;
+      the names: DataSeeder.cs:38, paediatric-epa-v11.1.json:5); its exit cell "5" over "Not comparable". Was "[level]
+      on [scale]".
+    - The cast (the newest encounter wins, GetEntrustmentStandingForTrainee.cs:182): Dlamini's PAED-001 after 3.28 is
+      the Clinical Case Analysis, "4 · Encounter 2026-09-27", "Case analysis; at or above the target" (3.27 Actual:
+      activity 19, Sarah Botha, 2026-09-27; 3.28: rung 4); was the CBD's "3b · Encounter 2026-09-24". Her PAED-004 is
+      "4 · Encounter 2026-10-01", "Direct observation; at or above the target" (Fatima Khumalo, 3.28). Ndlovu's PAED-002
+      is "3a · Encounter 2026-09-13" (3.13 Actual). Was "[rating]" for both.
+    The four decided changes stay: stacked below 641 px, 44 px links, ISO dates, the name linking to the EPA page.
+  C2. Part-way and not started in today's words (MyProgress.razor:94-129, ISO dates). The window name after "until",
+    "for" and "start with" is lower-case "semester 1, 2027", as built (QuotaText.FirstCountedName,
+    QuotaProgress.cs:197-203).
+    - part-way's Alert: "You started the programme on 2026-08-18. That was part-way through the semester, so under the
+      College's rule no semester target applies until semester 1, 2027, which starts on 2027-01-01. Encounters on those
+      EPAs before then stay in your portfolio as evidence, but do not count towards a later semester's target. That was
+      in the second half of the academic year, so under the College's rule no yearly target applies until the 2027
+      academic year, which starts on 2027-01-01. Encounters on those EPAs before then stay in your portfolio as
+      evidence, but do not count towards a later year's target." Was "You started on 2026-08-18, part-way through
+      Semester 2, 2026. … Your encounters are counted, and targets begin with Semester 1, 2027."
+    - not-started's Alert: "Your programme starts on 2027-01-15. Your first semester targets are for semester 1, 2027.
+      Your first yearly targets are for the 2027 academic year." Was the slot "[Today's first-window sentences, with ISO
+      dates.]".
+    - A waived cell, one line, no bar (:489-493): "No target this semester · 2 recorded · targets start with semester 1,
+      2027"; a yearly row "No target in 2026 · 0 recorded · targets start with the 2027 academic year". Was "2 observed
+      in Semester 2, 2026" over "No target this semester: you started part-way through it.".
+    - This period, where no target of a kind applies (part-way, not-started): the built "none apply yet" over the built
+      terms "Semester targets" and "Yearly targets" (TargetsLine, :303-306; :142, :149). Was "No target" over "this
+      semester: you started part-way through it" (and "… your programme has not started").
+    - not-started's index reads the window that holds today (QuotaWindow.For): columns and captions "Semester 2, 2026"
+      and "2026 academic year"; each cell "No target yet · targets start with semester 1, 2027" (yearly "… with the
+      2027 academic year", :508-513). Was the columns "Semester 1, 2027" and "2027 academic year", and "No target yet"
+      over "Targets start with Semester 1, 2027.".
+  C3. December keeps the figure (MyProgress.razor:464-475: only "n more by <date>" is replaced).
+    - R3-H-december's rows: "0 of 3 this semester · 3 more; encounters in December still count towards Semester 2,
+      2026." Was "3 more; encounters in December …" with no figure.
+    - A yearly row names its own window (current.Name): "1 more; encounters in December still count towards the 2026
+      academic year." on R3-P-december's Once a year rows. Was "… towards Semester 2, 2026." on every row. The built name
+      has no "the" ("2026 academic year", QuotaProgress.cs:183): the Spec lists "the" before a yearly window's name as
+      new words, here and in "Target met for the 2026 academic year.".
+  C4. The EPA page's lines as the code gives them (R3-C-Epa).
+    - other-scale: "At the minimum level when observed: 0 of 2": MinimumLevelReachedCount of Count, and the off-scale
+      completion counts in Count (CreditApplier.cs:234-238). Was "0 of 1 (1 more was rated on another scale)".
+    - paused: no MSF line (coverage lists items in force only, MsfSemesterCoverage.cs:55; CardLine returns null) and no
+      "Last encounter" line (the credited tally's; this completion credited nothing). Was "Last encounter 2026-10-03" and
+      the MSF line on R2-E-paused.
+    - MSF is CardLine whole, newest semester first (MsfCoverageText.cs:19-32, PeriodPhrase): every other state "MSF in
+      Semester 2, 2026: no released campaign covering this EPA has closed yet. MSF in Semester 1, 2026: no campaign
+      covering this EPA that closed in the semester has been released."; below-star (PAED-010) "MSF in Semester 2,
+      2026: covered by a released campaign that closed on 2026-10-03. MSF in Semester 1, 2026: no campaign covering this
+      EPA that closed in the semester has been released." Was the Semester 2 sentence alone.
+    - No line where the build has none. Drop "Last encounter: none yet" (no-rating, december, once-a-year, local-item).
+      A STAR with no expiry shows "Issued 2026-10-03" alone (typical): no "Expires" row; was "Expires" over "No expiry".
+      KGK-001's level line is "Minimum 3a"; was "Minimum 3a: the level each encounter is judged against. It has no
+      level by training year.".
+  C5. The paused mark where Q6 puts it. R3-E-paused's trajectory heading is "Rating trajectory (no longer in use)", the
+    mark in .paused-mark, as R2-T-paused-heading marks its h3. Was "Rating trajectory" with no mark. Spec R2 adds: the
+    tab is the h1's words, so it carries the mark ("PAED-012 — Communicating with and counselling patients, caregivers
+    and healthcare teams (no longer in use) · Wombat"); the crumb stays the code, "PAED-012".
+  C6. The cast.
+    - R3-H-decline (3.12): Sarah Botha has not yet completed the re-filed Mini-CEX (3.13), so PAED-002 is 0 of 3 and
+      Furthest short is PAED-001, 002, 003, 004 and 005, each "0 of 3 this semester · 3 more by 2026-11-30" (shortfall,
+      then code). Was 3.16's five (PAED-001, 003, 004, 005, 010); returned and decisions-mixed keep those.
+    - PAED-006 is "PAED-006 — Managing long-term health conditions (LTHCs)" until 6.14 saves "in children"
+      (act-1-setup.md:348; 6.14 Actual): on R3-H-with-stars, and on R3-P-first, -counting, -standing and -exit-met, in
+      the index and in the panel. Was "… (LTHCs) in children" there. paused, local-item and after-move keep "in
+      children".
+  C7. CSS that loses or breaks (flow05-r3.css).
+    - .index-caption (0,1,0) loses colour, size, padding and alignment to the built .clinic-table caption (0,1,1,
+      app.css:312-317): write .clinic-table .index-caption. .trajectory-table caption ties the built rule and wins by
+      order only: the Spec's part 3 says it goes after app.css:312 in the merge.
+    - The 390 block-link rule (flow05-r2.css:175-178) adds flex-direction: column; justify-content: center;
+      align-items: flex-start, so an activity's name and .activity-link-to stack (app.css:2638-2640, "on a second
+      line"). Was display: flex; flex-wrap: wrap alone ("…2026-09-13from Thandi Zulu").
+    - "Minimum 5" / "Min 5" (.trajectory-chart-minimum-label) in text-color, 12.63 on surface: warning-color is never
+      words (tokens.json; DESIGN.md:191). Was warning-color, and Spec § 4's "Minimum 5 warning-color on surface 5.77".
+  C8. Focus and announcements.
+    - The loading status is always on the page, empty once the read answers (DashboardFrame.razor:17;
+      ActivityView.razor:38): draw an empty <p class="visually-hidden" role="status"> in every state of R3-C-Home,
+      -Progress and -Epa, filled only while loading. Was the status with its words inside the loading branch
+      (R2-C-Home:57, R2-C-Progress:48, R2-C-Epa:63). Spec § 5 states the rule; Spec § 1 marks "Loading My progress."
+      and "Loading this EPA." new.
+    - R3-E-loading as ActivityView loads (ActivityView.razor:35, 275-276): h1 "Loading this EPA", crumb "Loading…", the
+      status "Loading this EPA."; once loaded the EPA's h1 takes the focus again, so the h1 FocusOnNavigate focused is
+      the loaded page's. Was "EPA" as h1 and crumb. load-error keeps "EPA" (ActivityView's "Activity"). This closes
+      Spec § 8's open point.
+    - Retry as built (StatePanel.razor:101-105): the button is gone while the read runs (the skeleton) and the answer
+      takes the focus; failing again, the alert takes it (FocusFailureAfterRender). Was Spec § 5's "Try again keeps the
+      focus while it runs (aria-disabled, "Trying again…")".
+    - #standing-h gets tabindex="-1", the target of the standing's Try again (R2-C-Progress:113 has none).
+  C9. 44 px at 390. "Open My authorisations" on R3-C-Epa (a bare link in a p, R2-C-Epa:101) becomes a 44 px block like
+    .epa-link; the empty state's "Log an activity" (.btn, 2.25rem, bundle.css:378) is 2.75rem below 641 px. The Spec
+    lists every 44 px lift: flow05-r3.css's block-link rule, these two, and the built ones the boards rely on
+    (.dashboard-card-footer .btn and .alert-row .btn, app.css:2816-2817; .breadcrumb-parent a, app.css:3322).
+  C10. Spec § 6, the reads, true of the code.
+    - My progress's counts: "Exists, gains four fields": TraineeCurriculumProgressDto carries no cadence, opportunistic
+      flag, local flag or exit level. Was "Exists … unchanged".
+    - The EPA page's activities: NEW, an EPA filter on ListActivitiesBySubjectQuery (it has none,
+      ListActivitiesBySubjectQuery.cs:23-27), its E7 names (the assessor added where two rows share type, EPA and date)
+      taken over the whole list. "Finished" means a terminal state, so a Declined or cancelled request is never on the
+      page. Was "through T343's query" (T343 is SQL paging and adds no filter).
+    - The trajectory's read gains assessor names, activity names, the training year at each encounter, the stepped
+      minimum, the exit level and the other scale's label (TrajectoryPointDto has none); EpaTrajectoryDto is shared with
+      the committee's ReviewDetail; "in the 2026 academic year" needs From/To, which MyProgress does not pass today.
+    - The last paragraph is E2's. Was "… both come from CreditTargetResolver's minimum-level-reached, so they cannot
+      disagree.".
+  C11. The Spec's words and open points.
+    - NEW, listed as words with no source: "No rating yet." (the chart's built empty is "No observations to plot.",
+      TrajectoryChart.razor:5), "Your EPAs", "Why it is not counted", December's "Semester 2, 2026 counts encounters
+      observed in December." (in place of the ends line), the ended Home's "No STAR yet.", the trajectory key's lines
+      ("How to read the chart" and its four items); with C3's "the", C8's two loading sentences, E1's region name and
+      E5's waived line.
+    - The trajectory summary is the ask's template; "so far" is for one rating only. other-scale: "2 ratings in the 2026
+      academic year, from Sarah Botha and Mohammed Patel. 1 on another scale, 1 below.", "1 on another scale" listed
+      new. Was "2 ratings so far, from Sarah Botha and Mohammed Patel. …" (R2-C-Trajectory:148).
+    - § 8 closes: the values are C1's, the words C1's and C2's, the loading title C8's, the denominator C4's, the
+      Discussed tint E6's. § 1 and § 7 lose the first person; was "(my words: replace with today's Alert sentences, ISO
+      dates)" and "which I have not done here". § 7 gives each 390 board's measured height; was "Phone heights are not
+      measured in this round" and "set generously".
+    - Straight apostrophes in every app string: R3-C-Epa's level line ("your STAR's target"), "College's" (local-item's
+      subtitle and Entrustment line), R3-C-WaysIn's "Anele Dlamini's request to …" and "[Registrar]'s request to …".
+      Was the curly ’ in each.
+  C12. The Steps board.
+    - Quote the runbook where a cell says "Not quoted in the brief":
+      3.12, Do: "Open the declined Mini-CEX from the dashboard's Recent activities."; Expect: "Recent activities lists
+        the Mini-CEX with a red Declined badge." and "No mail tells him of the decline (T320), so Recent activities,
+        while it is among his five newest, and My activities are where he finds it."
+      4.15, Expect: "Rating trajectory by EPA charts PAED-001, PAED-010 and PAED-012 on the ladder's rungs."
+      4.39, Do: "From the dashboard's My authorisations card, view her authorisations."; Actual: Home's My authorisations
+        card ("Statements of Awarded Responsibility (STAR) granted by committee review.") -> "View authorisations ->".
+      4.42, Route "/ → /portfolio/authorisations → /committee/my-reviews", Do: "View her authorisations, then her
+        review."; 5.8, Do: "Then open My authorisations from her dashboard's card, and download the certificate for
+        PAED-001."
+      A.4.6, Expect: "He lands on his Trainee dashboard, which still says that his programme ended (Step 5.28)."; Actual:
+        Curriculum targets reads "Your programme ended on 1 October 2026, so no target applies to you any more. …".
+    - Write A.7.6 (Dr Zulu on her phone; Route "/ → /committee/reviews → /committee/reviews/{ReviewId:int}"). Today: "The
+      review's cards stack. The evidence tables scroll inside their containers, and each EPA's trajectory chart fits the
+      width (T166)." New: each EPA's chart is drawn at 326 px, never scaled, rungs and months 12 px; in the review's
+      nested card (274 px inside) it scrolls sideways in its own named region (E1), its table stacked under it; nothing
+      else scrolls sideways. It closes F-A.7.6a (T323). Was "[To write once the step's text is in hand …]".
+    - Route cells add /portfolio/progress/{EpaId:int}: 3.7 (/2), 5.26 (/3), 6.15 (/13), 6.24 (/13), 6.27 (/17). 6.15's
+      Do opens PAED-012's row.
+    - Record the gaps the design closes: F-2.39a, T306 at 2.39 (the training year on Home); T280 at 3.12 (no card wraps
+      its own link); F-A.7.3a, T328 at A.7.3 (44 px rating links); F-6.37a, T304 at 6.37.
+    - 3.12's second half: after the re-filing, Recent decisions still lists only the Declined row; the new request is
+      Requested, with Sarah Botha, until 3.13 completes it.
+  C13. The Spec's tables.
+    - Add three rows: muted-text on warning-bg 4.79 ("Today" over the shading); the rung gridlines, border-color on
+      surface 1.30 and on warning-bg 1.23, marked decorative; the shading on the band, warning-bg on header-bg 1.05,
+      carried by the dashed line.
+    - Drop .progress-row--waived (flow05-r2.css:86; on no board). Say a paused EPA is tr.is-paused with .paused-mark,
+      never .detail-card--paused. Add .trajectory-figure (E1) to the new classes.
+
+ROUND 3 ASK:
+  - Apply C1–C13 and E1–E6 to the round 2 boards. Update the Spec: the messages and new words (§ 1), R1, R2 and R4,
+    the new-class table, the contrast rows, the focus rules, the reads, the measured phone heights, § 8 closed. Update
+    the Steps board: 3.12, 4.15, 4.39, 4.42 · 5.8, A.4.6, A.7.6, the routes of 3.7, 5.26, 6.15, 6.24 and 6.27, and the
+    gaps closed.
+  - Redraw as R3-* boards: R3-C-Home, R3-C-Progress, R3-C-Epa, R3-C-Trajectory, R3-C-WaysIn, R3-Spec, R3-Steps, and
+    one wrapper per state and width, keeping round 2's state names so the wrappers map one to one (R2-P-standing-390
+    becomes R3-P-standing-390): 112 wrappers, 56 states. No item needs a new state, so there is no new wrapper. The
+    stylesheet is flow05-r3.css, loaded in place of flow05-r2.css; nothing of the design system changes.
+  - Keep round 1's and round 2's boards; put round 3 on its own canvas page. Stop when round 3 is drawn; I will check
+    it item by item.
