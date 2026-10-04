@@ -10,7 +10,7 @@
 
 <PageTitle>Trainee profile · Wombat</PageTitle>
 
-<PageHeader Title="Trainee profile" Subtitle="@(_isAdmission ? "Admit a pending trainee into a curriculum." : "Update curriculum and completion details for this trainee.")">
+<PageHeader Title="Trainee profile" Subtitle="@Subtitle">
   <Actions>
     <a class="btn btn-outline btn-sm" href="/admin/trainees">Back to trainees</a>
   </Actions>
@@ -54,57 +54,71 @@
 
       <section class="detail-card">
         <h3>Profile details</h3>
-        <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="trainee-profile">
-          <DataAnnotationsValidator />
-          <ValidationSummary class="validation-summary-errors" />
+        @if (_model.IsEnded)
+        {
+          @* T305: Mark complete archives the profile, and a withdrawal ends it as surely, so an ended profile is read, not
+             edited: no inputs and no Save profile, which the command would refuse. The header keeps Back to trainees. *@
+          <p class="muted">This programme has ended, so its record is archived and cannot be changed.</p>
+          <dl class="details-list">
+            <div><dt>Curriculum</dt><dd>@_model.CurriculumLabel</dd></div>
+            <div><dt>Programme start date</dt><dd>@_model.ProgrammeStartDate.ToString("yyyy-MM-dd")</dd></div>
+            <div><dt>Expected completion date</dt><dd>@(_model.ExpectedCompletionDate?.ToString("yyyy-MM-dd"))</dd></div>
+          </dl>
+        }
+        else
+        {
+          <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="trainee-profile">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary-errors" />
 
-          <div class="form-grid form-grid--wide">
-            <FormField Label="Curriculum" InputId="curriculum-id" Required="true">
-              <InputSelect id="curriculum-id" class="form-select" @bind-Value="_model.CurriculumId">
-                @foreach (var curriculum in _curricula)
-                {
-                  <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
-                }
-              </InputSelect>
-            </FormField>
-
-            <FormField Label="Programme start date" InputId="programme-start-date" Required="true">
-              <InputDate id="programme-start-date" class="form-control" @bind-Value="_model.ProgrammeStartDate" />
-            </FormField>
-
-            <FormField Label="Expected completion date" InputId="expected-completion-date" HelpText="Leave this empty to derive it from the curriculum window.">
-              <InputDate id="expected-completion-date" class="form-control" aria-describedby="@FieldHelp.Id("expected-completion-date")" @bind-Value="_model.ExpectedCompletionDate" />
-            </FormField>
-          </div>
-
-          @if (!_isAdmission && _model.IsActive)
-          {
-            @* T209, D49: both ways out of the programme record its last day, and the quota reads it: the period it falls in
-               holds no target unless it is in that period's last month. The buttons name the help, because each one acts
-               on the date above it. *@
             <div class="form-grid form-grid--wide">
-              <FormField Label="Last day in the programme" InputId="programme-end-date" HelpText="@EndDateHelp">
-                <InputDate id="programme-end-date" class="form-control"
-                           aria-describedby="@FieldHelp.DescribedBy("programme-end-date", EndDateHelp, _endRefused ? EndRefusalId : null)"
-                           @bind-Value="_model.EndDate" />
+              <FormField Label="Curriculum" InputId="curriculum-id" Required="true">
+                <InputSelect id="curriculum-id" class="form-select" @bind-Value="_model.CurriculumId">
+                  @foreach (var curriculum in _curricula)
+                  {
+                    <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
+                  }
+                </InputSelect>
+              </FormField>
+
+              <FormField Label="Programme start date" InputId="programme-start-date" Required="true">
+                <InputDate id="programme-start-date" class="form-control" @bind-Value="_model.ProgrammeStartDate" />
+              </FormField>
+
+              <FormField Label="Expected completion date" InputId="expected-completion-date" HelpText="Leave this empty to derive it from the curriculum window.">
+                <InputDate id="expected-completion-date" class="form-control" aria-describedby="@FieldHelp.Id("expected-completion-date")" @bind-Value="_model.ExpectedCompletionDate" />
               </FormField>
             </div>
-          }
 
-          <FormActions>
-            <a class="btn btn-outline" href="/admin/trainees">Cancel</a>
             @if (!_isAdmission && _model.IsActive)
             {
-              @* Each asks first, naming the day (DESIGN.md § Button system): neither can be undone, and the day each records
-                 cannot be changed afterwards. The red button is only in the dialog's footer. *@
-              <button type="button" class="btn btn-outline" disabled="@Busy" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmDeactivate)">Deactivate</button>
-              <button type="button" class="btn btn-outline" disabled="@Busy" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmComplete)">Mark complete</button>
+              @* T209, D49: both ways out of the programme record its last day, and the quota reads it: the period it falls in
+                 holds no target unless it is in that period's last month. The buttons name the help, because each one acts
+                 on the date above it. *@
+              <div class="form-grid form-grid--wide">
+                <FormField Label="Last day in the programme" InputId="programme-end-date" HelpText="@EndDateHelp">
+                  <InputDate id="programme-end-date" class="form-control"
+                             aria-describedby="@FieldHelp.DescribedBy("programme-end-date", EndDateHelp, _endRefused ? EndRefusalId : null)"
+                             @bind-Value="_model.EndDate" />
+                </FormField>
+              </div>
             }
-            @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of a button it
-               disables, to the page. A second press sends nothing (SaveAsync). *@
-            <button type="submit" class="btn btn-primary" disabled="@_ending" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
-          </FormActions>
-        </EditForm>
+
+            <FormActions>
+              <a class="btn btn-outline" href="/admin/trainees">Cancel</a>
+              @if (!_isAdmission && _model.IsActive)
+              {
+                @* Each asks first, naming the day (DESIGN.md § Button system): neither can be undone, and the day each records
+                   cannot be changed afterwards. The red button is only in the dialog's footer. *@
+                <button type="button" class="btn btn-outline" disabled="@Busy" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmDeactivate)">Deactivate</button>
+                <button type="button" class="btn btn-outline" disabled="@Busy" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmComplete)">Mark complete</button>
+              }
+              @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of a button it
+                 disables, to the page. A second press sends nothing (SaveAsync). *@
+              <button type="submit" class="btn btn-primary" disabled="@_ending" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : (_isAdmission ? "Admit trainee" : "Save profile"))</button>
+            </FormActions>
+          </EditForm>
+        }
       </section>
     </div>
   }
@@ -140,7 +154,11 @@
   /// <summary>The id of the refusal alert, which the last-day field names after Deactivate or Mark complete is refused.</summary>
   private const string EndRefusalId = "programme-end-refusal";
 
-  private IReadOnlyList<CurriculumDto> _curricula = [];
+  /// <summary>
+  /// The curricula the picker offers: exactly what the command accepts (T304). A profile's pinned version and the
+  /// institution's active adoption for the discipline; at admission, the institution's active adoptions alone.
+  /// </summary>
+  private IReadOnlyList<CurriculumChoiceDto> _curricula = [];
   private ConfirmDialog? _confirmDeactivate;
   private ConfirmDialog? _confirmComplete;
   private ElementReference _result;
@@ -186,12 +204,14 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _curricula = await Sender.Send(new GetCurriculaListQuery(authState.User));
 
       if (Id.HasValue)
       {
         var profile = await Sender.Send(new GetTraineeProfileByIdQuery(Id.Value, authState.User));
         _isAdmission = false;
+
+        // An ended profile is read, not edited (T305), so it needs no picker.
+        _curricula = profile.IsEnded ? [] : await Sender.Send(new GetTraineeCurriculumChoicesQuery(profile.Id, authState.User));
         _model = new TraineeProfileFormModel
         {
           Id = profile.Id,
@@ -199,6 +219,7 @@
           Email = profile.Email,
           FullName = $"{profile.FirstName} {profile.LastName}",
           CurriculumId = profile.CurriculumId,
+          CurriculumLabel = $"{profile.CurriculumName} ({profile.CurriculumVersion})",
           ProgrammeStartDate = profile.ProgrammeStartDate,
           ExpectedCompletionDate = profile.ExpectedCompletionDate,
           IsActive = profile.IsActive,
@@ -210,6 +231,7 @@
       else if (!string.IsNullOrWhiteSpace(UserId))
       {
         _isAdmission = true;
+        _curricula = await Sender.Send(new GetAdmissionCurriculumChoicesQuery(UserId, authState.User));
         var pendingUsers = await Sender.Send(new ListPendingTraineesQuery(authState.User));
         var pendingUser = pendingUsers.FirstOrDefault(entity => entity.UserId == UserId)
           ?? throw new InvalidOperationException("The pending trainee could not be found.");
@@ -240,7 +262,7 @@
     }
   }
 
-  private CurriculumDto? ResolveDefaultCurriculum(PendingTraineeDto pendingUser)
+  private CurriculumChoiceDto? ResolveDefaultCurriculum(PendingTraineeDto pendingUser)
   {
     if (pendingUser.SubSpecialityIds.Count > 0)
     {
@@ -254,6 +276,12 @@
 
     return _curricula.FirstOrDefault();
   }
+
+  private string Subtitle => _isAdmission
+    ? "Admit a pending trainee into a curriculum."
+    : _model?.IsEnded == true
+      ? "The record of a programme that has ended."
+      : "Update curriculum and completion details for this trainee.";
 
   private async Task SaveAsync()
   {
@@ -283,14 +311,16 @@
         return;
       }
 
-      await Sender.Send(new UpdateTraineeProfileCommand(
+      var saved = await Sender.Send(new UpdateTraineeProfileCommand(
         _model.Id,
         _model.CurriculumId,
         _model.ProgrammeStartDate,
         _model.ExpectedCompletionDate,
         authState.User));
 
-      _statusMessage = "Trainee profile saved.";
+      // A move, or a change of programme start, says what its replay counted again (T304).
+      _statusMessage = saved.Message;
+      _model.CurriculumLabel = $"{saved.Profile.CurriculumName} ({saved.Profile.CurriculumVersion})";
       _focusResult = true;
     }
     catch (Exception exception)
@@ -406,6 +436,9 @@
     [Range(1, int.MaxValue)]
     public int CurriculumId { get; set; }
 
+    /// <summary>The curriculum as the read-only details list names it: its name and version.</summary>
+    public string CurriculumLabel { get; set; } = string.Empty;
+
     [Required]
     public DateOnly ProgrammeStartDate { get; set; }
 
@@ -413,6 +446,9 @@
     public bool IsActive { get; set; } = true;
     public DateOnly? CompletedOn { get; set; }
     public DateOnly? DeactivatedOn { get; set; }
+
+    /// <summary>Ended and archived, so read-only: <c>TraineeProfileDto.IsEnded</c>'s rule, kept as the end actions answer (T305).</summary>
+    public bool IsEnded => !IsActive && (CompletedOn ?? DeactivatedOn) is not null;
 
     /// <summary>
     /// The last day in the programme, which Mark complete and Deactivate each record (T209). Set to today on the South

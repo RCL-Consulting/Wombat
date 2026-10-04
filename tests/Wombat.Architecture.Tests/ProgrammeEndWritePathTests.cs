@@ -8,7 +8,8 @@ namespace Wombat.Architecture.Tests;
 
 /// <summary>
 /// The forcing function for T281's lock: whatever records a trainee's programme end holds the profile against the
-/// completions whose credit it judges.
+/// completions whose credit it judges; and, since T304, whatever moves a stored profile to another curriculum version or
+/// changes its programme start does too.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -37,6 +38,7 @@ public class ProgrammeEndWritePathTests
     private const string ProfileEntity = "Wombat.Domain.Identity.TraineeProfile";
     private const string TraineeCreditLock = "Wombat.Application.Common.Interfaces.ITraineeCreditLock";
     private const string HoldForEnd = "HoldForEndAsync";
+    private const string HoldForMove = "HoldForMoveAsync";
 
     /// <summary>The members of <c>TraineeProfile</c> that record the programme's end.</summary>
     private static readonly string[] EndMembers = ["Complete", "Deactivate"];
@@ -47,6 +49,12 @@ public class ProgrammeEndWritePathTests
         "Wombat.Application.Features.Trainees.CompleteTraineeProfileCommandHandler",
         "Wombat.Application.Features.Trainees.DeactivateTraineeProfileCommandHandler"
     ];
+
+    /// <summary>The setters of what a stored profile's credit is judged against: its curriculum and its start (T304).</summary>
+    private static readonly string[] MoveMembers = ["set_CurriculumId", "set_ProgrammeStartDate"];
+
+    /// <summary>The one that exists today: Save profile on the trainee profile page.</summary>
+    private static readonly string[] KnownMovers = ["Wombat.Application.Features.Trainees.UpdateTraineeProfileCommandHandler"];
 
     [Fact]
     public void Whatever_records_a_programmes_end_holds_the_profile_for_it()
@@ -70,9 +78,37 @@ public class ProgrammeEndWritePathTests
             .Should().BeEquivalentTo(KnownEnders, "guard: the IL scan must see both end handlers, each calling the hold");
     }
 
+    /// <summary>
+    /// T304: a save that moves a stored profile to another curriculum version, or changes its programme start, replays the
+    /// trainee's credit against what it saves, and must hold the profile from before it reads it until that save commits,
+    /// or a completion in flight credits against the curriculum or start it replaces. A type that creates a profile sets
+    /// both on the new one, which nothing has credited against yet, and is not asked.
+    /// </summary>
+    [Fact]
+    public void Whatever_moves_a_stored_profile_holds_it_for_the_move()
+    {
+        Scan()
+            .Where(type => type.Moves && !type.Creates && !type.HoldsForMove)
+            .Select(type => $"{type.TopLevelType} sets TraineeProfile.CurriculumId or ProgrammeStartDate without ITraineeCreditLock.{HoldForMove}")
+            .Should().BeEmpty(
+                "a move or a change of programme start replays the trainee's credit, and must hold the profile from before " +
+                "it reads it until its save commits; without the hold a completion in flight credits against what the save " +
+                "replaces. (T304)");
+    }
+
+    [Fact]
+    public void The_scan_still_sees_the_known_mover_and_its_hold()
+    {
+        Scan()
+            .Where(type => type.Moves && !type.Creates && type.HoldsForMove)
+            .Select(type => type.TopLevelType)
+            .Should().BeEquivalentTo(KnownMovers, "guard: the IL scan must see the profile save, calling the hold");
+    }
+
     // ─── Helpers: Cecil ──────────────────────────────────────────────────────
 
-    private sealed record ScannedType(string TopLevelType, IReadOnlySet<string> Ends, bool HoldsForEnd);
+    private sealed record ScannedType(
+        string TopLevelType, IReadOnlySet<string> Ends, bool HoldsForEnd, bool Moves, bool Creates, bool HoldsForMove);
 
     private static List<ScannedType> Scan()
         => new[] { ApplicationAssembly, InfrastructureAssembly, ApiAssembly, WebAssembly }.SelectMany(ScanAssembly).ToList();
@@ -85,10 +121,12 @@ public class ProgrammeEndWritePathTests
         return module.Types
             .Select(topLevel =>
             {
-                var calls = Flatten(topLevel)
+                var instructions = Flatten(topLevel)
                     .SelectMany(type => type.Methods)
                     .Where(method => method.HasBody)
                     .SelectMany(method => method.Body.Instructions)
+                    .ToList();
+                var calls = instructions
                     .Select(instruction => instruction.Operand as MethodReference)
                     .Where(call => call is not null)
                     .ToList();
@@ -101,7 +139,14 @@ public class ProgrammeEndWritePathTests
                 var holds = calls.Any(call => call!.DeclaringType?.FullName == TraineeCreditLock &&
                                               string.Equals(call.Name, HoldForEnd, StringComparison.Ordinal));
 
-                return new ScannedType(topLevel.FullName, ends, holds);
+                var moves = calls.Any(call => call!.DeclaringType?.FullName == ProfileEntity &&
+                                              MoveMembers.Contains(call.Name, StringComparer.Ordinal));
+                var creates = instructions.Any(instruction => instruction.OpCode.Code == Mono.Cecil.Cil.Code.Newobj &&
+                                                              instruction.Operand is MethodReference { DeclaringType.FullName: ProfileEntity });
+                var holdsForMove = calls.Any(call => call!.DeclaringType?.FullName == TraineeCreditLock &&
+                                                     string.Equals(call.Name, HoldForMove, StringComparison.Ordinal));
+
+                return new ScannedType(topLevel.FullName, ends, holds, moves, creates, holdsForMove);
             })
             .ToList();
     }

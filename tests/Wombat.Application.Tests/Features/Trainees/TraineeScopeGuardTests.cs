@@ -94,7 +94,7 @@ public sealed class TraineeScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task UpdateTraineeProfile_InstitutionalAdmin_RejectsOtherInstitution()
     {
-        var handler = new UpdateTraineeProfileCommandHandler(_db, _users.Object);
+        var handler = new UpdateTraineeProfileCommandHandler(_db, _users.Object, new CreditApplier(_db), new TraineeCreditLock(_db));
         var act = () => handler.Handle(
             new UpdateTraineeProfileCommand(_institutionBProfileId, 1, new DateOnly(2026, 2, 1), null, TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);

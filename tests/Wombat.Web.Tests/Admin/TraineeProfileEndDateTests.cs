@@ -18,11 +18,13 @@ namespace Wombat.Web.Tests.Admin;
 /// <summary>
 /// T209: the trainee profile page records the last day in the programme for both ways out of it. Deactivating used to
 /// record no day at all, so a withdrawn trainee's portfolio read every period after they left as one they fell short in.
-/// D49 reads the day: the period it falls in holds no target unless it is in that period's last month.
+/// D49 reads the day: the period it falls in holds no target unless it is in that period's last month. T304: the curriculum
+/// picker offers what the save accepts. T305: once the programme has ended, the profile is read-only.
 /// </summary>
 public sealed class TraineeProfileEndDateTests : TestContext
 {
     private const int ProfileId = 7;
+    private const string PendingUserId = "pending-1";
 
     /// <summary>What <see cref="ElementReference" />.FocusAsync calls.</summary>
     private const string FocusIdentifier = "Blazor._internal.domWrapper.focus";
@@ -253,6 +255,112 @@ public sealed class TraineeProfileEndDateTests : TestContext
         PageButton(cut, "Save profile").HasAttribute("disabled").Should().BeFalse();
     }
 
+    // ---- T304: the pickers offer what the commands accept; a move says what it counted again ----
+
+    [Fact]
+    public void TheProfilesPicker_OffersThePinnedVersionAndTheActiveAdoptions_FromTheQueryThatSaysSo()
+    {
+        var sender = new FakeSender();
+        var cut = RenderPage(sender);
+
+        Options(cut).Should().Equal(("1", "CPSA Paediatrics (11.1)"), ("2", "CPSA Paediatrics (11.2)"));
+        cut.Find("#curriculum-id").GetAttribute("value").Should().Be("1", "the pinned version is selected");
+        sender.Queries.Should().Contain(nameof(GetTraineeCurriculumChoicesQuery)).And
+            .NotContain(nameof(GetCurriculaListQuery), "that lists every curriculum the caller can open, not what a save accepts");
+    }
+
+    [Fact]
+    public void TheAdmitForm_OffersTheActiveAdoptionsVersionAlone()
+    {
+        var sender = new FakeSender();
+        var cut = RenderAdmission(sender);
+
+        Options(cut).Should().Equal(("2", "CPSA Paediatrics (11.2)"));
+        PageButton(cut, "Admit trainee").Should().NotBeNull();
+        sender.Queries.Should().Contain(nameof(GetAdmissionCurriculumChoicesQuery)).And.NotContain(nameof(GetCurriculaListQuery));
+    }
+
+    [Fact]
+    public void AMove_SaysWhatItsReplayCountedAgain()
+    {
+        var cut = RenderPage(new FakeSender { Recount = new TraineeCreditRecount(CurriculumMoved: true, CompletionsCounted: 1) });
+
+        cut.Find("#curriculum-id").Change("2");
+        PageButton(cut, "Save profile").Closest("form")!.Submit();
+
+        cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-success"))
+            .Should().Be("Trainee profile saved. 1 completion was counted again against 11.2."));
+    }
+
+    // ---- T305: an ended profile is read-only ----
+
+    [Theory]
+    [InlineData(true, "Status: Completed")]
+    [InlineData(false, "Status: Inactive")]
+    public void AnEndedProfile_ShowsItsDetailsReadOnly_WithNoSaveProfile(bool completed, string status)
+    {
+        var ended = new DateOnly(2026, 9, 26);
+        var sender = completed ? new FakeSender(completedOn: ended) : new FakeSender(deactivatedOn: ended);
+        var cut = RenderPage(sender);
+
+        Text(cut.Find("aside.detail-card")).Should().Contain(status);
+        cut.FindAll("form").Should().BeEmpty("Mark complete archives the profile, and the command refuses its save");
+        cut.FindAll("button").Where(button => Text(button) == "Save profile").Should().BeEmpty();
+        cut.FindAll("input, select").Should().BeEmpty("no curriculum, start or completion is editable");
+
+        var details = cut.FindAll("section.detail-card dl.details-list > div")
+            .Select(row => (Text(row.QuerySelector("dt")!), Text(row.QuerySelector("dd")!)))
+            .ToList();
+        details.Should().Equal(
+            ("Curriculum", "CPSA Paediatrics (11.1)"),
+            ("Programme start date", "2025-01-01"),
+            ("Expected completion date", "2029-01-01"));
+        Text(cut.Find("section.detail-card")).Should().Contain("This programme has ended, so its record is archived and cannot be changed.");
+        cut.FindAll("a").Should().Contain(link => link.GetAttribute("href") == "/admin/trainees" && Text(link) == "Back to trainees");
+        sender.Queries.Should().NotContain(nameof(GetTraineeCurriculumChoicesQuery), "an archived record needs no picker");
+    }
+
+    [Fact]
+    public void AnActiveProfile_KeepsItsFormAndSaveProfile()
+    {
+        var cut = RenderPage(new FakeSender());
+
+        cut.FindAll("dl.details-list").Should().BeEmpty();
+        cut.FindAll("#curriculum-id").Should().ContainSingle();
+        cut.FindAll("#programme-start-date").Should().ContainSingle();
+        cut.FindAll("#expected-completion-date").Should().ContainSingle();
+        PageButton(cut, "Save profile").GetAttribute("type").Should().Be("submit");
+    }
+
+    [Fact]
+    public void MarkComplete_LeavesTheProfileReadOnly_AtOnce()
+    {
+        var cut = RenderPage(new FakeSender());
+
+        cut.Find("#programme-end-date").Change("2026-09-20");
+        PageButton(cut, "Mark complete").Click();
+        DialogButton(cut, "Mark this programme complete?", "Mark complete").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll("form").Should().BeEmpty());
+        Text(cut.Find("section.detail-card dl.details-list")).Should().Contain("CPSA Paediatrics (11.1)");
+    }
+
+    private static IEnumerable<(string Value, string Label)> Options(IRenderedFragment cut)
+        => cut.FindAll("#curriculum-id option").Select(option => (option.GetAttribute("value") ?? string.Empty, Text(option))).ToList();
+
+    private IRenderedComponent<TraineeProfileEdit> RenderAdmission(FakeSender sender)
+    {
+        Services.AddSingleton<IScopedSender>(sender);
+
+        var navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo(navigation.GetUriWithQueryParameter("userId", PendingUserId));
+
+        var cut = RenderComponent<TraineeProfileEdit>();
+        cut.WaitForState(() => cut.FindAll("aside.detail-card").Count > 0);
+
+        return cut;
+    }
+
     private IRenderedComponent<TraineeProfileEdit> RenderPage(FakeSender sender)
     {
         Services.AddSingleton<IScopedSender>(sender);
@@ -295,11 +403,29 @@ public sealed class TraineeProfileEndDateTests : TestContext
     private sealed class FakeSender : IScopedSender
     {
         private readonly DateOnly? _deactivatedOn;
+        private readonly DateOnly? _completedOn;
 
-        public FakeSender(DateOnly? deactivatedOn = null)
+        public FakeSender(DateOnly? deactivatedOn = null, DateOnly? completedOn = null)
         {
             _deactivatedOn = deactivatedOn;
+            _completedOn = completedOn;
         }
+
+        /// <summary>What the profile's curriculum picker query answers (T304): its pinned version and the active adoption's.</summary>
+        public IReadOnlyList<CurriculumChoiceDto> ProfileChoices { get; init; } =
+        [
+            new(1, "CPSA Paediatrics", "11.1", 1, 1),
+            new(2, "CPSA Paediatrics", "11.2", 1, 1)
+        ];
+
+        /// <summary>What the admission's curriculum picker query answers (T304): the institution's active adoptions.</summary>
+        public IReadOnlyList<CurriculumChoiceDto> AdmissionChoices { get; init; } = [new(2, "CPSA Paediatrics", "11.2", 1, 1)];
+
+        /// <summary>The replay a save reports (T304), or none.</summary>
+        public TraineeCreditRecount? Recount { get; init; }
+
+        /// <summary>Every query the page sent, by type, so a test can say which picker query it asked.</summary>
+        public List<string> Queries { get; } = [];
 
         private TaskCompletionSource? _heldUpdate;
 
@@ -329,13 +455,14 @@ public sealed class TraineeProfileEndDateTests : TestContext
                 return SaveAsync<TResponse>();
             }
 
+            Queries.Add(request.GetType().Name);
             object response = request switch
             {
-                GetCurriculaListQuery => new[]
+                GetTraineeCurriculumChoicesQuery query when query.TraineeProfileId == ProfileId => ProfileChoices,
+                GetAdmissionCurriculumChoicesQuery query when query.UserId == PendingUserId => AdmissionChoices,
+                ListPendingTraineesQuery => new[]
                 {
-                    new CurriculumDto(
-                        1, 1, 1, "Paediatrics", "General Paediatrics", "CMSA", "CPSA Paediatrics", "11.1",
-                        new DateOnly(2025, 1, 1), null, IsActive: true, CanEditInPlace: false, [], SubSpecialityDefaultScaleId: null)
+                    new PendingTraineeDto(PendingUserId, "new@wombat.local", "Ayanda", "Zulu", 1, [1], [1])
                 },
                 GetTraineeProfileByIdQuery query when query.Id == ProfileId => Profile(),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
@@ -352,15 +479,21 @@ public sealed class TraineeProfileEndDateTests : TestContext
                 await _heldUpdate.Task;
             }
 
-            return (TResponse)(object)Profile();
+            var saved = Profile();
+            if (Recount is { CurriculumMoved: true })
+            {
+                saved = saved with { CurriculumId = 2, CurriculumVersion = "11.2" };
+            }
+
+            return (TResponse)(object)new UpdateTraineeProfileResult(saved, Recount);
         }
 
         private TraineeProfileDto Profile() => new(
             ProfileId, "trainee-1", "trainee@wombat.local", "Lerato", "Molefe",
             1, "CPSA Paediatrics", "11.1", 1, "Paediatrics", 1, "General Paediatrics",
             new DateOnly(2025, 1, 1), new DateOnly(2029, 1, 1),
-            IsActive: _deactivatedOn is null,
-            CompletedOn: null,
+            IsActive: _deactivatedOn is null && _completedOn is null,
+            CompletedOn: _completedOn,
             DeactivatedOn: _deactivatedOn);
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)

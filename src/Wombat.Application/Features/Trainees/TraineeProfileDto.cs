@@ -17,7 +17,14 @@ public sealed record TraineeProfileDto(
     DateOnly ExpectedCompletionDate,
     bool IsActive,
     DateOnly? CompletedOn = null,
-    DateOnly? DeactivatedOn = null);
+    DateOnly? DeactivatedOn = null)
+{
+    /// <summary>
+    /// Whether the programme has ended and the record is archived, read-only (T305): <c>TraineeProfile.IsEnded</c>, the
+    /// rule <see cref="UpdateTraineeProfileCommand" /> refuses a save by, read from the fields this record carries.
+    /// </summary>
+    public bool IsEnded => !IsActive && (CompletedOn ?? DeactivatedOn) is not null;
+}
 
 public sealed record PendingTraineeDto(
     string UserId,

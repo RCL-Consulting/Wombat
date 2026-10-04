@@ -78,7 +78,8 @@ namespace Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgr
 /// <param name="TraineeUserId">
 /// Optional. When set, only this trainee's progress rows are zeroed and only this trainee's activities
 /// are replayed; every other row in the table is untouched and unread. Useful after one trainee's
-/// encounter dates, curriculum or programme start have been corrected.
+/// encounter dates have been corrected. A change of curriculum or programme start replays the trainee itself, in the
+/// profile's own save (T304, <c>UpdateTraineeProfileCommand</c>).
 /// </param>
 [NoValidator]
 public sealed record RebuildCurriculumProgressCommand(
@@ -127,6 +128,6 @@ public sealed class RebuildCurriculumProgressCommandHandler : IRequestHandler<Re
         // The replay a completion or a withdrawal also runs for its trainee (T281), so the two cannot replay differently.
         // The rebuild judges the ends as stored, so it passes none pending.
         return await CurriculumProgressReplay.RunAsync(
-            _dbContext, _creditApplier, _dbContext.Set<Activity>(), request.TraineeUserId, pendingEnd: null, cancellationToken);
+            _dbContext, _creditApplier, _dbContext.Set<Activity>(), request.TraineeUserId, pendingEnd: null, pendingMove: null, cancellationToken);
     }
 }

@@ -10,7 +10,7 @@ namespace Wombat.Infrastructure.Activities;
 /// <remarks>
 /// <para>
 /// <c>FOR SHARE</c> on every profile of the trainee for credit, and <c>FOR NO KEY UPDATE</c> on the one profile whose end
-/// is recorded. Shared locks do not conflict with one another, so two completions for one trainee never wait for each
+/// is recorded, or which a profile save changes (T304). Shared locks do not conflict with one another, so two completions for one trainee never wait for each
 /// other; each conflicts with the end's lock, and two ends of one profile conflict with each other, so the second reads
 /// the first's end and is refused as a profile no longer active. Credit locks every profile of its trainee because which
 /// one it credits against is the preferred profile (<c>CreditTargetResolver.PickProfileAsync</c>), read after the hold;
@@ -19,9 +19,9 @@ namespace Wombat.Infrastructure.Activities;
 /// <para>
 /// Not <c>FOR UPDATE</c>: nothing references a profile by foreign key today, but the end's own <c>UPDATE</c> takes
 /// <c>FOR NO KEY UPDATE</c> (it changes no key a foreign key could use; the unique index on the user id is partial), so
-/// the stronger lock would buy nothing. Every other write to a profile (an edit of its curriculum or start date, an
-/// erasure) also takes <c>FOR NO KEY UPDATE</c> when it saves, so it waits for a completion of that trainee in flight, and
-/// a completion waits for it: a few milliseconds either way.
+/// the stronger lock would buy nothing. A profile save takes it before it reads the profile (T304), as an end does, since
+/// a move or a change of start replays the trainee's credit. An erasure takes it only when it saves, so it waits for a
+/// completion of that trainee in flight, and a completion waits for it: a few milliseconds either way.
 /// </para>
 /// <para>
 /// A profile id that names no row locks nothing, and the caller then finds no profile. The busy messages are what a
@@ -46,9 +46,13 @@ public sealed class TraineeCreditLock : ITraineeCreditLock
     public const string EndBusy =
         "Activities are still being completed for this trainee, so nothing was saved. Try again in a moment.";
 
-    /// <summary>What a completion is refused with when its hold gives up waiting.</summary>
+    /// <summary>What a trainee profile save is refused with when its hold gives up waiting (T304).</summary>
+    public const string MoveBusy =
+        "Activities are still being completed for this trainee, so the profile was not saved. Try again in a moment.";
+
+    /// <summary>What a completion is refused with when its hold gives up waiting: an end or a profile save holds it (T304).</summary>
     public const string CreditBusy =
-        "This trainee's programme is being ended right now, so nothing was saved. Try again in a moment.";
+        "This trainee's programme is being ended or changed right now, so nothing was saved. Try again in a moment.";
 
     public Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
         => CreditHolds.HoldAsync(
@@ -57,6 +61,16 @@ public sealed class TraineeCreditLock : ITraineeCreditLock
                 $"SELECT 1 FROM \"TraineeProfiles\" WHERE \"Id\" = {traineeProfileId} FOR NO KEY UPDATE",
                 cancellationToken),
             EndBusy,
+            cancellationToken);
+
+    /// <summary>The end's lock on the one profile (T304): a move's replay and an end's conflict alike with credit.</summary>
+    public Task<ICreditHold> HoldForMoveAsync(int traineeProfileId, CancellationToken cancellationToken)
+        => CreditHolds.HoldAsync(
+            _dbContext,
+            database => database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"TraineeProfiles\" WHERE \"Id\" = {traineeProfileId} FOR NO KEY UPDATE",
+                cancellationToken),
+            MoveBusy,
             cancellationToken);
 
     public Task<ICreditHold> HoldForCreditAsync(IReadOnlyCollection<string> traineeUserIds, CancellationToken cancellationToken)

@@ -9,8 +9,10 @@ namespace Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgr
 /// <summary>
 /// Recomputes <see cref="CurriculumItemProgress" /> from the completed activities that produced it, for one trainee or for
 /// everybody, and saves it in one <c>SaveChangesAsync</c>. What <see cref="RebuildCurriculumProgressCommand" /> runs once
-/// it has authorised its caller, and what a completion or a withdrawal runs for its trainee when the end it records takes
-/// credit back (T281, <c>CompleteTraineeProfileCommand</c>, <c>DeactivateTraineeProfileCommand</c>).
+/// it has authorised its caller, what a completion or a withdrawal runs for its trainee when the end it records takes
+/// credit back (T281, <c>CompleteTraineeProfileCommand</c>, <c>DeactivateTraineeProfileCommand</c>), and what a trainee
+/// profile save runs when it moves the trainee to another curriculum version or changes their start (T304,
+/// <c>UpdateTraineeProfileCommand</c>).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -38,12 +40,18 @@ internal static class CurriculumProgressReplay
     /// against it (<see cref="CreditSubject.PendingEnd" />), which applies it to the profile it names and to no other. Null
     /// for the rebuild, which judges the stored ends.
     /// </param>
+    /// <param name="pendingMove">
+    /// The curriculum and programme start the caller is saving on the trainee's profile and has not saved (T304): every
+    /// completion is judged against them (<see cref="CreditSubject.PendingMove" />), on the profile they name and no other.
+    /// Null for every caller but a trainee profile save that moves the trainee or changes their start.
+    /// </param>
     public static async Task<RebuildCurriculumProgressResult> RunAsync(
         IApplicationDbContext dbContext,
         ICreditApplier creditApplier,
         IQueryable<Activity> activities,
         string? traineeUserId,
         PendingProgrammeEnd? pendingEnd,
+        PendingProgrammeMove? pendingMove,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
@@ -117,7 +125,7 @@ internal static class CurriculumProgressReplay
                 // their targets and their scale pins are the curriculum as it stands today. So is the programme's end: an
                 // encounter after it credits nothing, whenever the end was recorded (T281), and the end the caller is
                 // recording counts as recorded (pendingEnd). Planned and applied as ApplyAsync would, with that end added.
-                var subject = CreditSubject.Of(activity) with { PendingEnd = pendingEnd };
+                var subject = CreditSubject.Of(activity) with { PendingEnd = pendingEnd, PendingMove = pendingMove };
                 var credited = creditApplier.Apply(
                     await creditApplier.PlanAsync(subject, pinnedType, cancellationToken), activity);
 

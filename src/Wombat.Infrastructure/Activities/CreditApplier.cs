@@ -75,6 +75,18 @@ public sealed class CreditApplier : ICreditApplier
             return CreditPlan.Nothing;
         }
 
+        // A profile save that moves the trainee to another curriculum version, or changes their programme start, replays
+        // their credit against what it is saving (T304): the items of the new version, and each encounter's training year
+        // from the new start. Only on the profile credit accrues against, as a pending end is.
+        if (subject.PendingMove is { } move && move.TraineeProfileId == trainee.ProfileId)
+        {
+            trainee = trainee with
+            {
+                CurriculumId = move.CurriculumId,
+                Stage = TraineeProfile.StageOn(move.ProgrammeStartDate, subject.ObservedOn)
+            };
+        }
+
         // An encounter observed after the programme's last day credits nothing on it (T281): the end-side mirror of the
         // programme-start bound (T160) and of D49, which puts the periods after the end outside the programme. Here, in
         // the plan, so the live completion, every replay (RebuildCurriculumProgress, the replay a completion or withdrawal

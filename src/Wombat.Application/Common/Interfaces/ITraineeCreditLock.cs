@@ -2,7 +2,8 @@ namespace Wombat.Application.Common.Interfaces;
 
 /// <summary>
 /// Serialises a completion's credit against the recording of its trainee's programme end (T281), so that neither can leave
-/// credit for an encounter after the last day in the tally.
+/// credit for an encounter after the last day in the tally; and against a profile save that moves the trainee to another
+/// curriculum version or changes their start (T304), so that no completion credits against what the save replaces.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -46,6 +47,18 @@ public interface ITraineeCreditLock
     /// </summary>
     /// <exception cref="InvalidOperationException">The wait outlasted the command timeout; nothing was held.</exception>
     Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// For a trainee profile save (T304): holds the profile against every completion's credit for its trainee, as an end
+    /// does, until the returned hold is committed or disposed. Take it before reading the profile. A save that moves the
+    /// trainee to another curriculum version, or changes their programme start, replays their credit against what it saves,
+    /// and no completion may credit against the old curriculum or start in between: one that waited reads the saved
+    /// profile, and one already in flight is in the replay. Every save takes it, because whether a save moves anything is
+    /// read after the profile is. Anything that sets <c>TraineeProfile.CurriculumId</c> or
+    /// <c>TraineeProfile.ProgrammeStartDate</c> on a stored profile takes it (<c>ProgrammeEndWritePathTests</c>).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The wait outlasted the command timeout; nothing was held.</exception>
+    Task<ICreditHold> HoldForMoveAsync(int traineeProfileId, CancellationToken cancellationToken);
 
     /// <summary>
     /// For credit: holds every profile of these trainees shared until the returned hold is committed or disposed. Take it

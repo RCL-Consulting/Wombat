@@ -382,6 +382,9 @@ public sealed class CreditPlannedBeforeTransitionTests
     /// <summary>Writes down which trainees it is asked to hold, and whether the save had gone through when it was committed.</summary>
     private sealed class RecordingTraineeLock(ApplicationDbContext db, List<string> events) : ITraineeCreditLock
     {
+        public Task<ICreditHold> HoldForMoveAsync(int traineeProfileId, CancellationToken cancellationToken)
+            => throw new NotSupportedException("No profile save is made here (T304).");
+
         public Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
             => throw new NotSupportedException("A completion never holds a profile for an end.");
 
@@ -406,6 +409,9 @@ public sealed class CreditPlannedBeforeTransitionTests
     /// <summary>A trainee hold that cannot be had.</summary>
     private sealed class FailingTraineeLock : ITraineeCreditLock
     {
+        public Task<ICreditHold> HoldForMoveAsync(int traineeProfileId, CancellationToken cancellationToken)
+            => throw new NotSupportedException("No profile save is made here (T304).");
+
         public Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
             => throw new NotSupportedException();
 

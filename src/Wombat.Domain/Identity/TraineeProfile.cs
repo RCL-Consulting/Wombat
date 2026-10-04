@@ -52,6 +52,15 @@ public sealed class TraineeProfile
     public DateOnly? EndedOn => CompletedOn ?? DeactivatedOn;
 
     /// <summary>
+    /// Whether the programme has ended and its record is archived (T305): the profile is no longer active and records the
+    /// day it ended, a completion or a withdrawal. Mark complete says the profile is archived, so an ended profile is
+    /// read-only: no save changes its curriculum, its adoption or its dates, which the trainee's progress, standing and
+    /// portfolio are read from. A profile deactivated before Wombat recorded the day (T209) records no end, and is not
+    /// archived by this rule.
+    /// </summary>
+    public bool IsEnded => !IsActive && EndedOn is not null;
+
+    /// <summary>
     /// Whether <paramref name="day" /> is after the programme's last day (<see cref="EndedOn" />), and so outside it (T281).
     /// </summary>
     /// <remarks>
@@ -164,14 +173,22 @@ public sealed class TraineeProfile
     /// (<see cref="CurriculumItem.GetMinimumLevelForStage"/>). Single source of truth shared by the
     /// trainee dashboard and the credit engine.
     /// </summary>
-    public int? GetStage(DateOnly today)
+    public int? GetStage(DateOnly today) => StageOn(ProgrammeStartDate, today);
+
+    /// <inheritdoc cref="GetStage(DateOnly)" />
+    /// <param name="programmeStartDate">
+    /// The programme start: a profile's, or the one a request is saving and has not saved yet (T304: the replay a move or a
+    /// change of start runs judges each completion at the new start's training year).
+    /// </param>
+    /// <param name="day">The day whose stage is wanted.</param>
+    public static int? StageOn(DateOnly programmeStartDate, DateOnly day)
     {
-        if (today < ProgrammeStartDate)
+        if (day < programmeStartDate)
         {
             return null;
         }
 
-        var daysElapsed = today.DayNumber - ProgrammeStartDate.DayNumber;
+        var daysElapsed = day.DayNumber - programmeStartDate.DayNumber;
         return (daysElapsed / 365) + 1;
     }
 }

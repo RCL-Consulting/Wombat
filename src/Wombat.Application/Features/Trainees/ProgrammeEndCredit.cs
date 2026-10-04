@@ -106,7 +106,7 @@ internal static class ProgrammeEndCredit
             var pendingEnd = new PendingProgrammeEnd(
                 profile.Id, profile.EndedOn ?? throw new InvalidOperationException("The profile has no end to replay against."));
             await CurriculumProgressReplay.RunAsync(
-                dbContext, creditApplier, activities, profile.UserId, pendingEnd, cancellationToken);
+                dbContext, creditApplier, activities, profile.UserId, pendingEnd, pendingMove: null, cancellationToken);
         }
         catch
         {

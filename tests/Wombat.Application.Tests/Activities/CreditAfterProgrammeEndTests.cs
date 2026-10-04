@@ -376,6 +376,9 @@ public sealed class CreditAfterProgrammeEndTests
     /// <summary>Writes down when the end's hold is asked for and committed, and what the request had read or saved by then.</summary>
     private sealed class RecordingEndLock(ApplicationDbContext db, List<string> events) : ITraineeCreditLock
     {
+        public Task<ICreditHold> HoldForMoveAsync(int traineeProfileId, CancellationToken cancellationToken)
+            => throw new NotSupportedException("No profile save is made here (T304).");
+
         public Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
         {
             events.Add($"hold end {traineeProfileId} (anything read: {db.ChangeTracker.Entries().Any()})");
@@ -400,6 +403,9 @@ public sealed class CreditAfterProgrammeEndTests
     /// <summary>An end's hold that cannot be had.</summary>
     private sealed class FailingEndLock : ITraineeCreditLock
     {
+        public Task<ICreditHold> HoldForMoveAsync(int traineeProfileId, CancellationToken cancellationToken)
+            => throw new NotSupportedException("No profile save is made here (T304).");
+
         public async Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
         {
             await Task.Yield();

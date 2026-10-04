@@ -335,6 +335,9 @@ public sealed class EpaReactivationCreditTests
     /// <summary>Writes down which trainees it is asked to hold (in id order), and whether the save had gone through at commit.</summary>
     private sealed class RecordingTraineeLock(ApplicationDbContext db, List<string> events) : ITraineeCreditLock
     {
+        public Task<ICreditHold> HoldForMoveAsync(int traineeProfileId, CancellationToken cancellationToken)
+            => throw new NotSupportedException("No profile save is made here (T304).");
+
         public Task<ICreditHold> HoldForEndAsync(int traineeProfileId, CancellationToken cancellationToken)
             => throw new NotSupportedException("A reactivation never records an end.");
 

@@ -1,16 +1,19 @@
 using System.Globalization;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Epas;
 using Wombat.Application.Features.Trainees;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Audit;
+using Wombat.Domain.Institutions;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Audit;
@@ -159,6 +162,63 @@ public sealed class ProgrammeEndCreditRacePostgresTests : IAsyncLifetime
         await ARebuildChangesNothingAsync(fixture);
     }
 
+    // ─── A move racing a completion (T304) ───────────────────────────────────
+
+    [Fact]
+    public async Task ACompletion_WaitsForAMoveInFlight_AndCreditsAgainstTheMovedProfile()
+    {
+        // A profile save that moves the trainee to the institution's newly adopted version holds the profile, as an end
+        // does, until its save commits. Without the hold the completion read the profile as it stood, credited the old
+        // version's item, and saved after the move's replay had read the trainee's rows: credit left on the old version.
+        var fixture = await ArrangeAsync();
+        var move = await ArrangeReAdoptionAsync(fixture);
+        var earlier = await AddSubmittedActivityAsync(fixture, new DateTime(2026, 8, 10, 9, 0, 0, DateTimeKind.Utc));
+        await CompleteAsync(fixture, earlier, "earlier");
+        var filed = await AddSubmittedActivityAsync(fixture, FiledAfterTheEnd, fixture.SecondEpaId);
+
+        var moveGate = new Gate();
+        var moving = Task.Run(() => MoveAsync(fixture, move, "move", moveGate));
+        await moveGate.ReachedAsync(moving);
+
+        var completion = Task.Run(() => CompleteAsync(fixture, filed, "completion"));
+        var completionWaited = await WaitsForALockAsync(fixture, "completion", completion);
+
+        moveGate.Open();
+        var saved = await moving;
+        await completion;
+
+        completionWaited.Should().BeTrue("the move holds the profile until its save commits");
+        saved.Message.Should().Be("Trainee profile saved. 1 completion was counted again against T304.2.");
+        (await CreditedCurriculaAsync(fixture)).Should().Equal(
+            [move.NewCurriculumId], "both completions credit the version the trainee was moved to, and nothing is left on the old one");
+        (await StampAsync(fixture, filed)).Should().Be(1);
+        await ARebuildChangesNothingAsync(fixture);
+    }
+
+    [Fact]
+    public async Task AMove_WaitsForACompletionInFlight_AndReplaysTheCreditItSaved()
+    {
+        var fixture = await ArrangeAsync();
+        var move = await ArrangeReAdoptionAsync(fixture);
+        var filed = await AddSubmittedActivityAsync(fixture, FiledAfterTheEnd);
+
+        var completionGate = new Gate();
+        var completion = Task.Run(() => CompleteAsync(fixture, filed, "completion", completionGate));
+        await completionGate.ReachedAsync(completion);
+
+        var moving = Task.Run(() => MoveAsync(fixture, move, "move"));
+        var moveWaited = await WaitsForALockAsync(fixture, "move", moving);
+
+        completionGate.Open();
+        await completion;
+        await moving;
+
+        moveWaited.Should().BeTrue("the completion holds its trainee until its save commits");
+        (await CreditedCurriculaAsync(fixture)).Should().Equal(
+            [move.NewCurriculumId], "the move read the credit once it had committed, and replayed it onto the new version");
+        await ARebuildChangesNothingAsync(fixture);
+    }
+
     // ─── What the holds hold off, and how a hold gives up ────────────────────
 
     [Fact]
@@ -247,6 +307,89 @@ public sealed class ProgrammeEndCreditRacePostgresTests : IAsyncLifetime
         await using var db = NewContext(fixture, connection, beforeSave);
         await new DeactivateTraineeProfileCommandHandler(db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(RecordedAt))
             .Handle(new DeactivateTraineeProfileCommand(fixture.ProfileId, LastDay, Administrator()), CancellationToken.None);
+    }
+
+    /// <summary>An administrator moves the trainee to the version the institution has just adopted, on 25 September.</summary>
+    private async Task<UpdateTraineeProfileResult> MoveAsync(Fixture fixture, ReAdoption move, string connection, Gate? beforeSave = null)
+    {
+        await using var db = NewContext(fixture, connection, beforeSave);
+        return await new UpdateTraineeProfileCommandHandler(db, Users(), new CreditApplier(db), new TraineeCreditLock(db))
+            .Handle(
+                new UpdateTraineeProfileCommand(
+                    fixture.ProfileId, move.NewCurriculumId, new DateOnly(2026, 1, 1), new DateOnly(2029, 12, 31), Administrator()),
+                CancellationToken.None);
+    }
+
+    private sealed record ReAdoption(int OldCurriculumId, int NewCurriculumId);
+
+    /// <summary>
+    /// The trainee's institution adopted the paediatric curriculum, which the trainee is pinned to, and has now re-adopted
+    /// a clone of it, "T304.2", as KGK re-adopts 11.2 at runbook Step 6.32.
+    /// </summary>
+    private async Task<ReAdoption> ArrangeReAdoptionAsync(Fixture fixture)
+    {
+        await using var db = NewContext(fixture);
+        var profile = await db.TraineeProfiles.SingleAsync(entity => entity.Id == fixture.ProfileId);
+        var old = await db.Curricula.Include(entity => entity.Items).SingleAsync(entity => entity.Id == profile.CurriculumId);
+
+        foreach (var adoption in await db.InstitutionCurriculumAdoptions
+                     .Where(entity => entity.InstitutionId == fixture.InstitutionId && entity.SubSpecialityId == old.SubSpecialityId)
+                     .ToListAsync())
+        {
+            adoption.IsActive = false;
+        }
+
+        var superseded = new InstitutionCurriculumAdoption
+        {
+            InstitutionId = fixture.InstitutionId, CurriculumId = old.Id, SubSpecialityId = old.SubSpecialityId,
+            AdoptedOn = new DateOnly(2026, 1, 1), IsActive = false
+        };
+        db.InstitutionCurriculumAdoptions.Add(superseded);
+        await db.SaveChangesAsync();
+
+        var clone = old.CloneAsNewVersion("T304.2", new DateOnly(2026, 9, 1), effectiveTo: null);
+        db.Curricula.Add(clone);
+        await db.SaveChangesAsync();
+
+        db.InstitutionCurriculumAdoptions.Add(new InstitutionCurriculumAdoption
+        {
+            InstitutionId = fixture.InstitutionId, CurriculumId = clone.Id, SubSpecialityId = clone.SubSpecialityId,
+            AdoptedOn = new DateOnly(2026, 9, 1), IsActive = true
+        });
+        profile.AdoptionId = superseded.Id;
+        await db.SaveChangesAsync();
+
+        return new ReAdoption(old.Id, clone.Id);
+    }
+
+    /// <summary>The curricula whose items hold any of the trainee's progress rows.</summary>
+    private async Task<List<int>> CreditedCurriculaAsync(Fixture fixture)
+    {
+        await using var db = NewContext(fixture);
+        var itemIds = await db.CurriculumItemProgresses.AsNoTracking()
+            .Where(row => row.TraineeUserId == TraineeUserId)
+            .Select(row => row.CurriculumItemId)
+            .ToListAsync();
+        return await db.CurriculumItems.AsNoTracking()
+            .Where(item => itemIds.Contains(item.Id))
+            .Select(item => item.CurriculumId)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    /// <summary>The trainee as the user directory answers for them; the scope write it is asked for does nothing.</summary>
+    private static IUserAdministrationService Users() => DispatchProxy.Create<IUserAdministrationService, UsersStub>();
+
+    public class UsersStub : DispatchProxy
+    {
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+            => targetMethod?.Name switch
+            {
+                nameof(IUserAdministrationService.GetByIdAsync) => Task.FromResult<UserIdentityDetails?>(
+                    new UserIdentityDetails(TraineeUserId, "trainee@test", "Thabo", "Ndlovu", null, [], [], [WombatRoles.Trainee])),
+                nameof(IUserAdministrationService.UpdateScopeAsync) => Task.CompletedTask,
+                _ => throw new NotSupportedException(targetMethod?.Name)
+            };
     }
 
     private async Task DeactivateTheEpaAsync(Fixture fixture)

@@ -71,6 +71,15 @@ public sealed record CreditSubject(
     public PendingProgrammeEnd? PendingEnd { get; init; }
 
     /// <summary>
+    /// Set only by the replay a trainee profile save runs when it moves the trainee to another curriculum version or
+    /// changes their programme start (T304, <c>UpdateTraineeProfileCommand</c>): the curriculum and the start that request
+    /// is saving, which it has not saved yet. Credit matches the items of that curriculum, and judges the encounter's
+    /// training year from that start, in place of the stored ones when the move is on the profile credit accrues against.
+    /// </summary>
+    /// <remarks>Passed explicitly for the reason <see cref="PendingEnd" /> is: every other plan reads the profile as stored.</remarks>
+    public PendingProgrammeMove? PendingMove { get; init; }
+
+    /// <summary>
     /// The subject, date and data an activity already carries, credited at its newest transition: for a replay, or for a
     /// caller that has already transitioned it.
     /// </summary>
@@ -102,6 +111,12 @@ public sealed record CreditSubject(
 /// See <see cref="CreditSubject.PendingEnd" />.
 /// </summary>
 public sealed record PendingProgrammeEnd(int TraineeProfileId, DateOnly EndedOn);
+
+/// <summary>
+/// A trainee profile's curriculum and programme start as a request is saving them, not yet saved (T304): the profile they
+/// are saved on, the curriculum version it moves to (or keeps), and the start. See <see cref="CreditSubject.PendingMove" />.
+/// </summary>
+public sealed record PendingProgrammeMove(int TraineeProfileId, int CurriculumId, DateOnly ProgrammeStartDate);
 
 /// <summary>One curriculum item a completion will credit, decided with every read already done.</summary>
 public sealed record PlannedCredit(int CurriculumItemId, int Amount, LevelComparison Comparison, int? ItemScaleId);
