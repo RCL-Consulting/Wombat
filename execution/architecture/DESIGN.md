@@ -1700,7 +1700,8 @@ one rendering of `GetEpaTrajectoryForTraineeQuery`, changed once for the EPA pag
 - **The heading's level is the page's** (`HeadingLevel`): h2 "Rating trajectory" on the EPA page, with the paused mark;
   on the committee page each EPA's name, one level below its section's h3, the summary naming the trainee and the
   review's window ("Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31, from …"). Each card is
-  `id="trajectory-<EpaId>"`, which the standing panel's EPA names link to on the committee page.
+  `id="trajectory-<EpaId>"` and its heading `trajectory-<EpaId>-h`, which the standing panel's EPA names link to on the
+  committee page (the heading, so the summary is in view; the section spans the details grid, `full-width`).
 
 **Multi-source feedback coverage** (T168). `Components/Shared/MsfCoveragePanel.razor` renders
 `GetMsfCoverageForTraineeQuery` on the committee review page. It is a full-width card directly after the standing card,

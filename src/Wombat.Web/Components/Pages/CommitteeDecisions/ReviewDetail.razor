@@ -702,7 +702,7 @@
       @MsfCoverageSection
     }
 
-    <section class="detail-card">
+    <section class="detail-card full-width">
       <h3>Rating trajectory by EPA</h3>
       @if (_trajectories.Count == 0)
       {
@@ -882,7 +882,7 @@
   /// one: an EPA with no rating in the review's window has no chart, so its name stays plain text.
   /// </summary>
   private string? ChartHref(EpaStandingDto epa)
-      => _trajectories.Any(trajectory => trajectory.EpaId == epa.EpaId) ? $"#trajectory-{epa.EpaId}" : null;
+      => _trajectories.Any(trajectory => trajectory.EpaId == epa.EpaId) ? $"#trajectory-{epa.EpaId}-h" : null;
   private EntrustmentStandingDto? _standing;
   private string? _standingError;
   private MsfCoverageDto? _msfCoverage;

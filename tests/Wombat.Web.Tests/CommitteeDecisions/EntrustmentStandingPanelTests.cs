@@ -439,8 +439,9 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
 
         var headers = cut.FindAll("tbody tr th[scope='row']").Where(th => th.Closest("section.trajectory-card") is null).ToList();
         headers.Should().HaveCount(2);
-        headers[0].QuerySelector("a")!.GetAttribute("href").Should().Be("#trajectory-1");
-        cut.FindAll("section#trajectory-1").Should().ContainSingle("the link lands on the chart this page draws");
+        headers[0].QuerySelector("a")!.GetAttribute("href").Should().Be("#trajectory-1-h");
+        cut.FindAll("section#trajectory-1 #trajectory-1-h").Should().ContainSingle(
+            "the link lands on the heading of the chart this page draws, so its summary is in view (4.15)");
         headers[1].QuerySelector("a").Should().BeNull("PAED-010 has no chart on this page");
     }
 
@@ -462,14 +463,14 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var before = navigation.Uri;
 
         var link = cut.Find("tbody th[scope='row'] a.epa-link");
-        link.GetAttribute("href").Should().Be("#trajectory-1");
+        link.GetAttribute("href").Should().Be("#trajectory-1-h");
         link.Attributes.Select(attribute => attribute.Name).Should().Contain(
             "blazor:onclick:preventdefault", "the browser must not follow the fragment against <base href=\"/\">");
 
         link.Click();
 
         JSInterop.Invocations.Where(call => call.Identifier == PageFocus.FocusByIdIdentifier)
-            .Should().ContainSingle().Which.Arguments.Should().Equal("trajectory-1");
+            .Should().ContainSingle().Which.Arguments.Should().Equal("trajectory-1-h");
         navigation.Uri.Should().Be(before, "the link moves the focus, never the page");
         navigation.History.Should().BeEmpty();
     }
@@ -504,6 +505,8 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var card = cut.Find("section#trajectory-1");
         var section = card.ParentElement!.Closest("section.detail-card")!;
         section.QuerySelector("h3")!.TextContent.Should().Be("Rating trajectory by EPA");
+        section.ClassList.Should().Contain("full-width",
+            "the charts span the details grid, never its narrow column (the T355 replay's 4.15: a 267 px card at 1280)");
         Text(card.QuerySelector("h4")!.TextContent).Should().Be("PAED-001 — PAED-001 title");
         Text(card.TextContent).Should().Contain(
             "Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31");
