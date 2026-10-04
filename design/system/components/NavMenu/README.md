@@ -70,7 +70,10 @@ Every page that is not an item's own, and the list it sits under for each acting
 | An audit entry | Administrator, Institutional admin: Audit log |
 | A scheduled job's run history | Administrator: Scheduled jobs |
 | My authorisations | Trainee: My progress |
+| An EPA's page (`/portfolio/progress/{id}`, flow 05) | Every acting role, and none: My progress (a page under a personal link; below) |
 | Entrustment decisions | none: under no list until flow 09 places it (reached from the Institutional admin's Home) |
+
+**A page under a personal link** (flow 05, T355, E3; `NavOwners.UnderAPersonalLink`, `IsPersonal`): an entry that names no role, under My progress or My data rights, is owned whatever the acting role, and for a graduate who holds none, since the menu offers the link whatever the role. It is lit only where the person is offered the link. An entry that names roles keeps them, whatever item it is under: My authorisations is under My progress for the Trainee alone.
 
 A list that is an item of the acting role's menu lights itself and draws no trail. A list the acting role's menu does not offer (opened through another role held) lights nothing, with the trail Home › the list.
 

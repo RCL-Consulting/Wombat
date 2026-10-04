@@ -1,0 +1,48 @@
+<!-- @dsCard group="Progress" height=700 width=974 subtitle="An EPA by name, and the paused mark after one not in force: in an h1, a chart's heading, a paused row and a cell" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EpaLabel</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">In force: the words alone, in a cell or a link</p>
+<p><a class="epa-link" href="#">PAED-001 — Providing paediatric emergency care to children</a></p>
+
+<p class="pv-cap">Paused, in the EPA page's h1 (PageHeader's TitleContent): the mark muted and never bold, the h1 on the page's ground</p>
+<div class="header-container">
+  <div>
+    <h1>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams <span class="paused-mark">(no longer in use)</span></h1>
+    <p class="page-subtitle">3 a semester · Decided each semester · Exit level 5</p>
+  </div>
+</div>
+
+<p class="pv-cap">Paused, in the trajectory's heading on the EPA page: the chart's own title, then the same mark</p>
+<section class="detail-card trajectory-card" aria-labelledby="pv-traj-h">
+  <div class="trajectory-head">
+    <h2 class="epa-section-title" id="pv-traj-h">Rating trajectory <span class="paused-mark">(no longer in use)</span></h2>
+  </div>
+</section>
+
+<p class="pv-cap">Paused, as a row of My progress's "No longer in use" group: the name its row's link, on header-bg</p>
+<div class="table-container shadow">
+  <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+    <caption class="index-caption">No longer in use · 1 EPA</caption>
+    <thead role="rowgroup">
+      <tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">Why it is not counted</th></tr>
+    </thead>
+    <tbody role="rowgroup">
+      <tr role="row" class="is-paused">
+        <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams <span class="paused-mark">(no longer in use)</span></a></th>
+        <td role="cell" data-label="Why it is not counted">Paused by the College. It is not a target while it is paused. Its ratings and the credit it had earned are kept, and what is completed on it meanwhile is credited if it is restored.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

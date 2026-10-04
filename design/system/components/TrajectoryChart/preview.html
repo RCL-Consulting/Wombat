@@ -1,0 +1,376 @@
+<!-- @dsCard group="Progress" height=3060 width=1000 subtitle="The rating trajectory: two fixed drawings, 900 and 322, chosen by the card's width; a named, focusable region; the key; the table, always visible" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TrajectoryChart</title>
+<style>
+  body { padding: var(--space-md); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The drawing is chosen by the card's width (a container query), so the two renditions need no help: at this card's
+     width the first figure holds 900px and draws the 900 drawing, and the phone frame's figure draws the 322. Below 641px
+     app.css also stacks the table, heads each block with its encounter, pads the card 16px and makes each activity link
+     a 44px block; this card is wider than a phone, so the phone rendition repeats those media rules' declarations under
+     .pv-phone. */
+  .pv-phone { width: 358px; }
+  .pv-phone .trajectory-card.detail-card { padding: var(--space-md); }
+  .pv-phone .clinic-table--stack thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-phone .clinic-table--stack tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-phone .clinic-table--stack tbody tr:last-child { border-bottom: 0; }
+  .pv-phone .clinic-table--stack td { border: 0; padding: 0; }
+  .pv-phone .clinic-table--stack td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-phone .clinic-table--stack th[scope="row"] { display: block; }
+  .pv-phone .trajectory-table tbody th { border: 0; display: block; font-weight: 600; padding: 0; white-space: normal; }
+  .pv-phone .activity-block-link { align-items: flex-start; display: flex; flex-direction: column; justify-content: center; min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">The EPA page at 1280 (Anele Dlamini, PAED-001, 2026-10-04): h2 "Rating trajectory", the summary, the key; the 900 drawing over the academic year with Semester 2 banded, the minimum stepped from 3b to 4 where training year 3 began and the area under it shaded, the exit level, Today, the three ratings; then the table, always visible</p>
+<section class="detail-card trajectory-card" id="trajectory-2" aria-labelledby="trajectory-2-h">
+  <div class="trajectory-head">
+    <h2 id="trajectory-2-h" class="epa-section-title">Rating trajectory</h2>
+    <p>3 ratings in the 2026 academic year, from David Naidoo, Thandi Zulu and Sarah Botha. 2 at the minimum, 1 below.</p>
+  </div>
+  <ul class="trajectory-key" aria-label="How to read the chart">
+    <li><span class="trajectory-key-swatch trajectory-key-swatch--below" aria-hidden="true"></span>Below the minimum: 3b until 2026-01-13, then 4 (training year 3)</li>
+    <li><span class="trajectory-key-swatch trajectory-key-swatch--exit" aria-hidden="true"></span>Exit level 5</li>
+    <li><span class="trajectory-key-swatch trajectory-key-swatch--dot" aria-hidden="true"></span>A rating</li>
+  </ul>
+  <div class="trajectory-figure" role="region" aria-label="Rating chart for PAED-001" tabindex="0">
+    <svg class="trajectory-chart trajectory-chart--sized trajectory-chart--wide" width="900" height="350" viewBox="0 0 900 350" role="img" aria-label="Chart of the 3 ratings in the table below.">
+      <rect class="trajectory-chart-band" x="441" y="12" width="363" height="312" />
+      <text class="trajectory-chart-band-label" x="88" y="26">Semester 1, 2026</text>
+      <text class="trajectory-chart-band-label" x="445" y="26">Semester 2, 2026</text>
+      <path class="trajectory-chart-below" d="M84 154H110V114H804V274H84Z" />
+      <path class="trajectory-chart-rung" d="M84 54H804M84 94H804M84 134H804M84 174H804M84 214H804M84 254H804" />
+      <line class="trajectory-chart-lane" x1="84" x2="804" y1="277" y2="277" />
+      <text class="trajectory-chart-y-label" x="74" y="59" text-anchor="end">5</text>
+      <text class="trajectory-chart-y-label" x="74" y="99" text-anchor="end">4</text>
+      <text class="trajectory-chart-y-label" x="74" y="139" text-anchor="end">3b</text>
+      <text class="trajectory-chart-y-label" x="74" y="179" text-anchor="end">3a</text>
+      <text class="trajectory-chart-y-label" x="74" y="219" text-anchor="end">2</text>
+      <text class="trajectory-chart-y-label" x="74" y="259" text-anchor="end">1</text>
+      <text class="trajectory-chart-note" x="74" y="305" text-anchor="end">Other scale</text>
+      <path class="trajectory-chart-minimum" d="M84 154H110V114H804" />
+      <line class="trajectory-chart-exit" x1="84" x2="804" y1="54" y2="54" />
+      <text class="trajectory-chart-line-label" x="810" y="59">Exit 5</text>
+      <text class="trajectory-chart-minimum-label" x="810" y="130">Minimum 4</text>
+      <line class="trajectory-chart-axis" x1="84" x2="804" y1="324" y2="324" />
+      <path class="trajectory-chart-axis" d="M84 324V329M145 324V329M200 324V329M262 324V329M321 324V329M382 324V329M441 324V329M502 324V329M563 324V329M623 324V329M684 324V329M743 324V329M804 324V329" />
+      <text class="trajectory-chart-x-label" x="115" y="344" text-anchor="middle">Jan</text>
+      <text class="trajectory-chart-x-label" x="173" y="344" text-anchor="middle">Feb</text>
+      <text class="trajectory-chart-x-label" x="231" y="344" text-anchor="middle">Mar</text>
+      <text class="trajectory-chart-x-label" x="291" y="344" text-anchor="middle">Apr</text>
+      <text class="trajectory-chart-x-label" x="351" y="344" text-anchor="middle">May</text>
+      <text class="trajectory-chart-x-label" x="411" y="344" text-anchor="middle">Jun</text>
+      <text class="trajectory-chart-x-label" x="472" y="344" text-anchor="middle">Jul</text>
+      <text class="trajectory-chart-x-label" x="533" y="344" text-anchor="middle">Aug</text>
+      <text class="trajectory-chart-x-label" x="593" y="344" text-anchor="middle">Sep</text>
+      <text class="trajectory-chart-x-label" x="653" y="344" text-anchor="middle">Oct</text>
+      <text class="trajectory-chart-x-label" x="713" y="344" text-anchor="middle">Nov</text>
+      <text class="trajectory-chart-x-label" x="773" y="344" text-anchor="middle">Dec</text>
+      <line class="trajectory-chart-today" x1="628" x2="628" y1="34" y2="324" />
+      <text class="trajectory-chart-note" x="632" y="318">Today</text>
+      <path class="trajectory-chart-line" d="M609 94L626 134L643 94" />
+      <path class="trajectory-chart-dots" d="M602 94a7 7 0 1 0 14 0a7 7 0 1 0 -14 0M619 134a7 7 0 1 0 14 0a7 7 0 1 0 -14 0M636 94a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+    </svg>
+    <svg class="trajectory-chart trajectory-chart--sized trajectory-chart--narrow" width="322" height="288" viewBox="0 0 322 288" role="img" aria-label="Chart of the 3 ratings in the table below.">
+      <rect class="trajectory-chart-band" x="155" y="8" width="113" height="256" />
+      <text class="trajectory-chart-band-label" x="48" y="22">Semester 1, 2026</text>
+      <text class="trajectory-chart-band-label" x="159" y="22">Semester 2, 2026</text>
+      <path class="trajectory-chart-below" d="M44 126H52V94H268V222H44Z" />
+      <path class="trajectory-chart-rung" d="M44 46H268M44 78H268M44 110H268M44 142H268M44 174H268M44 206H268" />
+      <line class="trajectory-chart-lane" x1="44" x2="268" y1="225" y2="225" />
+      <text class="trajectory-chart-y-label" x="34" y="50" text-anchor="end">5</text>
+      <text class="trajectory-chart-y-label" x="34" y="82" text-anchor="end">4</text>
+      <text class="trajectory-chart-y-label" x="34" y="114" text-anchor="end">3b</text>
+      <text class="trajectory-chart-y-label" x="34" y="146" text-anchor="end">3a</text>
+      <text class="trajectory-chart-y-label" x="34" y="178" text-anchor="end">2</text>
+      <text class="trajectory-chart-y-label" x="34" y="210" text-anchor="end">1</text>
+      <text class="trajectory-chart-note" x="34" y="248" text-anchor="end">Other</text>
+      <path class="trajectory-chart-minimum" d="M44 126H52V94H268" />
+      <line class="trajectory-chart-exit" x1="44" x2="268" y1="46" y2="46" />
+      <text class="trajectory-chart-line-label" x="274" y="50">Exit 5</text>
+      <text class="trajectory-chart-minimum-label" x="274" y="109">Min 4</text>
+      <line class="trajectory-chart-axis" x1="44" x2="268" y1="264" y2="264" />
+      <path class="trajectory-chart-axis" d="M44 264V269M63 264V269M80 264V269M99 264V269M118 264V269M137 264V269M155 264V269M174 264V269M193 264V269M212 264V269M231 264V269M249 264V269M268 264V269" />
+      <text class="trajectory-chart-x-label" x="54" y="282" text-anchor="middle">Jan</text>
+      <text class="trajectory-chart-x-label" x="90" y="282" text-anchor="middle">Mar</text>
+      <text class="trajectory-chart-x-label" x="127" y="282" text-anchor="middle">May</text>
+      <text class="trajectory-chart-x-label" x="165" y="282" text-anchor="middle">Jul</text>
+      <text class="trajectory-chart-x-label" x="202" y="282" text-anchor="middle">Sep</text>
+      <text class="trajectory-chart-x-label" x="240" y="282" text-anchor="middle">Nov</text>
+      <line class="trajectory-chart-today" x1="213" x2="213" y1="30" y2="264" />
+      <text class="trajectory-chart-note" x="217" y="258">Today</text>
+      <path class="trajectory-chart-line" d="M207 78L222 110L237 78" />
+      <path class="trajectory-chart-dots" d="M201 78a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M216 110a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M231 78a6 6 0 1 0 12 0a6 6 0 1 0 -12 0" />
+    </svg>
+  </div>
+  <div class="table-container">
+    <table class="clinic-table clinic-table--stack trajectory-table" role="table">
+      <caption>The ratings, oldest first</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Encounter</th>
+          <th scope="col" role="columnheader">Rating</th>
+          <th scope="col" role="columnheader">Against the minimum then</th>
+          <th scope="col" role="columnheader">Activity</th>
+          <th scope="col" role="columnheader">Assessor</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader">2026-09-24</th>
+          <td role="cell" data-label="Rating">4</td>
+          <td role="cell" data-label="Against the minimum then">At or above (4, training year 3)</td>
+          <td role="cell"><a class="activity-link activity-block-link" href="#">Mini-CEX (Paediatrics) · PAED-001 · 2026-09-24</a></td>
+          <td role="cell" data-label="Assessor">David Naidoo</td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader">2026-09-25</th>
+          <td role="cell" data-label="Rating">3b</td>
+          <td role="cell" data-label="Against the minimum then">Below (4, training year 3)</td>
+          <td role="cell"><a class="activity-link activity-block-link" href="#">Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-25</a></td>
+          <td role="cell" data-label="Assessor">Thandi Zulu</td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader">2026-09-28</th>
+          <td role="cell" data-label="Rating">4</td>
+          <td role="cell" data-label="Against the minimum then">At or above (4, training year 3)</td>
+          <td role="cell"><a class="activity-link activity-block-link" href="#">Clinical Case Analysis (Paediatrics) · PAED-001 · 2026-09-28</a></td>
+          <td role="cell" data-label="Assessor">Sarah Botha</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<p class="pv-cap">The same card at 390: the card's figure is narrower than 900, so the 322 drawing (every other month, "Min 4", "Other"); the table stacked, each block headed by its encounter</p>
+<div class="pv-phone">
+  <section class="detail-card trajectory-card" id="trajectory-2-phone" aria-labelledby="trajectory-2-phone-h">
+    <div class="trajectory-head">
+      <h2 id="trajectory-2-phone-h" class="epa-section-title">Rating trajectory</h2>
+      <p>3 ratings in the 2026 academic year, from David Naidoo, Thandi Zulu and Sarah Botha. 2 at the minimum, 1 below.</p>
+    </div>
+    <ul class="trajectory-key" aria-label="How to read the chart">
+      <li><span class="trajectory-key-swatch trajectory-key-swatch--below" aria-hidden="true"></span>Below the minimum: 3b until 2026-01-13, then 4 (training year 3)</li>
+      <li><span class="trajectory-key-swatch trajectory-key-swatch--exit" aria-hidden="true"></span>Exit level 5</li>
+      <li><span class="trajectory-key-swatch trajectory-key-swatch--dot" aria-hidden="true"></span>A rating</li>
+    </ul>
+    <div class="trajectory-figure" role="region" aria-label="Rating chart for PAED-001" tabindex="0">
+      <svg class="trajectory-chart trajectory-chart--sized trajectory-chart--wide" width="900" height="350" viewBox="0 0 900 350" role="img" aria-label="Chart of the 3 ratings in the table below.">
+        <rect class="trajectory-chart-band" x="441" y="12" width="363" height="312" />
+        <text class="trajectory-chart-band-label" x="88" y="26">Semester 1, 2026</text>
+        <text class="trajectory-chart-band-label" x="445" y="26">Semester 2, 2026</text>
+        <path class="trajectory-chart-below" d="M84 154H110V114H804V274H84Z" />
+        <path class="trajectory-chart-rung" d="M84 54H804M84 94H804M84 134H804M84 174H804M84 214H804M84 254H804" />
+        <line class="trajectory-chart-lane" x1="84" x2="804" y1="277" y2="277" />
+        <text class="trajectory-chart-y-label" x="74" y="59" text-anchor="end">5</text>
+        <text class="trajectory-chart-y-label" x="74" y="99" text-anchor="end">4</text>
+        <text class="trajectory-chart-y-label" x="74" y="139" text-anchor="end">3b</text>
+        <text class="trajectory-chart-y-label" x="74" y="179" text-anchor="end">3a</text>
+        <text class="trajectory-chart-y-label" x="74" y="219" text-anchor="end">2</text>
+        <text class="trajectory-chart-y-label" x="74" y="259" text-anchor="end">1</text>
+        <text class="trajectory-chart-note" x="74" y="305" text-anchor="end">Other scale</text>
+        <path class="trajectory-chart-minimum" d="M84 154H110V114H804" />
+        <line class="trajectory-chart-exit" x1="84" x2="804" y1="54" y2="54" />
+        <text class="trajectory-chart-line-label" x="810" y="59">Exit 5</text>
+        <text class="trajectory-chart-minimum-label" x="810" y="130">Minimum 4</text>
+        <line class="trajectory-chart-axis" x1="84" x2="804" y1="324" y2="324" />
+        <path class="trajectory-chart-axis" d="M84 324V329M145 324V329M200 324V329M262 324V329M321 324V329M382 324V329M441 324V329M502 324V329M563 324V329M623 324V329M684 324V329M743 324V329M804 324V329" />
+        <text class="trajectory-chart-x-label" x="115" y="344" text-anchor="middle">Jan</text>
+        <text class="trajectory-chart-x-label" x="173" y="344" text-anchor="middle">Feb</text>
+        <text class="trajectory-chart-x-label" x="231" y="344" text-anchor="middle">Mar</text>
+        <text class="trajectory-chart-x-label" x="291" y="344" text-anchor="middle">Apr</text>
+        <text class="trajectory-chart-x-label" x="351" y="344" text-anchor="middle">May</text>
+        <text class="trajectory-chart-x-label" x="411" y="344" text-anchor="middle">Jun</text>
+        <text class="trajectory-chart-x-label" x="472" y="344" text-anchor="middle">Jul</text>
+        <text class="trajectory-chart-x-label" x="533" y="344" text-anchor="middle">Aug</text>
+        <text class="trajectory-chart-x-label" x="593" y="344" text-anchor="middle">Sep</text>
+        <text class="trajectory-chart-x-label" x="653" y="344" text-anchor="middle">Oct</text>
+        <text class="trajectory-chart-x-label" x="713" y="344" text-anchor="middle">Nov</text>
+        <text class="trajectory-chart-x-label" x="773" y="344" text-anchor="middle">Dec</text>
+        <line class="trajectory-chart-today" x1="628" x2="628" y1="34" y2="324" />
+        <text class="trajectory-chart-note" x="632" y="318">Today</text>
+        <path class="trajectory-chart-line" d="M609 94L626 134L643 94" />
+        <path class="trajectory-chart-dots" d="M602 94a7 7 0 1 0 14 0a7 7 0 1 0 -14 0M619 134a7 7 0 1 0 14 0a7 7 0 1 0 -14 0M636 94a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+      </svg>
+      <svg class="trajectory-chart trajectory-chart--sized trajectory-chart--narrow" width="322" height="288" viewBox="0 0 322 288" role="img" aria-label="Chart of the 3 ratings in the table below.">
+        <rect class="trajectory-chart-band" x="155" y="8" width="113" height="256" />
+        <text class="trajectory-chart-band-label" x="48" y="22">Semester 1, 2026</text>
+        <text class="trajectory-chart-band-label" x="159" y="22">Semester 2, 2026</text>
+        <path class="trajectory-chart-below" d="M44 126H52V94H268V222H44Z" />
+        <path class="trajectory-chart-rung" d="M44 46H268M44 78H268M44 110H268M44 142H268M44 174H268M44 206H268" />
+        <line class="trajectory-chart-lane" x1="44" x2="268" y1="225" y2="225" />
+        <text class="trajectory-chart-y-label" x="34" y="50" text-anchor="end">5</text>
+        <text class="trajectory-chart-y-label" x="34" y="82" text-anchor="end">4</text>
+        <text class="trajectory-chart-y-label" x="34" y="114" text-anchor="end">3b</text>
+        <text class="trajectory-chart-y-label" x="34" y="146" text-anchor="end">3a</text>
+        <text class="trajectory-chart-y-label" x="34" y="178" text-anchor="end">2</text>
+        <text class="trajectory-chart-y-label" x="34" y="210" text-anchor="end">1</text>
+        <text class="trajectory-chart-note" x="34" y="248" text-anchor="end">Other</text>
+        <path class="trajectory-chart-minimum" d="M44 126H52V94H268" />
+        <line class="trajectory-chart-exit" x1="44" x2="268" y1="46" y2="46" />
+        <text class="trajectory-chart-line-label" x="274" y="50">Exit 5</text>
+        <text class="trajectory-chart-minimum-label" x="274" y="109">Min 4</text>
+        <line class="trajectory-chart-axis" x1="44" x2="268" y1="264" y2="264" />
+        <path class="trajectory-chart-axis" d="M44 264V269M63 264V269M80 264V269M99 264V269M118 264V269M137 264V269M155 264V269M174 264V269M193 264V269M212 264V269M231 264V269M249 264V269M268 264V269" />
+        <text class="trajectory-chart-x-label" x="54" y="282" text-anchor="middle">Jan</text>
+        <text class="trajectory-chart-x-label" x="90" y="282" text-anchor="middle">Mar</text>
+        <text class="trajectory-chart-x-label" x="127" y="282" text-anchor="middle">May</text>
+        <text class="trajectory-chart-x-label" x="165" y="282" text-anchor="middle">Jul</text>
+        <text class="trajectory-chart-x-label" x="202" y="282" text-anchor="middle">Sep</text>
+        <text class="trajectory-chart-x-label" x="240" y="282" text-anchor="middle">Nov</text>
+        <line class="trajectory-chart-today" x1="213" x2="213" y1="30" y2="264" />
+        <text class="trajectory-chart-note" x="217" y="258">Today</text>
+        <path class="trajectory-chart-line" d="M207 78L222 110L237 78" />
+        <path class="trajectory-chart-dots" d="M201 78a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M216 110a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M231 78a6 6 0 1 0 12 0a6 6 0 1 0 -12 0" />
+      </svg>
+    </div>
+    <div class="table-container">
+      <table class="clinic-table clinic-table--stack trajectory-table" role="table">
+        <caption>The ratings, oldest first</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Encounter</th>
+            <th scope="col" role="columnheader">Rating</th>
+            <th scope="col" role="columnheader">Against the minimum then</th>
+            <th scope="col" role="columnheader">Activity</th>
+            <th scope="col" role="columnheader">Assessor</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">2026-09-24</th>
+            <td role="cell" data-label="Rating">4</td>
+            <td role="cell" data-label="Against the minimum then">At or above (4, training year 3)</td>
+            <td role="cell"><a class="activity-link activity-block-link" href="#">Mini-CEX (Paediatrics) · PAED-001 · 2026-09-24</a></td>
+            <td role="cell" data-label="Assessor">David Naidoo</td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">2026-09-25</th>
+            <td role="cell" data-label="Rating">3b</td>
+            <td role="cell" data-label="Against the minimum then">Below (4, training year 3)</td>
+            <td role="cell"><a class="activity-link activity-block-link" href="#">Case-Based Discussion (Paediatrics) · PAED-001 · 2026-09-25</a></td>
+            <td role="cell" data-label="Assessor">Thandi Zulu</td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">2026-09-28</th>
+            <td role="cell" data-label="Rating">4</td>
+            <td role="cell" data-label="Against the minimum then">At or above (4, training year 3)</td>
+            <td role="cell"><a class="activity-link activity-block-link" href="#">Clinical Case Analysis (Paediatrics) · PAED-001 · 2026-09-28</a></td>
+            <td role="cell" data-label="Assessor">Sarah Botha</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">On the committee's review page (Thandi Zulu, review 1): each EPA's name as its h4, one level below the section's h3 "Rating trajectory by EPA", the trainee named and the review's window in the summary, and no Today (D2): PAED-010, one rating.</p>
+<section class="list-section" aria-labelledby="pv-section-h">
+  <h3 class="list-section-title" id="pv-section-h">Rating trajectory by EPA</h3>
+  <div class="stack-list">
+    <section class="detail-card trajectory-card" id="trajectory-11" aria-labelledby="trajectory-11-h">
+      <div class="trajectory-head">
+        <h4 id="trajectory-11-h">PAED-010 — Leading and operating within a clinical team</h4>
+        <p>Lerato Molefe · 1 rating in the review window, 2026-01-01 to 2026-12-31, from Thandi Zulu. At the minimum.</p>
+      </div>
+      <ul class="trajectory-key" aria-label="How to read the chart">
+        <li><span class="trajectory-key-swatch trajectory-key-swatch--below" aria-hidden="true"></span>Below the minimum: 4 until 2026-01-13, then 5 (training year 4)</li>
+        <li><span class="trajectory-key-swatch trajectory-key-swatch--exit" aria-hidden="true"></span>Exit level 5</li>
+        <li><span class="trajectory-key-swatch trajectory-key-swatch--dot" aria-hidden="true"></span>A rating</li>
+      </ul>
+      <div class="trajectory-figure" role="region" aria-label="Rating chart for PAED-010" tabindex="0">
+        <svg class="trajectory-chart trajectory-chart--sized trajectory-chart--wide" width="900" height="350" viewBox="0 0 900 350" role="img" aria-label="Chart of the 1 rating in the table below.">
+          <rect class="trajectory-chart-band" x="441" y="12" width="363" height="312" />
+          <text class="trajectory-chart-band-label" x="88" y="26">Semester 1, 2026</text>
+          <text class="trajectory-chart-band-label" x="445" y="26">Semester 2, 2026</text>
+          <path class="trajectory-chart-below" d="M84 114H110V74H804V274H84Z" />
+          <path class="trajectory-chart-rung" d="M84 54H804M84 94H804M84 134H804M84 174H804M84 214H804M84 254H804" />
+          <line class="trajectory-chart-lane" x1="84" x2="804" y1="277" y2="277" />
+          <text class="trajectory-chart-y-label" x="74" y="59" text-anchor="end">5</text>
+          <text class="trajectory-chart-y-label" x="74" y="99" text-anchor="end">4</text>
+          <text class="trajectory-chart-y-label" x="74" y="139" text-anchor="end">3b</text>
+          <text class="trajectory-chart-y-label" x="74" y="179" text-anchor="end">3a</text>
+          <text class="trajectory-chart-y-label" x="74" y="219" text-anchor="end">2</text>
+          <text class="trajectory-chart-y-label" x="74" y="259" text-anchor="end">1</text>
+          <text class="trajectory-chart-note" x="74" y="305" text-anchor="end">Other scale</text>
+          <path class="trajectory-chart-minimum" d="M84 114H110V74H804" />
+          <line class="trajectory-chart-exit" x1="84" x2="804" y1="54" y2="54" />
+          <text class="trajectory-chart-line-label" x="810" y="59">Exit 5</text>
+          <text class="trajectory-chart-minimum-label" x="810" y="90">Minimum 5</text>
+          <line class="trajectory-chart-axis" x1="84" x2="804" y1="324" y2="324" />
+          <path class="trajectory-chart-axis" d="M84 324V329M145 324V329M200 324V329M262 324V329M321 324V329M382 324V329M441 324V329M502 324V329M563 324V329M623 324V329M684 324V329M743 324V329M804 324V329" />
+          <text class="trajectory-chart-x-label" x="115" y="344" text-anchor="middle">Jan</text>
+          <text class="trajectory-chart-x-label" x="173" y="344" text-anchor="middle">Feb</text>
+          <text class="trajectory-chart-x-label" x="231" y="344" text-anchor="middle">Mar</text>
+          <text class="trajectory-chart-x-label" x="291" y="344" text-anchor="middle">Apr</text>
+          <text class="trajectory-chart-x-label" x="351" y="344" text-anchor="middle">May</text>
+          <text class="trajectory-chart-x-label" x="411" y="344" text-anchor="middle">Jun</text>
+          <text class="trajectory-chart-x-label" x="472" y="344" text-anchor="middle">Jul</text>
+          <text class="trajectory-chart-x-label" x="533" y="344" text-anchor="middle">Aug</text>
+          <text class="trajectory-chart-x-label" x="593" y="344" text-anchor="middle">Sep</text>
+          <text class="trajectory-chart-x-label" x="653" y="344" text-anchor="middle">Oct</text>
+          <text class="trajectory-chart-x-label" x="713" y="344" text-anchor="middle">Nov</text>
+          <text class="trajectory-chart-x-label" x="773" y="344" text-anchor="middle">Dec</text>
+          <path class="trajectory-chart-dots" d="M614 54a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+        </svg>
+        <svg class="trajectory-chart trajectory-chart--sized trajectory-chart--narrow" width="322" height="288" viewBox="0 0 322 288" role="img" aria-label="Chart of the 1 rating in the table below.">
+          <rect class="trajectory-chart-band" x="155" y="8" width="113" height="256" />
+          <text class="trajectory-chart-band-label" x="48" y="22">Semester 1, 2026</text>
+          <text class="trajectory-chart-band-label" x="159" y="22">Semester 2, 2026</text>
+          <path class="trajectory-chart-below" d="M44 94H52V62H268V222H44Z" />
+          <path class="trajectory-chart-rung" d="M44 46H268M44 78H268M44 110H268M44 142H268M44 174H268M44 206H268" />
+          <line class="trajectory-chart-lane" x1="44" x2="268" y1="225" y2="225" />
+          <text class="trajectory-chart-y-label" x="34" y="50" text-anchor="end">5</text>
+          <text class="trajectory-chart-y-label" x="34" y="82" text-anchor="end">4</text>
+          <text class="trajectory-chart-y-label" x="34" y="114" text-anchor="end">3b</text>
+          <text class="trajectory-chart-y-label" x="34" y="146" text-anchor="end">3a</text>
+          <text class="trajectory-chart-y-label" x="34" y="178" text-anchor="end">2</text>
+          <text class="trajectory-chart-y-label" x="34" y="210" text-anchor="end">1</text>
+          <text class="trajectory-chart-note" x="34" y="248" text-anchor="end">Other</text>
+          <path class="trajectory-chart-minimum" d="M44 94H52V62H268" />
+          <line class="trajectory-chart-exit" x1="44" x2="268" y1="46" y2="46" />
+          <text class="trajectory-chart-line-label" x="274" y="50">Exit 5</text>
+          <text class="trajectory-chart-minimum-label" x="274" y="77">Min 5</text>
+          <line class="trajectory-chart-axis" x1="44" x2="268" y1="264" y2="264" />
+          <path class="trajectory-chart-axis" d="M44 264V269M63 264V269M80 264V269M99 264V269M118 264V269M137 264V269M155 264V269M174 264V269M193 264V269M212 264V269M231 264V269M249 264V269M268 264V269" />
+          <text class="trajectory-chart-x-label" x="54" y="282" text-anchor="middle">Jan</text>
+          <text class="trajectory-chart-x-label" x="90" y="282" text-anchor="middle">Mar</text>
+          <text class="trajectory-chart-x-label" x="127" y="282" text-anchor="middle">May</text>
+          <text class="trajectory-chart-x-label" x="165" y="282" text-anchor="middle">Jul</text>
+          <text class="trajectory-chart-x-label" x="202" y="282" text-anchor="middle">Sep</text>
+          <text class="trajectory-chart-x-label" x="240" y="282" text-anchor="middle">Nov</text>
+          <path class="trajectory-chart-dots" d="M205 46a6 6 0 1 0 12 0a6 6 0 1 0 -12 0" />
+        </svg>
+      </div>
+      <div class="table-container">
+        <table class="clinic-table clinic-table--stack trajectory-table" role="table">
+          <caption>The ratings, oldest first</caption>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">Encounter</th>
+              <th scope="col" role="columnheader">Rating</th>
+              <th scope="col" role="columnheader">Against the minimum then</th>
+              <th scope="col" role="columnheader">Activity</th>
+              <th scope="col" role="columnheader">Assessor</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th scope="row" role="rowheader">2026-09-30</th>
+              <td role="cell" data-label="Rating">5</td>
+              <td role="cell" data-label="Against the minimum then">At or above (5, training year 4)</td>
+              <td role="cell"><a class="activity-link activity-block-link" href="#">Direct Observation (Paediatrics) · PAED-010 · 2026-09-30</a></td>
+              <td role="cell" data-label="Assessor">Thandi Zulu</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</section>
+</body>
+</html>

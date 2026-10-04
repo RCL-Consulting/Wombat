@@ -1,0 +1,215 @@
+<!-- @dsCard group="Progress" height=2010 width=974 subtitle="My progress's EPA index: one stacked table per group, each EPA its row's link to its page, its count a figure, a bar and a line, the cadence, and its STAR against the training year" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EpaProgressTable</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-index { display: flex; flex-direction: column; gap: var(--space-lg); }
+  /* Below 641px app.css stacks each table (DataTable's Stack), sets the EPA's row header as its block's first line and
+     makes each EPA link a 44px block. This card is wider than a phone, so the phone rendition repeats those media rules'
+     declarations under .pv-phone. */
+  .pv-phone { width: 358px; }
+  .pv-phone .clinic-table--stack thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-phone .clinic-table--stack tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-phone .clinic-table--stack tbody tr:last-child { border-bottom: 0; }
+  .pv-phone .clinic-table--stack td { border: 0; padding: 0; }
+  .pv-phone .clinic-table--stack td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-phone .clinic-table--index tbody th { border: 0; padding: 0; width: auto; }
+  .pv-phone .clinic-table--stack caption.index-caption { padding: var(--space-sm) var(--space-md); }
+  .pv-phone .clinic-table--stack th[scope="row"] { display: block; }
+  .pv-phone .verdict-level { white-space: normal; }
+  .pv-phone .epa-link { align-items: flex-start; display: flex; flex-direction: column; justify-content: center; min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">"Your EPAs" (Anele Dlamini, Semester 2, 2026; three of ten and two of six rows): each kind its own table, captioned by its group; a met count's bar in the success colour; a STAR's verdict badge and level; KGK-001, the institution's own, with its badge and no decision cadence (a dash, its words for a screen reader)</p>
+<section class="index-section" aria-labelledby="pv-index-h">
+  <h2 id="pv-index-h">Your EPAs</h2>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+      <caption class="index-caption">Each semester · 10 EPAs</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Semester 2, 2026</th>
+          <th scope="col" role="columnheader">Committee decides</th>
+          <th scope="col" role="columnheader">STAR against training year 3</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-001 — Providing paediatric emergency care to children</a></th>
+          <td role="cell" class="count-cell" data-label="Semester 2, 2026">
+            <span class="count-figure">3 of 3 this semester</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="3" aria-label="PAED-001: 3 of 3 this semester">
+              <div class="progress-bar-fill is-complete" style="width:100%"></div>
+            </div>
+            <p class="count-meta">Target met for Semester 2, 2026.</p>
+          </td>
+          <td role="cell" data-label="Committee decides">Decided each semester</td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="badge badge-standing-met">At or above</span> <span class="verdict-level">4</span></td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-002 — Managing common paediatric presentations</a></th>
+          <td role="cell" class="count-cell" data-label="Semester 2, 2026">
+            <span class="count-figure">1 of 3 this semester</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1" aria-label="PAED-002: 1 of 3 this semester">
+              <div class="progress-bar-fill" style="width:33%"></div>
+            </div>
+            <p class="count-meta">2 more by 2026-11-30</p>
+          </td>
+          <td role="cell" data-label="Committee decides">Decided each semester</td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="badge badge-standing-none">No decision</span></td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-003 — Providing intensive care to children</a></th>
+          <td role="cell" class="count-cell" data-label="Semester 2, 2026">
+            <span class="count-figure">0 of 3 this semester</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" aria-label="PAED-003: 0 of 3 this semester">
+              <div class="progress-bar-fill" style="width:0%"></div>
+            </div>
+            <p class="count-meta">3 more by 2026-11-30</p>
+          </td>
+          <td role="cell" data-label="Committee decides">Decided once a year</td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="badge badge-standing-none">No decision</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+      <caption class="index-caption">Once a year · 6 EPAs</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">2026 academic year</th>
+          <th scope="col" role="columnheader">Committee decides</th>
+          <th scope="col" role="columnheader">STAR against training year 3</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">KGK-001 — Running a paediatric outreach clinic at a district hospital</a><span class="badge badge-draft">Kgosi Kgari Teaching Hospital's own</span></th>
+          <td role="cell" class="count-cell" data-label="2026 academic year">
+            <span class="count-figure">0 of 1 in 2026</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0" aria-label="KGK-001: 0 of 1 in 2026">
+              <div class="progress-bar-fill" style="width:0%"></div>
+            </div>
+            <p class="count-meta">1 more by 2026-11-30</p>
+          </td>
+          <td role="cell" data-label="Committee decides"><span class="cadence-none" aria-hidden="true">—</span><span class="visually-hidden">No decision cadence</span></td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="badge badge-standing-none">No decision</span></td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children</a></th>
+          <td role="cell" class="count-cell" data-label="2026 academic year">
+            <span class="count-figure">0 of 1 in 2026</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0" aria-label="PAED-008: 0 of 1 in 2026">
+              <div class="progress-bar-fill" style="width:0%"></div>
+            </div>
+            <p class="count-meta">1 more by 2026-11-30</p>
+          </td>
+          <td role="cell" data-label="Committee decides">Decided as opportunity allows</td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="badge badge-standing-none">No decision</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+      <caption class="index-caption">No longer in use · 1 EPA</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Why it is not counted</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row" class="is-paused">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams <span class="paused-mark">(no longer in use)</span></a></th>
+          <td role="cell" data-label="Why it is not counted">Paused by the College. It is not a target while it is paused. Its ratings and the credit it had earned are kept, and what is completed on it meanwhile is credited if it is restored.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<p class="pv-cap">The standing's read failed: each verdict cell says "Not loaded", never "No decision", which would be a claim; the panel below says why, with Try again</p>
+<div class="pv-index">
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+      <caption class="index-caption">Each semester · 10 EPAs</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Semester 2, 2026</th>
+          <th scope="col" role="columnheader">Committee decides</th>
+          <th scope="col" role="columnheader">STAR against training year 3</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-002 — Managing common paediatric presentations</a></th>
+          <td role="cell" class="count-cell" data-label="Semester 2, 2026">
+            <span class="count-figure">1 of 3 this semester</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1" aria-label="PAED-002: 1 of 3 this semester">
+              <div class="progress-bar-fill" style="width:33%"></div>
+            </div>
+            <p class="count-meta">2 more by 2026-11-30</p>
+          </td>
+          <td role="cell" data-label="Committee decides">Decided each semester</td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="verdict-level">Not loaded</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="pv-cap">At 390, stacked: the EPA heads each block, the count, the cadence and the STAR labelled by their columns</p>
+<div class="pv-phone">
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+      <caption class="index-caption">Each semester · 10 EPAs</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Semester 2, 2026</th>
+          <th scope="col" role="columnheader">Committee decides</th>
+          <th scope="col" role="columnheader">STAR against training year 3</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-001 — Providing paediatric emergency care to children</a></th>
+          <td role="cell" class="count-cell" data-label="Semester 2, 2026">
+            <span class="count-figure">3 of 3 this semester</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="3" aria-label="PAED-001: 3 of 3 this semester">
+              <div class="progress-bar-fill is-complete" style="width:100%"></div>
+            </div>
+            <p class="count-meta">Target met for Semester 2, 2026.</p>
+          </td>
+          <td role="cell" data-label="Committee decides">Decided each semester</td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="badge badge-standing-met">At or above</span> <span class="verdict-level">4</span></td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-002 — Managing common paediatric presentations</a></th>
+          <td role="cell" class="count-cell" data-label="Semester 2, 2026">
+            <span class="count-figure">1 of 3 this semester</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1" aria-label="PAED-002: 1 of 3 this semester">
+              <div class="progress-bar-fill" style="width:33%"></div>
+            </div>
+            <p class="count-meta">2 more by 2026-11-30</p>
+          </td>
+          <td role="cell" data-label="Committee decides">Decided each semester</td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="badge badge-standing-none">No decision</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

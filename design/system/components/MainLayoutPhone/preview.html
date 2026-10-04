@@ -1,4 +1,4 @@
-<!-- @dsCard group="Shell" height=1400 width=390 subtitle="Below 641px: the phone bar folded, the menu open with the account row at its foot, and a trail folded to its parent" -->
+<!-- @dsCard group="Shell" height=1500 width=390 subtitle="Below 641px: the phone bar folded, the menu open with the account row at its foot, and a trail folded to its parent" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <div class="pv">
-  <p class="pv-cap">Folded: Nomsa Mahlangu, a Trainee, on Home. The header's one action is its own 44px row under the rule.</p>
+  <p class="pv-cap">Folded: Nomsa Mahlangu, a Trainee, on Home (the head of flow 05's Your targets card; its figures illustrative). The header's one action is its own 44px row under the rule.</p>
   <div class="page">
     <input type="checkbox" id="nav-toggle" class="nav-toggle">
     <header class="sidebar">
@@ -69,21 +69,22 @@
         </div>
         <div class="action-result" tabindex="-1">
           <div class="dashboard-grid">
-            <a href="#" class="detail-card detail-card--emphasis detail-card--interactive dashboard-span-2" style="text-decoration:none;color:inherit;">
-              <h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg><span>Curriculum targets</span></h2>
+            <section class="detail-card detail-card--emphasis dashboard-span-2" aria-labelledby="card-targets">
+              <h2 class="dashboard-card-title" id="card-targets"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <circle cx="12" cy="12" r="6" /> <circle cx="12" cy="12" r="2" /></svg><span>Your targets</span></h2>
               <div class="dashboard-card-body">
+                <p class="targets-line">Training year 1 — it sets the minimum level each encounter is judged against.</p>
                 <div class="dashboard-metric-row">
                   <div class="dashboard-metric">
-                    <span class="dashboard-metric-value">2 / 5</span>
-                    <span class="dashboard-metric-label">semester targets met</span>
+                    <span class="dashboard-metric-value">0 of 10</span>
+                    <span class="dashboard-metric-label">EPAs met this semester</span>
                   </div>
                   <div class="dashboard-metric">
-                    <span class="dashboard-metric-value">1 / 3</span>
-                    <span class="dashboard-metric-label">yearly targets met (2026)</span>
+                    <span class="dashboard-metric-value">0 of 6</span>
+                    <span class="dashboard-metric-label">EPAs met in 2026</span>
                   </div>
                 </div>
               </div>
-            </a>
+            </section>
           </div>
         </div>
       </article>

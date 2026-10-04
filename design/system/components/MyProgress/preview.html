@@ -1,0 +1,112 @@
+<!-- @dsCard group="Progress" height=1800 width=974 subtitle="My progress: This period, the EPA index and the standing; while it reads, when it fails, December, and a section's own failure" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyProgress</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Loaded (Anele Dlamini, 2026-10-04): the header, This period (the two figures, the semester's end, the training year and MSF), "Your EPAs" (one row of the index shown; see EpaProgressTable) and the standing's section (its opening shown; see EntrustmentStandingPanel)</p>
+<div class="header-container">
+  <div>
+    <h1 tabindex="-1">My progress</h1>
+    <p class="page-subtitle">Training year 3 · Semester 2, 2026</p>
+  </div>
+</div>
+<p class="visually-hidden" role="status"></p>
+<section class="detail-card period-card" aria-labelledby="period-h">
+  <h2 class="dashboard-card-title" id="period-h" tabindex="-1">This period</h2>
+  <div class="dashboard-metric-row">
+    <div class="dashboard-metric"><span class="dashboard-metric-value">1 of 10</span> <span class="dashboard-metric-label">EPAs met this semester</span></div>
+    <div class="dashboard-metric"><span class="dashboard-metric-value">0 of 6</span> <span class="dashboard-metric-label">EPAs met in 2026</span></div>
+  </div>
+  <p class="period-ends">Semester 2, 2026 ends on 2026-11-30.</p>
+  <div class="period-lines">
+    <p>Training year 3 — it sets the minimum level each encounter is judged against.</p>
+    <p><span class="period-line-term">Multi-source feedback:</span> 0 of 16 EPAs covered by a released campaign that closed this semester. MSF is tracked on its own and counts towards no target.</p>
+  </div>
+</section>
+<section class="index-section" aria-labelledby="index-h">
+  <h2 id="index-h">Your EPAs</h2>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+      <caption class="index-caption">Each semester · 10 EPAs</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Semester 2, 2026</th>
+          <th scope="col" role="columnheader">Committee decides</th>
+          <th scope="col" role="columnheader">STAR against training year 3</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="epa-link" href="#">PAED-002 — Managing common paediatric presentations</a></th>
+          <td role="cell" class="count-cell" data-label="Semester 2, 2026">
+            <span class="count-figure">1 of 3 this semester</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1" aria-label="PAED-002: 1 of 3 this semester">
+              <div class="progress-bar-fill" style="width:33%"></div>
+            </div>
+            <p class="count-meta">2 more by 2026-11-30</p>
+          </td>
+          <td role="cell" data-label="Committee decides">Decided each semester</td>
+          <td role="cell" class="verdict-cell" data-label="STAR against training year 3"><span class="badge badge-standing-none">No decision</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="standing-panel" aria-labelledby="standing-h">
+  <h2 id="standing-h" tabindex="-1">Entrustment against Annexure A</h2>
+  <p>You are in training year 3 on 2026-10-04. Each target is the level the curriculum sets for training year 3: Annexure A's, for the College's EPAs. Where it sets none, the EPA's exit level stands in, and the row says so. The exit level is the level each EPA must reach to finish the programme. A level is compared only on the ladder the curriculum sets for that EPA.</p>
+</section>
+
+<p class="pv-cap">While it reads: the status, always on the page, says "Loading My progress."; the skeletons, aria-hidden</p>
+<div class="header-container">
+  <div>
+    <h1>My progress</h1>
+  </div>
+</div>
+<p class="visually-hidden" role="status">Loading My progress.</p>
+<div class="skeleton" style="width:100%;height:3rem"></div>
+<div class="skeleton" style="width:100%;height:3rem"></div>
+<div class="skeleton" style="width:100%;height:3rem"></div>
+<div class="skeleton" style="width:100%;height:3rem"></div>
+
+<p class="pv-cap">The read failed: fixed words and Try again, never the exception's text; its answer focuses This period's heading</p>
+<div class="action-result" tabindex="-1">
+  <div class="alert alert-danger" role="alert">
+    <div class="alert-row">
+      <span class="alert-row-text">Could not load your progress. Nothing has changed. Try again, or come back in a few minutes.</span>
+      <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</button>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">In December (not reachable in the replay, which ran in October: the words as built, the figures illustrative): an info alert over This period, its first sentence the news; and MSF's own read failed, a line in place with no button</p>
+<div class="alert alert-info"><strong>The 2026 academic year ended on 2026-11-30.</strong> Encounters observed in December still count towards semester 2, 2026 and your 2026 yearly targets. Semester 1, 2027 starts on 2027-01-01.</div>
+<section class="detail-card period-card" aria-labelledby="pv-period-h">
+  <h2 class="dashboard-card-title" id="pv-period-h" tabindex="-1">This period</h2>
+  <div class="dashboard-metric-row">
+    <div class="dashboard-metric">
+      <span class="dashboard-metric-value">4 of 10</span>
+      <span class="dashboard-metric-label">EPAs met this semester</span>
+    </div>
+    <div class="dashboard-metric">
+      <span class="dashboard-metric-value">2 of 6</span>
+      <span class="dashboard-metric-label">EPAs met in 2026</span>
+    </div>
+  </div>
+  <p class="period-ends">Semester 2, 2026 counts encounters observed in December.</p>
+  <div class="period-lines">
+    <p>Training year 3 — it sets the minimum level each encounter is judged against.</p>
+    <p class="section-error"><span class="period-line-term">Multi-source feedback:</span> Could not load MSF coverage. Your counts above are not affected.</p>
+  </div>
+</section>
+</body>
+</html>

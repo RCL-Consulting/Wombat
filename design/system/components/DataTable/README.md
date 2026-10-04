@@ -32,14 +32,14 @@ PageHeader (title, subtitle, primary action) → `.search-container` with a `.se
 
 ## The stacked table (DESIGN.md § Page-level patterns, "List page")
 
-My activities' All activities is the first (and only) one: the columns Activity, Who has it now, State and Credit.
+My activities' All activities was the first: the columns Activity, Who has it now, State and Credit. Flow 04 stacked both of the Activity inbox's tables, and flow 05 writes the same markup out by hand (DataTable cannot caption a group or head a row) for My progress's index (EpaProgressTable), the standing panel (EntrustmentStandingPanel), the trajectory's table (TrajectoryChart) and the EPA page's Activities on this EPA (EpaPage); those make the EPA, or the encounter, each row's header (`th scope="row"`, `display: block` when stacked), where My activities has none.
 
 - **Below 641px** each `tbody tr` is a grid of its cells, 4px apart, padded 8px by 16px, ruled from the next; the cells lose their padding and rules.
 - **The header row stays in the table**, visually hidden (never `display: none`), so a screen reader still has each cell's column.
 - **The roles are explicit**: DataTable writes `role="table"` on the table and `role="rowgroup"` on its head and body, and the caller's rows carry `role="row"`, `role="columnheader"` and `role="cell"`, since a row laid out as a grid loses its table semantics in some browsers.
 - **A cell whose value does not say what it is** carries `data-label`, its column's name, drawn before the value at weight 600 in `muted-text` as `content: attr(data-label) ": " / ""`: the empty alternative text keeps the name from being read twice. A cell that says what it is (the activity's link, the state's badge) has none.
 - The Activity cell is an `ActivityLink` (NeedsYouList describes it): the activity's name, "Type · EPA · date", and on a second line whom it goes to. An EPA not in force now is marked under the link, "PAED-006 (no longer in use)" (`.muted .text-sm`, T231).
-- **Who has it now** reads "You", the holder's name, "Waiting for <state label>." (a move a role holds, nobody named), "Done" or "Closed" (`ActivityListWords.WhoHasIt`). **Credit** is `CreditOutcome.Label`: "1 item", "None", "—".
+- **Who has it now** reads "You", the holder's name, "Waiting for <state label>." (a move a role holds, nobody named), "Done" or "Closed" (`ActivityListWords.WhoHasIt`). **Credit** is `CreditOutcome.Label`: "1 item", "None", "—". Since flow 05 (C7, Q7) a credit to an EPA whose page opens is a link to it, `a.credit-link` "1 item", named "1 item to PAED-001, in My progress" (`ProgressLinks.CreditTo`), a 44px block below 641px; "None", "—", and a credit to an EPA of no curriculum she now holds stay text.
 - The list is headed by an `h2.list-section-title`, "All activities (12)", which takes the focus after a page turn (`tabindex="-1"`): the pager's button may be gone from under it. `PagerControls` under it, 20 a page.
 
 ## Rules
@@ -53,7 +53,7 @@ My activities' All activities is the first (and only) one: the columns Activity,
 
 ## Known gaps
 
-- My activities and the Activity inbox stack (flow 04 stacked both of the inbox's tables: WaitingList). Every other list at 390px still scrolls sideways inside its container.
+- My activities, the Activity inbox, and flow 05's index, standing panel, trajectory table and Activities on this EPA stack. Every other list at 390px still scrolls sideways inside its container.
 
 ## Appearance
 

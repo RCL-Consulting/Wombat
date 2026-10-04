@@ -23,7 +23,7 @@ Each status is mapped onto these in C#: `ActivityState(key, isFinished)` (done i
 
 ## The standing badges (`BadgeFor.Standing`)
 
-`badge-standing-met`, `-below` and `-none`: a level against a target ("At or above", "Below", "No decision", "Not comparable"), the only badges that are a comparison. They keep their own class names and are painted as the state badge of their tint (completed, accepted, draft).
+`badge-standing-met`, `-below` and `-none`: a level against a target ("At or above", "Below", "No decision", "Not comparable"), the only badges that are a comparison. They keep their own class names and are painted as the state badge of their tint (completed, accepted, draft). Since flow 05 (T355) they show in three more places beside the standing panel: My progress's index (each EPA's STAR against the training year, the badge then its level, `span.verdict-level`), the EPA page's Entrustment (beside the STAR's level, `div.star-level`), and Home's My authorisations card in words only (`StandingWords.YearLine`, no badge).
 
 ## Overdue (`BadgeFor.Overdue`)
 
@@ -39,7 +39,7 @@ A DashboardCard's `Count` shows as a `badge-submitted` after the title ("Needs y
 
 ## Rules
 
-- A category or a type (an audit category, a request's type) is not a state, so it is not a badge; its words stand alone.
+- A category or a type (an audit category, a request's type) is not a state, so it is not a badge; its words stand alone. Flow 05 breaks this once (T357): an institution's own EPA carries a neutral badge, "Kgosi Kgari Teaching Hospital's own" (`ProgressWords.LocalBadge`, `BadgeFor.State(Draft)`), in My progress's index and the EPA page's h1, where the standing panel marks the same EPA as text under its name (a gap, recorded with EpaProgressTable).
 - A new status maps onto the five; app.css defines no other state class.
 
 ## Contrast

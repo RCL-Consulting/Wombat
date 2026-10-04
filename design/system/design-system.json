@@ -92,6 +92,7 @@
         "shield-check.svg",
         "shield.svg",
         "stethoscope.svg",
+        "target.svg",
         "trash.svg",
         "trending-up.svg",
         "triangle-alert.svg",
@@ -456,6 +457,12 @@
           "blob": "81389b9bb3fe801850b9b69573939e89",
           "size": 208,
           "type": "image/svg+xml"
+        },
+        "target.svg": {
+          "name": "target.svg",
+          "blob": "27e54d87bee177448a538dbeb37916ba",
+          "size": 201,
+          "type": "image/svg+xml"
         }
       }
     },
@@ -508,8 +515,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-03T18:18:06Z",
-    "via": "Claude Code · Wombat@930377cd",
-    "note": "Re-synced to flow 04 as built (T350, 06aa51d7): no token value changed; 4 components added (WaitingList, WayOn, OtherRoleLine, RatedLevelPicker); 19 revised (ActivityAbout, ActivityForm, ActivityHistory, ActivityStatus, ActivityWorkflowActions with the note panel, Badge, Button, DashboardCard, DataTable, Icon, MainLayout, NeedsYouList, PagerControls, RefusalSummary, RungRow, StatePanel, the README, tokens' ref, and the bundle); move labels now sentence case; no icon added (59 in all)."
+    "at": "2026-10-04T16:01:01Z",
+    "via": "Claude Code · Wombat@426cdc17",
+    "note": "Re-synced to flow 05 as built (T355, b020c942 with db4c2d0a, 5f8e6639, b389f7d2 and 426cdc17): no token value changed; 6 records added in a new Progress group (EpaProgressTable, EntrustmentStandingPanel, TrajectoryChart, EpaLabel, MyProgress, EpaPage); revised DashboardCard (the Trainee's four cards), ActivityStatus (the count line), NeedsYouList, StatePanel, Badge, PageHeader, DataTable, NavMenu, MainLayoutPhone, Icon, the README, tokens' ref, and the bundle; ISO dates on screens; 1 icon uploaded (target; 60 in all)."
   }
 }

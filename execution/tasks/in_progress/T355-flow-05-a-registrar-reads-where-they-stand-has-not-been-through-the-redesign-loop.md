@@ -65,7 +65,9 @@ Run the loop as flow 04 ran it (`design/flows/04-assessor-inbox/`, BRIEF § 11 "
   re-checked: 4.15's chart section (`db4c2d0a`, `5f8e6639`), A.7.3's phone chart (`b389f7d2`); T306's Home half, T298,
   T346, T280 at 3.12, T328, T323 and F-6.37a/T304 no longer occur; T356 filed; dumps `scenario-t355-post-act{1..6,A}`).
   States: 37 rows, 36 hold (17 reused after checking, 19 taken on scratch copies), December not reachable in October.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number: 15 (files as 14, the index last; 6 records
+  added in a Progress group, about 15 revised; `target.svg` uploaded, 60 icons; one Sonnet review, its four must-fixes
+  applied; T357 filed).
 
 ## Related
 
