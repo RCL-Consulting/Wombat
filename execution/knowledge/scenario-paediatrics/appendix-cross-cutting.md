@@ -1099,14 +1099,15 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): At 390 px. The bar reads
   column ("Semester 2, 2026: ", "Committee decides: ", "STAR against training year 3: "; the panel's "Year 3 target: "
   … "Latest rating: "); each Latest rating link ("4 · Encounter 2026-09-28 — open this PAED-001 rating") is 48 px tall;
   no chart on the page; nothing sideways. PAED-001's page from the index (trail one 44 px "My progress" link):
-  Observations, Entrustment, Rating trajectory and Activities on this EPA stack; the chart is drawn at 326 px (viewBox
-  326, labels 12 px), never scaled, in the region "Rating chart for PAED-001" (324 px wide, so it scrolls 2 px), with
+  Observations, Entrustment, Rating trajectory and Activities on this EPA stack; the chart is drawn at 322 px (viewBox
+  322, labels 12 px), never scaled, the wide drawing hidden, in the region "Rating chart for PAED-001" (324 px wide,
+  scrollWidth 324 = clientWidth 324, no scroll), with
   "The ratings, oldest first" stacked under it. My activities: nothing needs her; All activities (6) stack each row as
   a 324 px block, "Who has it now:" and "Credit:" labelling their cells, the link and the state unlabelled; each Credit
   link ("1 item to PAED-012, in My progress") is 44 px; the table fits (356 in 358). My data rights: the cards stack;
   Your requests (367 px) scrolls in its 358 px container, its Download in reach.
-Gap: none (T328 no longer occurs: the Latest rating links are 48 px). new: the trajectory chart (326 px) sits in a 324
-  px region, so the region scrolls 2 px sideways (here, on the graduate's EPA page and on the committee page).
+Gap: none (T328 no longer occurs: the Latest rating links are 48 px). The 2 px finding no longer occurs: the chart
+  (322 px) fits its 324 px region, and the page is 390 wide.
 
 ### Step A.7.4 — Dr Molefe's record on her phone
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
@@ -1159,14 +1160,13 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): At 390 px. The bar's "Ac
   bar grows to 59 px; the menu's head adds "Switch to Assessor". Committee reviews: the table (878 px) scrolls in its
   container. Review 7 (Dr Molefe's pre-graduation review), trail one 44 px "Committee reviews" link: cards at 16 to
   374, nested cards at 41 to 349; the evidence tables (454 to 784 px) each scroll inside a 274 to 308 px container.
-  Rating trajectory by EPA holds one card per EPA at 16 to 374, not nested: each chart is drawn at 326 px (viewBox 326,
-  rungs and years in 12 px text), never scaled, in its own focusable region "Rating chart for PAED-001" (and 010, 012),
-  324 px wide, which ArrowRight scrolls its 2 px; the ratings table stacks under it. The window is the review's
-  ("2023-01-15 to 2026-12-31", years 2023 to 2026), with no Today line; the Annexure A panel's EPA names link to the
+  Rating trajectory by EPA holds one card per EPA at 16 to 374, not nested: each chart is drawn at 322 px (viewBox 322,
+  rungs and years in 12 px text), never scaled, the wide drawing hidden, in its own focusable region "Rating chart for
+  PAED-001" (and 010, 012), 324 px wide with scrollWidth 324 = clientWidth, so it does not scroll; the ratings table
+  stacks under it. The window is the review's ("2023-01-15 to 2026-12-31", years 2023 to 2026), with no
+  Today line; the Annexure A panel's EPA names link to the
   charts (#trajectory-2-h), its rating links 48 px. Nothing else scrolls sideways.
-Gap: runbook: the charts are no longer in a nested card (5f8e6639 took them out), so each fits its card and its region
-  scrolls only 2 px, not sideways as the Expect says. T323 no longer occurs: the charts are drawn at 326 px with 12 px
-  labels, not scaled. The 2 px is A.7.3's new finding.
+Gap: none
 
 ### Step A.7.7 — Dr Mokoena on her phone
 Role: SpecialityAdmin — Dr Refilwe Mokoena
