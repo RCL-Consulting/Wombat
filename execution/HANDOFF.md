@@ -37,9 +37,12 @@ The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\
   My progress and My authorisations into the Trainee's menu group, and a "being rebuilt" notice after a version move);
   `round-1-ask.txt`; staged 90 files plus flow 03's trainee boards by hand (`design/upload/flow03-boards/`, gitignored).
   Flows 01–04's quoted runbook steps re-synced (77 stale after T350's replay).
-- **Step 3 waits for the operator:** a new canvas from the main app's Design page on the design system version 13; its
-  link. Then step 4 copies the mark (`asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`), the ask's `<MARK-URL>` is
-  filled in, and round 1 is pasted.
+- **Steps 3–4 done** (`578281c3`): canvas https://claude.ai/artifact/VkYiJc32Tn8USxWMrftScj (before round 1: no
+  `project/canvas.json`, version `1791075615-bb97`); mark `/_blob/5e32abd7ee425f64c0db739c82470df3`, written into the
+  ask. Record: `design/flows/05-trainee-progress/README.md`.
+- **Round 1 waits for the operator:** paste `round-1-ask.txt` into the canvas, attaching `design/upload/` (with
+  `flow03-boards/`). Once it has drawn (the version changes), save the boards to `round-1/` and review them as flow 04's
+  `round-1-review.md` did.
 
 ### For the operator
 
