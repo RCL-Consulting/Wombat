@@ -1,12 +1,13 @@
 ---
 id: T304
 title: A trainee profile save re-admits the registrar: one left on a superseded curriculum version cannot be saved at all, and one moved to a new version has none of their credit replayed
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
 started: 2026-10-04
+completed: 2026-10-04
 ---
 
 # T304 — A trainee profile save re-admits the registrar: one left on a superseded curriculum version cannot be saved at all, and one moved to a new version has none of their credit replayed
@@ -75,13 +76,13 @@ started: 2026-10-04
 
 ## Verification
 
-- [ ] Handler test: after a re-adoption, saving a profile pinned to the superseded version, with only the expected completion changed, succeeds. AdoptionId is still the superseded adoption.
-- [ ] Handler test: a move from 11.2 back to 11.1 (inactive adoption) is refused before any write. The audit pipeline's save afterwards commits nothing.
-- [ ] Handler test: a move to 11.2 re-credits the trainee's completions on 11.2's items, and removes the 11.1 tallies, in one save. A replay that throws leaves the profile on 11.1.
-- [ ] Handler test: a programme-start change replays, and a completion's minimum is re-judged at the new training year.
-- [ ] Integration test in the style of ProgrammeEndWritePathTests: the move takes the trainee hold, and a completion racing it credits against the moved profile.
-- [ ] bUnit: the profile page's picker offers the pinned version and the active adoption's. The admit form offers the active adoption's alone.
-- [ ] Browser, runbook Step 6.34: Save profile reads 'Trainee profile saved.', and reopened it shows 2028-07-14 on 11.1. Step 6.37: Ndlovu's PAED-002 reads 1 of 3 before any rebuild. Step 6.38: 'Stale tallies removed 0'.
+- [x] Handler test: after a re-adoption, saving a profile pinned to the superseded version, with only the expected completion changed, succeeds. AdoptionId is still the superseded adoption. — `TraineeProfileMoveTests.AfterAReAdoption_SavingAProfilePinnedToTheSupersededVersion_WithOnlyTheExpectedCompletionChanged_Succeeds` (`95d4e950`).
+- [x] Handler test: a move from 11.2 back to 11.1 (inactive adoption) is refused before any write. The audit pipeline's save afterwards commits nothing. — `AMoveBackToTheSupersededVersion_IsRefusedBeforeAnyWrite`, `AMoveIntoAnotherDisciplinesAdoptedVersion_IsRefusedBeforeAnyWrite`.
+- [x] Handler test: a move to 11.2 re-credits the trainee's completions on 11.2's items, and removes the 11.1 tallies, in one save. A replay that throws leaves the profile on 11.1. — `AMoveTo112_ReCreditsTheTraineesCompletionsOn112sItems_AndRemoves111sTallies_InOneSave`; `WhenTheMovesReplayFails_TheProfileStaysOn111_AndTheAuditSaveCommitsNothing`; `AMoveToAVersionWithoutTheCompletionsEpa_…` (`a27983fd`).
+- [x] Handler test: a programme-start change replays, and a completion's minimum is re-judged at the new training year. — `AProgrammeStartChange_Replays_AndJudgesACompletionsMinimumAtTheNewTrainingYear`.
+- [x] Integration test in the style of ProgrammeEndWritePathTests: the move takes the trainee hold, and a completion racing it credits against the moved profile. — `ProgrammeEndCreditRacePostgresTests.ACompletion_WaitsForAMoveInFlight_AndCreditsAgainstTheMovedProfile` and `AMove_WaitsForACompletionInFlight_…`; Architecture `Whatever_moves_a_stored_profile_holds_it_for_the_move`.
+- [x] bUnit: the profile page's picker offers the pinned version and the active adoption's. The admit form offers the active adoption's alone. — `TheProfilesPicker_ListsWhatTheChoicesQueryAnswers_WithThePinnedVersionChosen`, `TheAdmitForm_ListsWhatTheAdmissionChoicesQueryAnswers`; the rule in `TraineeCurriculumChoicesTests`.
+- [x] Browser, runbook Step 6.34: Save profile reads 'Trainee profile saved.', and reopened it shows 2028-07-14 on 11.1. Step 6.37: Ndlovu's PAED-002 reads 1 of 3 before any rebuild. Step 6.38: 'Stale tallies removed 0'. — the T304 replay on `wombat_scenario_t304` (2026-10-04): 6.34 'Trainee profile saved.', reopened 2028-07-14 on 11.1, SQL adoption 1; 6.36 '…1 completion was checked against 11.2, and 1 counts towards it.'; 6.37 PAED-002 1 of 3 at once; 6.38 'Stale tallies removed 0'. Suites: Domain 810, Application 3,609, Infrastructure 1,011, Architecture 52, Web 3,051, Integration 483.
 
 ## Related
 

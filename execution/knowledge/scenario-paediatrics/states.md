@@ -356,7 +356,7 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 | `/portfolio/progress` | Withdrawn, read-only | `states/my-progress--withdrawn.png` | Dr du Plessis | At Step 5.28. |
 | `/portfolio/progress` | A paused EPA | `states/my-progress--paused-epa.png` | Dr Dlamini | At Step 6.19: no PAED-012 card, its trajectory "(no longer in use)". |
 | `/portfolio/progress` | An institution's own item | `states/my-progress--local-item.png` | Dr Dlamini | At Step 6.27. |
-| `/portfolio/progress` | New version before the rebuild | `states/my-progress--before-rebuild.png` | Dr Ndlovu | At Step 6.37. |
+| `/portfolio/progress` | New version after the move | `states/my-progress--after-move.png` | Dr Ndlovu | At Step 6.37: PAED-002 already counts on 11.2, before any rebuild (T304). |
 | `/portfolio/progress` | New version after the rebuild | `states/my-progress--after-rebuild.png` | Dr Ndlovu | At Step 6.39. |
 | `/portfolio/progress` | December notice | `states/my-progress--december.png` | Dr Dlamini | Only when `D` is in December: "The <year> academic year ended on 30 November. …". December replays only: on any other replay it is not shown, and its absence is not a gap. No change. |
 | `/portfolio/progress` | Loading | `states/my-progress--loading.png` | Dr Dlamini | Hold a read, then My progress in the menu. No change. |
@@ -738,10 +738,10 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 | `/admin/trainees/edit` | Saved | `states/trainee-profile-edit--saved.png` | Prof Mbatha | At Step 2.30: "Trainee profile saved." |
 | `/admin/trainees/edit` | Mark complete dialog | `states/trainee-profile-edit--complete-dialog.png` | Prof Mbatha | At Step 5.16. |
 | `/admin/trainees/edit` | A future day refused | `states/trainee-profile-edit--future-refused.png` | Prof Mbatha | At Step 5.16. |
-| `/admin/trainees/edit` | Completed | `states/trainee-profile-edit--completed.png` | Prof Mbatha | At Step 5.17. |
+| `/admin/trainees/edit` | Completed | `states/trainee-profile-edit--completed.png` | Prof Mbatha | At Step 5.17: the details read-only, no Save profile (T305). |
 | `/admin/trainees/edit` | Deactivate dialog | `states/trainee-profile-edit--deactivate-dialog.png` | Prof Mbatha | At Step 5.27. |
-| `/admin/trainees/edit` | Deactivated | `states/trainee-profile-edit--deactivated.png` | Prof Mbatha | At Step 5.27. |
-| `/admin/trainees/edit` | Curriculum not adopted | `states/trainee-profile-edit--curriculum-refused.png` | Prof Mbatha | At Step 6.34. |
+| `/admin/trainees/edit` | Deactivated | `states/trainee-profile-edit--deactivated.png` | Prof Mbatha | At Step 5.27: the details read-only, no Save profile (T305). |
+| `/admin/trainees/edit` | Moved to a new version | `states/trainee-profile-edit--moved.png` | Prof Mbatha | At Step 6.36: "Trainee profile saved. 1 completion was checked against 11.2, and 1 counts towards it." (T304) |
 | `/admin/trainees/edit` | Unknown id | `states/trainee-profile-edit--not-found.png` | Prof Mbatha | Typed: `/admin/trainees/edit?id=999999`: "Profile unavailable" under the load's alert. No change. |
 | `/admin/trainees/edit` | Narrow | `states/trainee-profile-edit--narrow.png` | Prof Mbatha | At Step A.7.9. |
 

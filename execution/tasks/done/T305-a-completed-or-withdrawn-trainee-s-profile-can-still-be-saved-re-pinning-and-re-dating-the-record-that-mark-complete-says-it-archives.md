@@ -1,12 +1,13 @@
 ---
 id: T305
 title: A completed or withdrawn trainee's profile can still be saved, re-pinning and re-dating the record that Mark complete says it archives
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
 started: 2026-10-04
+completed: 2026-10-04
 ---
 
 # T305 — A completed or withdrawn trainee's profile can still be saved, re-pinning and re-dating the record that Mark complete says it archives
@@ -45,9 +46,9 @@ started: 2026-10-04
 
 ## Verification
 
-- [ ] Handler test: updating a completed profile and a deactivated profile is refused. After the audit pipeline's save, curriculum, adoption and both dates are unchanged (the TraineeProfileRecordedEndTests pattern).
-- [ ] bUnit: TraineeProfileEdit renders no Save profile, and no editable curriculum, start or completion, for a Completed profile and for an Inactive one. An active profile is unchanged.
-- [ ] Browser, runbook Steps 5.17 and 5.27: after Mark complete and after Deactivate, the profile shows its details read-only with no Save profile. The states screenshots trainee-profile-edit--completed.png and --deactivated.png are retaken.
+- [x] Handler test: updating a completed profile and a deactivated profile is refused. After the audit pipeline's save, curriculum, adoption and both dates are unchanged (the TraineeProfileRecordedEndTests pattern). — `TraineeProfileRecordedEndTests.Update_OfAnEndedProfile_IsRefused_AndLeavesNothingToCommit` (completed and deactivated); scope first: `AnotherInstitutionsEndedProfile_IsRefusedByScope_NotByTheArchive`.
+- [x] bUnit: TraineeProfileEdit renders no Save profile, and no editable curriculum, start or completion, for a Completed profile and for an Inactive one. An active profile is unchanged. — `AnEndedProfile_ShowsItsDetailsReadOnly_WithNoSaveProfile`, `AnActiveProfile_KeepsItsFormAndSaveProfile`, `AfterMarkComplete_TheReadOnlyDetails_ShowTheStoredDates_NotUnsavedEdits`.
+- [x] Browser, runbook Steps 5.17 and 5.27: after Mark complete and after Deactivate, the profile shows its details read-only with no Save profile. The states screenshots trainee-profile-edit--completed.png and --deactivated.png are retaken. — the T304 replay (2026-10-04): 5.17 and 5.27 show the read-only details under 'This programme has ended, so its record is archived and cannot be changed.', no Save profile; `states/trainee-profile-edit--completed.png` and `--deactivated.png` retaken.
 
 ## Related
 

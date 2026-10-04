@@ -67,12 +67,11 @@ Expect: The first save is refused: "A college with the same name or short code a
   The second save opens the new College's edit page, Active. The colleges list reads three rows, each Active and each
   offering Edit and Specialities: the new College, the College of Paediatricians of South Africa and the Demo College.
 Note: Administrator only. The College pages and `CreateCollege` admit no one else.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): D = 2026-10-03. Colleges listed CPSA and the Demo College.
-  Create college: an empty save shows "The Name field is required." and "The ShortCode field is required."; with short
-  code CPSA the save was refused with "A college with the same name or short code already exists." and stayed on
-  /admin/colleges/new, nothing created. With CNSA it opened /admin/colleges/4, "Edit college", Active ticked. The list
-  reads three rows, all Active, each with Edit and Specialities ("Edit College of …", "Specialities of …"): CNSA,
-  CPSA, Demo College.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): D = 2026-10-04. Create college: an empty save shows "The Name
+  field is required." and "The ShortCode field is required."; with short code CPSA the save was refused with "A college
+  with the same name or short code already exists." and stayed on /admin/colleges/new. With CNSA it opened
+  /admin/colleges/4, "Edit college", Active. The list reads three rows, all Active, each with Edit and Specialities:
+  CNSA, CPSA, Demo College.
 Gap: F-6.1a, T324 (still: the required-field message names the model property, "The ShortCode field is required.", not
   the label "Short code"; the Expect itself is met).
 
@@ -87,10 +86,9 @@ Expect: The save is confirmed, and the list shows the new description, with CPSA
   neither re-seeds nor restores the record: the seeder finds its College by seed key (T221).
 Note: Administrator only (`UpdateCollege`: a CollegeAdmin keeps the catalogue, not the College's own record). The red
   Deactivate beside Save does not ask first yet, against DESIGN.md's rule (T264). Do not press it.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): CPSA is /admin/colleges/2 (id 2, for Step 6.10): name, short
-  code CPSA and Active as seeded. With only the description changed, Save showed "College saved."; the list's CPSA row
-  reads the new description, Active, name and short code unchanged. Deactivate was not pressed. Restart (played by the
-  integrator after Act 6): College 2's row is byte-identical before and after; the seeders found it by SeedKey 'cpsa'.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): CPSA is /admin/colleges/2 (name, short code CPSA, Active as
+  seeded). With only the description changed, Save showed "College saved."; the list's CPSA row reads the new
+  description, Active, name and short code unchanged. Deactivate was not pressed. No restart was played.
 Gap: none
 
 ### Step 6.3 — devadmin adds the Neurology speciality
@@ -103,10 +101,9 @@ Expect: Before the create, the list says the College has no specialities yet and
     sub-specialities";
   - the list has one row, Neurology, Active.
 Note: An Administrator, or the College's own CollegeAdmin. CNSA has none.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): "Specialities of College of Neurologists of South Africa"
-  opened /admin/colleges/4/specialities: "College: College of Neurologists of South Africa (CNSA)", "No specialities
-  yet / Create the first speciality for this college." Creating Neurology opened /admin/colleges/4/specialities/3,
-  "Edit speciality", "College: College of Neurologists of South Africa (CNSA)", Active ticked, with "Manage
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): /admin/colleges/4/specialities: "College: College of
+  Neurologists of South Africa (CNSA)", "No specialities yet / Create the first speciality for this college." Creating
+  Neurology opened /admin/colleges/4/specialities/3, "Edit speciality", the same College line, Active, with "Manage
   sub-specialities". The list has one row: Neurology, "Specialist training in Neurology.", Active.
 Gap: none
 
@@ -118,11 +115,10 @@ Do: From Neurology's page, manage its sub-specialities and create `Adult Neurolo
 Expect: The list is empty before the create and has one row after it. The new sub-speciality's edit page offers a
   default entrustment scale, which reads "No default — offer every scale". Its choices are the two existing scales.
 Note: An Administrator, or the College's own CollegeAdmin. Step 6.7 sets the default.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Manage sub-specialities opened
-  /admin/specialities/3/sub-specialities, "Speciality: Neurology", "No sub-specialities yet / Create the first
-  sub-speciality under this speciality." Creating Adult Neurology opened /admin/specialities/3/sub-specialities/3,
-  "Edit sub-speciality": "Default entrustment scale" reads "No default — offer every scale", its other choices the
-  CPSA Paediatric Entrustment Scale v11.1 and the O-R Scale. The list has one row, Adult Neurology, Active.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): /admin/specialities/3/sub-specialities: "No sub-specialities yet
+  / Create the first sub-speciality under this speciality." Creating Adult Neurology opened
+  /admin/specialities/3/sub-specialities/3: "Default entrustment scale" reads "No default — offer every scale", its
+  other choices the CPSA ladder and the O-R Scale. The list has one row, Adult Neurology, Active.
 Gap: none
 
 ## Phase 6.B — Entrustment scales
@@ -145,10 +141,10 @@ Expect: The first save is refused: "Level labels must be unique within a scale."
   opens the new scale's edit page, with the five levels numbered 1 to 5 in the order given. The scales list shows
   three scales, the new one with 5 levels.
 Note: Administrator only. The create and edit pages, and every scale command, admit no one else.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): With level 4 also "Indirect supervision" the save was refused:
-  "Level labels must be unique within a scale." and stayed on /new. With level 4 "Distant supervision" it opened
-  /admin/entrustment-scales/3, levels 1 Observe only to 5 Unsupervised practice in order. The list shows three scales:
-  CNSA Neurology Entrustment Scale 5, CPSA ladder 6, O-R Scale 5 (the refused save created none).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): With level 4 also "Indirect supervision" the save was refused:
+  "Level labels must be unique within a scale." and stayed on /new. Corrected, it opened /admin/entrustment-scales/3,
+  levels 1 Observe only to 5 Unsupervised practice in order. The list shows three scales: CNSA 5, CPSA ladder 6, O-R
+  Scale 5.
 Gap: none
 
 ### Step 6.6 — devadmin adds a sixth level
@@ -159,9 +155,8 @@ Do: Open the CNSA scale, add a sixth level, `Supervises others` ("Supervises jun
 Expect: The save is confirmed, and the page lists six levels, 1 to 6, with `Supervises others` at 6. The list shows 6
   levels.
 Note: Administrator only.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Add level gave a sixth row; with "Supervises others" and its
-  description, Save showed "Entrustment scale saved." and the page lists 1 to 6, Supervises others at 6. The list
-  reads 6 levels.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): With a sixth level "Supervises others", Save showed "Entrustment
+  scale saved." and the page lists 1 to 6. The list reads 6 levels.
 Gap: none
 
 ### Step 6.7 — devadmin makes it Adult Neurology's default
@@ -171,10 +166,9 @@ Do: Open Adult Neurology, set its default entrustment scale to the CNSA Neurolog
 Expect: The save is confirmed, and reopening the page shows the scale selected. Its help says that committee STARs for
   this programme's trainees are limited to that scale's levels.
 Note: An Administrator, or the College's CollegeAdmin.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): On /admin/specialities/3/sub-specialities/3 the default offers
-  No default, the CNSA scale, the CPSA ladder and the O-R Scale. Choosing the CNSA scale and saving showed
-  "Sub-speciality saved." (DefaultEntrustmentScaleId 3). Reopened, the CNSA scale is selected, with "Committee STARs
-  for this programme's trainees are limited to this scale's levels."
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): The default offers No default, the CNSA scale, the CPSA ladder
+  and the O-R Scale. Choosing the CNSA scale and saving showed "Sub-speciality saved."; reopened, it is selected, with
+  "Committee STARs for this programme's trainees are limited to this scale's levels."
 Gap: none
 
 ### Step 6.8 — devadmin cannot delete a scale in use
@@ -188,10 +182,10 @@ Expect: Delete asks first, naming the scale (DESIGN.md § Button system: a destr
 Note: Administrator only. The refusal names the first reference it finds, in this order: an MSF question, a pinned
   curriculum item, scored progress, a sub-speciality's default, a published form's binding, an entrustment decision.
   Until T264 lands, the list's Delete does not ask first.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): The CNSA row's Delete ("Delete CNSA Neurology Entrustment
-  Scale") sent the command at once: no dialog. It was refused: "This entrustment scale is the default scale of the
-  sub-speciality "Adult Neurology" (Neurology), so it cannot be deleted. Change that sub-speciality's default
-  entrustment scale to another scale, or to no default, first." The scale stays, 6 levels.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): The CNSA row's Delete sent the command at once: no dialog. It
+  was refused: "This entrustment scale is the default scale of the sub-speciality "Adult Neurology" (Neurology), so it
+  cannot be deleted. Change that sub-speciality's default entrustment scale to another scale, or to no default, first."
+  The scale stays, 6 levels.
 Gap: F-6.8a, T264 (still: Delete does not ask first, against DESIGN.md § Button system). The refusal text matches the
   Expect.
 
@@ -202,9 +196,9 @@ Do: Read the list.
 Expect: Three scales, with their level counts: the CPSA ladder at 6, the O-R Scale at 5 and the CNSA scale at 6. There
   is no Create scale, and no column of Edit and Delete: a column no row offers is not rendered (T239).
 Note: An InstitutionalAdmin reads the scales; only an Administrator changes one.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Prof Mbatha (Entrustment scales lit) reads three scales under
-  Name, Description and Levels only: CNSA 6, CPSA ladder 6, O-R Scale 5. No Create scale, no link or button in the
-  page, no Actions column. At 390 px the page does not scroll sideways (scrollWidth 390).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Prof Mbatha (Entrustment scales lit) reads three scales under
+  Name, Description and Levels only: CNSA 6, CPSA ladder 6, O-R Scale 5. No Create scale, no Actions column. At 390 px
+  the page does not scroll sideways (scrollWidth 390).
 Gap: none
 
 ## Phase 6.C — The College keeps its catalogue
@@ -219,12 +213,10 @@ Expect: The dashboard has one card, National catalogue, with Specialities, EPAs 
   this page."), with Go to Home, and nothing changes.
 Note: A CollegeAdmin keeps the College's specialities, EPAs and curricula. The College's own record and the scales
   belong to an Administrator (`UpdateCollege`, `CreateEntrustmentScale`).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): The sign-in page ("Sign in · Wombat": Email, Password with
-  Show, Remember me, Sign in, "Forgotten your password?") took him to /: "Home", "College admin · Semester 2, 2026",
-  one card, National catalogue, linking Specialities, EPAs and Curricula. His menu reads Home, Specialities, EPAs,
-  Curricula, Activity types, My data rights. /admin/colleges/2 and /admin/entrustment-scales/new each landed on
-  /access-denied?ReturnUrl=…, "You cannot open this page", "Your role (College admin) does not open this page.", "If
-  you need it for your work, ask the platform administrator.", Go to Home; nothing lit. Nothing changed.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Signed in, Home has one card, National catalogue ("Your
+  college's specialities, its EPAs and its curricula. …"). /admin/colleges/2 and /admin/entrustment-scales/new each
+  landed on /access-denied?ReturnUrl=…, "You cannot open this page", "Your role (College admin) does not open this
+  page.", Go to Home. Nothing changed.
 Gap: none
 
 ### Step 6.11 — Dr Kruger edits the Paediatrics speciality
@@ -240,12 +232,10 @@ Expect:
     its target admits).
 Note: The College's CollegeAdmin, or an Administrator. The seeder finds the speciality by seed key, so a restart keeps
   the edit (T221). Until T291 item 2 lands, the list still shows him "Back to colleges".
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Specialities in his menu opened /admin/colleges/2/specialities
-  (trail Home › Specialities › College of Paediatricians of South Africa): "College: College of Paediatricians of
-  South Africa (CPSA)", one row, Paediatrics. Edit opened /admin/colleges/2/specialities/2; the new description saved
-  with "Speciality saved." and the list shows it, Active. The edit page offers only Back to specialities, Manage
-  sub-specialities and Cancel, but the list still offers him "Back to colleges" (/admin/colleges), which Step 6.10
-  showed refuses him.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Specialities opened /admin/colleges/2/specialities, one row,
+  Paediatrics. Edit opened /admin/colleges/2/specialities/2 (Back to specialities, Manage sub-specialities); the new
+  description saved with "Speciality saved." and the list shows it, Active. The list still offers him "Back to colleges"
+  (/admin/colleges).
 Gap: F-6.11a, T291 (still: the specialities list offers a CollegeAdmin "Back to colleges", a page he is refused; the
   Note anticipates it).
 
@@ -259,11 +249,10 @@ Expect: The list holds Neonatology and Paediatrics, both Active. The default is 
   is reopened. The Paediatrics sub-speciality keeps its own default, the CPSA ladder. Nothing about KGK's programme
   changes.
 Note: The College's CollegeAdmin, or an Administrator.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Manage sub-specialities opened
-  /admin/specialities/2/sub-specialities, "Speciality: Paediatrics", one row. Creating Neonatology opened
-  /admin/specialities/2/sub-specialities/4 with No default; choosing the CPSA ladder and saving showed "Sub-speciality
-  saved.", and it stays selected when reopened. The list holds Neonatology and Paediatrics, both Active. By SQL both
-  default to scale 2; KGK's one adoption and every KGK profile (curriculum 2, adoption 1) are unchanged.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): /admin/specialities/2/sub-specialities had one row. Creating
+  Neonatology opened /admin/specialities/2/sub-specialities/4 with No default; choosing the CPSA ladder and saving
+  showed "Sub-speciality saved.", and it stays selected when reopened. The list holds Neonatology and Paediatrics, both
+  Active.
 Gap: none
 
 ### Step 6.13 — Dr Kruger starts a Neonatology curriculum, and holds it back
@@ -279,13 +268,11 @@ Expect:
     Neonatology must be added first.
 Note: The College's CollegeAdmin, or an Administrator. Active decides only whether an institution may adopt the
   curriculum (`GetAdoptableCurricula`).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): The create form preselects "Paediatrics / Neonatology";
-  effective from 2026-10-03. The create opened /admin/curricula/3, "Edit curriculum", Active ticked, with the "Clone
-  as new version" card (1.0-copy). Unticked and saved: "Curriculum saved."; the list reads Neonatology EPA Curriculum
-  1.0, Paediatrics / Neonatology, 0 items, Inactive, beside 11.1. Its items page has an Existing items table with
-  headers and no rows, and in place of the Add form: "Every national EPA of Neonatology is already on this curriculum,
-  as a national item or as an institution's own item, so there is none left to add. To add an item, first add a
-  national EPA of Neonatology, …"
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Effective from 2026-10-04, the create opened /admin/curricula/3,
+  Active ticked. Unticked and saved: "Curriculum saved."; the list reads Neonatology EPA Curriculum 1.0, Paediatrics /
+  Neonatology, 0 items, Inactive. Its items page has no rows, and in place of the Add form: "Every national EPA of
+  Neonatology is already on this curriculum, as a national item or as an institution's own item, so there is none left
+  to add. …"
 Gap: F-6.13a, T326 (still: the empty state says every national EPA of Neonatology is already on the curriculum, though
   Neonatology has none; the empty table shows headers with no "no items yet" line).
 
@@ -299,11 +286,9 @@ Expect: The save is confirmed, and the EPA stays Active. The EPA list shows the 
   EPA's wording has no versions.
 Note: A national EPA's College's CollegeAdmin, or an Administrator (`UpdateEpa`). A restart does not bring back the
   seeded title (T221).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): PAED-006 is /admin/epas/7. With the title changed and nothing
-  else, Save showed "EPA saved.", Active stays ticked and Deactivate is offered; the row keeps its description,
-  IsActive and SeedKey cpsa:paediatrics:epa:PAED-006. The EPA list reads the new title, Active, and 11.1's items name
-  it "PAED-006 - Managing long-term health conditions (LTHCs) in children". Pickers and progress are checked in Steps
-  6.15-6.16. Restart (played by the integrator after Act 6): EPA 7's row, title included, is identical before and after.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): PAED-006 (/admin/epas/7): with only the title changed, Save
+  showed "EPA saved.", Active stays ticked and Deactivate is offered. The EPA list reads "PAED-006 | Managing long-term
+  health conditions (LTHCs) in children | … | Active". No restart was played.
 Gap: none
 
 ### Step 6.14a — Dr Kruger drafts a College activity type
@@ -340,19 +325,15 @@ Expect:
 Note: A College's CollegeAdmin, or an Administrator (`ActivityTypeScopeGuard`, D52). Save no draft on a seeded `*_cpsa`
   type. A seeded type with an operator's draft stops receiving seed updates until the draft is published or discarded.
   Once anyone but the seeder publishes one, the seed refresher leaves it for good (T103, D52).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Activity types is in his menu, lit. The list has 22 rows: the
-  ten Demo rows ("Speciality · General Medicine") offer View; the twelve *_cpsa rows ("Speciality · Paediatrics", v1,
-  None, Active) offer Edit named for the row, msf_cpsa and learner_feedback_cpsa included. No KGK Teaching Session
-  Log; New activity type offered. "Edit Multi-Source Feedback (Paediatrics)" opened /admin/activity-types/21 with no
-  notice, Save draft, Publish (disabled), Add section and Edit/Up/Down/Delete; nothing pressed. New activity type
-  opened "New activity type" on Form, Live preview of the default Details section ("* marks a field you must fill
-  in.", Title *). Metadata's Scope offers Speciality and Sub-speciality, starting on Speciality with Paediatrics
-  alone; Sub-speciality offers "Paediatrics / Neonatology" and "Paediatrics / Paediatrics". With the Do's values Save
-  draft was accepted: /admin/activity-types/24, "Edit CPSA Case Presentation Log", Save draft, Discard draft and
-  Publish, and no "Draft saved.". By SQL Scope Speciality, ScopeId 2, Version 0, no tool key, the only draft. The list
-  has 23 rows, the new one "Speciality · Paediatrics", v0, "Draft saved", Active, Edit. Prof Mbatha's list has 23 rows
-  without it (KGK Teaching Session Log among them), and /admin/activity-types/24 reads "The activity type could not be
-  found."
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Activity types in his menu, lit. The list has 22 rows: the ten
+  Demo rows offer View; the twelve *_cpsa rows offer Edit named for the row, msf_cpsa and learner_feedback_cpsa
+  included. No KGK Teaching Session Log. "Edit Multi-Source Feedback (Paediatrics)" (/admin/activity-types/21) opened
+  with Save draft and Publish and no notice; nothing pressed. New activity type opened "New activity type" on Form.
+  Scope offers Speciality and Sub-speciality, starting on Speciality with Paediatrics alone; Sub-speciality offers
+  "Paediatrics / Neonatology" and "Paediatrics / Paediatrics". Save draft was accepted: /admin/activity-types/24, "Edit
+  CPSA Case Presentation Log", with no "Draft saved.". The list has 23 rows, the new one "Speciality · Paediatrics", v0,
+  "Draft saved", Active, Edit. Prof Mbatha's list has 23 rows without it, and /admin/activity-types/24 reads "The
+  activity type could not be found."
 Gap: F-6.14aa, T291 (still: the first Save draft shows no "Draft saved."). F-6.14ab, T334 (still: msf_cpsa and
   learner_feedback_cpsa offer the College Edit, and msf_cpsa opens with no notice and every editor live; not saved).
 
@@ -374,10 +355,9 @@ Do: Read the page. Note these, for Steps 6.19 and 6.24:
 Expect: PAED-012 is among the "Each semester" cards, with a target of 3 per semester. PAED-006's card carries the title
   corrected in Step 6.14. The "This period" card reads "Semester targets: … of `m` EPAs met this semester".
 Note: A trainee reads only their own progress.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): PAED-012's "Each semester" card reads "0 of 3 this semester",
-  "3 more by 30 November 2026.", "Target: 3 per semester (6 a year). Minimum now 4." and no "at the minimum level"
-  line: n = 0, 0 at the minimum, minimum now 4. "Semester targets 1 of 10 EPAs met this semester", so m = 10.
-  PAED-006's card and Annexure A row read the corrected title.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): PAED-012's card reads "0 of 3 this semester", "3 more by 30
+  November 2026.", "Target: 3 per semester (6 a year). Minimum now 4." and no "at the minimum level" line: n = 0,
+  minimum now 4. "1 of 10 EPAs met this semester", so m = 10. PAED-006 reads the corrected title.
 Gap: none
 
 ### Step 6.16 — Dr Dlamini files a Mini-CEX on PAED-012
@@ -394,14 +374,11 @@ Do: File a Mini-CEX (Paediatrics) and submit it:
 Expect: The EPA picker offers nine EPAs for the Mini-CEX, PAED-012 among them. Submit to Mohammed Patel reads
   "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox."
 Note: The trainee files it. The assessor must be an active Assessor at KGK (T102).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Log an activity (from her menu), Mini-CEX (Paediatrics) opened
-  /activities/new?type=mini_cex_cpsa: the EPA picker offers nine, PAED-001 to 004, 006 (corrected title), 007, 008,
-  012 and 013. Filed on PAED-012 with Mohammed Patel, encounter 2026-10-03, Outpatient clinic, the problem as given
-  and Moderate; the buttons read "Submit to Mohammed Patel" and Save draft. Submit opened /activities/26, "Anele
-  Dlamini's request to Mohammed Patel": "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox.";
-  Who has it now reads Requested, "With Mohammed Patel since 2026-10-03 19:11 SAST.", with Cancel request…; history
-  Create and Submit by Anele Dlamini. Activity id 26 (one higher than the earlier replay: act 5's cancelled #24). No
-  mail was written (Stub email lines stayed at 12).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Mini-CEX (Paediatrics) (/activities/new?type=mini_cex_cpsa): the
+  EPA picker offers nine, PAED-001 to 004, 006 (corrected title), 007, 008, 012 and 013. Filed with the Do's values,
+  encounter 2026-10-04; Submit to Mohammed Patel opened /activities/25: "Submitted. It is now Requested. It is in
+  Mohammed Patel's Activity inbox."; "With Mohammed Patel since 2026-10-04 10:12 SAST.". Activity id 25 (the T350
+  replay's was 26). No mail.
 Gap: none
 
 ### Step 6.17 — Dr Kruger pauses PAED-012
@@ -420,14 +397,13 @@ Expect:
     reactivating it credits what was completed meanwhile.
 Note: D48, T158, T196. The College's CollegeAdmin or an Administrator deactivates a national EPA; a local EPA is its
   institution's. Unticking Active and saving asks the same question.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): PAED-012 is /admin/epas/13. Deactivate opened "Deactivate this
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): PAED-012 is /admin/epas/13. Deactivate opened "Deactivate this
   EPA?": "It can no longer be chosen for a new activity, and it stops being a target on every progress page and
   dashboard, for every institution that uses it. The progress it has earned is kept. An activity completed against it
-  while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page.", focus on
-  Cancel. Confirmed: "EPA deactivated.", Active unticked, only Save visible. The EPA list reads PAED-012 Inactive.
-  11.1's items mark it "(inactive: not in force)" under "PAED-012 is inactive, so its item is not in force: … its
-  credit is paused, … Reactivating an EPA on its own page brings its item back, and credits what was completed against
-  it meanwhile."
+  while it is inactive counts towards nothing until it is reactivated. …", focus on Cancel. Confirmed: "EPA
+  deactivated.", Active unticked. The EPA list reads PAED-012 Inactive. 11.1's items mark it "(inactive: not in force)"
+  under "PAED-012 is inactive, so its item is not in force: … Reactivating an EPA on its own page brings its item back,
+  and credits what was completed against it meanwhile."
 Gap: none
 
 ### Step 6.18 — Dr Patel completes the Mini-CEX during the pause
@@ -445,17 +421,14 @@ Expect:
     EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
     its history, the completion's Credit reads None.
 Note: Only the nominated assessor completes it (`field:assessor_user_id`). T231.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Dr Patel's Home reads "Waiting for you", "2 waiting, 1
-  overdue": du Plessis's Portfolio and Logbook Review · PAED-015 first, Overdue, "Waiting 8 days", then "Mini-CEX
-  (Paediatrics) · PAED-012 · 2026-10-03", from Anele Dlamini, Requested. His inbox lists the same two in that order;
-  the Mini-CEX row's EPA reads "PAED-012 — Communicating with and counselling patients, caregivers and healthcare
-  teams (no longer in use)", and so do About's and the Request section's EPA on /activities/26. Status before: "Your
-  move. Anele Dlamini asked you on …". Rated 4 on the rung picker (1, 2, 3a, 3b, 4, 5) with the three feedback fields;
-  Complete was not refused: "Completed. 1 more waits for you.", with the review's row (Overdue, "Waiting 8 days, since
-  2026-09-25 17:22 SAST."), Open the next and Back to Activity inbox under it; no field enabled, no move left. Who has
-  it now reads "Done. You completed it on 2026-10-03 19:13 SAST." and "Rated 4. Its credit to PAED-012 waits while the
-  EPA is paused."; About's Credit reads None with "This activity's EPA is paused: its credit waits."; the history's
-  Complete row has Credit None (CreditedItemCount 0), and Dlamini has no PAED-012 progress row. No mail (12).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Dr Patel's Home reads "2 waiting, 1 overdue": du Plessis's
+  Portfolio and Logbook Review · PAED-015 first, Overdue, "Waiting 8 days", then "Mini-CEX (Paediatrics) · PAED-012 ·
+  2026-10-04", from Anele Dlamini. The inbox row, About and the Request section read "PAED-012 — Communicating with and
+  counselling patients, caregivers and healthcare teams (no longer in use)". Rated 4 on the rung picker; Complete:
+  "Completed. 1 more waits for you.", with the review's row, Open the next and Back to Activity inbox. "Done. You
+  completed it on 2026-10-04 10:12 SAST." and "Rated 4. Its credit to PAED-012 waits while the EPA is paused."; About's
+  Credit None with "This activity's EPA is paused: its credit waits."; the Complete row's Credit None (CreditedItemCount
+  0); no PAED-012 tally for Dlamini.
 Gap: none (the earlier replay's About card without "(no longer in use)" no longer occurs: About now carries it)
 
 ### Step 6.19 — Dr Dlamini during the pause
@@ -471,11 +444,10 @@ Expect:
   - **The picker.** It offers eight EPAs, without PAED-012.
 Note: T158: progress, pickers and dashboards list only EPAs in force. T231 and T255 mark what was recorded against an
   EPA that is not.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): My progress has no PAED-012 card and reads "Semester targets 1
-  of 9 EPAs met this semester" (m − 1); the trajectory "PAED-012 — … (no longer in use)" charts 1 observation,
-  2026-10-03 at 4. My activities lists the Mini-CEX ("Mini-CEX (Paediatrics) · PAED-012 · 2026-10-03", to Mohammed
-  Patel) with "PAED-012 (no longer in use)" under it, Done, Completed, Credit None. The Mini-CEX picker offers eight:
-  PAED-001 to 004, 006, 007, 008 and 013. Left without saving.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): My progress has no PAED-012 card and reads "1 of 9 EPAs met this
+  semester" (m − 1); the trajectory "PAED-012 — … (no longer in use)" charts 1 observation, 2026-10-04 at 4. My
+  activities lists the Mini-CEX with "PAED-012 (no longer in use)" under it, Done, Completed, Credit None. The Mini-CEX
+  picker offers eight: PAED-001 to 004, 006, 007, 008 and 013. Left without saving.
 Gap: none
 
 ### Step 6.20 — Dr Mahlangu's picker leaves PAED-012 out too
@@ -484,8 +456,8 @@ Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect: Eight EPAs: PAED-001 to PAED-004, PAED-006 to PAED-008, and PAED-013. PAED-012 is not offered.
 Note: The pause is national. It reaches every registrar on every curriculum that holds PAED-012.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Dr Mahlangu's Mini-CEX (Paediatrics) picker offers eight:
-  PAED-001 to 004, 006 to 008, and 013; no PAED-012. Left without saving.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Dr Mahlangu's Mini-CEX picker offers eight: PAED-001 to 004, 006
+  to 008, and 013. Left without saving.
 Gap: none
 
 ### Step 6.21 — Dr Molefe's record during the pause
@@ -498,13 +470,11 @@ Expect: The record opens with its notice that she completed her programme and th
   - Any rating trajectory she has on PAED-012 still charts, headed "(no longer in use)" (T255).
   - PAED-006's card carries the title corrected in Step 6.14. Her other cards and periods are as Act 5 left them.
 Note: The TraineeOrFormerTrainee policy admits her without the Trainee role (T252).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Signed in with no role (menu Home, My progress, My data
-  rights), /portfolio/progress opens "You completed your programme on 3 October 2026. This page is your record of it
-  and is read-only …". No PAED-012 card; "Entrustment against Annexure A" reads "14 at or above · 0 below · 0 with no
-  decision, of 14 EPAs" and "14 of 14 EPAs at their exit level by STAR decision (level 5: 8 of 8 · level 4: 6 of 6)",
-  no PAED-012 row (Act 5 left 15 of 15). Trajectories PAED-001, PAED-010 and "PAED-012 — … (no longer in use)" (2
-  observations, 2026-09-26 and 09-28, both 5). PAED-006 reads the corrected title; the other periods read as Act 5
-  left them (Semester 2, 2026 no target, 3 recorded on PAED-001, 1 on 010).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Menu Home, My progress, My data rights. "You completed your
+  programme on 4 October 2026. This page is your record of it and is read-only …". No PAED-012 card; "14 at or above · 0
+  below · 0 with no decision, of 14 EPAs" and "14 of 14 EPAs at their exit level by STAR decision (level 5: 8 of 8 ·
+  level 4: 6 of 6)", no PAED-012 row. Trajectories PAED-001, PAED-010 and "PAED-012 — … (no longer in use)" (2026-09-26
+  and 09-28, both 5). PAED-006 reads the corrected title.
 Gap: F-6.21a, T312 (still: the page matches the Expect, but a completed programme's record is rewritten by a catalogue
   change made after it ended: 15 of 15 becomes 14 of 14 and PAED-012's periods vanish; a product question).
 
@@ -524,13 +494,11 @@ Expect:
     standing.
 Note: An InstitutionalAdmin changes only KGK's own EPAs and items. Until T291 item 1 lands, the EPA list still offers
   her Edit on every row.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Her EPA list reads PAED-012 Inactive but offers her Edit on
-  all 15 national EPAs, and Create EPA. Her curricula list shows 11.1 with Items only. 11.1's items mark PAED-012
-  "(inactive: not in force)" under the same notice, beside "The College sets this curriculum's national items, so they
-  are read only here. …"; all 15 rows read "Set by the College", and the form is "Add your institution's own item".
-  Entrustment decisions (lit), status on All, Trainee "Molefe": 16 rows, 15 Active issued 2026-10-03 with no expiry
-  and Act 4's PAED-010 at 4, expiring 2026-10-23, Superseded. The PAED-012 row reads "PAED-012 — … (no longer in
-  use)", level 5, Active. Nothing revoked.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Her EPA list reads PAED-012 Inactive but offers her Edit on all
+  15 national EPAs, and Create EPA. Her curricula list shows 11.1 with Items only. 11.1's items mark PAED-012
+  "(inactive: not in force)" under the same notice; all 15 rows read "Set by the College". Entrustment decisions (lit),
+  status All, "Molefe": 16 rows, 15 Active with no expiry and Act 4's PAED-010 at 4, expiring 2026-10-23, Superseded.
+  The PAED-012 row reads "PAED-012 — … (no longer in use)", 5, Active. Nothing revoked.
 Gap: F-6.22a, T291 (still: the EPA list offers an InstitutionalAdmin Edit on every national EPA, which UpdateEpa
   refuses on save; the Note anticipates it).
 
@@ -542,10 +510,10 @@ Expect: Nothing asks first. The page reads "EPA reactivated. 1 activity complete
   counts towards progress." Deactivate is offered again. The EPA list reads PAED-012 Active.
 Note: D48: reactivating credits the paused completions itself, so no rebuild is needed. The College's CollegeAdmin, or
   an Administrator.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): PAED-012 read Active unticked. With Active ticked, Save asked
-  nothing and read "EPA reactivated. 1 activity completed against it while it was inactive now counts towards
-  progress."; Deactivate is offered again, DeactivatedOn is cleared, and the list reads PAED-012 Active. Dlamini now
-  has a PAED-012 2026 S2 row (1 counted, ["26:complete"]), and activity 26's completion reads CreditedItemCount 1.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Active unticked; ticked and saved, nothing asked: "EPA
+  reactivated. 1 activity completed against it while it was inactive now counts towards progress."; Deactivate offered
+  again; the list reads PAED-012 Active. Dlamini now has a PAED-012 2026 S2 row (1 counted, ["25:complete"]), and
+  activity 25's completion reads CreditedItemCount 1.
 Gap: none
 
 ### Step 6.24 — Dr Dlamini's credit is counted
@@ -561,12 +529,11 @@ Expect:
     (`n` is 0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged
     through the pause (by SQL, or on her record in Step 6.40).
 Note: D48.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): PAED-012's card is back: "1 of 3 this semester" (n + 1), "At
-  the minimum level when observed: 1 of 1. Last encounter date: 2026-10-03." (0 in Step 6.15). "Semester targets 1 of
-  10 EPAs met this semester" (m). The trajectory heading has no marker; My activities lists the Mini-CEX without it,
-  Completed, Credit "1 item"; /activities/26 no longer mentions the pause: "Rated 4. Credited 1 item to PAED-012."
-  with Open My progress, About Credit "1 item", Complete row "1 item". By SQL Molefe's PAED-012 2026 S2 row (2
-  counted, activities 15 and 16, updated 17:24, before the pause at 19:11) is unchanged.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): PAED-012's card is back: "1 of 3 this semester" (n + 1), "At the
+  minimum level when observed: 1 of 1. Last encounter date: 2026-10-04." "1 of 10 EPAs met this semester" (m). No marker
+  on the trajectory or in My activities, Credit "1 item"; /activities/25: "Rated 4. Credited 1 item to PAED-012.",
+  Complete row "1 item". By SQL Molefe's PAED-012 2026 S2 row (2 counted, activities 15 and 16, updated 2026-10-03
+  17:24) is unchanged.
 Gap: none
 
 ## Phase 6.E — KGK's own additions
@@ -591,11 +558,10 @@ Expect:
   - The EPA list shows KGK-001 beside the 15 national EPAs, and offers Edit on KGK-001 alone.
 Note: An InstitutionalAdmin creates only KGK's own EPAs (`CreateEpa`); a College or an Administrator creates national
   ones. Until T291 item 1 lands, the list offers her Edit on the national rows too.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Create EPA: the sub-speciality list offers only "Paediatrics /
-  Paediatrics"; category Core or Elective. Saved as EPA id 17 (KGK's, Elective); the page became /admin/epas/17,
-  Active ticked, Deactivate and Save offered. The EPA list shows 16 rows, KGK-001 first, and offers Edit on all 16.
-  KGK-001's College column reads "College of Paediatricians of South Africa"; the columns are Code, Title, College,
-  Speciality, Sub-speciality, Status, Actions, and nothing marks it as KGK's own.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): The sub-speciality list offers only "Paediatrics / Paediatrics";
+  category Core or Elective. Saved as /admin/epas/17, Active, Deactivate and Save offered. The EPA list shows 16 rows,
+  KGK-001 first, with Edit on all 16; KGK-001's College column reads "College of Paediatricians of South Africa" and
+  nothing marks it as KGK's own.
 Gap: F-6.25a, T291 (still: Edit is offered on all 15 national EPAs, which UpdateEpa refuses; the Note anticipates it).
   F-6.25b, T291 (still: the list does not tell an institution's own EPA from a national one).
 
@@ -619,13 +585,12 @@ Expect:
   - **The new row.** It reads "Your institution's own item": 1 per academic year, No decision cadence, 3a, Direct
     observation, with Edit and Remove. The national rows still read "Set by the College".
 Note: The owning InstitutionalAdmin, and only on a curriculum the institution has adopted (T223).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Her curricula list shows 11.1 alone with Items only: no Edit,
-  no Create curriculum. The form is headed "Add your institution's own item"; its picker offers KGK-001 alone; the
-  scale is the CPSA ladder, "Suggested because every item on this curriculum is pinned to it."; Add item was disabled
-  ("Adding is off until every minimum is a rung on CPSA Paediatric Entrustment Scale v11.1.") until 3a was chosen.
-  Added: "Curriculum item added.", and the form gave way to "Every EPA your institution could add is already on this
-  curriculum: …". The new row reads "Your institution's own item", 1 per academic year, No decision cadence, CPSA
-  ladder, 3a, window 12, Direct observation, Edit and Remove; the 15 national rows read "Set by the College".
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Her curricula list shows 11.1 with Items only: no Create
+  curriculum. The form is headed "Add your institution's own item"; its picker offers KGK-001 alone; the scale is the
+  CPSA ladder, "Suggested because every item on this curriculum is pinned to it."; Add item was off ("Adding is off
+  until every minimum is a rung on …") until 3a was chosen. "Curriculum item added.", and the form gave way to "Every
+  EPA your institution could add is already on this curriculum: …". The row reads "Your institution's own item", 1 per
+  academic year, No decision cadence, 3a, window 12, Direct observation, Edit and Remove.
 Gap: none
 
 ### Step 6.27 — Dr Dlamini is measured against KGK-001
@@ -636,11 +601,9 @@ Expect: A KGK-001 card appears under "Once a year", reading 0 of 1 for the curre
   counts one more EPA. Its line for the year before reads "0 of 1, 1 short": a target is read live, into periods that
   have already closed, as the items page warned. The Direct Observation picker offers ten EPAs, KGK-001 among them.
 Note: A trainee reads only their own progress. An institution's own item measures only that institution's registrars.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): A KGK-001 card leads "Once a year": "0 of 1 in 2026", "1 more
-  by 30 November 2026.", "2025 academic year: 0 of 1, 1 short". "Yearly targets 0 of 6 EPAs met in 2026" (was 5);
-  "Semester targets 1 of 10" unchanged; MSF line 16 EPAs; Annexure A lists KGK-001 as "The institution's own EPA; not
-  in the exit rule", and the exit rule says "The institution's own EPA is not part of the College's rule, so it is not
-  counted." The Direct Observation (Paediatrics) picker offers ten EPAs, KGK-001 first. Left unsaved.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): A KGK-001 card under "Once a year": "0 of 1 in 2026", "1 more by
+  30 November 2026.", "2025 academic year: 0 of 1, 1 short". "0 of 6 EPAs met in 2026" (was 5); the semester line still
+  "1 of 10". The Direct Observation (Paediatrics) picker offers ten EPAs, KGK-001 first. Left unsaved.
 Gap: none
 
 ## Phase 6.F — A new curriculum version
@@ -667,10 +630,9 @@ Expect:
   - PAED-016 is on no curriculum yet, so no registrar is offered it or measured against it.
 Note: The College's CollegeAdmin, or an Administrator. 11.1 would accept PAED-016 too, and it would then apply at once
   to every registrar on 11.1.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Create EPA's sub-speciality list offers "Paediatrics /
-  Neonatology" (first) and "Paediatrics / Paediatrics". Saved in Paediatrics / Paediatrics as EPA id 18 (national,
-  Core); the page became /admin/epas/18, Active ticked. His EPA list holds 16 rows, PAED-001 to PAED-016, and no
-  KGK-001. By SQL PAED-016 is on no curriculum item.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): The sub-speciality list offers "Paediatrics / Neonatology"
+  (first) and "Paediatrics / Paediatrics". Saved in Paediatrics / Paediatrics as /admin/epas/18, Active. His EPA list
+  holds 16 rows, PAED-001 to PAED-016, no KGK-001.
 Gap: none
 
 ### Step 6.29 — Dr Kruger clones 11.1 as 11.2, and holds it back
@@ -686,11 +648,9 @@ Expect:
 Note: The College's CollegeAdmin, or an Administrator. A clone copies every cell of the College's items: target,
   period, minima, scale pin, tools and decision. It copies none of an institution's own items
   (`Curriculum.CloneAsNewVersion`).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): 11.1's items show him 15 national rows and no KGK-001; its
-  picker offers PAED-016 alone. The clone card starts at "11.1-copy" (from 2026-01-02). Cloned as 11.2 from
-  2026-10-03, no end: the page became /admin/curricula/4 with no confirmation line, Version 11.2, Active ticked.
-  Unticked and saved: "Curriculum saved."; the list shows 11.2 Inactive, 15 items. By SQL curriculum 4's 15 items
-  equal 11.1's national items in every cell, and it has no own item.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): 11.1's items show him 15 rows and no KGK-001; its picker offers
+  PAED-016 alone. The clone card starts at "11.1-copy". Cloned as 11.2 from 2026-10-04: /admin/curricula/4, Active
+  ticked. Unticked and saved: "Curriculum saved."; the list shows 11.2 Inactive, 15 items.
 Gap: none
 
 ### Step 6.30 — Dr Kruger edits 11.2's items
@@ -712,15 +672,13 @@ Expect:
   - **The edit.** PAED-011's edit row opens beneath its row. Once saved, the row reads "2 per academic year". 11.1's
     PAED-011 still reads 1 (outcome SQL).
 Note: The College's CollegeAdmin, or an Administrator.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Played out of order by a script slip: PAED-011's edit was
-  saved before PAED-016's add, so the rendered before-the-edits comparison was not made (Step 6.29's SQL had shown the
-  15 items equal 11.1's in every cell). PAED-011's edit row opened beneath its row (Cancel and Save named for
-  PAED-011, minimum 4, Academic year); saved with target 2: "Curriculum item saved.", the row reads "2 per academic
-  year", nothing else changed. The form is headed "Add item", its picker offers PAED-016 alone, the CPSA ladder
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Played in order this time. Before the edits, 11.2's 15 rows
+  match 11.1's cell for cell. The form is headed "Add item", its picker offers PAED-016 alone, the CPSA ladder
   suggested; after the add: "Curriculum item added." and "Every national EPA of Paediatrics is already on this
-  curriculum, …"; 16 rows, PAED-016 reading 1 per academic year, Decided each academic year, CPSA ladder, 4, Year 1:
-  2, Year 2: 3a, Year 3: 3b, Year 4: 4, window 12, CBD, Mini-CEX, MSF. 11.1's PAED-011 still has RequiredCount 1
-  (SQL).
+  curriculum, …"; 16 rows, PAED-016 reading 1 per academic year, Decided each academic year, CPSA ladder, 4, Year 1: 2
+  to Year 4: 4, window 12, CBD, Mini-CEX, MSF. PAED-011's edit row opened beneath its row (Save named "Save PAED-011");
+  saved with target 2: "Curriculum item saved.", the row reads "2 per academic year". 11.1's PAED-011 still has
+  RequiredCount 1 (SQL).
 Gap: none
 
 ### Step 6.31 — Dr Kruger publishes 11.2
@@ -730,9 +688,8 @@ Do: Open 11.2, tick Active and save.
 Expect: The save is confirmed. The curricula list shows 11.1 and 11.2 Active, with 11.2 at 16 items, and the
   Neonatology curriculum still Inactive.
 Note: The College's CollegeAdmin, or an Administrator.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): On /admin/curricula/4, Active ticked and Save: "Curriculum
-  saved.", nothing asked. The list reads Neonatology EPA Curriculum 1.0 Inactive (0 items), 11.2 Active (16 items,
-  from 2026-10-03) and 11.1 Active (15).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Active ticked and Save: "Curriculum saved.", nothing asked. The
+  list reads Neonatology 1.0 Inactive (0 items), 11.2 Active (16 items, from 2026-10-04) and 11.1 Active (15).
 Gap: none
 
 ## Phase 6.G — KGK takes up the new version
@@ -748,11 +705,9 @@ Expect:
     version supersedes the current adoption.
   - The registrars already on 11.1 stay on it.
 Note: An InstitutionalAdmin for her own institution, or an Administrator for any institution (T091).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Curriculum adoptions: the picker offers CPSA's 11.2 and 11.1
-  and "Demo College — General Medicine / General Internal Medicine: IM Core Curriculum (2026.1)", not Neonatology 1.0.
-  Adopt asked nothing and read "Curriculum adopted."; Current adoptions reads 11.2 Active and 11.1 Superseded, as the
-  note ("Re-adopting a newer version of a discipline you already follow supersedes the current adoption for that
-  discipline.") says. By SQL all five KGK profiles are still on curriculum 2, adoption 1.
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Adopt asked nothing and read "Curriculum adopted."; Current
+  adoptions reads 11.2 Active (2026-10-04) and 11.1 Superseded. By SQL all five KGK profiles are still on curriculum 2,
+  adoption 1.
 Gap: none
 
 ### Step 6.33 — Prof Mbatha adds KGK's own item to 11.2
@@ -765,33 +720,31 @@ Expect:
     College". It has no KGK item, because a new version carries no institution's own items.
   - **The add.** The picker offers KGK-001 alone. Once added, the row reads "Your institution's own item".
 Note: The owning InstitutionalAdmin. An institution adds its own items again to each version it adopts (T091).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Her curricula list showed 11.2 (16 items) and 11.1 (16: 15
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Her curricula list shows 11.2 (16 items) and 11.1 (16: 15
   national and KGK's own), both Active, each with Items only. 11.2's items hold the College's 16 rows, all "Set by the
   College", PAED-016 among them and PAED-011 at "2 per academic year", and no KGK row. The form is "Add your
-  institution's own item", the CPSA ladder suggested; KGK-001 was taken from its picker (the option list itself was
-  not recorded this time). With Step 6.26's values: "Curriculum item added."; the new row reads "Your institution's
-  own item", 1 per academic year, No decision cadence, 3a, window 12, Direct observation, Edit and Remove. 17 rows.
+  institution's own item"; its picker offers KGK-001 alone. With Step 6.26's values: "Curriculum item added."; the row
+  reads "Your institution's own item". 17 rows.
 Gap: none
 
-### Step 6.34 — Prof Mbatha cannot save Dr Dlamini's profile while she stays on 11.1
+### Step 6.34 — Prof Mbatha saves Dr Dlamini's profile while she stays on 11.1
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
 Do: Open Dr Dlamini's profile, which is on Paediatric EPA Curriculum (11.1). Move the expected completion date six
   months later than it reads, leave the curriculum as it is, and save the profile. Then reopen the profile.
 Expect:
   - The curriculum picker offers 11.1 and 11.2, with 11.1 chosen.
-  - The save is refused: "Trainees must be admitted into the curriculum version this institution has adopted."
-  - Nothing changes: the reopened profile shows the old date, and Dr Dlamini stays on 11.1, as re-adopting leaves
-    registrars on the version they were admitted to (`CurriculumAdminScope`, T211).
-Note: An InstitutionalAdmin, or an Administrator. Every profile save re-checks its curriculum against KGK's active
-  adoption, now 11.2 (`UpdateTraineeProfile`, `TraineeAdoptionResolver`; T091's hard gate).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Trainees → Edit on Anele Dlamini opened
-  /admin/trainees/edit?id=3: Paediatric EPA Curriculum (11.1) selected, (11.2) also offered, start 2024-01-15,
-  expected completion 2028-01-14. Moved to 2028-07-14, Save profile was refused: "Trainees must be admitted into the
-  curriculum version this institution has adopted." Reopened, it reads 2028-01-14 and 11.1; by SQL profile 3 is
-  unchanged (curriculum 2, adoption 1).
-Gap: F-6.34a, T304 (still: as the Expect says, but once KGK re-adopts no profile left on 11.1 can be saved at all,
-  even for its expected completion date alone, although registrars are meant to stay pinned to their version).
+  - The save reads "Trainee profile saved."
+  - Reopened, the profile shows the new date on 11.1. By SQL, profile 3 stays on curriculum 2 and adoption 1: she stays
+    on the version she was admitted to (`CurriculumAdminScope`, T211).
+Note: An InstitutionalAdmin, or an Administrator. Only a move is judged against KGK's active adoption: an unchanged
+  curriculum keeps its pinned adoption, superseded or not (`UpdateTraineeProfile`, T304).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Trainees → Edit on Anele Dlamini opened
+  /admin/trainees/edit?id=3: the picker offers "Paediatric EPA Curriculum (11.1)" and "(11.2)", 11.1 chosen; start
+  2024-01-15, expected completion 2028-01-14. Moved to 2028-07-14 and Save profile: "Trainee profile saved." Reopened,
+  it reads 2028-07-14 on 11.1, the picker still offering both. By SQL profile 3 is on curriculum 2, adoption 1 (the
+  superseded one), ExpectedCompletionDate 2028-07-14.
+Gap: none. [F-6.34a, T304] closes: a profile left on 11.1 after the re-adoption saves, and stays pinned.
 
 ### Step 6.35 — Dr Ndlovu notes his figures before he moves
 Role: Trainee — Dr Sipho Ndlovu
@@ -801,10 +754,10 @@ Expect: Sixteen cards: the 15 national EPAs of 11.1, and KGK-001. PAED-016 is no
 Note: Count his tallies too, as `t`: `SELECT count(*) FROM "CurriculumItemProgresses" p JOIN "CurriculumItems" i ON
   i."Id" = p."CurriculumItemId" JOIN "Curricula" c ON c."Id" = i."CurriculumId" JOIN "AspNetUsers" u ON u."Id" =
   p."TraineeUserId" WHERE u."Email" = 'ndlovu@kgk.wombat.local' AND c."Version" = '11.1';`
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Sixteen cards: ten "Each semester" (PAED-001 to 007, 010, 012,
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Sixteen cards: ten "Each semester" (PAED-001 to 007, 010, 012,
   015) and six "Once a year" (KGK-001, PAED-008, 009, 011, 013, 014); no PAED-016. Every current-period count is 0
-  except PAED-002, "1 of 3 this semester"; PAED-011 reads "0 of 1 in 2026". "Semester targets 0 of 10", "Yearly
-  targets 0 of 6". t = 1 (PAED-002, 2026 S2, activity 3).
+  except PAED-002, "1 of 3 this semester"; PAED-011 reads "0 of 1 in 2026". "0 of 10 EPAs met this semester", "0 of 6
+  EPAs met in 2026". t = 1 (PAED-002, 2026 S2, activity 3, on 11.1).
 Gap: none
 
 ### Step 6.36 — Prof Mbatha moves Dr Ndlovu to 11.2
@@ -812,33 +765,37 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
 Do: Open Dr Ndlovu's profile. Choose Paediatric EPA Curriculum (11.2), keep his programme start (`J`, from Act 2) and
   his expected completion as they read, and save the profile.
-Expect: The save is confirmed, and the profile reads 11.2. From now on, his completions credit 11.2's items.
+Expect: The save reads "Trainee profile saved. N completion(s) was/were checked against 11.2, and M count(s) towards
+  it." The profile reads 11.2. By SQL his PAED-002 tally is on 11.2 and none is left on 11.1. Reopened, the picker
+  offers 11.2 alone. From now on, his completions credit 11.2's items.
 Note: An InstitutionalAdmin, or an Administrator, and only into the version KGK has adopted (`TraineeAdoptionResolver`).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): His profile (/admin/trainees/edit?id=6) read 11.1, start
-  2026-01-15 (J), expected completion 2030-01-14; with 11.2 chosen and the dates kept, Save profile read "Trainee
-  profile saved." and the select reads 11.2. By SQL profile 6 is on curriculum 4, adoption 2, dates unchanged; his one
-  tally is still the 11.1 row.
+  The move runs under the trainee credit lock, and replays his credit against 11.2 in the same save (T304).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): His profile (/admin/trainees/edit?id=6) read 11.1, start
+  2026-01-15 (J), expected completion 2030-01-14; the picker offered 11.1 and 11.2. With 11.2 chosen and the dates kept,
+  Save profile read "Trainee profile saved. 1 completion was checked against 11.2, and 1 counts towards it." and the
+  select reads 11.2; Trainees lists him on 11.2. Reopened, the picker offers "Paediatric EPA Curriculum (11.2)" alone.
+  By SQL profile 6 is on curriculum 4, adoption 2, dates unchanged; his one tally (PAED-002, 2026 S2, 1 counted,
+  ["3:complete"]) is now on 11.2, and none is left on 11.1. His only completion is activity 3 (his declined #2 and
+  discussed #4 credit nothing), so N = M = 1.
 Gap: none
 
-### Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt
+### Step 6.37 — Dr Ndlovu on 11.2, straight after the move
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect:
   - **The cards.** Seventeen: 11.2's 16 national items (PAED-016 once a year, and PAED-011 at 2 per academic year,
     among them) and KGK-001.
-  - **The counts.** His encounters before the move are counted in 11.1's tallies, which this page no longer reads. Until
-    Step 6.38, each card shows only what 11.2 holds for him, which is nothing yet.
+  - **The counts.** His evidence counts on 11.2 at once: PAED-002 reads 1 of 3 this semester, as in Step 6.35, and
+    PAED-016 and KGK-001 read 0.
   - **The picker.** The Mini-CEX picker offers ten EPAs, PAED-016 among them.
-Note: Moving a registrar replays none of his credit. The Administrator's rebuild does (Step 6.38).
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Seventeen cards: ten "Each semester" and seven "Once a year"
-  (KGK-001, PAED-008, 009, 011, 013, 014, 016); PAED-011 reads "0 of 2 in 2026", PAED-016 "0 of 1 in 2026". Every card
-  reads 0, PAED-002 included (1 in Step 6.35); "Yearly targets 0 of 7", MSF line 17 EPAs, "17 with no decision".
-  Nothing on the page says his counts await a rebuild. The Mini-CEX picker offers ten EPAs, PAED-016 among them. Left
-  unsaved (newest activity still 26).
-Gap: F-6.37a, T304 (still: as the Expect says, but a moved registrar's cards are left at zero with no word to anyone:
-  the save read only "Trainee profile saved.", his page does not say his evidence is not yet counted, and only the
-  Administrator's global rebuild refills it).
+Note: The move replays his credit in its own save (Step 6.36), so no rebuild is needed (T304).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Seventeen cards: ten "Each semester" and seven "Once a year"
+  (KGK-001, PAED-008, 009, 011, 013, 014, 016). PAED-002 reads "1 of 3 this semester" at once, as in Step 6.35; every
+  other card 0, PAED-011 "0 of 2 in 2026", PAED-016 and KGK-001 "0 of 1 in 2026". "0 of 10 EPAs met this semester", "0
+  of 7 EPAs met in 2026", MSF line 17 EPAs, "0 at or above · 0 below · 17 with no decision, of 17 EPAs". The Mini-CEX
+  picker offers ten EPAs, PAED-016 among them. Left unsaved (newest activity still 25).
+Gap: none. [F-6.37a, T304] closes: the moved registrar's cards count his evidence before any rebuild.
 
 ### Step 6.38 — devadmin rebuilds curriculum progress
 Role: Administrator — devadmin
@@ -853,17 +810,17 @@ Expect:
     whether an EPA was active as of each completion, and runs as one transaction.
   - **The question.** The button asks first: "Rebuild curriculum progress?".
   - **The result.** The page says progress was rebuilt, with five figures: activities re-read, curriculum items
-    credited, semester tallies written, stale tallies removed, and completions re-stamped. Stale tallies removed is at
-    least `t` from Step 6.35.
+    credited, semester tallies written, stale tallies removed, and completions re-stamped. Stale tallies removed is 0:
+    the move left nothing stale (T304).
 Note: Administrator only (the page's policy, and `RebuildCurriculumProgressCommand`). It is safe to run more than once.
-Actual (2026-10-03, T350 replay, wombat_scenario_t350): Curricula (from the menu) offers an outline "Curriculum
-  progress" (btn-outline) beside Create curriculum in its header. It opened /admin/curriculum-progress, "Curriculum
-  progress · Wombat", Curricula still lit, trail Home › Curricula › Curriculum progress. The page says a rebuild
-  "credits each activity against the curriculum as it is today", "Only whether an EPA was active is judged as of when
-  the activity was completed", and "It runs as one transaction". Rebuild progress asked "Rebuild curriculum
-  progress?"; confirmed: "Curriculum progress was rebuilt." with Activities re-read 15, Curriculum items credited 14,
-  Semester tallies written 9, Stale tallies removed 1 (t = 1), Completions re-stamped 15. Run once. By SQL Ndlovu's
-  PAED-002 tally is now on 11.2; every completion's CreditedItemCount is unchanged (activity 25: 0, 26: 1).
+Actual (2026-10-04, T304 replay, wombat_scenario_t304): Curricula (from the menu) offers an outline "Curriculum
+  progress" (btn btn-outline) beside Create curriculum. It opened /admin/curriculum-progress, "Curriculum progress ·
+  Wombat", Curricula still lit, trail Home › Curricula › Curriculum progress. The page says a rebuild "credits each
+  activity against the curriculum as it is today", "Only whether an EPA was active is judged as of when the activity was
+  completed", and "It runs as one transaction". Rebuild progress asked "Rebuild curriculum progress?"; confirmed:
+  "Curriculum progress was rebuilt." with Activities re-read 15, Curriculum items credited 14, Semester tallies written
+  9, Stale tallies removed 0, Completions re-stamped 15. By SQL the 9 tallies and every completion's CreditedItemCount
+  are the same before and after; Ndlovu's PAED-002 tally stays on 11.2.
 Gap: none
 
 ### Step 6.39 — Dr Ndlovu's evidence counts on 11.2
