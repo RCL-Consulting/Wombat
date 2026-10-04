@@ -6,18 +6,18 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **four redesign flows are done**: flow 01, the shell (T335,
-`b347e11c`), flow 02, sign-in and account (T339, `f50dffb2`), flow 03, filing an activity (T342, `725237ee`), and flow
-04, an assessor's inbox (T350, `06aa51d7`), each designed, built, replayed and in the design system (version 13). Left:
-flows 05–20 (T355 next), the deploy, the College's answers, 14 P2s, and P3 polish. **No push: the remote is cut.**
+replayed journey catalogue with a screenshot baseline, and **five redesign flows are done**: 01 the shell (T335,
+`b347e11c`), 02 sign-in (T339, `f50dffb2`), 03 filing an activity (T342, `725237ee`), 04 an assessor's inbox (T350,
+`06aa51d7`) and 05 a registrar's progress (T355, `b020c942`), each designed, built, replayed and in the design system
+(version 15). Left: flows 06–20 (T358 next), the deploy, the College's answers, 15 P2s, P3 polish. **No push.**
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps, 80 page templates, last replayed against flow 04
-  (T350, `wombat_scenario_t350`: 249 no gap, no regression); `coverage.md`, `states.md`; baseline `design/baseline/`.
-- **Open: 78 queued (1 P1, 13 P2, 64 P3), T355 in progress, 1 blocked.**
+- **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps, 80 page templates, last replayed against flow 05
+  (T355, `wombat_scenario_t355`: 256 no gap, no open regression); `coverage.md`, `states.md`, `design/baseline/`.
+- **Open: 81 queued (1 P1, 15 P2, 65 P3), none in progress, 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
-  - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T355.
+  - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T356, T358.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
 - **Gated on the College or the operator:** T139, T170, T146, T152, T153, T171 (`knowledge/college-message-2026-09.md`).
 
@@ -33,7 +33,7 @@ flows 05–20 (T355 next), the deploy, the College's answers, 14 P2s, and P3 pol
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T355, flow 05 (a registrar reads where they stand), step 7, the replay. Opus.** Built: `b020c942`.
+- **The GUI redesign: T358, flow 06 (programme oversight), step 1, the brief. Opus.**
 
 ## Open questions
 
@@ -55,6 +55,6 @@ flows 05–20 (T355 next), the deploy, the College's answers, 14 P2s, and P3 pol
 
 ## Recent
 
-- **2026-10-04:** T304, T305 done (`95d4e950`, `a27983fd`); T355, flow 05, designed and built (`b020c942`).
+- **2026-10-04:** T304, T305 done; T355, flow 05, done (`b020c942`; replay, states, design system v15); T356–T358.
 - **2026-10-03:** T350, flow 04, done: replay (no regression), states, design system v13, lessons; T353–T355 filed.
 - **09-30 and before:** T342 (flow 03), T339 (flow 02), T335 (flow 01). Earlier: `git log`.

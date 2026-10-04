@@ -2,7 +2,7 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-10-03/04 (Opus): T350 finished; T304, T305 done; T355, flow 05, designed, built and replayed
+## Session 2026-10-03/04 (Opus): T350 finished; T304, T305 done; T355, flow 05, done
 
 The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\Wombat`** (moved from
 `C:\Users\Renier\Wombat`), and **it is disconnected from its remote: commit locally, never push.**
@@ -24,6 +24,9 @@ The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\
     half, T298, T346, T280 at 3.12, T328, T323 and F-6.37a/T304 no longer occur. T356 filed (P2: a scrolled table
     paints over the fixed top bar, flow 01's). States: 36 of 37 hold (December unreachable in October).
     Dumps `scenario-t355-post-act{1..6,A}`.
+  - Step 8: the design system re-synced and published as **version 15** (files 14, the index last; `f2a22044`): six
+    records in a new Progress group, `target.svg` uploaded; one Sonnet review. T357 filed (P3).
+  - Step 9: BRIEF § 11 "Flow 05" (`29d013d2`). **T355 is done**; T358, flow 06, filed (P2).
 
 ### Decisions (the operator's)
 
@@ -31,20 +34,19 @@ The operator asked to carry on with the GUI redesign. **The repo is now `C:\dev\
 - Flow 05: V1, Q8, Q9 (T304 first), O1, O2; E1–E6; D1, D2; T304 before the build (2026-10-04).
 - CLAUDE.md § Multi-agent workflows (the operator's edit, still uncommitted, theirs to commit).
 
-### Next: T355 step 8, then 9. **Model: Opus.**
+### Next: T358, flow 06 (programme oversight). **Model: Opus.**
 
-- **Step 8:** the design system re-sync to flow 05 (an Opus implementer was running at the session's end, editing
-  `design/system/` only), then one Sonnet review, then publish as version 14: files first, the index last, with
-  `4f855cd3` as the model. Upload `target.svg` if the re-sync names it.
-- **Step 9:** BRIEF § 11 "Flow 05", only what is new: a replay agent waiting a real hour in short background waits;
-  Chromium's ~16,384 px full-page limit (the agent stitched two halves); fixing a regression mid-replay, republishing on
-  the same database and re-checking it at the start of the next act; T304 landed before the build. Then close T355.
+- `harness.py task start T358`, then step 1: restate `design/flows/06-programme-oversight.md` as flow 05's was
+  (`design/flows/05-trainee-progress/` is the latest model; BRIEF § 11 "Flow 05"). Stage with `stage_upload.ps1 -Flow 06`.
+- Step 3 needs the operator: a new canvas from the main app's Design page on the design system **version 15**.
+- **Tasks the build closed in part** (for the operator to close or trim): T306 (Home's half), T298 (Upcoming
+  deadlines), T346, T323 (the chart), T328 (rating links) no longer occur; their files are still in `queued/`.
 
 ### For the operator
 
-- **P2s before real users (15):** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T355, T356.
+- **P2s before real users (15):** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T356, T358.
 - **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now carries flows 02–05, T304 and T305.
-- **The design system** is https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18 (version 13; 14 after step 8).
+- **The design system** is https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18 (version 15).
 
 ### Environment left
 

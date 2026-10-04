@@ -1,12 +1,13 @@
 ---
 id: T355
 title: Flow 05, a registrar reads where they stand, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-03
 started: 2026-10-03
+completed: 2026-10-04
 ---
 
 # T355 — Flow 05, a registrar reads where they stand, has not been through the redesign loop
