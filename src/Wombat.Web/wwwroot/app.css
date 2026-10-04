@@ -2653,8 +2653,8 @@ textarea[aria-invalid="true"] {
 /* The stacked table (DataTable's Stack; A8): below 641px each row is a block of its cells. The header row stays in the
    table, visually hidden, so a screen reader still has each cell's column; the table carries explicit roles, which a
    row laid out as a grid would otherwise lose. A labelled cell shows its column's name before its value, as generated
-   content with empty alternative text, so the name is not read twice. Scoped by the modifier: only My activities uses
-   it. */
+   content with empty alternative text, so the name is not read twice. Scoped by the modifier: My activities, My progress
+   and the EPA page use it (T355). */
 @media (max-width: 640.98px) {
   .clinic-table--stack thead {
     border: 0;
@@ -3750,8 +3750,8 @@ fieldset.form-group fieldset.form-group > legend {
 
 /* TrajectoryChart's new form (Q5, E1; R4). Both drawings are in the markup, each at its own fixed size and never scaled;
    the card's width, not the viewport, chooses one: .trajectory-figure is a container, and the 900 drawing shows where it
-   holds 900px, the 326 below. It is also a named, focusable scroll region (role="region", tabindex="0", as
-   .table-container), the floor for a card narrower than 326px: the committee's nested card at 390 scrolls the drawing
+   holds 900px, the 322 below. It is also a named, focusable scroll region (role="region", tabindex="0", as
+   .table-container), the floor for a card narrower than 322px (none at 390 since b389f7d2), where it scrolls the drawing
    sideways there and nothing else does. */
 .trajectory-card {
   display: flex;
@@ -3873,7 +3873,7 @@ fieldset.form-group fieldset.form-group > legend {
   stroke-width: 2.5;
 }
 
-/* The words: rungs and months 13px in text-color (12px at 326); the semester names, the lane's and "Today" muted;
+/* The words: rungs and months 13px in text-color (12px at 322); the semester names, the lane's and "Today" muted;
    "Exit 5" and "Minimum 5" in text-color, never in the warning colour, which marks and never words (C7). Nothing under
    12px (note 13). */
 .trajectory-chart .trajectory-chart-x-label,
