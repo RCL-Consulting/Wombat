@@ -210,3 +210,7 @@ all-met board's decision lines read "3 of 3 this semester, met." under "every ta
 - Heading order with no skips; the breadcrumb `nav` with `aria-current`; every card and section labelled by its
   heading; captions and `th scope="row"` on the index; the chart's SVG named for what it adds; the paused mark and the
   KGK badge in text; verdicts in words; load errors `role="alert"` with Try again at 44 px. [A]
+
+## The operator's answer (2026-10-04)
+
+Accept all: C1–C13 go to round 3; E1–E6 as recommended.

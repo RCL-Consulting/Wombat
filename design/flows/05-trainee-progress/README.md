@@ -27,3 +27,4 @@ T355's design, kept beside its brief (`../05-trainee-progress.md`) so that it ou
 - **Round 2's ask:** `round-2-ask.txt` (464 lines): the decisions; B1, C1–C8 and N1–N6 numbered; facts F1–F16 corrected from the runbook; five component boards (Home 17 states, Progress 17, Epa 12, Trajectory 5, WaysIn 6) at 1280 and 390, a Spec and a Steps board.
 - **Round 2** (2026-10-04, `round-2/`, canvas version `1791080399-d995`): 121 files: five component boards (R2-C-Home, -Progress, -Epa, -Trajectory, -WaysIn) with 112 state wrappers (56 states at 1280 and 390), R2-Spec, R2-Steps, `flow05-r2.css` and `canvas.json`. Round 1's boards are kept on the canvas.
 - **Round 2's review:** `round-2-review.md` (four Sonnet reviewers T, B, S, A; one Opus synthesis): accept with changes; C1–C13 for round 3; E1–E6 for the operator.
+- **The decisions** (the operator, 2026-10-04): accept all: C1–C13 for round 3; E1–E6 as recommended.
