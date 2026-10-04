@@ -8,6 +8,8 @@ lane plan). Words are quoted as the boards give them for the cast (D = 2026-10-0
 
 ## Two decisions the design leaves to the code (the operator's; the lanes build the recommendation unless told otherwise)
 
+**The operator's decisions (2026-10-04):** D1 and D2 as recommended above: build them.
+
 - **D1. One date form, and `QuotaText`'s long date.** The boards write every date ISO (T325): "2 more by 2026-11-30",
   "Your programme ended on 2026-10-01", "Issued 2026-10-03", MSF's "closed on 2026-10-03" (C4), the part-way Alert's
   "2026-08-18" (C2). The built words take their dates from `QuotaText.LongDate` ("30 November 2026") and `ShortDate`
