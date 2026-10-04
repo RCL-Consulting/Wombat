@@ -994,6 +994,36 @@ teach is here.
   it" (the other-role line). The code places it in `Home.razor` for every role. The Sonnet reviewer, reading the code,
   caught it, and DESIGN.md was corrected with the design system. *Changed:* nothing; keep the reviewer on the code.
 
+**Flow 05 (T355, 2026-10-03 to 10-04): what the fifth flow added**
+
+Flow 05 ran the whole loop in one session: a W flow's three structures (V1 picked), three rounds, a four-sided review,
+the build (`b020c942`), the replay (256 of 325 steps with no gap), the states (36 of 37) and the re-sync (design system
+version 15). Its record is `design/flows/05-trainee-progress/`. Only what flows 01–04 did not already teach is here.
+
+- **A defect the design depends on lands first, as its own task.** Observed: round 1's Q9 (draw only the rebuilt state
+  after a curriculum move) was true only once T304 replayed credit on a move. The operator chose T304 first, with
+  T305 folded in, since both changed one handler. Each was reviewed against its own risk, and a partial replay checked
+  them before the UI build began. *Changed:* nothing; a question whose answer rests on an open task names it, and the
+  task lands before step 6.
+- **The replay finds layout regressions the build review cannot.** Observed: four reviewers read the code and passed
+  the committee page's chart. The replay at 1280 then found it in the details grid's narrow column (4.15), and a second
+  look found it still a card inside a card, the figure 874 px against a 900 drawing. At 390, A.7.3 found a 2 px
+  sideways scroll. Each was fixed by the integrator, republished onto the same database, and re-checked by the next
+  act's agent before it played on. *Changed:* nothing; this is the replay's job, and the next act re-checks a fix
+  first.
+- **A first fix can be partial: measure the container, not the class.** Observed: `full-width` made the section span
+  the grid, but the chart still drew its narrow form, because its parent card ate 50 px. *Changed:* nothing; a layout
+  re-check measures the element the rule depends on (here, the container query's container).
+- **Test the press, not the href.** Observed: the build review's one high finding was the integrator's own wiring. A
+  bare `#trajectory-1` link resolves against `<base href="/">` and sends the reader to Home, and the test checked only
+  the href string. *Changed:* an in-page link focuses its target through `PageFocus` (as `RefusalSummary` does), and
+  its test presses it and asserts the page did not move.
+- **A real hour's wait survives in short background waits.** Observed: flow 04's act 2 agent died in one long wait.
+  This replay's act 2 and act 3 agents each waited a real hour in short background waits, playing read-only steps
+  meanwhile and saying so, and both finished. *Changed:* the act prompts say how to wait.
+- **A page taller than about 16,384 px cannot be one screenshot.** Observed: Chromium repeated the header part-way down
+  an 18,013 px committee page. *Changed:* capture such a page in parts and stitch them (the states agent did).
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
