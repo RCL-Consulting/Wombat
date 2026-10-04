@@ -63,3 +63,8 @@ Run the loop as flow 04 ran it (`design/flows/04-assessor-inbox/`, BRIEF § 11 "
 ## Related
 
 W-008, T350 (flow 04), T306 (B4: no training year shown), T323, T328, T311; BRIEF § 8 and § 11.
+
+## Notes
+
+- **2026-10-04, Q9 (the operator):** My progress draws only the rebuilt state after a version move, so **T304 lands
+  before or with flow 05's build** (step 6). Round 1's other decisions: `design/flows/05-trainee-progress/README.md`.

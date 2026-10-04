@@ -20,3 +20,7 @@ T355's design, kept beside its brief (`../05-trainee-progress.md`) so that it ou
   her requests (the one Home surface for a decline), with six corrections (the committee's standing table kept whole;
   the EPA page by id; the evidence from the activity records; only the rebuilt state after a version move; the
   completed card gains only the count; the rule words). Operator's: Q8, Q9, O1, O2.
+- **The decisions** (the operator, 2026-10-04): V1 as reviewed, with V2's widened Credited lately and the six
+  corrections; Q8, My progress stays a personal link under the rule (no shell change), My authorisations keeps no menu
+  item; Q9, only the rebuilt state after a version move, no move notice, and **T304 lands before or with flow 05's
+  build**; O1, no scheduled-review date for the registrar; O2, KGK-001 reads as today in periods before it was added.
