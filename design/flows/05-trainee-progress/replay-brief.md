@@ -122,4 +122,8 @@ captures show a registration link, and anything you could not check.
 
 - `<PW>` = `C:\Users\Renier\AppData\Local\Temp\claude\c--Users-Renier-Wombat\842d7157-aa59-4fb6-9f09-284891ff7f72\scratchpad\replay\pw`
   (flow 02's installed helpers, reused).
-- `<G>` = `C:\Users\Renier\AppData\Local\Temp\claude\C--Users-Renier-Wombat\b4d7c8bc-8eea-42ac-bfa7-358dc154bea9\scratchpad\g350`.
+- `<PWURL>` = `file:///C:/Users/Renier/AppData/Local/Temp/claude/c--Users-Renier-Wombat/842d7157-aa59-4fb6-9f09-284891ff7f72/scratchpad/replay/pw`.
+- `<G>` = `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\0bf7cd41-bd07-426d-888f-afc3139cc444\scratchpad\g355`
+  (a new `replay-pw.env` for this replay). T350's act scripts are in
+  `C:\Users\Renier\AppData\Local\Temp\claude\c--Users-Renier-Wombat\b4d7c8bc-8eea-42ac-bfa7-358dc154bea9\scratchpad\g350\act-*`
+  (T304's fixed act-5 and act-6 copies in its `t304` folder): copy what helps into `<G>\<DIR>`, fixing paths and dates.
