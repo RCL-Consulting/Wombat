@@ -4,7 +4,7 @@ This is flow 06 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   account), 03 (a registrar files an activity), 04 (an assessor's inbox) and 05 (a registrar reads where she stands)
   are designed and built; these pages sit inside the shell. Structure first, then fidelity: round 1 is 2–3 structural
   variations as wireframes of the four oversight Homes and of the pages each variation adds, and I pick one before
-  round 2. The runbook steps follow below in this same message. The brand mark is at <MARK-URL>: use it, never a drawn
+  round 2. The runbook steps follow below in this same message. The brand mark is at /_blob/d0ffe547ebb511d3f58145477434f9aa: use it, never a drawn
   disc.
 
 GOAL: Programme staff open Wombat once a week and learn, in under a minute and on a phone if need be:

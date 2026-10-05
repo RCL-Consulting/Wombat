@@ -23,10 +23,10 @@ page of the programme's registrars, no page of stalled work, and no way to chase
 1. **Stage the upload set:** `pwsh design/tools/stage_upload.ps1 -Flow 06`. Open each screenshot. Leave out anything in
    `design/upload/crop-first/`, or crop its link first. Flow 05's boards (§ 4) are not staged by the script.
 2. **Start a new canvas** from the main app's Design page, on the Wombat design system v15
-   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas.
+   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Flow 06's canvas: https://claude.ai/artifact/97WQWEuzMYHcKngPnNdHkV (created 2026-10-05).
 3. **Copy the mark into the canvas before round 1** (`Artifact publish`, `asset: true`, `from_url` = the design
    system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Put the returned `/_blob/` URL in § 1 and in
-   `design/flows/06-programme-oversight/round-1-ask.txt`, where they read `<MARK-URL>`.
+   `design/flows/06-programme-oversight/round-1-ask.txt`, where they read `/_blob/d0ffe547ebb511d3f58145477434f9aa`.
 4. **Send § 1 and § 8 as ONE message** (`design/flows/06-programme-oversight/round-1-ask.txt`), with the key
    screenshots in § 4. The canvas draws round 1 from the first message and does not wait for a second (§ 11, flow 02).
    Read `project/canvas.json`'s version before and after: a send can draw nothing.
@@ -49,7 +49,7 @@ This is flow 06 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   account), 03 (a registrar files an activity), 04 (an assessor's inbox) and 05 (a registrar reads where she stands)
   are designed and built; these pages sit inside the shell. Structure first, then fidelity: round 1 is 2–3 structural
   variations as wireframes of the four oversight Homes and of the pages each variation adds, and I pick one before
-  round 2. The runbook steps follow below in this same message. The brand mark is at <MARK-URL>: use it, never a drawn
+  round 2. The runbook steps follow below in this same message. The brand mark is at /_blob/d0ffe547ebb511d3f58145477434f9aa: use it, never a drawn
   disc.
 
 GOAL: Programme staff open Wombat once a week and learn, in under a minute and on a phone if need be:
