@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · structure</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1500px; background: #fff">
+<div class="doc">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1>C · One Programme page, three views</h1>
+<p>The programme is one place with three ways to read it: by registrar, by EPA, and what is waiting. Every oversight role has the same menu item. Home says three figures and leads into the view each one comes from.</p>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2>Menus of the four roles</h2>
+<div class="cols c4">
+<div class="menu"><div class="k">Acting as</div><div class="r">Committee member</div>
+<div class="i">Home</div><div class="i">Programme<span class="tag">NEW</span></div><div class="i">Committee reviews</div><div class="i">Decision panels</div><div class="rule"></div><div class="i">My data rights</div></div>
+<div class="menu"><div class="k">Acting as</div><div class="r">Speciality admin · Sub-speciality admin</div>
+<div class="i">Home</div><div class="i">Programme<span class="tag">NEW</span></div><div class="i">Decisions due</div><div class="i">Committee reviews</div><div class="i">Decision panels</div><div class="i">Entrustment decisions<span class="tag">ADDED</span></div><div class="rule"></div><div class="i">My data rights</div></div>
+<div class="menu"><div class="k">Acting as</div><div class="r">Coordinator</div>
+<div class="i">Home</div><div class="i">Programme<span class="tag">NEW</span></div><div class="i">Decisions due</div><div class="i">MSF campaigns</div><div class="i">Committee reviews</div><div class="i">Decision panels<span class="tag">ADDED</span></div><div class="i">Data rights requests</div><div class="rule"></div><div class="i">My data rights</div></div>
+<div class="anno">One label for every role, so a committee member and the director say the same name to each other. The views are links (?view=registrars | epas | waiting), each its own address, so Home and a mail can open one; the committee's Programme has no Waiting tab.</div>
+</div>
+</div>
+
+<div class="cols c2">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2>Pages and owners</h2>
+<div class="tree">
+<div class="n"><b>Home</b> (/) · figures, one link each</div>
+<div class="n nw ind"><b>Programme</b> <span class="new">NEW</span> /programme · admits the four roles · ViewTabs <span class="new">NEW</span>: By registrar · By EPA · Waiting (admins, Coordinator)</div>
+<div class="n nw ind" style="margin-left: 56px"><b>Nomsa Mahlangu</b> <span class="new">NEW</span> /programme/registrars/{id} · owned by Programme</div>
+<div class="n ind" style="margin-left: 56px">Activity page (flow 03's) · from a Waiting row</div>
+<div class="n ind">Entrustment decisions (flow 09's) · in the admins' menus</div>
+</div>
+<h2 style="margin-top: 8px">Homes</h2>
+<table class="st"><tbody>
+<tr><td>Committee member</td><td>(line) · "0 of 5" registrars met every target this semester → By registrar · "0 of 15" EPAs every registrar has met → By EPA</td></tr>
+<tr><td>Speciality admins</td><td>The committee's two · "2 waiting" for an assessor, "0 overdue" → Waiting</td></tr>
+<tr><td>Coordinator</td><td>Header action · "2 waiting, 2 overdue" → Waiting · "[n]" registrars with nothing filed in 30 days → By registrar, filtered · Invitations nearing expiry (rows)</td></tr>
+</tbody></table>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2>Journeys</h2>
+<table class="st">
+<thead><tr><th>Journey</th><th>Path</th><th>1280</th><th>390</th></tr></thead>
+<tbody>
+<tr><td>J1</td><td><div class="flow"><span class="s">Home</span><span class="a">→ By registrar</span><span class="s">Programme</span><span class="a">→ first row</span><span class="s">registrar</span></div></td><td class="n">2</td><td class="n">2</td></tr>
+<tr><td>J1b</td><td><div class="flow"><span class="s">Home</span><span class="a">→ By EPA</span><span class="s">grid</span><span class="a">→ a name</span><span class="s">registrar</span></div></td><td class="n">2</td><td class="n">2</td></tr>
+<tr><td>J2</td><td><div class="flow"><span class="s">Home</span><span class="a">→ Waiting</span><span class="s">Programme, Waiting</span><span class="a">→ first row</span><span class="s">Activity</span></div></td><td class="n">2</td><td class="n">2</td></tr>
+<tr><td>J3</td><td><div class="flow"><span class="s">Home</span><span class="a">→ Waiting</span><span class="s">Waiting</span><span class="a">→ Send a reminder</span><span class="s">dialog</span><span class="a">→ Send</span><span class="s">result</span></div></td><td class="n">3</td><td class="n">3</td></tr>
+<tr><td>J4</td><td><div class="flow"><span class="s">Home</span><span class="a">→ By registrar</span><span class="s">Programme</span><span class="a">→ name</span><span class="s">registrar</span></div></td><td class="n">2</td><td class="n">2</td></tr>
+</tbody>
+</table>
+<h2 style="margin-top: 8px">Why, and what it costs</h2>
+<ul class="b">
+<li>Home answers "is anything wrong?" in three numbers on one phone screen; the detail is one press away, always in the same place.</li>
+<li>The By EPA grid answers the brief's first two questions at once: which EPAs, and which registrars on each. Neither A nor B shows that crossing.</li>
+<li>Cost: one press more on every first look. A figure with no names asks to be opened.</li>
+<li>Cost: two NEW components (ViewTabs, ProgrammeGrid) and a definition to settle: a registrar "met every target" counts both windows, so "0 of 5" will read 0 for most of a semester. A threshold for "behind" (e.g. short with 30 days left) is a domain rule the operator would have to set.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

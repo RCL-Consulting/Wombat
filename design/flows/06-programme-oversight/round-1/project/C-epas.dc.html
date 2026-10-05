@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · Programme, by EPA</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.g td.c{text-align:center;white-space:nowrap}
+.g td.met{background:#f2f2f2;font-weight:600}
+.g th.r{text-align:center;font-size:12.5px}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1400px">
+<div class="shell" style="min-height: 1400px">
+<nav class="side">
+<div class="brand"><img src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="">Wombat</div>
+<div class="rolehead"><div class="k">Acting as</div><div class="r">Committee member</div><a class="sw" href="#">Switch to Assessor</a></div>
+<div class="nav"><a class="i" href="#">Home</a><a class="i lit" href="#">Programme<span class="tag">NEW</span></a><a class="i" href="#">Committee reviews</a><a class="i" href="#">Decision panels</a><div class="rule"></div><a class="i" href="#">My data rights</a></div>
+</nav>
+<div class="main">
+<div class="top"><a href="#">Thandi Zulu</a><a class="btn sm" href="#">Sign out</a></div>
+<main class="page">
+<div class="ph"><div class="t"><h1>Programme <span class="new">NEW</span></h1><div class="sub">Kgosi Kgari Teaching Hospital · Paediatrics · Semester 2, 2026</div></div></div>
+<nav class="tabs" aria-label="Programme views"><a href="#">By registrar</a><a class="on" href="#">By EPA</a></nav>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="font-size: 16px">Targets by EPA</h2>
+<p class="rl">Each EPA's count for each registrar in its window. Fewest registrars met first. Semester 2 ends 2026-11-30.</p>
+<div style="border: 2px solid #3a3a3a; border-radius: 12px; overflow: hidden">
+<table class="tbl g" style="border: 0; border-radius: 0">
+<thead><tr><th style="width: 300px">EPA</th><th style="width: 110px">Registrars met</th><th class="r"><a href="#">Pieter du Plessis</a></th><th class="r"><a href="#">Nomsa Mahlangu</a></th><th class="r"><a href="#">Sipho Ndlovu</a></th><th class="r"><a href="#">Anele Dlamini</a></th><th class="r"><a href="#">Lerato Molefe</a></th></tr></thead>
+<tbody>
+<tr><td><b>PAED-002 — [title]</b><div class="m">[n] per semester</div></td><td><b>0 of 5</b></td><td class="c">0 of [m]</td><td class="c">0 of [m]</td><td class="c">0 of [m]</td><td class="c">0 of [m]</td><td class="c">0 of [m]</td></tr>
+<tr><td><b>PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</b><div class="m">[n] per academic year · in 2026</div></td><td><b>0 of 5</b></td><td class="c">0 of [m]</td><td class="c">0 of [m]</td><td class="c">0 of [m]</td><td class="c">0 of [m]</td><td class="c">0 of [m]</td></tr>
+<tr><td colspan="7"><span class="anno">… PAED-003 to PAED-014; heavy adds KGK-001 with "Your institution's own".</span></td></tr>
+<tr><td><b>PAED-001 — Providing paediatric emergency care to children</b><div class="m">3 per semester</div></td><td><b>2 of 5</b></td><td class="c">0 of 3</td><td class="c">0 of 3</td><td class="c">0 of 3</td><td class="c met">Met</td><td class="c met">Met</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="cols c3">
+<div class="anno"><b>A real table:</b> row headers the EPAs, column headers the registrars (each her link), so a screen reader reads a cell as "Nomsa Mahlangu, PAED-001, 0 of 3". Met is a word and a shade, never the shade alone. No bar in the grid: the counts are the figure.</div>
+<div class="anno"><b>Width:</b> up to 6 registrars fit at 1280. Past that the region scrolls sideways inside its frame (labelled "Targets by EPA, by registrar", focusable, the design's ring, the EPA column sticky). A programme of 30 is a wide grid; that is C's limit, and a filter by training year narrows it.</div>
+<div class="anno"><b>Exempt:</b> her column reads "Exempt" in every row and she is not counted ("2 of 4"). <b>At 390:</b> no grid. Each EPA a block: its name, "2 of 5 registrars met", then "Short: Pieter du Plessis 0 of 3, Nomsa Mahlangu 0 of 3, Sipho Ndlovu 0 of 3", each name a link.</div>
+</div>
+<div class="anno">The committee's tabs: By registrar, By EPA. Admins and the Coordinator also see Waiting.</div>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

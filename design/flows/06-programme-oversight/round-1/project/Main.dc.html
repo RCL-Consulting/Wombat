@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 1 · compare</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1600px; min-height: 2300px; background: #fff">
+<div class="doc">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h1>Flow 06 · Watching the programme — round 1: three structures</h1>
+<p>Wireframes, greyscale on purpose: no colour or type choices yet. Each row below is one structure: its menus, pages and journeys first, then the four Homes, the pages it adds, and 390 px. Real figures are the brief's (Step 3.30, 3.52, 3.53); a figure the brief does not give is a [placeholder], never invented.</p>
+<div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; font-size: 13px">
+<span><span class="new">NEW</span> a page, card or component that does not exist</span>
+<span><span class="prop">PROPOSED</span> an action that is not built (a reminder, a reassignment)</span>
+<span><span class="anno">yellow</span> wireframe annotation, not part of any screen</span>
+<span><span class="badge">pill</span> a badge; <span class="badge od">Overdue</span> flow 04's Overdue badge</span>
+</div>
+</div>
+
+<div class="cols c3">
+<div class="card emph"><h3 style="font-size: 17px">A · Two lists and a record</h3><p>Two new pages, Programme trainees (who is behind) and Waiting for assessors (what has stalled), and a staff page for one registrar under the roster. Each Home previews them as flow 04's Home previews the Activity inbox: the first five rows, then "Open …". Reminders are sent from the waiting list's row.</p><p class="rl">Pages added: 3. Menu items added: committee 1, admins 3, Coordinator 3.</p></div>
+<div class="card"><h3 style="font-size: 17px">B · Home holds it all</h3><p>No list pages. Each Home card lists every row, uncapped; a per-EPA row opens in place (a native fold) onto the registrars short on it. One new page, the registrar, owned by no list. Reminders are sent from Home's row.</p><p class="rl">Pages added: 1. Menu items added: committee 0, admins 1, Coordinator 1.</p></div>
+<div class="card"><h3 style="font-size: 17px">C · One Programme page, three views</h3><p>One new page, Programme, with three views as links: by registrar, by EPA (a registrar-by-EPA grid), and waiting. Homes shrink to three figures, each a way into its view. The registrar page sits under Programme.</p><p class="rl">Pages added: 2 (one with three views). Menu items added: committee 1, admins 2, Coordinator 2.</p></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2>The brief's questions 1–7, answered per structure</h2>
+<table class="st">
+<thead><tr><th style="width: 150px">Question</th><th>A · Two lists and a record</th><th>B · Home holds it all</th><th>C · One Programme page</th></tr></thead>
+<tbody>
+<tr><td><b>1</b> Programme trainees</td><td>A page <span class="new">NEW</span>, admitting Committee member, both speciality admins and Coordinator. The committee's card "Registrars behind" is its preview: the first five, fewest met first.</td><td>No page. Home's "Registrars" card lists every current registrar. The deleted stub stays deleted (B7: Home carries it).</td><td>Programme <span class="new">NEW</span>, view "By registrar", admitting all four roles. Home shows its figure only: "0 of 5 registrars met every target this semester".</td></tr>
+<tr><td><b>2</b> One registrar, as staff read her</td><td colspan="3">A new staff page <span class="new">NEW</span> in all three, never the committee review (it exists only once a review is scheduled) and never My progress (registrar only). Its body composes flow 05's parts for staff: This period's two figures, EpaProgressTable with the EPA names as text (an EPA page admits only its registrar), EntrustmentStandingPanel, TrajectoryChart per rated EPA; plus her waiting requests and a link to her scheduled committee review. The structures differ only in its owner: <b>A</b> Home › Programme trainees › Nomsa Mahlangu · <b>B</b> Home › Nomsa Mahlangu, nothing lit · <b>C</b> Home › Programme › Nomsa Mahlangu.</td></tr>
+<tr><td><b>3</b> What waits for a reviewer</td><td>One page <span class="new">NEW</span>, "Waiting for assessors", for both admins and the Coordinator: every waiting request in scope, oldest first, overdue marked. It is the target of the admins' count and the Coordinator's card, which become one card, "Waiting for assessors".</td><td>Home card only, every row, for both admins and the Coordinator. Past 10 rows the rest sit in a fold ("Show 4 more").</td><td>Programme's "Waiting" view, for both admins and the Coordinator (the committee does not see the tab).</td></tr>
+<tr><td><b>3</b> What is "stalled"</td><td colspan="3">All three: flow 04's Overdue, 7 days since the last move (T351's caveat stands), with flow 04's badge and stripe. The word "stalled" goes; staff and assessor read the same mark on the same request. The rule line names the 5-day mail: "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5." Moving the mail to 7 is the operator's call.</td></tr>
+<tr><td><b>4</b> Triage</td><td>"Send a reminder" <span class="prop">PROPOSED</span> on the list's row, named per row. "Reassign" <span class="prop">PROPOSED</span> drawn as a reserved slot only, filed as its own task (it changes the platform's rules).</td><td>"Send a reminder" <span class="prop">PROPOSED</span> on Home's row. No reassign.</td><td>As A, on the Waiting view's row.</td></tr>
+<tr><td><b>5</b> Per-EPA card</td><td colspan="3">One title on every Home: "Targets by EPA". The semester is said once, by Home's subtitle; the card's rule line says only "July to November. Fewest registrars met first." Rows sort fewest met first, then by code. The figure "2 of 5" over "registrars met" sits in a fixed 150 px column at 1280 and on its own line under the title at 390, so it never wraps. Its rows lead on: <b>A</b> to Programme trainees filtered "Short on PAED-001" · <b>B</b> a fold listing who is short · <b>C</b> to the By EPA view at that row.</td></tr>
+<tr><td><b>6</b> Coordinator's Home</td><td colspan="3">All three: "Quick action" goes; "Start an MSF campaign" becomes Home's one header action. The weekly digest's roster comes to a page: <b>A</b> a filter "Nothing logged in 30 days" on Programme trainees and a Home card · <b>B</b> a Home card · <b>C</b> a "Last logged" column and the same filter in By registrar. Invitations name the role by its label and say why there is no action.</td></tr>
+<tr><td><b>7</b> Menus</td><td colspan="3">All three: "Entrustment decisions" joins both speciality admins' menus, replacing the STAR review queue (label unchanged, so the owner table gains it as its own list); "Decision panels" joins the Coordinator's.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2>Journeys: presses after Home has loaded, at 1280 / 390</h2>
+<p class="rl">Sign-in is one more press in every case. A press is a link, a button or a fold. Scroll is the 390 px distance before the first press: short (inside the first screen), medium (one to two screens), long (more, in the heavy state).</p>
+<table class="st">
+<thead><tr><th>Journey</th><th>A</th><th>B</th><th>C</th></tr></thead>
+<tbody>
+<tr><td><b>J1</b> Thandi Zulu, weekly look: to the registrar furthest behind</td><td class="n">1 / 1<div class="rl" style="font-weight: 400">first row of Registrars behind · scroll short (under flow 04's line)</div></td><td class="n">1 / 1<div class="rl" style="font-weight: 400">first row of Registrars · short</div></td><td class="n">2 / 2<div class="rl" style="font-weight: 400">the figure, then the first row · short</div></td></tr>
+<tr><td><b>J1b</b> Thandi Zulu: the EPA the programme is shortest on, to a registrar short on it</td><td class="n">2 / 2<div class="rl" style="font-weight: 400">EPA row, then a filtered roster row · medium</div></td><td class="n">2 / 2<div class="rl" style="font-weight: 400">fold, then a name in it · medium</div></td><td class="n">2 / 2<div class="rl" style="font-weight: 400">the figure, then a name in the grid · short</div></td></tr>
+<tr><td><b>J2</b> Refilwe Mokoena: pending count to the oldest waiting request</td><td class="n">1 / 1<div class="rl" style="font-weight: 400">the card's first row is the oldest · short</div></td><td class="n">1 / 1<div class="rl" style="font-weight: 400">short</div></td><td class="n">2 / 2<div class="rl" style="font-weight: 400">the figure, then the first row · short</div></td></tr>
+<tr><td><b>J3</b> Pieter Smit: an overdue request to a reminder sent</td><td class="n">3 / 3<div class="rl" style="font-weight: 400">Open Waiting for assessors, Send a reminder, confirm · short</div></td><td class="n">2 / 2<div class="rl" style="font-weight: 400">Send a reminder on Home's row, confirm · short; long when heavy</div></td><td class="n">3 / 3<div class="rl" style="font-weight: 400">the figure, Send a reminder, confirm · short</div></td></tr>
+<tr><td><b>J4</b> John van Rensburg, first look (after T290): to any registrar</td><td class="n">1 / 1</td><td class="n">1 / 1</td><td class="n">2 / 2</td></tr>
+</tbody>
+</table>
+<div class="anno"><b>Reading the counts.</b> B is shortest everywhere, and pays for it in Home's length and read: the admins' Home in the heavy state is 14 waiting rows, 5 registrars and 16 EPAs, three screens and more at 390, read in full every visit. C is one press longer on every first look and gives the most context on the second (the grid). A matches flow 04's Home → list pattern, keeps Home five rows a card, and puts triage in one place a list can filter.</div>
+</div>
+
+<div class="cols c2">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2>The operator's questions 8–10: a recommendation, the same for all three</h2>
+<ul class="b">
+<li><b>8 · T290 and T298 first</b>, as their own task, as flow 05 did with T304: every figure the boards show (the external member's five, the tie order) depends on them, and a replay that fails on them would fail the design for the backend's reason.</li>
+<li><b>9 · Triage</b>: design both here; build "Send a reminder" in this flow if it is chosen (it reuses the nudge's mail, one assessor, one request); file "Reassign" as its own task with its rule (who may, whether the registrar is told, what the history says).</li>
+<li><b>10 · "Inactive"</b>: drop the count. Home counts current registrars only ("5 current registrars"). An ended programme is flow 13's and an erased account flow 14's; a count that only grows says nothing weekly. If kept: "3 ended this year", never counting an erased account as a person.</li>
+</ul>
+<h2 style="margin-top: 12px">DESIGN.md rules each structure changes</h2>
+<table class="st">
+<thead><tr><th>Rule</th><th>A</th><th>B</th><th>C</th></tr></thead>
+<tbody>
+<tr><td>§ Dashboard page, link rule</td><td>every row a link; a card's foot opens its list</td><td>every row a link; a card may hold a fold; cards are uncapped</td><td>a figure card is one link (its figure's caption names the view)</td></tr>
+<tr><td>§ Dashboard grid, progress figures</td><td colspan="3">adds the programme's form: "2 of 5" over "registrars met", for a named window; one exemption wording: "1 registrar exempt this period"</td></tr>
+<tr><td>§ NavMenu, nav table</td><td>+ Programme trainees (4 roles), + Waiting for assessors (3), + Entrustment decisions (2), + Decision panels (Coordinator)</td><td>+ Entrustment decisions (2), + Decision panels (Coordinator)</td><td>+ Programme (4), + Entrustment decisions (2), + Decision panels (Coordinator)</td></tr>
+<tr><td>Owner table</td><td>Programme trainees owns the registrar page</td><td>the registrar page has no owner</td><td>Programme owns the registrar page</td></tr>
+</tbody>
+</table>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2>Components</h2>
+<ul class="b">
+<li><b>Reused as they are:</b> PageHeader, DashboardCard and DashboardFrame (loading, load error), DataTable with Stack and PagerControls, StatePanel, Skeleton, Alert, ActionResult, ConfirmDialog, badges, Icon, OtherRoleLine, the Overdue badge, EpaProgressTable, EntrustmentStandingPanel, TrajectoryChart, EpaLabel.</li>
+<li><b>Changed:</b> EpaTargetCoverageList (one title, figure column, rows lead on); WaitingList gains a staff reading, "with &lt;assessor&gt;" in place of "from &lt;registrar&gt;" being the reader's own.</li>
+<li><span class="new">NEW</span> RegistrarRoster (a roster row: name, training year, two figures, furthest short); the registrar page (StaffRegistrarPage); <span class="prop">PROPOSED</span> ReminderAction (button, dialog, result, refusal). C adds ViewTabs (links with aria-current) and ProgrammeGrid.</li>
+</ul>
+<h2 style="margin-top: 12px">Edge cases, where each lands</h2>
+<table class="st">
+<tbody>
+<tr><td><b>Nobody to show</b></td><td>Roster: "No current registrars. They appear here once admitted to the programme." Waiting: "Nothing is waiting for an assessor." Same words in all three.</td></tr>
+<tr><td><b>Every target met</b></td><td>Roster rows stay, figures read "10 of 10"; the card's rule line says "Everyone has met this semester's targets." No empty state: met is a result.</td></tr>
+<tr><td><b>Exempt this period</b></td><td>The row's figures give way to "Exempt this period" (neutral badge) and the reason as stored; the EPA card's line: "1 registrar exempt this period, not counted." One wording.</td></tr>
+<tr><td><b>120-character title</b></td><td>Wraps freely beside the fixed figure column; at 390 the figure is its own line under it. Never truncated.</td></tr>
+<tr><td><b>16 EPAs</b></td><td>KGK-001 by its code with "Your institution's own" as text (flow 05's T357 rule), sorted with the rest. A: all 16 on Home. C: 16 grid rows.</td></tr>
+<tr><td><b>More than 10 overdue</b></td><td>A, C: Home shows five and "9 more wait in Waiting for assessors."; the page pages at 20. B: ten, then a fold.</td></tr>
+<tr><td><b>Assessor deactivated</b></td><td>Row: "With Fatima Khumalo (account deactivated)"; no reminder, and the reason in the row: "No reminder: Fatima Khumalo's account is deactivated. Nomsa Mahlangu can cancel and file it again."</td></tr>
+<tr><td><b>Ended this week</b></td><td>Leaves the roster at once (current only); her requests still waiting stay in the waiting list, marked "Programme ended 2026-10-02"; her page is still found from them.</td></tr>
+<tr><td><b>Two of these roles</b></td><td>The acting role's Home and menu only; pages open on the union (a Coordinator who is also Speciality admin reads both scopes; nothing switches).</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2>Accessibility review, WCAG 2.1 AA, against all three</h2>
+<div class="cols c3">
+<ul class="b">
+<li><b>Names (2.4.4, 4.1.2).</b> Every registrar link is her name; every EPA link "PAED-001 — Providing paediatric emergency care to children"; every activity link flow 03's "Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu" (T280). "Send a reminder" names its row: "Send Thandi Zulu a reminder about Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30".</li>
+<li><b>No card is one link around links</b> (T280): C's figure cards hold one link each and nothing else interactive.</li>
+</ul>
+<ul class="b">
+<li><b>Figures as words (1.1.1, 1.4.1).</b> Every bar sits under its words ("2 of 5 registrars met"), aria-hidden; the grid's cells say "0 of 3, short" or "Met", never a mark alone; Overdue is a word beside the state.</li>
+<li><b>Targets (2.5.5 as the brief sets it).</b> Rows 44 px at every width (they are lists of links); buttons 36 px, 44 px at 390; folds' summaries 44 px.</li>
+</ul>
+<ul class="b">
+<li><b>Focus (2.4.3, 3.3.1).</b> Try again's answer focuses the first card's heading, or the empty state; after a reminder the result alert takes the focus, and the next Tab is the next row's link; a refusal takes it the same way. A filter's Show puts it on the table's heading with its count.</li>
+<li><b>Scroll regions.</b> C's grid at 1280 past eight registrars scrolls inside a labelled, focusable region with the ring (T328); nothing at 390 scrolls sideways.</li>
+</ul>
+</div>
+<div class="anno"><b>Not attached to this session:</b> the eleven screenshots and flow 05's boards (R3-E, R3-P, R3-T, flow05-r3.css). These wireframes follow the brief's text and the Wombat design system's README; round 2 should re-check against the screenshots.</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":2300}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A · structure</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1700px; background: #fff">
+<div class="doc">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1>A · Two lists and a record</h1>
+<p>Who is behind is a roster; what has stalled is a queue; one registrar is a record under the roster. Homes preview the two lists and lead into them, as flow 04's Home leads into the Activity inbox.</p>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2>Menus of the four roles</h2>
+<div class="cols c4">
+<div class="menu"><div class="k">Acting as</div><div class="r">Committee member</div>
+<div class="i">Home</div><div class="i">Programme trainees<span class="tag">NEW</span></div><div class="i">Committee reviews</div><div class="i">Decision panels</div><div class="rule"></div><div class="i">My data rights</div></div>
+<div class="menu"><div class="k">Acting as</div><div class="r">Speciality admin · Sub-speciality admin</div>
+<div class="i">Home</div><div class="i">Programme trainees<span class="tag">NEW</span></div><div class="i">Waiting for assessors<span class="tag">NEW</span></div><div class="i">Decisions due</div><div class="i">Committee reviews</div><div class="i">Decision panels</div><div class="i">Entrustment decisions<span class="tag">ADDED</span></div><div class="rule"></div><div class="i">My data rights</div><div class="i gone">STAR review queue (deleted, not restored)</div></div>
+<div class="menu"><div class="k">Acting as</div><div class="r">Coordinator</div>
+<div class="i">Home</div><div class="i">Programme trainees<span class="tag">NEW</span></div><div class="i">Waiting for assessors<span class="tag">NEW</span></div><div class="i">Decisions due</div><div class="i">MSF campaigns</div><div class="i">Committee reviews</div><div class="i">Decision panels<span class="tag">ADDED</span></div><div class="i">Data rights requests</div><div class="rule"></div><div class="i">My data rights</div><div class="i gone">Stalled activities (replaced)</div></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div class="anno">Coordinator: 8 items, the flat limit exactly. A ninth for him would group the menu (flow 01's rule); C keeps him at 7.</div>
+<div class="anno">Committee: no Waiting for assessors. Chasing is not the panel's work; a member who assesses has flow 04's own inbox.</div>
+<div class="anno">Entrustment decisions keeps flow 09's label; its owner table entry is itself, so its trail stops reading Home › Entrustment decisions with nothing lit.</div>
+</div>
+</div>
+</div>
+
+<div class="cols c2">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2>Pages and owners</h2>
+<div class="tree">
+<div class="n"><b>Home</b> (/) · four role Homes, cards below</div>
+<div class="n nw ind"><b>Programme trainees</b> <span class="new">NEW</span> /programme/trainees · admits Committee member, Speciality admin, Sub-speciality admin, Coordinator · filters: Short on (EPA), Training year, Nothing logged in 30 days</div>
+<div class="n nw ind" style="margin-left: 56px"><b>Nomsa Mahlangu</b> <span class="new">NEW</span> /programme/trainees/{id} · the registrar as staff read her · owned by Programme trainees · out of scope: Page not found</div>
+<div class="n nw ind"><b>Waiting for assessors</b> <span class="new">NEW</span> /programme/waiting · admits both speciality admins, Coordinator · filter: Overdue only, Assessor · row action <span class="prop">PROPOSED</span> Send a reminder</div>
+<div class="n ind" style="margin-left: 56px">Activity page /activities/{id} (flow 03's, unchanged) · reached from any waiting row</div>
+<div class="n ind" style="margin-left: 56px">Committee review (flow 07's, unchanged) · reached from the registrar page when one is scheduled</div>
+<div class="n ind">Entrustment decisions (flow 09's body) · now in both admins' menus</div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2>Homes, card by card</h2>
+<table class="st">
+<thead><tr><th>Role</th><th>Cards, in order</th></tr></thead>
+<tbody>
+<tr><td>Committee member</td><td>(flow 04's line, for an Assessor holder) · Registrars behind (span 2, first 5, Open Programme trainees) · Targets by EPA (all rows, each to the filtered roster)</td></tr>
+<tr><td>Speciality admin, Sub-speciality admin</td><td>Waiting for assessors (first 5, the count in the title's badge, Open Waiting for assessors) · Registrars behind · Targets by EPA. "Trainees in programme" goes: the roster card's line says "5 current registrars".</td></tr>
+<tr><td>Coordinator</td><td>Header action Start an MSF campaign · Waiting for assessors · Nothing logged in 30 days <span class="new">NEW</span> · Invitations nearing expiry</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2>Journeys</h2>
+<table class="st">
+<thead><tr><th style="width: 260px">Journey</th><th>Path (each box a page, each arrow a press)</th><th style="width: 90px">1280</th><th style="width: 90px">390</th></tr></thead>
+<tbody>
+<tr><td>J1 Thandi Zulu's weekly look</td><td><div class="flow"><span class="s">Sign in</span><span class="a">→</span><span class="s">Home: line, then Registrars behind</span><span class="a">→ Pieter du Plessis</span><span class="s">Pieter du Plessis</span></div></td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>J1b the EPA shortest on</td><td><div class="flow"><span class="s">Home: Targets by EPA</span><span class="a">→ PAED-002 row</span><span class="s">Programme trainees, Short on PAED-002</span><span class="a">→ a name</span><span class="s">registrar</span></div></td><td class="n">2</td><td class="n">2</td></tr>
+<tr><td>J2 Refilwe Mokoena, pending to oldest</td><td><div class="flow"><span class="s">Home: Waiting for assessors, oldest first</span><span class="a">→ first row</span><span class="s">Activity page</span></div><div class="rl">Or Open Waiting for assessors (+1) to see all, filter by assessor.</div></td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>J3 Pieter Smit chases</td><td><div class="flow"><span class="s">Home: Waiting for assessors, 2 overdue</span><span class="a">→ Open</span><span class="s">Waiting for assessors</span><span class="a">→ Send a reminder</span><span class="s">dialog</span><span class="a">→ Send the reminder</span><span class="s">result alert, focus</span></div></td><td class="n">3</td><td class="n">3</td></tr>
+<tr><td>J4 John van Rensburg's first look</td><td><div class="flow"><span class="s">Sign in</span><span class="a">→</span><span class="s">Home: all five current registrars (T290)</span><span class="a">→ a name</span><span class="s">registrar</span></div></td><td class="n">1</td><td class="n">1</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2>Why this structure</h2>
+<ul class="b">
+<li>It is the pattern Wombat already teaches: a Home card of five with "Open …", a list page that is the whole truth (flow 04). Staff learn nothing new.</li>
+<li>Home stays one screen a card whatever the programme's size: five rows, a count, a way on. The heavy state lives on pages built for it (pager, filters, stacked rows).</li>
+<li>Triage sits in one place that can filter by assessor, so "chase Mohammed Patel about his three" is one filtered view, not three trips.</li>
+<li>Cost: two pages and three menu items more than B; the Coordinator's menu is full at 8.</li>
+</ul>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

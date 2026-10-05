@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · Programme, waiting</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1300px">
+<div class="shell" style="min-height: 1300px">
+<nav class="side">
+<div class="brand"><img src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="">Wombat</div>
+<div class="rolehead"><div class="k">Acting as</div><div class="r">Coordinator</div></div>
+<div class="nav"><a class="i" href="#">Home</a><a class="i lit" href="#">Programme<span class="tag">NEW</span></a><a class="i" href="#">Decisions due</a><a class="i" href="#">MSF campaigns</a><a class="i" href="#">Committee reviews</a><a class="i" href="#">Decision panels<span class="tag">ADDED</span></a><a class="i" href="#">Data rights requests</a><div class="rule"></div><a class="i" href="#">My data rights</a></div>
+</nav>
+<div class="main">
+<div class="top"><a href="#">Pieter Smit</a><a class="btn sm" href="#">Sign out</a></div>
+<main class="page">
+<div class="ph"><div class="t"><h1>Programme <span class="new">NEW</span></h1><div class="sub">Kgosi Kgari Teaching Hospital · Semester 2, 2026</div></div></div>
+<nav class="tabs" aria-label="Programme views"><a href="#">By registrar</a><a href="#">By EPA</a><a class="on" href="#">Waiting</a></nav>
+
+<form class="filters">
+<div class="fld"><label>Show</label><span class="ctl">All waiting <span>▾</span></span></div>
+<div class="fld"><label>With</label><span class="ctl">Anyone <span>▾</span></span></div>
+<a class="btn p" href="#">Show</a>
+</form>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="font-size: 16px">2 waiting, 2 overdue</h2>
+<p class="rl">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5. "Waiting" counts from the last move.</p>
+<table class="tbl">
+<thead><tr><th>Activity</th><th>With</th><th>State</th><th>Waiting</th><th style="width: 200px"><span class="prop">PROPOSED</span></th></tr></thead>
+<tbody>
+<tr style="box-shadow: inset 4px 0 0 #6b6b6b"><td><a href="#"><b>Portfolio and Logbook Review (Paediatrics) · [date]</b></a><div class="m">from <a href="#">Pieter du Plessis</a></div></td><td>Mohammed Patel</td><td><span class="badge">Awaiting review</span> <span class="badge od">Overdue</span></td><td><b>8 days</b><div class="m">since 2026-09-26 [hh:mm] SAST</div></td><td><a class="btn sm" href="#">Send a reminder</a></td></tr>
+<tr style="box-shadow: inset 4px 0 0 #6b6b6b"><td><a href="#"><b>Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30</b></a><div class="m">from <a href="#">Nomsa Mahlangu</a></div></td><td>Thandi Zulu</td><td><span class="badge">Requested</span> <span class="badge od">Overdue</span></td><td><b>8 days</b><div class="m">since 2026-09-26 [hh:mm] SAST</div></td><td><a class="btn sm" href="#">Send a reminder</a></td></tr>
+</tbody>
+</table>
+</div>
+<div class="cols c2">
+<div class="anno">The same list, row and triage as A's Waiting for assessors (its dialog, result, refusals, the deactivated assessor, the reserved Reassign). The difference is its home: a tab of Programme, so the registrar's name in each row is a second link, to her page in the same place.</div>
+<div class="anno">The committee has no Waiting tab; typed by a reader whose roles do not admit it, /programme?view=waiting opens By registrar, its tab lit, and lists nothing it would not.</div>
+</div>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

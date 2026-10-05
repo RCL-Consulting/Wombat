@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A · Home, Coordinator</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1400px">
+<div class="shell" style="min-height: 1400px">
+<nav class="side">
+<div class="brand"><img src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="">Wombat</div>
+<div class="rolehead"><div class="k">Acting as</div><div class="r">Coordinator</div></div>
+<div class="nav"><a class="i lit" href="#">Home</a><a class="i" href="#">Programme trainees<span class="tag">NEW</span></a><a class="i" href="#">Waiting for assessors<span class="tag">NEW</span></a><a class="i" href="#">Decisions due</a><a class="i" href="#">MSF campaigns</a><a class="i" href="#">Committee reviews</a><a class="i" href="#">Decision panels<span class="tag">ADDED</span></a><a class="i" href="#">Data rights requests</a><div class="rule"></div><a class="i" href="#">My data rights</a></div>
+</nav>
+<div class="main">
+<div class="top"><a href="#">Pieter Smit</a><a class="btn sm" href="#">Sign out</a></div>
+<main class="page">
+<div class="ph"><div class="t"><h1>Home</h1><div class="sub">Coordinator · Semester 2, 2026</div></div><a class="btn p" href="#">Start an MSF campaign</a></div>
+
+<div class="grid">
+<section class="card s2 warn">
+<div class="hd"><span class="ico">C</span><h2>Waiting for assessors</h2><span class="badge">2 waiting, 2 overdue</span></div>
+<p class="rl">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.</p>
+<div class="rows">
+<div class="wr od"><div><a class="nm" href="#">Portfolio and Logbook Review (Paediatrics) · [date], from Pieter du Plessis</a><div class="m">With Mohammed Patel · Awaiting review <span class="badge od">Overdue</span> · Waiting 8 days</div></div><span></span></div>
+<div class="wr od"><div><a class="nm" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu</a><div class="m">With Thandi Zulu · Requested <span class="badge od">Overdue</span> · Waiting 8 days</div></div><span></span></div>
+</div>
+<div class="foot"><a class="btn" href="#">Open Waiting for assessors</a><span class="rl">to send a reminder <span class="prop">PROPOSED</span></span></div>
+<div class="anno">Was "Stalled requests · 26 Sept". Now: how long it has waited in flow 04's words (T351: from the last move), whose it is, the activity link named "Type · EPA · date, from registrar" so two Mini-CEX from one registrar differ by EPA and date (T280). No cap at 10 without saying so: five, then "9 more wait in Waiting for assessors."</div>
+</section>
+
+<section class="card">
+<div class="hd"><span class="ico">Z</span><h2>Nothing logged in 30 days</h2><span class="new">NEW</span></div>
+<p class="rl">Current registrars with no activity filed since 2026-09-04.</p>
+<div class="rows">
+<div class="wr" style="padding-left: 0"><div><a class="nm" href="#">[registrar]</a><div class="m">Last filed [date] · Training year [n]</div></div><span></span></div>
+</div>
+<div class="foot"><a class="btn" href="#">Open in Programme trainees</a></div>
+<div class="anno">The weekly digest's roster (WeeklyCoordinatorDigestJob), now on a page: Programme trainees filtered "Nothing logged in 30 days". Empty: "Every current registrar has filed something in the last 30 days."</div>
+</section>
+
+<section class="card s3">
+<div class="hd"><span class="ico">M</span><h2>Invitations nearing expiry</h2></div>
+<p class="rl">Expiring in the next 3 days. Only an institutional admin can resend an invitation.</p>
+<div class="rows">
+<div class="wr" style="padding-left: 0"><div><span class="nm">expiring@kgk.wombat.local</span><div class="m">Trainee · expires 2026-09-29</div></div><span></span></div>
+<div class="wr" style="padding-left: 0"><div><span class="nm">[address]</span><div class="m">Committee member · expires [date]</div></div><span></span></div>
+</div>
+<div class="anno">Role by its label ("Committee member", never CommitteeMember); the date ISO (T325). No row action, and the card's line says why: Invitations admits only the institutional admin (Step 2.32). An invitation has no name yet, so its address is the person.</div>
+</section>
+</div>
+
+<div class="cols c3">
+<div class="card"><b>Empty</b><p>Nothing is waiting for an assessor.</p><p>No invitations expire in the next 3 days.</p></div>
+<div class="card"><b>Quick action</b><p class="rl">The card goes. "Start an MSF campaign" is Home's one header action for the Coordinator (flow 01 allows one); at 390 it sits under the subtitle, full width, 44 px.</p></div>
+<div class="card"><b>Decision panels</b><p class="rl">Now in his menu (it admitted him with no item). He reads the panels, no New panel, no Edit; its body is flow 08's.</p></div>
+</div>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

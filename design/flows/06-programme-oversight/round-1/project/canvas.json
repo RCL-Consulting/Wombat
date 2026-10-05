@@ -1,0 +1,244 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "A-home-admin.dc.html": {
+      "h": 1700,
+      "title": "A · Home, Speciality admin (Refilwe Mokoena)",
+      "w": 1280,
+      "x": 2720,
+      "y": 2600
+    },
+    "A-home-committee.dc.html": {
+      "h": 1500,
+      "title": "A · Home, Committee member (Thandi Zulu)",
+      "w": 1280,
+      "x": 1360,
+      "y": 2600
+    },
+    "A-home-coordinator.dc.html": {
+      "h": 1400,
+      "title": "A · Home, Coordinator (Pieter Smit)",
+      "w": 1280,
+      "x": 4080,
+      "y": 2600
+    },
+    "A-phone.dc.html": {
+      "h": 1500,
+      "title": "A · 390 px",
+      "w": 2588,
+      "x": 9520,
+      "y": 2600
+    },
+    "A-programme-trainees.dc.html": {
+      "h": 1300,
+      "title": "A · Programme trainees (NEW)",
+      "w": 1280,
+      "x": 5440,
+      "y": 2600
+    },
+    "A-registrar.dc.html": {
+      "h": 1700,
+      "title": "A · One registrar, as staff read her (NEW)",
+      "w": 1280,
+      "x": 6800,
+      "y": 2600
+    },
+    "A-structure.dc.html": {
+      "h": 1700,
+      "title": "A · Structure: menus, pages, journeys",
+      "w": 1280,
+      "x": 0,
+      "y": 2600
+    },
+    "A-waiting.dc.html": {
+      "h": 1700,
+      "title": "A · Waiting for assessors (NEW) and triage",
+      "w": 1280,
+      "x": 8160,
+      "y": 2600
+    },
+    "B-home-admin.dc.html": {
+      "h": 2000,
+      "title": "B · Home, Speciality admin",
+      "w": 1280,
+      "x": 2720,
+      "y": 4680
+    },
+    "B-home-committee.dc.html": {
+      "h": 1700,
+      "title": "B · Home, Committee member",
+      "w": 1280,
+      "x": 1360,
+      "y": 4680
+    },
+    "B-home-coordinator.dc.html": {
+      "h": 1700,
+      "title": "B · Home, Coordinator, with a reminder",
+      "w": 1280,
+      "x": 4080,
+      "y": 4680
+    },
+    "B-phone.dc.html": {
+      "h": 1700,
+      "title": "B · 390 px",
+      "w": 1728,
+      "x": 6800,
+      "y": 4680
+    },
+    "B-registrar.dc.html": {
+      "h": 900,
+      "title": "B · One registrar (NEW, owned by nobody)",
+      "w": 1280,
+      "x": 5440,
+      "y": 4680
+    },
+    "B-structure.dc.html": {
+      "h": 1500,
+      "title": "B · Structure: menus, pages, journeys",
+      "w": 1280,
+      "x": 0,
+      "y": 4680
+    },
+    "C-epas.dc.html": {
+      "h": 1400,
+      "title": "C · Programme, by EPA (NEW)",
+      "w": 1280,
+      "x": 5440,
+      "y": 7060
+    },
+    "C-home-coordinator.dc.html": {
+      "h": 1200,
+      "title": "C · Home, Coordinator",
+      "w": 1280,
+      "x": 2720,
+      "y": 7060
+    },
+    "C-home.dc.html": {
+      "h": 1300,
+      "title": "C · Home, Committee member",
+      "w": 1280,
+      "x": 1360,
+      "y": 7060
+    },
+    "C-phone.dc.html": {
+      "h": 1500,
+      "title": "C · 390 px",
+      "w": 2158,
+      "x": 9520,
+      "y": 7060
+    },
+    "C-registrar.dc.html": {
+      "h": 900,
+      "title": "C · One registrar (NEW, under Programme)",
+      "w": 1280,
+      "x": 8160,
+      "y": 7060
+    },
+    "C-registrars.dc.html": {
+      "h": 1200,
+      "title": "C · Programme, by registrar (NEW)",
+      "w": 1280,
+      "x": 4080,
+      "y": 7060
+    },
+    "C-structure.dc.html": {
+      "h": 1500,
+      "title": "C · Structure: menus, pages, journeys",
+      "w": 1280,
+      "x": 0,
+      "y": 7060
+    },
+    "C-waiting.dc.html": {
+      "h": 1300,
+      "title": "C · Programme, waiting (NEW)",
+      "w": 1280,
+      "x": 6800,
+      "y": 7060
+    },
+    "Main.dc.html": {
+      "h": 2300,
+      "title": "Round 1 · compare the three structures",
+      "w": 1600,
+      "x": 0,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-05T08:00:00Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "https://claude.ai/code/artifact/c96bff42-69c1-4e3c-925a-95bb2292870f",
+      "copiedAt": "2026-10-05T08:00:00Z",
+      "namespace": "wombat",
+      "title": "Wombat",
+      "version": null
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t0": {
+      "kind": "title1",
+      "maxW": 1600,
+      "text": "Flow 06 · round 1 · structure",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "tA": {
+      "kind": "title1",
+      "maxW": 4000,
+      "text": "A · Two lists and a record",
+      "w": 240,
+      "x": 0,
+      "y": 2340
+    },
+    "tB": {
+      "kind": "title1",
+      "maxW": 4000,
+      "text": "B · Home holds it all",
+      "w": 240,
+      "x": 0,
+      "y": 4420
+    },
+    "tC": {
+      "kind": "title1",
+      "maxW": 4000,
+      "text": "C · One Programme page, three views",
+      "w": 240,
+      "x": 0,
+      "y": 6800
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "A-structure.dc.html",
+    "A-home-committee.dc.html",
+    "A-home-admin.dc.html",
+    "A-home-coordinator.dc.html",
+    "A-programme-trainees.dc.html",
+    "A-registrar.dc.html",
+    "A-waiting.dc.html",
+    "A-phone.dc.html",
+    "B-structure.dc.html",
+    "B-home-committee.dc.html",
+    "B-home-admin.dc.html",
+    "B-home-coordinator.dc.html",
+    "B-registrar.dc.html",
+    "B-phone.dc.html",
+    "C-structure.dc.html",
+    "C-home.dc.html",
+    "C-home-coordinator.dc.html",
+    "C-registrars.dc.html",
+    "C-epas.dc.html",
+    "C-waiting.dc.html",
+    "C-registrar.dc.html",
+    "C-phone.dc.html"
+  ],
+  "pages": [],
+  "title": "Flow 06 — Watching the programme"
+}

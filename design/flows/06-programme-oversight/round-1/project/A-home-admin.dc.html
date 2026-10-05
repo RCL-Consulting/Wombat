@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A · Home, Speciality admin</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1700px">
+<div class="shell" style="min-height: 1700px">
+<nav class="side">
+<div class="brand"><img src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="">Wombat</div>
+<div class="rolehead"><div class="k">Acting as</div><div class="r">Speciality admin</div></div>
+<div class="nav"><a class="i lit" href="#">Home</a><a class="i" href="#">Programme trainees<span class="tag">NEW</span></a><a class="i" href="#">Waiting for assessors<span class="tag">NEW</span></a><a class="i" href="#">Decisions due</a><a class="i" href="#">Committee reviews</a><a class="i" href="#">Decision panels</a><a class="i" href="#">Entrustment decisions<span class="tag">ADDED</span></a><div class="rule"></div><a class="i" href="#">My data rights</a></div>
+</nav>
+<div class="main">
+<div class="top"><a href="#">Refilwe Mokoena</a><a class="btn sm" href="#">Sign out</a></div>
+<main class="page">
+<div class="ph"><div class="t"><h1>Home</h1><div class="sub">Speciality admin · Semester 2, 2026</div></div></div>
+
+<div class="grid">
+<section class="card s3 emph">
+<div class="hd"><span class="ico">C</span><h2>Waiting for assessors</h2><span class="badge">2 waiting</span></div>
+<p class="rl">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.</p>
+<div class="rows">
+<div class="wr"><div><a class="nm" href="#">Portfolio and Logbook Review (Paediatrics) · [date], from Pieter du Plessis</a><div class="m">With Mohammed Patel · <span class="badge">Awaiting review</span> · Waiting [n] days</div></div><span></span></div>
+<div class="wr"><div><a class="nm" href="#">CBD (Paediatrics) · PAED-[0nn] · [date], from Pieter du Plessis</a><div class="m">With [assessor] · <span class="badge">Requested</span> · Waiting [n] days</div></div><span></span></div>
+</div>
+<div class="foot"><a class="btn" href="#">Open Waiting for assessors</a></div>
+<div class="anno"><b>Replaces two cards:</b> the admins' "Pending reviews" count (it was the count of this list with no list) and, on the Coordinator's Home, "Stalled requests". The count moves to the title's badge in flow 04's words ("2 waiting", "14 waiting, 11 overdue"; no "0"). Each row is WaitingList's, read for staff: its link names type, EPA, date and registrar (T280); its line says whose it is. Rows have no action here: triage is on the page.</div>
+</section>
+
+<section class="card s3">
+<div class="hd"><span class="ico">U</span><h2>Registrars behind</h2></div>
+<p class="rl">5 current registrars. Fewest met first, then by surname. Semester 2 ends 2026-11-30.</p>
+<div class="rows">
+<div class="rw"><div><a class="nm" href="#">Pieter du Plessis</a><div class="m">Training year 2</div></div><div><div class="fig">0 of 10</div><div class="cap">EPAs met this semester</div></div><div><div class="fig">0 of 5</div><div class="cap">EPAs met in 2026</div></div></div>
+<div class="rw"><div><a class="nm" href="#">Nomsa Mahlangu</a><div class="m">Training year 1</div></div><div><div class="fig">0 of 10</div><div class="cap">EPAs met this semester</div></div><div><div class="fig">0 of 5</div><div class="cap">EPAs met in 2026</div></div></div>
+<div class="rw"><div class="anno">… the committee's five rows, the same reader and order.</div><div></div><div></div></div>
+</div>
+<div class="foot"><a class="btn" href="#">Open Programme trainees</a></div>
+<div class="anno"><b>"Trainees in programme" (5 active / 0 inactive) goes.</b> The count of current registrars is this card's line. Recommendation for question 10: ended programmes and erased accounts are not counted on Home at all.</div>
+</section>
+
+<section class="card s3">
+<div class="hd"><span class="ico">T</span><h2>Targets by EPA</h2></div>
+<p class="rl">July to November. Fewest registrars met first.</p>
+<div class="rows">
+<div class="epa"><div><a class="nm" href="#">PAED-002 — [title]</a><div class="m">[n] per semester</div></div><div><div class="fig">0 of 5</div><div class="cap">registrars met</div><div class="bar"><i style="width: 0%"></i></div></div></div>
+<div class="epa"><div class="anno">… the committee's rows; one component, one title, one row shape (was "Curriculum coverage — Semester 2, 2026").</div><div></div></div>
+<div class="epa"><div><a class="nm" href="#">PAED-001 — Providing paediatric emergency care to children</a><div class="m">3 per semester</div></div><div><div class="fig">2 of 5</div><div class="cap">registrars met</div><div class="bar"><i style="width: 40%"></i></div></div></div>
+</div>
+</section>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="rl" style="font-weight: 700; font-size: 13px">States of this Home</div>
+<div class="cols c3">
+<section class="card warn"><div class="hd"><h3>Waiting for assessors</h3><span class="badge">14 waiting, 11 overdue</span></div>
+<div class="wr od"><div><a class="nm" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu</a><div class="m">With Thandi Zulu · Requested <span class="badge od">Overdue</span> · Waiting 8 days</div></div><span></span></div>
+<div class="anno">… four more rows, then "9 more wait in Waiting for assessors." Heavy: the warning stripe in place of the emphasis one.</div></section>
+<div class="card"><b>Empty</b><p>Nothing is waiting for an assessor.</p><p class="rl">No foot link; the page is still in the menu.</p></div>
+<div class="card"><b>Sub-speciality admin (Kabelo Sithole)</b><p class="rl">The same three cards scoped to his sub-speciality; subtitle "Sub-speciality admin · Semester 2, 2026"; the roster line names the scope: "5 current registrars in [sub-speciality]".</p></div>
+<div class="card"><b>Assessor deactivated</b><div class="wr" style="padding-left: 0"><div><a class="nm" href="#">Mini-CEX (Paediatrics) · PAED-004 · [date], from Nomsa Mahlangu</a><div class="m">With Fatima Khumalo (account deactivated) · Requested · Waiting [n] days</div></div><span></span></div></div>
+<div class="card"><b>Programme ended this week</b><p class="rl">Lerato Molefe leaves Registrars behind; a request of hers still waiting stays here, its line ending "Programme ended 2026-10-02".</p></div>
+<div class="card"><b>Load error</b><p class="rl">The frame's sentence and Try again; no card draws.</p></div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

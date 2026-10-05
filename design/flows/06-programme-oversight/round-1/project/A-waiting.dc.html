@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A · Waiting for assessors</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1700px">
+<div class="shell" style="min-height: 1700px">
+<nav class="side">
+<div class="brand"><img src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="">Wombat</div>
+<div class="rolehead"><div class="k">Acting as</div><div class="r">Coordinator</div></div>
+<div class="nav"><a class="i" href="#">Home</a><a class="i" href="#">Programme trainees<span class="tag">NEW</span></a><a class="i lit" href="#">Waiting for assessors<span class="tag">NEW</span></a><a class="i" href="#">Decisions due</a><a class="i" href="#">MSF campaigns</a><a class="i" href="#">Committee reviews</a><a class="i" href="#">Decision panels<span class="tag">ADDED</span></a><a class="i" href="#">Data rights requests</a><div class="rule"></div><a class="i" href="#">My data rights</a></div>
+</nav>
+<div class="main">
+<div class="top"><a href="#">Pieter Smit</a><a class="btn sm" href="#">Sign out</a></div>
+<main class="page">
+<div class="ph"><div class="t"><h1>Waiting for assessors <span class="new">NEW</span></h1><div class="sub">What waits for an assessor, supervisor or reviewer at Kgosi Kgari Teaching Hospital.</div></div></div>
+
+<div class="alert" style="border-left-width: 6px"><b>Reminder sent to Mohammed Patel.</b> It lists Portfolio and Logbook Review (Paediatrics) · [date], from Pieter du Plessis. The request is still Awaiting review, waiting 8 days.<div class="rl" style="margin-top: 4px">Result state, after confirming: takes the focus; the next Tab is the next row's link.</div></div>
+
+<form class="filters">
+<div class="fld"><label>Show</label><span class="ctl">All waiting <span>▾</span></span></div>
+<div class="fld"><label>With</label><span class="ctl">Anyone <span>▾</span></span></div>
+<a class="btn p" href="#">Show</a>
+</form>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="font-size: 16px">2 waiting, 2 overdue</h2>
+<p class="rl">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5. "Waiting" counts from the last move: any save restarts it.</p>
+<table class="tbl">
+<thead><tr><th>Activity</th><th>With</th><th>State</th><th>Waiting</th><th style="width: 230px"><span class="prop">PROPOSED</span></th></tr></thead>
+<tbody>
+<tr style="box-shadow: inset 4px 0 0 #6b6b6b"><td><a href="#"><b>Portfolio and Logbook Review (Paediatrics) · [date]</b></a><div class="m">from Pieter du Plessis</div></td><td>Mohammed Patel</td><td><span class="badge">Awaiting review</span> <span class="badge od">Overdue</span></td><td><b>8 days</b><div class="m">since 2026-09-26 [hh:mm] SAST</div></td><td><span class="m">Reminded today by Pieter Smit</span></td></tr>
+<tr style="box-shadow: inset 4px 0 0 #6b6b6b"><td><a href="#"><b>Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30</b></a><div class="m">from Nomsa Mahlangu</div></td><td>Thandi Zulu</td><td><span class="badge">Requested</span> <span class="badge od">Overdue</span></td><td><b>8 days</b><div class="m">since 2026-09-26 [hh:mm] SAST</div></td><td><div style="display: flex; gap: 8px"><a class="btn sm" href="#">Send a reminder</a><span class="btn sm" style="opacity: .5; border-style: dashed">Reassign</span></div></td></tr>
+<tr><td><a href="#"><b>Mini-CEX (Paediatrics) · PAED-[0nn] · [date]</b></a><div class="m">from Nomsa Mahlangu · Programme ended 2026-10-02</div></td><td>Fatima Khumalo<div class="m">account deactivated</div></td><td><span class="badge">Requested</span></td><td><b>[n] days</b></td><td><span class="m">No reminder: Fatima Khumalo's account is deactivated. Nomsa Mahlangu can cancel it and file it again.</span></td></tr>
+</tbody>
+</table>
+<div class="anno">Row 3 is an edge-case row drawn for this board, not Step 3.30's data. Accessible names: "Send Thandi Zulu a reminder about Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30". "Reassign" is drawn only to reserve its place: <span class="prop">PROPOSED</span>, not built, filed as its own task, since a request's named assessor is locked while it waits. One reminder per request per day; after one, the cell says who sent it and when.</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="rl" style="font-weight: 700; font-size: 13px">Triage <span class="prop">PROPOSED</span>: the action, its confirmation, its result, its refusals</div>
+<div class="cols c3">
+<div class="dialog">
+<h3 style="font-size: 16px">Send Thandi Zulu a reminder?</h3>
+<p>She gets one email, "Activities awaiting your assessment", listing Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu, waiting 8 days.</p>
+<p class="rl">It does not move the request or restart its wait, and Nomsa Mahlangu is not told.</p>
+<div style="display: flex; gap: 8px; justify-content: flex-end"><a class="btn" href="#">Don't send</a><a class="btn p" href="#">Send the reminder</a></div>
+<p class="rl">ConfirmDialog; it opens on "Don't send".</p>
+</div>
+<div class="card"><b>Refused: no email address</b><div class="alert"><b>Not sent.</b> Thandi Zulu has no email address in Wombat. Ask your institutional admin to add one.</div><p class="rl">Danger alert above the table, takes the focus; the row is unchanged.</p></div>
+<div class="card"><b>Refused: it moved meanwhile</b><div class="alert"><b>Not sent.</b> Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30 moved at 2026-10-04 10:12 SAST: it is now Completed and waits for nobody.</div><p class="rl">The list reads again; the row is gone; focus on the alert.</p></div>
+</div>
+</div>
+
+<div class="cols c3">
+<div class="card"><b>Empty</b><p>Nothing is waiting for an assessor.</p></div>
+<div class="card"><b>No match</b><p>Nothing waiting matches these filters.</p><a class="btn sm" href="#">Show all waiting</a></div>
+<div class="card"><b>Load error</b><p><b>Could not load Waiting for assessors.</b> Nothing has changed. Try again, or come back in a few minutes.</p><a class="btn sm" href="#">Try again</a></div>
+</div>
+<div class="anno"><b>Who opens it:</b> both speciality admins (scoped to their speciality or sub-speciality) and the Coordinator (his institution). Heavy: 20 a page, PagerControls, overdue rows on the warning stripe. A request out of scope is not listed; the activity page by address is flow 03's "Activity unavailable".</div>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

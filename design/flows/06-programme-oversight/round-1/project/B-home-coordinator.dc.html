@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B · Home, Coordinator</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1700px">
+<div class="shell" style="min-height: 1700px">
+<nav class="side">
+<div class="brand"><img src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="">Wombat</div>
+<div class="rolehead"><div class="k">Acting as</div><div class="r">Coordinator</div></div>
+<div class="nav"><a class="i lit" href="#">Home</a><a class="i" href="#">Decisions due</a><a class="i" href="#">MSF campaigns</a><a class="i" href="#">Committee reviews</a><a class="i" href="#">Decision panels<span class="tag">ADDED</span></a><a class="i" href="#">Data rights requests</a><div class="rule"></div><a class="i" href="#">My data rights</a></div>
+</nav>
+<div class="main">
+<div class="top"><a href="#">Pieter Smit</a><a class="btn sm" href="#">Sign out</a></div>
+<main class="page">
+<div class="ph"><div class="t"><h1>Home</h1><div class="sub">Coordinator · Semester 2, 2026</div></div><a class="btn p" href="#">Start an MSF campaign</a></div>
+
+<div class="alert" style="border-left-width: 6px"><b>Reminder sent to Mohammed Patel.</b> It lists Portfolio and Logbook Review (Paediatrics) · [date], from Pieter du Plessis. The request is still Awaiting review, waiting 8 days.<div class="rl" style="margin-top: 4px">The result lands at the head of Home, under the header, and takes the focus. The next Tab returns to the card.</div></div>
+
+<div class="grid">
+<section class="card s3 warn">
+<div class="hd"><span class="ico">C</span><h2>Waiting for assessors</h2><span class="badge">2 waiting, 2 overdue</span></div>
+<p class="rl">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.</p>
+<div class="rows">
+<div class="wr od"><div><a class="nm" href="#">Portfolio and Logbook Review (Paediatrics) · [date], from Pieter du Plessis</a><div class="m">With Mohammed Patel · Awaiting review <span class="badge od">Overdue</span> · Waiting 8 days · Reminded today by Pieter Smit</div></div><span></span></div>
+<div class="wr od"><div><a class="nm" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu</a><div class="m">With Thandi Zulu · Requested <span class="badge od">Overdue</span> · Waiting 8 days</div></div><a class="btn sm" href="#">Send a reminder</a></div>
+</div>
+</section>
+
+<section class="card s2">
+<div class="hd"><span class="ico">Z</span><h2>Nothing logged in 30 days</h2><span class="new">NEW</span></div>
+<p class="rl">Current registrars with no activity filed since 2026-09-04, longest first.</p>
+<div class="wr" style="padding-left: 0"><div><a class="nm" href="#">[registrar]</a><div class="m">Last filed [date] · Training year [n]</div></div><span></span></div>
+<div class="anno">Every row, no page behind it. Empty: "Every current registrar has filed something in the last 30 days."</div>
+</section>
+
+<section class="card">
+<div class="hd"><span class="ico">M</span><h2>Invitations nearing expiry</h2></div>
+<p class="rl">Expiring in the next 3 days. Only an institutional admin can resend an invitation.</p>
+<div class="wr" style="padding-left: 0"><div><span class="nm">expiring@kgk.wombat.local</span><div class="m">Trainee · expires 2026-09-29</div></div><span></span></div>
+</section>
+</div>
+
+<div class="cols c3">
+<div class="dialog">
+<h3 style="font-size: 16px">Send Thandi Zulu a reminder?</h3>
+<p>She gets one email, "Activities awaiting your assessment", listing Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30, from Nomsa Mahlangu, waiting 8 days.</p>
+<p class="rl">It does not move the request or restart its wait, and Nomsa Mahlangu is not told.</p>
+<div style="display: flex; gap: 8px; justify-content: flex-end"><a class="btn" href="#">Don't send</a><a class="btn p" href="#">Send the reminder</a></div>
+</div>
+<div class="card"><b>Refusals</b><div class="alert"><b>Not sent.</b> Thandi Zulu has no email address in Wombat. Ask your institutional admin to add one.</div><div class="alert"><b>Not sent.</b> Mini-CEX (Paediatrics) · PAED-004 · 2026-09-30 moved at 2026-10-04 10:12 SAST: it is now Completed.</div><p class="rl">Each lands where the result does and takes the focus; Home reads the card again.</p></div>
+<div class="card"><b>No reassign</b><p class="rl">B draws no place for it: a Home row is too small for a choice of person. If reassignment is built later, it needs a page, which is A or C.</p></div>
+</div>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

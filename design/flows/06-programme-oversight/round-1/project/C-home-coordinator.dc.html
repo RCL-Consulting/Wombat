@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · Home, Coordinator</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px; min-height: 1200px">
+<div class="shell" style="min-height: 1200px">
+<nav class="side">
+<div class="brand"><img src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="">Wombat</div>
+<div class="rolehead"><div class="k">Acting as</div><div class="r">Coordinator</div></div>
+<div class="nav"><a class="i lit" href="#">Home</a><a class="i" href="#">Programme<span class="tag">NEW</span></a><a class="i" href="#">Decisions due</a><a class="i" href="#">MSF campaigns</a><a class="i" href="#">Committee reviews</a><a class="i" href="#">Decision panels<span class="tag">ADDED</span></a><a class="i" href="#">Data rights requests</a><div class="rule"></div><a class="i" href="#">My data rights</a></div>
+</nav>
+<div class="main">
+<div class="top"><a href="#">Pieter Smit</a><a class="btn sm" href="#">Sign out</a></div>
+<main class="page">
+<div class="ph"><div class="t"><h1>Home</h1><div class="sub">Coordinator · Semester 2, 2026</div></div><a class="btn p" href="#">Start an MSF campaign</a></div>
+
+<div class="grid">
+<section class="card warn">
+<div class="hd"><span class="ico">C</span><h2>Waiting for assessors</h2></div>
+<div><div class="fig" style="font-size: 32px">2 waiting</div><div class="cap">2 overdue, the oldest 8 days</div></div>
+<p class="rl">Overdue once it has waited 7 days.</p>
+<div class="foot"><a class="btn" href="#">Open Programme, waiting</a></div>
+</section>
+<section class="card">
+<div class="hd"><span class="ico">Z</span><h2>Nothing filed in 30 days</h2><span class="new">NEW</span></div>
+<div><div class="fig" style="font-size: 32px">[n] of 5</div><div class="cap">registrars have filed nothing since 2026-09-04</div></div>
+<div class="foot"><a class="btn" href="#">Open Programme, by registrar</a></div>
+</section>
+<section class="card">
+<div class="hd"><span class="ico">M</span><h2>Invitations nearing expiry</h2></div>
+<p class="rl">Expiring in the next 3 days. Only an institutional admin can resend an invitation.</p>
+<div class="wr" style="padding-left: 0"><div><span class="nm">expiring@kgk.wombat.local</span><div class="m">Trainee · expires 2026-09-29</div></div><span></span></div>
+</section>
+</div>
+<div class="cols c2">
+<div class="anno">The Coordinator's Home no longer names a single stalled request: the card says how many and how old the oldest is, and leads to the Waiting view, where the rows and the reminder are. Empty: "Nothing is waiting for an assessor." with no link.</div>
+<div class="anno">Invitations stay as rows: there is no page of them he may open, so Home is their only place.</div>
+</div>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1200}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
