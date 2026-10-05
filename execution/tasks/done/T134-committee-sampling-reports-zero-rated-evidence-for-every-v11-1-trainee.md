@@ -198,8 +198,8 @@ at all**. The committee was shown nothing where it should have been shown a conc
 ### Still not verified
 
 - **The withheld-evidence path** (`EvidenceComplete: false`) could **not** be reproduced on dev.
-  Attempted 2026-09-20 as `vanrensburg@sun.ac.za`, who is external to the trainee's institution
-  (sun.ac.za vs kgk) and sits on the panel: they see the identical report to a global
+  Attempted 2026-09-20 as `vanrensburg@sun.wombat.local`, who is external to the trainee's institution
+  (sun.wombat.local vs kgk) and sits on the panel: they see the identical report to a global
   Administrator, with no incomplete banner. Panel membership evidently admits the rows through
   `WhereReadableBy`, so the case needs activity scope stamps engineered for it and there is no UI
   to do that. It stays covered by `ExternalPanelMember_IsToldTheSampleIsIncompleteRatherThanClean`

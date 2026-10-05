@@ -661,7 +661,7 @@ Action: Repeat Step 2.1's form for each consultant below. After each, copy the r
 | `botha@kgk.wombat.local` | `CommitteeMember` | Paediatrics | leave blank | `Assessor` added in Step 2.3.b. |
 | `patel@kgk.wombat.local` | `Assessor` | Paediatrics | Paediatrics | WBA only. |
 | `khumalo@kgk.wombat.local` | `Assessor` | Paediatrics | Paediatrics | WBA only. |
-| `vanrensburg@sun.ac.za` | `CommitteeMember` | leave blank | leave blank | External examiner; speciality blank because his Stellenbosch home institution is not in this Wombat tenancy. |
+| `vanrensburg@sun.wombat.local` | `CommitteeMember` | leave blank | leave blank | External examiner; speciality blank because his Stellenbosch home institution is not in this Wombat tenancy. |
 
 Expected: All six rows in Active invitations with the correct role and institution columns. Six registration URLs captured.
 Actual: All 6 invitations persist. After T060, vanrensburg's external CommitteeMember invitation can be issued with Speciality blank as the scenario intends. Patel + Khumalo's Assessor invitations still require both Speciality AND Sub-speciality (`Paediatrics` / `General Paediatrics`) — Assessor demands both scope levels per the validator (rule unchanged). After 7 total invitations the Active table holds 7 rows.
@@ -705,7 +705,7 @@ The full cast of expected dashboards on first login:
 | `botha@kgk.wombat.local` | Sarah Botha | CommitteeMember (+ Assessor) | CommitteeMemberDashboard |
 | `patel@kgk.wombat.local` | Mohammed Patel | Assessor | AssessorDashboard |
 | `khumalo@kgk.wombat.local` | Fatima Khumalo | Assessor | AssessorDashboard |
-| `vanrensburg@sun.ac.za` | John van Rensburg | CommitteeMember | CommitteeMemberDashboard |
+| `vanrensburg@sun.wombat.local` | John van Rensburg | CommitteeMember | CommitteeMemberDashboard |
 
 Actual: All 7 primary registrations completed. Each invitee auto-logged in and rendered the role-appropriate dashboard (Smit→CoordinatorDashboard with Stalled/Invitations/Quick action panels; Zulu/Naidoo/Botha/van Rensburg→CommitteeMemberDashboard with Trainees-approaching-completion + Programme overview; Patel/Khumalo→AssessorDashboard with Pending requests/Accepted needing action/Recent decisions/Actions). Password used for all 7: `<shared scenario pw — see pwd_DO_NOT_COMMIT.txt>` (saved in `pwd_DO_NOT_COMMIT.txt` per the session-secrets memory rule). Form pre-fill confirmed email + role; First/Last name + password + confirm were the only operator inputs.
 Gap: None observed for the primary flow. See Step 2.2.b + Phase 2.B.b for the secondary-invitation finding (A2-3).
