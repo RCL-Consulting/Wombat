@@ -23,16 +23,15 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 - **Step 2, staged:** `stage_upload.ps1 -Flow 06`, 88 files (2.98 MB); flow 05's boards R3-E-typical, R3-P-standing,
   R3-T-committee (both widths) and `flow05-r3.css` copied by hand into `design/upload/flow05-boards/`.
 
-### Next: T290 and T298 (the operator's Q8: before flow 06's build), then T358 step 6, the build. Opus.
+### Next: T358 step 6, flow 06's build. Opus.
 
-- **Flow 06's design is final** (`round-3-check.md`): A, two lists (Programme trainees, Waiting for assessors), a staff
-  registrar page, Send a reminder; E1–E6 in `round-2-review.md`. The build carries the check's six items (no pronouns,
-  the ended page from `EndedItemCard`, steps A.5.14/A.5.16/4.3/4.4, r8's trail, no inline styles, board detail).
-- **First T290 and T298**, each reviewed against its own risk: the committee card reads the institution's current
-  registrars, ties by surname then first name. T290's file holds more than the committee item: land that item, say so.
-- **The build** (step 6, `design/flows/05-trainee-progress/build-lanes.md` as template): a new table and migration for
-  the reminder (review items 1–3), an Application-side recipient policy, a role-explicit waiting query, new progress
-  readers, `EpaProgressTable` names-as-text, `EndedView` extracted, the nav limit (E2) and DESIGN.md.
+- **T298 done and T290's committee item landed** (`14dac868`): the committee card reads every current trainee at
+  the institution and ties by surname. Browser-checked on `wombat_scenario_t290` (droppable). T290 stays in progress
+  for its other items: the harness cannot requeue a task.
+- **The build** (`design/flows/05-trainee-progress/build-lanes.md` as template; `round-3-check.md`'s six items): a new
+  table and migration for the reminder (review items 1–3), an Application-side recipient policy, a role-explicit waiting
+  query (E3, E4), new progress readers, `EpaProgressTable` names-as-text, `EndedView` extracted, the nav limit (E2),
+  DESIGN.md. Size it per CLAUDE.md § Multi-agent workflows; say the cost first.
 
 ### For the operator
 
@@ -43,7 +42,7 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 
 ### Environment left
 
-- **The replay app on `:5180`** runs `wombat_scenario_t355` (the appendix's end state), published from `b389f7d2`.
+- **The replay app on `:5180`** runs `wombat_scenario_t355` (the appendix's end state), republished from `14dac868` (2026-10-05).
 - **Replay scratch:** T355's scratchpad folder `g355` (`replay-pw.env`, act and states scripts). Khumalo's and du
   Plessis's pre-appendix passwords are the `_A` keys.
 - **Droppable databases:** `wombat_scenario_t355_s518{4,6,6b,8,8b}`, `_t304`, `_t350` (dumps kept), `_t350_s518*`,

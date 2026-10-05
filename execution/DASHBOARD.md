@@ -7,6 +7,7 @@ Queued tasks that wait on another are listed after the ready ones.
 | lane | id | pri | title | model | waits on |
 |---|---|---|---|---|---|
 | in_progress | [T358](tasks/in_progress/T358-flow-06-programme-oversight-has-not-been-through-the-redesign-loop.md) | P2 | Flow 06, programme oversight, has not been through the redesign loop |  |  |
+| in_progress | [T290](tasks/in_progress/T290-trainee-first-and-existence-leftovers-completing-your-own-profile-invitations-the-users-commands-refusals-and-two-committee-queries-that-read-claims.md) | P3 | Trainee-first and existence leftovers: completing your own profile, in |  |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |  |
 | queued | [T288](tasks/queued/T288-an-institutionaladmin-can-create-an-sso-group-mapping-that-grants-roles-to-another-institution-s-users.md) | P2 | An InstitutionalAdmin can create an SSO group mapping that grants role |  |  |
@@ -55,9 +56,7 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T280](tasks/queued/T280-accessibility-leftovers-trainee-dashboard-links-named-only-by-instrument-the-alert-s-dismiss-button-named-and-the-review-pdf-leaving-out-a-review-under-appeal.md) | P3 | Accessibility leftovers: trainee dashboard links named only by instrum |  |  |
 | queued | [T286](tasks/queued/T286-account-leftovers-a-password-change-writes-no-audit-row-institutional-sign-in-links-cannot-be-listed-or-removed-and-emails-are-unique-only-by-check.md) | P3 | Account leftovers: a password change writes no audit row, institutiona |  |  |
 | queued | [T287](tasks/queued/T287-sign-in-hardening-second-pass-the-lockout-reply-tells-a-locked-account-apart-the-app-cookies-lack-host-and-the-api-host-has-no-forwarded-headers.md) | P3 | Sign-in hardening, second pass: the lockout reply tells a locked accou |  |  |
-| queued | [T290](tasks/queued/T290-trainee-first-and-existence-leftovers-completing-your-own-profile-invitations-the-users-commands-refusals-and-two-committee-queries-that-read-claims.md) | P3 | Trainee-first and existence leftovers: completing your own profile, in |  |  |
 | queued | [T291](tasks/queued/T291-admin-pages-offer-what-they-then-refuse-found-by-the-t159-replay-edit-on-national-epas-back-to-colleges-and-a-first-save-s-status.md) | P3 | Admin pages offer what they then refuse, found by the T159 replay: Edi |  |  |
-| queued | [T298](tasks/queued/T298-the-committee-s-targets-card-orders-tied-trainees-by-user-id-and-the-trainee-s-upcoming-deadlines-card-reads-a-field-no-instrument-has.md) | P3 | The committee's Targets card orders tied trainees by user id, and the  |  |  |
 | queued | [T299](tasks/queued/T299-the-activity-page-loses-a-move-s-outcome-a-refused-note-move-closes-its-panel-a-done-submit-or-complete-says-nothing-and-leaves-the-focus-on-the-body-and-a-date-typed-after-a-refusal-gets-no-late-filing-warning.md) | P3 | The activity page loses a move's outcome: a refused note move closes i |  |  |
 | queued | [T301](tasks/queued/T301-a-curriculum-version-is-held-back-from-adoption-only-by-its-active-flag-which-adoptcurriculumcommand-never-checks-and-every-new-or-cloned-version-is-created-with.md) | P3 | A curriculum version is held back from adoption only by its Active fla |  |  |
 | queued | [T306](tasks/queued/T306-the-training-year-is-shown-only-on-my-progress-the-trainees-list-the-profile-page-and-the-trainee-dashboard-show-none-though-t066-is-closed-as-having-added-them.md) | P3 | The training year is shown only on My Progress: the trainees list, the |  |  |
@@ -90,7 +89,7 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T357](tasks/queued/T357-flow-05-marks-an-institution-s-own-epa-and-a-paused-epa-several-ways.md) | P3 | Flow 05 marks an institution's own EPA and a paused EPA several ways |  |  |
 | queued | [T359](tasks/queued/T359-staff-cannot-reassign-a-waiting-request-to-another-assessor.md) | P3 | Staff cannot reassign a waiting request to another assessor |  | T358 |
 
-Done: 224 task(s).
+Done: 225 task(s).
 
 ## From STATE.md
 
@@ -106,11 +105,11 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
 ## Recent commits
 
 ```
-a1471073 docs(design): flow 06 round 1 saved from the canvas: three structures (T358 step 5)
-f807c6c6 docs(execution): T358 handoff: canvas made, round 1 ready to send
-f2137a8c docs(design): flow 06's canvas created and the mark copied in; the ask names it (T358 steps 3-4)
-597220de docs(execution): T358 started, step 1 done; state and handoff (step 3 waits for the operator's canvas)
-2f29c158 docs(design): flow 06's brief restated for the restructure (T358 step 1)
+14dac868 fix(dashboards): the committee card reads the institution's current registrars, ties by surname (T290 committee item, T298)
+3b26868d docs(design): flow 06's design is final: round 3 checked item by item; T358 steps 1-5 ticked; handoff
+020af6e4 docs(design): flow 06 round 3 saved from the canvas (T358 step 5)
+184687bc docs(design): flow 06 round 3 ask: E1-E6 and the review's corrections (T358 step 5)
+0eebca64 docs(design): flow 06 round 2 reviewed from three sides (code, cast, design system): E1-E6 for the operator, 33 findings (T358 step 5)
 ```
 
 ## For the reviewer
@@ -119,6 +118,7 @@ No review closed yet; showing everything since 2026-10-04.
 
 #### Tasks finished
 
+- T298 The committee's Targets card orders tied trainees by user id, and the trainee's Upcoming deadlines card reads a field no instrument has
 - T304 A trainee profile save re-admits the registrar: one left on a superseded curriculum version cannot be saved at all, and one moved to a new version has none of their credit replayed
 - T305 A completed or withdrawn trainee's profile can still be saved, re-pinning and re-dating the record that Mark complete says it archives
 - T355 Flow 05, a registrar reads where they stand, has not been through the redesign loop
@@ -138,6 +138,20 @@ _Nothing flagged._
 #### Commits
 
 ```
+14dac868 fix(dashboards): the committee card reads the institution's current registrars, ties by surname (T290 committee item, T298)
+3b26868d docs(design): flow 06's design is final: round 3 checked item by item; T358 steps 1-5 ticked; handoff
+020af6e4 docs(design): flow 06 round 3 saved from the canvas (T358 step 5)
+184687bc docs(design): flow 06 round 3 ask: E1-E6 and the review's corrections (T358 step 5)
+0eebca64 docs(design): flow 06 round 2 reviewed from three sides (code, cast, design system): E1-E6 for the operator, 33 findings (T358 step 5)
+7c2bdde1 docs(design): flow 06 round 2 saved from the canvas: A at fidelity, 41 files (T358 step 5)
+1a6b8d9c docs(execution): handoff: CLAUDE.md's workflows section is committed
+cfffe72b docs(claude): Multi-agent workflows: size pipelines to the risk, two review rounds, checkers on Sonnet
+bbd8c588 chore: the rest of the tidy-up (1eb90b0b committed only the workflow's removal)
+1eb90b0b chore: tidy what the security survey found lying around
+3848bc0d chore: ignore dumps, env files, keys and secrets.json (security survey)
+53aa1aef docs: README rewritten for the rebuilt Wombat
+30163825 docs(execution): the remote is pushable again (the operator, 2026-10-05)
+128e7baf docs(design): flow 06 round 1 picked (A) and the round 2 ask; T359 filed (T358 step 5)
 a1471073 docs(design): flow 06 round 1 saved from the canvas: three structures (T358 step 5)
 f807c6c6 docs(execution): T358 handoff: canvas made, round 1 ready to send
 f2137a8c docs(design): flow 06's canvas created and the mark copied in; the ask names it (T358 steps 3-4)
@@ -154,19 +168,5 @@ c1997d5c docs(execution): handoff rewritten within its cap (a NUL byte had crept
 07ecefc1 docs(runbook): A.7.3 and A.7.6 re-checked at 390 on b389f7d2: the 322 chart fits, nothing scrolls (T355 step 7)
 b389f7d2 fix(progress): the phone chart is 322 px, inside a 390 card's 324 px figure; A.7.6's Expect after 5f8e6639 (T355 step 7)
 fb98a2d6 docs(runbook): the appendix replayed against flow 05 (T355 step 7)
-a23cf286 docs(runbook): act 6 replayed against flow 05; 4.15's regression confirmed fixed (T355 step 7)
-5f8e6639 fix(committee): the review page's charts are not nested in a card; act 5 replayed; T356 filed (T355 step 7)
-db4c2d0a fix(committee): the review page's charts span the grid, and the standing names land on a chart's heading (T355 step 7, 4.15)
-3517343c docs(runbook): act 4 replayed against flow 05 (T355 step 7)
-1548811f docs(runbook): act 3 replayed against flow 05 (T355 step 7)
-45203601 docs(runbook): act 2 replayed against flow 05 (T355 step 7)
-7e976c64 docs(runbook): act 1 replayed against flow 05 (T355 step 7)
-c4f921ff docs(design): the replay brief names this replay's scratch folder (T355 step 7)
-6dddcf8b docs(design): flow 05's replay brief (T355 step 7)
-cece55a7 docs(execution): handoff and state: flow 05 built; step 7 next
-02e1a022 docs(execution): flow 05 is built (b020c942): DESIGN.md's banner names it; T355's build item (T355 step 6)
-b020c942 feat(progress): flow 05 of the restructure, a registrar reads where they stand, built from round 3 (T355 step 6)
-a16f9a46 docs(design): build-contracts records D1 and D2 as decided (T355)
-c422ccf4 docs(design): flow 05's build plan, and the operator's D1 (ISO dates on screens) and D2 (the review's window) (T355 step 6)
 ```
-_15 more; see `git log`._
+_29 more; see `git log`._
