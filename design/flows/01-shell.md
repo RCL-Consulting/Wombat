@@ -501,11 +501,12 @@ Do: Sign in and read the dashboard and nav.
 Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The sidebar reads "Acting as Committee
   member", with "Switch to Assessor" under it: she holds both, and the precedence opens her sessions as a Committee
   member. Targets this period names the current semester and its months. It lists the five registrars, each at "semester
-  0/10 · yearly 0/5", and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
+  0/10 · yearly 0/5", by surname since all are tied: Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato
+  Molefe, Sipho Ndlovu (T298); and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
   PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
   never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
 
-Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:599)
+Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:600)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /account/logout/submit → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and in again. Then type

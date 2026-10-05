@@ -517,29 +517,30 @@ Do: Sign in and read the dashboard and nav.
 Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The sidebar reads "Acting as Committee
   member", with "Switch to Assessor" under it: she holds both, and the precedence opens her sessions as a Committee
   member. Targets this period names the current semester and its months. It lists the five registrars, each at "semester
-  0/10 · yearly 0/5", and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
+  0/10 · yearly 0/5", by surname since all are tied: Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato
+  Molefe, Sipho Ndlovu (T298); and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
   PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
   never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
 
-Step 2.35 — Dr Naidoo and Dr Botha (act-2-onboarding.md:627)
+Step 2.35 — Dr Naidoo and Dr Botha (act-2-onboarding.md:628)
 Role: CommitteeMember + Assessor — Dr David Naidoo and Dr Sarah Botha
 Route: /account/login → / → /committee/panels
 Do: Each signs in, reads the dashboard and opens Decision panels.
 Expect: Each sees what Zulu saw in Step 2.33. Decision panels lists the panel they sit on, with no New panel and no
   Edit.
 
-Step 2.37 — Dr van Rensburg, external committee member (act-2-onboarding.md:652)
+Step 2.37 — Dr van Rensburg, external committee member (act-2-onboarding.md:653)
 Role: CommitteeMember — Dr John van Rensburg
 Route: /account/login → / → /committee/panels
 Do: Sign in, read the dashboard and open Decision panels.
 Expect: He sees "Committee member · Semester N, YYYY" on Home, and no switch: he holds one role. Targets this period
-  names the current semester and reads "No trainees have targets this period.", and Targets met by EPA reads "No
-  curriculum targets for these trainees.": the card lists the trainees of the member's own sub-specialities at his
-  institution, and he holds none.
+  names the current semester and lists KGK's five registrars as Dr Zulu's card does (Step 2.33), and Targets met by EPA
+  reads "0 of 5 met" for each: a committee member reads every current trainee at their institution, whatever their
+  own sub-specialities, and he holds none (T290).
   The sidebar reads "Acting as Committee member" with no switch, over Home, Committee reviews and Decision panels, then
   My data rights. Decision panels lists the panel he sits on as external member, with no New panel and no Edit.
 
-Step 2.38 — Dr Mokoena's and Dr Sithole's dashboards (act-2-onboarding.md:672)
+Step 2.38 — Dr Mokoena's and Dr Sithole's dashboards (act-2-onboarding.md:674)
 Role: SpecialityAdmin and SubSpecialityAdmin — Dr Refilwe Mokoena and Dr Kabelo Sithole
 Route: /
 Do: Each opens Home, now that the registrars are admitted.

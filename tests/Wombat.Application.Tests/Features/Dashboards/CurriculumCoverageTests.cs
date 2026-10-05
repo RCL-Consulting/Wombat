@@ -321,11 +321,11 @@ public sealed class CurriculumCoverageTests
     // ---------------------------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task CommitteeMemberDashboard_ListsTheirSubSpecialitiesActiveTraineesByName_AndEachEpasCount()
+    public async Task CommitteeMemberDashboard_ListsTheInstitutionsCurrentTraineesByName_AndEachEpasCount()
     {
-        // The committee card printed the user id in the name column before T130. The member's scope is their
-        // sub-speciality claims, 1 and 2 here: sub-speciality 3's trainee, and the inactive one, would each move
-        // PAED-001 to "2 of 3" if they leaked in.
+        // The committee card printed the user id in the name column before T130. A committee member oversees every
+        // current trainee at their institution (T113, T290), whatever their own sub-speciality claims: farai, on
+        // sub-speciality 3's curriculum, is listed and counts towards PAED-001 ("2 of 3"); the inactive emeka is not.
         await using var db = CreateDb();
         SeedProgramme(db);
         var handler = new GetCommitteeMemberDashboardSummaryQueryHandler(db, TraineeNames().Object);
@@ -339,9 +339,80 @@ public sealed class CurriculumCoverageTests
         result.TraineeTargets.Should().Equal(
             new TraineeTargetsItem("bongani", "Bongani Dlamini", SemesterTargetsMet: 0, SemesterTargetsApplying: 1, YearTargetsMet: 0, YearTargetsApplying: 1),
             new TraineeTargetsItem("amara", "Amara Okafor", SemesterTargetsMet: 1, SemesterTargetsApplying: 1, YearTargetsMet: 0, YearTargetsApplying: 1),
+            new TraineeTargetsItem("farai", "Farai Moyo", SemesterTargetsMet: 1, SemesterTargetsApplying: 1, YearTargetsMet: 0, YearTargetsApplying: 0),
             new TraineeTargetsItem("chen", "Chen Wei", SemesterTargetsMet: 1, SemesterTargetsApplying: 1, YearTargetsMet: 0, YearTargetsApplying: 0));
-        result.EpaTargets.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
+        result.EpaTargets.Should().Equal(ExpectedEpasForTheInstitution);
         result.ExemptTraineeCount.Should().Be(1, "dineo started mid-semester");
+    }
+
+    [Fact]
+    public async Task CommitteeMemberDashboard_ForAMemberWithNoSubSpeciality_ListsTheInstitutionsCurrentTrainees()
+    {
+        // T290, Step 2.37: the external member holds no speciality or sub-speciality claim. Until T290 the card read only
+        // the member's sub-speciality claims, so he saw "No trainees have targets this period." though he sits on the
+        // panel that judges them all. gugu, at another institution, stays out.
+        await using var db = CreateDb();
+        SeedProgramme(db);
+        AddTrainee(db, "gugu", curriculumId: 1, OnTime, institutionId: OtherInstitution);
+        AddRow(db, 1, "gugu", 2026, 2, counts: 3);
+        Commit(db);
+
+        var result = await new GetCommitteeMemberDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
+            new GetCommitteeMemberDashboardSummaryQuery(CommitteeMember(subSpecialityIds: []), AsOf), CancellationToken.None);
+
+        result.TraineeTargets.Select(trainee => trainee.TraineeUserId).Should().Equal("bongani", "amara", "farai", "chen");
+        result.EpaTargets.Should().Equal(ExpectedEpasForTheInstitution);
+    }
+
+    [Fact]
+    public async Task CommitteeMemberDashboard_OrdersEqualSharesBySurnameThenFirstName_AndAFewerShareFirstWhateverTheName()
+    {
+        // T298: equal shares were ordered by user id, a GUID. Five trainees all at 0, as at Step 2.33, must read by
+        // surname then first name, case-insensitively ("du Plessis" among the D's), though their ids sort the other way;
+        // a trainee who has met less comes
+        // first whatever the name, and two people of one name are told apart by id only.
+        await using var db = CreateDb();
+        SeedScope(db);
+        AddCurriculum(db, 1, subSpecialityId: 1);
+        AddEpa(db, 1, "PAED-001");
+        AddItem(db, 1, curriculumId: 1, epaId: 1, QuotaPeriod.Semester, target: 1);
+        foreach (var id in new[] { "a1", "a2", "a3", "a4", "a5", "a0", "t2", "t1" })
+        {
+            AddTrainee(db, id, curriculumId: 1, OnTime);
+        }
+
+        AddRow(db, 1, "a0", 2026, 2, counts: 1);
+        AddRow(db, 1, "t1", 2026, 2, counts: 1);
+        AddRow(db, 1, "t2", 2026, 2, counts: 1);
+        Commit(db);
+        var people = new Dictionary<string, (string First, string Last)>
+        {
+            ["a1"] = ("Sipho", "Ndlovu"), ["a2"] = ("Lerato", "Molefe"), ["a3"] = ("Nomsa", "Mahlangu"),
+            ["a4"] = ("Pieter", "du Plessis"), ["a5"] = ("Anele", "Dlamini"), ["a0"] = ("Aaron", "Zulu"),
+            ["t1"] = ("Sam", "Mokoena"), ["t2"] = ("Sam", "Mokoena")
+        };
+        var users = new Mock<IUserAdministrationService>();
+        users.Setup(service => service.GetContactsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                (IReadOnlyDictionary<string, UserContact>)ids.ToDictionary(
+                    id => id, id => new UserContact(id, people[id].First, people[id].Last, $"{id}@example.test"), StringComparer.Ordinal));
+        users.Setup(service => service.WhichActivelyHoldRoleAsync(
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, string _, CancellationToken _) =>
+                (IReadOnlySet<string>)ids.ToHashSet(StringComparer.Ordinal));
+        users.Setup(service => service.WhichHoldRoleAsync(
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, string role, CancellationToken _) =>
+                (IReadOnlySet<string>)(role == WombatRoles.Trainee ? ids.ToHashSet(StringComparer.Ordinal) : new HashSet<string>()));
+
+        var result = await new GetCommitteeMemberDashboardSummaryQueryHandler(db, users.Object).Handle(
+            new GetCommitteeMemberDashboardSummaryQuery(CommitteeMember(subSpecialityIds: []), AsOf), CancellationToken.None);
+
+        result.TraineeTargets.Select(trainee => trainee.TraineeName).Should().Equal(
+            "Anele Dlamini", "Pieter du Plessis", "Nomsa Mahlangu", "Lerato Molefe", "Sipho Ndlovu",
+            "Sam Mokoena", "Sam Mokoena", "Aaron Zulu");
+        result.TraineeTargets.Where(trainee => trainee.TraineeName == "Sam Mokoena").Select(trainee => trainee.TraineeUserId)
+            .Should().Equal("t1", "t2");
     }
 
     [Fact]
@@ -364,8 +435,8 @@ public sealed class CurriculumCoverageTests
         var result = await new GetCommitteeMemberDashboardSummaryQueryHandler(db, TraineeNames().Object).Handle(
             new GetCommitteeMemberDashboardSummaryQuery(CommitteeMember(subSpecialityIds: [1, 2]), AsOf), CancellationToken.None);
 
-        result.TraineeTargets.Select(trainee => trainee.TraineeUserId).Should().Equal("bongani", "amara", "chen");
-        result.EpaTargets.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
+        result.TraineeTargets.Select(trainee => trainee.TraineeUserId).Should().Equal("bongani", "amara", "farai", "chen");
+        result.EpaTargets.Should().Equal(ExpectedEpasForTheInstitution);
     }
 
     [Fact]
@@ -394,17 +465,19 @@ public sealed class CurriculumCoverageTests
         var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db, users).Handle(
             new GetSubSpecialityAdminDashboardSummaryQuery(SubSpecialityAdmin(1), AsOf), CancellationToken.None);
 
-        committee.EpaTargets.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
+        // The committee reads the institution (T290); the speciality admin's card reads speciality 1, so the two differ
+        // only by farai, on speciality 2's curriculum.
+        committee.EpaTargets.Should().Equal(ExpectedEpasForTheInstitution);
         speciality.CurriculumCoverage.Epas.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
         speciality.CurriculumCoverage.Trainees.Select(trainee => trainee.TraineeUserId)
-            .Should().Equal(committee.TraineeTargets.Select(trainee => trainee.TraineeUserId));
+            .Should().BeEquivalentTo(committee.TraineeTargets.Select(trainee => trainee.TraineeUserId).Where(id => id != "farai"));
         speciality.ActiveTraineeCount.Should().Be(4, "amara, bongani, chen and dineo; not the pseudonym, hana or ines");
         speciality.InactiveTraineeCount.Should().Be(1, "emeka, whose programme ended; none of the three is counted here");
 
         subSpeciality.ActiveTraineeCount.Should().Be(3, "amara, bongani and dineo");
         subSpeciality.CurriculumCoverage.Epas.Single(epa => epa.EpaCode == "PAED-001").Should().Be(
-            committee.EpaTargets.Single(epa => epa.EpaCode == "PAED-001"),
-            "chen, the one trainee the committee reads beyond sub-speciality 1, is on a curriculum without PAED-001");
+            speciality.CurriculumCoverage.Epas.Single(epa => epa.EpaCode == "PAED-001"),
+            "chen, the one trainee the speciality reads beyond sub-speciality 1, is on a curriculum without PAED-001");
     }
 
     [Fact]
@@ -429,12 +502,12 @@ public sealed class CurriculumCoverageTests
             new GetSubSpecialityAdminDashboardSummaryQuery(SubSpecialityAdmin(1), AsOf), CancellationToken.None);
 
         committee.TraineeTargets.Select(trainee => trainee.TraineeUserId).Should().NotContain("gugu");
-        committee.EpaTargets.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
+        committee.EpaTargets.Should().Equal(ExpectedEpasForTheInstitution);
         speciality.CurriculumCoverage.Epas.Should().Equal(ExpectedEpasForSubSpecialitiesOneAndTwo);
         speciality.ActiveTraineeCount.Should().Be(4, "amara, bongani, chen and dineo; not gugu at the other institution");
         subSpeciality.CurriculumCoverage.Epas.Single(epa => epa.EpaCode == "PAED-001").TraineesApplying.Should().Be(2);
         users.Verify(
-            service => service.GetDisplayNamesAsync(
+            service => service.GetContactsAsync(
                 It.Is<IReadOnlyCollection<string>>(ids => !ids.Contains("gugu")), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -751,6 +824,17 @@ public sealed class CurriculumCoverageTests
     ];
 
     /// <summary>
+    /// What the committee reads of <see cref="SeedProgramme" />: every current trainee at the institution, whatever the
+    /// sub-speciality (T290), so farai's PAED-001, on sub-speciality 3's curriculum, counts too.
+    /// </summary>
+    private static readonly EpaTargetCoverage[] ExpectedEpasForTheInstitution =
+    [
+        new(1, "PAED-001", TitleOf("PAED-001"), QuotaPeriod.Semester, 3, TraineesMet: 2, TraineesApplying: 3, TraineesExempt: 1),
+        new(6, "PAED-006", TitleOf("PAED-006"), QuotaPeriod.Semester, 2, TraineesMet: 1, TraineesApplying: 1, TraineesExempt: 0),
+        new(11, "PAED-011", TitleOf("PAED-011"), QuotaPeriod.AcademicYear, 1, TraineesMet: 0, TraineesApplying: 2, TraineesExempt: 1)
+    ];
+
+    /// <summary>
     /// Three sub-specialities with a curriculum each. Sub-speciality 1: amara (met PAED-001), bongani (no credit),
     /// dineo (started mid-semester, exempt), and emeka (inactive, met both). Sub-speciality 2: chen (met PAED-006).
     /// Sub-speciality 3, in speciality 2: farai (met PAED-001 on that curriculum's own item for the same EPA).
@@ -934,6 +1018,17 @@ public sealed class CurriculumCoverageTests
                 (IReadOnlyDictionary<string, string>)people
                     .Where(person => ids.Contains(person.UserId))
                     .ToDictionary(person => person.UserId, person => $"{person.FirstName} {person.LastName}", StringComparer.Ordinal));
+
+        // The committee card's names and its tie-break by surname (T298), for exactly the trainees listed.
+        users
+            .Setup(service => service.GetContactsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                (IReadOnlyDictionary<string, UserContact>)people
+                    .Where(person => ids.Contains(person.UserId))
+                    .ToDictionary(
+                        person => person.UserId,
+                        person => new UserContact(person.UserId, person.FirstName, person.LastName, person.Email),
+                        StringComparer.Ordinal));
 
         // Who holds a role, of exactly the people asked about, whatever their lock: the Trainee rung (T237). An erased
         // trainee's pseudonym names no account, so it is never among them.

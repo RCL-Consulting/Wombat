@@ -1,11 +1,13 @@
 ---
 id: T298
 title: The committee's Targets card orders tied trainees by user id, and the trainee's Upcoming deadlines card reads a field no instrument has
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-10-05
+completed: 2026-10-05
 ---
 
 # T298 — The committee's Targets card orders tied trainees by user id, and the trainee's Upcoming deadlines card reads a field no instrument has
@@ -39,11 +41,13 @@ created: 2026-09-26
 
 ## Verification
 
-- [ ] A CurriculumCoverage or committee dashboard handler test: three trainees at the same share come back in surname order, and a lower share comes first whatever the name.
-- [ ] Browser, Step 2.33: all five at 0/10 read Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato Molefe, Sipho Ndlovu for Zulu, Naidoo and Botha.
-- [ ] The deadlines card, if removed: bUnit shows TraineeDashboard renders no 'Upcoming deadlines', and the query no longer reads DataJson. If kept: a handler test gives it a row from the chosen source, and a browser check at Step 3.50 shows that row.
-- [ ] states.md, coverage.md and Step 3.50 are updated to match.
+- [x] A CurriculumCoverage or committee dashboard handler test: three trainees at the same share come back in surname order, and a lower share comes first whatever the name. (`CommitteeMemberDashboard_OrdersEqualSharesBySurnameThenFirstName_AndAFewerShareFirstWhateverTheName`: eight trainees, ids that sort the other way, two of one name; fails on the old code.)
+- [x] Browser, Step 2.33: all five at 0/10 read Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato Molefe, Sipho Ndlovu for Zulu, Naidoo and Botha. (2026-10-05, Dr Zulu and Dr van Rensburg on `wombat_scenario_t290`, restored from `scenario-t355-post-act2`; Naidoo and Botha read the same query.)
+- [x] The deadlines card, if removed: bUnit shows TraineeDashboard renders no 'Upcoming deadlines', and the query no longer reads DataJson. If kept: a handler test gives it a row from the chosen source, and a browser check at Step 3.50 shows that row. (Removed by T355, flow 05, `b020c942`: Q3.)
+- [x] states.md, coverage.md and Step 3.50 are updated to match. (Flow 05 for the card; Step 2.33's Expect names the order, 2026-10-05.)
 
 ## Related
 
 T130 (the coverage reader), T238 (the committee card's trainees), T280 (the trainee dashboard's deadline links), D15 (a different 'deadline': the late-filing warning). Runbook steps 2.33, 2.35 and 3.50. Author's suspect at 3.50: 'Upcoming deadlines can never show anything'.
+
+- **2026-10-05 (T358's Q8, before flow 06's build).** The tie-break is in the committee query, not in `CurriculumCoverage`: it reads `GetContactsAsync` (first and last name apart; "Pieter du Plessis" cannot be split) and orders share, surname, first name, id. Landed with T290's committee item.

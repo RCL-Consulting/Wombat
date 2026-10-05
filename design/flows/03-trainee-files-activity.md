@@ -463,7 +463,7 @@ describes the product as it is today. `D` is the replay day and `J` the programm
 § The clock in this act).
 
 ```text
-Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:758)
+Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:760)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Open Log an activity and read its instrument picker. Open each type in turn to see what it rates, going back by
@@ -482,7 +482,7 @@ Expect: The page is headed "Log an activity", with "Choose what you are filing. 
   Multi-Source Feedback and Learner Feedback (Paediatrics) are not offered, because only the system writes them (T162,
   T164). Nor are the Demo types, which belong to another discipline.
 
-Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:785)
+Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:787)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new?type=mini_cex_cpsa
 Do: Open `/activities/new?type=mini_cex_cpsa`. Read the EPA and Assessor pickers, then leave without saving.

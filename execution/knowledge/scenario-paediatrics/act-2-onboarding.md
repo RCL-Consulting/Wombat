@@ -586,7 +586,8 @@ Do: Sign in and read the dashboard and nav.
 Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The sidebar reads "Acting as Committee
   member", with "Switch to Assessor" under it: she holds both, and the precedence opens her sessions as a Committee
   member. Targets this period names the current semester and its months. It lists the five registrars, each at "semester
-  0/10 · yearly 0/5", and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
+  0/10 · yearly 0/5", by surname since all are tied: Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato
+  Molefe, Sipho Ndlovu (T298); and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
   PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
   never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Committee member · Semester 2, 2026"; the sidebar
@@ -654,14 +655,15 @@ Role: CommitteeMember — Dr John van Rensburg
 Route: /account/login → / → /committee/panels
 Do: Sign in, read the dashboard and open Decision panels.
 Expect: He sees "Committee member · Semester N, YYYY" on Home, and no switch: he holds one role. Targets this period
-  names the current semester and reads "No trainees have targets this period.", and Targets met by EPA reads "No
-  curriculum targets for these trainees.": the card lists the trainees of the member's own sub-specialities at his
-  institution, and he holds none.
+  names the current semester and lists KGK's five registrars as Dr Zulu's card does (Step 2.33), and Targets met by EPA
+  reads "0 of 5 met" for each: a committee member reads every current trainee at their institution, whatever their
+  own sub-specialities, and he holds none (T290).
   The sidebar reads "Acting as Committee member" with no switch, over Home, Committee reviews and Decision panels, then
   My data rights. Decision panels lists the panel he sits on as external member, with no New panel and no Edit.
 Note: Zulu, Naidoo and Botha hold the Paediatrics sub-speciality only through their assessor profiles (Step 2.14), and a
   CommitteeMember invitation may carry none (Step 2.3). So a committee member with no assessor profile sees no trainee
-  here, although he sits on the panel and may read every KGK trainee's record (T113). Reported as a suspected defect.
+  here, although he sits on the panel and may read every KGK trainee's record (T113). Fixed by T290 (2026-10-05):
+  the card no longer reads sub-speciality claims.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Committee member · Semester 2, 2026", "Acting as
   Committee member" with no switch, over Home, Committee reviews and Decision panels, then My data rights. "Semester 2,
   2026 · July to November", "No trainees have targets this period.", "No curriculum targets for these trainees.".

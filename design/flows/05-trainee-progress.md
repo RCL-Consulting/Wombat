@@ -510,7 +510,7 @@ describes the product as it is today, after flow 04 (re-synced 2026-10-03). `D` 
 January on or before it.
 
 ```text
-Step 2.39 — Dr Molefe, final-year registrar (act-2-onboarding.md:688)
+Step 2.39 — Dr Molefe, final-year registrar (act-2-onboarding.md:690)
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → / → /portfolio/progress
 Do: Sign in, read the dashboard and nav, and open My progress.
@@ -530,7 +530,7 @@ Expect: Home's first card, Your targets, reads "Training year 4 — it sets the 
   "Each semester · 10 EPAs" and "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; Entrustment against
   Annexure A reads "0 at or above · 0 below · 15 with no decision, of 15 EPAs".
 
-Step 2.40 — The other registrars' training years (act-2-onboarding.md:722)
+Step 2.40 — The other registrars' training years (act-2-onboarding.md:724)
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
 Route: /account/login → / → /portfolio/progress
 Do: Each signs in and opens My progress.

@@ -426,7 +426,7 @@ describes the product as it is today, after flow 03 (re-synced 2026-09-30). `D` 
 (`act-3-operations.md` § The clock in this act).
 
 ```text
-Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:639)
+Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:640)
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
 Route: /account/login → /
 Do: Each signs in and reads the dashboard and nav.
