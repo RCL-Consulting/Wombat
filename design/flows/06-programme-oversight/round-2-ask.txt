@@ -1,0 +1,124 @@
+ROUND 1 PICKED: A, "Two lists and a record", with the corrections below. Round 2: A at full fidelity on the design
+system's tokens, every screen and state at 1280 and 390. Drop B's and C's boards from round 2 (keep them, and Main,
+on round 1's page). The brand mark is at /_blob/d0ffe547ebb511d3f58145477434f9aa: use it, never a drawn disc.
+
+ATTACHED, AGAIN: round 1 said the screenshots and flow 05's boards did not reach it. They are attached to THIS
+message: act-3/3.52-1-zulu-committee-home.png, states/home--committee-line-one.png, act-2/2.37-1-vanrensburg-home.png,
+act-3/3.53-1-mokoena-home.png, act-3/3.30-1-smit-stalled-requests.png, states/home--coordinator-expiring.png,
+act-A/A.7.6-1-home-390.png, act-A/A.7.7-1-home-390.png, act-A/A.7.5-1-home-390.png,
+act-A/A.7.7-5-entrustment-decisions-390.png, act-3/3.31-1-stalled-activities-404.png; flow 05's R3-E-typical,
+R3-P-standing and R3-T-committee at 1280 and 390, with flow05-r3.css. Check round 2 against them: the shell, the
+type, the cards and flow 05's progress parts are as built there.
+
+DECISIONS (the operator's, 2026-10-05; one sentence each):
+  Pick: A. Two new lists, Programme trainees and Waiting for assessors; a staff page for one registrar, owned by
+    Programme trainees; each Home previews the lists, five rows and "Open …".
+  Q1: Programme trainees is a page, admitting Committee member, Speciality admin, Sub-speciality admin and
+    Coordinator; the committee's and the admins' "Registrars behind" card is its preview.
+  Q2: one registrar is a new staff page under Programme trainees, composed of flow 05's parts, never the review page
+    and never My progress.
+  Q3: one page, Waiting for assessors, for both speciality admins and the Coordinator; it replaces "Pending reviews"
+    and "Stalled requests" on Home, as one card of the same name. "Stalled" goes: a request is Overdue as flow 04
+    says it, after 7 days since its last move.
+  Q4: Send a reminder is built in this flow, on Waiting for assessors' row and on the registrar page. Reassign is
+    filed as its own task and is NOT drawn (see C5).
+  Q5: one title, "Targets by EPA", on every Home; the figure in its own column; each EPA leads to Programme trainees
+    filtered "Short on <EPA>".
+  Q6: the Quick action card goes; "Start an MSF campaign" is the Coordinator's Home header action. The weekly digest's
+    roster comes to Programme trainees as a filter and to the Coordinator's Home as a card.
+  Q7: Entrustment decisions joins both speciality admins' menus, under that label, as its own owning list; Decision
+    panels joins the Coordinator's.
+  Q8: T290 (the committee reads the institution's current registrars) and T298 (ties by surname, then first name) land
+    first, as their own task, before the build. Draw both as fixed.
+  Q9: as Q4.
+  Q10: no "inactive" anywhere. Home and Programme trainees count current registrars only ("5 current registrars").
+    "Trainees in programme" goes.
+
+CORRECTIONS TO A (round 2's review checks each by number):
+  C1. Real figures, not placeholders. Round 1 drew [title], [date], [n] and [assessor] where the brief and the
+      screenshots give them. Use these, at the Step 3.30 moment (D = 2026-10-04):
+      - Waiting: Portfolio and Logbook Review (Paediatrics), from Pieter du Plessis, with Mohammed Patel, Awaiting
+        review, waiting 8 days since 2026-09-26; Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu,
+        with Thandi Zulu, Requested, waiting 8 days since 2026-09-26. Both Overdue.
+      - At Step 3.53 (after Dr Zulu completed the Mini-CEX) the admins' card reads "2 waiting": the portfolio review,
+        and Pieter du Plessis's CBD (Paediatrics), Requested, with its assessor, waiting less than a day.
+      - EPA titles are the catalogue's (Step 3.52's screenshot lists all fifteen); "3 per semester", "1 per academic
+        year" as there.
+      Where a figure truly is not given, keep the bracket and say so on the board.
+  C2. The registrar page's address is the trainee profile's id: /programme/trainees/{ProfileId:int}. Its h1 is her
+      name as stored; its title "<Name> · Wombat"; its trail Home › Programme trainees › <Name>, Programme trainees
+      lit. An id out of the reader's scope, or an erased account, is "not found". A profile whose programme has ended
+      opens read-only: subtitle "Programme ended 2026-10-02", This period in flow 05's ended words worded for staff,
+      no Send a reminder; no list in this flow links to it (flow 13 will).
+  C3. One overdue rule. Overdue is flow 04's (DashboardThresholds.AssessorDueDays, 7 days since UpdatedOn, its rule
+      line "Oldest first. Overdue once it has waited 7 days."), for staff and assessor alike; the old 7-day stall
+      setting goes. Keep round 1's added sentence, "Its assessor is emailed after 5.", and its T351 sentence on the
+      page: "Waiting counts from the last move: any save restarts it."
+  C4. Send a reminder, specified:
+      a. Who: both speciality admins and the Coordinator, on any request their list shows. Not the committee.
+      b. What: one email to the named assessor, the nudge's own mail, "Activities awaiting your assessment", listing
+         this one request ("Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days").
+      c. It moves nothing: not the request's state, not its wait (UpdatedOn is not touched), and the registrar is not
+         told. Say so in the dialog, as round 1 did.
+      d. It is recorded: who sent it and when, shown in the row's Waiting cell, "Reminded 2026-10-04 by Pieter Smit".
+         One reminder per request per South African day: after one, the button gives way to that line.
+      e. It obeys the nudge's recipient rules (ReminderRecipientPolicy), each refusal a sentence naming why, above
+         the table, taking the focus, the row unchanged: the account is deactivated; the account has turned off
+         reminder emails; it has no email address; the request moved meanwhile (round 1's words). Draw each.
+      f. A request whose next move belongs to a role, not a named person, has nobody to remind: its With cell reads
+         "Any assessor at Kgosi Kgari Teaching Hospital" and the row offers no reminder, with no explanation needed
+         beyond that. Draw one such row in the heavy state.
+  C5. Remove "Reassign" from every board, including the reserved slot. A button that does nothing is not drawn; the
+      Spec board says it is filed as its own task.
+  C6. "Nothing filed in 30 days", not "logged": Wombat files activities. The filter, the Coordinator's card and the
+      roster's column ("Last filed 2026-09-12") use the weekly digest's definition: no activity whose subject is the registrar was created in the last 30
+      days (WeeklyCoordinatorDigestJob), so a recorded MSF counts as filed. The card's empty: "Every current registrar has filed something in the last 30 days."
+  C7. Scopes, said on each page's subtitle or line:
+      - Committee member: the institution's current registrars (after T290).
+      - Speciality admin: her speciality's; Sub-speciality admin: his sub-speciality's.
+      - Coordinator: his institution's.
+      Waiting for assessors reads the same predicate as today's card (an activity whose pinned workflow waits on a
+      reviewer), in the reader's read scope. A row out of scope is not listed.
+  C8. Rows link only to what the reader may open: a waiting row's activity link (flow 03's page admits staff who
+      oversee it); a roster row's name to the registrar page; an EPA name on the registrar page is text (an EPA page
+      admits only its registrar), and inside its Standing panel it moves the focus to that EPA's chart on the same
+      page, as on the review page.
+  C9. Registrar page sections, in order: This period; Her EPAs (EpaProgressTable, names as text); Standing
+      (EntrustmentStandingPanel whole); Rating trajectories (TrajectoryChart per rated EPA, over this academic year,
+      the review page's drawing without its window); Waiting for assessors (her requests); Committee reviews (a link to
+      a scheduled or past review, or "No review is scheduled for Nomsa Mahlangu."). Each section that loads apart
+      fails apart, in a sentence.
+  C10. The Coordinator's menu is eight links, flow 01's flat limit: Home, Programme trainees, Waiting for assessors,
+      Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests; then My data rights.
+      Say it on the Spec board.
+  C11. Waiting for assessors' filters: Show (All waiting, Overdue only) and With (Anyone, then each assessor named on a
+      waiting row, by name), applied with Show, never live. Heading: "2 waiting, 2 overdue", the count in flow 04's
+      words; no match is "Nothing waiting matches these filters." with Show all waiting.
+
+STATES TO DRAW (round 2), at 1280 and 390 each:
+  Home, Committee member: typical (Step 3.52); all zeros (Step 2.33); with flow 04's line above (one waiting; one
+    overdue); after the switch (the alert); the external member, now five registrars; one exempt; nobody to show;
+    the story's end (two current registrars, KGK-001 among 16 EPAs); loading; load error.
+  Home, Speciality admin (and one Sub-speciality admin board to show it is the same, scoped): typical (Step 3.53);
+    all zeros (Step 2.38); heavy (14 waiting, 11 overdue; 16 EPAs); nothing waiting; loading; load error.
+  Home, Coordinator: typical (Step 3.30); nothing waiting (Step 2.32); one waiting (Step A.5.10); invitations nearing
+    expiry with rows; nothing filed in 30 days with rows and empty; loading; load error.
+  Programme trainees: typical; filtered "Short on PAED-002"; "Nothing filed in 30 days"; no match; empty; heavy (a
+    pager); one exempt; loading; load error.
+  The registrar: typical (Nomsa Mahlangu, one rating); no rating yet; with STARs (Lerato Molefe before graduation:
+    the panel full, three trajectories); a section's load error; the page's load error; programme ended; not found.
+  Waiting for assessors: typical (Step 3.30); heavy (pager, the role-held row); filtered; no match; empty; the
+    reminder's dialog, its result, each refusal (C4e), after a reminder; loading; load error.
+  The menus of the four roles, and Entrustment decisions' trail now Entrustment decisions lit.
+
+ALSO, as flow 05's round 2 did:
+  - A Spec board: every NEW and changed component (RegistrarRoster, the registrar page, ReminderAction, the staff
+    reading of WaitingList, EpaTargetCoverageList's one title and figure column), its classes, and the DESIGN.md rule
+    text each changes: the dashboard link rule (a card's foot opens its list); the progress figures rule (the
+    programme's form, "2 of 5" over "registrars met", for a named window; one exemption wording, "1 registrar exempt
+    this period, not counted"); the nav table; the owner table.
+  - A Steps board: each of the 20 runbook steps, and what its Expect will say once A is built (the steps that change:
+    2.32, 2.33, 2.37, 2.38, 3.30, 3.31, 3.52–3.54, A.5.10–A.5.12, A.7.5–A.7.8), and the new steps A needs (a reminder
+    sent; a reminder refused; Programme trainees filtered; the registrar page; Waiting for assessors filtered).
+  - Tokens by name; every colour an existing token or a NEW one with its value; contrast and targets checked (text
+    4.5:1, borders and the focus ring 3:1, targets 24 px, 44 at 390).

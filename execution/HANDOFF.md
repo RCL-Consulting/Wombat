@@ -24,12 +24,15 @@ locally, never push.** The harness is `python C:\dev\rcl_execution\bin\harness.p
 - **Step 2, staged:** `stage_upload.ps1 -Flow 06`, 88 files (2.98 MB); flow 05's boards R3-E-typical, R3-P-standing,
   R3-T-committee (both widths) and `flow05-r3.css` copied by hand into `design/upload/flow05-boards/`.
 
-### Next: T358 step 4, round 1. **The operator sends it.**
+### Next: T358 step 5, round 2. **The operator sends it.**
 
-- Canvas https://claude.ai/artifact/97WQWEuzMYHcKngPnNdHkV (design system v15), the mark copied in as`n  `/_blob/d0ffe547ebb511d3f58145477434f9aa` and named in § 1 (`f2137a8c`). Before the send it held no `project/` files`n  (artifact version 1791175135-48da).
-- Send `design/upload/round-1-ask.txt` with the 11 key screenshots and `design/upload/flow05-boards/` as ONE message.
-  Then read the canvas's files and `canvas.json` version, and record round 1 in `design/flows/06-programme-oversight/`.
-- Then step 5: the pick and § 6's questions (8–10 the operator's). **Model: Opus.**
+- Round 1 (`a1471073`): three structures. **The operator picked A** (two lists and a record) and answered Q8–Q10 as
+  recommended: T290 and T298 land first as their own task, before the build; Send a reminder is built in flow 06,
+  Reassign filed (**T359**, P3); no "inactive" count anywhere.
+- Round 1's canvas said the screenshots and boards never reached it. `design/upload/round-2-ask.txt` (decisions, C1–C11,
+  the states) goes with the 11 screenshots and `design/upload/flow05-boards/` AGAIN, as one message.
+- Then read the boards into `round-2/`, review them four-sided (one reviewer on the code, one on the cast; Sonnet),
+  put the decisions to the operator, one correction round (step 5's end). **Before step 6: T290 and T298.** Opus.
 
 ### For the operator
 
