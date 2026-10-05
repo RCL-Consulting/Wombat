@@ -23,13 +23,16 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 - **Step 2, staged:** `stage_upload.ps1 -Flow 06`, 88 files (2.98 MB); flow 05's boards R3-E-typical, R3-P-standing,
   R3-T-committee (both widths) and `flow05-r3.css` copied by hand into `design/upload/flow05-boards/`.
 
-### Next: T358 step 5's correction round (round 3). **The operator sends it.**
+### Next: T290 and T298 (the operator's Q8: before flow 06's build), then T358 step 6, the build. Opus.
 
-- Round 1 picked A (`a1471073`, `128e7baf`); round 2 drawn (`7c2bdde1`) and reviewed from three sides (code, cast,
-  design system; Sonnet): `round-2-review.md`, 33 findings. The operator took E1–E5 as recommended; E6 adopted.
-- Send `design/upload/round-3-ask.txt` alone (the screenshots reached round 2). Then save `round-3/`, check it item by
-  item against the ask (one Sonnet checker), and close the design. **Before step 6: T290 and T298**, then the build
-  (the reminder needs a new table and migration; see the review's 1–3). Reassign is T359. Opus.
+- **Flow 06's design is final** (`round-3-check.md`): A, two lists (Programme trainees, Waiting for assessors), a staff
+  registrar page, Send a reminder; E1–E6 in `round-2-review.md`. The build carries the check's six items (no pronouns,
+  the ended page from `EndedItemCard`, steps A.5.14/A.5.16/4.3/4.4, r8's trail, no inline styles, board detail).
+- **First T290 and T298**, each reviewed against its own risk: the committee card reads the institution's current
+  registrars, ties by surname then first name. T290's file holds more than the committee item: land that item, say so.
+- **The build** (step 6, `design/flows/05-trainee-progress/build-lanes.md` as template): a new table and migration for
+  the reminder (review items 1–3), an Application-side recipient policy, a role-explicit waiting query, new progress
+  readers, `EpaProgressTable` names-as-text, `EndedView` extracted, the nav limit (E2) and DESIGN.md.
 
 ### For the operator
 
