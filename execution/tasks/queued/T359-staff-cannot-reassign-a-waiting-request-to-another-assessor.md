@@ -54,3 +54,7 @@ Then a row action on Waiting for assessors, beside Send a reminder (flow 06's pl
 ## Related
 
 T358 (flow 06), D50 (whom the nudge skips), NomineeGate, `FieldPermissionEvaluator`, CLAUDE.md § Activity platform.
+
+## Notes
+
+- **From flow 06's build review (R1, 2026-10-05).** A reminder's history and the same-day block are keyed by request, not by the nominee it was sent to (`WaitingForAssessorsReader`: `LastReminder`, `RemindedToday`; `SendActivityReminderCommand`; the unique index `IX_ActivityReminders_ActivityId_SentOnDay`). Unreachable today, since nobody may change a waiting request's assessor. A reassignment makes it real: after one, the new assessor would read "Reminded … by …" for a mail the old one got, and could not be reminded until the next South African day. Scope both to the current holder (`ActivityReminder.AssessorUserId`), or decide the rule stays per request, when building this task.
