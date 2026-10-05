@@ -139,3 +139,8 @@ goes.
 The registrar page (30); Registrars behind past five rows ("3 more in Programme trainees."), and a heavy committee
 Home; Programme trainees and Waiting for assessors as the Sub-speciality admin; the reminder in flight (confirming,
 Cancel disabled); the ended registrar's past review link at 390.
+
+## The operator's decisions (2026-10-05)
+
+E1 to E5 as recommended (asked); E6 as recommended (flow 04's words may not change). The round 3 ask is`nround-3-ask.txt.
+

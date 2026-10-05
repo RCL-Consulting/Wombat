@@ -1,0 +1,108 @@
+ROUND 3: one correction round on A as round 2 drew it. Keep every board and its states; change what follows, then
+say on the Spec, item by item (by the numbers below), what changed and where. Round 1's boards stay on their page.
+The brand mark is at /_blob/d0ffe547ebb511d3f58145477434f9aa.
+
+THE OPERATOR'S DECISIONS (2026-10-05):
+  E1. "Opt out of digest emails" does NOT stop a staff reminder: a reminder about one request is "email about one
+      particular thing", which the account page says is still sent. The refusals are four: the account is
+      deactivated; it has no email address; no such account (a nominee field naming an erased or deleted user); the
+      request moved meanwhile. Remove the opt-out refusal (w6). The account page's help text is unchanged.
+  E2. The flat menu limit counts the role's links only: up to 8 stay flat, and Home's personal links (My data rights,
+      My progress) sit under their own rule, uncounted. So the Coordinator's eight role links stay flat. Put the rule's
+      new text on the Spec.
+  E3. Waiting for assessors lists only requests whose next move names a person (a nominee field: an assessor,
+      supervisor or reviewer). Work held by a role (a Speciality admin's review of a research output, the
+      Coordinator's MSF release) is not listed. Remove "Any assessor at Kgosi Kgari Teaching Hospital" (w9); draw that
+      slot instead as a request whose assessor's account is deactivated (no reminder, the reason in the row). The
+      Coordinator's Home card narrows the same way.
+  E4. Scope follows the ACTING role, never the union of the roles held: the Speciality admin's page reads her
+      speciality's requests even if she also holds Committee member. The Home card and the page are one query. The
+      reader's own requests are never listed. Each subtitle says what was read.
+  E5. "Nothing filed in 30 days" counts activities that have left draft (a draft is not filed), and its 30 days start
+      at the later of the registrar's admission and today − 30 days, so a registrar admitted last week is not listed
+      until 30 days have passed with nothing filed. The weekly digest takes the same rule. The card's rule line says it.
+  E6. The why-line keeps flow 04's words: "Waiting 8 days" (or "Waiting less than a day"). "With Mohammed Patel" is a
+      line of its own above it, in the staff reading.
+  Settled: a same-day reminder blocks every staff member, not only its sender; the next day the cell shows the last
+  "Reminded 2026-10-04 by Pieter Smit" line AND the button again. A withdrawn registrar's request stays waiting (the
+  runbook plays it so at A.5.10): drop the Spec's questions 3 and 4.
+
+CORRECTIONS (the review's numbers; round 3's check takes them one by one):
+  13. Tie order at 2.33 (everyone at 0): Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato Molefe, Sipho
+      Ndlovu (surname, then first name). Fix R2-Steps 2.33 and R2-Home's zero rows (c4, c5, a2, k2). 3.52's order
+      stays.
+  14. The counts. Pieter du Plessis's Case-Based Discussion to Fatima Khumalo stays Requested through Act 3. So:
+      Step 3.30 "3 waiting, 2 overdue" (the portfolio review and the Mini-CEX overdue, the CBD waiting less than a
+      day); Step 3.53 "2 waiting, 1 overdue"; Step A.5.10 "3 waiting, 1 overdue" (the portfolio review overdue, the
+      CBD, and Nomsa Mahlangu's Mini-CEX to Fatima Khumalo at 6 days).
+  15. Fill these brackets: Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-03, from Pieter du
+      Plessis, with Mohammed Patel; Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-29, from Pieter du
+      Plessis, with Fatima Khumalo (the type's stored name, never "CBD (Paediatrics)"). The Sub-speciality admin's
+      sub-speciality is Paediatrics: "5 current registrars in Paediatrics".
+  16. Programme trainees at 3.52: Nomsa Mahlangu's and Sipho Ndlovu's PAED-002 read "1 of 3 · 2 more"; "Short on
+      PAED-002" lists Pieter du Plessis, Anele Dlamini, Lerato Molefe at 0, then Nomsa Mahlangu and Sipho Ndlovu.
+      Furthest short: Anele Dlamini PAED-002, 003, 005; Nomsa Mahlangu PAED-001, 003, 005. On 3.52b Nomsa Mahlangu's
+      EPAs show PAED-002 and PAED-004 at "1 of 3".
+  17. The new steps: number them after the last existing one (A.5.13 exists: start at A.5.14; in Act 3 after 3.54),
+      in play order; routes as the page's address with no query string. In the appendix only Anele Dlamini and Nomsa
+      Mahlangu are current ("n of 2"). Thandi Zulu waits on nothing after 3.33: the With filter's example is Mohammed
+      Patel ("1 waiting, 1 overdue"), then Overdue only with Fatima Khumalo for no match. After a reminder at 3.30,
+      3.31's Mini-CEX row reads "Reminded 2026-10-04 by Pieter Smit"; 3.32's nightly nudge still mails a request
+      reminded today, so the log then holds three stub mails: say so. A refusal step plays on a scratch database
+      (deactivated, no email address), and names who does what.
+  18. Add Steps 4.3 and 4.4 (the admins' menus and Home cards) to the Steps board, and note 3.33's "Targets this
+      period" (now "Registrars behind").
+  19. States at their real moment: Dr Naidoo's one-waiting line is Step 5.25's: "1 activity waits for you in the Activity
+      inbox: Mini-CEX (Paediatrics) · PAED-002 · 2026-10-03, from Pieter du Plessis, waiting less than a day.", over
+      that moment's roster (Lerato Molefe has graduated, so four current; Pieter du Plessis withdraws later, at 5.27); the expiring invitation expires 2026-10-07 (D+3); Lerato Molefe
+      before graduation holds STARs on PAED-001, PAED-010 and PAED-012, her final review 2026-10-04; the heavy admin
+      Home is invented (say so on its caption); 3.52b's erased and other-institution cases move to the appendix.
+  1.  The reminder's record: say on the Spec that it is a new table (who, when, which request), one per request per
+      South African day, and that sending it never touches the request's last move.
+  3.  The reminder's mail is the nudge's template for one request, tagged as a reminder; a request under a day reads
+      "waiting less than a day", never "0 days".
+  6.  The registrar page opens only the registrar's current (preferred) profile; any other profile id, and an erased
+      account, are "not found".
+  7.  EpaProgressTable gains a "names as text" mode: list it as changed on the Spec.
+  8.  The ended registrar page is drawn from flow 05's ended cards (EndedItemCard, My progress's ended view), its
+      words written for staff and marked NEW (flow 05's say "your programme"); "No target after 2026-10-02" goes.
+  9.  Programme trainees needs a new per-registrar, per-EPA reader (Furthest short, Short on): say so. Exemption is
+      computed, so an exempt row says the reason in words ("Started part-way through the period"), not "as stored".
+  10. Owner rows: an activity opened from Waiting for assessors lights Waiting for assessors for both admins and the
+      Coordinator (trail Home › Waiting for assessors › the activity). Decision panels' owner row adds the Coordinator.
+  11. "Its assessor is emailed after 5." reads one setting; the old 7-day stall setting goes.
+  12. The With filter's names come from each waiting row's nominee: say so.
+  21. Collapse .roster-row and .coverage-row to one column at max-width 900px (where the dashboard grid does), so
+      nothing breaks from 641 to 900; draw one board at 768.
+  22. Send a reminder is 44 px below 641 px wherever it sits: scope the rule to .reminder-action.
+  23. No pronouns anywhere: "Thandi Zulu gets one email…", "Wombat sends Fatima Khumalo no email", the Spec's rule
+      "a registrar's name to the registrar's page".
+  24. Roster table: use clinic-table--index (its row header reset), not plain .clinic-table th.
+  25. .filter-actions: flex-direction row, aligned with the fields' bottom.
+  26. The Coordinator's header action, "Start an MSF campaign": list it as a change to DESIGN.md § Dashboard page
+      (header actions: Trainee, Institutional admin, Coordinator).
+  27. Every preview card keeps its foot when its list is in the menu, empty included (c7, c8, k1).
+  28. Reuse the built classes: .progress-row-link for the roster's and coverage's names; .needs-you-rule for scope
+      lines; .count-figure / .count-meta for figure cells; .dashboard-metric-label / .progress-row-meta for captions;
+      .waited-cell span for the reminder line; .list-unstyled for the lists; .section-error as built. Drop
+      .waiting-with and .with-cell-note. Keep NEW only the two column grids and what nothing built does.
+  29. Draw one pair of rows whose links would read the same (two Mini-CEX from Nomsa Mahlangu on one date) and how
+      they differ (state, "waiting since … SAST", "(1 of 2)"), per DESIGN.md § List page.
+  30. The registrar page: draw loading; the reminder's dialog, result, refusal and "Reminded" line on it; each
+      section's own load error (This period, EPAs, rating trajectories, waiting, committee reviews); the page error
+      with an h1 "Programme trainee" and the trail Home › Programme trainees. Reset .index-section and .standing-panel
+      margins inside .registrar-stack; one heading scale for the sections.
+  31. Words: a count badge in words ("5 registrars"); the Filed checkbox's label only once; Waiting for assessors'
+      select is "Waiting" (All, Overdue only), so it and the Show button do not share a name; the apply-with-Show
+      filter is a new list pattern: write its DESIGN.md rule; the coverage bars inside an aria-hidden figure amend the
+      progressbar rule: say so.
+  32. The Spec's DESIGN.md list also changes: the staff target cards' paragraph ("Trainees in programme" goes), the
+      "guard the eager reads" sentence ("Curriculum coverage" is now "Targets by EPA"), and the owner rows (10).
+  33. Try again focuses the frame's result region (flow 04), not a card heading; no inline layout styles; a caption
+      on every table and data-label on every stacked cell; one no-match sentence pattern and one clear button word
+      for both lists; an empty list draws no filter form; title the roster card "Registrars", its line "Fewest met
+      first, then by surname"; an EPA every registrar has met keeps its name as text.
+
+STATES TO ADD: the registrar page's (30); "Registrars" past five rows ("3 more in Programme trainees."); a heavy
+committee Home; Programme trainees and Waiting for assessors as the Sub-speciality admin; the reminder in flight
+(Send the reminder pressed, Don't send disabled); the ended registrar's past review link at 390; one board at 768 (21).

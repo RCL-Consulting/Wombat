@@ -23,15 +23,13 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 - **Step 2, staged:** `stage_upload.ps1 -Flow 06`, 88 files (2.98 MB); flow 05's boards R3-E-typical, R3-P-standing,
   R3-T-committee (both widths) and `flow05-r3.css` copied by hand into `design/upload/flow05-boards/`.
 
-### Next: T358 step 5, round 2. **The operator sends it.**
+### Next: T358 step 5's correction round (round 3). **The operator sends it.**
 
-- Round 1 (`a1471073`): three structures. **The operator picked A** (two lists and a record) and answered Q8–Q10 as
-  recommended: T290 and T298 land first as their own task, before the build; Send a reminder is built in flow 06,
-  Reassign filed (**T359**, P3); no "inactive" count anywhere.
-- Round 1's canvas said the screenshots and boards never reached it. `design/upload/round-2-ask.txt` (decisions, C1–C11,
-  the states) goes with the 11 screenshots and `design/upload/flow05-boards/` AGAIN, as one message.
-- Then read the boards into `round-2/`, review them four-sided (one reviewer on the code, one on the cast; Sonnet),
-  put the decisions to the operator, one correction round (step 5's end). **Before step 6: T290 and T298.** Opus.
+- Round 1 picked A (`a1471073`, `128e7baf`); round 2 drawn (`7c2bdde1`) and reviewed from three sides (code, cast,
+  design system; Sonnet): `round-2-review.md`, 33 findings. The operator took E1–E5 as recommended; E6 adopted.
+- Send `design/upload/round-3-ask.txt` alone (the screenshots reached round 2). Then save `round-3/`, check it item by
+  item against the ask (one Sonnet checker), and close the design. **Before step 6: T290 and T298**, then the build
+  (the reminder needs a new table and migration; see the review's 1–3). Reassign is T359. Opus.
 
 ### For the operator
 
