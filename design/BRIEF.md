@@ -1024,6 +1024,37 @@ version 15). Its record is `design/flows/05-trainee-progress/`. Only what flows 
 - **A page taller than about 16,384 px cannot be one screenshot.** Observed: Chromium repeated the header part-way down
   an 18,013 px committee page. *Changed:* capture such a page in parts and stitch them (the states agent did).
 
+**Flow 06 (T358, 2026-10-04 to 10-05): what the sixth flow added**
+
+Flow 06 ran the whole loop in two days: three structures (A picked), three rounds, a three-sided review (code, cast, design
+system), T290 and T298 first, the build (`85d5a508`), the replay (332 steps, 266 with no gap), the states and the re-sync
+(design system version 17). Its record is `design/flows/06-programme-oversight/`. Only what flows 01–05 did not already
+teach is here.
+
+- **A canvas can say it never received the attachments.** Observed: round 1 drew from the brief's text alone and said
+  so in an annotation; the screenshots and boards were not in its session. Round 2 re-attached them and named the folder
+  (`C:\dev\Wombat\design\upload`, which the canvas could not find in the home folders). *Changed:* nothing; read round 1's
+  notes for that line, and re-attach before round 2.
+- **A wave 0 holds what two parallel lanes both need compiled.** Observed: the acting-role scope, the one migration and
+  the three pages' shells (so wave 2's menus could name their types) went first, alone; wave 1's two lanes then ran on it
+  with one trivial merge conflict. The planner also moved the Homes to wave 2, since both wave-1 reads fed them.
+  *Changed:* `build-lanes.md` of flow 06 is the template when a flow adds a migration or new routes.
+- **The band between the phone and the desktop needs its own check.** Observed: four reviewers and every suite passed
+  the two new lists, and the replay at 768 px (the sidebar shown, a 462 px column) found their tables splitting names
+  mid-word: they stacked only below 641 px. Fixed by a scoped stack from 900 px (`94edf2b7`). *Changed:* nothing; a new
+  table is checked at 768 as well as 390 and 1280.
+- **A not-found page must tell the shell.** Observed: the review found a page that draws Page not found in its own place
+  still lit its owner in the menu (the menu read the routed page); flow 05's EPA page had the same fault. Fixed once in
+  the shell (`PageDrawn`). *Changed:* DESIGN.md § The current item.
+- **A helper that reads its base address at import can write to the wrong database.** Observed: the states agent imported
+  an act's filing helpers, which read `BASE` before its script set the scratch port, and filed two requests on the replay
+  database. The appendix's dump was restored into a fresh database for `:5180`. *Changed:* nothing in the brief; a states
+  script passes its base explicitly, and the replay database is checked (its highest activity id) before the next step.
+- **A wait can be killed by memory pressure.** Observed: act 2's real hour's wait lost a background sleep when the
+  machine ran low; the agent stopped, said where, and resumed on the operator's word with nothing lost. *Changed:* the act
+  prompts say to stop and report, never restart, a killed wait.
+- **A new step takes a letter when its number is taken.** Observed: the boards' new 3.55–3.57 and A.7.9 already existed,
+  so the runbook lane wrote 3.54a–c and A.7.8a (6.14a's precedent) rather than renumber and break the captures' names.
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)

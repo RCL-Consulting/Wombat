@@ -23,20 +23,13 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 - **Step 2, staged:** `stage_upload.ps1 -Flow 06`, 88 files (2.98 MB); flow 05's boards R3-E-typical, R3-P-standing,
   R3-T-committee (both widths) and `flow05-r3.css` copied by hand into `design/upload/flow05-boards/`.
 
-### Next: T358 step 8 (re-sync the design system to flow 06 as built; republish), then step 9 (lessons). Opus.
+### Next: T361, flow 07 (the review sitting), step 1: the brief. Opus.
 
-- **Step 7 done:** the replay on `wombat_scenario_t358` (332 steps, 266 no gap, every other gap a filed task); one
-  regression, A.7.8a at 768 px, fixed (`94edf2b7`) and re-checked; flow 06's states re-taken on scratch copies,
-  `check_baseline_paths` missing 0. Dumps `scenario-t358-post-act{1..6,A}`. T360 filed (P3 layout nits).
-- **The states agent wrote by mistake to `wombat_scenario_t358`** (activities 29, 30): `:5180` now runs
-  `wombat_scenario_t358_end`, restored from `scenario-t358-post-actA` (max activity 28). Drop the polluted one.
-- Step 8 as flow 05's: read each published file of the design system (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18,
-  v15) and compare with HEAD, re-sync from the code (new components: RegistrarRoster, ReminderAction, the three pages,
-  EndedRecord, the staff WaitingList; app.css's Programme section), one implementer and one Sonnet review, publish
-  (files with `root` = a folder holding `project/…`; the index last).
-- Step 9: BRIEF § 11 "Flow 06", only what is new (candidates: the canvas lost the attachments in round 1; a wave 0
-  for shared pieces; the 768 px band between the phone and the desktop; a helper reading BASE at import wrote to the
-  replay database; memory pressure killing a wait; the letter-suffixed step ids).
+- **T358, flow 06, is done.** Built `85d5a508`; replayed (332 steps, 266 no gap; A.7.8a's 768 px regression fixed,
+  `94edf2b7`); states re-taken; design system re-synced (`1fed3a9a`) and published as **version 17**; lessons in BRIEF
+  § 11 "Flow 06". T359 (Reassign) and T360 (layout nits, the trainees form without the circuit) filed.
+- T361 runs the loop as flow 06's record shows (`design/flows/06-programme-oversight/`); step 3 needs the operator's
+  new canvas on design system version 17. T290 stays in progress for its other items (the harness cannot requeue).
 
 ### For the operator
 

@@ -6,18 +6,17 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **five redesign flows are done**: 01 the shell (T335,
+replayed journey catalogue with a screenshot baseline, and **six redesign flows are done**: 01 the shell (T335,
 `b347e11c`), 02 sign-in (T339, `f50dffb2`), 03 filing an activity (T342, `725237ee`), 04 an assessor's inbox (T350,
-`06aa51d7`) and 05 a registrar's progress (T355, `b020c942`), each designed, built, replayed and in the design system
-(version 15). Left: flows 06–20 (T358 next), the deploy, the College's answers, 15 P2s, P3 polish. The remote is pushable again (2026-10-05).
+`06aa51d7`), 05 a registrar's progress (T355, `b020c942`) and 06 programme oversight (T358, `85d5a508`), each designed,, replayed and in the design system (version 17). Left: flows 07–20 (T361 next), the deploy, the College's, the P2s, P3 polish. The repo is on GitHub (RCL-Consulting/Wombat, public) since 2026-10-05.
 
 ## Now
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps, 80 page templates, last replayed against flow 05
   (T355, `wombat_scenario_t355`: 256 no gap, no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 79 queued (1 P1, 14 P2, 64 P3); T358 and T290 (its other items) in progress; 1 blocked.**
+- **Open: 81 queued; T290 (its other items) in progress; 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
-  - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T356, T358.
+  - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T356, T361.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
 - **Gated on the College or the operator:** T139, T170, T146, T152, T153, T171 (`knowledge/college-message-2026-09.md`).
 
@@ -33,7 +32,7 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T358, flow 06 (programme oversight): brief done (`2f29c158`); built (`85d5a508`) and replayed (332 steps, no regression left); next the design-system re-sync. Opus.**
+- **The GUI redesign: T361, flow 07 (the review sitting), step 1, the brief. Opus.**
 
 ## Open questions
 
@@ -55,6 +54,7 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
 
 ## Recent
 
+- **2026-10-05:** T358, flow 06, done (`85d5a508`; replay, states, design system v17); T298, T290's committee item; the repo moved to GitHub; T359–T361.
 - **2026-10-04:** T358 started, its brief restated (`2f29c158`); T304, T305 done; T355, flow 05, done (`b020c942`; replay, states, design system v15); T356–T358.
 - **2026-10-03:** T350, flow 04, done: replay (no regression), states, design system v13, lessons; T353–T355 filed.
 - **09-30 and before:** T342 (flow 03), T339 (flow 02), T335 (flow 01). Earlier: `git log`.

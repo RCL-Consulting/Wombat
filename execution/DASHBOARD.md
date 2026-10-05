@@ -6,7 +6,6 @@ Queued tasks that wait on another are listed after the ready ones.
 
 | lane | id | pri | title | model | waits on |
 |---|---|---|---|---|---|
-| in_progress | [T358](tasks/in_progress/T358-flow-06-programme-oversight-has-not-been-through-the-redesign-loop.md) | P2 | Flow 06, programme oversight, has not been through the redesign loop |  |  |
 | in_progress | [T290](tasks/in_progress/T290-trainee-first-and-existence-leftovers-completing-your-own-profile-invitations-the-users-commands-refusals-and-two-committee-queries-that-read-claims.md) | P3 | Trainee-first and existence leftovers: completing your own profile, in |  |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |  |
@@ -24,6 +23,7 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T334](tasks/queued/T334-the-builder-lets-the-college-edit-the-system-managed-msf-and-learner-feedback-types-whose-data-the-releases-write.md) | P2 | The builder lets the College edit the system-managed MSF and learner-f |  |  |
 | queued | [T341](tasks/queued/T341-account-outcomes-ride-in-the-address-so-a-crafted-link-can-show-a-fixed-notice-or-reopen-the-remove-dialog.md) | P2 | Account outcomes ride in the address, so a crafted link can show a fix |  |  |
 | queued | [T356](tasks/queued/T356-a-scrolled-table-paints-over-the-fixed-top-bar-covering-sign-out.md) | P2 | A scrolled table paints over the fixed top bar, covering Sign out |  |  |
+| queued | [T361](tasks/queued/T361-flow-07-the-review-sitting-has-not-been-through-the-redesign-loop.md) | P2 | Flow 07, the review sitting, has not been through the redesign loop |  |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |  |
@@ -87,10 +87,10 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T353](tasks/queued/T353-step-3-30-s-ageing-leaves-a-request-filed-before-its-encounter.md) | P3 | Step 3.30's ageing leaves a request filed before its encounter |  |  |
 | queued | [T354](tasks/queued/T354-the-rung-picker-s-help-line-is-a-page-subtitle-not-a-field-s-help.md) | P3 | The rung picker's help line is a page subtitle, not a field's help |  |  |
 | queued | [T357](tasks/queued/T357-flow-05-marks-an-institution-s-own-epa-and-a-paused-epa-several-ways.md) | P3 | Flow 05 marks an institution's own EPA and a paused EPA several ways |  |  |
+| queued | [T359](tasks/queued/T359-staff-cannot-reassign-a-waiting-request-to-another-assessor.md) | P3 | Staff cannot reassign a waiting request to another assessor |  |  |
 | queued | [T360](tasks/queued/T360-programme-pages-last-filed-breaks-iso-dates-at-the-hyphen-and-the-ended-registrar-page-wraps-its-period-line-into-a-tall-block.md) | P3 | Programme pages: Last filed breaks ISO dates at the hyphen, and the en |  |  |
-| queued | [T359](tasks/queued/T359-staff-cannot-reassign-a-waiting-request-to-another-assessor.md) | P3 | Staff cannot reassign a waiting request to another assessor |  | T358 |
 
-Done: 225 task(s).
+Done: 226 task(s).
 
 ## From STATE.md
 
@@ -99,18 +99,18 @@ Cap: 60 lines. `harness.py lint` enforces it; `harness.py trim` moves the overfl
 This is a reset point, not a diary.
 ## Focus
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **five redesign flows are done**: 01 the shell (T335,
+replayed journey catalogue with a screenshot baseline, and **six redesign flows are done**: 01 the shell (T335,
 `b347e11c`), 02 sign-in (T339, `f50dffb2`), 03 filing an activity (T342, `725237ee`), 04 an assessor's inbox (T350,
-`06aa51d7`) and 05 a registrar's progress (T355, `b020c942`), each designed, built, replayed and in the design system
+`06aa51d7`), 05 a registrar's progress (T355, `b020c942`) and 06 programme oversight (T358, `85d5a508`), each designed,, replayed and in the design system (version 17). Left: flows 07–20 (T361 next), the deploy, the College's, the P2s, P3 polish. The repo is on GitHub (RCL-Consulting/Wombat, public) since 2026-10-05.
 
 ## Recent commits
 
 ```
+3ebba7ed docs: DESIGN.md's Programme section lists its fourth part (.clinic-table--stack-wide); T360 gains the trainees form's no-circuit gap
+1fed3a9a docs(design): the design system re-synced to flow 06 as built (T358 step 8)
+6be346de docs(execution): T358 step 7 done (replay, states); T360 filed; handoff and state
 33d846b1 docs(runbook): A.7.8a re-checked after the 768px fix (T358 step 7)
 94edf2b7 fix(programme): the two lists' tables stack from 900px, not only below 641 (T358 step 7, A.7.8a)
-62747e94 docs(runbook): appendix replayed against flow 06 (T358 step 7): 75 steps, 59 no gap, 15 known-task, 1 regression (A.7.8a at 768)
-d3393c62 docs(runbook): act 6 replayed against flow 06 (T358 step 7): 42 steps, 34 no gap, 8 known-task, no regression
-ae8c1d2e docs(runbook): act 5 replayed against flow 06 (T358 step 7): 29 steps, 23 no gap, 6 known-task, no regression
 ```
 
 ## For the reviewer
@@ -123,6 +123,7 @@ No review closed yet; showing everything since 2026-10-04.
 - T304 A trainee profile save re-admits the registrar: one left on a superseded curriculum version cannot be saved at all, and one moved to a new version has none of their credit replayed
 - T305 A completed or withdrawn trainee's profile can still be saved, re-pinning and re-dating the record that Mark complete says it archives
 - T355 Flow 05, a registrar reads where they stand, has not been through the redesign loop
+- T358 Flow 06, programme oversight, has not been through the redesign loop
 
 #### Decisions awaiting you (Proposed)
 
@@ -139,6 +140,9 @@ _Nothing flagged._
 #### Commits
 
 ```
+3ebba7ed docs: DESIGN.md's Programme section lists its fourth part (.clinic-table--stack-wide); T360 gains the trainees form's no-circuit gap
+1fed3a9a docs(design): the design system re-synced to flow 06 as built (T358 step 8)
+6be346de docs(execution): T358 step 7 done (replay, states); T360 filed; handoff and state
 33d846b1 docs(runbook): A.7.8a re-checked after the 768px fix (T358 step 7)
 94edf2b7 fix(programme): the two lists' tables stack from 900px, not only below 641 (T358 step 7, A.7.8a)
 62747e94 docs(runbook): appendix replayed against flow 06 (T358 step 7): 75 steps, 59 no gap, 15 known-task, 1 regression (A.7.8a at 768)
@@ -166,8 +170,5 @@ cfffe72b docs(claude): Multi-agent workflows: size pipelines to the risk, two re
 bbd8c588 chore: the rest of the tidy-up (1eb90b0b committed only the workflow's removal)
 1eb90b0b chore: tidy what the security survey found lying around
 3848bc0d chore: ignore dumps, env files, keys and secrets.json (security survey)
-53aa1aef docs: README rewritten for the rebuilt Wombat
-30163825 docs(execution): the remote is pushable again (the operator, 2026-10-05)
-128e7baf docs(design): flow 06 round 1 picked (A) and the round 2 ask; T359 filed (T358 step 5)
 ```
-_45 more; see `git log`._
+_48 more; see `git log`._

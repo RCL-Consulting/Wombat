@@ -1,12 +1,13 @@
 ---
 id: T358
 title: Flow 06, programme oversight, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-04
 started: 2026-10-04
+completed: 2026-10-05
 ---
 
 # T358 — Flow 06, programme oversight, has not been through the redesign loop
@@ -57,7 +58,7 @@ Run the loop as flow 05 ran it (`design/flows/05-trainee-progress/`, BRIEF § 11
   flow 06's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (2026-10-05,
   `wombat_scenario_t358`: 332 steps, 266 no gap, every other gap a filed task; one regression, A.7.8a at 768 px, fixed
   in `94edf2b7` and re-checked; states re-taken on scratch copies, missing 0; T360 filed for two layout nits.)
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (Version 17, 1791219142-2815; `1fed3a9a`; lessons in BRIEF § 11 "Flow 06".)
 
 ## Related
 
