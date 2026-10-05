@@ -426,7 +426,7 @@ describes the product as it is today, after flow 03 (re-synced 2026-09-30). `D` 
 (`act-3-operations.md` § The clock in this act).
 
 ```text
-Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:640)
+Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:656)
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
 Route: /account/login → /
 Do: Each signs in and reads the dashboard and nav.
@@ -566,25 +566,27 @@ Expect: Each rates on the rung picker. Dr Khumalo, who also holds Dr du Plessis'
   Two are at year 3's minimum of rung 4; the CBD at 3b counts towards the target only. Her PAED-004 holds one, at the
   minimum.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:825)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:851)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
   open Dr Mahlangu's Mini-CEX (the Activity inbox lists it too), rate it 3a with feedback, and complete it.
 Expect: The sidebar first reads "Acting as Committee member", with "Switch to Assessor" under it, and Home "Committee
-  member · Semester N, YYYY" under its heading. Under the header, above the committee cards, a warning line reads "1
-  activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · `D−3`, from
-  Nomsa Mahlangu, waiting 8 days.", with Open it (T350). After the switch Home reads "You are now acting as Assessor."
-  in an info alert under the header, and "Assessor · Semester N, YYYY", with no such line; the sidebar reads "Acting
-  as Assessor" over Home and Activity inbox, and "Waiting for you", in the warning stripe, is badged "1 waiting, 1
-  overdue": this Mini-CEX, "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu, Requested with Overdue
-  beside it, "Waiting 8 days": it has waited past the assessor's seven days since Step 3.30 aged it. The inbox lists it
-  with "8 days" over "since `D−8` … SAST"; the page's status card reads "Your move. Nomsa Mahlangu asked you on `D−8` …
-  SAST.", the same moment. She rates it on the rung picker. After Complete the result reads "Completed. Nothing else
-  waits for you.", with Go to Home, and Home then reads "Nothing is waiting for you." The Mini-CEX is Completed,
-  credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
+  member · Semester N, YYYY" under its heading. Under the header, above the committee cards (Registrars and Targets by
+  EPA), a warning line reads "1 activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics)
+  · PAED-004 · `D−3`, from Nomsa Mahlangu, waiting 8 days.", with Open it (T350). After the switch Home reads "You are
+  now acting as Assessor." in an info alert under the header, and "Assessor · Semester N, YYYY", with no such line; the
+  sidebar reads "Acting as Assessor" over Home and Activity inbox, and "Waiting for you", in the warning stripe, is
+  badged "1 waiting, 1 overdue": this Mini-CEX, "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu,
+  Requested with Overdue beside it, "Waiting 8 days": it has waited past the assessor's seven days since Step 3.30 aged
+  it. The inbox lists it with "8 days" over "since `D−8` … SAST"; the page's status card reads "Your move. Nomsa
+  Mahlangu asked you on `D−8` … SAST.", the same moment. Step 3.31's reminder has not moved it. Dr Zulu rates it on the
+  rung picker. After Complete the result reads "Completed. Nothing else waits for you.", with Go to Home, and Home then
+  reads "Nothing is waiting for you." The Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-004 is 3a.
+  Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
+  Home card.
 
-Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:1186)
+Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:1214)
 Role: Assessor — Dr Fatima Khumalo
 Route: / → /activities/inbox
 Do: Read the dashboard, then follow "Open Activity inbox". Then read the menu.
@@ -629,7 +631,7 @@ Expect:
     EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
     its history, the completion's Credit reads None.
 
-Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:580)
+Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:581)
 Role: Assessor — Dr Fatima Khumalo (the second browser)
 Route: /activities/inbox → /account/session-ended → /account/login → /activities/inbox
 Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
@@ -637,7 +639,7 @@ Expect: The tab leaves for the sign-in page by a full page load, which says "You
   (T279), an information notice. The old password is refused, and "Invalid email or password." takes the notice's
   place. The new one brings her back to her Activity inbox: the return address survives the refusal.
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:954)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:1023)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
@@ -646,7 +648,7 @@ Expect: He lands on his Assessor dashboard. "Waiting for you", in the warning st
   it, "Waiting 8 days", as his inbox lists it, "8 days" over "since `D−8` … SAST" (T297, T335, T350). Recent decisions
   lists the three he decided on `D`. Dr Dlamini's assessor list names him again (checked at A.7.1).
 
-Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1049)
+Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1118)
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: At 390 px, open Dr Dlamini's Mini-CEX from Activity inbox. Rate the supervision at `3b`, write the three

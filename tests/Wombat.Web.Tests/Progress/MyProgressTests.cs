@@ -636,6 +636,76 @@ public sealed class MyProgressTests : WombatTestContext
         (coverage.From, coverage.To, coverage.AsOf).Should().Be(((DateOnly?)null, (DateOnly?)new DateOnly(2026, 8, 20), (DateOnly?)null));
     }
 
+    // ─── The ended record, extracted (T358, flow 06; review 8; round-3-check 2) ─
+
+    /// <summary>
+    /// The registrar page draws My progress's ended view for staff, so the view moved into <c>EndedRecord</c>. My progress
+    /// must not change for the registrar: its whole page, for every kind of ended programme, is byte for byte the markup
+    /// it was before the move (<c>Progress/Golden</c>, captured from the page as built at 846740ff). Only what bUnit invents
+    /// per render, an element reference's id and an event handler's number, is set aside.
+    /// </summary>
+    [Theory]
+    [InlineData("graduate")]
+    [InlineData("withdrawn")]
+    [InlineData("unrecorded")]
+    [InlineData("no-items")]
+    [InlineData("msf-failed")]
+    public void TheEndedView_IsByteForByteWhatItWasBeforeTheRecordWasExtracted(string kind)
+    {
+        var cut = RenderWith(EndedSender(kind), waitFor: "Curriculum targets");
+
+        Normalised(cut.Markup).Should().Be(File.ReadAllText(GoldenFile(kind)).ReplaceLineEndings("\n"));
+    }
+
+    private static FakeSender EndedSender(string kind)
+    {
+        var standing = Standing(Epa(1, "PAED-001", "5", EntrustmentStandingStatus.AtOrAbove));
+        var withdrawnMsf = new MsfCoverageDto(
+            new DateOnly(2026, 8, 20),
+            [
+                new MsfCoveragePeriodDto(2026, 1, "Semester 1, 2026", "January to June", new(2026, 1, 1), new(2026, 6, 30), new(2026, 6, 30), HasEnded: true, EpasCovered: 1),
+                new MsfCoveragePeriodDto(2026, 2, "Semester 2, 2026", "July to November", new(2026, 7, 1), new(2026, 12, 31), new(2026, 11, 30), HasEnded: false, EpasCovered: 0)
+            ],
+            [
+                new MsfEpaCoverageDto(101, EpaId: 1, "PAED-001", "Providing paediatric emergency care to children", IsLocal: false,
+                [
+                    new MsfEpaPeriodCoverageDto(2026, 1, [new MsfCoveringCampaignDto(50, "Annual MSF", new(2026, 3, 10), new(2026, 3, 13))]),
+                    new MsfEpaPeriodCoverageDto(2026, 2, [])
+                ])
+            ]);
+
+        return kind switch
+        {
+            "graduate" => Sender(Graduate(), standing),
+            "withdrawn" => Sender(Withdrawn(), standing, withdrawnMsf),
+            "unrecorded" => Sender(Graduate() with { Ended = new ProgrammeEndDto(Completed: false, EndedOn: null, Today: new DateOnly(2026, 9, 23)) }),
+            "no-items" => Sender(Graduate() with { Items = [] }),
+            _ => new FakeSender()
+                .On<GetCurriculumProgressForTraineeQuery>(_ => Withdrawn())
+                .On<GetEntrustmentStandingForTraineeQuery>(_ => standing)
+                .On<GetMsfCoverageForTraineeQuery>(_ => throw new InvalidOperationException(Secret))
+        };
+    }
+
+    /// <summary>The markup with what bUnit numbers per render set aside: element references and event handler ids.</summary>
+    private static string Normalised(string markup)
+    {
+        var references = Regex.Replace(markup, "blazor:elementReference=\"[^\"]*\"", "blazor:elementReference=\"_\"", RegexOptions.IgnoreCase);
+        return Regex.Replace(references, "blazor:on(\\w+)=\"\\d+\"", "blazor:on$1=\"_\"", RegexOptions.IgnoreCase).ReplaceLineEndings("\n");
+    }
+
+    private static string GoldenFile(string kind)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && directory.GetFiles("Wombat.sln").Length == 0)
+        {
+            directory = directory.Parent;
+        }
+
+        var root = directory?.FullName ?? throw new InvalidOperationException("Could not find Wombat.sln.");
+        return Path.Combine(root, "tests", "Wombat.Web.Tests", "Progress", "Golden", $"my-progress-ended-{kind}.html");
+    }
+
     // ─── Fixtures ────────────────────────────────────────────────────────────
 
     /// <summary>Lerato Molefe on 2026-10-03, training year 4: PAED-001 met, PAED-012 two of three, PAED-008 none.</summary>

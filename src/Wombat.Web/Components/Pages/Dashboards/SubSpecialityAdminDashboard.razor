@@ -1,39 +1,28 @@
 @using System.Security.Claims
 @using MediatR
 @using Wombat.Application.Features.Dashboards.SubSpecialityAdmin
+@using Wombat.Web.Components.Shared.Programme
 @attribute [Authorize(Roles = "SubSpecialityAdmin")]
 @rendermode InteractiveServer
 @inherits RoleDashboard<SubSpecialityAdminDashboardSummaryDto>
 
+@*
+  The Sub-speciality admin's Home (T358, flow 06; Q1, Q3, Q5, Q10; R2-Home a5): three cards, each spanning three, read as
+  Sub-speciality admin in the sub-speciality's scope at the admin's institution (E4), one read behind the frame.
+  - "Waiting for assessors" (#card-waiting-assessors): the page's first five (AssessorsWaitingCard).
+  - "Registrars" (#card-registrars): Programme trainees' first five (RegistrarsCard).
+  - "Targets by EPA" (#card-epa-targets): each EPA's "n of m registrars met" (EpaTargetCoverageList). No foot.
+  "Pending reviews", "Trainees in programme" (with its "inactive") and "Curriculum coverage" are gone (Q3, Q10).
+*@
 <DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
-  @* The programme's backlog awaiting a reviewer, read from each activity's pinned workflow (T297). No link: the inbox
-     lists only what the caller can move, not this backlog, and no page lists the backlog yet. *@
-  <DashboardCard Title="Pending reviews" Icon="inbox" Emphasis="true" IsLoading="IsLoading">
-    @if (Summary is { } summary)
-    {
-      <div class="dashboard-metric">
-        <span class="dashboard-metric-value">@summary.PendingReviewCount</span>
-        <span class="dashboard-metric-label">@(summary.PendingReviewCount == 1 ? "activity awaiting review" : "activities awaiting review")</span>
-      </div>
-    }
-  </DashboardCard>
+  <AssessorsWaitingCard Waiting="@Summary?.Waiting" IsLoading="IsLoading" Span="3" />
 
-  <DashboardCard Title="Trainees in programme" Icon="users" IsLoading="IsLoading">
-    @if (Summary is { } summary)
-    {
-      <div class="dashboard-metric">
-        <span class="dashboard-metric-value">@summary.ActiveTraineeCount</span>
-        <span class="dashboard-metric-label">active / @summary.InactiveTraineeCount inactive</span>
-      </div>
-    }
-  </DashboardCard>
+  <RegistrarsCard Card="@Summary?.Registrars" IsLoading="IsLoading" />
 
-  @* Its title names the semester once the summary has come; until then, the card's own name (T335: a title the frame
-     draws before the read, which read the summary eagerly). *@
-  <DashboardCard Title="@CoverageTitle(Summary?.CurriculumCoverage.CurrentSemesterName)" Icon="book" Span="2" IsLoading="IsLoading">
+  <DashboardCard Title="@TargetsByEpaWords.Title" Icon="book" HeadingId="card-epa-targets" Span="3" IsLoading="IsLoading">
     @if (Summary is { } summary)
     {
-      <EpaTargetCoverageList Coverage="@summary.CurriculumCoverage" />
+      <EpaTargetCoverageList Coverage="@summary.Coverage" />
     }
   </DashboardCard>
 </DashboardFrame>
@@ -41,7 +30,4 @@
 @code {
   protected override IRequest<SubSpecialityAdminDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
     => new GetSubSpecialityAdminDashboardSummaryQuery(user);
-
-  private static string CoverageTitle(string? semester)
-    => semester is null ? "Curriculum coverage" : $"Curriculum coverage — {semester}";
 }

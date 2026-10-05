@@ -82,6 +82,13 @@ else
     [Parameter] public string? BadgeWords { get; set; }
 
     /// <summary>
+    /// The count badge's tone (T358, flow 06, D10): <c>badge-submitted</c> by default, a count of work waiting on someone
+    /// ("2 waiting, 1 overdue"); <see cref="BadgeState.Draft" /> for a count of people, which wait on nobody ("5
+    /// registrars", R2-Home's Registrars and Nothing filed).
+    /// </summary>
+    [Parameter] public BadgeState BadgeTone { get; set; } = BadgeState.Submitted;
+
+    /// <summary>
     /// The title's id (T350, flow 04): the card is then a <c>section</c> named by it (<c>aria-labelledby</c>), as the
     /// Assessor's cards are (<c>#card-waiting</c>, <c>#card-decisions</c>). Null: a plain card, as before.
     /// </summary>
@@ -112,18 +119,18 @@ else
       <span>@Title</span>
       @if (!string.IsNullOrEmpty(BadgeWords) && !IsLoading)
       {
-        <span class="badge @BadgeFor.State(BadgeState.Submitted)">@BadgeWords</span>
+        <span class="badge @BadgeFor.State(BadgeTone)">@BadgeWords</span>
       }
       else if (Count is { } count && !IsLoading)
       {
         @if (CountWords is { } words)
         {
           @* The figure to the eye, the words to a screen reader ("2 items", T342, A16). *@
-          <span class="badge @BadgeFor.State(BadgeState.Submitted)" aria-hidden="true">@count</span><span class="visually-hidden">, @words</span>
+          <span class="badge @BadgeFor.State(BadgeTone)" aria-hidden="true">@count</span><span class="visually-hidden">, @words</span>
         }
         else
         {
-          <span class="badge @BadgeFor.State(BadgeState.Submitted)">@count</span>
+          <span class="badge @BadgeFor.State(BadgeTone)">@count</span>
         }
       }
     </h2>;

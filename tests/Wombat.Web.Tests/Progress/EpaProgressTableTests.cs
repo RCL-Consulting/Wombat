@@ -236,6 +236,36 @@ public sealed class EpaProgressTableTests : TestContext
         Render(Molefe()).Markup.Should().NotContain("No longer in use");
     }
 
+    // ─── Names as text: the registrar page (T358, flow 06; review 7; R2-Registrar r1) ─
+
+    /// <summary>
+    /// On the registrar page a member of staff reads someone else's index: the EPA pages are the registrar's own, so no
+    /// name links anywhere, in force or paused; the row header is the name, with its paused mark and its local badge.
+    /// </summary>
+    [Fact]
+    public void WithNamesAsText_NoEpaIsALink_AndEachRowHeaderIsTheName()
+    {
+        var summary = Molefe() with { Paused = [new PausedItemDto(112, 12, "PAED-012", Title12, QuotaPeriod.Semester)] };
+
+        var cut = RenderComponent<EpaProgressTable>(parameters => parameters
+            .Add(table => table.Summary, summary)
+            .Add(table => table.TrainingYear, summary.TraineeStage)
+            .Add(table => table.EpaNamesAsText, true));
+
+        cut.FindAll("a").Should().BeEmpty();
+        Text(Row(cut, "PAED-001").QuerySelector("th")!).Should().Be("PAED-001 — Providing paediatric emergency care to children");
+        Text(Row(cut, "KGK-001").QuerySelector("th .badge")!).Should().NotBeEmpty("the institution's own EPA keeps its badge");
+        var paused = cut.FindAll("table").Last().QuerySelector("tbody tr th")!;
+        Text(paused).Should().Be($"PAED-012 — {Title12} (no longer in use)");
+        paused.QuerySelector(".paused-mark").Should().NotBeNull();
+    }
+
+    [Fact]
+    public void ByDefault_TheNamesStayLinks_AsMyProgressDrawsThem()
+    {
+        Render(Molefe()).FindAll("th a.epa-link").Should().HaveCount(5);
+    }
+
     // ─── Fixtures ────────────────────────────────────────────────────────────
 
     private const string Title12 = "Communicating with and counselling patients, caregivers and healthcare teams";

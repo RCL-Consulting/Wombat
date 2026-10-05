@@ -1,0 +1,410 @@
+@page "/programme/waiting"
+@attribute [Authorize(Roles = "SpecialityAdmin,SubSpecialityAdmin,Coordinator")]
+@rendermode InteractiveServer
+@using Wombat.Application.Features.Programme
+@using Wombat.Application.Features.Programme.Commands.SendActivityReminder
+@using Wombat.Application.Features.Programme.Waiting
+@using Wombat.Web.Components.Shared.Programme
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject ILogger<WaitingForAssessors> Logger
+
+<PageTitle>Waiting for assessors · Wombat</PageTitle>
+
+@*
+  Waiting for assessors (T358, flow 06, lane D; R2-Waiting w1-w15; Q3, Q4, C3, C4, C11; E3, E4, E6): the requests in the
+  programme of the role read as (ProgrammeReadAs.RoleFor, D2) whose next move names one assessor, supervisor or
+  reviewer, oldest first; the reader's own requests and work a role holds are never listed (the read's, E3, E4). The one
+  query Home's card sends, a page of 20 at a time.
+
+  - The filters (Waiting: All, Overdue only; With: Anyone, then each row's nominee) are applied with Show and carried in
+    the address, ?show=overdue&with=<id> (DESIGN.md § List page, the filters-applied-with-Show pattern; D3): no field acts
+    on change, the page reads its query and reads the list again whenever it changes, and the answer's heading takes the
+    focus. The form is a GET form whose fields carry the query's names, so before the circuit starts Show still works.
+  - The heading counts the answer in flow 04's words ("3 waiting, 2 overdue", "1 waiting, 1 overdue, with Mohammed
+    Patel"); no match is "0 of 3 waiting" and an empty-state card with what was asked and Clear filters; nothing waiting
+    at all is the empty state, with no form.
+  - The table is DataTable's Stack written out for its hidden caption, as the EPA page's is: Activity (the link, "from
+    <registrar>", two that read the same told apart by ActivityRowNames.Waiting), With, State (the badge and Overdue
+    beside it), Waiting ("8 days" over "since ... SAST", then ReminderAction for a role that may remind).
+  - A reminder's answer, sent or refused, is shown above the table in this page's ActionResult once the list has been
+    read again (the row's button giving way to "Reminded ... by ...", or a request moved meanwhile gone and the heading
+    recounted), and takes the focus there (C4; round 3 item 23).
+*@
+<PageHeader Title="Waiting for assessors" Subtitle="@Subtitle" />
+
+@* Present from the first render, so its words are announced when they come (flow 04's C11). *@
+<p class="visually-hidden" role="status">@(_loading ? WaitingWords.PageLoading : null)</p>
+
+@if (ShowsForm)
+{
+  <form class="search-container" method="get" aria-label="Filter Waiting for assessors" @onsubmit="ShowAsync" @onsubmit:preventDefault="true">
+    <div class="search-grid">
+      <div class="search-field">
+        <label for="f-show">@WaitingWords.ShowLabel</label>
+        <select id="f-show" name="@ProgrammeLinks.ShowKey" class="form-select" @bind="_showField">
+          <option value="@AllValue">@WaitingWords.ShowAll</option>
+          <option value="@ProgrammeLinks.ShowOverdueValue">@WaitingWords.ShowOverdue</option>
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="f-with">@WaitingWords.WithLabel</label>
+        <select id="f-with" name="@ProgrammeLinks.WithKey" class="form-select" @bind="_withField">
+          <option value="">@WaitingWords.WithAnyone</option>
+          @foreach (var nominee in _waiting?.Nominees ?? [])
+          {
+            <option value="@nominee.UserId">@nominee.Name</option>
+          }
+        </select>
+      </div>
+      <div class="search-field filter-actions">
+        <button type="submit" class="btn btn-primary">@ProgrammeWords.Show</button>
+        @if (IsFiltered)
+        {
+          <a class="btn btn-outline" href="@ProgrammeLinks.Waiting">@ProgrammeWords.ClearFilters</a>
+        }
+      </div>
+    </div>
+  </form>
+}
+
+@* The reminder's answer, above the list (C4). Always drawn, so it is there to take the focus once the answer comes. *@
+<ActionResult @ref="_region">
+  @if (_result is { } result)
+  {
+    var refused = ReminderWords.IsRefusal(result);
+    <div class="alert @(refused ? "alert-danger" : "alert-success")" role="@(refused ? "alert" : "status")"><strong>@ReminderWords.Lead(result)</strong> @ReminderWords.Detail(result)</div>
+  }
+  else if (_sendFailed)
+  {
+    <div class="alert alert-danger" role="alert">@ReminderWords.Failed</div>
+  }
+</ActionResult>
+
+<StatePanel @ref="_panel"
+            IsLoading="_loading"
+            LoadError="@_error"
+            OnRetry="LoadAsync"
+            FocusAfterRetry="FocusHeadingAsync">
+  <LoadingContent>
+    <section class="list-section" aria-busy="true">
+      <h2 class="list-section-title">@ListTitle</h2>
+      <div class="dashboard-card-skeleton" aria-hidden="true">
+        <Skeleton Count="3" Height="3rem" />
+      </div>
+    </section>
+  </LoadingContent>
+  <ChildContent>
+    <section class="list-section" aria-labelledby="@HeadingId">
+      <h2 id="@HeadingId" class="list-section-title" tabindex="-1" @ref="_heading">@Heading</h2>
+      @if (_waiting is null)
+      {
+        @* No programme to read as this role (no institution, or no claimed speciality): nothing to list, never a refusal. *@
+        <div class="detail-card detail-card--empty">
+          <p class="state-panel-title">@WaitingWords.NothingWaitingTitle</p>
+          <p class="state-panel-copy">@WaitingWords.NothingWaitingCard</p>
+        </div>
+      }
+      else if (_waiting.TotalCount == 0)
+      {
+        <div class="detail-card detail-card--empty">
+          <p class="state-panel-title">@WaitingWords.NothingWaitingTitle</p>
+          <p class="state-panel-copy">@WaitingWords.NothingWaitingBody(_waiting.Scope)</p>
+        </div>
+      }
+      else if (_waiting.MatchCount == 0)
+      {
+        @* No match is not empty (review 33): what was asked, and the way back. *@
+        <div class="detail-card detail-card--empty">
+          <p class="state-panel-title">@WaitingWords.NoMatch</p>
+          <p class="state-panel-copy">@WaitingWords.Asked(_waiting.Filter.OverdueOnly, WithName)</p>
+          <div class="form-actions">
+            <a class="btn btn-outline" href="@ProgrammeLinks.Waiting">@ProgrammeWords.ClearFilters</a>
+          </div>
+        </div>
+      }
+      else
+      {
+        var page = _waiting;
+        <p class="needs-you-rule">@WaitingWords.PageRuleLine(page.DueDays, page.NudgeDays)</p>
+        @* Stacked below 641px (A8). The link says what it is; With, State and Waiting are labelled by their column there
+           (data-label), a label a screen reader, which has the hidden header, skips. *@
+        <div class="table-container shadow">
+          <table class="clinic-table clinic-table--stack" role="table">
+            <caption class="visually-hidden">@WaitingWords.TableCaption(WithName)</caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Activity</th>
+                <th scope="col" role="columnheader">@WaitingWords.WithLabel</th>
+                <th scope="col" role="columnheader">State</th>
+                <th scope="col" role="columnheader">Waiting</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              @foreach (var item in page.Items)
+              {
+                <tr role="row" @key="item.Id">
+                  @* A 44px block below 641px, its two lines stacked (Step A.7.9; the EPA page's .activity-block-link). *@
+                  <td role="cell"><ActivityLink Item="item" FromSubject="true" Name="@NameOf(item)" Block="true" /></td>
+                  <td role="cell" data-label="@WaitingWords.WithLabel">@(item.Holder?.Name ?? item.NomineeName)</td>
+                  @* Nothing here is finished: each row has a move that leads on, and it is a named person's. Overdue beside
+                     the state's badge, never in its place (flow 04's note 14). *@
+                  <td role="cell" data-label="State"><span class="needs-you-badges"><span class="badge @BadgeFor.ActivityState(item.CurrentState, isFinished: false)">@item.CurrentStateLabel</span>@if (item.IsOverdue)
+                    {<span class="badge @BadgeFor.Overdue">Overdue</span>}</span></td>
+                  <td role="cell" class="waited-cell" data-label="Waiting">
+                    <b>@WaitingWords.WaitedCell(item)</b><span>@WaitingWords.Since(item)</span>
+                    @if (page.MayRemind && _role is not null)
+                    {
+                      <ReminderAction Item="item" ActingRole="@_role" LinkName="@NameOf(item)" OnResult="ShowResultAsync" OnFailed="ShowFailureAsync" />
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <PagerControls Page="page.Page" PageSize="page.PageSize" TotalCount="page.MatchCount" Label="Waiting, pages"
+                       OnPageChanged="TurnPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+      }
+    </section>
+  </ChildContent>
+</StatePanel>
+
+@code {
+  /// <summary>The list's heading while it loads and when nothing waits (R2-Waiting w12, w13).</summary>
+  public const string ListTitle = "Waiting";
+
+  /// <summary>The heading's id: the page's own target (build-contracts § the pages' fixed words and ids).</summary>
+  public const string HeadingId = "waiting-h";
+
+  /// <summary>The Waiting filter's value for All: anything but "overdue" asks for every row.</summary>
+  private const string AllValue = "all";
+
+  private WaitingForAssessorsDto? _waiting;
+  private IReadOnlyDictionary<int, string> _names = new Dictionary<int, string>();
+  private string? _role;
+  private bool _loading = true;
+  private string? _error;
+
+  // The filters the address asks for, as last read; null until the first read.
+  private (bool OverdueOnly, string? WithUserId)? _asked;
+  private int _page = 1;
+  private int _pageSize = 20;
+
+  // The form's fields: they change nothing until Show.
+  private string _showField = AllValue;
+  private string _withField = string.Empty;
+
+  private SendActivityReminderResult? _result;
+  private bool _sendFailed;
+
+  // Show was pressed: the answer's heading takes the focus once it is drawn. A page turn: the same, at once.
+  private bool _focusOnNextLoad;
+  private bool _focusHeading;
+
+  private ElementReference _heading;
+  private ActionResult? _region;
+  private StatePanel? _panel;
+
+  /// <summary>The acting role and every role held (T335), cascaded by <c>Routes</c>.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>The Waiting filter from the address: "overdue", or anything else for All (D3).</summary>
+  [SupplyParameterFromQuery(Name = ProgrammeLinks.ShowKey)] public string? Show { get; set; }
+
+  /// <summary>The With filter from the address: the nominee's user id (D3).</summary>
+  [SupplyParameterFromQuery(Name = ProgrammeLinks.WithKey)] public string? With { get; set; }
+
+  /// <summary>The list's heading, which Show, a page turn and a Try again focus. A test matches a focus call to it.</summary>
+  public ElementReference WaitingHeading => _heading;
+
+  /// <summary>The reminder's result region, which its answer focuses. A test matches a focus call to it.</summary>
+  public ElementReference ResultRegion => _region?.Element ?? default;
+
+  private string? Subtitle => _loading || _error is not null || _waiting is null ? null : WaitingWords.StaffSubtitle(_waiting.Scope);
+
+  /// <summary>An empty list draws no form (review 33); while it loads, or failed, the filters stand.</summary>
+  private bool ShowsForm => _loading || _error is not null || _waiting is { TotalCount: > 0 };
+
+  private bool IsFiltered => _asked is { } asked && (asked.OverdueOnly || asked.WithUserId is not null);
+
+  private string? WithName => _waiting is null ? null : WaitingWords.NomineeNameOf(_waiting, _waiting.Filter.WithUserId);
+
+  private string Heading => _waiting switch
+  {
+    null or { TotalCount: 0 } => ListTitle,
+    { MatchCount: 0 } => WaitingWords.NoMatchHeading(_waiting),
+    _ => WaitingWords.StaffCount(_waiting)
+  };
+
+  protected override void OnInitialized()
+    => _role = ProgrammeReadAs.RoleFor(Acting ?? ActingRole.None, ProgrammeScope.WaitingRoles);
+
+  /// <summary>
+  /// Reads the list whenever the address asks something different (D3): on arrival, after Show, after Clear filters and
+  /// after Back. The fields are set to what the address asks, and the read starts from the first page.
+  /// </summary>
+  protected override async Task OnParametersSetAsync()
+  {
+    var asked = (OverdueOnly: string.Equals(Show, ProgrammeLinks.ShowOverdueValue, StringComparison.Ordinal),
+                 WithUserId: string.IsNullOrEmpty(With) ? null : With);
+    if (_asked == asked)
+    {
+      return;
+    }
+
+    if (_asked is not null)
+    {
+      // A new question: the last reminder's answer was about the list as it was.
+      _result = null;
+      _sendFailed = false;
+    }
+
+    _asked = asked;
+    _showField = asked.OverdueOnly ? ProgrammeLinks.ShowOverdueValue : AllValue;
+    _withField = asked.WithUserId ?? string.Empty;
+    _page = 1;
+    await LoadAsync();
+  }
+
+  /// <summary>Reads the page shown, with the skeleton in its place; Try again reads it again.</summary>
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _error = null;
+    try
+    {
+      await ReadAsync();
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "Waiting for assessors could not be read.");
+      _error = WaitingWords.PageLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+
+    if (_focusOnNextLoad && _error is null)
+    {
+      _focusHeading = true;
+    }
+
+    _focusOnNextLoad = false;
+  }
+
+  private async Task ReadAsync()
+  {
+    if (_role is null)
+    {
+      // Holds none of the roles the page admits: its attribute refuses them before this is asked.
+      _waiting = null;
+      return;
+    }
+
+    var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+    var asked = _asked ?? (false, null);
+    _waiting = await Sender.Send(new ListWaitingForAssessorsQuery(user, _role, asked.OverdueOnly, asked.WithUserId, Page: _page, PageSize: _pageSize));
+    _page = _waiting?.Page ?? 1;
+    // One name per link on the page (flow 04's note 9; C11): two requests that read the same are told apart, and each
+    // row's button is named as its link is (round 3 item 29).
+    _names = ActivityRowNames.Waiting(_waiting?.Items ?? []);
+  }
+
+  /// <summary>
+  /// Show (D3): to the page's own address with the filters as its query, which reads the list again; the same question
+  /// asked again reads it here. Either way the answer's heading takes the focus.
+  /// </summary>
+  private async Task ShowAsync()
+  {
+    var target = ProgrammeLinks.WaitingFiltered(
+        string.Equals(_showField, ProgrammeLinks.ShowOverdueValue, StringComparison.Ordinal),
+        string.IsNullOrEmpty(_withField) ? null : _withField);
+    _focusOnNextLoad = true;
+    if (string.Equals(target, ProgrammeLinks.WaitingFiltered(_asked?.OverdueOnly ?? false, _asked?.WithUserId), StringComparison.Ordinal))
+    {
+      _page = 1;
+      await LoadAsync();
+      return;
+    }
+
+    Navigation.NavigateTo(target);
+  }
+
+  // Flow 04's C10 f: after a page turn the list's heading takes the focus and says what it holds; the pressed button keeps
+  // its place (PagerControls' ends are aria-disabled, never disabled).
+  private Task TurnPageAsync(int page) => ReadPageAsync(page, focusHeading: true);
+
+  // Flow 04's build review A1: a change of size leaves the focus on the select.
+  private Task ChangePageSizeAsync(int pageSize)
+  {
+    _pageSize = pageSize;
+    return ReadPageAsync(1, focusHeading: false);
+  }
+
+  private async Task ReadPageAsync(int page, bool focusHeading)
+  {
+    _page = page;
+    if (await RereadAsync())
+    {
+      _focusHeading = focusHeading;
+    }
+  }
+
+  /// <summary>
+  /// Reads the page shown again in place, without the skeleton: after a page turn, and after a reminder's answer. A
+  /// failure replaces the list with the load error, which takes the focus (flow 04's build review A3).
+  /// </summary>
+  private async Task<bool> RereadAsync()
+  {
+    try
+    {
+      await ReadAsync();
+      return true;
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "Waiting for assessors could not be read again.");
+      _error = WaitingWords.PageLoadFailed;
+      _panel?.FocusFailureAfterRender();
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// A reminder answered, sent or refused (C4): the list is read again, so a sent reminder's row shows its record in place
+  /// of the button and a request moved meanwhile is gone with the heading recounted; then the answer takes the focus.
+  /// </summary>
+  private async Task ShowResultAsync(SendActivityReminderResult result)
+  {
+    _result = result;
+    _sendFailed = false;
+    await RereadAsync();
+    _region?.FocusAfterRender();
+  }
+
+  /// <summary>The send failed (not a refusal): fixed words (T329), the list as it was.</summary>
+  private Task ShowFailureAsync()
+  {
+    _result = null;
+    _sendFailed = true;
+    _region?.FocusAfterRender();
+    return Task.CompletedTask;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusHeading && !_loading && _error is null)
+    {
+      _focusHeading = false;
+      await _heading.FocusAsync();
+    }
+  }
+
+  /// <summary>After a Try again that read: the list's heading (flow 04's C10 e).</summary>
+  private async ValueTask FocusHeadingAsync() => await _heading.FocusAsync();
+
+  private string? NameOf(ActivitySummaryDto item) => _names.TryGetValue(item.Id, out var name) ? name : null;
+}

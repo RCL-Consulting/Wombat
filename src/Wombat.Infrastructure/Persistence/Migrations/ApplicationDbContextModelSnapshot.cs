@@ -239,6 +239,43 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.ToTable("Activities", (string)null);
                 });
 
+            modelBuilder.Entity("Wombat.Domain.Activities.ActivityReminder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AssessorUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("SentByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime>("SentOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("SentOnDay")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId", "SentOn");
+
+                    b.HasIndex("ActivityId", "SentOnDay")
+                        .IsUnique();
+
+                    b.ToTable("ActivityReminders", (string)null);
+                });
+
             modelBuilder.Entity("Wombat.Domain.Activities.ActivityTransition", b =>
                 {
                     b.Property<int>("Id")
@@ -1840,6 +1877,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateOnly>("AdmittedOn")
+                        .HasColumnType("date");
+
                     b.Property<int?>("AdoptionId")
                         .HasColumnType("integer");
 
@@ -2893,6 +2933,15 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("ActivityType");
+                });
+
+            modelBuilder.Entity("Wombat.Domain.Activities.ActivityReminder", b =>
+                {
+                    b.HasOne("Wombat.Domain.Activities.Activity", null)
+                        .WithMany()
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Wombat.Domain.Activities.ActivityTransition", b =>

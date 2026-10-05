@@ -7,6 +7,8 @@
    switch is a full page load, which starts a new circuit, so neither changes while this one lives. *@
 <CascadingValue Value="Acting" IsFixed="true">
   <CascadingValue Value="_notice" IsFixed="true">
+  @* The page a routed page draws in its place, Page not found or Access denied, for the menu to light (T358, D1). *@
+  <CascadingValue Value="_drawn" IsFixed="true">
     <LeaveEndedSession />
     <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
         <Found Context="routeData">
@@ -35,10 +37,12 @@
         </Found>
     </Router>
   </CascadingValue>
+  </CascadingValue>
 </CascadingValue>
 
 @code {
   private ActingRoleSwitchNotice _notice = new(null);
+  private readonly PageDrawn _drawn = new();
   private bool _listening;
 
   /// <summary>The acting role, resolved by App from the sign-in cookie's claims.</summary>

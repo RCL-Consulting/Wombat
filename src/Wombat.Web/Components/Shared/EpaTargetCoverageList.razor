@@ -1,41 +1,61 @@
 @using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Web.Components.Shared.Programme
 
-@* Each EPA's target for the current period, as "n of m trainees met it" (T130). Shared by the committee,
-   speciality-admin and sub-speciality-admin dashboards so the three cannot drift, as their lifetime-percentage
-   predecessors did. A count, never a mean: "4 of 9" says five have not, "41%" does not. *@
+@*
+  Targets by EPA (T358, flow 06; Q5; R2-Home c1, c6, c8, c11; review 13, round 3 items 21, 31, 33): each EPA's target for
+  the current period as "n of m registrars met", on every staff Home that has the card (the Committee member's and both
+  speciality admins'), so they cannot drift, as their lifetime-percentage predecessors did. A count, never a mean: "2 of 5"
+  says three have not, "40%" does not.
 
+  - The rule line: fewest registrars met first and when the semester ends, after the one exemption wording ("1 registrar
+    exempt this period, not counted.") when any is.
+  - A row is a .coverage-row: the EPA's name, a link to Programme trainees filtered Short on it, with the figure in words
+    hidden after it; or text when every registrar holding it has met it, since nobody would be listed (item 33). Under the
+    name its cadence, and a local extra's owner. Then the figure in its own column over its caption, and the bar under the
+    words, aria-hidden because the words already say it (§ Dashboard layout grid, the progressbar rule's exception, item
+    31). An EPA every registrar is exempt from reads "All exempt" with no bar: a bar would read as a coverage failure.
+  - The EPAs come from the reader fewest registrars met first, then by code (CurriculumCoverageReader).
+
+  Until T358 the card was "Targets met by EPA" on the committee's Home and "Curriculum coverage — Semester 2, 2026" on the
+  admins', each EPA a .progress-row-head of "Code — Title (3 per semester)" beside "4 of 9 met" over a named progressbar,
+  and no row a link.
+*@
 @if (Coverage.Epas.Count == 0)
 {
-  <p class="muted">No curriculum targets for these trainees.</p>
+  <p class="card-empty">@TargetsByEpaWords.Empty</p>
 }
 else
 {
-  <p class="progress-row-meta">
-    @Coverage.CurrentSemesterName · @Coverage.CurrentSemesterMonths@(Coverage.ExemptTraineeCount > 0 ? $" · {Coverage.ExemptTraineeCount} trainee{(Coverage.ExemptTraineeCount == 1 ? string.Empty : "s")} exempt this period" : string.Empty)
-  </p>
-  @foreach (var epa in Coverage.Epas)
-  {
-    <div class="progress-row">
-      <div class="progress-row-head">
-        <span>@epa.EpaCode — @epa.EpaTitle <span class="muted">(@QuotaText.TargetPhrase(epa.QuotaPeriod, epa.Target))</span></span>
-        @if (epa.TraineesApplying == 0)
-        {
-          <span class="muted">all exempt</span>
-        }
-        else
-        {
-          <span class="muted">@epa.TraineesMet of @epa.TraineesApplying met</span>
-        }
-      </div>
-      @if (epa.TraineesApplying > 0)
-      {
-        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="@epa.TraineesApplying" aria-valuenow="@epa.TraineesMet"
-             aria-label="@($"{epa.EpaCode}: {epa.TraineesMet} of {epa.TraineesApplying} trainees met the target")">
-          <div class="progress-bar-fill @(epa.TraineesMet == epa.TraineesApplying ? "is-complete" : string.Empty)" style="width:@epa.PercentMet%"></div>
+  <p class="needs-you-rule">@TargetsByEpaWords.Rule(Coverage)</p>
+  <ul class="list-unstyled">
+    @foreach (var epa in Coverage.Epas)
+    {
+      var (value, label) = TargetsByEpaWords.Figure(epa, Coverage);
+      <li @key="epa.EpaId" class="coverage-row">
+        <div>
+          @if (TargetsByEpaWords.IsMetByAll(epa))
+          {
+            <span>@TargetsByEpaWords.Name(epa)</span>
+          }
+          else
+          {
+            <a class="progress-row-link" href="@ProgrammeLinks.ShortOn(epa.EpaId)">@TargetsByEpaWords.Name(epa)<span class="visually-hidden">@TargetsByEpaWords.LinkTail(epa, Coverage)</span></a>
+          }
+          <p class="progress-row-meta">@TargetsByEpaWords.Cadence(epa)</p>
         </div>
-      }
-    </div>
-  }
+        <div class="dashboard-metric">
+          <span class="count-figure">@value</span>
+          <span class="dashboard-metric-label">@label</span>
+          @if (epa.TraineesApplying > 0)
+          {
+            <div class="progress-bar" aria-hidden="true">
+              <div class="progress-bar-fill @(TargetsByEpaWords.IsMetByAll(epa) ? "is-complete" : string.Empty)" style="width:@epa.PercentMet%"></div>
+            </div>
+          }
+        </div>
+      </li>
+    }
+  </ul>
 }
 
 @code {

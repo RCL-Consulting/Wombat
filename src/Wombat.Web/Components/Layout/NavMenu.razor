@@ -9,8 +9,11 @@
     page load (data-enhance-nav="false"): enhanced navigation would patch a static page in place and start no circuit.
     No role, no head (D8).
   - A group's heading is not a link and not a heading element: the page's h1 is the first heading. It names its list.
-  - At most one item is lit (NavOwners): a list lights itself, a page under it lights its owner for the acting role.
+  - At most one item is lit (NavOwners): a list lights itself, a page under it lights its owner for the acting role. The
+    item is lit by the page drawn: a page that draws Page not found in its own place tells PageDrawn through its header,
+    and lights nothing (T358, build review D1).
 *@
+@implements IDisposable
 @inject IJSRuntime JS
 
 <nav class="nav-panel" aria-label="Main">
@@ -97,7 +100,47 @@
   /// <summary>The page shown, as Routes cascades it: which item is lit.</summary>
   [CascadingParameter] public RouteData? Route { get; set; }
 
-  protected override void OnParametersSet() => _lit = NavOwners.Lit(Route?.PageType, Acting?.Role, Menu);
+  /// <summary>The page drawn in the routed page's place, if one is (T358, build review D1).</summary>
+  [CascadingParameter] public PageDrawn? Drawn { get; set; }
+
+  private PageDrawn? _listening;
+
+  protected override void OnParametersSet()
+  {
+    if (!ReferenceEquals(_listening, Drawn))
+    {
+      if (_listening is not null)
+      {
+        _listening.Changed -= OnDrawnChanged;
+      }
+
+      _listening = Drawn;
+      if (_listening is not null)
+      {
+        _listening.Changed += OnDrawnChanged;
+      }
+    }
+
+    Light();
+  }
+
+  private void Light() => _lit = NavOwners.Lit(Drawn is null ? Route?.PageType : Drawn.On(Route), Acting?.Role, Menu);
+
+  // Told by the page's header, which renders after the menu: light again, and draw. Raised on the renderer's own thread,
+  // in the header's OnParametersSet, so the render is queued in the same batch.
+  private void OnDrawnChanged()
+  {
+    Light();
+    StateHasChanged();
+  }
+
+  public void Dispose()
+  {
+    if (_listening is not null)
+    {
+      _listening.Changed -= OnDrawnChanged;
+    }
+  }
 
   /// <summary>
   /// The lit item scrolled into the list's view (R2-Sidebar-Scroll): the circuit's first render replaces the prerendered

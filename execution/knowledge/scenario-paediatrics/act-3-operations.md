@@ -749,17 +749,25 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): Mini-CEX EPA picker the 
   inbox."
 Gap: none
 
-### Step 3.30 — Mr Smit's dashboard shows the stalled requests
+### Step 3.30 — Mr Smit's dashboard shows what waits for an assessor
 Role: Coordinator — Mr Pieter Smit
 Route: /
 Do: Once Dr Mahlangu's Mini-CEX and Dr du Plessis's portfolio review have waited more than seven days, open the
   dashboard.
-Expect: "Stalled requests" is marked as a warning and lists both, oldest first, each by type, trainee and the day it
-  last moved:
-  - Portfolio and Logbook Review (Paediatrics) — Pieter du Plessis
-  - Mini-CEX (Paediatrics) — Nomsa Mahlangu
-  Each row's type links to the activity's page, `/activities/{id}` (T297). "Invitations nearing expiry" reads "No
-  invitations expiring soon." The Quick action card offers "Start an MSF campaign".
+Expect: Home's "Waiting for assessors" is in the warning stripe, badged "3 waiting, 2 overdue", under the rule line
+  "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5." (T358, Q3). It lists every request
+  whose next move names one person, oldest first, each row its link ("Type · EPA · date", then "from <registrar>"), its
+  state's badge with Overdue beside it, "With <assessor>" on its own line, then the wait (E6):
+  - "Portfolio and Logbook Review (Paediatrics) · PAED-015 · `D−1`", from Pieter du Plessis: Awaiting review, Overdue,
+    "With Mohammed Patel", "Waiting 8 days";
+  - "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu: Requested, Overdue, "With Thandi Zulu", "Waiting 8
+    days";
+  - "Case-Based Discussion (Paediatrics) · PAED-002 · `D−5`", from Pieter du Plessis: Requested, "With Fatima Khumalo",
+    "Waiting less than a day" (filed in this sitting, Step 3.21, and not aged).
+  Each link opens the activity's page, `/activities/{id}` (T297), and no date on the card is written "26 Sept" (T325).
+  Its foot is Open Waiting for assessors. "Nothing filed in 30 days" reads "Every current registrar has filed something
+  in the last 30 days." and "Invitations nearing expiry" "No invitations expiring soon.". "Start an MSF campaign" is
+  Home's header action; there is no Quick action card.
 Note: To play this in one sitting, age both requests by eight days (the statement touches 2 rows):
   `UPDATE "Activities" a SET "UpdatedOn" = a."UpdatedOn" - interval '8 days' FROM "ActivityTypes" t, "AspNetUsers" u
   WHERE t."Id" = a."ActivityTypeId" AND u."Id" = a."SubjectUserId" AND ((t."Key" = 'mini_cex_cpsa' AND u."Email" =
@@ -774,12 +782,12 @@ Note: To play this in one sitting, age both requests by eight days (the statemen
   The ageing leaves each Submit dated before its encounter (the Mini-CEX submitted `D−8` for a `D−3` encounter, the
   review filed `D−8` for a period to `D−1`), and the review's Review request then reads "Filled in by Pieter du Plessis,
   `D−8`". Both follow from the ageing, not from the product.
-  The card lists what awaits a reviewer, read from each activity's pinned workflow (`ActivityWaiting`, T297), the
-  predicate the nudge of Step 3.32 reads too: the Mini-CEX waits in `requested`, the portfolio review in `submitted`.
-  The two wait different times: the nudge mails after five days, and the card lists a request only once it is untouched
-  for `DashboardThresholds:CoordinatorStallDays` (seven), so a request mailed about on its sixth day reaches the card
-  only after its seventh. The eight days' ageing puts both past both. If it lists the portfolio review alone, that is a
-  Gap.
+  The card is Waiting for assessors' first five, read from each activity's pinned workflow (`ActivityWaiting`, T297),
+  the predicate the nudge of Step 3.32 reads too, and held by one named person (a `field:` nominee, E3): the Mini-CEX
+  waits in `requested`, the portfolio review in `submitted`. A request is listed from its first moment and is Overdue
+  once it has waited `DashboardThresholds:AssessorDueDays` (seven); the nudge mails after
+  `DashboardThresholds:AssessorNudgeDays` (five). The eight days' ageing puts both past both. If either aged request is
+  not marked Overdue, that is a Gap.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Both of the Note's UPDATEs ran: "UPDATE 2" (activities 10 and
   21, UpdatedOn now 2026-09-26) and "UPDATE 4" (each one's Create and Submit history rows, now 2026-09-26). "Stalled
   requests" is a warning card (detail-card--warning) listing "Portfolio and Logbook Review (Paediatrics) — Pieter du
@@ -788,15 +796,31 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): Both of the Note's UPDAT
   (/msf/campaigns/new).
 Gap: none
 
-### Step 3.31 — Mr Smit looks for a page of stalled requests
+### Step 3.31 — Mr Smit sends Dr Zulu a reminder from Waiting for assessors
 Role: Coordinator — Mr Pieter Smit
-Route: / → /not-found
-Do: Look in the menu for a page of stalled requests. Then type the address the menu once linked,
-  `/placeholder/stalled-activities`.
-Expect: The menu offers none: Home, Decisions due, MSF campaigns, Committee reviews and Data rights requests, then My
-  data rights. The nav links to no unbuilt page (DESIGN.md § The NavMenu); stalled work is flow 06's. Only Home's
-  "Stalled requests" card lists it, and no page chases a stalled request: no reminder and no reassignment. The old
-  address is "Page not found" with status 404: the placeholder page went with the stubs (T335, flow 01).
+Route: / → /programme/waiting → /not-found
+Do: Open Waiting for assessors from the menu. On the Mini-CEX's row choose Send a reminder, read the dialog, then choose
+  Send the reminder. Then type the address the menu once linked, `/placeholder/stalled-activities`.
+Expect: The menu reads Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews,
+  Decision panels and Data rights requests, then My data rights, and Waiting for assessors is lit on its page (T358,
+  Q7). The page is headed "Waiting for assessors", its subtitle "Requests at Kgosi Kgari Teaching Hospital whose next
+  move names an assessor, supervisor or reviewer, read as Coordinator. Your own requests are not listed." (E4), over the
+  filters Waiting (All) and With (Anyone), and Show. The list's heading reads "3 waiting, 2 overdue", its rule line
+  "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5. Waiting counts from the last move:
+  any save restarts it.", and the table's columns are Activity, With, State and Waiting: Step 3.30's three rows in its
+  order, each Waiting cell "8 days" or "Less than a day" over "since … SAST", then Send a reminder.
+  On the Mini-CEX's row Send a reminder opens a dialog titled "Send Thandi Zulu a reminder?", which says "Thandi Zulu
+  gets one email, "Activities awaiting your assessment", listing this request: Mini-CEX (Paediatrics) from Nomsa
+  Mahlangu — waiting 8 days. It moves nothing: the request stays Requested, its wait is not restarted, and Nomsa
+  Mahlangu is not told." and opens on Don't send (C4). After Send the reminder, above the table and with the focus:
+  "Reminder sent to Thandi Zulu. It lists Mini-CEX (Paediatrics) · PAED-004 · `D−3`, from Nomsa Mahlangu, waiting 8
+  days. The request is still Requested; its wait is unchanged." The list is read again: the Mini-CEX's row reads
+  "Reminded `D` by Pieter Smit" where its button was, still Requested, Overdue and "8 days"; the other two keep their
+  buttons.
+  The log holds one stub mail (tags reminder, assessor-reminder) "Activities awaiting your assessment", "Hi Thandi",
+  listing "Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days". Nomsa Mahlangu is sent nothing. No page offers
+  Reassign (C5). The old address is "Page not found" with status 404: the placeholder page went with the stubs (T335,
+  flow 01).
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): The menu reads Home, Decisions due, MSF campaigns, Committee
   reviews and Data rights requests, then My data rights; nothing names stalled work. /placeholder/stalled-activities
   answers HTTP 404, "Page not found" (tab "Page not found · Wombat"), "There is no page at this address." with Go to
@@ -807,12 +831,14 @@ Gap: none
 Role: Administrator — devadmin@wombat.local
 Route: /admin/jobs
 Do: Run `assessor-pending-nudge` now.
-Expect: The job's last run updates. The application log holds two stub emails, "Activities awaiting your assessment".
-  The log names no address (T282); each greets its assessor by first name:
-  - "Hi Thandi", listing Mini-CEX (Paediatrics) from Nomsa Mahlangu, waiting 8 days;
-  - "Hi Mohammed", listing Portfolio and Logbook Review (Paediatrics) from Pieter du Plessis, waiting 8 days.
-  The run's summary line reads "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days,
-  so nobody else is nudged.
+Expect: The job's last run updates. The application log then holds three stub emails "Activities awaiting your
+  assessment", naming no address (T282), each greeting its assessor by first name: Step 3.31's reminder (tags reminder,
+  assessor-reminder), "Hi Thandi", and the nudge's two (tags nudge, assessor-pending):
+  - "Hi Thandi", listing Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days;
+  - "Hi Mohammed", listing Portfolio and Logbook Review (Paediatrics) from Pieter du Plessis — waiting 8 days.
+  The nudge still mails a request reminded today: a reminder moves nothing (T358, C4). The run's summary line reads
+  "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days, so nobody else is nudged: Dr
+  du Plessis's CBD has waited less than a day.
 Note: The job reads each activity's pinned workflow and nudges on anything untouched for five days in a state whose
   next move belongs to a `field:` nominee (`AssessorPendingNudgeJob`). D50 decides whom it skips.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Run now: "Job 'assessor-pending-nudge' dispatched."; last run
@@ -828,17 +854,19 @@ Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activitie
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
   open Dr Mahlangu's Mini-CEX (the Activity inbox lists it too), rate it 3a with feedback, and complete it.
 Expect: The sidebar first reads "Acting as Committee member", with "Switch to Assessor" under it, and Home "Committee
-  member · Semester N, YYYY" under its heading. Under the header, above the committee cards, a warning line reads "1
-  activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · `D−3`, from
-  Nomsa Mahlangu, waiting 8 days.", with Open it (T350). After the switch Home reads "You are now acting as Assessor."
-  in an info alert under the header, and "Assessor · Semester N, YYYY", with no such line; the sidebar reads "Acting
-  as Assessor" over Home and Activity inbox, and "Waiting for you", in the warning stripe, is badged "1 waiting, 1
-  overdue": this Mini-CEX, "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu, Requested with Overdue
-  beside it, "Waiting 8 days": it has waited past the assessor's seven days since Step 3.30 aged it. The inbox lists it
-  with "8 days" over "since `D−8` … SAST"; the page's status card reads "Your move. Nomsa Mahlangu asked you on `D−8` …
-  SAST.", the same moment. She rates it on the rung picker. After Complete the result reads "Completed. Nothing else
-  waits for you.", with Go to Home, and Home then reads "Nothing is waiting for you." The Mini-CEX is Completed,
-  credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
+  member · Semester N, YYYY" under its heading. Under the header, above the committee cards (Registrars and Targets by
+  EPA), a warning line reads "1 activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics)
+  · PAED-004 · `D−3`, from Nomsa Mahlangu, waiting 8 days.", with Open it (T350). After the switch Home reads "You are
+  now acting as Assessor." in an info alert under the header, and "Assessor · Semester N, YYYY", with no such line; the
+  sidebar reads "Acting as Assessor" over Home and Activity inbox, and "Waiting for you", in the warning stripe, is
+  badged "1 waiting, 1 overdue": this Mini-CEX, "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu,
+  Requested with Overdue beside it, "Waiting 8 days": it has waited past the assessor's seven days since Step 3.30 aged
+  it. The inbox lists it with "8 days" over "since `D−8` … SAST"; the page's status card reads "Your move. Nomsa
+  Mahlangu asked you on `D−8` … SAST.", the same moment. Step 3.31's reminder has not moved it. Dr Zulu rates it on the
+  rung picker. After Complete the result reads "Completed. Nothing else waits for you.", with Go to Home, and Home then
+  reads "Nothing is waiting for you." The Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-004 is 3a.
+  Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
+  Home card.
 Note: The card and the line count what her inbox lists, less her own portfolio (`ActivityWaiting`, T297), so neither
   can read 0 beside an inbox holding one; if one does, that is a Gap. The line's Open it is a second way in: it opens
   the activity with no switch, the trail Home › the activity with nothing lit in the menu (T350). The step keeps the
@@ -1217,18 +1245,20 @@ Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
 Expect:
-  - Home opens acting as Assessor, her choice from Step 3.33, kept with her account. After the switch an info alert
-    reads "You are now acting as Committee member.", the sidebar "Acting as Committee member", and Home's subtitle
+  - Home opens acting as Assessor, Dr Zulu's choice from Step 3.33, kept with the account. After the switch an info
+    alert reads "You are now acting as Committee member.", the sidebar "Acting as Committee member", and Home's subtitle
     "Committee member · Semester N, YYYY".
-  - Targets this period, "Semester 2, 2026 · July to November": KGK's five current trainees, fewest met first.
-    Pieter du Plessis, Nomsa Mahlangu and Sipho Ndlovu read "semester 0/10 · yearly 0/5". Anele Dlamini and Lerato
-    Molefe read "semester 1/10 · yearly 0/5".
-  - Targets met by EPA: PAED-001 (3 per semester) reads "2 of 5 met", and every other EPA "0 of 5 met".
-  - Neither card holds a link.
-  - Her menu is Home, Committee reviews and Decision panels, then My data rights. Programme trainees is flow 06's, and
-    the menu offers no page before it is built.
-Note: The card reads the trainees in the member's sub-speciality scopes (`GetCommitteeMemberDashboardSummaryQuery`).
-  Dr Zulu's invitation carried none; her Paediatrics sub-speciality came with her assessor profile (Step 2.14).
+  - "Registrars", badged "5 registrars", fewest met first, then by surname: Pieter du Plessis, Nomsa Mahlangu and Sipho
+    Ndlovu, each "0 of 10" over "EPAs met this semester" and "0 of 5" over "EPAs met in YYYY"; then Anele Dlamini and
+    Lerato Molefe, each "1 of 10" and "0 of 5" (T298 at each tie).
+  - "Targets by EPA", fewest registrars met first, then by code: PAED-002 to PAED-015, each "0 of 5", then PAED-001 ("3
+    per semester") last, "2 of 5" over "registrars met this semester".
+  - Each registrar's name is a link to the registrar's page, and each EPA's name a link to Programme trainees filtered
+    Short on it, its figure in words hidden after it. No card is one link around its rows (T280).
+  - The menu is Home, Programme trainees, Committee reviews and Decision panels, then My data rights.
+Note: The cards read the current registrars at Dr Zulu's institution, as Committee member (`ProgrammeScope`, E4; T290),
+  not the member's sub-speciality scopes: Dr Zulu's invitation carried none, and Dr Zulu's Paediatrics sub-speciality
+  came with the assessor profile (Step 2.14).
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Played in Step 3.43's wait. Home opened "Assessor · Semester 2,
   2026" (3.33's choice kept). After the switch: "You are now acting as Committee member.", sidebar "Acting as Committee
   member", subtitle "Committee member · Semester 2, 2026". Targets this period "Semester 2, 2026 · July to November":
@@ -1242,17 +1272,18 @@ Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the dashboard and the menu.
 Expect:
-  - Pending reviews: "2 activities awaiting review", Dr du Plessis's Requested CBD and his portfolio review awaiting
-    review. The card has no link (T297).
-  - Trainees in programme: "5 active / 0 inactive".
-  - Curriculum coverage — Semester 2, 2026: the 15 EPAs with their targets. PAED-001 reads "2 of 5 met", and the rest
-    "0 of 5 met", the same figures as Dr Zulu's.
-  - Her menu is Home, Decisions due, Committee reviews and Decision panels, then My data rights. The STAR review queue
-    is flow 09's and Programme trainees flow 06's; the menu offers neither before it is built.
-Note: The count is the programme's backlog awaiting a reviewer at KGK, read from each activity's pinned workflow
-  (`ActivityWaiting`, T297): a request waits in `requested`, a portfolio review in `submitted`. It used to link to
-  `/activities/inbox`, which lists only what she can move, and read "Inbox clear" beside the count; no page lists the
-  backlog yet, so the card links nowhere.
+  - "Waiting for assessors", in the warning stripe, badged "2 waiting, 1 overdue": Dr du Plessis's portfolio review
+    (Awaiting review, Overdue, "With Mohammed Patel", "Waiting 8 days"), then the CBD (Requested, "With Fatima Khumalo",
+    "Waiting less than a day"), each a link to its activity, with Open Waiting for assessors (T358, Q3).
+  - "Registrars" and "Targets by EPA" read as Step 3.52's, for Paediatrics: the same five, badged "5 registrars", and
+    PAED-001 "2 of 5" last.
+  - No Pending reviews, no Trainees in programme and no "inactive" (Q10).
+  - The menu is Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels and
+    Entrustment decisions, then My data rights. The STAR review queue is not restored: Entrustment decisions takes its
+    place.
+Note: The card is Waiting for assessors' first five, the page's own read (T358, E4): each activity's pinned workflow
+  (`ActivityWaiting`, T297) says it awaits a reviewer, and a `field:` nominee holds it (E3): a request waits in
+  `requested`, a portfolio review in `submitted`. Until T358 it was Pending reviews, a count that linked nowhere.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Played in Step 3.43's wait. "Speciality admin · Semester 2,
   2026". Pending reviews "2 activities awaiting review" (the Requested CBD and the portfolio review), no link; "5
   active / 0 inactive"; Curriculum coverage — Semester 2, 2026: 15 EPAs with their targets, PAED-001 "2 of 5 met", the
@@ -1264,12 +1295,72 @@ Gap: none
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /
 Do: Read the dashboard.
-Expect: The same three cards and figures as Dr Mokoena's: "2 activities awaiting review" with no link, "5 active / 0
-  inactive", and PAED-001 "2 of 5 met". His menu reads as hers, under "Acting as Sub-speciality admin".
+Expect: The same three cards and figures as Dr Mokoena's, read for Paediatrics: "2 waiting, 1 overdue", Registrars
+  badged "5 registrars", and PAED-001 "2 of 5" last on Targets by EPA. Dr Sithole's menu reads as Dr Mokoena's, under
+  "Acting as Sub-speciality admin".
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Played in Step 3.43's wait. "Acting as Sub-speciality admin":
   "2 activities awaiting review" with no link, "5 active / 0 inactive", PAED-001 "2 of 5 met" and the others "0 of 5
   met"; the menu reads as Dr Mokoena's.
 Gap: none
+
+### Step 3.54a — Dr Zulu reads who is short on PAED-002
+Role: CommitteeMember — Dr Thandi Zulu
+Route: / → /programme/trainees
+Do: On Home, choose PAED-002 on Targets by EPA. Then choose Clear filters.
+Expect: Programme trainees opens with Short on set to PAED-002 and Programme trainees lit (T358, Q1). Its subtitle reads
+  "Current registrars at Kgosi Kgari Teaching Hospital, read as Committee member · Semester N, YYYY". The list's
+  heading, with the focus, reads "5 of 5 current registrars are short on PAED-002", its rule line "PAED-002 — <its
+  title>, 3 per semester. Furthest from its target first, then fewest EPAs met, then by surname.", and its columns are
+  Registrar, Training year, PAED-002, This semester, In YYYY and Last filed. Pieter du Plessis, Anele Dlamini and Lerato
+  Molefe read "0 of 3 this semester" over "3 more by <the semester's last day, ISO>", then Nomsa Mahlangu and Sipho
+  Ndlovu "1 of 3 this semester" over "2 more by …". Each registrar's name is a link to the registrar's page.
+  Clear filters shows the whole list, headed "5 current registrars", under "Fewest met first, then by surname. Semester
+  N, YYYY ends on <its last day>.", its columns Registrar, Training year, This semester, In YYYY, Furthest short and
+  Last filed. Furthest short reads "PAED-002, PAED-003, PAED-005" for Anele Dlamini and "PAED-001, PAED-003, PAED-005"
+  for Nomsa Mahlangu, each over "0 of 3 each this semester" (D11). Nothing on the page reads "n / m", a percentage or
+  the bare word "year" (Q10).
+Note: The EPA's link carries the filter in the address (`?short=<EpaId>`, D3), so Back and a shared link show the same
+  list. Played after Step 3.54, on its figures.
+Actual:
+Gap:
+
+### Step 3.54b — Dr Zulu opens Dr Mahlangu's page
+Role: CommitteeMember — Dr Thandi Zulu
+Route: /programme/trainees → /programme/trainees/{ProfileId:int}
+Do: On Programme trainees, choose Nomsa Mahlangu, and read the page to its foot.
+Expect: The registrar page's h1 reads "Nomsa Mahlangu", its tab "Nomsa Mahlangu · Wombat", its subtitle "Training year 1
+  · Semester N, YYYY · Kgosi Kgari Teaching Hospital, Paediatrics"; the trail reads Home › Programme trainees › Nomsa
+  Mahlangu, and Programme trainees is lit (T358, C2, C9). Its sections, in order, each headed:
+  - This period: "0 of 10" over "EPAs met this semester" and "0 of 5" over "EPAs met in YYYY", then "Semester N, YYYY
+    ends on <its last day>. Training year 1 sets the minimum level each encounter is judged against.";
+  - EPAs: the index, in code order, each EPA's name as text, not a link (review 7), among them PAED-001 "0 of 3 this
+    semester", and PAED-002 and PAED-004 "1 of 3 this semester";
+  - Entrustment against Annexure A: the standing panel, PAED-004's latest rating "3a · Encounter `D−3`" and PAED-002's
+    "3a · Encounter `D−8`"; each EPA charted on this page names a link to its chart below;
+  - Rating trajectories: a chart for each EPA rated in the YYYY academic year (PAED-002's DOPS and PAED-004's Mini-CEX,
+    both 3a), each headed by its own h3, with no Today rule (D8);
+  - Waiting for assessors: "Nothing of Nomsa Mahlangu's waits for an assessor.";
+  - Committee reviews: "No review is scheduled for Nomsa Mahlangu."
+  Dr Zulu, a Committee member, is offered no Send a reminder. No word on the page names Nomsa Mahlangu by a pronoun
+  (round-3-check 1).
+Actual:
+Gap:
+
+### Step 3.54c — Dr Mokoena filters Waiting for assessors
+Role: SpecialityAdmin — Dr Refilwe Mokoena
+Route: / → /programme/waiting
+Do: Open Waiting for assessors from the menu. Choose With: Mohammed Patel and, before Show, look at the list; then Show.
+  Then choose Waiting: Overdue only and With: Fatima Khumalo, and Show. Last, choose Clear filters.
+Expect: The subtitle reads "Requests in Paediatrics whose next move names an assessor, supervisor or reviewer, read as
+  Speciality admin. Your own requests are not listed." (E4), and the heading "2 waiting, 1 overdue": Step 3.53's two
+  rows, each with Send a reminder. The With filter offers Anyone, Fatima Khumalo and Mohammed Patel, each waiting row's
+  assessor by surname. Nothing on the page changes until Show (round 3 item 31). After Show the address carries the
+  filter (`?with=<id>`, D3), Clear filters is offered, and the heading takes the focus: "1 waiting, 1 overdue, with
+  Mohammed Patel", over the portfolio review alone. After the second Show the heading reads "0 of 2 waiting", and under
+  it "No request matches these filters.", "Overdue only, with Fatima Khumalo." and Clear filters (review 33). Clear
+  filters returns the whole list, "2 waiting, 1 overdue". No reminder is sent.
+Actual:
+Gap:
 
 ## Phase 3.I — The audit trail
 
@@ -1351,7 +1442,9 @@ Replay check (2026-10-04, T355 replay, wombat_scenario_t355): match on all five 
   - Dr Molefe's campaign Released, with 6 responses from 7 invitations whose addresses were removed at the close;
   - Dr du Plessis's draft Withdrawn.
 - **The audit trail:** four failed commands in this act.
-- **Mail:** the MSF invitations (seven, plus one resent) and two nudge digests. Nothing about any activity's moves.
+- **Mail:** the MSF invitations (seven, plus one resent), Mr Smit's one reminder to Dr Zulu (Step 3.31) and two nudge
+  digests. Nothing about any activity's moves.
+- **Reminders:** one row in `ActivityReminders`, the Mini-CEX's, sent by Mr Smit to Dr Zulu on `D` (T358).
 
 ```sql
 -- 1. Activities by instrument and state: 23 in 12 groups
@@ -1384,6 +1477,7 @@ SELECT "State", count(*) FROM "MsfCampaigns" GROUP BY 1 ORDER BY 1;   -- 4 (Rele
 SELECT count(*) FROM "MsfResponses";                                   -- 6
 SELECT count(*), count("RespondentEmail") FROM "MsfInvitations";       -- 7, 0
 SELECT count(*) FROM "MsfTemplates";                                   -- 1
+SELECT count(*) FROM "ActivityReminders";                              -- 1 (Step 3.31)
 
 -- 5. The act's refused commands
 SELECT "Action", count(*) FROM "AuditEntries"

@@ -84,8 +84,9 @@ public sealed partial class NavMenuAuthorizationTests : TestContext
     [MemberData(nameof(EveryRole))]
     public void AMenuOfMoreThanEightLinks_IsGrouped_AndOneOfEightOrFewer_IsFlat(string role)
     {
-        var menu = NavItems.For(ActingAs(role, role), Holder([role]));
-        var count = menu.Items.Count();
+        // T358, E2: Home and the role's links are counted; the personal links, under their own rule, are not.
+        var menu = NavItems.For(ActingAs(role, role), Holder([role], TraineeRecord()));
+        var count = menu.Groups.Sum(group => group.Items.Count);
 
         if (count > NavItems.FlatLimit)
         {
@@ -98,6 +99,28 @@ public sealed partial class NavMenuAuthorizationTests : TestContext
             menu.Groups.Should().ContainSingle().Which.Heading.Should().BeNull($"{count} links are one flat list");
         }
     }
+
+    // T358, flow 06 (E2; R2-Menus m4): the Coordinator's eight links with Home stay flat, the personal links under their
+    // own rule and not counted, though nine and ten with them.
+    [Fact]
+    public void TheCoordinatorsEightLinks_AreFlat_ThePersonalLinksNotCounted()
+    {
+        var menu = NavItems.For(ActingAs(WombatRoles.Coordinator, WombatRoles.Coordinator), Holder([WombatRoles.Coordinator], TraineeRecord()));
+
+        menu.Groups.Should().ContainSingle().Which.Items.Select(item => item.Label).Should().Equal(
+            "Home", "Programme trainees", "Waiting for assessors", "Decisions due", "MSF campaigns", "Committee reviews",
+            "Decision panels", "Data rights requests");
+        menu.Personal.Select(item => item.Label).Should().Equal("My progress", "My data rights");
+        menu.Groups.Single().Items.Should().HaveCount(NavItems.FlatLimit);
+    }
+
+    // T358, flow 06 (Q7, C10; R2-Menus m1–m3): the menus of the four roles that watch the programme.
+    [Theory]
+    [InlineData(WombatRoles.CommitteeMember, new[] { "Home", "Programme trainees", "Committee reviews", "Decision panels" })]
+    [InlineData(WombatRoles.SpecialityAdmin, new[] { "Home", "Programme trainees", "Waiting for assessors", "Decisions due", "Committee reviews", "Decision panels", "Entrustment decisions" })]
+    [InlineData(WombatRoles.SubSpecialityAdmin, new[] { "Home", "Programme trainees", "Waiting for assessors", "Decisions due", "Committee reviews", "Decision panels", "Entrustment decisions" })]
+    public void TheProgrammeRoles_AreOfferedTheProgrammesPages(string role, string[] labels)
+        => NavItems.For(ActingAs(role, role), Holder([role])).Groups.Single().Items.Select(item => item.Label).Should().Equal(labels);
 
     [Fact]
     public void OnlyTheAdministrators_AndTheInstitutionalAdmins_AreGrouped()

@@ -55,6 +55,21 @@ public sealed class DataRightsDigestOptOutTests : TestContext
             .And.Contain("Email about one particular thing is still sent");
     }
 
+    /// <summary>
+    /// T358, review 11: the nudge's days are one setting, <c>DashboardThresholds.AssessorNudgeDays</c>, which this help reads
+    /// where it wrote 5 by hand; the words are otherwise unchanged (E1).
+    /// </summary>
+    [Fact]
+    public void TheNudgesDays_AreReadFromTheSetting()
+    {
+        Services.Configure<Wombat.Application.Common.Options.DashboardThresholds>(thresholds => thresholds.AssessorNudgeDays = 3);
+
+        var cut = RenderComponent<DataRights>();
+
+        Text(cut.Find("#data-rights-digest-emails-help"))
+            .Should().Contain("the reminder of activities that have waited more than 3 days for you to assess");
+    }
+
     [Fact]
     public void BothPreferences_AreLabelledCheckboxes_AndEveryReferenceResolves()
     {

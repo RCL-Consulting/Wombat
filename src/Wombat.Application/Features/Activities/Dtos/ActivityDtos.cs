@@ -1,4 +1,6 @@
 using Wombat.Application.Features.Curricula.Quota;
+using Wombat.Application.Features.Programme.Commands.SendActivityReminder;
+using Wombat.Application.Features.Programme.Waiting;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Workflow;
 
@@ -557,6 +559,27 @@ public sealed record ActivitySummaryDto(
     /// elsewhere.
     /// </summary>
     public bool CanCredit { get; init; }
+
+    /// <summary>
+    /// The newest reminder a member of staff sent about it (T358, flow 06; C4): "Reminded 2026-10-04 by Pieter Smit" in
+    /// the Waiting cell. Set by <c>WaitingForAssessorsReader</c> only; null elsewhere, and when none was sent.
+    /// </summary>
+    public ActivityReminderDto? LastReminder { get; init; }
+
+    /// <summary>
+    /// Whether a reminder about it was sent today on the South African calendar, by anyone (T358, round 3's settled
+    /// same-day rule): then no one may send another, and the cell shows the record and no button. Set by
+    /// <c>WaitingForAssessorsReader</c> only.
+    /// </summary>
+    public bool RemindedToday { get; init; }
+
+    /// <summary>
+    /// Why its nominee cannot be reminded, as the list was read (<c>ReminderRecipientRules.RefusalFor</c>, T358, E3's
+    /// w9): <see cref="ReminderOutcome.Deactivated" />, <see cref="ReminderOutcome.NoEmail" /> or
+    /// <see cref="ReminderOutcome.NoAccount" />, so the row says so before anyone presses; null when a reminder may be
+    /// sent. Never an opt-out of digest emails (E1). Set by <c>WaitingForAssessorsReader</c> only.
+    /// </summary>
+    public ReminderOutcome? CannotRemind { get; init; }
 }
 
 /// <summary>

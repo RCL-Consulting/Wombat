@@ -1,6 +1,7 @@
 using AngleSharp.Dom;
 using Bunit;
 using FluentAssertions;
+using Microsoft.AspNetCore.Components;
 using Wombat.Web.Components.Shared.Activities;
 using Wombat.Web.Tests.TestSupport;
 
@@ -110,6 +111,59 @@ public sealed class WaitingListTests : TestContext
             .Add(list => list.Names, new Dictionary<int, string> { [1] = "Named by the page" }));
 
         cut.Find("a.activity-link").GetAttribute("aria-label").Should().Be("Named by the page");
+    }
+
+    // ---- T358 (flow 06; E6): the staff reading and the row's action ------------------------------------------------
+
+    /// <summary>E6: "With Mohammed Patel" on a line of its own, above flow 04's "Waiting 8 days", which is unchanged.</summary>
+    [Fact]
+    public void TheStaffReading_SaysWhomEachRowWaitsWith_AboveItsWait()
+    {
+        var row = ActivityRows.Waiting(10, subjectName: "Pieter du Plessis", waitedDays: 8, overdue: true) with
+        {
+            Holder = new Wombat.Application.Features.Activities.Dtos.ActivityHolderDto(
+                Wombat.Application.Features.Activities.Dtos.ActivityHolderKind.Person, "patel", "Mohammed Patel", false, null)
+        };
+
+        var cut = RenderComponent<WaitingList>(parameters => parameters
+            .Add(list => list.Items, [row])
+            .Add(list => list.WithNominee, true));
+
+        cut.FindAll(".needs-you-why").Select(line => line.TextContent).Should().Equal("With Mohammed Patel", "Waiting 8 days");
+        cut.Find("li").ClassList.Should().Contain(["needs-you-row", "needs-you-row--overdue"]);
+    }
+
+    /// <summary>The registrar page's Send a reminder: drawn after the why-lines, inside the row.</summary>
+    [Fact]
+    public void ARowAction_IsDrawnAfterTheWhyLines_InsideTheRow()
+    {
+        var cut = RenderComponent<WaitingList>(parameters => parameters
+            .Add(list => list.Items, [ActivityRows.Waiting(1), ActivityRows.Waiting(2, subjectName: "Nomsa Mahlangu")])
+            .Add(list => list.RowAction, item => builder =>
+            {
+                builder.OpenElement(0, "button");
+                builder.AddAttribute(1, "class", "row-action");
+                builder.AddContent(2, $"Act on {item.Id}");
+                builder.CloseElement();
+            }));
+
+        var rows = cut.FindAll("li").ToList();
+        rows.Select(row => row.QuerySelector("button.row-action")!.TextContent).Should().Equal("Act on 1", "Act on 2");
+        rows[0].Children.Last().TagName.Should().Be("BUTTON", "after the why-lines");
+    }
+
+    /// <summary>The fence: without the staff reading or an action, every row is flow 04's.</summary>
+    [Fact]
+    public void WithNeither_TheRowsAreFlow04s()
+    {
+        var plain = Render(ActivityRows.Waiting(1, waitedDays: 8, overdue: true));
+        var off = RenderComponent<WaitingList>(parameters => parameters
+            .Add(list => list.Items, [ActivityRows.Waiting(1, waitedDays: 8, overdue: true)])
+            .Add(list => list.WithNominee, false)
+            .Add(list => list.RowAction, (RenderFragment<Wombat.Application.Features.Activities.Dtos.ActivitySummaryDto>?)null));
+
+        off.MarkupMatches(plain.Markup);
+        plain.FindAll(".needs-you-why").Select(line => line.TextContent).Should().Equal("Waiting 8 days");
     }
 
     private IRenderedComponent<WaitingList> Render(params Wombat.Application.Features.Activities.Dtos.ActivitySummaryDto[] rows)

@@ -359,7 +359,8 @@ Do: Run weekly-coordinator-digest now, then read the log.
 Expect: A stub mail "Your weekly Wombat digest" begins "Hi Pieter,". It covers KGK only (T117). With nothing to list
   it says "No items requiring attention this week." Otherwise it lists:
   - under "Trainees at risk", any current KGK trainee who has filed nothing in the last 30 days by the real clock
-    (T284): never Dr Molefe or Dr du Plessis, whose programmes have ended, or Dr Ndlovu, who has been erased;
+    (T284): a draft is not a filing, and a registrar admitted less than 30 days ago is not listed (T358, E5); never
+    Dr Molefe or Dr du Plessis, whose programmes have ended, or Dr Ndlovu, who has been erased;
   - any MSF campaign of his waiting on its review;
   - any committee review scheduled in the coming week.
 Note: A second log line accounts for the earlier run's mail. On dev, where no mail worker reports, it counts that mail
@@ -800,14 +801,21 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): "Acting as Assessor"; th
   then My data rights. No Recent activities, and no link to an unbuilt page.
 Gap: none
 
-### Step A.5.10 — Mr Smit's stalled requests
+### Step A.5.10 — Mr Smit reads what waits for an assessor
 Role: Coordinator — Mr Pieter Smit
-Route: /
-Do: Read the dashboard's "Stalled requests" card, then look for a stalled-work page in the menu.
-Expect: The card lists Dr du Plessis's portfolio review, still awaiting review since Step 3.30 aged it, and its row
-  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. The menu
-  offers no stalled-work page: it is flow 06's, and the nav links to no page that is not built.
-Note: Dr Mahlangu's request from A.2.7 has waited 6 days, under the card's 7, so it is not listed.
+Route: / → /programme/waiting
+Do: Read the dashboard's "Waiting for assessors" card, then open Waiting for assessors from its foot.
+Expect: The card, in the warning stripe, is badged "3 waiting, 1 overdue", and lists, oldest first, each row a link to
+  its activity's page (T297):
+  - Dr du Plessis's portfolio review, Awaiting review, Overdue, "With Mohammed Patel", "Waiting 8 days": Dr du Plessis
+    withdrew at Step 5.27, and the request still waits (round-3-check, r6);
+  - Dr Mahlangu's Mini-CEX of Step A.2.7, encounter `D−2`, Requested, not overdue, "With Fatima Khumalo", "Waiting 6
+    days" (aged at Step A.2.8);
+  - Dr du Plessis's CBD of Step 3.21, Requested, "With Fatima Khumalo".
+  Waiting for assessors lists the same three in that order under "3 waiting, 1 overdue", each with Send a reminder (none
+  is sent here). Nothing offers Reassign (C5).
+Note: Dr Mahlangu's request from A.2.7 has waited 6 days, under the 7 that make a request overdue, so it is listed
+  without Overdue.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): No stand-in was needed: Act 3 had aged Dr du Plessis's
   portfolio review (activity 10). The "Stalled requests" card lists "Portfolio and Logbook Review (Paediatrics) —
   Pieter du Plessis 26 Sept", its type a link to /activities/10. Mahlangu's Mini-CEX 27 (6 days) is not listed. The
@@ -815,22 +823,24 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): No stand-in was needed: 
   stalled-work page.
 Gap: none (the card's "26 Sept" is the coordinator's text, which T355's D1 keeps long)
 
-### Step A.5.11 — Dr Botha's menu offers no Programme trainees
+### Step A.5.11 — Dr Botha's menu offers Programme trainees
 Role: CommitteeMember — Dr Sarah Botha
 Route: /
 Do: Read the menu.
-Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Committee reviews and Decision
-  panels, then My data rights. Programme trainees is flow 06's, and not offered before it is built.
+Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Programme trainees, Committee
+  reviews and Decision panels, then My data rights. There is no Waiting for assessors: chasing work is not a Committee
+  member's (T358, Q7).
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): "Acting as Committee member", with "Switch to Assessor" under
   it, over Home, Committee reviews and Decision panels, then My data rights. No Programme trainees.
 Gap: none
 
-### Step A.5.12 — Dr Mokoena's menu offers no Programme trainees or STAR review queue
+### Step A.5.12 — Dr Mokoena's menu offers no STAR review queue
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the menu.
-Expect: Home, Decisions due, Committee reviews and Decision panels, then My data rights. Programme trainees is flow
-  06's and the STAR review queue flow 09's; the menu offers neither before it is built.
+Expect: Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels and
+  Entrustment decisions, then My data rights (T358, R2-Menus). The STAR review queue is not restored: Entrustment
+  decisions, the programme's register of STARs, takes its place (DESIGN.md § The NavMenu).
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): "Acting as Speciality admin", no switch, over Home, Decisions
   due, Committee reviews and Decision panels, then My data rights. Neither Programme trainees nor STAR review queue.
 Gap: none
@@ -845,6 +855,65 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): "Acting as Administrator
   Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee
   reviews, Decision panels; then My data rights. No System item.
 Gap: none
+
+### Step A.5.14 — Registrar pages Dr Zulu may not read, by address
+Role: CommitteeMember — Dr Thandi Zulu
+Route: /programme/trainees/{ProfileId:int} → /programme/trainees/{ProfileId:int}
+Do: Type the registrar page's address with the trainee profile id of the dev trainee `trainee@wombat.local`, at the Demo
+  Institution; then with Dr Ndlovu's, whose account was erased in § A.1.
+Expect: Each is flow 01's Page not found, word for word: the h1 "Page not found", the tab "Page not found · Wombat",
+  "There is no page at this address.", "Check the address, or start again from Home." and Go to Home, with no trail and
+  nothing in the menu lit. Neither page confirms that the profile exists (T358, C2; CLAUDE.md: 404, not 403), and
+  nothing of either registrar is read.
+Note: The ids: `SELECT p."Id" FROM "TraineeProfiles" p JOIN "AspNetUsers" u ON u."Id" = p."UserId" WHERE u."Email" =
+  'trainee@wombat.local';` and, for the erased account's profile, which no account holds, `SELECT p."Id" FROM
+  "TraineeProfiles" p LEFT JOIN "AspNetUsers" u ON u."Id" = p."UserId" WHERE u."Id" IS NULL;`. On a host without the dev
+  accounts, play the erased half only. The corpus holds no earlier profile of a current registrar, so a profile that is
+  not the registrar's current one is covered by `GetProgrammeTraineeQueryTests` instead (round-3-check 3).
+Actual:
+Gap:
+
+### Step A.5.15 — A reminder Wombat cannot send
+Role: Coordinator and Administrator — Mr Pieter Smit and devadmin
+Route: /programme/waiting → /admin/users/{UserId} → /programme/waiting → /admin/users/{UserId} → /programme/waiting
+Do: On a scratch database (the Note), Mr Smit opens Waiting for assessors and leaves it open. devadmin locks Dr Khumalo
+  out on Dr Khumalo's account page (Lock out user). Mr Smit, on the list as read before the lock, chooses Send a
+  reminder on Dr du Plessis's CBD, then Send the reminder.
+  devadmin then reactivates Dr Khumalo (Reactivate user), and Dr Patel's email address is cleared (the Note). Mr Smit,
+  on the list as read before, chooses Send a reminder on the portfolio review, then Send the reminder.
+Expect: The first answer stands above the table and takes the focus: "Not sent. Fatima Khumalo's account is deactivated,
+  so Wombat sends Fatima Khumalo no email. The request still waits." The list is read again, and both of Dr Khumalo's
+  rows read "No reminder: Fatima Khumalo's account is deactivated." where the button was (E3).
+  The second, in the same place and with the focus: "Not sent. Mohammed Patel has no email address in Wombat. Ask your
+  institutional admin to add one.", and the portfolio review's row then reads "No reminder: Mohammed Patel has no email
+  address in Wombat.".
+  Neither request moves: each keeps its state and its wait, and no "Reminded …" line is recorded. The log gains no
+  reminder mail. A reminder is never refused because an assessor opted out of digest emails (E1).
+Note: Scratch only: a lock and a cleared address are changes the story does not make (states.md § Three ways a state is
+  reached, 3), on a copy of the replay's database as it stands here. No page edits an account's address, so clear Dr
+  Patel's after Mr Smit's list has been read: `UPDATE "AspNetUsers" SET "Email" = NULL, "NormalizedEmail" = NULL WHERE
+  "Email" = 'patel@kgk.wombat.local';`. The flow 06 boards play the second refusal on Dr Zulu's Mini-CEX, which Step
+  3.33 completed; the portfolio review is the request still with a named assessor whose address can be cleared.
+Actual:
+Gap:
+
+### Step A.5.16 — Mr Smit looks for registrars with nothing filed
+Role: Coordinator — Mr Pieter Smit
+Route: / → /programme/trainees
+Do: On Home, choose Open in Programme trainees under "Nothing filed in 30 days".
+Expect: Home's "Nothing filed in 30 days" reads "Every current registrar has filed something in the last 30 days.": the
+  two current registrars, Dr Dlamini and Dr Mahlangu, were admitted in this sitting, and a registrar admitted less than
+  30 days ago is not listed (E5). Programme trainees opens with Nothing filed in 30 days ticked and Programme trainees lit. Nobody
+  matches, so the heading reads "0 of 2 current registrars", and under it "No registrar matches these filters.",
+  "Nothing filed in 30 days." and Clear filters (review 33).
+  A registrar is listed only once admitted at least 30 days before and with nothing filed since `D−30`: a draft is not
+  filed, and a recorded MSF is. The heading then takes the count's own form, singular or plural: "1 of 2 current
+  registrars has filed nothing in 30 days", "2 of 2 current registrars have filed nothing in 30 days" (D9).
+Note: Dr Molefe has completed, Dr du Plessis has withdrawn and Dr Ndlovu has been erased, so two registrars are current.
+  A replay played over more than 30 days lists those with nothing filed since `D−30`, and its heading reads the count's
+  form above.
+Actual:
+Gap:
 
 ## A.6 — Platform operations
 
@@ -1134,9 +1203,11 @@ Gap: F-A.7.4a, T311 (still: Home points her to My progress but does not say that
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
-Expect: The campaign page keeps its gutter (T226), and its invitee table (counts by respondent group: the page never
-  lists an address) scrolls within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as
-  a labelled, focusable region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
+Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
+  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
+  keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
+  within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as a labelled, focusable
+  region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): At 390 px. The bar reads "Acting as Coordinator"; Home's cards
   stack. MSF campaigns: 2 rows (du Plessis Withdrawn; Molefe Released, 7 invited, 6 responded); the table (683 px)
   scrolls in its container; each action is named ("View campaign: the campaign for Lerato Molefe (Default MSF, closing
@@ -1152,7 +1223,9 @@ Gap: F-A.7.5b, T328 (still: Apply filters comes before the filters it applies).
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
-Expect: The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
+Expect: Home's Registrars and Targets by EPA cards are one column: each registrar's name a 44px block with the training
+  year and the figures under it, each EPA's name a 44px block with its cadence and its "n of 2" under it (T358, round 3
+  item 21). The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
   a card of its own (its section is not a card around it), drawn at 322 px, never scaled, its rungs and months 12 px,
   and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
   scrolls sideways (T166, T355).
@@ -1171,11 +1244,13 @@ Gap: none
 ### Step A.7.7 — Dr Mokoena on her phone
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
-Do: At 390 px, open her dashboard, Decision panels, Decisions due and, by its address, Entrustment decisions.
-Expect: The dashboard's coverage cards stack. The panels list and the decisions list scroll inside their containers
-  (T226).
-Note: No menu item leads to Entrustment decisions for her role; only the InstitutionalAdmin dashboard links to it. On
-  it nothing is lit, and the trail reads Home › Entrustment decisions.
+Do: At 390 px, open the dashboard, then Decision panels, Decisions due and Entrustment decisions from the menu.
+Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Registrars, badged "2 registrars", and Targets
+  by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). The panels list and the decisions list
+  scroll inside their containers (T226). Entrustment decisions is in the menu, lit on its page, with no trail: it is a
+  list the menu offers (R2-Menus m5).
+Note: Until T358 no menu item led to Entrustment decisions for a speciality admin, and the page lit nothing, under the
+  trail Home › Entrustment decisions.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): At 390 px. The bar reads "Acting as" over "Speciality admin".
   Home stacks Pending reviews (3 activities awaiting review), Trainees in programme "2 active / 3 inactive" and
   Curriculum coverage for Semester 2, 2026, at 16 to 374. The menu: Home, Decisions due, Committee reviews, Decision
@@ -1189,13 +1264,33 @@ Gap: none
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: / → /committee/reviews → /committee/decisions-due
 Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
-Expect: As for Dr Mokoena, scoped to his sub-speciality. The folded bar reads "Acting as" over "Sub-speciality admin",
-  in two lines: the bar grows, and the role is never cut. His menu reads as hers (A.5.12), each row 44px.
+Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks the same three cards. The folded bar reads
+  "Acting as" over "Sub-speciality admin", in two lines: the bar grows, and the role is never cut. Dr Sithole's menu
+  reads as Dr Mokoena's (A.5.12), each row 44px.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): At 390 px. The folded bar reads "Acting as" over
   "Sub-speciality admin" on two lines, and the bar grows to 59 px; nothing is cut. Home matches Dr Mokoena's (3, "2
   active / 3 inactive", the coverage). His menu reads as hers, each row 44 px. Committee reviews: the table (878 px)
   scrolls in its container. Decisions due: the focusable summary region (656 px in 306). Nothing scrolls sideways.
 Gap: none
+
+### Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet
+Role: CommitteeMember and Coordinator — Dr Thandi Zulu and Mr Pieter Smit
+Route: /programme/trainees → /programme/trainees/{ProfileId:int} → /programme/waiting → /
+Do: At 390 px, Dr Zulu opens Programme trainees from the menu, then Dr Mahlangu's page; Mr Smit opens Waiting for
+  assessors from the menu. Then each opens the same pages, and Home, at 768 px.
+Expect: At 390 px both lists' tables stack, a block per row: each registrar's name and each activity's link a 44px
+  block, every other cell under its column's name. The filter bar's fields stack, and Show and Clear filters are each
+  44px tall and the row's width; so is each Send a reminder (round 3 items 22, 25). On Dr Mahlangu's page the sections
+  stack, the trail is one 44px link back to Programme trainees, Dr Mahlangu's Mini-CEX of Step A.2.7 is listed under
+  Waiting for assessors with no Send a reminder for Dr Zulu, and each trajectory chart is drawn at 322 px, never scaled,
+  in its own named region.
+  At 768 px Home's Registrars and Targets by EPA rows are one column for Dr Zulu, each figure under its name, and Mr
+  Smit's cards stack in one column (round 3 item 21; the grid has one track at 900 px and below). Nothing scrolls
+  sideways at either width.
+Note: The flow 06 boards number this step A.7.9; Prof Mbatha's phone step already holds that number, so it is A.7.8a,
+  after the speciality admins' (as Step 6.14a was placed).
+Actual:
+Gap:
 
 ### Step A.7.9 — Prof Mbatha on her phone
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

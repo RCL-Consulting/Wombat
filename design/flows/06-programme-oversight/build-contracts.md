@@ -221,8 +221,9 @@ Static classes in `Shared/Programme/` (namespace `Wombat.Web.Components.Shared.P
   days", "0 of 5 current registrars"; `ListRule(read, filter)` → "Fewest met first, then by surname. Semester 2, 2026
   ends on 2026-11-30." (exempt: "Fewest met first, then by surname. 1 registrar exempt this period, not counted, listed
   last."), Short on: "PAED-002 — Managing common paediatric presentations, 3 per semester. Furthest from its target first,
-  then fewest EPAs met, then by surname.", Nothing filed: "Nothing filed (a draft is not filed) in the last 30 days, or
-  since admission if that is later; a recorded MSF counts. Longest without first."; `Caption(filter, epa)` → "Current
+  then fewest EPAs met, then by surname.", Nothing filed: "Nothing filed (a draft is not filed) in the last 30 days; a
+  recorded MSF counts. A registrar admitted less than 30 days ago is not listed. Longest without first." (build review
+  G1); `Caption(filter, epa)` → "Current
   registrars, fewest EPAs met first" / "Current registrars short on PAED-002, furthest from its target first" / "Current
   registrars with nothing filed in 30 days"; `NoMatch` "No registrar matches these filters."; `Asked(filter, epa)` →
   "Short on PAED-001, training year 4, nothing filed in 30 days."; `EmptyTitle` "No current registrars", `EmptyBody` "They
@@ -232,7 +233,7 @@ Static classes in `Shared/Programme/` (namespace `Wombat.Web.Components.Shared.P
   in 30 days", `Show` "Show", `ClearFilters` "Clear filters"; Home: `Badge(int n)` → "5 registrars" / "1 registrar";
   `More(int beyond)` → "3 more in Programme trainees."; `RosterEmpty` "No current registrars. They appear here once they
   are admitted to the programme."; `OpenTrainees` "Open Programme trainees"; `FiledRule` "Current registrars with nothing
-  filed (a draft is not filed) in the last 30 days, or since admission if that is later."; `FiledRowMeta(row)` → "Last
+  filed (a draft is not filed) in the last 30 days. A registrar admitted less than 30 days ago is not listed." (G1); `FiledRowMeta(row)` → "Last
   filed 2026-09-12 · Training year 2"; `FiledEmpty` "Every current registrar has filed something in the last 30 days.";
   `OpenFiled` "Open in Programme trainees".
 - **`TargetsByEpaWords`**: `Figure(EpaTargetCoverage)` → ("2 of 5", "registrars met this semester" / "registrars met in
@@ -338,3 +339,59 @@ Never shipped: the canvas's `.r2-*`, and every class round 3 dropped (`.waiting-
 ## As built after wave 1
 
 (The integrator fills this in after merging A1 and A2, from the code, before wave 2 starts.)
+
+## As built after wave 1 (the integrator, 2026-10-05): where the code differs from the above
+
+Merged into `t358` at `d6f2644b` (A0 `4245a6de`, A1 `69c7974b`, A2): build clean, six suites green (Domain 814,
+Application 3752, Infrastructure 1018, Architecture 52, Web 3307, Integration 490). Wave 2 builds on these as built.
+
+**Lane A0.** `ActivityReminder` is created only by `ActivityReminder.Record(activityId, sentByUserId, assessorUserId,
+sentOn)`. `ProgrammeScope.ResolveAsync` also returns null when the institution claim names no institution, or an admin
+has no existing claimed speciality/sub-speciality. `ProgrammeScope.Profiles` includes ended and erased profiles: filter
+to current yourself. The detail shell's h1/tab read "Programme trainee" until lane C names the registrar.
+`tests/Wombat.Web.Tests/Programme/ProgrammePageShellTests.cs`: lane B replaces its owner-table test; lanes C and D
+replace its shell-heading test (it renders without services). `coverage.md` § Not played holds three wave-0 rows the
+runbook lane deletes.
+
+**Lane A1 (waiting).**
+- `WaitingForAssessorsDto` gains `Filter` (init, `WaitingForAssessorsFilter`); `WaitingWords.StaffCount(dto)` reads it.
+  Extra: `WaitingWords.NomineeNameOf(dto, userId)`. `ListWaitingForAssessorsQueryHandler.HomeRows = 5`.
+- `SendActivityReminderResult` gains `bool StillWaiting` (moved but still waits for a named person: "… it is now
+  Requested, with X.") and a static `NotFound`. A shape-only `SendActivityReminderCommandValidator` exists. Check order:
+  not found, moved meanwhile, reminded today, then recipient (no account, deactivated, no email). A lost race answers
+  RemindedToday.
+- `ReminderWords` extras: `Lead(result)`, `Detail(result)` (`Result` = Lead + " " + Detail), `DialogBody(item)` (one
+  paragraph: ConfirmDialog has one Body), `Failed` (a send that throws).
+- **`ReminderAction` parameters: `Item`, `ActingRole`, `LinkName`, `OnResult`, and `EventCallback OnFailed`.** Lanes C and
+  D bind `OnFailed` and show `ReminderWords.Failed` in their ActionResult. The component closes its dialog before invoking
+  either callback, so the host's `ActionResult.FocusAfterRender` works. Its lines are `span.needs-you-why.progress-row-meta`.
+- `ActivitySummaryDto` gains `LastReminder`, `RemindedToday`, `CannotRemind`; the reader fills `Holder`, `NomineeName`,
+  `SubjectName`, `DisplayName`, `Shape`, `IsOverdue`, `WaitedDays`. `WaitingList` gains `WithNominee` and `RowAction`.
+- A page number past the end returns the last page (`Page` says which). The With list is built from every row (only the
+  registrar filter applies), by surname, first name, id.
+- `DashboardThresholds.AssessorNudgeDays` = 5; `CoordinatorStallDays` is gone. The Coordinator Home handler is
+  compile-only (still the old stalled card on `AssessorDueDays`, and `DateTime.UtcNow`): **lane B rewrites it.**
+- CSS: `/* Flow 06: the reminder and the filter bar (T358) */` appended at the end of `app.css` (`.reminder-action`,
+  `.filter-actions`). DESIGN.md § List page has the filters-applied-with-Show paragraph.
+
+**Lane A2 (roster).**
+- `CurriculumCoverageReader.ReadAsync(dbContext, users, profiles, asOf, ct)` gains `IUserAdministrationService users`;
+  the reader names (`TraineeTargetCoverage.Name`) and orders trainees (share, surname, first name, id). EPAs order
+  fewest registrars met (absolute), then code. The committee handler's own sort was removed. `EpaTargetCoverage` gains
+  `OwningInstitutionName`.
+- Init additions: `ProgrammeTraineesFilter.IsFiltered`, `.Count`; `ProgrammeTraineeRowDto` `ProgrammeStartDate`,
+  `AdmittedOn`, `AcademicYear`, `NothingFiled`, `IsExempt`; `EpaShortfallDto` `WindowEnd`, `AcademicYear`,
+  `IsPerSemester`; `ProgrammeRosterRead.Filter`; `ListProgrammeTraineesQueryHandler.HomeRows = 5`.
+- Signatures: `TargetsByEpaWords.Figure(epa, coverage)`, `LinkTail(epa, coverage)`; `ProgrammeWords.ExemptReason(row)`
+  and `ExemptReason(exemption, programmeStart)`; `ProgrammeWords.Caption(filter, epa, exemptCount = 0)`;
+  `RegistrarWords.NoRatings((From, To) window, bool ended = false)` (takes `TrajectoryWindow.AcademicYearOf`).
+- Extra words: `ProgrammeWords` `PageTitle`, `ListTitle`, `ScopePhrase`, `YearColumn(read)`, `TrainingYearCell`,
+  `ExemptCellLabel`, `EveryTargetMet`, `ExemptCount`, `EpaOption`, `FilterFormName`, `PagerName`,
+  `LoadFailedLead`/`LoadFailedRest`, `RegistrarsCard`, `NothingFiledCard`, `Figure(EpaShortfallDto)`; `TargetsByEpaWords`
+  `Title`, `Name`; `RegistrarWords` `*FailedLead`, `TryAgainRest`, `ReviewLink`/`ReviewMeta`, `EndedWhenOr`,
+  `EndedProgrammeHeading`, `EndedNoItems(name)`, `EndedNoTarget`, `EndedPeriodLine(period, today)`, `Possessive`;
+  `ProgrammeLinks.TraineesFiltered(...)`, `WaitingFiltered(...)` (D3 query strings).
+- `GetProgrammeTraineeQuery`: an ended programme reads training year and semester as of its last day; a locked account
+  still opens. `ListReviewsForProgrammeTraineeQuery(Principal, TraineeUserId)`: a caller acting as trainee gets none.
+- The Web tests reject she/her/he/him/his and you/your; "they" is allowed.
+- The current (old) committee and admin Homes already show the new EPA order: lane B's rebuild must keep it.

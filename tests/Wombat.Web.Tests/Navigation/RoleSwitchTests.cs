@@ -25,7 +25,8 @@ public sealed class RoleSwitchTests : TestContext
         // Dr Zulu: Committee member and Assessor (R2-Phone-Zulu-Open, R2-Detail-Inbox).
         string[] held = [WombatRoles.CommitteeMember, WombatRoles.Assessor];
 
-        Labels(Render(held, WombatRoles.CommitteeMember)).Should().Equal("Home", "Committee reviews", "Decision panels", "My data rights");
+        Labels(Render(held, WombatRoles.CommitteeMember)).Should().Equal(
+            "Home", "Programme trainees", "Committee reviews", "Decision panels", "My data rights");
         Labels(Render(held, WombatRoles.Assessor)).Should().Equal("Home", "Activity inbox", "My data rights");
     }
 

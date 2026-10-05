@@ -537,6 +537,59 @@ public sealed class WeeklyCoordinatorDigestJobTests
         return (services.BuildServiceProvider(), emailSender);
     }
 
+    /// <summary>
+    /// T358 (E5): filed is having left draft, by the rule Programme trainees reads (FilingMoments). A draft opened this week
+    /// is not a filing, so its author is still listed; a draft submitted this week is, so its author is not.
+    /// </summary>
+    [Fact]
+    public async Task ADraftIsNotAFiling_ButItsSubmissionIs()
+    {
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddCoordinators(db);
+
+            AddTrainee(db, "a-drafter", "Amahle", "Drafter", InstitutionA);
+            AddActivity(db, "a-drafter", DraftType, "draft", Now.AddDays(-3));
+            AddTrainee(db, "a-submitter", "Ayabonga", "Submitter", InstitutionA);
+            AddActivity(
+                db, "a-submitter", DraftType, "submitted", Now.AddDays(-45),
+                new ActivityTransition { FromState = "draft", ToState = "submitted", TransitionKey = "submit", OccurredOn = Now.AddDays(-2) });
+        });
+
+        await RunAsync(provider);
+
+        Section(emailSender.To(CoordinatorA), TraineesAtRisk).Should().Equal("Amahle Drafter");
+    }
+
+    /// <summary>
+    /// T358 (E5, D1): the 30 days start at the later of admission and 30 days before the run, so a trainee admitted since
+    /// has not had 30 days to file and is not listed; one admitted 31 days ago with nothing filed is.
+    /// </summary>
+    [Fact]
+    public async Task ATraineeAdmittedLessThan30DaysAgo_IsNotListed()
+    {
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, db =>
+        {
+            AddCoordinators(db);
+
+            var recent = NomineeSeed.AddUser(db, "a-recent", InstitutionA, WombatRoles.Trainee);
+            recent.FirstName = "Ama";
+            recent.LastName = "Recent";
+            AddProfile(db, "a-recent", InstitutionA, PaediatricsCurriculum, isActive: true, admittedOn: Today.AddDays(-10));
+
+            var settled = NomineeSeed.AddUser(db, "a-settled", InstitutionA, WombatRoles.Trainee);
+            settled.FirstName = "Asanda";
+            settled.LastName = "Settled";
+            AddProfile(db, "a-settled", InstitutionA, PaediatricsCurriculum, isActive: true, admittedOn: Today.AddDays(-31));
+        });
+
+        await RunAsync(provider);
+
+        Section(emailSender.To(CoordinatorA), TraineesAtRisk).Should().Equal("Asanda Settled");
+    }
+
     private static async Task<CapturingLogger> RunAsync(ServiceProvider provider)
     {
         var logger = new CapturingLogger();
@@ -561,6 +614,8 @@ public sealed class WeeklyCoordinatorDigestJobTests
             new Curriculum { Id = SurgeryCurriculum, SubSpecialityId = SurgerySubSpeciality, Name = "Surgery", Version = "1", EffectiveFrom = new DateOnly(2025, 1, 1) },
             new Curriculum { Id = PaediatricsCurriculum, SubSpecialityId = PaediatricsSubSpeciality, Name = "Paediatrics", Version = "11.1", EffectiveFrom = new DateOnly(2025, 1, 1) });
         db.MsfTemplates.Add(new MsfTemplate { Id = 1, Name = "Annual MSF" });
+        AddActivityType(db, LoggedType, LoggedWorkflow);
+        AddActivityType(db, DraftType, DraftWorkflow);
 
         seed(db);
         await db.SaveChangesAsync();
@@ -589,7 +644,8 @@ public sealed class WeeklyCoordinatorDigestJobTests
         return trainee;
     }
 
-    private static void AddProfile(ApplicationDbContext db, string userId, int institutionId, int curriculumId, bool isActive)
+    private static void AddProfile(
+        ApplicationDbContext db, string userId, int institutionId, int curriculumId, bool isActive, DateOnly? admittedOn = null)
         => db.TraineeProfiles.Add(new TraineeProfile
         {
             UserId = userId,
@@ -597,24 +653,74 @@ public sealed class WeeklyCoordinatorDigestJobTests
             CurriculumId = curriculumId,
             IsActive = isActive,
             ProgrammeStartDate = new DateOnly(2025, 1, 1),
+            AdmittedOn = admittedOn ?? new DateOnly(2025, 1, 1),
             ExpectedCompletionDate = new DateOnly(2029, 1, 1)
         });
 
-    private static void AddActivity(ApplicationDbContext db, string subjectUserId, int daysAgo)
-    {
-        var createdOn = Now.AddDays(-daysAgo);
-        db.Activities.Add(new Activity
+    /// <summary>A type born terminal, as a journal club is: its create files it (T358, E5).</summary>
+    private const int LoggedType = 1;
+
+    /// <summary>A draft-born type: filed when its author submits it.</summary>
+    private const int DraftType = 2;
+
+    private const string LoggedWorkflow =
+        """{ "version": 1, "initial_state": "logged", "states": [ { "key": "logged", "label": "Logged", "terminal": true } ], "transitions": [] }""";
+
+    private const string DraftWorkflow = """
         {
-            ActivityTypeId = 1,
+          "version": 1,
+          "initial_state": "draft",
+          "states": [ { "key": "draft", "label": "Draft" }, { "key": "submitted", "label": "Submitted" }, { "key": "done", "label": "Done", "terminal": true } ],
+          "transitions": [
+            { "key": "submit", "from": "draft", "to": "submitted", "actor": "subject|creator", "validation": "owned" },
+            { "key": "finish", "from": "submitted", "to": "done", "actor": "field:assessor_user_id", "validation": "all" }
+          ]
+        }
+        """;
+
+    private static void AddActivityType(ApplicationDbContext db, int id, string workflowJson)
+    {
+        var type = new ActivityType
+        {
+            Id = id, Key = $"type-{id}", Name = $"Type {id}", Scope = ActivityScope.Global, Version = 1, IsActive = true,
+            SchemaJson = "{}", WorkflowJson = workflowJson, CreditRulesJson = "{}", DisplayFieldsJson = "[]",
+            OwnerUserId = "system", CreatedOn = Now.AddYears(-1)
+        };
+        type.Versions.Add(new ActivityTypeVersion
+        {
+            ActivityTypeId = id, Version = 1, SchemaJson = "{}", WorkflowJson = workflowJson, CreditRulesJson = "{}",
+            DisplayFieldsJson = "[]", PublishedByUserId = "system", PublishedOn = Now.AddYears(-1)
+        });
+        db.ActivityTypes.Add(type);
+    }
+
+    /// <summary>A filed activity: a record born terminal, created (and so filed) <paramref name="daysAgo" /> days before the run.</summary>
+    private static void AddActivity(ApplicationDbContext db, string subjectUserId, int daysAgo)
+        => AddActivity(db, subjectUserId, LoggedType, "logged", Now.AddDays(-daysAgo));
+
+    private static Activity AddActivity(
+        ApplicationDbContext db, string subjectUserId, int typeId, string state, DateTime createdOn, params ActivityTransition[] moves)
+    {
+        var activity = new Activity
+        {
+            ActivityTypeId = typeId,
             SchemaVersion = 1,
             SubjectUserId = subjectUserId,
             CreatedByUserId = subjectUserId,
-            CurrentState = "draft",
+            CurrentState = state,
             DataJson = "{}",
             CreatedOn = createdOn,
-            UpdatedOn = createdOn,
+            UpdatedOn = moves.Length == 0 ? createdOn : moves[^1].OccurredOn,
             ObservedOn = DateOnly.FromDateTime(createdOn)
-        });
+        };
+        foreach (var move in moves)
+        {
+            move.ActorUserId = subjectUserId;
+            activity.Transitions.Add(move);
+        }
+
+        db.Activities.Add(activity);
+        return activity;
     }
 
     private static void AddCampaign(

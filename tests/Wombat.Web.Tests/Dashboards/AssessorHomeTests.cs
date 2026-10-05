@@ -366,7 +366,7 @@ public sealed class AssessorHomeTests : TestContext
             object answer = request switch
             {
                 GetAssessorDashboardSummaryQuery => assessor ?? throw new NotSupportedException("no assessor summary"),
-                GetCommitteeMemberDashboardSummaryQuery => new CommitteeMemberDashboardSummaryDto("Semester 2, 2026", "July to November", [], [], 0),
+                GetCommitteeMemberDashboardSummaryQuery => OversightHomeFixtures.Committee(),
                 ListWaitingForYouQuery => Waiting(),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

@@ -1,39 +1,26 @@
 @using System.Security.Claims
 @using MediatR
 @using Wombat.Application.Features.Dashboards.CommitteeMember
-@using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Web.Components.Shared.Programme
 @attribute [Authorize(Roles = "CommitteeMember")]
 @rendermode InteractiveServer
 @inherits RoleDashboard<CommitteeMemberDashboardSummaryDto>
 
+@*
+  The Committee member's Home (T358, flow 06; Q1, Q5; R2-Home c1–c11): two cards, each spanning three, read as Committee
+  member in the institution's scope (E4), one read behind the frame.
+  - "Registrars" (#card-registrars): Programme trainees' first five, each name a link to the registrar's page.
+  - "Targets by EPA" (#card-epa-targets): each EPA's "n of m registrars met", its name a link to Programme trainees
+    filtered Short on it. No foot: its list is Programme trainees, which the Registrars card opens.
+  Until T358 they were "Targets this period" (names and "semester 1/5" with no link) and "Targets met by EPA".
+*@
 <DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
-  <DashboardCard Title="Targets this period" Icon="users" Emphasis="true" IsLoading="IsLoading">
-    @if (Summary is { } summary)
-    {
-      <p class="progress-row-meta">@summary.CurrentSemesterName · @summary.CurrentSemesterMonths@(summary.ExemptTraineeCount > 0 ? $" · {summary.ExemptTraineeCount} exempt" : string.Empty)</p>
-      if (summary.TraineeTargets.Count == 0)
-      {
-        <p class="muted">No trainees have targets this period.</p>
-      }
-      else
-      {
-        <ul class="list-unstyled">
-          @foreach (var trainee in summary.TraineeTargets)
-          {
-            <li class="progress-row-head">
-              <span>@trainee.TraineeName</span>
-              <span class="muted">@TargetsText(trainee)</span>
-            </li>
-          }
-        </ul>
-      }
-    }
-  </DashboardCard>
+  <RegistrarsCard Card="@Summary?.Registrars" IsLoading="IsLoading" />
 
-  <DashboardCard Title="Targets met by EPA" Icon="book" Span="2" IsLoading="IsLoading">
+  <DashboardCard Title="@TargetsByEpaWords.Title" Icon="book" HeadingId="card-epa-targets" Span="3" IsLoading="IsLoading">
     @if (Summary is { } summary)
     {
-      <EpaTargetCoverageList Coverage="@(new CurriculumCoverage(DateOnly.MinValue, summary.CurrentSemesterName, summary.CurrentSemesterMonths, [], summary.EpaTargets, summary.ExemptTraineeCount))" />
+      <EpaTargetCoverageList Coverage="@summary.Coverage" />
     }
   </DashboardCard>
 </DashboardFrame>
@@ -41,22 +28,4 @@
 @code {
   protected override IRequest<CommitteeMemberDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
     => new GetCommitteeMemberDashboardSummaryQuery(user);
-
-  // Fewest met first (the query orders them). Semester and yearly targets are shown apart, because the
-  // yearly ones are met "as opportunities arise" and would otherwise drag every trainee down all year.
-  private static string TargetsText(TraineeTargetsItem trainee)
-  {
-    var parts = new List<string>();
-    if (trainee.SemesterTargetsApplying > 0)
-    {
-      parts.Add($"semester {trainee.SemesterTargetsMet}/{trainee.SemesterTargetsApplying}");
-    }
-
-    if (trainee.YearTargetsApplying > 0)
-    {
-      parts.Add($"yearly {trainee.YearTargetsMet}/{trainee.YearTargetsApplying}");
-    }
-
-    return string.Join(" · ", parts);
-  }
 }

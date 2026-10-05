@@ -5,21 +5,17 @@ using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Dashboards.Administrator;
 using Wombat.Application.Features.Dashboards.Assessor;
-using Wombat.Application.Features.Dashboards.Coordinator;
-using Wombat.Application.Features.Dashboards.SpecialityAdmin;
-using Wombat.Application.Features.Dashboards.SubSpecialityAdmin;
 using Wombat.Web.Components.Pages.Dashboards;
 using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.Dashboards;
 
 /// <summary>
-/// T297: the staff dashboards' waiting cards. The Coordinator's stalled rows each open their activity, where they were
-/// plain text; the programme admins' "Pending reviews" says "1 activity" and no longer links to an inbox that lists only
-/// what the admin can move, which read "Inbox clear" beside a count of 1 (Steps 3.53, 3.54).
+/// T297: the staff dashboards' waiting cards. The Assessor's waiting work is one card, the Administrator's Home has no
+/// Maintenance card, and no dashboard lays a row out with an inline style. The programme Homes' cards are flow 06's
+/// (T358: CommitteeHomeTests, ProgrammeAdminHomeTests, CoordinatorHomeTests).
 /// </summary>
 public sealed class WaitingCardsTests : TestContext
 {
@@ -34,26 +30,8 @@ public sealed class WaitingCardsTests : TestContext
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "staff-1"));
     }
 
-    [Fact]
-    public void EachStalledRequest_LinksToItsActivity_NamedByItsInstrumentAndItsTrainee()
-    {
-        _auth.SetRoles("Coordinator");
-        Services.AddSingleton<IScopedSender>(new Sender(new CoordinatorDashboardSummaryDto(
-            [
-                new StalledRequestItem(10, "Portfolio and Logbook Review (Paediatrics)", "Pieter du Plessis", When),
-                new StalledRequestItem(21, "Mini-CEX (Paediatrics)", "Nomsa Mahlangu", When.AddDays(5))
-            ],
-            [])));
-
-        var cut = RenderComponent<CoordinatorDashboard>();
-        cut.WaitForState(() => cut.FindAll("a[href^='/activities/']").Count == 2);
-
-        var links = cut.FindAll("a[href^='/activities/']").ToList();
-        links.Select(link => link.GetAttribute("href")).Should().Equal("/activities/10", "/activities/21");
-        var mahlangu = links.Last();
-        mahlangu.GetAttribute("aria-label").Should().Be("Mini-CEX (Paediatrics) for Nomsa Mahlangu");
-        Text(mahlangu.ParentElement!).Should().Be("Mini-CEX (Paediatrics) — Nomsa Mahlangu");
-    }
+    // T297's Coordinator "Stalled requests" and the programme admins' "Pending reviews" went with T358 (flow 06, Q3): both
+    // Homes now draw Waiting for assessors' first five, each row its own link (CoordinatorHomeTests, ProgrammeAdminHomeTests).
 
     // The T297 review's test of the Trainee's Activity inbox card, which named another trainee's row, went with the card:
     // since T342 it is Needs you, the caller's own work only (NeedsYouCardTests).
@@ -113,40 +91,6 @@ public sealed class WaitingCardsTests : TestContext
             .Select(Path.GetFileName)
             .Should().BeEmpty("a row is .list-row, a row of buttons .actions-cell, and a row of figures .dashboard-metric-row");
     }
-
-    [Theory]
-    [InlineData(1, "1 activity awaiting review")]
-    [InlineData(2, "2 activities awaiting review")]
-    [InlineData(0, "0 activities awaiting review")]
-    public void TheSpecialityAdminsPendingReviews_CountsInTheSingularForOne_AndLinksToNoInbox(int count, string expected)
-    {
-        _auth.SetRoles("SpecialityAdmin");
-        Services.AddSingleton<IScopedSender>(new Sender(new SpecialityAdminDashboardSummaryDto(count, 5, 0, Coverage())));
-
-        var cut = RenderComponent<SpecialityAdminDashboard>();
-        cut.WaitForState(() => cut.FindAll(".dashboard-metric").Count > 0);
-
-        Text(cut.FindAll(".dashboard-metric").First()).Should().Be(expected);
-        cut.FindAll("a[href='/activities/inbox']").Should().BeEmpty();
-    }
-
-    [Theory]
-    [InlineData(1, "1 activity awaiting review")]
-    [InlineData(3, "3 activities awaiting review")]
-    public void TheSubSpecialityAdminsPendingReviews_CountsInTheSingularForOne_AndLinksToNoInbox(int count, string expected)
-    {
-        _auth.SetRoles("SubSpecialityAdmin");
-        Services.AddSingleton<IScopedSender>(new Sender(new SubSpecialityAdminDashboardSummaryDto(count, 5, 0, Coverage())));
-
-        var cut = RenderComponent<SubSpecialityAdminDashboard>();
-        cut.WaitForState(() => cut.FindAll(".dashboard-metric").Count > 0);
-
-        Text(cut.FindAll(".dashboard-metric").First()).Should().Be(expected);
-        cut.FindAll("a[href='/activities/inbox']").Should().BeEmpty();
-    }
-
-    private static CurriculumCoverage Coverage()
-        => new(new DateOnly(2026, 9, 23), "Semester 2, 2026", "July to November", [], [], 0);
 
     private static List<string> Titles(IRenderedFragment cut)
         => cut.FindAll(".dashboard-card-title > span:not(.badge)").Select(title => title.TextContent.Trim()).ToList();

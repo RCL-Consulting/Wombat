@@ -1,0 +1,678 @@
+@page "/programme/trainees/{ProfileId:int}"
+@attribute [Authorize(Roles = "CommitteeMember,SpecialityAdmin,SubSpecialityAdmin,Coordinator")]
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Microsoft.Extensions.DependencyInjection
+@using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Application.Features.Programme
+@using Wombat.Application.Features.Programme.Commands.SendActivityReminder
+@using Wombat.Application.Features.Programme.Trainees
+@using Wombat.Application.Features.Programme.Waiting
+@using Wombat.Web.Components.Shared.Programme
+@using Wombat.Web.Components.Shared.Progress
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<ProgrammeTraineeDetail> Logger
+@inject IJSRuntime JS
+@inject IServiceProvider ServiceProvider
+
+@*
+  One registrar, read by a member of staff (T358, flow 06; R2-Registrar r1–r8; C2, C8, C9; review 6, 7, 8, 30): reached
+  from Programme trainees and the staff Homes, by trainee-profile id. GetProgrammeTraineeQuery reads first, as the role the
+  page reads as (ProgrammeReadAs, D2, E4): only the registrar's current profile, only in that role's scope, only while an
+  account holds the user (C2; review 6). Null is flow 01's Page not found, word for word, so an id confirms nothing.
+
+  - The h1 is the registrar's name as stored, the tab "<Name> · Wombat", the subtitle RegistrarWords.Subtitle. One header
+    stands over every state: while the page reads it is "Programme trainee", with the trail (round-3-check 4); the page's
+    own load error keeps that h1 (r5).
+  - Then .registrar-stack, the sections in C9's order, each a section named by its h2.epa-section-title, each read and
+    failing apart in its own sentence with its own Try again, which answers into its heading (review 30): This period
+    (flow 05's figures and ends line, in staff words), EPAs (EpaProgressTable, the names as text, review 7), Entrustment
+    against Annexure A (EntrustmentStandingPanel whole, Self false, each EPA charted here linking to its chart), Rating
+    trajectories (TrajectoryChart per rated EPA over the academic year, an h3 each, no Today rule, D8), Waiting for
+    assessors (A1's read for this registrar, the staff reading, and Send a reminder for a role that may remind; its answer
+    in the section's own ActionResult, taking the focus), and Committee reviews (each a link to the review it opens).
+  - An ended registrar (r6; round-3-check 2): the subtitle "Programme ended <date>", the ended record (flow 05's, in staff
+    words, EndedRecord) in place of This period and EPAs, the standing as on the last day, the chart over the academic
+    year the programme ended in, and the waiting requests still remindable (round-3-check, r6 settled).
+  No pronoun in any word (round-3-check 1): the registrar's name, "the registrar" or "the assessor". Every failure is fixed
+  words; the exception goes to the log (T329, T272).
+*@
+
+@* The tab is the h1's words, "Nomsa Mahlangu · Wombat" (RegistrarWords.Tab) once loaded. *@
+<PageTitle>@Heading · Wombat</PageTitle>
+
+<PageHeader Title="@Heading" Subtitle="@Subtitle" Icon="@(_notFound ? "search" : null)"
+            Page="@(_notFound ? typeof(NotFound) : null)" />
+
+@* Always present, filled while the page reads: a live region added with its words in it is often not read (C8). *@
+<p class="visually-hidden" role="status">@(_loading ? RegistrarWords.Loading : null)</p>
+
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+  <LoadingContent>
+    @* r8: each section's title over skeleton lines, the trail and the header standing above (round-3-check 4). No inline
+       sizes: a bare .skeleton is a full-width line (round-3-check 5). *@
+    <div class="registrar-stack" aria-busy="true">
+      <section class="detail-card">
+        <h2 class="epa-section-title">@RegistrarWords.PeriodHeading</h2>
+        <div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div></div>
+      </section>
+      <section class="detail-card">
+        <h2 class="epa-section-title">@RegistrarWords.EpasHeading</h2>
+        <div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+      </section>
+      <section class="detail-card">
+        <h2 class="epa-section-title">@RegistrarWords.StandingHeading</h2>
+        <div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div></div>
+      </section>
+    </div>
+  </LoadingContent>
+  <ChildContent>
+    @if (_notFound || _registrar is null)
+    {
+      @* Flow 01's NotFound, word for word (T233, T335; r7): an id that is not this role's to read is no page at all. *@
+      <div class="system-panel">
+        <p>There is no page at this address.</p>
+        <p class="muted">Check the address, or start again from Home.</p>
+        <div class="actions-cell">
+          <a class="btn btn-primary" href="/"><Icon Name="home" />Go to Home</a>
+        </div>
+      </div>
+    }
+    else
+    {
+      var registrar = _registrar;
+      <div class="registrar-stack">
+        @if (EndedOf(registrar) is { } ended)
+        {
+          @EndedSection(registrar, ended)
+        }
+        else
+        {
+          @PeriodSection(registrar)
+          @EpasSection(registrar)
+        }
+        @StandingSection(registrar)
+        @TrajectoriesSection(registrar)
+        @WaitingSection(registrar)
+        @ReviewsSection(registrar)
+      </div>
+    }
+  </ChildContent>
+</StatePanel>
+
+@code {
+  /// <summary>The registrar's trainee profile, as the address gives it.</summary>
+  [Parameter] public int ProfileId { get; set; }
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it; the claims' when nothing cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _notFound;
+  private ClaimsPrincipal _user = new();
+  private string _role = string.Empty;
+  private ProgrammeTraineeDto? _registrar;
+
+  private TraineeCurriculumProgressSummaryDto? _summary;
+  private bool _summaryFailed;
+  private EntrustmentStandingDto? _standing;
+  private bool _standingFailed;
+  private bool _standingLoading;
+  private IReadOnlyList<EpaTrajectoryDto> _trajectories = [];
+  private bool _trajectoriesFailed;
+  private WaitingForAssessorsDto? _waiting;
+  private bool _waitingFailed;
+  private IReadOnlyList<CommitteeReviewListItemDto> _reviews = [];
+  private bool _reviewsFailed;
+  private MsfCoverageDto? _msfCoverage;
+  private bool _msfFailed;
+
+  private SendActivityReminderResult? _reminder;
+  private bool _reminderFailed;
+  private ActionResult? _waitingResult;
+
+  private ElementReference _periodHeading;
+  private ElementReference _epasHeading;
+  private ElementReference _standingHeading;
+  private ElementReference _trajectoriesHeading;
+  private ElementReference _waitingHeading;
+  private ElementReference _reviewsHeading;
+  private EndedRecord? _endedRecord;
+  private ElementReference _endedErrorHeading;
+
+  // A section's Try again has answered: its heading takes the focus once the answer is drawn (review 30).
+  private Func<ValueTask>? _focusAfterRender;
+
+  /// <summary>The waiting section's result region, which takes the focus once a reminder has answered. A test matches it.</summary>
+  public ElementReference WaitingResultElement => _waitingResult?.Element ?? default;
+
+  /// <summary>How many of the registrar's waiting requests the section reads: every one, in practice.</summary>
+  public const int WaitingRows = 50;
+
+  /// <summary>
+  /// The h1, which the tab and the crumb share: "Programme trainee" while the page reads and when it failed (r5, r8),
+  /// "Page not found" for an id this role may not read (r7), else the registrar's name as stored.
+  /// </summary>
+  private string Heading => _loading || _loadError is not null
+    ? RegistrarWords.ErrorHeading
+    : _notFound || _registrar is null ? "Page not found" : _registrar.Name;
+
+  private string? Subtitle => _loading || _loadError is not null || _notFound || _registrar is null
+    ? null
+    : RegistrarWords.Subtitle(_registrar);
+
+  // The clock the host registers (Infrastructure's TimeProvider), else the system's; "today" on the South African
+  // calendar (T325), which the trajectories' academic year is read for.
+  private TimeProvider Clock => ServiceProvider.GetService<TimeProvider>() ?? TimeProvider.System;
+
+  /// <summary>How the programme ended, from the registrar read, or the counts' own when they say so; null while it runs.</summary>
+  private ProgrammeEndDto? EndedOf(ProgrammeTraineeDto registrar) => registrar.Ended ?? _summary?.Ended;
+
+  /// <summary>The day the page is read for: the ended programme's last day, else today (T252; D8).</summary>
+  private DateOnly ReadDay(ProgrammeTraineeDto registrar) => EndedOf(registrar)?.EndedOn ?? QuotaCalendar.Today(Clock);
+
+  /// <summary>The academic year the charts are drawn over (D8): the one containing today, or the programme's last day.</summary>
+  private (DateOnly From, DateOnly To) ChartWindow(ProgrammeTraineeDto registrar) => TrajectoryWindow.AcademicYearOf(ReadDay(registrar));
+
+  private IReadOnlyList<EpaTrajectoryDto> Rated => _trajectories.Where(trajectory => trajectory.Points.Count > 0).ToList();
+
+  /// <summary>The training year the index's STAR column is judged against: the standing's, else the counts'.</summary>
+  private int? VerdictYear => _standing?.TargetYear ?? _summary?.TraineeStage;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    await LoadOrFailAsync();
+  }
+
+  private async Task LoadOrFailAsync()
+  {
+    try
+    {
+      await LoadAsync();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Never the exception's text on the page: it goes to the log (T329, T272).
+      Logger.LogError(exception, "Programme trainee {ProfileId} could not be loaded.", ProfileId);
+      _loadError = RegistrarWords.LoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task LoadAsync()
+  {
+    _notFound = false;
+    _registrar = null;
+    _reminder = null;
+    _reminderFailed = false;
+    _user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+    // D2: the role the page reads as, never the union of the roles held (E4).
+    var role = ProgrammeReadAs.RoleFor(Acting ?? ActingRoleResolver.Resolve(_user), ProgrammeScope.RosterRoles);
+    if (role is null)
+    {
+      _notFound = true;
+      return;
+    }
+
+    _role = role;
+    var registrar = await Sender.Send(new GetProgrammeTraineeQuery(_user, role, ProfileId));
+    if (registrar is null)
+    {
+      _notFound = true;
+      return;
+    }
+
+    _registrar = registrar;
+
+    // Each section reads apart and fails apart (review 30): a failure is that section's sentence, never the page's.
+    await ReadSummaryAsync(registrar);
+    await ReadStandingAsync(registrar);
+    await ReadTrajectoriesAsync(registrar);
+    await ReadWaitingAsync(registrar);
+    await ReadReviewsAsync(registrar);
+  }
+
+  private async Task ReadSummaryAsync(ProgrammeTraineeDto registrar)
+  {
+    try
+    {
+      _summary = await Sender.Send(new GetCurriculumProgressForTraineeQuery(registrar.TraineeUserId, _user));
+      _summaryFailed = false;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "Programme trainee {ProfileId}'s counts could not be read.", ProfileId);
+      _summary = null;
+      _summaryFailed = true;
+    }
+
+    // An ended programme's cards say each period's MSF coverage, read to its last day (T168, T252).
+    _msfCoverage = null;
+    _msfFailed = false;
+    if (EndedOf(registrar) is { } ended && !_summaryFailed)
+    {
+      try
+      {
+        _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(registrar.TraineeUserId, _user, To: ended.EndedOn));
+      }
+      catch (Exception exception) when (exception is not OperationCanceledException)
+      {
+        Logger.LogError(exception, "Programme trainee {ProfileId}'s MSF coverage could not be read.", ProfileId);
+        _msfFailed = true;
+      }
+    }
+  }
+
+  private async Task ReadStandingAsync(ProgrammeTraineeDto registrar)
+  {
+    try
+    {
+      // An ended programme is judged against the training year it ended in (T252).
+      _standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(registrar.TraineeUserId, _user, EndedOf(registrar)?.EndedOn));
+      _standingFailed = false;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "Programme trainee {ProfileId}'s standing could not be read.", ProfileId);
+      _standing = null;
+      _standingFailed = true;
+    }
+  }
+
+  private async Task ReadTrajectoriesAsync(ProgrammeTraineeDto registrar)
+  {
+    try
+    {
+      var (from, to) = ChartWindow(registrar);
+      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(registrar.TraineeUserId, _user, from, to));
+      _trajectoriesFailed = false;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "Programme trainee {ProfileId}'s rating trajectories could not be read.", ProfileId);
+      _trajectories = [];
+      _trajectoriesFailed = true;
+    }
+  }
+
+  private async Task ReadWaitingAsync(ProgrammeTraineeDto registrar)
+  {
+    try
+    {
+      // A1's one read, for this registrar (E4): a Committee member reads it too, with MayRemind false.
+      _waiting = await Sender.Send(new ListWaitingForAssessorsQuery(
+        _user, _role, SubjectUserId: registrar.TraineeUserId, Page: 1, PageSize: WaitingRows));
+      _waitingFailed = false;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "Programme trainee {ProfileId}'s waiting requests could not be read.", ProfileId);
+      _waiting = null;
+      _waitingFailed = true;
+    }
+  }
+
+  private async Task ReadReviewsAsync(ProgrammeTraineeDto registrar)
+  {
+    try
+    {
+      _reviews = await Sender.Send(new ListReviewsForProgrammeTraineeQuery(_user, registrar.TraineeUserId));
+      _reviewsFailed = false;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "Programme trainee {ProfileId}'s committee reviews could not be read.", ProfileId);
+      _reviews = [];
+      _reviewsFailed = true;
+    }
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadOrFailAsync();
+  }
+
+  // After the page's Try again read: the h1, now the registrar's name. StatePanel calls it.
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  // ---- Each section's own Try again (review 30): it reads that section alone, and its heading takes the focus. ----
+
+  private async Task RetrySummaryAsync(Func<ValueTask> focus)
+  {
+    await ReadSummaryAsync(_registrar!);
+    _focusAfterRender = focus;
+  }
+
+  private async Task RetryStandingAsync()
+  {
+    _standingLoading = true;
+    try
+    {
+      await ReadStandingAsync(_registrar!);
+    }
+    finally
+    {
+      _standingLoading = false;
+    }
+
+    _focusAfterRender = () => _standingHeading.FocusAsync();
+  }
+
+  private async Task RetryTrajectoriesAsync()
+  {
+    await ReadTrajectoriesAsync(_registrar!);
+    _focusAfterRender = () => _trajectoriesHeading.FocusAsync();
+  }
+
+  private async Task RetryWaitingAsync()
+  {
+    _reminder = null;
+    _reminderFailed = false;
+    await ReadWaitingAsync(_registrar!);
+    _focusAfterRender = () => _waitingHeading.FocusAsync();
+  }
+
+  private async Task RetryReviewsAsync()
+  {
+    await ReadReviewsAsync(_registrar!);
+    _focusAfterRender = () => _reviewsHeading.FocusAsync();
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusAfterRender is { } focus)
+    {
+      _focusAfterRender = null;
+      await focus();
+    }
+  }
+
+  // ---- The reminder (C4; r2d, r2r, r2x): its answer in the section, the rows read again, the focus on the answer. ----
+
+  private async Task ReminderAnsweredAsync(SendActivityReminderResult result)
+  {
+    _reminder = result;
+    _reminderFailed = false;
+    // Read again: a sent reminder's row gives way to its "Reminded … by …" line; a refused one is drawn as it now reads.
+    await ReadWaitingAsync(_registrar!);
+    _waitingResult?.FocusAfterRender();
+  }
+
+  private Task ReminderFailedAsync()
+  {
+    _reminder = null;
+    _reminderFailed = true;
+    _waitingResult?.FocusAfterRender();
+    return Task.CompletedTask;
+  }
+
+  // ---- The sections ----
+
+  /// <summary>A section's own load error (r4): its lead, the fixed rest, and its own Try again.</summary>
+  private RenderFragment SectionError(string lead, Func<Task> retry) => __builder =>
+  {
+    <div class="alert alert-danger section-error" role="alert">
+      <div class="alert-row">
+        <span class="alert-row-text"><strong>@lead</strong> @RegistrarWords.TryAgainRest</span>
+        <button type="button" class="btn btn-outline btn-sm" @onclick="retry"><Icon Name="refresh-cw" />Try again</button>
+      </div>
+    </div>
+  };
+
+  /// <summary>This period (r1): flow 05's two figures and the ends line, with the training year's sentence for staff.</summary>
+  private RenderFragment PeriodSection(ProgrammeTraineeDto registrar) => __builder =>
+  {
+    <section class="detail-card period-card" aria-labelledby="period-h">
+      <h2 class="epa-section-title" id="period-h" tabindex="-1" @ref="_periodHeading">@RegistrarWords.PeriodHeading</h2>
+      @if (_summaryFailed)
+      {
+        @SectionError(RegistrarWords.PeriodFailedLead, () => RetrySummaryAsync(() => _periodHeading.FocusAsync()))
+      }
+      else if (_summary is null)
+      {
+        <p class="card-empty">@NoCurriculum(registrar.Name)</p>
+      }
+      else
+      {
+        var summary = _summary;
+        <div class="dashboard-metric-row">
+          @if (summary.HasSemesterItems)
+          {
+            var semester = ProgressWords.SemesterFigure(summary);
+            <div class="dashboard-metric">
+              <span class="dashboard-metric-value">@semester.Value</span>
+              <span class="dashboard-metric-label">@semester.Label</span>
+            </div>
+          }
+          @if (summary.HasYearItems)
+          {
+            var year = ProgressWords.YearFigure(summary);
+            <div class="dashboard-metric">
+              <span class="dashboard-metric-value">@year.Value</span>
+              <span class="dashboard-metric-label">@year.Label</span>
+            </div>
+          }
+        </div>
+        <p class="period-ends">@RegistrarWords.PeriodLine(summary)</p>
+      }
+    </section>
+  };
+
+  /// <summary>EPAs (r1): the index, its names as text (review 7), its STAR column from the standing.</summary>
+  private RenderFragment EpasSection(ProgrammeTraineeDto registrar) => __builder =>
+  {
+    <section class="index-section" aria-labelledby="epas-h">
+      <h2 class="epa-section-title" id="epas-h" tabindex="-1" @ref="_epasHeading">@RegistrarWords.EpasHeading</h2>
+      @if (_summaryFailed)
+      {
+        @SectionError(RegistrarWords.EpasFailedLead, () => RetrySummaryAsync(() => _epasHeading.FocusAsync()))
+      }
+      else if (_summary is null)
+      {
+        <p class="card-empty">@NoCurriculum(registrar.Name)</p>
+      }
+      else if (_summary.Items.Count == 0 && _summary.Paused.Count == 0)
+      {
+        <p class="card-empty">@NoEpaInUse(registrar.Name)</p>
+      }
+      else
+      {
+        <EpaProgressTable Summary="_summary" Standing="_standing" StandingFailed="_standingFailed" TrainingYear="VerdictYear" EpaNamesAsText="true" />
+      }
+    </section>
+  };
+
+  /// <summary>
+  /// An ended registrar (r6; round-3-check 2): flow 05's ended record in staff words, in place of This period and EPAs.
+  /// </summary>
+  private RenderFragment EndedSection(ProgrammeTraineeDto registrar, ProgrammeEndDto ended) => __builder =>
+  {
+    @if (_summaryFailed || _summary is null)
+    {
+      <section class="index-section" aria-labelledby="ended-h">
+        <h2 class="epa-section-title" id="ended-h" tabindex="-1" @ref="_endedErrorHeading">@EndedHeading</h2>
+        @if (_summaryFailed)
+        {
+          @SectionError(RegistrarWords.EpasFailedLead, () => RetrySummaryAsync(FocusEndedAsync))
+        }
+        else
+        {
+          <p class="card-empty">@NoCurriculum(registrar.Name)</p>
+        }
+      </section>
+    }
+    else
+    {
+      <EndedRecord @ref="_endedRecord" Summary="_summary" Ended="ended" MsfCoverage="_msfCoverage" MsfFailed="_msfFailed" SubjectName="@registrar.Name" />
+    }
+  };
+
+  private ValueTask FocusEndedAsync() => _endedRecord is { } record && !_summaryFailed ? record.FocusHeadingAsync() : _endedErrorHeading.FocusAsync();
+
+  /// <summary>Entrustment against Annexure A (r1, r3): the panel whole, Self false, each charted EPA's name linking to its chart.</summary>
+  private RenderFragment StandingSection(ProgrammeTraineeDto registrar) => __builder =>
+  {
+    <section class="standing-panel" aria-labelledby="standing-h">
+      <h2 class="epa-section-title" id="standing-h" tabindex="-1" @ref="_standingHeading">@RegistrarWords.StandingHeading</h2>
+      @if (_standingFailed && !_standingLoading)
+      {
+        @SectionError(RegistrarWords.StandingFailedLead, RetryStandingAsync)
+      }
+      else if (_standing is null && !_standingLoading)
+      {
+        <p class="card-empty">@NoCurriculum(registrar.Name)</p>
+      }
+      else
+      {
+        <EntrustmentStandingPanel Standing="@_standing"
+                                  IsLoading="_standingLoading"
+                                  Self="false"
+                                  ProgrammeEnd="@EndedOf(registrar)"
+                                  EpaHref="ChartOf" />
+      }
+    </section>
+  };
+
+  /// <summary>An EPA charted on this page links to its chart, which takes the focus (D8); any other is text.</summary>
+  private string? ChartOf(EpaStandingDto epa)
+    => Rated.Any(trajectory => trajectory.EpaId == epa.EpaId) ? $"#trajectory-{epa.EpaId}" : null;
+
+  /// <summary>Rating trajectories (r1–r3, r6): a chart per rated EPA over the academic year, each an h3, no Today rule (D8).</summary>
+  private RenderFragment TrajectoriesSection(ProgrammeTraineeDto registrar) => __builder =>
+  {
+    <section class="list-section" aria-labelledby="trajectories-h">
+      <h2 class="epa-section-title" id="trajectories-h" tabindex="-1" @ref="_trajectoriesHeading">@RegistrarWords.TrajectoriesHeading</h2>
+      @if (_trajectoriesFailed)
+      {
+        @SectionError(RegistrarWords.TrajectoriesFailedLead, RetryTrajectoriesAsync)
+      }
+      else if (Rated is { Count: > 0 } rated)
+      {
+        <div class="stack-list">
+          @foreach (var trajectory in rated)
+          {
+            <TrajectoryChart Trajectory="trajectory" HeadingLevel="3" SubjectName="@registrar.Name" />
+          }
+        </div>
+      }
+      else
+      {
+        <p class="card-empty">@RegistrarWords.NoRatings(ChartWindow(registrar), ended: EndedOf(registrar) is not null)</p>
+      }
+    </section>
+  };
+
+  /// <summary>
+  /// Waiting for assessors (r1, r2, r2d, r2r, r2x): A1's read for this registrar in the staff reading, Send a reminder
+  /// for a role that may remind, its answer in the section's own result region (C4).
+  /// </summary>
+  private RenderFragment WaitingSection(ProgrammeTraineeDto registrar) => __builder =>
+  {
+    var waiting = _waitingFailed ? null : _waiting;
+    var tone = waiting is { MatchOverdueCount: > 0 } ? "detail-card--warning" : "detail-card--emphasis";
+    <section class="detail-card @tone" aria-labelledby="waiting-h">
+      <h2 class="epa-section-title" id="waiting-h" tabindex="-1" @ref="_waitingHeading">
+        @RegistrarWords.WaitingHeading
+        @if (waiting is { MatchCount: > 0 })
+        {
+          @* The count in flow 04's words, "1 waiting, 1 overdue", as the heading's badge (R2-Registrar r2). *@
+          <span class="badge @BadgeFor.State(BadgeState.Submitted)">@WaitingWords.StaffCount(waiting)</span>
+        }
+      </h2>
+      @if (_waitingFailed)
+      {
+        @SectionError(RegistrarWords.WaitingFailedLead, RetryWaitingAsync)
+      }
+      <ActionResult @ref="_waitingResult">
+        @if (_reminder is { } result)
+        {
+          <Alert Kind="@(ReminderWords.IsRefusal(result) ? "danger" : "success")"><strong>@ReminderWords.Lead(result)</strong> @ReminderWords.Detail(result)</Alert>
+        }
+        else if (_reminderFailed)
+        {
+          <Alert Kind="danger">@ReminderWords.Failed</Alert>
+        }
+      </ActionResult>
+      @if (waiting is { Items.Count: > 0 })
+      {
+        var names = ActivityRowNames.Waiting(waiting.Items);
+        <p class="needs-you-rule">@WaitingWords.StaffRuleLine(waiting.DueDays, waiting.NudgeDays)</p>
+        @if (waiting.MayRemind)
+        {
+          <WaitingList Items="waiting.Items" Names="names" WithNominee="true">
+            <RowAction Context="item">
+              <ReminderAction Item="item" ActingRole="@_role" LinkName="@NameOf(names, item)"
+                              OnResult="ReminderAnsweredAsync" OnFailed="ReminderFailedAsync" />
+            </RowAction>
+          </WaitingList>
+        }
+        else
+        {
+          <WaitingList Items="waiting.Items" Names="names" WithNominee="true" />
+        }
+        @if (waiting.MatchCount > waiting.Items.Count)
+        {
+          <p class="waiting-more">@WaitingWords.StaffMore(waiting.MatchCount - waiting.Items.Count)</p>
+        }
+      }
+      else if (waiting is not null)
+      {
+        <p class="card-empty">@RegistrarWords.NothingWaiting(registrar.Name)</p>
+      }
+    </section>
+  };
+
+  // The row link's own name where two read the same, so the button says "(1 of 2)" as the link does (round 3 item 29).
+  private static string? NameOf(IReadOnlyDictionary<int, string> names, ActivitySummaryDto item)
+    => names.TryGetValue(item.Id, out var name) ? name : null;
+
+  /// <summary>Committee reviews (r1, r3, r6; C9): each review the reader may open, a link to it, newest first.</summary>
+  private RenderFragment ReviewsSection(ProgrammeTraineeDto registrar) => __builder =>
+  {
+    <section class="detail-card" aria-labelledby="reviews-h">
+      <h2 class="epa-section-title" id="reviews-h" tabindex="-1" @ref="_reviewsHeading">@RegistrarWords.ReviewsHeading</h2>
+      @if (_reviewsFailed)
+      {
+        @SectionError(RegistrarWords.ReviewsFailedLead, RetryReviewsAsync)
+      }
+      else if (_reviews.Count > 0)
+      {
+        <ul class="list-unstyled">
+          @foreach (var review in _reviews)
+          {
+            <li class="progress-row progress-row--link">
+              @* The committee review page, /committee/reviews/{ReviewId:int} (ReviewDetail). *@
+              <a class="progress-row-link" href="@($"/committee/reviews/{review.Id}")">@RegistrarWords.ReviewLink(review)</a>
+              <p class="progress-row-meta">@RegistrarWords.ReviewMeta(review)</p>
+            </li>
+          }
+        </ul>
+      }
+      else
+      {
+        <p class="card-empty">@RegistrarWords.NoReview(registrar.Name)</p>
+      }
+    </section>
+  };
+
+  /// <summary>The ended record's heading, when its counts could not be read (My progress's "Curriculum targets").</summary>
+  private const string EndedHeading = "Curriculum targets";
+
+  /// <summary>No counts at all for the registrar: no curriculum on record (the reader's null).</summary>
+  public static string NoCurriculum(string name) => $"No curriculum is on record for {name}.";
+
+  /// <summary>Admitted, but no EPA of the curriculum in force (T158, D48): My progress's sentence, for staff.</summary>
+  public static string NoEpaInUse(string name)
+    => $"No EPA on {RegistrarWords.Possessive(name)} curriculum is in use at the moment, so no target applies.";
+}

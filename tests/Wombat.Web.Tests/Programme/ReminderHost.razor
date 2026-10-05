@@ -1,0 +1,62 @@
+@using Wombat.Application.Features.Activities.Dtos
+@using Wombat.Application.Features.Programme.Commands.SendActivityReminder
+@using Wombat.Web.Components.Shared
+@using Wombat.Web.Components.Shared.Programme
+
+@*
+  A host for ReminderAction's tests (T358, lane A1), as the waiting list and the registrar page host it: the answer in the
+  host's own ActionResult, which takes the focus once it is shown (C4; round 3 item 23). Lanes C and D write the real ones.
+*@
+<ActionResult @ref="_region">
+  @if (_result is { } result)
+  {
+    <div class="alert @(ReminderWords.IsRefusal(result) ? "alert-danger" : "alert-success")"
+         role="@(ReminderWords.IsRefusal(result) ? "alert" : "status")"><strong>@ReminderWords.Lead(result)</strong> @ReminderWords.Detail(result)</div>
+  }
+  @if (_failed)
+  {
+    <div class="alert alert-danger" role="alert">@ReminderWords.Failed</div>
+  }
+</ActionResult>
+<table>
+  <tbody>
+    <tr>
+      <td class="waited-cell">
+        <b>8 days</b><span>since 2026-09-26 08:10 SAST</span>
+        <ReminderAction Item="Item" ActingRole="@ActingRole" LinkName="@LinkName" OnResult="ShowAsync" OnFailed="FailAsync" />
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+@code {
+  private ActionResult? _region;
+  private SendActivityReminderResult? _result;
+  private bool _failed;
+
+  [Parameter, EditorRequired] public ActivitySummaryDto Item { get; set; } = default!;
+
+  [Parameter] public string ActingRole { get; set; } = "Coordinator";
+
+  [Parameter] public string? LinkName { get; set; }
+
+  /// <summary>Every answer handed over, in order.</summary>
+  public List<SendActivityReminderResult> Answers { get; } = [];
+
+  private Task ShowAsync(SendActivityReminderResult result)
+  {
+    Answers.Add(result);
+    _result = result;
+    _failed = false;
+    _region?.FocusAfterRender();
+    return Task.CompletedTask;
+  }
+
+  private Task FailAsync()
+  {
+    _result = null;
+    _failed = true;
+    _region?.FocusAfterRender();
+    return Task.CompletedTask;
+  }
+}

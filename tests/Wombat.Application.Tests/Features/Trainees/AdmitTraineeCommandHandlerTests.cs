@@ -225,6 +225,38 @@ public sealed class AdmitTraineeCommandHandlerTests
         profile.AdoptionId.Should().Be(7000);
     }
 
+    /// <summary>
+    /// T358, D1: admission records the day it happened on the South African calendar, read from the clock, beside the
+    /// programme's start, which is another day. 22:30 UTC on 4 October is already 5 October in South Africa.
+    /// </summary>
+    [Fact]
+    public async Task Handle_RecordsTheAdmissionDay_OnTheSouthAfricanCalendar_FromTheClock()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        await using var dbContext = new ApplicationDbContext(options);
+        SeedCurriculum(dbContext);
+
+        var userAdministrationService = new Mock<IUserAdministrationService>();
+        userAdministrationService
+            .Setup(service => service.GetByIdAsync("user-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserIdentityDetails(
+                "user-1", "trainee@example.test", "Pending", "Trainee", 10, [100], [1000], [WombatRoles.PendingTrainee]));
+
+        var clock = new FixedClock(new DateTimeOffset(2026, 10, 4, 22, 30, 0, TimeSpan.Zero));
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object, clock);
+
+        await handler.Handle(
+            new AdmitTraineeCommand("user-1", 3000, new DateOnly(2026, 1, 15), null, TestPrincipals.Administrator()),
+            CancellationToken.None);
+
+        var profile = await dbContext.TraineeProfiles.SingleAsync();
+        profile.AdmittedOn.Should().Be(new DateOnly(2026, 10, 5), "the South African day, not the UTC one");
+        profile.ProgrammeStartDate.Should().Be(new DateOnly(2026, 1, 15), "the programme's start is its own day");
+    }
+
     [Fact]
     public async Task Handle_WhenInstitutionHasNotAdoptedTheCurriculum_Throws()
     {
@@ -254,5 +286,10 @@ public sealed class AdmitTraineeCommandHandlerTests
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*not adopted a curriculum*");
         dbContext.TraineeProfiles.Should().BeEmpty();
+    }
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 }

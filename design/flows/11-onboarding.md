@@ -717,15 +717,23 @@ Expect: Within a minute of her admission the tab moves to the sign-in page, whic
 Step 2.32 — Mr Smit, Coordinator
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
-Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision panels address, then the
-  new-panel address.
-Expect: The dashboard reads "No stalled requests.", "No invitations expiring soon." and a Quick action, "Start an MSF
-  campaign". The sidebar reads "Acting as Coordinator" over Home, Decisions due, MSF campaigns, Committee reviews and
-  Data rights requests, then My data rights. It has no Invitations, and the invitations page reads "You cannot
-  open this page", "Your role (Coordinator) does not open this page." and "If you need it for your work, ask your
-  institution's Wombat administrator.", with Go to Home (T178, T335). It has no Decision panels either, though that page
-  admits him: it lists the panel with no New panel and no Edit column, and nothing in his menu is lit there. The panel
-  form reads "You cannot open this page" in the same words.
+Do: Sign in and read the dashboard and nav. Type the invitations address. Open Decision panels from the menu, then type
+  the new-panel address.
+Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "Start an MSF campaign"
+  (`/msf/campaigns/new`), where a Quick action card was (T358, Q6). Its cards, in order:
+  - "Waiting for assessors", with no badge: "Nothing is waiting for an assessor.", with Open Waiting for assessors;
+  - "Nothing filed in 30 days", its rule line "Current registrars with nothing filed (a draft is not filed) in the last
+    30 days. A registrar admitted less than 30 days ago is not listed.", then "Every current registrar has filed
+    something in the last 30 days.", with Open in Programme trainees: the registrars were admitted today, and a
+    registrar admitted less than 30 days ago is not listed (E5);
+  - "Invitations nearing expiry": "No invitations expiring soon."
+  The sidebar reads "Acting as Coordinator" over Home, Programme trainees, Waiting for assessors, Decisions due, MSF
+  campaigns, Committee reviews, Decision panels and Data rights requests, one flat list (E2), then My data rights. It
+  has no Invitations, and the invitations page reads "You cannot open this page", "Your role (Coordinator) does not open
+  this page." and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home (T178,
+  T335). Decision panels lists the panel with no New panel and no Edit column, and Decision panels is lit there (T358,
+  C10). The panel form reads "You cannot open this page" in the same words: the Coordinator reads panels, and edits none
+  (D4).
 
 Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

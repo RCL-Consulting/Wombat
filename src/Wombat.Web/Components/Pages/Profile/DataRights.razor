@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject Microsoft.Extensions.Options.IOptions<Wombat.Application.Common.Options.DashboardThresholds> Thresholds
 
 <PageTitle>My data rights · Wombat</PageTitle>
 
@@ -157,10 +158,12 @@
 
   /// <summary>
   /// What the opt-out stops: the three jobs that ask <c>ReminderRecipientPolicy</c> (T151, T240), and what it does not.
+  /// The nudge's days are its own setting, <c>DashboardThresholds.AssessorNudgeDays</c>, where this wrote 5 by hand (T358,
+  /// review 11); the words are unchanged (E1: a staff member's reminder about one request is the second kind, still sent).
   /// </summary>
-  private const string DigestEmailsHelp =
+  private string DigestEmailsHelp =>
     "Stops three regular reminders: the weekly coordinator digest, the reminder of drafts left untouched for 14 days, " +
-    "and the reminder of activities that have waited more than 5 days for you to assess. Email about one particular " +
+    $"and the reminder of activities that have waited more than {Thresholds.Value.AssessorNudgeDays.ToString(System.Globalization.CultureInfo.InvariantCulture)} days for you to assess. Email about one particular " +
     "thing is still sent, such as a request to assess, an invitation to give feedback, or a committee or entrustment " +
     "decision.";
 

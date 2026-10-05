@@ -38,6 +38,31 @@ public static class PostgresErrors
     public static bool IsForeignKeyViolation(string? sqlState)
         => sqlState is ForeignKeyViolation or RestrictViolation;
 
+    /// <summary><c>unique_violation</c>: a unique index refusing an insert or update (T358, D6).</summary>
+    public const string UniqueViolation = "23505";
+
+    /// <summary>Whether <paramref name="sqlState" /> is a unique index refusing a write.</summary>
+    public static bool IsUniqueViolation(string? sqlState) => sqlState is UniqueViolation;
+
+    /// <summary>
+    /// Whether <paramref name="exception" /> is a unique index refusing a write: the provider's exception itself, or any
+    /// exception carrying it at any depth, as <see cref="IsForeignKeyViolation(Exception?)" /> reads the chain. The
+    /// reminder's same-day block is a unique index, so two staff sending in the same instant meet it, and the second is
+    /// told "already reminded today" (T358, D6).
+    /// </summary>
+    public static bool IsUniqueViolation(Exception? exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is DbException refusal && IsUniqueViolation(refusal.SqlState))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Whether <paramref name="exception" /> is a foreign key refusing a write: the provider's exception itself, or any
     /// exception carrying it at any depth. A refused <c>SaveChanges</c> wraps it in a <c>DbUpdateException</c>, and a

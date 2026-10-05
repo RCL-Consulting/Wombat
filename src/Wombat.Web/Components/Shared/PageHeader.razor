@@ -74,8 +74,15 @@
   /// <summary>The person's navigation, as MainLayout cascades it; none outside the signed-in shell.</summary>
   [CascadingParameter] public NavMenuModel? Menu { get; set; }
 
+  /// <summary>
+  /// Where to tell the shell which page is drawn, as Routes cascades it (T358, build review D1): a page that draws Page not
+  /// found in its own place says so through its header, and the menu lights what Page not found lights, nothing.
+  /// </summary>
+  [CascadingParameter] public PageDrawn? Drawn { get; set; }
+
   protected override void OnParametersSet()
   {
+    Drawn?.Draw(Route, Page);
     var before = NavOwners.TrailTo(Page ?? Route?.PageType, Acting?.Role, Menu);
     _trail = before is null ? null : [.. before, .. Trail ?? [], new Crumb(CurrentCrumb ?? Title)];
   }

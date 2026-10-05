@@ -22,6 +22,8 @@ using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.Portfolio;
 using Wombat.Web.Components.Pages.Profile;
+using Wombat.Web.Components.Pages.Programme;
+using EntrustmentDecisionsPage = Wombat.Web.Components.Pages.Admin.EntrustmentDecisions.Index;
 
 namespace Wombat.Web.Navigation;
 
@@ -60,21 +62,27 @@ public sealed record NavMenuModel(IReadOnlyList<NavGroup> Groups, IReadOnlyList<
 /// <list type="bullet">
 /// <item><b>One role at a time.</b> The acting role's links, never the union of the roles held: access is the union and
 /// never changes, so a page outside the acting role's links still opens (R2-Rules § 1).</item>
-/// <item><b>Grouped only when long.</b> Up to <see cref="FlatLimit" /> links, Home and the personal links counted, the list
-/// is flat. Longer (the Administrator's 17 and the Institutional admin's 16), it is grouped under headings that are not
-/// links.</item>
+/// <item><b>Grouped only when long.</b> Up to <see cref="FlatLimit" /> of the acting role's links, Home counted, the list
+/// is flat; the personal links are not counted, since they sit under their own rule whatever the role (T358, flow 06,
+/// E2: the Coordinator's eight stay flat). Longer (the Administrator's 16 and the Institutional admin's 15, Home counted;
+/// T358 build review G4), it is grouped under headings that are not links.</item>
 /// <item><b>The personal links</b>, last and under a rule, belong to the person rather than the role, so they are shown
 /// whatever the role: My progress to anyone holding a trainee record (the claim sign-in issues, T252, D8) or the Trainee
 /// role, a graduate acting as Assessor included; My data rights to everyone signed in.</item>
 /// <item><b>Nothing unbuilt.</b> The nav never links to a page that does not exist. The five placeholders (Recent
-/// activities, Stalled activities, Programme trainees, STAR review queue, System) went with the placeholder page: flows
-/// 06 and 09 design the ones kept, and the others were dropped (the flow 01 pick).</item>
+/// activities, Stalled activities, Programme trainees, STAR review queue, System) went with the placeholder page. Flow 06
+/// built Programme trainees and, in Stalled activities' place, Waiting for assessors (T358); Entrustment decisions, the
+/// programme's register of STARs, is offered under its own label where the STAR review queue would have been; the others
+/// were dropped (the flow 01 pick).</item>
 /// <item><b>No Sign out and no My account:</b> the account row carries both.</item>
 /// </list>
 /// </remarks>
 public static class NavItems
 {
-    /// <summary>Up to this many links in all, the list is flat; more, it is grouped.</summary>
+    /// <summary>
+    /// Up to this many of the acting role's links, Home counted, the list is flat; more, it is grouped. The personal links
+    /// are not counted (T358, E2).
+    /// </summary>
     public const int FlatLimit = 8;
 
     public static readonly NavItem Home = new("/", "Home", "home", typeof(Home));
@@ -92,6 +100,11 @@ public static class NavItems
     public static readonly NavItem CommitteeReviews = new("/committee/reviews", "Committee reviews", "file-text", typeof(ReviewsSchedule));
     public static readonly NavItem DecisionPanels = new("/committee/panels", "Decision panels", "scale", typeof(PanelsList));
     public static readonly NavItem MsfCampaigns = new("/msf/campaigns", "MSF campaigns", "message-square", typeof(CampaignsList));
+
+    // Watching the programme (T358, flow 06; Q7, C10).
+    public static readonly NavItem ProgrammeTrainees = new("/programme/trainees", "Programme trainees", "users", typeof(ProgrammeTrainees));
+    public static readonly NavItem WaitingForAssessors = new("/programme/waiting", "Waiting for assessors", "clock", typeof(WaitingForAssessors));
+    public static readonly NavItem EntrustmentDecisions = new("/admin/entrustment-decisions", "Entrustment decisions", "award", typeof(EntrustmentDecisionsPage));
 
     // The catalogue.
     public static readonly NavItem Specialities = new("/admin/specialities", "Specialities", "stethoscope", typeof(MySpecialitiesRedirect));
@@ -120,8 +133,8 @@ public static class NavItems
     public static readonly NavItem MyDataRights = new("/account/data-rights", "My data rights", "lock", typeof(DataRights));
 
     /// <summary>
-    /// Each role's links, grouped, Home and the personal links aside. A role whose links, with Home and the personal links,
-    /// come to <see cref="FlatLimit" /> or fewer has one group, whose heading is never shown.
+    /// Each role's links, grouped, Home and the personal links aside. A role whose links, with Home, come to
+    /// <see cref="FlatLimit" /> or fewer has one group, whose heading is never shown.
     /// </summary>
     private static readonly IReadOnlyDictionary<string, IReadOnlyList<NavGroup>> ByRole =
         new Dictionary<string, IReadOnlyList<NavGroup>>(StringComparer.Ordinal)
@@ -145,13 +158,21 @@ public static class NavItems
             // T300: the College writes its disciplines' activity types (T091), and the builder admits it.
             [WombatRoles.CollegeAdmin] = [new(null, [Specialities, Epas, Curricula, ActivityTypes])],
 
-            // T131 slice 6: Decisions due is for the roles that schedule reviews, so not for a Committee member.
-            [WombatRoles.SpecialityAdmin] = [new(null, [DecisionsDue, CommitteeReviews, DecisionPanels])],
-            [WombatRoles.SubSpecialityAdmin] = [new(null, [DecisionsDue, CommitteeReviews, DecisionPanels])],
-            [WombatRoles.CommitteeMember] = [new(null, [CommitteeReviews, DecisionPanels])],
+            // T131 slice 6: Decisions due is for the roles that schedule reviews, so not for a Committee member. T358 (flow 06,
+            // Q7, C10): Programme trainees for the four roles that watch the programme; Waiting for assessors for the three
+            // that chase it, not the Committee member, whose work is not chasing; Entrustment decisions for both speciality
+            // admins, reached until then only by address (R2-Menus m2, m5).
+            [WombatRoles.SpecialityAdmin] =
+                [new(null, [ProgrammeTrainees, WaitingForAssessors, DecisionsDue, CommitteeReviews, DecisionPanels, EntrustmentDecisions])],
+            [WombatRoles.SubSpecialityAdmin] =
+                [new(null, [ProgrammeTrainees, WaitingForAssessors, DecisionsDue, CommitteeReviews, DecisionPanels, EntrustmentDecisions])],
+            [WombatRoles.CommitteeMember] = [new(null, [ProgrammeTrainees, CommitteeReviews, DecisionPanels])],
 
-            // Not Invitations: its page admits only an Administrator or an Institutional admin (T178).
-            [WombatRoles.Coordinator] = [new(null, [DecisionsDue, MsfCampaigns, CommitteeReviews, DataRightsRequests])],
+            // Not Invitations: its page admits only an Administrator or an Institutional admin (T178). Decision panels since
+            // T358 (R2-Menus m4): the list admitted the Coordinator with no menu item (Step 2.32); it is read-only for him,
+            // and a panel's own page still refuses him (D4). Eight links with Home, flat (E2).
+            [WombatRoles.Coordinator] =
+                [new(null, [ProgrammeTrainees, WaitingForAssessors, DecisionsDue, MsfCampaigns, CommitteeReviews, DecisionPanels, DataRightsRequests])],
             [WombatRoles.Assessor] = [new(null, [ActivityInbox])],
 
             // T154: the portfolio review asks the trainee to export the period and hand the PDF to the reviewer.
@@ -173,7 +194,8 @@ public static class NavItems
         var groups = acting.Role is { } role && ByRole.TryGetValue(role, out var own) ? own : [];
         var personal = PersonalFor(user);
 
-        var count = 1 + groups.Sum(group => group.Items.Count) + personal.Count;
+        // Home and the role's links; the personal links are not counted (T358, E2).
+        var count = 1 + groups.Sum(group => group.Items.Count);
         IReadOnlyList<NavGroup> shown = count <= FlatLimit
             ? [new NavGroup(null, [Home, .. groups.SelectMany(group => group.Items)])]
             : [new NavGroup(null, [Home]), .. groups];

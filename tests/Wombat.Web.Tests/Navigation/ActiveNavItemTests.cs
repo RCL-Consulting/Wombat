@@ -21,6 +21,8 @@ using Wombat.Web.Components.Pages.Admin.Institutions;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.Portfolio;
+using Wombat.Web.Components.Pages.Programme;
+using EntrustmentDecisionsPage = Wombat.Web.Components.Pages.Admin.EntrustmentDecisions.Index;
 using Wombat.Web.Components.Shared;
 using Wombat.Web.Navigation;
 using Wombat.Web.Services;
@@ -154,7 +156,10 @@ public sealed class ActiveNavItemTests : TestContext
     [InlineData(WombatRoles.Trainee, "My activities")]
     [InlineData(WombatRoles.PendingTrainee, "My activities")]
     [InlineData(WombatRoles.CommitteeMember, null)]
-    [InlineData(WombatRoles.Coordinator, null)]
+    // T358, flow 06 (round 3 item 10): an activity opened from Waiting for assessors lights it for the three it serves.
+    [InlineData(WombatRoles.Coordinator, "Waiting for assessors")]
+    [InlineData(WombatRoles.SpecialityAdmin, "Waiting for assessors")]
+    [InlineData(WombatRoles.SubSpecialityAdmin, "Waiting for assessors")]
     [InlineData(WombatRoles.Administrator, null)]
     public void AnActivity_LightsTheActingRolesList(string role, string? owner)
         => LitLabel(role, typeof(ActivityView)).Should().Be(owner);
@@ -311,6 +316,58 @@ public sealed class ActiveNavItemTests : TestContext
         trail.QuerySelectorAll("[aria-current]").Should().ContainSingle();
     }
 
+    // T358, flow 06: a registrar's page is under Programme trainees for the four roles that watch the programme, so it
+    // lights Programme trainees ("true") and its trail is Home › Programme trainees › the registrar.
+    [Theory]
+    [InlineData(WombatRoles.CommitteeMember)]
+    [InlineData(WombatRoles.SpecialityAdmin)]
+    [InlineData(WombatRoles.SubSpecialityAdmin)]
+    [InlineData(WombatRoles.Coordinator)]
+    public void ARegistrarsPage_LightsProgrammeTrainees_UnderHomeAndProgrammeTrainees(string role)
+    {
+        var lit = RenderNav(role, typeof(ProgrammeTraineeDetail)).FindAll("a.active").Should().ContainSingle().Which;
+        lit.TextContent.Trim().Should().Be("Programme trainees");
+        lit.GetAttribute("aria-current").Should().Be("true");
+
+        Crumbs(RenderHeader(role, typeof(ProgrammeTraineeDetail), "Nomsa Mahlangu"))
+            .Should().Equal(("Home", "/"), ("Programme trainees", "/programme/trainees"), ("Nomsa Mahlangu", null));
+    }
+
+    // T358, flow 06 (R2-Menus m5): Entrustment decisions is a list both speciality admins' menus offer, so it lights itself
+    // and draws no trail; it was Home › Entrustment decisions with nothing lit.
+    [Theory]
+    [InlineData(WombatRoles.SpecialityAdmin)]
+    [InlineData(WombatRoles.SubSpecialityAdmin)]
+    public void EntrustmentDecisions_LightsItself_WithNoTrail(string role)
+    {
+        var lit = RenderNav(role, typeof(EntrustmentDecisionsPage)).FindAll("a.active").Should().ContainSingle().Which;
+        lit.TextContent.Trim().Should().Be("Entrustment decisions");
+        lit.GetAttribute("aria-current").Should().Be("page");
+        Crumbs(RenderHeader(role, typeof(EntrustmentDecisionsPage), "Entrustment decisions")).Should().BeEmpty();
+    }
+
+    // T358, flow 06: Programme trainees and Waiting for assessors light themselves for the roles whose menus offer them.
+    [Theory]
+    [InlineData(WombatRoles.CommitteeMember, typeof(ProgrammeTrainees), "Programme trainees")]
+    [InlineData(WombatRoles.Coordinator, typeof(ProgrammeTrainees), "Programme trainees")]
+    [InlineData(WombatRoles.SpecialityAdmin, typeof(WaitingForAssessors), "Waiting for assessors")]
+    [InlineData(WombatRoles.Coordinator, typeof(WaitingForAssessors), "Waiting for assessors")]
+    public void TheProgrammesLists_LightThemselves(string role, Type page, string label)
+    {
+        var lit = RenderNav(role, page).FindAll("a.active").Should().ContainSingle().Which;
+        lit.TextContent.Trim().Should().Be(label);
+        lit.GetAttribute("aria-current").Should().Be("page");
+    }
+
+    // D4: a decision panel's page does not admit the Coordinator, so it names no owner for him; his Decision panels item
+    // lights only on the list.
+    [Fact]
+    public void ADecisionPanel_LightsNothingForTheCoordinator_WhoseListLightsItself()
+    {
+        LitLabel(WombatRoles.Coordinator, typeof(PanelEdit)).Should().BeNull();
+        LitLabel(WombatRoles.Coordinator, typeof(PanelsList)).Should().Be("Decision panels");
+    }
+
     [Fact]
     public void WithNoOwnerForTheActingRole_TheTrailIsHome_ThenThePage()
         => Crumbs(RenderHeader(WombatRoles.CommitteeMember, typeof(ActivityView), "Mini-CEX for Anele Dlamini"))
@@ -363,6 +420,44 @@ public sealed class ActiveNavItemTests : TestContext
         cut.FindAll("a.nav-link").Select(a => a.TextContent.Trim()).Should().Contain("Decision panels", "guard: her menu shows the owner");
         cut.FindAll("a.active, a[aria-current]").Should().BeEmpty();
         cut.FindAll("nav[aria-label='Breadcrumb']").Should().BeEmpty();
+    }
+
+    // T358, build review D1: a registrar, a roster or an EPA that is not the caller's to read draws flow 01's Page not found
+    // in its own place, at its own address. The menu lit by the routed page, so Programme trainees (or My progress) read
+    // aria-current over a page that is not there. The page tells the shell what it drew, and the shell lights nothing.
+    public static TheoryData<Type, string, string, string?> PagesThatDrawPageNotFound() => new()
+    {
+        { typeof(ProgrammeTraineeDetail), "ProfileId", WombatRoles.CommitteeMember, "Programme trainees" },
+        { typeof(ProgrammeTrainees), "", WombatRoles.Coordinator, "Programme trainees" },
+        { typeof(EpaProgress), "EpaId", WombatRoles.Trainee, "My progress" },
+    };
+
+    [Theory]
+    [MemberData(nameof(PagesThatDrawPageNotFound))]
+    public void APageThatDrawsPageNotFound_LightsNothingInTheMenu(Type page, string idParameter, string role, string? litWhenFound)
+    {
+        Services.AddSingleton<IScopedSender>(new NothingSender());
+        Services.AddSingleton(TimeProvider.System);
+        var auth = this.AddTestAuthorization();
+        auth.SetAuthorized("smit@kgk.wombat.local");
+        auth.SetRoles(role);
+        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "smit"));
+        var values = idParameter.Length == 0 ? new Dictionary<string, object?>() : new Dictionary<string, object?> { [idParameter] = 12 };
+        var menu = MenuFor(role, TraineeRecord());
+
+        NavOwners.Lit(page, role, menu).Item?.Label.Should().Be(litWhenFound, "guard: found, the page lights this item");
+
+        var cut = RenderComponent<ShellHost>(parameters => parameters
+            .Add(host => host.Acting, ActingAs(role))
+            .Add(host => host.Menu, menu)
+            .Add(host => host.Route, new RouteData(page, values)));
+
+        cut.WaitForAssertion(() => cut.Find("main h1").TextContent.Trim().Should().Be("Page not found"),
+            Wombat.Web.Tests.TestSupport.WombatTestContext.AsyncWorkTimeout);
+        cut.FindAll("nav[aria-label='Main'] a.nav-link").Select(a => a.TextContent.Trim()).Should().Contain(litWhenFound!,
+            "guard: the menu shows the item the page would light");
+        cut.FindAll("nav[aria-label='Main'] a.active, nav[aria-label='Main'] a[aria-current]").Should().BeEmpty(
+            "a page drawn as Page not found lights what Page not found lights: nothing");
     }
 
     // The review of the t335 branch: every test above cascades a RouteData by hand. Here the real Routes renders, signed in,
@@ -569,6 +664,16 @@ public sealed class ActiveNavItemTests : TestContext
             authenticationType: "Test"));
 
     private static Claim TraineeRecord() => new(WombatClaims.TraineeRecord, "true");
+
+    /// <summary>Answers every read with nothing: an id the caller may not read, or no programme to list (T358, D1).</summary>
+    private sealed class NothingSender : IScopedSender
+    {
+        public Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request, CancellationToken cancellationToken = default)
+            => Task.FromResult(default(TResponse)!);
+
+        public Task Send(MediatR.IRequest request, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("No commands here.");
+    }
 
     /// <summary>Fails every read: a page draws its header and trail whatever its reads do.</summary>
     private sealed class FailingSender : IScopedSender

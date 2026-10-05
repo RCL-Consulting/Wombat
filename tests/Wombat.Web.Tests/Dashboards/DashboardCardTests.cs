@@ -68,6 +68,27 @@ public sealed class DashboardCardTests : TestContext
         cut.FindAll(".badge").Should().BeEmpty("a count is not known until the read returns");
     }
 
+    // T358, flow 06 (D10; R2-Home c1, k4): a count of people waits on nobody, so its badge is the draft tone; a count of
+    // work waiting keeps the submitted tone, the default.
+    [Fact]
+    public void TheBadgesTone_IsSubmittedByDefault_AndDraftForACountOfPeople()
+    {
+        var waiting = RenderComponent<DashboardCard>(parameters => parameters
+            .Add(p => p.Title, "Waiting for assessors")
+            .Add(p => p.BadgeWords, "3 waiting, 2 overdue")
+            .AddChildContent("<p>Rows</p>"));
+        waiting.Find("h2 .badge").ClassList.Should().Contain("badge-submitted");
+
+        var registrars = RenderComponent<DashboardCard>(parameters => parameters
+            .Add(p => p.Title, "Registrars")
+            .Add(p => p.BadgeWords, "5 registrars")
+            .Add(p => p.BadgeTone, BadgeState.Draft)
+            .AddChildContent("<p>Rows</p>"));
+        var badge = registrars.Find("h2 .badge");
+        badge.TextContent.Should().Be("5 registrars");
+        badge.ClassList.Should().Contain("badge-draft").And.NotContain("badge-submitted");
+    }
+
     [Fact]
     public void EmphasisCard_HasEmphasisClass()
     {

@@ -11,7 +11,10 @@
 
    A count is a figure against a target for a named window, never "n / m", a percentage or a lifetime total (R3); a
    waived or not-started window is its one line, with no figure and no bar. The words are ProgressWords', the one class
-   Home, this page and the EPA page say a count in. *@
+   Home, this page and the EPA page say a count in.
+
+   On the registrar page (T358, flow 06; review 7) EpaNamesAsText draws every name as text: a member of staff reads
+   someone else's index, and the EPA pages are the registrar's own. *@
 @using Wombat.Application.Features.Curricula.Quota
 
 @foreach (var group in Groups)
@@ -34,7 +37,14 @@
           var current = item.Current;
           <tr role="row">
             <th scope="row" role="rowheader">
-              <a class="epa-link" href="@ProgressLinks.Epa(item.EpaId)"><EpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="true" /></a>
+              @if (EpaNamesAsText)
+              {
+                <EpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="true" />
+              }
+              else
+              {
+                <a class="epa-link" href="@ProgressLinks.Epa(item.EpaId)"><EpaLabel Code="@item.EpaCode" Title="@item.EpaTitle" InForce="true" /></a>
+              }
               @if (ProgressWords.LocalBadge(item) is { } local)
               {
                 @* The institution's own EPA (KGK-001): a neutral badge in words, never a colour alone. *@
@@ -158,10 +168,23 @@
       }
       .Where(group => group.Count > 0);
 
-  // A paused EPA's name, a link to its page with the paused mark (EpaLabel's, C13).
-  private static RenderFragment PausedName(PausedItemDto paused) => __builder =>
+  /// <summary>
+  /// Each EPA's name as text, never a link (T358, flow 06; review 7): the registrar page, where a member of staff reads
+  /// someone else's index and the EPA pages are the registrar's own. False, My progress's links to each EPA's page.
+  /// </summary>
+  [Parameter] public bool EpaNamesAsText { get; set; }
+
+  // A paused EPA's name, a link to its page with the paused mark (EpaLabel's, C13); text on the registrar page.
+  private RenderFragment PausedName(PausedItemDto paused) => __builder =>
   {
-    <a class="epa-link" href="@ProgressLinks.Epa(paused.EpaId)"><EpaLabel Code="@paused.EpaCode" Title="@paused.EpaTitle" InForce="false" /></a>
+    @if (EpaNamesAsText)
+    {
+      <EpaLabel Code="@paused.EpaCode" Title="@paused.EpaTitle" InForce="false" />
+    }
+    else
+    {
+      <a class="epa-link" href="@ProgressLinks.Epa(paused.EpaId)"><EpaLabel Code="@paused.EpaCode" Title="@paused.EpaTitle" InForce="false" /></a>
+    }
   };
 
   private EpaStandingDto? StandingOf(int epaId) => Standing?.Epas.FirstOrDefault(epa => epa.EpaId == epaId);

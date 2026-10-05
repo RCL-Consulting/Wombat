@@ -2,8 +2,10 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
@@ -12,8 +14,8 @@ using Wombat.Domain.Activities.Workflow;
 namespace Wombat.Infrastructure.Scheduling.Jobs;
 
 /// <summary>
-/// Nudges each assessor, daily, about the activities that have waited on them for more than five days: one email per
-/// assessor listing them all.
+/// Nudges each assessor, daily, about the activities that have waited on them for more than
+/// <see cref="DashboardThresholds.AssessorNudgeDays" /> days (5): one email per assessor listing them all.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -27,6 +29,11 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// deliberately does not re-read <c>NomineeDirectory</c>, which would silence the one person able to act.
 /// </para>
 /// <para>
+/// The number of days is one setting (T358, review 11), which the account page's help text and Waiting for assessors'
+/// rule line ("Its assessor is emailed after 5.") read too, where three places used to write 5 by hand. A staff
+/// member's reminder about one request (<c>SendActivityReminderCommand</c>) does not stop tonight's nudge listing it.
+/// </para>
+/// <para>
 /// Its line says whom it nudged, not whether they received it. A second line, once the mail worker has reported on every
 /// nudge, counts those not delivered (<see cref="ScheduledJobMailTally" />, T283).
 /// </para>
@@ -34,15 +41,18 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 public sealed class AssessorPendingNudgeJob : IScheduledJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly int _nudgeDays;
 
-    public AssessorPendingNudgeJob(IServiceScopeFactory scopeFactory)
+    public AssessorPendingNudgeJob(IServiceScopeFactory scopeFactory, IOptions<DashboardThresholds> thresholds)
     {
+        ArgumentNullException.ThrowIfNull(thresholds);
         _scopeFactory = scopeFactory;
+        _nudgeDays = thresholds.Value.AssessorNudgeDays;
     }
 
     public string Key => "assessor-pending-nudge";
     public string CronExpression => "0 9 * * *";
-    public string Description => "Nudges assessors about activities waiting for their assessment for more than 5 days (daily at 09:00 UTC).";
+    public string Description => $"Nudges assessors about activities waiting for their assessment for more than {_nudgeDays} days (daily at 09:00 UTC).";
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {
@@ -50,7 +60,7 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
         var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
-        var cutoff = context.UtcNow.AddDays(-5);
+        var cutoff = context.UtcNow.AddDays(-_nudgeDays);
 
         var activities = await dbContext.Set<Activity>()
             .Include(a => a.ActivityType)

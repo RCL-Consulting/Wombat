@@ -35,7 +35,8 @@
   }
   else if (_summary.Ended is { } programmeEnd)
   {
-    @EndedView(_summary, programmeEnd)
+    <EndedRecord @ref="_endedRecord" Summary="_summary" Ended="programmeEnd" MsfCoverage="_msfCoverage" MsfFailed="_msfFailed" />
+    @StandingSection(_summary)
   }
   else if (_summary.Items.Count == 0)
   {
@@ -71,7 +72,7 @@
   /// The MSF read's own failure, a line in This period with no button (R3-Spec § 1, Section error): the counts it sits
   /// beside are a different read, and stand.
   /// </summary>
-  public const string MsfLoadFailed = "Could not load MSF coverage. Your counts above are not affected.";
+  public const string MsfLoadFailed = EndedRecord.MsfLoadFailed;
 
   private TraineeCurriculumProgressSummaryDto? _summary;
   private EntrustmentStandingDto? _standing;
@@ -84,7 +85,7 @@
 
   private ElementReference _periodHeading;
   private ElementReference _standingHeading;
-  private ElementReference _endedHeading;
+  private EndedRecord? _endedRecord;
   private ElementReference _emptyCard;
 
   private bool HasSemesterItems => _summary?.HasSemesterItems == true;
@@ -209,7 +210,7 @@
     }
     else if (_summary.Ended is not null)
     {
-      await _endedHeading.FocusAsync();
+      await _endedRecord!.FocusHeadingAsync();
     }
     else
     {
@@ -222,21 +223,6 @@
 
   /// <summary>The panel's EPA names link to each EPA's page (R4; T355, C1).</summary>
   private static string? EpaPage(EpaStandingDto epa) => ProgressLinks.Epa(epa.EpaId);
-
-  /// <summary>
-  /// The notice at the top of an ended programme's page (T252): that it ended, on what day, and that the page is a
-  /// record, followed by D49's rule for the period it ended in, which the PDF states beside the same figures.
-  /// </summary>
-  private static string EndedNotice(ProgrammeEndDto ended)
-  {
-    const string record = "This page is your record of it and is read-only: no target applies to you any more.";
-
-    var how = QuotaText.ProgrammeEnded(ended);
-
-    return ended.EndedOn is null
-      ? $"{how}. Wombat did not record the day it ended, so your periods are shown up to {QuotaText.Iso(ended.Today)}. {record}"
-      : $"{how}. {record} A period your programme ended in before that period's last month has no target, and no period after it is listed.";
-  }
 
   /// <summary>
   /// A running programme (R3-C-Progress): the Alerts that apply (December, part-way, not started; C2, C3), This period,
@@ -324,110 +310,5 @@
                                   EpaHref="EpaPage" />
       </section>
     }
-  };
-
-  /// <summary>
-  /// An ended programme (T252; flow 13's, as built, R5): the notice, every period of each EPA read-only and newest first,
-  /// with nothing about what is still to do, then the standing as on the last day. Dates ISO (D1). Each EPA's code links
-  /// to its page, which holds its periods and its trajectory now that the chart has left this page (T355).
-  /// </summary>
-  private RenderFragment EndedView(TraineeCurriculumProgressSummaryDto summary, ProgrammeEndDto ended) => __builder =>
-  {
-    @* T252: standing page content, there on every visit, so an info alert with no role (DESIGN.md § Alerts). *@
-    <Alert Kind="info">@EndedNotice(ended)</Alert>
-
-    <section>
-      <h2 tabindex="-1" @ref="_endedHeading">Curriculum targets</h2>
-      @if (summary.Items.Count == 0)
-      {
-        <p class="muted">No EPA on your curriculum is in use any more, so there are no targets to show.</p>
-      }
-      else
-      {
-        <section class="detail-card">
-          <h3>Your programme</h3>
-          <dl class="details-list">
-            <div>
-              <dt>Started</dt>
-              <dd>@QuotaText.Iso(summary.ProgrammeStartDate)</dd>
-            </div>
-            <div>
-              <dt>@(ended.Completed ? "Completed" : "Ended")</dt>
-              <dd>@(ended.EndedOn is { } endedOn ? QuotaText.Iso(endedOn) : "The day was not recorded")</dd>
-            </div>
-            @if (summary.TraineeStage is { } finalStage)
-            {
-              <div>
-                <dt>Training year</dt>
-                <dd>@finalStage @(ended.EndedOn is null ? "today" : "when your programme ended")</dd>
-              </div>
-            }
-          </dl>
-        </section>
-
-        @if (_msfFailed)
-        {
-          <p class="section-error"><span class="period-line-term">Multi-source feedback:</span> @MsfLoadFailed</p>
-        }
-
-        @if (HasSemesterItems)
-        {
-          <h3 class="progress-group-title">Each semester</h3>
-          <div class="dashboard-grid">
-            @foreach (var item in summary.Items.Where(entry => entry.IsPerSemester))
-            {
-              @EndedItemCard(item, ended)
-            }
-          </div>
-        }
-
-        @if (HasYearItems)
-        {
-          <h3 class="progress-group-title">Once a year</h3>
-          <div class="dashboard-grid">
-            @foreach (var item in summary.Items.Where(entry => !entry.IsPerSemester))
-            {
-              @EndedItemCard(item, ended)
-            }
-          </div>
-        }
-      }
-    </section>
-
-    @StandingSection(summary)
-  };
-
-  /// <summary>
-  /// An item of an ended programme (T252): its target, and every period from the one the programme ended in back to its
-  /// start, newest first, in the words the portfolio PDF prints them (<see cref="ProgressWords.EndedPeriodLine" />). No
-  /// bar and no "more by": nothing is still to do.
-  /// </summary>
-  private RenderFragment EndedItemCard(TraineeCurriculumProgressDto item, ProgrammeEndDto ended) => __builder =>
-  {
-    IReadOnlyList<QuotaWindowDto> periods = item.Periods ?? (item.Previous is { } previous ? [item.Current, previous] : [item.Current]);
-    <section class="detail-card">
-      <div class="progress-row-head">
-        <h3><a class="epa-link" href="@ProgressLinks.Epa(item.EpaId)" aria-label="@EpaPageWords.Title(item.EpaCode, item.EpaTitle)">@item.EpaCode</a></h3>
-      </div>
-      <p class="muted">@item.EpaTitle</p>
-      <p class="progress-row-meta">
-        Target: @QuotaText.TargetPhrase(item.QuotaPeriod, item.Target)@(item.IsPerSemester ? $" ({item.Target * 2} a year)" : string.Empty).
-        Minimum @(ended.EndedOn is null ? "now" : "when your programme ended"): @item.EffectiveMinimumLevelLabel.
-      </p>
-      <dl class="details-list">
-        @foreach (var period in periods)
-        {
-          <div>
-            <dt>@period.Name</dt>
-            <dd>@ProgressWords.EndedPeriodLine(period, ended.Today)</dd>
-          </div>
-        }
-      </dl>
-
-      @if (_msfCoverage is not null && MsfCoverageText.CardLine(_msfCoverage, item.EpaId) is { } msfLine)
-      {
-        <p class="progress-row-meta">@msfLine</p>
-      }
-    </section>
   };
 }

@@ -294,12 +294,14 @@ Expect: Active invitations reads "No active invitations", because a used invitat
 Role: Administrator — devadmin@wombat.local
 Route: /admin/jobs
 Do: Run `assessor-pending-nudge` now.
-Expect: The job's last run updates. The application log holds two stub emails, "Activities awaiting your assessment".
-  The log names no address (T282); each greets its assessor by first name:
-  - "Hi Thandi", listing Mini-CEX (Paediatrics) from Nomsa Mahlangu, waiting 8 days;
-  - "Hi Mohammed", listing Portfolio and Logbook Review (Paediatrics) from Pieter du Plessis, waiting 8 days.
-  The run's summary line reads "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days,
-  so nobody else is nudged.
+Expect: The job's last run updates. The application log then holds three stub emails "Activities awaiting your
+  assessment", naming no address (T282), each greeting its assessor by first name: Step 3.31's reminder (tags reminder,
+  assessor-reminder), "Hi Thandi", and the nudge's two (tags nudge, assessor-pending):
+  - "Hi Thandi", listing Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days;
+  - "Hi Mohammed", listing Portfolio and Logbook Review (Paediatrics) from Pieter du Plessis — waiting 8 days.
+  The nudge still mails a request reminded today: a reminder moves nothing (T358, C4). The run's summary line reads
+  "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days, so nobody else is nudged: Dr
+  du Plessis's CBD has waited less than a day.
 
 [act-3-operations.md]
 ### Step 3.55 — Prof Mbatha reads KGK's audit log
@@ -415,7 +417,8 @@ Do: Run weekly-coordinator-digest now, then read the log.
 Expect: A stub mail "Your weekly Wombat digest" begins "Hi Pieter,". It covers KGK only (T117). With nothing to list
   it says "No items requiring attention this week." Otherwise it lists:
   - under "Trainees at risk", any current KGK trainee who has filed nothing in the last 30 days by the real clock
-    (T284): never Dr Molefe or Dr du Plessis, whose programmes have ended, or Dr Ndlovu, who has been erased;
+    (T284): a draft is not a filing, and a registrar admitted less than 30 days ago is not listed (T358, E5); never
+    Dr Molefe or Dr du Plessis, whose programmes have ended, or Dr Ndlovu, who has been erased;
   - any MSF campaign of his waiting on its review;
   - any committee review scheduled in the coming week.
 

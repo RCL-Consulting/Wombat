@@ -33,7 +33,8 @@ public static class TrajectoryWords
     /// The line under the chart's heading (C11): "3 ratings in the 2026 academic year, from Thandi Zulu, David Naidoo and
     /// Mohammed Patel. 2 at the minimum, 1 below."; one rating only, "1 rating so far, from David Naidoo. At the minimum.";
     /// on the committee's page, the review's window and the trainee's name, "Lerato Molefe · 3 ratings in the review
-    /// window, 2026-01-01 to 2026-12-31, from …".
+    /// window, 2026-01-01 to 2026-12-31, from …"; on the registrar page (T358), the trainee's name and the academic year,
+    /// even for one rating: "Nomsa Mahlangu · 1 rating in the 2026 academic year, from Thandi Zulu. At the minimum.".
     /// </summary>
     /// <remarks>
     /// The assessors are named in the order of their first rating, oldest first, as the table lists them; more than three
@@ -58,8 +59,10 @@ public static class TrajectoryWords
                 ? $"{ratings} in the review window, {QuotaText.Iso(from)} to {QuotaText.Iso(to)}"
                 : $"{ratings} in the review window";
         }
-        else if (count == 1)
+        else if (count == 1 && subjectName is null)
         {
+            // "So far" is the registrar's own phrase for a chart of their own year; the registrar page names the
+            // registrar and the year it draws, for one rating as for several (T358, R2-Registrar r1).
             span = "1 rating so far";
         }
         else

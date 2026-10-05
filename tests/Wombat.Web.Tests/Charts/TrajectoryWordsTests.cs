@@ -41,6 +41,24 @@ public sealed class TrajectoryWordsTests
             "1 rating so far, from David Naidoo. At the minimum.");
     }
 
+    /// <summary>
+    /// T358 (flow 06; R2-Registrar r1): the registrar page names the registrar and the academic year it draws, even for one
+    /// rating: "so far" is the registrar's own phrase, for a chart of their own year.
+    /// </summary>
+    [Fact]
+    public void TheRegistrarPage_NamesTheRegistrarAndTheYear_EvenForOneRating()
+    {
+        var one = Molefe(Point(1, new(2026, 10, 1), "3a", "zulu", "Thandi Zulu", 1, "3a", TrajectoryAgainstMinimum.AtOrAbove));
+        var two = Molefe(
+            Point(1, new(2026, 9, 21), "5", "zulu", "Thandi Zulu", 4, "5", TrajectoryAgainstMinimum.AtOrAbove),
+            Point(2, new(2026, 9, 24), "4", "patel", "Mohammed Patel", 4, "5", TrajectoryAgainstMinimum.Below));
+
+        TrajectoryWords.Summary(one, reviewWindow: false, subjectName: "Nomsa Mahlangu").Should().Be(
+            "Nomsa Mahlangu · 1 rating in the 2026 academic year, from Thandi Zulu. At the minimum.");
+        TrajectoryWords.Summary(two, reviewWindow: false, subjectName: "Lerato Molefe").Should().Be(
+            "Lerato Molefe · 2 ratings in the 2026 academic year, from Thandi Zulu and Mohammed Patel. 1 at the minimum, 1 below.");
+    }
+
     [Fact]
     public void ARatingOnAnotherScale_IsCountedApart()
     {

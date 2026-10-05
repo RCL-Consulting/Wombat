@@ -9,9 +9,10 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.MultiSourceFeedback;
+using Wombat.Application.Features.Programme.Filing;
 using Wombat.Application.Scheduling;
-using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Identity;
@@ -19,7 +20,7 @@ using Wombat.Infrastructure.Identity;
 namespace Wombat.Infrastructure.Scheduling.Jobs;
 
 /// <summary>
-/// Mails each Coordinator, on Monday morning, the trainees at their institution who have logged nothing in 30 days, the
+/// Mails each Coordinator, on Monday morning, the trainees at their institution who have filed nothing in 30 days, the
 /// feedback campaigns there waiting on a review, and the committee reviews there scheduled this week.
 /// </summary>
 /// <remarks>
@@ -70,9 +71,17 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// mail worker has reported on every digest, counts those not delivered (<see cref="ScheduledJobMailTally" />, T283).
 /// </para>
 /// <para>
-/// The activity table is read directly, outside <c>ActivityReadScope.WhereReadableBy</c> (an Application extension over
-/// a principal's stamps), and only to learn which trainees filed anything in 30 days. No activity reaches a mail; what a
-/// recipient is told is decided by the roster above, so the per-recipient boundary is the roster, not a per-activity gate.
+/// <b>Filed nothing in 30 days</b> is Programme trainees' and the Coordinator's Home card's rule (<see cref="FilingMoments" />,
+/// T358, E5): an activity counts once it has left draft (a recorded MSF included), and the 30 days start at the later of
+/// the trainee's admission (<c>TraineeProfile.AdmittedOn</c>) and 30 South African days before the run, so a trainee
+/// admitted last week is not listed. Until T358 it was any activity <i>created</i> about the trainee in 30 days, drafts and
+/// cancelled requests included, and a trainee admitted the day before was listed.
+/// </para>
+/// <para>
+/// The activity table is read outside <c>ActivityReadScope.WhereReadableBy</c> (an Application extension over a
+/// principal's stamps), and only for the moments current trainees filed (<see cref="FilingMoments.LastFiledAsync" />). No
+/// activity reaches a mail; what a recipient is told is decided by the roster above, so the per-recipient boundary is the
+/// roster, not a per-activity gate.
 /// </para>
 /// </remarks>
 public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
@@ -185,7 +194,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
         DateTime utcNow,
         CancellationToken cancellationToken)
     {
-        var inactivityCutoff = utcNow.AddDays(-30);
+        var today = ProgrammeCalendar.DateOf(utcNow);
         var weekStart = DateOnly.FromDateTime(utcNow);
         var weekEnd = weekStart.AddDays(7);
 
@@ -201,13 +210,21 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
             dbContext, users, traineeNames.Keys, cancellationToken);
         var traineeIds = currentTraineeIds.ToArray();
 
-        // Whether each trainee filed anything, and nothing else about the activities: see the class remarks.
-        var activeTraineeIds = await dbContext.Set<Activity>()
+        // When each filed last, and nothing else about the activities, against the day each was admitted (E5): see the
+        // class remarks. A current trainee's active profile is their preferred one, so its admission is theirs.
+        var lastFiled = await FilingMoments.LastFiledAsync(dbContext, traineeIds, cancellationToken);
+        var admittedOn = await TraineeScopeResolver.ActiveProfiles(dbContext)
             .AsNoTracking()
-            .Where(activity => activity.CreatedOn >= inactivityCutoff && traineeIds.Contains(activity.SubjectUserId))
-            .Select(activity => activity.SubjectUserId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
+            .Where(profile => traineeIds.Contains(profile.UserId))
+            .Select(profile => new { profile.UserId, profile.AdmittedOn })
+            .ToDictionaryAsync(profile => profile.UserId, profile => profile.AdmittedOn, StringComparer.Ordinal, cancellationToken);
+        var inactiveTraineeIds = traineeIds
+            .Where(userId => admittedOn.TryGetValue(userId, out var admitted) &&
+                             FilingMoments.NothingFiled(
+                                 admitted,
+                                 lastFiled.TryGetValue(userId, out var filed) ? filed : null,
+                                 today))
+            .ToHashSet(StringComparer.Ordinal);
 
         // Panel and members loaded, as the review read ladder requires.
         var reviewsThisWeek = await dbContext.Set<CommitteeReview>()
@@ -227,7 +244,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
         return new DigestFacts(
             traineeNames,
             currentTraineeIds,
-            activeTraineeIds.ToHashSet(StringComparer.Ordinal),
+            inactiveTraineeIds,
             reviewsThisWeek,
             reviewTraineeNames);
     }
@@ -254,7 +271,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
 
         var inactiveTrainees = roster
             .Where(facts.CurrentTraineeIds.Contains)
-            .Where(userId => !facts.ActiveTraineeIds.Contains(userId))
+            .Where(facts.InactiveTraineeIds.Contains)
             .Select(userId => facts.TraineeNames.GetValueOrDefault(userId))
             .OfType<string>()
             .Order(StringComparer.Ordinal)
@@ -298,7 +315,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
     private sealed record DigestFacts(
         IReadOnlyDictionary<string, string> TraineeNames,
         IReadOnlySet<string> CurrentTraineeIds,
-        IReadOnlySet<string> ActiveTraineeIds,
+        IReadOnlySet<string> InactiveTraineeIds,
         IReadOnlyList<CommitteeReview> ReviewsThisWeek,
         IReadOnlyDictionary<string, string> ReviewTraineeNames);
 

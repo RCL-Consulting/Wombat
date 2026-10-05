@@ -83,6 +83,8 @@ public sealed class HomeFrameTests : WombatTestContext
     [Theory]
     [InlineData(WombatRoles.Trainee, "Log an activity", "/activities/new")]
     [InlineData(WombatRoles.InstitutionalAdmin, "Invite a person", "/admin/invitations")]
+    // T358, flow 06 (Q6, review 26): the Coordinator's "Quick action" card is gone to the header.
+    [InlineData(WombatRoles.Coordinator, "Start an MSF campaign", "/msf/campaigns/new")]
     public void TheHeader_OffersTheRolesOneAction(string role, string label, string href)
     {
         var cut = RenderHome(Reads.Answer, role);
@@ -99,7 +101,6 @@ public sealed class HomeFrameTests : WombatTestContext
     [InlineData(WombatRoles.SpecialityAdmin)]
     [InlineData(WombatRoles.SubSpecialityAdmin)]
     [InlineData(WombatRoles.CommitteeMember)]
-    [InlineData(WombatRoles.Coordinator)]
     [InlineData(WombatRoles.Assessor)]
     [InlineData(WombatRoles.PendingTrainee)]
     public void EveryOtherRole_HasNoHeaderAction(string role)
@@ -113,6 +114,7 @@ public sealed class HomeFrameTests : WombatTestContext
     [Theory]
     [InlineData(WombatRoles.Trainee)]
     [InlineData(WombatRoles.InstitutionalAdmin)]
+    [InlineData(WombatRoles.Coordinator)]
     public async Task TheHeaderAction_OpensAPageThatAdmitsTheRole(string role)
     {
         var href = HomeFrame.ActionFor(role)!.Href;
@@ -133,7 +135,7 @@ public sealed class HomeFrameTests : WombatTestContext
         cut.Find(".page-subtitle").TextContent.Should().StartWith("Committee member · Semester");
         var grid = cut.Find(".dashboard-grid");
         grid.GetAttribute("aria-busy").Should().Be("true");
-        CardTitles(cut).Should().Equal("Targets this period", "Targets met by EPA");
+        CardTitles(cut).Should().Equal("Registrars", "Targets by EPA");
         cut.FindAll(".dashboard-grid .detail-card").Should().OnlyContain(card => card.QuerySelectorAll(".skeleton").Length > 0);
         grid.QuerySelectorAll("a, button").Should().BeEmpty("no action is offered before the read returns");
     }
@@ -167,7 +169,8 @@ public sealed class HomeFrameTests : WombatTestContext
     }
 
     // CoordinatorDashboard's stripe and the admins' coverage title read the summary as the card was drawn, safe only while
-    // no card rendered before the read returned (the review, S22(c)). Every dashboard now draws its cards first.
+    // no card rendered before the read returned (the review, S22(c)). Every dashboard now draws its cards first; since
+    // T358 the stripes and badges of Waiting for assessors, Registrars and Nothing filed read it the same guarded way.
     [Theory]
     [MemberData(nameof(EveryRoleThatReads))]
     public void EveryDashboard_DrawsItsFrame_BeforeItsReadReturns(string role)
@@ -177,6 +180,16 @@ public sealed class HomeFrameTests : WombatTestContext
         cut.Find(".dashboard-grid").GetAttribute("aria-busy").Should().Be("true");
         CardTitles(cut).Should().NotBeEmpty();
         cut.FindAll(".dashboard-grid a[href], .dashboard-grid button").Should().BeEmpty();
+    }
+
+    // T358, flow 06 (R2-Home k5): the Coordinator's header action is there from the start, before the cards' read returns.
+    [Fact]
+    public void WhileTheCoordinatorsReadRuns_TheHeaderActionIsAlreadyOffered()
+    {
+        var cut = RenderHome(Reads.Hang, WombatRoles.Coordinator);
+
+        CardTitles(cut).Should().Equal("Waiting for assessors", "Nothing filed in 30 days", "Invitations nearing expiry");
+        cut.Find(".header-container .actions-cell a").TextContent.Trim().Should().Be("Start an MSF campaign");
     }
 
     // ---- a failed read: one alert, Try again, no cards (T329) ----
@@ -308,10 +321,10 @@ public sealed class HomeFrameTests : WombatTestContext
         {
             GetAdministratorDashboardSummaryQuery => new AdministratorDashboardSummaryDto(DatabaseHealthy: true, TotalUserCount: 12),
             GetInstitutionalAdminDashboardSummaryQuery => new InstitutionalAdminDashboardSummaryDto([], SpecialityCount: 1, SubSpecialityCount: 1),
-            GetSpecialityAdminDashboardSummaryQuery => new SpecialityAdminDashboardSummaryDto(1, 3, 1, Coverage()),
-            GetSubSpecialityAdminDashboardSummaryQuery => new SubSpecialityAdminDashboardSummaryDto(1, 3, 1, Coverage()),
-            GetCommitteeMemberDashboardSummaryQuery => new CommitteeMemberDashboardSummaryDto("Semester 2, 2026", "July to November", [], [], 0),
-            GetCoordinatorDashboardSummaryQuery => new CoordinatorDashboardSummaryDto([], []),
+            GetSpecialityAdminDashboardSummaryQuery => OversightHomeFixtures.SpecialityAdmin(),
+            GetSubSpecialityAdminDashboardSummaryQuery => OversightHomeFixtures.SubSpecialityAdmin(),
+            GetCommitteeMemberDashboardSummaryQuery => OversightHomeFixtures.Committee(),
+            GetCoordinatorDashboardSummaryQuery => OversightHomeFixtures.Coordinator(),
             GetAssessorDashboardSummaryQuery => ActivityRows.AssessorHome(
                 [ActivityRows.Waiting(52, typeName: "Mini-CEX", subjectName: "Nomsa Mahlangu", since: When)],
                 []),
@@ -321,8 +334,6 @@ public sealed class HomeFrameTests : WombatTestContext
             _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
         };
 
-        private static CurriculumCoverage Coverage()
-            => new(new DateOnly(2026, 9, 23), "Semester 2, 2026", "July to November", [], [], 0);
     }
 
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider

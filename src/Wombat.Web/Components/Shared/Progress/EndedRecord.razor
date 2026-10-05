@@ -1,0 +1,192 @@
+@using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Web.Components.Shared.Programme
+@*
+  The record of an ended programme (T252; flow 13's, as built, R5), extracted from My progress for the registrar page
+  (T358, flow 06; review 8; round-3-check 2): the notice, every period of each EPA read-only and newest first, with
+  nothing about what is still to do. Dates ISO (D1). The standing as on the last day is the page's own section, after it.
+
+  Two readers, one shape:
+  - My progress (SubjectName null): the registrar's own words, word for word as the page drew them before the move, each
+    EPA's code a link to its page (T355). Held byte for byte by MyProgressTests' golden markup.
+  - The registrar page (SubjectName set): the same cards for a member of staff, in RegistrarWords' words, which name the
+    registrar and never say "you" or "your"; each EPA's code is text, since the EPA pages are the registrar's own. Its
+    heading is the page's section title (.epa-section-title, #ended-h).
+*@
+@View(Summary, Ended)
+
+@code {
+  /// <summary>My progress's MSF failure in the ended view (R3-Spec § 1): a line with no button.</summary>
+  public const string MsfLoadFailed = "Could not load MSF coverage. Your counts above are not affected.";
+
+  /// <summary>The same failure on the registrar page, for staff (review 8).</summary>
+  public const string StaffMsfLoadFailed = "Could not load MSF coverage. The periods below are not affected.";
+
+  private ElementReference _endedHeading;
+
+  /// <summary>The ended programme's counts, read as on its last day, every period back to its start.</summary>
+  [Parameter, EditorRequired] public TraineeCurriculumProgressSummaryDto Summary { get; set; } = default!;
+
+  /// <summary>How the programme ended.</summary>
+  [Parameter, EditorRequired] public ProgrammeEndDto Ended { get; set; } = default!;
+
+  /// <summary>Each period's MSF coverage, a line on each card; null when there is none or it failed.</summary>
+  [Parameter] public MsfCoverageDto? MsfCoverage { get; set; }
+
+  /// <summary>The MSF read failed: one line says so, and the periods stand.</summary>
+  [Parameter] public bool MsfFailed { get; set; }
+
+  /// <summary>
+  /// The registrar, on the registrar page: the staff words, and no EPA-page links. Null on My progress, whose words are
+  /// the registrar's own.
+  /// </summary>
+  [Parameter] public string? SubjectName { get; set; }
+
+  private bool Staff => SubjectName is not null;
+
+  private bool HasSemesterItems => Summary.HasSemesterItems;
+  private bool HasYearItems => Summary.HasYearItems;
+
+  /// <summary>The record's heading, which a Try again answered by the record focuses.</summary>
+  public ValueTask FocusHeadingAsync() => _endedHeading.FocusAsync();
+
+  /// <summary>
+  /// The notice at the top of an ended programme's page (T252): that it ended, on what day, and that the page is a
+  /// record, followed by D49's rule for the period it ended in, which the PDF states beside the same figures. For staff,
+  /// <see cref="RegistrarWords.EndedNotice" />.
+  /// </summary>
+  private string EndedNotice(ProgrammeEndDto ended)
+  {
+    if (SubjectName is { } name)
+    {
+      return RegistrarWords.EndedNotice(name, ended, Summary.CurrentSemesterName);
+    }
+
+    const string record = "This page is your record of it and is read-only: no target applies to you any more.";
+
+    var how = QuotaText.ProgrammeEnded(ended);
+
+    return ended.EndedOn is null
+      ? $"{how}. Wombat did not record the day it ended, so your periods are shown up to {QuotaText.Iso(ended.Today)}. {record}"
+      : $"{how}. {record} A period your programme ended in before that period's last month has no target, and no period after it is listed.";
+  }
+
+  private string NoItems => SubjectName is { } name
+    ? RegistrarWords.EndedNoItems(name)
+    : "No EPA on your curriculum is in use any more, so there are no targets to show.";
+
+  private string ProgrammeHeading => Staff ? RegistrarWords.EndedProgrammeHeading : "Your programme";
+
+  private string MsfFailedWords => Staff ? StaffMsfLoadFailed : MsfLoadFailed;
+
+  // "2 when your programme ended" / "2 today"; for staff, "2 when the programme ended".
+  private string TrainingYearWhen(ProgrammeEndDto ended)
+    => Staff ? RegistrarWords.EndedWhenOr(ended, "today") : ended.EndedOn is null ? "today" : "when your programme ended";
+
+  // "Minimum when your programme ended" / "Minimum now"; for staff, "Minimum when the programme ended".
+  private string MinimumWhen(ProgrammeEndDto ended)
+    => Staff ? RegistrarWords.EndedWhenOr(ended, "now") : ended.EndedOn is null ? "now" : "when your programme ended";
+
+  private string PeriodLine(QuotaWindowDto period, ProgrammeEndDto ended)
+    => Staff ? RegistrarWords.EndedPeriodLine(period, ended.Today) : ProgressWords.EndedPeriodLine(period, ended.Today);
+
+  // The markup below is My progress's EndedView and EndedItemCard as they were, line for line and space for space, so the
+  // registrar's page renders the same bytes (the golden test); only the words a member of staff reads differently are
+  // expressions now.
+  private RenderFragment View(TraineeCurriculumProgressSummaryDto summary, ProgrammeEndDto ended) => __builder =>
+  {
+    @* T252: standing page content, there on every visit, so an info alert with no role (DESIGN.md § Alerts). *@
+    <Alert Kind="info">@EndedNotice(ended)</Alert>
+
+    <section aria-labelledby="@(Staff ? "ended-h" : null)" class="@(Staff ? "index-section" : null)">
+      <h2 tabindex="-1" @ref="_endedHeading" id="@(Staff ? "ended-h" : null)" class="@(Staff ? "epa-section-title" : null)">Curriculum targets</h2>
+      @if (summary.Items.Count == 0)
+      {
+        <p class="muted">@NoItems</p>
+      }
+      else
+      {
+        <section class="detail-card">
+          <h3>@ProgrammeHeading</h3>
+          <dl class="details-list">
+            <div>
+              <dt>Started</dt>
+              <dd>@QuotaText.Iso(summary.ProgrammeStartDate)</dd>
+            </div>
+            <div>
+              <dt>@(ended.Completed ? "Completed" : "Ended")</dt>
+              <dd>@(ended.EndedOn is { } endedOn ? QuotaText.Iso(endedOn) : "The day was not recorded")</dd>
+            </div>
+            @if (summary.TraineeStage is { } finalStage)
+            {
+              <div>
+                <dt>Training year</dt>
+                <dd>@finalStage @TrainingYearWhen(ended)</dd>
+              </div>
+            }
+          </dl>
+        </section>
+
+        @if (MsfFailed)
+        {
+          <p class="section-error"><span class="period-line-term">Multi-source feedback:</span> @MsfFailedWords</p>
+        }
+
+        @if (HasSemesterItems)
+        {
+          <h3 class="progress-group-title">Each semester</h3>
+          <div class="dashboard-grid">
+            @foreach (var item in summary.Items.Where(entry => entry.IsPerSemester))
+            {
+              @EndedItemCard(item, ended)
+            }
+          </div>
+        }
+
+        @if (HasYearItems)
+        {
+          <h3 class="progress-group-title">Once a year</h3>
+          <div class="dashboard-grid">
+            @foreach (var item in summary.Items.Where(entry => !entry.IsPerSemester))
+            {
+              @EndedItemCard(item, ended)
+            }
+          </div>
+        }
+      }
+    </section>
+  };
+
+  /// <summary>
+  /// An item of an ended programme (T252): its target, and every period from the one the programme ended in back to its
+  /// start, newest first, in the words the portfolio PDF prints them (<see cref="ProgressWords.EndedPeriodLine" />; for
+  /// staff <see cref="RegistrarWords.EndedPeriodLine" />). No bar and no "more by": nothing is still to do.
+  /// </summary>
+  private RenderFragment EndedItemCard(TraineeCurriculumProgressDto item, ProgrammeEndDto ended) => __builder =>
+  {
+    IReadOnlyList<QuotaWindowDto> periods = item.Periods ?? (item.Previous is { } previous ? [item.Current, previous] : [item.Current]);
+    <section class="detail-card">
+      <div class="progress-row-head">
+        <h3>@if (Staff){@item.EpaCode}else{<a class="epa-link" href="@ProgressLinks.Epa(item.EpaId)" aria-label="@EpaPageWords.Title(item.EpaCode, item.EpaTitle)">@item.EpaCode</a>}</h3>
+      </div>
+      <p class="muted">@item.EpaTitle</p>
+      <p class="progress-row-meta">
+        Target: @QuotaText.TargetPhrase(item.QuotaPeriod, item.Target)@(item.IsPerSemester ? $" ({item.Target * 2} a year)" : string.Empty).
+        Minimum @MinimumWhen(ended): @item.EffectiveMinimumLevelLabel.
+      </p>
+      <dl class="details-list">
+        @foreach (var period in periods)
+        {
+          <div>
+            <dt>@period.Name</dt>
+            <dd>@PeriodLine(period, ended)</dd>
+          </div>
+        }
+      </dl>
+
+      @if (MsfCoverage is not null && MsfCoverageText.CardLine(MsfCoverage, item.EpaId) is { } msfLine)
+      {
+        <p class="progress-row-meta">@msfLine</p>
+      }
+    </section>
+  };
+}

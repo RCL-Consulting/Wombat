@@ -609,7 +609,9 @@ Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
-Expect: The campaign page keeps its gutter (T226), and its invitee table (counts by respondent group: the page never
-  lists an address) scrolls within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as
-  a labelled, focusable region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
+Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
+  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
+  keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
+  within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as a labelled, focusable
+  region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 ```

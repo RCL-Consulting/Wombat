@@ -117,10 +117,13 @@ Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/decisions-due
 Do: Sign in, read her menu, and open Decisions due.
 Expect:
-  - **Menu:** Home, Decisions due, Committee reviews and Decision panels, then My data rights. Decisions due is lit on
-    its page.
+  - **Menu:** Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels and
+    Entrustment decisions, then My data rights (T358, R2-Menus). Decisions due is lit on its page.
+  - **Home's cards:** Waiting for assessors, Registrars and Targets by EPA, read for Paediatrics. Waiting for assessors
+    holds Dr du Plessis's CBD and portfolio review, both still open from Act 3, the review Overdue; Registrars the five,
+    badged "5 registrars".
   - **The page:** the same five registrars, all in Paediatrics, and 75 rows, each Schedule link offered.
-  - **Not in her menu or on her dashboard:** Entrustment decisions.
+  - **Entrustment decisions** is in the menu (Step A.7.7 opens it from there); no card on Home names it.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home "Speciality admin · Semester 2, 2026". Menu: Home,
   Decisions due, Committee reviews, Decision panels, then My data rights; Decisions due lit on its page. Home cards
   Pending reviews 2, Trainees in programme 5, Curriculum coverage; no Entrustment decisions in the menu or on Home.
@@ -131,8 +134,8 @@ Gap: none
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /account/login → / → /committee/decisions-due
 Do: Sign in and open Decisions due.
-Expect: The same five registrars and 75 rows as Step 4.3: all five train in the Paediatrics sub-speciality he
-  administers. His menu reads as Mokoena's.
+Expect: The same five registrars and 75 rows as Step 4.3: all five train in the Paediatrics sub-speciality Dr Sithole
+  administers. Dr Sithole's menu and Home's cards read as Dr Mokoena's.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home "Sub-speciality admin · Semester 2, 2026"; menu as
   Mokoena's. Decisions due: "the 5 trainees you oversee at Kgosi Kgari Teaching Hospital", "75 of 75 decisions due in
   2026 S2 shown.", Schedule on every row.
@@ -790,17 +793,19 @@ Gap: none
 ### Step 4.36 — Dr Mokoena revokes one of Dr Dlamini's STARs
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /admin/entrustment-decisions
-Do: Type the page's address. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged on evidence about
-  PAED-001, not PAED-002; to be decided again." and confirm the revocation.
+Do: Open Entrustment decisions from the menu. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged
+  on evidence about PAED-001, not PAED-002; to be decided again." and confirm the revocation.
 Expect:
+  - **The menu:** Entrustment decisions is lit on its page, with no trail: a list her menu offers (T358, R2-Menus m5;
+    as Step A.7.7).
   - **The list:** the same five rows as Step 4.35, since all five registrars are in her speciality.
   - **The dialog** names PAED-002 and Anele Dlamini, and says "Revocation is immediate and irreversible. The trainee is
     notified." Confirm revocation is enabled once a reason is typed.
   - **After confirming:** "Entrustment decision for PAED-002 revoked." The row reads Revoked, with no Revoke button.
   - **The trainee is notified,** as the dialog promises: the application log holds a mail to Dr Dlamini about the
     revocation.
-Note: The page is linked from no nav item or dashboard card for her role (coverage.md). T260 (open): Confirm stays
-  disabled until the reason box loses focus.
+Note: Until T358 the page was linked from no nav item or dashboard card for her role, and was reached by typing its
+  address. T260 (open): Confirm stays disabled until the reason box loses focus.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Typed address; the same five rows. "Revoke Anele Dlamini's
   PAED-002 decision, issued 2026-10-04" opened an inline "Revoke entrustment decision" section (no dialog role): "...
   held by Anele Dlamini. Revocation is immediate and irreversible. The trainee is notified." Confirm revocation stayed
@@ -812,9 +817,10 @@ Gap: [F-4.36a, T319] (still) "The trainee is notified." and nobody is: no mail t
 ### Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
-Do: Type the entrustment decisions page's address. Filter Status to Revoked and apply, then to Active and apply.
-  Download the revoked certificate. Then open Decisions due with "Every status".
+Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
+  the revoked certificate. Then open Decisions due with "Every status".
 Expect:
+  - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.

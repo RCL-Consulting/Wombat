@@ -1,0 +1,36 @@
+@using Wombat.Application.Features.Dashboards.Oversight
+
+@*
+  Home's Registrars (T358, flow 06; Q1; R2-Home c1, c4, c6, c7, c11; round 3 items 27, 31, 33): Programme trainees' first
+  five, on the Committee member's and both speciality admins' Homes, spanning three. Its badge is the count in words, "5
+  registrars", in the draft tone (D10), none when there is nobody; the rule line "Fewest met first, then by surname."; the
+  rows (RegistrarRoster); and the foot "Open Programme trainees", empty included, since the page is in the menu (item 27).
+  Until T358 it was "Targets this period", every trainee by name beside "semester 1/5 · yearly 0/1", no row a link.
+*@
+<DashboardCard Title="@ProgrammeWords.RegistrarsCard" Icon="users" HeadingId="card-registrars" Span="3" IsLoading="IsLoading"
+               BadgeWords="@(Card is { Total: > 0 } counted ? ProgrammeWords.Badge(counted.Total) : null)"
+               BadgeTone="BadgeState.Draft">
+  @if (!IsLoading && Card is { } card)
+  {
+    if (card.Total == 0)
+    {
+      <p class="card-empty">@ProgrammeWords.RosterEmpty</p>
+    }
+    else
+    {
+      <p class="needs-you-rule">@ProgrammeWords.RosterLine</p>
+      <RegistrarRoster Rows="@card.Rows" Total="@card.Total" />
+    }
+    <div class="dashboard-card-footer">
+      <a href="@ProgrammeLinks.Trainees" class="btn btn-sm btn-outline">@ProgrammeWords.OpenTrainees</a>
+    </div>
+  }
+</DashboardCard>
+
+@code {
+  /// <summary>The first five and the count; null until the dashboard's read has come.</summary>
+  [Parameter] public RegistrarsCardDto? Card { get; set; }
+
+  /// <summary>The dashboard's read has not returned: the title and a skeleton (the frame's).</summary>
+  [Parameter] public bool IsLoading { get; set; }
+}

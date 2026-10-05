@@ -39,15 +39,17 @@ public static class HomeFrame
     /// Home rather than from a card's row.
     /// </summary>
     /// <remarks>
-    /// Two roles have one. The Trainee's main job is filing an observation, and the Institutional admin's is inviting a
-    /// person; the invitation form is on the invitations page. Every other role's main job is a row of a card on Home, or
-    /// a nav link, and a pending trainee can file nothing yet. The link opens a page that admits the role, as every link
-    /// on Home does (DashboardLinkAuthorizationTests).
+    /// Three roles have one. The Trainee's main job is filing an observation, the Institutional admin's is inviting a
+    /// person (the invitation form is on the invitations page), and the Coordinator's is starting an MSF campaign, MSF
+    /// campaigns' new-campaign form (T358, flow 06, Q6; review 26: until then a "Quick action" card on the Coordinator's
+    /// Home). Every other role's main job is a row of a card on Home, or a nav link, and a pending trainee can file nothing
+    /// yet. The link opens a page that admits the role, as every link on Home does (DashboardLinkAuthorizationTests).
     /// </remarks>
     public static HomeAction? ActionFor(string? actingRole) => actingRole switch
     {
         WombatRoles.Trainee => new HomeAction("Log an activity", "/activities/new", "circle-plus"),
         WombatRoles.InstitutionalAdmin => new HomeAction("Invite a person", "/admin/invitations", "user-plus"),
+        WombatRoles.Coordinator => new HomeAction("Start an MSF campaign", "/msf/campaigns/new", "plus"),
         _ => null
     };
 }

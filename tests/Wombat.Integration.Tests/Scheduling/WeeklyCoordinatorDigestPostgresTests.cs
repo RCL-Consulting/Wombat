@@ -95,7 +95,9 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
                 await db.SaveChangesAsync();
 
                 var curriculumId = await db.Curricula.OrderBy(entity => entity.Id).Select(entity => entity.Id).FirstAsync();
-                var type = await db.ActivityTypes.OrderBy(entity => entity.Id).Select(entity => new { entity.Id, entity.Version }).FirstAsync();
+                // T358 (E5): a filing, not any activity. A journal club is born terminal, so its create files it; a draft would
+                // not count, and a-busy would be listed.
+                var type = await db.ActivityTypes.Where(entity => entity.Key == "journal_club").Select(entity => new { entity.Id, entity.Version }).SingleAsync();
 
                 NomineeSeed.AddUser(db, "coord-a", host, WombatRoles.Coordinator);
                 NomineeSeed.AddUser(db, "coord-b", elsewhere.Id, WombatRoles.Coordinator);
@@ -127,7 +129,7 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
                     InstitutionId = host,
                     SubjectUserId = "a-busy",
                     CreatedByUserId = "a-busy",
-                    CurrentState = "draft",
+                    CurrentState = "logged",
                     DataJson = "{}",
                     CreatedOn = filed,
                     UpdatedOn = filed,
@@ -183,8 +185,9 @@ public sealed class WeeklyCoordinatorDigestPostgresTests : IAsyncLifetime
 
             // The activity table is read for who filed, and for nothing a mail could carry (the class remarks).
             var activityReads = commands.Texts.Where(text => text.Contains("FROM \"Activities\"", StringComparison.Ordinal)).ToList();
+            // Since T358 the read is FilingMoments': each activity's type, create time and moves, never its data (build review R2: no creator).
             activityReads.Should().ContainSingle();
-            activityReads[0].Should().NotContain("\"DataJson\"").And.Contain("DISTINCT");
+            activityReads[0].Should().NotContain("\"DataJson\"").And.NotContain("\"SnapshotJson\"").And.NotContain("\"Note\"");
         }
         finally
         {

@@ -121,6 +121,7 @@ public static class DependencyInjection
         // flow 02, E5): the sign-in endpoint's and the link handler's.
         services.AddSingleton<SignInTiming>();
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
+        services.AddScoped<IReminderRecipients, ReminderRecipients>(); // T358: a staff reminder's recipient, as the digests read it
         // The clock the activity write path judges the encounter date's "today" by (T160). TryAdd: a host that already
         // registers one keeps it.
         services.TryAddSingleton(TimeProvider.System);

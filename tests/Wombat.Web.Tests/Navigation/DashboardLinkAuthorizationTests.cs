@@ -23,6 +23,7 @@ using Wombat.Web.Components.Pages;
 using Wombat.Web.Components.Pages.Dashboards;
 using Wombat.Web.Navigation;
 using Wombat.Web.Services;
+using Wombat.Web.Tests.Dashboards;
 using static Wombat.Web.Tests.Navigation.PageAccess;
 
 namespace Wombat.Web.Tests.Navigation;
@@ -350,9 +351,16 @@ public sealed class DashboardLinkAuthorizationTests
     }
 
     // "@item.ActivityId" or "@(expression)" is a value the render fills in: one path segment, whatever it holds. A href
-    // that is wholly one call, "@ProgressLinks.Epa(item.EpaId)", is an address the call builds (T355): a whole path.
+    // that is wholly one call, "@ProgressLinks.Epa(item.EpaId)", is an address the call builds (T355): a whole path. So is
+    // a href that is wholly one named address, "@ProgrammeLinks.Waiting", or one built with its query,
+    // "@ProgrammeLinks.ShortOn(epa.EpaId)" (T358, flow 06): a whole path, its query string included.
     private static Regex PatternFor(string declared)
     {
+        if (Regex.IsMatch(declared, @"^@[A-Z][A-Za-z0-9_]*\.[A-Z][A-Za-z0-9_]*(\([^)]*\))?$"))
+        {
+            return new Regex("^/[^#]*$");
+        }
+
         if (Regex.IsMatch(declared, @"^@[A-Za-z_][A-Za-z0-9_.]*\([^)]*\)$"))
         {
             return new Regex("^/[^?#]+$");
@@ -380,13 +388,15 @@ public sealed class DashboardLinkAuthorizationTests
             GetAdministratorDashboardSummaryQuery => new AdministratorDashboardSummaryDto(DatabaseHealthy: true, TotalUserCount: 12),
             GetInstitutionalAdminDashboardSummaryQuery => new InstitutionalAdminDashboardSummaryDto(
                 [new RoleCountItem(WombatRoles.Trainee, 3)], SpecialityCount: 1, SubSpecialityCount: 1),
-            GetSpecialityAdminDashboardSummaryQuery => new SpecialityAdminDashboardSummaryDto(1, 3, 1, Coverage()),
-            GetSubSpecialityAdminDashboardSummaryQuery => new SubSpecialityAdminDashboardSummaryDto(1, 3, 1, Coverage()),
-            GetCommitteeMemberDashboardSummaryQuery => new CommitteeMemberDashboardSummaryDto(
-                "Semester 1, 2026", "January to June", [new TraineeTargetsItem("trainee-1", "Thandi Nkosi", 1, 2, 0, 1)], [Epa()], 0),
-            GetCoordinatorDashboardSummaryQuery => new CoordinatorDashboardSummaryDto(
-                [new StalledRequestItem(51, "Mini-CEX", "Thandi Nkosi", When)],
-                [new ExpiringInvitationItem(1, "new.trainee@wombat.local", WombatRoles.Trainee, new DateOnly(2026, 3, 22))]),
+            // T358, flow 06: every card's list filled, a registrar exempt among them, an EPA every registrar has met (text)
+            // beside one that links, more than five of each, and the Coordinator's Nothing filed and invitations.
+            GetSpecialityAdminDashboardSummaryQuery => OversightHomeFixtures.SpecialityAdmin(Waiting(), Registrars(), Coverage()),
+            GetSubSpecialityAdminDashboardSummaryQuery => OversightHomeFixtures.SubSpecialityAdmin(Waiting(), Registrars(), Coverage()),
+            GetCommitteeMemberDashboardSummaryQuery => OversightHomeFixtures.Committee(Registrars(), Coverage()),
+            GetCoordinatorDashboardSummaryQuery => OversightHomeFixtures.Coordinator(
+                Waiting(),
+                OversightHomeFixtures.Card([OversightHomeFixtures.Registrar("Thandi Nkosi", 2, lastFiled: new DateOnly(2026, 2, 1))], total: 7),
+                [OversightHomeFixtures.Invitation("new.trainee@wombat.local")]),
             GetAssessorDashboardSummaryQuery => TestSupport.ActivityRows.AssessorHome(
                 [TestSupport.ActivityRows.Waiting(52, typeName: "Mini-CEX", subjectName: "Thandi Nkosi", since: When)],
                 [TestSupport.ActivityRows.Decided(53, typeName: "Mini-CEX", subjectName: "Thandi Nkosi", decidedOn: When)]),
@@ -435,13 +445,30 @@ public sealed class DashboardLinkAuthorizationTests
                 Items: [new TraineeCurriculumProgressDto(1, 1, "EPA 1", "Resuscitate a newborn", QuotaPeriod.Semester, 2, current, null, 3, "3a", null)]);
         }
 
+        // One EPA's target that applies to a trainee who has not met it (a link to the registrars short on it), and one
+        // every registrar has met (text).
         private static CurriculumCoverage Coverage()
             => new(
                 new DateOnly(2026, 3, 20), "Semester 1, 2026", "January to June",
-                [new TraineeTargetCoverage("trainee-1", 0, 1, 0, 0)], [Epa()], 0);
+                [new TraineeTargetCoverage("trainee-1", 0, 1, 0, 0)],
+                [
+                    new EpaTargetCoverage(1, "EPA 1", "Resuscitate a newborn", QuotaPeriod.Semester, 2, TraineesMet: 0, TraineesApplying: 1, TraineesExempt: 0),
+                    new EpaTargetCoverage(2, "EPA 2", "Run a ward round", QuotaPeriod.Semester, 1, TraineesMet: 1, TraineesApplying: 1, TraineesExempt: 0)
+                ],
+                0);
 
-        // One EPA's target that applies to a trainee who has not met it: a row, with its bar.
-        private static EpaTargetCoverage Epa()
-            => new(1, "EPA 1", "Resuscitate a newborn", QuotaPeriod.Semester, 2, TraineesMet: 0, TraineesApplying: 1, TraineesExempt: 0);
+        private static Wombat.Application.Features.Dashboards.Oversight.RegistrarsCardDto Registrars()
+            => OversightHomeFixtures.Card(
+                [
+                    OversightHomeFixtures.Registrar("Thandi Nkosi", 2),
+                    OversightHomeFixtures.Registrar("Sipho Ndlovu", 1, exemption: Wombat.Application.Features.Programme.Trainees.ProgrammeExemption.StartedPartWay)
+                ],
+                total: 8);
+
+        private static Wombat.Application.Features.Programme.Waiting.WaitingForAssessorsDto Waiting()
+            => OversightHomeFixtures.Waiting(
+                OversightHomeFixtures.Kgk,
+                [OversightHomeFixtures.MiniCex() with { Id = 51 }],
+                total: 9);
     }
 }

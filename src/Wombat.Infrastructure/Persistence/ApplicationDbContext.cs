@@ -56,6 +56,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<ProcedureCatalogueEntry> ProcedureCatalogueEntries => Set<ProcedureCatalogueEntry>();
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<ActivityTransition> ActivityTransitions => Set<ActivityTransition>();
+    public DbSet<ActivityReminder> ActivityReminders => Set<ActivityReminder>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<MsfTemplate> MsfTemplates => Set<MsfTemplate>();
     public DbSet<MsfQuestion> MsfQuestions => Set<MsfQuestion>();

@@ -262,15 +262,23 @@ Expect: The list offers him New panel and an Edit on the panel. The form's Scope
 ### Step 2.32 — Mr Smit, Coordinator
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
-Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision panels address, then the
-  new-panel address.
-Expect: The dashboard reads "No stalled requests.", "No invitations expiring soon." and a Quick action, "Start an MSF
-  campaign". The sidebar reads "Acting as Coordinator" over Home, Decisions due, MSF campaigns, Committee reviews and
-  Data rights requests, then My data rights. It has no Invitations, and the invitations page reads "You cannot
-  open this page", "Your role (Coordinator) does not open this page." and "If you need it for your work, ask your
-  institution's Wombat administrator.", with Go to Home (T178, T335). It has no Decision panels either, though that page
-  admits him: it lists the panel with no New panel and no Edit column, and nothing in his menu is lit there. The panel
-  form reads "You cannot open this page" in the same words.
+Do: Sign in and read the dashboard and nav. Type the invitations address. Open Decision panels from the menu, then type
+  the new-panel address.
+Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "Start an MSF campaign"
+  (`/msf/campaigns/new`), where a Quick action card was (T358, Q6). Its cards, in order:
+  - "Waiting for assessors", with no badge: "Nothing is waiting for an assessor.", with Open Waiting for assessors;
+  - "Nothing filed in 30 days", its rule line "Current registrars with nothing filed (a draft is not filed) in the last
+    30 days. A registrar admitted less than 30 days ago is not listed.", then "Every current registrar has filed
+    something in the last 30 days.", with Open in Programme trainees: the registrars were admitted today, and a
+    registrar admitted less than 30 days ago is not listed (E5);
+  - "Invitations nearing expiry": "No invitations expiring soon."
+  The sidebar reads "Acting as Coordinator" over Home, Programme trainees, Waiting for assessors, Decisions due, MSF
+  campaigns, Committee reviews, Decision panels and Data rights requests, one flat list (E2), then My data rights. It
+  has no Invitations, and the invitations page reads "You cannot open this page", "Your role (Coordinator) does not open
+  this page." and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home (T178,
+  T335). Decision panels lists the panel with no New panel and no Edit column, and Decision panels is lit there (T358,
+  C10). The panel form reads "You cannot open this page" in the same words: the Coordinator reads panels, and edits none
+  (D4).
 
 --- from execution/knowledge/scenario-paediatrics/act-4-annual-review.md ---
 
@@ -308,17 +316,20 @@ Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/decisions-due
 Do: Sign in, read her menu, and open Decisions due.
 Expect:
-  - **Menu:** Home, Decisions due, Committee reviews and Decision panels, then My data rights. Decisions due is lit on
-    its page.
+  - **Menu:** Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels and
+    Entrustment decisions, then My data rights (T358, R2-Menus). Decisions due is lit on its page.
+  - **Home's cards:** Waiting for assessors, Registrars and Targets by EPA, read for Paediatrics. Waiting for assessors
+    holds Dr du Plessis's CBD and portfolio review, both still open from Act 3, the review Overdue; Registrars the five,
+    badged "5 registrars".
   - **The page:** the same five registrars, all in Paediatrics, and 75 rows, each Schedule link offered.
-  - **Not in her menu or on her dashboard:** Entrustment decisions.
+  - **Entrustment decisions** is in the menu (Step A.7.7 opens it from there); no card on Home names it.
 
 ### Step 4.4 — Dr Sithole reads what is due in his sub-speciality
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /account/login → / → /committee/decisions-due
 Do: Sign in and open Decisions due.
-Expect: The same five registrars and 75 rows as Step 4.3: all five train in the Paediatrics sub-speciality he
-  administers. His menu reads as Mokoena's.
+Expect: The same five registrars and 75 rows as Step 4.3: all five train in the Paediatrics sub-speciality Dr Sithole
+  administers. Dr Sithole's menu and Home's cards read as Dr Mokoena's.
 
 ### Step 4.5 — Dr Naidoo is not offered what is due
 Role: CommitteeMember — Dr David Naidoo
@@ -458,9 +469,10 @@ Expect:
 ### Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
-Do: Type the entrustment decisions page's address. Filter Status to Revoked and apply, then to Active and apply.
-  Download the revoked certificate. Then open Decisions due with "Every status".
+Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
+  the revoked certificate. Then open Decisions due with "Every status".
 Expect:
+  - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
@@ -533,16 +545,19 @@ Expect: The review opens with Mode "Formative (interim check-in, no binding deci
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
-Expect: The campaign page keeps its gutter (T226), and its invitee table (counts by respondent group: the page never
-  lists an address) scrolls within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as
-  a labelled, focusable region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
+Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
+  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
+  keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
+  within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as a labelled, focusable
+  region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 
 ### Step A.7.8 — Dr Sithole on his phone
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: / → /committee/reviews → /committee/decisions-due
 Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
-Expect: As for Dr Mokoena, scoped to his sub-speciality. The folded bar reads "Acting as" over "Sub-speciality admin",
-  in two lines: the bar grows, and the role is never cut. His menu reads as hers (A.5.12), each row 44px.
+Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks the same three cards. The folded bar reads
+  "Acting as" over "Sub-speciality admin", in two lines: the bar grows, and the role is never cut. Dr Sithole's menu
+  reads as Dr Mokoena's (A.5.12), each row 44px.
 ```
 
 ### 2.2 After you pick, paste this
@@ -567,7 +582,7 @@ One line per step: what the person does, and what they must be able to see. The 
 | 2.23 | `/account/login` → `/` → `/committee/panels` → `/committee/panels/{PanelId:int}` → `/committee/panels` | Dr Mokoena | Adds Dr Botha. Decides for is read-only for her; "Panel members updated."; Members reads 4. |
 | 2.24 | `/committee/panels` | Prof Mbatha | One panel, and "who decides": PAED-004 and 005 fall back to the general panel with the College's reason; the other thirteen go to it. |
 | 2.25 | `/account/login` → `/` → `/committee/panels` → `/committee/panels/new` | Dr Sithole | May create Speciality-scoped panels only, with no Decides for field. Leaves without saving. |
-| 2.32 | `/account/login` → `/` → `/admin/invitations` → `/access-denied` → `/committee/panels` → `/committee/panels/new` → `/access-denied` | Mr Smit | His nav has no Decision Panels. Typed, the list opens (no New, no Edit); the new-panel form is access denied. |
+| 2.32 | `/account/login` → `/` → `/admin/invitations` → `/access-denied` → `/committee/panels` → `/committee/panels/new` → `/access-denied` | Mr Smit | Since flow 06 (T358) his nav has Decision panels, lit on the list (no New, no Edit); the new-panel form is access denied (D4). |
 | 4.1 | `/` → `/committee/decisions-due` | Mr Smit | Outstanding for the period: the opening sentence, By EPA (12 To schedule, 3 Optional), "75 of 75", 20 a page, Schedule named per row; filters to five PAED-004 rows. |
 | 4.2 | `/` → `/committee/decisions-due` | Prof Mbatha | No Institution filter for her. The previous semester shows Missed rows; optional EPAs are never missed. |
 | 4.3 | `/account/login` → `/` → `/committee/decisions-due` | Dr Mokoena | The same 75 rows. Entrustment Decisions is in neither her nav nor her dashboard. |

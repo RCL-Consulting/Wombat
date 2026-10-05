@@ -1,0 +1,71 @@
+@using Wombat.Application.Features.Programme.Trainees
+
+@*
+  Home's previews of Programme trainees (T358, flow 06; Q1; R2-Home c1, c6, c11, k4; round 3 items 27, 28, 33): the first
+  rows of the list, each its own link to the registrar's page, then "3 more in Programme trainees." past them.
+
+  - The Registrars card (the Committee member's and both speciality admins'): a .roster-row per registrar, the name
+    (.progress-row-link) over the training year, then My progress's two figures in their own columns ("0 of 10" over
+    "EPAs met this semester", "0 of 5" over "EPAs met in 2026"). An exempt registrar has no figure: the badge "Exempt this
+    period" and why, in words (review 9).
+  - The Coordinator's Nothing filed in 30 days (FiledMeta): the name over "Last filed 2026-09-12 · Training year 2", no
+    figures, the Trainee Home's .progress-row--link rows, since the card is one column wide.
+
+  No pronoun in any word (round-3-check 1). The card's title, badge, rule line, empty words and foot are the Home's.
+*@
+<ul class="list-unstyled">
+  @foreach (var row in Rows)
+  {
+    @if (FiledMeta)
+    {
+      <li @key="row.ProfileId" class="progress-row progress-row--link">
+        <a class="progress-row-link" href="@ProgrammeLinks.Trainee(row.ProfileId)">@row.Name</a>
+        <p class="progress-row-meta">@ProgrammeWords.FiledRowMeta(row)</p>
+      </li>
+    }
+    else
+    {
+      <li @key="row.ProfileId" class="roster-row">
+        <div>
+          <a class="progress-row-link" href="@ProgrammeLinks.Trainee(row.ProfileId)">@row.Name</a>
+          <p class="progress-row-meta">@ProgrammeWords.TrainingYear(row)</p>
+        </div>
+        @if (row.IsExempt)
+        {
+          <div class="roster-exempt">
+            <span class="badge @BadgeFor.State(BadgeState.Draft)">@ProgrammeWords.Exempt</span>
+            <span class="progress-row-meta">@ProgrammeWords.ExemptReason(row)</span>
+          </div>
+        }
+        else
+        {
+          var (semesterValue, semesterLabel) = ProgrammeWords.SemesterFigure(row);
+          var (yearValue, yearLabel) = ProgrammeWords.YearFigure(row);
+          <div class="dashboard-metric">
+            <span class="count-figure">@semesterValue</span>
+            <span class="dashboard-metric-label">@semesterLabel</span>
+          </div>
+          <div class="dashboard-metric">
+            <span class="count-figure">@yearValue</span>
+            <span class="dashboard-metric-label">@yearLabel</span>
+          </div>
+        }
+      </li>
+    }
+  }
+</ul>
+@if (Total > Rows.Count)
+{
+  <p class="waiting-more">@ProgrammeWords.More(Total - Rows.Count)</p>
+}
+
+@code {
+  /// <summary>The rows shown, the list's first five, in its order.</summary>
+  [Parameter, EditorRequired] public IReadOnlyList<ProgrammeTraineeRowDto> Rows { get; set; } = [];
+
+  /// <summary>How many the list holds: past <see cref="Rows" />, "n more in Programme trainees.".</summary>
+  [Parameter] public int Total { get; set; }
+
+  /// <summary>The Nothing filed card's rows: the name over when the registrar last filed and the training year.</summary>
+  [Parameter] public bool FiledMeta { get; set; }
+}

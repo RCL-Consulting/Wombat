@@ -21,6 +21,12 @@ files and 80 templates. Its build closes, for its replay to confirm, five gaps t
 training year on Home, 2.39), T280 at 3.12 (no card is one link around its rows), F-A.7.3a (T328, the standing table's
 rating links 44 px at 390, A.7.3), F-6.37a (T304, counts carried at a version move, 6.37, already closed by T304's own
 replay) and F-A.7.6a (T323, each chart drawn at its own size and scrolled in its named region, A.7.6).
+T358 (flow 06, 2026-10-05) added Programme trainees, a registrar's page under it and Waiting for assessors, so 71 page
+files and 83 templates, and seven steps (3.54a–3.54c, A.5.14–A.5.16, A.7.8a), so 332. Its build closes, for its replay
+to confirm, the gaps the steps record or the cards showed: T290 at 2.37 (the external member reads every registrar),
+T298 at 2.33 and 3.52 (ties by surname), T280 and T325 at 3.30 (each row its own link; no "26 Sept"), B7
+(BRIEF § 7: Stalled activities built as Waiting for assessors, with its reminder, and Programme trainees) and B8
+(Decision panels in the Coordinator's menu, Entrustment decisions in the speciality admins').
 
 ## Pages
 
@@ -97,10 +103,13 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/portfolio/progress/{EpaId:int}` | Portfolio/EpaProgress.razor | Trainee, or a former trainee (trainee record); the caller's own curriculum's EPAs only, any other id "Page not found". Reached from My progress's index, Home's Furthest short and My authorisations rows, My activities' Credit links, a completed activity's Open My progress, and an ended record's EPA codes (T355) | 3.6, 3.7, 3.48, 5.26, 6.15, 6.19, 6.21, 6.24, 6.27, A.7.3 |
 | `/portfolio/progress` | Portfolio/MyProgress.razor | Trainee, or a former trainee (trainee record) | 2.19, 2.39, 2.40, 3.7, 3.48, 4.40, 5.15, 5.19, 5.20, 5.26, 5.28, 6.15, 6.19, 6.21, 6.24, 6.27, 6.35, 6.37, 6.39, 6.40, 6.41, A.7.3, A.7.4 |
 | `/portfolio/verify` | Portfolio/VerifyExport.razor | Anyone, signed in or not (a static page) | 5.13, 5.14, 5.23, A.7.12 |
+| `/programme/trainees` | Programme/ProgrammeTrainees.razor | CommitteeMember, SpecialityAdmin, SubSpecialityAdmin, Coordinator; read as one role, scoped by it (T358, E4) | 3.54a, 3.54b, A.5.16, A.7.8a |
+| `/programme/trainees/{ProfileId:int}` | Programme/ProgrammeTraineeDetail.razor | CommitteeMember, SpecialityAdmin, SubSpecialityAdmin, Coordinator; one registrar in the scope of the role read as (T358, C2) | 3.54b, A.5.14, A.7.8a |
+| `/programme/waiting` | Programme/WaitingForAssessors.razor | SpecialityAdmin, SubSpecialityAdmin, Coordinator; read as one role, scoped by it (T358, E4) | 3.31, 3.54c, A.5.10, A.5.15, A.7.8a |
 
 ## Not played
 
-No template is unplayed. Every one of the 80 templates is named by at least one step's `Route:` line, so this section
+No template is unplayed. Every one of the 83 templates is named by at least one step's `Route:` line, so this section
 has no rows. A row added here must name, in backticks, a template that no step plays, with its reason (T294).
 
 ## Flows and states not played
@@ -122,8 +131,8 @@ state, `states.md` is where it belongs.
 | Change password refused by the sign-in throttle ("Too many attempts from this network. …") | Needs ten failed password checks from one address within five minutes; no step fails that often. | `states.md` (typed, or on a scratch database) |
 | The sign-in page with scripts blocked (no Show toggle; signing in still works), and a signed-in visitor opening `/account/login` (sent Home) | No step blocks scripts or opens the sign-in page while signed in. | `states.md` |
 | `/Error` reached through an unhandled exception | Outside Development only (`ErrorPages`, T321); the replay runs in Development, whose developer exception page answers instead. `Hosting/ErrorPageFlowTests` plays it; A.5.8 plays the page by its address. | Reported at A.5.8 |
-| The five features the nav once linked as "Coming soon": Recent activities (Assessor), Stalled activities (Coordinator), Programme trainees (CommitteeMember, SpecialityAdmin, SubSpecialityAdmin), STAR review queue (SpecialityAdmin, SubSpecialityAdmin) and System (Administrator) | Not built, and not offered: the nav links to no unbuilt page, and the placeholder page is gone (T335, flow 01). Recent activities and System were dropped; stalled work and Programme trainees are flow 06's, the STAR review queue flow 09's. The menus are read at 3.31, 3.51–3.53 and A.5.9–A.5.13. | Flows 06 and 09 |
-| The Coordinator's stalled-work triage: sending a reminder, or reassigning a request | No page offers it. The dashboard's "Stalled requests" rows link to each activity's page (T297), which offers neither (3.30, A.5.10). | Not built |
+| Three of the five features the nav once linked as "Coming soon": Recent activities (Assessor), STAR review queue (SpecialityAdmin, SubSpecialityAdmin) and System (Administrator) | Not built, and not offered: the nav links to no unbuilt page, and the placeholder page is gone (T335, flow 01). Recent activities and System were dropped; the STAR review queue is not restored, Entrustment decisions taking its place in the speciality admins' menu (T358). The other two are built: Stalled activities as Waiting for assessors and Programme trainees (T358, flow 06). The menus are read at 3.31, 3.51–3.53 and A.5.9–A.5.13. | Dropped, or flow 09 |
+| Reassigning a waiting request to another assessor | No page offers it (T358, Q4, C5): Waiting for assessors sends a reminder (3.31, A.5.15), and nothing reassigns. | Not built |
 | Applying and completing an approved data-rights rectification | No page calls `ApplyRectificationCommand` or `CompleteRectificationRequestCommand` (T112, Still open). A.1.8 rejects the request instead. | Not built |
 | An email when an activity is requested, completed, declined or returned | Nothing sends the `AssessmentRequested`, `AssessmentAccepted`, `AssessmentCompleted` or `AssessmentDeclined` templates. Steps 3.3, 5.24, A.2.7 and A.7.2 expect that nothing is sent. | Undecided |
 | An assessor's training status (`AssessorProfile.TrainingStatus`) changing an assessment | Nothing on the activity path reads it (2.14 records it). | Undecided |
@@ -165,9 +174,8 @@ whether each deserves a link.
 | Page | Who is admitted but has no link | Steps |
 |---|---|---|
 | `/portfolio/export/{TraineeUserId}` | Every member of staff who may export a trainee's portfolio: no page links to it | 5.10, 5.12 |
-| `/admin/entrustment-decisions` | SpecialityAdmin and SubSpecialityAdmin; the InstitutionalAdmin reaches it only from her dashboard's quick links | 4.36, 4.37, A.7.7 |
+| `/admin/entrustment-decisions` | InstitutionalAdmin: reached only from Prof Mbatha's dashboard's quick links. The speciality admins have it in their menu since T358 | 4.35, 5.7, 6.22 |
 | `/admin/institutions/{Id:int}` | InstitutionalAdmin, for her own institution | 1.23, A.6.3 |
-| `/committee/panels` | Coordinator: the page admits him, but his menu has no Decision panels (DESIGN.md) | 2.32 |
 | `/account/logout-confirm`, `/account/logout` | Everyone: only the error page's Sign out links to the confirmation address (on the replay no failure leads there, A.5.8), and nothing links to `/account/logout`; everywhere else the account row's Sign out posts to `/account/logout/submit` and signs out at once | A.4.7 |
 | `/Error` | Everyone: on the replay (Development) no failure leads to it | A.5.8 |
 | `/portfolio/authorisations` | Trainee: reached from Home's My authorisations card (its Open My authorisations; its STAR rows open the EPA page) and from an EPA page's Entrustment, not from the menu, which lights My progress on it (T355) | 4.39, 4.42, 5.8 |
@@ -285,11 +293,12 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation | 2.10 | `/account/register`, `/` |
 | Add a consultant to my programme's review panel | 2.23 | `/committee/panels`, `/committee/panels/{PanelId:int}` |
-| Read my programme's dashboard: trainees, work awaiting review, target coverage | 2.38, 3.53 | `/` |
+| Read my programme's dashboard: what waits for an assessor, the registrars, the targets by EPA | 2.38, 3.53, 4.3 | `/` |
+| See which requests wait for an assessor, filter them by assessor and how overdue | 3.54c | `/programme/waiting` |
 | See what the committee must decide in my speciality | 4.3 | `/committee/decisions-due` |
 | Schedule a registrar's review from what is due | 4.9 | `/committee/decisions-due`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Revoke a STAR issued in error | 4.36 | `/admin/entrustment-decisions` |
-| Find no Programme trainees or STAR review queue yet (flows 06 and 09) | 3.53, A.5.12 | `/` |
+| Find Programme trainees, Waiting for assessors and Entrustment decisions in my menu, and no STAR review queue | 3.53, A.5.12 | `/` |
 | Review my account | 2.41 | `/account/profile` |
 | Do my programme's work on a phone | A.7.7 | `/`, `/committee/panels`, `/committee/decisions-due`, `/admin/entrustment-decisions` |
 
@@ -299,7 +308,7 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation | 2.10 | `/account/register`, `/` |
 | See which panels I may create | 2.25 | `/committee/panels`, `/committee/panels/new` |
-| Read my sub-speciality's dashboard | 2.38, 3.54 | `/` |
+| Read my sub-speciality's dashboard: what waits for an assessor, the registrars, the targets by EPA | 2.38, 3.54, 4.4 | `/` |
 | See what the committee must decide in my sub-speciality | 4.4 | `/committee/decisions-due` |
 | Schedule a registrar's review from what is due | 4.10 | `/committee/decisions-due`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Find a revoked STAR and what must be decided again | 4.37 | `/admin/entrustment-decisions`, `/committee/decisions-due` |
@@ -312,7 +321,10 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation | 2.8, 2.11 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
 | Learn what my dashboard offers, and which pages are not mine | 2.32 | `/`, `/admin/invitations`, `/committee/panels`, `/committee/panels/new`, `/access-denied` |
-| See which requests have stalled | 3.30, 3.31, A.5.10 | `/`, `/not-found` |
+| See which requests wait for an assessor, and which are overdue | 3.30, 3.31, A.5.10 | `/`, `/programme/waiting` |
+| Send an assessor a reminder about one waiting request | 3.31 | `/programme/waiting`, `/not-found` |
+| Find that a reminder cannot reach a deactivated assessor, or one with no address | A.5.15 | `/programme/waiting`, `/admin/users/{UserId}` |
+| See which current registrars have filed nothing in 30 days | 2.32, 3.30, A.5.16 | `/`, `/programme/trainees` |
 | Set up an MSF questionnaire and a campaign for a registrar | 3.34, 3.35 | `/msf/campaigns`, `/msf/campaigns/new`, `/msf/campaigns/{CampaignId:int}` |
 | Invite the respondents, and fix one added under the wrong group | 3.36 | `/msf/campaigns/{CampaignId:int}` |
 | Open a campaign, and resend a link that was not delivered | 3.37, 3.43 | `/msf/campaigns/{CampaignId:int}` |
@@ -331,7 +343,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Stop, then restart, my weekly digest email | A.2.3, A.2.5 | `/account/data-rights` |
 | Sign out, and come back to the page I asked for | A.4.7 | `/account/logout-confirm`, `/`, `/account/logout`, `/account/logout/submit`, `/account/login`, `/msf/campaigns` |
 | Review my account | 2.41 | `/account/profile` |
-| Do my work on a phone | A.7.5 | `/`, `/msf/campaigns`, `/msf/campaigns/{CampaignId:int}`, `/committee/decisions-due`, `/admin/data-rights` |
+| Do my work on a phone | A.7.5, A.7.8a | `/`, `/msf/campaigns`, `/msf/campaigns/{CampaignId:int}`, `/committee/decisions-due`, `/admin/data-rights`, `/programme/waiting` |
 
 ### CommitteeMember (Dr Thandi Zulu, chair; Dr David Naidoo, Dr Sarah Botha; Dr John van Rensburg, external)
 
@@ -339,6 +351,9 @@ and Assessor) appears under each role for the jobs done in it.
 |---|---|---|
 | Accept my invitation | 2.10 | `/account/register`, `/` |
 | See how the programme's registrars stand against this period's targets | 2.33, 2.35, 2.37, 3.52 | `/account/login`, `/`, `/committee/panels` |
+| See which registrars are short on one EPA, and how far | 3.54a | `/`, `/programme/trainees` |
+| Read one registrar's progress, standing and trajectories, and what waits for an assessor | 3.54b | `/programme/trainees`, `/programme/trainees/{ProfileId:int}` |
+| Find that another institution's registrar, or an erased one, is no page at all | A.5.14 | `/programme/trainees/{ProfileId:int}` |
 | Switch between my committee and assessor dashboards, to rate and back | 2.34, 3.13, 3.33, 3.52 | `/`, `/dashboard/switch/{role}`, `/account/logout/submit`, `/account/login` |
 | Check who sits on my panel and which EPAs it decides | 4.14 | `/committee/panels` |
 | Find that scheduling is not mine | 4.5 | `/committee/decisions-due`, `/access-denied` |
@@ -352,9 +367,10 @@ and Assessor) appears under each role for the jobs done in it.
 | (External member) See the appeal I may hear | 4.45 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | (Chair) Resolve an appeal, with a quorum for the replacement decision | 4.46, 4.47 | `/committee/reviews/{ReviewId:int}` |
 | (Chair) Hold and close a formative check-in | 4.50 | `/committee/reviews/{ReviewId:int}` |
-| Find no Programme trainees yet (flow 06) | 3.52, A.5.11 | `/` |
+| Find Programme trainees in my menu, and no Waiting for assessors | 3.52, A.5.11 | `/` |
 | Review and correct my account | 2.41, A.4.1 | `/account/profile`, `/account/profile/submit` |
 | Read a review on a phone, and with a screen reader | A.7.6, A.7.13 | `/`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
+| Read Programme trainees and a registrar's page on a phone and a tablet | A.7.8a | `/programme/trainees`, `/programme/trainees/{ProfileId:int}` |
 
 ### Assessor (Dr Mohammed Patel, Dr Fatima Khumalo; and Dr Zulu, Dr Naidoo and Dr Botha as assessors)
 

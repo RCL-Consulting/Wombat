@@ -1,67 +1,81 @@
 @using System.Security.Claims
 @using MediatR
+@using Wombat.Application.Features.Curricula.Quota
 @using Wombat.Application.Features.Dashboards.Coordinator
+@using Wombat.Web.Components.Shared.Programme
 @attribute [Authorize(Roles = "Coordinator")]
 @rendermode InteractiveServer
 @inherits RoleDashboard<CoordinatorDashboardSummaryDto>
 
+@*
+  The Coordinator's Home (T358, flow 06; Q3, Q6, E3, E5; R2-Home k1–k6): three cards, read as Coordinator in the
+  institution's scope, one read behind the frame. "Start an MSF campaign" is Home's header action (HomeFrame.ActionFor,
+  Q6, review 26), where the "Quick action" card was.
+  - "Waiting for assessors" (#card-waiting-assessors, spanning two): the page's first five (AssessorsWaitingCard), in
+    place of "Stalled requests".
+  - "Nothing filed in 30 days" (#card-nothing-filed): Programme trainees filtered Nothing filed, its first five, each name
+    a link to the registrar's page over when the registrar last filed; its rule line always, since the 30 days' rule (E5)
+    is the card's whole meaning; its foot "Open in Programme trainees", empty included (round 3 item 27).
+  - "Invitations nearing expiry" (#card-invitations): the address and the role by its label, "expires 2026-10-07" (ISO,
+    T325), its rule line with rows only, and no row action, since only an institutional admin can resend one. With rows
+    it spans the row (k4); no foot.
+*@
 <DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
-  @* Activities awaiting a reviewer that nobody has moved for the stall days, read from each activity's pinned workflow
-     (T297), so a request the assessor nudge writes about is on this card once it has waited this long. *@
-  <DashboardCard Title="Stalled requests" Icon="alert-triangle" IsLoading="IsLoading" Warning="@(Summary?.StalledRequests.Count > 0)">
+  <AssessorsWaitingCard Waiting="@Summary?.Waiting" IsLoading="IsLoading" Span="2" />
+
+  <DashboardCard Title="@ProgrammeWords.NothingFiledCard" Icon="clipboard-list" HeadingId="card-nothing-filed" IsLoading="IsLoading"
+                 BadgeWords="@(Summary is { NothingFiled.Total: > 0 } filed ? ProgrammeWords.Badge(filed.NothingFiled.Total) : null)"
+                 BadgeTone="BadgeState.Draft">
     @if (Summary is { } summary)
     {
-      if (summary.StalledRequests.Count == 0)
+      <p class="needs-you-rule">@ProgrammeWords.FiledRule</p>
+      if (summary.NothingFiled.Total == 0)
       {
-        <p class="muted">No stalled requests.</p>
+        <p class="card-empty">@ProgrammeWords.FiledEmpty</p>
       }
       else
       {
-        <ul class="list-unstyled">
-          @foreach (var item in summary.StalledRequests)
-          {
-            <li class="list-row">
-              @* Each row opens its activity (T297), which the read rule that chose the row lets the Coordinator read (T101).
-                 The link's name starts with its visible label and names the trainee, as the assessor's rows do (T250). *@
-              <span><a href="/activities/@item.ActivityId" aria-label="@($"{item.ActivityTypeName} for {item.SubjectName}")">@item.ActivityTypeName</a> &mdash; @item.SubjectName</span>
-              <span class="muted">@item.LastMovedOn.ToString("d MMM")</span>
-            </li>
-          }
-        </ul>
+        <RegistrarRoster Rows="@summary.NothingFiled.Rows" Total="@summary.NothingFiled.Total" FiledMeta="true" />
       }
+      <div class="dashboard-card-footer">
+        <a href="@ProgrammeLinks.NothingFiled" class="btn btn-sm btn-outline">@ProgrammeWords.OpenFiled</a>
+      </div>
     }
   </DashboardCard>
 
-  <DashboardCard Title="Invitations nearing expiry" Icon="calendar" IsLoading="IsLoading">
+  <DashboardCard Title="Invitations nearing expiry" Icon="calendar" HeadingId="card-invitations" IsLoading="IsLoading"
+                 Span="@(Summary?.ExpiringInvitations.Count > 0 ? 3 : 0)">
     @if (Summary is { } summary)
     {
       if (summary.ExpiringInvitations.Count == 0)
       {
-        <p class="muted">No invitations expiring soon.</p>
+        <p class="card-empty">@NoneExpiring</p>
       }
       else
       {
+        <p class="needs-you-rule">@ExpiryRule</p>
         <ul class="list-unstyled">
           @foreach (var item in summary.ExpiringInvitations)
           {
-            <li class="list-row">
-              <span>@item.Email (@item.TargetRole)</span>
-              <span class="muted">expires @item.ExpiresOn.ToString("d MMM")</span>
+            <li @key="item.InvitationId" class="list-row">
+              <span>@item.Email <span class="muted">· @item.TargetRoleLabel</span></span>
+              <span class="muted">expires @QuotaText.Iso(item.ExpiresOn)</span>
             </li>
           }
         </ul>
       }
     }
   </DashboardCard>
-
-  @* Not "Issue invitation": the invitations page admits only an Administrator or an InstitutionalAdmin, as the nav
-     says (T178). An MSF campaign is the Coordinator's own to start (T261). *@
-  <DashboardCard Title="Quick action" Icon="plus" IsLoading="IsLoading">
-    <a href="/msf/campaigns/new" class="btn btn-primary">Start an MSF campaign</a>
-  </DashboardCard>
 </DashboardFrame>
 
 @code {
+  /// <summary>The invitations card's rule line, with rows (k4): why the card offers nothing to do.</summary>
+  public static readonly string ExpiryRule =
+    $"Expiring in the next {GetCoordinatorDashboardSummaryQueryHandler.ExpiryDays} days. Only an institutional admin can resend an invitation.";
+
+  /// <summary>The invitations card with nothing expiring (k1).</summary>
+  public const string NoneExpiring = "No invitations expiring soon.";
+
   protected override IRequest<CoordinatorDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
     => new GetCoordinatorDashboardSummaryQuery(user);
 }

@@ -1,0 +1,113 @@
+@using Wombat.Application.Features.Activities.Dtos
+@using Wombat.Application.Features.Programme.Commands.SendActivityReminder
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<ReminderAction> Logger
+
+@*
+  Send a reminder (T358, flow 06; C4; round 3 items 22, 23, 29; R2-Waiting w1-w8, R2-Registrar r2, r2d, r2r, r2x): the
+  tail of a waiting row's Waiting cell, and of the registrar page's waiting row. The last reminder's record, "Reminded
+  2026-10-04 by Pieter Smit", then one of: the button, named for the assessor and the activity; "No reminder: ..." when
+  the nominee cannot be reminded (E3's w9); or nothing more, when someone has reminded the assessor today already (the
+  same-day block every staff member meets). The lines take .waited-cell span's look in the table and sit on lines of
+  their own in a row (.needs-you-why), muted as .progress-row-meta: built classes only (round 3 item 28).
+
+  The button opens a ConfirmDialog on its safe button, Don't send. Send the reminder sends the command once; while it is
+  on its way the confirm reads "Sending..." and is aria-disabled, keeping the focus, and Don't send is disabled
+  (ConfirmDialog's own in-flight rule). The result is not drawn here: the dialog is closed first, so nothing outside it is
+  inert, and then the host is handed the answer (OnResult) to show in its own ActionResult, which takes the focus. A send
+  that fails is logged and handed to the host as OnFailed, worded ReminderWords.Failed, never the exception's text (T329).
+*@
+@if (Item.LastReminder is { } last)
+{
+  <span class="needs-you-why progress-row-meta">@ReminderWords.Reminded(last)</span>
+}
+@if (ReminderWords.CannotRemind(Item) is { } reason)
+{
+  <span class="needs-you-why progress-row-meta">@reason</span>
+}
+else if (!Item.RemindedToday)
+{
+  <button type="button" class="btn btn-outline btn-sm reminder-action"
+          aria-label="@ReminderWords.ButtonName(Item, LinkName)" @onclick="OpenAsync">@ReminderWords.Button</button>
+  <ConfirmDialog @ref="_dialog"
+                 Title="@ReminderWords.DialogTitle(Item)"
+                 Body="@ReminderWords.DialogBody(Item)"
+                 CancelLabel="@ReminderWords.Cancel"
+                 ConfirmLabel="@(_sending ? ReminderWords.Sending : ReminderWords.Confirm)"
+                 OnConfirm="SendAsync" />
+}
+
+@code {
+  private ConfirmDialog? _dialog;
+
+  // The reminder has been sent and has not answered: a second confirm sends nothing.
+  private bool _sending;
+
+  /// <summary>The waiting row: its nominee, its last reminder, whether one went today, and whether it may be sent.</summary>
+  [Parameter, EditorRequired] public ActivitySummaryDto Item { get; set; } = default!;
+
+  /// <summary>The role the page reads as (<c>ProgrammeReadAs.RoleFor</c>), which the command is sent as (E4).</summary>
+  [Parameter, EditorRequired] public string ActingRole { get; set; } = string.Empty;
+
+  /// <summary>
+  /// The row link's own accessible name where <c>ActivityRowNames.Waiting</c> gave it one, so the button's name says
+  /// "(1 of 2)" as the link does (round 3 item 29). Null: the link's words.
+  /// </summary>
+  [Parameter] public string? LinkName { get; set; }
+
+  /// <summary>The answer, sent or refused, handed to the host once the dialog has closed.</summary>
+  [Parameter] public EventCallback<SendActivityReminderResult> OnResult { get; set; }
+
+  /// <summary>The send failed (not a refusal), handed to the host once the dialog has closed: it shows ReminderWords.Failed.</summary>
+  [Parameter] public EventCallback OnFailed { get; set; }
+
+  private async Task OpenAsync()
+  {
+    if (_dialog is not null)
+    {
+      await _dialog.ShowAsync();
+    }
+  }
+
+  private async Task SendAsync()
+  {
+    if (_sending)
+    {
+      return;
+    }
+
+    _sending = true;
+    SendActivityReminderResult? result = null;
+    try
+    {
+      var principal = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      // The state and the last move the row was read with: a request that moved since is refused, not reminded about in
+      // words it was not asked in (moved meanwhile).
+      result = await Sender.Send(new SendActivityReminderCommand(principal, ActingRole, Item.Id, Item.CurrentState, Item.UpdatedOn));
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "A reminder about activity {ActivityId} could not be sent.", Item.Id);
+    }
+    finally
+    {
+      _sending = false;
+    }
+
+    // Closed before the host shows the answer: while a modal dialog is open, nothing outside it can take the focus.
+    if (_dialog is not null)
+    {
+      await _dialog.CloseAsync();
+    }
+
+    if (result is not null)
+    {
+      await OnResult.InvokeAsync(result);
+    }
+    else
+    {
+      await OnFailed.InvokeAsync();
+    }
+  }
+}

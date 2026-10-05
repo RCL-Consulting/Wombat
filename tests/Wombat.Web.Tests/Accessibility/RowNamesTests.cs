@@ -217,6 +217,32 @@ public sealed class RowNamesTests
         names[4].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-25, to David Naidoo, Draft (2 of 2)");
     }
 
+    /// <summary>
+    /// T358 (flow 06, lane D; R2-Waiting w9; round 3 item 29): Waiting for assessors names its links as the waiting lists
+    /// do, so two requests from one registrar on one EPA and date are told apart by their state, then their wait's start,
+    /// then their number; the row's Send a reminder takes the same name (<c>ReminderWords.ButtonName</c>).
+    /// </summary>
+    [Fact]
+    public void WaitingForAssessors_TellsTwoAlikeRequestsApart_ByStateThenSinceThenNumber()
+    {
+        var since = new DateTime(2026, 9, 25, 6, 10, 0, DateTimeKind.Utc);
+        var requested = TestSupport.ActivityRows.Waiting(31, subjectName: "Nomsa Mahlangu", since: since, epaCode: "PAED-003",
+            observedOn: new DateOnly(2026, 9, 24));
+        var discussed = requested with { Id = 32, CurrentState = "awaiting_discussion", CurrentStateLabel = "Awaiting discussion" };
+        var later = requested with { Id = 33, UpdatedOn = since.AddHours(6) };
+        var twin = requested with { Id = 34, UpdatedOn = since.AddSeconds(20) };
+
+        var byState = ActivityRowNames.Waiting([requested, discussed]);
+        var bySince = ActivityRowNames.Waiting([requested, later]);
+        var byNumber = ActivityRowNames.Waiting([requested, twin]);
+
+        byState[31].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-24, from Nomsa Mahlangu, Requested");
+        byState[32].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-24, from Nomsa Mahlangu, Awaiting discussion");
+        bySince[33].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-24, from Nomsa Mahlangu, waiting since 2026-09-25 14:10 SAST");
+        byNumber[31].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-24, from Nomsa Mahlangu (1 of 2)");
+        byNumber[34].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-24, from Nomsa Mahlangu (2 of 2)");
+    }
+
     private sealed record Row(int Id, string Name, string Detail);
 
     private static CommitteeReviewListItemDto Review(

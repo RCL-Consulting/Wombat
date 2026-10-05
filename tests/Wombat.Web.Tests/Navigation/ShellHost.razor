@@ -1,0 +1,32 @@
+@using Microsoft.AspNetCore.Components
+@using Wombat.Web.Components.Layout
+@using Wombat.Web.Navigation
+
+@*
+  A host for the shell's tests (T358, build review D1): the menu and a routed page side by side, under the cascades Routes
+  and MainLayout give them, the page drawn as Routes draws it, so what the page tells the shell reaches the menu.
+*@
+<CascadingValue Value="_drawn" IsFixed="true">
+  <CascadingValue Value="Acting" IsFixed="true">
+    <CascadingValue Value="Menu">
+      <CascadingValue Value="Route">
+        <NavMenu />
+        <main>
+          <DynamicComponent Type="Route.PageType" Parameters="PageParameters" />
+        </main>
+      </CascadingValue>
+    </CascadingValue>
+  </CascadingValue>
+</CascadingValue>
+
+@code {
+  private readonly PageDrawn _drawn = new();
+
+  [Parameter, EditorRequired] public ActingRole Acting { get; set; } = default!;
+
+  [Parameter, EditorRequired] public NavMenuModel Menu { get; set; } = default!;
+
+  [Parameter, EditorRequired] public RouteData Route { get; set; } = default!;
+
+  private IDictionary<string, object> PageParameters => Route.RouteValues.ToDictionary(pair => pair.Key, pair => pair.Value!);
+}

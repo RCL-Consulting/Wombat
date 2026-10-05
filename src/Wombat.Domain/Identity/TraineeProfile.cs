@@ -25,6 +25,18 @@ public sealed class TraineeProfile
     /// </summary>
     public int? AdoptionId { get; set; }
     public DateOnly ProgrammeStartDate { get; set; }
+
+    /// <summary>
+    /// The South African day the registrar was admitted to the programme (T358, D1): when admission wrote this profile, not
+    /// <see cref="ProgrammeStartDate" />, which is the programme's start and is often months before or after it.
+    /// </summary>
+    /// <remarks>
+    /// "Nothing filed in 30 days" counts from the later of this day and today − 30 (E5), so a registrar admitted this week is
+    /// not listed for having filed nothing in a month they were not in Wombat for. Written by admission and the dev seed; the
+    /// T358 migration set every profile it found to its <see cref="ProgrammeStartDate" />, the nearest day it held.
+    /// </remarks>
+    public DateOnly AdmittedOn { get; set; }
+
     public DateOnly ExpectedCompletionDate { get; set; }
     public bool IsActive { get; set; } = true;
 

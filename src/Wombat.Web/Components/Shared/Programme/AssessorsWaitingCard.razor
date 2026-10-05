@@ -1,0 +1,56 @@
+@using Wombat.Application.Features.Programme.Waiting
+@using Wombat.Web.Components.Shared.Activities
+@using Wombat.Web.Navigation
+
+@*
+  Home's Waiting for assessors (T358, flow 06; Q3, E3, E6; R2-Home a1–a5, k1–k4; round 3 items 11, 27): the page's own read,
+  its first five, so the card and the page its foot opens cannot disagree. The Speciality and Sub-speciality admin's Home
+  (spanning three) and the Coordinator's (spanning two).
+
+  - The title's badge is the count in flow 04's words, "3 waiting, 2 overdue" (WaitingWords.StaffCount), none when
+    nothing waits; the warning stripe when any is overdue, in place of the emphasis one (nit T15).
+  - Over the rows the rule line, "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.", both
+    numbers the settings'.
+  - Each row is WaitingList's staff reading: its link ("Type · EPA · date", then "from <registrar>"), its state's badge
+    with Overdue beside it, "With Mohammed Patel" on its own line, then "Waiting 8 days" (E6). No reminder here: that is
+    the page's. Past five, "9 more wait in Waiting for assessors.".
+  - Empty, "Nothing is waiting for an assessor."; the foot "Open Waiting for assessors" stays, empty included, since the
+    page is in the menu (item 27).
+
+  Until T358 the admins' card was "Pending reviews", a count that linked nowhere, and the Coordinator's "Stalled
+  requests", ten rows each its type and its trainee beside "d MMM".
+*@
+<DashboardCard Title="@NavItems.WaitingForAssessors.Label" Icon="clock" HeadingId="card-waiting-assessors" Span="Span"
+               IsLoading="IsLoading" Emphasis="true" Warning="@(Waiting?.TotalOverdueCount > 0)"
+               BadgeWords="@(Waiting is { MatchCount: > 0 } counted ? WaitingWords.StaffCount(counted) : null)">
+  @if (!IsLoading)
+  {
+    if (Waiting is not { MatchCount: > 0 } waiting)
+    {
+      <p class="card-empty">@WaitingWords.NothingWaitingCard</p>
+    }
+    else
+    {
+      <p class="needs-you-rule">@WaitingWords.StaffRuleLine(waiting.DueDays, waiting.NudgeDays)</p>
+      <WaitingList Items="@waiting.Items" WithNominee="true" />
+      @if (waiting.MatchCount > waiting.Items.Count)
+      {
+        <p class="waiting-more">@WaitingWords.StaffMore(waiting.MatchCount - waiting.Items.Count)</p>
+      }
+    }
+    <div class="dashboard-card-footer">
+      <a href="@ProgrammeLinks.Waiting" class="btn btn-sm btn-outline">@WaitingWords.OpenPage</a>
+    </div>
+  }
+</DashboardCard>
+
+@code {
+  /// <summary>Waiting for assessors' first page of five; null when the role gives no scope, which reads as empty.</summary>
+  [Parameter] public WaitingForAssessorsDto? Waiting { get; set; }
+
+  /// <summary>The dashboard's read has not returned: the title and a skeleton (the frame's).</summary>
+  [Parameter] public bool IsLoading { get; set; }
+
+  /// <summary>Three on the admins' Home, two on the Coordinator's (R2-Home).</summary>
+  [Parameter] public int Span { get; set; } = 3;
+}

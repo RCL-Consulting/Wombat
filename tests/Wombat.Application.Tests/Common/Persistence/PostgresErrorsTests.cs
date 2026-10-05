@@ -91,6 +91,39 @@ public sealed class PostgresErrorsTests
     public void TheCodesAreExactlyTheTwo_SoAnAssertionOnTheListAcceptsNothingElse()
         => PostgresErrors.ForeignKeyViolationStates.Should().BeEquivalentTo(["23503", "23001"]);
 
+    // ---- the unique index (T358, D6): the reminder's same-day block ----
+
+    [Fact]
+    public void AUniqueViolation_IsRecognisedByItsCode_AtAnyDepth()
+    {
+        PostgresErrors.UniqueViolation.Should().Be("23505");
+        PostgresErrors.IsUniqueViolation("23505").Should().BeTrue();
+        PostgresErrors.IsUniqueViolation(new Refusal("23505")).Should().BeTrue();
+
+        var refusedSave = new DbUpdateException("An error occurred while saving the entity changes.", new Refusal("23505"));
+        PostgresErrors.IsUniqueViolation(refusedSave).Should().BeTrue();
+        PostgresErrors.IsUniqueViolation(new InvalidOperationException("wrapped", refusedSave)).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("23503")]
+    [InlineData("23001")]
+    [InlineData("23P01")]
+    [InlineData("")]
+    public void AnyOtherRefusal_IsNotAUniqueViolation(string sqlState)
+    {
+        PostgresErrors.IsUniqueViolation(sqlState).Should().BeFalse();
+        PostgresErrors.IsUniqueViolation(new DbUpdateException("refused", new Refusal(sqlState))).Should().BeFalse();
+    }
+
+    [Fact]
+    public void NoCode_NoException_AndAMessageHoldingTheCode_AreNotAUniqueViolation()
+    {
+        PostgresErrors.IsUniqueViolation((string?)null).Should().BeFalse();
+        PostgresErrors.IsUniqueViolation((Exception?)null).Should().BeFalse();
+        PostgresErrors.IsUniqueViolation(new InvalidOperationException("23505")).Should().BeFalse();
+    }
+
     /// <summary>A provider's refusal carrying only its SQLSTATE, as Npgsql's <c>PostgresException</c> does.</summary>
     private sealed class Refusal(string? sqlState) : DbException("refused")
     {

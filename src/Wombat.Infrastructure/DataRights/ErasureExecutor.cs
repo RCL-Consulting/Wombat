@@ -146,6 +146,18 @@ public sealed class ErasureExecutor : IErasureExecutor
         foreach (var transition in transitions)
             transition.ActorUserId = pseudonym;
 
+        // --- Activity reminders (T358, review 1): who sent one, and the assessor it was sent to ---
+        var reminders = await _dbContext.Set<ActivityReminder>()
+            .Where(r => r.SentByUserId == userId || r.AssessorUserId == userId)
+            .ToListAsync(cancellationToken);
+        foreach (var reminder in reminders)
+        {
+            if (reminder.SentByUserId == userId)
+                reminder.SentByUserId = pseudonym;
+            if (reminder.AssessorUserId == userId)
+                reminder.AssessorUserId = pseudonym;
+        }
+
         // --- Activity types (owner/staging) ---
         var activityTypes = await _dbContext.Set<ActivityType>()
             .Where(at => at.OwnerUserId == userId || at.StagingUpdatedByUserId == userId)

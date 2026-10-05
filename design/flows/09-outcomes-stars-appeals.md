@@ -178,8 +178,8 @@ QUESTIONS THE DESIGN MUST ANSWER:
   1. Where do certificates live for the trainee: on My authorisations only, or also on the review that issued them?
   2. Does the trainee's review page reuse the committee's decision-history component exactly? (Recommended.)
   3. Should the speciality admins get a nav link to the STAR register, and the Trainee a nav link to My authorisations?
-     Today the register is reached only by address or a dashboard card, and My authorisations only from a dashboard
-     card.
+     Flow 06 answered the first half (T358, 2026-10-05): Entrustment decisions is in both speciality admins' menus. My
+     authorisations is still reached only from a dashboard card.
   4. How does the trainee's list tell a formative check-in from an annual review? It has no Mode column today; only
      "No binding decision" and the View link's name mark it.
 
@@ -259,8 +259,8 @@ Each row is one runbook step. The Route column gives the step's page templates (
 | A.7.7 | `/` → `/committee/panels` → `/committee/decisions-due` → `/admin/entrustment-decisions` | Dr Mokoena works on her phone. | The register at 390 px, with its table scrolling inside its container (T226). |
 
 The steps' notes say three more things the design must know:
-- **The register has no nav link.** No nav item or dashboard card leads there for a speciality admin (Step 4.36's note;
-  `coverage.md` § Reached only by address).
+- **The register has no nav link** for the Institutional admin, who reaches it from a dashboard card (`coverage.md`
+  § Reached only by address). Since flow 06 (T358) both speciality admins have it in their menu (Step A.7.7).
 - **My authorisations requires the Trainee role.** A graduate loses the page at Step 5.22 (Step 5.8's note). The
   graduate's home is flow 13 (BRIEF § 7 B1, T311).
 - **The revoke confirmation is not a dialog today.** It is an inline section below the table (observed:
@@ -453,9 +453,11 @@ Expect:
 Step 4.36 — Dr Mokoena revokes one of Dr Dlamini's STARs
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /admin/entrustment-decisions
-Do: Type the page's address. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged on evidence about
-  PAED-001, not PAED-002; to be decided again." and confirm the revocation.
+Do: Open Entrustment decisions from the menu. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged
+  on evidence about PAED-001, not PAED-002; to be decided again." and confirm the revocation.
 Expect:
+  - **The menu:** Entrustment decisions is lit on its page, with no trail: a list her menu offers (T358, R2-Menus m5;
+    as Step A.7.7).
   - **The list:** the same five rows as Step 4.35, since all five registrars are in her speciality.
   - **The dialog** names PAED-002 and Anele Dlamini, and says "Revocation is immediate and irreversible. The trainee is
     notified." Confirm revocation is enabled once a reason is typed.
@@ -466,9 +468,10 @@ Expect:
 Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
-Do: Type the entrustment decisions page's address. Filter Status to Revoked and apply, then to Active and apply.
-  Download the revoked certificate. Then open Decisions due with "Every status".
+Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
+  the revoked certificate. Then open Decisions due with "Every status".
 Expect:
+  - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
@@ -634,7 +637,9 @@ Expect:
 Step A.7.7 — Dr Mokoena on her phone
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
-Do: At 390 px, open her dashboard, Decision panels, Decisions due and, by its address, Entrustment decisions.
-Expect: The dashboard's coverage cards stack. The panels list and the decisions list scroll inside their containers
-  (T226).
+Do: At 390 px, open the dashboard, then Decision panels, Decisions due and Entrustment decisions from the menu.
+Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Registrars, badged "2 registrars", and Targets
+  by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). The panels list and the decisions list
+  scroll inside their containers (T226). Entrustment decisions is in the menu, lit on its page, with no trail: it is a
+  list the menu offers (R2-Menus m5).
 ```

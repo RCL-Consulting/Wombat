@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 
@@ -41,11 +42,17 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
 
     private readonly IApplicationDbContext _dbContext;
     private readonly IUserAdministrationService _userAdministrationService;
+    private readonly TimeProvider _clock;
 
-    public AdmitTraineeCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService userAdministrationService)
+    /// <param name="clock">What "today" is read from, for the admission day (T358, D1); the system clock unless a test pins it.</param>
+    public AdmitTraineeCommandHandler(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService userAdministrationService,
+        TimeProvider? clock = null)
     {
         _dbContext = dbContext;
         _userAdministrationService = userAdministrationService;
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task<TraineeProfileDto> Handle(AdmitTraineeCommand request, CancellationToken cancellationToken)
@@ -106,6 +113,10 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
             CurriculumId = curriculum.Id,
             AdoptionId = adoptionId,
             ProgrammeStartDate = request.ProgrammeStartDate,
+
+            // The day of the admission itself, on the South African calendar (T358, D1): what "Nothing filed in 30 days"
+            // counts from when it is later than today − 30 (E5), never the programme's start.
+            AdmittedOn = QuotaCalendar.Today(_clock),
             ExpectedCompletionDate = expectedCompletionDate,
             IsActive = true
         };

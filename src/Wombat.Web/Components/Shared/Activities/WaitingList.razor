@@ -5,6 +5,10 @@
   with an overdue edge: the built .needs-you and .needs-you-row, plus .needs-you-row--overdue's warning stripe. The rows
   are ListWaitingForYouQuery's, oldest first; the words are WaitingWords'. Two links that read the same are told apart by
   their accessible names (ActivityRowNames.Waiting, note 9; C11), wherever this renders.
+
+  The staff reading (T358, flow 06; E6): WithNominee puts "With Mohammed Patel" on a line of its own above flow 04's
+  "Waiting 8 days", which is unchanged; RowAction draws after the why-lines, inside the row (the registrar page's Send a
+  reminder, ReminderAction). Without either, every row is byte-for-byte flow 04's.
 *@
 <ul class="needs-you stack-list">
   @foreach (var item in Items)
@@ -14,7 +18,15 @@
       @* Nothing here is finished: every row has a move that leads on, and it is the reader's. *@
       <span class="needs-you-badges"><span class="badge @BadgeFor.ActivityState(item.CurrentState, isFinished: false)">@item.CurrentStateLabel</span>@if (item.IsOverdue)
         {<span class="badge @BadgeFor.Overdue">Overdue</span>}</span>
+      @if (WithNominee)
+      {
+        <p class="needs-you-why">@WaitingWords.With(item)</p>
+      }
       <p class="needs-you-why">@(WithSince ? WaitingWords.WaitedSince(item) : WaitingWords.Waited(item))</p>
+      @if (RowAction is not null)
+      {
+        @RowAction(item)
+      }
     </li>
   }
 </ul>
@@ -39,6 +51,17 @@
   /// is the next Tab after the result (T350, C10 d; <c>ActivityLink.OutOfTabOrder</c>).
   /// </summary>
   [Parameter] public bool LinksOutOfTabOrder { get; set; }
+
+  /// <summary>
+  /// The staff reading (T358, E6): each row says whom it waits with, "With Mohammed Patel", on a line of its own above
+  /// its wait. Home's Waiting for assessors card and the registrar page's section.
+  /// </summary>
+  [Parameter] public bool WithNominee { get; set; }
+
+  /// <summary>
+  /// What a row offers after its why-lines, inside the row: the registrar page's <c>ReminderAction</c> (T358). Null: none.
+  /// </summary>
+  [Parameter] public RenderFragment<ActivitySummaryDto>? RowAction { get; set; }
 
   private IReadOnlyDictionary<int, string> _names = new Dictionary<int, string>();
 

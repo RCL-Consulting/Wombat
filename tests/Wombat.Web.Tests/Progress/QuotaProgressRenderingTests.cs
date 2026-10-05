@@ -68,87 +68,122 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
     // My progress itself is MyProgressTests and EpaProgressTableTests (T355, flow 05).
 
     // ---------------------------------------------------------------------------------------------
-    // EpaTargetCoverageList
+    // EpaTargetCoverageList: Targets by EPA (T358, flow 06; Q5; R2-Home c1, c6, c8, c11)
     // ---------------------------------------------------------------------------------------------
 
     [Fact]
-    public void Coverage_IsACountOfTraineesWhoMetTheTarget_NotAMean()
+    public void Coverage_IsACountOfRegistrarsWhoMetTheTarget_NotAMean_InItsOwnColumnOverItsCaption()
     {
-        // "4 of 9" tells a coordinator five have not; "44%" could mean everyone is halfway.
+        // "4 of 9" tells a coordinator five have not; "44%" could mean everyone is halfway. Since T358 the figure stands in
+        // its own column over its caption, the bar under the words and hidden, since the words say it (item 31).
         var cut = RenderCoverage(Coverage(
             exemptTrainees: 2,
             new EpaTargetCoverage(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3, 4, 9, 2)));
 
-        var row = cut.Find(".progress-row");
-        Text(row.QuerySelector(".progress-row-head > span:first-child")!)
-            .Should().Be("PAED-001 — Providing paediatric emergency care to children (3 per semester)");
-        Text(row.QuerySelector(".progress-row-head > .muted")!).Should().Be("4 of 9 met");
+        var row = cut.Find("li.coverage-row");
+        var link = row.QuerySelector("a.progress-row-link")!;
+        link.GetAttribute("href").Should().Be("/programme/trainees?short=1", "the EPA's name opens the registrars short on it");
+        Text(link).Should().Be(
+            "PAED-001 — Providing paediatric emergency care to children: 4 of 9 registrars met this semester. Show the registrars short on it.");
+        Text(link.QuerySelector(".visually-hidden")!).Should().Be(": 4 of 9 registrars met this semester. Show the registrars short on it.");
+        Text(row.QuerySelector(".progress-row-meta")!).Should().Be("3 per semester");
+        Text(row.QuerySelector(".dashboard-metric .count-figure")!).Should().Be("4 of 9");
+        Text(row.QuerySelector(".dashboard-metric .dashboard-metric-label")!).Should().Be("registrars met this semester");
 
         var bar = row.QuerySelector(".progress-bar")!;
-        bar.GetAttribute("role").Should().Be("progressbar");
-        bar.GetAttribute("aria-valuemax").Should().Be("9");
-        bar.GetAttribute("aria-valuenow").Should().Be("4");
-        bar.GetAttribute("aria-label").Should().Be("PAED-001: 4 of 9 trainees met the target");
+        bar.GetAttribute("aria-hidden").Should().Be("true");
+        bar.HasAttribute("role").Should().BeFalse("a bar under words that state it is decoration (§ Dashboard layout grid)");
         bar.QuerySelector(".progress-bar-fill")!.GetAttribute("style").Should().Be("width:44%");
         bar.QuerySelector(".progress-bar-fill")!.ClassList.Should().NotContain("is-complete");
+        cut.Markup.Should().NotContain("44%<", "never a percentage in words");
     }
 
     [Fact]
-    public void AnEpaEveryTraineeIsExemptFrom_ReadsAllExempt_WithNoBar()
+    public void AYearlyEpa_CountsTheRegistrarsWhoMetItInTheAcademicYear()
     {
-        // Nobody applying is not 0%: a bar would read as a coverage failure, and a percentage would divide
-        // by zero.
+        var cut = RenderCoverage(Coverage(
+            exemptTrainees: 0,
+            new EpaTargetCoverage(8, "PAED-008", "Evaluating and managing neurodevelopmental and behavioural presentations in children", QuotaPeriod.AcademicYear, 1, 0, 5, 0)));
+
+        Text(cut.Find(".dashboard-metric-label")).Should().Be("registrars met in 2026");
+        Text(cut.Find(".progress-row-meta")).Should().Be("1 per academic year");
+    }
+
+    [Fact]
+    public void AnEpaEveryRegistrarIsExemptFrom_ReadsAllExempt_WithNoBar()
+    {
+        // Nobody applying is not 0%: a bar would read as a coverage failure, and a percentage would divide by zero.
         var cut = RenderCoverage(Coverage(
             exemptTrainees: 0,
             new EpaTargetCoverage(11, "PAED-011", "Managing population health challenges", QuotaPeriod.AcademicYear, 1, 0, 0, 3)));
 
-        var row = cut.Find(".progress-row");
-        Text(row.QuerySelector(".progress-row-head > span:first-child")!)
-            .Should().Be("PAED-011 — Managing population health challenges (1 per academic year)");
-        Text(row.QuerySelector(".progress-row-head > .muted")!).Should().Be("all exempt");
+        var row = cut.Find("li.coverage-row");
+        Text(row.QuerySelector(".count-figure")!).Should().Be("All exempt");
+        Text(row.QuerySelector(".dashboard-metric-label")!).Should().Be("this period");
         row.QuerySelectorAll(".progress-bar").Should().BeEmpty();
         Text(row).Should().NotContain("of 0");
     }
 
     [Fact]
-    public void AnEpaEveryApplyingTraineeMet_FillsTheBar()
+    public void AnEpaEveryRegistrarMet_KeepsItsNameAsText_AndFillsTheBar()
     {
+        // Round 3 item 33 (c11): a list of the registrars short on it would be empty, so the name is not a link.
         var cut = RenderCoverage(Coverage(
             exemptTrainees: 0,
             new EpaTargetCoverage(6, "PAED-006", "Managing long-term health conditions (LTHCs)", QuotaPeriod.Semester, 2, 5, 5, 0)));
 
-        Text(cut.Find(".progress-row-head > .muted")).Should().Be("5 of 5 met");
+        var row = cut.Find("li.coverage-row");
+        row.QuerySelectorAll("a").Should().BeEmpty();
+        Text(row.QuerySelector("div > span")!).Should().Be("PAED-006 — Managing long-term health conditions (LTHCs)");
+        Text(row.QuerySelector(".progress-row-meta")!).Should().Be("2 per semester · every registrar has met it");
+        Text(row.QuerySelector(".count-figure")!).Should().Be("5 of 5");
         var fill = cut.Find(".progress-bar-fill");
         fill.GetAttribute("style").Should().Be("width:100%");
         fill.ClassList.Should().Contain("is-complete");
     }
 
     [Fact]
-    public void TheCoverageHeading_NamesTheSemester_AndCountsExemptTrainees()
+    public void ALocalExtra_NamesItsOwnerInItsCadence()
+    {
+        var cut = RenderCoverage(Coverage(
+            exemptTrainees: 0,
+            new EpaTargetCoverage(21, "KGK-001", "Running a paediatric outreach clinic at a district hospital", QuotaPeriod.AcademicYear, 1, 0, 2, 0)
+            {
+                OwningInstitutionName = "Kgosi Kgari Teaching Hospital"
+            }));
+
+        Text(cut.Find(".progress-row-meta")).Should().Be("1 per academic year · Kgosi Kgari Teaching Hospital's own");
+    }
+
+    [Fact]
+    public void TheRuleLine_SaysTheOrderAndWhenTheSemesterEnds_AfterTheOneExemptionWording()
     {
         var plural = RenderCoverage(Coverage(
             exemptTrainees: 2,
             new EpaTargetCoverage(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3, 4, 9, 2)));
-        Text(plural.Find("p.progress-row-meta")).Should().Be("Semester 2, 2026 · July to November · 2 trainees exempt this period");
+        Text(plural.Find("p.needs-you-rule")).Should().Be(
+            "2 registrars exempt this period, not counted. Fewest registrars met first. Semester 2, 2026 ends on 2026-11-30.");
 
         var singular = RenderCoverage(Coverage(
             exemptTrainees: 1,
             new EpaTargetCoverage(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3, 4, 9, 1)));
-        Text(singular.Find("p.progress-row-meta")).Should().Be("Semester 2, 2026 · July to November · 1 trainee exempt this period");
+        Text(singular.Find("p.needs-you-rule")).Should().Be(
+            "1 registrar exempt this period, not counted. Fewest registrars met first. Semester 2, 2026 ends on 2026-11-30.");
 
         var none = RenderCoverage(Coverage(
             exemptTrainees: 0,
             new EpaTargetCoverage(1, "PAED-001", "Providing paediatric emergency care to children", QuotaPeriod.Semester, 3, 4, 9, 0)));
-        Text(none.Find("p.progress-row-meta")).Should().Be("Semester 2, 2026 · July to November");
+        Text(none.Find("p.needs-you-rule")).Should().Be("Fewest registrars met first. Semester 2, 2026 ends on 2026-11-30.");
+        Text(none.Find("ul")).Should().NotContain("trainee", "the programme's figures count registrars (Q10)");
     }
 
     [Fact]
-    public void CoverageWithNoEpas_SaysThereAreNoTargets()
+    public void CoverageWithNoEpas_SaysThereIsNoCurrentRegistrar()
     {
         var cut = RenderCoverage(Coverage(exemptTrainees: 0));
 
-        Text(cut.Find("p.muted")).Should().Be("No curriculum targets for these trainees.");
-        cut.FindAll(".progress-row").Should().BeEmpty();
+        Text(cut.Find("p.card-empty")).Should().Be("No targets this period: there is no current registrar.");
+        cut.FindAll(".coverage-row, .needs-you-rule").Should().BeEmpty();
     }
 
     // ---------------------------------------------------------------------------------------------

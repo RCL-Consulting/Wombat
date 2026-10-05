@@ -1,0 +1,418 @@
+@page "/programme/trainees"
+@attribute [Authorize(Roles = "CommitteeMember,SpecialityAdmin,SubSpecialityAdmin,Coordinator")]
+@rendermode InteractiveServer
+@using System.Globalization
+@using System.Security.Claims
+@using Wombat.Application.Features.Programme
+@using Wombat.Application.Features.Programme.Trainees
+@using Wombat.Web.Components.Shared.Programme
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject ILogger<ProgrammeTrainees> Logger
+
+@*
+  Programme trainees (T358, flow 06; R2-Trainees t1–t10; Q1, Q2; C6, C7; review 6, 24, 31, 33): the current registrars in
+  the scope of the role the page reads as (ProgrammeReadAs, D2, E4), which the subtitle names.
+
+  - The filters (DESIGN.md § List page, "A list's filters are applied with Show"): Short on, Training year and Nothing filed
+    in 30 days, a real form so Enter is Show; nothing changes until Show, which navigates to the page's own address with
+    the filters as its query (D3); Clear filters, once any is set, goes to the bare route. The page reads the query and
+    reads the list again whenever it changes, so the address, Back and a shared link show what was asked.
+  - The list's heading counts the answer (D9) and takes the focus after Show and after a page turn; the rule line says the
+    order and what the figures are read against; the stacked index table has a caption, the registrar a row header and a
+    link to the registrar page, every other cell labelled. Its columns follow the filter: the roster, Short on (the EPA's
+    own column), or Nothing filed (Last filed first).
+  - An exempt registrar is listed last, the three figure cells one, saying why in words (review 9).
+  - No match is not empty: "No registrar matches these filters.", what was asked and Clear filters. With no current
+    registrar at all, the empty state and no form (review 33).
+  - Loading: the filters stand, the list's heading over skeleton rows, the status always present. Load error: fixed words
+    with Try again, whose answer takes the focus (round 3 item 33). 20 a page under PagerControls.
+  No pronoun in any word (round-3-check 1); dates ISO.
+*@
+
+@* The tab is a literal, as every menu item's page's is (NavMenuAuthorizationTests reads it): the list's first. *@
+@if (!_notFound)
+{
+    <PageTitle>Programme trainees · Wombat</PageTitle>
+}
+else
+{
+    <PageTitle>Page not found · Wombat</PageTitle>
+}
+
+<PageHeader Title="@(_notFound ? "Page not found" : "Programme trainees")" Subtitle="@Subtitle"
+            Icon="@(_notFound ? "search" : null)" Page="@(_notFound ? typeof(NotFound) : null)" />
+
+@* Always present, filled while the list reads: a live region added with its words in it is often not read (C8). *@
+<p class="visually-hidden" role="status">@(_loading ? ProgrammeWords.Loading : null)</p>
+
+@if (_notFound)
+{
+  @* Flow 01's NotFound, word for word: the role read as gives no programme to list (no institution, T358 A0). *@
+  <div class="system-panel">
+    <p>There is no page at this address.</p>
+    <p class="muted">Check the address, or start again from Home.</p>
+    <div class="actions-cell">
+      <a class="btn btn-primary" href="/"><Icon Name="home" />Go to Home</a>
+    </div>
+  </div>
+}
+else
+{
+  @if (!IsEmpty)
+  {
+    <form class="search-container" aria-label="@ProgrammeWords.FilterFormName" @onsubmit="ShowAsync">
+      <div class="search-grid">
+        <div class="search-field">
+          <label for="f-epa">@ProgrammeWords.ShortOnLabel</label>
+          <select id="f-epa" class="form-select" @bind="_formEpa">
+            <option value="">@ProgrammeWords.AnyEpa</option>
+            @foreach (var epa in EpaOptions)
+            {
+              <option value="@epa.EpaId.ToString(CultureInfo.InvariantCulture)">@ProgrammeWords.EpaOption(epa)</option>
+            }
+          </select>
+        </div>
+        <div class="search-field">
+          <label for="f-year">@ProgrammeWords.YearLabel</label>
+          <select id="f-year" class="form-select" @bind="_formYear">
+            <option value="">@ProgrammeWords.AnyYear</option>
+            @foreach (var year in YearOptions)
+            {
+              <option value="@year.ToString(CultureInfo.InvariantCulture)">@year.ToString(CultureInfo.InvariantCulture)</option>
+            }
+          </select>
+        </div>
+        <div class="search-field">
+          @* Its label once, beside the box (review 31). *@
+          <div class="form-check">
+            <input id="f-filed" class="form-check-input" type="checkbox" @bind="_formFiled" />
+            <label for="f-filed">@ProgrammeWords.FiledLabel</label>
+          </div>
+        </div>
+        <div class="search-field filter-actions">
+          <button type="submit" class="btn btn-primary">@ProgrammeWords.Show</button>
+          @if (Applied.IsFiltered)
+          {
+            <a class="btn btn-outline" href="@ProgrammeLinks.Trainees">@ProgrammeWords.ClearFilters</a>
+          }
+        </div>
+      </div>
+    </form>
+  }
+
+  <StatePanel @ref="_panel" IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusListHeadingAsync">
+    <LoadingContent>
+      <section class="list-section" aria-busy="true">
+        <h2 class="list-section-title">@ProgrammeWords.ListTitle</h2>
+        @* Skeleton rows with no inline sizes: a bare .skeleton is a full-width line (round-3-check 5). *@
+        <div class="dashboard-card-skeleton" aria-hidden="true">
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+        </div>
+      </section>
+    </LoadingContent>
+    <ChildContent>
+      @if (_list is { } list)
+      {
+        var read = list.Read;
+        var filter = read.Filter;
+        <section class="list-section" aria-labelledby="trainees-h">
+          <h2 class="list-section-title" id="trainees-h" tabindex="-1" @ref="_listHeading">@ListHeading(list)</h2>
+          @if (read.CurrentCount == 0)
+          {
+            @* t5: nothing to filter, so no form, and not "no match". *@
+            <div class="detail-card detail-card--empty">
+              <p class="state-panel-title">@ProgrammeWords.EmptyTitle</p>
+              <p class="state-panel-copy">@ProgrammeWords.EmptyBody</p>
+            </div>
+          }
+          else if (list.MatchCount == 0)
+          {
+            @* t4: one no-match pattern for both lists (review 33). *@
+            <div class="detail-card detail-card--empty">
+              <p class="state-panel-title">@ProgrammeWords.NoMatch</p>
+              <p class="state-panel-copy">@ProgrammeWords.Asked(filter, read.ShortOn)</p>
+              <div class="form-actions">
+                <a class="btn btn-outline" href="@ProgrammeLinks.Trainees">@ProgrammeWords.ClearFilters</a>
+              </div>
+            </div>
+          }
+          else
+          {
+            var columns = ColumnsFor(filter);
+            <p class="needs-you-rule">@ProgrammeWords.ListRule(read, filter)</p>
+            <div class="table-container shadow">
+              <table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+                <caption class="visually-hidden">@ProgrammeWords.Caption(filter, read.ShortOn, read.ExemptCount)</caption>
+                <thead role="rowgroup">
+                  <tr role="row">
+                    <th scope="col" role="columnheader">Registrar</th>
+                    <th scope="col" role="columnheader">Training year</th>
+                    @foreach (var column in columns)
+                    {
+                      <th scope="col" role="columnheader">@ColumnHeading(column, read)</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody role="rowgroup">
+                  @foreach (var row in list.Page)
+                  {
+                    <tr role="row" @key="row.ProfileId">
+                      <th scope="row" role="rowheader"><a class="progress-row-link" href="@ProgrammeLinks.Trainee(row.ProfileId)">@row.Name</a></th>
+                      <td role="cell" data-label="Training year">@ProgrammeWords.TrainingYearCell(row)</td>
+                      @RowCells(row, columns, read)
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <PagerControls Page="list.PageNumber" PageSize="list.PageSize" TotalCount="list.MatchCount" Label="@ProgrammeWords.PagerName"
+                           OnPageChanged="GoToPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+          }
+        </section>
+      }
+    </ChildContent>
+  </StatePanel>
+}
+
+@code {
+  /// <summary>Short on, from the address (<c>?short=&lt;EpaId&gt;</c>, D3).</summary>
+  [SupplyParameterFromQuery(Name = ProgrammeLinks.ShortKey)] public int? ShortOn { get; set; }
+
+  /// <summary>Training year, from the address (<c>?year=&lt;n&gt;</c>).</summary>
+  [SupplyParameterFromQuery(Name = ProgrammeLinks.YearKey)] public int? Year { get; set; }
+
+  /// <summary>Nothing filed in 30 days, from the address (<c>?filed=true</c>).</summary>
+  [SupplyParameterFromQuery(Name = ProgrammeLinks.FiledKey)] public bool? Filed { get; set; }
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it; the claims' when nothing cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>The page size Programme trainees opens with (R2-Trainees t6).</summary>
+  public const int DefaultPageSize = 20;
+
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _notFound;
+  private ProgrammeTraineesDto? _list;
+  private ElementReference _listHeading;
+  private StatePanel? _panel;
+  private int _page = 1;
+  private int _pageSize = DefaultPageSize;
+  private bool _focusList;
+  private bool _loadedOnce;
+
+  // The form's fields: what is being chosen, which changes nothing until Show (DESIGN.md § List page).
+  private string _formEpa = string.Empty;
+  private string _formYear = string.Empty;
+  private bool _formFiled;
+
+  /// <summary>The list's heading, which takes the focus after Show and a page turn. A test matches a focus call to it.</summary>
+  public ElementReference ListHeadingElement => _listHeading;
+
+  /// <summary>The filters the address asked for, which the list answers.</summary>
+  private ProgrammeTraineesFilter Applied => new(ShortOn, Year, Filed == true);
+
+  /// <summary>The scope's subtitle (E4), once read: "Current registrars at Kgosi Kgari Teaching Hospital, read as …".</summary>
+  private string? Subtitle => _list is { } list ? ProgrammeWords.Subtitle(list.Read.Scope, list.Read.CurrentSemesterName) : null;
+
+  /// <summary>The empty state: no current registrar in the scope, so no form (t5).</summary>
+  private bool IsEmpty => _list is { Read.CurrentCount: 0 } && _loadError is null;
+
+  private IReadOnlyList<EpaFilterOptionDto> EpaOptions => _list?.Read.Epas ?? [];
+
+  private IReadOnlyList<int> YearOptions => _list?.Read.TrainingYears ?? [];
+
+  protected override async Task OnParametersSetAsync()
+  {
+    // The address is what was asked: the form shows it, and the list answers it from its first page (D3).
+    _formEpa = ShortOn?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+    _formYear = Year?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+    _formFiled = Filed == true;
+    _page = 1;
+
+    // The heading takes the focus after Show, and on arrival with a filter set (t2, from Home's EPA row).
+    _focusList = _loadedOnce || Applied.IsFiltered;
+    await LoadAsync();
+    _loadedOnce = true;
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      // D2: the role the page reads as, never the union of the roles held (E4).
+      var role = ProgrammeReadAs.RoleFor(Acting ?? ActingRoleResolver.Resolve(user), ProgrammeScope.RosterRoles);
+      var list = role is null
+        ? null
+        : await Sender.Send(new ListProgrammeTraineesQuery(user, role, ShortOn, Year, Filed == true, _page, _pageSize));
+      _notFound = list is null;
+      _list = list;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Never the exception's text on the page: it goes to the log (T329, T272).
+      Logger.LogError(exception, "Programme trainees could not be loaded.");
+      _loadError = ProgrammeWords.LoadFailed;
+      _focusList = false;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusList && !_loading && _list is not null && _loadError is null)
+    {
+      _focusList = false;
+      await _listHeading.FocusAsync();
+    }
+  }
+
+  /// <summary>
+  /// Show (D3): the page's own address with the filters chosen. An address that is already the one shown reads again in
+  /// place, since navigating to it would change no parameter.
+  /// </summary>
+  private async Task ShowAsync()
+  {
+    int? epa = int.TryParse(_formEpa, NumberStyles.None, CultureInfo.InvariantCulture, out var epaId) ? epaId : null;
+    int? year = int.TryParse(_formYear, NumberStyles.None, CultureInfo.InvariantCulture, out var yearValue) ? yearValue : null;
+
+    if (epa == ShortOn && year == Year && _formFiled == (Filed == true))
+    {
+      _page = 1;
+      _focusList = true;
+      await LoadAsync();
+      return;
+    }
+
+    Navigation.NavigateTo(ProgrammeLinks.TraineesFiltered(epa, year, _formFiled));
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadAsync();
+  }
+
+  // After Try again read: the list's heading, the answer (round 3 item 33). StatePanel calls it.
+  private ValueTask FocusListHeadingAsync() => _listHeading.FocusAsync();
+
+  // A page turn reads that page and puts the focus on the list's heading; one that fails puts it on the failure, which
+  // replaced the pressed button (T350 build review, A3).
+  private async Task GoToPageAsync(int page)
+  {
+    _page = page;
+    _focusList = true;
+    await LoadAsync();
+    if (_loadError is not null)
+    {
+      _panel?.FocusFailureAfterRender();
+    }
+  }
+
+  // A change of page size reads the first page at that size and leaves the focus on the select, since a closed select
+  // fires change on every arrow (T350 build review, A1).
+  private async Task ChangePageSizeAsync(int size)
+  {
+    _pageSize = size;
+    _page = 1;
+    await LoadAsync();
+  }
+
+  /// <summary>The heading (D9): the answer counted, "Current registrars" when there is none to count.</summary>
+  private static string ListHeading(ProgrammeTraineesDto list)
+    => list.Read.CurrentCount == 0
+      ? ProgrammeWords.ListTitle
+      : ProgrammeWords.ListHeading(list.Read, list.Read.Filter, list.MatchCount);
+
+  // ---- The three column sets (R2-Trainees t1, t2, t3), after Registrar and Training year ----
+
+  private enum Column { ShortOn, Semester, Year, FurthestShort, LastFiled }
+
+  /// <summary>
+  /// The roster: This semester, In 2026, Furthest short, Last filed. Short on: the EPA's own column first, then the two
+  /// figures and Last filed. Nothing filed: Last filed first, then the two figures. Short on wins when both are asked.
+  /// </summary>
+  private static IReadOnlyList<Column> ColumnsFor(ProgrammeTraineesFilter filter)
+    => filter.ShortOnEpaId is not null
+      ? [Column.ShortOn, Column.Semester, Column.Year, Column.LastFiled]
+      : filter.NothingFiled
+        ? [Column.LastFiled, Column.Semester, Column.Year]
+        : [Column.Semester, Column.Year, Column.FurthestShort, Column.LastFiled];
+
+  private static string ColumnHeading(Column column, ProgrammeRosterRead read) => column switch
+  {
+    Column.ShortOn => read.ShortOn?.EpaCode ?? ProgrammeWords.ShortOnLabel,
+    Column.Semester => "This semester",
+    Column.Year => ProgrammeWords.YearColumn(read),
+    Column.FurthestShort => "Furthest short",
+    _ => "Last filed"
+  };
+
+  /// <summary>
+  /// A row's cells after its training year. An exempt registrar's figure cells give way to one, its badge and why, in
+  /// words (t7; review 9), labelled "This period".
+  /// </summary>
+  private RenderFragment RowCells(ProgrammeTraineeRowDto row, IReadOnlyList<Column> columns, ProgrammeRosterRead read) => __builder =>
+  {
+    var exemptSpan = row.IsExempt ? columns.Count(column => column is Column.Semester or Column.Year or Column.FurthestShort or Column.ShortOn) : 0;
+    var exemptDrawn = false;
+    @foreach (var column in columns)
+    {
+      @if (row.IsExempt && column is not Column.LastFiled)
+      {
+        @if (!exemptDrawn)
+        {
+          exemptDrawn = true;
+          <td role="cell" colspan="@exemptSpan" data-label="@ProgrammeWords.ExemptCellLabel">
+            <span class="badge @BadgeFor.State(BadgeState.Draft)">@ProgrammeWords.Exempt</span>
+            <p class="count-meta">@ProgrammeWords.ExemptReason(row)</p>
+          </td>
+        }
+        continue;
+      }
+
+      var label = ColumnHeading(column, read);
+      @switch (column)
+      {
+        case Column.ShortOn:
+          var shortOn = ProgrammeWords.ShortOnCell(row);
+          <td role="cell" data-label="@label"><span class="count-figure">@shortOn.Value</span><p class="count-meta">@shortOn.Meta</p></td>
+          break;
+        case Column.Semester:
+          var semester = ProgrammeWords.SemesterFigure(row);
+          <td role="cell" data-label="@label"><span class="count-figure">@semester.Value</span><p class="count-meta">@semester.Label</p></td>
+          break;
+        case Column.Year:
+          var year = ProgrammeWords.YearFigure(row);
+          <td role="cell" data-label="@label"><span class="count-figure">@year.Value</span><p class="count-meta">@year.Label</p></td>
+          break;
+        case Column.FurthestShort:
+          var line = ProgrammeWords.FurthestShortLine(row);
+          <td role="cell" data-label="@label">
+            <span class="count-figure">@ProgrammeWords.FurthestShortCodes(row)</span>
+            @if (line.Length > 0)
+            {
+              <p class="count-meta">@line</p>
+            }
+          </td>
+          break;
+        default:
+          <td role="cell" data-label="@label">@ProgrammeWords.LastFiled(row)</td>
+          break;
+      }
+    }
+  };
+}

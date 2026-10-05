@@ -18,7 +18,8 @@ using Wombat.Web.Components.Pages.Admin.Users;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Pages.MultiSourceFeedback;
 using Wombat.Web.Components.Pages.Portfolio;
-using EntrustmentDecisionsPage = Wombat.Web.Components.Pages.Admin.EntrustmentDecisions.Index;
+using Wombat.Web.Components.Pages.Programme;
+using Wombat.Application.Features.Programme;
 
 namespace Wombat.Web.Navigation;
 
@@ -92,11 +93,13 @@ public static class NavOwners
     public static readonly IReadOnlyDictionary<Type, IReadOnlyList<Owner>> Table = new Dictionary<Type, IReadOnlyList<Owner>>
     {
         // An activity is opened from the inbox, from My activities, from Home and from a review. Its trail follows the
-        // acting role's list (D5); a Committee member, a Coordinator or an administrator has none (R2-Rules § 3).
+        // acting role's list (D5): for both speciality admins and the Coordinator, Waiting for assessors, the list their
+        // Home's rows preview (T358, round 3 item 10); a Committee member or an administrator has none (R2-Rules § 3).
         [typeof(ActivityView)] =
         [
             new([WombatRoles.Assessor], NavItems.ActivityInbox),
             new([WombatRoles.Trainee, WombatRoles.PendingTrainee], NavItems.MyActivities),
+            new([WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin, WombatRoles.Coordinator], NavItems.WaitingForAssessors),
         ],
 
         // A committee review. The trainee reads theirs on My committee reviews; this page does not admit them.
@@ -109,6 +112,7 @@ public static class NavOwners
                 ],
                 NavItems.CommitteeReviews),
         ],
+        // The Coordinator reads the panels on the list, which lights itself; a panel's page does not admit him (T358, D4).
         [typeof(PanelEdit)] = [new(PanelKeepers, NavItems.DecisionPanels)],
 
         // T331: the MSF report and the coverage are reached from the campaigns, though they live outside /msf/campaigns.
@@ -147,8 +151,10 @@ public static class NavOwners
         // the acting role, and for a graduate who holds none (E3). The roles are its policy's, TraineeOrFormerTrainee's.
         [typeof(EpaProgress)] = [new(UnderAPersonalLink, NavItems.MyProgress)],
 
-        // Reached from the Institutional admin's Home only. Flow 09 places the entrustment work; until then it is under no list.
-        [typeof(EntrustmentDecisionsPage)] = [],
+        // A registrar's page, under Programme trainees for the four roles that watch the programme (T358, flow 06):
+        // Home › Programme trainees › the registrar. Programme trainees, Waiting for assessors and Entrustment decisions
+        // are items now, each lighting itself (R2-Menus m5), so none is here.
+        [typeof(ProgrammeTraineeDetail)] = [new([.. ProgrammeScope.RosterRoles], NavItems.ProgrammeTrainees)],
     };
 
     /// <summary>The pages outside the rule, each with why: nothing is lit on them, and they draw no trail but their own.</summary>

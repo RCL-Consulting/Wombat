@@ -875,12 +875,14 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
             var profiles = await db.TraineeProfiles.AsNoTracking().ToListAsync();
             profiles.Select(profile => profile.UserId).Should().BeEquivalentTo(TraineeUserId, LateStarterUserId);
 
-            var coverage = await CurriculumCoverageReader.ReadAsync(db, profiles, AsOf, CancellationToken.None);
+            var coverage = await CurriculumCoverageReader.ReadAsync(db, FakeUserDirectory.Empty, profiles, AsOf, CancellationToken.None);
 
             coverage.CurrentSemesterName.Should().Be("Semester 2, 2026");
             coverage.ExemptTraineeCount.Should().Be(1);
             coverage.Trainees.Should().Equal(new TraineeTargetCoverage(TraineeUserId, 0, 10, 1, 5));
-            coverage.Epas.Select(epa => (epa.EpaCode, epa.QuotaPeriod, epa.Target)).Should().Equal(AnnexureB);
+            // Fewest registrars met first, then by code (T358, review 13): PAED-008, the one met, comes last.
+            coverage.Epas.Select(epa => (epa.EpaCode, epa.QuotaPeriod, epa.Target)).Should().Equal(
+                AnnexureB.Where(epa => epa.Code != "PAED-008").Concat(AnnexureB.Where(epa => epa.Code == "PAED-008")));
             coverage.Epas.Should().OnlyContain(epa => epa.TraineesApplying == 1 && epa.TraineesExempt == 1);
             coverage.Epas.Where(epa => epa.TraineesMet == 1).Select(epa => epa.EpaCode).Should().Equal("PAED-008");
         }

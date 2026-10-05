@@ -595,7 +595,9 @@ Expect: The page says "Decision ratified." and the review reads Ratified. Every 
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
-Expect: The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
+Expect: Home's Registrars and Targets by EPA cards are one column: each registrar's name a 44px block with the training
+  year and the figures under it, each EPA's name a 44px block with its cadence and its "n of 2" under it (T358, round 3
+  item 21). The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
   a card of its own (its section is not a card around it), drawn at 322 px, never scaled, its rungs and months 12 px,
   and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
   scrolls sideways (T166, T355).

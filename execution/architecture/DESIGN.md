@@ -24,7 +24,12 @@
 >   they stand (2026-10-04, T355, `b020c942`: § Dashboard page (R1, the Trainee's Home), § Page-level patterns
 >   "Record page under a personal link" (R2, R5, the EPA page) and "List page" (My activities' Credit link),
 >   § Dashboard layout grid "The progress figures" (R3, and My progress), § Badges "Entrustment standing" (R4, the panel
->   and the trajectory), § Table system (the paused mark), and § app.css section order (one Progress section).
+>   and the trajectory), § Table system (the paused mark), and § app.css section order (one Progress section); flow 06,
+>   watching the programme (2026-10-05, T358: § The NavMenu (the flat limit without the personal links, the four
+>   roles' menus, the owner table's two rows), § Dashboard layout grid (the staff target cards, the programme's figures,
+>   the progressbar rule's `aria-hidden` exception, the card title's badge tone), § Page-level patterns "List page" (the
+>   filters applied with Show) and "Dashboard page" (the Coordinator's header action, the guard on eager reads, the
+>   oversight Homes), and § app.css section order (one Programme section)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -508,10 +513,12 @@ wraps: the label and the role on one line where they fit, the role under it wher
 - `RoleSwitchTests` holds the head.
 
 **The links.** Home first. A label is its page's `<h1>` and the stem of its tab, in sentence case (D10);
-`NavMenuAuthorizationTests` holds each label to its page's `<PageTitle>`. Up to 8 links, Home and the personal links
-counted, the list is flat; more than 8, it is grouped under headings that are not links. A heading is a `<p>`, not a
-heading element (the page's `<h1>` is its first heading), and names its `<ul>` through `aria-labelledby`. Only the
-Administrator's (17) and the Institutional admin's (16) are grouped.
+`NavMenuAuthorizationTests` holds each label to its page's `<PageTitle>`. Up to 8 of the acting role's links, Home
+counted, the list is flat; more than 8, it is grouped under headings that are not links. The personal links (My
+progress, My data rights) sit under their own rule and are not counted (2026-10-05, T358, flow 06, E2: until then they
+were, and the Coordinator's eight would have been grouped). A heading is a `<p>`, not a heading element (the page's
+`<h1>` is its first heading), and names its `<ul>` through `aria-labelledby`. Only the Administrator's (16) and the
+Institutional admin's (15) are grouped.
 
 Each row is what that acting role is offered, in menu order: "Heading: links" for a group, `;` between groups.
 `NavMenuAuthorizationTests` builds the menu for every row and fails when the two differ, so a change to the nav is a
@@ -522,14 +529,19 @@ change to this table.
 | Administrator | Home; Platform: Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels |
 | InstitutionalAdmin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log |
 | CollegeAdmin | Home, Specialities, EPAs, Curricula, Activity types |
-| SpecialityAdmin | Home, Decisions due, Committee reviews, Decision panels |
-| SubSpecialityAdmin | Home, Decisions due, Committee reviews, Decision panels |
-| CommitteeMember | Home, Committee reviews, Decision panels |
-| Coordinator | Home, Decisions due, MSF campaigns, Committee reviews, Data rights requests |
+| SpecialityAdmin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
+| SubSpecialityAdmin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
+| CommitteeMember | Home, Programme trainees, Committee reviews, Decision panels |
+| Coordinator | Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests |
 | Assessor | Home, Activity inbox |
 | Trainee | Home, Log an activity, My activities, MSF reports, My committee reviews, Export portfolio |
 | PendingTrainee | Home, Log an activity, My activities |
 | No role | Home |
+
+Flow 06 (2026-10-05, T358; R2-Menus; Q7, C10) gave the four roles that watch the programme its pages: Programme
+trainees for all four; Waiting for assessors for the three that chase it, not the Committee member, whose work is not
+chasing; Entrustment decisions for both speciality admins, who reached it until then only by address; and Decision
+panels for the Coordinator, whom the list admitted with no item (Step 2.32), read-only as before.
 
 **The personal links**, last, under a rule, are the person's rather than the role's, so they are offered whatever the
 acting role (D8):
@@ -541,8 +553,10 @@ acting role (D8):
 
 **What the nav never holds.**
 - **No link to an unbuilt page.** The placeholder page and its five stubs are gone (the review's S22e): Recent
-  activities and System were dropped, Stalled activities and Programme trainees are flow 06's, and the STAR review queue
-  is flow 09's. `NavMenuAuthorizationTests` fails on a `/placeholder/` link and on a page that answers one.
+  activities and System were dropped; flow 06 built Programme trainees, and Waiting for assessors in Stalled activities'
+  place (T358); the STAR review queue is not restored, Entrustment decisions, the programme's register of STARs, taking
+  its place under its own label. `NavMenuAuthorizationTests` fails on a `/placeholder/` link and on a page that answers
+  one.
 - **No Sign out and no My account:** the account row carries both (§ Layout grid).
 - **No link the acting role cannot open.** `NavMenuAuthorizationTests` judges every rendered link against its page's
   `[Authorize]`, through the app's own policies, for every acting role. So the Coordinator is not offered Invitations,
@@ -561,6 +575,11 @@ the acting role and the menu.
 - **Where the acting role has no owner, nothing is lit.** "Lights Home" is retired.
 - **My account, Change password, the sign-in pages, the anonymous static pages and the failure pages light nothing**
   (`NavOwners.Outside`). On My account the account row's name carries `aria-current="page"`.
+- **A page that draws Page not found in its own place lights nothing** (T358, build review D1): a registrar, a roster or
+  an EPA that is not the caller's to read is no page at all, so its owner is not lit either. The page tells the shell
+  through its header (`PageHeader`'s `Page="typeof(NotFound)"`), which hands it to the `PageDrawn` that `Routes`
+  cascades; `NavMenu` lights by the page drawn before the routed one. `ActiveNavItemTests` mounts the menu beside each
+  of Programme trainees, a programme trainee and an EPA page drawn as not found, and asserts nothing is lit.
 - Lit, the row takes the class `active`: the `--nav-active-bg` fill (.32, D4), `--nav-text-strong`, weight 600 and a 3px
   inset bar on its left. The bar and the weight are the state's cue; the fill is 2.67:1 against a plain row.
 - **An owner is named only for a role its page admits.** So Access denied, drawn at the address of a page that refused
@@ -575,9 +594,10 @@ there, and its trail is Home › the page (§ Page-level patterns).
 
 | Page | Lit item, by acting role |
 |---|---|
-| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee, Pending trainee: My activities |
+| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee, Pending trainee: My activities · Speciality and Sub-speciality admin, Coordinator: Waiting for assessors, however the activity was reached (T358) |
+| A registrar's progress (`/programme/trainees/{id}`) | Committee member, Speciality and Sub-speciality admin, Coordinator: Programme trainees; its trail Home › Programme trainees › the registrar's name (T358) |
 | A committee review | Committee member, Coordinator, Speciality and Sub-speciality admin, Institutional admin, Administrator: Committee reviews (the trainee reads theirs on My committee reviews; the page does not admit them) |
-| A decision panel | Administrator, Institutional admin, Speciality and Sub-speciality admin: Decision panels |
+| A decision panel | Administrator, Institutional admin, Speciality and Sub-speciality admin: Decision panels. Not the Coordinator: the panel's page does not admit him, and an owner is named only for a role the page admits, so he reads the panels on the list, which lights itself (T358, D4) |
 | An MSF campaign, `/msf/reports/{id}`, `/msf/coverage` | Coordinator: MSF campaigns (T331) |
 | A data-rights request | Coordinator, Administrator: Data rights requests. Its crumb is the request's id once loaded (R2-Rules § 3). R2-Rules also names the requester, under My data rights: that row was dropped, since the page admits only Administrator and Coordinator, so the owner table may not name the requester's role (the review of the t335 branch) |
 | A College's specialities and sub-specialities, and their edit pages | College admin: Specialities · Administrator: Colleges (T331) |
@@ -592,7 +612,10 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | An audit entry | Administrator, Institutional admin: Audit log |
 | The job run history | Administrator: Scheduled jobs |
 | My authorisations | Trainee: My progress |
-| Entrustment decisions | none: under no list until flow 09 places it |
+
+Entrustment decisions is not in the table: for both speciality admins it is a list the menu offers, which lights itself
+(T358, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list
+until flow 09 places it.
 
 MSF coverage (`/msf/coverage`, T210) is reached from the MSF campaign list's header, an outline "MSF coverage" link
 (`#msf-coverage-link`) beside New campaign. The link is not offered to someone who holds Trainee, whom the page shows no
@@ -1324,7 +1347,9 @@ Dashboard widget classes (added in T011):
 `.progress-row-*` was promoted in T130 from the inline `display:flex;justify-content:space-between` row that had spread
 across six progress surfaces, past the four-dashboard threshold below. Use it for any "label · n of m · bar" figure.
 Give every `.progress-bar` `role="progressbar"` with `aria-valuemin`, `aria-valuemax`, `aria-valuenow` and an
-`aria-label` that states the figure in words. A bar is decoration without them.
+`aria-label` that states the figure in words. A bar is decoration without them — except a bar inside a figure whose
+words already state it, which is `aria-hidden` (Targets by EPA: "2 of 5" over "registrars met this semester", then the
+bar; T358, round 3 item 31).
 
 Curriculum progress figures (T130) are always **a count against a target for a named window**: "2 of 3 this semester",
 "1 of 1 in 2026", "4 of 9 trainees met". Never a lifetime total, and never a mean percentage across trainees. Say
@@ -1360,17 +1385,31 @@ a failed read is "Could not load your progress. …" with Try again, which answe
 exception's text (T329). A section's own read fails in place: MSF's as a line (`p.section-error`, no button), the
 standing's as the panel's alert with its own Try again, answering into `#standing-h`.
 
-The three staff dashboards' target cards (CommitteeMember, SpecialityAdmin and SubSpecialityAdmin, one
-`EpaTargetCoverageList`) count the same trainees: the current trainees in the caller's scope
-(`TraineeScopeResolver.KeepCurrentAsync`, T238), an active profile on an account that still holds Trainee and that an
-administrator has not locked (T268). So an erased trainee's pseudonym, a profile that outlived its Trainee role and a
-locked trainee are in no "n of m", and the admins' "Trainees in programme" tile counts as active the trainees their card
-reads. None of them is counted as inactive either; the admin trainees list is where such a profile is seen, and ended.
+The three staff dashboards' Registrars and Targets by EPA cards (CommitteeMember, SpecialityAdmin and SubSpecialityAdmin;
+one `RegistrarRoster`, one `EpaTargetCoverageList`) count the current registrars in the acting role's scope
+(`ProgrammeScope`, then `TraineeScopeResolver.KeepCurrentAsync`, T238; T290 for the committee): an active profile on an
+account that still holds Trainee and that an administrator has not locked (T268). So an erased trainee's pseudonym, a
+profile that outlived its Trainee role and a locked trainee are in no "n of m" and on no card. None is counted as
+inactive: there is no "Trainees in programme" tile and no "inactive" anywhere (2026-10-05, T358, flow 06, Q10); the
+admin trainees list is where such a profile is seen, and ended.
+
+**Targets by EPA** (`EpaTargetCoverageList`, `.coverage-row`; R2-Home c1, c8, c11): one title on every Home. Its rule
+line is "Fewest registrars met first. Semester 2, 2026 ends on 2026-11-30.", after the one exemption wording when any is.
+A row is the EPA's name, a link to Programme trainees filtered Short on it with the figure in words hidden after it (or
+text when every registrar has met it), over its cadence ("3 per semester", "1 per academic year", " · Kgosi Kgari
+Teaching Hospital's own"); then the figure in its own column over its caption, and the bar. The EPAs come fewest
+registrars met first, then by code. At 900px and below both `.roster-row` and `.coverage-row` are one column, where the
+dashboard grid is (round 3 item 21; `StylesheetRuleTests.Flow06Homes`).
+
+**The programme's figures** (T358): a registrar's figure is "n of m" over its window; the programme's is "n of m" over
+"registrars met this semester" or "registrars met in 2026". One exemption wording: "1 registrar exempt this period, not
+counted", and on the row "Exempt this period" and why, in words. Ties by surname, then first name (T298).
 
 Each dashboard card is a `<DashboardCard>` — a shared component that wraps `.detail-card` and adds `Title`, `Icon` (Lucide name), `Href` (turns it into `.detail-card--interactive`), `Emphasis` / `Warning` (left stripe variants), and `Span` (1/2/3, the `.dashboard-span-*` modifiers). Reach for `<DashboardCard>` first; drop to raw `<div class="detail-card">` only when the card does not have a titled strip. At 900px and below the `.dashboard-grid` is a single column.
 
 - **Its title is an `<h2 class="dashboard-card-title">`** (2026-09-27, T335, flow 01): the icon, the words and, where the
-  card counts something, the count as a `badge-submitted` badge: a figure read as words (`Count` with `CountWords`,
+  card counts something, the count as a badge, `badge-submitted` unless the card says otherwise (`BadgeTone`: a count of
+  people takes `badge-draft`, the oversight Homes, T358, D10): a figure read as words (`Count` with `CountWords`,
   the Trainee's "Needs you 2", ", 2 items"), or the words themselves (`BadgeWords`, the Assessor's "2 waiting, 1
   overdue"; T350, note 13). Home's `<h1>` is the page's one; until T335 the cards' `<h3>` skipped a level. A card
   draws one stripe: `Warning` in place of `Emphasis`, never both (T350, nit T15); with a `HeadingId` it is a
@@ -2834,6 +2873,34 @@ value does not say what it is carries `data-label` (the column's name), shown be
 `content: attr(data-label) ": " / ""`: empty alternative text, so the column's name is not read twice. A cell that says
 what it is (the link, the state's badge) has none.
 
+**A list's filters are applied with Show** (2026-10-05, T358, flow 06; round 3 item 31, D3, D9; R2-Trainees, R2-Waiting).
+A list's filters are a GET form above it: the fields, then Show (primary) and, once any is set, Clear filters. Nothing
+changes until Show; the address carries the filters. The list's heading counts the answer ("5 of 5 current registrars
+are short on PAED-002") and takes the focus. A filter that leaves nothing is "No &lt;row&gt; matches these filters.",
+what was asked, and Clear filters; an empty list draws no form.
+
+- **The form** is a real `<form class="search-container">` named for its list (`aria-label="Filter Programme
+  trainees"`), so Enter is Show. Its fields are `.search-field`s in a `.search-grid`, each a labelled control; then
+  `div.search-field.filter-actions`: Show (`btn-primary`) and, once any filter is set, Clear filters (`btn-outline`), side
+  by side on the fields' bottom line (`.filter-actions`: a row, `align-self: end`, review 25). Below 641px each of its
+  buttons is 44px and the row's width. No field acts on change: no live filtering, and nothing on the page moves while a
+  field is being set.
+- **Show** navigates to the page's own address with the filters as its query (`?short=2&year=4&filed=true`; Waiting for
+  assessors `?show=overdue&with=<id>`); the page reads them as query parameters and reads the list again whenever they
+  change, so the address, Back and a shared link all show what was asked. **Clear filters** navigates to the bare route.
+  The page number is not in the address: Show starts from the first page.
+- **The heading counts the answer** in the list's own words, and takes the focus after Show and after a page turn
+  (`h2.list-section-title`, `tabindex="-1"`): with no filter, the count ("5 current registrars", "3 waiting, 2
+  overdue"); with one, its own sentence ("1 of 5 current registrars has filed nothing in 30 days", "1 waiting, 1 overdue,
+  with Mohammed Patel"); with several, "2 of 5 current registrars match these filters", what was asked in the rule line
+  (D9). Every count has its singular.
+- **No match is not empty.** When the filters leave nothing, the heading is "0 of 5 current registrars" ("0 of 2
+  waiting"), and an empty-state card says "No registrar matches these filters." ("No request matches these filters."),
+  what was asked ("Overdue only, with Fatima Khumalo."), and Clear filters: one pattern and one button word for every
+  list (review 33). When there is nothing to filter, the page draws its empty state and no form.
+- The select that picks a kind of row is named for what it filters ("Waiting": All, Overdue only), never "Show", which
+  is the button's (review 31).
+
 ### Detail page
 
 ```
@@ -3080,9 +3147,11 @@ Dashboards are a composition, not a standalone page pattern.
     (`QuotaCalendar.Today`, from the injected `TimeProvider`), the same "Semester 2, 2026" the progress pages and the
     committee's card name that day. It replaced "Viewing as {role key}". Someone with no role has no subtitle (D8).
   - **One header action for a role whose main job starts from Home** (A-Spec § e; `HomeFrame.ActionFor`), a primary
-    button with its icon: the Trainee's "Log an activity" (`/activities/new`) and the Institutional admin's "Invite a
-    person" (`/admin/invitations`, where the invitation form is). Every other role has none: its main job is a card's row
-    or a nav link, and a pending trainee can file nothing yet. The action is a link Home offers, so it too opens a page
+    button with its icon: the Trainee's "Log an activity" (`/activities/new`), the Institutional admin's "Invite a
+    person" (`/admin/invitations`, where the invitation form is), and the Coordinator's "Start an MSF campaign" (MSF
+    campaigns' new-campaign form, `/msf/campaigns/new`; 2026-10-05, T358, flow 06, Q6, review 26: until then a "Quick
+    action" card). It is there from the first render, before the cards' read returns (R2-Home k5). Every other role has
+    none: its main job is a card's row or a nav link, and a pending trainee can file nothing yet. The action is a link Home offers, so it too opens a page
     that admits the role. At phone width it is its own row **below the header's rule**, 44px tall and the page's width
     (`.home-action`), as R2-Phone-Folded draws it: the rule is drawn under the heading block instead of under the header
     (`.header-container:has(> .actions-cell > .home-action)`), so the action falls below it. Until the review of the t335
@@ -3110,8 +3179,9 @@ Dashboards are a composition, not a standalone page pattern.
     `ActionResult` (§ Button system, T234): the region that replaces the error (T350, C10 e). Below 641px the card
     footers' buttons, every Try again and the pager's buttons are 44px tall (T350, C8).
   - **Guard the eager reads.** The frame renders before the summary, so a card's parameters are read while it is null: a
-    title, stripe or count that reads it is written `Summary?.…` (the Coordinator's warning stripe, the admins' coverage
-    title, which is "Curriculum coverage" until it knows the semester), and a card's content only
+    title, stripe or count that reads it is written `Summary?.…` (Waiting for assessors' warning stripe and badge, the
+    Registrars and Nothing filed badges, the invitations card's span; T358: "Targets by EPA" never names the semester, so
+    the admins' coverage title, "Curriculum coverage" until it knew the semester, is gone), and a card's content only
     `@if (Summary is { } summary)`. `HomeFrameTests` renders every role's Home with a read that never returns, and with
     one that fails.
 - **The cards** belong to later flows (S20); today's are kept, less the duplicates the boards drop:
@@ -3189,6 +3259,35 @@ Dashboards are a composition, not a standalone page pattern.
       authorisations. The card's title is the page's name.
     - A card is never one link around other links; a card's rows are its links (T280). No MSF on Home. No Upcoming
       deadlines and no Recent activities (Q3; T298): a date is shown on the row it belongs to.
+- **The oversight Homes** (2026-10-05, T358, flow 06; R2-Home; Q1, Q3, Q5, Q6, Q10; E3–E6): the Committee member's,
+  both speciality admins' and the Coordinator's, each one read behind the frame (`DashboardFrame`), read as that Home's
+  own role in its scope (`ProgrammeScope`, E4: the Committee member and the Coordinator the institution, the admins the
+  speciality's or sub-speciality's registrars there), never the union of the roles held. Each preview card is the first
+  five rows of the list it previews, read by that list's own reader, so a card and its page cannot disagree.
+  - **Committee member:** Registrars (`#card-registrars`, `users`, spanning three) and Targets by EPA
+    (`#card-epa-targets`, `book`, spanning three).
+  - **Speciality and Sub-speciality admin:** Waiting for assessors (`#card-waiting-assessors`, `clock`, spanning three,
+    the warning stripe when any is overdue, else the emphasis one), Registrars and Targets by EPA. "Pending reviews",
+    "Trainees in programme" and every "inactive" are gone.
+  - **Coordinator:** Waiting for assessors (spanning two), Nothing filed in 30 days (`#card-nothing-filed`,
+    `clipboard-list`) and Invitations nearing expiry (`#card-invitations`, `calendar`; the role by its label, "expires
+    2026-10-07", its rule line with rows only; spanning the row once it has one). "Stalled requests" and "Quick action"
+    are gone.
+  - **The link rule.** Every row on an oversight Home is its own link to the one record behind it: a registrar's name to
+    the registrar's page, an EPA's name to Programme trainees filtered Short on the EPA, an activity's name to its page;
+    an EPA every registrar has met is text. A card is never one link around other links (T280). A card that previews a
+    list shows its first five rows, then "n more in <list>." ("3 more in Programme trainees.", "9 more wait in Waiting
+    for assessors."), and its foot opens the list, empty included, whenever the list is in the menu: "Open Waiting for
+    assessors", "Open Programme trainees", "Open in Programme trainees". Targets by EPA has no foot.
+  - **The counts are badges in words** ("2 waiting, 1 overdue"; "5 registrars", "1 registrar"), none when there is
+    nothing. Work waiting on someone keeps `badge-submitted`; a count of people takes `badge-draft` (`DashboardCard`'s
+    `BadgeTone`, D10).
+  - **Waiting for assessors' rows** are `WaitingList`'s staff reading (`WithNominee`): flow 04's row, then "With
+    Mohammed Patel" on its own line above "Waiting 8 days" (E6). Its rule line is "Oldest first. Overdue once it has
+    waited 7 days. Its assessor is emailed after 5.", both numbers the settings'. No reminder is sent from Home.
+  - **Registrars** (`Shared/Programme/RegistrarRoster`, `.roster-row`): the name over the training year, then My
+    progress's two figures in their own columns; an exempt registrar the badge "Exempt this period" and why, in words
+    (`.roster-exempt`). Nothing filed's rows are the name over "Last filed 2026-09-12 · Training year 2", no figures.
 - **Every role has its own case in Home's switch**, and the dashboard it picks admits the role (T261). Until then a
   CollegeAdmin fell through to the trainee's dashboard: "No curriculum assigned yet", beside links to pages that refuse
   a CollegeAdmin. PendingTrainee shares the trainee's dashboard, which branches on it. A signed-in user who holds **no
@@ -3798,10 +3897,16 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
   "3. Block links at phone width (C7, C9)": .progress-row-link, .epa-link, .activity-block-link, .standing-rating-link, .credit-link, .epa-auth-link, .decided-note (+ a) (+ ≤640px: each a 44px block, .decided-row .activity-link, .detail-card--empty .btn),
   "4. The paused mark (C5, C13)": .paused-mark,
   "5. The EPA page and the trajectory (R2, R4, R5; E1)": .details-grid--reverse, .epa-stack, .epa-page-alert, .epa-section-title, .epa-figure-row, .epa-lines, .epa-level-line, .star-level, .activity-cell-paused (+ ≤900px: one column), .trajectory-card, .trajectory-head, .trajectory-figure (a container; @container ≥900px shows the wide drawing), .trajectory-chart(--wide|--narrow|--sized), .trajectory-chart-* (band, below, minimum, exit, rung, lane, today, axis, line, dots, hollow, labels), .trajectory-key(-swatch--below|--exit|--dot|--hollow), .trajectory-table (caption, tbody th), .trajectory-msf (+ ≤640px: the stacked table, .trajectory-card.detail-card)
+
+/* ── Programme ─────────────────────────────────────── */
+"Flow 06: watching the programme (T358)", one account in three parts, in the order they were built:
+  "1. The reminder and the filter bar (R2-Waiting, R2-Trainees, R2-Registrar)": .reminder-action, .filter-actions (+ ≤640px: 44px and the row's width),
+  "2. The registrar page (R2-Registrar)": .registrar-stack (+ > .index-section, > .standing-panel, > .list-section: margin 0),
+  "3. The oversight Homes (R2-Home)": .roster-row, .roster-row > .roster-exempt, .coverage-row (+ ≤900px: one column)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
-rule is in it, none elsewhere.
+rule is in it, none elsewhere. The Programme section holds every flow 06 rule, none elsewhere (2026-10-05, T358).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

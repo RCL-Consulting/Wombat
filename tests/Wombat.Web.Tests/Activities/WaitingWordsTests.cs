@@ -1,5 +1,7 @@
 using FluentAssertions;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Programme;
+using Wombat.Application.Features.Programme.Waiting;
 using Wombat.Web.Components.Shared.Activities;
 using Wombat.Web.Tests.TestSupport;
 
@@ -97,6 +99,107 @@ public sealed class WaitingWordsTests
         ActivityListWords.FromLine(ActivityRows.Waiting(1, subjectName: "Anele Dlamini")).Should().Be("from Anele Dlamini");
         ActivityListWords.FromLine(ActivityRows.Waiting(1) with { SubjectName = null }).Should().BeNull();
     }
+
+    // ---- T358 (flow 06; E3, E4, E6): the staff reading, Waiting for assessors ------------------------------------------
+
+    [Fact]
+    public void TheStaffRow_SaysWhomItWaitsWith_OnALineOfItsOwn()
+    {
+        var row = ActivityRows.Waiting(1, waitedDays: 8) with
+        {
+            Holder = new ActivityHolderDto(ActivityHolderKind.Person, "patel", "Mohammed Patel", false, null)
+        };
+
+        WaitingWords.With(row).Should().Be("With Mohammed Patel");
+        WaitingWords.Waited(row).Should().Be("Waiting 8 days", "flow 04's words stand (E6)");
+    }
+
+    [Fact]
+    public void TheStaffRules_AddTheNudge_AndThePageAddsWhatRestartsTheWait()
+    {
+        WaitingWords.StaffRuleLine(7, 5).Should().Be(
+            "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.");
+        WaitingWords.PageRuleLine(7, 5).Should().Be(
+            "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5. Waiting counts from the last " +
+            "move: any save restarts it.");
+        WaitingWords.RuleLine(7).Should().Be("Oldest first. Overdue once it has waited 7 days.", "flow 04's rule is unchanged");
+    }
+
+    [Fact]
+    public void TheStaffCount_IsTheMatch_InFlow04sWords_WithTheNomineeWhenOneIsAsked()
+    {
+        WaitingWords.StaffCount(Staff(match: 3, matchOverdue: 2)).Should().Be("3 waiting, 2 overdue");
+        WaitingWords.StaffCount(Staff(match: 2, matchOverdue: 0)).Should().Be("2 waiting");
+        WaitingWords.StaffCount(Staff(match: 1, matchOverdue: 1, withUserId: "patel")).Should().Be("1 waiting, 1 overdue, with Mohammed Patel");
+        WaitingWords.NoMatchHeading(Staff(match: 0, matchOverdue: 0, total: 2)).Should().Be("0 of 2 waiting");
+    }
+
+    [Theory]
+    [InlineData(1, "1 more waits in Waiting for assessors.")]
+    [InlineData(9, "9 more wait in Waiting for assessors.")]
+    public void HomesOverflow_HasItsSingular(int beyond, string words) => WaitingWords.StaffMore(beyond).Should().Be(words);
+
+    /// <summary>E4: the subtitle says what was read, as which role.</summary>
+    [Fact]
+    public void TheSubtitle_AndTheEmptyWords_NameTheScopeReadAndTheRole()
+    {
+        var hospital = new ProgrammeScopeDto("Coordinator", ProgrammeScopeKind.Institution, "Kgosi Kgari Teaching Hospital", 10, [], []);
+        var paediatrics = new ProgrammeScopeDto("SpecialityAdmin", ProgrammeScopeKind.Speciality, "Paediatrics", 10, [100], [1000]);
+        var sub = new ProgrammeScopeDto("SubSpecialityAdmin", ProgrammeScopeKind.SubSpeciality, "Paediatrics", 10, [], [1000]);
+
+        WaitingWords.StaffSubtitle(hospital).Should().Be(
+            "Requests at Kgosi Kgari Teaching Hospital whose next move names an assessor, supervisor or reviewer, read as " +
+            "Coordinator. Your own requests are not listed.");
+        WaitingWords.StaffSubtitle(paediatrics).Should().Be(
+            "Requests in Paediatrics whose next move names an assessor, supervisor or reviewer, read as Speciality admin. " +
+            "Your own requests are not listed.");
+        WaitingWords.StaffSubtitle(sub).Should().Contain("read as Sub-speciality admin.");
+
+        WaitingWords.NothingWaitingCard.Should().Be("Nothing is waiting for an assessor.");
+        WaitingWords.NothingWaitingTitle.Should().Be("Nothing is waiting");
+        WaitingWords.NothingWaitingBody(hospital).Should().Be(
+            "Nothing at Kgosi Kgari Teaching Hospital is waiting for an assessor, supervisor or reviewer.");
+        WaitingWords.NothingWaitingBody(paediatrics).Should().Be(
+            "Nothing in Paediatrics is waiting for an assessor, supervisor or reviewer.");
+    }
+
+    [Fact]
+    public void TheFiltersWords_NoMatch_WhatWasAsked_AndTheCaption()
+    {
+        WaitingWords.NoMatch.Should().Be("No request matches these filters.");
+        WaitingWords.Asked(true, "Fatima Khumalo").Should().Be("Overdue only, with Fatima Khumalo.");
+        WaitingWords.Asked(true, null).Should().Be("Overdue only.");
+        WaitingWords.Asked(false, "Fatima Khumalo").Should().Be("With Fatima Khumalo.");
+        WaitingWords.Asked(false, null).Should().BeEmpty();
+        WaitingWords.TableCaption(null).Should().Be("Requests waiting for a named assessor, oldest first");
+        WaitingWords.TableCaption("Mohammed Patel").Should().Be("Requests waiting for Mohammed Patel, oldest first");
+        (WaitingWords.ShowLabel, WaitingWords.ShowAll, WaitingWords.ShowOverdue, WaitingWords.WithLabel, WaitingWords.WithAnyone)
+            .Should().Be(("Waiting", "All", "Overdue only", "With", "Anyone"));
+        WaitingWords.PageLoading.Should().Be("Loading Waiting for assessors.");
+        WaitingWords.PageLoadFailed.Should().Be(
+            "Could not load Waiting for assessors. Nothing has changed. Try again, or come back in a few minutes.");
+        WaitingWords.OpenPage.Should().Be("Open Waiting for assessors");
+        WaitingWords.NomineeNameOf(Staff(1, 0), "patel").Should().Be("Mohammed Patel");
+        WaitingWords.NomineeNameOf(Staff(1, 0), "nobody").Should().BeNull();
+    }
+
+    private static WaitingForAssessorsDto Staff(int match, int matchOverdue, int? total = null, string? withUserId = null)
+        => new(
+            new ProgrammeScopeDto("Coordinator", ProgrammeScopeKind.Institution, "Kgosi Kgari Teaching Hospital", 10, [], []),
+            [],
+            match,
+            matchOverdue,
+            total ?? match,
+            matchOverdue,
+            [new NomineeOptionDto("khumalo", "Fatima Khumalo"), new NomineeOptionDto("patel", "Mohammed Patel")],
+            7,
+            5,
+            1,
+            20,
+            true)
+        {
+            Filter = new WaitingForAssessorsFilter(WithUserId: withUserId)
+        };
 
     private static WaitingForYouDto Waiting(params ActivitySummaryDto[] rows)
         => new(rows, rows.Count(row => row.IsOverdue), 7);

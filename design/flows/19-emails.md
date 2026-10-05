@@ -216,7 +216,7 @@ baseline capture names its file.
 | 1 | `InvitationEmail` | `IssueInvitation.cs:118`, `ResendInvitation.cs:148` | Issue invitation or Resend on `/admin/invitations` | the invitee | "Your Wombat invitation" | `/account/register?token=…`, built by `InvitationLinks.RegistrationUrl` (`IssueInvitation.cs:133-141`); expires in 14 days | yes | 17: Steps 1.5, 1.7, 2.2–2.7, 2.16 and 2.17 | Real: Step 2.16 to Dr Molefe as Trainee (sink `20260926-114607-029.eml`) |
 | 2 | `MsfInvitationEmail` | `OpenMsfCampaign.cs:103`, `ResendMsfLinks.cs:133` | Open campaign; Resend links on `/msf/campaigns/{CampaignId:int}` | each respondent (no account) | "Feedback request: Lerato Molefe (Default MSF, 2026-09-26 to 2026-10-10)" | `/msf/respond?token=…` from `Wombat:MsfRespondUrl`, refused when unset (`WombatOptionsExtensions.cs:35`) | yes | 8: Step 3.36 (7) and 3.43 (1, resent) | Real: Step 3.36 to Dr Motsepe (`…124727-037`). Variant `-resent`: Step 3.43 to Dr Khoza (`…125233-044`), identical but for the token. Variant `-learner`: rendered, about Dr du Plessis's teaching (the story opens no learner campaign) |
 | 3 | `MsfExpiryReminderEmail` | `MsfInvitationExpiryReminderJob.cs:126` | Daily at 08:00 UTC, once per respondent, two days before their last day | an unanswered respondent | "Reminder: feedback on Lerato Molefe (Default MSF) is due by 2026-10-10" | a new `/msf/respond` link; the first still works (T214) | yes | 0: every link was answered or resent before a reminder was due | Rendered: to Dr Khoza, due 2026-10-10 |
-| 4 | `AssessorPendingNudgeEmail` | `AssessorPendingNudgeJob.cs:170` | Daily at 09:00 UTC, for work waiting more than 5 days on a `field:` nominee | the nominee | "Activities awaiting your assessment" | none | yes | 4: Steps 3.32 and A.2.8 | Real: Step 3.32, "Hi Thandi" (`…124322-036`) |
+| 4 | `AssessorPendingNudgeEmail` | `AssessorPendingNudgeJob.cs:170` | Daily at 09:00 UTC, for work waiting more than 5 days on a `field:` nominee; since T358 also a staff member's reminder about one request, from Waiting for assessors (`BuildReminder`, tags reminder, assessor-reminder) | the nominee | "Activities awaiting your assessment" | none | yes | 5: Steps 3.31 (the reminder), 3.32 and A.2.8 | Real: Step 3.32, "Hi Thandi" (`…124322-036`) |
 | 5 | `DraftNudgeEmail` | `ActivityDraftNudgeJob.cs:98` | Daily at 07:00 UTC, for drafts untouched 14 days | the draft's subject | "You have draft activities waiting" | none | yes | 1: Step A.2.8 | Real: Step A.2.8, "Hi Nomsa" (`…153640-049`) |
 | 6 | `CoordinatorDigestEmail` | `WeeklyCoordinatorDigestJob.cs:130` | Mondays at 08:00 UTC, or Run now | each Coordinator, except one who opted out, is deactivated, has no institution or holds Trainee | "Your weekly Wombat digest" | none | yes | 3: Step A.2.6 to Mr Smit, and two to the Demo Institution's coordinator | Real: Step A.2.6, empty (`…153421-048`). Variant `-items`: rendered with all three lists |
 | 7 | `GraduationEmail` | `CompleteTraineeProfile.cs:100` | Mark complete on `/admin/trainees/edit` | the graduate | "Congratulations on completing Paediatric EPA Curriculum" | none | yes | 1: Step 5.18 | Real: Step 5.18 (`…141525-045`) |
@@ -256,6 +256,7 @@ steps are in the last section.
 | 2.26 | `InvitationEmail` (resent) | Prof Mbatha → Dr du Plessis | That this link replaces an earlier one, which no longer works |
 | 3.3 | none today; the activity-move mail (T320) | Dr Dlamini → Dr Naidoo | That Dr Dlamini asks him to assess a Mini-CEX on PAED-001 of 2026-09-16, with a link to it |
 | 3.11 | none today; the activity-move mail (T320) | Dr Khumalo → Dr Ndlovu | That his Mini-CEX was declined and by whom, with a link to read her note. No note in the mail |
+| 3.31 | `AssessorPendingNudgeEmail` (`BuildReminder`, since T358; tags reminder, assessor-reminder) | Mr Smit → Dr Zulu | The nudge's mail, one request long: which request, from whom, how long it has waited, and that a member of staff sent it (flow 06 sent it from Waiting for assessors) |
 | 3.32 | `AssessorPendingNudgeEmail` | the job → Dr Zulu, Dr Patel | What has waited on them, from whom and for how long, each item linked |
 | 3.36 | `MsfInvitationEmail` | Mr Smit → seven colleagues | Whom the feedback is about, the questionnaire, the window, the last day, the one-time link, and what the trainee will and will not see |
 | 3.43 | `MsfInvitationEmail` (resent) | Mr Smit → Dr Khoza | The same, with a link that works where the lost one would have |
@@ -501,12 +502,14 @@ Step 3.32 — The daily nudge reminds the assessors
 Role: Administrator — devadmin@wombat.local
 Route: /admin/jobs
 Do: Run `assessor-pending-nudge` now.
-Expect: The job's last run updates. The application log holds two stub emails, "Activities awaiting your assessment".
-  The log names no address (T282); each greets its assessor by first name:
-  - "Hi Thandi", listing Mini-CEX (Paediatrics) from Nomsa Mahlangu, waiting 8 days;
-  - "Hi Mohammed", listing Portfolio and Logbook Review (Paediatrics) from Pieter du Plessis, waiting 8 days.
-  The run's summary line reads "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days,
-  so nobody else is nudged.
+Expect: The job's last run updates. The application log then holds three stub emails "Activities awaiting your
+  assessment", naming no address (T282), each greeting its assessor by first name: Step 3.31's reminder (tags reminder,
+  assessor-reminder), "Hi Thandi", and the nudge's two (tags nudge, assessor-pending):
+  - "Hi Thandi", listing Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days;
+  - "Hi Mohammed", listing Portfolio and Logbook Review (Paediatrics) from Pieter du Plessis — waiting 8 days.
+  The nudge still mails a request reminded today: a reminder moves nothing (T358, C4). The run's summary line reads
+  "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days, so nobody else is nudged: Dr
+  du Plessis's CBD has waited less than a day.
 
 Step 3.36 — Mr Smit invites seven colleagues, and removes one added under the wrong group
 Role: Coordinator — Mr Pieter Smit
@@ -555,9 +558,11 @@ Expect: "Decision ratified." The state reads Ratified, and Ratify is gone.
 Step 4.36 — Dr Mokoena revokes one of Dr Dlamini's STARs
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /admin/entrustment-decisions
-Do: Type the page's address. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged on evidence about
-  PAED-001, not PAED-002; to be decided again." and confirm the revocation.
+Do: Open Entrustment decisions from the menu. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged
+  on evidence about PAED-001, not PAED-002; to be decided again." and confirm the revocation.
 Expect:
+  - **The menu:** Entrustment decisions is lit on its page, with no trail: a list her menu offers (T358, R2-Menus m5;
+    as Step A.7.7).
   - **The list:** the same five rows as Step 4.35, since all five registrars are in her speciality.
   - **The dialog** names PAED-002 and Anele Dlamini, and says "Revocation is immediate and irreversible. The trainee is
     notified." Confirm revocation is enabled once a reason is typed.
@@ -636,7 +641,8 @@ Do: Run weekly-coordinator-digest now, then read the log.
 Expect: A stub mail "Your weekly Wombat digest" begins "Hi Pieter,". It covers KGK only (T117). With nothing to list
   it says "No items requiring attention this week." Otherwise it lists:
   - under "Trainees at risk", any current KGK trainee who has filed nothing in the last 30 days by the real clock
-    (T284): never Dr Molefe or Dr du Plessis, whose programmes have ended, or Dr Ndlovu, who has been erased;
+    (T284): a draft is not a filing, and a registrar admitted less than 30 days ago is not listed (T358, E5); never
+    Dr Molefe or Dr du Plessis, whose programmes have ended, or Dr Ndlovu, who has been erased;
   - any MSF campaign of his waiting on its review;
   - any committee review scheduled in the coming week.
 

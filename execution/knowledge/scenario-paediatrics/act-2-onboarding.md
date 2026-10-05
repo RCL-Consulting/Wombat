@@ -562,15 +562,23 @@ Gap: none
 ### Step 2.32 — Mr Smit, Coordinator
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
-Do: Sign in and read the dashboard and nav. Type the invitations address. Type the Decision panels address, then the
-  new-panel address.
-Expect: The dashboard reads "No stalled requests.", "No invitations expiring soon." and a Quick action, "Start an MSF
-  campaign". The sidebar reads "Acting as Coordinator" over Home, Decisions due, MSF campaigns, Committee reviews and
-  Data rights requests, then My data rights. It has no Invitations, and the invitations page reads "You cannot
-  open this page", "Your role (Coordinator) does not open this page." and "If you need it for your work, ask your
-  institution's Wombat administrator.", with Go to Home (T178, T335). It has no Decision panels either, though that page
-  admits him: it lists the panel with no New panel and no Edit column, and nothing in his menu is lit there. The panel
-  form reads "You cannot open this page" in the same words.
+Do: Sign in and read the dashboard and nav. Type the invitations address. Open Decision panels from the menu, then type
+  the new-panel address.
+Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "Start an MSF campaign"
+  (`/msf/campaigns/new`), where a Quick action card was (T358, Q6). Its cards, in order:
+  - "Waiting for assessors", with no badge: "Nothing is waiting for an assessor.", with Open Waiting for assessors;
+  - "Nothing filed in 30 days", its rule line "Current registrars with nothing filed (a draft is not filed) in the last
+    30 days. A registrar admitted less than 30 days ago is not listed.", then "Every current registrar has filed
+    something in the last 30 days.", with Open in Programme trainees: the registrars were admitted today, and a
+    registrar admitted less than 30 days ago is not listed (E5);
+  - "Invitations nearing expiry": "No invitations expiring soon."
+  The sidebar reads "Acting as Coordinator" over Home, Programme trainees, Waiting for assessors, Decisions due, MSF
+  campaigns, Committee reviews, Decision panels and Data rights requests, one flat list (E2), then My data rights. It
+  has no Invitations, and the invitations page reads "You cannot open this page", "Your role (Coordinator) does not open
+  this page." and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home (T178,
+  T335). Decision panels lists the panel with no New panel and no Edit column, and Decision panels is lit there (T358,
+  C10). The panel form reads "You cannot open this page" in the same words: the Coordinator reads panels, and edits none
+  (D4).
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Coordinator · Semester 2, 2026": "No stalled requests.",
   "No invitations expiring soon." and Quick action "Start an MSF campaign". The sidebar reads "Acting as Coordinator"
   over exactly the five named, then My data rights. Typed Invitations: /access-denied, "You cannot open this page", the
@@ -584,12 +592,19 @@ Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
 Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The sidebar reads "Acting as Committee
-  member", with "Switch to Assessor" under it: she holds both, and the precedence opens her sessions as a Committee
-  member. Targets this period names the current semester and its months. It lists the five registrars, each at "semester
-  0/10 · yearly 0/5", by surname since all are tied: Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato
-  Molefe, Sipho Ndlovu (T298); and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
-  PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
-  never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
+  member", with "Switch to Assessor" under it: Dr Zulu holds both, and the precedence opens Dr Zulu's sessions as a
+  Committee member. The cards (T358, Q1, Q5):
+  - "Registrars", badged "5 registrars", under the rule line "Fewest met first, then by surname.": Anele Dlamini, Pieter
+    du Plessis, Nomsa Mahlangu, Lerato Molefe and Sipho Ndlovu, all tied at nothing met, so by surname, then first name
+    (T298). Each name is a link to the registrar's page, over the training year ("Training year 3"), then "0 of 10" over
+    "EPAs met this semester" and "0 of 5" over "EPAs met in YYYY". Nobody is exempt: a 15 January start counts from the
+    boundary (D42). Its foot is Open Programme trainees.
+  - "Targets by EPA", under "Fewest registrars met first. Semester N, YYYY ends on <the semester's last day, ISO>.":
+    PAED-001 to PAED-015 in code order, each EPA's name a link to Programme trainees filtered Short on it, over its
+    cadence ("3 per semester", "1 per academic year"), then "0 of 5" over "registrars met this semester" or "registrars
+    met in YYYY" (T130's count, never a percentage). It has no foot.
+  The menu is the Committee member's alone, never the union of Dr Zulu's roles: Home, Programme trainees, Committee
+  reviews and Decision panels, then My data rights.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Committee member · Semester 2, 2026"; the sidebar
   "Acting as Committee member" with "Switch to Assessor", over Home, Committee reviews and Decision panels, then My
   data rights. "Semester 2, 2026 · July to November"; five registrars at "semester 0/10 · yearly 0/5" (in the order du
@@ -629,8 +644,9 @@ Gap: none
 Role: CommitteeMember + Assessor — Dr David Naidoo and Dr Sarah Botha
 Route: /account/login → / → /committee/panels
 Do: Each signs in, reads the dashboard and opens Decision panels.
-Expect: Each sees what Zulu saw in Step 2.33. Decision panels lists the panel they sit on, with no New panel and no
-  Edit.
+Expect: Dr Naidoo and Dr Botha each see what Dr Zulu saw in Step 2.33: the same menu, the five registrars on Registrars
+  in its order, and "0 of 5" for every EPA on Targets by EPA. Decision panels lists the panel both sit on, with no New
+  panel and no Edit.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Each: Home, "Committee member · Semester 2, 2026", "Acting as
   Committee member" with "Switch to Assessor", Zulu's menu, the same five registrars at 0/10 · 0/5 and PAED-001 to 015
   at "0 of 5 met". Decision panels lists Paed Annual Review Panel (Speciality, General panel, 4) and the Who-decides
@@ -654,12 +670,12 @@ Gap: none
 Role: CommitteeMember — Dr John van Rensburg
 Route: /account/login → / → /committee/panels
 Do: Sign in, read the dashboard and open Decision panels.
-Expect: He sees "Committee member · Semester N, YYYY" on Home, and no switch: he holds one role. Targets this period
-  names the current semester and lists KGK's five registrars as Dr Zulu's card does (Step 2.33), and Targets met by EPA
-  reads "0 of 5 met" for each: a committee member reads every current trainee at their institution, whatever their
-  own sub-specialities, and he holds none (T290).
-  The sidebar reads "Acting as Committee member" with no switch, over Home, Committee reviews and Decision panels, then
-  My data rights. Decision panels lists the panel he sits on as external member, with no New panel and no Edit.
+Expect: Dr van Rensburg sees "Committee member · Semester N, YYYY" on Home, and no switch: Dr van Rensburg holds one
+  role. "Registrars", badged "5 registrars", lists KGK's five current registrars in Step 2.33's order, and "Targets by
+  EPA" reads "0 of 5" for each EPA: a committee member reads every current registrar at the member's institution,
+  whatever the member's own sub-specialities, and Dr van Rensburg holds none (T290). The sidebar reads "Acting as
+  Committee member" with no switch, over Home, Programme trainees, Committee reviews and Decision panels, then My data
+  rights. Decision panels lists the panel Dr van Rensburg sits on as external member, with no New panel and no Edit.
 Note: Zulu, Naidoo and Botha hold the Paediatrics sub-speciality only through their assessor profiles (Step 2.14), and a
   CommitteeMember invitation may carry none (Step 2.3). So a committee member with no assessor profile sees no trainee
   here, although he sits on the panel and may read every KGK trainee's record (T113). Fixed by T290 (2026-10-05):
@@ -675,11 +691,13 @@ Gap: [F-2.37a, T290] (still) The panel's external member, who may read every KGK
 Role: SpecialityAdmin and SubSpecialityAdmin — Dr Refilwe Mokoena and Dr Kabelo Sithole
 Route: /
 Do: Each opens Home, now that the registrars are admitted.
-Expect: Each sees "Speciality admin · Semester N, YYYY" or "Sub-speciality admin · Semester N, YYYY" on Home. Pending
-  reviews reads 0 "activities awaiting review", with no link (T297). Trainees in programme reads 5 active / 0 inactive.
-  Curriculum coverage names the current semester and lists PAED-001 to PAED-015 at "0 of 5 met". The sidebar reads
-  "Acting as Speciality admin" or "Acting as Sub-speciality admin", over Home, Decisions due, Committee reviews and
-  Decision panels, then My data rights.
+Expect: Each sees "Speciality admin · Semester N, YYYY" or "Sub-speciality admin · Semester N, YYYY" on Home. The cards,
+  read for Paediatrics (T358, Q3): "Waiting for assessors", with no badge, reads "Nothing is waiting for an assessor.",
+  with Open Waiting for assessors; "Registrars" lists the five as Step 2.33's card does, badged "5 registrars", with
+  Open Programme trainees; "Targets by EPA" lists PAED-001 to PAED-015, each "0 of 5". There is no Pending reviews, no
+  Trainees in programme and no "inactive" anywhere (Q10). The sidebar reads "Acting as Speciality admin" or "Acting as
+  Sub-speciality admin", over Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews,
+  Decision panels and Entrustment decisions, then My data rights.
 Actual (2026-10-04, T355 replay, wombat_scenario_t355): Both as expected: "Speciality admin · Semester 2, 2026" and
   "Sub-speciality admin · …"; Pending reviews 0 "activities awaiting review" with no link (no action in main); Trainees
   in programme 5 "active / 0 inactive"; "Curriculum coverage — Semester 2, 2026" over "Semester 2, 2026 · July to

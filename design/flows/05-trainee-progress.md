@@ -510,7 +510,7 @@ describes the product as it is today, after flow 04 (re-synced 2026-10-03). `D` 
 January on or before it.
 
 ```text
-Step 2.39 — Dr Molefe, final-year registrar (act-2-onboarding.md:690)
+Step 2.39 — Dr Molefe, final-year registrar (act-2-onboarding.md:708)
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → / → /portfolio/progress
 Do: Sign in, read the dashboard and nav, and open My progress.
@@ -530,7 +530,7 @@ Expect: Home's first card, Your targets, reads "Training year 4 — it sets the 
   "Each semester · 10 EPAs" and "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; Entrustment against
   Annexure A reads "0 at or above · 0 below · 15 with no decision, of 15 EPAs".
 
-Step 2.40 — The other registrars' training years (act-2-onboarding.md:724)
+Step 2.40 — The other registrars' training years (act-2-onboarding.md:742)
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
 Route: /account/login → / → /portfolio/progress
 Do: Each signs in and opens My progress.
@@ -572,7 +572,7 @@ Expect: My progress's subtitle reads "Training year 3 · Semester 2, 2026". The 
   At the minimum.", its chart marking Today, and its table one row: `D−10`, 4, "At or above (4, training year 3)", the
   Mini-CEX, David Naidoo. Activities on this EPA lists the Mini-CEX, Completed, Credit "1 item".
 
-Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback (act-3-operations.md:1104)
+Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback (act-3-operations.md:1132)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Open My activities, then My progress, then PAED-001, PAED-010 and PAED-012 from its index.
@@ -590,7 +590,7 @@ Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback
   "MSF in Semester 2, 2026: covered by a released campaign that closed on `D`." first among their MSF lines, chart their
   ratings, and say under the chart "Multi-source feedback is not plotted.": no chart plots an MSF point (D36).
 
-Step 3.50 — Dr Dlamini's dashboard (act-3-operations.md:1155)
+Step 3.50 — Dr Dlamini's dashboard (act-3-operations.md:1183)
 Role: Trainee — Dr Anele Dlamini
 Route: /
 Do: Open the dashboard and read each card.
@@ -607,7 +607,7 @@ Expect:
     with Open My authorisations. The header offers "Log an activity" (T335: the Actions card is gone), and there is no
     Upcoming deadlines card (T355).
 
-Step 4.40 — Dr Molefe reads her progress against Annexure A (act-4-annual-review.md:879)
+Step 4.40 — Dr Molefe reads her progress against Annexure A (act-4-annual-review.md:885)
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/progress
 Do: Open My progress and read its index's STAR column and "Entrustment against Annexure A".
@@ -734,7 +734,7 @@ Expect: Each of the 15 EPAs carried over from 11.1 reads the count he noted in S
   target of 2 per academic year. The rows are "Each semester · 10 EPAs" and "Once a year · 7 EPAs", and This period's
   yearly figure is "… of 7" over "EPAs met in 2026".
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1082)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1151)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data

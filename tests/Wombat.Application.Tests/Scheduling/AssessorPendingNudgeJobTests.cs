@@ -2,6 +2,9 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Email.Templates;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
@@ -266,6 +269,60 @@ public sealed class AssessorPendingNudgeJobTests
         line.Count("NotDeliveredCount").Should().Be(1);
     }
 
+    // ---- T358 (review 3, review 11): the one setting, and the days phrase -----------------------------------------
+
+    /// <summary>
+    /// Review 11: the nudge's days are <see cref="DashboardThresholds.AssessorNudgeDays" />, read for its cutoff and its
+    /// description, where both wrote 5 by hand; the rule line on Waiting for assessors reads the same number.
+    /// </summary>
+    [Fact]
+    public async Task TheCutoffAndTheDescription_ReadTheNudgeDaysSetting()
+    {
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, (SchemaVersion: 1, DaysAgo: 3));
+
+        await RunAsync(provider);
+        emailSender.Sent.Should().BeEmpty("by default the nudge waits 5 days, and this request has waited 3");
+
+        await RunAsync(provider, new DashboardThresholds { AssessorNudgeDays = 2 });
+        emailSender.Sent.Should().ContainSingle("at 2 days the request is past the cutoff");
+
+        Job(provider).Description.Should().Be(
+            "Nudges assessors about activities waiting for their assessment for more than 5 days (daily at 09:00 UTC).");
+        Job(provider, new DashboardThresholds { AssessorNudgeDays = 2 }).Description.Should().Contain("for more than 2 days");
+        new DashboardThresholds().AssessorNudgeDays.Should().Be(5);
+    }
+
+    /// <summary>Review 3: a wait of one day reads "waiting 1 day", never "waiting 1 days".</summary>
+    [Fact]
+    public async Task OneDaysWait_ReadsWaitingOneDay()
+    {
+        var (provider, emailSender) = BuildServices();
+        await SeedAsync(provider, (SchemaVersion: 1, DaysAgo: 1));
+
+        await RunAsync(provider, new DashboardThresholds { AssessorNudgeDays = 0 });
+
+        emailSender.Sent.Single().TextBody.Should().Contain("— waiting 1 day").And.NotContain("1 days");
+    }
+
+    [Theory]
+    [InlineData(0, "waiting less than a day")]
+    [InlineData(1, "waiting 1 day")]
+    [InlineData(8, "waiting 8 days")]
+    public void TheDaysPhrase_IsWholeDays_AndUnderADayIsLessThanADay(int days, string expected)
+        => AssessorPendingNudgeEmail.WaitingPhrase(days).Should().Be(expected);
+
+    [Fact]
+    public void TheNudge_KeepsItsSubjectAndTags()
+    {
+        var mail = AssessorPendingNudgeEmail.Build("zulu@test", "Thandi", [("Mini-CEX (Paediatrics)", "Nomsa Mahlangu", 0)]);
+
+        mail.Subject.Should().Be("Activities awaiting your assessment");
+        mail.Tags.Should().Equal("nudge", "assessor-pending");
+        mail.TextBody.Should().Contain("Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting less than a day")
+            .And.NotContain("0 days");
+    }
+
     // ---- helpers ----------------------------------------------------------------------------------------------
 
     private static (ServiceProvider Provider, RecordingEmailSender EmailSender) BuildServices()
@@ -282,10 +339,13 @@ public sealed class AssessorPendingNudgeJobTests
         return (services.BuildServiceProvider(), emailSender);
     }
 
-    private static async Task<CapturingLogger> RunAsync(ServiceProvider provider)
+    private static AssessorPendingNudgeJob Job(ServiceProvider provider, DashboardThresholds? thresholds = null)
+        => new(provider.GetRequiredService<IServiceScopeFactory>(), Options.Create(thresholds ?? new DashboardThresholds()));
+
+    private static async Task<CapturingLogger> RunAsync(ServiceProvider provider, DashboardThresholds? thresholds = null)
     {
         var logger = new CapturingLogger();
-        await new AssessorPendingNudgeJob(provider.GetRequiredService<IServiceScopeFactory>())
+        await Job(provider, thresholds)
             .ExecuteAsync(new ScheduledJobContext(DateTime.UtcNow, logger), CancellationToken.None);
         return logger;
     }

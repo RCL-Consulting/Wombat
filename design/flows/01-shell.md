@@ -494,19 +494,26 @@ describes the product as it is today. Steps 2.34 and 3.33 describe the Assessor 
 "Waiting for your rating"; F04 designs the cards.
 
 ```text
-Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:582)
+Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:590)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
 Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The sidebar reads "Acting as Committee
-  member", with "Switch to Assessor" under it: she holds both, and the precedence opens her sessions as a Committee
-  member. Targets this period names the current semester and its months. It lists the five registrars, each at "semester
-  0/10 · yearly 0/5", by surname since all are tied: Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato
-  Molefe, Sipho Ndlovu (T298); and nobody is exempt: a 15 January start counts from the boundary (D42). Targets met by EPA lists
-  PAED-001 to PAED-015, each "0 of 5 met" (T130's count, never a percentage). The menu is the Committee member's alone,
-  never the union of her roles: Home, Committee reviews and Decision panels, then My data rights.
+  member", with "Switch to Assessor" under it: Dr Zulu holds both, and the precedence opens Dr Zulu's sessions as a
+  Committee member. The cards (T358, Q1, Q5):
+  - "Registrars", badged "5 registrars", under the rule line "Fewest met first, then by surname.": Anele Dlamini, Pieter
+    du Plessis, Nomsa Mahlangu, Lerato Molefe and Sipho Ndlovu, all tied at nothing met, so by surname, then first name
+    (T298). Each name is a link to the registrar's page, over the training year ("Training year 3"), then "0 of 10" over
+    "EPAs met this semester" and "0 of 5" over "EPAs met in YYYY". Nobody is exempt: a 15 January start counts from the
+    boundary (D42). Its foot is Open Programme trainees.
+  - "Targets by EPA", under "Fewest registrars met first. Semester N, YYYY ends on <the semester's last day, ISO>.":
+    PAED-001 to PAED-015 in code order, each EPA's name a link to Programme trainees filtered Short on it, over its
+    cadence ("3 per semester", "1 per academic year"), then "0 of 5" over "registrars met this semester" or "registrars
+    met in YYYY" (T130's count, never a percentage). It has no foot.
+  The menu is the Committee member's alone, never the union of Dr Zulu's roles: Home, Programme trainees, Committee
+  reviews and Decision panels, then My data rights.
 
-Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:600)
+Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:615)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /account/logout/submit → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and in again. Then type
@@ -524,58 +531,77 @@ Expect: Under the header an info alert reads "You are now acting as Assessor." a
   member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
   role Step 3.33 starts from.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:825)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:851)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
   open Dr Mahlangu's Mini-CEX (the Activity inbox lists it too), rate it 3a with feedback, and complete it.
 Expect: The sidebar first reads "Acting as Committee member", with "Switch to Assessor" under it, and Home "Committee
-  member · Semester N, YYYY" under its heading. Under the header, above the committee cards, a warning line reads "1
-  activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · `D−3`, from
-  Nomsa Mahlangu, waiting 8 days.", with Open it (T350). After the switch Home reads "You are now acting as Assessor."
-  in an info alert under the header, and "Assessor · Semester N, YYYY", with no such line; the sidebar reads "Acting
-  as Assessor" over Home and Activity inbox, and "Waiting for you", in the warning stripe, is badged "1 waiting, 1
-  overdue": this Mini-CEX, "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu, Requested with Overdue
-  beside it, "Waiting 8 days": it has waited past the assessor's seven days since Step 3.30 aged it. The inbox lists it
-  with "8 days" over "since `D−8` … SAST"; the page's status card reads "Your move. Nomsa Mahlangu asked you on `D−8` …
-  SAST.", the same moment. She rates it on the rung picker. After Complete the result reads "Completed. Nothing else
-  waits for you.", with Go to Home, and Home then reads "Nothing is waiting for you." The Mini-CEX is Completed,
-  credited "1 item". Year 1's minimum on PAED-004 is 3a. Nothing of Dr Mahlangu's is stalled any more.
+  member · Semester N, YYYY" under its heading. Under the header, above the committee cards (Registrars and Targets by
+  EPA), a warning line reads "1 activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics)
+  · PAED-004 · `D−3`, from Nomsa Mahlangu, waiting 8 days.", with Open it (T350). After the switch Home reads "You are
+  now acting as Assessor." in an info alert under the header, and "Assessor · Semester N, YYYY", with no such line; the
+  sidebar reads "Acting as Assessor" over Home and Activity inbox, and "Waiting for you", in the warning stripe, is
+  badged "1 waiting, 1 overdue": this Mini-CEX, "Mini-CEX (Paediatrics) · PAED-004 · `D−3`", from Nomsa Mahlangu,
+  Requested with Overdue beside it, "Waiting 8 days": it has waited past the assessor's seven days since Step 3.30 aged
+  it. The inbox lists it with "8 days" over "since `D−8` … SAST"; the page's status card reads "Your move. Nomsa
+  Mahlangu asked you on `D−8` … SAST.", the same moment. Step 3.31's reminder has not moved it. Dr Zulu rates it on the
+  rung picker. After Complete the result reads "Completed. Nothing else waits for you.", with Go to Home, and Home then
+  reads "Nothing is waiting for you." The Mini-CEX is Completed, credited "1 item". Year 1's minimum on PAED-004 is 3a.
+  Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
+  Home card.
 
-Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1215)
+Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1243)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
 Expect:
-  - Home opens acting as Assessor, her choice from Step 3.33, kept with her account. After the switch an info alert
-    reads "You are now acting as Committee member.", the sidebar "Acting as Committee member", and Home's subtitle
+  - Home opens acting as Assessor, Dr Zulu's choice from Step 3.33, kept with the account. After the switch an info
+    alert reads "You are now acting as Committee member.", the sidebar "Acting as Committee member", and Home's subtitle
     "Committee member · Semester N, YYYY".
-  - Targets this period, "Semester 2, 2026 · July to November": KGK's five current trainees, fewest met first.
-    Pieter du Plessis, Nomsa Mahlangu and Sipho Ndlovu read "semester 0/10 · yearly 0/5". Anele Dlamini and Lerato
-    Molefe read "semester 1/10 · yearly 0/5".
-  - Targets met by EPA: PAED-001 (3 per semester) reads "2 of 5 met", and every other EPA "0 of 5 met".
-  - Neither card holds a link.
-  - Her menu is Home, Committee reviews and Decision panels, then My data rights. Programme trainees is flow 06's, and
-    the menu offers no page before it is built.
+  - "Registrars", badged "5 registrars", fewest met first, then by surname: Pieter du Plessis, Nomsa Mahlangu and Sipho
+    Ndlovu, each "0 of 10" over "EPAs met this semester" and "0 of 5" over "EPAs met in YYYY"; then Anele Dlamini and
+    Lerato Molefe, each "1 of 10" and "0 of 5" (T298 at each tie).
+  - "Targets by EPA", fewest registrars met first, then by code: PAED-002 to PAED-015, each "0 of 5", then PAED-001 ("3
+    per semester") last, "2 of 5" over "registrars met this semester".
+  - Each registrar's name is a link to the registrar's page, and each EPA's name a link to Programme trainees filtered
+    Short on it, its figure in words hidden after it. No card is one link around its rows (T280).
+  - The menu is Home, Programme trainees, Committee reviews and Decision panels, then My data rights.
 
-Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:791)
+Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:799)
 Role: Coordinator — Mr Pieter Smit
-Route: / → /not-found
-Do: Look in the menu for a page of stalled requests. Then type the address the menu once linked,
-  `/placeholder/stalled-activities`.
-Expect: The menu offers none: Home, Decisions due, MSF campaigns, Committee reviews and Data rights requests, then My
-  data rights. The nav links to no unbuilt page (DESIGN.md § The NavMenu); stalled work is flow 06's. Only Home's
-  "Stalled requests" card lists it, and no page chases a stalled request: no reminder and no reassignment. The old
-  address is "Page not found" with status 404: the placeholder page went with the stubs (T335, flow 01).
+Route: / → /programme/waiting → /not-found
+Do: Open Waiting for assessors from the menu. On the Mini-CEX's row choose Send a reminder, read the dialog, then choose
+  Send the reminder. Then type the address the menu once linked, `/placeholder/stalled-activities`.
+Expect: The menu reads Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews,
+  Decision panels and Data rights requests, then My data rights, and Waiting for assessors is lit on its page (T358,
+  Q7). The page is headed "Waiting for assessors", its subtitle "Requests at Kgosi Kgari Teaching Hospital whose next
+  move names an assessor, supervisor or reviewer, read as Coordinator. Your own requests are not listed." (E4), over the
+  filters Waiting (All) and With (Anyone), and Show. The list's heading reads "3 waiting, 2 overdue", its rule line
+  "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5. Waiting counts from the last move:
+  any save restarts it.", and the table's columns are Activity, With, State and Waiting: Step 3.30's three rows in its
+  order, each Waiting cell "8 days" or "Less than a day" over "since … SAST", then Send a reminder.
+  On the Mini-CEX's row Send a reminder opens a dialog titled "Send Thandi Zulu a reminder?", which says "Thandi Zulu
+  gets one email, "Activities awaiting your assessment", listing this request: Mini-CEX (Paediatrics) from Nomsa
+  Mahlangu — waiting 8 days. It moves nothing: the request stays Requested, its wait is not restarted, and Nomsa
+  Mahlangu is not told." and opens on Don't send (C4). After Send the reminder, above the table and with the focus:
+  "Reminder sent to Thandi Zulu. It lists Mini-CEX (Paediatrics) · PAED-004 · `D−3`, from Nomsa Mahlangu, waiting 8
+  days. The request is still Requested; its wait is unchanged." The list is read again: the Mini-CEX's row reads
+  "Reminded `D` by Pieter Smit" where its button was, still Requested, Overdue and "8 days"; the other two keep their
+  buttons.
+  The log holds one stub mail (tags reminder, assessor-reminder) "Activities awaiting your assessment", "Hi Thandi",
+  listing "Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days". Nomsa Mahlangu is sent nothing. No page offers
+  Reassign (C5). The old address is "Page not found" with status 404: the placeholder page went with the stubs (T335,
+  flow 01).
 
-Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:700)
+Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:701)
 Role: Trainee — Dr Anele Dlamini
 Route: /dashboard/switch/{role} → /
 Do: Open `/dashboard/switch/Administrator`.
 Expect: She is back on her own dashboard, still acting as a Trainee. A switch to a role she does not hold changes
   nothing and says nothing (no "You are now acting as" alert), and the sidebar offers her no switch: she holds one role.
 
-Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:673)
+Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:674)
 Role: Trainee — Dr Anele Dlamini
 Route: /admin/users → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Users page, then that of Scheduled jobs.
@@ -583,7 +609,7 @@ Expect: Each time, "You cannot open this page": "Your role (Trainee) does not op
   your work, ask your institution's Wombat administrator.", with Go to Home, which takes her home. Nothing of the page
   she asked for is shown or named, and no switch of role is offered (T335, D6).
 
-Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:687)
+Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:688)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Institutions list, then that of Scheduled jobs.
@@ -591,7 +617,7 @@ Expect: For both, "You cannot open this page": "Your role (Institutional admin) 
   need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
   offers neither, and nothing in it is lit on the refusal.
 
-Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:882)
+Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:951)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /
 Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
@@ -602,7 +628,7 @@ Expect: "Institution saved." takes the focus. Status reads "Active" as text, wit
   `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
   `2|hod.paediatrics@kgk.wombat.local|t`.
 
-Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:710)
+Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:711)
 Role: Trainee — Dr Anele Dlamini
 Route: /not-found → /not-found → /account/login → /not-found
 Do: Type the following addresses:
@@ -615,7 +641,7 @@ Expect: For each, the "Page not found" page: "There is no page at this address."
   - `/placeholder/recent-activities` is Page not found too: the placeholder page went with the stubs (T335, flow 01).
   - Signed out, the unknown address first asks her to sign in, then shows Page not found.
 
-Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:729)
+Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:730)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
@@ -624,7 +650,7 @@ Expect: The institution shows Page not found, not "You cannot open this page". T
   user could not be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not
   403).
 
-Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:747)
+Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:748)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Open the address of Dr Mahlangu's submitted Mini-CEX from A.2.7.
@@ -632,14 +658,14 @@ Expect: The page is headed "Activity unavailable" and reads "This activity does 
   Go to My activities: the same page an id that does not exist shows, so nothing of the activity is shown and nothing
   tells her it exists (T101, C7).
 
-Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:760)
+Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:761)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights/{Id:guid}
 Do: Open the address of Dr Mahlangu's request with its last digit changed.
 Expect: The refusal "You are not authorized to access this data-rights request." and the empty state "Not found". An
   unknown id and another institution's request read the same, so the page does not tell them apart (T112).
 
-Step A.5.8 — The error page (appendix-cross-cutting.md:773)
+Step A.5.8 — The error page (appendix-cross-cutting.md:774)
 Role: Trainee — Dr Anele Dlamini
 Route: /Error
 Do: Type `/Error`.
@@ -647,42 +673,50 @@ Expect: Typed, no request failed: "Nothing went wrong" and "This is Wombat's err
   failed, so there is nothing to report.", with Go to Home, no reference and no Try again. Signed out it reads the same,
   with no sign-in first: the page is open to everyone, and static (T321, T335).
 
-Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:793)
+Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:794)
 Role: Assessor — Dr Mohammed Patel
 Route: /
 Do: Read the menu.
 Expect: Home and Activity inbox, then My data rights. There is no Recent activities: the flow 01 pick dropped it, and
   the nav links to no page that is not built (DESIGN.md § The NavMenu).
 
-Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:803)
+Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:804)
 Role: Coordinator — Mr Pieter Smit
-Route: /
-Do: Read the dashboard's "Stalled requests" card, then look for a stalled-work page in the menu.
-Expect: The card lists Dr du Plessis's portfolio review, still awaiting review since Step 3.30 aged it, and its row
-  links to the activity's page (T297). No page chases a stalled request: no reminder and no reassignment. The menu
-  offers no stalled-work page: it is flow 06's, and the nav links to no page that is not built.
+Route: / → /programme/waiting
+Do: Read the dashboard's "Waiting for assessors" card, then open Waiting for assessors from its foot.
+Expect: The card, in the warning stripe, is badged "3 waiting, 1 overdue", and lists, oldest first, each row a link to
+  its activity's page (T297):
+  - Dr du Plessis's portfolio review, Awaiting review, Overdue, "With Mohammed Patel", "Waiting 8 days": Dr du Plessis
+    withdrew at Step 5.27, and the request still waits (round-3-check, r6);
+  - Dr Mahlangu's Mini-CEX of Step A.2.7, encounter `D−2`, Requested, not overdue, "With Fatima Khumalo", "Waiting 6
+    days" (aged at Step A.2.8);
+  - Dr du Plessis's CBD of Step 3.21, Requested, "With Fatima Khumalo".
+  Waiting for assessors lists the same three in that order under "3 waiting, 1 overdue", each with Send a reminder (none
+  is sent here). Nothing offers Reassign (C5).
 
-Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:818)
+Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:826)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /
 Do: Read the menu.
-Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Committee reviews and Decision
-  panels, then My data rights. Programme trainees is flow 06's, and not offered before it is built.
+Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Programme trainees, Committee
+  reviews and Decision panels, then My data rights. There is no Waiting for assessors: chasing work is not a Committee
+  member's (T358, Q7).
 
-Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:828)
+Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:837)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the menu.
-Expect: Home, Decisions due, Committee reviews and Decision panels, then My data rights. Programme trainees is flow
-  06's and the STAR review queue flow 09's; the menu offers neither before it is built.
+Expect: Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels and
+  Entrustment decisions, then My data rights (T358, R2-Menus). The STAR review queue is not restored: Entrustment
+  decisions, the programme's register of STARs, takes its place (DESIGN.md § The NavMenu).
 
-Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:838)
+Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:848)
 Role: Administrator — devadmin
 Route: /
 Do: Read the menu.
 Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1082)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1151)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data
@@ -694,7 +728,7 @@ Expect: The dashboard's cards stack, each Furthest short row's figure under its 
   but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1289)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1384)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

@@ -43,6 +43,9 @@ public sealed class DevUserSeederTests : IDisposable
         services.AddScoped<RoleSeeder>();
         services.AddScoped<DevUserSeeder>();
 
+        // 22:30 UTC on 4 October is already 5 October in South Africa: the dev trainee's admission day (T358, D1).
+        services.AddSingleton<TimeProvider>(new FixedClock(new DateTimeOffset(2026, 10, 4, 22, 30, 0, TimeSpan.Zero)));
+
         _root = services.BuildServiceProvider();
     }
 
@@ -79,6 +82,26 @@ public sealed class DevUserSeederTests : IDisposable
         await BootAsync(withDemoData: true);
 
         (await CensusAsync()).Should().Be(before, "a second boot creates no user, role, scope or profile");
+    }
+
+    /// <summary>
+    /// T358, D1: the dev trainee is admitted on the day the seed runs, on the South African calendar and read from the
+    /// clock, into a programme that starts on 1 January of that year.
+    /// </summary>
+    [Fact]
+    public async Task TheDevTrainee_IsAdmittedOnTheSouthAfricanDayTheSeedRuns()
+    {
+        await BootAsync(withDemoData: true);
+
+        await using var scope = _root.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>();
+        var trainee = await users.FindByEmailAsync("trainee@wombat.local");
+        trainee.Should().NotBeNull();
+
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var profile = await dbContext.TraineeProfiles.SingleAsync(entry => entry.UserId == trainee!.Id);
+        profile.AdmittedOn.Should().Be(new DateOnly(2026, 10, 5));
+        profile.ProgrammeStartDate.Should().Be(new DateOnly(2026, 1, 1));
     }
 
     /// <summary>
@@ -132,5 +155,10 @@ public sealed class DevUserSeederTests : IDisposable
             await dbContext.UserSpecialityScopes.CountAsync(),
             await dbContext.UserSubSpecialityScopes.CountAsync(),
             await dbContext.TraineeProfiles.CountAsync());
+    }
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 }

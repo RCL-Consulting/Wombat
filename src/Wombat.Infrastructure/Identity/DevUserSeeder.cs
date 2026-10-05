@@ -71,15 +71,19 @@ public sealed class DevUserSeeder
     private readonly UserManager<WombatIdentityUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<DevUserSeeder> _logger;
+    private readonly TimeProvider _clock;
 
+    /// <param name="clock">What "today" is read from, for the dev trainee's admission day (T358, D1).</param>
     public DevUserSeeder(
         UserManager<WombatIdentityUser> userManager,
         ApplicationDbContext dbContext,
-        ILogger<DevUserSeeder> logger)
+        ILogger<DevUserSeeder> logger,
+        TimeProvider? clock = null)
     {
         _userManager = userManager;
         _dbContext = dbContext;
         _logger = logger;
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -235,13 +239,16 @@ public sealed class DevUserSeeder
         {
             // A semester boundary, so the College's D14 exemption for a mid-period start does not apply
             // and the dev trainee has targets to look at (T130).
-            var programmeStart = new DateOnly(DateTime.UtcNow.Year, 1, 1);
+            // Admitted today, on the South African calendar, as admission records it (T358, D1).
+            var today = ProgrammeCalendar.DateOf(_clock.GetUtcNow().UtcDateTime);
+            var programmeStart = new DateOnly(today.Year, 1, 1);
             _dbContext.TraineeProfiles.Add(new TraineeProfile
             {
                 UserId = existingUser.Id,
                 InstitutionId = institutionId,
                 CurriculumId = curriculumId,
                 ProgrammeStartDate = programmeStart,
+                AdmittedOn = today,
                 ExpectedCompletionDate = programmeStart.AddYears(4),
                 IsActive = true
                 // AdoptionId left null: this dev seed bypasses the AdmitTrainee adoption gate (T091); the

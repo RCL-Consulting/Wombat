@@ -74,6 +74,9 @@ public sealed class DashboardWaitingPostgresTests : IAsyncLifetime
             int miniCex, portfolioReview, draft, declined, elsewhere;
             await using (var db = NewContext(schema))
             {
+                // T358: the programme Homes read in a scope that names an institution, a speciality and a sub-speciality
+                // that exist (ProgrammeScope), so the stamps the activities carry are rows here.
+                SeedProgrammeScope(db);
                 var miniCexType = AddType(db, "mini_cex_cpsa", "Mini-CEX (Paediatrics)");
                 var portfolioType = AddType(db, "portfolio_review_cpsa", "Portfolio and Logbook Review (Paediatrics)");
                 await db.SaveChangesAsync();
@@ -142,23 +145,29 @@ public sealed class DashboardWaitingPostgresTests : IAsyncLifetime
                 needsYou.Select(row => (row.Id, row.Holder!.Kind, row.NomineeName)).Should().ContainSingle()
                     .Which.Should().Be((draft, ActivityHolderKind.Author, AssessorId), "the assessor has no name on record, so his id is shown");
 
+                // T358 (flow 06, E3): the staff Homes' Waiting for assessors is the page's read, its first five: what waits
+                // for a named person in the role's scope, oldest first, another institution's never.
+                var recipients = new Wombat.Infrastructure.Scheduling.ReminderRecipients(db);
                 var coordinator = await new GetCoordinatorDashboardSummaryQueryHandler(
-                        db, Options.Create(new DashboardThresholds { CoordinatorStallDays = 7 }), names)
+                        db, names, recipients, Options.Create(new DashboardThresholds()), TimeProvider.System)
                     .Handle(new GetCoordinatorDashboardSummaryQuery(Principal("t297-coordinator", [WombatRoles.Coordinator], InstitutionId)), CancellationToken.None);
-                coordinator.StalledRequests.Select(item => (item.ActivityId, item.SubjectName))
-                    .Should().Equal((miniCex, "Nomsa Mahlangu"));
+                coordinator.Waiting!.Items.Select(item => (item.Id, item.SubjectName, item.IsOverdue))
+                    .Should().Equal((miniCex, "Nomsa Mahlangu", true), (portfolioReview, "Nomsa Mahlangu", false));
 
-                var speciality = await new GetSpecialityAdminDashboardSummaryQueryHandler(db, names)
+                var speciality = await new GetSpecialityAdminDashboardSummaryQueryHandler(
+                        db, names, recipients, Options.Create(new DashboardThresholds()), TimeProvider.System)
                     .Handle(new GetSpecialityAdminDashboardSummaryQuery(
                         Principal("t297-speciality-admin", [WombatRoles.SpecialityAdmin], InstitutionId, specialityId: SpecialityId),
                         new DateOnly(2026, 9, 23)), CancellationToken.None);
-                speciality.PendingReviewCount.Should().Be(2, "the requested Mini-CEX and the portfolio review, at her institution");
+                (speciality.Waiting!.MatchCount, speciality.Waiting.MatchOverdueCount)
+                    .Should().Be((2, 1), "the requested Mini-CEX and the portfolio review, at her institution");
 
-                var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(db, names)
+                var subSpeciality = await new GetSubSpecialityAdminDashboardSummaryQueryHandler(
+                        db, names, recipients, Options.Create(new DashboardThresholds()), TimeProvider.System)
                     .Handle(new GetSubSpecialityAdminDashboardSummaryQuery(
                         Principal("t297-sub-speciality-admin", [WombatRoles.SubSpecialityAdmin], InstitutionId, subSpecialityId: SubSpecialityId),
                         new DateOnly(2026, 9, 23)), CancellationToken.None);
-                subSpeciality.PendingReviewCount.Should().Be(2);
+                subSpeciality.Waiting!.MatchCount.Should().Be(2);
             }
         }
         finally
@@ -299,6 +308,28 @@ public sealed class DashboardWaitingPostgresTests : IAsyncLifetime
         {
             await _schemas.DropAllAsync();
         }
+    }
+
+    /// <summary>The institution, speciality and sub-speciality the activities are stamped with, under their constant ids.</summary>
+    private static void SeedProgrammeScope(ApplicationDbContext db)
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        db.Institutions.Add(new Wombat.Domain.Institutions.Institution
+        {
+            Id = InstitutionId, Name = "Kgosi Kgari Teaching Hospital", ShortCode = $"KGK-{suffix}"
+        });
+        db.SubSpecialities.Add(new Wombat.Domain.Institutions.SubSpeciality
+        {
+            Id = SubSpecialityId,
+            Name = "Paediatrics",
+            Speciality = new Wombat.Domain.Institutions.Speciality
+            {
+                Id = SpecialityId,
+                Name = "Paediatrics",
+                College = new Wombat.Domain.Institutions.College { Name = $"T358 College {suffix}", ShortCode = $"T358C-{suffix}" }
+            }
+        });
+        db.SaveChanges();
     }
 
     private static int AddType(ApplicationDbContext db, string key, string name)

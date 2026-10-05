@@ -51,6 +51,12 @@ public class ActivityReadBoundaryTests
         // T350: the waiting read's rows, held the same way; and the Assessor's Home, which holds it and a decided page.
         "WaitingForYouDto",
         "AssessorDashboardSummaryDto",
+        // T358: Waiting for assessors' page of rows, the programme's waiting requests, held the same way; and the three
+        // oversight Homes that hold its first five (lane B).
+        "WaitingForAssessorsDto",
+        "SpecialityAdminDashboardSummaryDto",
+        "SubSpecialityAdminDashboardSummaryDto",
+        "CoordinatorDashboardSummaryDto",
         "EpaTrajectoryDto",
         "TrajectoryPointDto"
     ];
@@ -86,11 +92,9 @@ public class ActivityReadBoundaryTests
         ["Wombat.Application.Features.CommitteeDecisions.StartCommitteeReviewCommandHandler"] =
             "Builds the review evidence snapshot after CommitteeDecisionAuthorization.DemandStartableReview, which admits a member of this panel, a Coordinator of the institution this panel belongs to, or a global Administrator - it waived every Coordinator anywhere until T101 finding E, which is what made this reason worth stating - and after CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync, which refuses anyone but an Administrator a review whose trainee does not train at the panel's institution (T182). Stores labels and dates, never DataJson.",
 
-        ["Wombat.Application.Features.Dashboards.SpecialityAdmin.GetSpecialityAdminDashboardSummaryQueryHandler"] =
-            "T101 REVIEW FINDING, not an approval: hand-rolls the SpecialityId stamp comparison instead of calling WhereReadableBy, making it a fourth copy of the oversight rule. It already differs - no Administrator arm, and no IsInRole(SpecialityAdmin) gate on the speciality claim - and is safe only because SpecialityAdminDashboard.razor is role-gated, which nothing here states. Replace the inline Where with WhereReadableBy and delete this entry.",
+        ["Wombat.Application.Features.Programme.Filing.FilingMoments"] =
+            "T358 (E5): when each registrar last filed, as dates, for registrars the caller has already admitted to its list: the acting role's current registrars (ProgrammeScope.Profiles, then TraineeScopeResolver.KeepCurrentAsync) or a digest recipient's roster. Reads each activity's moves and pinned workflow to find the filing; no activity row, field or state leaves it.",
 
-        ["Wombat.Application.Features.Dashboards.SubSpecialityAdmin.GetSubSpecialityAdminDashboardSummaryQueryHandler"] =
-            "T101 REVIEW FINDING, not an approval: same hand-rolled stamp comparison as the SpecialityAdmin dashboard, and on the same dashboard its trainee tiles derive scope live from Curriculum.SubSpecialityId while this tile reads the frozen stamp, so the two disagree about a transferred trainee. Replace the inline Where with WhereReadableBy and delete this entry."
     };
 
     /// <summary>
@@ -105,7 +109,11 @@ public class ActivityReadBoundaryTests
         "Wombat.Application.Features.Activities.Services.DecidedByYou",
         // T355: Recent decisions on the Trainee's Home, and the standing Home and the query share (note 3).
         "Wombat.Application.Features.Activities.Services.DecidedOnYours",
-        "Wombat.Application.Features.EntrustmentDecisions.EntrustmentStandingReader"
+        "Wombat.Application.Features.EntrustmentDecisions.EntrustmentStandingReader",
+        // T358: Waiting for assessors, the Homes' card of that name, and the registrar page's section (E4).
+        "Wombat.Application.Features.Programme.Waiting.WaitingForAssessorsReader",
+        // T358: the filing moments Programme trainees, Home's Nothing filed card and the weekly digest share (E5).
+        "Wombat.Application.Features.Programme.Filing.FilingMoments"
     };
 
     // ─── The boundary itself ─────────────────────────────────────────────────

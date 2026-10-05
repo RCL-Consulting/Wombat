@@ -1,5 +1,8 @@
 using System.Globalization;
 using Wombat.Application.Features.Activities.Dtos;
+using Wombat.Application.Features.Programme;
+using Wombat.Application.Features.Programme.Waiting;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Web.Components.Shared.Activities;
 
@@ -135,6 +138,157 @@ public static class WaitingWords
         ArgumentNullException.ThrowIfNull(waiting);
         return waiting.Count == 1 ? "Open it" : "Open the oldest";
     }
+
+    // ---- The staff reading: Waiting for assessors (T358, flow 06; E3, E4, E6) ----------------------------------------
+    //
+    // The same rows read by a member of staff, about someone else's assessor: whom each waits with on a line of its own,
+    // then flow 04's "Waiting 8 days" unchanged (E6). Nothing above this line changes for it (the fence). No third-person
+    // pronoun anywhere (round 3 check 1): the person's name, "the registrar" or "the assessor"; the reader is "you".
+
+    /// <summary>The staff row's line above its wait (E6): "With Mohammed Patel".</summary>
+    public static string With(ActivitySummaryDto item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return $"With {item.Holder?.Name ?? item.NomineeName}";
+    }
+
+    /// <summary>
+    /// The rule over Home's Waiting for assessors card and the registrar page's section (round 3 item 11): "Oldest first.
+    /// Overdue once it has waited 7 days. Its assessor is emailed after 5.", both numbers the settings'
+    /// (<see cref="WaitingForAssessorsDto.DueDays" />, <see cref="WaitingForAssessorsDto.NudgeDays" />).
+    /// </summary>
+    public static string StaffRuleLine(int dueDays, int nudgeDays)
+        => $"{RuleLine(dueDays)} Its assessor is emailed after {nudgeDays.ToString(CultureInfo.InvariantCulture)}.";
+
+    /// <summary>
+    /// The page's rule line: the staff rule, then T351's sentence, "Waiting counts from the last move: any save restarts
+    /// it."
+    /// </summary>
+    public static string PageRuleLine(int dueDays, int nudgeDays)
+        => $"{StaffRuleLine(dueDays, nudgeDays)} Waiting counts from the last move: any save restarts it.";
+
+    /// <summary>
+    /// The page's heading and the card's badge, the match counted in flow 04's words: "3 waiting, 2 overdue"; "1 waiting, 1
+    /// overdue, with Mohammed Patel" when the read was asked for one nominee (<see cref="WaitingForAssessorsDto.Filter" />).
+    /// </summary>
+    public static string StaffCount(WaitingForAssessorsDto waiting)
+    {
+        ArgumentNullException.ThrowIfNull(waiting);
+        var count = waiting.MatchOverdueCount > 0
+            ? $"{waiting.MatchCount.ToString(CultureInfo.InvariantCulture)} waiting, {waiting.MatchOverdueCount.ToString(CultureInfo.InvariantCulture)} overdue"
+            : $"{waiting.MatchCount.ToString(CultureInfo.InvariantCulture)} waiting";
+        return NomineeNameOf(waiting, waiting.Filter.WithUserId) is { } name ? $"{count}, with {name}" : count;
+    }
+
+    /// <summary>The heading when the filters leave nothing (D9's pattern): "0 of 2 waiting".</summary>
+    public static string NoMatchHeading(WaitingForAssessorsDto waiting)
+    {
+        ArgumentNullException.ThrowIfNull(waiting);
+        return $"0 of {waiting.TotalCount.ToString(CultureInfo.InvariantCulture)} waiting";
+    }
+
+    /// <summary>
+    /// Home's overflow past five rows (R2-Home): "1 more waits in Waiting for assessors.", "9 more wait in Waiting for
+    /// assessors.".
+    /// </summary>
+    public static string StaffMore(int beyond)
+        => beyond == 1
+            ? "1 more waits in Waiting for assessors."
+            : $"{beyond.ToString(CultureInfo.InvariantCulture)} more wait in Waiting for assessors.";
+
+    /// <summary>
+    /// The page's subtitle (E4): what was read, as which role. "Requests at Kgosi Kgari Teaching Hospital whose next move
+    /// names an assessor, supervisor or reviewer, read as Coordinator. Your own requests are not listed."; "in
+    /// Paediatrics" for the two admins.
+    /// </summary>
+    public static string StaffSubtitle(ProgrammeScopeDto scope)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        return $"Requests {Where(scope)} whose next move names an assessor, supervisor or reviewer, read as " +
+               $"{WombatRoleLabels.For(scope.ActingRole)}. Your own requests are not listed.";
+    }
+
+    /// <summary>Home's Waiting for assessors card when nothing waits.</summary>
+    public const string NothingWaitingCard = "Nothing is waiting for an assessor.";
+
+    /// <summary>The page's empty state's title (w12).</summary>
+    public const string NothingWaitingTitle = "Nothing is waiting";
+
+    /// <summary>
+    /// The page's empty state's words (w12): "Nothing at Kgosi Kgari Teaching Hospital is waiting for an assessor,
+    /// supervisor or reviewer."; "Nothing in Paediatrics …" for the two admins.
+    /// </summary>
+    public static string NothingWaitingBody(ProgrammeScopeDto scope)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        return $"Nothing {Where(scope)} is waiting for an assessor, supervisor or reviewer.";
+    }
+
+    /// <summary>The no-match title, one pattern with Programme trainees' (review 33).</summary>
+    public const string NoMatch = "No request matches these filters.";
+
+    /// <summary>
+    /// What was asked, under the no-match title: "Overdue only, with Fatima Khumalo.", "Overdue only.", "With Fatima
+    /// Khumalo."; empty when nothing was.
+    /// </summary>
+    public static string Asked(bool overdueOnly, string? withName)
+        => (overdueOnly, string.IsNullOrWhiteSpace(withName)) switch
+        {
+            (true, false) => $"Overdue only, with {withName}.",
+            (true, true) => "Overdue only.",
+            (false, false) => $"With {withName}.",
+            _ => string.Empty
+        };
+
+    /// <summary>
+    /// The table's caption: "Requests waiting for a named assessor, oldest first"; "Requests waiting for Mohammed Patel,
+    /// oldest first" when one nominee is asked for.
+    /// </summary>
+    public static string TableCaption(string? withName)
+        => string.IsNullOrWhiteSpace(withName)
+            ? "Requests waiting for a named assessor, oldest first"
+            : $"Requests waiting for {withName}, oldest first";
+
+    /// <summary>The page's status while it loads, present from the first render.</summary>
+    public const string PageLoading = "Loading Waiting for assessors.";
+
+    /// <summary>The page's load error: fixed words, never the exception's (T329).</summary>
+    public const string PageLoadFailed =
+        "Could not load Waiting for assessors. Nothing has changed. Try again, or come back in a few minutes.";
+
+    /// <summary>The card's foot, and the way to the page.</summary>
+    public const string OpenPage = "Open Waiting for assessors";
+
+    /// <summary>The Waiting filter's label: not "Show", which is the button's (review 31).</summary>
+    public const string ShowLabel = "Waiting";
+
+    /// <summary>The Waiting filter's first option.</summary>
+    public const string ShowAll = "All";
+
+    /// <summary>The Waiting filter's second option.</summary>
+    public const string ShowOverdue = "Overdue only";
+
+    /// <summary>The With filter's label.</summary>
+    public const string WithLabel = "With";
+
+    /// <summary>The With filter's first option, before each nominee by name.</summary>
+    public const string WithAnyone = "Anyone";
+
+    /// <summary>
+    /// The name of the nominee <paramref name="withUserId" /> names, from the With filter's own list; null for none, or for
+    /// an id the read does not list.
+    /// </summary>
+    public static string? NomineeNameOf(WaitingForAssessorsDto waiting, string? withUserId)
+    {
+        ArgumentNullException.ThrowIfNull(waiting);
+        return withUserId is null
+            ? null
+            : waiting.Nominees.FirstOrDefault(nominee => string.Equals(nominee.UserId, withUserId, StringComparison.Ordinal))?.Name;
+    }
+
+    /// <summary>"at Kgosi Kgari Teaching Hospital" for the whole institution, "in Paediatrics" for a speciality's.</summary>
+    private static string Where(ProgrammeScopeDto scope)
+        => scope.Kind == ProgrammeScopeKind.Institution ? $"at {scope.Name}" : $"in {scope.Name}";
 
     private static string Days(ActivitySummaryDto item, string underADay)
     {
