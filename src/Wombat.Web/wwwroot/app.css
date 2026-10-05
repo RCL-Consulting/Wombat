@@ -4104,4 +4104,49 @@ fieldset.form-group fieldset.form-group > legend {
     grid-column: auto;
   }
 }
+/* 4. The two lists' tables below 900px (A.7.8a; the replay at 768): from 641 to 900px the sidebar leaves the main column
+   too narrow for Programme trainees' six columns and Waiting for assessors' four, so the names split mid-word. They
+   stack as DataTable's Stack does below 641px (flow 03), from 900px, where the dashboard grid goes to one column too. */
+@media (max-width: 900px) {
+  .clinic-table--stack-wide thead {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .clinic-table--stack-wide tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .clinic-table--stack-wide tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .clinic-table--stack-wide td,
+  .clinic-table--stack-wide tbody th {
+    border: 0;
+    padding: 0;
+    width: auto;
+  }
+
+  .clinic-table--stack-wide th[scope="row"] {
+    display: block;
+  }
+
+  .clinic-table--stack-wide td[data-label]::before {
+    color: var(--muted-text);
+    content: attr(data-label) ": ";
+    content: attr(data-label) ": " / "";
+    font-weight: 600;
+  }
+}
 /* end Flow 06 */
