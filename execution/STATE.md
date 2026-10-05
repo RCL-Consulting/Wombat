@@ -15,7 +15,7 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): 325 steps, 80 page templates, last replayed against flow 05
   (T355, `wombat_scenario_t355`: 256 no gap, no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 81 queued (1 P1, 14 P2, 66 P3), T358 in progress, 1 blocked.**
+- **Open: 79 queued (1 P1, 14 P2, 64 P3); T358 and T290 (its other items) in progress; 1 blocked.**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341, T356, T358.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
