@@ -435,6 +435,28 @@ refuses to end a session that changed task state without writing a handoff.
 **Commit after every completed task.** Do not accumulate multiple tasks in a single
 uncommitted working tree.
 
+## Multi-agent workflows
+
+Workflows were two thirds of this project's token spend over 16–30 Sep 2026: 1,231 subagents
+from 98 workflows, most of it per-task pipelines (understand → design critique → tests →
+review), with T122 running five review rounds. The harness itself was about 6%. Use them
+deliberately:
+
+- **Size the pipeline to the risk.** A contained change — one screen, one endpoint, copy,
+  styling, a seed value — gets one implementing agent (or the main session) and at most one
+  review. The full pipeline is for changes to the activity platform's schema / workflow /
+  credit DSLs, the seed corpus, EF Core migrations, roles and authorization, or anything that
+  spans several flows. Nothing is live, so a defect that ships is cheap to fix; size the
+  review to that.
+- **Two review rounds.** Run a third only when round two found a new defect of substance —
+  not wording, not style. Ask the user before a fourth.
+- **Checkers run on Sonnet.** Review, verify and refute agents use `model: 'sonnet'`; keep
+  Opus for design and implementation.
+- **Verify what would change the code.** Cosmetic findings go to the main session as one
+  list, not an agent each. Keep a workflow under ~10 agents unless the user asked for more.
+- **Say the cost first.** Before a workflow of more than ~10 agents, or a repeated round,
+  tell the user in one line what it will run and roughly what it costs.
+
 ## Reference folders
 
 Both reference trees were deleted from the worktree on 2026-09-20. Nothing was lost —
