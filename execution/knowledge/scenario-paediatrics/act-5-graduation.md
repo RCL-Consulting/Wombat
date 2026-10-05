@@ -68,13 +68,13 @@ Expect: There is one row for each EPA due for her in the period, and each row gi
   - an EPA that Act 4 deferred reads Deferred, and says that a later sitting plans it again;
   - the others read Not scheduled, Due by year end or As opportunity allows.
   Every row that is not yet decided offers Schedule. KGK's other registrars are listed too, and nobody outside KGK is.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Menu Home, Decisions due, MSF campaigns, Committee reviews,
-  Data rights requests, My data rights. Decisions due opened on 2026 S2; Every status: "75 of 75 decisions due in 2026
-  S2 shown." for "the 5 trainees you oversee at Kgosi Kgari Teaching Hospital" (Dlamini, Molefe, Mahlangu, du Plessis,
-  Ndlovu; nobody else). Molefe's 15 rows: PAED-001, 010 and 012 Decided ("STAR #1/#2/#3, issued at review #1.", Open
-  review); nine Deferred ("Deferred at review #1. A later sitting for 2026 S2 [or 2026] plans it again.", Open review
-  and Schedule); PAED-008, 009 and 013 As opportunity allows (Schedule). All 71 undecided rows of the 75 offer
-  Schedule.
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Menu Home, Programme trainees, Waiting for assessors,
+  Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests, My data rights. Decisions
+  due opened on 2026 S2; Every status: "75 of 75 decisions due in 2026 S2 shown." for "the 5 trainees you oversee at
+  Kgosi Kgari Teaching Hospital" (Dlamini, Molefe, Mahlangu, du Plessis, Ndlovu; nobody else). Molefe's 15 rows:
+  PAED-001, 010 and 012 Decided ("STAR #1/#2/#3, issued at review #1.", Open review); nine Deferred ("Deferred at
+  review #1. A later sitting for 2026 S2 [or 2026] plans it again.", Open review and Schedule); PAED-008, 009 and 013
+  As opportunity allows (Schedule). All 71 undecided rows of the 75 offer Schedule.
 Gap: none
 
 ### Step 5.2 — Mr Smit schedules Dr Molefe's pre-graduation review
@@ -98,15 +98,15 @@ Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the peri
   the end of the period. Mr Smit is offered Start review, but leaves it to the chair.
 Note: A second binding review for a period is refused only while the first one is open (scheduled, in progress or
   decided). Act 4's review of her has been ratified.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Schedule on Molefe's PAED-006 row opened
-  /committee/reviews?panel=1&trainee=…&period=2026-2 with Paed Annual Review Panel, Lerato Molefe and 2026 S2 filled,
-  window 2026-01-01 to 2026-12-31, scheduled 2026-10-04. Type offers Annual progression review and Pre-graduation
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Schedule on Molefe's PAED-006 row opened
+  /committee/reviews?panel=1&trainee=…&period=2026-2 with Paed Annual Review Panel, Lerato Molefe and "2026 S2 · 1 Jul
+  to 31 Dec 2026" filled, window 2026-01-01 to 2026-12-31. Type offers Annual progression review and Pre-graduation
   review only; Formative unticked. Preview: "12 EPAs will be on the agenda for 2026 S2.", "PAED-002, PAED-003, …,
   PAED-014 and PAED-015 must be decided at this sitting, or deferred with a reason, before it is ratified.",
   PAED-008/009/013 "· As opportunity allows", "Already decided in this window, so not on the agenda: PAED-001,
-  PAED-010 and PAED-012." With from 2023-01-15, Pre-graduation, Formative unticked, created review #7: Pre-graduation
-  review, Summative, Scheduled, evidence window 2023-01-15 to 2026-12-31; Start review offered to Mr Smit, left
-  unpressed.
+  PAED-010 and PAED-012." With from 2023-01-15, scheduled 2026-10-05, Pre-graduation, Formative unticked, created
+  review #7: Pre-graduation review, Summative, Scheduled, evidence window 2023-01-15 to 2026-12-31; Start review
+  offered to Mr Smit, left unpressed.
 Gap: none
 
 ### Step 5.3 — Dr Zulu starts the review and reads where Dr Molefe stands
@@ -124,14 +124,15 @@ Expect: The page says "Review started." and the review reads In progress.
     exit rule."
   - Record decision is shown disabled, and names the closing agenda lines that are still to be staged or deferred.
   - Sampling warnings may name EPAs rated by fewer than three assessors. They are warnings and refuse nothing.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Menu Home, Committee reviews, Decision panels, My data rights
-  ("Acting as Committee member", Switch to Assessor). Opened review #7 from Committee reviews (Pre-graduation,
-  Scheduled) and pressed Start review: "Review started.", State In progress. Snapshot frozen and grouped by EPA, the
-  released MSF campaign (#22, Default MSF #1) included. Standing: "In training year 4 on 2026-10-04", "2 at or above ·
-  1 below · 12 with no decision, of 15 EPAs", "2 of 15 EPAs at their exit level by STAR decision (level 5: 2 of 9 ·
-  level 4: 0 of 6). Not yet: PAED-002, …, PAED-015" (all but 001 and 012), then "For information only. Recording a
-  Graduate decision or completing the programme does not check the exit rule." Record decision disabled, naming the
-  nine closing lines. Sampling warnings on PAED-010 (1 assessor) and PAED-012 (2), refusing nothing.
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Menu Home, Programme trainees, Committee reviews, Decision
+  panels, My data rights ("Acting as Committee member", Switch to Assessor). Opened review #7 from Committee reviews
+  (Pre-graduation, Scheduled) and pressed Start review: "Review started.", State In progress. Snapshot frozen and
+  grouped by EPA, the released MSF campaign (Default MSF #1, records #22 and #23) included. Standing: "In training
+  year 4 on 2026-10-05", "2 at or above · 1 below · 12 with no decision, of 15 EPAs", "2 of 15 EPAs at their exit
+  level by STAR decision (level 5: 2 of 9 · level 4: 0 of 6). Not yet: PAED-002, …, PAED-015" (all but 001 and 012),
+  then "For information only. Recording a Graduate decision or completing the programme does not check the exit rule."
+  Record decision disabled, naming the nine closing lines. Sampling warnings on PAED-010 (1 assessor) and PAED-012
+  (2), refusing nothing.
 Gap: none
 
 ### Step 5.4 — Dr Zulu stages a STAR at its exit level on every EPA not yet there
@@ -152,15 +153,16 @@ Expect: The level list offers only the six rungs of the CPSA Paediatric Entrustm
   - the decision is listed with its level, its issue date and the lines it rests on.
   Once every closing line is staged, Record decision is enabled.
 Note: The exit levels are v11.1's final minima: nine EPAs at `5` and six at `4` (T166).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Staged 13 decisions on review #7, all issued 2026-10-04 (the
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Staged 13 decisions on review #7, all issued 2026-10-05 (the
   form's default) with no expiry: rung 5 on PAED-002 to 007 and 010, rung 4 on PAED-008, 009, 011, 013, 014 and 015.
   Twelve via Stage on the agenda line ("PAED-002's lines are listed first."); PAED-010 via the EPA list. The level
   list offered exactly 1, 2, 3a, 3b, 4, 5; Stage pending decision was disabled ("Name at least one item of the
   evidence snapshot.") until a line was ticked. The twelve without own lines rest on Default MSF #1 and got both hints
   ("Only one item is named. …" and "None of the named items is about PAED-002."), not refused; PAED-010 rests on its
-  own DO #17 and MSF #22 (no hint). Each staging: "Pending entrustment decision staged."; PAED-010 gained a line
-  (agenda "13 EPAs for 2026 S2", "Already decided in this window, so not on the agenda: PAED-001 and PAED-012."); each
-  decision is listed with its level, "issued 2026-10-04" and "Rests on …". Record decision then enabled.
+  own DO #17 and MSF #22 (no hint). Each staging: "Pending entrustment decision staged."; every agenda line reads
+  Staged; PAED-010 gained a line (agenda "13 EPAs for 2026 S2", "Already decided in this window, so not on the agenda:
+  PAED-001 and PAED-012."); each decision is listed with its level, "issued 2026-10-05" and "Rests on …". Record
+  decision then enabled.
 Gap: none
 
 ### Step 5.5 — The panel records its decision: Graduate
@@ -177,12 +179,12 @@ Expect: The category list opens with nothing chosen and offers Graduate (program
   are now fixed and that ratifying issues exactly these. The staging form is gone, and only Dr Zulu is offered Ratify.
 Note: Recording a Graduate decision checks nothing against the exit rule. T166 deferred that check until the College
   confirms the rule.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Category opened on "Select a category…" and offered
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Category opened on "Select a category…" and offered
   Satisfactory Progress, Satisfactory with Observations, Inadequate Progress — Additional Training, Inadequate
   Progress — Repeat, Release from Training, Outcome Deferred and Graduate (programme complete). "Thandi Zulu (chair)"
   was ticked and disabled. Recorded Graduate with the rationale, no conditions, all four present: "Decision
-  recorded.", State Decided, decision "Graduate (programme complete)", "Present: Thandi Zulu (chair), Sarah Botha,
-  David Naidoo, John van Rensburg (external)". Pending list reads "Fixed when the committee's decision was recorded:
+  recorded.", State Decided, decision "Graduate (programme complete)", "Present: Thandi Zulu (chair), David Naidoo,
+  Sarah Botha, John van Rensburg (external)". Pending list reads "Fixed when the committee's decision was recorded:
   ratifying issues exactly these. …"; the staging form is gone. Ratify offered to Dr Zulu; Dr Naidoo sees no Ratify,
   only "Only the panel's chair, Thandi Zulu, can ratify the committee's decision."
 Gap: none
@@ -199,12 +201,12 @@ Expect: The page says "Decision ratified." and the review reads Ratified. Every 
   The standing's exit rule reads "15 of 15 EPAs at their exit level by STAR decision (level 5: 9 of 9 · level 4: 6 of
   6). Every EPA is at its exit level." Its year line reads "15 at or above · 0 below · 0 with no decision, of 15 EPAs".
 Note: Only the panel's chair ratifies. There is no Administrator bypass (D46, T165).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Ratify: "Decision ratified.", State Ratified. The 13 staged
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Ratify: "Decision ratified.", State Ratified. The 13 staged
   decisions were issued as STARs #6–#18 (PAED-010's is #18); every agenda line reads "Decided STAR #n."; the pending
   list reads "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each
-  one." Act 4's PAED-010 STAR #2 (level 4, expiry 2026-10-24) now has Status 4, superseded (SQL). Standing: "15 at or
+  one." Act 4's PAED-010 STAR #2 (level 4, expiry 2026-10-25) now has Status 4, superseded (SQL). Standing: "15 at or
   above · 0 below · 0 with no decision, of 15 EPAs" and "15 of 15 EPAs at their exit level by STAR decision (level 5:
-  9 of 9 · level 4: 6 of 6). Every EPA is at its exit level." No mail.
+  9 of 9 · level 4: 6 of 6). Every EPA is at its exit level." No mail (stub count 31 → 31).
 Gap: none
 
 ### Step 5.7 — Prof Mbatha reads Dr Molefe's STARs
@@ -221,11 +223,11 @@ Expect: There are fifteen Active rows, one for each EPA from PAED-001 to PAED-01
   nothing.
 Note: If PAED-010's Act 4 expiry passed and the expiry job ran before Step 5.6, that STAR reads Expired instead, and
   ratifying superseded none.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home's quick links: Invite a person, Users, Invitations,
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Home's quick links: Invite a person, Users, Invitations,
   Curriculum adoptions, Entrustment decisions. Trainee "Molefe", Status Active, Apply filters: 15 rows, PAED-001 to
-  PAED-015, level 5 on 001–007, 010, 012 and 4 on 008, 009, 011, 013–015; all issued 2026-10-04 (Act 4 was played on
+  PAED-015, level 5 on 001–007, 010, 012 and 4 on 008, 009, 011, 013–015; all issued 2026-10-05 (Act 4 was played on
   this replay's D too, so PAED-001's and 012's issue day is also D); Expires "—"; each with Download and Revoke.
-  Status All: 16 rows; the extra is PAED-010 at 4, issued 2026-10-04, expires 2026-10-24, Superseded, Download only.
+  Status All: 16 rows; the extra is PAED-010 at 4, issued 2026-10-05, expires 2026-10-25, Superseded, Download only.
   Nothing revoked.
 Gap: none
 
@@ -243,15 +245,15 @@ Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme co
   issue date and "No expiry". The certificate downloads as `star-certificate-PAED-001-<id>-<8 hex digits>.pdf`.
 Note: My authorisations requires the Trainee role, so this is the last point at which she can download a certificate
   from that page (see Step 5.22).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): My committee reviews lists two: "2026 S2 · 2023-01-15 to
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): My committee reviews lists two: "2026 S2 · 2023-01-15 to
   2026-12-31, Pre-graduation, Ratified, Graduate (programme complete)" and Act 4's annual one. View shows "Type:
   Pre-graduation review", "State: Ratified", the decision and rationale, "Present when this decision was taken: Thandi
-  Zulu (chair), Sarah Botha, David Naidoo, John van Rensburg (external)", and an agenda of the 13 EPAs it decided,
+  Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)", and an agenda of the 13 EPAs it decided,
   each "Decided STAR #n." (#6–#18). Lodge appeal form offered, not used. Home (Your targets "1 of 10" / "0 of 5",
   Furthest short with ISO "3 more by 2026-11-30", Needs you, Recent decisions, My authorisations "15 at or above") →
-  Open My authorisations → /portfolio/authorisations: 15 cards, each with level, "Issued 4 October 2026" (a long date:
+  Open My authorisations → /portfolio/authorisations: 15 cards, each with level, "Issued 5 October 2026" (a long date:
   this page is not a flow-05 surface), "No expiry" and Download certificate. PAED-001's downloaded as
-  star-certificate-PAED-001-1-e268d3ba.pdf (97,130 bytes).
+  star-certificate-PAED-001-1-63a9f4ee.pdf (96,897 bytes).
 Gap: none
 
 ## Phase 5.B — The portfolio and its verification
@@ -266,10 +268,10 @@ Expect: The page opens with the last twelve months filled in. After the export i
   Record the file name: Steps 5.10 and 5.12 must produce the same one.
 Note: Every export in this phase is made on `D` with the same two dates. The PDF carries no generation time, so the
   same data gives the same bytes (T078).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Export portfolio from the menu opened with From 2025-10-04 and
-  To 2026-10-04 (the last twelve months). With 2023-01-15 to 2026-10-04, Export PDF: "Portfolio exported successfully.
-  The download should start automatically." and portfolio-410f3eaf10f1.pdf downloaded (183,111 bytes; SHA-256
-  410f3eaf…459c, recorded for 5.10, 5.12 and 5.13).
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Export portfolio from the menu opened with From 2025-10-05 and
+  To 2026-10-05 (the last twelve months). With 2023-01-15 to 2026-10-05, Export PDF: "Portfolio exported successfully.
+  The download should start automatically." and portfolio-c47ccaad4d32.pdf downloaded (183,527 bytes; SHA-256
+  c47ccaad…9f60, recorded for 5.10, 5.12 and 5.13).
 Gap: none
 
 ### Step 5.10 — Prof Mbatha exports Dr Molefe's portfolio by its address
@@ -280,10 +282,10 @@ Do: Find Dr Molefe in Users and open her. Take her user id from the page's addre
 Expect: The export succeeds as in Step 5.9. The downloaded file has the same name as Dr Molefe's and is identical to it
   byte for byte. Compare the two with `fc /b`, or by their SHA-256.
 Note: No page links to the staff export, so this step reaches it by typing the address. Record that in `coverage.md`.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Users → filter "Molefe" → Manage opened
-  /admin/users/e4c82745-e5b6-467a-a760-978fbc009799. Typed /portfolio/export/e4c82745-…: the page opened with
-  2025-10-04 to 2026-10-04 and reads only "Generate a PDF export of the trainee's portfolio.", naming nobody, before
-  and after. With 2023-01-15 to 2026-10-04: "Portfolio exported successfully. …" and portfolio-410f3eaf10f1.pdf,
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Users → filter "Molefe" → Manage opened
+  /admin/users/49a8e028-a15a-4500-81ca-8d883f365212. Typed /portfolio/export/49a8e028-…: the page opened with
+  2025-10-05 to 2026-10-05 and reads only "Generate a PDF export of the trainee's portfolio.", naming nobody, before
+  and after. With 2023-01-15 to 2026-10-05: "Portfolio exported successfully. …" and portfolio-c47ccaad4d32.pdf,
   byte-identical to Dr Molefe's (cmp; the same SHA-256).
 Gap: [F-5.10a, T314] (still) The staff export page never says whose portfolio it exports:
   /portfolio/export/{TraineeUserId} names no trainee before or after the export, so a wrong id exports another
@@ -309,15 +311,15 @@ Expect: Every page carries the same header and footer:
   - "Appendix — Audit Trail".
 Note: In "Progress per EPA", the periods before the scenario's evidence (which starts in Act 3) read short. That comes
   from the scenario's data and is not a gap.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The 11-page PDF carries on every page the header Kgosi Kgari
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The 11-page PDF carries on every page the header Kgosi Kgari
   Teaching Hospital, "Portfolio Export", Lerato Molefe, Paediatric EPA Curriculum, "Paediatrics — Paediatrics",
-  "Period: 2023-01-15 to 2026-10-04", and the footer "Page n of 11 | Generated by Wombat"; no generation time
-  (metadata dates fixed at 2000-01-01). Sections in order: Summary ("Committee reviews: 2", "MSF reports: 1");
-  "Statements of Awarded Responsibility (STARs)", "15 active entrustment decisions on record.", rungs by label;
-  "Progress per EPA" "on 4 October 2026 (training year 4)" (the PDF keeps long dates, D1); "Committee Decisions" with
-  Act 4's review, then the Pre-graduation review, Ratified, "Graduate (programme complete)", its rationale and the
-  four present by name; Activities by type; Multi-Source Feedback; "Appendix — Audit Trail". Rendered pages 1, 5 and 6
-  are the captures.
+  "Period: 2023-01-15 to 2026-10-05", and the footer "Page n of 11 | Generated by Wombat"; no generation time
+  (metadata dates fixed at 2000-01-01). Sections in order: Summary (activities by type, "Committee reviews: 2", "MSF
+  reports: 1"); "Statements of Awarded Responsibility (STARs)", "15 active entrustment decisions on record.", rungs by
+  label; "Progress per EPA" "on 5 October 2026 (training year 4)" (the PDF keeps long dates, D1); "Committee
+  Decisions" with Act 4's review, then the Pre-graduation review, Ratified, "Graduate (programme complete)", its
+  rationale and the four present by name; Activities by type; Multi-Source Feedback; "Appendix — Audit Trail".
+  Rendered pages 1, 5 and 6 are the captures.
 Gap: none
 
 ### Step 5.12 — Mr Smit reproduces the export
@@ -328,9 +330,9 @@ Expect: The export is allowed, because a coordinator of her institution oversees
   same name as those from Steps 5.9 and 5.10, and is identical to both byte for byte.
 Note: No page that a coordinator can open links to a trainee's export. Her user id is otherwise only in an address he
   has seen: the `trainee=` part of the Schedule link he followed in Step 5.2.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Typed /portfolio/export/e4c82745-e5b6-467a-a760-978fbc009799
-  as Mr Smit: admitted ("Generate a PDF export of the trainee's portfolio.", no name). With 2023-01-15 to 2026-10-04:
-  "Portfolio exported successfully. …" and portfolio-410f3eaf10f1.pdf, byte-identical to Steps 5.9 and 5.10 (cmp).
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Typed /portfolio/export/49a8e028-a15a-4500-81ca-8d883f365212
+  as Mr Smit: admitted ("Generate a PDF export of the trainee's portfolio.", no name). With 2023-01-15 to 2026-10-05:
+  "Portfolio exported successfully. …" and portfolio-c47ccaad4d32.pdf, byte-identical to Steps 5.9 and 5.10 (cmp).
 Gap: [F-5.10a, T314] (still) The page names no trainee.
 
 ### Step 5.13 — A verifier checks the genuine PDF
@@ -349,11 +351,11 @@ Expect: The page works signed out, as a static page, under the signed-out bar: t
   Mr Smit's copy has the same SHA-256 and gets the same answer.
 Note: The PDF prints no hash, though the field's placeholder says "from the PDF footer" (T287). The file name carries
   only the first 12 hex digits, and those alone match nothing. The check needs the file's whole SHA-256.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Signed out, /portfolio/verify opened under the signed-out bar
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Signed out, /portfolio/verify opened under the signed-out bar
   (Wombat and Sign in, no menu) as a static GET form with the placeholder "Enter the hash from the PDF footer". Dr
-  Molefe's SHA-256 (lower case) → /portfolio/verify?hash=410f3eaf…&check=1: "Export verified", "This PDF was generated
-  by Wombat on 2026-10-04 14:16 UTC.", "Trainee ID: e4c82745-…", "Exported by: e4c82745-…" (ids only), "Filter:
-  2023-01-15 to 2026-10-04", "File: portfolio-410f3eaf10f1.pdf". Mr Smit's copy got the same answer. The same hash in
+  Molefe's SHA-256 (lower case) → /portfolio/verify?hash=c47ccaad…&check=1: "Export verified", "This PDF was generated
+  by Wombat on 2026-10-05 14:43 UTC.", "Trainee ID: 49a8e028-…", "Exported by: 49a8e028-…" (ids only), "Filter:
+  2023-01-15 to 2026-10-05", "File: portfolio-c47ccaad4d32.pdf". Mr Smit's copy got the same answer. The same hash in
   upper case read "No matching export found. …".
 Gap: [F-5.13a, T313] (still) The verify page matches the hash case-sensitively: the genuine file's SHA-256 in upper
   case, as Windows' Get-FileHash prints it, reads "No matching export found". [F-5.13b, T287] (still) The placeholder
@@ -366,7 +368,7 @@ Do: Change one byte in a copy of the PDF, compute the copy's SHA-256 and verify 
   in the field.
 Expect: The tampered copy gets "No matching export found. This hash does not correspond to any PDF generated by this
   system." The press with only spaces gets "Enter the content hash to check." Neither leads to an error page.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): A copy with one byte changed (SHA-256 01e7179f…) → "No
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): A copy with one byte changed (SHA-256 dbb89d20…) → "No
   matching export found. This hash does not correspond to any PDF generated by this system." Five spaces →
   ?hash=+++++&check=1: "Enter the content hash to check." Neither reached an error page; the page stayed signed out.
 Gap: none
@@ -385,7 +387,7 @@ Expect: The page shows her programme as still running:
     EPA is at its exit level.";
   - the period before each window, and her rating trajectories, on each EPA's page (T355), not on My progress.
   Nothing says that her programme has ended.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Dr Molefe signed in in her own browser and opened My progress
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Dr Molefe signed in in her own browser and opened My progress
   from the menu (the tab was held open through Step 5.19). "Training year 4 · Semester 2, 2026"; This period "1 of 10
   EPAs met this semester", "0 of 5 EPAs met in 2026", "Semester 2, 2026 ends on 2026-11-30."; Your EPAs: 15 rows with
   their bars (15), the window holding D ("3 of 3 this semester" / "Target met for Semester 2, 2026." on PAED-001, "3
@@ -410,14 +412,14 @@ Expect: The last-day field opens on `D`. Among the rest, its help says that:
   be undone. Once
   confirmed, the request is refused with "The completion date cannot be after today (`D`)." (`D` shown as yyyy-MM-dd),
   which is read with the field. The profile is still Active.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Trainees → Edit Lerato Molefe (/admin/trainees/edit?id=2).
-  "Last day in the programme" opened on 2026-10-04; its help reads "Mark complete records it as the graduation day,
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Trainees → Edit Lerato Molefe (/admin/trainees/edit?id=2).
+  "Last day in the programme" opened on 2026-10-05; its help reads "Mark complete records it as the graduation day,
   archives the profile and removes the Trainee role. … It cannot be after today, and it cannot be changed afterwards.
   …". Set to 2027-01-14, Mark complete: the dialog "Mark this programme complete?" asks "Record 2027-01-14 as Lerato
   Molefe's graduation day? The profile is archived, the Trainee role is removed and a graduation email is sent.
   Encounters observed after that day will count towards nothing in this programme, including any already counted. The
   day cannot be changed afterwards, and this cannot be undone." Confirmed: "The completion date cannot be after today
-  (2026-10-04)." (programme-end-refusal, in the field's aria-describedby); Status still Active.
+  (2026-10-05)." (programme-end-refusal, in the field's aria-describedby); Status still Active.
 Gap: none
 
 ### Step 5.17 — Prof Mbatha marks Dr Molefe's programme complete on `D`
@@ -436,14 +438,14 @@ Expect: The page says "Trainee marked complete. The Trainee role has been remove
   - No credit is taken back, because nothing of hers is observed after `D` (T281; Step 5.27 shows a take-back).
 Note: The completion runs under the trainee credit lock (T281), so any completion of hers that is in flight is waited
   for first.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Last day 2026-10-04 → Mark complete; the dialog named
-  2026-10-04; confirmed (14:18 UTC): "Trainee marked complete. The Trainee role has been removed and a graduation
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Last day 2026-10-05 → Mark complete; the dialog named
+  2026-10-05; confirmed (14:44 UTC): "Trainee marked complete. The Trainee role has been removed and a graduation
   email sent." Subtitle "The record of a programme that has ended."; summary "Status: Completed", "Completed:
-  2026-10-04". "Profile details" reads "This programme has ended, so its record is archived and cannot be changed."
+  2026-10-05". "Profile details" reads "This programme has ended, so its record is archived and cannot be changed."
   over Curriculum "Paediatric EPA Curriculum (11.1)", Programme start date 2023-01-15, Expected completion date
   2027-01-14, as text. No input or select in the page (Deactivate and Mark complete are only in the closed dialogs'
   markup); no Save profile; Back to trainees stays. Trainees: Active profiles lists Dlamini, du Plessis, Mahlangu and
-  Ndlovu; "Completed & closed profiles" lists Lerato Molefe, "Completed 2026-10-04". /admin/users/e4c82745-…: "This
+  Ndlovu; "Completed & closed profiles" lists Lerato Molefe, "Completed 2026-10-05". /admin/users/49a8e028-…: "This
   user has no roles."; Add role offers no Trainee ("Trainee is not offered: …"). Nothing of hers is observed after D,
   so nothing was taken back.
 Gap: none
@@ -455,12 +457,12 @@ Do: Read the application log for the mail sent in Step 5.17.
 Expect: There is one email to `molefe@kgk.wombat.local` with the subject "Congratulations on completing Paediatric EPA
   Curriculum". It congratulates her on completing the programme as of `D`, and says that her committee has ratified
   her final entrustment decisions and that her portfolio is available in Wombat.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The log holds one mail after the completion, "Stub email
-  3d119ee20546 (tags: graduation)", subject "Congratulations on completing Paediatric EPA Curriculum": "Dear Lerato
-  Molefe, Congratulations on completing your training programme, Paediatric EPA Curriculum, as of 2026-10-04. Your
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The log holds one mail after the completion, "Stub email
+  b6310e0ea460 (tags: graduation)", subject "Congratulations on completing Paediatric EPA Curriculum": "Dear Lerato
+  Molefe, Congratulations on completing your training programme, Paediatric EPA Curriculum, as of 2026-10-05. Your
   committee has ratified your final entrustment decisions and your portfolio of evidence is available in Wombat. …".
-  The stub line never names the address; the completion wrote no other mail (stub count 0 → 1 in the restarted log).
-  The capture renders the log excerpt.
+  The stub line never names the address; the completion wrote no other mail (stub count 31 → 32). The capture renders
+  the log excerpt.
 Gap: none
 
 ### Step 5.19 — Dr Molefe's open session ends
@@ -470,7 +472,7 @@ Do: Go back to the tab left open at Step 5.15 and wait up to a minute.
 Expect: Removing her role changed her account's security stamp. The session check, which runs once a minute, ends the
   session: the tab reloads to the sign-in page, which says "Your session has ended. Sign in again.", an information
   notice. Nothing she had open still acts as a Trainee.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The tab held open since Step 5.15 reloaded 44 seconds after
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The tab held open since Step 5.15 reloaded 46 seconds after
   Mark complete to /account/login?error=SessionEnded&returnUrl=%2Fportfolio%2Fprogress, reading "Your session has
   ended. Sign in again." as an information notice (alert-info) above an empty sign-in form; nothing of the Trainee
   page remained.
@@ -493,17 +495,17 @@ Expect: Her trainee record admits her to the page (T252, `TraineeOrFormerTrainee
     with the exit rule met.
   - Her trajectories are on each EPA's page, which reads as her record does: every period listed, and no "n more by"
     (T355).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Signing in from the session-ended page returned her to
-  /portfolio/progress. Notice: "You completed your programme on 2026-10-04. This page is your record of it and is
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Signing in from the session-ended page returned her to
+  /portfolio/progress. Notice: "You completed your programme on 2026-10-05. This page is your record of it and is
   read-only: no target applies to you any more. A period your programme ended in before that period's last month has
-  no target, and no period after it is listed." "Your programme": Started 2023-01-15, Completed 2026-10-04, "4 when
+  no target, and no period after it is listed." "Your programme": Started 2023-01-15, Completed 2026-10-05, "4 when
   your programme ended". Each EPA card's code links to its page (/portfolio/progress/2 …); periods newest first:
   "Semester 2, 2026 no target (your programme ended part-way through) · 3 recorded" (PAED-001), earlier periods "0 of
   3, 3 short". No progress bars; no long date anywhere. The standing reads "You completed your programme on
-  2026-10-04, in training year 4, …", "15 at or above · 0 below · 0 with no decision" and "15 of 15 … Every EPA is at
+  2026-10-05, in training year 4, …", "15 at or above · 0 below · 0 with no decision" and "15 of 15 … Every EPA is at
   its exit level." PAED-001's page lists all eight periods the same way, "Training year 4: level 5, …", Entrustment 5
-  "At or above", Issued 2026-10-04, "Exit level 5 · reached", the trajectory ("3 ratings in the 2026 academic year,
-  …") and Activities on this EPA (three, 1 item each); no "more by" (5.20-2, new).
+  "At or above", Issued 2026-10-05, "Exit level 5 · reached", the trajectory ("3 ratings in the 2026 academic year,
+  …") and Activities on this EPA (three, 1 item each); no "more by".
 Gap: none
 
 ### Step 5.21 — What her home page and menu offer a graduate
@@ -517,12 +519,12 @@ Expect: The sidebar has no "Acting as" head, since she holds no role, and the me
   "Home says the same"; dates ISO, T355).
 Note: The code shows one card, "Your training record", pointing to My progress (T335), but does not say that or when she
   completed her programme (T311).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): No "Acting as" head; the menu is Home, My progress and My data
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): No "Acting as" head; the menu is Home, My progress and My data
   rights; the top bar reads "Lerato Molefe" with Sign out. Home shows one card, "Your training record": "You hold no
   role at the moment. Your training record is kept, read-only: your progress in each period, and your portfolio to
   export." with "Open My progress →" (its only link). It does not say that or when she completed her programme.
 Gap: [F-5.21a, T311] (still, as the Note records) A graduate's Home does not say "You completed your programme on
-  2026-10-04, so no target applies to you any more." (T252 As built: "Home says the same"); its "Your training record"
+  2026-10-05, so no target applies to you any more." (T252 As built: "Home says the same"); its "Your training record"
   card names no completion and offers no export link although it mentions "your portfolio to export".
 
 ### Step 5.22 — What a graduate can no longer open
@@ -539,11 +541,12 @@ Expect: Each of the first three reads "You cannot open this page", "Your account
 Note: No decision says whether a graduate may still file about herself. Nothing refuses her today: the page and
   `ActivityService.CreateDraftAsync` check no role. T281 decides only that an encounter after her last day credits
   nothing.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Typed /committee/my-reviews, /portfolio/authorisations and
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Typed /committee/my-reviews, /portfolio/authorisations and
   /msf/my-reports: each went to /access-denied?ReturnUrl=…, reading "You cannot open this page", "Your account holds
   no role that opens this page." and "If you need it for your work, ask your institution's Wombat administrator.",
-  with Go to Home. Neither the menu nor Home offers an activity. Typed /activities/new: it opens on Log an activity's
-  instrument picker ("Choose what you are filing. Each opens its own form.", the KGK instruments). Nothing filed.
+  with Go to Home; the menu lights nothing. Neither the menu nor Home offers an activity. Typed /activities/new: it
+  opens on Log an activity's instrument picker ("Choose what you are filing. Each opens its own form.", the KGK
+  instruments). Nothing filed.
 Gap: [F-5.22a, T311] (still) A graduate can no longer open My authorisations, the only page that downloads her STAR
   certificates, and no decision covers it. [F-5.22b, T153] (still) /activities/new admits a graduate with no role and
   offers her the KGK instruments to file about herself; no decision says whether she may, and nothing was filed.
@@ -557,12 +560,12 @@ Expect: The export page is not in her menu, but it admits her, because the portf
   file has a new name. Its "Progress per EPA" now says "The trainee completed the programme on <`D`>", so the content
   differs from Steps 5.9 to 5.12. The new file verifies, with the same trainee, the same filter and its own
   file name. The earlier file still verifies too.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Export portfolio is not in her menu. Typed /portfolio/export:
-  admitted. With 2023-01-15 to 2026-10-04: "Portfolio exported successfully. …" and a new file,
-  portfolio-433dd2260c83.pdf (184,505 bytes). Its "Progress per EPA" opens "The trainee completed the programme on 4
-  October 2026. Targets as on 4 October 2026 (training year 4). …". Verify: "Export verified", generated 2026-10-04
-  14:19 UTC, the same Trainee ID and exporter (e4c82745-…), "Filter: 2023-01-15 to 2026-10-04", "File:
-  portfolio-433dd2260c83.pdf". The earlier file still verifies (14:16 UTC, portfolio-410f3eaf10f1.pdf).
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Export portfolio is not in her menu. Typed /portfolio/export:
+  admitted. With 2023-01-15 to 2026-10-05: "Portfolio exported successfully. …" and a new file,
+  portfolio-ed02ba05ee23.pdf (184,880 bytes). Its "Progress per EPA" opens "The trainee completed the programme on 5
+  October 2026. Targets as on 5 October 2026 (training year 4). …". Verify: "Export verified", generated 2026-10-05
+  14:46 UTC, the same Trainee ID and exporter (49a8e028-…), "Filter: 2023-01-15 to 2026-10-05", "File:
+  portfolio-ed02ba05ee23.pdf". The earlier file still verifies (14:43 UTC, portfolio-c47ccaad4d32.pdf).
 Gap: [F-5.23a, T311] (still) A graduate is offered no link to Export portfolio, although the page admits her, the
   graduation email says her portfolio "is available in Wombat" and Home's card mentions "your portfolio to export";
   she reaches it only by typing its address. The step's Expect describes this behaviour as it is.
@@ -582,13 +585,13 @@ Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CE
   activity is in his inbox. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 Note: In the story, his registrar post ended on `D−2` when he resigned to move provinces, but HR tells Prof Mbatha only
   today. He worked `D−1` as a locum shift.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Log an activity's picker → Mini-CEX (Paediatrics)
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Log an activity's picker → Mini-CEX (Paediatrics)
   (/activities/new?type=mini_cex_cpsa): the EPA list offered PAED-001, 002, 003, 004, 006, 007, 008, 012 and 013, and
-  the assessor list Botha, Khumalo, Naidoo, Patel and Zulu. With PAED-002, David Naidoo, date observed 2026-10-03,
+  the assessor list Botha, Khumalo, Naidoo, Patel and Zulu. With PAED-002, David Naidoo, date observed 2026-10-04,
   Ward, a presenting problem and Moderate, no late-filing notice showed; the moves were Submit to David Naidoo and
   Save draft. Submit → /activities/24: "Submitted. It is now Requested. It is in David Naidoo's Activity inbox."; Who
-  has it now: "With David Naidoo since 2026-10-04 16:20 SAST.", Cancel request… offered; Credit "None until it is
-  completed". No mail (stub count 1 → 1).
+  has it now: "With David Naidoo since 2026-10-05 16:47 SAST.", Cancel request… offered; Credit "None until it is
+  completed". No mail (stub count 32 → 32).
 Gap: none
 
 ### Step 5.25 — Dr Naidoo rates it
@@ -604,16 +607,17 @@ Expect: Before the switch, his Committee member's Home carries, under the header
   Complete the result reads "Completed. Nothing else waits for you.", with Go to Home. The activity reads Completed and
   is read-only to both of them. It credits PAED-002 in the semester that holds `D−1` (checked in Step 5.26), and My
   activities reads it credited "1 item". Nobody is emailed.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): His Committee member Home carries "1 activity waits for you in
-  the Activity inbox: Mini-CEX (Paediatrics) · PAED-002 · 2026-10-03, from Pieter du Plessis, waiting less than a
-  day." with Open it (→ /activities/24). Switch to Assessor: "You are now acting as Assessor." (menu Home, Activity
-  inbox, My data rights); Home's "Waiting for you" is badged "1 waiting". Inbox: "Mini-CEX (Paediatrics) · PAED-002 ·
-  2026-10-03", from Pieter du Plessis, Requested, "Less than a day". Rated 3b on the rung picker (1, 2, 3a, 3b, 4, 5)
-  with the three fields; Complete: "Completed. Nothing else waits for you."; "Done. You completed it on 2026-10-04
-  16:20 SAST. Rated 3b. Credited 1 item to PAED-002."; no field or move left for either (du Plessis's view adds
-  "PAED-002: 1 of 3 this semester." and Open My progress). Switched back: "You are now acting as Committee member." Dr
-  du Plessis's My activities reads it "Done, Completed, 1 item". No mail. (The script's My activities click first hit
-  the breadcrumb's link as well; re-run from Home for that capture.)
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): His Committee member Home (menu Home, Programme trainees,
+  Committee reviews, Decision panels, My data rights) carries under the header, above the Registrars roster (4
+  registrars; Molefe is gone), "1 activity waits for you in the Activity inbox: Mini-CEX (Paediatrics) · PAED-002 ·
+  2026-10-04, from Pieter du Plessis, waiting less than a day." with Open it (→ /activities/24). Switch to Assessor:
+  "You are now acting as Assessor." (menu Home, Activity inbox, My data rights); Home's "Waiting for you" is badged "1
+  waiting". Inbox: "Mini-CEX (Paediatrics) · PAED-002 · 2026-10-04", from Pieter du Plessis, Requested, "Less than a
+  day". Rated 3b on the rung picker (1, 2, 3a, 3b, 4, 5) with the three fields; Complete: "Completed. Nothing else
+  waits for you."; "Done. You completed it on 2026-10-05 16:47 SAST. Rated 3b. Credited 1 item to PAED-002."; no field
+  or move left for either (du Plessis's view adds "PAED-002: 1 of 3 this semester." and Open My progress). Switched
+  back: "You are now acting as Committee member." Dr du Plessis's My activities reads it "Done, Completed, 1 item". No
+  mail (32 → 32).
 Gap: none
 
 ### Step 5.26 — Dr du Plessis sees it counted
@@ -623,12 +627,12 @@ Do: Open My progress, then PAED-002 from its index, and read its count for this 
 Expect: This period's count for PAED-002 includes the `D−1` Mini-CEX: its row reads "n of 3 this semester", and its page
   the same count, with "Last encounter `D−1`" and "Training year 2: level 3b, the minimum each encounter is judged
   against and your STAR's target." Record the count as n.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): My progress ("Training year 2 · Semester 2, 2026"): PAED-002
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): My progress ("Training year 2 · Semester 2, 2026"): PAED-002
   "1 of 3 this semester", "2 more by 2026-11-30"; its code links to /portfolio/progress/3 (My activities' Credit "1
   item" links there too). PAED-002's page: Observations "1 of 3 this semester", "2 more by 2026-11-30.", "At the
-  minimum level when observed: 1 of 1", "Last encounter 2026-10-03", "Semester 1, 2026: 0 of 3, 3 short", "Training
+  minimum level when observed: 1 of 1", "Last encounter 2026-10-04", "Semester 1, 2026: 0 of 3, 3 short", "Training
   year 2: level 3b, the minimum each encounter is judged against and your STAR's target."; Entrustment "No STAR yet.";
-  the trajectory (1 rating, at the minimum) and Activities on this EPA (the Mini-CEX, 1 item). So n = 1 (5.26-2, new).
+  the trajectory (1 rating, at the minimum) and Activities on this EPA (the Mini-CEX, 1 item). So n = 1.
 Gap: none
 
 ### Step 5.27 — Prof Mbatha records his withdrawal
@@ -644,17 +648,20 @@ Expect: The confirmation names `D−2` as his last day. It says that encounters 
   - on Trainees he is listed under Completed & closed profiles, with the outcome "Withdrawn `D−2`";
   - in the same save, the credit from the `D−1` Mini-CEX is taken back (T281);
   - he keeps the Trainee role and is not emailed.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Trainees → Edit Pieter du Plessis (/admin/trainees/edit?id=4),
-  last day 2026-10-02, Deactivate: "Deactivate Pieter du Plessis's profile, with 2026-10-02 as their last day in the
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Trainees → Edit Pieter du Plessis (/admin/trainees/edit?id=4),
+  last day 2026-10-03, Deactivate: "Deactivate Pieter du Plessis's profile, with 2026-10-03 as their last day in the
   programme? Encounters observed after that day will count towards nothing in this programme, including any already
   counted. The day cannot be changed afterwards, and a deactivated profile cannot be made active again." Confirmed:
-  "Trainee profile deactivated. Their last day in the programme is recorded as 2026-10-02."; "Status: Inactive", "Left
-  the programme: 2026-10-02"; subtitle "The record of a programme that has ended."; "Profile details" reads "This
+  "Trainee profile deactivated. Their last day in the programme is recorded as 2026-10-03."; "Status: Inactive", "Left
+  the programme: 2026-10-03"; subtitle "The record of a programme that has ended."; "Profile details" reads "This
   programme has ended, so its record is archived and cannot be changed." over 11.1, 2025-01-15 and 2029-01-14 as text,
   with no visible input or button and no Save profile. Trainees: Active lists Dlamini, Mahlangu and Ndlovu; Completed
-  & closed lists "Pieter du Plessis … Withdrawn 2026-10-02" and "Lerato Molefe … Completed 2026-10-04". In the same
+  & closed lists "Pieter du Plessis … Withdrawn 2026-10-03" and "Lerato Molefe … Completed 2026-10-05". In the same
   save his PAED-002 progress went (1 row → none) and #24's complete transition was re-stamped CreditedItemCount 1 → 0
-  (SQL). His Users row still lists Trainee; no mail.
+  (SQL). His Users row still lists Trainee; no mail (32 → 32). Afterwards (flow 06, read as Mr Smit): Waiting for
+  assessors still lists his two waiting requests (Portfolio and Logbook Review with Patel, Overdue, 8 days; CbD with
+  Khumalo), each offering Send a reminder, and the Coordinator's Home lists them too; Programme trainees lists 3
+  current registrars.
 Gap: none
 
 ### Step 5.28 — Dr du Plessis's record after he left
@@ -670,14 +677,14 @@ Expect: Each page records that his programme ended on `D−2`, every date ISO (T
     through) · n−1 recorded".
   - My activities still lists the `D−1` Mini-CEX as Completed, its Credit now "None": the take-back's replay re-stamped
     its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home (Acting as Trainee): Your targets reads "Your programme
-  ended on 2026-10-02, so no target applies to you any more. Your progress in each period is kept on My progress,
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Home (Acting as Trainee): Your targets reads "Your programme
+  ended on 2026-10-03, so no target applies to you any more. Your progress in each period is kept on My progress,
   read-only.", no figures and no Furthest short, then Open My progress; Recent decisions lists the Mini-CEX "Credits
   nothing."; My authorisations reads "No STAR yet." with Open My authorisations. My progress: "Your programme ended on
-  2026-10-02. This page is your record of it and is read-only: …"; "Your programme" Started 2025-01-15, Ended
-  2026-10-02, "2 when your programme ended"; PAED-002 "Semester 2, 2026 no target (your programme ended part-way
+  2026-10-03. This page is your record of it and is read-only: …"; "Your programme" Started 2025-01-15, Ended
+  2026-10-03, "2 when your programme ended"; PAED-002 "Semester 2, 2026 no target (your programme ended part-way
   through) · 0 recorded" (n−1 = 0); no bars; no long date on Home or My progress. My activities: "Mini-CEX
-  (Paediatrics) · PAED-002 · 2026-10-03, to David Naidoo, Done, Completed", Credit "None". /activities/24 reads "Rated
+  (Paediatrics) · PAED-002 · 2026-10-04, to David Naidoo, Done, Completed", Credit "None". /activities/24 reads "Rated
   3b. It counted towards no curriculum requirement.", Credit None, and "… or the encounter is dated after the
   trainee's programme ended. The record is kept. …".
 Gap: none
@@ -688,19 +695,19 @@ Route: /committee/reviews
 Do: Open Schedule review, choose the Paed Annual Review Panel and read the trainee list.
 Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu. A graduate and a registrar who has withdrawn are not
   current trainees (T238). He closes the form without scheduling anything.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Committee reviews → Schedule review → Paed Annual Review
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Committee reviews → Schedule review → Paed Annual Review
   Panel: the Trainee list offers only Anele Dlamini, Nomsa Mahlangu and Sipho Ndlovu. He left the form without
   creating anything (still 7 reviews, SQL).
 Gap: none
 
 ## Act 5 outcome state
 
-Replay check (2026-10-04, T355 replay, wombat_scenario_t355): match on every query below. Molefe false, 2026-10-04,
-  null; du Plessis false, null, 2026-10-02. Molefe holds no role and du Plessis holds Trainee. The current trainees
+Replay check (2026-10-05, T358 replay, wombat_scenario_t358): match on every query below. Molefe false, 2026-10-05,
+  null; du Plessis false, null, 2026-10-03. Molefe holds no role and du Plessis holds Trainee. The current trainees
   are dlamini, mahlangu and ndlovu. 15 active STARs, nine at 5 and six at 4, each Order equal to MinimumLevelOrder.
-  Review 7 reads 2, 4, 7, 4, with nothing left staged. The exports are portfolio-410f3eaf10f1.pdf ×3, then
-  portfolio-433dd2260c83.pdf ×1. After the last day: #24 only (completed, 2026-10-03, 2026-10-02). His PAED-002
-  progress has no row (n−1 = 0). The act wrote one mail, the graduation email. Snapshot: scenario-t355-post-act5.
+  Review 7 reads 2, 4, 7, 4, with nothing left staged. The exports are portfolio-c47ccaad4d32.pdf ×3, then
+  portfolio-ed02ba05ee23.pdf ×1. After the last day: #24 only (completed, 2026-10-04, 2026-10-03). His PAED-002
+  progress has no row (n−1 = 0). The act wrote one mail, the graduation email. Snapshot: scenario-t358-post-act5.
 
 - **Dr Molefe** is a former trainee:
   - her pre-graduation review is ratified with the decision Graduate;
