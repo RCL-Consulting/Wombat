@@ -39,7 +39,6 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 - **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy carries flows 02–05, T304 and T305.
 - **Tasks flow 05's build closed in part** (still in `queued/`): T306 (Home's half), T298 (Upcoming deadlines; its tie
   order is flow 06's), T346, T323 (the chart), T328 (its dashboard parts too).
-- CLAUDE.md § Multi-agent workflows: the operator's edit, still uncommitted, theirs to commit.
 
 ### Environment left
 
