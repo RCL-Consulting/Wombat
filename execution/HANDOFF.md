@@ -23,15 +23,14 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 - **Step 2, staged:** `stage_upload.ps1 -Flow 06`, 88 files (2.98 MB); flow 05's boards R3-E-typical, R3-P-standing,
   R3-T-committee (both widths) and `flow05-r3.css` copied by hand into `design/upload/flow05-boards/`.
 
-### Next: T358 step 6, flow 06's build. Opus.
+### Next: T358 step 7, the replay. Opus.
 
-- **T298 done and T290's committee item landed** (`14dac868`): the committee card reads every current trainee at
-  the institution and ties by surname. Browser-checked on `wombat_scenario_t290` (droppable). T290 stays in progress
-  for its other items: the harness cannot requeue a task.
-- **The build** (`design/flows/05-trainee-progress/build-lanes.md` as template; `round-3-check.md`'s six items): a new
-  table and migration for the reminder (review items 1–3), an Application-side recipient policy, a role-explicit waiting
-  query (E3, E4), new progress readers, `EpaProgressTable` names-as-text, `EndedView` extracted, the nav limit (E2),
-  DESIGN.md. Size it per CLAUDE.md § Multi-agent workflows; say the cost first.
+- **Flow 06 is built** (`85d5a508`, pushed): seven lanes in three waves on `t358` (A0 base, A1 waiting, A2 roster; B homes,
+  C trainees, D waiting page; runbook), three Sonnet reviews (no high), one fix pass of eight (`build-review.md`).
+- **Step 7:** replay the whole runbook on a fresh database (`design/flows/05-trainee-progress/replay-brief.md` as the
+  template; new steps 3.54a–c, A.5.14–A.5.16, A.7.8a; A.5.15 needs a scratch database). Republish `:5180` first (it runs
+  `14dac868`). Then flow 06's states, `check_baseline_paths.py`. Then step 8 (design system re-sync) and step 9 (lessons).
+- Branches `t358`, `t358-*` are merged and kept locally; worktree `.claude/worktrees/t358` can be removed.
 
 ### For the operator
 

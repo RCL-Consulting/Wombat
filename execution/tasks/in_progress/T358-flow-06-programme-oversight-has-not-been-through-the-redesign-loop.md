@@ -52,7 +52,7 @@ Run the loop as flow 05 ran it (`design/flows/05-trainee-progress/`, BRIEF § 11
 - [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`2f29c158`)
 - [x] The canvas is created, with the mark copied in before round 1 — its link. (https://claude.ai/artifact/97WQWEuzMYHcKngPnNdHkV, `f2137a8c`)
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/06-…/`. (A; `round-2-review.md` E1–E6; `round-3-check.md`, 2026-10-05)
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 06) — the squash commit and counts.
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 06) — the squash commit and counts. (`85d5a508`: Domain 814, Application 3763, Infrastructure 1018, Architecture 52, Web 3428, Integration 490; `build-review.md`.)
 - [ ] The whole runbook replays on a fresh database with no regression from flow 06, the baseline is re-captured, and
   flow 06's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.

@@ -105,11 +105,11 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
 ## Recent commits
 
 ```
-14dac868 fix(dashboards): the committee card reads the institution's current registrars, ties by surname (T290 committee item, T298)
-3b26868d docs(design): flow 06's design is final: round 3 checked item by item; T358 steps 1-5 ticked; handoff
-020af6e4 docs(design): flow 06 round 3 saved from the canvas (T358 step 5)
-184687bc docs(design): flow 06 round 3 ask: E1-E6 and the review's corrections (T358 step 5)
-0eebca64 docs(design): flow 06 round 2 reviewed from three sides (code, cast, design system): E1-E6 for the operator, 33 findings (T358 step 5)
+85d5a508 feat(programme): flow 06 of the restructure, watching the programme, built from round 3 (T358 step 6)
+0a317fed docs(execution): T359 notes flow 06's review R1 (reminders keyed by request, not by assessor)
+0fff0d4e docs(design): flow 06's build plan: lanes, contracts and the review's lenses (T358 step 6)
+4d470f4b docs(execution): state's task counts
+ac407d21 docs(execution): T298 done, T290's committee item landed; next T358's build; handoff and state
 ```
 
 ## For the reviewer
@@ -138,6 +138,11 @@ _Nothing flagged._
 #### Commits
 
 ```
+85d5a508 feat(programme): flow 06 of the restructure, watching the programme, built from round 3 (T358 step 6)
+0a317fed docs(execution): T359 notes flow 06's review R1 (reminders keyed by request, not by assessor)
+0fff0d4e docs(design): flow 06's build plan: lanes, contracts and the review's lenses (T358 step 6)
+4d470f4b docs(execution): state's task counts
+ac407d21 docs(execution): T298 done, T290's committee item landed; next T358's build; handoff and state
 14dac868 fix(dashboards): the committee card reads the institution's current registrars, ties by surname (T290 committee item, T298)
 3b26868d docs(design): flow 06's design is final: round 3 checked item by item; T358 steps 1-5 ticked; handoff
 020af6e4 docs(design): flow 06 round 3 saved from the canvas (T358 step 5)
@@ -163,10 +168,5 @@ f2a22044 docs(design): the design system re-synced to flow 05 as built and repub
 426cdc17 docs(progress): stale comments after the replay's fixes: the phone drawing is 322, no nested card, the links target the heading (T355 step 8)
 c1997d5c docs(execution): handoff rewritten within its cap (a NUL byte had crept into a path)
 0ded9858 docs(execution): handoff: T355's replay and states done; step 8 running
-3100ee8a docs(execution): T355's replay item counts two regressions, not three
-3f24d5ec docs(runbook): flow 05's states re-taken, 36 of 37 hold (December not reachable); T355's replay item (step 7)
-07ecefc1 docs(runbook): A.7.3 and A.7.6 re-checked at 390 on b389f7d2: the 322 chart fits, nothing scrolls (T355 step 7)
-b389f7d2 fix(progress): the phone chart is 322 px, inside a 390 card's 324 px figure; A.7.6's Expect after 5f8e6639 (T355 step 7)
-fb98a2d6 docs(runbook): the appendix replayed against flow 05 (T355 step 7)
 ```
-_29 more; see `git log`._
+_34 more; see `git log`._
