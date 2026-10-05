@@ -23,14 +23,20 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 - **Step 2, staged:** `stage_upload.ps1 -Flow 06`, 88 files (2.98 MB); flow 05's boards R3-E-typical, R3-P-standing,
   R3-T-committee (both widths) and `flow05-r3.css` copied by hand into `design/upload/flow05-boards/`.
 
-### Next: T358 step 7, the replay. Opus.
+### Next: T358 step 8 (re-sync the design system to flow 06 as built; republish), then step 9 (lessons). Opus.
 
-- **Flow 06 is built** (`85d5a508`, pushed): seven lanes in three waves on `t358` (A0 base, A1 waiting, A2 roster; B homes,
-  C trainees, D waiting page; runbook), three Sonnet reviews (no high), one fix pass of eight (`build-review.md`).
-- **Step 7:** replay the whole runbook on a fresh database (`design/flows/05-trainee-progress/replay-brief.md` as the
-  template; new steps 3.54a–c, A.5.14–A.5.16, A.7.8a; A.5.15 needs a scratch database). Republish `:5180` first (it runs
-  `14dac868`). Then flow 06's states, `check_baseline_paths.py`. Then step 8 (design system re-sync) and step 9 (lessons).
-- Branches `t358`, `t358-*` are merged and kept locally; worktree `.claude/worktrees/t358` can be removed.
+- **Step 7 done:** the replay on `wombat_scenario_t358` (332 steps, 266 no gap, every other gap a filed task); one
+  regression, A.7.8a at 768 px, fixed (`94edf2b7`) and re-checked; flow 06's states re-taken on scratch copies,
+  `check_baseline_paths` missing 0. Dumps `scenario-t358-post-act{1..6,A}`. T360 filed (P3 layout nits).
+- **The states agent wrote by mistake to `wombat_scenario_t358`** (activities 29, 30): `:5180` now runs
+  `wombat_scenario_t358_end`, restored from `scenario-t358-post-actA` (max activity 28). Drop the polluted one.
+- Step 8 as flow 05's: read each published file of the design system (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18,
+  v15) and compare with HEAD, re-sync from the code (new components: RegistrarRoster, ReminderAction, the three pages,
+  EndedRecord, the staff WaitingList; app.css's Programme section), one implementer and one Sonnet review, publish
+  (files with `root` = a folder holding `project/…`; the index last).
+- Step 9: BRIEF § 11 "Flow 06", only what is new (candidates: the canvas lost the attachments in round 1; a wave 0
+  for shared pieces; the 768 px band between the phone and the desktop; a helper reading BASE at import wrote to the
+  replay database; memory pressure killing a wait; the letter-suffixed step ids).
 
 ### For the operator
 
@@ -41,10 +47,10 @@ The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, r
 
 ### Environment left
 
-- **The replay app on `:5180`** runs `wombat_scenario_t355` (the appendix's end state), republished from `14dac868` (2026-10-05).
+- **The replay app on `:5180`** runs `wombat_scenario_t358_end` (flow 06's appendix end state), published from `94edf2b7`.
 - **Replay scratch:** T355's scratchpad folder `g355` (`replay-pw.env`, act and states scripts). Khumalo's and du
   Plessis's pre-appendix passwords are the `_A` keys.
-- **Droppable databases:** `wombat_scenario_t355_s518{4,6,6b,8,8b}`, `_t304`, `_t350` (dumps kept), `_t350_s518*`,
+- **Droppable databases:** `wombat_scenario_t358` (polluted), `_t358_s515`, `_t358_states*`, `_t290`, `_t355`, `wombat_scenario_t355_s518{4,6,6b,8,8b}`, `_t304`, `_t350` (dumps kept), `_t350_s518*`,
   `_t342*`, `_t339*`, `_t335*`, `_states*`, `_rc*`, `_t292`.
 - **Branches:** `t355*`, `t304`, `t350*`, `t342*` kept locally (squashed); worktrees removed. `verify-master` stays.
 

@@ -87,6 +87,7 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T353](tasks/queued/T353-step-3-30-s-ageing-leaves-a-request-filed-before-its-encounter.md) | P3 | Step 3.30's ageing leaves a request filed before its encounter |  |  |
 | queued | [T354](tasks/queued/T354-the-rung-picker-s-help-line-is-a-page-subtitle-not-a-field-s-help.md) | P3 | The rung picker's help line is a page subtitle, not a field's help |  |  |
 | queued | [T357](tasks/queued/T357-flow-05-marks-an-institution-s-own-epa-and-a-paused-epa-several-ways.md) | P3 | Flow 05 marks an institution's own EPA and a paused EPA several ways |  |  |
+| queued | [T360](tasks/queued/T360-programme-pages-last-filed-breaks-iso-dates-at-the-hyphen-and-the-ended-registrar-page-wraps-its-period-line-into-a-tall-block.md) | P3 | Programme pages: Last filed breaks ISO dates at the hyphen, and the en |  |  |
 | queued | [T359](tasks/queued/T359-staff-cannot-reassign-a-waiting-request-to-another-assessor.md) | P3 | Staff cannot reassign a waiting request to another assessor |  | T358 |
 
 Done: 225 task(s).
@@ -105,11 +106,11 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
 ## Recent commits
 
 ```
-85d5a508 feat(programme): flow 06 of the restructure, watching the programme, built from round 3 (T358 step 6)
-0a317fed docs(execution): T359 notes flow 06's review R1 (reminders keyed by request, not by assessor)
-0fff0d4e docs(design): flow 06's build plan: lanes, contracts and the review's lenses (T358 step 6)
-4d470f4b docs(execution): state's task counts
-ac407d21 docs(execution): T298 done, T290's committee item landed; next T358's build; handoff and state
+33d846b1 docs(runbook): A.7.8a re-checked after the 768px fix (T358 step 7)
+94edf2b7 fix(programme): the two lists' tables stack from 900px, not only below 641 (T358 step 7, A.7.8a)
+62747e94 docs(runbook): appendix replayed against flow 06 (T358 step 7): 75 steps, 59 no gap, 15 known-task, 1 regression (A.7.8a at 768)
+d3393c62 docs(runbook): act 6 replayed against flow 06 (T358 step 7): 42 steps, 34 no gap, 8 known-task, no regression
+ae8c1d2e docs(runbook): act 5 replayed against flow 06 (T358 step 7): 29 steps, 23 no gap, 6 known-task, no regression
 ```
 
 ## For the reviewer
@@ -138,6 +139,17 @@ _Nothing flagged._
 #### Commits
 
 ```
+33d846b1 docs(runbook): A.7.8a re-checked after the 768px fix (T358 step 7)
+94edf2b7 fix(programme): the two lists' tables stack from 900px, not only below 641 (T358 step 7, A.7.8a)
+62747e94 docs(runbook): appendix replayed against flow 06 (T358 step 7): 75 steps, 59 no gap, 15 known-task, 1 regression (A.7.8a at 768)
+d3393c62 docs(runbook): act 6 replayed against flow 06 (T358 step 7): 42 steps, 34 no gap, 8 known-task, no regression
+ae8c1d2e docs(runbook): act 5 replayed against flow 06 (T358 step 7): 29 steps, 23 no gap, 6 known-task, no regression
+8fd56fed docs(runbook): act 4 replayed against flow 06 (T358 step 7): 51 steps, 41 no gap, 10 known-task, no regression; B8 no longer occurs at 4.36
+d125bff4 docs(runbook): act 3 replayed against flow 06 (T358 step 7): 60 steps, 56 no gap, 6 known-task gaps on 4 steps, no regression; first reminder sent
+8f6f90f0 docs(runbook): act 2 replayed against flow 06 (T358 step 7): 44 steps, 33 no gap (T290, T298 no longer occur), 11 known-task, no regression
+49a6b00f docs(runbook): act 1 replayed against flow 06 (T358 step 7): 31 steps, 19 no gap, 12 known-task, no regression
+182511f8 docs(design): flow 06's replay brief (T358 step 7)
+af639f25 docs(execution): T358 built; next the replay; handoff and state
 85d5a508 feat(programme): flow 06 of the restructure, watching the programme, built from round 3 (T358 step 6)
 0a317fed docs(execution): T359 notes flow 06's review R1 (reminders keyed by request, not by assessor)
 0fff0d4e docs(design): flow 06's build plan: lanes, contracts and the review's lenses (T358 step 6)
@@ -157,16 +169,5 @@ bbd8c588 chore: the rest of the tidy-up (1eb90b0b committed only the workflow's 
 53aa1aef docs: README rewritten for the rebuilt Wombat
 30163825 docs(execution): the remote is pushable again (the operator, 2026-10-05)
 128e7baf docs(design): flow 06 round 1 picked (A) and the round 2 ask; T359 filed (T358 step 5)
-a1471073 docs(design): flow 06 round 1 saved from the canvas: three structures (T358 step 5)
-f807c6c6 docs(execution): T358 handoff: canvas made, round 1 ready to send
-f2137a8c docs(design): flow 06's canvas created and the mark copied in; the ask names it (T358 steps 3-4)
-597220de docs(execution): T358 started, step 1 done; state and handoff (step 3 waits for the operator's canvas)
-2f29c158 docs(design): flow 06's brief restated for the restructure (T358 step 1)
-ef65c336 docs(execution): T355, flow 05, done; T358 (flow 06) filed; state and handoff
-29d013d2 docs(design): BRIEF § 11 "Flow 05": six lessons (T355 step 9)
-f2a22044 docs(design): the design system re-synced to flow 05 as built and republished (T355 step 8, version 15)
-426cdc17 docs(progress): stale comments after the replay's fixes: the phone drawing is 322, no nested card, the links target the heading (T355 step 8)
-c1997d5c docs(execution): handoff rewritten within its cap (a NUL byte had crept into a path)
-0ded9858 docs(execution): handoff: T355's replay and states done; step 8 running
 ```
-_34 more; see `git log`._
+_45 more; see `git log`._
