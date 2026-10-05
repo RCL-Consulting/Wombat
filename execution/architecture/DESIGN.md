@@ -3899,10 +3899,11 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
   "5. The EPA page and the trajectory (R2, R4, R5; E1)": .details-grid--reverse, .epa-stack, .epa-page-alert, .epa-section-title, .epa-figure-row, .epa-lines, .epa-level-line, .star-level, .activity-cell-paused (+ ≤900px: one column), .trajectory-card, .trajectory-head, .trajectory-figure (a container; @container ≥900px shows the wide drawing), .trajectory-chart(--wide|--narrow|--sized), .trajectory-chart-* (band, below, minimum, exit, rung, lane, today, axis, line, dots, hollow, labels), .trajectory-key(-swatch--below|--exit|--dot|--hollow), .trajectory-table (caption, tbody th), .trajectory-msf (+ ≤640px: the stacked table, .trajectory-card.detail-card)
 
 /* ── Programme ─────────────────────────────────────── */
-"Flow 06: watching the programme (T358)", one account in three parts, in the order they were built:
+"Flow 06: watching the programme (T358)", one account in four parts, in the order they were built:
   "1. The reminder and the filter bar (R2-Waiting, R2-Trainees, R2-Registrar)": .reminder-action, .filter-actions (+ ≤640px: 44px and the row's width),
   "2. The registrar page (R2-Registrar)": .registrar-stack (+ > .index-section, > .standing-panel, > .list-section: margin 0),
   "3. The oversight Homes (R2-Home)": .roster-row, .roster-row > .roster-exempt, .coverage-row (+ ≤900px: one column)
+  "4. The two lists' tables below 900px (A.7.8a)": .clinic-table--stack-wide (≤900px: stacked as DataTable's Stack)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05

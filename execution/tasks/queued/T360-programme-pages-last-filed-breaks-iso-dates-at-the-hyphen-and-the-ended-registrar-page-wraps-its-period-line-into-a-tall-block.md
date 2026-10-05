@@ -26,12 +26,18 @@ created: 2026-10-05
   programme ended part-way through) · 0 recorded" into a tall, narrow block
   (`design/baseline/states/programme-trainee-detail--ended.png`).
 
+- Programme trainees' filter form has no `method="get"` and its fields no `name`, so before the circuit starts Show
+  reloads the bare list; Waiting for assessors' form works without the circuit (flow 06's design-system re-sync).
+
 ## What to build
 
 - Keep a date whole: `white-space: nowrap` on the date (or the column a minimum width), as flow 05's index keeps its
   dates.
 - Give the ended page's period lines room: one column for the ended cards below a sensible width, or the line under
   its heading rather than beside it.
+
+- Give Programme trainees' form `method="get"` and named fields (`epa`/`year`/`filed` as `ProgrammeLinks` builds them),
+  as `WaitingForAssessors.razor` does.
 
 ## Verification
 
