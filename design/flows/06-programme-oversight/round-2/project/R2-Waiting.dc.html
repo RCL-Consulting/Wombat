@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 2 · Waiting for assessors</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow06-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-board">
+<sc-for list="{{states}}" as="s" hint-placeholder-count="1">
+<section class="r2-state">
+<p class="r2-cap"><b>{{s.title}}</b> · {{s.cap}}</p>
+<sc-if value="{{s.note}}"><p class="r2-note">{{s.note}}</p></sc-if>
+<div class="r2-clip {{s.clip}}">
+<div class="page">
+<input type="checkbox" id="nt-{{s.id}}" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>{{s.role}}</span></p>
+<label class="nav-toggle-label" for="nt-{{s.id}}"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"></path></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">{{s.role}}</span></p></div>
+<div class="nav-list">
+<ul class="nav-items">
+<sc-for list="{{s.nav}}" as="n">
+<li><sc-if value="{{n.lit}}"><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if><sc-if value="{{n.rest}}"><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if></li>
+</sc-for>
+</ul>
+<ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="nav-label">My data rights</span></a></li></ul>
+</div>
+</nav>
+<div class="account-row">
+<a class="account-link" href="#" title="{{s.who}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8a4 4 0 1 0 8 0a4 4 0 1 0-8 0M6 20a6 6 0 0 1 12 0"></path></svg><span class="account-name">{{s.who}}</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out</button></form>
+</div>
+</header>
+<main>
+<article>
+<div class="header-container"><div><h1>Waiting for assessors</h1><p class="page-subtitle">{{s.sub}}</p></div></div>
+
+<form class="search-container" action="#" method="get" aria-label="Filter Waiting for assessors">
+<div class="search-grid">
+<div class="search-field"><label for="f-show-{{s.id}}">Show</label><select id="f-show-{{s.id}}" class="form-select"><option>{{s.fShow}}</option></select></div>
+<div class="search-field"><label for="f-with-{{s.id}}">With</label><select id="f-with-{{s.id}}" class="form-select"><option>{{s.fWith}}</option></select></div>
+<div class="search-field filter-actions"><button type="submit" class="btn btn-primary">Show</button><sc-if value="{{s.filtered}}"><a class="btn btn-outline" href="#">Show all waiting</a></sc-if></div>
+</div>
+</form>
+
+<sc-if value="{{s.result}}"><div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Reminder sent to Thandi Zulu.</strong> It lists Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu, waiting 8 days. The request is still Requested; its wait is unchanged.</div></div></sc-if>
+<sc-if value="{{s.refusal}}"><div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><strong>Not sent.</strong> {{s.refusal}}</div></div></sc-if>
+
+<sc-if value="{{s.is.loading}}">
+<p class="visually-hidden" role="status">Loading Waiting for assessors.</p>
+<section class="list-section" aria-busy="true"><h2 class="list-section-title">Waiting</h2><div aria-hidden="true" style="display: flex; flex-direction: column; gap: var(--space-sm)"><div class="skeleton" style="width: 100%; height: 3rem"></div><div class="skeleton" style="width: 100%; height: 3rem"></div><div class="skeleton" style="width: 100%; height: 3rem"></div></div></section>
+</sc-if>
+<sc-if value="{{s.is.error}}"><div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load Waiting for assessors.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></div></div></div></sc-if>
+<sc-if value="{{s.is.empty}}"><section class="list-section" aria-labelledby="h-{{s.id}}"><h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">Waiting</h2><div class="detail-card detail-card--empty"><p class="state-panel-title">Nothing is waiting</p><p class="state-panel-copy">Nothing is waiting for an assessor at Kgosi Kgari Teaching Hospital.</p></div></section></sc-if>
+<sc-if value="{{s.is.nomatch}}"><section class="list-section" aria-labelledby="h-{{s.id}}"><h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">None of 3 waiting matches</h2><div class="detail-card detail-card--empty"><p class="state-panel-title">Nothing waiting matches these filters</p><p class="state-panel-copy">3 requests wait at Kgosi Kgari Teaching Hospital; none with Fatima Khumalo is overdue.</p><div class="form-actions" style="justify-content: center"><a class="btn btn-outline" href="#">Show all waiting</a></div></div></section></sc-if>
+
+<sc-if value="{{s.is.list}}">
+<section class="list-section" aria-labelledby="h-{{s.id}}">
+<h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">{{s.head}}</h2>
+<p class="needs-you-rule">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.<br>Waiting counts from the last move: any save restarts it.</p>
+<div class="table-container shadow">
+
+<sc-if value="{{s.tbl.two}}">
+<table class="clinic-table clinic-table--stack" role="table">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">With</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Waiting</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><a class="activity-link" href="#">Portfolio and Logbook Review (Paediatrics) · [EPA] · [date]<span class="visually-hidden">, </span><span class="activity-link-to">from Pieter du Plessis</span></a></td><td role="cell" data-label="With">Mohammed Patel</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Awaiting review</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-26 [hh:mm] SAST</span><sc-if value="{{s.pBtn}}"><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Mohammed Patel a reminder about Portfolio and Logbook Review (Paediatrics), from Pieter du Plessis">Send a reminder</button></sc-if><sc-if value="{{s.pLine}}"><span class="reminder-line">Reminded 2026-10-04 by Pieter Smit</span></sc-if></td></tr>
+<tr role="row"><td role="cell"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01<span class="visually-hidden">, </span><span class="activity-link-to">from Nomsa Mahlangu</span></a></td><td role="cell" data-label="With">Thandi Zulu</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-26 [hh:mm] SAST</span><sc-if value="{{s.mBtn}}"><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Thandi Zulu a reminder about Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu">Send a reminder</button></sc-if><sc-if value="{{s.mLine}}"><span class="reminder-line">Reminded 2026-10-04 by Pieter Smit</span></sc-if></td></tr>
+</tbody></table>
+</sc-if>
+
+<sc-if value="{{s.tbl.three}}">
+<table class="clinic-table clinic-table--stack" role="table">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">With</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Waiting</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><a class="activity-link" href="#">Portfolio and Logbook Review (Paediatrics) · [EPA] · [date]<span class="visually-hidden">, </span><span class="activity-link-to">from Pieter du Plessis</span></a></td><td role="cell" data-label="With">Mohammed Patel</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Awaiting review</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-26 [hh:mm] SAST</span><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Mohammed Patel a reminder about Portfolio and Logbook Review (Paediatrics), from Pieter du Plessis">Send a reminder</button></td></tr>
+<tr role="row"><td role="cell"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01<span class="visually-hidden">, </span><span class="activity-link-to">from Nomsa Mahlangu</span></a></td><td role="cell" data-label="With">Thandi Zulu</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-26 [hh:mm] SAST</span><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Thandi Zulu a reminder about Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu">Send a reminder</button></td></tr>
+<tr role="row"><td role="cell"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · [EPA] · [date]<span class="visually-hidden">, </span><span class="activity-link-to">from Nomsa Mahlangu</span></a></td><td role="cell" data-label="With">Fatima Khumalo</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>6 days</b><span>since [date] [hh:mm] SAST</span><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Fatima Khumalo a reminder about Mini-CEX (Paediatrics), from Nomsa Mahlangu">Send a reminder</button></td></tr>
+</tbody></table>
+</sc-if>
+
+<sc-if value="{{s.tbl.port}}">
+<table class="clinic-table clinic-table--stack" role="table">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">With</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Waiting</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><a class="activity-link" href="#">Portfolio and Logbook Review (Paediatrics) · [EPA] · [date]<span class="visually-hidden">, </span><span class="activity-link-to">from Pieter du Plessis</span></a></td><td role="cell" data-label="With">Mohammed Patel</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Awaiting review</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-26 [hh:mm] SAST</span><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Mohammed Patel a reminder about Portfolio and Logbook Review (Paediatrics), from Pieter du Plessis">Send a reminder</button></td></tr>
+</tbody></table>
+</sc-if>
+
+<sc-if value="{{s.tbl.mini}}">
+<table class="clinic-table clinic-table--stack" role="table">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">With</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Waiting</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><a class="activity-link" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01<span class="visually-hidden">, </span><span class="activity-link-to">from Nomsa Mahlangu</span></a></td><td role="cell" data-label="With">Thandi Zulu</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-26 [hh:mm] SAST</span><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Thandi Zulu a reminder about Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu">Send a reminder</button></td></tr>
+</tbody></table>
+</sc-if>
+
+<sc-if value="{{s.tbl.heavy}}">
+<table class="clinic-table clinic-table--stack" role="table">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">With</th><th scope="col" role="columnheader">State</th><th scope="col" role="columnheader">Waiting</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><a class="activity-link" href="#">Portfolio and Logbook Review (Paediatrics) · [EPA] · [date]<span class="visually-hidden">, </span><span class="activity-link-to">from Pieter du Plessis</span></a></td><td role="cell" data-label="With">Mohammed Patel</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Awaiting review</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>[n] days</b><span>since 2026-09-26 [hh:mm] SAST</span><span class="reminder-line">Reminded 2026-10-04 by Pieter Smit</span></td></tr>
+<tr role="row"><td role="cell"><a class="activity-link" href="#">[Type] (Paediatrics) · [EPA] · [date]<span class="visually-hidden">, </span><span class="activity-link-to">from Sipho Ndlovu</span></a></td><td role="cell" data-label="With">Any assessor at Kgosi Kgari Teaching Hospital</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>[n] days</b><span>since [date] [hh:mm] SAST</span></td></tr>
+<tr role="row"><td role="cell"><a class="activity-link" href="#">[Type] (Paediatrics) · [EPA] · [date]<span class="visually-hidden">, </span><span class="activity-link-to">from Anele Dlamini</span></a></td><td role="cell" data-label="With">[assessor]</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span><span class="badge badge-overdue">Overdue</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>[n] days</b><span>since [date] [hh:mm] SAST</span><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send [assessor] a reminder about [Type] (Paediatrics), from Anele Dlamini">Send a reminder</button></td></tr>
+<tr role="row"><td role="cell"><a class="activity-link" href="#">[Type] (Paediatrics) · [EPA] · [date]<span class="visually-hidden">, </span><span class="activity-link-to">from Lerato Molefe</span></a></td><td role="cell" data-label="With">[assessor]</td><td role="cell"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span></span></td><td role="cell" class="waited-cell" data-label="Waiting"><b>[n] days</b><span>since [date] [hh:mm] SAST</span><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send [assessor] a reminder about [Type] (Paediatrics), from Lerato Molefe">Send a reminder</button></td></tr>
+</tbody></table>
+</sc-if>
+
+</div>
+<sc-if value="{{s.pager}}"><nav class="pager" aria-label="Waiting, pages"><div class="pager-info">Showing 1–14 of 14</div><div class="pager-actions"><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Previous</button><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Next</button></div><div class="pager-page-size"><label class="pager-page-size-label" for="pp-{{s.id}}">Per page</label><select id="pp-{{s.id}}" class="form-select form-select-sm pager-page-size-select"><option>20</option></select></div></nav></sc-if>
+</section>
+</sc-if>
+</article>
+</main>
+</div>
+<sc-if value="{{s.dialog}}">
+<div class="r2-scrim"></div>
+<div class="r2-dialog-stage">
+<dialog open="" class="dialog-scrim dialog-card" aria-labelledby="dlg-{{s.id}}" aria-describedby="dlg-b-{{s.id}}">
+<div class="form-container">
+<h2 id="dlg-{{s.id}}">Send Thandi Zulu a reminder?</h2>
+<p id="dlg-b-{{s.id}}">She gets one email, "Activities awaiting your assessment", listing this request: Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days.</p>
+<p>It moves nothing: the request stays Requested, its wait is not restarted, and Nomsa Mahlangu is not told.</p>
+<div class="form-actions"><button type="button" class="btn btn-outline" autofocus="">Don't send</button><button type="button" class="btn btn-primary">Send the reminder</button></div>
+</div>
+</dialog>
+</div>
+</sc-if>
+</div>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"show":{"editor":"text","default":""},"$preview":{"width":1280,"height":8000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      home: 'M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5',
+      users: 'M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9M9 9a3 3 0 1 0 6 0a3 3 0 1 0-6 0',
+      clock: 'M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0M12 6v6l4 2',
+      file: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6',
+      scale: 'm16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2',
+      cal: 'M8 2v4M16 2v4M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM3 10h18M9 16l2 2 4-4',
+      award: 'M6 8a6 6 0 1 0 12 0a6 6 0 1 0-12 0M15.477 12.89 17 22l-5-3-5 3 1.523-9.11',
+      msg: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+      shield: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4'
+    };
+    const MENUS = {
+      sa: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Entrustment decisions', P.award]],
+      co: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['MSF campaigns', P.msg], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Data rights requests', P.shield]]
+    };
+    const nav = (k) => MENUS[k].map(([label, d]) => ({ label, d, lit: label === 'Waiting for assessors', rest: label !== 'Waiting for assessors' }));
+    const st = (o) => Object.assign({ note: '', clip: '', fShow: 'All waiting', fWith: 'Anyone', filtered: false, result: false, refusal: '', dialog: false, pager: false, head: '2 waiting, 2 overdue', pBtn: true, pLine: false, mBtn: true, mLine: false, tbl: {}, is: { list: true } }, o);
+    const co = (o) => st(Object.assign({ role: 'Coordinator', who: 'Pieter Smit', nav: nav('co'), sub: 'What waits for an assessor, supervisor or reviewer at Kgosi Kgari Teaching Hospital.' }, o));
+    const sa = (o) => st(Object.assign({ role: 'Speciality admin', who: 'Refilwe Mokoena', nav: nav('sa'), sub: 'What waits for an assessor, supervisor or reviewer in Paediatrics.' }, o));
+    const TWO = { two: true }, THREE = { three: true };
+    const MIX = 'The refusal boards mix Step 3.30\'s two requests with Step A.2.8\'s request to Fatima Khumalo (waiting 6 days), so each refusal has its row. Times of day are not in the brief: [hh:mm].';
+    const all = [
+      co({ id: 'w1', title: 'Waiting for assessors · typical (Step 3.30)', cap: 'Pieter Smit from Home\'s card: both requests, oldest first, each with whom it waits, how long and since when; Send a reminder in the Waiting cell.', note: 'C1 gives no EPA or date for the portfolio review and no time of day for the waits: bracketed.', tbl: TWO }),
+      co({ id: 'w2', title: 'Waiting for assessors · the reminder\'s dialog', cap: 'ConfirmDialog, opening on its safe button. It names the assessor, the mail, the one request, and what it does not do.', tbl: TWO, dialog: true, clip: 'r2-clip--m' }),
+      co({ id: 'w3', title: 'Waiting for assessors · the result', cap: 'The success alert above the list takes the focus; the row\'s button has given way to the record, and the next Tab is the next row\'s link.', tbl: TWO, result: true, mBtn: false, mLine: true }),
+      sa({ id: 'w4', title: 'Waiting for assessors · after a reminder, read by someone else', cap: 'Refilwe Mokoena the same day: the record is the request\'s, so every reader sees it; no second reminder until tomorrow (South African day).', tbl: TWO, mBtn: false, mLine: true, sub: 'What waits for an assessor, supervisor or reviewer in Paediatrics.', clip: 'r2-clip--m' }),
+      co({ id: 'w5', title: 'Refused · the account is deactivated', cap: 'Above the table, taking the focus; the row is unchanged.', note: MIX, tbl: THREE, head: '3 waiting, 2 overdue', refusal: 'Fatima Khumalo\'s account is deactivated, so Wombat sends her no email. The request still waits for her.', clip: 'r2-clip--m' }),
+      co({ id: 'w6', title: 'Refused · reminder emails turned off', cap: 'The assessor\'s own setting, which the nightly nudge obeys too (ReminderRecipientPolicy).', tbl: THREE, head: '3 waiting, 2 overdue', refusal: 'Mohammed Patel has turned off reminder emails, so Wombat sends him none. The request still waits for him.', clip: 'r2-clip--m' }),
+      co({ id: 'w7', title: 'Refused · no email address', cap: 'Says who can fix it.', tbl: THREE, head: '3 waiting, 2 overdue', refusal: 'Thandi Zulu has no email address in Wombat. Ask your institutional admin to add one.', clip: 'r2-clip--m' }),
+      co({ id: 'w8', title: 'Refused · the request moved meanwhile', cap: 'The list reads again: the Mini-CEX is gone from it, and the heading counts one.', tbl: { port: true }, head: '1 waiting, 1 overdue', refusal: 'Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01 moved at 2026-10-04 [hh:mm] SAST: it is now Completed and waits for nobody.' }),
+      sa({ id: 'w9', title: 'Waiting for assessors · heavy', cap: '14 waiting, 11 overdue, one page of 20. A request whose next move belongs to a role, not a person, waits for "Any assessor at Kgosi Kgari Teaching Hospital" and offers no reminder.', note: 'The heavy state\'s twelve requests beyond Step 3.30\'s are not in the brief: four rows stand for fourteen, bracketed.', tbl: { heavy: true }, head: '14 waiting, 11 overdue', pager: true }),
+      co({ id: 'w10', title: 'Waiting for assessors · filtered', cap: 'With: Thandi Zulu, applied with Show. With lists Anyone, then each assessor named on a waiting row, by name.', tbl: { mini: true }, head: '1 waiting, 1 overdue, with Thandi Zulu', fWith: 'Thandi Zulu', filtered: true }),
+      co({ id: 'w11', title: 'Waiting for assessors · no match (not empty)', cap: 'Overdue only, with Fatima Khumalo, whose one request has waited 6 days.', fShow: 'Overdue only', fWith: 'Fatima Khumalo', filtered: true, is: { nomatch: true } }),
+      co({ id: 'w12', title: 'Waiting for assessors · empty (Step 2.32)', cap: 'Nothing waits: the page says so, with no filter to clear.', is: { empty: true } }),
+      co({ id: 'w13', title: 'Waiting for assessors · loading', cap: 'Skeleton rows; a status "Loading Waiting for assessors."', is: { loading: true } }),
+      co({ id: 'w14', title: 'Waiting for assessors · load error', cap: 'Home\'s pattern; Try again\'s answer focuses the list\'s heading.', is: { error: true } })
+    ];
+    const pick = (this.props.show || '').split(',').map((x) => x.trim()).filter(Boolean);
+    return { states: pick.length ? all.filter((s) => pick.indexOf(s.id) >= 0) : all };
+  }
+}
+</script>
+</body>
+</html>

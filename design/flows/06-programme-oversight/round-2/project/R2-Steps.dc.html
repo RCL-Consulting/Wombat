@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 2 · Steps</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow06-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; box-sizing: border-box; padding: 48px; background: var(--background-color); display: flex; flex-direction: column; gap: 32px">
+<div class="header-container"><div><h1>Flow 06 · round 2 · Steps</h1><p class="page-subtitle">Each of the 20 runbook steps and what its Expect says once A is built; then the steps A needs. Quoted words are the boards'. D = 2026-10-04.</p></div></div>
+
+<section class="detail-card">
+<h2 style="margin-top: 0">The 20 steps</h2>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th style="width: 90px">Step</th><th style="width: 90px">Changes</th><th>Expect, once A is built</th></tr></thead>
+<tbody>
+<tr><td>2.32</td><td>yes</td><td>Mr Smit's Home: header action "Start an MSF campaign"; "Waiting for assessors" reads "Nothing is waiting for an assessor."; "Nothing filed in 30 days" lists the five current registrars, each "Nothing filed yet" (see the Spec's question 1); "Invitations nearing expiry" reads "No invitations expiring soon." The sidebar: Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests, then My data rights. The invitations address is Access denied as today. Decision panels is now his menu's item and lights; it lists the panel with no New panel and no Edit. The panel form is Access denied as today.</td></tr>
+<tr><td>2.33</td><td>yes</td><td>Dr Zulu: "Committee member · Semester 2, 2026", "Switch to Assessor". "Registrars behind": "5 current registrars at Kgosi Kgari Teaching Hospital. Fewest met first, then by surname."; each row "0 of 10" EPAs met this semester and "0 of 5" EPAs met in 2026, in the order Pieter du Plessis, Nomsa Mahlangu, Sipho Ndlovu, Anele Dlamini, Lerato Molefe (T298: the 0-of-10 ties by surname, the training years' order not in play); nobody exempt. "Targets by EPA": PAED-001 to PAED-015 in code order, each "0 of 5" over "registrars met this semester" or "in 2026". Each name and each EPA is a link. Menu: Home, Programme trainees, Committee reviews, Decision panels, then My data rights.</td></tr>
+<tr><td>2.35</td><td>as 2.33</td><td>Dr Naidoo and Dr Botha see what Dr Zulu saw. Decision panels unchanged.</td></tr>
+<tr><td>2.37</td><td>yes (T290)</td><td>Dr van Rensburg: no switch, no line. "Registrars behind" lists the institution's five current registrars at 0, as 2.33; "Targets by EPA" reads "0 of 5" for each. "No trainees have targets this period." is shown only for an institution with no current registrar. Menu as 2.33.</td></tr>
+<tr><td>2.38</td><td>yes</td><td>Dr Mokoena and Dr Sithole: "Waiting for assessors" reads "Nothing is waiting for an assessor." with "Open Waiting for assessors"; "Registrars behind" "5 current registrars in Paediatrics" (his: "in &lt;sub-speciality&gt;"), all at 0; "Targets by EPA" all "0 of 5". No "Pending reviews", no "Trainees in programme", no "inactive". Menu: Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions, then My data rights.</td></tr>
+<tr><td>3.30</td><td>yes</td><td>"Waiting for assessors" on the warning stripe, badged "2 waiting, 2 overdue", the rule line "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.", then "Portfolio and Logbook Review (Paediatrics) · … from Pieter du Plessis" (Awaiting review, Overdue, "With Mohammed Patel · waiting 8 days") and "Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu" (Requested, Overdue, "With Thandi Zulu · waiting 8 days"), each link to /activities/{id}. No "26 Sept". Invitations: "No invitations expiring soon." The header action replaces Quick action.</td></tr>
+<tr><td>3.31</td><td>yes</td><td>The menu offers "Waiting for assessors" (/programme/waiting): both requests, oldest first, Overdue, with whom and since when, each with "Send a reminder". /placeholder/stalled-activities is still Page not found (404).</td></tr>
+<tr><td>3.32</td><td>no</td><td>Unchanged: the nightly nudge mails Thandi Zulu and Mohammed Patel; "assessors nudged 2 (activities 2)".</td></tr>
+<tr><td>3.33</td><td>no (flow 04's)</td><td>Unchanged. The line's date reads 2026-10-01 (C1). After she completes the Mini-CEX, Waiting for assessors and Home's card no longer list it.</td></tr>
+<tr><td>3.52</td><td>yes</td><td>After the switch: the alert, then "Registrars behind": Pieter du Plessis, Nomsa Mahlangu, Sipho Ndlovu "0 of 10"/"0 of 5"; Anele Dlamini, Lerato Molefe "1 of 10"/"0 of 5". "Targets by EPA": PAED-002 … PAED-015 "0 of 5", then PAED-001 "2 of 5" over "registrars met this semester", last (fewest met first). Every name and EPA is a link: Pieter du Plessis opens his page; PAED-002 opens Programme trainees "Short on PAED-002". Menu as 2.33.</td></tr>
+<tr><td>3.53</td><td>yes</td><td>"Waiting for assessors" "2 waiting, 1 overdue": the portfolio review (Overdue, with Mohammed Patel) and Pieter du Plessis's "CBD (Paediatrics)" (Requested, waiting less than a day), each a link. "Registrars behind" as 3.52, "in Paediatrics". "Targets by EPA" as 3.52. No "5 active / 0 inactive". Menu as 2.38.</td></tr>
+<tr><td>3.54</td><td>yes</td><td>As 3.53, "Sub-speciality admin", scoped to his sub-speciality.</td></tr>
+<tr><td>A.2.8</td><td>no</td><td>Unchanged (the nudge's mails). The request to Fatima Khumalo shows on Waiting for assessors, not Overdue, "6 days".</td></tr>
+<tr><td>A.5.10</td><td>yes</td><td>Home's "Waiting for assessors" "1 waiting, 1 overdue": the portfolio review, its link to the activity. Waiting for assessors is in the menu, with Send a reminder on the row. No Reassign anywhere.</td></tr>
+<tr><td>A.5.11</td><td>yes</td><td>Dr Botha's menu: Home, Programme trainees, Committee reviews, Decision panels, then My data rights.</td></tr>
+<tr><td>A.5.12</td><td>yes</td><td>Dr Mokoena's menu: Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions, then My data rights. No STAR review queue.</td></tr>
+<tr><td>A.7.5</td><td>yes</td><td>At 390 Mr Smit's Home stacks: the header action a 44px full-width row under the rule; the cards one column; each row's link a 44px block. Then the campaign, Decisions due, the queue as today.</td></tr>
+<tr><td>A.7.6</td><td>yes</td><td>At 390 Dr Zulu's Home: the line, Registrars behind (name a 44px block, the two figures side by side under it), Targets by EPA (each EPA a 44px block, its figure on its own line, "0 of 5 registrars met this semester" never wrapping into the title). The review pages as today.</td></tr>
+<tr><td>A.7.7</td><td>yes</td><td>At 390 Dr Mokoena's Home stacks Waiting for assessors, Registrars behind and Targets by EPA (story's end: "2 current registrars"; KGK-001 first at "0 of 2"). Entrustment decisions is in her menu, and lit on its page, with no trail.</td></tr>
+<tr><td>A.7.8</td><td>yes</td><td>As A.7.7 for Dr Sithole; the folded bar "Acting as" over "Sub-speciality admin"; his menu as hers, each row 44px.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card">
+<h2 style="margin-top: 0">New steps A needs</h2>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th style="width: 90px">Step</th><th style="width: 200px">Role · route</th><th>Do / Expect</th></tr></thead>
+<tbody>
+<tr><td>3.30a</td><td>Coordinator · / → /programme/waiting</td><td><b>Do:</b> from Home choose Open Waiting for assessors; on the Mini-CEX's row choose Send a reminder, then Send the reminder. <b>Expect:</b> the dialog "Send Thandi Zulu a reminder?", opening on "Don't send", saying it moves nothing. After: "Reminder sent to Thandi Zulu." with the focus; the row reads "Reminded 2026-10-04 by Pieter Smit" where its button was; the request is still Requested and still "8 days". The application log holds one stub mail "Activities awaiting your assessment", "Hi Thandi", listing "Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days". Nomsa Mahlangu receives nothing.</td></tr>
+<tr><td>3.30b</td><td>Speciality admin · /programme/waiting</td><td><b>Do:</b> the same day, open the list. <b>Expect:</b> the Mini-CEX's row reads "Reminded 2026-10-04 by Pieter Smit" and offers no button.</td></tr>
+<tr><td>A.5.13</td><td>Coordinator · /programme/waiting</td><td><b>Do:</b> with the assessor's reminders turned off (or the account deactivated, or no email address), choose Send a reminder, then Send the reminder. <b>Expect:</b> "Not sent." and the reason, above the table, with the focus; the row unchanged; no mail in the log. Then complete the request in another session and send again: "Not sent. … it is now Completed and waits for nobody.", and the row is gone.</td></tr>
+<tr><td>3.52a</td><td>Committee member · / → /programme/trainees?shortOn=PAED-002</td><td><b>Do:</b> on Home choose PAED-002. <b>Expect:</b> Programme trainees, "Short on" set to PAED-002, heading "5 of 5 current registrars are short on PAED-002" with the focus, PAED-002's count leading each row. Clear filters restores "5 current registrars". Lit: Programme trainees.</td></tr>
+<tr><td>3.52b</td><td>Committee member · /programme/trainees/{ProfileId:int}</td><td><b>Do:</b> choose Nomsa Mahlangu. <b>Expect:</b> h1 "Nomsa Mahlangu", tab "Nomsa Mahlangu · Wombat", Home › Programme trainees › Nomsa Mahlangu, Programme trainees lit; This period "0 of 10", "0 of 5"; EPAs (names as text, PAED-004 "1 of 3 this semester"); the standing panel (PAED-004 target 3a, latest "3a · Encounter 2026-10-01"); one trajectory, PAED-004; "Nothing of Nomsa Mahlangu's waits for an assessor."; "No review is scheduled for Nomsa Mahlangu." Another institution's profile id, and an erased one, are Page not found.</td></tr>
+<tr><td>A.5.14</td><td>Coordinator · /programme/trainees?filed=none</td><td><b>Do:</b> on Home choose Open in Programme trainees under Nothing filed in 30 days. <b>Expect:</b> the box ticked; the heading "n of 5 current registrars have filed nothing since &lt;D−30&gt;"; a registrar with a recorded MSF in the window is not listed.</td></tr>
+<tr><td>A.5.15</td><td>Speciality admin · /programme/waiting</td><td><b>Do:</b> choose With: Thandi Zulu, then Show; then Overdue only with Fatima Khumalo. <b>Expect:</b> "1 waiting, 1 overdue, with Thandi Zulu"; then "Nothing waiting matches these filters." with Show all waiting. Nothing changes until Show is pressed.</td></tr>
+<tr><td>A.7.9</td><td>each role, 390 · the three new pages</td><td><b>Expect:</b> both tables stacked, each name or activity a 44px block, Send a reminder and the filter buttons 44px and full width, the trajectory drawn at 322, nothing scrolling sideways.</td></tr>
+</tbody></table></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3800}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

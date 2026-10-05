@@ -1,0 +1,189 @@
+/* Wombat · flow 06 · round 2 — flow06-r2.css
+   Loaded after ds/wombat/components/bundle.css (flows 01–05 as built). Three parts, as flow05-r3.css:
+   1. :root and @font-face, compiled from ds/wombat/tokens.json (the built tokens, unchanged; no new colour token).
+   2. The canvas frame (.r2-*): only for drawing boards, never shipped. It lets one board stack several states, each a
+      whole .page, by taking the shell's sticky sidebar and fixed top bar out of the window's flow.
+   3. NEW for flow 06: every rule below "NEW" goes to app.css. Each colour is an existing token. */
+
+/* ── 1. Tokens (ds/wombat/tokens.json, Light) ─────────────────────────────── */
+@font-face { font-family: "Source Sans 3"; src: url("ds/wombat/fonts/SourceSans3VF-Upright.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Source Sans 3"; src: url("ds/wombat/fonts/SourceSans3VF-Italic.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: italic; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("ds/wombat/fonts/fraunces-var.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+:root {
+  --primary-color: rgb(44 62 80);
+  --secondary-color: rgb(45 108 223);
+  --on-fill: rgb(255 255 255);
+  --background-color: rgb(248 249 250);
+  --surface-color: rgb(255 255 255);
+  --text-color: rgb(51 51 51);
+  --muted-text: rgb(104 111 119);
+  --link-color: rgb(11 92 171);
+  --link-hover: rgb(8 74 138);
+  --border-color: rgb(222 226 230);
+  --input-border: rgb(123 132 141);
+  --focus-ring: rgb(45 108 223);
+  --header-bg: rgb(241 243 245);
+  --hover-bg: rgb(248 249 250);
+  --success-color: rgb(26 115 64);
+  --success-bg: rgb(232 245 233);
+  --warning-color: rgb(154 84 0);
+  --warning-bg: rgb(255 248 225);
+  --danger-color: rgb(184 50 42);
+  --danger-bg: rgb(255 245 245);
+  --info-bg: rgb(243 248 255);
+  --scrim: rgb(0 0 0 / 0.35);
+  --shadow-color: rgb(0 0 0 / 0.1);
+  --sidebar-gradient-start: rgb(5 39 103);
+  --sidebar-gradient-end: rgb(58 6 71);
+  --nav-text: rgb(215 215 215);
+  --nav-text-strong: rgb(255 255 255);
+  --nav-group-label: rgb(185 195 224);
+  --nav-active-bg: rgb(255 255 255 / 0.32);
+  --nav-hover-bg: rgb(255 255 255 / 0.1);
+  --nav-brand-bg: rgb(0 0 0 / 0.4);
+  --nav-divider: rgb(255 255 255 / 0.18);
+  --nav-focus-ring: rgb(255 255 255);
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 999px;
+  --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.1);
+  --shadow-dialog: 0 10px 25px rgb(0 0 0 / 0.25);
+  --shadow-bar: 0 -1px 2px rgb(0 0 0 / 0.2);
+  --sidebar-width: 250px;
+  --motion-fast: 150ms;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: Consolas, "Courier New", monospace;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+}
+
+/* ── 2. Canvas frame (boards only) ────────────────────────────────────────── */
+.r2-board { background: var(--header-bg); display: flex; flex-direction: column; gap: var(--space-2xl); padding: 0 0 var(--space-2xl); width: 100%; }
+.r2-state { background: var(--background-color); border-bottom: 2px solid var(--input-border); }
+.r2-cap { background: var(--primary-color); color: var(--on-fill); font-size: 0.875rem; line-height: 1.4; margin: 0; padding: var(--space-sm) var(--space-md); }
+.r2-cap b { font-weight: 700; }
+.r2-note { background: var(--warning-bg); border-top: 1px solid var(--warning-color); color: var(--text-color); font-size: 0.85rem; margin: 0; padding: var(--space-sm) var(--space-md); }
+.r2-clip { overflow: hidden; position: relative; }
+.r2-clip--s { max-height: 620px; }
+.r2-clip--m { max-height: 900px; }
+.r2-clip--l { max-height: 1250px; }
+.r2-clip--xl { max-height: 1700px; }
+.r2-clip--s::after, .r2-clip--m::after, .r2-clip--l::after, .r2-clip--xl::after {
+  background: linear-gradient(transparent, var(--background-color)); bottom: 0; content: ""; height: 64px; left: 0; pointer-events: none; position: absolute; right: 0; }
+.r2-state .page { min-height: 0; position: relative; }
+@media (min-width: 641px) {
+  .r2-state .page:not(.page--signed-out) { grid-template-rows: 56px auto; }
+  .r2-state .sidebar { align-self: stretch; height: auto; min-height: 760px; position: relative; }
+  .r2-state .account-row { left: var(--sidebar-width); position: absolute; }
+}
+@media (max-width: 640.98px) {
+  .r2-state .nav-toggle:checked ~ .sidebar { height: auto; min-height: 640px; }
+}
+.r2-scrim { background: var(--scrim); inset: 0; position: absolute; z-index: 2; }
+.r2-dialog-stage { left: 50%; position: absolute; top: 120px; transform: translateX(-50%); width: min(32rem, calc(100% - 2rem)); z-index: 3; }
+.r2-dialog-stage .dialog-card { margin: 0; position: static; }
+
+/* ── 3. NEW for flow 06 ───────────────────────────────────────────────────── */
+
+/* RegistrarRoster (NEW): Home's "Registrars behind" card. A row a registrar: her name (the link to her page) and training
+   year, then the two figures, each "n of m" over its window. Figures are primary-color (10.98:1 on the surface),
+   captions muted-text (5.09:1). Below 641px the name is a 44px block and the figures sit side by side under it. */
+.roster-list { list-style: none; margin: 0; padding: 0; }
+.roster-row {
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  gap: var(--space-xs) var(--space-lg);
+  grid-template-columns: minmax(0, 1fr) 10rem 10rem;
+  padding: var(--space-sm) 0;
+}
+.roster-row:first-child { border-top: 0; }
+.roster-name { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.roster-meta { color: var(--muted-text); font-size: 0.85rem; margin: 0; }
+.roster-figure { display: flex; flex-direction: column; }
+.roster-figure-value { color: var(--primary-color); font-size: 1.25rem; font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1.2; }
+.roster-figure-label { color: var(--muted-text); font-size: 0.85rem; }
+.roster-exempt { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); grid-column: 2 / -1; }
+.roster-exempt p { color: var(--muted-text); font-size: 0.85rem; margin: 0; }
+@media (max-width: 640.98px) {
+  .roster-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .roster-row > :first-child { grid-column: 1 / -1; }
+  .roster-name { align-items: center; display: flex; min-height: 2.75rem; }
+  .roster-exempt { grid-column: 1 / -1; }
+}
+
+/* EpaTargetCoverageList (changed): one title on every Home, "Targets by EPA". A row an EPA: its name, the link to
+   Programme trainees filtered "Short on <EPA>", over its cadence; the figure in its own 10rem column ("2 of 5" over
+   "registrars met this semester") with its bar. Below 641px the figure is its own line under the name. */
+.coverage-list { list-style: none; margin: 0; padding: 0; }
+.coverage-row {
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  gap: var(--space-xs) var(--space-lg);
+  grid-template-columns: minmax(0, 1fr) 10rem;
+  padding: var(--space-sm) 0;
+}
+.coverage-row:first-child { border-top: 0; }
+.coverage-epa { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.coverage-cadence { color: var(--muted-text); font-size: 0.85rem; margin: var(--space-xs) 0 0; }
+.coverage-figure { display: flex; flex-direction: column; }
+.coverage-value { color: var(--primary-color); font-size: 1.1rem; font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1.2; }
+.coverage-label { color: var(--muted-text); font-size: 0.85rem; }
+.coverage-figure .progress-bar { margin-top: var(--space-xs); }
+@media (max-width: 640.98px) {
+  .coverage-row { grid-template-columns: minmax(0, 1fr); }
+  .coverage-epa { align-items: center; display: flex; min-height: 2.75rem; }
+  .coverage-figure { align-items: baseline; column-gap: 0.375rem; flex-direction: row; flex-wrap: wrap; }
+  .coverage-figure .progress-bar { flex-basis: 100%; max-width: 16rem; }
+}
+
+/* A card's scope line, under its title: whose registrars, and the window's end. muted-text, 5.09:1. */
+.card-scope { color: var(--muted-text); font-size: 0.9rem; margin: 0 0 var(--space-sm); }
+
+/* WaitingList, the staff reading (changed): flow 04's row, "from <registrar>" in the link, and under it whose it is
+   and how long it has waited: "With Mohammed Patel · waiting 8 days". Nothing new but the line's name. */
+.waiting-with { margin: 0; }
+
+/* Waiting for assessors' table: the Waiting cell holds the wait, its start, and the reminder (ReminderAction): the
+   button, or once sent, the line that replaces it. */
+.waited-cell .reminder-action { margin-top: var(--space-sm); }
+.reminder-line { color: var(--muted-text); display: block; font-size: 0.85rem; margin-top: var(--space-xs); }
+.with-cell-note { color: var(--muted-text); display: block; font-size: 0.85rem; }
+@media (max-width: 640.98px) {
+  .waited-cell .reminder-action { min-height: 2.75rem; width: 100%; }
+}
+
+/* The filter bar of both lists: the fields in .search-grid, then Show and Clear filters, applied by a post, never live. */
+.filter-actions { align-items: flex-end; display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+.filter-check { align-items: center; display: flex; gap: var(--space-sm); min-height: 2.375rem; }
+@media (max-width: 640.98px) {
+  .filter-actions .btn { flex: 1 1 auto; min-height: 2.75rem; }
+  .filter-check { min-height: 2.75rem; }
+}
+
+/* Programme trainees' table: a figure cell's value over its caption, and the furthest-short list. */
+.figure-cell b { display: block; font-variant-numeric: tabular-nums; }
+.figure-cell span, .short-cell span { color: var(--muted-text); display: block; font-size: 0.85rem; }
+.roster-table th[scope="row"] a { display: block; font-weight: 600; }
+@media (max-width: 640.98px) {
+  .roster-table th[scope="row"] a { align-items: center; display: flex; min-height: 2.75rem; }
+}
+
+/* The registrar page (NEW): its sections in one column, 24px apart, each a card or a titled list section. */
+.registrar-stack { display: flex; flex-direction: column; gap: var(--space-lg); }
+.registrar-stack > .list-section + .list-section { margin-top: 0; }
+.section-error { margin: 0; }
+.review-links { list-style: none; margin: 0; padding: 0; }
+.review-links li { border-top: 1px solid var(--border-color); padding: var(--space-sm) 0; }
+.review-links li:first-child { border-top: 0; }
+@media (max-width: 640.98px) {
+  .review-links a { align-items: center; display: flex; min-height: 2.75rem; }
+}

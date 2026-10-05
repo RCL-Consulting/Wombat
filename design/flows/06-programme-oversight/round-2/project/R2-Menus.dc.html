@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 2 · Menus</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow06-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-board">
+<sc-for list="{{states}}" as="s" hint-placeholder-count="1">
+<section class="r2-state">
+<p class="r2-cap"><b>{{s.title}}</b> · {{s.cap}}</p>
+<div class="r2-clip {{s.clip}}">
+<div class="page">
+<input type="checkbox" id="nt-{{s.id}}" class="nav-toggle" checked="{{s.open}}" readonly="">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>{{s.role}}</span></p>
+<label class="nav-toggle-label" for="nt-{{s.id}}"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"></path></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">{{s.role}}</span></p><sc-if value="{{s.sw}}"><a class="role-switch" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"></path></svg><span>{{s.sw}}</span></a></sc-if></div>
+<div class="nav-list">
+<ul class="nav-items">
+<sc-for list="{{s.nav}}" as="n">
+<li><sc-if value="{{n.lit}}"><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if><sc-if value="{{n.rest}}"><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if></li>
+</sc-for>
+</ul>
+<ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="nav-label">My data rights</span></a></li></ul>
+</div>
+</nav>
+<div class="account-row">
+<a class="account-link" href="#" title="{{s.who}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8a4 4 0 1 0 8 0a4 4 0 1 0-8 0M6 20a6 6 0 0 1 12 0"></path></svg><span class="account-name">{{s.who}}</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out</button></form>
+</div>
+</header>
+<main>
+<article>
+<div class="header-container"><div><h1>{{s.h1}}</h1><p class="page-subtitle">{{s.sub}}</p></div></div>
+<div class="detail-card"><p style="margin: 0">{{s.body}}</p></div>
+</article>
+</main>
+</div>
+</div>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"show":{"editor":"text","default":""},"open":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":4400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      home: 'M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5',
+      users: 'M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9M9 9a3 3 0 1 0 6 0a3 3 0 1 0-6 0',
+      clock: 'M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0M12 6v6l4 2',
+      file: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6',
+      scale: 'm16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2',
+      cal: 'M8 2v4M16 2v4M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM3 10h18M9 16l2 2 4-4',
+      award: 'M6 8a6 6 0 1 0 12 0a6 6 0 1 0-12 0M15.477 12.89 17 22l-5-3-5 3 1.523-9.11',
+      msg: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+      shield: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4'
+    };
+    const MENUS = {
+      cm: [['Home', P.home], ['Programme trainees', P.users], ['Committee reviews', P.file], ['Decision panels', P.scale]],
+      sa: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Entrustment decisions', P.award]],
+      co: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['MSF campaigns', P.msg], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Data rights requests', P.shield]]
+    };
+    const nav = (k, lit) => MENUS[k].map(([label, d]) => ({ label, d, lit: label === lit, rest: label !== lit }));
+    const open = !!this.props.open;
+    const all = [
+      { id: 'm1', title: 'Committee member', cap: 'Home, Programme trainees (new), Committee reviews, Decision panels; then My data rights. Thandi Zulu holds Assessor too: Switch to Assessor.', role: 'Committee member', who: 'Thandi Zulu', sw: 'Switch to Assessor', nav: nav('cm', 'Home'), h1: 'Home', sub: 'Committee member · Semester 2, 2026', body: 'Programme trainees admits every Committee member, scoped to the institution\'s current registrars (T290). No Waiting for assessors: chasing is not the panel\'s work.', open },
+      { id: 'm2', title: 'Speciality admin', cap: 'Home, Programme trainees and Waiting for assessors (new), Decisions due, Committee reviews, Decision panels, Entrustment decisions (now in the menu); then My data rights: 8 links.', role: 'Speciality admin', who: 'Refilwe Mokoena', sw: '', nav: nav('sa', 'Home'), h1: 'Home', sub: 'Speciality admin · Semester 2, 2026', body: 'The STAR review queue is not restored: Entrustment decisions, the programme\'s register of STARs, takes its place under its own label.', open },
+      { id: 'm3', title: 'Sub-speciality admin', cap: 'The same menu as the Speciality admin\'s; at 390 the folded bar reads "Acting as" over "Sub-speciality admin" on two lines, never cut (A.7.8).', role: 'Sub-speciality admin', who: 'Kabelo Sithole', sw: '', nav: nav('sa', 'Home'), h1: 'Home', sub: 'Sub-speciality admin · Semester 2, 2026', body: 'Each page scopes to his sub-speciality.', open },
+      { id: 'm4', title: 'Coordinator', cap: 'Home, Programme trainees and Waiting for assessors (new), Decisions due, MSF campaigns, Committee reviews, Decision panels (now in the menu), Data rights requests; then My data rights. See the Spec board on the flat limit.', role: 'Coordinator', who: 'Pieter Smit', sw: '', nav: nav('co', 'Home'), h1: 'Home', sub: 'Coordinator · Semester 2, 2026', body: 'Decision panels admitted him with no menu item (Step 2.32); it is now offered, read-only as before (no New panel, no Edit).', open },
+      { id: 'm5', title: 'Entrustment decisions, lit', cap: 'Refilwe Mokoena on /admin/entrustment-decisions: a list the menu offers, so it lights itself (aria-current="page") and has no trail; was Home › Entrustment decisions with nothing lit.', role: 'Speciality admin', who: 'Refilwe Mokoena', sw: '', nav: nav('sa', 'Entrustment decisions'), h1: 'Entrustment decisions', sub: '[flow 09\'s subtitle]', body: 'The page\'s body is flow 09\'s, unchanged here.', open: false }
+    ];
+    const pick = (this.props.show || '').split(',').map((x) => x.trim()).filter(Boolean);
+    return { states: pick.length ? all.filter((s) => pick.indexOf(s.id) >= 0) : all };
+  }
+}
+</script>
+</body>
+</html>

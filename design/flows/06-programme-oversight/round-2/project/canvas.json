@@ -1,0 +1,701 @@
+{
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "A-home-admin.dc.html": {
+   "h": 1700,
+   "title": "A · Home, Speciality admin (Refilwe Mokoena)",
+   "w": 1280,
+   "x": 2720,
+   "y": 2600,
+   "page": "r1"
+  },
+  "A-home-committee.dc.html": {
+   "h": 1500,
+   "title": "A · Home, Committee member (Thandi Zulu)",
+   "w": 1280,
+   "x": 1360,
+   "y": 2600,
+   "page": "r1"
+  },
+  "A-home-coordinator.dc.html": {
+   "h": 1400,
+   "title": "A · Home, Coordinator (Pieter Smit)",
+   "w": 1280,
+   "x": 4080,
+   "y": 2600,
+   "page": "r1"
+  },
+  "A-phone.dc.html": {
+   "h": 1500,
+   "title": "A · 390 px",
+   "w": 2588,
+   "x": 9520,
+   "y": 2600,
+   "page": "r1"
+  },
+  "A-programme-trainees.dc.html": {
+   "h": 1300,
+   "title": "A · Programme trainees (NEW)",
+   "w": 1280,
+   "x": 5440,
+   "y": 2600,
+   "page": "r1"
+  },
+  "A-registrar.dc.html": {
+   "h": 1700,
+   "title": "A · One registrar, as staff read her (NEW)",
+   "w": 1280,
+   "x": 6800,
+   "y": 2600,
+   "page": "r1"
+  },
+  "A-structure.dc.html": {
+   "h": 1700,
+   "title": "A · Structure: menus, pages, journeys",
+   "w": 1280,
+   "x": 0,
+   "y": 2600,
+   "page": "r1"
+  },
+  "A-waiting.dc.html": {
+   "h": 1700,
+   "title": "A · Waiting for assessors (NEW) and triage",
+   "w": 1280,
+   "x": 8160,
+   "y": 2600,
+   "page": "r1"
+  },
+  "B-home-admin.dc.html": {
+   "h": 2000,
+   "title": "B · Home, Speciality admin",
+   "w": 1280,
+   "x": 2720,
+   "y": 4680,
+   "page": "r1"
+  },
+  "B-home-committee.dc.html": {
+   "h": 1700,
+   "title": "B · Home, Committee member",
+   "w": 1280,
+   "x": 1360,
+   "y": 4680,
+   "page": "r1"
+  },
+  "B-home-coordinator.dc.html": {
+   "h": 1700,
+   "title": "B · Home, Coordinator, with a reminder",
+   "w": 1280,
+   "x": 4080,
+   "y": 4680,
+   "page": "r1"
+  },
+  "B-phone.dc.html": {
+   "h": 1700,
+   "title": "B · 390 px",
+   "w": 1728,
+   "x": 6800,
+   "y": 4680,
+   "page": "r1"
+  },
+  "B-registrar.dc.html": {
+   "h": 900,
+   "title": "B · One registrar (NEW, owned by nobody)",
+   "w": 1280,
+   "x": 5440,
+   "y": 4680,
+   "page": "r1"
+  },
+  "B-structure.dc.html": {
+   "h": 1500,
+   "title": "B · Structure: menus, pages, journeys",
+   "w": 1280,
+   "x": 0,
+   "y": 4680,
+   "page": "r1"
+  },
+  "C-epas.dc.html": {
+   "h": 1400,
+   "title": "C · Programme, by EPA (NEW)",
+   "w": 1280,
+   "x": 5440,
+   "y": 7060,
+   "page": "r1"
+  },
+  "C-home-coordinator.dc.html": {
+   "h": 1200,
+   "title": "C · Home, Coordinator",
+   "w": 1280,
+   "x": 2720,
+   "y": 7060,
+   "page": "r1"
+  },
+  "C-home.dc.html": {
+   "h": 1300,
+   "title": "C · Home, Committee member",
+   "w": 1280,
+   "x": 1360,
+   "y": 7060,
+   "page": "r1"
+  },
+  "C-phone.dc.html": {
+   "h": 1500,
+   "title": "C · 390 px",
+   "w": 2158,
+   "x": 9520,
+   "y": 7060,
+   "page": "r1"
+  },
+  "C-registrar.dc.html": {
+   "h": 900,
+   "title": "C · One registrar (NEW, under Programme)",
+   "w": 1280,
+   "x": 8160,
+   "y": 7060,
+   "page": "r1"
+  },
+  "C-registrars.dc.html": {
+   "h": 1200,
+   "title": "C · Programme, by registrar (NEW)",
+   "w": 1280,
+   "x": 4080,
+   "y": 7060,
+   "page": "r1"
+  },
+  "C-structure.dc.html": {
+   "h": 1500,
+   "title": "C · Structure: menus, pages, journeys",
+   "w": 1280,
+   "x": 0,
+   "y": 7060,
+   "page": "r1"
+  },
+  "C-waiting.dc.html": {
+   "h": 1300,
+   "title": "C · Programme, waiting (NEW)",
+   "w": 1280,
+   "x": 6800,
+   "y": 7060,
+   "page": "r1"
+  },
+  "Main.dc.html": {
+   "h": 2300,
+   "title": "Round 1 · compare the three structures",
+   "w": 1600,
+   "x": 0,
+   "y": 0,
+   "page": "r1"
+  },
+  "R2-Spec.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 4200,
+   "title": "Spec: components, DESIGN.md, tokens, C1–C11",
+   "page": "r2"
+  },
+  "R2-Steps.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 1280,
+   "h": 3800,
+   "title": "Steps: the 20, and the new ones",
+   "page": "r2"
+  },
+  "R2-Menus-1280.dc.html": {
+   "x": 2720,
+   "y": 0,
+   "w": 1280,
+   "h": 4600,
+   "title": "Menus · 1280",
+   "page": "r2"
+  },
+  "R2-Menus-390.dc.html": {
+   "x": 4080,
+   "y": 0,
+   "w": 390,
+   "h": 4200,
+   "title": "Menus · 390, open",
+   "page": "r2"
+  },
+  "R2-HomeCM-1-1280.dc.html": {
+   "x": 0,
+   "y": 4980,
+   "w": 1280,
+   "h": 6400,
+   "title": "Committee member · 1280 · typical, lines, zeros",
+   "page": "r2"
+  },
+  "R2-HomeCM-2-1280.dc.html": {
+   "x": 1360,
+   "y": 4980,
+   "w": 1280,
+   "h": 7600,
+   "title": "Committee member · 1280 · external, exempt, empty, end, loading, error",
+   "page": "r2"
+  },
+  "R2-HomeCM-1-390.dc.html": {
+   "x": 2720,
+   "y": 4980,
+   "w": 390,
+   "h": 5200,
+   "title": "390 · typical, lines",
+   "page": "r2"
+  },
+  "R2-HomeCM-2-390.dc.html": {
+   "x": 3190,
+   "y": 4980,
+   "w": 390,
+   "h": 7600,
+   "title": "390 · zeros, external, exempt",
+   "page": "r2"
+  },
+  "R2-HomeCM-3-390.dc.html": {
+   "x": 3660,
+   "y": 4980,
+   "w": 390,
+   "h": 6200,
+   "title": "390 · empty, end, loading, error",
+   "page": "r2"
+  },
+  "R2-HomeSA-1-1280.dc.html": {
+   "x": 0,
+   "y": 12960,
+   "w": 1280,
+   "h": 5200,
+   "title": "Speciality admin · 1280 · typical, zeros",
+   "page": "r2"
+  },
+  "R2-HomeSA-2-1280.dc.html": {
+   "x": 1360,
+   "y": 12960,
+   "w": 1280,
+   "h": 6400,
+   "title": "1280 · heavy, nothing waiting, Sub-speciality admin, loading, error",
+   "page": "r2"
+  },
+  "R2-HomeSA-1-390.dc.html": {
+   "x": 2720,
+   "y": 12960,
+   "w": 390,
+   "h": 7600,
+   "title": "390 · typical, zeros",
+   "page": "r2"
+  },
+  "R2-HomeSA-2-390.dc.html": {
+   "x": 3190,
+   "y": 12960,
+   "w": 390,
+   "h": 4400,
+   "title": "390 · heavy",
+   "page": "r2"
+  },
+  "R2-HomeSA-3-390.dc.html": {
+   "x": 3660,
+   "y": 12960,
+   "w": 390,
+   "h": 4200,
+   "title": "390 · nothing waiting, sub-speciality, loading, error",
+   "page": "r2"
+  },
+  "R2-HomeCO-1280.dc.html": {
+   "x": 0,
+   "y": 20940,
+   "w": 1280,
+   "h": 6000,
+   "title": "Coordinator · 1280 · all states",
+   "page": "r2"
+  },
+  "R2-HomeCO-1-390.dc.html": {
+   "x": 1360,
+   "y": 20940,
+   "w": 390,
+   "h": 4800,
+   "title": "390 · typical, nothing waiting, one waiting",
+   "page": "r2"
+  },
+  "R2-HomeCO-2-390.dc.html": {
+   "x": 1830,
+   "y": 20940,
+   "w": 390,
+   "h": 3600,
+   "title": "390 · invitations, loading, error",
+   "page": "r2"
+  },
+  "R2-Trainees-1-1280.dc.html": {
+   "x": 0,
+   "y": 27320,
+   "w": 1280,
+   "h": 5400,
+   "title": "1280 · typical, short on PAED-002, nothing filed, no match, empty",
+   "page": "r2"
+  },
+  "R2-Trainees-2-1280.dc.html": {
+   "x": 1360,
+   "y": 27320,
+   "w": 1280,
+   "h": 4200,
+   "title": "1280 · heavy, exempt, loading, error",
+   "page": "r2"
+  },
+  "R2-Trainees-1-390.dc.html": {
+   "x": 2720,
+   "y": 27320,
+   "w": 390,
+   "h": 7200,
+   "title": "390 · typical, short on, nothing filed",
+   "page": "r2"
+  },
+  "R2-Trainees-2-390.dc.html": {
+   "x": 3190,
+   "y": 27320,
+   "w": 390,
+   "h": 5600,
+   "title": "390 · no match, empty, heavy",
+   "page": "r2"
+  },
+  "R2-Trainees-3-390.dc.html": {
+   "x": 3660,
+   "y": 27320,
+   "w": 390,
+   "h": 4200,
+   "title": "390 · exempt, loading, error",
+   "page": "r2"
+  },
+  "R2-Registrar-1-1280.dc.html": {
+   "x": 0,
+   "y": 34900,
+   "w": 1280,
+   "h": 5600,
+   "title": "1280 · typical, no rating + reminder",
+   "page": "r2"
+  },
+  "R2-Registrar-2-1280.dc.html": {
+   "x": 1360,
+   "y": 34900,
+   "w": 1280,
+   "h": 6000,
+   "title": "1280 · with STARs, section error",
+   "page": "r2"
+  },
+  "R2-Registrar-3-1280.dc.html": {
+   "x": 2720,
+   "y": 34900,
+   "w": 1280,
+   "h": 4000,
+   "title": "1280 · page error, ended, not found",
+   "page": "r2"
+  },
+  "R2-Registrar-1-390.dc.html": {
+   "x": 4080,
+   "y": 34900,
+   "w": 390,
+   "h": 6000,
+   "title": "390 · typical",
+   "page": "r2"
+  },
+  "R2-Registrar-2-390.dc.html": {
+   "x": 4550,
+   "y": 34900,
+   "w": 390,
+   "h": 7200,
+   "title": "390 · no rating, section error, page error, ended, not found",
+   "page": "r2"
+  },
+  "R2-Registrar-3-390.dc.html": {
+   "x": 5020,
+   "y": 34900,
+   "w": 390,
+   "h": 7200,
+   "title": "390 · with STARs",
+   "page": "r2"
+  },
+  "R2-Waiting-1-1280.dc.html": {
+   "x": 0,
+   "y": 42480,
+   "w": 1280,
+   "h": 4800,
+   "title": "1280 · typical, dialog, result, after",
+   "page": "r2"
+  },
+  "R2-Waiting-2-1280.dc.html": {
+   "x": 1360,
+   "y": 42480,
+   "w": 1280,
+   "h": 4400,
+   "title": "1280 · the four refusals",
+   "page": "r2"
+  },
+  "R2-Waiting-3-1280.dc.html": {
+   "x": 2720,
+   "y": 42480,
+   "w": 1280,
+   "h": 6200,
+   "title": "1280 · heavy, filtered, no match, empty, loading, error",
+   "page": "r2"
+  },
+  "R2-Waiting-1-390.dc.html": {
+   "x": 4080,
+   "y": 42480,
+   "w": 390,
+   "h": 5600,
+   "title": "390 · typical, dialog, result, after",
+   "page": "r2"
+  },
+  "R2-Waiting-2-390.dc.html": {
+   "x": 4550,
+   "y": 42480,
+   "w": 390,
+   "h": 4800,
+   "title": "390 · refusals",
+   "page": "r2"
+  },
+  "R2-Waiting-3-390.dc.html": {
+   "x": 5020,
+   "y": 42480,
+   "w": 390,
+   "h": 4400,
+   "title": "390 · heavy, filtered",
+   "page": "r2"
+  },
+  "R2-Waiting-4-390.dc.html": {
+   "x": 5490,
+   "y": 42480,
+   "w": 390,
+   "h": 4400,
+   "title": "390 · no match, empty, loading, error",
+   "page": "r2"
+  },
+  "R2-Home.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 8000,
+   "title": "R2-Home (component: every state, read by the boards)",
+   "page": "r2parts"
+  },
+  "R2-Trainees.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 1280,
+   "h": 8000,
+   "title": "R2-Trainees (component: every state, read by the boards)",
+   "page": "r2parts"
+  },
+  "R2-Waiting.dc.html": {
+   "x": 2720,
+   "y": 0,
+   "w": 1280,
+   "h": 8000,
+   "title": "R2-Waiting (component: every state, read by the boards)",
+   "page": "r2parts"
+  },
+  "R2-Registrar.dc.html": {
+   "x": 4080,
+   "y": 0,
+   "w": 1280,
+   "h": 8000,
+   "title": "R2-Registrar (component: every state, read by the boards)",
+   "page": "r2parts"
+  },
+  "R2-Menus.dc.html": {
+   "x": 5440,
+   "y": 0,
+   "w": 1280,
+   "h": 8000,
+   "title": "R2-Menus (component: every state, read by the boards)",
+   "page": "r2parts"
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-10-05T08:00:00Z",
+  "v": 1
+ },
+ "designSystems": [
+  {
+   "artifact": "https://claude.ai/code/artifact/c96bff42-69c1-4e3c-925a-95bb2292870f",
+   "copiedAt": "2026-10-05T08:00:00Z",
+   "namespace": "wombat",
+   "title": "Wombat",
+   "version": null
+  }
+ ],
+ "launch": {
+  "view": "canvas",
+  "page": "r2"
+ },
+ "notes": {
+  "t0": {
+   "kind": "title1",
+   "maxW": 1600,
+   "text": "Flow 06 · round 1 · structure",
+   "w": 240,
+   "x": 0,
+   "y": -300,
+   "page": "r1"
+  },
+  "tA": {
+   "kind": "title1",
+   "maxW": 4000,
+   "text": "A · Two lists and a record",
+   "w": 240,
+   "x": 0,
+   "y": 2340,
+   "page": "r1"
+  },
+  "tB": {
+   "kind": "title1",
+   "maxW": 4000,
+   "text": "B · Home holds it all",
+   "w": 240,
+   "x": 0,
+   "y": 4420,
+   "page": "r1"
+  },
+  "tC": {
+   "kind": "title1",
+   "maxW": 4000,
+   "text": "C · One Programme page, three views",
+   "w": 240,
+   "x": 0,
+   "y": 6800,
+   "page": "r1"
+  },
+  "r2t0": {
+   "x": 0,
+   "y": -260,
+   "text": "Spec, steps and menus",
+   "kind": "title1",
+   "maxW": 6000,
+   "page": "r2"
+  },
+  "r2t1": {
+   "x": 0,
+   "y": 4720,
+   "text": "Home · Committee member",
+   "kind": "title1",
+   "maxW": 6000,
+   "page": "r2"
+  },
+  "r2t2": {
+   "x": 0,
+   "y": 12700,
+   "text": "Home · Speciality and Sub-speciality admin",
+   "kind": "title1",
+   "maxW": 6000,
+   "page": "r2"
+  },
+  "r2t3": {
+   "x": 0,
+   "y": 20680,
+   "text": "Home · Coordinator",
+   "kind": "title1",
+   "maxW": 6000,
+   "page": "r2"
+  },
+  "r2t4": {
+   "x": 0,
+   "y": 27060,
+   "text": "Programme trainees (NEW)",
+   "kind": "title1",
+   "maxW": 6000,
+   "page": "r2"
+  },
+  "r2t5": {
+   "x": 0,
+   "y": 34640,
+   "text": "One registrar (NEW)",
+   "kind": "title1",
+   "maxW": 6000,
+   "page": "r2"
+  },
+  "r2t6": {
+   "x": 0,
+   "y": 42220,
+   "text": "Waiting for assessors (NEW) and Send a reminder",
+   "kind": "title1",
+   "maxW": 6000,
+   "page": "r2"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "A-structure.dc.html",
+  "A-home-committee.dc.html",
+  "A-home-admin.dc.html",
+  "A-home-coordinator.dc.html",
+  "A-programme-trainees.dc.html",
+  "A-registrar.dc.html",
+  "A-waiting.dc.html",
+  "A-phone.dc.html",
+  "B-structure.dc.html",
+  "B-home-committee.dc.html",
+  "B-home-admin.dc.html",
+  "B-home-coordinator.dc.html",
+  "B-registrar.dc.html",
+  "B-phone.dc.html",
+  "C-structure.dc.html",
+  "C-home.dc.html",
+  "C-home-coordinator.dc.html",
+  "C-registrars.dc.html",
+  "C-epas.dc.html",
+  "C-waiting.dc.html",
+  "C-registrar.dc.html",
+  "C-phone.dc.html",
+  "R2-Spec.dc.html",
+  "R2-Steps.dc.html",
+  "R2-Menus-1280.dc.html",
+  "R2-Menus-390.dc.html",
+  "R2-HomeCM-1-1280.dc.html",
+  "R2-HomeCM-2-1280.dc.html",
+  "R2-HomeCM-1-390.dc.html",
+  "R2-HomeCM-2-390.dc.html",
+  "R2-HomeCM-3-390.dc.html",
+  "R2-HomeSA-1-1280.dc.html",
+  "R2-HomeSA-2-1280.dc.html",
+  "R2-HomeSA-1-390.dc.html",
+  "R2-HomeSA-2-390.dc.html",
+  "R2-HomeSA-3-390.dc.html",
+  "R2-HomeCO-1280.dc.html",
+  "R2-HomeCO-1-390.dc.html",
+  "R2-HomeCO-2-390.dc.html",
+  "R2-Trainees-1-1280.dc.html",
+  "R2-Trainees-2-1280.dc.html",
+  "R2-Trainees-1-390.dc.html",
+  "R2-Trainees-2-390.dc.html",
+  "R2-Trainees-3-390.dc.html",
+  "R2-Registrar-1-1280.dc.html",
+  "R2-Registrar-2-1280.dc.html",
+  "R2-Registrar-3-1280.dc.html",
+  "R2-Registrar-1-390.dc.html",
+  "R2-Registrar-2-390.dc.html",
+  "R2-Registrar-3-390.dc.html",
+  "R2-Waiting-1-1280.dc.html",
+  "R2-Waiting-2-1280.dc.html",
+  "R2-Waiting-3-1280.dc.html",
+  "R2-Waiting-1-390.dc.html",
+  "R2-Waiting-2-390.dc.html",
+  "R2-Waiting-3-390.dc.html",
+  "R2-Waiting-4-390.dc.html",
+  "R2-Home.dc.html",
+  "R2-Trainees.dc.html",
+  "R2-Waiting.dc.html",
+  "R2-Registrar.dc.html",
+  "R2-Menus.dc.html"
+ ],
+ "pages": [
+  {
+   "id": "r2",
+   "name": "Round 2 · A at full fidelity"
+  },
+  {
+   "id": "r1",
+   "name": "Round 1 · structures"
+  },
+  {
+   "id": "r2parts",
+   "name": "Round 2 · parts"
+  }
+ ],
+ "title": "Flow 06 — Watching the programme"
+}

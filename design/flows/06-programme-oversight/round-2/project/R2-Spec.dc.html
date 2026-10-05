@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 2 · Spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow06-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; box-sizing: border-box; padding: 48px; background: var(--background-color); display: flex; flex-direction: column; gap: 32px">
+<div class="header-container"><div><h1>Flow 06 · round 2 · Spec</h1><p class="page-subtitle">A, "Two lists and a record", with C1–C11. Every NEW and changed component, its classes, the DESIGN.md text each changes, tokens, contrast and targets. Checked against the eleven screenshots, flow 05's boards and the built bundle (bundle.css = app.css as of T355).</p></div></div>
+
+<section class="detail-card">
+<h2 style="margin-top: 0">What is NEW, what changed, what is reused</h2>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th>Component</th><th>Status</th><th>Classes (all in flow06-r2.css § 3, to app.css)</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td><b>RegistrarRoster</b></td><td>NEW</td><td>.roster-list, .roster-row, .roster-name, .roster-meta, .roster-figure, .roster-figure-value, .roster-figure-label, .roster-exempt; .card-scope</td><td>Home's "Registrars behind" (committee, both admins). A row: name link to the registrar page, "Training year n", then "0 of 10" over "EPAs met this semester" and "0 of 5" over "EPAs met in 2026". Exempt: badge-draft "Exempt this period" and the stored reason in the figures' place. Five rows, then "n more in Programme trainees." and the foot "Open Programme trainees".</td></tr>
+<tr><td><b>Programme trainees</b> (page)</td><td>NEW</td><td>DataTable (.clinic-table--stack) + .roster-table, .figure-cell, .short-cell; filters .search-container/.search-grid + .filter-actions, .filter-check; PagerControls</td><td>/programme/trainees. Filters Short on (EPA), Training year, Nothing filed in 30 days, applied with Show (a GET; never live). Heading counts the answer and takes the focus.</td></tr>
+<tr><td><b>The registrar page</b> (StaffRegistrarPage)</td><td>NEW</td><td>.registrar-stack, .review-links, .section-error; composes PageHeader, Breadcrumbs, .period-card + DashboardMetric, EpaProgressTable, EntrustmentStandingPanel, TrajectoryChart, WaitingList (staff), ReminderAction</td><td>/programme/trainees/{ProfileId:int}; h1 the name as stored; tab "&lt;Name&gt; · Wombat"; Home › Programme trainees › &lt;Name&gt;, Programme trainees lit (aria-current="true").</td></tr>
+<tr><td><b>Waiting for assessors</b> (page)</td><td>NEW</td><td>DataTable (.clinic-table--stack), .waited-cell + .reminder-action, .reminder-line; filters as above</td><td>/programme/waiting. Activity · With · State · Waiting. Filters Show (All waiting, Overdue only), With (Anyone, then each assessor named on a waiting row).</td></tr>
+<tr><td><b>ReminderAction</b></td><td>NEW</td><td>.btn.btn-outline.btn-sm.reminder-action; ConfirmDialog; ActionResult (.action-result + .alert-success / .alert-danger); .reminder-line</td><td>Waiting for assessors' Waiting cell and the registrar page's waiting row. Both admins and the Coordinator; never the committee.</td></tr>
+<tr><td><b>WaitingList, the staff reading</b></td><td>changed</td><td>.needs-you-row(--overdue), .needs-you-why + .waiting-with</td><td>Home's "Waiting for assessors" card and the registrar page. The why-line reads "With Mohammed Patel · waiting 8 days". Reads the same predicate as today's card, in the reader's read scope.</td></tr>
+<tr><td><b>EpaTargetCoverageList</b></td><td>changed</td><td>.coverage-list, .coverage-row, .coverage-epa, .coverage-cadence, .coverage-figure, .coverage-value, .coverage-label</td><td>One title, "Targets by EPA", on every Home. Fewest registrars met first, then by code. The figure in its own 10rem column at 1280; its own line under the name below 641px. Each EPA links to Programme trainees filtered "Short on &lt;EPA&gt;"; its accessible name adds the figure and "Show the registrars short on it."</td></tr>
+<tr><td>Home (four oversight roles)</td><td>changed</td><td>.dashboard-grid, .detail-card, .dashboard-span-2/-3, .home-action</td><td>Committee: (line) · Registrars behind · Targets by EPA. Admins: Waiting for assessors · Registrars behind · Targets by EPA. Coordinator: header action · Waiting for assessors · Nothing filed in 30 days (NEW card) · Invitations nearing expiry. Gone: Pending reviews, Trainees in programme, Stalled requests, Quick action, Curriculum coverage's and Targets this period's titles.</td></tr>
+<tr><td>Reused unchanged</td><td>—</td><td colspan="2">MainLayout, MainLayoutPhone, NavMenu, PageHeader, Breadcrumbs, ActingRoleSwitchAlert, OtherRoleLine, DashboardCard/DashboardFrame (loading, load error), StatePanel, Skeleton, Alert, Badge (incl. badge-overdue), ConfirmDialog, PagerControls, DataTable Stack, EpaProgressTable, EntrustmentStandingPanel, TrajectoryChart (900 and 322), NotFound, Icon. Icons: Lucide users, clock, award (nav); clipboard-list (Nothing filed card); plus (header action). None is new to the set.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card">
+<h2 style="margin-top: 0">DESIGN.md text each changes</h2>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th style="width: 220px">Section</th><th>New text</th></tr></thead>
+<tbody>
+<tr><td>§ Dashboard page — the link rule</td><td>Every row on an oversight Home is its own link to the one record behind it: a registrar's name to her page, an EPA's name to Programme trainees filtered "Short on &lt;EPA&gt;", an activity's name to its page. A card is never one link around other links (T280). A card that previews a list shows its first five rows, then "n more in &lt;list&gt;.", and its foot opens that list ("Open Programme trainees", "Open Waiting for assessors"); its empty state keeps the foot when the list is still in the menu.</td></tr>
+<tr><td>§ Dashboard layout grid — the progress figures rule</td><td>A registrar's figure is "n of m" over its window ("0 of 10" over "EPAs met this semester", "0 of 5" over "EPAs met in 2026"). The programme's figure is "n of m" over "registrars met this semester" or "registrars met in 2026", m counting current registrars with a target. Never a percentage, never "n / m", never a bare "year". One exemption wording: "1 registrar exempt this period, not counted", and on her row "Exempt this period" with the stored reason. Ties are ordered by surname, then first name (T298).</td></tr>
+<tr><td>§ The NavMenu — nav table</td><td>SpecialityAdmin, SubSpecialityAdmin: Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions. CommitteeMember: Home, Programme trainees, Committee reviews, Decision panels. Coordinator: Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests. "What the nav never holds" loses Stalled activities, Programme trainees and the STAR review queue from its unbuilt list.</td></tr>
+<tr><td>§ The NavMenu — owner table</td><td>Add: "A registrar's progress (/programme/trainees/{id}) | Committee member, Speciality and Sub-speciality admin, Coordinator: Programme trainees". Change: "Entrustment decisions | none: under no list until flow 09 places it" → it is an item of the speciality admins' menus, so it lights itself; no owner row is needed for them (Administrator and Institutional admin, if it admits them, stay unowned until flow 09).</td></tr>
+<tr><td>§ Flat limit — to settle</td><td>C10 counts the Coordinator's eight role links. DESIGN.md counts "Home and the personal links" within the 8, which makes his menu 9 and grouped. Either the rule reads "up to 8 of the role's links, the personal links not counted" (recommended: they sit under their own rule already), or his menu groups. The boards draw it flat, per C10.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card">
+<h2 style="margin-top: 0">C1–C11, where each is drawn</h2>
+<div class="table-container"><table class="clinic-table">
+<tbody>
+<tr><td style="width: 70px"><b>C1</b></td><td>Real figures from the screenshots and C1: the fifteen catalogue titles and cadences (3.52's screenshot), KGK-001 and PAED-006's story-end title (A.7.7's), the two Step 3.30 requests. Brackets remain only where nothing gives the fact, and every board with one says so in its yellow note: the portfolio review's EPA and date, the CBD's EPA, date and assessor, times of day, last-filed dates, year 1 targets other than PAED-004's, exit levels and cadences not shown, the heavy state's extra rows, the story's end roster figures, Lerato Molefe's other ratings.</td></tr>
+<tr><td><b>C2</b></td><td>Registrar boards r1–r7: address, h1, tab, trail, lit; ended read-only (r6); not found (r7).</td></tr>
+<tr><td><b>C3</b></td><td>One rule line everywhere: "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5." and on the page "Waiting counts from the last move: any save restarts it." The old 7-day stall setting is not referenced anywhere.</td></tr>
+<tr><td><b>C4</b></td><td>Waiting boards w1–w8 and registrar r2: who (a), the mail (b), "It moves nothing" (c), "Reminded 2026-10-04 by Pieter Smit" replacing the button, every reader (d), four refusals (e), the role-held row with no reminder (f, w9).</td></tr>
+<tr><td><b>C5</b></td><td>No Reassign on any round 2 board. Filed as its own task.</td></tr>
+<tr><td><b>C6</b></td><td>"Nothing filed in 30 days" on the card, the filter and the "Last filed" column; the digest's rule in the list's rule line; the card's empty sentence as given.</td></tr>
+<tr><td><b>C7</b></td><td>Each page's subtitle and each card's scope line says whose: "at Kgosi Kgari Teaching Hospital" (committee, Coordinator), "in Paediatrics" (Speciality admin), "in [sub-speciality]" (Sub-speciality admin).</td></tr>
+<tr><td><b>C8</b></td><td>Links only to what opens: waiting rows → the activity; roster rows → the registrar page; EPA names on the registrar page are text, and in the standing panel move the focus to that EPA's chart.</td></tr>
+<tr><td><b>C9</b></td><td>The registrar page's six sections in order; the standing panel fails apart (r4). Section title "EPAs", not "Her EPAs": Wombat stores no pronoun, so a page about any registrar cannot choose one.</td></tr>
+<tr><td><b>C10</b></td><td>The Coordinator's eight links, flat (Menus board); the limit question above.</td></tr>
+<tr><td><b>C11</b></td><td>Waiting filters (w10), its heading in flow 04's words, no match (w11) with Show all waiting.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card">
+<h2 style="margin-top: 0">Tokens, contrast and targets</h2>
+<p>No new colour token. Every colour below is tokens.json's; the ratios are DESIGN.md § Contrast's.</p>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th>Use</th><th>Pair</th><th>Needs</th><th>Ratio</th></tr></thead>
+<tbody>
+<tr><td>Roster and coverage figures</td><td>primary-color on surface-color</td><td>4.5</td><td>10.98</td></tr>
+<tr><td>Captions, scope lines, cadence, reminder line, card-empty</td><td>muted-text on surface-color</td><td>4.5</td><td>5.09</td></tr>
+<tr><td>Names and EPA links</td><td>link-color on surface-color</td><td>4.5</td><td>6.70</td></tr>
+<tr><td>Overdue row stripe; warning card stripe</td><td>warning-color on surface-color</td><td>3</td><td>5.77</td></tr>
+<tr><td>Overdue badge text · edge</td><td>text-color · warning-color on warning-bg</td><td>4.5 · 3</td><td>11.89 · 5.43</td></tr>
+<tr><td>Exempt badge text · edge</td><td>text-color · input-border on header-bg</td><td>4.5 · 3</td><td>11.36 · 3.42</td></tr>
+<tr><td>Coverage bar fill on its track</td><td>secondary-color (complete: success-color) on hover-bg</td><td>3</td><td>4.61 (5.58)</td></tr>
+<tr><td>Reminder result · refusal</td><td>text-color on success-bg · danger-bg; edges success · danger</td><td>4.5 · 3</td><td>11.23 · 11.81; 5.23 · 5.56</td></tr>
+<tr><td>Send a reminder (outline)</td><td>secondary-color on surface-color</td><td>4.5</td><td>4.86</td></tr>
+<tr><td>Focus ring</td><td>focus-ring on surface · background · the tints</td><td>3</td><td>4.86 · 4.61 · 4.32–4.57</td></tr>
+<tr><td>Dialog backdrop</td><td>scrim</td><td>—</td><td>—</td></tr>
+</tbody></table></div>
+<p><b>Targets.</b> At 1280: a roster or coverage row is at least 44px tall (its link is the name's line, 24px+); Send a reminder 28px (btn-sm, ≥24); filter buttons 36px. Below 641px every new link is a 44px block (.roster-name, .coverage-epa, .roster-table's name, .review-links a), Send a reminder and the filter buttons 44px and full width, the card foots 44px (flow 04's rule).</p>
+<p><b>Spacing.</b> On the scale: gaps 4/8/16/24px, card padding 24px, the 10rem figure column. No literal outside the scale but the shell's own.</p>
+</section>
+
+<section class="detail-card">
+<h2 style="margin-top: 0">Accessibility review (WCAG 2.1 AA)</h2>
+<ul>
+<li><b>1.1.1, 1.4.1.</b> Every bar sits under its words and is aria-hidden (coverage) or a named progressbar (the index, "PAED-001: 0 of 3 this semester"); Overdue is a word; Exempt is a word.</li>
+<li><b>1.3.1.</b> Each card is a section named by its h2; each list page's heading is its list's h2 (tabindex -1); the tables are real tables, the registrar the row header; the stacked rows keep data-label.</li>
+<li><b>2.4.4, 4.1.2.</b> Links named for their registrar, EPA or activity ("Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu"); Send a reminder's accessible name names the assessor and the activity; the pager's size select has a label (T280's gap closed here).</li>
+<li><b>2.4.3, 3.2.</b> Show posts and lands focus on the list heading; Try again focuses the first card's heading, or the list's; the reminder's dialog opens on Don't send, and its result or refusal takes the focus, the next Tab the next row's link.</li>
+<li><b>1.4.10.</b> Nothing scrolls sideways at 390: the roster and coverage rows stack, both tables stack, the trajectory draws at 322.</li>
+<li><b>2.5.5 (as the brief sets it).</b> Targets as above.</li>
+</ul>
+</section>
+
+<section class="detail-card">
+<h2 style="margin-top: 0">Open questions for the operator</h2>
+<ol>
+<li><b>Nothing filed in 30 days and new registrars.</b> The digest's rule lists a registrar admitted last week who has filed nothing yet (Coordinator board k2, Step 2.32's moment: all five). Keep it, or count from admission?</li>
+<li><b>Flat limit</b>: the counting question above (C10).</li>
+<li><b>One reminder per South African day</b> per request: is a second staff member blocked too (drawn so: w4), or only the sender?</li>
+<li><b>A withdrawn registrar's waiting request</b> (r6): cancelled at withdrawal, or left waiting? Drawn left waiting with no reminder.</li>
+</ol>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4200}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

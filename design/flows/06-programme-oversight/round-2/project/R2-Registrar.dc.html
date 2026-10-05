@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 2 · One registrar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow06-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-board">
+<sc-for list="{{states}}" as="s" hint-placeholder-count="1">
+<section class="r2-state">
+<p class="r2-cap"><b>{{s.title}}</b> · {{s.cap}}</p>
+<sc-if value="{{s.note}}"><p class="r2-note">{{s.note}}</p></sc-if>
+<div class="r2-clip {{s.clip}}">
+<div class="page">
+<input type="checkbox" id="nt-{{s.id}}" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>{{s.role}}</span></p>
+<label class="nav-toggle-label" for="nt-{{s.id}}"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"></path></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">{{s.role}}</span></p><sc-if value="{{s.sw}}"><a class="role-switch" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"></path></svg><span>{{s.sw}}</span></a></sc-if></div>
+<div class="nav-list">
+<ul class="nav-items">
+<sc-for list="{{s.nav}}" as="n">
+<li><sc-if value="{{n.lit}}"><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if><sc-if value="{{n.rest}}"><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if></li>
+</sc-for>
+</ul>
+<ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="nav-label">My data rights</span></a></li></ul>
+</div>
+</nav>
+<div class="account-row">
+<a class="account-link" href="#" title="{{s.who}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8a4 4 0 1 0 8 0a4 4 0 1 0-8 0M6 20a6 6 0 0 1 12 0"></path></svg><span class="account-name">{{s.who}}</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out</button></form>
+</div>
+</header>
+<main>
+<article>
+
+<sc-if value="{{s.is.notfound}}">
+<div class="header-container"><div><h1 class="page-title-with-icon"><svg class="icon page-title-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0M20 20l-3.5-3.5"></path></svg>Page not found</h1></div></div>
+<div class="system-panel"><p>There is no page at this address.</p><p class="muted">Check the address, or start again from Home.</p><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5"></path></svg>Go to Home</a></div></div>
+</sc-if>
+
+<sc-if value="{{s.page}}">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+<li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Programme trainees</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-current"><span aria-current="page">{{s.crumb}}</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>{{s.name}}</h1><p class="page-subtitle">{{s.sub}}</p></div></div>
+</sc-if>
+
+<sc-if value="{{s.is.error}}"><div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load this registrar's progress.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></div></div></div></sc-if>
+
+<sc-if value="{{s.body}}">
+<div class="registrar-stack">
+
+<section class="detail-card period-card" aria-labelledby="period-{{s.id}}">
+<h2 id="period-{{s.id}}" class="epa-section-title">This period</h2>
+<sc-if value="{{s.figs}}">
+<div class="dashboard-metric-row"><div class="dashboard-metric"><span class="dashboard-metric-value">{{s.figs.sem}}</span><span class="dashboard-metric-label">EPAs met this semester</span></div><div class="dashboard-metric"><span class="dashboard-metric-value">{{s.figs.yr}}</span><span class="dashboard-metric-label">EPAs met in 2026</span></div></div>
+<p class="progress-row-meta">Semester 2, 2026 ends on 2026-11-30. {{s.figs.year}} sets the minimum level each encounter is judged against.</p>
+</sc-if>
+<sc-if value="{{s.ended}}"><p>No targets this period: the programme ended part-way through Semester 2, 2026, on 2026-10-02. What is below is the record as it stood then, read-only.</p></sc-if>
+</section>
+
+<section class="index-section" aria-labelledby="epas-{{s.id}}">
+<h2 id="epas-{{s.id}}">EPAs</h2>
+<div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="index-caption">Each semester · 10 EPAs</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">Semester 2, 2026</th><th scope="col" role="columnheader">Committee decides</th><th scope="col" role="columnheader">{{s.starHead}}</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader">PAED-001 — Providing paediatric emergency care to children</th><td role="cell" class="count-cell" data-label="Semester 2, 2026"><span class="count-figure">{{s.e1.fig}}</span><div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="{{s.e1.n}}" aria-label="PAED-001: {{s.e1.fig}}"><div class="progress-bar-fill {{s.e1.done}}" style="width: {{s.e1.pct}}"></div></div><p class="count-meta">{{s.e1.meta}}</p></td><td role="cell" data-label="Committee decides">Decided each semester</td><td role="cell" class="verdict-cell" data-label="{{s.starHead}}"><span class="badge {{s.e1.badgeCls}}">{{s.e1.badge}}</span> <span class="verdict-level">{{s.e1.level}}</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader">PAED-002 — Managing common paediatric presentations</th><td role="cell" class="count-cell" data-label="Semester 2, 2026"><span class="count-figure">0 of 3 this semester</span><div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" aria-label="PAED-002: 0 of 3 this semester"><div class="progress-bar-fill" style="width: 0%"></div></div><p class="count-meta">{{s.more3}}</p></td><td role="cell" data-label="Committee decides">Decided each semester</td><td role="cell" class="verdict-cell" data-label="{{s.starHead}}"><span class="badge {{s.nd.cls}}">{{s.nd.label}}</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader">PAED-004 — Managing common neonatal conditions</th><td role="cell" class="count-cell" data-label="Semester 2, 2026"><span class="count-figure">{{s.e4.fig}}</span><div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="{{s.e4.n}}" aria-label="PAED-004: {{s.e4.fig}}"><div class="progress-bar-fill" style="width: {{s.e4.pct}}"></div></div><p class="count-meta">{{s.e4.meta}}</p></td><td role="cell" data-label="Committee decides">[cadence]</td><td role="cell" class="verdict-cell" data-label="{{s.starHead}}"><span class="badge {{s.nd.cls}}">{{s.nd.label}}</span></td></tr>
+<tr role="row"><td role="cell" colspan="4" class="muted">PAED-003 and PAED-005 to PAED-015's semester EPAs follow in code order, each as these.</td></tr>
+</tbody></table></div>
+<div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="index-caption">Once a year · 5 EPAs</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">2026 academic year</th><th scope="col" role="columnheader">Committee decides</th><th scope="col" role="columnheader">{{s.starHead}}</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader">PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children</th><td role="cell" class="count-cell" data-label="2026 academic year"><span class="count-figure">0 of 1 in 2026</span><div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0" aria-label="PAED-008: 0 of 1 in 2026"><div class="progress-bar-fill" style="width: 0%"></div></div><p class="count-meta">{{s.more1}}</p></td><td role="cell" data-label="Committee decides">Decided as opportunity allows</td><td role="cell" class="verdict-cell" data-label="{{s.starHead}}"><span class="badge {{s.nd.cls}}">{{s.nd.label}}</span></td></tr>
+<tr role="row"><td role="cell" colspan="4" class="muted">PAED-009, PAED-011, PAED-013 and PAED-014 follow, each as this.</td></tr>
+</tbody></table></div>
+</section>
+
+<sc-if value="{{s.standOk}}">
+<section class="standing-panel detail-card" aria-labelledby="stand-{{s.id}}">
+<h2 id="stand-{{s.id}}" tabindex="-1">Entrustment against Annexure A</h2>
+<p>{{s.first}} is in training year {{s.ty}} on {{s.on}}. Each target is the level the curriculum sets for training year {{s.ty}}: Annexure A's, for the College's EPAs. Where it sets none, the EPA's exit level stands in, and the row says so. The exit level is the level each EPA must reach to finish the programme.</p>
+<dl class="details-list"><div><dt>STAR decisions against training year {{s.ty}} targets</dt><dd>{{s.sum}}</dd></div><div><dt>Exit rule</dt><dd>{{s.exit}}</dd></div></dl>
+<p class="progress-row-meta">For information only. Recording a Graduate decision or completing the programme does not check the exit rule.</p>
+<div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption>Each EPA's STAR decision against the training year {{s.ty}} target and the exit level, with the latest rating.</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">Year {{s.ty}} target</th><th scope="col" role="columnheader">STAR decision</th><th scope="col" role="columnheader">Against target</th><th scope="col" role="columnheader">Exit level</th><th scope="col" role="columnheader">Latest rating</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader">{{s.sA.epa}}</th><td role="cell" data-label="Target">{{s.sA.target}}</td><td role="cell" data-label="STAR decision">{{s.sA.star}}<span class="standing-rating-meta">{{s.sA.issued}}</span></td><td role="cell" data-label="Against target"><span class="badge {{s.sA.cls}}">{{s.sA.against}}</span></td><td role="cell" data-label="Exit level">{{s.sA.exit}} <span class="standing-rating-meta">{{s.sA.exitNote}}</span></td><td role="cell" data-label="Latest rating">{{s.sA.rating}}</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><sc-if value="{{s.sB.chart}}"><a class="epa-link" href="#trajectory-{{s.id}}-h">{{s.sB.epa}}</a></sc-if><sc-if value="{{s.sB.text}}">{{s.sB.epa}}</sc-if></th><td role="cell" data-label="Target">{{s.sB.target}}</td><td role="cell" data-label="STAR decision">{{s.sB.star}}</td><td role="cell" data-label="Against target"><span class="badge badge-standing-none">No decision</span></td><td role="cell" data-label="Exit level">{{s.sB.exit}} <span class="standing-rating-meta">Not yet</span></td><td role="cell" data-label="Latest rating"><sc-if value="{{s.sB.chart}}"><a class="standing-rating-link" href="#">{{s.sB.rating}}<span class="visually-hidden"> — open this {{s.sB.code}} rating</span></a> <span class="standing-rating-meta">{{s.sB.ratingMeta}}</span></sc-if><sc-if value="{{s.sB.text}}">None</sc-if></td></tr>
+<tr role="row"><td role="cell" colspan="6" class="muted">The other EPAs follow in code order, each as these.</td></tr>
+</tbody></table></div>
+</section>
+</sc-if>
+<sc-if value="{{s.standErr}}">
+<section class="standing-panel detail-card" aria-labelledby="stand-{{s.id}}">
+<h2 id="stand-{{s.id}}" tabindex="-1">Entrustment against Annexure A</h2>
+<div class="alert alert-danger section-error" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load Nomsa Mahlangu's standing.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm">Try again</button></div></div>
+</section>
+</sc-if>
+
+<section class="list-section" aria-labelledby="traj-{{s.id}}">
+<h2 class="list-section-title" id="traj-{{s.id}}">Rating trajectories</h2>
+<sc-if value="{{s.noRating}}"><p class="card-empty">{{s.noRating}}</p></sc-if>
+<sc-if value="{{s.chart4}}">
+<div class="stack-list">
+<section class="detail-card trajectory-card" id="trajectory-{{s.id}}" aria-labelledby="trajectory-{{s.id}}-h">
+<div class="trajectory-head"><h3 id="trajectory-{{s.id}}-h" tabindex="-1">PAED-004 — Managing common neonatal conditions</h3><p>Nomsa Mahlangu · 1 rating in the 2026 academic year, from Thandi Zulu. At the minimum.</p></div>
+<ul class="trajectory-key" aria-label="How to read the chart"><li><span class="trajectory-key-swatch trajectory-key-swatch--below" aria-hidden="true"></span>Below the minimum: 3a from 2026-01-15 (training year 1)</li><li><span class="trajectory-key-swatch trajectory-key-swatch--exit" aria-hidden="true"></span>Exit level [n]</li><li><span class="trajectory-key-swatch trajectory-key-swatch--dot" aria-hidden="true"></span>A rating</li></ul>
+<div class="trajectory-figure" role="region" aria-label="Rating chart for PAED-004" tabindex="0">
+<svg class="trajectory-chart trajectory-chart--sized trajectory-chart--wide" width="900" height="350" viewBox="0 0 900 350" role="img" aria-label="Chart of the 1 rating in the table below.">
+<rect class="trajectory-chart-band" x="441" y="12" width="363" height="312"></rect>
+<text class="trajectory-chart-band-label" x="88" y="26">Semester 1, 2026</text>
+<text class="trajectory-chart-band-label" x="445" y="26">Semester 2, 2026</text>
+<path class="trajectory-chart-below" d="M112 174H804V274H112Z"></path>
+<path class="trajectory-chart-rung" d="M84 54H804M84 94H804M84 134H804M84 174H804M84 214H804M84 254H804"></path>
+<line class="trajectory-chart-lane" x1="84" x2="804" y1="277" y2="277"></line>
+<text class="trajectory-chart-y-label" x="74" y="59" text-anchor="end">5</text><text class="trajectory-chart-y-label" x="74" y="99" text-anchor="end">4</text><text class="trajectory-chart-y-label" x="74" y="139" text-anchor="end">3b</text><text class="trajectory-chart-y-label" x="74" y="179" text-anchor="end">3a</text><text class="trajectory-chart-y-label" x="74" y="219" text-anchor="end">2</text><text class="trajectory-chart-y-label" x="74" y="259" text-anchor="end">1</text>
+<text class="trajectory-chart-note" x="74" y="305" text-anchor="end">Other scale</text>
+<path class="trajectory-chart-minimum" d="M112 174H804"></path>
+<line class="trajectory-chart-exit" x1="84" x2="804" y1="54" y2="54"></line>
+<text class="trajectory-chart-line-label" x="810" y="59">Exit [n]</text>
+<text class="trajectory-chart-minimum-label" x="810" y="179">Minimum 3a</text>
+<line class="trajectory-chart-axis" x1="84" x2="804" y1="324" y2="324"></line>
+<path class="trajectory-chart-axis" d="M84 324V329M145 324V329M200 324V329M262 324V329M321 324V329M382 324V329M441 324V329M502 324V329M563 324V329M623 324V329M684 324V329M743 324V329M804 324V329"></path>
+<text class="trajectory-chart-x-label" x="115" y="344" text-anchor="middle">Jan</text><text class="trajectory-chart-x-label" x="173" y="344" text-anchor="middle">Feb</text><text class="trajectory-chart-x-label" x="231" y="344" text-anchor="middle">Mar</text><text class="trajectory-chart-x-label" x="291" y="344" text-anchor="middle">Apr</text><text class="trajectory-chart-x-label" x="351" y="344" text-anchor="middle">May</text><text class="trajectory-chart-x-label" x="411" y="344" text-anchor="middle">Jun</text><text class="trajectory-chart-x-label" x="472" y="344" text-anchor="middle">Jul</text><text class="trajectory-chart-x-label" x="533" y="344" text-anchor="middle">Aug</text><text class="trajectory-chart-x-label" x="593" y="344" text-anchor="middle">Sep</text><text class="trajectory-chart-x-label" x="653" y="344" text-anchor="middle">Oct</text><text class="trajectory-chart-x-label" x="713" y="344" text-anchor="middle">Nov</text><text class="trajectory-chart-x-label" x="773" y="344" text-anchor="middle">Dec</text>
+<path class="trajectory-chart-dots" d="M615 174a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+</svg>
+<svg class="trajectory-chart trajectory-chart--sized trajectory-chart--narrow" width="322" height="288" viewBox="0 0 322 288" role="img" aria-label="Chart of the 1 rating in the table below.">
+<rect class="trajectory-chart-band" x="155" y="8" width="113" height="256"></rect>
+<text class="trajectory-chart-band-label" x="48" y="22">Semester 1, 2026</text>
+<text class="trajectory-chart-band-label" x="159" y="22">Semester 2, 2026</text>
+<path class="trajectory-chart-below" d="M53 142H268V222H53Z"></path>
+<path class="trajectory-chart-rung" d="M44 46H268M44 78H268M44 110H268M44 142H268M44 174H268M44 206H268"></path>
+<line class="trajectory-chart-lane" x1="44" x2="268" y1="225" y2="225"></line>
+<text class="trajectory-chart-y-label" x="34" y="50" text-anchor="end">5</text><text class="trajectory-chart-y-label" x="34" y="82" text-anchor="end">4</text><text class="trajectory-chart-y-label" x="34" y="114" text-anchor="end">3b</text><text class="trajectory-chart-y-label" x="34" y="146" text-anchor="end">3a</text><text class="trajectory-chart-y-label" x="34" y="178" text-anchor="end">2</text><text class="trajectory-chart-y-label" x="34" y="210" text-anchor="end">1</text>
+<text class="trajectory-chart-note" x="34" y="248" text-anchor="end">Other</text>
+<path class="trajectory-chart-minimum" d="M53 142H268"></path>
+<line class="trajectory-chart-exit" x1="44" x2="268" y1="46" y2="46"></line>
+<text class="trajectory-chart-line-label" x="274" y="50">Exit [n]</text>
+<text class="trajectory-chart-minimum-label" x="274" y="146">Min 3a</text>
+<line class="trajectory-chart-axis" x1="44" x2="268" y1="264" y2="264"></line>
+<path class="trajectory-chart-axis" d="M44 264V269M63 264V269M80 264V269M99 264V269M118 264V269M137 264V269M155 264V269M174 264V269M193 264V269M212 264V269M231 264V269M249 264V269M268 264V269"></path>
+<text class="trajectory-chart-x-label" x="54" y="282" text-anchor="middle">Jan</text><text class="trajectory-chart-x-label" x="90" y="282" text-anchor="middle">Mar</text><text class="trajectory-chart-x-label" x="127" y="282" text-anchor="middle">May</text><text class="trajectory-chart-x-label" x="165" y="282" text-anchor="middle">Jul</text><text class="trajectory-chart-x-label" x="202" y="282" text-anchor="middle">Sep</text><text class="trajectory-chart-x-label" x="240" y="282" text-anchor="middle">Nov</text>
+<path class="trajectory-chart-dots" d="M206 142a6 6 0 1 0 12 0a6 6 0 1 0 -12 0"></path>
+</svg>
+</div>
+<div class="table-container"><table class="clinic-table clinic-table--stack trajectory-table" role="table"><caption>The ratings, oldest first</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Encounter</th><th scope="col" role="columnheader">Rating</th><th scope="col" role="columnheader">Against the minimum then</th><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">Assessor</th></tr></thead>
+<tbody role="rowgroup"><tr role="row"><th scope="row" role="rowheader">2026-10-01</th><td role="cell" data-label="Rating">3a</td><td role="cell" data-label="Against the minimum then">At or above (3a, training year 1)</td><td role="cell"><a class="activity-link activity-block-link" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01</a></td><td role="cell" data-label="Assessor">Thandi Zulu</td></tr></tbody></table></div>
+</section>
+</div>
+</sc-if>
+<sc-if value="{{s.charts3}}">
+<div class="stack-list">
+<section class="detail-card trajectory-card" id="trajectory-{{s.id}}" aria-labelledby="trajectory-{{s.id}}-h">
+<div class="trajectory-head"><h3 id="trajectory-{{s.id}}-h" tabindex="-1">PAED-010 — Leading and operating within a clinical team</h3><p>Lerato Molefe · 1 rating in the 2026 academic year, from Thandi Zulu. At the minimum.</p></div>
+<ul class="trajectory-key" aria-label="How to read the chart"><li><span class="trajectory-key-swatch trajectory-key-swatch--below" aria-hidden="true"></span>Below the minimum: 4 until 2026-01-13, then 5 (training year 4)</li><li><span class="trajectory-key-swatch trajectory-key-swatch--exit" aria-hidden="true"></span>Exit level 5</li><li><span class="trajectory-key-swatch trajectory-key-swatch--dot" aria-hidden="true"></span>A rating</li></ul>
+<div class="trajectory-figure" role="region" aria-label="Rating chart for PAED-010" tabindex="0">
+<svg class="trajectory-chart trajectory-chart--sized trajectory-chart--wide" width="900" height="350" viewBox="0 0 900 350" role="img" aria-label="Chart of the 1 rating in the table below.">
+<rect class="trajectory-chart-band" x="441" y="12" width="363" height="312"></rect>
+<text class="trajectory-chart-band-label" x="88" y="26">Semester 1, 2026</text><text class="trajectory-chart-band-label" x="445" y="26">Semester 2, 2026</text>
+<path class="trajectory-chart-below" d="M84 114H110V74H804V274H84Z"></path>
+<path class="trajectory-chart-rung" d="M84 54H804M84 94H804M84 134H804M84 174H804M84 214H804M84 254H804"></path>
+<line class="trajectory-chart-lane" x1="84" x2="804" y1="277" y2="277"></line>
+<text class="trajectory-chart-y-label" x="74" y="59" text-anchor="end">5</text><text class="trajectory-chart-y-label" x="74" y="99" text-anchor="end">4</text><text class="trajectory-chart-y-label" x="74" y="139" text-anchor="end">3b</text><text class="trajectory-chart-y-label" x="74" y="179" text-anchor="end">3a</text><text class="trajectory-chart-y-label" x="74" y="219" text-anchor="end">2</text><text class="trajectory-chart-y-label" x="74" y="259" text-anchor="end">1</text>
+<text class="trajectory-chart-note" x="74" y="305" text-anchor="end">Other scale</text>
+<path class="trajectory-chart-minimum" d="M84 114H110V74H804"></path>
+<line class="trajectory-chart-exit" x1="84" x2="804" y1="54" y2="54"></line>
+<text class="trajectory-chart-line-label" x="810" y="59">Exit 5</text><text class="trajectory-chart-minimum-label" x="810" y="90">Minimum 5</text>
+<line class="trajectory-chart-axis" x1="84" x2="804" y1="324" y2="324"></line>
+<path class="trajectory-chart-axis" d="M84 324V329M145 324V329M200 324V329M262 324V329M321 324V329M382 324V329M441 324V329M502 324V329M563 324V329M623 324V329M684 324V329M743 324V329M804 324V329"></path>
+<text class="trajectory-chart-x-label" x="115" y="344" text-anchor="middle">Jan</text><text class="trajectory-chart-x-label" x="173" y="344" text-anchor="middle">Feb</text><text class="trajectory-chart-x-label" x="231" y="344" text-anchor="middle">Mar</text><text class="trajectory-chart-x-label" x="291" y="344" text-anchor="middle">Apr</text><text class="trajectory-chart-x-label" x="351" y="344" text-anchor="middle">May</text><text class="trajectory-chart-x-label" x="411" y="344" text-anchor="middle">Jun</text><text class="trajectory-chart-x-label" x="472" y="344" text-anchor="middle">Jul</text><text class="trajectory-chart-x-label" x="533" y="344" text-anchor="middle">Aug</text><text class="trajectory-chart-x-label" x="593" y="344" text-anchor="middle">Sep</text><text class="trajectory-chart-x-label" x="653" y="344" text-anchor="middle">Oct</text><text class="trajectory-chart-x-label" x="713" y="344" text-anchor="middle">Nov</text><text class="trajectory-chart-x-label" x="773" y="344" text-anchor="middle">Dec</text>
+<path class="trajectory-chart-dots" d="M614 54a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+</svg>
+<svg class="trajectory-chart trajectory-chart--sized trajectory-chart--narrow" width="322" height="288" viewBox="0 0 322 288" role="img" aria-label="Chart of the 1 rating in the table below.">
+<rect class="trajectory-chart-band" x="155" y="8" width="113" height="256"></rect>
+<text class="trajectory-chart-band-label" x="48" y="22">Semester 1, 2026</text><text class="trajectory-chart-band-label" x="159" y="22">Semester 2, 2026</text>
+<path class="trajectory-chart-below" d="M44 94H52V62H268V222H44Z"></path>
+<path class="trajectory-chart-rung" d="M44 46H268M44 78H268M44 110H268M44 142H268M44 174H268M44 206H268"></path>
+<line class="trajectory-chart-lane" x1="44" x2="268" y1="225" y2="225"></line>
+<text class="trajectory-chart-y-label" x="34" y="50" text-anchor="end">5</text><text class="trajectory-chart-y-label" x="34" y="82" text-anchor="end">4</text><text class="trajectory-chart-y-label" x="34" y="114" text-anchor="end">3b</text><text class="trajectory-chart-y-label" x="34" y="146" text-anchor="end">3a</text><text class="trajectory-chart-y-label" x="34" y="178" text-anchor="end">2</text><text class="trajectory-chart-y-label" x="34" y="210" text-anchor="end">1</text>
+<text class="trajectory-chart-note" x="34" y="248" text-anchor="end">Other</text>
+<path class="trajectory-chart-minimum" d="M44 94H52V62H268"></path>
+<line class="trajectory-chart-exit" x1="44" x2="268" y1="46" y2="46"></line>
+<text class="trajectory-chart-line-label" x="274" y="50">Exit 5</text><text class="trajectory-chart-minimum-label" x="274" y="77">Min 5</text>
+<line class="trajectory-chart-axis" x1="44" x2="268" y1="264" y2="264"></line>
+<path class="trajectory-chart-axis" d="M44 264V269M63 264V269M80 264V269M99 264V269M118 264V269M137 264V269M155 264V269M174 264V269M193 264V269M212 264V269M231 264V269M249 264V269M268 264V269"></path>
+<text class="trajectory-chart-x-label" x="54" y="282" text-anchor="middle">Jan</text><text class="trajectory-chart-x-label" x="90" y="282" text-anchor="middle">Mar</text><text class="trajectory-chart-x-label" x="127" y="282" text-anchor="middle">May</text><text class="trajectory-chart-x-label" x="165" y="282" text-anchor="middle">Jul</text><text class="trajectory-chart-x-label" x="202" y="282" text-anchor="middle">Sep</text><text class="trajectory-chart-x-label" x="240" y="282" text-anchor="middle">Nov</text>
+<path class="trajectory-chart-dots" d="M205 46a6 6 0 1 0 12 0a6 6 0 1 0 -12 0"></path>
+</svg>
+</div>
+<div class="table-container"><table class="clinic-table clinic-table--stack trajectory-table" role="table"><caption>The ratings, oldest first</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Encounter</th><th scope="col" role="columnheader">Rating</th><th scope="col" role="columnheader">Against the minimum then</th><th scope="col" role="columnheader">Activity</th><th scope="col" role="columnheader">Assessor</th></tr></thead>
+<tbody role="rowgroup"><tr role="row"><th scope="row" role="rowheader">2026-09-30</th><td role="cell" data-label="Rating">5</td><td role="cell" data-label="Against the minimum then">At or above (5, training year 4)</td><td role="cell"><a class="activity-link activity-block-link" href="#">Direct Observation (Paediatrics) · PAED-010 · 2026-09-30</a></td><td role="cell" data-label="Assessor">Thandi Zulu</td></tr></tbody></table></div>
+</section>
+<section class="detail-card trajectory-card" aria-labelledby="traj-b-{{s.id}}"><div class="trajectory-head"><h3 id="traj-b-{{s.id}}" tabindex="-1">PAED-001 — Providing paediatric emergency care to children</h3><p>Lerato Molefe · [n] ratings in the 2026 academic year. STAR 5, issued 2026-10-04.</p></div><p class="r2-note">Drawn as PAED-010's, its ratings plotted; the brief and the screenshots give none of them.</p></section>
+<section class="detail-card trajectory-card" aria-labelledby="traj-c-{{s.id}}"><div class="trajectory-head"><h3 id="traj-c-{{s.id}}" tabindex="-1">[EPA] — [title]</h3><p>Lerato Molefe · [n] ratings in the 2026 academic year.</p></div><p class="r2-note">The third rated EPA is not named in the brief.</p></section>
+</div>
+</sc-if>
+</section>
+
+<section class="detail-card {{s.waitCls}}" aria-labelledby="w-{{s.id}}">
+<h2 class="dashboard-card-title" id="w-{{s.id}}"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0M12 6v6l4 2"></path></svg><span>Waiting for assessors</span><sc-if value="{{s.waitBadge}}"><span class="badge badge-submitted">{{s.waitBadge}}</span></sc-if></h2>
+<sc-if value="{{s.waitRow}}">
+<p class="needs-you-rule">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.</p>
+<ul class="needs-you stack-list"><li class="needs-you-row needs-you-row--overdue"><a class="activity-link" href="#">{{s.waitRow.name}}</a><span class="needs-you-badges"><span class="badge badge-submitted">{{s.waitRow.state}}</span><span class="badge badge-overdue">Overdue</span></span><p class="needs-you-why">With {{s.waitRow.with}} · waiting {{s.waitRow.wait}}</p><sc-if value="{{s.remind}}"><button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send {{s.waitRow.with}} a reminder about {{s.waitRow.name}}">Send a reminder</button></sc-if><sc-if value="{{s.noRemind}}"><p class="reminder-line">{{s.noRemind}}</p></sc-if></li></ul>
+</sc-if>
+<sc-if value="{{s.waitNone}}"><p class="card-empty">{{s.waitNone}}</p></sc-if>
+</section>
+
+<section class="detail-card" aria-labelledby="rev-{{s.id}}">
+<h2 class="dashboard-card-title" id="rev-{{s.id}}"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"></path></svg><span>Committee reviews</span></h2>
+<sc-if value="{{s.review}}"><ul class="review-links"><li><a href="#">{{s.review}}</a></li></ul></sc-if>
+<sc-if value="{{s.noReview}}"><p class="card-empty">{{s.noReview}}</p></sc-if>
+</section>
+
+</div>
+</sc-if>
+</article>
+</main>
+</div>
+</div>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"show":{"editor":"text","default":""},"$preview":{"width":1280,"height":8000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      home: 'M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5',
+      users: 'M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9M9 9a3 3 0 1 0 6 0a3 3 0 1 0-6 0',
+      clock: 'M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0M12 6v6l4 2',
+      file: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6',
+      scale: 'm16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2',
+      cal: 'M8 2v4M16 2v4M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM3 10h18M9 16l2 2 4-4',
+      award: 'M6 8a6 6 0 1 0 12 0a6 6 0 1 0-12 0M15.477 12.89 17 22l-5-3-5 3 1.523-9.11',
+      msg: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+      shield: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4'
+    };
+    const MENUS = {
+      cm: [['Home', P.home], ['Programme trainees', P.users], ['Committee reviews', P.file], ['Decision panels', P.scale]],
+      sa: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Entrustment decisions', P.award]],
+      co: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['MSF campaigns', P.msg], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Data rights requests', P.shield]]
+    };
+    const nav = (k, lit) => MENUS[k].map(([label, d]) => ({ label, d, lit: label === lit, rest: label !== lit }));
+    const ROLE = { cm: ['Committee member', 'Thandi Zulu', 'Switch to Assessor'], sa: ['Speciality admin', 'Refilwe Mokoena', ''], co: ['Coordinator', 'Pieter Smit', ''] };
+    const ND = { cls: 'badge-standing-none', label: 'No decision' };
+    const nomsa = {
+      name: 'Nomsa Mahlangu', crumb: 'Nomsa Mahlangu', first: 'Nomsa Mahlangu', ty: '1', on: '2026-10-04',
+      sub: 'Training year 1 · Semester 2, 2026 · Kgosi Kgari Teaching Hospital, Paediatrics',
+      starHead: 'STAR against training year 1', nd: ND, more3: '3 more by 2026-11-30', more1: '1 more by 2026-11-30',
+      e1: { fig: '0 of 3 this semester', n: '0', pct: '0%', done: '', meta: '3 more by 2026-11-30', badgeCls: 'badge-standing-none', badge: 'No decision', level: '' },
+      e4: { fig: '1 of 3 this semester', n: '1', pct: '33%', meta: '2 more by 2026-11-30' },
+      figs: { sem: '0 of 10', yr: '0 of 5', year: 'Training year 1' }, ended: false,
+      sum: '0 at or above · 0 below · 15 with no decision, of 15 EPAs',
+      exit: '0 of 15 EPAs at their exit level by STAR decision (level 5: 0 of 9 · level 4: 0 of 6).',
+      sA: { epa: 'PAED-001 — Providing paediatric emergency care to children', target: '[level]', star: 'None', issued: '', cls: 'badge-standing-none', against: 'No decision', exit: '5', exitNote: 'Not yet', rating: 'None' },
+      sB: { epa: 'PAED-004 — Managing common neonatal conditions', code: 'PAED-004', target: '3a', star: 'None', exit: '[n]', chart: true, text: false, rating: '3a · Encounter 2026-10-01', ratingMeta: 'Mini-CEX; at or above the target' },
+      standOk: true, standErr: false, noRating: '', chart4: true, charts3: false,
+      waitCls: 'detail-card--emphasis', waitBadge: '', waitRow: null, waitNone: 'Nothing of Nomsa Mahlangu\'s waits for an assessor.', remind: false, noRemind: '',
+      review: '', noReview: 'No review is scheduled for Nomsa Mahlangu.'
+    };
+    const st = (role, lit, o) => Object.assign({ note: '', clip: '', page: true, body: true, is: {}, role: ROLE[role][0], who: ROLE[role][1], sw: ROLE[role][2], nav: nav(role, lit) }, nomsa, o);
+    const all = [
+      st('cm', 'Programme trainees', { id: 'r1', title: 'One registrar · typical (Nomsa Mahlangu after Step 3.33)', cap: 'Thandi Zulu from Programme trainees: /programme/trainees/{ProfileId}; title "Nomsa Mahlangu · Wombat"; Programme trainees lit. Six sections in C9\'s order. EPA names are text; in the standing panel PAED-004, which has a chart, moves the focus to it.', note: 'Year 1 targets other than PAED-004\'s 3a, PAED-004\'s exit level and its decision cadence are not in the brief: bracketed. Two rows a table stand for fifteen.' }),
+      st('co', 'Programme trainees', { id: 'r2', title: 'One registrar · no rating yet, and Send a reminder (Step 3.30)', cap: 'Pieter Smit, before Thandi Zulu completed the Mini-CEX: no chart yet; her waiting request, overdue, with Send a reminder (the same ReminderAction as the list).',
+        e4: { fig: '0 of 3 this semester', n: '0', pct: '0%', meta: '3 more by 2026-11-30' },
+        sB: { epa: 'PAED-004 — Managing common neonatal conditions', code: 'PAED-004', target: '3a', star: 'None', exit: '[n]', chart: false, text: true },
+        chart4: false, noRating: 'No ratings yet in the 2026 academic year.', clip: 'r2-clip--xl',
+        waitCls: 'detail-card--warning', waitBadge: '1 waiting, 1 overdue', waitRow: { name: 'Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01', state: 'Requested', with: 'Thandi Zulu', wait: '8 days' }, remind: true, waitNone: '' }),
+      st('sa', 'Programme trainees', { id: 'r3', title: 'One registrar · with STARs (Lerato Molefe before graduation)', cap: 'Refilwe Mokoena: the standing panel whole, a STAR at or above; the charts as the review page draws them, over the academic year, with no window.', note: 'Lerato Molefe\'s STARs and ratings are not in the brief: PAED-001\'s STAR 5 (2026-10-04) and PAED-010\'s rating are the design system\'s review-page example; the rest bracketed.',
+        name: 'Lerato Molefe', crumb: 'Lerato Molefe', first: 'Lerato Molefe', ty: '4', starHead: 'STAR against training year 4',
+        sub: 'Training year 4 · Semester 2, 2026 · Kgosi Kgari Teaching Hospital, Paediatrics',
+        figs: { sem: '1 of 10', yr: '0 of 5', year: 'Training year 4' },
+        e1: { fig: '3 of 3 this semester', n: '3', pct: '100%', done: 'is-complete', meta: 'Target met for Semester 2, 2026.', badgeCls: 'badge-standing-met', badge: 'At or above', level: '5' },
+        e4: { fig: '[n] of 3 this semester', n: '0', pct: '0%', meta: '[n] more by 2026-11-30' },
+        sum: '[n] at or above · [n] below · [n] with no decision, of 15 EPAs',
+        exit: '[n] of 15 EPAs at their exit level by STAR decision (level 5: [n] of 9 · level 4: [n] of 6).',
+        sA: { epa: 'PAED-001 — Providing paediatric emergency care to children', target: '5', star: '5', issued: 'Issued 2026-10-04', cls: 'badge-standing-met', against: 'At or above', exit: '5', exitNote: 'Reached', rating: '[rating]' },
+        sB: { epa: 'PAED-010 — Leading and operating within a clinical team', code: 'PAED-010', target: '5', star: 'None', exit: '5', chart: true, text: false, rating: '5 · Encounter 2026-09-30', ratingMeta: 'Direct observation; at or above the target' },
+        chart4: false, charts3: true, waitNone: 'Nothing of Lerato Molefe\'s waits for an assessor.', review: 'Final review, [date]', noReview: '' }),
+      st('cm', 'Programme trainees', { id: 'r4', title: 'One registrar · a section\'s load error', cap: 'The standing panel failed alone: it says so in place, with its own Try again; the page and the other sections stand.', standOk: false, standErr: true, clip: 'r2-clip--l' }),
+      st('cm', 'Programme trainees', { id: 'r5', title: 'One registrar · the page\'s load error', cap: 'Nothing loaded, so no name: the trail ends at Programme trainees; a sentence and Try again, never the exception.', body: false, page: false, is: { error: true } }),
+      st('sa', 'Programme trainees', { id: 'r6', title: 'One registrar · programme ended (read-only)', cap: 'Pieter du Plessis withdrew: the subtitle says when, This period has no figures, no Send a reminder anywhere. No list in this flow leads here (flow 13 will); an address or a waiting row does.', note: 'Whether his waiting portfolio review was cancelled at withdrawal is not in the brief; drawn still waiting, with no reminder.',
+        name: 'Pieter du Plessis', crumb: 'Pieter du Plessis', first: 'Pieter du Plessis', ty: '2', starHead: 'STAR against training year 2',
+        sub: 'Training year 2 · Programme ended 2026-10-02 · Kgosi Kgari Teaching Hospital, Paediatrics',
+        figs: null, ended: true, e4: { fig: '0 of 3 this semester', n: '0', pct: '0%', meta: 'No target after 2026-10-02' }, more3: 'No target after 2026-10-02', more1: 'No target after 2026-10-02',
+        e1: { fig: '0 of 3 this semester', n: '0', pct: '0%', done: '', meta: 'No target after 2026-10-02', badgeCls: 'badge-standing-none', badge: 'No decision', level: '' },
+        sB: { epa: 'PAED-004 — Managing common neonatal conditions', code: 'PAED-004', target: '[level]', star: 'None', exit: '[n]', chart: false, text: true },
+        sum: '0 at or above · 0 below · 15 with no decision, of 15 EPAs', chart4: false, noRating: 'No ratings in the 2026 academic year.',
+        waitCls: 'detail-card--warning', waitBadge: '1 waiting, 1 overdue', waitRow: { name: 'Portfolio and Logbook Review (Paediatrics) · [EPA] · [date]', state: 'Awaiting review', with: 'Mohammed Patel', wait: '[n] days' }, remind: false, noRemind: 'No reminder: the programme ended on 2026-10-02.', waitNone: '',
+        noReview: 'No review is scheduled for Pieter du Plessis.', clip: 'r2-clip--xl' }),
+      st('cm', '', { id: 'r7', title: 'One registrar · not found', cap: 'An id out of Thandi Zulu\'s scope, or an erased account (Sipho Ndlovu\'s): flow 01\'s Page not found, nothing lit, no trail.', page: false, body: false, is: { notfound: true } })
+    ];
+    const pick = (this.props.show || '').split(',').map((x) => x.trim()).filter(Boolean);
+    return { states: pick.length ? all.filter((s) => pick.indexOf(s.id) >= 0) : all };
+  }
+}
+</script>
+</body>
+</html>
