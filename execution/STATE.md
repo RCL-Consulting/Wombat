@@ -9,7 +9,7 @@ Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 s
 replayed journey catalogue with a screenshot baseline, and **five redesign flows are done**: 01 the shell (T335,
 `b347e11c`), 02 sign-in (T339, `f50dffb2`), 03 filing an activity (T342, `725237ee`), 04 an assessor's inbox (T350,
 `06aa51d7`) and 05 a registrar's progress (T355, `b020c942`), each designed, built, replayed and in the design system
-(version 15). Left: flows 06–20 (T358 next), the deploy, the College's answers, 15 P2s, P3 polish. **No push.**
+(version 15). Left: flows 06–20 (T358 next), the deploy, the College's answers, 15 P2s, P3 polish. The remote is pushable again (2026-10-05).
 
 ## Now
 

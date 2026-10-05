@@ -4,8 +4,7 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 
 ## Session 2026-10-04 (Opus): T358, flow 06, started; step 1 (the brief) done
 
-The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, disconnected from its remote: commit
-locally, never push.** The harness is `python C:\dev\rcl_execution\bin\harness.py` (the repo holds no copy).
+The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, reconnected to its remote (2026-10-05, the operator): commit locally; push when the operator asks.** The harness is `python C:\dev\rcl_execution\bin\harness.py` (the repo holds no copy).
 
 ### Done
 
@@ -53,7 +52,6 @@ locally, never push.** The harness is `python C:\dev\rcl_execution\bin\harness.p
 
 ### Traps
 
-- **No push.** The remote is disconnected.
 - **A design-system publish:** read each published file and compare it with HEAD; send the files with `root` = a folder
   holding `project/…`; read the index again, send it last.
 - **Copied replay scripts carry stale paths, ids and date helpers;** compute every date from D.
