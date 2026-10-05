@@ -1,0 +1,89 @@
+<!-- @dsCard group="Programme" height=880 width=974 subtitle="Targets by EPA: each EPA's n of m registrars met, fewest first, its name a link to the registrars short on it; met by all as text; all exempt; empty" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EpaTargetCoverageList</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">The Committee member's card (Step 3.52; three of sixteen rows): the rule line, PAED-002 and PAED-003 at "0 of 5", PAED-001 last at "2 of 5"; each name a link with the figure in words hidden after it; the bar aria-hidden</p>
+<section class="detail-card" aria-labelledby="card-epa-targets">
+  <h2 class="dashboard-card-title" id="card-epa-targets"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg><span>Targets by EPA</span></h2>
+  <div class="dashboard-card-body">
+    <p class="needs-you-rule">Fewest registrars met first. Semester 2, 2026 ends on 2026-11-30.</p>
+    <ul class="list-unstyled">
+      <li class="coverage-row">
+        <div>
+          <a class="progress-row-link" href="#">PAED-002 — Managing common paediatric presentations<span class="visually-hidden">: 0 of 5 registrars met this semester. Show the registrars short on it.</span></a>
+          <p class="progress-row-meta">3 per semester</p>
+        </div>
+        <div class="dashboard-metric">
+          <span class="count-figure">0 of 5</span>
+          <span class="dashboard-metric-label">registrars met this semester</span>
+          <div class="progress-bar" aria-hidden="true"><div class="progress-bar-fill" style="width:0%"></div></div>
+        </div>
+      </li>
+      <li class="coverage-row">
+        <div>
+          <a class="progress-row-link" href="#">PAED-003 — Providing intensive care to children<span class="visually-hidden">: 0 of 5 registrars met this semester. Show the registrars short on it.</span></a>
+          <p class="progress-row-meta">3 per semester</p>
+        </div>
+        <div class="dashboard-metric">
+          <span class="count-figure">0 of 5</span>
+          <span class="dashboard-metric-label">registrars met this semester</span>
+          <div class="progress-bar" aria-hidden="true"><div class="progress-bar-fill" style="width:0%"></div></div>
+        </div>
+      </li>
+      <li class="coverage-row">
+        <div>
+          <a class="progress-row-link" href="#">PAED-001 — Providing paediatric emergency care to children<span class="visually-hidden">: 2 of 5 registrars met this semester. Show the registrars short on it.</span></a>
+          <p class="progress-row-meta">3 per semester</p>
+        </div>
+        <div class="dashboard-metric">
+          <span class="count-figure">2 of 5</span>
+          <span class="dashboard-metric-label">registrars met this semester</span>
+          <div class="progress-bar" aria-hidden="true"><div class="progress-bar-fill" style="width:40%"></div></div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<p class="pv-cap">Met by every registrar: the name as text, "every registrar has met it", the complete fill; an EPA all are exempt from: "All exempt", no bar; an institution's own EPA's cadence</p>
+<div class="detail-card">
+  <ul class="list-unstyled">
+    <li class="coverage-row">
+      <div>
+        <span>PAED-001 — Providing paediatric emergency care to children</span>
+        <p class="progress-row-meta">3 per semester · every registrar has met it</p>
+      </div>
+      <div class="dashboard-metric">
+        <span class="count-figure">5 of 5</span>
+        <span class="dashboard-metric-label">registrars met this semester</span>
+        <div class="progress-bar" aria-hidden="true"><div class="progress-bar-fill is-complete" style="width:100%"></div></div>
+      </div>
+    </li>
+    <li class="coverage-row">
+      <div>
+        <a class="progress-row-link" href="#">KGK-001 — Running a paediatric outreach clinic at a district hospital<span class="visually-hidden">: all exempt this period. Show the registrars short on it.</span></a>
+        <p class="progress-row-meta">1 per academic year · Kgosi Kgari Teaching Hospital's own</p>
+      </div>
+      <div class="dashboard-metric">
+        <span class="count-figure">All exempt</span>
+        <span class="dashboard-metric-label">this period</span>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<p class="pv-cap">No current registrar (Step 2.29, before admission)</p>
+<div class="detail-card">
+  <p class="card-empty">No targets this period: there is no current registrar.</p>
+</div>
+</body>
+</html>

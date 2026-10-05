@@ -18,7 +18,7 @@ Nothing: MainLayout renders it in its header. What it offers is `NavItems.For(ac
   - Every switch is `/dashboard/switch/{role}` with no return address, so it lands on the new role's Home, and carries `data-enhance-nav="false"`: a full page load.
   - **No role** (a former trainee): no head and no switch; the list starts under the brand cell.
 - **The list** `div.nav-list` (scrolls; no tabindex): `ul.nav-items` of `li > NavItemLink`, rows 4px apart.
-  - Up to eight links, Home and the personal links counted, one flat list. More (the Administrator's 17, the Institutional admin's 16), Home, then groups: `p.nav-group-heading` (0.8125rem/600, `nav-group-label`, sentence case), a `<p>` and not a heading element, naming its `ul.nav-items` through `aria-labelledby`.
+  - Up to eight of the acting role's links, Home counted, one flat list; **the personal links are not counted** (flow 06, T358, E2: until then they were, and the Coordinator's eight would have been grouped). More (the Administrator's 16, the Institutional admin's 15), Home, then groups: `p.nav-group-heading` (0.8125rem/600, `nav-group-label`, sentence case), a `<p>` and not a heading element, naming its `ul.nav-items` through `aria-labelledby`.
   - **The personal links** last, in `ul.nav-items.nav-personal` under a `nav-divider` rule: My progress (to anyone holding the Trainee role or a trainee record, whatever the acting role) and My data rights (everyone).
 - **NavItemLink** `a.nav-link`: a 20px icon and `span.nav-label`, 0.9375rem, 28px tall (44px and 1rem below 641px), `radius-sm`, `nav-text`. Hover: `nav-hover-bg`, `nav-text-strong`. Lit: the class `active`, `nav-active-bg`, `nav-text-strong`, weight 600 and a 3px `nav-text-strong` bar inset on its left.
 
@@ -29,15 +29,17 @@ Nothing: MainLayout renders it in its header. What it offers is `NavItems.For(ac
 | Administrator | Home; Platform: Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels |
 | Institutional admin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log |
 | College admin | Home, Specialities, EPAs, Curricula, Activity types |
-| Speciality admin, Sub-speciality admin | Home, Decisions due, Committee reviews, Decision panels |
-| Committee member | Home, Committee reviews, Decision panels |
-| Coordinator | Home, Decisions due, MSF campaigns, Committee reviews, Data rights requests |
+| Speciality admin, Sub-speciality admin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
+| Committee member | Home, Programme trainees, Committee reviews, Decision panels |
+| Coordinator | Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests |
 | Assessor | Home, Activity inbox |
 | Trainee | Home, Log an activity, My activities, MSF reports, My committee reviews, Export portfolio |
 | Pending trainee | Home, Log an activity, My activities |
 | No role | Home |
 
-Then the personal links. Icons: home, circle-plus, list, message-square, file-text, download, inbox, calendar-check, scale, stethoscope, list-checks, book-open, book-check, clipboard-list, gauge, building, graduation-cap, users, mail, user-round, user-check, clock, history, key, shield-check, trending-up, lock.
+Then the personal links. Icons: home, circle-plus, list, message-square, file-text, download, inbox, calendar-check, scale, stethoscope, list-checks, book-open, book-check, clipboard-list, gauge, building, graduation-cap, users, mail, user-round, user-check, clock, history, key, shield-check, trending-up, lock, award.
+
+**Flow 06** (T358, 2026-10-05; R2-Menus; Q7, C10) gave the four roles that watch the programme its pages: Programme trainees (`users`) for all four; Waiting for assessors (`clock`) for the three that chase it, not the Committee member, whose work is not chasing; Entrustment decisions (`award`) for both speciality admins, who reached it until then only by address; and Decision panels for the Coordinator, whom the list admitted with no item (Step 2.32), read-only as before. The Coordinator's eight stay flat.
 
 ## The current item (NavOwners.cs; R2-Rules § 3)
 
@@ -53,9 +55,10 @@ Every page that is not an item's own, and the list it sits under for each acting
 
 | Page | Lit item, by acting role |
 |---|---|
-| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee, Pending trainee: My activities |
+| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee, Pending trainee: My activities · Speciality admin, Sub-speciality admin, Coordinator: Waiting for assessors, however the activity was reached (flow 06) |
+| A registrar's page (`/programme/trainees/{id}`, flow 06) | Committee member, Speciality admin, Sub-speciality admin, Coordinator: Programme trainees; its trail Home › Programme trainees › the registrar's name |
 | A committee review | Committee member, Coordinator, Speciality admin, Sub-speciality admin, Institutional admin, Administrator: Committee reviews (a trainee reads theirs on My committee reviews; this page does not admit them) |
-| A decision panel | Administrator, Institutional admin, Speciality admin, Sub-speciality admin: Decision panels |
+| A decision panel | Administrator, Institutional admin, Speciality admin, Sub-speciality admin: Decision panels. Not the Coordinator: the panel's page does not admit the role, and an owner is named only for a role the page admits, so the Coordinator reads the panels on the list, which lights itself (D4) |
 | An MSF campaign, an MSF report (`/msf/reports/{id}`), MSF coverage (`/msf/coverage`) | Coordinator: MSF campaigns |
 | A data-rights request | Coordinator, Administrator: Data rights requests (its own crumb is the request's id) |
 | A College's specialities and sub-specialities, and their edit pages | College admin: Specialities · Administrator: Colleges. On a College's specialities the College is in the trail: Home › Specialities › {College name} for the College admin (the College is the page's own crumb), Home › Colleges › {College name} › Specialities for the Administrator |
@@ -71,9 +74,10 @@ Every page that is not an item's own, and the list it sits under for each acting
 | A scheduled job's run history | Administrator: Scheduled jobs |
 | My authorisations | Trainee: My progress |
 | An EPA's page (`/portfolio/progress/{id}`, flow 05) | Every acting role, and none: My progress (a page under a personal link; below) |
-| Entrustment decisions | none: under no list until flow 09 places it (reached from the Institutional admin's Home) |
 
 **A page under a personal link** (flow 05, T355, E3; `NavOwners.UnderAPersonalLink`, `IsPersonal`): an entry that names no role, under My progress or My data rights, is owned whatever the acting role, and for a graduate who holds none, since the menu offers the link whatever the role. It is lit only where the person is offered the link. An entry that names roles keeps them, whatever item it is under: My authorisations is under My progress for the Trainee alone.
+
+**Entrustment decisions** is not in the table: for both speciality admins it is a list the menu offers, which lights itself (flow 06, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list until flow 09 places it.
 
 A list that is an item of the acting role's menu lights itself and draws no trail. A list the acting role's menu does not offer (opened through another role held) lights nothing, with the trail Home › the list.
 
@@ -86,6 +90,8 @@ These light nothing and draw no trail, but one:
 - **The sign-in pages**, in the sign-in layout: Sign in, Sign out, Register, Forgotten password, Link account, and the MSF questionnaire (`/msf/respond`).
 - **Portfolio verification** (`/portfolio/verify`), the anonymous static page anyone holding a portfolio PDF opens.
 - **The system pages**: Access denied, Page not found, the error page.
+
+**A page that draws Page not found in its own place lights nothing** (flow 06, T358, build review D1): a registrar, a roster or an EPA that is not the caller's to read is no page at all, so its owner is not lit either. The page tells the shell through its header (PageHeader's `Page="typeof(NotFound)"`), which hands it to the `PageDrawn` that `Routes` cascades; NavMenu lights by the page drawn before the routed one, and lights again when the header tells it (the header renders after the menu). The word is held against the route it was said on, so the next navigation forgets it. `ActiveNavItemTests` mounts the menu beside Programme trainees, a programme trainee and an EPA page drawn as not found, and asserts nothing is lit.
 
 ## Rules
 
@@ -101,4 +107,4 @@ These light nothing and draw no trail, but one:
 
 ## Known gaps
 
-- Stalled activities and Programme trainees (flow 06) and the STAR review queue (flow 09) have no link yet: those pages are not built. Recent activities and System were dropped.
+- Flow 06 built Programme trainees, and Waiting for assessors in Stalled activities' place. The STAR review queue is not restored: Entrustment decisions, the programme's register of STARs, takes its place under its own label for both speciality admins. Recent activities and System were dropped.

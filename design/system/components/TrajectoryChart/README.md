@@ -13,7 +13,7 @@ One EPA's rating trajectory (`Components/Shared/TrajectoryChart.razor`, drawn by
 - `HeadingLevel` (default 2): the page's (note 10). 2 on the EPA page; on the committee page 4, one below its section's h3.
 - `Title`: the heading's words where the page's h1 already names the EPA, "Rating trajectory", with the paused mark after it for a paused EPA. Null: the heading is the EPA's name through EpaLabel, "PAED-010 — Leading and operating within a clinical team".
 - `Today`: draws the "Today" rule where it falls in the window. Null draws none: the committee page reads the review's window, not today's (decision D2).
-- `ReviewWindow` and `SubjectName`: the committee page's summary names the trainee and the review's window.
+- `ReviewWindow` and `SubjectName`: the committee page's summary names the trainee and the review's window. `SubjectName` alone (the registrar page, flow 06): the summary names the registrar and the academic year, even for one rating, "Nomsa Mahlangu · 1 rating in the 2026 academic year, from Thandi Zulu. At the minimum." ("1 rating so far" is the registrar's own phrase, for a chart of the registrar's own year).
 - `MsfBeside`: the page has multi-source feedback beside the EPA, so the card says "Multi-source feedback is not plotted." (`p.trajectory-msf`) under the table.
 
 ## Markup
@@ -37,9 +37,10 @@ Both drawings are in the markup, each at its own fixed geometry (`TrajectoryFram
 
 **Below 641px** the card pads 16px, the table stacks (the encounter heads each block at weight 600 and wraps), and each activity link is a 44px block.
 
-## On the two pages
+## On the three pages
 
 - **The EPA page** (EpaPage): h2 "Rating trajectory", with `span.paused-mark` "(no longer in use)" after it for a paused EPA; the academic year with Today; "Multi-source feedback is not plotted." where the EPA's activities include MSF.
+- **The registrar page** (`/programme/trainees/{id}`, flow 06, D8): a `section.list-section` titled by its h2 "Rating trajectories" holds a `.stack-list` of one card per EPA rated in the academic year (the one containing today, or the one the programme ended in), each headed by the EPA's name at h3, with no Today rule; empty, "No ratings yet in the 2026 academic year." ("No ratings in …" once ended). The standing panel's EPA names link to each card (`#trajectory-<EpaId>`).
 - **The committee's review page** (`/committee/reviews/{id}`): a `section.list-section.full-width` titled by its h3 "Rating trajectory by EPA" spans the details grid, a `.stack-list` of one card per EPA with a rating in the review's window, each headed by the EPA's name at h4. The section is never a card around the charts (5f8e6639: a card in a card left each figure 874px at 1280, short of the 900 drawing); empty, "No rating by a named assessor to chart in this review's window." The standing panel's EPA names link to each chart's heading (EntrustmentStandingPanel).
 
 ## Rules (DESIGN.md § Badges, "Entrustment standing": the trajectory)

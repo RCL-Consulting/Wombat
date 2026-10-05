@@ -1,0 +1,169 @@
+<!-- @dsCard group="Programme" height=2200 width=974 subtitle="Waiting for assessors: the requests waiting on a named assessor, With, State and Waiting with Send a reminder; a reminder sent, filtered by assessor, no match, nothing waiting, and stacked at 768" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WaitingForAssessors</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide; the 768 rendition (a 486px column) repeats the media
+     rules' declarations under .pv-narrow. */
+  .pv-narrow { width: 486px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Pieter Smit, read as Coordinator, after Send the reminder on the Mini-CEX (Step 3.31): the answer above the table with the focus; the row's "Reminded 2026-10-05 by Pieter Smit" where its button was; the other two keep theirs</p>
+<div class="header-container">
+  <div>
+    <h1>Waiting for assessors</h1>
+    <p class="page-subtitle">Requests at Kgosi Kgari Teaching Hospital whose next move names an assessor, supervisor or reviewer, read as Coordinator. Your own requests are not listed.</p>
+  </div>
+</div>
+<p class="visually-hidden" role="status"></p>
+<form class="search-container" method="get" aria-label="Filter Waiting for assessors">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="f-show">Waiting</label>
+      <select id="f-show" name="show" class="form-select"><option value="all">All</option><option value="overdue">Overdue only</option></select>
+    </div>
+    <div class="search-field">
+      <label for="f-with">With</label>
+      <select id="f-with" name="with" class="form-select"><option value="">Anyone</option><option>Fatima Khumalo</option><option>Mohammed Patel</option><option>Thandi Zulu</option></select>
+    </div>
+    <div class="search-field filter-actions">
+      <button type="submit" class="btn btn-primary">Show</button>
+    </div>
+  </div>
+</form>
+<div class="action-result" tabindex="-1">
+  <div class="alert alert-success" role="status"><strong>Reminder sent to Thandi Zulu.</strong> It lists Mini-CEX (Paediatrics) · PAED-004 · 2026-10-02, from Nomsa Mahlangu, waiting 8 days. The request is still Requested; its wait is unchanged.</div>
+</div>
+<section class="list-section" aria-labelledby="waiting-h">
+  <h2 id="waiting-h" class="list-section-title" tabindex="-1">3 waiting, 2 overdue</h2>
+  <p class="needs-you-rule">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5. Waiting counts from the last move: any save restarts it.</p>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption class="visually-hidden">Requests waiting for a named assessor, oldest first</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Activity</th>
+          <th scope="col" role="columnheader">With</th>
+          <th scope="col" role="columnheader">State</th>
+          <th scope="col" role="columnheader">Waiting</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <td role="cell"><a class="activity-link activity-block-link" href="#">Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-04<span class="visually-hidden">, </span><span class="activity-link-to">from Pieter du Plessis</span></a></td>
+          <td role="cell" data-label="With">Mohammed Patel</td>
+          <td role="cell" data-label="State"><span class="needs-you-badges"><span class="badge badge-submitted">Awaiting review</span><span class="badge badge-overdue">Overdue</span></span></td>
+          <td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-27 15:04 SAST</span>
+            <button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Mohammed Patel a reminder about Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-04, from Pieter du Plessis">Send a reminder</button></td>
+        </tr>
+        <tr role="row">
+          <td role="cell"><a class="activity-link activity-block-link" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-10-02<span class="visually-hidden">, </span><span class="activity-link-to">from Nomsa Mahlangu</span></a></td>
+          <td role="cell" data-label="With">Thandi Zulu</td>
+          <td role="cell" data-label="State"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span><span class="badge badge-overdue">Overdue</span></span></td>
+          <td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-27 15:08 SAST</span>
+            <span class="needs-you-why progress-row-meta">Reminded 2026-10-05 by Pieter Smit</span></td>
+        </tr>
+        <tr role="row">
+          <td role="cell"><a class="activity-link activity-block-link" href="#">Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-30<span class="visually-hidden">, </span><span class="activity-link-to">from Pieter du Plessis</span></a></td>
+          <td role="cell" data-label="With">Fatima Khumalo</td>
+          <td role="cell" data-label="State"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span></span></td>
+          <td role="cell" class="waited-cell" data-label="Waiting"><b>Less than a day</b><span>since 2026-10-05 15:04 SAST</span>
+            <button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Fatima Khumalo a reminder about Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-30, from Pieter du Plessis">Send a reminder</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<p class="pv-cap">Refusals (Step A.5.15): the answer in danger, then "No reminder: …" where a row's button was</p>
+<div class="action-result" tabindex="-1">
+  <div class="alert alert-danger" role="alert"><strong>Not sent.</strong> Fatima Khumalo's account is deactivated, so Wombat sends Fatima Khumalo no email. The request still waits.</div>
+</div>
+<div class="table-container shadow">
+  <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption class="visually-hidden">Requests waiting for a named assessor, oldest first</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col">Activity</th><th scope="col">With</th><th scope="col">State</th><th scope="col">Waiting</th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row">
+        <td role="cell"><a class="activity-link activity-block-link" href="#">Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-30<span class="visually-hidden">, </span><span class="activity-link-to">from Pieter du Plessis</span></a></td>
+        <td role="cell" data-label="With">Fatima Khumalo</td>
+        <td role="cell" data-label="State"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span></span></td>
+        <td role="cell" class="waited-cell" data-label="Waiting"><b>Less than a day</b><span>since 2026-10-05 15:04 SAST</span>
+          <span class="needs-you-why progress-row-meta">No reminder: Fatima Khumalo's account is deactivated.</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="pv-cap">Filtered by assessor (Refilwe Mokoena, read as Speciality admin, Step 3.54c): the address carries ?with=…, Clear filters offered, the heading focused</p>
+<form class="search-container" method="get" aria-label="Filter Waiting for assessors">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="f-show2">Waiting</label>
+      <select id="f-show2" name="show" class="form-select"><option>All</option></select>
+    </div>
+    <div class="search-field">
+      <label for="f-with2">With</label>
+      <select id="f-with2" name="with" class="form-select"><option>Mohammed Patel</option></select>
+    </div>
+    <div class="search-field filter-actions">
+      <button type="submit" class="btn btn-primary">Show</button>
+      <a class="btn btn-outline" href="#">Clear filters</a>
+    </div>
+  </div>
+</form>
+<section class="list-section" aria-labelledby="waiting-h2">
+  <h2 id="waiting-h2" class="list-section-title" tabindex="-1">1 waiting, 1 overdue, with Mohammed Patel</h2>
+  <p class="needs-you-rule">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5. Waiting counts from the last move: any save restarts it.</p>
+</section>
+
+<p class="pv-cap">No match: "0 of 2 waiting", what was asked, Clear filters</p>
+<section class="list-section" aria-labelledby="waiting-h3">
+  <h2 id="waiting-h3" class="list-section-title" tabindex="-1">0 of 2 waiting</h2>
+  <div class="detail-card detail-card--empty">
+    <p class="state-panel-title">No request matches these filters.</p>
+    <p class="state-panel-copy">Overdue only, with Fatima Khumalo.</p>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Clear filters</a></div>
+  </div>
+</section>
+
+<p class="pv-cap">Nothing waiting (Step 2.32): no form, the empty card</p>
+<section class="list-section" aria-labelledby="waiting-h4">
+  <h2 id="waiting-h4" class="list-section-title" tabindex="-1">Waiting</h2>
+  <div class="detail-card detail-card--empty">
+    <p class="state-panel-title">Nothing is waiting</p>
+    <p class="state-panel-copy">Nothing at Kgosi Kgari Teaching Hospital is waiting for an assessor, supervisor or reviewer.</p>
+  </div>
+</section>
+
+<p class="pv-cap">At 768 (Step A.7.8a): stacked from 900px, each row its link over With, State and Waiting</p>
+<div class="pv-narrow">
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption class="visually-hidden">Requests waiting for a named assessor, oldest first</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col">Activity</th><th scope="col">With</th><th scope="col">State</th><th scope="col">Waiting</th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <td role="cell"><a class="activity-link activity-block-link" href="#">Mini-CEX (Paediatrics) · PAED-004 · 2026-10-02<span class="visually-hidden">, </span><span class="activity-link-to">from Nomsa Mahlangu</span></a></td>
+          <td role="cell" data-label="With">Thandi Zulu</td>
+          <td role="cell" data-label="State"><span class="needs-you-badges"><span class="badge badge-submitted">Requested</span><span class="badge badge-overdue">Overdue</span></span></td>
+          <td role="cell" class="waited-cell" data-label="Waiting"><b>8 days</b><span>since 2026-09-27 15:08 SAST</span>
+            <button type="button" class="btn btn-outline btn-sm reminder-action">Send a reminder</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

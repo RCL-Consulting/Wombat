@@ -1,0 +1,70 @@
+<!-- @dsCard group="Programme" height=1300 width=974 subtitle="Send a reminder: at the tail of a waiting row, the last reminder, the button or why not; the dialog that says it moves nothing, Sending…, and the answers" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ReminderAction</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-cell { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); max-width: 20rem; }
+  /* The app opens the dialog with showModal(); a static preview paints its backdrop itself, as ConfirmDialog's does. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-2xl) 0; box-sizing: border-box; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  .pv-row { display: flex; flex-wrap: wrap; gap: var(--space-lg); align-items: flex-start; }
+</style>
+</head>
+<body>
+<p class="pv-cap">In Waiting for assessors' Waiting cell: the button under the wait; reminded today, the record and no button; a nominee who cannot be reminded, why not</p>
+<div class="pv-row">
+  <div class="pv-cell waited-cell"><b>8 days</b><span>since 2026-09-27 15:04 SAST</span>
+    <button type="button" class="btn btn-outline btn-sm reminder-action" aria-label="Send Mohammed Patel a reminder about Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-04, from Pieter du Plessis">Send a reminder</button></div>
+  <div class="pv-cell waited-cell"><b>8 days</b><span>since 2026-09-27 15:08 SAST</span>
+    <span class="needs-you-why progress-row-meta">Reminded 2026-10-05 by Pieter Smit</span></div>
+  <div class="pv-cell waited-cell"><b>Less than a day</b><span>since 2026-10-05 15:04 SAST</span>
+    <span class="needs-you-why progress-row-meta">No reminder: Fatima Khumalo's account is deactivated.</span></div>
+</div>
+
+<p class="pv-cap">The dialog, opened on Don't send (Step 3.31)</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-r-title" aria-describedby="pv-r-body">
+    <div class="form-container">
+      <h2 id="pv-r-title">Send Thandi Zulu a reminder?</h2>
+      <p id="pv-r-body">Thandi Zulu gets one email, "Activities awaiting your assessment", listing this request: Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days. It moves nothing: the request stays Requested, its wait is not restarted, and Nomsa Mahlangu is not told.</p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" autofocus>Don't send</button>
+        <button type="button" class="btn btn-primary">Send the reminder</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">On its way: the confirm reads Sending… and is aria-disabled, keeping the focus; Don't send is disabled</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-s-title">
+    <div class="form-container">
+      <h2 id="pv-s-title">Send Thandi Zulu a reminder?</h2>
+      <p>Thandi Zulu gets one email, "Activities awaiting your assessment", listing this request: Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days. It moves nothing: the request stays Requested, its wait is not restarted, and Nomsa Mahlangu is not told.</p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" disabled>Don't send</button>
+        <button type="button" class="btn btn-primary" aria-disabled="true">Sending…</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">The answers, in the host's ActionResult with the focus: sent; refused because the request moved meanwhile; a failure</p>
+<div class="action-result" tabindex="-1">
+  <div class="alert alert-success" role="status"><strong>Reminder sent to Thandi Zulu.</strong> It lists Mini-CEX (Paediatrics) · PAED-004 · 2026-10-02, from Nomsa Mahlangu, waiting 8 days. The request is still Requested; its wait is unchanged.</div>
+</div>
+<p class="pv-cap"></p>
+<div class="action-result" tabindex="-1">
+  <div class="alert alert-danger" role="alert"><strong>Not sent.</strong> Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-30 moved at 2026-10-05 16:12 SAST: it is now Completed and waits for nobody.</div>
+</div>
+<p class="pv-cap"></p>
+<div class="action-result" tabindex="-1">
+  <div class="alert alert-danger" role="alert">Not sent. Something went wrong, and no reminder was sent. Try again, or come back in a few minutes.</div>
+</div>
+</body>
+</html>

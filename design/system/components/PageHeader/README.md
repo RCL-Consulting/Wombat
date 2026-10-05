@@ -23,7 +23,8 @@ The top of every page: its trail (from the owner table), its one `<h1>` with an 
 - `Icon` and `IconTone` (the system pages): a 24px Lucide icon before the heading, aria-hidden. `IconTone` is `info` (the default, `secondary-color`), `warning` or `danger`.
 - `Trail`: crumbs between the owner and the page, where the owner table names one (the College on a College's specialities, for the Administrator).
 - `CurrentCrumb`: the page's own crumb when it is not its title (a data-rights request's id; an EPA's page, its code: "PAED-012", "Loading…" while it loads, "EPA" when the read fails).
-- `Page`: the page this header heads when it is not the routed one (Access denied, drawn in place of the page that refused, draws no trail).
+- `Page`: the page this header heads when it is not the routed one (Access denied, drawn in place of the page that refused, draws no trail). Since flow 06 (T358, build review D1) the header also tells the shell (`PageDrawn`, which `Routes` cascades): a page that draws Page not found in its own place (`Page="typeof(NotFound)"`: a registrar, Programme trainees with no programme to read, an EPA page) lights nothing in the menu, as Page not found does (NavMenu).
+- **A registrar's page** (flow 06): the h1 is the registrar's name as stored, "Nomsa Mahlangu", the tab "Nomsa Mahlangu · Wombat", the trail Home › Programme trainees › Nomsa Mahlangu; while it reads and when its read fails, "Programme trainee" (ProgrammeTraineeDetail).
 
 ## Markup
 
@@ -43,7 +44,7 @@ The top of every page: its trail (from the owner table), its one `<h1>` with an 
 
 - `.header-container`: flex, wrapping, space-between, the actions on the heading's **baseline**; the h1 has no margin, the subtitle sits 0.25rem under it, the rule 0.75rem under that, and the page begins `space-lg` (24px) under the rule.
 - The h1 is 1.5rem/600 (1.375rem below 641px), never larger; line height 1.25.
-- **Home's one header action** (`.home-action`: the Trainee's "Log an activity", the Institutional admin's "Invite a person") is, below 641px, its own 44px row the page's width under the rule.
+- **Home's one header action** (`.home-action`: the Trainee's "Log an activity", the Institutional admin's "Invite a person", and since flow 06 the Coordinator's "Start an MSF campaign") is, below 641px, its own 44px row the page's width under the rule.
 - **With an icon**, `.page-title-with-icon` lays the icon and the words out in a row with a 12px gap; in a signed-out system card the icon stands above the heading and the rule is gone.
 
 ## The trail (Breadcrumbs; NavOwners.TrailTo)

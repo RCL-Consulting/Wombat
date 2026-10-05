@@ -1,0 +1,259 @@
+<!-- @dsCard group="Programme" height=2350 width=974 subtitle="Programme trainees: the roster filtered with Show, its heading counting the answer; Short on an EPA, an exempt row, no match, empty, loading and failed, and the stacked table at 768" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ProgrammeTrainees</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide. This card is wider than that, so the 768 rendition
+     (a 486px main column beside the sidebar) repeats the media rules' declarations under .pv-narrow. */
+  .pv-narrow { width: 486px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Thandi Zulu, read as Committee member, after Clear filters (Step 3.54a): the heading "5 current registrars" (focused), the roster's columns, Furthest short</p>
+<div class="header-container">
+  <div>
+    <h1>Programme trainees</h1>
+    <p class="page-subtitle">Current registrars at Kgosi Kgari Teaching Hospital, read as Committee member · Semester 2, 2026</p>
+  </div>
+</div>
+<p class="visually-hidden" role="status"></p>
+<form class="search-container" aria-label="Filter Programme trainees">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="f-epa">Short on</label>
+      <select id="f-epa" class="form-select"><option>Any EPA</option><option>PAED-001 — Providing paediatric emergency care to children</option><option>PAED-002 — Managing common paediatric presentations</option></select>
+    </div>
+    <div class="search-field">
+      <label for="f-year">Training year</label>
+      <select id="f-year" class="form-select"><option>Any</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
+    </div>
+    <div class="search-field">
+      <div class="form-check">
+        <input id="f-filed" class="form-check-input" type="checkbox">
+        <label for="f-filed">Nothing filed in 30 days</label>
+      </div>
+    </div>
+    <div class="search-field filter-actions">
+      <button type="submit" class="btn btn-primary">Show</button>
+    </div>
+  </div>
+</form>
+<section class="list-section" aria-labelledby="trainees-h">
+  <h2 class="list-section-title" id="trainees-h" tabindex="-1">5 current registrars</h2>
+  <p class="needs-you-rule">Fewest met first, then by surname. Semester 2, 2026 ends on 2026-11-30.</p>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide clinic-table--index" role="table">
+      <caption class="visually-hidden">Current registrars, fewest EPAs met first</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Registrar</th>
+          <th scope="col" role="columnheader">Training year</th>
+          <th scope="col" role="columnheader">This semester</th>
+          <th scope="col" role="columnheader">In 2026</th>
+          <th scope="col" role="columnheader">Furthest short</th>
+          <th scope="col" role="columnheader">Last filed</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="progress-row-link" href="#">Pieter du Plessis</a></th>
+          <td role="cell" data-label="Training year">2</td>
+          <td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td>
+          <td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td>
+          <td role="cell" data-label="Furthest short"><span class="count-figure">PAED-001, PAED-002, PAED-003</span><p class="count-meta">0 of 3 each this semester</p></td>
+          <td role="cell" data-label="Last filed">2026-10-04</td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="progress-row-link" href="#">Nomsa Mahlangu</a></th>
+          <td role="cell" data-label="Training year">1</td>
+          <td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td>
+          <td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td>
+          <td role="cell" data-label="Furthest short"><span class="count-figure">PAED-001, PAED-003, PAED-005</span><p class="count-meta">0 of 3 each this semester</p></td>
+          <td role="cell" data-label="Last filed">2026-10-02</td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="progress-row-link" href="#">Anele Dlamini</a></th>
+          <td role="cell" data-label="Training year">3</td>
+          <td role="cell" data-label="This semester"><span class="count-figure">1 of 10</span><p class="count-meta">EPAs met this semester</p></td>
+          <td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td>
+          <td role="cell" data-label="Furthest short"><span class="count-figure">PAED-002, PAED-003, PAED-005</span><p class="count-meta">0 of 3 each this semester</p></td>
+          <td role="cell" data-label="Last filed">2026-10-01</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <nav class="pager" aria-label="Current registrars, pages">
+    <div class="pager-info">Showing 1–5 of 5</div>
+    <div class="pager-actions">
+      <button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Previous</button>
+      <button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Next</button>
+    </div>
+    <div class="pager-page-size">
+      <span class="pager-page-size-label">Per page:</span>
+      <select class="form-select form-select-sm pager-page-size-select"><option>10</option><option selected>20</option><option>50</option><option>100</option></select>
+    </div>
+  </nav>
+</section>
+
+<p class="pv-cap">From Home's PAED-002 row (Step 3.54a): Short on set, Clear filters offered, the EPA's own column first</p>
+<form class="search-container" aria-label="Filter Programme trainees">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="f-epa2">Short on</label>
+      <select id="f-epa2" class="form-select"><option>PAED-002 — Managing common paediatric presentations</option></select>
+    </div>
+    <div class="search-field">
+      <label for="f-year2">Training year</label>
+      <select id="f-year2" class="form-select"><option>Any</option></select>
+    </div>
+    <div class="search-field">
+      <div class="form-check">
+        <input id="f-filed2" class="form-check-input" type="checkbox">
+        <label for="f-filed2">Nothing filed in 30 days</label>
+      </div>
+    </div>
+    <div class="search-field filter-actions">
+      <button type="submit" class="btn btn-primary">Show</button>
+      <a class="btn btn-outline" href="#">Clear filters</a>
+    </div>
+  </div>
+</form>
+<section class="list-section" aria-labelledby="trainees-h2">
+  <h2 class="list-section-title" id="trainees-h2" tabindex="-1">5 of 5 current registrars are short on PAED-002</h2>
+  <p class="needs-you-rule">PAED-002 — Managing common paediatric presentations, 3 per semester. Furthest from its target first, then fewest EPAs met, then by surname.</p>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide clinic-table--index" role="table">
+      <caption class="visually-hidden">Current registrars short on PAED-002, furthest from its target first</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Registrar</th>
+          <th scope="col" role="columnheader">Training year</th>
+          <th scope="col" role="columnheader">PAED-002</th>
+          <th scope="col" role="columnheader">This semester</th>
+          <th scope="col" role="columnheader">In 2026</th>
+          <th scope="col" role="columnheader">Last filed</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="progress-row-link" href="#">Pieter du Plessis</a></th>
+          <td role="cell" data-label="Training year">2</td>
+          <td role="cell" data-label="PAED-002"><span class="count-figure">0 of 3 this semester</span><p class="count-meta">3 more by 2026-11-30</p></td>
+          <td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td>
+          <td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td>
+          <td role="cell" data-label="Last filed">2026-10-04</td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="progress-row-link" href="#">Nomsa Mahlangu</a></th>
+          <td role="cell" data-label="Training year">1</td>
+          <td role="cell" data-label="PAED-002"><span class="count-figure">1 of 3 this semester</span><p class="count-meta">2 more by 2026-11-30</p></td>
+          <td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td>
+          <td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td>
+          <td role="cell" data-label="Last filed">2026-10-02</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<p class="pv-cap">An exempt registrar, listed last: the figure cells one, labelled "This period", the badge and why in words (review 9). An illustration: no registrar in the replay is exempt, so the row is drawn from the code, not a step</p>
+<div class="table-container shadow">
+  <table class="clinic-table clinic-table--stack clinic-table--stack-wide clinic-table--index" role="table">
+    <caption class="visually-hidden">Current registrars, fewest EPAs met first, one exempt this period</caption>
+    <thead role="rowgroup">
+      <tr role="row">
+        <th scope="col" role="columnheader">Registrar</th>
+        <th scope="col" role="columnheader">Training year</th>
+        <th scope="col" role="columnheader">This semester</th>
+        <th scope="col" role="columnheader">In 2026</th>
+        <th scope="col" role="columnheader">Furthest short</th>
+        <th scope="col" role="columnheader">Last filed</th>
+      </tr>
+    </thead>
+    <tbody role="rowgroup">
+      <tr role="row">
+        <th scope="row" role="rowheader"><a class="progress-row-link" href="#">Sipho Ndlovu</a></th>
+        <td role="cell" data-label="Training year">Not started</td>
+        <td role="cell" colspan="3" data-label="This period"><span class="badge badge-draft">Exempt this period</span><p class="count-meta">Starts on 2027-01-01</p></td>
+        <td role="cell" data-label="Last filed">Nothing filed yet</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="pv-cap">No match (Step A.5.16, Pieter Smit): "0 of 2 current registrars", what was asked, Clear filters</p>
+<section class="list-section" aria-labelledby="trainees-h3">
+  <h2 class="list-section-title" id="trainees-h3" tabindex="-1">0 of 2 current registrars</h2>
+  <div class="detail-card detail-card--empty">
+    <p class="state-panel-title">No registrar matches these filters.</p>
+    <p class="state-panel-copy">Nothing filed in 30 days.</p>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Clear filters</a></div>
+  </div>
+</section>
+
+<p class="pv-cap">No current registrar in the scope: no form, the empty card</p>
+<section class="list-section" aria-labelledby="trainees-h4">
+  <h2 class="list-section-title" id="trainees-h4" tabindex="-1">Current registrars</h2>
+  <div class="detail-card detail-card--empty">
+    <p class="state-panel-title">No current registrars</p>
+    <p class="state-panel-copy">They appear here once they are admitted to the programme.</p>
+  </div>
+</section>
+
+<p class="pv-cap">Loading: the filters stand above it; the heading over skeleton lines</p>
+<section class="list-section" aria-busy="true">
+  <h2 class="list-section-title">Current registrars</h2>
+  <div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+</section>
+<p class="pv-cap">The read failed: StatePanel's fixed words and Try again, whose answer focuses the list's heading</p>
+<div class="action-result" tabindex="-1">
+<div class="alert alert-danger" role="alert">
+  <div class="alert-row">
+    <span class="alert-row-text">Could not load Programme trainees. Nothing has changed. Try again, or come back in a few minutes.</span>
+    <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+  </div>
+</div>
+</div>
+
+<p class="pv-cap">At 768 (Step A.7.8a): the table stacks from 900px, each row the registrar over its labelled cells</p>
+<div class="pv-narrow">
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide clinic-table--index" role="table">
+      <caption class="visually-hidden">Current registrars, fewest EPAs met first</caption>
+      <thead role="rowgroup">
+        <tr role="row"><th scope="col">Registrar</th><th scope="col">Training year</th><th scope="col">This semester</th><th scope="col">In 2026</th><th scope="col">Furthest short</th><th scope="col">Last filed</th></tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="progress-row-link" href="#">Pieter du Plessis</a></th>
+          <td role="cell" data-label="Training year">2</td>
+          <td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td>
+          <td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td>
+          <td role="cell" data-label="Furthest short"><span class="count-figure">PAED-001, PAED-002, PAED-003</span><p class="count-meta">0 of 3 each this semester</p></td>
+          <td role="cell" data-label="Last filed">2026-10-04</td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader"><a class="progress-row-link" href="#">Nomsa Mahlangu</a></th>
+          <td role="cell" data-label="Training year">1</td>
+          <td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td>
+          <td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td>
+          <td role="cell" data-label="Furthest short"><span class="count-figure">PAED-001, PAED-003, PAED-005</span><p class="count-meta">0 of 3 each this semester</p></td>
+          <td role="cell" data-label="Last filed">2026-10-02</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

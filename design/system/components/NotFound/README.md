@@ -15,6 +15,10 @@ Nothing: it is a page.
 
 The shape is AccessDenied's (`.system-panel`, `.system-card`, 44px stacked buttons below 641px).
 
+## Drawn in another page's place
+
+A page whose record is not the caller's to read draws this page's words, word for word, at its own address: an EPA's page (flow 05), a registrar's page and Programme trainees for a role with no programme to read (flow 06). Its PageHeader says "Page not found" with the `search` icon and `Page="typeof(NotFound)"`, so there is no trail and, since flow 06 (T358, build review D1), **nothing in the menu is lit**: the header tells the shell through `PageDrawn`, and the menu lights what Page not found lights. An id so answered confirms nothing.
+
 ## Rules
 
 - **It never echoes the address:** a crafted link would put its own words on a Wombat page (T285's class), and the address bar shows it already.

@@ -20,7 +20,7 @@ With no trainee profile: the empty card "No curriculum items assigned yet." / "O
 
 ## Once the programme has ended (R5)
 
-The page keeps T252's record (flow 13 owns it): the subtitle "Your record of the programme you ended: what your curriculum held you to in each period.", an info Alert ("You completed your programme on 2026-10-04. This page is your record of it and is read-only: …"), an h2 "Curriculum targets" with a "Your programme" card (Started, Completed or Ended, Training year "4 when your programme ended"), and each EPA a card with every period read-only, newest first, its code a link to its EPA's page; then the standing as on the last day. Dates ISO (D1).
+The page keeps T252's record (flow 13 owns it), drawn since flow 06 by EndedRecord, the component the registrar page shares, byte for byte as before (`MyProgressTests`' golden markup): the subtitle "Your record of the programme you ended: what your curriculum held you to in each period.", an info Alert ("You completed your programme on 2026-10-04. This page is your record of it and is read-only: …"), an h2 "Curriculum targets" with a "Your programme" card (Started, Completed or Ended, Training year "4 when your programme ended"), and each EPA a card with every period read-only, newest first, its code a link to its EPA's page; then the standing as on the last day. Dates ISO (D1).
 
 ## Rules (DESIGN.md § Dashboard layout grid, "The progress figures")
 

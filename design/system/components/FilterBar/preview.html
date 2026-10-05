@@ -1,0 +1,80 @@
+<!-- @dsCard group="Data" height=780 width=974 subtitle="A list's filters, applied with Show: labelled fields, Show and Clear filters on the fields' bottom line; nothing changes until Show; one under the other on a phone" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FilterBar</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px app.css makes each of .filter-actions' buttons 44px and the row's width; this card is wider than a phone,
+     so the phone rendition repeats that rule's declarations under .pv-phone. */
+  .pv-phone { width: 358px; }
+  .pv-phone .search-grid { grid-template-columns: minmax(0, 1fr); }
+  .pv-phone .filter-actions .btn { min-height: 2.75rem; width: 100%; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Programme trainees, no filter set: three fields, then Show alone</p>
+<form class="search-container" aria-label="Filter Programme trainees">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="a-epa">Short on</label>
+      <select id="a-epa" class="form-select"><option>Any EPA</option></select>
+    </div>
+    <div class="search-field">
+      <label for="a-year">Training year</label>
+      <select id="a-year" class="form-select"><option>Any</option></select>
+    </div>
+    <div class="search-field">
+      <div class="form-check">
+        <input id="a-filed" class="form-check-input" type="checkbox">
+        <label for="a-filed">Nothing filed in 30 days</label>
+      </div>
+    </div>
+    <div class="search-field filter-actions">
+      <button type="submit" class="btn btn-primary">Show</button>
+    </div>
+  </div>
+</form>
+
+<p class="pv-cap">Waiting for assessors, two filters set and shown (?show=overdue&amp;with=…): Clear filters beside Show</p>
+<form class="search-container" method="get" aria-label="Filter Waiting for assessors">
+  <div class="search-grid">
+    <div class="search-field">
+      <label for="b-show">Waiting</label>
+      <select id="b-show" name="show" class="form-select"><option>Overdue only</option></select>
+    </div>
+    <div class="search-field">
+      <label for="b-with">With</label>
+      <select id="b-with" name="with" class="form-select"><option>Fatima Khumalo</option></select>
+    </div>
+    <div class="search-field filter-actions">
+      <button type="submit" class="btn btn-primary">Show</button>
+      <a class="btn btn-outline" href="#">Clear filters</a>
+    </div>
+  </div>
+</form>
+
+<p class="pv-cap">At 390: the fields one under another, then Show and Clear filters, each 44px and the row's width</p>
+<div class="pv-phone">
+  <form class="search-container" method="get" aria-label="Filter Waiting for assessors">
+    <div class="search-grid">
+      <div class="search-field">
+        <label for="c-show">Waiting</label>
+        <select id="c-show" name="show" class="form-select"><option>All</option></select>
+      </div>
+      <div class="search-field">
+        <label for="c-with">With</label>
+        <select id="c-with" name="with" class="form-select"><option>Mohammed Patel</option></select>
+      </div>
+      <div class="search-field filter-actions">
+        <button type="submit" class="btn btn-primary">Show</button>
+        <a class="btn btn-outline" href="#">Clear filters</a>
+      </div>
+    </div>
+  </form>
+</div>
+</body>
+</html>

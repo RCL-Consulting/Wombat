@@ -31,7 +31,11 @@ Each status is mapped onto these in C#: `ActivityState(key, isFinished)` (done i
 
 ## A count
 
-A DashboardCard's `Count` shows as a `badge-submitted` after the title ("Needs you 2"), read as words where `CountWords` is given (", 2 items"). Its `BadgeWords` (flow 04) is the count in words as the badge itself, to the eye and to a screen reader alike: "2 waiting, 1 overdue". A list section's heading carries its count the same way: the inbox's "1 waiting, 1 overdue" (`badge-submitted`) and "3 decisions" (`badge-draft`).
+A DashboardCard's `Count` shows as a `badge-submitted` after the title ("Needs you 2"), read as words where `CountWords` is given (", 2 items"). Its `BadgeWords` (flow 04) is the count in words as the badge itself, to the eye and to a screen reader alike: "2 waiting, 1 overdue". A list section's heading carries its count the same way: the inbox's "1 waiting, 1 overdue" (`badge-submitted`) and "3 decisions" (`badge-draft`), the registrar page's "1 waiting, 1 overdue".
+
+**Work waiting on someone is `badge-submitted`; a count of people is `badge-draft`** (flow 06, T358, D10; DashboardCard's `BadgeTone`): "5 registrars" on the Registrars and Nothing filed in 30 days cards, since people wait on nobody.
+
+**"Exempt this period"** (flow 06, review 9) is a `badge-draft`, `BadgeFor.State(Draft)`: a registrar to whom no target applies this period, always beside why, in words ("Starts on 2027-01-01", "Started part-way through the period"), on Programme trainees and Home's Registrars (RegistrarRoster).
 
 ## Look
 

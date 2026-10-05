@@ -18,7 +18,7 @@ The list page's table: a `.clinic-table` in a scrolling `.table-container`, with
 
 ## The list page shape (DESIGN.md § Table system; § Page-level patterns)
 
-PageHeader (title, subtitle, primary action) → `.search-container` with a `.search-grid` of labelled `.search-input` fields → the table → `PagerControls`.
+PageHeader (title, subtitle, primary action) → `.search-container` with a `.search-grid` of labelled `.search-input` fields → the table → `PagerControls`. Since flow 06 a list's filters are applied with Show, its heading counting the answer (FilterBar).
 
 ## Column and row classes
 
@@ -42,6 +42,8 @@ My activities' All activities was the first: the columns Activity, Who has it no
 - **Who has it now** reads "You", the holder's name, "Waiting for <state label>." (a move a role holds, nobody named), "Done" or "Closed" (`ActivityListWords.WhoHasIt`). **Credit** is `CreditOutcome.Label`: "1 item", "None", "—". Since flow 05 (C7, Q7) a credit to an EPA whose page opens is a link to it, `a.credit-link` "1 item", named "1 item to PAED-001, in My progress" (`ProgressLinks.CreditTo`), a 44px block below 641px; "None", "—", and a credit to an EPA of no curriculum she now holds stay text.
 - The list is headed by an `h2.list-section-title`, "All activities (12)", which takes the focus after a page turn (`tabindex="-1"`): the pager's button may be gone from under it. `PagerControls` under it, 20 a page.
 
+**Stacked from 900px** (flow 06, T358, 94edf2b7; A.7.8a): `.clinic-table--stack-wide`, added beside `.clinic-table--stack`, stacks the same way **at 900px and below**, where the dashboard grid goes to one column too. From 641 to 900px the sidebar leaves the main column too narrow for Programme trainees' six columns and Waiting for assessors' four, so the names split mid-word. The two lists write it out by hand, as flow 05's tables do; a row's header (`th scope="row"`, the registrar) is `display: block`, and a cell carries `data-label` as below 641px.
+
 ## Rules
 
 - Every `<table>` is a `.clinic-table` in a `.table-container`; never Bootstrap's `.table`, and no inline column widths.
@@ -53,7 +55,8 @@ My activities' All activities was the first: the columns Activity, Who has it no
 
 ## Known gaps
 
-- My activities, the Activity inbox, and flow 05's index, standing panel, trajectory table and Activities on this EPA stack. Every other list at 390px still scrolls sideways inside its container.
+- My activities, the Activity inbox, flow 05's index, standing panel, trajectory table and Activities on this EPA, and flow 06's Programme trainees and Waiting for assessors (from 900px) stack. Every other list at 390px still scrolls sideways inside its container.
+- A filtered list's form above it is FilterBar's (flow 06); the older lists' `.search-container` with `.search-input` fields acts as each page wires it.
 
 ## Appearance
 

@@ -10,6 +10,10 @@ Waiting for you (`Components/Shared/Activities/WaitingList.razor`): what waits o
 - `Names`: the links' accessible names over the whole page (`AssessorRowNames.For`), where the page lists these rows among more: Home passes its first five of the inbox's rows. Null: named among these rows (`ActivityRowNames.Waiting`).
 - `WithSince`: each row says since when it has waited, "Waiting 8 days, since 2026-09-22 08:06 SAST." (the way on, which shows one row with no Waiting column beside it).
 - `LinksOutOfTabOrder`: the rows' links take `tabindex="-1"` (the way on, whose "Open the next" opens the same activity and is the next Tab after the result; C10 d).
+- `WithNominee` (flow 06, T358, E6): **the staff reading**. Each row says whom it waits with, "With Mohammed Patel" (`WaitingWords.With`), on a line of its own (`p.needs-you-why`) above flow 04's "Waiting 8 days", which is unchanged: Home's Waiting for assessors card (AssessorsWaitingCard) and the registrar page's section.
+- `RowAction` (flow 06): what a row offers after its why-lines, inside the row: the registrar page's Send a reminder (ReminderAction). Null: none.
+
+Without `WithNominee` or `RowAction` every row is byte for byte flow 04's. The staff reading's rows are `ListWaitingForAssessorsQuery`'s: requests in the reader's programme waiting for one named person, the reader's own left out (WaitingForAssessors).
 
 ## Markup
 
@@ -40,7 +44,7 @@ Below 641px both tables stack, a block a row (DataTable's `Stack`); the page no 
 
 ## Rules (DESIGN.md § Page-level patterns, "List page" R2; § Dashboard page R1; § Badges)
 
-- One read, one order, one set of words, wherever a waiting row is drawn.
+- One read, one order, one set of words, wherever a waiting row is drawn; the staff reading adds only "With <name>" (E6), in place of nothing.
 - "Overdue" is said in words beside the state, never instead of it, and never by the stripe alone.
 - Times are South African with the zone; never the server's clock.
 

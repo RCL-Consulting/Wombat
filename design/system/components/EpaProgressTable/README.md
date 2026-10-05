@@ -15,6 +15,7 @@ My progress's EPA index, "Your EPAs" (`Components/Shared/Progress/EpaProgressTab
 - `Standing`: the standing, read by EPA id for the STAR column; null when there is none to read.
 - `StandingFailed`: the standing's read failed: every verdict cell reads "Not loaded".
 - `TrainingYear`: the year the STAR column is judged against, its heading "STAR against training year 3"; null, "STAR decision".
+- `EpaNamesAsText` (flow 06, T358, review 7): every EPA's name, the paused group's included, is text (EpaLabel alone, no `a.epa-link`): the registrar page, where a member of staff reads someone else's index and the EPA pages are the registrar's own (ProgrammeTraineeDetail, section "EPAs"). False: My progress's links to each EPA's page.
 
 The page wraps it in `section.index-section` (a column 24px apart, 24px under This period) under `h2#index-h` "Your EPAs". With every EPA paused (no item in force), My progress shows the empty card "No EPA on your curriculum is in use at the moment, so no target applies to you." and the index with the paused group alone.
 

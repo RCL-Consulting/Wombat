@@ -1,0 +1,89 @@
+<!-- @dsCard group="Programme" height=900 width=974 subtitle="Home's rows of registrars: the name a link over the training year, then the two figures in their own columns; an exempt registrar; Nothing filed's rows; one column at 900px" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RegistrarRoster</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-card { max-width: 60rem; }
+  .pv-narrow-card { max-width: 30rem; }
+  /* At 900px and below app.css draws a roster row in one column; this card is wider, so the narrow rendition repeats
+     that rule's declarations under .pv-narrow. */
+  .pv-narrow .roster-row { grid-template-columns: minmax(0, 1fr); }
+  .pv-narrow .roster-row > .roster-exempt { grid-column: auto; }
+</style>
+</head>
+<body>
+<p class="pv-cap">The Registrars card's rows (Step 3.52, the first three and an exempt registrar), then "n more"; each name its own link to the registrar's page. The exempt row is an illustration drawn from the code: no registrar in the replay is exempt</p>
+<div class="detail-card pv-card">
+  <ul class="list-unstyled">
+    <li class="roster-row">
+      <div>
+        <a class="progress-row-link" href="#">Pieter du Plessis</a>
+        <p class="progress-row-meta">Training year 2</p>
+      </div>
+      <div class="dashboard-metric"><span class="count-figure">0 of 10</span><span class="dashboard-metric-label">EPAs met this semester</span></div>
+      <div class="dashboard-metric"><span class="count-figure">0 of 5</span><span class="dashboard-metric-label">EPAs met in 2026</span></div>
+    </li>
+    <li class="roster-row">
+      <div>
+        <a class="progress-row-link" href="#">Nomsa Mahlangu</a>
+        <p class="progress-row-meta">Training year 1</p>
+      </div>
+      <div class="dashboard-metric"><span class="count-figure">0 of 10</span><span class="dashboard-metric-label">EPAs met this semester</span></div>
+      <div class="dashboard-metric"><span class="count-figure">0 of 5</span><span class="dashboard-metric-label">EPAs met in 2026</span></div>
+    </li>
+    <li class="roster-row">
+      <div>
+        <a class="progress-row-link" href="#">Anele Dlamini</a>
+        <p class="progress-row-meta">Training year 3</p>
+      </div>
+      <div class="dashboard-metric"><span class="count-figure">1 of 10</span><span class="dashboard-metric-label">EPAs met this semester</span></div>
+      <div class="dashboard-metric"><span class="count-figure">0 of 5</span><span class="dashboard-metric-label">EPAs met in 2026</span></div>
+    </li>
+    <li class="roster-row">
+      <div>
+        <a class="progress-row-link" href="#">Sipho Ndlovu</a>
+        <p class="progress-row-meta">Programme not started</p>
+      </div>
+      <div class="roster-exempt">
+        <span class="badge badge-draft">Exempt this period</span>
+        <span class="progress-row-meta">Starts on 2027-01-01</span>
+      </div>
+    </li>
+  </ul>
+  <p class="waiting-more">2 more in Programme trainees.</p>
+</div>
+
+<p class="pv-cap">Nothing filed in 30 days' rows (FiledMeta; the Coordinator's card, one column wide): the name over when the registrar last filed and the training year, no figures</p>
+<div class="detail-card pv-narrow-card">
+  <ul class="list-unstyled">
+    <li class="progress-row progress-row--link">
+      <a class="progress-row-link" href="#">Lerato Molefe</a>
+      <p class="progress-row-meta">Nothing filed yet · Training year 4</p>
+    </li>
+    <li class="progress-row progress-row--link">
+      <a class="progress-row-link" href="#">Sipho Ndlovu</a>
+      <p class="progress-row-meta">Nothing filed yet · Training year 1</p>
+    </li>
+  </ul>
+</div>
+
+<p class="pv-cap">At 900px and below: one column, the figures under the name</p>
+<div class="detail-card pv-narrow-card pv-narrow">
+  <ul class="list-unstyled">
+    <li class="roster-row">
+      <div>
+        <a class="progress-row-link" href="#">Nomsa Mahlangu</a>
+        <p class="progress-row-meta">Training year 1</p>
+      </div>
+      <div class="dashboard-metric"><span class="count-figure">0 of 10</span><span class="dashboard-metric-label">EPAs met this semester</span></div>
+      <div class="dashboard-metric"><span class="count-figure">0 of 5</span><span class="dashboard-metric-label">EPAs met in 2026</span></div>
+    </li>
+  </ul>
+</div>
+</body>
+</html>

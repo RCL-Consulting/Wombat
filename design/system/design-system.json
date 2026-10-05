@@ -515,8 +515,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-04T16:01:01Z",
-    "via": "Claude Code · Wombat@426cdc17",
-    "note": "Re-synced to flow 05 as built (T355, b020c942 with db4c2d0a, 5f8e6639, b389f7d2 and 426cdc17): no token value changed; 6 records added in a new Progress group (EpaProgressTable, EntrustmentStandingPanel, TrajectoryChart, EpaLabel, MyProgress, EpaPage); revised DashboardCard (the Trainee's four cards), ActivityStatus (the count line), NeedsYouList, StatePanel, Badge, PageHeader, DataTable, NavMenu, MainLayoutPhone, Icon, the README, tokens' ref, and the bundle; ISO dates on screens; 1 icon uploaded (target; 60 in all)."
+    "at": "2026-10-05T16:45:00Z",
+    "via": "Claude Code · Wombat@6be346de",
+    "note": "Re-synced to flow 06 as built (T358, 85d5a508 with 94edf2b7): no token value changed; 10 records added: 8 in a new Programme group (ProgrammeTrainees, ProgrammeTraineeDetail, WaitingForAssessors, RegistrarRoster, RegistrarsCard, AssessorsWaitingCard, EpaTargetCoverageList, ReminderAction), FilterBar (Data) and EndedRecord (Progress); revised DashboardCard (the oversight Homes, BadgeTone, the Coordinator's header action), WaitingList (the staff reading), DataTable (stacked from 900px), NavMenu (the flat limit, the four roles' menus, a page drawn as not found lights nothing), PageHeader, NotFound, Badge, EpaProgressTable, TrajectoryChart, EntrustmentStandingPanel, MyProgress, EpaPage, Icon, the README, tokens' ref, and the bundle; no icon added (60 in all, 53 named by a page)."
   }
 }
