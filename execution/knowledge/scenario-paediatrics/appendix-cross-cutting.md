@@ -1342,9 +1342,9 @@ Actual (2026-10-05, T358 replay, wombat_scenario_t358): At 390 px. Dr Zulu's Pro
   Registrar column crushed to split "Nomsa Mahlang|u", and Waiting for assessors' Activity column is 65 px wide, its
   links breaking mid-word ("Paediatr|ics", "Discussio|n") into 233 to 305 px tall stacks, each Send a reminder wrapping
   to two lines in a 111 px cell. The page never scrolls sideways at either width.
-Gap: new: at 768 px (the sidebar shown, a 462 px main column) Programme trainees and Waiting for assessors keep their
-  wide tables, so the name and activity columns are crushed and split words mid-word
-  (A.7.8a-1-programme-trainees-768.png, A.7.8a-3-waiting-768.png); the lists stack only at the phone width.
+Gap: none (fixed in 94edf2b7 and re-checked 2026-10-05 on the republished app: at 768 px both lists' tables stack
+  from 900 px, each 460 px in its 460 px container, no sideways scroll; A.7.8a-1 and A.7.8a-3 retaken). Found by this
+  replay as a regression of flow 06: the tables stacked only below 641 px.
 
 ### Step A.7.9 — Prof Mbatha on her phone
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
