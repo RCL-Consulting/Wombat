@@ -51,7 +51,7 @@ Expect: Active invitations is empty: "No active invitations". Kruger's CollegeAd
   KGK's, and Mbatha's own has been used. Role offers InstitutionalAdmin (the default), SpecialityAdmin,
   SubSpecialityAdmin, Coordinator, CommitteeMember, Assessor and Trainee, but not CollegeAdmin, which only an
   Administrator issues (T093). Institution offers KGK only. Speciality is disabled for the default role.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Signed in to Home and opened Invitations from the sidebar: "No
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Signed in to Home and opened Invitations from the sidebar: "No
   active invitations" / "Issue an invitation to create the first onboarding link." (act 1's revoked second Mbatha
   invitation is not listed). Role offers the seven named, InstitutionalAdmin selected, no CollegeAdmin. Institution
   offers KGK alone (behind "Select institution"). Speciality and Sub-speciality are disabled.
@@ -67,10 +67,10 @@ Expect: For a Coordinator, Speciality is optional and Sub-speciality stays disab
   wording). Below it the link says it expires in 14 days. Active invitations gains a row: Coordinator, KGK, no
   speciality, expiring `D+14`, Delivery "Being sent". The form goes back to its defaults, and the log holds a stub
   "Your Wombat invitation" tagged `role:Coordinator`.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Coordinator enabled Speciality (Paediatrics); Sub-speciality
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Coordinator enabled Speciality (Paediatrics); Sub-speciality
   stayed disabled. "Invitation issued for smit@kgk.wombat.local. Its email is being sent. Copy the link below — it is
-  shown only once.", then "It expires in 14 days" and the link; row Coordinator, KGK, scopes blank, issued 2026-10-04
-  13:11, expires 2026-10-18 (`D+14`), "Being sent"; the form back to its defaults (InstitutionalAdmin, Institution
+  shown only once.", then "It expires in 14 days" and the link; row Coordinator, KGK, scopes blank, issued 2026-10-05
+  13:39, expires 2026-10-19 (`D+14`), "Being sent"; the form back to its defaults (InstitutionalAdmin, Institution
   unselected, Speciality disabled). The log holds a stub "Your Wombat invitation" tagged `invitation,
   role:Coordinator`.
 Gap: none
@@ -84,7 +84,7 @@ Expect: Speciality offers Paediatrics alone: KGK's adopted specialities (T092). 
   committee member may not be scoped to one. Three rows read CommitteeMember, KGK, Paediatrics, with the sub-speciality
   blank.
 Note: An invitation carries one role. Assessor is added on each user's page in Step 2.13 (T061).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Speciality offered Paediatrics alone; Sub-speciality stayed
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Speciality offered Paediatrics alone; Sub-speciality stayed
   disabled for CommitteeMember. Three rows read CommitteeMember, KGK, Paediatrics, sub-speciality blank, "Being sent",
   each issued with its own link; three stubs tagged `role:CommitteeMember`.
 Gap: none
@@ -96,7 +96,7 @@ Do: Issue an invitation each to `patel@` and `khumalo@kgk.wombat.local` as Asses
   and sub-speciality Paediatrics.
 Expect: For an Assessor the Sub-speciality select is enabled. Once Paediatrics is chosen as the speciality, it offers
   that speciality's sub-speciality, Paediatrics. Two rows read Assessor, KGK, Paediatrics, Paediatrics.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): For Assessor the Sub-speciality select was enabled, and with
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): For Assessor the Sub-speciality select was enabled, and with
   Paediatrics chosen as the speciality it offered Paediatrics. Two rows read Assessor, KGK, Paediatrics, Paediatrics;
   two stubs tagged `role:Assessor`.
 Gap: none
@@ -109,8 +109,8 @@ Do: Issue an invitation to `vanrensburg@sun.wombat.local` as CommitteeMember at 
 Expect: It is issued with no speciality (T060). The row reads CommitteeMember, KGK, with both scope columns blank. The
   address's domain does not matter: the invitation scopes him to KGK.
 Note: A panel seats only committee members at its own institution (T165), so the Stellenbosch examiner is invited at KGK.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Issued with no speciality. The row reads CommitteeMember, KGK,
-  both scope columns blank, expires 2026-10-18, "Being sent".
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Issued with no speciality. The row reads CommitteeMember, KGK,
+  both scope columns blank, expires 2026-10-19, "Being sent".
 Gap: none
 
 ### Step 2.6 — Mbatha invites Dr Mokoena as the programme's SpecialityAdmin
@@ -123,7 +123,7 @@ Expect: The first is refused: "Speciality administrators must be scoped to a spe
   KGK, Paediatrics.
 Note: The code keeps the last issued link's alert (van Rensburg's, from Step 2.5) on screen under a refused issue, and
   under a revoke (Step 2.17): reported as a suspected defect. Copy nothing from it here.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The first was refused with "Speciality administrators must be
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The first was refused with "Speciality administrators must be
   scoped to a speciality." and no row was added; van Rensburg's "Share this registration link…" box and link (Step 2.5)
   stayed on screen under the refusal, as the Note says. The second was issued: SpecialityAdmin, KGK, Paediatrics;
   Sub-speciality stayed disabled.
@@ -138,10 +138,10 @@ Do: Issue `sithole@kgk.wombat.local` as SubSpecialityAdmin at KGK with specialit
 Expect: The first is refused: "The selected role requires speciality and sub-speciality scope." The second is issued.
   Active invitations now holds nine rows: Smit, Zulu, Naidoo, Botha, Patel, Khumalo, van Rensburg, Mokoena and Sithole,
   each with the role and scope above.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The first was refused with "The selected role requires
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The first was refused with "The selected role requires
   speciality and sub-speciality scope.", and Mokoena's "Share this registration link…" box and link stayed on screen
   under it (F-2.6a). The second was issued. Nine rows, Smit to Sithole, each role and scope as above, all expiring
-  2026-10-18 and "Being sent"; nine stubs in the log, each tagged with its role.
+  2026-10-19 and "Being sent"; nine stubs in the log, each tagged with its role.
 Gap: [F-2.6a, T264] (still) A refused issue leaves the previous invitee's registration link (Mokoena's) on screen under
   the refusal.
 
@@ -157,7 +157,7 @@ Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with
   "Home" with "Coordinator · Semester N, YYYY" under it. Signing out (the top bar's Sign out, one press) returns him to
   the sign-in page, which reads "You have signed out."
 Note: Record every password chosen in this act in `pwd_DO_NOT_COMMIT.txt` only (README § Passwords).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): "Registering smit@kgk.wombat.local as Coordinator.", the email
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): "Registering smit@kgk.wombat.local as Coordinator.", the email
   filled and disabled. The address bar still held `?token=…` after load (and 3 s later). Registering landed on Home:
   "Home", "Coordinator · Semester 2, 2026", the top bar reading "Pieter Smit". The top bar's Sign out, one press,
   returned to /account/login?error=SignedOut reading "You have signed out.".
@@ -174,10 +174,10 @@ Expect: Before anything is typed, the six rules stand under Password: "The new p
   form with "The new password needs: At least 12 characters." The first field takes the focus and no account is
   created (T285). The second returns with "The password confirmation does not match." The third registers him and
   lands on Home, "Assessor · Semester N, YYYY". Signing out lands on the sign-in page with "You have signed out."
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Before typing: "The new password needs:" and the six rules word
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Before typing: "The new password needs:" and the six rules word
   for word under Password, and a Show toggle on each password field ("Show password", "Show confirm password"). 10
   characters: back at `&error=PasswordTooShort` with "The new password needs: At least 12 characters.", First name
-  focused; the same invitation registered him at the third try, so no account was made. Mismatch: back at
+  focused; no account was made (the same invitation registered him at the third try). Mismatch: back at
   `&error=ConfirmationMismatch`, "The password confirmation does not match.". Each refusal emptied First and Last name.
   The third landed on Home, "Assessor · Semester 2, 2026" ("Waiting for you", "Nothing is waiting for you.", "Open
   Activity inbox", Recent decisions "No decisions yet."); signing out read "You have signed out.".
@@ -192,11 +192,11 @@ Expect: Each page names the address and the invited role, and lists the six pass
   Each person lands on Home viewing as that role. Zulu, Naidoo, Botha and van Rensburg view as CommitteeMember, Khumalo
   as Assessor, Mokoena as SpecialityAdmin and Sithole as SubSpecialityAdmin. Each sign-out lands on the sign-in page
   with "You have signed out."
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Each page read "Registering <address> as <role>." with the
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Each page read "Registering <address> as <role>." with the
   email disabled and the six rules under Password, and each landed on Home: Zulu, Naidoo, Botha and van Rensburg
-  "Committee member · Semester 2, 2026", Khumalo (typed "Fatma") "Assessor · …", Mokoena "Speciality admin · …" and
-  Sithole "Sub-speciality admin · …", the sidebar acting as that role. Each sign-out landed on the sign-in page with
-  "You have signed out.".
+  "Committee member · Semester 2, 2026" (Registrars: "No current registrars. They appear here once they are admitted to
+  the programme."), Khumalo (typed "Fatma") "Assessor · …", Mokoena "Speciality admin · …" and Sithole "Sub-speciality
+  admin · …", the sidebar acting as that role. Each sign-out landed on the sign-in page with "You have signed out.".
 Gap: none
 
 ### Step 2.11 — A used link cannot be used again
@@ -204,7 +204,7 @@ Role: Anonymous — Mr Pieter Smit
 Route: /account/register
 Do: Open his invitation link a second time.
 Expect: No form is shown, only "This invitation has already been used." (T285's words).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): "Complete registration" with "This invitation has already been
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): "Complete registration" with "This invitation has already been
   used." and no form (no input).
 Gap: none
 
@@ -222,7 +222,7 @@ Expect: Active invitations reads "No active invitations": all nine staff invitat
   "This is your own account, so you cannot change its roles, lockout or password here. Another administrator can change
   your roles or lockout.", followed by a Change your password link. It offers no Remove, Add role, Reset password or
   Lockout (T278).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): "No active invitations". Users: ten rows (Mbatha and the nine),
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): "No active invitations". Users: ten rows (Mbatha and the nine),
   all KGK, Active, each with its invited role; no Demo, devadmin or Kruger row. "zulu" left Zulu alone; cleared, ten
   again. Manage on her row: trail Home › Users › Nolwazi Mbatha, the subtitle and the note as quoted, then "Change your
   password from your account." with the Change your password link (/account/change-password). Roles lists
@@ -241,14 +241,14 @@ Expect: Before the change, Roles lists CommitteeMember with Remove. Add role off
   this email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
   Assessor. The users list's Roles column shows both.
 Note: A role change ends any session the account still has open within a minute (T279). Step 2.10 signed everyone out.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Before: Roles "CommitteeMember" with "Remove the
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Before: Roles "CommitteeMember" with "Remove the
   CommitteeMember role"; Add role offers exactly InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Coordinator
   and Assessor, with the T303 help under it (aria-describedby); the Lockout card lists four effects; "No active
   invitations are outstanding for this email.". After: "Role 'Assessor' added." (it takes the focus), Assessor gone
   from Add role. Same for Naidoo and Botha; the users list's Roles reads "CommitteeMember, Assessor" for all three. The
   log holds three pairs of "Navigation failed when changing the location to /account/session-ended" and "Unhandled
-  exception in circuit" (TaskCanceledException), about a minute after Step 2.14's saves changed the three committee
-  members' security stamps, a few minutes after they had signed out (log lines 29780-29975); none at the admissions.
+  exception in circuit" (TaskCanceledException), after Step 2.14's saves changed the three committee members' security
+  stamps, minutes after they had signed out (log lines 28419-28636).
 Gap: [F-2.13a, T290] (still) A role or scope change on a recently signed-out, disconnected circuit logs a cancelled
   session-ended navigation and "Unhandled exception in circuit" at fail level, three times here.
 
@@ -265,7 +265,7 @@ Expect: The list first reads "No assessor profiles". The form's Assessor user of
   moves to `?id=` for the saved profile. The next new form's picker leaves out everyone already profiled.
 Note: T064 decided both the `?id=` move and the narrowing; the code has neither (T064 is closed, and the T159 replay found
   both missing), so expect a Gap. Saving a profile sets the user's scope to the profile's (T279: open sessions end).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): List first "No assessor profiles" / "Create the first assessor
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): List first "No assessor profiles" / "Create the first assessor
   profile to make assessors selectable in the workflow.". Picker: the five KGK Assessors only, each "(email)";
   Institution KGK alone; Sub-speciality enabled once a speciality is chosen; Training status offers the four; the date
   shown only for Provisional or Trained. An empty save reads "The UserId field is required." and "The Qualifications
@@ -283,9 +283,9 @@ Expect: Five rows, each at KGK in Paediatrics / Paediatrics. Training status rea
   training for Patel and Provisional for Khumalo. Training completed reads `D−8 years`, `D−6 years`, "Not recorded",
   "Not recorded" and `D−1 month` respectively. Each row has an Edit named for its assessor. Van Rensburg is neither listed
   nor offered, because he does not hold the Assessor role.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Five rows, KGK, Paediatrics / Paediatrics: Botha Trained "Not
-  recorded", Khumalo (Fatma) Provisional 2026-09-04, Naidoo Trained 2020-10-04, Patel In training "Not recorded", Zulu
-  Trained 2018-10-04. Each Edit is named "Edit <name>". Van Rensburg is not listed and was never offered.
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Five rows, KGK, Paediatrics / Paediatrics: Botha Trained "Not
+  recorded", Khumalo (Fatma) Provisional 2026-09-05, Naidoo Trained 2020-10-05, Patel In training "Not recorded", Zulu
+  Trained 2018-10-05. Each Edit is named "Edit <name>". Van Rensburg is not listed and was never offered.
 Gap: none
 
 ## Phase 2.D — Registrar invitations
@@ -297,8 +297,8 @@ Do: Invite `molefe@`, `dlamini@`, `duplessis@` and `mahlangu@kgk.wombat.local` a
   Paediatrics. Copy each link. For Dr Ndlovu she types `ndlvou@kgk.wombat.local`.
 Expect: A Trainee invitation needs both speciality and sub-speciality, and the Sub-speciality select is enabled for it.
   Five rows read Trainee, KGK, Paediatrics, Paediatrics, and each Delivery reads "Being sent".
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): For Trainee the Sub-speciality select was enabled; both scopes
-  were chosen. Five rows read Trainee, KGK, Paediatrics, Paediatrics, issued 2026-10-04 13:16, expiring 2026-10-18,
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): For Trainee the Sub-speciality select was enabled; both scopes
+  were chosen. Five rows read Trainee, KGK, Paediatrics, Paediatrics, issued 2026-10-05 13:43, expiring 2026-10-19,
   each "Being sent".
 Gap: none
 
@@ -311,9 +311,9 @@ Expect: The row's button is named "Revoke the Trainee invitation to ndlvou@kgk.w
   "Invitation revoked." and the row is gone, with no link shown (see Step 2.6's note). An address is never corrected in
   place: the invitation names who may register (T283). A new row reads `ndlovu@`. The revoked link shows no form, only
   "This invitation has been revoked."
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The button is named "Revoke the Trainee invitation to
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The button is named "Revoke the Trainee invitation to
   ndlvou@kgk.wombat.local"; pressing it showed "Invitation revoked." and the row went, but the "Share this registration
-  link…" box still showed the revoked ndlvou@ link under it. The ndlovu@ row was added (issued 13:17). The revoked
+  link…" box still showed the revoked ndlvou@ link under it. The ndlovu@ row was added (issued 13:43). The revoked
   link, in a separate browser, read "This invitation has been revoked." with no form.
 Gap: [F-2.6a, T264] (still) A revoke leaves the revoked invitation's link on screen. The link itself is dead ("This
   invitation has been revoked.").
@@ -330,10 +330,10 @@ Expect: Each page reads "Registering <address> as Trainee." Each registrar lands
   admission": "You are registered and waiting to be admitted to a curriculum by your programme administrator." It has a
   "Review your account →" link, and the header offers no action. Each sign-out lands on the sign-in page with "You
   have signed out."
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Each page read "Registering <address> as Trainee."; each landed
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Each page read "Registering <address> as Trainee."; each landed
   on Home, "Pending trainee · Semester 2, 2026", with the one "Awaiting admission" card, its sentence as quoted and
   "Review your account →", and no header action. Molefe, Dlamini and Ndlovu signed out to "You have signed out.";
-  Mahlangu stayed signed in, on Home, in her own browser, held open by a background script from 13:17. Du Plessis did
+  Mahlangu stayed signed in, on Home, in her own browser, held open by a background script from 13:44. Du Plessis did
   not register.
 Gap: none
 
@@ -350,7 +350,7 @@ Expect: The sidebar reads "Acting as Pending trainee" over Home, Log an activity
   eleven instruments of Step 2.42, in its three groups. Her invitation's Paediatrics scope selects them, and with no
   curriculum yet no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee)
   does not open this page.") with Go to Home (T335).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The sidebar reads "Acting as Pending trainee" over Home, Log an
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The sidebar reads "Acting as Pending trainee" over Home, Log an
   activity and My activities, then My data rights, and nothing else. Review your account: My account, Institution Kgosi
   Kgari Teaching Hospital, Roles "Pending trainee". My activities: "No activities yet" and the quoted sentence, with
   Log an activity (and the header's). Log an activity: "Choose what you are filing. Each opens its own form." over
@@ -371,7 +371,7 @@ Do: Open Decision panels.
 Expect: The page reads "No decision panels" / "Create a panel before scheduling reviews." and offers New panel. "Who
   decides each EPA" names `Paediatric EPA Curriculum 11.1` and says against every EPA "No panel at this institution
   covers this programme."
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): "No decision panels" / "Create a panel before scheduling
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): "No decision panels" / "Create a panel before scheduling
   reviews.", New panel offered. "Who decides each EPA" names Paediatric EPA Curriculum 11.1 in two rows (PAED-004,
   PAED-005; and the other thirteen), each "No panel at this institution covers this programme."
 Gap: none
@@ -388,7 +388,7 @@ Expect: Scope offers Institution and Speciality and starts on Speciality. Specia
   Choosing Zulu as chair shows "Thandi Zulu is the chair now, so is no longer selected under Members." (T257). The save
   is refused: "A panel needs at least two members: the chair and at least one other, so that no decision is one
   person's." (D46).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Scope offered Institution and Speciality, on Speciality;
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Scope offered Institution and Speciality, on Speciality;
   Speciality offered Paediatrics with the quoted help; Decides for offered the two. Chair, Members and External members
   each listed Botha, Naidoo, van Rensburg and Zulu. Choosing Zulu as chair showed the T257 sentence and dropped her
   from Members. With Naidoo unselected, Save panel was refused with the D46 sentence; the page stayed at
@@ -403,10 +403,11 @@ Expect: The page reloads as the panel's own page. It has a "Decides for" card re
   committee, and Update members shows Zulu as chair, Naidoo as a member and van Rensburg as external. The External
   members help text says external members sit with the chair on the appeal body and that cross-institution externals
   are not yet supported.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Saved to /committee/panels/1. The "Decides for" card reads
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Saved to /committee/panels/1. The "Decides for" card reads
   General panel with Save committee; Update members shows Zulu chair, Naidoo member, van Rensburg external, and the
-  External members help as expected. The heading reads "Decision panel": nowhere does the page name the panel, its
-  scope or its speciality.
+  External members help as expected ("…who sit with the chair on the panel's appeal body… cross-institution externals
+  are not yet supported."). The heading reads "Decision panel": nowhere does the page name the panel, its scope or its
+  speciality.
 Gap: [F-2.22a, T260] (still) A panel's own page never shows its name (nor scope and speciality), so the admin cannot
   tell which panel she is editing; there is also no way to rename it there.
 
@@ -419,7 +420,7 @@ Expect: The list offers her New panel and an Edit on this panel, a Speciality-sc
   institution (T194). Decides for is read-only: "General panel", with "Only an institutional administrator can change
   which College committee a panel sits as." The save reads "Panel members updated.", and the list's Members column
   reads 4.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The list offered her New panel and "Edit Paed Annual Review
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The list offered her New panel and "Edit Paed Annual Review
   Panel" (Members 3). Decides for was read-only, "General panel", with the quoted sentence and no select. Save panel
   read "Panel members updated." (members Botha and Naidoo, chair Zulu, external van Rensburg); back on the list,
   Members read 4.
@@ -433,7 +434,7 @@ Expect: One row: Paed Annual Review Panel, Speciality, General panel, 4 members,
   the panel with "No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the
   general panel decides." (T131). The other thirteen EPAs go to the panel.
 Note: KGK has no neonatal CCC, so "Decides for" stays General panel. Act 4 schedules every review on this panel.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): One row: Paed Annual Review Panel, Speciality, General panel,
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): One row: Paed Annual Review Panel, Speciality, General panel,
   4, "Edit Paed Annual Review Panel". Routing: PAED-004, PAED-005 → Paed Annual Review Panel with the T131 sentence as
   quoted; the other thirteen → Paed Annual Review Panel.
 Gap: none
@@ -445,7 +446,7 @@ Do: Sign in, open Decision panels, press New panel and read the form. He leaves 
 Expect: The list offers him New panel and an Edit on the panel. The form's Scope offers Speciality only, because a
   sub-speciality administrator manages the Speciality-scoped panels of his sub-speciality's speciality (T194, T245).
   Speciality offers Paediatrics. There is no Decides for field. Nothing is created.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The list offered him New panel and "Edit Paed Annual Review
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The list offered him New panel and "Edit Paed Annual Review
   Panel". The form's Scope offered Speciality only, Speciality offered Paediatrics, and there was no Decides for field.
   He went Back to panels without saving; still one panel.
 Gap: none
@@ -462,12 +463,12 @@ Expect: His is the only row left. Its Delivery reads "Not delivered. Resend emai
   shown only once.", with the link below it. The row reads "Being sent", offers no Resend and expires 14 days from now.
 Note: This needs the log sender (see Mail). Against a mail server that accepted the first email, the row reads "Sent"
   and offers no Resend.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Played a real hour after Step 2.16 (issued 13:16:50; Resend
-  pressed 14:18). His row alone: "Not delivered. Resend emails a new link in place of the current one, which then stops
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Played a real hour after Step 2.16 (issued 13:43; Resend
+  pressed 14:45). His row alone: "Not delivered. Resend emails a new link in place of the current one, which then stops
   working.", with Resend before Revoke, each named "... the Trainee invitation to duplessis@kgk.wombat.local". Resend
   gave "A new invitation link is being emailed to duplessis@kgk.wombat.local. The link it replaces no longer works.
   Copy the new link below — it is shown only once." with the new link under it; one new stub (invitation, role:Trainee)
-  in the log. The row reads "Being sent", issued 2026-10-04 14:18, expiring 2026-10-18 (14 days), and offers only
+  in the log. The row reads "Being sent", issued 2026-10-05 14:45, expiring 2026-10-19 (14 days), and offers only
   Revoke.
 Gap: none
 
@@ -478,7 +479,7 @@ Do: Open the first link, then the resent one. Register from the resent link and 
 Expect: The first link shows no form, only "This invitation is invalid.": the resend replaced the link's hash, so the old
   token matches no invitation. The resent link registers him and lands on Home, "Pending trainee · Semester N, YYYY",
   with the Awaiting admission card. Signing out lands on the sign-in page with "You have signed out."
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The first link read "Complete registration" / "This invitation
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The first link read "Complete registration" / "This invitation
   is invalid." with no form (no input). The resent link read "Registering duplessis@kgk.wombat.local as Trainee.",
   registered him and landed on Home, "Pending trainee · Semester 2, 2026", with the Awaiting admission card; signing
   out read "You have signed out.".
@@ -496,7 +497,7 @@ Expect: Active invitations reads "No active invitations". Users lists 15, with t
   is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'." (T303).
   Trainees' Pending admission lists the five with their emails and KGK, each with an
   "Admit to curriculum" named for the registrar. Active profiles reads "No active trainee profiles found."
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): "No active invitations". Users lists 15, the five registrars as
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): "No active invitations". Users lists 15, the five registrars as
   PendingTrainee. Molefe's page: Roles lists PendingTrainee with "System-managed" and no Remove; Add role offers
   exactly InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember and Assessor, with the
   T303 help under it (aria-describedby). Trainees: Pending admission lists the five with emails and KGK, each "Admit to
@@ -517,9 +518,9 @@ Expect: The form reads "Trainee profile" / "Admit a pending trainee into a curri
   Deactivate and Mark complete, none of them used here. The four appear under Active profiles with the curriculum,
   Paediatrics and the completion date entered.
 Note: Admission into a version KGK has not adopted is refused (T091). The picker never offers one.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): "Trainee profile" / "Admit a pending trainee into a
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): "Trainee profile" / "Admit a pending trainee into a
   curriculum." (trail Home › Trainees › Trainee profile); Curriculum offered only "Paediatric EPA Curriculum (11.1)";
-  start pre-filled 2026-10-04 (today); no training-year field. Each admission moved to `?id=` (Molefe 2, Dlamini 3, du
+  start pre-filled 2026-10-05 (today); no training-year field. Each admission moved to `?id=` (Molefe 2, Dlamini 3, du
   Plessis 4, Mahlangu 5): Status Active, "Update curriculum and completion details for this trainee.", Last day in the
   programme, Deactivate, Mark complete. Active profiles lists the four with 11.1, Paediatrics and 2027-01-14,
   2028-01-14, 2029-01-14, 2030-01-14 (J = 2026-01-15).
@@ -535,7 +536,7 @@ Expect: Left empty, the completion date is derived as `J` + 12 months, the longe
   says so ("Leave this empty to derive it from the curriculum window."). The save reads "Trainee profile saved.", and
   the list shows `J+4y−1d`. Pending admission reads "No pending trainees found."
 Note: A 12-month window for a four-year programme is T139's open College question.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Help text "Leave this empty to derive it from the curriculum
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Help text "Leave this empty to derive it from the curriculum
   window."; admitted with it empty (profile 6), it was derived as 2027-01-15 (`J` + 12 months). Set to 2030-01-14 and
   saved: "Trainee profile saved." (it takes the focus); the list shows 2030-01-14. Pending admission: "No pending
   trainees found."
@@ -549,8 +550,8 @@ Expect: Within a minute of her admission the tab moves to the sign-in page, whic
   again.", an information notice; the focus is on Email (no institution buttons on dev). Admission changes her role,
   and a role change ends open sessions (T279). Signed in again, she sees
   "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Her Step 2.18 tab, held open by one background browser from
-  13:17 through the hour's wait and Steps 2.26-2.30, never reopened, sat on Home. 35 s after her admission (12:19:03
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Her Step 2.18 tab, held open by one background browser from
+  13:44 through the hour's wait and Steps 2.26-2.30, never reopened, sat on Home. 4 s after her admission (12:46:13
   UTC) it moved to /account/login?error=SessionEnded&returnUrl=%2F: "Your session has ended. Sign in again." as an info
   notice (role status), the focus on Email. Signed in again: Home, "Trainee · Semester 2, 2026", and the trainee
   dashboard of Step 2.39 (Your targets "Training year 1 — …", Needs you, Recent decisions, My authorisations); the
@@ -579,12 +580,16 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
   T335). Decision panels lists the panel with no New panel and no Edit column, and Decision panels is lit there (T358,
   C10). The panel form reads "You cannot open this page" in the same words: the Coordinator reads panels, and edits none
   (D4).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Coordinator · Semester 2, 2026": "No stalled requests.",
-  "No invitations expiring soon." and Quick action "Start an MSF campaign". The sidebar reads "Acting as Coordinator"
-  over exactly the five named, then My data rights. Typed Invitations: /access-denied, "You cannot open this page", the
-  two sentences as quoted, Go to Home. Typed /committee/panels: the panel (Speciality, General panel, 4) and the
-  Who-decides card, no New panel, no Actions column, nothing in the sidebar lit (only the trail's last crumb is
-  aria-current). The typed panel form: "You cannot open this page" in the same words.
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Home, "Coordinator · Semester 2, 2026", header action "Start an
+  MSF campaign" (/msf/campaigns/new), no Quick action card. Cards in order: "Waiting for assessors", no badge, "Nothing
+  is waiting for an assessor.", Open Waiting for assessors; "Nothing filed in 30 days", the rule line as quoted, "Every
+  current registrar has filed something in the last 30 days.", Open in Programme trainees; "Invitations nearing
+  expiry", "No invitations expiring soon.". The sidebar reads "Acting as Coordinator" over Home, Programme trainees,
+  Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels and Data rights requests, one
+  flat list, then My data rights; no Invitations. Typed Invitations: /access-denied, "You cannot open this page", the
+  two sentences as quoted, Go to Home. /committee/panels: the panel (Speciality, General panel, 4) and the Who-decides
+  card, no New panel, no Actions column, Decision panels lit in the sidebar. The typed panel form: "You cannot open
+  this page" in the same words.
 Gap: none
 
 ### Step 2.33 — Dr Zulu's first view: committee member
@@ -605,12 +610,16 @@ Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The
     met in YYYY" (T130's count, never a percentage). It has no foot.
   The menu is the Committee member's alone, never the union of Dr Zulu's roles: Home, Programme trainees, Committee
   reviews and Decision panels, then My data rights.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Committee member · Semester 2, 2026"; the sidebar
-  "Acting as Committee member" with "Switch to Assessor", over Home, Committee reviews and Decision panels, then My
-  data rights. "Semester 2, 2026 · July to November"; five registrars at "semester 0/10 · yearly 0/5" (in the order du
-  Plessis, Dlamini, Mahlangu, Ndlovu, Molefe), no exempt line; PAED-001 to 015 each "0 of 5 met".
-Gap: [F-2.33a, T298] (still) With every trainee level, the Targets card lists them in user-id order (the tie-break
-  after "fewest met first"), which no reader can follow; a name tie-break would read.
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Home, "Committee member · Semester 2, 2026"; the sidebar
+  "Acting as Committee member" with "Switch to Assessor", over Home, Programme trainees, Committee reviews and Decision
+  panels, then My data rights. "Registrars", badged "5 registrars", "Fewest met first, then by surname.": Anele
+  Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato Molefe, Sipho Ndlovu, each name a link to
+  /programme/trainees/{ProfileId} (3, 4, 5, 2, 6) over "Training year N", then "0 of 10" / "EPAs met this semester" and
+  "0 of 5" / "EPAs met in 2026"; no exempt line; foot Open Programme trainees. "Targets by EPA", "Fewest registrars met
+  first. Semester 2, 2026 ends on 2026-11-30.": PAED-001 to PAED-015 in code order, each name a link to
+  /programme/trainees?short=<EpaId>, over its cadence ("3 per semester", "1 per academic year"), then "0 of 5" over
+  "registrars met this semester" or "registrars met in 2026"; no foot.
+Gap: none (T298 no longer occurs: the registrars read by surname, not by user id)
 
 ### Step 2.34 — Dr Zulu switches between her dashboards
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
@@ -629,7 +638,7 @@ Expect: Under the header an info alert reads "You are now acting as Assessor." a
   is never shown or stored. Switch to Committee member brings back the Committee member's sidebar and menu, "Committee
   member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
   role Step 3.33 starts from.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Switch to Assessor: Home, "Assessor · Semester 2, 2026", "You
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Switch to Assessor: Home, "Assessor · Semester 2, 2026", "You
   are now acting as Assessor." with the focus, no Switch back; the sidebar "Acting as Assessor" / "Switch to Committee
   member" over Home and Activity inbox, then My data rights; "Waiting for you" with no badge, "Nothing is waiting for
   you.", "Open Activity inbox" (/activities/inbox), and Recent decisions "No decisions yet." with no "All your
@@ -647,11 +656,12 @@ Do: Each signs in, reads the dashboard and opens Decision panels.
 Expect: Dr Naidoo and Dr Botha each see what Dr Zulu saw in Step 2.33: the same menu, the five registrars on Registrars
   in its order, and "0 of 5" for every EPA on Targets by EPA. Decision panels lists the panel both sit on, with no New
   panel and no Edit.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Each: Home, "Committee member · Semester 2, 2026", "Acting as
-  Committee member" with "Switch to Assessor", Zulu's menu, the same five registrars at 0/10 · 0/5 and PAED-001 to 015
-  at "0 of 5 met". Decision panels lists Paed Annual Review Panel (Speciality, General panel, 4) and the Who-decides
-  card, with no New panel and no Edit (no action in main).
-Gap: [F-2.33a, T298] (still) The same user-id order on the Targets card as Zulu's.
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Each: Home, "Committee member · Semester 2, 2026", "Acting as
+  Committee member" with "Switch to Assessor", Zulu's menu, Registrars badged "5 registrars" in Zulu's order (Dlamini,
+  du Plessis, Mahlangu, Molefe, Ndlovu) at "0 of 10" / "0 of 5", and Targets by EPA PAED-001 to 015 each "0 of 5".
+  Decision panels (lit) lists Paed Annual Review Panel (Speciality, General panel, 4) and the Who-decides card, with no
+  New panel and no Edit (no action in main).
+Gap: none (T298 no longer occurs)
 
 ### Step 2.36 — Dr Patel and Dr Khumalo, assessors
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
@@ -661,7 +671,7 @@ Expect: Each sees "Assessor · Semester N, YYYY" on Home, and the empty Assessor
   you" with no badge and no "0", "Nothing is waiting for you.", "Open Activity inbox"; Recent decisions, "No decisions
   yet." (T350). The sidebar reads "Acting as Assessor" with no switch, over Home and Activity inbox, then My data
   rights.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Each: Home, "Assessor · Semester 2, 2026"; the sidebar "Acting
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Each: Home, "Assessor · Semester 2, 2026"; the sidebar "Acting
   as Assessor" with no switch, over Home and Activity inbox, then My data rights; "Waiting for you" with no badge and
   no "0", "Nothing is waiting for you.", "Open Activity inbox"; Recent decisions "No decisions yet.".
 Gap: none
@@ -680,12 +690,11 @@ Note: Zulu, Naidoo and Botha hold the Paediatrics sub-speciality only through th
   CommitteeMember invitation may carry none (Step 2.3). So a committee member with no assessor profile sees no trainee
   here, although he sits on the panel and may read every KGK trainee's record (T113). Fixed by T290 (2026-10-05):
   the card no longer reads sub-speciality claims.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Committee member · Semester 2, 2026", "Acting as
-  Committee member" with no switch, over Home, Committee reviews and Decision panels, then My data rights. "Semester 2,
-  2026 · July to November", "No trainees have targets this period.", "No curriculum targets for these trainees.".
-  Decision panels as Naidoo saw them, with no New panel and no Edit.
-Gap: [F-2.37a, T290] (still) The panel's external member, who may read every KGK trainee (T113), sees an empty
-  committee dashboard, because the card filters on sub-speciality scope he cannot hold.
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Home, "Committee member · Semester 2, 2026", "Acting as
+  Committee member" with no switch, over Home, Programme trainees, Committee reviews and Decision panels, then My data
+  rights. "Registrars", badged "5 registrars", lists the five in Step 2.33's order, each "0 of 10" / "0 of 5"; Targets
+  by EPA PAED-001 to 015 each "0 of 5". Decision panels as Naidoo saw them, with no New panel and no Edit.
+Gap: none (T290 no longer occurs, F-2.37a: the external member's Home lists every current KGK registrar)
 
 ### Step 2.38 — Dr Mokoena's and Dr Sithole's dashboards
 Role: SpecialityAdmin and SubSpecialityAdmin — Dr Refilwe Mokoena and Dr Kabelo Sithole
@@ -698,11 +707,13 @@ Expect: Each sees "Speciality admin · Semester N, YYYY" or "Sub-speciality admi
   Trainees in programme and no "inactive" anywhere (Q10). The sidebar reads "Acting as Speciality admin" or "Acting as
   Sub-speciality admin", over Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews,
   Decision panels and Entrustment decisions, then My data rights.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Both as expected: "Speciality admin · Semester 2, 2026" and
-  "Sub-speciality admin · …"; Pending reviews 0 "activities awaiting review" with no link (no action in main); Trainees
-  in programme 5 "active / 0 inactive"; "Curriculum coverage — Semester 2, 2026" over "Semester 2, 2026 · July to
-  November", PAED-001 to 015 at "0 of 5 met". The sidebar "Acting as Speciality admin" or "Acting as Sub-speciality
-  admin" over Home, Decisions due, Committee reviews and Decision panels, then My data rights.
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Mokoena "Speciality admin · Semester 2, 2026", Sithole
+  "Sub-speciality admin · Semester 2, 2026". Each: "Waiting for assessors", no badge, "Nothing is waiting for an
+  assessor.", Open Waiting for assessors; "Registrars", badged "5 registrars", the five in Step 2.33's order, Open
+  Programme trainees; "Targets by EPA" PAED-001 to 015 each "0 of 5". No Pending reviews, no Trainees in programme, no
+  "inactive". The sidebar "Acting as Speciality admin" or "Acting as Sub-speciality admin" over Home, Programme
+  trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels and Entrustment decisions, then My
+  data rights.
 Gap: none
 
 ### Step 2.39 — Dr Molefe, final-year registrar
@@ -724,7 +735,7 @@ Expect: Home's first card, Your targets, reads "Training year 4 — it sets the 
   "Multi-source feedback: 0 of 15 EPAs covered by a released campaign that closed this semester. …". Your EPAs lists
   "Each semester · 10 EPAs" and "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; Entrustment against
   Annexure A reads "0 at or above · 0 below · 15 with no decision, of 15 EPAs".
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Trainee · Semester 2, 2026", header action "Log an
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Home, "Trainee · Semester 2, 2026", header action "Log an
   activity". Your targets: "Training year 4 — it sets the minimum level each encounter is judged against.", "0 of 10"
   over "EPAs met this semester" and "0 of 5" over "EPAs met in 2026"; Furthest short PAED-001 to 005, each its name as
   a link to /portfolio/progress/{EpaId} (2 to 6) with "0 of 3 this semester · 3 more by 2026-11-30", no part-way line;
@@ -737,7 +748,7 @@ Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Trainee · Semest
   of 15 EPAs covered by a released campaign that closed this semester. …"; Your EPAs "Each semester · 10 EPAs" and
   "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; Entrustment against Annexure A "0 at or above · 0
   below · 15 with no decision, of 15 EPAs".
-Gap: none (T306 no longer occurs: Home's Your targets names training year 4)
+Gap: none
 
 ### Step 2.40 — The other registrars' training years
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
@@ -748,12 +759,12 @@ Expect: Each dashboard has Molefe's shape and figures, with its own training yea
   STAR yet. When the committee issues one, it shows here against training year N's level.", and My progress's subtitle
   reads "Training year N · Semester 2, 2026". N is 3 for Dlamini, 2 for du Plessis and 1 for Mahlangu and Ndlovu. Their
   semester and yearly targets apply now: a start on 15 January is on time for both (D42).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Each dashboard has Molefe's shape and figures ("0 of 10", "0 of
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Each dashboard has Molefe's shape and figures ("0 of 10", "0 of
   5" in 2026, PAED-001 to 005 "0 of 3 this semester", no part-way line, the same Needs you card), with its own year:
   Your targets opens "Training year N — it sets the minimum level each encounter is judged against.", My authorisations
   "No STAR yet. When the committee issues one, it shows here against training year N's level.", and My progress's
   subtitle "Training year N · Semester 2, 2026": N = 3 (Dlamini), 2 (du Plessis), 1 (Mahlangu), 1 (Ndlovu), right for
-  2026-10-04.
+  2026-10-05.
 Gap: none
 
 ### Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name
@@ -766,7 +777,7 @@ Expect: The page reads "My account" and "Your name, your roles, and how you sign
   "Assessor" for Zulu, Naidoo and Botha; "Trainee" for the registrars). How you sign in shows Password with Change
   password. Khumalo's Save name reloads the page with "Name saved." in the Your name card, which takes the focus, and
   the top bar's account row now reads "Fatima Khumalo" (the lists are checked on Mbatha's in Step 2.44).
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): All 14 opened My account from the top bar's name (then marked
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): All 14 opened My account from the top bar's name (then marked
   aria-current page): "My account" and "Your name, your roles, and how you sign in."; the Account card shows the email
   as text (no input), Kgosi Kgari Teaching Hospital and the roles by label, one per line: "Committee member" and
   "Assessor" for Zulu, Naidoo and Botha, "Trainee" for the five, each other its one label ("Coordinator", "Speciality
@@ -793,7 +804,7 @@ Expect: The page is headed "Log an activity", with "Choose what you are filing. 
     Session Log`.
   Multi-Source Feedback and Learner Feedback (Paediatrics) are not offered, because only the system writes them (T162,
   T164). Nor are the Demo types, which belong to another discipline.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Headed "Log an activity" with "Choose what you are filing. Each
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Headed "Log an activity" with "Choose what you are filing. Each
   opens its own form."; eleven links, no name twice, in three groups: "Rated by an assessor" "7 types" with the quoted
   sentence and the seven named, each "(Paediatrics)"; "Discussed or reviewed, not rated" "3 types" with its sentence
   and the three; "Logged by you" "1 type" with its sentence and KGK Teaching Session Log. Each link opened
@@ -814,7 +825,7 @@ Expect: The Mini-CEX (Paediatrics) form opens at once, its name under the headin
   Annexure A list names the Mini-CEX: PAED-001, 002, 003, 004, 006, 007, 008, 012 and 013 (T122). The Assessor picker
   offers exactly Botha, Khumalo, Naidoo, Patel and Zulu, each with their email. It does not offer van Rensburg, Molefe
   herself or any Demo account (T102). Nothing is saved.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): The Mini-CEX form opened at once, subtitled "Mini-CEX
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): The Mini-CEX form opened at once, subtitled "Mini-CEX
   (Paediatrics) · Choose another type". Request is open ("You fill this in"); Entrustment (the ladder) and Feedback
   each read "The assessor you name fills this in" and "Not filled in yet.". Above the actions, "When you submit: it
   goes to the Activity inbox of the assessor you name, and stays Requested until that assessor acts on it."; Submit,
@@ -834,7 +845,7 @@ Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite 
   adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
 Note: The adopted count is T291 item 4's decision, still queued: the query counts the whole national catalogue, which
   with the Demo world reads 2 and 2, so expect a Gap until T291 lands.
-Actual (2026-10-04, T355 replay, wombat_scenario_t355): Home, "Institutional admin · Semester 2, 2026", header action
+Actual (2026-10-05, T358 replay, wombat_scenario_t358): Home, "Institutional admin · Semester 2, 2026", header action
   "Invite a person"; Users 1/1/1/1/4/5/5, no PendingTrainee line; Specialities & sub-specialities reads 2 and 2; Quick
   links Users, Invitations, Curriculum adoptions and Entrustment decisions. Users lists 15 KGK accounts and Assessors
   five profiles, both naming Fatima Khumalo.
@@ -843,10 +854,10 @@ Gap: [F-2.44a, T291] (still) Specialities & sub-specialities reads 2 and 2 (the 
 
 ## Act 2 outcome state
 
-Replay check (2026-10-04, T355 replay, wombat_scenario_t355): match but one; all 7 queries as expected except
-invitations, 15 | 2 | 0: act 1's script issued Prof Mbatha a second invitation and revoked the first, so one more
-revoked row than the runbook's (not a finding). Activities and reviews 0 | 0; the assessor dates are D−8y, D−6y and D−1
-month from 2026-10-04.
+Replay check (2026-10-05, T358 replay, wombat_scenario_t358): match but one; all 7 queries as expected except
+invitations, 15 | 2 | 0: act 1's script issued Prof Mbatha a second invitation and revoked it, so one more revoked row
+than the runbook's (not a finding). Activities and reviews 0 | 0; the assessor dates are D−8y, D−6y and D−1 month from
+2026-10-05.
 
 - **15 KGK users:** Mbatha (InstitutionalAdmin); Smit (Coordinator); Zulu, Naidoo and Botha (CommitteeMember and
   Assessor); Patel and Khumalo (Assessor); van Rensburg (CommitteeMember); Mokoena (SpecialityAdmin); Sithole
