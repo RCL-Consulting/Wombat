@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 3 · Spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow06-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-doc">
+<div class="header-container"><div><h1>Flow 06 · round 3 · Spec</h1><p class="page-subtitle">A, "Two lists and a record", after the operator's decisions E1–E6 and the review's corrections (2026-10-05). Each item below says what changed and where. Boards are named by their state ids (c, a, k Homes; t Programme trainees; r the registrar; w Waiting for assessors).</p></div></div>
+
+<section class="detail-card">
+<h2>Round 3, item by item</h2>
+<div class="table-container"><table class="clinic-table">
+<caption class="visually-hidden">Round 3's decisions and corrections, and where each is drawn</caption>
+<thead><tr><th>Item</th><th>What changed, and where</th></tr></thead>
+<tbody>
+<tr><td><b>E1</b></td><td>Opting out of digest emails does not stop a reminder (one request is "email about one particular thing"). The opt-out refusal is gone (old w6). Four refusals remain, each drawn: deactivated (w5), no email address (w6, r2x), no such account (w7: the nominee field names an erased or deleted user), moved meanwhile (w8). The account page's help is unchanged.</td></tr>
+<tr><td><b>E2</b></td><td>The flat limit counts the role's links only; see the NavMenu text below. Menus board m2 and m4 captions say so; the Coordinator's eight stay flat.</td></tr>
+<tr><td><b>E3</b></td><td>Only requests whose next move names a person are listed. "Any assessor at Kgosi Kgari Teaching Hospital" is gone; that slot in w9 is now a request whose assessor's account is deactivated ("No reminder: [assessor]'s account is deactivated." in its Waiting cell). The Coordinator's card reads the same query (k1 caption).</td></tr>
+<tr><td><b>E4</b></td><td>Scope follows the acting role. Each page subtitle says what was read: "Requests in Paediatrics whose next move names an assessor, supervisor or reviewer, read as Speciality admin. Your own requests are not listed." (w4, w9–w11, w15); "Current registrars in Paediatrics, read as Sub-speciality admin" (t10). Home's card and the page are one query.</td></tr>
+<tr><td><b>E5</b></td><td>Nothing filed in 30 days counts what has left draft, from the later of admission and today − 30 days. The card's rule line says so (k1–k6); k2 (Step 2.32) is now empty; t3's rule line; the weekly digest takes the same rule (Steps 2.32).</td></tr>
+<tr><td><b>E6</b></td><td>Home's waiting rows: "With Mohammed Patel" on its own line, then flow 04's "Waiting 8 days" / "Waiting less than a day" (a1, a3, a5, k1, k3, k4; r2). <code>.waiting-with</code> dropped.</td></tr>
+<tr><td><b>Settled</b></td><td>A same-day reminder blocks every staff member (w4); the next day the last "Reminded 2026-10-04 by Pieter Smit" line and the button both show (w4b). A withdrawn registrar's request stays waiting (k3, r6). Round 2's questions 3 and 4 are dropped.</td></tr>
+<tr><td><b>1</b></td><td>The reminder's record is a new table (proposed name ReminderSent: the request, who sent it, when, in UTC with its South African day): one per request per South African day, checked by a unique key on (request, day). Sending never touches the request's last move (UpdatedOn).</td></tr>
+<tr><td><b>3</b></td><td>The mail is the nudge's template, "Activities awaiting your assessment", for one request and tagged as a reminder (the log line and the subject's tag say "reminder", the body is the nudge's). A request under a day reads "waiting less than a day", never "0 days".</td></tr>
+<tr><td><b>6</b></td><td>The registrar page opens only the registrar's current (preferred) profile; any other profile id, and an erased account, are Page not found (r7; Steps A.5.14).</td></tr>
+<tr><td><b>7</b></td><td>EpaProgressTable gains a "names as text" mode (listed as changed below; r1).</td></tr>
+<tr><td><b>8</b></td><td>The ended page (r6) is drawn from flow 05's ended cards (EndedItemCard, My progress's ended view), its words NEW and written for staff: "Pieter du Plessis's programme ended on 2026-10-02, part-way through Semester 2, 2026. …"; each count cell "No target (the programme ended part-way through)", with no figure and no bar. "No target after 2026-10-02" is gone.</td></tr>
+<tr><td><b>9</b></td><td>Programme trainees needs a new reader, per registrar and per EPA, for Furthest short and Short on (listed below). Exemption is computed, so its row says why in words, "Started part-way through the period" (c6, t7).</td></tr>
+<tr><td><b>10</b></td><td>Owner rows: an activity opened from Waiting for assessors lights Waiting for assessors for both admins and the Coordinator (Home › Waiting for assessors › the activity); Decision panels' row adds the Coordinator (below).</td></tr>
+<tr><td><b>11</b></td><td>"Its assessor is emailed after 5." reads one setting, the nightly nudge's own; the old 7-day stall setting is removed. Overdue reads AssessorDueDays.</td></tr>
+<tr><td><b>12</b></td><td>The With filter's names come from each waiting row's nominee (w10 caption).</td></tr>
+<tr><td><b>13</b></td><td>Everyone at 0 is ordered Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato Molefe, Sipho Ndlovu (c4, c5, a2; Steps 2.33). 3.52's order stays.</td></tr>
+<tr><td><b>14</b></td><td>Counts: 3.30 "3 waiting, 2 overdue" (k1, w1); 3.53 "2 waiting, 1 overdue" (a1, a5, w15); A.5.10 "3 waiting, 1 overdue" (k3).</td></tr>
+<tr><td><b>15</b></td><td>Filled: "Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-03", with Mohammed Patel; "Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-29", with Fatima Khumalo (the type's stored name). The sub-speciality is Paediatrics (a5, t10, w15).</td></tr>
+<tr><td><b>16</b></td><td>t1: Furthest short Anele Dlamini PAED-002, 003, 005; Nomsa Mahlangu PAED-001, 003, 005. t2: Pieter du Plessis, Anele Dlamini, Lerato Molefe at 0, then Nomsa Mahlangu and Sipho Ndlovu at "1 of 3 · 2 more" (order: furthest from the target, then fewest met, then surname). r1: PAED-002 and PAED-004 at "1 of 3". Sipho Ndlovu's and Lerato Molefe's furthest three are derived by the same rule.</td></tr>
+<tr><td><b>17</b></td><td>The reminder plays inside 3.31 (Mr Smit sends it from the page he looks for there), so 3.32's log holds three stub mails, said in its Expect. New steps: 3.55 (Short on PAED-002), 3.56 (the registrar page), 3.57 (Waiting filtered: With Mohammed Patel, then Overdue only with Fatima Khumalo); A.5.14 (not found), A.5.15 (refusals on a scratch database, devadmin then Mr Smit), A.5.16 (Nothing filed, "n of 2"), A.7.9 (390 and 768). Routes carry no query string.</td></tr>
+<tr><td><b>18</b></td><td>Steps 4.3 and 4.4 added; 3.33's "Targets this period" noted as now "Registrars" (Steps board; c2 caption).</td></tr>
+<tr><td><b>19</b></td><td>c3 is David Naidoo at Step 5.25, four current registrars; the invitation expires 2026-10-07 (k4); Lerato Molefe holds STARs on PAED-001, PAED-010 and PAED-012, final review 2026-10-04 (r3); the heavy Homes say they are invented (a3, c11); the erased and other-institution cases are the appendix's (r7; Steps).</td></tr>
+<tr><td><b>21</b></td><td>.roster-row and .coverage-row collapse to one column at 900px; the 768 board (R3-768) shows the committee Home and Programme trainees between 641 and 900.</td></tr>
+<tr><td><b>22</b></td><td>.reminder-action is 44px below 641px wherever it sits (the list's cell, the registrar page).</td></tr>
+<tr><td><b>23</b></td><td>No pronouns: the dialog reads "Thandi Zulu gets one email…"; refusals "Wombat sends Fatima Khumalo no email"; the rule text "a registrar's name to the registrar's page".</td></tr>
+<tr><td><b>24</b></td><td>Programme trainees' tables are .clinic-table--index (its row header reset).</td></tr>
+<tr><td><b>25</b></td><td>.filter-actions is a row, on the fields' bottom line.</td></tr>
+<tr><td><b>26</b></td><td>"Start an MSF campaign" is listed as a § Dashboard page change (below).</td></tr>
+<tr><td><b>27</b></td><td>Every preview card keeps its foot when its list is in the menu, empty included (c7 Registrars, k1/k2 Nothing filed, a2/a4 Waiting).</td></tr>
+<tr><td><b>28</b></td><td>Built classes reused: .progress-row-link, .needs-you-rule, .dashboard-metric + .count-figure + .dashboard-metric-label, .count-figure/.count-meta, .progress-row-meta, .waited-cell span, .list-unstyled, .section-error, .dashboard-card-skeleton. Dropped: .waiting-with, .with-cell-note, .card-scope, .figure-cell, .short-cell, .roster-figure*, .coverage-epa/-cadence/-figure/-value/-label, .roster-list, .coverage-list, .review-links, .filter-check. NEW only: .roster-row (+ .roster-exempt), .coverage-row, .filter-actions, .reminder-action, .registrar-stack.</td></tr>
+<tr><td><b>29</b></td><td>w9 draws two Mini-CEX from Nomsa Mahlangu on 2026-09-24: they differ by state and "since … SAST", and their accessible names end "(1 of 2)" / "(2 of 2)" (RowNames.Distinct, § List page).</td></tr>
+<tr><td><b>30</b></td><td>Registrar states added: loading (r8); the reminder's dialog (r2d), result and Reminded line (r2r), refusal (r2x); each section's own error (r4: This period, EPAs, standing, rating trajectories, waiting, committee reviews); the page error with h1 "Programme trainee" and the trail Home › Programme trainees (r5). .index-section and .standing-panel margins reset in .registrar-stack; every section heading is .epa-section-title.</td></tr>
+<tr><td><b>31</b></td><td>Count badges in words ("5 registrars", "1 registrar"); the Filed checkbox's label once; Waiting for assessors' select is "Waiting" (All, Overdue only); the apply-with-Show pattern and the aria-hidden coverage bars written as DESIGN.md text below.</td></tr>
+<tr><td><b>32</b></td><td>The DESIGN.md list adds the staff target cards' paragraph, "Guard the eager reads" and the owner rows (below).</td></tr>
+<tr><td><b>33</b></td><td>Try again's answer takes the focus in the frame's result region (captions c10, a7, k6, t9, w14). No inline layout styles (the skeleton lists use .dashboard-card-skeleton; the boards' wrapper is .r2-doc). A caption on every table; data-label on every stacked cell. One no-match pattern, "No registrar matches these filters." / "No request matches these filters.", and one button, Clear filters. An empty list draws no filter form (t5, w12). The roster card is "Registrars", its line "Fewest met first, then by surname." An EPA every registrar has met keeps its name as text (c11).</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card">
+<h2>What is NEW, what changed, what is reused</h2>
+<div class="table-container"><table class="clinic-table">
+<caption class="visually-hidden">Components and their classes</caption>
+<thead><tr><th>Component</th><th>Status</th><th>Classes</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td><b>RegistrarRoster</b></td><td>NEW</td><td>.roster-row, .roster-exempt (NEW); .list-unstyled, .progress-row-link, .progress-row-meta, .dashboard-metric, .count-figure, .dashboard-metric-label, .waiting-more</td><td>Home's "Registrars" (committee, both admins): five rows, "3 more in Programme trainees." past five, the foot "Open Programme trainees".</td></tr>
+<tr><td><b>Programme trainees</b> (page)</td><td>NEW</td><td>.clinic-table--stack.clinic-table--index, .count-figure/.count-meta; .search-container/.search-grid + .filter-actions; PagerControls</td><td>/programme/trainees. Needs a NEW reader per registrar and per EPA (Furthest short, Short on).</td></tr>
+<tr><td><b>The registrar page</b></td><td>NEW</td><td>.registrar-stack (NEW); .period-card, .period-ends, .epa-section-title, .section-error</td><td>/programme/trainees/{ProfileId:int}, the current profile only; Home › Programme trainees › &lt;Name&gt;.</td></tr>
+<tr><td><b>Waiting for assessors</b> (page)</td><td>NEW</td><td>.clinic-table--stack, .waited-cell</td><td>/programme/waiting; one query with Home's card, in the acting role's scope.</td></tr>
+<tr><td><b>ReminderAction</b></td><td>NEW</td><td>.reminder-action (NEW); ConfirmDialog; .action-result; .btn.is-running</td><td>The list's Waiting cell and the registrar page.</td></tr>
+<tr><td><b>ReminderSent</b> (table, proposed name)</td><td>NEW</td><td>—</td><td>Item 1.</td></tr>
+<tr><td><b>WaitingList, staff reading</b></td><td>changed</td><td>.needs-you-row(--overdue), .needs-you-why ×2</td><td>"With X" line, then flow 04's "Waiting N days".</td></tr>
+<tr><td><b>EpaTargetCoverageList</b></td><td>changed</td><td>.coverage-row (NEW grid); .progress-row-link, .dashboard-metric, .progress-bar (aria-hidden)</td><td>"Targets by EPA" on every Home; a met-by-all EPA is text.</td></tr>
+<tr><td><b>EpaProgressTable</b></td><td>changed</td><td>—</td><td>A "names as text" mode for the staff page (no EPA page link).</td></tr>
+<tr><td><b>Ended record, staff words</b></td><td>NEW words</td><td>.period-card</td><td>r6, from flow 05's EndedItemCard.</td></tr>
+<tr><td>Reused unchanged</td><td>—</td><td colspan="2">MainLayout, MainLayoutPhone, NavMenu, PageHeader, Breadcrumbs, ActingRoleSwitchAlert, OtherRoleLine, DashboardCard/DashboardFrame, StatePanel, Skeleton, Alert, Badge, ConfirmDialog, PagerControls, DataTable Stack, EntrustmentStandingPanel, TrajectoryChart (900, 322), NotFound, Icon (users, clock, award, clipboard-list, plus).</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card">
+<h2>DESIGN.md text</h2>
+<div class="table-container"><table class="clinic-table">
+<caption class="visually-hidden">DESIGN.md sections and their new text</caption>
+<thead><tr><th>Section</th><th>New text</th></tr></thead>
+<tbody>
+<tr><td>§ The NavMenu, the flat limit (E2)</td><td>"Up to 8 of the acting role's links, Home counted, the list is flat; more than 8, it is grouped under headings that are not links. The personal links (My progress, My data rights) sit under their own rule and are not counted."</td></tr>
+<tr><td>§ The NavMenu, nav table</td><td>SpecialityAdmin, SubSpecialityAdmin: Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions. CommitteeMember: Home, Programme trainees, Committee reviews, Decision panels. Coordinator: Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests. "What the nav never holds" loses Stalled activities, Programme trainees and the STAR review queue.</td></tr>
+<tr><td>§ The NavMenu, owner table (10)</td><td>Add: "A registrar's progress (/programme/trainees/{id}) | Committee member, Speciality and Sub-speciality admin, Coordinator: Programme trainees". Change "An activity" to add "Speciality and Sub-speciality admin, Coordinator, arrived from Waiting for assessors: Waiting for assessors". Change "A decision panel" to add Coordinator. Change "Entrustment decisions | none" to "Speciality and Sub-speciality admin: itself (a list the menu offers)".</td></tr>
+<tr><td>§ Dashboard page, header actions (26)</td><td>"One header action for a role whose main job starts from Home: the Trainee's Log an activity, the Institutional admin's Invite a person, and the Coordinator's Start an MSF campaign (MSF campaigns' new-campaign form)."</td></tr>
+<tr><td>§ Dashboard page, the link rule</td><td>"Every row on an oversight Home is its own link to the one record behind it: a registrar's name to the registrar's page, an EPA's name to Programme trainees filtered Short on the EPA, an activity's name to its page; an EPA every registrar has met is text. A card is never one link around other links (T280). A card that previews a list shows its first five rows, then 'n more in &lt;list&gt;.', and its foot opens the list, empty included, whenever the list is in the menu."</td></tr>
+<tr><td>§ Dashboard page, "Guard the eager reads"</td><td>"… (the Coordinator's warning stripe, Targets by EPA's rows …)": "the admins' coverage title, which is 'Curriculum coverage' until it knows the semester" goes, since "Targets by EPA" never names the semester.</td></tr>
+<tr><td>§ Dashboard layout grid, the staff target cards</td><td>"The three staff dashboards' Registrars and Targets by EPA cards (one RegistrarRoster, one EpaTargetCoverageList) count the current registrars in the acting role's scope (TraineeScopeResolver.KeepCurrentAsync, T238; T290 for the committee) … None is counted as inactive: there is no 'Trainees in programme' tile and no 'inactive' anywhere."</td></tr>
+<tr><td>§ Dashboard layout grid, progress figures</td><td>"A registrar's figure is 'n of m' over its window; the programme's is 'n of m' over 'registrars met this semester' or 'registrars met in 2026'. One exemption wording: '1 registrar exempt this period, not counted', and on the row 'Exempt this period' and why, in words. Ties by surname, then first name (T298)."</td></tr>
+<tr><td>§ Dashboard layout grid, the progressbar rule (31)</td><td>"Give every .progress-bar role=progressbar … — except a bar inside a figure whose words already state it, which is aria-hidden (Targets by EPA: 'n of m registrars met' then the bar)."</td></tr>
+<tr><td>§ List page, filters applied with Show (31, NEW pattern)</td><td>"A list's filters are a GET form above it: the fields, then Show (primary) and, once any is set, Clear filters. Nothing changes until Show; the address carries the filters. The list's heading counts the answer ('5 of 5 current registrars are short on PAED-002') and takes the focus. A filter that leaves nothing is 'No &lt;row&gt; matches these filters.', what was asked, and Clear filters; an empty list draws no form."</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="detail-card">
+<h2>Tokens, contrast and targets</h2>
+<p>No new colour token. Ratios are DESIGN.md § Contrast's.</p>
+<div class="table-container"><table class="clinic-table">
+<caption class="visually-hidden">Colour pairs used and their contrast</caption>
+<thead><tr><th>Use</th><th>Pair</th><th>Needs</th><th>Ratio</th></tr></thead>
+<tbody>
+<tr><td>Figures (.count-figure)</td><td>text-color on surface</td><td>4.5</td><td>12.63</td></tr>
+<tr><td>Captions, rule lines, Reminded line</td><td>muted-text on surface</td><td>4.5</td><td>5.09</td></tr>
+<tr><td>Names, EPA links</td><td>link-color on surface</td><td>4.5</td><td>6.70</td></tr>
+<tr><td>Overdue stripe; warning card</td><td>warning-color on surface</td><td>3</td><td>5.77</td></tr>
+<tr><td>Overdue badge text · edge</td><td>text-color · warning-color on warning-bg</td><td>4.5 · 3</td><td>11.89 · 5.43</td></tr>
+<tr><td>Count and exempt badges</td><td>text-color · input-border on header-bg / info-bg</td><td>4.5 · 3</td><td>11.36 · 3.42 / 11.84 · 3.56</td></tr>
+<tr><td>Bars on their track</td><td>secondary (complete: success) on hover-bg</td><td>3</td><td>4.61 (5.58)</td></tr>
+<tr><td>Result · refusal</td><td>text-color on success-bg · danger-bg</td><td>4.5</td><td>11.23 · 11.81</td></tr>
+<tr><td>Send a reminder</td><td>secondary-color on surface</td><td>4.5</td><td>4.86</td></tr>
+<tr><td>Focus ring</td><td>focus-ring on surface · background · tints</td><td>3</td><td>4.86 · 4.61 · 4.32–4.57</td></tr>
+</tbody></table></div>
+<p><b>Targets.</b> 1280: rows at least 44px; Send a reminder 28px (btn-sm); filter buttons 36px. Below 641px: names 44px blocks (.progress-row-link), Send a reminder and the filter buttons 44px and full width, card foots 44px. 641–900px: both row grids one column (R3-768).</p>
+</section>
+
+<section class="detail-card">
+<h2>Accessibility review (WCAG 2.1 AA)</h2>
+<ul>
+<li><b>1.1.1, 1.4.1.</b> Bars are aria-hidden under their words, or named progressbars in the index; Overdue and Exempt are words.</li>
+<li><b>1.3.1.</b> Each card a section named by its h2; each list's heading its h2 (tabindex -1); every table captioned, the registrar or EPA its row header, every stacked cell labelled.</li>
+<li><b>2.4.4, 4.1.2.</b> Links named for their registrar, EPA or activity; two alike end "(1 of 2)"; Send a reminder names the assessor and the activity; the pager's size select is labelled; the Waiting select and the Show button no longer share a name.</li>
+<li><b>2.4.3.</b> Show focuses the list's heading; Try again focuses the frame's result region; the dialog opens on Don't send; a result or refusal takes the focus.</li>
+<li><b>1.4.10.</b> Nothing scrolls sideways at 390 or 768.</li>
+</ul>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":7200}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

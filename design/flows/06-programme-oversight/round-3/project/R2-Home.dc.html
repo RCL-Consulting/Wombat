@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 2 · Homes</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow06-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-board">
+<sc-for list="{{states}}" as="s" hint-placeholder-count="1">
+<section class="r2-state">
+<p class="r2-cap"><b>{{s.title}}</b> · {{s.cap}}</p>
+<sc-if value="{{s.note}}"><p class="r2-note">{{s.note}}</p></sc-if>
+<div class="r2-clip {{s.clip}}">
+<div class="page">
+<input type="checkbox" id="nt-{{s.id}}" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>{{s.role}}</span></p>
+<label class="nav-toggle-label" for="nt-{{s.id}}"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"></path></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head">
+<p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">{{s.role}}</span></p>
+<sc-if value="{{s.sw}}"><a class="role-switch" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"></path></svg><span>{{s.sw}}</span></a></sc-if>
+</div>
+<div class="nav-list">
+<ul class="nav-items">
+<sc-for list="{{s.nav}}" as="n">
+<li><sc-if value="{{n.lit}}"><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if><sc-if value="{{n.rest}}"><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if></li>
+</sc-for>
+</ul>
+<ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="nav-label">My data rights</span></a></li></ul>
+</div>
+</nav>
+<div class="account-row">
+<a class="account-link" href="#" title="{{s.who}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8a4 4 0 1 0 8 0a4 4 0 1 0-8 0M6 20a6 6 0 0 1 12 0"></path></svg><span class="account-name">{{s.who}}</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out</button></form>
+</div>
+</header>
+<main>
+<article>
+<div class="header-container">
+<div><h1>Home</h1><p class="page-subtitle">{{s.sub}}</p></div>
+<sc-if value="{{s.action}}"><div class="actions-cell"><a class="btn btn-primary home-action" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg>Start an MSF campaign</a></div></sc-if>
+</div>
+
+<sc-if value="{{s.alert}}"><div class="action-result" tabindex="-1"><div class="alert alert-info" role="status">{{s.alert}}</div></div></sc-if>
+
+<sc-if value="{{s.line}}"><section class="alert {{s.line.cls}} other-role-line" aria-label="Waiting for you in the Activity inbox"><div class="alert-row"><span class="alert-row-text">{{s.line.text}}</span><a class="btn btn-outline btn-sm" href="#" aria-label="{{s.line.aria}}">Open it</a></div></section></sc-if>
+
+<sc-if value="{{s.loading}}">
+<p class="visually-hidden" role="status">Loading your Home.</p>
+<div class="dashboard-grid" aria-busy="true">
+<sc-for list="{{s.cards}}" as="c">
+<div class="detail-card {{c.span}}"><h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="{{c.d}}"></path></svg><span>{{c.title}}</span></h2><div class="dashboard-card-body"><div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton" style="width: 70%; height: 1rem"></div><div class="skeleton" style="width: 50%; height: 1rem"></div><div class="skeleton" style="width: 60%; height: 1rem"></div></div></div></div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{s.error}}"><div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load your Home.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></div></div></div></sc-if>
+
+<sc-if value="{{s.loaded}}">
+<div class="action-result" tabindex="-1">
+<div class="dashboard-grid">
+
+<sc-if value="{{s.wait}}">
+<section class="detail-card {{s.wait.cls}}" aria-labelledby="wait-{{s.id}}">
+<h2 class="dashboard-card-title" id="wait-{{s.id}}"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0M12 6v6l4 2"></path></svg><span>Waiting for assessors</span><sc-if value="{{s.wait.badge}}"><span class="badge badge-submitted">{{s.wait.badge}}</span></sc-if></h2>
+<div class="dashboard-card-body">
+<sc-if value="{{s.wait.has}}">
+<p class="needs-you-rule">Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.</p>
+<ul class="needs-you stack-list">
+<sc-for list="{{s.wait.rows}}" as="w">
+<li class="needs-you-row {{w.od}}"><a class="activity-link" href="#">{{w.name}}<span class="visually-hidden">, </span><span class="activity-link-to">from {{w.from}}</span></a><span class="needs-you-badges"><span class="badge badge-submitted">{{w.state}}</span><sc-if value="{{w.overdue}}"><span class="badge badge-overdue">Overdue</span></sc-if></span><p class="needs-you-why">With {{w.with}}</p><p class="needs-you-why">{{w.wait}}</p></li>
+</sc-for>
+</ul>
+<sc-if value="{{s.wait.more}}"><p class="waiting-more">{{s.wait.more}}</p></sc-if>
+</sc-if>
+<sc-if value="{{s.wait.none}}"><p class="card-empty">Nothing is waiting for an assessor.</p></sc-if>
+<div class="dashboard-card-footer"><a href="#" class="btn btn-sm btn-outline">Open Waiting for assessors</a></div>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{s.filed}}">
+<section class="detail-card" aria-labelledby="filed-{{s.id}}">
+<h2 class="dashboard-card-title" id="filed-{{s.id}}"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01"></path></svg><span>Nothing filed in 30 days</span><sc-if value="{{s.filed.badge}}"><span class="badge badge-draft">{{s.filed.badge}}</span></sc-if></h2>
+<div class="dashboard-card-body">
+<p class="needs-you-rule">Current registrars with nothing filed (a draft is not filed) in the last 30 days, or since admission if that is later.</p>
+<sc-if value="{{s.filed.has}}"><ul class="list-unstyled"><sc-for list="{{s.filed.rows}}" as="f"><li class="progress-row progress-row--link"><a class="progress-row-link" href="#">{{f.name}}</a><p class="progress-row-meta">{{f.meta}}</p></li></sc-for></ul></sc-if>
+<sc-if value="{{s.filed.none}}"><p class="card-empty">Every current registrar has filed something in the last 30 days.</p></sc-if>
+<div class="dashboard-card-footer"><a href="#" class="btn btn-sm btn-outline">Open in Programme trainees</a></div>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{s.inv}}">
+<section class="detail-card {{s.inv.cls}}" aria-labelledby="inv-{{s.id}}">
+<h2 class="dashboard-card-title" id="inv-{{s.id}}"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM16 3v4M8 3v4M3 11h18"></path></svg><span>Invitations nearing expiry</span></h2>
+<div class="dashboard-card-body">
+<sc-if value="{{s.inv.has}}">
+<p class="needs-you-rule">Expiring in the next 3 days. Only an institutional admin can resend an invitation.</p>
+<ul class="list-unstyled"><sc-for list="{{s.inv.rows}}" as="v"><li class="list-row"><span>{{v.addr}} <span class="muted">· {{v.role}}</span></span><span class="muted">expires {{v.on}}</span></li></sc-for></ul>
+</sc-if>
+<sc-if value="{{s.inv.none}}"><p class="card-empty">No invitations expiring soon.</p></sc-if>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{s.roster}}">
+<section class="detail-card dashboard-span-3" aria-labelledby="roster-{{s.id}}">
+<h2 class="dashboard-card-title" id="roster-{{s.id}}"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9M9 9a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg><span>Registrars</span><sc-if value="{{s.roster.badge}}"><span class="badge badge-draft">{{s.roster.badge}}</span></sc-if></h2>
+<div class="dashboard-card-body">
+<sc-if value="{{s.roster.has}}">
+<p class="needs-you-rule">{{s.roster.line}}</p>
+<ul class="list-unstyled">
+<sc-for list="{{s.roster.rows}}" as="r">
+<li class="roster-row"><div><a class="progress-row-link" href="#">{{r.name}}</a><p class="progress-row-meta">{{r.meta}}</p></div><sc-if value="{{r.counted}}"><div class="dashboard-metric"><span class="count-figure">{{r.sem}}</span><span class="dashboard-metric-label">EPAs met this semester</span></div><div class="dashboard-metric"><span class="count-figure">{{r.yr}}</span><span class="dashboard-metric-label">EPAs met in 2026</span></div></sc-if><sc-if value="{{r.exempt}}"><div class="roster-exempt"><span class="badge badge-draft">Exempt this period</span><span class="progress-row-meta">{{r.reason}}</span></div></sc-if></li>
+</sc-for>
+</ul>
+<sc-if value="{{s.roster.more}}"><p class="waiting-more">{{s.roster.more}}</p></sc-if>
+</sc-if>
+<sc-if value="{{s.roster.none}}"><p class="card-empty">No current registrars. They appear here once they are admitted to the programme.</p></sc-if>
+<div class="dashboard-card-footer"><a href="#" class="btn btn-sm btn-outline">Open Programme trainees</a></div>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{s.cov}}">
+<section class="detail-card dashboard-span-3" aria-labelledby="cov-{{s.id}}">
+<h2 class="dashboard-card-title" id="cov-{{s.id}}"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path></svg><span>Targets by EPA</span></h2>
+<div class="dashboard-card-body">
+<sc-if value="{{s.cov.has}}">
+<p class="needs-you-rule">{{s.cov.scope}}</p>
+<ul class="list-unstyled">
+<sc-for list="{{s.cov.rows}}" as="e">
+<li class="coverage-row"><div><sc-if value="{{e.link}}"><a class="progress-row-link" href="#">{{e.label}}<span class="visually-hidden">: {{e.val}} {{e.cap}}. Show the registrars short on it.</span></a></sc-if><sc-if value="{{e.text}}"><span class="count-figure">{{e.label}}</span></sc-if><p class="progress-row-meta">{{e.cad}}</p></div><div class="dashboard-metric"><span class="count-figure">{{e.val}}</span><span class="dashboard-metric-label">{{e.cap}}</span><div class="progress-bar" aria-hidden="true"><div class="progress-bar-fill {{e.done}}" style="width: {{e.pct}}"></div></div></div></li>
+</sc-for>
+</ul>
+</sc-if>
+<sc-if value="{{s.cov.none}}"><p class="card-empty">No targets this period: there is no current registrar.</p></sc-if>
+</div>
+</section>
+</sc-if>
+
+</div>
+</div>
+</sc-if>
+</article>
+</main>
+</div>
+</div>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"show":{"editor":"text","default":""},"$preview":{"width":1280,"height":8000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      home: 'M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5',
+      users: 'M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9M9 9a3 3 0 1 0 6 0a3 3 0 1 0-6 0',
+      clock: 'M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0M12 6v6l4 2',
+      file: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6',
+      scale: 'm16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2',
+      cal: 'M8 2v4M16 2v4M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM3 10h18M9 16l2 2 4-4',
+      award: 'M6 8a6 6 0 1 0 12 0a6 6 0 1 0-12 0M15.477 12.89 17 22l-5-3-5 3 1.523-9.11',
+      msg: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+      shield: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4',
+      book: 'M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z',
+      clip: 'M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01',
+      calendar: 'M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM16 3v4M8 3v4M3 11h18'
+    };
+    const MENUS = {
+      cm: [['Home', P.home], ['Programme trainees', P.users], ['Committee reviews', P.file], ['Decision panels', P.scale]],
+      sa: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Entrustment decisions', P.award]],
+      co: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['MSF campaigns', P.msg], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Data rights requests', P.shield]]
+    };
+    const nav = (k, lit) => MENUS[k].map(([label, d]) => ({ label, d, lit: label === lit, rest: label !== lit }));
+    const ROLE = { cm: 'Committee member', sa: 'Speciality admin', ssa: 'Sub-speciality admin', co: 'Coordinator' };
+    const CAT = [
+      ['PAED-001', 'Providing paediatric emergency care to children', 3, 's'],
+      ['PAED-002', 'Managing common paediatric presentations', 3, 's'],
+      ['PAED-003', 'Providing intensive care to children', 3, 's'],
+      ['PAED-004', 'Managing common neonatal conditions', 3, 's'],
+      ['PAED-005', 'Providing neonatal care in intensive and high-care settings', 3, 's'],
+      ['PAED-006', 'Managing long-term health conditions (LTHCs)', 2, 's'],
+      ['PAED-007', 'Maintaining and promoting the health and well-being of children', 1, 's'],
+      ['PAED-008', 'Evaluating and managing neurodevelopmental and behavioural presentations in children', 1, 'y'],
+      ['PAED-009', 'Providing care for an adolescent patient', 1, 'y'],
+      ['PAED-010', 'Leading and operating within a clinical team', 3, 's'],
+      ['PAED-011', 'Managing population health challenges', 1, 'y'],
+      ['PAED-012', 'Communicating with and counselling patients, caregivers and healthcare teams', 3, 's'],
+      ['PAED-013', 'Managing child protection, legal and ethical aspects of children at risk', 1, 'y'],
+      ['PAED-014', 'Providing palliative and end-of-life care', 1, 'y'],
+      ['PAED-015', 'Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research', 1, 's']
+    ];
+    const KGK = ['KGK-001', 'Running a paediatric outreach clinic at a district hospital', 1, 'y'];
+    const epas = (of, met, opt) => {
+      opt = opt || {};
+      let list = CAT.slice();
+      if (opt.kgk) list = [KGK].concat(list);
+      return list.map(([code, title, n, w]) => {
+        const m = (met && met[code]) || 0;
+        const t = (opt.titles && opt.titles[code]) || title;
+        const own = code.indexOf('KGK') === 0 ? " · Kgosi Kgari Teaching Hospital's own" : '';
+        const all = of > 0 && m === of;
+        return {
+          code, m, label: code + ' — ' + t, link: !all, text: all,
+          cad: (w === 's' ? n + ' per semester' : n + ' per academic year') + own + (all ? ' · every registrar has met it' : ''),
+          val: m + ' of ' + of,
+          cap: w === 's' ? 'registrars met this semester' : 'registrars met in 2026',
+          pct: of ? Math.round(100 * m / of) + '%' : '0%',
+          done: all ? 'is-complete' : ''
+        };
+      }).sort((a, b) => (a.m - b.m) || (a.code < b.code ? -1 : 1));
+    };
+    const rows = (src) => src.map(([name, ty, s, y]) => ({ name, meta: 'Training year ' + ty, sem: s + ' of 10', yr: y + ' of 5', counted: true, exempt: false }));
+    const TYP = [['Pieter du Plessis', 2, 0, 0], ['Nomsa Mahlangu', 1, 0, 0], ['Sipho Ndlovu', 1, 0, 0], ['Anele Dlamini', 3, 1, 0], ['Lerato Molefe', 4, 1, 0]];
+    const ZERO = [['Anele Dlamini', 3, 0, 0], ['Pieter du Plessis', 2, 0, 0], ['Nomsa Mahlangu', 1, 0, 0], ['Lerato Molefe', 4, 0, 0], ['Sipho Ndlovu', 1, 0, 0]];
+    const LINE = 'Fewest met first, then by surname.';
+    const roster = (src, n) => ({ badge: (n || src.length) + ' registrars', line: LINE, has: true, rows: rows(src) });
+    const COV = 'Fewest registrars met first. Semester 2, 2026 ends on 2026-11-30.';
+
+    const W_PORT = (wait) => ({ name: 'Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-03', from: 'Pieter du Plessis', state: 'Awaiting review', overdue: true, od: 'needs-you-row--overdue', with: 'Mohammed Patel', wait: wait || 'Waiting 8 days' });
+    const W_MINI = { name: 'Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01', from: 'Nomsa Mahlangu', state: 'Requested', overdue: true, od: 'needs-you-row--overdue', with: 'Thandi Zulu', wait: 'Waiting 8 days' };
+    const W_CBD = (wait) => ({ name: 'Case-Based Discussion (Paediatrics) · PAED-002 · 2026-09-29', from: 'Pieter du Plessis', state: 'Requested', overdue: false, od: '', with: 'Fatima Khumalo', wait: wait || 'Waiting less than a day' });
+    const W_FAT = { name: 'Mini-CEX (Paediatrics) · [EPA] · [date]', from: 'Nomsa Mahlangu', state: 'Requested', overdue: false, od: '', with: 'Fatima Khumalo', wait: 'Waiting 6 days' };
+    const W_X = (r, a) => ({ name: '[Type] (Paediatrics) · [EPA] · [date]', from: r, state: 'Requested', overdue: true, od: 'needs-you-row--overdue', with: a, wait: 'Waiting [n] days' });
+
+    const base = (o) => Object.assign({ note: '', clip: '', sw: '', alert: '', line: null, action: false, loading: false, error: false, loaded: true, wait: null, filed: null, inv: null, roster: null, cov: null, cards: [] }, o);
+    const cm = (o) => base(Object.assign({ role: ROLE.cm, who: 'Thandi Zulu', sw: 'Switch to Assessor', sub: 'Committee member · Semester 2, 2026', nav: nav('cm', 'Home') }, o));
+    const sa = (o) => base(Object.assign({ role: ROLE.sa, who: 'Refilwe Mokoena', sub: 'Speciality admin · Semester 2, 2026', nav: nav('sa', 'Home') }, o));
+    const co = (o) => base(Object.assign({ role: ROLE.co, who: 'Pieter Smit', sub: 'Coordinator · Semester 2, 2026', nav: nav('co', 'Home'), action: true }, o));
+    const card = (title, d, span) => ({ title, d, span });
+    const TRY = 'Try again\'s answer takes the focus in the frame\'s result region (flow 04, ActionResult): the cards, or the alert again.';
+
+    const all = [
+      cm({ id: 'c1', title: 'Committee member · typical (Step 3.52)', cap: 'Thandi Zulu, after Switch to Committee member: the switch\'s alert, Registrars (5, all shown) and Targets by EPA. Every name is a link; PAED-001 (2 of 5) sorts last.',
+        alert: 'You are now acting as Committee member.', roster: roster(TYP), cov: { scope: COV, has: true, rows: epas(5, { 'PAED-001': 2 }) } }),
+      cm({ id: 'c2', title: 'Committee member · flow 04\'s line, one overdue (Step 3.33)', cap: 'Before her switch to Assessor: the warning line, its words and Open it unchanged from flow 04. 3.33\'s "Targets this period" is now "Registrars".', clip: 'r2-clip--m',
+        line: { cls: 'alert-warning', text: '1 activity waits for you in the Activity inbox, and it is overdue: Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu, waiting 8 days.', aria: 'Open it: Mini-CEX (Paediatrics) · PAED-004 · 2026-10-01, from Nomsa Mahlangu' },
+        roster: roster(TYP), cov: { scope: COV, has: true, rows: epas(5, { 'PAED-001': 2 }) } }),
+      cm({ id: 'c3', title: 'Committee member · flow 04\'s line, one waiting (Step 5.25)', cap: 'David Naidoo at Step 5.25: the info line. Lerato Molefe has graduated, so four current registrars; Pieter du Plessis withdraws later, at 5.27. Figures as the home--committee-line-one screenshot.', clip: 'r2-clip--l', who: 'David Naidoo',
+        line: { cls: 'alert-info', text: '1 activity waits for you in the Activity inbox: Mini-CEX (Paediatrics) · PAED-002 · 2026-10-03, from Pieter du Plessis, waiting less than a day.', aria: 'Open it: Mini-CEX (Paediatrics) · PAED-002 · 2026-10-03, from Pieter du Plessis' },
+        roster: roster([['Pieter du Plessis', 2, 0, 0], ['Nomsa Mahlangu', 1, 0, 0], ['Sipho Ndlovu', 1, 0, 0], ['Anele Dlamini', 3, 1, 0]]), cov: { scope: COV, has: true, rows: epas(4, { 'PAED-001': 1 }) } }),
+      cm({ id: 'c4', title: 'Committee member · all zeros (Step 2.33)', cap: 'Everyone at 0: the tie is ordered by surname, then first name (T298): Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato Molefe, Sipho Ndlovu. Every EPA 0 of 5, in code order.',
+        roster: roster(ZERO), cov: { scope: COV, has: true, rows: epas(5, {}) } }),
+      cm({ id: 'c5', title: 'Committee member · the external member (Step 2.37, after T290)', cap: 'John van Rensburg: one role, so no switch and no line. He reads the institution\'s five current registrars, where he read "No trainees have targets this period."', clip: 'r2-clip--l', who: 'John van Rensburg', sw: '',
+        roster: roster(ZERO), cov: { scope: COV, has: true, rows: epas(5, {}) } }),
+      cm({ id: 'c6', title: 'Committee member · one registrar exempt this period', cap: 'Exemption is computed, so the row says why in words. She sorts after everyone with a target; the EPA card counts four, in the one wording.', note: 'The brief names no exempt registrar: Sipho Ndlovu stands in.',
+        roster: { badge: '5 registrars', line: LINE, has: true, rows: rows([['Pieter du Plessis', 2, 0, 0], ['Nomsa Mahlangu', 1, 0, 0], ['Anele Dlamini', 3, 1, 0], ['Lerato Molefe', 4, 1, 0]]).concat([{ name: 'Sipho Ndlovu', meta: 'Training year 1', counted: false, exempt: true, reason: 'Started part-way through the period' }]) },
+        cov: { scope: '1 registrar exempt this period, not counted. Fewest registrars met first. Semester 2, 2026 ends on 2026-11-30.', has: true, rows: epas(4, { 'PAED-001': 2 }) } }),
+      cm({ id: 'c7', title: 'Committee member · nobody to show', cap: 'An institution with no current registrar. The Registrars card keeps its foot: Programme trainees is in the menu.',
+        roster: { badge: '', has: false, none: true, rows: [] }, cov: { has: false, none: true, rows: [] } }),
+      cm({ id: 'c8', title: 'Committee member · the story\'s end', cap: 'Two current registrars; Lerato Molefe graduated, Pieter du Plessis withdrew, Sipho Ndlovu\'s account is erased: none is counted. 16 EPAs, KGK-001 first (A.7.7\'s figures).', note: 'The story\'s end roster figures are not in the brief or the screenshots: [n].',
+        roster: { badge: '2 registrars', line: LINE, has: true, rows: [{ name: 'Anele Dlamini', meta: 'Training year 3', sem: '[n] of 10', yr: '[n] of 5', counted: true }, { name: 'Nomsa Mahlangu', meta: 'Training year 1', sem: '[n] of 10', yr: '[n] of 5', counted: true }] },
+        cov: { scope: COV, has: true, rows: epas(2, { 'PAED-001': 1 }, { kgk: true, titles: { 'PAED-006': 'Managing long-term health conditions (LTHCs) in children' } }) } }),
+      cm({ id: 'c11', title: 'Committee member · heavy (invented)', cap: 'Eight current registrars: five rows, then "3 more in Programme trainees."; 16 EPAs; one EPA every registrar has met keeps its name as text (nobody is short on it).', note: 'Invented for the heavy state: three more registrars and their figures are not in the story.',
+        roster: { badge: '8 registrars', line: LINE, has: true, more: '3 more in Programme trainees.', rows: rows(TYP) }, cov: { scope: COV, has: true, rows: epas(8, { 'PAED-001': 3, 'PAED-007': 8 }, { kgk: true }) } }),
+      cm({ id: 'c9', title: 'Committee member · loading', cap: 'The frame\'s: each card\'s title over a skeleton; a hidden status, "Loading your Home."', loaded: false, loading: true,
+        cards: [card('Registrars', P.users, 'dashboard-span-3'), card('Targets by EPA', P.book, 'dashboard-span-3')] }),
+      cm({ id: 'c10', title: 'Committee member · load error', cap: 'The frame\'s sentence and Try again; no card draws. ' + TRY, loaded: false, error: true }),
+
+      sa({ id: 'a1', title: 'Speciality admin · typical (Step 3.53)', cap: 'Refilwe Mokoena: "2 waiting, 1 overdue": the portfolio review and the Case-Based Discussion. Pending reviews, Trainees in programme and Curriculum coverage are gone. Her own requests are never listed.',
+        wait: { cls: 'detail-card--warning dashboard-span-3', badge: '2 waiting, 1 overdue', has: true, rows: [W_PORT(), W_CBD()] },
+        roster: roster(TYP), cov: { scope: COV, has: true, rows: epas(5, { 'PAED-001': 2 }) } }),
+      sa({ id: 'a2', title: 'Speciality admin · all zeros (Step 2.38)', cap: 'Nothing waiting (no badge, no "0", the emphasis stripe, the foot kept), five registrars at 0 in surname order, every EPA 0 of 5.',
+        wait: { cls: 'detail-card--emphasis dashboard-span-3', badge: '', has: false, none: true, rows: [] },
+        roster: roster(ZERO), cov: { scope: COV, has: true, rows: epas(5, {}) } }),
+      sa({ id: 'a3', title: 'Speciality admin · heavy (invented)', cap: 'Invented for the heavy state: 14 waiting, 11 overdue, five rows then how many more; the warning stripe; 16 EPAs with KGK-001.', note: 'Every request beyond Step 3.30\'s three is invented and bracketed.',
+        wait: { cls: 'detail-card--warning dashboard-span-3', badge: '14 waiting, 11 overdue', has: true, more: '9 more wait in Waiting for assessors.', rows: [W_PORT(), W_MINI, W_X('Sipho Ndlovu', '[assessor]'), W_X('Anele Dlamini', '[assessor]'), W_X('Lerato Molefe', '[assessor]')] },
+        roster: roster(TYP), cov: { scope: COV, has: true, rows: epas(5, { 'PAED-001': 2 }, { kgk: true }) } }),
+      sa({ id: 'a4', title: 'Speciality admin · nothing waiting', cap: 'The card says so and keeps its foot: the page is in the menu.', clip: 'r2-clip--s',
+        wait: { cls: 'detail-card--emphasis dashboard-span-3', badge: '', has: false, none: true, rows: [] },
+        roster: roster(TYP), cov: { scope: COV, has: true, rows: epas(5, { 'PAED-001': 2 }) } }),
+      base({ id: 'a5', title: 'Sub-speciality admin · the same Home (Step 3.54)', cap: 'Kabelo Sithole: the same three cards and figures, read for his sub-speciality, Paediatrics; his menu is hers.', clip: 'r2-clip--l',
+        role: ROLE.ssa, who: 'Kabelo Sithole', sub: 'Sub-speciality admin · Semester 2, 2026', nav: nav('sa', 'Home'),
+        wait: { cls: 'detail-card--warning dashboard-span-3', badge: '2 waiting, 1 overdue', has: true, rows: [W_PORT(), W_CBD()] },
+        roster: roster(TYP), cov: { scope: COV, has: true, rows: epas(5, { 'PAED-001': 2 }) } }),
+      sa({ id: 'a6', title: 'Speciality admin · loading', cap: 'Three titles over skeletons.', loaded: false, loading: true,
+        cards: [card('Waiting for assessors', P.clock, 'dashboard-span-3'), card('Registrars', P.users, 'dashboard-span-3'), card('Targets by EPA', P.book, 'dashboard-span-3')] }),
+      sa({ id: 'a7', title: 'Speciality admin · load error', cap: 'The frame\'s. ' + TRY, loaded: false, error: true }),
+
+      co({ id: 'k1', title: 'Coordinator · typical (Step 3.30)', cap: 'Pieter Smit: "3 waiting, 2 overdue", oldest first: the portfolio review and the Mini-CEX overdue, the Case-Based Discussion waiting less than a day. Work a role holds (an MSF release) is not listed. Nothing filed keeps its foot when empty.',
+        wait: { cls: 'detail-card--warning dashboard-span-2', badge: '3 waiting, 2 overdue', has: true, rows: [W_PORT(), W_MINI, W_CBD()] },
+        filed: { badge: '', has: false, none: true, rows: [] }, inv: { cls: '', has: false, none: true, rows: [] } }),
+      co({ id: 'k2', title: 'Coordinator · nothing waiting (Step 2.32)', cap: 'Registrars admitted this week: their 30 days start at admission (E5), so nobody is listed yet.',
+        wait: { cls: 'detail-card--emphasis dashboard-span-2', badge: '', has: false, none: true, rows: [] },
+        filed: { badge: '', has: false, none: true, rows: [] }, inv: { cls: '', has: false, none: true, rows: [] } }),
+      co({ id: 'k3', title: 'Coordinator · Step A.5.10', cap: '"3 waiting, 1 overdue": the portfolio review (Pieter du Plessis withdrew; it stays waiting), the Case-Based Discussion, and Nomsa Mahlangu\'s Mini-CEX to Fatima Khumalo at 6 days.', note: 'The portfolio review\'s and the Case-Based Discussion\'s waits at A.5.10, and the Mini-CEX\'s EPA and date, are not in the brief: bracketed.',
+        wait: { cls: 'detail-card--warning dashboard-span-2', badge: '3 waiting, 1 overdue', has: true, rows: [W_PORT('Waiting [n] days'), W_CBD('Waiting [n] days'), W_FAT] },
+        filed: { badge: '', has: false, none: true, rows: [] }, inv: { cls: '', has: false, none: true, rows: [] } }),
+      co({ id: 'k4', title: 'Coordinator · invitations nearing expiry, and nothing filed with rows', cap: 'The invitation expires 2026-10-07 (D+3), its role by its label; no row action, and the card says why. The count badge in words.', note: 'Who has filed nothing at this moment is not in the brief: [registrar], [date].',
+        wait: { cls: 'detail-card--warning dashboard-span-2', badge: '3 waiting, 2 overdue', has: true, rows: [W_PORT(), W_MINI, W_CBD()] },
+        filed: { badge: '1 registrar', has: true, rows: [{ name: '[registrar]', meta: 'Last filed [date] · Training year [n]' }] },
+        inv: { cls: 'dashboard-span-3', has: true, rows: [{ addr: 'expiring@kgk.wombat.local', role: 'Trainee', on: '2026-10-07' }] } }),
+      co({ id: 'k5', title: 'Coordinator · loading', cap: 'Three titles over skeletons; the header action is there from the start.', loaded: false, loading: true,
+        cards: [card('Waiting for assessors', P.clock, 'dashboard-span-2'), card('Nothing filed in 30 days', P.clip, ''), card('Invitations nearing expiry', P.calendar, '')] }),
+      co({ id: 'k6', title: 'Coordinator · load error', cap: 'The frame\'s. ' + TRY, loaded: false, error: true })
+    ];
+    const pick = (this.props.show || '').split(',').map((x) => x.trim()).filter(Boolean);
+    const states = pick.length ? all.filter((s) => pick.indexOf(s.id) >= 0) : all;
+    return { states };
+  }
+}
+</script>
+</body>
+</html>

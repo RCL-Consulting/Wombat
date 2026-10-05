@@ -1,0 +1,146 @@
+/* Wombat · flow 06 · round 2 — flow06-r2.css
+   Loaded after ds/wombat/components/bundle.css (flows 01–05 as built). Three parts, as flow05-r3.css:
+   1. :root and @font-face, compiled from ds/wombat/tokens.json (the built tokens, unchanged; no new colour token).
+   2. The canvas frame (.r2-*): only for drawing boards, never shipped. It lets one board stack several states, each a
+      whole .page, by taking the shell's sticky sidebar and fixed top bar out of the window's flow.
+   3. NEW for flow 06: every rule below "NEW" goes to app.css. Each colour is an existing token. */
+
+/* ── 1. Tokens (ds/wombat/tokens.json, Light) ─────────────────────────────── */
+@font-face { font-family: "Source Sans 3"; src: url("ds/wombat/fonts/SourceSans3VF-Upright.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Source Sans 3"; src: url("ds/wombat/fonts/SourceSans3VF-Italic.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: italic; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("ds/wombat/fonts/fraunces-var.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+:root {
+  --primary-color: rgb(44 62 80);
+  --secondary-color: rgb(45 108 223);
+  --on-fill: rgb(255 255 255);
+  --background-color: rgb(248 249 250);
+  --surface-color: rgb(255 255 255);
+  --text-color: rgb(51 51 51);
+  --muted-text: rgb(104 111 119);
+  --link-color: rgb(11 92 171);
+  --link-hover: rgb(8 74 138);
+  --border-color: rgb(222 226 230);
+  --input-border: rgb(123 132 141);
+  --focus-ring: rgb(45 108 223);
+  --header-bg: rgb(241 243 245);
+  --hover-bg: rgb(248 249 250);
+  --success-color: rgb(26 115 64);
+  --success-bg: rgb(232 245 233);
+  --warning-color: rgb(154 84 0);
+  --warning-bg: rgb(255 248 225);
+  --danger-color: rgb(184 50 42);
+  --danger-bg: rgb(255 245 245);
+  --info-bg: rgb(243 248 255);
+  --scrim: rgb(0 0 0 / 0.35);
+  --shadow-color: rgb(0 0 0 / 0.1);
+  --sidebar-gradient-start: rgb(5 39 103);
+  --sidebar-gradient-end: rgb(58 6 71);
+  --nav-text: rgb(215 215 215);
+  --nav-text-strong: rgb(255 255 255);
+  --nav-group-label: rgb(185 195 224);
+  --nav-active-bg: rgb(255 255 255 / 0.32);
+  --nav-hover-bg: rgb(255 255 255 / 0.1);
+  --nav-brand-bg: rgb(0 0 0 / 0.4);
+  --nav-divider: rgb(255 255 255 / 0.18);
+  --nav-focus-ring: rgb(255 255 255);
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 999px;
+  --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.1);
+  --shadow-dialog: 0 10px 25px rgb(0 0 0 / 0.25);
+  --shadow-bar: 0 -1px 2px rgb(0 0 0 / 0.2);
+  --sidebar-width: 250px;
+  --motion-fast: 150ms;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: Consolas, "Courier New", monospace;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+}
+
+/* ── 2. Canvas frame (boards only) ────────────────────────────────────────── */
+.r2-board { background: var(--header-bg); display: flex; flex-direction: column; gap: var(--space-2xl); padding: 0 0 var(--space-2xl); width: 100%; }
+.r2-state { background: var(--background-color); border-bottom: 2px solid var(--input-border); }
+.r2-cap { background: var(--primary-color); color: var(--on-fill); font-size: 0.875rem; line-height: 1.4; margin: 0; padding: var(--space-sm) var(--space-md); }
+.r2-cap b { font-weight: 700; }
+.r2-note { background: var(--warning-bg); border-top: 1px solid var(--warning-color); color: var(--text-color); font-size: 0.85rem; margin: 0; padding: var(--space-sm) var(--space-md); }
+.r2-clip { overflow: hidden; position: relative; }
+.r2-clip--s { max-height: 620px; }
+.r2-clip--m { max-height: 900px; }
+.r2-clip--l { max-height: 1250px; }
+.r2-clip--xl { max-height: 1700px; }
+.r2-clip--s::after, .r2-clip--m::after, .r2-clip--l::after, .r2-clip--xl::after {
+  background: linear-gradient(transparent, var(--background-color)); bottom: 0; content: ""; height: 64px; left: 0; pointer-events: none; position: absolute; right: 0; }
+.r2-state .page { min-height: 0; position: relative; }
+@media (min-width: 641px) {
+  .r2-state .page:not(.page--signed-out) { grid-template-rows: 56px auto; }
+  .r2-state .sidebar { align-self: stretch; height: auto; min-height: 760px; position: relative; }
+  .r2-state .account-row { left: var(--sidebar-width); position: absolute; }
+}
+@media (max-width: 640.98px) {
+  .r2-state .nav-toggle:checked ~ .sidebar { height: auto; min-height: 640px; }
+}
+.r2-doc { background: var(--background-color); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-xl); padding: var(--space-2xl); width: 100%; }
+.r2-doc h2 { margin-top: 0; }
+.r2-doc td, .r2-doc th { vertical-align: top; }
+.r2-scrim { background: var(--scrim); inset: 0; position: absolute; z-index: 2; }
+.r2-dialog-stage { left: 50%; position: absolute; top: 120px; transform: translateX(-50%); width: min(32rem, calc(100% - 2rem)); z-index: 3; }
+.r2-dialog-stage .dialog-card { margin: 0; position: static; }
+
+/* ── 3. NEW for flow 06 (round 3: only what nothing built does) ─────────────── */
+/* Everything else the boards use is built: .list-unstyled, .progress-row-link (names, 44px blocks below 641px),
+   .needs-you-rule (scope and rule lines), .dashboard-metric + .count-figure + .dashboard-metric-label (figures),
+   .count-figure / .count-meta (figure cells), .progress-row-meta (captions under a name), .waited-cell b/span (the
+   wait and the reminder line), .section-error, .dashboard-card-skeleton, .clinic-table--index (row headers). */
+
+/* RegistrarRoster (NEW): a row a registrar, her name and training year, then two figures in fixed columns. */
+.roster-row {
+  align-items: start;
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  gap: var(--space-xs) var(--space-lg);
+  grid-template-columns: minmax(0, 1fr) 10rem 10rem;
+  padding: var(--space-sm) 0;
+}
+.roster-row:first-child { border-top: 0; }
+.roster-row > .roster-exempt { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); grid-column: 2 / -1; }
+
+/* EpaTargetCoverageList (changed): the EPA's name over its cadence; the figure in its own 10rem column. */
+.coverage-row {
+  align-items: start;
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  gap: var(--space-xs) var(--space-lg);
+  grid-template-columns: minmax(0, 1fr) 10rem;
+  padding: var(--space-sm) 0;
+}
+.coverage-row:first-child { border-top: 0; }
+
+/* One column where the dashboard grid has one (900px and below), so nothing breaks from 641 to 900px (R3 21). */
+@media (max-width: 900px) {
+  .roster-row, .coverage-row { grid-template-columns: minmax(0, 1fr); }
+  .roster-row > .roster-exempt { grid-column: auto; }
+}
+
+/* The filter bar's buttons (NEW list pattern: fields applied with Show): a row, on the fields' bottom line. */
+.filter-actions { align-items: flex-end; align-self: end; display: flex; flex-direction: row; flex-wrap: wrap; gap: var(--space-sm); }
+
+/* ReminderAction (NEW): under the wait, wherever it sits; 44px below 641px (R3 22). */
+.reminder-action { margin-top: var(--space-sm); }
+@media (max-width: 640.98px) {
+  .reminder-action { min-height: 2.75rem; width: 100%; }
+  .filter-actions .btn { flex: 1 1 auto; min-height: 2.75rem; }
+}
+
+/* The registrar page (NEW): one column of sections, 24px apart, the built sections' own margins reset (R3 30). */
+.registrar-stack { display: flex; flex-direction: column; gap: var(--space-lg); }
+.registrar-stack > .index-section,
+.registrar-stack > .standing-panel,
+.registrar-stack > .list-section { margin: 0; }

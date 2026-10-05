@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 06 round 2 · Programme trainees</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="flow06-r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="r2-board">
+<sc-for list="{{states}}" as="s" hint-placeholder-count="1">
+<section class="r2-state">
+<p class="r2-cap"><b>{{s.title}}</b> · {{s.cap}}</p>
+<sc-if value="{{s.note}}"><p class="r2-note">{{s.note}}</p></sc-if>
+<div class="r2-clip {{s.clip}}">
+<div class="page">
+<input type="checkbox" id="nt-{{s.id}}" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d0ffe547ebb511d3f58145477434f9aa" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>{{s.role}}</span></p>
+<label class="nav-toggle-label" for="nt-{{s.id}}"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"></path></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head">
+<p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">{{s.role}}</span></p>
+<sc-if value="{{s.sw}}"><a class="role-switch" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"></path></svg><span>{{s.sw}}</span></a></sc-if>
+</div>
+<div class="nav-list">
+<ul class="nav-items">
+<sc-for list="{{s.nav}}" as="n">
+<li><sc-if value="{{n.lit}}"><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if><sc-if value="{{n.rest}}"><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg><span class="nav-label">{{n.label}}</span></a></sc-if></li>
+</sc-for>
+</ul>
+<ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="nav-label">My data rights</span></a></li></ul>
+</div>
+</nav>
+<div class="account-row">
+<a class="account-link" href="#" title="{{s.who}}"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8a4 4 0 1 0 8 0a4 4 0 1 0-8 0M6 20a6 6 0 0 1 12 0"></path></svg><span class="account-name">{{s.who}}</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out</button></form>
+</div>
+</header>
+<main>
+<article>
+<div class="header-container"><div><h1>Programme trainees</h1><p class="page-subtitle">{{s.sub}}</p></div></div>
+
+<sc-if value="{{s.form}}">
+<form class="search-container" action="#" method="get" aria-label="Filter Programme trainees">
+<div class="search-grid">
+<div class="search-field"><label for="f-epa-{{s.id}}">Short on</label><select id="f-epa-{{s.id}}" class="form-select"><option>{{s.fEpa}}</option></select></div>
+<div class="search-field"><label for="f-year-{{s.id}}">Training year</label><select id="f-year-{{s.id}}" class="form-select"><option>{{s.fYear}}</option></select></div>
+<div class="search-field filter-actions"><div class="form-check"><input id="f-filed-{{s.id}}" class="form-check-input" type="checkbox" checked="{{s.fFiled}}" readonly=""><label for="f-filed-{{s.id}}">Nothing filed in 30 days</label></div></div>
+<div class="filter-actions"><button type="submit" class="btn btn-primary">Show</button><sc-if value="{{s.filtered}}"><a class="btn btn-outline" href="#">Clear filters</a></sc-if></div>
+</div>
+</form>
+</sc-if>
+
+<sc-if value="{{s.is.loading}}">
+<p class="visually-hidden" role="status">Loading Programme trainees.</p>
+<section class="list-section" aria-busy="true"><h2 class="list-section-title">Current registrars</h2><div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton" style="width: 100%; height: 3rem"></div><div class="skeleton" style="width: 100%; height: 3rem"></div><div class="skeleton" style="width: 100%; height: 3rem"></div><div class="skeleton" style="width: 100%; height: 3rem"></div></div></section>
+</sc-if>
+
+<sc-if value="{{s.is.error}}">
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load Programme trainees.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"></path></svg>Try again</button></div></div></div>
+</sc-if>
+
+<sc-if value="{{s.is.empty}}">
+<section class="list-section" aria-labelledby="h-{{s.id}}"><h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">Current registrars</h2>
+<div class="detail-card detail-card--empty"><p class="state-panel-title">No current registrars</p><p class="state-panel-copy">They appear here once they are admitted to the programme.</p></div></section>
+</sc-if>
+
+<sc-if value="{{s.is.nomatch}}">
+<section class="list-section" aria-labelledby="h-{{s.id}}"><h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">0 of 5 current registrars</h2>
+<div class="detail-card detail-card--empty"><p class="state-panel-title">No registrar matches these filters.</p><p class="state-panel-copy">Short on PAED-001, training year 4, nothing filed in 30 days.</p><div class="form-actions"><a class="btn btn-outline" href="#">Clear filters</a></div></div></section>
+</sc-if>
+
+<sc-if value="{{s.is.typical}}">
+<section class="list-section" aria-labelledby="h-{{s.id}}"><h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">5 current registrars</h2>
+<p class="needs-you-rule">Fewest met first, then by surname. Semester 2, 2026 ends on 2026-11-30.</p>
+<div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="visually-hidden">Current registrars, fewest EPAs met first</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Registrar</th><th scope="col" role="columnheader">Training year</th><th scope="col" role="columnheader">This semester</th><th scope="col" role="columnheader">In 2026</th><th scope="col" role="columnheader">Furthest short</th><th scope="col" role="columnheader">Last filed</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Pieter du Plessis</a></th><td role="cell" data-label="Training year">2</td><td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Furthest short"><span class="count-figure">PAED-001, PAED-002, PAED-003</span><p class="count-meta">0 of 3 each this semester</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Nomsa Mahlangu</a></th><td role="cell" data-label="Training year">1</td><td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Furthest short"><span class="count-figure">PAED-001, PAED-003, PAED-005</span><p class="count-meta">0 of 3 each this semester</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Sipho Ndlovu</a></th><td role="cell" data-label="Training year">1</td><td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Furthest short"><span class="count-figure">PAED-001, PAED-003, PAED-004</span><p class="count-meta">0 of 3 each this semester</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Anele Dlamini</a></th><td role="cell" data-label="Training year">3</td><td role="cell" data-label="This semester"><span class="count-figure">1 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Furthest short"><span class="count-figure">PAED-002, PAED-003, PAED-005</span><p class="count-meta">0 of 3 each this semester</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Lerato Molefe</a></th><td role="cell" data-label="Training year">4</td><td role="cell" data-label="This semester"><span class="count-figure">1 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Furthest short"><span class="count-figure">PAED-002, PAED-003, PAED-004</span><p class="count-meta">0 of 3 each this semester</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+</tbody></table></div>
+<sc-if value="{{s.pager}}"><nav class="pager" aria-label="Current registrars, pages"><div class="pager-info">Showing 1–20 of [n]</div><div class="pager-actions"><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Previous</button><button type="button" class="btn btn-outline btn-sm">Next</button></div><div class="pager-page-size"><label class="pager-page-size-label" for="pp-{{s.id}}">Per page</label><select id="pp-{{s.id}}" class="form-select form-select-sm pager-page-size-select"><option>20</option></select></div></nav></sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{s.is.short}}">
+<section class="list-section" aria-labelledby="h-{{s.id}}"><h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">5 of 5 current registrars are short on PAED-002</h2>
+<p class="needs-you-rule">PAED-002 — Managing common paediatric presentations, 3 per semester. Furthest from its target first, then fewest EPAs met, then by surname.</p>
+<div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="visually-hidden">Current registrars short on PAED-002, furthest from its target first</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Registrar</th><th scope="col" role="columnheader">Training year</th><th scope="col" role="columnheader">PAED-002</th><th scope="col" role="columnheader">This semester</th><th scope="col" role="columnheader">In 2026</th><th scope="col" role="columnheader">Last filed</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Pieter du Plessis</a></th><td role="cell" data-label="Training year">2</td><td role="cell" data-label="PAED-002"><span class="count-figure">0 of 3 this semester</span><p class="count-meta">3 more by 2026-11-30</p></td><td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Anele Dlamini</a></th><td role="cell" data-label="Training year">3</td><td role="cell" data-label="PAED-002"><span class="count-figure">0 of 3 this semester</span><p class="count-meta">3 more by 2026-11-30</p></td><td role="cell" data-label="This semester"><span class="count-figure">1 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Lerato Molefe</a></th><td role="cell" data-label="Training year">4</td><td role="cell" data-label="PAED-002"><span class="count-figure">0 of 3 this semester</span><p class="count-meta">3 more by 2026-11-30</p></td><td role="cell" data-label="This semester"><span class="count-figure">1 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Nomsa Mahlangu</a></th><td role="cell" data-label="Training year">1</td><td role="cell" data-label="PAED-002"><span class="count-figure">1 of 3 this semester</span><p class="count-meta">2 more by 2026-11-30</p></td><td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Sipho Ndlovu</a></th><td role="cell" data-label="Training year">1</td><td role="cell" data-label="PAED-002"><span class="count-figure">1 of 3 this semester</span><p class="count-meta">2 more by 2026-11-30</p></td><td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+</tbody></table></div>
+</section>
+</sc-if>
+
+<sc-if value="{{s.is.filed}}">
+<section class="list-section" aria-labelledby="h-{{s.id}}"><h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">1 of 5 current registrars has filed nothing in 30 days</h2>
+<p class="needs-you-rule">Nothing filed (a draft is not filed) in the last 30 days, or since admission if that is later; a recorded MSF counts. Longest without first.</p>
+<div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="visually-hidden">Current registrars with nothing filed in 30 days</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Registrar</th><th scope="col" role="columnheader">Training year</th><th scope="col" role="columnheader">Last filed</th><th scope="col" role="columnheader">This semester</th><th scope="col" role="columnheader">In 2026</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">[registrar]</a></th><td role="cell" data-label="Training year">[n]</td><td role="cell" data-label="Last filed">[date]</td><td role="cell" data-label="This semester"><span class="count-figure">[n] of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">[n] of 5</span><p class="count-meta">EPAs met in 2026</p></td></tr>
+</tbody></table></div>
+</section>
+</sc-if>
+
+<sc-if value="{{s.is.exempt}}">
+<section class="list-section" aria-labelledby="h-{{s.id}}"><h2 id="h-{{s.id}}" class="list-section-title" tabindex="-1">5 current registrars</h2>
+<p class="needs-you-rule">Fewest met first, then by surname. 1 registrar exempt this period, not counted, listed last.</p>
+<div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--index" role="table">
+<caption class="visually-hidden">Current registrars, fewest EPAs met first, one exempt this period</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Registrar</th><th scope="col" role="columnheader">Training year</th><th scope="col" role="columnheader">This semester</th><th scope="col" role="columnheader">In 2026</th><th scope="col" role="columnheader">Furthest short</th><th scope="col" role="columnheader">Last filed</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Pieter du Plessis</a></th><td role="cell" data-label="Training year">2</td><td role="cell" data-label="This semester"><span class="count-figure">0 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Furthest short"><span class="count-figure">PAED-001, PAED-002, PAED-003</span><p class="count-meta">0 of 3 each this semester</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Lerato Molefe</a></th><td role="cell" data-label="Training year">4</td><td role="cell" data-label="This semester"><span class="count-figure">1 of 10</span><p class="count-meta">EPAs met this semester</p></td><td role="cell" data-label="In 2026"><span class="count-figure">0 of 5</span><p class="count-meta">EPAs met in 2026</p></td><td role="cell" data-label="Furthest short"><span class="count-figure">PAED-002, PAED-003, PAED-004</span><p class="count-meta">0 of 3 each this semester</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+<tr role="row"><th scope="row" role="rowheader"><a class="progress-row-link" href="#">Sipho Ndlovu</a></th><td role="cell" data-label="Training year">1</td><td role="cell" colspan="3" data-label="This period"><span class="badge badge-draft">Exempt this period</span><p class="count-meta">Started part-way through the period</p></td><td role="cell" data-label="Last filed">[date]</td></tr>
+</tbody></table></div>
+</section>
+</sc-if>
+</article>
+</main>
+</div>
+</div>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"show":{"editor":"text","default":""},"$preview":{"width":1280,"height":8000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      home: 'M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5',
+      users: 'M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9M9 9a3 3 0 1 0 6 0a3 3 0 1 0-6 0',
+      clock: 'M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0M12 6v6l4 2',
+      file: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6',
+      scale: 'm16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2',
+      cal: 'M8 2v4M16 2v4M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM3 10h18M9 16l2 2 4-4',
+      award: 'M6 8a6 6 0 1 0 12 0a6 6 0 1 0-12 0M15.477 12.89 17 22l-5-3-5 3 1.523-9.11',
+      msg: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+      shield: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4'
+    };
+    const MENUS = {
+      cm: [['Home', P.home], ['Programme trainees', P.users], ['Committee reviews', P.file], ['Decision panels', P.scale]],
+      sa: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Entrustment decisions', P.award]],
+      co: [['Home', P.home], ['Programme trainees', P.users], ['Waiting for assessors', P.clock], ['Decisions due', P.cal], ['MSF campaigns', P.msg], ['Committee reviews', P.file], ['Decision panels', P.scale], ['Data rights requests', P.shield]]
+    };
+    const nav = (k) => MENUS[k].map(([label, d]) => ({ label, d, lit: label === 'Programme trainees', rest: label !== 'Programme trainees' }));
+    const KGK = (r) => 'Current registrars at Kgosi Kgari Teaching Hospital, read as ' + r + ' · Semester 2, 2026';
+    const PAED = (r) => 'Current registrars in Paediatrics, read as ' + r + ' · Semester 2, 2026';
+    const st = (o, k) => Object.assign({ note: '', clip: '', sw: '', form: true, fEpa: 'Any EPA', fYear: 'Any', fFiled: false, filtered: false, pager: false, is: { [k]: true } }, o);
+    const cm = (o, k) => st(Object.assign({ role: 'Committee member', who: 'Thandi Zulu', sw: 'Switch to Assessor', sub: KGK('Committee member'), nav: nav('cm') }, o), k);
+    const sa = (o, k) => st(Object.assign({ role: 'Speciality admin', who: 'Refilwe Mokoena', sub: PAED('Speciality admin'), nav: nav('sa') }, o), k);
+    const ssa = (o, k) => st(Object.assign({ role: 'Sub-speciality admin', who: 'Kabelo Sithole', sub: PAED('Sub-speciality admin'), nav: nav('sa') }, o), k);
+    const co = (o, k) => st(Object.assign({ role: 'Coordinator', who: 'Pieter Smit', sub: KGK('Coordinator'), nav: nav('co') }, o), k);
+    const all = [
+      cm({ id: 't1', title: 'Programme trainees · typical (Step 3.52)', cap: 'Thandi Zulu: a row a current registrar, the name the link to the registrar\'s page; the figures in flow 05\'s words; the three EPAs furthest from this window\'s target (a new per-registrar, per-EPA reader).', note: 'Last filed is not in the brief for anyone at this moment: [date].' }, 'typical'),
+      cm({ id: 't2', title: 'Programme trainees · "Short on PAED-002" (from Home)', cap: 'Arrived from the EPA\'s row on Home: the filter set, the heading counting the answer and taking the focus. Pieter du Plessis, Anele Dlamini, Lerato Molefe at 0, then Nomsa Mahlangu and Sipho Ndlovu at 1 of 3.', fEpa: 'PAED-002 — Managing common paediatric presentations', filtered: true }, 'short'),
+      co({ id: 't3', title: 'Programme trainees · "Nothing filed in 30 days"', cap: 'Pieter Smit from the card on Home. Activities that have left draft count; the 30 days start at admission when that is later (E5).', note: 'Who has filed nothing at this moment is not in the brief: [registrar].', fFiled: true, filtered: true }, 'filed'),
+      sa({ id: 't4', title: 'Programme trainees · no match (not empty)', cap: 'Refilwe Mokoena: three filters that leave nobody. One pattern on both lists: "No registrar matches these filters.", then what was asked, then Clear filters.', fEpa: 'PAED-001 — Providing paediatric emergency care to children', fYear: '4', fFiled: true, filtered: true }, 'nomatch'),
+      sa({ id: 't5', title: 'Programme trainees · empty', cap: 'No current registrar in her scope: empty, not "no match"; no filter form is drawn.', form: false }, 'empty'),
+      ssa({ id: 't10', title: 'Programme trainees · Sub-speciality admin (Step 3.54)', cap: 'Kabelo Sithole: the same rows, read for his sub-speciality, Paediatrics; the subtitle says what was read.', clip: 'r2-clip--m' }, 'typical'),
+      cm({ id: 't6', title: 'Programme trainees · heavy (invented)', cap: 'More than 20 registrars: 20 a page under PagerControls (its size select labelled, T280); a page turn focuses the list\'s heading.', pager: true, note: 'Invented: the five rows stand for 20; the total is [n].' }, 'typical'),
+      cm({ id: 't7', title: 'Programme trainees · one registrar exempt this period', cap: 'Exemption is computed, so the row says why in words; three figure cells give way to one; she sorts last.', note: 'Sipho Ndlovu stands in for the brief\'s unnamed exempt registrar.' }, 'exempt'),
+      cm({ id: 't8', title: 'Programme trainees · loading', cap: 'The filters stand; skeleton rows; a status "Loading Programme trainees."' }, 'loading'),
+      cm({ id: 't9', title: 'Programme trainees · load error', cap: 'Home\'s pattern, never the exception; Try again\'s answer takes the focus in the result region.' }, 'error')
+    ];
+    const pick = (this.props.show || '').split(',').map((x) => x.trim()).filter(Boolean);
+    return { states: pick.length ? all.filter((s) => pick.indexOf(s.id) >= 0) : all };
+  }
+}
+</script>
+</body>
+</html>
