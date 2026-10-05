@@ -1,108 +1,105 @@
-![License](https://img.shields.io/github/license/reniercloete/Wombat)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/reniercloete/Wombat)
-![GitHub last commit](https://img.shields.io/github/last-commit/reniercloete/Wombat)
+![License](https://img.shields.io/github/license/RCL-Consulting/Wombat)
+![GitHub last commit](https://img.shields.io/github/last-commit/RCL-Consulting/Wombat)
 
-Wombat - Work-Based Assessment Tool
-===================================
+# Wombat — Work-Based Assessment Tool
 
-**Wombat** is a web-based application built using **ASP.NET Core** that supports the management of **work-based assessments (WBA)** for medical specialists using the **EPA (Entrustable Professional Activities)** approach. It is designed to be highly configurable, supporting multiple institutions, specialities, and subspecialities. The application is hosted on **Azure**, with a backend powered by **MS SQL**, also deployed in Azure.
+**Wombat** tracks the training of medical specialists under competency-based medical education, built around
+**Entrustable Professional Activities (EPAs)**. It holds each registrar's portfolio of workplace-based assessments,
+counts them against the curriculum's targets, and supports the committee that decides each registrar's entrustment,
+across colleges, institutions, specialities and sub-specialities.
 
-Features
---------
+It is deployed but **not yet in service**: every database holds scenario data only, replayed from the paediatrics
+runbook (`execution/knowledge/scenario-paediatrics/`). There are no real trainees or clinical records anywhere.
 
-*   **Multi-Institution Support**: Configure and manage assessments across multiple institutions.
-*   **Customizable Specialties and Subspecialties**: Add and manage specialities and subspecialities, along with their corresponding EPAs.
-*   **User Roles**:
-    *   **Admin**: Full system control.
-    *   **Institution Coordinator**: Oversees institution-specific configurations and reviews trainee portfolios.
-    *   **Assessor**: Responds to assessment requests from trainees.
-    *   **Trainee**: Sends assessment requests and manages their ePortfolio.
-*   **Customizable Activity Types**:
-    *   Each activity type carries its own form, workflow and credit rules, built in the activity-type builder.
-    *   Which instruments may assess an EPA is set on the curriculum item (its permitted tools) and enforced when an activity is created or handed on.
-*   **Assessment Workflow**:
-    *   Trainees submit assessment requests to a specific assessor.
-    *   Assessors complete the assessment, which is added to the trainee’s ePortfolio.
-    *   Trainees can exclude certain assessments from their portfolios if desired.
-    *   Institution Coordinators can review the completed portfolios.
+## What it does
 
-Technology Stack
-----------------
+- **Activities, defined as data.** An institution or a College adds its own activity types (Mini-CEX, DOPS, CBD,
+  portfolio reviews, reflections, procedure logs, research outputs …) in a visual builder. Each type carries its form
+  schema, its workflow state machine and its curriculum credit rules as `jsonb`, interpreted at runtime by generic
+  validators, a workflow evaluator and a credit applier. Publishing bumps a type's version; existing activities stay
+  pinned to theirs.
+- **Curricula and progress.** A College authors its catalogue (specialities, EPAs, entrustment scales, versioned
+  curricula); an institution adopts it and may add its own items. Each registrar sees her targets for this semester
+  and this academic year, her shortfalls, her rating trajectory per EPA and her standing against the College's
+  training-year levels.
+- **Assessment and review.** Registrars request assessments from named assessors, who rate them from an inbox. The
+  committee sits on a schedule, reviews the evidence, and issues, renews or revokes entrustment decisions (STARs), with
+  appeals.
+- **Multi-source feedback**, run as campaigns with anonymous respondents.
+- **Portfolio export** as PDF, with a verification page for third parties.
+- **Data rights:** access, correction and erasure requests, decided by staff and audited.
 
-*   **Frontend**: ASP.NET Core
-*   **Backend**: MS SQL (Azure)
-*   **Hosting**: Azure App Services
-*   **Database**: Azure SQL Database
+### Roles
 
-Installation
-------------
+Administrator, CollegeAdmin, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember,
+Assessor, Trainee and PendingTrainee. A person may hold several and acts as one at a time. Onboarding is by
+invitation or institutional single sign-on (OIDC); there is no open registration.
 
-### Prerequisites
+## Technology
 
-*   .NET Core SDK (v6 or later)
-*   SQL Server or Azure SQL Database
-*   Azure Account (for deployment)
-*   [Visual Studio community](https://visualstudio.microsoft.com/vs/community/)
+| | |
+|---|---|
+| Runtime | .NET 10, ASP.NET Core |
+| UI | Blazor Interactive Server, with a custom design system (`src/Wombat.Web/wwwroot/app.css`); no CSS framework |
+| Architecture | Clean Architecture with CQRS via MediatR 12; layer boundaries enforced by architecture tests |
+| Data | PostgreSQL with EF Core 10 (Npgsql); migrations applied at startup |
+| Identity | ASP.NET Core Identity; OIDC single sign-on per institution |
+| PDF | QuestPDF |
+| Hosting | Ubuntu 26.04 LTS on Linode, behind Caddy, run by systemd (`deploy/`) |
 
-### Setup Instructions
+## Repository layout
 
-1.  Clone the repository:
+```
+src/
+  Wombat.Domain/          entities, value objects, the activity DSL parsers
+  Wombat.Application/     MediatR commands, queries, handlers, DTOs, validators
+  Wombat.Infrastructure/  EF Core, Identity, email, the activity runtime, reporting, seeds
+  Wombat.Api/             thin REST endpoints for webhooks and integration
+  Wombat.Web/             the Blazor app
+tests/                    Domain, Application, Infrastructure, Architecture, Integration and Web (bUnit) suites
+deploy/                   server provisioning, deploy and verification scripts
+design/                   the GUI redesign: brief, per-flow design records, the design system
+execution/                project state, task register, architecture and domain documentation
+```
 
-    ```bash
-    git clone https://github.com/your-username/wombat.git
-    cd wombat
-    ```    
-1.  Set up the database:
+Start with `execution/architecture/ARCHITECTURE.md` (how it is built), `execution/architecture/CUSTOMIZATION.md` (the
+activity platform), `execution/knowledge/DOMAIN.md` (what EPAs, WBAs and STARs mean) and `CLAUDE.md` (conventions).
 
-    To run Wombat on the development machine, simply run `update-database` in the package manager console and you should be ready to go.
+## Running it locally
 
-    To run Wombat on Azure, 
-    *   Create a SQL Server or Azure SQL Database instance and create a new database [Azure Data Studio](https://azure.microsoft.com/en-us/products/data-studio) works well.
-    *   Generate a create script using `Script-Migration -Idempotent` in the package manager console and run the SQL script on your newly created database.
-      
-3.  Configure connection strings:
-    
-    *   Update the connection string in `appsettings.json` to point to your database.
-    
-    ```json
-    {
-      "ConnectionStrings": {
-        "DefaultConnection": "Server=your-server.database.windows.net;Database=wombat_db;User Id=your-username;Password=your-password;"
-      }
-    }
-    ```    
-4.  Run the application locally:
-    
-    ```bash  
-    dotnet run
-    ```
-    
-5.  Deploy to Azure:
-    
-    *   Follow the official Microsoft guide to deploy an ASP.NET Core web app to Azure: [Deploy an ASP.NET Core web app to Azure](https://docs.microsoft.com/en-us/azure/app-service/quickstart-dotnetcore).
+Prerequisites: the .NET 10 SDK and a PostgreSQL server.
 
-Usage
------
+```bash
+git clone https://github.com/RCL-Consulting/Wombat.git
+cd Wombat
 
-The repo is pre-populated with some users and data to get things going as fast as possible:
+# The connection string lives in user secrets, never in a committed file
+dotnet user-secrets --project src/Wombat.Web set "ConnectionStrings:DefaultConnection" \
+  "Host=localhost;Database=wombat;Username=wombat;Password=<your local password>"
 
-1.  **Admin Panel**: Log in as an admin to configure institutions, specialities, and user roles, configure EPAs and assessment forms. Log in as `admin@localhost.com` with password `P@ssw0rd`.
-2.  **Coordinator**: Review trainee portfolios. Log in as `coordinator@localhost.com` with password `P@ssw0rd`.
-3.  **Assessor**: Respond to assessment requests from trainees and complete forms.  Log in as `assessor@localhost.com` with password `P@ssw0rd`.
-4.  **Trainee**: Request assessments, view, manage, and curate your ePortfolio.  Log in as `trainee@localhost.com` with password `P@ssw0rd`.
+dotnet build Wombat.sln -c Release
+dotnet run --project src/Wombat.Web/Wombat.Web.csproj      # http://localhost:5080
+```
 
-Contributing
-------------
+The database is migrated and seeded with a demo catalogue on first start. In the Development environment a set of
+dev accounts is seeded as well (`src/Wombat.Infrastructure/Identity/DevUserSeeder.cs`); outside Development nothing of
+the kind is created, and production startup fails if its connection string is missing.
 
-We welcome contributions! Please follow these steps:
+## Tests
 
-1.  Fork the repository.
-2.  Create a new feature branch (`git checkout -b feature-branch`).
-3.  Commit your changes (`git commit -m "Add new feature"`).
-4.  Push to the branch (`git push origin feature-branch`).
-5.  Create a new Pull Request.
+```bash
+dotnet test tests/Wombat.Domain.Tests/Wombat.Domain.Tests.csproj
+dotnet test tests/Wombat.Application.Tests/Wombat.Application.Tests.csproj
+dotnet test tests/Wombat.Infrastructure.Tests/Wombat.Infrastructure.Tests.csproj
+dotnet test tests/Wombat.Architecture.Tests/Wombat.Architecture.Tests.csproj
+dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj
+dotnet test tests/Wombat.Integration.Tests/Wombat.Integration.Tests.csproj   # needs PostgreSQL (WOMBAT_TEST_CONNECTION)
+```
 
-License
--------
+Do not pass `--no-build`: the solution build and the per-project tools write to different output paths, so it can run
+a stale assembly (`CLAUDE.md` § Testing).
 
-Wombat is licensed under the GNU Affero GPL-3.0 license.
+## Licence
+
+Wombat is licensed under the [GNU Affero General Public License v3.0](LICENSE). Dependencies are limited to
+GPLv3-compatible licences.
