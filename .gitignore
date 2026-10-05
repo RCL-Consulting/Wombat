@@ -427,3 +427,15 @@ execution/.session
 /design/baseline/
 # What design/tools/stage_upload.ps1 stages for one Claude Design thread (design/BRIEF.md § 3)
 /design/upload/
+
+# Secrets and dumps never committed (security survey, 2026-10-05)
+*.dump
+.env
+.env.*
+*.env
+secrets.json
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
