@@ -24,14 +24,12 @@ locally, never push.** The harness is `python C:\dev\rcl_execution\bin\harness.p
 - **Step 2, staged:** `stage_upload.ps1 -Flow 06`, 88 files (2.98 MB); flow 05's boards R3-E-typical, R3-P-standing,
   R3-T-committee (both widths) and `flow05-r3.css` copied by hand into `design/upload/flow05-boards/`.
 
-### Next: T358 step 3. **It needs the operator.**
+### Next: T358 step 4, round 1. **The operator sends it.**
 
-- Create a new canvas from the main app's Design page on the design system **version 15**
-  (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18) and give its link.
-- Then step 4: copy the mark (`asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`), put its `/_blob/` URL where § 1
-  and `round-1-ask.txt` read `<MARK-URL>`, and send `round-1-ask.txt` with the 11 key screenshots and flow 05's
-  boards as ONE message. Read the canvas's `canvas.json` version before and after.
-- **Model: Opus.**
+- Canvas https://claude.ai/artifact/97WQWEuzMYHcKngPnNdHkV (design system v15), the mark copied in as`n  `/_blob/d0ffe547ebb511d3f58145477434f9aa` and named in § 1 (`f2137a8c`). Before the send it held no `project/` files`n  (artifact version 1791175135-48da).
+- Send `design/upload/round-1-ask.txt` with the 11 key screenshots and `design/upload/flow05-boards/` as ONE message.
+  Then read the canvas's files and `canvas.json` version, and record round 1 in `design/flows/06-programme-oversight/`.
+- Then step 5: the pick and § 6's questions (8–10 the operator's). **Model: Opus.**
 
 ### For the operator
 

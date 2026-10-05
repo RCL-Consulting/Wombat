@@ -33,7 +33,7 @@ replayed journey catalogue with a screenshot baseline, and **five redesign flows
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T358, flow 06 (programme oversight): brief done (`2f29c158`); step 3, a new canvas, needs the operator. Opus.**
+- **The GUI redesign: T358, flow 06 (programme oversight): brief done (`2f29c158`); canvas made, the mark in (`f2137a8c`); round 1 waits for the operator's send. Opus.**
 
 ## Open questions
 
