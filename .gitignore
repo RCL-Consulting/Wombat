@@ -439,3 +439,5 @@ secrets.json
 id_rsa*
 id_ed25519*
 
+execution/.review
+execution/REVIEW_DIGEST.md
