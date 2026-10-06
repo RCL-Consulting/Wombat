@@ -6,7 +6,7 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 
 The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, now on GitHub,
 `https://github.com/RCL-Consulting/Wombat.git` (public), `origin`; the old server stays as remote `rcl` (its SSH port is
-closed). Commit locally; push when the operator asks.** The harness is `python C:\dev\rcl_execution\bin\harness.py`.
+closed). Commit locally; push when the operator asks.** The harness is `harness.py`; its path is in the hooks in `.claude/settings.local.json`.
 
 ### Done
 
@@ -49,7 +49,7 @@ closed). Commit locally; push when the operator asks.** The harness is `python C
 - **Droppable databases:** `wombat_scenario_t358` (polluted by the states agent), `_t358_s515`, `_t358_states*`,
   `_t290`, `_t355`, `_t355_s518*`, `_t304`, `_t350*`, `_t342*`, `_t339*`, `_t335*`, `_states*`, `_rc*`, `_t292`.
 - **Branches:** `t358`, `t358-*` (merged, squashed into `85d5a508`), `t355*`, `t304`, `t350*`, `t342*` kept locally;
-  worktrees removed. `verify-master` stays.
+  worktrees removed. The orphaned `verify-master` worktree folder (pointing at the pre-move repo path) was deleted 2026-10-06.
 
 ### Traps
 
