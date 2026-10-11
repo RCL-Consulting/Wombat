@@ -16,18 +16,21 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 - **Archive** (`bc9a6c4b`): the 50 undated tasks and every task completed by 2026-09-24 moved from `tasks/done/` to
   `log/tasks/` (226 to 115); four links followed. CLAUDE.md's books-rag bullet names the medical-education sources
   (ten Cate et al. 2024 on EPAs, the `medicine` category), per the operator.
-- **T361 started** (flow 07, the review sitting), step 1, the brief. Nothing written to `design/flows/07-review-sitting.md`
-  yet. Two read-only investigators were launched: one auditing the review page's code at HEAD (claims, strings, gating,
-  components, open tasks), one surveying `design/baseline/` captures for the flow. Their reports live only in that
-  session: **re-run both if they are not in front of you.**
+- **T361 steps 1–2** (flow 07, the review sitting): the brief restated in flow 06's layout (`9a204a5c`), from two
+  read-only audits (the review page's code at `bc9a6c4b`; the captures). Completeness exit 0, baseline paths missing 0,
+  all 26 verbatim steps match. Staged with `stage_upload.ps1 -Flow 07` (88 files, 18.7 MB);
+  `design/flows/07-review-sitting/round-1-ask.txt` is § 1 + § 8 as one paste. T361's Verification lines are now
+  flow 07's own.
 
-### Next: T361 step 1, restate the brief in flow 06's layout
+### Next: T361 step 3, the operator's canvas
 
-- Header table, how to run, § 1 ask (structure first, W: 2–3 variations), § 2 journey, § 3 states, § 4 Attach (the
-  script needs a `## N. Attach` heading), § 5 known problems at HEAD, § 6 questions, § 7 acceptance, § 8 steps.
-- § 8: the 26 steps re-extracted with `(file.md:line)` pointers, matching the runbook (the old copy had no pointers, so
-  `check_verbatim_steps.py` skipped it). Then `check_flow_completeness.py` (passes now) and the verbatim check.
-- T361's Verification lines carry flow 06's evidence in brackets, copied from T358: replace them.
+- **The operator:** create a new canvas from the main app's Design page on the Wombat design system v17
+  (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18) and give its link.
+- Then copy the mark in (`asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`), put its `/_blob/` URL where the brief
+  and `round-1-ask.txt` read `/_blob/MARK`, and send round 1 with § 4's 14 key screenshots. Before uploading, move
+  `design/baseline/act-4/4.27-1-zulu-ratified-stars-issued.png`'s copy back from `design/upload/crop-first/` (held for its name; no link)
+  and stage flow 05's two boards by hand (§ 4).
+- Questions 10–12 are the operator's: T329/T273/T325/T309/T260/T324 folded or first; T260's Start; T314's export.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator
