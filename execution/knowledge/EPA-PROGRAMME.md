@@ -30,7 +30,7 @@ The run, through the UI on dev: institution 2 adopted `Paediatric EPA Curriculum
 from curriculum 2 to curriculum 3; she filed a `mini_cex_cpsa` against PAED-001 with `observed_on`
 **2026-03-10**; Naidoo completed it at **3a**. Result: `CreditedItemCount = 1`,
 `CreditScaleMismatchCount = 0`, one `CurriculumItemProgress` row on item 17 with `CountsSoFar = 1` and
-`MinimumLevelReachedCount = 1`. Full detail in [`execution/tasks/done/T118-v11-1-evidence-run-findings.md`]
+`MinimumLevelReachedCount = 1`. Full detail in [`execution/log/tasks/T118-v11-1-evidence-run-findings.md`]
 (closed 2026-09-24).
 
 **What that proved, on real data rather than by reading code:** T109's scale pinning holds (both sides

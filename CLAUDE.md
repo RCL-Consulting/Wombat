@@ -173,7 +173,7 @@ request record. Lists use `principal.GetInstitutionId()` to filter; get-by-id ca
 `ClaimsPrincipalExtensions` (`IsAdministrator()`, `IsInstitutionalAdmin()`,
 `CanAccessInstitution(int)`).
 
-T056 is landing cluster-incrementally — see `execution/tasks/done/T056-institutional-admin-role-power.md`
+T056 is landing cluster-incrementally — see `execution/log/tasks/T056-institutional-admin-role-power.md`
 for which page groups have been migrated and which still require `Administrator`.
 
 ## Activity platform (the schema-driven pivot)
@@ -510,6 +510,12 @@ Stop hook refuses to end a session that changed task state without writing a han
   "which book covers X"; use `ref/` for material curated for this project, which wins where
   the two disagree. Cite either by the returned path, page and edition — most codes exist in
   several editions whose clause numbers differ, so a clause number alone is not a citation.
+  For Wombat it holds medical-education sources: ten Cate et al. (eds.), *Entrustable
+  Professional Activities and Entrustment Decision-Making in Health Professions Education*
+  (2024), the `medicine` category (the Medical_Education domain), the South African and WHO
+  HIV guidelines, and papers on implementing medical records systems. Use them when a
+  question is about EPAs, entrustment or workplace-based assessment; the College's own
+  documents (`knowledge/EPA-PROGRAMME.md`) win for what the CPSA programme requires.
 
 Working rules:
 

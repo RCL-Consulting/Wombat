@@ -142,7 +142,7 @@ Infrastructure:
 - EF config + hand-written migration + Designer file
 - Background job `EntrustmentDecisionExpiryJob` (daily) — flips `ExpiresOn` < today to `Status=Expired`, fires email to trainee + coordinator
 
-**Why hard-coded not schema-driven:** matches the reasoning in `execution/tasks/done/T022-committee-decisions.md` — regulatory weight, immutability requirements, appeal pathway, revocation as a first-class event.
+**Why hard-coded not schema-driven:** matches the reasoning in `execution/log/tasks/T022-committee-decisions.md` — regulatory weight, immutability requirements, appeal pathway, revocation as a first-class event.
 
 **Committee integration:** `RecordCommitteeDecisionCommand` (existing, T022) gains an optional list of `entrustmentDecisions[]` to issue as part of ratification. When the committee ratifies, the decisions issue atomically.
 
@@ -302,4 +302,4 @@ Each becomes a task file only when a programme requests it.
 
 ## Active task
 
-None of these are active yet. The roadmap is a draft for review. When approved, the next step is to write `execution/tasks/done/T028-*.md` through the first block of approved Phase 1 tasks (T028, T029, T046), then update `execution/STATE.md` to point at the first active one.
+None of these are active yet. The roadmap is a draft for review. When approved, the next step is to write `execution/log/tasks/T028-*.md` through the first block of approved Phase 1 tasks (T028, T029, T046), then update `execution/STATE.md` to point at the first active one.
