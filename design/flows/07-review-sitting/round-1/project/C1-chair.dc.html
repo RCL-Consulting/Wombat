@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · the chair stages and defers</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1f1f1f;background:#fff;font-size:13px;line-height:1.35}
+a{color:#1f1f1f}a:hover{color:#000}
+.g2{display:grid;grid-template-columns:repeat(2,1280px);gap:80px}
+.cap{height:32px;font-size:15px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden}
+.cap i{font-style:normal;font-weight:400;color:#555}
+.vp{position:relative;width:1280px;height:800px;box-sizing:border-box;border:1px solid #8c8c8c;background:#efefef;overflow:hidden;display:flex}
+.side{width:250px;flex:none;background:#d4d4d4;display:flex;flex-direction:column}
+.brand{height:56px;display:flex;align-items:center;gap:8px;padding:0 16px;font-weight:700;font-size:17px}
+.brand img{width:32px;height:32px}
+.role{padding:8px 16px 12px;font-size:12px;border-bottom:1px solid #b5b5b5}
+.role b{display:block;font-size:13px}
+.nav{display:flex;flex-direction:column;padding:8px 0}
+.nav a{padding:8px 16px;text-decoration:none;color:#2a2a2a}
+.nav a.on{background:#b8b8b8;font-weight:700;box-shadow:inset 3px 0 0 #fff}
+.nav hr{border:0;border-top:1px solid #b5b5b5;margin:8px 16px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:56px;flex:none;background:#fff;border-bottom:1px solid #c8c8c8;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 24px}
+.art{flex:1;min-height:0;overflow:hidden;padding:16px 24px 0 32px;display:flex;flex-direction:column;gap:12px}
+.crumb{font-size:12px;color:#555}
+.h1{margin:0;font-size:24px;line-height:1.2;font-weight:700}
+.sub{color:#555;margin-top:2px}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.card{background:#fff;border:1px solid #b3b3b3;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.h2{margin:0;font-size:17px;font-weight:700}
+.h3{margin:0;font-size:14px;font-weight:700}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sb{justify-content:space-between}
+.col{display:flex;flex-direction:column;gap:8px}
+.mute{color:#5c5c5c}
+.sm{font-size:12px}
+.ln{height:8px;background:#d3d3d3;border-radius:4px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1.5px solid #4d4d4d;border-radius:4px;background:#fff;font:inherit;color:#1f1f1f;white-space:nowrap;text-decoration:none}
+.btn.p{background:#3a3a3a;border-color:#3a3a3a;color:#fff}
+.btn.q{border-color:transparent;text-decoration:underline;padding:0 4px}
+.btn.s{height:26px;padding:0 8px;font-size:12px}
+.btn[aria-pressed="true"]{background:#d6d6d6;font-weight:700}
+.btn[disabled]{border-style:dashed;border-color:#9a9a9a;color:#6f6f6f;background:#f7f7f7}
+.bd{display:inline-block;font-size:11px;line-height:16px;padding:0 7px;border:1px solid #6f6f6f;border-radius:9px;background:#e6e6e6;white-space:nowrap}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;padding:0 5px;border:1.5px dashed #222;border-radius:3px;background:#fff;color:#222;line-height:15px;white-space:nowrap}
+.foc{outline:3px dashed #111;outline-offset:3px}
+.fx{position:relative}
+.fx::after{content:"focus";position:absolute;top:-20px;right:-4px;font-size:10px;font-weight:700;background:#111;color:#fff;padding:1px 5px;border-radius:3px;line-height:14px}
+.al{border:1px solid #8a8a8a;background:#e4e4e4;border-radius:4px;padding:8px 12px}
+.al.ok{background:#f3f3f3}
+.al.bad{border:2px solid #222;background:#fff}
+.f{display:flex;flex-direction:column;gap:3px;font-size:12px}
+.f label{font-weight:700}
+.f input,.f select,.f textarea{font:inherit;height:30px;box-sizing:border-box;border:1.5px solid #6f6f6f;border-radius:4px;background:#fff;padding:0 8px}
+.f textarea{height:44px;padding:6px 8px;resize:none}
+.f .err{border:2px solid #111;box-shadow:inset 4px 0 0 #111}
+.fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ck{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+.ck input{margin:1px 0 0;width:16px;height:16px;flex:none}
+.ws{display:flex;gap:16px;flex:1;min-height:0}
+.rail{width:260px;flex:none;background:#fff;border:1px solid #b3b3b3;border-radius:6px;display:flex;flex-direction:column;overflow:hidden;align-self:flex-start}
+.rail .rh{padding:8px 12px;border-bottom:1px solid #ccc;font-size:12px;display:flex;flex-direction:column;gap:2px}
+.rail a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 12px;min-height:24px;text-decoration:none;color:#222;font-size:12px}
+.rail a.on{background:#dcdcdc;font-weight:700;box-shadow:inset 3px 0 0 #333}
+.rail .gh{padding:8px 12px 2px;font-size:11px;font-weight:700;color:#555}
+.pane{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.t{width:100%;border-collapse:collapse;font-size:11px}
+.t th{text-align:left;font-weight:700;padding:3px 6px;border-bottom:1.5px solid #888}
+.t td{padding:3px 6px;border-bottom:1px solid #d0d0d0}
+.chart{height:128px;width:322px;box-sizing:border-box;border:1px dashed #888;background:#fafafa;display:flex;align-items:center;justify-content:center;color:#555;font-size:12px;text-align:center}
+.fold{position:absolute;left:250px;right:0;bottom:0;padding:6px 24px 8px 32px;background:#e6e6e6;border-top:2px dashed #7a7a7a;font-size:12px;color:#333}
+</style>
+</helmet>
+<div class="g2" style="width:2640px">
+
+<div>
+<div class="cap">1 · Scheduled · the chair on Overview <i>— the sitting index on the left; Start in the header; the agenda lines are readable, with no actions</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div class="hd"><div><div class="crumb"><a href="#">Committee reviews</a> › Lerato Molefe · 2026 S2</div><h1 class="h1">Lerato Molefe · 2026 S2</h1><div class="sub">Annual progression review · Paed Annual Review Panel · Training year 4</div></div><div class="row"><span class="bd">Scheduled</span><button class="btn p">Start review…</button></div></div>
+<div class="ws">
+<nav class="rail" aria-label="The sitting"><div class="rh"><b>The sitting</b><span>15 EPAs · evidence not frozen yet</span><span class="tag">NEW · sitting index · ?item= PROPOSED</span></div>
+<a href="#" class="on" aria-current="page">Overview</a>
+<div class="gh">Agenda</div>
+<a href="#">PAED-001 <span class="bd">Due</span></a><a href="#">PAED-002 <span class="bd">Due</span></a><a href="#">PAED-003 <span class="bd">Due</span></a><a href="#">PAED-004 <span class="bd">Due</span></a><a href="#">PAED-005 <span class="bd">Due</span></a><a href="#">PAED-006 <span class="bd">Due</span></a><a href="#">PAED-007 <span class="bd">Due</span></a><a href="#">PAED-008 <span class="bd">As opportunity allows</span></a><a href="#">…</a><a href="#">PAED-015 <span class="bd">Due</span></a>
+<div class="gh">After the agenda</div><a href="#">Decision</a><a href="#">Appeals</a></nav>
+<div class="pane">
+<section class="card" aria-labelledby="f1n"><h2 class="h2" id="f1n">Before the committee decides</h2><div class="sm"><b>PAED-010</b> · 1 rating · 1 assessor · 1 source. Fewer than three distinct assessors across this EPA's evidence.</div><div class="sm"><b>PAED-012</b> · 2 ratings · … Fewer than three distinct assessors across this EPA's evidence.</div><div class="sm mute">Not counted: 2 records in the review window with no rating by a named assessor …</div></section>
+<section class="card" aria-labelledby="f1s"><h2 class="h2" id="f1s">Entrustment against Annexure A</h2><div class="sm">Training year 4 on 2026-10-05 · 0 at or above · 0 below · 15 with no decision, of 15 EPAs</div><div class="sm">0 of 15 EPAs at their exit level by STAR decision · Not yet: … · For information only.</div><div class="ln"></div><div class="ln" style="width:80%"></div><div class="sm mute">Each EPA's name opens its workspace, where its chart is.</div></section>
+<section class="card" aria-labelledby="f1m"><h2 class="h2" id="f1m">Multi-source feedback by EPA</h2><div class="ln"></div><div class="ln" style="width:75%"></div></section>
+</div></div>
+</div></div>
+<div class="fold">Below on Overview: Evidence snapshot, whole ("No evidence has been frozen yet …"). Each EPA's chart lives in its own workspace, not here.</div>
+</div>
+</div>
+
+<div>
+<div class="cap">2 · In progress · PAED-001's workspace, Stage chosen <i>— its chart, its lines and the form share the pane; focus on Authorised level</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div class="hd"><div><div class="crumb"><a href="#">Committee reviews</a> › Lerato Molefe · 2026 S2</div><h1 class="h1" style="font-size:20px">Lerato Molefe · 2026 S2</h1></div><span class="bd">In progress</span></div>
+<div class="ws">
+<nav class="rail" aria-label="The sitting"><div class="rh"><b>12 still to stage or defer</b><span>Present: the chair only</span></div>
+<a href="#">Overview</a><div class="gh">Agenda</div>
+<a href="#" class="on" aria-current="page">PAED-001 <span class="bd">Due</span></a><a href="#">PAED-002 <span class="bd">Due</span></a><a href="#">PAED-003 <span class="bd">Due</span></a><a href="#">PAED-004 <span class="bd">Due</span></a><a href="#">PAED-005 <span class="bd">Due</span></a><a href="#">PAED-006 <span class="bd">Due</span></a><a href="#">PAED-007 <span class="bd">Due</span></a><a href="#">PAED-008 <span class="bd">As opportunity allows</span></a><a href="#">PAED-009 <span class="bd">As opportunity allows</span></a><a href="#">PAED-010 <span class="bd">Due</span></a><a href="#">PAED-011 <span class="bd">Due</span></a><a href="#">PAED-012 <span class="bd">Due</span></a><a href="#">…</a>
+<div class="gh">Other EPAs on the curriculum</div><a href="#">Stage on an EPA not on this agenda</a>
+<div class="gh">After the agenda</div><a href="#">Decision</a><a href="#">Appeals</a></nav>
+<div class="pane">
+<section class="card" aria-labelledby="f2e" style="gap:10px"><div class="row sb"><h2 class="h2" id="f2e">PAED-001 <span class="ln" style="display:inline-block;width:240px;vertical-align:middle"></span></h2><span class="bd">Due</span></div>
+<div class="sm">Must be decided at this sitting, or deferred with a reason. · 2026 · Year 4 target 5 · no STAR yet · MSF: Covered</div>
+<div style="display:flex;gap:14px">
+<div class="col" style="flex:none"><div class="chart">Rating chart for PAED-001<br>322 px drawing</div>
+<table class="t" style="width:322px"><thead><tr><th>Date</th><th>Instrument</th><th>Assessor</th><th>Rung</th></tr></thead><tbody><tr><td>…</td><td>Mini-CEX</td><td>Thandi Zulu</td><td>5</td></tr><tr><td>…</td><td>CBD</td><td>David Naidoo</td><td>…</td></tr><tr><td>…</td><td>…</td><td>Mohammed Patel</td><td>…</td></tr></tbody></table></div>
+<fieldset class="col" style="border:0;padding:0;margin:0;flex:1;min-width:0"><legend class="sm" style="font-weight:700;padding:0;margin-bottom:4px">Evidence it rests on · PAED-001's lines first</legend>
+<label class="ck"><input type="checkbox" checked><span>Mini-CEX · Thandi Zulu · 5 · Completed</span></label><button class="btn s" style="align-self:flex-start;margin-left:24px">Read</button>
+<label class="ck"><input type="checkbox"><span>CBD · David Naidoo · … · Completed</span></label>
+<label class="ck"><input type="checkbox"><span>… · Mohammed Patel · … · Completed</span></label>
+<a href="#" class="sm">Show the other 5 snapshot lines</a>
+<div class="al sm">Only one item is named. The College's rule is that an entrustment decision is never taken from a single form.</div></fieldset>
+</div>
+<div class="row"><button class="btn" aria-pressed="true">Stage a decision</button><button class="btn" aria-pressed="false">Defer</button></div>
+<div class="fg" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div class="f"><label for="f2l">Authorised level</label><select id="f2l" class="foc fx"><option>Choose a rung…</option></select></div><div class="f"><label for="f2i">Issued on</label><input id="f2i" value="2026-10-05"></div><div class="f"><label for="f2x">Expires on (optional)</label><input id="f2x"></div></div>
+<div class="f"><label for="f2r">Rationale</label><textarea id="f2r"></textarea></div>
+</section>
+</div></div>
+</div></div>
+<div class="fold">Below in the pane: Stage pending decision · after staging, the staged decision with Remove… and "Next still to settle: PAED-002 →"</div>
+</div>
+</div>
+
+<div>
+<div class="cap">2 · PAED-010's expiry refused <i>— the refusal at the form's top, focus on it; the index shows PAED-001 Staged and counts 11</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div class="hd"><div><div class="crumb"><a href="#">Committee reviews</a> › Lerato Molefe · 2026 S2</div><h1 class="h1" style="font-size:20px">Lerato Molefe · 2026 S2</h1></div><span class="bd">In progress</span></div>
+<div class="ws">
+<nav class="rail" aria-label="The sitting"><div class="rh"><b>11 still to stage or defer</b><span>Present: the chair only</span></div>
+<a href="#">Overview</a><div class="gh">Agenda</div>
+<a href="#">PAED-001 <span class="bd">Staged</span></a><a href="#">PAED-002 <span class="bd">Due</span></a><a href="#">PAED-003 <span class="bd">Due</span></a><a href="#">…</a><a href="#" class="on" aria-current="page">PAED-010 <span class="bd">Due</span></a><a href="#">PAED-011 <span class="bd">Due</span></a><a href="#">PAED-012 <span class="bd">Due</span></a><a href="#">…</a>
+<div class="gh">After the agenda</div><a href="#">Decision</a><a href="#">Appeals</a></nav>
+<div class="pane">
+<section class="card" aria-labelledby="f3e" style="gap:10px"><div class="row sb"><h2 class="h2" id="f3e">PAED-010 <span class="ln" style="display:inline-block;width:240px;vertical-align:middle"></span></h2><span class="bd">Due</span></div>
+<div class="sm">2026 S2 · Year 4 target 5 · no STAR yet · Sampling: 1 rating · 1 assessor · 1 source</div>
+<div class="row"><button class="btn" aria-pressed="true">Stage a decision</button><button class="btn" aria-pressed="false">Defer</button></div>
+<div class="al bad foc fx" role="alert"><b>Not staged.</b> An expiry date must be after the issue date.</div>
+<div class="fg" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div class="f"><label for="f3l">Authorised level</label><select id="f3l"><option>4</option></select></div><div class="f"><label for="f3i">Issued on</label><input id="f3i" value="2026-10-05"></div><div class="f"><label for="f3x">Expires on (optional)</label><input id="f3x" class="err" value="2026-10-04"><span style="font-weight:700">An expiry date must be after the issue date.</span></div></div>
+<div class="f"><label for="f3r">Rationale</label><textarea id="f3r">Leads the ward round safely; one observation so far, to be confirmed at her final review.</textarea></div>
+<fieldset class="col" style="border:0;padding:0;margin:0"><legend class="sm" style="font-weight:700;padding:0;margin-bottom:4px">Evidence it rests on</legend><label class="ck"><input type="checkbox" checked><span>Direct Observation · … · 4 · Completed</span></label><label class="ck"><input type="checkbox" checked><span>MSF record · …</span></label></fieldset>
+<div class="row"><button class="btn p">Stage pending decision</button></div>
+</section>
+</div></div>
+</div></div>
+<div class="fold">When the form is a Defer: a reason box, "Kept on the agenda line. The trainee sees it on their reviews page once the review is ratified.", and Defer PAED-010.</div>
+</div>
+</div>
+
+<div>
+<div class="cap">3 · A piece of evidence opened in place <i>— Read swaps the form for the activity, read-only; Back to PAED-001 restores it as typed, focus on Read</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div class="hd"><div><div class="crumb"><a href="#">Committee reviews</a> › Lerato Molefe · 2026 S2</div><h1 class="h1" style="font-size:20px">Lerato Molefe · 2026 S2</h1></div><span class="bd">In progress</span></div>
+<div class="ws">
+<nav class="rail" aria-label="The sitting"><div class="rh"><b>12 still to stage or defer</b><span>Present: the chair only</span></div>
+<a href="#">Overview</a><div class="gh">Agenda</div>
+<a href="#" class="on" aria-current="page">PAED-001 <span class="bd">Due</span></a><a href="#">PAED-002 <span class="bd">Due</span></a><a href="#">…</a>
+<div class="gh">After the agenda</div><a href="#">Decision</a><a href="#">Appeals</a></nav>
+<div class="pane">
+<section class="card" aria-labelledby="f4e" style="gap:10px"><div class="row sb"><button class="btn foc fx">← Back to PAED-001</button><span class="tag">NEW · evidence reader</span></div>
+<h2 class="h2" id="f4e">Mini-CEX · PAED-001 · Thandi Zulu</h2>
+<div class="card" style="background:#f8f8f8"><div class="row"><span class="bd">Completed</span><b>Done. You completed it on …</b></div><div class="sm">Rated 5. Credited 1 item to PAED-001.</div></div>
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:12px"><div class="col"><div class="h3">About</div><div class="ln"></div><div class="ln" style="width:70%"></div><div class="ln" style="width:60%"></div></div><div class="col"><div class="h3">The form, read-only</div><div class="ln"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:80%"></div><div class="ln"></div><div class="ln" style="width:60%"></div></div></div>
+<div class="row"><a href="#" class="sm">Open the activity's own page</a><span class="tag">PROPOSED · its return link, as in A</span></div>
+<div class="sm mute">Flow 03's ActivityStatus and ActivityAbout, read-only, with no moves offered, as the activity page shows them to this reader.</div>
+</section>
+</div></div>
+</div></div>
+<div class="fold">The staging form keeps level, rationale and ticks while the reader is open: same component, same circuit, no navigation.</div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2640,"height":1760}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

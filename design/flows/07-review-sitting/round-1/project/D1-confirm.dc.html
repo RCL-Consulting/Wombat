@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shared confirmations and refusals</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1f1f1f;background:#fff;font-size:13px;line-height:1.35}
+a{color:#1f1f1f}a:hover{color:#000}
+.g{display:grid;grid-template-columns:repeat(3,620px);gap:80px}
+.cap{height:32px;font-size:15px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden}
+.cap i{font-style:normal;font-weight:400;color:#555}
+.tile{width:620px;height:560px;box-sizing:border-box;border:1px solid #8c8c8c;background:#8f8f8f;display:flex;align-items:center;justify-content:center;position:relative}
+.tile.lt{background:#efefef;align-items:flex-start;padding:20px}
+.dlg{width:540px;background:#fff;border:2px solid #222;border-radius:8px;padding:20px 24px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+.dlg ul{margin:0;padding-left:18px}
+.h2{margin:0;font-size:17px;font-weight:700}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sm{font-size:12px}
+.mute{color:#5c5c5c}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1.5px solid #4d4d4d;border-radius:4px;background:#fff;font:inherit;color:#1f1f1f;white-space:nowrap}
+.btn.p{background:#3a3a3a;border-color:#3a3a3a;color:#fff}
+.btn[disabled]{border-style:dashed;border-color:#9a9a9a;color:#6f6f6f;background:#f7f7f7}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;padding:0 5px;border:1.5px dashed #222;border-radius:3px;background:#fff;color:#222;line-height:15px;white-space:nowrap}
+.foc{outline:3px dashed #111;outline-offset:3px}
+.fx{position:relative}
+.fx::after{content:"focus";position:absolute;top:-20px;right:-4px;font-size:10px;font-weight:700;background:#111;color:#fff;padding:1px 5px;border-radius:3px;line-height:14px}
+.f{display:flex;flex-direction:column;gap:3px;font-size:12px}
+.f label{font-weight:700}
+.f select,.f textarea{font:inherit;height:30px;box-sizing:border-box;border:1.5px solid #6f6f6f;border-radius:4px;background:#fff;padding:0 8px}
+.f textarea{height:52px;padding:6px 8px;resize:none}
+.f .err{border:2px solid #111;box-shadow:inset 4px 0 0 #111}
+.ck{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+.ck input{margin:1px 0 0;width:16px;height:16px;flex:none}
+.al{border:2px solid #222;background:#fff;border-radius:4px;padding:8px 12px}
+.card{background:#fff;border:1px solid #b3b3b3;border-radius:6px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;width:100%;box-sizing:border-box}
+</style>
+</helmet>
+<div class="g" style="width:2020px">
+
+<div><div class="cap">Start review… <i>— names what it freezes; Not yet takes the focus</i></div>
+<div class="tile"><div class="dlg" role="dialog" aria-labelledby="s1"><h2 class="h2" id="s1">Start Lerato Molefe's review for 2026 S2?</h2>
+<div class="sm">Starting freezes the evidence: the 8 items observed from 2026-01-01 to 2026-12-31 become this review's snapshot, in the state each is in now. Anything finished later is not added.</div>
+<div class="sm mute">When a campaign was released after the review was scheduled: "Starting now leaves out N feedback campaigns".</div>
+<div class="row" style="justify-content:flex-end"><button class="btn foc fx">Not yet</button><button class="btn p">Start review</button></div>
+<div class="sm mute">After: "Review started." takes the focus where the chair works next (A: atop the agenda · B: the Agenda step · C: the first line still due).</div>
+<span class="tag" style="align-self:flex-start">PROPOSED · confirmation</span></div></div></div>
+
+<div><div class="cap">Remove… <i>— names the EPA and what is discarded</i></div>
+<div class="tile"><div class="dlg" role="dialog" aria-labelledby="s2"><h2 class="h2" id="s2">Remove the staged decision on PAED-012?</h2>
+<div class="sm">Its level 5, its rationale and the 2 snapshot items it rests on are discarded. PAED-012 returns to Due.</div>
+<div class="row" style="justify-content:flex-end"><button class="btn foc fx">Keep it</button><button class="btn p">Remove the decision</button></div>
+<div class="sm mute">After: "Pending entrustment decision removed." in PAED-012's place, with the focus; Stage and Defer return there.</div>
+<span class="tag" style="align-self:flex-start">PROPOSED · confirmation</span></div></div></div>
+
+<div><div class="cap">Defer lines still due… <i>— ConfirmDialog's form mode (flow 02); every line ticked, one reason</i></div>
+<div class="tile"><div class="dlg" role="dialog" aria-labelledby="s3"><h2 class="h2" id="s3">Defer 9 lines</h2>
+<fieldset style="border:0;padding:0;margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px"><legend class="sm" style="font-weight:700;padding:0;margin-bottom:6px">Lines still due</legend>
+<label class="ck"><input type="checkbox" checked><span>PAED-002</span></label><label class="ck"><input type="checkbox" checked><span>PAED-003</span></label><label class="ck"><input type="checkbox" checked><span>PAED-004</span></label><label class="ck"><input type="checkbox" checked><span>PAED-005</span></label><label class="ck"><input type="checkbox" checked><span>PAED-006</span></label><label class="ck"><input type="checkbox" checked><span>PAED-007</span></label><label class="ck"><input type="checkbox" checked><span>PAED-011</span></label><label class="ck"><input type="checkbox" checked><span>PAED-014</span></label><label class="ck"><input type="checkbox" checked><span>PAED-015</span></label></fieldset>
+<div class="f"><label for="s3r">Reason</label><textarea id="s3r" class="err foc fx"></textarea><span style="font-weight:700">Say why the committee is deferring the decision.</span><span class="mute">Kept on each agenda line. The trainee sees it on their reviews page once the review is ratified.</span></div>
+<div class="row" style="justify-content:flex-end"><button class="btn">Cancel</button><button class="btn p">Defer 9 lines</button></div>
+<span class="tag" style="align-self:flex-start">PROPOSED · bulk deferral · drawn refused (empty reason)</span></div></div></div>
+
+<div><div class="cap">Close review… <i>— the formative check-in; names that it records no decision</i></div>
+<div class="tile"><div class="dlg" role="dialog" aria-labelledby="s4"><h2 class="h2" id="s4">Close Sipho Ndlovu's formative check-in?</h2>
+<div class="sm">It records no decision and issues no STAR. Nothing on it can change once it is closed.</div>
+<div class="row" style="justify-content:flex-end"><button class="btn foc fx">Not yet</button><button class="btn p">Close review</button></div>
+<div class="sm mute">After: "Formative review closed." with the focus; the state reads Closed; nothing is offered.</div>
+<span class="tag" style="align-self:flex-start">PROPOSED · confirmation</span></div></div></div>
+
+<div><div class="cap">Ratify… with nothing staged <i>— Pieter du Plessis; says plainly that no STAR is issued</i></div>
+<div class="tile"><div class="dlg" role="dialog" aria-labelledby="s5"><h2 class="h2" id="s5">Ratify Pieter du Plessis's decision?</h2>
+<div class="sm">Satisfactory with Observations. Nothing is staged, so ratifying issues no STAR. The 12 deferred lines keep their reasons.</div>
+<div class="sm" style="font-weight:700">Ratifying cannot be undone: nothing on this review can change afterwards.</div>
+<div class="row" style="justify-content:flex-end"><button class="btn foc fx">Not yet</button><button class="btn p">Ratify</button></div>
+<div class="sm mute">No dialog mentions mail or what the registrar is told (T320).</div>
+<span class="tag" style="align-self:flex-start">PROPOSED · confirmation</span></div></div></div>
+
+<div><div class="cap">The decision form's refusals <i>— beside the control, focus on the summary, all typed kept</i></div>
+<div class="tile lt"><div class="card">
+<div class="al foc fx" role="alert"><b>Not recorded.</b> This review decides the trainee's progression, so its decision records a progression category. Choose one.</div>
+<div class="f"><label for="s6c">Category</label><select id="s6c" class="err"><option>Select a category…</option></select><span style="font-weight:700">Choose a progression category.</span></div>
+<div class="f"><label for="s6r">Rationale</label><textarea id="s6r">On track for completion; three EPAs entrusted, …</textarea></div>
+<div class="sm" style="font-weight:700">4 present: the chair and 3 others. The quorum is met.</div>
+<div class="row"><button class="btn p">Record decision…</button></div>
+<div class="sm mute">No quorum: Record stays disabled and says "Only the chair is ticked. A committee decision needs at least two panel members present: the chair and at least one other." The server's refusal, the same words, stays as the backstop. A missing rationale or issue date reads in Wombat's words (T324), never "The Rationale field is required.".</div>
+</div></div></div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2020,"height":1264}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shared states and variants</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1f1f1f;background:#fff;font-size:13px;line-height:1.35}
+a{color:#1f1f1f}a:hover{color:#000}
+.g4{display:grid;grid-template-columns:repeat(4,1280px);gap:80px}
+.cap{height:32px;font-size:15px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden}
+.cap i{font-style:normal;font-weight:400;color:#555}
+.vp{position:relative;width:1280px;height:800px;box-sizing:border-box;border:1px solid #8c8c8c;background:#efefef;overflow:hidden;display:flex}
+.side{width:250px;flex:none;background:#d4d4d4;display:flex;flex-direction:column}
+.brand{height:56px;display:flex;align-items:center;gap:8px;padding:0 16px;font-weight:700;font-size:17px}
+.brand img{width:32px;height:32px}
+.role{padding:8px 16px 12px;font-size:12px;border-bottom:1px solid #b5b5b5}
+.role b{display:block;font-size:13px}
+.nav{display:flex;flex-direction:column;padding:8px 0}
+.nav a{padding:8px 16px;text-decoration:none;color:#2a2a2a}
+.nav a.on{background:#b8b8b8;font-weight:700;box-shadow:inset 3px 0 0 #fff}
+.nav hr{border:0;border-top:1px solid #b5b5b5;margin:8px 16px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:56px;flex:none;background:#fff;border-bottom:1px solid #c8c8c8;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 24px}
+.art{flex:1;min-height:0;overflow:hidden;padding:16px 24px 0 32px;display:flex;flex-direction:column;gap:14px}
+.crumb{font-size:12px;color:#555}
+.h1{margin:0;font-size:26px;line-height:1.2;font-weight:700}
+.sub{color:#555;margin-top:2px}
+.card{background:#fff;border:1px solid #b3b3b3;border-radius:6px;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.h2{margin:0;font-size:17px;font-weight:700}
+.h3{margin:0;font-size:14px;font-weight:700}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sb{justify-content:space-between}
+.mute{color:#5c5c5c}
+.sm{font-size:12px}
+.ln{height:8px;background:#d3d3d3;border-radius:4px}
+.sk{background:#d9d9d9;border-radius:4px}
+.tl{display:inline-block;width:150px;height:8px;background:#d3d3d3;border-radius:4px;vertical-align:middle;margin-left:6px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1.5px solid #4d4d4d;border-radius:4px;background:#fff;font:inherit;color:#1f1f1f;white-space:nowrap;text-decoration:none}
+.btn.p{background:#3a3a3a;border-color:#3a3a3a;color:#fff}
+.bd{display:inline-block;font-size:11px;line-height:16px;padding:0 7px;border:1px solid #6f6f6f;border-radius:9px;background:#e6e6e6;white-space:nowrap}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;padding:0 5px;border:1.5px dashed #222;border-radius:3px;background:#fff;color:#222;line-height:15px;white-space:nowrap}
+.foc{outline:3px dashed #111;outline-offset:3px}
+.fx{position:relative}
+.fx::after{content:"focus";position:absolute;top:-20px;right:-4px;font-size:10px;font-weight:700;background:#111;color:#fff;padding:1px 5px;border-radius:3px;line-height:14px}
+.al{border:1px solid #8a8a8a;background:#e4e4e4;border-radius:4px;padding:8px 12px}
+.al.ok{background:#f3f3f3}
+.al.bad{border:2px solid #222;background:#fff}
+.t{width:100%;border-collapse:collapse;font-size:12px}
+.t th{text-align:left;font-weight:700;padding:5px 8px;border-bottom:1.5px solid #888}
+.t td{padding:5px 8px;border-bottom:1px solid #d0d0d0;vertical-align:top}
+.bar{background:#fff;border:1.5px solid #555;border-radius:6px;padding:6px 12px;display:flex;align-items:center;gap:14px;min-height:44px;box-sizing:border-box}
+.fold{position:absolute;left:250px;right:0;bottom:0;padding:6px 24px 8px 32px;background:#e6e6e6;border-top:2px dashed #7a7a7a;font-size:12px;color:#333}
+</style>
+</helmet>
+<div class="g4" style="width:5360px">
+
+<div>
+<div class="cap">8 · Loading <i>— the header from the first moment; a skeleton; no action until loaded (T329)</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art" aria-busy="true">
+<div><div class="crumb"><a href="#">Committee reviews</a> › Committee review</div><h1 class="h1">Committee review</h1><div class="sub">Loading the review…</div></div>
+<div class="sk" style="height:44px"></div>
+<div class="card"><div class="sk" style="height:16px;width:30%"></div><div class="sk" style="height:10px"></div><div class="sk" style="height:10px;width:80%"></div></div>
+<div class="card"><div class="sk" style="height:16px;width:20%"></div><div class="sk" style="height:10px"></div><div class="sk" style="height:10px"></div><div class="sk" style="height:10px;width:90%"></div><div class="sk" style="height:10px;width:70%"></div></div>
+</div></div>
+<div class="fold">The h1 and the tab read "Committee review · Wombat" until the review loads, then "Lerato Molefe · 2026 S2". Skeleton: Skeleton component, aria-busy.</div>
+</div>
+</div>
+
+<div>
+<div class="cap">8 · Load error <i>— a sentence and Try again, never an exception's text; focus on the alert</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div><div class="crumb"><a href="#">Committee reviews</a> › Committee review</div><h1 class="h1">Committee review</h1></div>
+<div class="al bad row foc fx" role="alert" style="justify-content:space-between"><span>The review could not be loaded. Nothing on it has changed.</span><button class="btn">Try again</button></div>
+</div></div>
+<div class="fold">StatePanel (error) with OnRetry, as Home's and My account's.</div>
+</div>
+</div>
+
+<div>
+<div class="cap">8 · Not found <i>— flow 01's not found in the shell, with this page's sentence</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div><div class="crumb"><a href="#">Committee reviews</a> › Not found</div><h1 class="h1">Page not found</h1></div>
+<div class="card"><div>The committee review could not be found among the reviews you can view.</div><a href="#" class="btn" style="align-self:flex-start">Back to Committee reviews</a></div>
+</div></div>
+</div>
+</div>
+
+<div>
+<div class="cap">7 · Formative check-in · in progress <i>— no agenda, no decision; Close review… the chair's only control</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div><div class="crumb"><a href="#">Committee reviews</a> › Sipho Ndlovu · 2026 S2</div><h1 class="h1">Sipho Ndlovu · 2026 S2</h1><div class="sub">Formative check-in · Paed Annual Review Panel · Training year 1</div></div>
+<section class="bar" aria-label="The sitting"><span class="bd">In progress</span><span>Formative (interim check-in, no binding decision)</span><span style="flex:1"></span><button class="btn p">Close review…</button></section>
+<div class="al ok">Review started.</div>
+<section class="card" aria-labelledby="k4s"><h2 class="h2" id="k4s">Evidence snapshot</h2><div class="sm mute">Frozen when the review started</div><div class="h3">PAED-001</div><div class="sm">Reflective exercise · discussed</div><div class="h3">PAED-002</div><div class="sm">Mini-CEX · Khumalo · Declined</div><div class="sm">Mini-CEX · Sarah Botha · rated 3a · Completed</div></section>
+</div></div>
+<div class="fold">Below: Entrustment against Annexure A · MSF by EPA · Rating trajectory (PAED-002 alone). Others read "Only the panel's chair, Thandi Zulu, can close this review." in the bar. B: the Evidence step alone, no step links. C: Overview and the EPA items, no Decision item.</div>
+</div>
+</div>
+
+<div>
+<div class="cap">7 · Formative check-in · closed <i>— the result takes the focus; Closed; nothing offered</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div><div class="crumb"><a href="#">Committee reviews</a> › Sipho Ndlovu · 2026 S2</div><h1 class="h1">Sipho Ndlovu · 2026 S2</h1><div class="sub">Formative check-in · Paed Annual Review Panel · Training year 1</div></div>
+<section class="bar" aria-label="The sitting"><span class="bd">Closed</span><span>Formative check-in: no decision recorded</span></section>
+<div class="al ok foc fx" role="status">Formative review closed.</div>
+<section class="card" aria-labelledby="k5s"><h2 class="h2" id="k5s">Evidence snapshot</h2><div class="ln"></div><div class="ln" style="width:80%"></div></section>
+</div></div>
+</div>
+</div>
+
+<div>
+<div class="cap">7 · Entrustment-only review · recorded <i>— no category; the decision is the staged decisions</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div><div class="crumb"><a href="#">Committee reviews</a> › [registrar] · 2026 S2</div><h1 class="h1">[Registrar] · 2026 S2</h1><div class="sub">Entrustment-only review · Paed Annual Review Panel</div></div>
+<section class="bar" aria-label="The sitting"><span class="bd">Decided</span><span>Entrustment decisions only · 2 to issue</span><span style="flex:1"></span><button class="btn p">Ratify…</button></section>
+<section class="card" aria-labelledby="k6d"><h2 class="h2" id="k6d">Decision</h2><div class="h3">Entrustment decisions only</div><div class="sm">This review decides entrustment only. Its decision is the entrustment decisions staged below, and it records no progression category: …</div><div class="sm">Present: Thandi Zulu (chair), …</div></section>
+<div class="sm mute">Before recording, the form has Rationale, Conditions and Present, and no Category.</div>
+</div></div>
+</div>
+</div>
+
+<div>
+<div class="cap">7 · Pre-graduation · Graduate ratified <i>— every EPA at its exit level; the exit rule is for information only</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div><div class="crumb"><a href="#">Committee reviews</a> › Lerato Molefe · [period]</div><h1 class="h1">Lerato Molefe · [period]</h1><div class="sub">Pre-graduation review · Paed Annual Review Panel · Training year 4</div></div>
+<section class="bar" aria-label="The sitting"><span class="bd">Ratified</span><span>Graduate (programme complete) · 13 STARs issued</span></section>
+<div class="al ok foc fx" role="status">Decision ratified.</div>
+<section class="card" aria-labelledby="k7s"><h2 class="h2" id="k7s">Entrustment against Annexure A</h2><div class="sm">15 at or above · 0 below · 0 with no decision, of 15 EPAs</div><div class="sm"><b>15 of 15 EPAs at their exit level by STAR decision (level 5: 9 of 9 · level 4: 6 of 6). Every EPA is at its exit level.</b></div><div class="sm mute">For information only. Recording a Graduate decision or completing the programme does not check the exit rule.</div></section>
+<section class="card" aria-labelledby="k7d"><h2 class="h2" id="k7d">Decision</h2><div class="h3">Graduate (programme complete)</div><div class="sm">Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)</div><div class="sm">PAED-010's STAR at 4 from the annual review is superseded by today's at 5.</div></section>
+</div></div>
+<div class="fold">The Ratify dialog here names 13 STARs as a list grouped by level (5: seven EPAs · 4: six EPAs); it scrolls inside the dialog at 390.</div>
+</div>
+</div>
+
+<div>
+<div class="cap">2 · The chair can no longer act, with the other notes <i>— where each note sits; none dismissible; controls withdrawn, not disabled</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="role">Acting as<b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nav" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div><div class="crumb"><a href="#">Committee reviews</a> › Lerato Molefe · 2026 S2</div><h1 class="h1">Lerato Molefe · 2026 S2</h1><div class="sub">Annual progression review · Paed Annual Review Panel · Training year 4</div></div>
+<section class="bar" aria-label="The sitting" style="flex-wrap:wrap"><span class="bd">In progress</span><span class="sm" style="flex:1">The panel's chair, Thandi Zulu, cannot take the chair's actions now: … A panel administrator must seat a chair who can.</span></section>
+<section class="card" aria-labelledby="k8n"><h2 class="h2" id="k8n">Before the committee decides</h2>
+<div class="sm"><b>Sitting order.</b> PAED-004 and PAED-005 are decided by {panel} and not yet decided for 2026 S2. A progression decision recorded now is taken without them.</div>
+<div class="sm"><b>A STAR revoked.</b> PAED-0xx is no longer decided in its window: the STAR that decided it has been revoked. It is not on this agenda; stage a decision on it to decide it at this sitting.</div>
+<div class="sm"><b>The chair rated all of this evidence.</b> (D46: a warning; it refuses nothing.)</div>
+<div class="sm"><b>Sampling figures are incomplete.</b> (danger tint)</div>
+<div class="sm mute">Sampling concentration warnings follow, per EPA; an EPA no longer in force reads "PAED-0xx (no longer in use)" (T273).</div></section>
+<section class="card" aria-labelledby="k8g"><h2 class="h2" id="k8g">Agenda</h2><table class="t"><thead><tr><th>EPA</th><th>Window</th><th>State</th><th>Evidence</th></tr></thead><tbody><tr><td><b>PAED-001</b><span class="tl"></span></td><td>2026</td><td><span class="bd">Staged</span> A decision is staged below.</td><td>3 items</td></tr><tr><td><b>PAED-004</b><span class="tl"></span></td><td>2026</td><td><span class="bd">Decided elsewhere</span> Another sitting has decided it in this window, so it need not be decided here. A decision staged on it decides it again.</td><td>1 item</td></tr></tbody></table></section>
+</div></div>
+<div class="fold">The trainee at another institution: the same bar sentence slot reads "This review's trainee does not train at the panel's institution, so the panel cannot act on it." Both are re-read after every action (T260).</div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":5360,"height":1760}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
