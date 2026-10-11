@@ -6,7 +6,7 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 
 The operator said "upgrade the execution workspace", "move the done tasks" and "proceed". **The repo is `C:\dev\Wombat`,
 on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when the operator asks.** The harness is
-`C:\devcl_executionin\harness.py` (the hooks in `.claude/settings.local.json`).
+`C:\dev\rcl_execution\bin\harness.py` (the hooks in `.claude/settings.local.json`).
 
 ### Done
 
