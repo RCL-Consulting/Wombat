@@ -1,188 +1,274 @@
 # F07 The committee sits: the chair stages STARs, defers, records with a quorum, and ratifies
 
-The panel's chair reads a registrar's evidence and standing, stages STARs (Statements of Awarded Responsibility),
-defers what the panel will not decide, records the decision with a quorum, and ratifies. Members follow without the
-chair's controls. STARs are "immutable once issued" (`execution/knowledge/DOMAIN.md:78`); this is the highest-stakes page
-in the product.
+**Who and why:** a registrar's review is the one moment the programme's evidence becomes a decision. The panel's chair
+reads the registrar's frozen evidence and standing, stages STARs (Statements of Awarded Responsibility), defers what the
+panel will not decide, records the committee's decision with a quorum, and ratifies, which issues the STARs. Members
+follow on their own screens without the chair's controls; an administrator reads and cannot ratify. A STAR is
+"immutable once issued" (`execution/knowledge/DOMAIN.md:78`): this is the highest-stakes page in the product, and today
+it is one page 9,192 px tall before Start and 14,834 px with thirteen decisions staged, with every result and refusal
+shown at its top.
 
-Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screenshots are under `design/baseline/`
-(gitignored). Claims about Claude Design use BRIEF § 2.0's source keys.
+Restated 2026-10-11 for T361 (the brief of 2026-09-26, T332, predates flows 01–06). Paths to screenshots are under
+`design/baseline/` (gitignored). Code is cited at `bc9a6c4b`; `W/` is `src/Wombat.Web/`, `A/` is
+`src/Wombat.Application/`, `D/` is `src/Wombat.Domain/`.
 
 | | |
 |---|---|
-| People | CommitteeMember: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha. InstitutionalAdmin: Prof Nolwazi Mbatha, who reads a decided review (Step 4.26). The registrars under review: Dr Molefe, Dr Dlamini, Dr du Plessis, Dr Mahlangu, Dr Ndlovu (`README.md` § Cast) |
-| Pages | `/committee/reviews/{ReviewId:int}` (`CommitteeDecisions/ReviewDetail.razor`, 2,093 lines), `/activities/{ActivityId:int}` (read-only, from the snapshot), `/committee/reviews` (the list, to open one), `/committee/panels` (who sits) (`coverage.md` § Pages) |
-| Steps | 26: 4.14–4.32, 4.50, 5.3–5.6, A.7.6, A.7.13. Forty steps touch the review page in all (`coverage.md:80`); the others are F08's (scheduling) and F09's (appeals). |
-| Frequency and stakes | Each semester or academic year for each registrar, by the EPA's decision cadence (`act-1-setup.md:382-396`). The highest stakes in the product: a STAR is a medico-legal record (`DOMAIN.md:78`). |
-| Mode | **Wireframe first, in three parts:** before the sitting; staging; record and ratify. Then fidelity. This is the densest page: 38 state captures (`design/baseline/states/review-detail--*`, from `states.md` § Committee). |
-| Held | **Nothing held.** No group-1 task changes this flow's states. T307 (group 1) changed the page's Appeals card; it landed in d03732d and those states (`review-detail--appeal-*`) were re-captured on 2026-09-26. They are F09's: do not use them here (BRIEF § 10). |
+| Decision | **Restructure, with UX in scope** (W-008; BRIEF.md § 4), inside flow 01's shell. Marked **W** in BRIEF.md § 8: the review page is expected to change a lot, so round 1 asks for 2–3 structural variations. |
+| Mode | **Structure first** (BRIEF.md § 2.3, as § 11 corrected it). Round 1: 2–3 structural variations as wireframes of the review page through a whole sitting (before Start, staging, recording, ratifying) and of what each adds or drops, each with its reasoning and its step counts. Round 2, after the pick: fidelity with every state. Then a review round from the boards' text, the operator's decisions, and one correction round. The old brief's "three parts, a wireframe each" is replaced by this. |
+| Viewports | Desktop 1280×800 and phone 390×844 |
+| Variations | 2–3 in round 1; the chosen one in round 2 |
+| People | CommitteeMember: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha (each also an Assessor), Dr John van Rensburg (external, CommitteeMember only). InstitutionalAdmin: Prof Nolwazi Mbatha, who reads a decided review (Step 4.26). The registrars reviewed: Dr Lerato Molefe (training year 4), Dr Anele Dlamini (3), Dr Pieter du Plessis (2), Dr Nomsa Mahlangu and Dr Sipho Ndlovu (1) (`README.md` § Cast) |
+| Runbook steps | 26, pasted verbatim in § 8: 4.14–4.32 and 4.50 (Act 4), 5.3–5.6 (Act 5), A.7.6 and A.7.13 (appendix). Forty steps touch the review page in all (`coverage.md`); the others are flow 08's (scheduling, panels) and flow 09's (appeals, revocation). |
+| Pages (`coverage.md` templates) | `/committee/reviews/{ReviewId:int}` (`W/Components/Pages/CommitteeDecisions/ReviewDetail.razor`, 2,162 lines), `/activities/{ActivityId:int}` (read-only, opened from the snapshot; flow 03's page), `/committee/reviews` (`ReviewsSchedule.razor`, the list, to open one; flow 08's), `/committee/panels` (`PanelsList.razor`, who sits; flow 08's). The registrar page `/programme/trainees/{id}` (flow 06's, `ProgrammeTraineeDetail.razor:640–665`) and Decisions due (flow 08's, `DecisionsDue.razor:152`, `:160`) also link a review. Checked at `bc9a6c4b`. |
+| Menus (`NavItems.cs`) | Committee reviews (`:100`) is in every staff menu that reaches a review: CommitteeMember (`:169`: Home, Programme trainees, Committee reviews, Decision panels); SpecialityAdmin and SubSpecialityAdmin (`:166`, `:168`); Coordinator (`:175`); InstitutionalAdmin and Administrator under "Reviews" (`:154`, `:148`). The review page's owning list is Committee reviews for all six (`W/Navigation/NavOwners.cs:105–114`; DESIGN.md owner table `:599`), so its trail reads Home › Committee reviews › Committee review. DESIGN.md's nav table (`:529–535`) matches. |
+| Components drawn at runtime | `PageHeader`, `ActionResult`, `Alert` (the sampling card is its only `Dismissible` caller), `FormField`, `FormActions`, `EditForm` with `InputSelect`/`InputDate`/`InputTextArea`, `EncounterDateLabel`; flow 05's `EntrustmentStandingPanel` (`Shared/`, 332 lines), `MsfCoveragePanel` and `TrajectoryChart` (two fixed drawings, 900 and 322 px, its table always visible). The agenda, the staging form, the staged list and the snapshot are inline in `ReviewDetail.razor`, helped by `EvidenceSnapshotGroups.cs` and `CommitteeAgendaText.cs`. Not used: `ConfirmDialog`, `StatePanel`, `Skeleton`, `DataTable`. Queries: `GetCommitteeReviewByIdQuery` (with the agenda), `ListPendingEntrustmentDecisionsForReviewQuery`, `GetSamplingConcentrationWarningsQuery`, `GetEntrustmentStandingForTraineeQuery`, `GetMsfCoverageForTraineeQuery`, `GetEpaTrajectoryForTraineeQuery`; commands `Start…`, `RecordCommitteeDecision…`, `RatifyCommitteeDecision…`, `CloseFormativeReview…`, `DeferAgendaLine…`, `ReinstateAgendaLine…`, `StagePendingEntrustmentDecision…`, `RemovePendingEntrustmentDecision…` (`A/Features/CommitteeDecisions/`, `A/Features/EntrustmentDecisions/`) |
+| Held | None. Every step capture § 4 names was re-taken by the T358 replay on 2026-10-05, on the shell as built. Most `states/review-detail--*` captures are from 2026-09-26 and show the old frame: brief from their page body only (§ 3). |
+| Depends on | Flow 01, built (`b347e11c`): the shell, the trail, `ActionResult`, `ConfirmDialog` (designed, unused on this page), access denied and not found. Flow 03, built (`725237ee`): the activity page opened from the snapshot. Flow 04, built (`06aa51d7`): rows named per row, counts as words. Flow 05, built (`b020c942`): the standing panel, the trajectory charts and their table, ISO dates (D1), an EPA's name as its own link, `PageFocus` for in-page links. Flow 06, built (`85d5a508`): the committee Home, Programme trainees and the staff registrar page that links her reviews. The design system is **version 17**, re-synced to flow 06 as built |
+
+**How to run this thread** (BRIEF.md § 2.3 step 4; § 11):
+1. **Stage the upload set:** `pwsh design/tools/stage_upload.ps1 -Flow 07`. Open each screenshot. Leave out anything in
+   `design/upload/crop-first/`, or crop its link first (none of this flow's captures shows one; checked 2026-10-11). The script keeps back
+   `act-4/4.27-1-zulu-ratified-stars-issued.png` for the word "issued" in its name: it shows no link, so move it back.
+   Two captures are 18,013 px tall, past Chromium's 16,384 px, and repeat the header near their foot (§ 4).
+2. **Start a new canvas** from the main app's Design page, on the Wombat design system v17
+   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Flow 07's canvas: (the operator
+   gives its link).
+3. **Copy the mark into the canvas before round 1** (`Artifact publish`, `asset: true`, `from_url` = the design
+   system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Put the returned `/_blob/` URL in § 1 and in
+   `design/flows/07-review-sitting/round-1-ask.txt`, where they read `/_blob/MARK`.
+4. **Send § 1 and § 8 as ONE message** (`design/flows/07-review-sitting/round-1-ask.txt`), with the key screenshots in
+   § 4. The canvas draws round 1 from the first message and does not wait for a second (§ 11, flow 02). Read
+   `project/canvas.json`'s version before and after: a send can draw nothing. Read round 1's notes for a line saying it
+   never received the attachments (§ 11, flow 06); re-attach and name the folder before round 2 if so.
+5. **Pick one structure,** say why in a sentence, and answer § 6's questions one sentence each; questions 10–12 are the
+   operator's. A question whose answer rests on an open task names it, and the task lands before the build (§ 11, flow
+   05). Ask for round 2.
+6. **Review round 2 from the boards' text** (`Artifact read`), as `design/flows/06-programme-oversight/round-2-review.md`
+   did: one reviewer on the code, one on the cast, one on the design system; the reviewer on the code checks the ask
+   too (§ 11, flow 03). Put the decisions to the operator, then ask for one correction round.
+7. **Record every round** in `design/flows/07-review-sitting/` before moving on.
 
 ---
 
-## 1. How to run this thread
+## 1. The ask (paste this first, with § 8 in the same message)
 
-1. Run F01 first (BRIEF § 2.3, step 2). F05 designs the trajectory chart; reuse its answer here rather than designing a
-   second chart.
-2. Start a new thread. Attach the key screenshots in § 5.1, then paste § 2.1 as one message.
-3. Pick a wireframe for each of the three parts. Decide in the chat, one sentence each:
-   - one page or steps;
-   - what stays on screen while staging;
-   - how Ratify is confirmed.
-   Then paste § 2.2 for fidelity.
-4. Attach the state captures in § 5.2 as the chat asks for them.
-5. Ask for an accessibility review [start], with BRIEF § 6 A1 as the check. This page is walked by screen reader in Step
-   A.7.13.
-6. Export the chosen artboards to `design/flows/07-review-sitting/` before moving on. There is no version history
-   [start].
-
-## 2. The ask
-
-### 2.1 Paste this first, with the key screenshots attached
-
-```
+```text
 FLOW 07 — The committee sits: stage STARs, defer, record with a quorum, ratify
 
-GOAL: The panel's chair runs one registrar's review.
-- She reads the frozen evidence, the registrar's standing against the College's levels, MSF coverage and rating
-  trajectories.
-- She stages STARs: an EPA, the level the registrar is entrusted at, the issue date, an optional expiry, a rationale,
-  and the evidence it rests on.
-- She defers each other EPA that must be decided at this sitting, with a reason.
-- She records the committee's decision: a progression category, a rationale, conditions, and who was present. At least
-  two members must be present, the chair and one other.
-- She ratifies. That issues every staged STAR at once, and nothing on the review can change afterwards.
-Other members follow the same page without the chair's controls. An administrator reads it and cannot ratify.
+This is flow 07 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 01 (the shell), 02 (sign-in and
+  account), 03 (a registrar files an activity), 04 (an assessor's inbox), 05 (a registrar reads where she stands) and
+  06 (watching the programme) are designed and built; this page sits inside the shell. Structure first, then fidelity:
+  round 1 is 2–3 structural variations as wireframes of one registrar's review through a whole sitting, and I pick one
+  before round 2. The runbook steps follow below in this same message. The brand mark is at /_blob/MARK: use it, never
+  a drawn disc.
 
-What is wrong today:
-- It is one very long page with no structure for the sitting: 7,100 px tall before Start, 9,100 px with three staged
-  decisions and 12,700 px with thirteen, at 1280 px. At 390 px it is 12,900 px.
-- The Decision form (Record decision) sits at the top, beside the Review card. The Agenda (Stage and Defer per line)
-  is below the standing and MSF tables. The staging form is below the Agenda, in a narrow column beside the evidence.
-- Every action's result appears at the very top of the page and takes the focus there, away from where the chair is
-  working.
-- Ratify, Remove and Close review ask for no confirmation.
-- While the review loads, the page shows its header and blank space.
-- At 390 px the trajectory charts' labels are about 5 px tall.
-- The heading reads "Committee review" and never names the registrar.
+GOAL: The panel's chair runs one registrar's review, start to finish, in one sitting, with the panel watching:
+  - she reads the evidence frozen at Start, the registrar's standing against the College's levels (Annexure A), MSF
+    coverage and each EPA's rating trajectory, and opens any piece of evidence and comes back to where she was;
+  - she stages STARs: an EPA, the level the registrar is entrusted at, the issue date, an optional expiry, a rationale,
+    and the snapshot items it rests on;
+  - she defers each other EPA due at this sitting, with a reason, and may reinstate it;
+  - she records the committee's decision: a progression category, a rationale, conditions, and who is present (the
+    chair and at least one other member);
+  - she ratifies, which issues every staged STAR at once; nothing on the review can change afterwards.
+  Members follow the same review on their own screens with none of the chair's controls; an administrator reads it and
+  cannot ratify. A formative check-in is read and closed, with no decision.
+  What is wrong today (the attached screenshots show each; all on the shell as built, 2026-10-05):
+  - It is one long page with no shape for a sitting: 9,192 px at 1280 before Start, about 11,000 in progress, 14,834
+    with thirteen decisions staged; 18,013 at 390. Its cards, in order: a sampling-warnings alert; Review (with Start,
+    Close review or Ratify) beside Decision (the record form); Entrustment against Annexure A; Multi-source feedback by
+    EPA; Agenda (Stage and Defer per line); Pending entrustment decisions (the staging form, then the staged list)
+    beside the Evidence snapshot; Rating trajectory by EPA (a chart per EPA); Appeals.
+  - The record form sits at the top, beside the Review card, about 3,000 px above the agenda where the lines it waits
+    on are staged and deferred. Choosing Stage on an agenda line sends the focus to the staging form's EPA select, below
+    the agenda; the evidence to tick is in the same form, the snapshot to read is beside it.
+  - Every action's result, and every refusal, shows at the very top of the page. A success takes the focus there, about
+    6,000 px from the staging form; a refusal leaves the focus where it was, out of sight of its message.
+  - Nothing asks for confirmation: not Start (which freezes the evidence), Remove, Record (which fixes what is staged),
+    Ratify (which issues STARs), nor Close review.
+  - Whether a quorum is present is known only from the refusal after pressing Record.
+  - While the review loads, the header shows over a blank body; a review that cannot be found shows a red alert under
+    "Committee review", with no body.
+  - The h1 reads "Committee review" and the subtitle "Evidence bundle, decision record, ratification, and appeals in one
+    place."; neither names the registrar or the period. Headings go h1 then h3, with no h2. Five of the nine cards
+    (Review, Decision, Entrustment against Annexure A, Pending, Appeals) are not named regions.
+  - The sampling warnings' dismiss button is a bare "×", unnamed, and the card is the only dismissible alert in Wombat.
+  - A piece of evidence opened from the snapshot (an activity page, read-only) has no way back but the browser's Back,
+    and the review reloads from its top.
+  - A formative check-in's Type still reads "Annual progression review" (T309).
+  - "Issued on" defaults to the UTC date, a day behind between 22:00 and 24:00 UTC, South African midnight to 02:00
+    (T325).
 
 AUDIENCE:
-- CommitteeMember: Dr Thandi Zulu (chair, senior paediatric consultant); members Dr David Naidoo and Dr Sarah Botha;
-  Dr John van Rensburg (external examiner).
-- InstitutionalAdmin: Prof Nolwazi Mbatha (head of department), who reads only.
-- The registrars reviewed: Dr Lerato Molefe (training year 4), Dr Anele Dlamini (3), Dr Pieter du Plessis (2), Dr
-  Nomsa Mahlangu and Dr Sipho Ndlovu (1).
-- A sitting is a meeting: the chair drives the page, and members open the same review on their own screens while it
-  is in progress. Desktop 1280×800 and phone 390×844.
+  - CommitteeMember: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha: senior paediatric consultants who also
+    assess, so their sessions open as Committee member with "Switch to Assessor". Dr John van Rensburg: external
+    examiner from another university, Committee member only. A sitting is a meeting: the chair drives the page, often
+    on a laptop to a projector; members open the same review on their own screens while it is in progress.
+  - InstitutionalAdmin: Prof Nolwazi Mbatha (head of department), who reads only.
+  - Kgosi Kgari Teaching Hospital (KGK), Paediatrics, on the College's (CPSA) curriculum 11.1, fifteen EPAs (PAED-001
+    to PAED-015), each rated on the six rungs of the CPSA Paediatric Entrustment Scale v11.1 (1, 2, 3a, 3b, 4, 5). The
+    registrars reviewed: Dr Lerato Molefe (training year 4; an annual review in Act 4, a pre-graduation review in Act
+    5), Dr Anele Dlamini (3), Dr Pieter du Plessis (2), Dr Nomsa Mahlangu and Dr Sipho Ndlovu (1; also a formative
+    check-in). Desktop 1280×800 and phone 390×844.
 
-THE PAGE'S PARTS TODAY, top to bottom:
-- Result alert: "Pending entrustment decision staged."
-- "Sampling concentration warnings", a dismissible warning: EPAs whose evidence comes from fewer than three distinct
-  assessors, with "1 rating · 1 assessor · 1 source", and a note on records not counted (MSF has no named assessor).
-- "Review": Trainee, Panel, Sits for (2026 S2), Evidence window (2026-01-01 to 2026-12-31), Type (Annual progression
-  review, Pre-graduation review, Entrustment-only review), Mode (Summative or Formative), State.
-- "Decision", beside Review: Category, Rationale, Conditions, Present (a checkbox per panel member, the chair's ticked
-  and locked), and Record decision with its reason when disabled. Once recorded, it shows the category as a heading,
-  the rationale, "Conditions: …" and "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg
-  (external)".
-- "Entrustment against Annexure A", full width: the training year; "2 at or above · 1 below · 12 with no decision, of
-  15 EPAs"; the exit rule "2 of 15 EPAs at their exit level by STAR decision (level 5: 2 of 9 · level 4: 0 of 6)", "For
-  information only"; then a table per EPA (year target, STAR decision, against target, exit level, latest rating).
-- "Multi-source feedback by EPA", full width: an EPA-by-semester table, each cell "Covered" or "None released".
-- "Agenda", full width: its caption counts "15 EPAs for 2026 S2, 12 still to stage or defer". Its table has EPA,
-  Window, State, Evidence (n items) and, for the chair only, Action.
-  - A state is Due ("Must be decided at this sitting, or deferred with a reason."), As opportunity allows (optional),
-    Staged, Deferred (with its reason and Reinstate), Decided ("STAR #n."), Not decided, or Decided elsewhere.
-  - Warnings may name an EPA "no longer decided in its window" (its STAR was revoked mid-review), or EPAs decided by
-    another panel.
-- "Pending entrustment decisions": the staging form. EPA; Authorised level (the EPA's ladder: 1, 2, 3a, 3b, 4, 5 under
-  "CPSA Paediatric Entrustment Scale v11.1"); Issued on (today by default); Expires on (optional); Rationale; and "Evidence
-  it rests on", ticks over the snapshot's lines with that EPA's own lines first. Below the form is the list of staged
-  decisions, each "PAED-010 … 4 · issued 2026-09-26 · expires 2026-10-16" with "Rests on 2 items of the snapshot: …"
-  and a Remove.
-- "Evidence snapshot", beside the staging form: frozen at Start, grouped by EPA then by instrument. Each line links to
-  its activity and shows its rating, encounter date and state. A feedback campaign sits under "Not about a single EPA".
-- "Rating trajectory by EPA": a small SVG chart per EPA on the six rungs.
-- "Appeals" (designed in Flow 09).
+THE RULES THE PAGE CARRIES TODAY (real words; they are the data to draw with, and the rules hold whatever the shape):
+  - Who is offered what. Start: a panel member who may sit now, a Coordinator of the panel's institution, or an
+    Administrator. Everything else is the chair's alone, never an administrator's: the staging form, Remove, the
+    agenda's Stage, Defer and Reinstate, the decision form, Record decision, Ratify and Close review. Others read
+    "Only the panel's chair, Thandi Zulu, can stage entrustment decisions, defer agenda lines and record the committee's
+    decision." (in progress), "Only the panel's chair, Thandi Zulu, can ratify the committee's decision." (decided; it
+    can also name removing a decision that no longer fits, and deferring a line that blocks ratifying), and "Only the
+    panel's chair, Thandi Zulu, can close this review." (a formative check-in). Controls a reader may not use are not
+    drawn, never drawn disabled.
+  - The agenda: one line per EPA due in this window ("15 EPAs for 2026 S2, 12 still to stage or defer"), each with its
+    window (2026 S2 for six semester EPAs, 2026 for nine annual ones), a state badge and its detail, the evidence count,
+    and the chair's action. States: Due ("Must be decided at this sitting, or deferred with a reason."), Due by year
+    end, Partial period, As opportunity allows, Staged ("A decision is staged below."), Deferred ("Reason: …", with
+    Reinstate), Decided ("STAR #n."), Not decided ("The review was ratified without deciding it."), Decided elsewhere
+    ("Another sitting has decided it in this window, so it need not be decided here. A decision staged on it decides it
+    again."). An EPA whose STAR was revoked mid-review: "PAED-0xx is no longer decided in its window: the STAR that
+    decided it has been revoked. It is not on this agenda; stage a decision on it to decide it at this sitting."
+  - Staging: EPA (with help "The EPAs on the trainee's curriculum."); Authorised level, the EPA's rungs with "Rungs of
+    CPSA Paediatric Entrustment Scale v11.1, the ladder this EPA is assessed on."; Issued on (today); Expires on
+    (optional); Rationale; "Evidence it rests on", ticks over the snapshot's lines with that EPA's own lines first.
+    Stage pending decision stays disabled with "Name at least one item of the evidence snapshot." until one is ticked.
+    Hints that refuse nothing: "Only one item is named. The College's rule is that an entrustment decision is never
+    taken from a single form."; "None of the named items is about PAED-002."; "None of the named items was finished
+    when the review started (each shows the state it was in), so the decision would rest on no completed assessment."
+    Each staged decision lists its EPA, level, "issued 2026-10-05 · expires 2026-10-25" and "Rests on 2 items of the
+    snapshot: …", with Remove ("Remove the staged decision on PAED-012").
+  - Deferring: "Defer PAED-002", a reason box with "Kept on the agenda line. The trainee sees it on their reviews page
+    once the review is ratified."
+  - Recording: Category, opening on "Select a category…": Satisfactory Progress; Satisfactory with Observations;
+    Inadequate Progress — Additional Training; Inadequate Progress — Repeat; Release from Training; Outcome Deferred;
+    Graduate (programme complete). Rationale; Conditions; Present, one tick per member who may sit, the chair's ticked
+    and locked, with "Tick every panel member at this sitting. A committee decision needs at least two panel members
+    present: the chair and at least one other." Record decision is disabled until every Due line is staged or deferred:
+    "Record decision: PAED-001, PAED-002, … and PAED-015 must be decided at this sitting. Stage a decision on each, or
+    defer it with a reason." Enabled, it reads beside "Recording fixes the entrustment decisions staged below and the
+    agenda's deferrals: they cannot be changed afterwards." A recorded decision shows its category as a heading, the
+    rationale, "Conditions: …" and "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg
+    (external)"; the staged list then reads "Fixed when the committee's decision was recorded: ratifying issues exactly
+    these. Only a decision that no longer fits the trainee's curriculum can still be removed."
+  - Ratifying: offered to the chair once Decided; blocked, disabled with "Ratify: …", while the quorum recorded falls
+    short or a line blocks it. After it: "Nothing is pending: ratifying the review issued what was staged as STARs, and
+    the agenda names each one." or "Nothing was staged when the review was ratified, so ratifying it issued no STAR."
+    It sends no mail (T320): promise nothing to the registrar.
+  - Refusals, each with its exact words; a refusal keeps everything typed: "An expiry date must be after the issue
+    date."; "An entrustment decision on PAED-001 is already staged at this review. Remove it to stage another."; "Say
+    why the committee is deferring the decision."; "A committee decision needs at least two panel members present: the
+    chair and at least one other."; "This review decides the trainee's progression, so its decision records a
+    progression category. Choose one."
+  - Results: "Review started.", "Pending entrustment decision staged.", "Pending entrustment decision removed.",
+    "PAED-002 deferred.", "PAED-002 reinstated: it is due at this sitting again.", "Decision recorded.", "Decision
+    ratified.", "Formative review closed."
+  - Notes the page may carry: "Sampling concentration warnings" (per EPA "1 rating · 1 assessor · 1 source" and
+    "Fewer than three distinct assessors across this EPA's evidence.", with "Not counted: 2 records in the review window
+    with no rating by a named assessor …"); "Sampling figures are incomplete" (danger); "The chair rated all of this
+    evidence" (D46, refuses nothing); the sitting-order warning ("PAED-004 and PAED-005 are decided by {panel} and not
+    yet decided for 2026 S2. A progression decision recorded now is taken without them."); the chair cannot act ("The
+    panel's chair, Thandi Zulu, cannot take the chair's actions now: … A panel administrator must seat a chair who
+    can."); "This review's trainee does not train at the panel's institution, so the panel cannot act on it."; an MSF
+    campaign released after Start ("Starting now leaves out N feedback campaigns").
+  - Variants: a pre-graduation review, whose standing adds the exit rule ("2 of 15 EPAs at their exit level by STAR
+    decision (level 5: 2 of 9 · level 4: 0 of 6)", "Not yet: …", "For information only. Recording a Graduate decision
+    or completing the programme does not check the exit rule."); an entrustment-only review (no category; "This review
+    decides entrustment only. Its decision is the entrustment decisions staged below, and it records no progression
+    category: …"; recorded as "Entrustment decisions only"); a formative check-in (Mode "Formative (interim check-in, no
+    binding decision)"; Review, Evidence snapshot, standing, MSF and trajectory only; Close review; state Closed).
+  - Data volumes: none (a snapshot of 0 items, "No evidence has been frozen yet …"; "No rating by a named assessor to
+    chart in this review's window."); typical (Dr Molefe in Act 4: 8 snapshot lines, 3 staged, 9 deferred, 3 optional);
+    heavy (her pre-graduation review: thirteen decisions staged on 15 agenda lines, a snapshot of three years).
 
-RULES THE DESIGN MUST SHOW:
-- Only the chair is offered: the staging form, Remove, the agenda's Stage, Defer and Reinstate, the decision form,
-  Record decision, Ratify and Close review. Everyone else reads four agenda columns and a sentence: "Only the panel's
-  chair, Thandi Zulu, can stage entrustment decisions, defer agenda lines and record the committee's decision." No
-  administrator can bypass this.
-- Record decision is disabled, with its reason naming the lines, until every Due line is staged or deferred. Recording
-  "fixes the entrustment decisions staged below and the agenda's deferrals: they cannot be changed afterwards."
-- A progression review must record a category: Satisfactory Progress, Satisfactory with Observations, Inadequate
-  Progress — Additional Training, Inadequate Progress — Repeat, Release from Training, Outcome Deferred, or Graduate
-  (programme complete). An entrustment-only review records none.
-- Refusals, each with its exact words:
-  - "An expiry date must be after the issue date."
-  - "An entrustment decision on PAED-001 is already staged at this review. Remove it to stage another."
-  - "Say why the committee is deferring the decision."
-  - "A committee decision needs at least two panel members present: the chair and at least one other."
-  - "This review decides the trainee's progression, so its decision records a progression category. Choose one."
-  A refusal keeps everything typed.
-- Hints that refuse nothing: "Only one item is named. The College's rule is that an entrustment decision is never
-  taken from a single form." and "None of the named items is about PAED-002."
-- A formative check-in has no Decision, Agenda, Pending or Appeals card. The chair closes it ("Close review").
+WHAT FLOW 07 MAY CHANGE OF WHAT EARLIER FLOWS BUILT, AND WHAT IT MAY NOT:
+  May not: the shell (flow 01: the trail, the acting role, access denied, not found, the reconnect dialog);
+    flow 05's EntrustmentStandingPanel and TrajectoryChart (their content, words, two drawings and table: this flow
+    places them, and may say which EPA's chart shows where); flow 06's Homes and registrar page; flow 08's Committee
+    reviews list, scheduling and Decision panels; flow 09's Appeals card body; the rules above (who may act, the
+    quorum, what each refusal means, what Record fixes and Ratify issues).
+  May, for this page: its whole structure (one page, steps or tabs within the route, a workspace per EPA), the order
+    and grouping of its parts, its h1 and subtitle, card titles, where each result and refusal shows and where focus
+    goes, confirmations, the staging, deferral and decision forms' layout, the agenda's and snapshot's presentation, a
+    sticky or fixed region for the sitting's state, and a way back from a piece of evidence (which touches flow 03's
+    activity page: mark it PROPOSED). Wording may change; the runbook's Expects change with it.
+  Say which of these each variation changes, and why.
 
-DATA VOLUMES: none (a snapshot of 0 items; "No rating by a named assessor to chart in this review's window"); typical (8
-snapshot lines, 3 staged, 9 deferred, 3 optional); heavy (a pre-graduation review with 13 staged decisions, and 15
-agenda lines).
+SCREENS, in order (today's single page; a variation may split it into steps, tabs or panes within its route):
+  1. Before the sitting (Scheduled): Start offered; the standing, MSF, a 15-line agenda with no actions, the snapshot
+     not yet frozen, the trajectories, the sampling warnings.
+  2. In progress, the chair: the frozen snapshot; the agenda with Stage and Defer; the staging form and staged list;
+     deferral; the decision form with Present; Record disabled with its reason, then enabled.
+  3. Opening a piece of evidence from the snapshot (an activity, read-only; flow 03's page) and coming back to the same
+     place.
+  4. In progress, a member: everything the chair sees, none of her controls, and the sentence saying so.
+  5. Decided: the chair (Ratify, with its confirmation) and an administrator (no Ratify).
+  6. Ratified: STARs issued, the agenda's final states, the standing updated; and ratified with no STAR.
+  7. The variants: pre-graduation with the exit rule (and Graduate recorded and ratified); entrustment-only; formative
+     in progress and closed.
+  8. Loading, not found ("The committee review could not be found among the reviews you can view."), 390 px.
 
-MODE: Wireframe first, in three parts, then full fidelity for the variations I pick.
+STEPS: 4.14–4.32, 4.50, 5.3–5.6, A.7.6 and A.7.13. Pasted verbatim below (Role / Route / Do / Expect). In them, D is
+  the day the story is replayed, <P> the semester holding D (for example 2026 S2) and <Y> its year; J is the latest
+  15 January on or before D. Where an Expect quotes today's wording or layout, that is today's page, not a requirement
+  on the new one.
 
-SCREENS, in order:
-1. Part 1, before the sitting: a scheduled review (Start offered) and one in progress, with the registrar's evidence
-   (the sampling warnings and the snapshot), standing, trajectory and MSF. Include opening one piece of evidence from
-   the snapshot (an activity, read-only) and coming back without losing her place.
-2. Part 2, staging:
-   - stage a STAR (EPA, level, issue date, expiry, rationale, evidence);
-   - the refusals (expiry, duplicate);
-   - defer with a reason, and the empty reason refused;
-   - Reinstate;
-   - ready to record;
-   - a decision resting on a single item;
-   - thirteen staged lines.
-3. Part 3, record and ratify:
-   - record a category with a quorum, and the quorum and category refusals;
-   - decided, as the chair (Ratify offered) and as an administrator (no Ratify);
-   - ratified with STARs issued, and ratified with no STAR;
-   - a staged decision about an EPA with no evidence of its own.
-4. The member's view (no chair controls), and the variants: formative in progress and closed, pre-graduation (exit
-   rule), and Graduate decided and ratified.
-5. Loading, not found, 390 px.
+STATES TO SHOW:
+  The chair: scheduled; in progress; Stage chosen (focus in the form); one evidence item named (the hint); staged;
+    expiry refused; duplicate refused; defer open; deferral with no reason; reinstated; every Due line settled (ready to
+    record); no quorum; no category; decided (Ratify offered); Ratify blocked; ratified with STARs; ratified with no
+    STAR; a staged decision with no evidence about its EPA; thirteen staged; Graduate recorded; Graduate ratified (every
+    EPA at its exit level); formative in progress and closed; entrustment-only; an agenda line no longer decided (a STAR
+    revoked mid-review); a line decided by another panel; the sitting-order warning; the chair can no longer act.
+  A member: during the sitting; after recording. An administrator: decided, no Ratify.
+  Each confirmation (whatever the variation confirms), its cancel, and the result after it with focus on it.
+  Loading (the header and a skeleton, no action offered until the review has loaded); load error (a sentence and Try
+    again, never an exception's text); not found; 390 px through the whole sitting.
 
-STEPS: 4.14–4.32, 4.50, 5.3–5.6, A.7.6 and A.7.13, pasted verbatim at the end of this message (Role / Route / Do /
-Expect). In them, D is the day the story is replayed, <P> the semester holding D (for example 2026 S2) and <Y> its
-year; J is the latest 15 January on or before D.
-
-STATES TO SHOW: scheduled; in progress; one evidence item named; staged; expiry refused; duplicate refused; deferral
-with no reason; ready to record; a member during the sitting; no quorum; no category; decided (chair); decided (an
-administrator); ratified with STARs; a staged decision with no evidence about its EPA; ratified with no STAR; formative
-in progress; formative closed; pre-graduation; Graduate recorded; Graduate ratified (every EPA at its exit level); the
-chair can no longer act; an agenda line no longer decided; Ratify blocked; an entrustment-only review; decided by
-another panel; loading; not found ("The committee review could not be found among the reviews you can view."); 390 px.
-
-REQUIREMENTS FROM KNOWN DEFECTS (each is testable):
-- T329: the header renders from the first moment and a skeleton shows while the review loads. No action is offered
-  before it has loaded.
-- T323: trajectory text is at least 11 px at 390 px, or the chart's table is visible under it.
-- T273: the sampling list and the staged lines mark an EPA that is no longer in force, "(no longer in use)". The
-  snapshot's headings stay as they were when frozen.
-- T325: "Issued on" defaults to today on the South African calendar.
-- T260: a warning about who can no longer sit is never left on screen after it stops being true.
-- T280: the warnings' dismiss button has a name ("Dismiss", not "×"). Every card is a named region.
-- T322: badge text meets 4.5:1 contrast.
-- T309: a formative review reads "Formative check-in", never "Annual progression review".
-- A5 (from BRIEF § 6): every action reports its outcome where the focus goes. A refused action keeps what was typed.
-  Irreversible actions confirm and name their target.
+REQUIREMENTS FROM KNOWN DEFECTS:
+  - A5 (BRIEF.md § 6): every action reports its outcome where the focus goes and where the chair is working; a refusal
+    shows beside the control that caused it, and keeps what was typed. Irreversible acts confirm and name their target.
+  - T329: the header renders from the first moment, a skeleton while the review loads, a failed read as an alert with
+    Try again; no action offered before the review has loaded.
+  - T280: every card a named region; the dismiss button named ("Dismiss", not "×"), or no dismiss at all.
+  - T273: the sampling list and the staged decisions mark an EPA no longer in force "(no longer in use)"; the frozen
+    snapshot's headings stay as they were (decided 2026-09-25).
+  - T325: "Issued on" defaults to today on the South African calendar; every date is ISO (flow 05's D1).
+  - T309: a formative review reads "Formative check-in" wherever its type shows.
+  - T260: a note about who may act (the chair cannot act; only the chair may …) is re-read after every action and
+    never left stale; the chair's controls are not left offered after a refusal that changed what she may do.
+  - T324: a missing rationale or issue date is refused in Wombat's words, never "The Rationale field is required.".
+  - T320: ratifying sends no mail; the confirmation promises nothing to the registrar.
+  - T356: a scrolled table never paints over the fixed top bar (seen on this page at Step 4.15).
+  - T190 (done for the tab's case): the h1 and the tab name the registrar and the period, or the brief says why not.
+  - Content (BRIEF.md § 6): sentence case; people by name as stored; states, types and categories by their labels; no
+    system words; ISO dates; the rungs as the scale writes them (3a, 3b).
+  - Done since the old brief, keep them: the trajectory is a card per EPA, drawn at 900 or 322 px, never scaled, its
+    table always visible (T323's chart item, flow 05); the standing panel's EPA names link to their charts (T355);
+    badge contrast (T322); the chair's controls hidden from everyone else (T213); the chair-cannot-act note (T256).
 
 QUESTIONS THE DESIGN MUST ANSWER:
-1. One long page, or steps (evidence, stage, record, ratify)? How does the chair keep her place across 13 staged
-   lines?
-2. What stays on screen while the chair stages: the registrar's standing and shortfalls, or the evidence list?
-3. How does the page show who is present and whether the quorum is met, before the chair presses Record?
-4. How are irreversible acts (Record, which fixes what is staged; Ratify, which issues STARs) marked and confirmed?
+  1. One page, steps (read, stage, record, ratify), tabs, or a workspace per EPA? How does the chair keep her place
+     across 15 agenda lines and 13 staged decisions, and how does a member keep up with where the chair is?
+  2. What stays on screen while the chair stages one EPA: that EPA's standing and trajectory, its snapshot lines, the
+     agenda, or the decision's fields alone?
+  3. Where does the decision form belong, given it waits on every Due line? How does the page show who is present and
+     whether the quorum is met before Record is pressed?
+  4. Which acts confirm, and how: Start (freezes the evidence), Remove, Record (fixes what is staged and deferred),
+     Ratify (issues STARs, no undo, no administrator bypass), Close review? What does each confirmation name?
+  5. Where does each result and each refusal show, and where does the focus go after Stage, Defer, Reinstate, Remove,
+     Record and Ratify?
+  6. The way back from a piece of evidence: a return link on the activity page (flow 03's page: PROPOSED), the
+     evidence opened in place, or something else?
+  7. The page's title: does the h1 name the registrar and the period ("Lerato Molefe · 2026 S2")? What does the
+     subtitle say?
+  8. The notes (sampling warnings, incomplete figures, chair-rated, sitting order, chair cannot act): where does each
+     sit, and is any dismissible?
+  9. At 390 px: what does the chair do on a phone (A.7.6 reads, it does not stage), and what does the page show first?
+  10. (The operator's) T329, T273, T325, T309, T260 and T324 touch only this page: fold them into the build, or land
+     any first as its own task (flow 05's T304)?
+  11. (The operator's) T260's open choice: refuse Start while the chair cannot act, or keep offering it?
+  12. (The operator's) T314's "Export portfolio" for the registrar under review: in this flow, or flow 13's?
 
 CONSTRAINTS:
 WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
@@ -209,6 +295,11 @@ Components (compose from these; mark anything else NEW): PageHeader (the page's 
   loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
   text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
   (hand-drawn SVG, no chart library), ReferenceBlock.
+  Since flow 03 also: ActivityStatus, ActivityAbout, ActivityForm, ActivityWorkflowActions, SubmitCheck,
+  RefusalSummary, ActivityHistory, NeedsYouList, InstrumentPicker, and DataTable's stacked rows (Stack). Since flow 04:
+  the rung picker, WaitingList, WayOn, the Overdue badge and the other-role line. Since flow 05: the progress index
+  (an EPA per row, its name its own link), the figure over its caption, EntrustmentStandingPanel's stacked rows, and
+  TrajectoryChart's two drawings (wide and 322 px) with its visible table.
 Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
   denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
   them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
@@ -219,24 +310,245 @@ Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the 
   ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
   reduced motion honoured.
 Viewports: 1280×800 and 390×844.
-Also: the page has exactly one h1. The trajectory chart is the hand-drawn SVG TrajectoryChart shared with My progress
-(Flow 05); it needs a text or table equivalent. A confirmation is the native <dialog> ConfirmDialog.
+Also: the page has exactly one h1, and its headings are in order. A confirmation is flow 01's native <dialog>
+  ConfirmDialog. Flow 05's TrajectoryChart and EntrustmentStandingPanel are placed, not redrawn.
 
-ASK: 2–3 variations for each part. Wireframes first, then full fidelity. Name every design-system component you use
-and mark anything else NEW. Say which DESIGN.md rule a variation breaks. Flag edge cases and draw the none, typical
-and heavy data volumes. Review the result for accessibility against WCAG 2.1 AA: headings in order, every card a named
-region, every row action named for its row.
+ASK:
+  - Round 1: 2–3 STRUCTURAL variations as wireframes of the review page through a whole sitting (screens 1–8), each
+    covering its parts and their order (or its steps, tabs or panes), what stays on screen while the chair stages and
+    while she records, where each result, refusal and confirmation shows, and the way back from evidence. Give each its
+    reasoning and its step count per journey, at 1280 and 390 px: the chair's Act 4 sitting for Dr Molefe from opening
+    the review to Ratify (Steps 4.15–4.27: start, open one piece of evidence and return, stage three, defer nine,
+    record with four present, ratify); her pre-graduation sitting (5.3–5.6: thirteen staged); a member following it
+    (4.22); the administrator reading it (4.26); the formative check-in (4.50). No colour or type choices yet. Stop and
+    wait for my pick.
+  - Round 2: the chosen structure at full fidelity on the design system's tokens, every screen and state above, at
+    1280 and 390 px, the chair's and a member's view of each, every confirmation, and where the focus lands after each
+    action.
+  - Name every design-system component you use, and mark anything else NEW. Say which DESIGN.md rule a variation
+    changes (DESIGN.md § Committee agenda; § The chair's controls; § Entrustment-only reviews; § Detail page and its
+    details-grid; § Page-level patterns and its title rule; the owner table's row for a committee review).
+  - Mark PROPOSED anything not built: a confirmation, a return link on the activity page, a new route or step.
+  - Flag edge cases: a snapshot of nothing; thirteen staged; 15 lines all Due; a decision resting on one item or on no
+    item about its EPA; an EPA no longer in force; the chair cannot act; the trainee at another institution; a member
+    who opens the review mid-sitting; a panel of two (the chair and one member); the 120-character EPA title ("PAED-015 —
+    Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research").
+  - Run an accessibility review against WCAG 2.1 AA: one h1, headings in order, every card a named region, every row
+    action named for its row, badges read as words, the chart's table, focus after every action and every
+    confirmation; targets ≥ 24 px (44 at 390). Step A.7.13 walks this page with a screen reader.
 
-ATTACHED: states/review-detail--scheduled.png, act-4/4.17-1-zulu-minicex-from-snapshot.png,
-states/review-detail--staged.png, states/review-detail--ready-to-record.png, states/review-detail--quorum-refused.png,
-states/review-detail--ratified.png, act-5/5.3-2-zulu-review-full.png, act-5/5.4-4-zulu-thirteen-staged-full.png,
-states/review-detail--member.png, act-A/A.7.13-1-review-7.png, states/review-detail--narrow.png
+ATTACHED: act-4/4.15-1-zulu-molefe-review-before-start.png, act-4/4.16-1-zulu-review-started.png,
+  act-4/4.17-1-zulu-minicex-from-snapshot.png, act-4/4.19-1-zulu-three-staged.png,
+  act-4/4.23-1-zulu-quorum-refused.png, act-4/4.21-2-zulu-ready-to-record.png,
+  act-4/4.22-1-naidoo-sitting-no-controls.png, act-4/4.26-1-mbatha-decided-no-ratify.png,
+  act-4/4.27-1-zulu-ratified-stars-issued.png, act-5/5.3-2-zulu-review-full.png,
+  act-5/5.4-4-zulu-thirteen-staged-full.png, act-4/4.50-1-zulu-formative-started.png, act-A/A.7.6-3-review-390.png,
+  act-A/A.7.13-1-review-7.png; flow 05's boards R3-T-committee and R3-P-standing, each at 1280 and 390, with
+  flow05-r3.css.
+```
 
-RUNBOOK STEPS, VERBATIM:
+---
 
---- from execution/knowledge/scenario-paediatrics/act-4-annual-review.md ---
+## 2. The journey
 
-### Step 4.14 — Dr Botha checks who sits and who decides
+| Step | Page | Who does | They must be able to see |
+|---|---|---|---|
+| 4.14 | `/committee/panels` | Dr Botha | who sits and which EPAs the panel decides; PAED-004 and 005 fall back to it (flow 08's page) |
+| 4.15 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | before Start: Start offered, no decision yet, the standing (0 of 15), MSF coverage, a 15-line agenda (12 Due, 3 optional) with no actions, no snapshot yet, three trajectories, the sampling warnings; 9,192 px |
+| 4.16 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | "Review started." at the top; the snapshot frozen and grouped; Stage and Defer per line; the decision form with Present; Record disabled with its reason; nothing asked her to confirm the freeze |
+| 4.17 | `…/{ReviewId:int}` → `/activities/{ActivityId:int}` → `…/{ReviewId:int}` | Dr Zulu | her own Mini-CEX read-only, then Back by the browser to the top of the review; Stage puts the focus in the EPA select below the agenda; the ladder; the "one item" hint; the result at the top |
+| 4.18 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | the expiry refusal at the top of the page, the form below keeping what she typed |
+| 4.19 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | three staged; Remove without confirmation; the caption counting down |
+| 4.20 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | the duplicate refusal at the top |
+| 4.21 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | "Defer PAED-002" under the table; the empty reason refused in the form; Reinstate; nine deferred; Record enabled, about 3,000 px up |
+| 4.22 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Naidoo | everything the chair sees, no controls, the sentence saying only the chair acts |
+| 4.23 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | the quorum refusal at the top; nothing before pressing said the quorum was short |
+| 4.24 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | the category refusal |
+| 4.25 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | "Decision recorded." with no confirmation; the Present line; the staged decisions fixed; Ratify offered |
+| 4.26 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Prof Mbatha | the decided review; no Ratify; "Only the panel's chair, Thandi Zulu, can ratify the committee's decision." |
+| 4.27 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | "Decision ratified." with no confirmation; STARs #1–#3; the agenda's final states; the standing updated |
+| 4.28–4.32 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | four more sittings: a decision on items not about its EPA (a hint); no STAR; Additional Training; Outcome Deferred, a declined request as evidence |
+| 4.50 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | a formative check-in started and closed; Type still "Annual progression review" (T309) |
+| 5.3 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | the pre-graduation review: three years of evidence; the exit rule, which gates nothing |
+| 5.4 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | thirteen decisions staged one after another; 14,834 px |
+| 5.5–5.6 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Graduate recorded and ratified; "15 of 15 … Every EPA is at its exit level." |
+| A.7.6 | `/` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu at 390 px | the cards stacked, 18,013 px; tables scrolling in their boxes; each chart its own card at 322 px |
+| A.7.13 | `/committee/reviews/{ReviewId:int}` | Dr Zulu, screen reader | h1 then h3s; four of nine cards named; the "×" dismiss unnamed |
+
+## 3. States to design
+
+Each screenshot is under `design/baseline/`. How to reach each is in `states.md` § Committee. The step captures were
+re-taken by the T358 replay on 2026-10-05 on the shell as built. The `states/review-detail--*` captures are from
+2026-09-26, on the old frame (a flat Title Case sidebar, an email in the top bar), except `--scheduled` and `--narrow`
+(2026-10-04): brief from their page body, not the frame. Where a state has a step capture, brief from that.
+
+| State | Screenshot | Reached at |
+|---|---|---|
+| Scheduled, the chair | `act-4/4.15-1-zulu-molefe-review-before-start.png` (`states/review-detail--scheduled.png`) | Step 4.15 |
+| In progress, the chair | `act-4/4.16-1-zulu-review-started.png` (`states/review-detail--in-progress.png`) | Step 4.16 |
+| Evidence opened from the snapshot | `act-4/4.17-1-zulu-minicex-from-snapshot.png` | Step 4.17 |
+| One item named; staged | `act-4/4.17-2-zulu-paed001-staged.png` (`states/review-detail--single-item.png`, `--staged.png`) | Step 4.17 |
+| Expiry refused | `act-4/4.18-1-zulu-expiry-refused.png` (`states/review-detail--expiry-refused.png`) | Step 4.18 |
+| Three staged | `act-4/4.19-1-zulu-three-staged.png` | Step 4.19 |
+| Second decision refused | `act-4/4.20-1-zulu-duplicate-refused.png` (`states/review-detail--duplicate-refused.png`) | Step 4.20 |
+| Deferral form, no reason | `act-4/4.21-1-zulu-defer-form.png` (`states/review-detail--defer-empty.png`) | Step 4.21 |
+| Ready to record | `act-4/4.21-2-zulu-ready-to-record.png` (`states/review-detail--ready-to-record.png`) | Step 4.21 |
+| A member during the sitting | `act-4/4.22-1-naidoo-sitting-no-controls.png` (`states/review-detail--member.png`) | Step 4.22 |
+| No quorum | `act-4/4.23-1-zulu-quorum-refused.png` (`states/review-detail--quorum-refused.png`) | Step 4.23 |
+| No category | `act-4/4.24-1-zulu-category-refused.png` (`states/review-detail--category-refused.png`) | Step 4.24 |
+| Decided, the chair | `act-4/4.25-1-zulu-decision-recorded.png` (`states/review-detail--decided.png`) | Step 4.25 |
+| Decided, an administrator | `act-4/4.26-1-mbatha-decided-no-ratify.png` (`states/review-detail--decided-admin.png`) | Step 4.26 |
+| Ratified, STARs issued | `act-4/4.27-1-zulu-ratified-stars-issued.png` (`states/review-detail--ratified.png`) | Step 4.27 |
+| No item about the EPA | `act-5/5.4-1-zulu-stage-paed002-hint.png`, `act-4/4.28-1-zulu-dlamini-staged-and-deferred.png` (`states/review-detail--none-about-epa.png`) | Step 4.28 |
+| Ratified, no STAR | `act-4/4.30-1-zulu-duplessis-ratified-no-star.png` (`states/review-detail--ratified-no-star.png`) | Step 4.30 |
+| Formative, in progress and closed | `act-4/4.50-1-zulu-formative-started.png`, `4.50-2-naidoo-formative-in-progress.png`, `4.50-3-zulu-formative-closed.png` (`states/review-detail--formative-in-progress.png`, `--formative-closed.png`) | Step 4.50 |
+| Pre-graduation, in progress | `act-5/5.3-1-zulu-review-started.png`, `5.3-2-zulu-review-full.png` (`states/review-detail--pre-graduation.png`) | Step 5.3 |
+| Thirteen staged | `act-5/5.4-4-zulu-thirteen-staged-full.png` (14,834 px) | Step 5.4 |
+| Graduate recorded | `act-5/5.5-2-zulu-graduate-decided.png`, `5.5-3-naidoo-no-ratify.png` (`states/review-detail--graduate.png`) | Step 5.5 |
+| Every EPA at its exit level | `act-5/5.6-2-zulu-exit-rule-met.png`, `5.6-3-zulu-ratified-full.png` (`states/review-detail--graduate-ratified.png`) | Step 5.6 |
+| 390 px | `act-A/A.7.6-3-review-390.png` (`states/review-detail--narrow.png`), both 390×18,013 | Step A.7.6 |
+| Populated, for the screen reader | `act-A/A.7.13-1-review-7.png` | Step A.7.13 |
+| The chair can no longer act | `states/review-detail--chair-cannot-act.png` (old frame) | Scratch (post-act4) |
+| Agenda: no longer decided | `states/review-detail--no-longer-decided.png` (old frame) | Scratch (post-act4) |
+| Ratify blocked | `states/review-detail--ratify-blocked.png` (old frame) | Scratch (post-act4) |
+| Entrustment-only review | `states/review-detail--entrustment-only.png` (old frame) | Scratch (post-act4) |
+| Decided by another panel | `states/review-detail--decided-elsewhere.png` (old frame) | The same scratch run |
+| Loading | `states/review-detail--loading.png` (old frame) | A held read: the header and blank space (T329) |
+| Not found | `states/review-detail--not-found.png` (old frame) | Typed `/committee/reviews/999999` |
+
+Not captured, so describe them in words (`states.md`):
+- "The chair rated all of this evidence" (D46 warns and refuses nothing).
+- "Sampling figures are incomplete" (the danger alert, when a source cannot be counted).
+- The trainee now at another institution ("This review's trainee does not train at the panel's institution, …").
+- "Starting now leaves out N feedback campaigns" (an MSF campaign released after Start).
+- The sitting-order warning (another panel decides some EPAs and has not yet).
+- Not played at all (`coverage.md` § Flows and states not played): the Administrator on a review (no ratify or appeal
+  bypass, D46), Defer after recording, and Remove after recording when a decision no longer fits.
+- Any confirmation: none exists today.
+
+**Belongs to other flows:** flow 08: scheduling, the scheduled review with no Start (`--scheduled-no-start`), the
+formative review as scheduled (`--formative`), the Committee reviews list and Decision panels. Flow 09: the Appeals
+card's states (`--appeal-*`, `--remit-refused`, `--remitted`; `--appeal-upheld` no longer exists, D51). Flow 14: a review
+withdrawn by an erasure (`--withdrawn`). Flow 03: the activity page's body.
+
+## 4. Attach
+
+Paths are relative to `design/baseline/`. Every key screenshot below was opened and checked on 2026-10-11; none shows a
+link or a password. Most are full pages of 9,000–15,000 px, which the canvas will see scaled: say so in the message.
+
+**Key screenshots (attach these first, with § 1):**
+1. `act-4/4.15-1-zulu-molefe-review-before-start.png`: the whole page before Start (9,192 px): the sampling warnings,
+   Review with Start beside an empty Decision card, the standing, MSF, a 15-line agenda, no snapshot, the charts
+2. `act-4/4.16-1-zulu-review-started.png`: just started: "Review started." at the top, the decision form live, Stage and
+   Defer on each line, the staging form open, the snapshot frozen (11,033 px)
+3. `act-4/4.17-1-zulu-minicex-from-snapshot.png`: a piece of evidence opened from the snapshot, read-only, no way back
+4. `act-4/4.19-1-zulu-three-staged.png`: three decisions staged, the agenda's Staged badges
+5. `act-4/4.23-1-zulu-quorum-refused.png`: the quorum refusal at the top, far from the filled decision form
+6. `act-4/4.21-2-zulu-ready-to-record.png`: every Due line settled, Record enabled
+7. `act-4/4.22-1-naidoo-sitting-no-controls.png`: a member's view: no Stage, Defer or decision form
+8. `act-4/4.26-1-mbatha-decided-no-ratify.png`: an administrator on a decided review: "Only the panel's chair, Thandi
+   Zulu, can ratify the committee's decision."
+9. `act-4/4.27-1-zulu-ratified-stars-issued.png`: ratified: STARs issued, the agenda's Decided badges
+10. `act-5/5.3-2-zulu-review-full.png`: the pre-graduation review: the standing with the exit rule
+11. `act-5/5.4-4-zulu-thirteen-staged-full.png`: thirteen staged (14,834 px)
+12. `act-4/4.50-1-zulu-formative-started.png`: a formative check-in in progress, Close review offered
+13. `act-A/A.7.6-3-review-390.png`: the review at 390 px. It is 18,013 px tall, past Chromium's 16,384 px limit, so the
+    header repeats near its foot: an artefact of the capture, not of the page (§ 11, flow 05)
+14. `act-A/A.7.13-1-review-7.png`: a populated review at 1280, the headings and the "×" dismiss (Step A.7.13)
+
+**States (attach as the chat asks):** every row of § 3 not already attached above, flagging the old-frame ones, and
+`act-5/5.3-1-zulu-review-started.png` and `act-5/5.6-2-zulu-exit-rule-met.png` (each the 800 px top of a review, legible at full size).
+
+**Also, for what the page places:** flow 05's round 3 boards `R3-T-committee-1280.dc.html` and `-390` (the trajectory
+over a review window) and `R3-P-standing-1280.dc.html` and `-390` (the standing panel), from
+`design/flows/05-trainee-progress/round-3/project/`, with `flow05-r3.css`. Stage them by hand in
+`design/upload/flow05-boards/`; the staging script does not stage them.
+
+## 5. Known problems this design must solve
+
+The evidence column is for the operator and for Claude Code. Attach only what § 4 lists. Code is cited at `bc9a6c4b`.
+
+| Task | What it means for the design | Evidence |
+|---|---|---|
+| **A5** (BRIEF § 6; no task) | `ActionResult` is at the top of the page (`ReviewDetail.razor:16–26`); a success focuses it (`ExecuteAsync` `:1568–1589`; Stage `:1369`, Remove `:1521`, Defer `:1848`, Reinstate `:1884`), about 6,000 px from the staging form at 1280; a refusal leaves the focus where it was, its alert out of view. An empty deferral is the one refusal shown in its form (`:1815`). Each outcome shows, and takes the focus, where the chair is working. | `act-4/4.23-1-zulu-quorum-refused.png` |
+| **Confirmations** (no task; T264's item here was the Remove name, met by T239) | The page has no `ConfirmDialog` (grep at `bc9a6c4b`): Start, Remove, Record, Ratify and Close review act on one press. | Steps 4.16, 4.19, 4.25, 4.27, 4.50 |
+| **T329** (P2) | No loading flag, `Skeleton` or `StatePanel`; the body is gated on `_review is not null` (`:113`). Not found is `RefusalText` in the top alert (`A/Features/CommitteeDecisions/CommitteeDecisionAuthorization.cs:557`), under the h1, with no body. | `states/review-detail--loading.png`, `--not-found.png` |
+| **T280** (P3) | `Alert.razor:8` renders the dismiss as "×" with no name; the sampling card is its only `Dismissible` caller. Review, Decision, Entrustment against Annexure A, Pending and Appeals are not named regions; MSF (`:1554`), Agenda (`agenda-heading`), the Evidence snapshot and the Trajectory section (`trajectory-section-h`, `:707–726`) are. | `act-A/A.7.13-1-review-7.png` |
+| **T273** (P3) | The sampling list and the staged lines print a bare "Code — Title" for an EPA no longer in force; DESIGN.md:858–867 lists them as the surfaces not yet marked. The snapshot's headings stay unmarked (adopted 2026-09-25). | — |
+| **T325** (P3) | "Issued on" defaults to `DateOnly.FromDateTime(DateTime.UtcNow)` (`:2152`). | Step 4.17 |
+| **T309** (P3) | A formative check-in's Type is `ReviewTypeLabel` (`A/…/CommitteeDecisionWording.cs:120–126`), with no formative label: "Annual progression review". | `act-4/4.50-1-zulu-formative-started.png` |
+| **T260** (P3) | The chair's controls stay offered after a refusal (no re-read after a refusal), and Start is offered while `ChairCannotAct`; whether to refuse Start then is undecided (question 11). | `states/review-detail--chair-cannot-act.png` |
+| **T324** (P3) | The decision form's and the staging form's Rationale, and Issued on, are `[Required]` with no message (inferred: "The Rationale field is required."). | — |
+| **T320** (P2) | Ratifying issues STARs and sends no mail. A confirmation must not promise that the registrar is told. | Step 4.27 |
+| **T356** (P2) | A scrolled table paints over the fixed top bar, covering Sign out; found on this page at Step 4.15. | T356's file |
+| **T190** (done) | The tab reads "Committee review · Wombat" (`:7`); the h1 "Committee review", the subtitle "Evidence bundle, decision record, ratification, and appeals in one place." (`:9`). Naming the registrar and the period was left to this flow. Headings go h1, h3, h4: no h2. | `act-A/A.7.13-1-review-7.png` |
+| **T314** (P3) | No "Export portfolio" for the registrar under review; the list's Trainee column links nowhere (`ReviewsSchedule.razor`). Question 12. | — |
+| Layout (observed, not filed) | `details-grid` is `1fr 2fr` (`app.css:2159–2163`): Review in the narrow column beside Decision, Pending beside the Evidence snapshot. The decision form (`:207–346`) is above the standing, MSF and agenda (`:1542–2070`), so Record sits about 3,000 px above the lines it waits on. Choosing Stage sets the staging form's EPA and focuses it (`:1745–1762`), below the agenda. DESIGN.md:2050–2133 (§ Committee agenda) places the agenda "directly above" Pending so the chair "reads what is due and stages it in one place". | `act-4/4.16-1-zulu-review-started.png` |
+| The way back (observed, not filed) | The activity page opened from the snapshot has no return link or return URL; its owner table has no row for a committee reader (`NavOwners.cs:94–103`), so (inferred) the trail is Home › the activity; `WayOn`'s "Back to …" shows only after a move (`ActivityView.razor:91–95`, `:795`), which a reader never makes. Only the browser's Back returns, to the review's top (inferred). | `act-4/4.17-1-zulu-minicex-from-snapshot.png` |
+| Quorum (observed) | Present lists only members who may sit, the chair ticked and locked; the rule is in the help (`:1248–1250`) and known short only from the refusal. Ratify is blocked with "Ratify: …" when the recorded quorum falls short (`D/CommitteeDecisions/CommitteeReview.cs:515–536`). | Step 4.23 |
+
+**Dropped from the old brief (fixed since):** the trajectory charts' 5–6 px labels and the screen-reader-only table
+(T323's chart item, flow 05: two fixed drawings, the table always visible); badge contrast (T322); the tab's Title Case
+(T190); the stale line numbers (`ReviewDetail.razor` is 2,162 lines, Issued on at `:2152`).
+
+## 6. Questions the design must answer
+
+1. **One page, steps, tabs, or a workspace per EPA?** How the chair keeps her place across 15 lines and 13 staged
+   decisions (`act-5/5.4-4-zulu-thirteen-staged-full.png`), and how a member keeps up.
+2. **What stays on screen while the chair stages:** the EPA's standing and trajectory, its snapshot lines, the agenda.
+3. **The decision form's place,** and how the page shows who is present and whether the quorum is met before Record
+   (D46: the chair and at least one other).
+4. **Confirmations:** which of Start, Remove, Record, Ratify and Close review confirm, and what each names. Ratifying
+   issues STARs, "immutable once issued" (`DOMAIN.md:78`), with no undo and no administrator bypass (D46).
+5. **Results and refusals:** where each shows and where the focus goes (A5).
+6. **The way back from evidence:** a return link on the activity page (flow 03's page: PROPOSED), the evidence opened
+   in place, or something else.
+7. **The title:** an h1 that names the registrar and the period, and a subtitle that says something.
+8. **The notes:** where each sits, and whether any is dismissible (T280).
+9. **390 px:** what the chair does on a phone, and what shows first.
+10. **(The operator's) T329, T273, T325, T309, T260 and T324:** folded into the build, or any landed first as its own
+    task?
+11. **(The operator's) T260:** refuse Start while the chair cannot act, or keep offering it?
+12. **(The operator's) T314:** "Export portfolio" for the registrar under review in this flow, or in flow 13?
+
+## 7. Acceptance
+
+A flow is done when BRIEF.md § 9's four checks hold. For this flow:
+
+- **Replay the whole runbook** on a fresh database (the flow's steps span Acts 4, 5 and the appendix; § 9): every Expect
+  must hold, the refusals' exact words included. **Rewrite the steps that change:** a confirmation adds a press to
+  4.16, 4.19, 4.25, 4.27, 4.29–4.32, 4.50, 5.5 and 5.6 (and to flow 09's and flow 14's steps on this page, if they act
+  through it); a layout of steps or tabs changes the Route and Do lines of 4.15–4.32, 5.3–5.6 and A.7.6; a new title
+  changes every Expect that quotes "Committee review"; search the whole runbook (BRIEF.md § 9 item 7). A new page or
+  route needs a step (`Scenario/ScenarioRunbookTests`). A new step takes a letter when its number is taken (§ 11, flow
+  06).
+- **Checks the design adds:** 4.15 with a held read, the header and a skeleton and no Start until loaded (T329); 4.17,
+  the way back lands where she left; 4.18 and 4.23, each refusal beside its control, with the focus on it; 4.17 and
+  4.19, each result where the chair works; 4.25 and 4.27, Record and Ratify confirm and name what they fix or issue;
+  4.50, "Formative check-in" (T309); A.7.6, nothing scrolls sideways at 390, and the page checked at 768 as well;
+  A.7.13, one h1, headings in order, every card a named region, no "×" (T280).
+- **The tests pass** (`dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj`, never with `--no-build`), with all
+  six suites green. They must include:
+  - `CommitteeDecisions/ReviewDetail*Tests` (Agenda, AppealForm, ChairControls, EvidenceEmptyState, EvidenceGrouping,
+    EvidencePicker, MsfOutsideSnapshot, Quorum, SamplingSentence), `EntrustmentStandingPanelTests`,
+    `EntrustmentOnlyReviewPageTests`, `CommitteeReviewStateLabelTests`, `WithdrawnReviewPageTests`;
+  - `Charts/TrajectoryChartTests` and `TrajectoryWordsTests`;
+  - `Accessibility/ActionFocusTests`, `RowNamesTests`, `AccessibleNamesTests`, `IdReferencesTests`;
+  - `Design/NarrowLayoutTests`, `DefinedClassTests`, `AlertRoleTests`, `ContrastTests`, `FieldGroupTests`,
+    `RowActionMarkupTests`; `Hosting/PageTitleTests`; `Navigation/ActiveNavItemTests`;
+  - `Epas/EpaNoLongerInUseMarkTests` (T273); `Scenario/`.
+- **Re-capture** the states in § 3 (the old-frame ones on scratch copies, as `states.md` says) and the steps' own
+  captures, keeping their names; `check_baseline_paths.py` at missing 0. A page taller than about 16,384 px is captured
+  in parts and stitched (§ 11, flow 05). Compare them with the chosen artboards.
+- **Browser check** at 1280, 768 and 390 px as the chair, a member, the external member and the InstitutionalAdmin.
+
+## 8. The runbook steps, verbatim (sent with § 1, in the same message)
+
+These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only), as they stood on
+2026-10-11 after flow 06's build. `D` is the replay day.
+
+```text
+Step 4.14 — Dr Botha checks who sits and who decides (act-4-annual-review.md:323)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /committee/panels
 Do: Open Decision panels.
@@ -246,7 +558,7 @@ Expect:
   - **Who decides each EPA:** curriculum 11.1's EPAs are decided by `Paed Annual Review Panel`. PAED-004 and 005 fall
     back to it, because no panel covering the programme sits as the neonatal CCC.
 
-### Step 4.15 — Dr Zulu reads Dr Molefe's review before starting it
+Step 4.15 — Dr Zulu reads Dr Molefe's review before starting it (act-4-annual-review.md:338)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Committee reviews and Dr Molefe's review. Read every card before starting it.
@@ -277,7 +589,7 @@ Expect:
   - **Pending entrustment decisions:** "No pending entrustment decisions have been staged for this review."
   - **Appeals:** "No appeal has been lodged against this review."
 
-### Step 4.16 — Dr Zulu starts the review
+Step 4.16 — Dr Zulu starts the review (act-4-annual-review.md:385)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Start the review.
@@ -297,7 +609,7 @@ Expect: "Review started." The state reads In progress.
     be decided at this sitting. Stage a decision on each, or defer it with a reason." It names the twelve closing EPAs.
   - **The staging form** appears under Pending entrustment decisions.
 
-### Step 4.17 — Dr Zulu stages PAED-001 at level 5
+Step 4.17 — Dr Zulu stages PAED-001 at level 5 (act-4-annual-review.md:415)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int} → /activities/{ActivityId:int} → /committee/reviews/{ReviewId:int}
 Do: Open Dr Zulu's own PAED-001 Mini-CEX from the snapshot to re-read it, then come back to the review. Choose Stage on
@@ -321,7 +633,7 @@ Expect:
     below.", and its Action cell reads "Staged below". The caption counts 11 still to stage or defer. The pending list
     shows PAED-001 at `5`, issued `D`, and "Rests on 2 items of the snapshot: …" naming both.
 
-### Step 4.18 — An expiry before the issue date is refused
+Step 4.18 — An expiry before the issue date is refused (act-4-annual-review.md:451)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Start staging PAED-010: choose its Stage, then level `4`, Issued on `D`, Expires on `D−1`, the rationale "Leads the
@@ -330,7 +642,7 @@ Do: Start staging PAED-010: choose its Stage, then level `4`, Issued on `D`, Exp
 Expect: Refused with "An expiry date must be after the issue date." Nothing is staged, the form keeps what was typed,
   and PAED-010 still reads Due.
 
-### Step 4.19 — Dr Zulu stages PAED-010 with an expiry, and PAED-012
+Step 4.19 — Dr Zulu stages PAED-010 with an expiry, and PAED-012 (act-4-annual-review.md:464)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Correct PAED-010's Expires on to `D+20` and stage it. Then stage PAED-012 at `5` with no expiry, the rationale
@@ -344,7 +656,7 @@ Expect: Both are staged. The pending list shows:
     PAED-012's line reads Due again, with Stage and Defer, and the caption counts 10.
   - **Staged again,** it reads Staged, and the caption counts 9.
 
-### Step 4.20 — A second decision on PAED-001 is refused
+Step 4.20 — A second decision on PAED-001 is refused (act-4-annual-review.md:484)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: In the staging form, choose PAED-001 from the EPA select, then fill in level `4`, a rationale and one line. Stage
@@ -352,7 +664,7 @@ Do: In the staging form, choose PAED-001 from the EPA select, then fill in level
 Expect: Refused with "An entrustment decision on PAED-001 is already staged at this review. Remove it to stage
   another." The pending list still holds exactly one PAED-001 decision, at `5`.
 
-### Step 4.21 — Dr Zulu defers the other nine closing lines
+Step 4.21 — Dr Zulu defers the other nine closing lines (act-4-annual-review.md:496)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Choose Defer on PAED-002 and submit an empty reason. Then give the reason "To be decided at her final review." and
@@ -369,7 +681,7 @@ Expect:
     009 and 013 still read As opportunity allows. Record decision is enabled, beside "Recording fixes the entrustment
     decisions staged below and the agenda's deferrals: they cannot be changed afterwards."
 
-### Step 4.22 — Dr Naidoo reads the sitting without the chair's controls
+Step 4.22 — Dr Naidoo reads the sitting without the chair's controls (act-4-annual-review.md:521)
 Role: CommitteeMember — Dr David Naidoo
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Dr Molefe's review while it is in progress.
@@ -384,7 +696,7 @@ Expect: He sees everything the chair sees:
   The Review card says "Only the panel's chair, Thandi Zulu, can stage entrustment decisions, defer agenda lines and
   record the committee's decision." The Decision card says "No decision has been recorded yet."
 
-### Step 4.23 — Recording without a second member present is refused
+Step 4.23 — Recording without a second member present is refused (act-4-annual-review.md:542)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Choose the category Satisfactory Progress and write a rationale. Tick nobody besides herself under Present, and
@@ -392,7 +704,7 @@ Do: Choose the category Satisfactory Progress and write a rationale. Tick nobody
 Expect: Refused with "A committee decision needs at least two panel members present: the chair and at least one
   other." (T165, D46). The review stays In progress, with nothing recorded.
 
-### Step 4.24 — Recording without a category is refused
+Step 4.24 — Recording without a category is refused (act-4-annual-review.md:554)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Tick David Naidoo, Sarah Botha and John van Rensburg as present. Set Category back to "Select a category…" and
@@ -400,7 +712,7 @@ Do: Tick David Naidoo, Sarah Botha and John van Rensburg as present. Set Categor
 Expect: Refused with "This review decides the trainee's progression, so its decision records a progression category.
   Choose one." (T131 slice 5). Nothing is recorded.
 
-### Step 4.25 — Dr Zulu records Dr Molefe's decision
+Step 4.25 — Dr Zulu records Dr Molefe's decision (act-4-annual-review.md:566)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Choose Satisfactory Progress, with the rationale "On track for completion; three EPAs entrusted, the rest to be
@@ -415,7 +727,7 @@ Expect: "Decision recorded." The state reads Decided.
   - **No chair-rated warning:** five assessors rated her lines, so "The chair rated all of this evidence" is not shown
     (D46 warns of that case and refuses nothing).
 
-### Step 4.26 — Prof Mbatha reads the decided review, and is not offered Ratify
+Step 4.26 — Prof Mbatha reads the decided review, and is not offered Ratify (act-4-annual-review.md:586)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Between the recording and the ratifying, open Dr Molefe's review from Committee reviews.
@@ -424,7 +736,7 @@ Expect: The list reads Decided, Satisfactory Progress, for her review. The revie
   no Ratify, no Remove and no Action column. The Review card says "Only the panel's chair, Thandi Zulu, can ratify the
   committee's decision.": only the chair ratifies, with no administrator's bypass (D46).
 
-### Step 4.27 — Dr Zulu ratifies, and the STARs are issued
+Step 4.27 — Dr Zulu ratifies, and the STARs are issued (act-4-annual-review.md:600)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Ratify the decision.
@@ -440,7 +752,7 @@ Expect: "Decision ratified." The state reads Ratified, and Ratify is gone.
     decision".
   - **What ratifying locks:** nothing on the review can now be staged, deferred, removed or recorded.
 
-### Step 4.28 — Dr Zulu stages two decisions for Dr Dlamini
+Step 4.28 — Dr Zulu stages two decisions for Dr Dlamini (act-4-annual-review.md:625)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Dr Dlamini's review and start it. Stage, each on two finished PAED-001 lines (Dr Naidoo's Mini-CEX and Dr
@@ -455,7 +767,7 @@ Expect:
   - **The agenda:** PAED-001 and 002 read Staged, ten lines Deferred, and PAED-008, 009 and 013 As opportunity allows.
   - **Record decision** becomes enabled once the tenth line is deferred.
 
-### Step 4.29 — Dr Zulu records and ratifies Dr Dlamini's decision
+Step 4.29 — Dr Zulu records and ratifies Dr Dlamini's decision (act-4-annual-review.md:646)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Choose Satisfactory Progress with a rationale, tick David Naidoo and Sarah Botha as present, and record. Then
@@ -467,7 +779,7 @@ Expect:
   - **Standing:** "1 at or above · 1 below · 13 with no decision, of 15 EPAs". PAED-001 at `4` meets year 3's target of
     `4`, and PAED-002 at `3b` is below it.
 
-### Step 4.30 — Dr du Plessis's sitting: progress with an observation, no STAR
+Step 4.30 — Dr du Plessis's sitting: progress with an observation, no STAR (act-4-annual-review.md:663)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Dr du Plessis's review and start it. Stage nothing, and defer all twelve closing lines with the reason "Not at
@@ -486,7 +798,7 @@ Expect:
   - **Ratified:** the state reads Ratified, and the pending card says "Nothing was staged when the review was ratified,
     so ratifying it issued no STAR."
 
-### Step 4.31 — Dr Mahlangu's sitting: additional training
+Step 4.31 — Dr Mahlangu's sitting: additional training (act-4-annual-review.md:689)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Dr Mahlangu's review and start it, and read her snapshot. Defer all twelve closing lines with the reason "Not
@@ -501,7 +813,7 @@ Expect:
   - **Ratified:** the state reads Ratified.
   - **Present:** "Present: Thandi Zulu (chair), Sarah Botha, John van Rensburg (external)".
 
-### Step 4.32 — Dr Ndlovu's sitting: the outcome deferred
+Step 4.32 — Dr Ndlovu's sitting: the outcome deferred (act-4-annual-review.md:709)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Dr Ndlovu's review and start it, and read his snapshot. Defer all twelve closing lines with the reason "Too
@@ -518,7 +830,7 @@ Expect:
   - **Sampling:** the warnings card names PAED-002, one rating from one assessor.
   - **Ratified:** the review reads Ratified, with "Outcome Deferred".
 
-### Step 4.50 — Dr Zulu starts and closes the check-in
+Step 4.50 — Dr Zulu starts and closes the check-in (act-4-annual-review.md:1082)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Start the formative review, read it, and close it.
@@ -528,9 +840,7 @@ Expect:
   - **Closed:** "Formative review closed." The state reads Closed, and nothing is offered.
   - **Other readers** are told "Only the panel's chair, Thandi Zulu, can close this review." while it is in progress.
 
---- from execution/knowledge/scenario-paediatrics/act-5-graduation.md ---
-
-### Step 5.3 — Dr Zulu starts the review and reads where Dr Molefe stands
+Step 5.3 — Dr Zulu starts the review and reads where Dr Molefe stands (act-5-graduation.md:112)
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Dr Molefe's pre-graduation review from Committee reviews and start it. Read the evidence snapshot, the agenda
@@ -546,7 +856,7 @@ Expect: The page says "Review started." and the review reads In progress.
   - Record decision is shown disabled, and names the closing agenda lines that are still to be staged or deferred.
   - Sampling warnings may name EPAs rated by fewer than three assessors. They are warnings and refuse nothing.
 
-### Step 5.4 — Dr Zulu stages a STAR at its exit level on every EPA not yet there
+Step 5.4 — Dr Zulu stages a STAR at its exit level on every EPA not yet there (act-5-graduation.md:138)
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews/{ReviewId:int}
 Do: For each EPA the standing names under "Not yet", stage a decision at its exit level. That is thirteen EPAs, every
@@ -564,7 +874,7 @@ Expect: The level list offers only the six rungs of the CPSA Paediatric Entrustm
   - the decision is listed with its level, its issue date and the lines it rests on.
   Once every closing line is staged, Record decision is enabled.
 
-### Step 5.5 — The panel records its decision: Graduate
+Step 5.5 — The panel records its decision: Graduate (act-5-graduation.md:168)
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews/{ReviewId:int}
 Do: Record the committee's decision:
@@ -577,7 +887,7 @@ Expect: The category list opens with nothing chosen and offers Graduate (program
   headed "Graduate (programme complete)" and names the four members present. The page says that the staged decisions
   are now fixed and that ratifying issues exactly these. The staging form is gone, and only Dr Zulu is offered Ratify.
 
-### Step 5.6 — Dr Zulu ratifies
+Step 5.6 — Dr Zulu ratifies (act-5-graduation.md:192)
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews/{ReviewId:int}
 Do: Ratify the decision.
@@ -589,9 +899,7 @@ Expect: The page says "Decision ratified." and the review reads Ratified. Every 
   The standing's exit rule reads "15 of 15 EPAs at their exit level by STAR decision (level 5: 9 of 9 · level 4: 6 of
   6). Every EPA is at its exit level." Its year line reads "15 at or above · 0 below · 0 with no decision, of 15 EPAs".
 
---- from execution/knowledge/scenario-paediatrics/appendix-cross-cutting.md ---
-
-### Step A.7.6 — Dr Zulu on her phone
+Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1253)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
@@ -602,7 +910,7 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
   and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
   scrolls sideways (T166, T355).
 
-### Step A.7.13 — Dr Zulu hears a populated review with a screen reader
+Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1412)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: With NVDA (or Narrator) on, open Dr Molefe's final review. Walk it by headings, then by tables, then by regions.
@@ -616,231 +924,3 @@ Expect: The page heading is announced on arrival. Each card is a heading ("Revie
   - No control is unnamed.
 ```
 
-### 2.2 After you pick a wireframe for each part, paste this
-
-```
-Take variation <letter> of Part 1, <letter> of Part 2 and <letter> of Part 3 to full fidelity at 1280×800 and
-390×844, in the design system you hold. Draw every state under STATES TO SHOW, the chair's and a member's view of each,
-and the confirmation for Record and for Ratify. Show where the focus lands after Stage, Defer, Remove, Record and Ratify.
-For each artboard, list the components used and mark NEW ones. For each colour, name the token, or give a NEW token and
-its value. Then check contrast (text 4.5:1; borders and the focus ring 3:1) and every target (at least 24 px).
-```
-
-## 3. The journey
-
-One line per step: what the person does, and what they must be able to see. The step's full text is in § 2.1.
-
-| Step | Page template | Who | Does, and must see |
-|---|---|---|---|
-| 4.14 | `/committee/panels` | Dr Botha | Who sits on the panel and which EPAs it decides; PAED-004 and 005 fall back to it (the panel page is F08's). |
-| 4.15 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | Before Start: Start offered; no decision yet; the standing (0 of 15), MSF coverage, a 15-line agenda (12 Due, 3 optional) with no Action column, the snapshot not yet frozen, three trajectories, and sampling warnings. |
-| 4.16 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Starts it: "Review started.", the snapshot frozen and grouped, Stage and Defer on each line, the decision form with Present, and Record disabled with its reason. |
-| 4.17 | `/committee/reviews/{ReviewId:int}` → `/activities/{ActivityId:int}` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | Opens her own Mini-CEX from the snapshot, comes back, and stages PAED-001 at 5 on two items. She sees the ladder, the "one item" hint, and the line reading Staged. |
-| 4.18 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | An expiry before the issue date is refused; everything typed is kept. |
-| 4.19 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Stages PAED-010 with an expiry and PAED-012, then removes and re-stages PAED-012. The caption counts down. Remove asks for no confirmation. |
-| 4.20 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | A second decision on PAED-001 is refused. |
-| 4.21 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Defers nine lines with a reason (an empty one is refused), reinstates one, and ends with Record enabled beside its "cannot be changed afterwards" sentence. |
-| 4.22 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Naidoo | Follows the sitting: everything the chair sees, no controls, and a sentence saying only the chair acts. |
-| 4.23 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Records with only herself present: refused for want of a quorum. |
-| 4.24 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Records with no category: refused. |
-| 4.25 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Records Satisfactory Progress with four present. The decision card shows the Present line; staged decisions are fixed; Ratify is offered. |
-| 4.26 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Prof Mbatha | Reads the decided review; no Ratify, no Remove; "Only the panel's chair … can ratify" (D46). |
-| 4.27 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Ratifies: STARs #1–#3 issued, the agenda reads Decided / Deferred / Not decided, and the standing updates. No confirmation is asked, and no mail is sent (T320). |
-| 4.28 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | Dr Dlamini's review: stages PAED-002 on items not about it (a hint, not a refusal), and defers ten. |
-| 4.29 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Records and ratifies with three present; the standing reads 1 at or above, 1 below. |
-| 4.30 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | Dr du Plessis: stages nothing, records "Satisfactory with Observations" with a condition, and ratifies with no STAR. |
-| 4.31 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | Dr Mahlangu: "Inadequate Progress — Additional Training", the external member present. |
-| 4.32 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | Dr Ndlovu: the snapshot holds a declined request as evidence; "Outcome Deferred". |
-| 4.50 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | A formative check-in: starts, reads, and closes it. Others see "Only the panel's chair … can close this review." |
-| 5.3 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | The pre-graduation review: the widened snapshot and the exit rule "2 of 15 … Not yet: …", which gates nothing. |
-| 5.4 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Stages thirteen STARs at their exit levels, one after another. |
-| 5.5 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Records "Graduate (programme complete)" with four present. |
-| 5.6 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | Ratifies: STARs #6–#18 issued; "15 of 15 … Every EPA is at its exit level." |
-| A.7.6 | `/` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Zulu | At 390 px: 17 cards stack, tables scroll in their containers, and the chart labels shrink to about 6 px (T323). |
-| A.7.13 | `/committee/reviews/{ReviewId:int}` | Dr Zulu | With a screen reader: headings, tables, regions. Today only 3 of 9 cards are named regions, and the dismiss button's name is "×" (T280). |
-
-## 4. States to design
-
-From `execution/knowledge/scenario-paediatrics/states.md` § Committee. Each file is
-`design/baseline/states/review-detail--<state>.png`.
-
-| State | Capture | Reached at |
-|---|---|---|
-| Scheduled, the chair | `review-detail--scheduled.png` | Step 4.15, with the sampling warnings |
-| In progress, the chair | `review-detail--in-progress.png` | Step 4.16: the staging form; Record disabled with its reason |
-| One item named | `review-detail--single-item.png` | Step 4.17 |
-| Staged | `review-detail--staged.png` | Step 4.17, after staging |
-| Expiry refused | `review-detail--expiry-refused.png` | Step 4.18 |
-| Second decision refused | `review-detail--duplicate-refused.png` | Step 4.20 |
-| Deferral form, no reason | `review-detail--defer-empty.png` | Step 4.21 |
-| Every closing line settled | `review-detail--ready-to-record.png` | Step 4.21, after the last deferral |
-| A member during the sitting | `review-detail--member.png` | Step 4.22 |
-| No quorum | `review-detail--quorum-refused.png` | Step 4.23 |
-| No category | `review-detail--category-refused.png` | Step 4.24 |
-| Decided, the chair | `review-detail--decided.png` | Step 4.25: Ratify offered |
-| Decided, an administrator | `review-detail--decided-admin.png` | Step 4.26 |
-| Ratified, STARs issued | `review-detail--ratified.png` | Step 4.27 |
-| No item about the EPA | `review-detail--none-about-epa.png` | Step 4.28 |
-| Ratified, no STAR | `review-detail--ratified-no-star.png` | Step 4.30 |
-| Formative, in progress | `review-detail--formative-in-progress.png` | Step 4.50 |
-| Formative, closed | `review-detail--formative-closed.png` | Step 4.50 |
-| Pre-graduation, in progress | `review-detail--pre-graduation.png` | Step 5.3 |
-| Graduate recorded | `review-detail--graduate.png` | Step 5.5 |
-| Every EPA at its exit level | `review-detail--graduate-ratified.png` | Step 5.6 |
-| The chair can no longer act | `review-detail--chair-cannot-act.png` | Scratch (post-act4): Dr Zulu locked out; Dr Naidoo opens the review |
-| Agenda: no longer decided | `review-detail--no-longer-decided.png` | Scratch (post-act4): a STAR revoked mid-review |
-| Ratify blocked | `review-detail--ratify-blocked.png` | Scratch (post-act4) |
-| Entrustment-only review | `review-detail--entrustment-only.png` | Scratch (post-act4): a second panel sitting as the neonatal committee |
-| Decided by another panel | `review-detail--decided-elsewhere.png` | The same scratch run (named only in `states.md`'s prose; BRIEF § 10) |
-| Loading | `review-detail--loading.png` | A held read: the header and blank space (T329) |
-| Not found | `review-detail--not-found.png` | Typed `/committee/reviews/999999` |
-| 390 px | `review-detail--narrow.png` | Step A.7.6 |
-
-**Not captured, to be drawn from their description** (`states.md:775-778`):
-- "The chair rated all of this evidence" (D46 warns and refuses nothing).
-- "Sampling figures are incomplete".
-- The note that the trainee is now at another institution.
-- "Starting now leaves out N feedback campaigns".
-- Not played at all (`coverage.md` § Flows and states not played): the Administrator on a review (no ratify or appeal
-  bypass, D46), and Defer after recording. The scratch captures above cover a neonatal panel and "Decided elsewhere".
-
-**Belongs to other flows:**
-- F08: the scheduled review with no Start (`--scheduled-no-start`) and the formative review as scheduled
-  (`--formative`).
-- F09: the appeal card's states (`--appeal-*`, `--remit-refused`, `--remitted`), re-captured after T307 (2026-09-26);
-  `--appeal-upheld` no longer exists (D51).
-- F14: a review withdrawn by an erasure (`--withdrawn`).
-
-## 5. Attach
-
-Every path below is under `design/baseline/` and was checked with `ls` on 2026-09-26. Open each before you upload it
-(BRIEF § 3.3). None of them is an invitation page.
-
-### 5.1 Key screenshots (attach with the ask)
-
-1. `states/review-detail--scheduled.png`: the whole page before Start (7,111 px tall).
-2. `act-4/4.17-1-zulu-minicex-from-snapshot.png`: a piece of evidence opened from the snapshot.
-3. `states/review-detail--staged.png`: one decision staged (9,126 px tall).
-4. `states/review-detail--ready-to-record.png`: every line settled, Record enabled.
-5. `states/review-detail--quorum-refused.png`: the quorum refusal.
-6. `states/review-detail--ratified.png`: ratified, STARs issued.
-7. `act-5/5.3-2-zulu-review-full.png`: the standing and the exit rule.
-8. `act-5/5.4-4-zulu-thirteen-staged-full.png`: thirteen staged decisions (12,711 px tall).
-9. `states/review-detail--member.png`: a member's view.
-10. `act-A/A.7.13-1-review-7.png`: the top of a populated review, with the "×" dismiss button.
-11. `states/review-detail--narrow.png`: 390 px (12,935 px tall).
-
-### 5.2 State captures (add as the chat asks)
-
-- Review page states:
-  - `states/review-detail--in-progress.png`
-  - `states/review-detail--single-item.png`
-  - `states/review-detail--expiry-refused.png`
-  - `states/review-detail--duplicate-refused.png`
-  - `states/review-detail--defer-empty.png`
-  - `states/review-detail--category-refused.png`
-  - `states/review-detail--decided.png`
-  - `states/review-detail--decided-admin.png`
-  - `states/review-detail--none-about-epa.png`
-  - `states/review-detail--ratified-no-star.png`
-  - `states/review-detail--formative-in-progress.png`
-  - `states/review-detail--formative-closed.png`
-  - `states/review-detail--pre-graduation.png`
-  - `states/review-detail--graduate.png`
-  - `states/review-detail--graduate-ratified.png`
-  - `states/review-detail--chair-cannot-act.png`
-  - `states/review-detail--no-longer-decided.png`
-  - `states/review-detail--ratify-blocked.png`
-  - `states/review-detail--entrustment-only.png`
-  - `states/review-detail--decided-elsewhere.png`
-  - `states/review-detail--loading.png`
-  - `states/review-detail--not-found.png`
-- Evidence for the known problems:
-  - the charts at 375 px: the foot of `states/review-detail--narrow.png` (§ 5.1, item 11)
-  - `act-A/A.7.14-7-review-7-badges.png` (badge contrast; the badges pass since T335's tokens)
-- Step captures for detail:
-  - `act-4/4.16-1-zulu-review-started.png`
-  - `act-4/4.19-1-zulu-three-staged.png`
-  - `act-4/4.21-2-zulu-ready-to-record.png`
-  - `act-4/4.25-1-zulu-decision-recorded.png`
-  - `act-4/4.27-1-zulu-ratified-stars-issued.png`
-  - `act-4/4.30-1-zulu-duplessis-ratified-no-star.png`
-  - `act-5/5.4-1-zulu-stage-paed002-hint.png`
-  - `act-5/5.5-1-zulu-graduate-form.png`
-  - `act-5/5.6-2-zulu-exit-rule-met.png`
-  - `act-4/4.14-1-botha-decision-panels.png`
-
-### 5.3 Held
-
-None.
-
-## 6. Known problems this design must solve
-
-| Task | Problem today | What it means for the design | Evidence |
-|---|---|---|---|
-| T329 (P2; BRIEF A6) | `ReviewDetail.razor:113` renders the body only once the review is read. `LoadAsync` keeps no loading flag, and the page has no `StatePanel`. | The header renders from the first moment, with a skeleton for the body. A failed first read shows its alert there. No action is offered before the review has loaded. | `states/review-detail--loading.png` |
-| T323 (P3; BRIEF A3) | Each trajectory is a 600×200 viewBox scaled to about 260 px, so its labels are 5–6 px. The table beside it is for screen readers only. | Text at least 11 px at 390 px, or the table visible under 641 px. Use F05's answer; it is one component. | `states/review-detail--narrow.png` (its foot, at 375 px) |
-| T273 (P3) | The sampling list and the staged lines print a bare "Code — Title" for an EPA no longer in force (DESIGN.md:448-450). | Mark both through `EpaLabel`, "(no longer in use)". A staged line also says "No longer fits". Decision adopted 2026-09-25: the frozen snapshot's headings are not re-marked. | — |
-| T325 (P3; BRIEF A9) | "Issued on" defaults to the UTC date (`ReviewDetail.razor:2083`), a day behind between 22:00 and 24:00 UTC. | The default is today on the South African calendar. Any printed time carries its zone. | Step 4.17 ("Issued on filled 2026-09-26") |
-| T260 (P3) | After a panel save, the panel page keeps a stale "can no longer sit" warning (F08's page). | This page's seat notes ("The chair can no longer act", T256) are re-read after every action and never left stale (inference: the same class of note). | `states/review-detail--chair-cannot-act.png` |
-| T280 (P3; BRIEF A14) | The sampling warnings' dismiss button is `<button …>×</button>` with no name. Only 3 of the 9 cards are named regions (Step A.7.13). | "Dismiss" as the accessible name. Every card `aria-labelledby` its heading. | `act-A/A.7.13-1-review-7.png` |
-| T322 (P2; BRIEF A1) | Badge text on its tint fails 4.5:1 (for example success 2.55:1). | Body text on the tint, as `.badge-standing-*` does already. | `act-A/A.7.14-7-review-7-badges.png` (re-taken after T335's tokens: the badges now pass) |
-| T309 (P3) | A formative check-in carries Type "Annual progression review" (Steps 4.49, A.1.10). | Every surface reads "Formative check-in" (short: "Formative"). | `states/review-detail--formative-in-progress.png`, `states/review-detail--formative-closed.png` |
-| BRIEF A5; T264 (P3) | The result region (`ReviewDetail.razor:16-26`) is at the top of the page and takes the focus after each action. So each stage sends the chair about 6,000 px up from the staging form, at 1280 px (inference from the code and `states/review-detail--staged.png`). Remove, Ratify and Close review ask for no confirmation: the page has no `ConfirmDialog` (Steps 4.19, 4.27, 4.50). | Each action's outcome appears, and takes the focus, where the chair is working. Ratify and Record, which cannot be undone, confirm and name what they fix or issue. Remove confirms and names the staged decision. | Steps 4.19, 4.27, 4.50 |
-| T320 (P2, backend) | Ratifying issues STARs and sends no mail (Step 4.27, F-4.27a). | Do not promise "the registrar will be told" in the confirmation until T320 decides. | Step 4.27 |
-| T190 (P3; BRIEF A14) | The h1 is "Committee review" and the tab title "Committee Review" (`ReviewDetail.razor:7,9`). Neither names the registrar. The headings go h1 then h3, with no h2 (Step A.7.13 Note; cosmetic, T085). | One title pattern that names the registrar and the period. Headings in order. | `act-A/A.7.13-1-review-7.png` |
-| Layout (observed, not filed) | The Decision form (Record) sits at the top beside the Review card. The Agenda, where lines are staged and deferred, starts about 3,000 px lower, above the staging form (DESIGN.md:1231-1233: the Agenda "directly above the 'Pending entrustment decisions' card, so a chair reads what is due and stages it in one place"). | Keep the agenda and the staging together, and decide where Record belongs (questions 1 and 3). | `states/review-detail--staged.png` |
-
-## 7. Questions the design must answer
-
-1. **One long page, or steps (evidence, stage, record, ratify)?** How does the chair keep her place across 13 staged
-   lines (Step 5.4, `act-5/5.4-4-zulu-thirteen-staged-full.png`)?
-2. **What stays on screen while the chair stages?** The registrar's standing and shortfalls (the Annexure A table), or
-   the evidence list (the snapshot and its ticks, D38)?
-3. **How does the page show who is present, and whether the quorum is met, before the chair presses Record?** At least
-   two present, the chair among them (D46). Today it is known only from the refusal (Step 4.23).
-4. **How are irreversible acts marked and confirmed?**
-   - Recording fixes the staged decisions and deferrals.
-   - Ratifying issues STARs, "immutable once issued" (`DOMAIN.md:78`); there is no undo, and no Administrator bypass
-     (D46).
-
-## 8. Acceptance
-
-Claude Code builds the chosen design as one task, or one per part if the page becomes steps (BRIEF § 9). It is done
-when all of the following hold.
-
-**Tests.**
-- `dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj` is green. Never use `--no-build` (CLAUDE.md § Testing).
-- The run includes the tests that pin this page:
-  - `CommitteeDecisions/ReviewDetail*Tests` (Agenda, ChairControls, EvidenceEmptyState, EvidenceGrouping,
-    EvidencePicker, MsfOutsideSnapshot, Quorum, SamplingSentence);
-  - `CommitteeDecisions/EntrustmentStandingPanelTests`, `EntrustmentOnlyReviewPageTests`,
-    `CommitteeReviewStateLabelTests` and `WithdrawnReviewPageTests`;
-  - `Charts/TrajectoryChartTests`;
-  - `Accessibility/ActionFocusTests` and `RowNamesTests`;
-  - `Design/*`;
-  - the scenario guard in `Scenario/`.
-
-**The replay.**
-- Replay the flow's steps on a fresh database (`tools/scenario-replay.ps1`, BRIEF § 9):
-  - 4.14–4.32 and 4.50 (Act 4);
-  - 5.3–5.6 (Act 5);
-  - A.7.6 and A.7.13 (appendix).
-- Each act may instead start from `recovery/scenario-post-act3.dump` or `-act4.dump` (README § How to play,
-  "Snapshots"). Every Expect must hold, the refusals' exact words included.
-- **Update the Expects the design changes.** A confirmation dialog adds a step to 4.19, 4.25, 4.27, 4.29–4.32, 4.50,
-  5.5 and 5.6. A layout of steps changes the Route lines. The steps quote the screen (BRIEF § 9, item 7).
-- Replay the scratch states in § 4 (`states.md` § Three ways a state is reached).
-
-**Checks the design adds.**
-- Step 4.15, reached from the nav with a held read: the header and a skeleton show, and no Start is offered until the
-  review has loaded (T329).
-- Step 4.17: after staging, the focus is on the result, and the result is where the chair was working.
-- Step 4.27: Ratify asks for confirmation and names what it issues.
-- Step A.7.6 at 390 px: trajectory text is at least 11 px, or the table is visible (T323). No page scrolls sideways.
-- Step A.7.13: every card is a named region, the dismiss button is named, and the headings are in order (T280).
-
-**Re-capture.** Take the 29 state captures in § 4 and this flow's step captures again (`states.md` § How to capture).
-Compare them with the chosen artboards.
-
-**Browser check.** Check as the chair, a member and the InstitutionalAdmin, at 1280 px and at 390 px.

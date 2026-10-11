@@ -50,14 +50,12 @@ Run the loop as flow 06 ran it (`design/flows/06-programme-oversight/`, BRIEF §
 ## Verification
 
 - [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [ ] The canvas is created, with the mark copied in before round 1 — its link. (https://claude.ai/artifact/97WQWEuzMYHcKngPnNdHkV, `f2137a8c`)
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/07-…/`. (A; `round-2-review.md` E1–E6; `round-3-check.md`, 2026-10-05)
+- [ ] The canvas is created, with the mark copied in before round 1 — its link.
+- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/07-review-sitting/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 07) — the squash commit and counts.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 07, the baseline is re-captured, and
-  flow 06's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (2026-10-05,
-  `wombat_scenario_t358`: 332 steps, 266 no gap, every other gap a filed task; one regression, A.7.8a at 768 px, fixed
-  in `94edf2b7` and re-checked; states re-taken on scratch copies, missing 0; T360 filed for two layout nits.)
-- [ ] The design system is re-synced and republished — its version number. (Version 17, 1791219142-2815; `1fed3a9a`; lessons in BRIEF § 11 "Flow 06".)
+  flow 07's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [ ] The design system is re-synced and republished — its version number.
 
 ## Related
 
