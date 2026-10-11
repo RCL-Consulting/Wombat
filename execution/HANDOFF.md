@@ -2,37 +2,33 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-10-04/05 (Opus): T358, flow 06, done end to end; T298 and T290's committee item; repo to GitHub
+## Session 2026-10-11 (Opus): the harness upgraded to 3.4; 111 done tasks archived; T361 started
 
-The operator said "proceed with the next task". **The repo is `C:\dev\Wombat`, now on GitHub,
-`https://github.com/RCL-Consulting/Wombat.git` (public), `origin`; the old server stays as remote `rcl` (its SSH port is
-closed). Commit locally; push when the operator asks.** The harness is `harness.py`; its path is in the hooks in `.claude/settings.local.json`.
+The operator said "upgrade the execution workspace", "move the done tasks" and "proceed". **The repo is `C:\dev\Wombat`,
+on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when the operator asks.** The harness is
+`C:\devcl_executionin\harness.py` (the hooks in `.claude/settings.local.json`).
 
 ### Done
 
-- **T358, flow 06 (programme oversight), all nine steps** (`design/flows/06-programme-oversight/`):
-  - Brief `2f29c158`; canvas https://claude.ai/artifact/97WQWEuzMYHcKngPnNdHkV; round 1 picked A ("two lists and a
-    record"); round 2 reviewed from three sides (`round-2-review.md`, E1–E6 the operator's); round 3 checked
-    (`round-3-check.md`).
-  - Build `85d5a508`: lanes A0, A1, A2, B, C, D, runbook (`build-lanes.md`, `build-contracts.md`); three Sonnet reviews,
-    one fix pass (`build-review.md`). Programme trainees, the staff registrar page, Waiting for assessors, Send a reminder
-    (ActivityReminders + AdmittedOn, one migration), the four Homes, the menus (E2's flat limit), a not-found page lights
-    nothing.
-  - Replay on `wombat_scenario_t358`: 332 steps, 266 no gap, every other gap a filed task; A.7.8a's 768 px regression
-    fixed (`94edf2b7`); states re-taken. Design system re-synced (`1fed3a9a`), published as **version 17**. Lessons in
-    BRIEF § 11 "Flow 06". T358 closed (`6b9ae3ae`).
-- **T298 done, T290's committee item landed** (`14dac868`), before the build (the operator's Q8).
-- **Filed:** T359 (Reassign; carries the review's R1), T360 (P3 layout nits, the trainees form without the circuit),
-  T361 (flow 07).
-- **Repo housekeeping:** README rewritten for the rebuilt app; old Azure workflow removed; `.gitignore` covers dumps,
-  env files and keys; the five old `codex/*` branches deleted (their PRs were already merged or closed); the
-  credentials survey found only dev-only or rotated values in history, left as is (the operator: dev only, not in use).
-  CLAUDE.md's Multi-agent workflows section committed. The contributor rewrite (fulasht) is deferred by the operator.
+- **Harness 3.4** (`c5c4d41d`): `upgrade --apply`, five conflicts settled (this repo's `## Verification` rule kept; the
+  generic multi-agent block points at CLAUDE.md's own section); `execution/harness.json` records the merge base;
+  the template's empty `execution/ref/` added. `lint` clean; `upgrade` says up to date.
+- **Archive** (`bc9a6c4b`): the 50 undated tasks and every task completed by 2026-09-24 moved from `tasks/done/` to
+  `log/tasks/` (226 to 115); four links followed. CLAUDE.md's books-rag bullet names the medical-education sources
+  (ten Cate et al. 2024 on EPAs, the `medicine` category), per the operator.
+- **T361 started** (flow 07, the review sitting), step 1, the brief. Nothing written to `design/flows/07-review-sitting.md`
+  yet. Two read-only investigators were launched: one auditing the review page's code at HEAD (claims, strings, gating,
+  components, open tasks), one surveying `design/baseline/` captures for the flow. Their reports live only in that
+  session: **re-run both if they are not in front of you.**
 
-### Next: T361, flow 07 (the review sitting), step 1: the brief. Opus.
+### Next: T361 step 1, restate the brief in flow 06's layout
 
-- Run the loop as flow 06's record shows. Step 3 needs the operator's new canvas on design system version 17.
-- **T290 stays in progress** for its other items only (the harness cannot requeue a task).
+- Header table, how to run, § 1 ask (structure first, W: 2–3 variations), § 2 journey, § 3 states, § 4 Attach (the
+  script needs a `## N. Attach` heading), § 5 known problems at HEAD, § 6 questions, § 7 acceptance, § 8 steps.
+- § 8: the 26 steps re-extracted with `(file.md:line)` pointers, matching the runbook (the old copy had no pointers, so
+  `check_verbatim_steps.py` skipped it). Then `check_flow_completeness.py` (passes now) and the verbatim check.
+- T361's Verification lines carry flow 06's evidence in brackets, copied from T358: replace them.
+- **T290 stays in progress** for its other items only.
 
 ### For the operator
 

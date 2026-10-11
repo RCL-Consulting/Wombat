@@ -1,11 +1,12 @@
 ---
 id: T361
 title: Flow 07, the review sitting, has not been through the redesign loop
-status: queued
+status: in_progress
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-05
+started: 2026-10-11
 ---
 
 # T361 — Flow 07, the review sitting, has not been through the redesign loop
