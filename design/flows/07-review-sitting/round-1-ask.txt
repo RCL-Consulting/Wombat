@@ -4,7 +4,7 @@ This is flow 07 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   account), 03 (a registrar files an activity), 04 (an assessor's inbox), 05 (a registrar reads where she stands) and
   06 (watching the programme) are designed and built; this page sits inside the shell. Structure first, then fidelity:
   round 1 is 2–3 structural variations as wireframes of one registrar's review through a whole sitting, and I pick one
-  before round 2. The runbook steps follow below in this same message. The brand mark is at /_blob/MARK: use it, never
+  before round 2. The runbook steps follow below in this same message. The brand mark is at /_blob/33198ce497bf7fb3aeac9b59047b615b: use it, never
   a drawn disc.
 
 GOAL: The panel's chair runs one registrar's review, start to finish, in one sitting, with the panel watching:

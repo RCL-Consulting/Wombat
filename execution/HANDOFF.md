@@ -22,14 +22,14 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   `design/flows/07-review-sitting/round-1-ask.txt` is § 1 + § 8 as one paste. T361's Verification lines are now
   flow 07's own.
 
-### Next: T361 step 3, the operator's canvas
+### Next: T361 step 4–5, round 1 in the canvas
 
-- **The operator:** create a new canvas from the main app's Design page on the Wombat design system v17
-  (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18) and give its link.
-- Then copy the mark in (`asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`), put its `/_blob/` URL where the brief
-  and `round-1-ask.txt` read `/_blob/MARK`, and send round 1 with § 4's 14 key screenshots. Before uploading, move
-  `design/baseline/act-4/4.27-1-zulu-ratified-stars-issued.png`'s copy back from `design/upload/crop-first/` (held for its name; no link)
-  and stage flow 05's two boards by hand (§ 4).
+- **Canvas:** https://claude.ai/artifact/9hVRTiLRBUugygR7bHB1CS (the operator's, 2026-10-11); the mark copied in as
+  `/_blob/33198ce497bf7fb3aeac9b59047b615b`, now in the brief and `round-1-ask.txt`. It has no design system attached
+  yet: choose Wombat (v17) when sending round 1.
+- The operator sends `round-1-ask.txt` as ONE message with § 4's 14 key screenshots. Before uploading, move
+  `design/baseline/act-4/4.27-1-zulu-ratified-stars-issued.png`'s copy back from `design/upload/crop-first/` (held for
+  its name; no link) and stage flow 05's two boards by hand (§ 4). Then pick, and answer § 6.
 - Questions 10–12 are the operator's: T329/T273/T325/T309/T260/T324 folded or first; T260's Start; T314's export.
 - **T290 stays in progress** for its other items only.
 

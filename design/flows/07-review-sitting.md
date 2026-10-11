@@ -32,11 +32,11 @@ Restated 2026-10-11 for T361 (the brief of 2026-09-26, T332, predates flows 01�
    `act-4/4.27-1-zulu-ratified-stars-issued.png` for the word "issued" in its name: it shows no link, so move it back.
    Two captures are 18,013 px tall, past Chromium's 16,384 px, and repeat the header near their foot (§ 4).
 2. **Start a new canvas** from the main app's Design page, on the Wombat design system v17
-   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Flow 07's canvas: (the operator
-   gives its link).
+   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Flow 07's canvas: https://claude.ai/artifact/9hVRTiLRBUugygR7bHB1CS (created
+   2026-10-11).
 3. **Copy the mark into the canvas before round 1** (`Artifact publish`, `asset: true`, `from_url` = the design
    system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Put the returned `/_blob/` URL in § 1 and in
-   `design/flows/07-review-sitting/round-1-ask.txt`, where they read `/_blob/MARK`.
+   `design/flows/07-review-sitting/round-1-ask.txt`, where they read `/_blob/33198ce497bf7fb3aeac9b59047b615b`.
 4. **Send § 1 and § 8 as ONE message** (`design/flows/07-review-sitting/round-1-ask.txt`), with the key screenshots in
    § 4. The canvas draws round 1 from the first message and does not wait for a second (§ 11, flow 02). Read
    `project/canvas.json`'s version before and after: a send can draw nothing. Read round 1's notes for a line saying it
@@ -60,7 +60,7 @@ This is flow 07 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   account), 03 (a registrar files an activity), 04 (an assessor's inbox), 05 (a registrar reads where she stands) and
   06 (watching the programme) are designed and built; this page sits inside the shell. Structure first, then fidelity:
   round 1 is 2–3 structural variations as wireframes of one registrar's review through a whole sitting, and I pick one
-  before round 2. The runbook steps follow below in this same message. The brand mark is at /_blob/MARK: use it, never
+  before round 2. The runbook steps follow below in this same message. The brand mark is at /_blob/33198ce497bf7fb3aeac9b59047b615b: use it, never
   a drawn disc.
 
 GOAL: The panel's chair runs one registrar's review, start to finish, in one sitting, with the panel watching:
