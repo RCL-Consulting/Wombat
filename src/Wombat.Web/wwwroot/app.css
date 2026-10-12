@@ -4601,6 +4601,13 @@ fieldset.form-group fieldset.form-group > legend {
     min-height: 44px;
   }
 
+  /* A snapshot line's item, a link to flow 03: a one-line name was a 21px target (the replay's A.7.6, T086). */
+  #evidence-snapshot tbody th a {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+
   .review-page .snapshot-pick-line .form-check,
   .review-page .check-grid .form-check {
     flex: 1 1 auto;

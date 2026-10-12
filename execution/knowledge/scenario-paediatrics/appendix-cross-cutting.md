@@ -1299,6 +1299,7 @@ Actual (2026-10-12, T361 replay, wombat_scenario_t361): At 390 px. The bar's "Ac
   (Paediatrics) #12", "#15") are 21 px tall; at T358 nothing on the page was under 24 px.
 Gap: new: at 390 px the evidence snapshot's one-line activity links ("DOPS (Paediatrics) #14" and the like) are 21 px
   tall, under § A.7's 24 px floor (T086); the rest of the Expect holds.
+  Fixed in the next commit (44px below 641px); measured on the republished app: 44-48 px, no sideways scroll.
 
 ### Step A.7.7 — Dr Mokoena on her phone
 Role: SpecialityAdmin — Dr Refilwe Mokoena
