@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2 1280 record and ratify</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Fraunces:wght@500&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:4000px;display:grid;grid-template-columns:repeat(3,1280px);gap:80px;font-family:'Source Sans 3',sans-serif">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol><symbol id="i-err" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></symbol></defs></svg>
+
+<!-- 1 -->
+<div>
+<div class="cap"><b>2 · The decision form, only the chair ticked (Step 4.23).</b> <i>Reached by "Go to the decision". Present reads live from the ticks; Record decision… is disabled with the quorum sentence beside it. Unstaged lines hold nothing back (C1c). New optional field after Rationale (C1d).</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art" style="padding-top:0;gap:16px">
+<section class="sit" aria-label="The sitting"><span class="bdg b-i">In progress</span><span class="cnt">3 staged</span><span class="mt2 gr">Present: the chair · one more member needed</span></section>
+<section class="card" aria-labelledby="b1d" id="decision"><h2 id="b1d" class="foc fx" tabindex="-1">Decision</h2>
+<div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:24px">
+<div class="col" style="gap:14px">
+<div class="fld"><label for="b1c">Category</label><select id="b1c" class="ctl"><option>Satisfactory Progress</option></select></div>
+<div class="fld"><label for="b1r">Rationale</label><textarea id="b1r" class="ctl" style="height:60px">On track for completion; three EPAs entrusted, the rest to be decided at her final review.</textarea></div>
+<div class="fld"><label for="b1n">About the EPAs not decided (optional)</label><textarea id="b1n" class="ctl" style="height:52px"></textarea><span class="help">The registrar sees this once the review is ratified.</span></div>
+<div class="fld"><label for="b1o">Conditions</label><textarea id="b1o" class="ctl" style="height:52px"></textarea></div>
+</div>
+<fieldset class="fs"><legend>Present</legend>
+<label class="ck"><input type="checkbox" checked disabled>Thandi Zulu (chair)</label><label class="ck"><input type="checkbox">David Naidoo</label><label class="ck"><input type="checkbox">Sarah Botha</label><label class="ck"><input type="checkbox">John van Rensburg (external)</label>
+<span class="help">Tick every panel member at this sitting. A committee decision needs at least two panel members present: the chair and at least one other.</span></fieldset>
+</div>
+<div class="acts"><button class="btn btn-p" disabled aria-describedby="b1q">Record decision…</button><span class="q" id="b1q">Only the chair is ticked. A committee decision needs at least two panel members present: the chair and at least one other.</span></div>
+</section>
+</div></div>
+<div class="fold">Focus lands on the Decision heading after "Go to the decision". The server keeps its refusal with the same words, should the page be stale.</div>
+</div>
+</div>
+
+<!-- 2 -->
+<div>
+<div class="cap"><b>2 · No category, refused (Step 4.24).</b> <i>The refusal at the top of the form takes the focus; Category is marked; all typed and ticked is kept (A5). A missing rationale reads in Wombat's words the same way (T324).</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art" style="padding-top:0;gap:16px">
+<section class="sit" aria-label="The sitting"><span class="bdg b-i">In progress</span><span class="cnt">3 staged</span><span class="mt2 gr">4 present · quorum met</span></section>
+<section class="card" aria-labelledby="b2d"><h2 id="b2d">Decision</h2>
+<div class="al al-d foc fx" role="alert"><svg class="ic" aria-hidden="true"><use href="#i-err"/></svg><p><b>Not recorded.</b> This review decides the trainee's progression, so its decision records a progression category. Choose one.</p></div>
+<div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:24px">
+<div class="col" style="gap:14px">
+<div class="fld"><label for="b2c">Category</label><select id="b2c" class="ctl inv" aria-invalid="true" aria-describedby="b2cm"><option>Select a category…</option></select><span class="fmsg" id="b2cm"><svg class="ic" aria-hidden="true"><use href="#i-err"/></svg>Choose a progression category.</span></div>
+<div class="fld"><label for="b2r">Rationale</label><textarea id="b2r" class="ctl" style="height:60px">On track for completion; three EPAs entrusted, the rest to be decided at her final review.</textarea></div>
+<div class="fld"><label for="b2n">About the EPAs not decided (optional)</label><textarea id="b2n" class="ctl" style="height:52px">To be decided at her final review.</textarea><span class="help">The registrar sees this once the review is ratified.</span></div>
+</div>
+<fieldset class="fs"><legend>Present</legend>
+<label class="ck"><input type="checkbox" checked disabled>Thandi Zulu (chair)</label><label class="ck"><input type="checkbox" checked>David Naidoo</label><label class="ck"><input type="checkbox" checked>Sarah Botha</label><label class="ck"><input type="checkbox" checked>John van Rensburg (external)</label>
+<span class="q sm">4 present: the chair and 3 others. The quorum is met.</span></fieldset>
+</div>
+</section>
+</div></div>
+<div class="fold">Below: Conditions · Record decision… (enabled). A missing rationale: "Not recorded. Say why the committee decided this." under Rationale, never "The Rationale field is required." <span class="bk">wording to confirm against T324's list</span></div>
+</div>
+</div>
+
+<!-- 3 -->
+<div>
+<div class="cap"><b>2 · Ready (Step 4.25).</b> <i>4 present, the quorum met; Record decision… enabled, and the line beside it says what recording fixes and records.</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art" style="padding-top:0;gap:16px">
+<section class="sit" aria-label="The sitting"><span class="bdg b-i">In progress</span><span class="cnt">3 staged</span><span class="mt2 gr">4 present · quorum met</span></section>
+<section class="card" aria-labelledby="b3d"><h2 id="b3d">Decision</h2>
+<div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:24px">
+<div class="col" style="gap:14px">
+<div class="fld"><label for="b3c">Category</label><select id="b3c" class="ctl"><option>Satisfactory Progress</option></select></div>
+<div class="fld"><label for="b3r">Rationale</label><textarea id="b3r" class="ctl" style="height:60px">On track for completion; three EPAs entrusted, the rest to be decided at her final review.</textarea></div>
+<div class="fld"><label for="b3n">About the EPAs not decided (optional)</label><textarea id="b3n" class="ctl" style="height:52px">To be decided at her final review.</textarea><span class="help">The registrar sees this once the review is ratified.</span></div>
+<div class="fld"><label for="b3o">Conditions</label><textarea id="b3o" class="ctl" style="height:52px"></textarea></div>
+</div>
+<fieldset class="fs"><legend>Present</legend>
+<label class="ck"><input type="checkbox" checked disabled>Thandi Zulu (chair)</label><label class="ck"><input type="checkbox" checked>David Naidoo</label><label class="ck"><input type="checkbox" checked>Sarah Botha</label><label class="ck"><input type="checkbox" checked>John van Rensburg (external)</label>
+<span class="help">Tick every panel member at this sitting. A committee decision needs at least two panel members present: the chair and at least one other.</span>
+<span class="q sm">4 present: the chair and 3 others. The quorum is met.</span></fieldset>
+</div>
+<div class="acts"><button class="btn btn-p">Record decision…</button><span class="sm">Recording fixes the 3 staged decisions, and records the 9 EPAs due at this sitting that are not staged as not decided.</span></div>
+</section>
+</div></div>
+</div>
+</div>
+
+<!-- 4 -->
+<div>
+<div class="cap"><b>2 · Record decision… confirms (C1e).</b> <i>Names the category, what it fixes, what it records as not decided, and who is present. Focus opens on Go back.</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art" style="padding-top:0;gap:16px">
+<section class="sit"><span class="bdg b-i">In progress</span><span class="cnt">3 staged</span><span class="mt2 gr">4 present · quorum met</span></section>
+<section class="card"><h2>Decision</h2><div class="sk" style="height:240px"></div></section>
+</div></div>
+<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="b4t" style="width:600px"><h2 class="h2" id="b4t">Record Satisfactory Progress for Lerato Molefe?</h2>
+<ul><li>Fixes 3 staged decisions: PAED-001 at 5, PAED-010 at 4 (expires 2026-10-25), PAED-012 at 5.</li><li>Records 9 EPAs due at this sitting as not decided: PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-011, PAED-014 and PAED-015.</li><li>Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external).</li></ul>
+<p style="margin:0">Afterwards only a decision that no longer fits the trainee's curriculum can be removed.</p>
+<div class="acts"><button class="btn foc fx">Go back</button><button class="btn btn-p">Record decision</button></div></div></div>
+</div>
+</div>
+
+<!-- 5 -->
+<div>
+<div class="cap"><b>5 · Decided · the chair.</b> <i>"Decision recorded." in the Decision card takes the focus. The bar offers Ratify…. The record shows the not-decided sentence. The form is gone; staged lines read Fixed.</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art" style="padding-top:0;gap:16px">
+<section class="sit" aria-label="The sitting"><span class="bdg b-w">Decided</span><span class="cnt">Satisfactory Progress · 3 decisions to issue</span><span class="gr"></span><button class="btn btn-p">Ratify…</button></section>
+<section class="card" aria-labelledby="b5d"><h2 id="b5d">Decision</h2>
+<div class="al al-s foc fx" role="status"><svg class="ic" aria-hidden="true"><use href="#i-ok"/></svg><p>Decision recorded.</p></div>
+<div class="h3">Satisfactory Progress</div>
+<p style="margin:0">On track for completion; three EPAs entrusted, the rest to be decided at her final review.</p>
+<p style="margin:0"><span class="mut">About the EPAs not decided:</span> To be decided at her final review.</p>
+<p style="margin:0"><span class="mut">Present:</span> Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)</p>
+</section>
+<section class="card" style="gap:12px"><div class="ch"><h2>Agenda</h2><span class="cap2">Fixed when the committee's decision was recorded: ratifying issues exactly these.</span></div>
+<div class="tw"><table class="tbl"><thead><tr><th>EPA</th><th>Window</th><th>State</th><th>Evidence</th></tr></thead><tbody>
+<tr><td class="epa"><b>PAED-001</b><span>Providing paediatric emergency care to children</span></td><td class="n">2026</td><td><div class="st"><span class="bdg b-i">Staged</span><span class="s">Level 5 · issued 2026-10-05 · fixed.</span></div></td><td class="n">3 items</td></tr>
+<tr><td class="epa"><b>PAED-002</b><span><span class="bk">catalogue title</span></span></td><td class="n">2026 S2</td><td><div class="st"><span class="bdg">Not decided at this sitting</span><span class="s">To be decided at her final review.</span></div></td><td class="n">0 items</td></tr>
+</tbody></table></div></section>
+</div></div>
+<div class="fold">The Decision card stands above the agenda once a decision is recorded, so the result sits where the chair pressed Record. Only a decision that no longer fits the curriculum still offers Remove….</div>
+</div>
+</div>
+
+<!-- 6 -->
+<div>
+<div class="cap"><b>5 · Ratify… confirms (C1g, T320).</b> <i>Names each STAR it issues and what was not decided; no undo; nothing promised to the registrar. Focus opens on Not yet.</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art" style="padding-top:0;gap:16px">
+<section class="sit"><span class="bdg b-w">Decided</span><span class="cnt">Satisfactory Progress · 3 decisions to issue</span><span class="gr"></span><button class="btn btn-p">Ratify…</button></section>
+<section class="card"><h2>Decision</h2><div class="sk" style="height:180px"></div></section>
+</div></div>
+<div class="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="b6t"><h2 class="h2" id="b6t">Ratify and issue 3 STARs to Lerato Molefe?</h2>
+<ul><li>PAED-001 at 5, issued 2026-10-05</li><li>PAED-010 at 4, issued 2026-10-05, expires 2026-10-25</li><li>PAED-012 at 5, issued 2026-10-05</li></ul>
+<p style="margin:0">PAED-002 and 8 others were not decided at this sitting. PAED-008, PAED-009 and PAED-013 are not decided.</p>
+<p style="margin:0" class="q">Ratifying cannot be undone: nothing on this review can change afterwards.</p>
+<div class="acts"><button class="btn foc fx">Not yet</button><button class="btn btn-p">Ratify and issue 3 STARs</button></div></div></div>
+</div>
+</div>
+
+<!-- 7 -->
+<div>
+<div class="cap"><b>6 · Ratified (Step 4.27).</b> <i>"Decision ratified." under the bar takes the focus. The STARs in their lines; the not-decided lines with their sentence (C1f); the optional lines Not decided. The standing below has updated.</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art" style="padding-top:0;gap:16px">
+<section class="sit" aria-label="The sitting"><span class="bdg b-s">Ratified</span><span class="cnt">Satisfactory Progress · 3 STARs issued</span></section>
+<div class="al al-s foc fx" role="status"><svg class="ic" aria-hidden="true"><use href="#i-ok"/></svg><p>Decision ratified.</p></div>
+<section class="card" style="gap:12px"><div class="ch"><h2>Agenda</h2><span class="cap2">Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each one.</span></div>
+<div class="tw"><table class="tbl"><thead><tr><th>EPA</th><th>Window</th><th>State</th><th>Evidence</th></tr></thead><tbody>
+<tr><td class="epa"><b>PAED-001</b><span>Providing paediatric emergency care to children</span></td><td class="n">2026</td><td><div class="st"><span class="bdg b-s">Decided</span><span class="s">STAR #<span class="bk">n</span>. Level 5.</span></div></td><td class="n">3 items</td></tr>
+<tr><td class="epa"><b>PAED-002</b><span><span class="bk">catalogue title</span></span></td><td class="n">2026 S2</td><td><div class="st"><span class="bdg">Not decided at this sitting</span><span class="s">To be decided at her final review.</span></div></td><td class="n">0 items</td></tr>
+<tr><td class="epa"><b>PAED-008</b><span><span class="bk">catalogue title</span></span></td><td class="n">2026</td><td><div class="st"><span class="bdg">Not decided</span><span class="s">The review was ratified without deciding it.</span></div></td><td class="n">0 items</td></tr>
+<tr><td class="epa"><b>PAED-010</b><span><span class="bk">catalogue title</span></span></td><td class="n">2026 S2</td><td><div class="st"><span class="bdg b-s">Decided</span><span class="s">STAR #<span class="bk">n</span>. Level 4, expires 2026-10-25.</span></div></td><td class="n">2 items</td></tr>
+</tbody></table></div></section>
+</div></div>
+<div class="fold">Below: Decision (as recorded) · Entrustment against Annexure A: "2 at or above · 1 below · 12 with no decision, of 15 EPAs"; "2 of 15 EPAs at their exit level by STAR decision" · … · Appeals.</div>
+</div>
+</div>
+
+<!-- 8 -->
+<div>
+<div class="cap"><b>6 · Ratified with nothing staged (du Plessis, Step 4.30).</b> <i>No STAR; the twelve due lines carry the one sentence written at Record ("Not at a decision point this year.").</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<header class="hdr"><div class="crumbs"><a href="#">Committee reviews</a><span class="s">›</span><b>Pieter du Plessis · 2026 S2</b></div><h1 class="pg">Pieter du Plessis · 2026 S2</h1><div class="subt">Annual progression review · Paed Annual Review Panel · Training year 2</div></header>
+<section class="sit" aria-label="The sitting"><span class="bdg b-s">Ratified</span><span class="cnt">Satisfactory with Observations · no STAR issued</span></section>
+<section class="card" aria-labelledby="b8d"><h2 id="b8d">Decision</h2><div class="h3">Satisfactory with Observations</div>
+<p style="margin:0">Teaching logs are sound; no observed clinical assessment completed yet.</p>
+<p style="margin:0"><span class="mut">About the EPAs not decided:</span> Not at a decision point this year.</p>
+<p style="margin:0"><span class="mut">Conditions:</span> At least two Mini-CEX before the next sitting.</p>
+<p style="margin:0"><span class="mut">Present:</span> Thandi Zulu (chair), David Naidoo</p></section>
+<section class="card" style="gap:8px"><div class="ch"><h2>Agenda</h2><span class="cap2">Nothing was staged when the review was ratified, so ratifying it issued no STAR.</span></div></section>
+</div></div>
+<div class="fold">Rating trajectory: "No rating by a named assessor to chart in this review's window." The snapshot lists each item in its state: the CBD Requested, the DOPS cancelled, the portfolio review Awaiting review (T138).</div>
+</div>
+</div>
+
+<!-- 9 -->
+<div>
+<div class="cap"><b>6 · Outcome Deferred (Ndlovu, Step 4.32).</b> <i>A progression category the College lists, recorded and ratified like any other. It is not a deferral and is unrelated to D53.</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<header class="hdr"><div class="crumbs"><a href="#">Committee reviews</a><span class="s">›</span><b>Sipho Ndlovu · 2026 S2</b></div><h1 class="pg">Sipho Ndlovu · 2026 S2</h1><div class="subt">Annual progression review · Paed Annual Review Panel · Training year 1</div></header>
+<section class="sit" aria-label="The sitting"><span class="bdg b-s">Ratified</span><span class="cnt">Outcome Deferred · no STAR issued</span></section>
+<section class="card" aria-labelledby="b9d"><h2 id="b9d">Decision</h2><div class="h3">Outcome Deferred</div>
+<p style="margin:0">One completed Mini-CEX and one reflection in his first semester; to be judged at the next sitting.</p>
+<p style="margin:0"><span class="mut">About the EPAs not decided:</span> Too early in the programme to decide.</p>
+<p style="margin:0"><span class="mut">Present:</span> Thandi Zulu (chair), Sarah Botha</p></section>
+<section class="card" style="gap:8px"><div class="ch"><h2>Before the committee decides</h2></div><div class="sm"><b>PAED-002</b> · 1 rating · 1 assessor · 1 source. Fewer than three distinct assessors across this EPA's evidence.</div></section>
+</div></div>
+<div class="fold">Snapshot: the Mini-CEX Khumalo declined and the one Sarah Botha completed at 3a (PAED-002), the reflective exercise (PAED-001), discussed. Trajectory: PAED-002 alone.</div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":4000,"height":2716}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

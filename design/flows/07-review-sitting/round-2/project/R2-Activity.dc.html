@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2 activity page return link</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Fraunces:wght@500&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:1750px;display:flex;gap:80px;align-items:flex-start;font-family:'Source Sans 3',sans-serif">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-back" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol></defs></svg>
+
+<div>
+<div class="cap"><b>3 · Flow 03's activity page, opened from the review's snapshot (Q6, decided).</b> <i>"← Back to Lerato Molefe · 2026 S2" above the trail, only when opened from a review; Back lands on the snapshot line it came from, focus on its link.</i></div>
+<div class="vp">
+<div class="side"><div class="brand"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt="">Wombat</div><div class="rh"><small>Acting as</small><b>Committee member</b><a href="#">Switch to Assessor</a></div><nav class="nv" aria-label="Main"><a href="#">Home</a><a href="#" class="on" aria-current="true">Committee reviews</a><a href="#">Decision panels</a><hr><a href="#">My data rights</a></nav></div>
+<div class="main"><div class="top"><a href="#">Thandi Zulu</a><button class="btn">Sign out</button></div>
+<div class="art">
+<div class="col" style="gap:8px">
+<a href="#" class="row" style="font-weight:600;text-decoration:none;gap:6px"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Back to Lerato Molefe · 2026 S2</a>
+<header class="hdr"><div class="crumbs"><a href="#">Committee reviews</a><span class="s">›</span><a href="#">Lerato Molefe · 2026 S2</a><span class="s">›</span><b>Mini-CEX · PAED-001</b></div><h1 class="pg">Mini-CEX · PAED-001 — Providing paediatric emergency care to children</h1><div class="subt">Lerato Molefe's request to Thandi Zulu</div></header>
+</div>
+<section class="card" aria-label="Status" style="border-left:4px solid var(--success-color)"><div class="row"><span class="bdg b-s">Completed</span><span class="q">Done. You completed it on <span class="bk">date</span>.</span></div><p style="margin:0">Rated 5. Credited 1 item to PAED-001.</p></section>
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:24px">
+<section class="card" aria-labelledby="ab"><h2 class="h3" id="ab">About</h2><dl class="dl"><dt>Trainee</dt><dd>Lerato Molefe</dd><dt>Assessor</dt><dd>Thandi Zulu</dd><dt>Encounter</dt><dd><span class="bk">date</span></dd></dl></section>
+<section class="card" aria-label="The form"><div class="h2">The form, read-only</div><p style="margin:0" class="mut">Flow 03's ActivityForm sections, unchanged.</p></section>
+</div>
+</div></div>
+<div class="fold">Address: /activities/{id}?from=review-{ReviewId}&amp;at=snap-{itemId}. Without "from" (any other route in), the link is not drawn. The trail is the owner table's, unchanged.</div>
+</div>
+</div>
+
+<div>
+<div class="cap"><b>390 · the same page.</b> <i>The return link is the first 44 px row, before flow 01's phone back crumb.</i></div>
+<div class="ph"><div class="pbar"><img src="/_blob/33198ce497bf7fb3aeac9b59047b615b" alt=""><span class="wm">Wombat</span><span class="ar"><small>Acting as</small>Committee member</span><button class="mt">Menu</button></div>
+<div class="part">
+<a href="#" class="row" style="min-height:44px;font-weight:600;text-decoration:none;gap:6px"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Back to Lerato Molefe · 2026 S2</a>
+<header class="hdr"><h1 class="pg">Mini-CEX · PAED-001 — Providing paediatric emergency care to children</h1><div class="subt">Lerato Molefe's request to Thandi Zulu</div></header>
+<section class="card" aria-label="Status" style="border-left:4px solid var(--success-color)"><div class="row"><span class="bdg b-s">Completed</span><span class="q">Done. You completed it on <span class="bk">date</span>.</span></div><p style="margin:0">Rated 5. Credited 1 item to PAED-001.</p></section>
+<section class="card"><h2 class="h3">About</h2><dl class="dl"><dt>Trainee</dt><dd>Lerato Molefe</dd><dt>Assessor</dt><dd>Thandi Zulu</dd></dl></section>
+</div></div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1750,"height":896}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

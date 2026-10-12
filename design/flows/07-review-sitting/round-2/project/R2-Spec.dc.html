@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2 spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Fraunces:wght@500&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="doc" style="width:2000px;min-height:3000px;background:var(--surface-color);font-family:'Source Sans 3',sans-serif">
+<h1>Flow 07 · round 2 · Spec</h1>
+<p style="margin:0;max-width:1500px">A, "the agenda is the page", on Wombat's tokens (tokens.json as of flow 06; :root unchanged since flow 01). One page, one address: <code>/committee/reviews/{ReviewId:int}</code>. Words in <span class="bk">brackets</span> are figures § 8 does not give, or were in the screenshots that did not reach this round: thirteen EPA titles (PAED-001's and PAED-015's are real), encounter dates, the third PAED-001 instrument, STAR numbers, Act 5's period and the entrustment-only registrar. The canvas loads Source Sans 3 and Fraunces from Google Fonts for preview only; the build self-hosts them as today.</p>
+
+<h2>Components: new and changed</h2>
+<table><thead><tr><th style="width:230px">Component</th><th style="width:90px"></th><th style="width:430px">Classes</th><th>What it is, and its rules</th></tr></thead><tbody>
+<tr><td><b>SittingBar</b></td><td><span class="new">NEW</span></td><td><code>.sitting-bar</code>, <code>.sitting-bar--reader</code>, <code>__state</code> (a Badge), <code>__count</code>, <code>__sentence</code>, <code>__as-of</code>, <code>__actions</code></td><td>A <code>section</code> named "The sitting" (visually hidden h2), first under PageHeader. Holds the review's state, what is staged ("3 staged", "13 staged"), who is present (from the form's ticks, once started), and the next act: Start review…, Go to the decision, Ratify…, Close review…. For readers: the who-may-act sentence and the Refresh line in place of the acts. 4px left stripe: <code>secondary-color</code> when the act is the reader's (the chair; flow 03's stripe rule), <code>input-border</code> for others. From 641px <code>position: sticky; top: 56px</code> (the top bar's height, a literal as the shell writes it), its z-index under the top bar's, so it never paints over it (T356, C8); a table's <code>.table-container</code> creates no stacking context above it. Below 641px static, under the title, its parts stacked and its button full width (Q9). Re-rendered after every action, so the who-may-act sentence is never stale (T260).</td></tr>
+<tr><td><b>Agenda line</b> (DataTable row)</td><td><span class="chg">CHANGED</span></td><td><code>.agenda-row--open</code>, <code>.agenda-form-row</code>, <code>.agenda-result-row</code>, <code>.agenda-staged</code>; stacked: <code>.agenda-line</code>, <code>.agenda-line--open</code></td><td>Columns EPA (code over its title, which wraps), Window, State (badge over its sentence), Evidence, Action (chair only). Stage opens the line in place: the open row and the form row under it share the 4px <code>secondary-color</code> stripe (the existing "row open for editing" rule). A staged decision lives in its line's State cell ("Level 5 · issued 2026-10-05 · no expiry. Rests on 2 items of the snapshot: …") with Remove… (<code>.btn-quiet--danger</code>, named "Remove the staged decision on PAED-012"). Stage is named "Stage a decision on PAED-0xx". A result shows in <code>.agenda-result-row</code> under its line and takes the focus. Stacks into <code>.agenda-line</code> cards when the card is narrower than 900px (the 768 board, and 390).</td></tr>
+<tr><td><b>AgendaLineForm</b></td><td><span class="new">NEW</span></td><td><code>.agenda-form</code> (grid 1fr 1fr, one column below a 760px container), <code>.snapshot-pick</code> (fieldset), <code>.snapshot-pick__line</code>, <code>.agenda-form__standing</code></td><td>Header "Stage a decision on PAED-001" (h3); one line of standing ("Year 4 target 5 · no STAR yet · 3 ratings in the review window · MSF: Covered") and "Rating chart for PAED-001"; "Evidence it rests on": this EPA's snapshot lines first, each with its tick and Read, then "Show the other N snapshot lines"; the hints (one item; none about the EPA; none finished at Start) beside the ticks as info alerts that refuse nothing; then Authorised level, Issued on (today on the South African calendar, T325), Expires on (optional), Rationale, Stage pending decision (disabled with "Name at least one item of the evidence snapshot." until a tick), Cancel. A refusal sits at the form's top (RefusalSummary) and takes the focus; the field is marked; all typed is kept (A5). Focus on opening: Authorised level.</td></tr>
+<tr><td><b>"Stage a decision on an EPA not on this agenda"</b></td><td><span class="chg">CHANGED</span></td><td>the same <code>.agenda-form</code>, with an EPA select</td><td>Replaces the old staging form, at the agenda's foot. EPA select: the curriculum's EPAs ("The EPAs on the trainee's curriculum."). Staged, the EPA gains a chair's line ("Added by the chair") saying what it decides again. Step 4.20's refusal shows here.</td></tr>
+<tr><td><b>EvidenceReader</b></td><td><span class="new">NEW</span></td><td><code>.evidence-reader</code></td><td>Inside an open line only: Read swaps the form column for the activity, read-only: flow 03's ActivityStatus, ActivityAbout and ActivityForm (read-only), no moves. "← Back to PAED-001" (a button) restores the form exactly as typed (same component, no navigation) and puts the focus on the Read pressed. On opening, the reader's heading (tabindex −1) takes the focus. 4px <code>input-border</code> stripe: someone else's record.</td></tr>
+<tr><td><b>Chart link pair</b></td><td><span class="chg">CHANGED</span></td><td><code>.chart-jump</code>, <code>.chart-back</code></td><td>Flow 05's T355 link becomes a focus move to that EPA's chart card heading in Rating trajectory by EPA. While the line is open, the chart's heading offers "Back to PAED-001's line", which returns the focus to the link. Chart and table unchanged (flow 05).</td></tr>
+<tr><td><b>Decision form</b></td><td><span class="chg">CHANGED</span></td><td>FormField in <code>.form-grid</code>; <code>.quorum-line</code> (<code>aria-live="polite"</code>)</td><td>After the agenda; reached by the bar's "Go to the decision" (focus on its heading). Category, Rationale, <b>About the EPAs not decided (optional)</b> with help "The registrar sees this once the review is ratified." (C1d), Conditions, Present (the chair ticked and locked). The quorum line reads from the ticks: "Only the chair is ticked. …" or "4 present: the chair and 3 others. The quorum is met." Record decision… is disabled only while the quorum falls short (C1c), its reason beside it (<code>aria-describedby</code>). Missing category or rationale: refused in Wombat's words (T324). Recorded, the card moves above the agenda.</td></tr>
+<tr><td><b>Refresh line</b></td><td><span class="new">NEW</span></td><td><code>.sitting-bar__as-of</code> (<code>role="status"</code>), <code>.btn-sm</code> Refresh with <code>refresh-cw</code></td><td>Members' and administrators' bars only: "As of 14:02 SAST" and Refresh, which re-reads the review in place, keeps the scroll position and leaves the focus on Refresh. Not live (C4); live following is T362, not drawn. The chair's page has none.</td></tr>
+<tr><td><b>Return link</b> on flow 03's activity page</td><td><span class="chg">CHANGED</span></td><td><code>.return-link</code></td><td>"← Back to Lerato Molefe · 2026 S2" above the trail, only when the page was opened from a review's Evidence snapshot (<code>?from=review-{id}&amp;at=snap-{itemId}</code>); goes to <code>/committee/reviews/{id}#snap-{itemId}</code>, focus on that line's link. 44px row on a phone.</td></tr>
+<tr><td><b>PageHeader link</b></td><td><span class="chg">CHANGED</span></td><td><code>.page-header-link</code></td><td>Under the subtitle, "Lerato Molefe's progress" to flow 06's <code>/programme/trainees/{ProfileId:int}</code>, drawn only for readers that page admits (the administrator here; a committee member only if flow 06 admits one: to confirm).</td></tr>
+<tr><td><b>ConfirmDialog</b> uses</td><td><span class="chg">CHANGED</span></td><td>flow 01's native <code>&lt;dialog&gt;</code></td><td>Start (what it freezes), Remove (the EPA, what is discarded; danger fill), Record (category, fixed decisions, the EPAs recorded as not decided, who is present), Ratify (each STAR; "PAED-002 and 8 others were not decided at this sitting."; no undo; no mail promised, T320), Close review (no decision). The safe button opens with the focus; Cancel returns it to the opener; the result takes it after.</td></tr>
+<tr><td>Review card, Pending entrustment decisions card, deferral form, Defer, Reinstate, "Defer lines still due…", the sampling card's ×</td><td><span class="gone">GONE</span></td><td></td><td>Their parts move to the sitting bar and the agenda lines; deferral is gone (D53); the notes card is not dismissible (T280).</td></tr>
+</tbody></table>
+
+<h2>DESIGN.md: rule text that changes</h2>
+<table><thead><tr><th style="width:300px">Section</th><th>New text</th></tr></thead><tbody>
+<tr><td>§ Committee agenda</td><td>The agenda is the review page's spine: one line per EPA due in the window, then the chair's lines. A line opens in place to stage a decision; a staged decision is shown in its line, not in a separate list. There is no deferral (D53): a line due at this sitting that is not staged when the decision is recorded becomes "Not decided at this sitting", with the decision's optional sentence under it. The caption counts what is staged ("15 EPAs for 2026 S2 · 3 staged").</td></tr>
+<tr><td>§ The chair's controls</td><td>The chair's acts live in the sitting bar (Start, Go to the decision, Ratify, Close review) and in the agenda's lines (Stage, Remove); everyone else reads the who-may-act sentence in the bar's place, and the controls are not drawn. Record is held back only by the quorum. Start is not offered while the chair cannot act (T260).</td></tr>
+<tr><td>§ Entrustment-only reviews</td><td>The decision form has no Category; the record reads "Entrustment decisions only"; "staged below" becomes "staged above".</td></tr>
+<tr><td>§ Detail page and its details-grid</td><td>The committee review is the one detail page with no details-grid: one column in a fixed order (sitting bar, notes, agenda, decision, standing, MSF, snapshot, trajectories, appeals); the decision card rises above the agenda once recorded.</td></tr>
+<tr><td>§ Page-level patterns · the title rule</td><td>A record page's h1 names its subject: "Lerato Molefe · 2026 S2", and the tab "Lerato Molefe · 2026 S2 · Wombat" (T190); while loading, "Committee review".</td></tr>
+<tr><td>The owner table, a committee review</td><td>Unchanged route; Committee reviews lights for every role that reaches it. The activity page opened from a review keeps its own owner and gains the return link.</td></tr>
+</tbody></table>
+
+<h2>D53: words that change elsewhere (C1h; those pages are not redrawn here)</h2>
+<table><thead><tr><th style="width:420px">Where</th><th style="width:420px">Was</th><th>Now</th></tr></thead><tbody>
+<tr><td>This page, a line due at this sitting</td><td>Due · "Must be decided at this sitting, or deferred with a reason."</td><td>Due at this sitting (no sentence)</td></tr>
+<tr><td>This page, captions and bar</td><td>"15 EPAs for 2026 S2, 12 still to stage or defer"</td><td>"15 EPAs for 2026 S2 · 3 staged" · bar "3 staged"</td></tr>
+<tr><td>This page, after Record</td><td>Deferred · "Reason: …" · Reinstate</td><td>Not decided at this sitting · the optional sentence</td></tr>
+<tr><td>This page, Record's reason</td><td>"Record decision: PAED-001, … must be decided at this sitting. Stage a decision on each, or defer it with a reason."</td><td>Only the quorum sentence</td></tr>
+<tr><td>This page, the who-may-act sentence</td><td>"… can stage entrustment decisions, defer agenda lines and record …"</td><td>"… can stage entrustment decisions and record the committee's decision."</td></tr>
+<tr><td>Decisions-due page, a status</td><td>Deferred</td><td><b>Not decided</b> (a sitting held it and did not decide it). <b>Missed</b> stays (the window ended and no sitting held it).</td></tr>
+<tr><td>The registrar's reviews page, a line</td><td>"Deferred. Reason: …"</td><td>"Not decided at this sitting." and the sentence, once ratified</td></tr>
+</tbody></table>
+
+<h2>States as badges (Badge's five tints; words on the tint in text-color)</h2>
+<div class="row" style="gap:12px"><span class="bdg">Scheduled</span><span class="bdg b-i">In progress</span><span class="bdg b-w">Decided</span><span class="bdg b-s">Ratified</span><span class="bdg">Closed</span><span style="width:24px"></span><span class="bdg b-w">Due at this sitting</span><span class="bdg">As opportunity allows</span><span class="bdg">Due by year end</span><span class="bdg">Partial period</span><span class="bdg b-i">Staged</span><span class="bdg b-s">Decided</span><span class="bdg b-s">Decided elsewhere</span><span class="bdg">Not decided at this sitting</span><span class="bdg">Not decided</span></div>
+
+<h2>Tokens and contrast (DESIGN.md § Contrast figures; no NEW colour token)</h2>
+<table><thead><tr><th>Pair, where</th><th style="width:120px">Needs</th><th style="width:140px">Ratio</th></tr></thead><tbody>
+<tr><td><code>text-color</code> on <code>surface-color</code> (cards, bar, dialogs) · on <code>background-color</code></td><td>4.5</td><td>12.63 · 11.99</td></tr>
+<tr><td><code>muted-text</code> on surface (the bar's present line, help, captions) · on <code>header-bg</code> (fold strips are canvas only)</td><td>4.5</td><td>5.09 · 4.57</td></tr>
+<tr><td><code>text-color</code> on the info · warning · success tints (badges, alerts, the open snapshot line)</td><td>4.5</td><td>11.84 · 11.89 · 11.23</td></tr>
+<tr><td><code>link-color</code> on surface (chart link, Read, quiet links)</td><td>4.5</td><td>6.70</td></tr>
+<tr><td><code>on-fill</code> on <code>secondary-color</code> (Start, Ratify, Record, Stage pending decision) · on <code>danger-color</code> (Remove the decision)</td><td>4.5</td><td>4.86 · 5.95</td></tr>
+<tr><td><code>secondary-color</code> outline buttons on surface (Stage, Go to the decision, Refresh, Not yet)</td><td>4.5</td><td>4.86</td></tr>
+<tr><td><code>danger-color</code> as words: Remove… (quiet danger), a field's refusal, on surface</td><td>4.5</td><td>5.95</td></tr>
+<tr><td><code>input-border</code> on surface (controls, ticks, the readers' bar stripe, the reader's stripe)</td><td>3</td><td>3.80</td></tr>
+<tr><td><code>secondary-color</code> stripe on surface (the chair's bar, the open line)</td><td>3</td><td>4.86</td></tr>
+<tr><td><code>focus-ring</code> on surface · background · info tint</td><td>3</td><td>4.86 · 4.61 · 4.55</td></tr>
+<tr><td>Badge and alert edges and icons on their tints: info · warning · success · danger</td><td>3</td><td>4.55 · 5.43 · 5.23 · 5.56</td></tr>
+<tr><td>Neutral badge text · edge on <code>header-bg</code></td><td>4.5 · 3</td><td>11.36 · 3.42</td></tr>
+</tbody></table>
+<p style="margin:0" class="sm">Spacing: card padding and gaps <code>space-lg</code> 24px; the agenda's cells 12px (the shell's literal); the open line's grid gap 24px; the bar's 10px/16px inside a row (literals as the shell). Radii: cards <code>radius-lg</code>, tables and dialogs <code>radius-xl</code>, controls <code>radius-md</code>, badges <code>radius-pill</code>. Shadows: <code>shadow-raised</code> (cards, bar), <code>shadow-dialog</code>. Icons: <code>refresh-cw</code>, <code>arrow-left</code> and <code>chart-line</code> are added from Lucide if not among the 60. The "Focus" chips and the dashed fold strips are canvas notation, not product.</p>
+
+<h2>Targets</h2>
+<table><thead><tr><th>Control</th><th style="width:200px">1280 · 768</th><th style="width:140px">390</th></tr></thead><tbody>
+<tr><td>Buttons (Start, Ratify, Record, Stage pending decision, dialog buttons)</td><td>36px</td><td>44px, full width</td></tr>
+<tr><td>Row actions (Stage, Remove…, Read), Refresh, Back to PAED-001</td><td>28px (btn-sm), ≥ 24</td><td>44px</td></tr>
+<tr><td>Ticks (snapshot lines, Present): the whole labelled row is the target</td><td>≥ 36px row, 24px min</td><td>44px rows</td></tr>
+<tr><td>Links in a line ("Rating chart for …", "Show the other N snapshot lines", the progress link)</td><td>text links in a sentence (WCAG 2.5.8's inline exception)</td><td>44px rows</td></tr>
+</tbody></table>
+
+<h2>Open, for the operator</h2>
+<table><tbody>
+<tr><td style="width:40px">1</td><td>C4 writes "As of 14:02 · Refresh"; BRIEF.md's content rule shows the zone. The boards draw "As of 14:02 SAST". Say which.</td></tr>
+<tr><td>2</td><td>Does flow 06's registrar page admit a committee member? If not, the chair's and members' headers carry no "Lerato Molefe's progress" (as drawn).</td></tr>
+<tr><td>3</td><td>T324's exact sentence for a missing rationale was not in the brief; the board brackets it.</td></tr>
+<tr><td>4</td><td>The thirteen EPA titles, Act 5's period and the encounter dates: send the catalogue (or Step 4.15's screenshot) and round 3 fills every bracket.</td></tr>
+</tbody></table>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2000,"height":3000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
