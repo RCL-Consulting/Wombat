@@ -57,4 +57,13 @@ public sealed class ReviewLinksTests
         ReviewLinks.TryReadReturn(from, "snap-412", out _, out var itemId).Should().BeFalse();
         itemId.Should().BeNull();
     }
+
+    [Theory]
+    [InlineData("http://localhost/committee/reviews/30#snap-412", "snap-412")]
+    [InlineData("http://localhost/committee/reviews/30", null)]
+    [InlineData("http://localhost/committee/reviews/30#snap-0", null)]
+    [InlineData("http://localhost/committee/reviews/30#snap-4x", null)]
+    [InlineData("http://localhost/committee/reviews/30#evidence-snapshot", null)]
+    public void TheLineAnAddressOpensAt_IsReadFromItsFragment_OnlyInItsOwnForm(string uri, string? line)
+        => ReviewLinks.SnapshotLineIn(uri).Should().Be(line);
 }

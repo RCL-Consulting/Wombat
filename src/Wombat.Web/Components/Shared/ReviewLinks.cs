@@ -32,6 +32,17 @@ public static class ReviewLinks
     public static string SnapshotLineId(int snapshotItemId) => Invariant($"{SnapshotPrefix}{snapshotItemId}");
 
     /// <summary>
+    /// The snapshot line an address of the review page is opened at, <c>snap-12</c> from <c>…/reviews/30#snap-12</c>, or
+    /// null when the address has no fragment of that form. The page draws its lines only once the review is read, after the
+    /// navigation, so the browser never scrolls to the fragment itself: the page takes the focus there (4.17, T361 replay).
+    /// </summary>
+    public static string? SnapshotLineIn(string uri)
+    {
+        var hash = uri.IndexOf('#', StringComparison.Ordinal);
+        return hash >= 0 && TryReadId(uri[(hash + 1)..], SnapshotPrefix, out var itemId) ? SnapshotLineId(itemId) : null;
+    }
+
+    /// <summary>
     /// Flow 03's activity page, opened from a review's snapshot line:
     /// <c>/activities/12?from=review-30&amp;at=snap-12</c>.
     /// </summary>

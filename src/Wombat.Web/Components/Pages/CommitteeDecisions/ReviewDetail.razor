@@ -10,6 +10,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<ReviewDetail> Logger
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 @inject IServiceProvider ServiceProvider
 
 @*
@@ -249,6 +250,12 @@
     _notFound = false;
     ClearResult();
     await LoadOrFailAsync();
+
+    // Opened at a snapshot line (the activity page's way back): the line is drawn only now, so take the focus there.
+    if (_review is not null && ReviewLinks.SnapshotLineIn(Navigation.Uri) is { } line)
+    {
+      _focusId = line;
+    }
   }
 
   private async Task LoadOrFailAsync()

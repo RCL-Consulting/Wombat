@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Bunit;
 using FluentAssertions;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetActivityById;
@@ -120,6 +121,24 @@ public sealed partial class ReviewPageStatesTests : ReviewPageTestBase
         Text(line).Should().Be("Mini-CEX (Paediatrics) #12 Thandi Zulu 5 2026-09-23 Completed");
         line.QuerySelector("a")!.GetAttribute("href").Should().Be("/activities/12?from=review-30&at=snap-12");
         Text(cut.Find("#snap-1")).Should().Be("Default MSF #1 · Released · 6 responses");
+    }
+
+    [Fact]
+    public void OpenedAtASnapshotLine_ThePageTakesTheFocusThere_OnceTheLineIsDrawn()
+    {
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/committee/reviews/30#snap-12");
+
+        Render(Review());
+
+        FocusedIds().Should().Equal("snap-12");
+    }
+
+    [Fact]
+    public void OpenedWithoutALine_ThePageMovesNoFocus()
+    {
+        Render(Review());
+
+        FocusedIds().Should().BeEmpty();
     }
 
     [Fact]
