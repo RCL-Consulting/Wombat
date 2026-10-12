@@ -29,13 +29,13 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   operator's): no deferral; unstaged closing lines are recorded "Not decided at this sitting", overruling T131's O2.
   Live following for members proposed as **T362**.
 
-### Next: T361 step 5, the operator's decisions on round 2, then round 3 (the correction round)
+### Next: T361 step 5, round 3 (the correction round) in the canvas
 
-- **Round 2** (canvas version 1791772499-ebd7) is saved in `round-2/` (`83ba4dc7`) and reviewed from three sides
-  (code, cast, design system; Sonnet): `design/flows/07-review-sitting/round-2-review.md`, 31 findings, the fills for
-  every bracket, and **E1–E9 for the operator**. Their answers, then write `round-3-ask.txt` (decisions plus the
-  findings as numbered corrections, as flow 06's round 3), then check round 3 item by item.
-- **The build is not presentation only:** D53 changes the domain (findings 1–6). Plan its review as a domain change.
+- **Round 2** (`83ba4dc7`) reviewed from three sides: `design/flows/07-review-sitting/round-2-review.md` (`f1e193c8`).
+  The operator took E1–E9 as recommended (2026-10-12). `round-3-ask.txt` carries them, corrections 7–31 by the
+  review's numbers, and the fills. The operator pastes it as ONE message; then read the boards and check round 3 item
+  by item (flow 06's `round-3-check.md`), then the build.
+- **The build is not presentation only:** D53 changes the domain (the review's findings 1–6). Plan its review as one.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator

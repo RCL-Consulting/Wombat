@@ -1,0 +1,107 @@
+ROUND 3: one correction round on A as round 2 drew it. Keep every board and its states; change what follows, then
+say on the Spec, item by item (by the numbers below), what changed and where. Round 1's boards stay on their page.
+The brand mark is at /_blob/33198ce497bf7fb3aeac9b59047b615b.
+
+THE OPERATOR'S DECISIONS (2026-10-12):
+  E1. One label for every line left unstaged: "Not decided at this sitting", with the decision's optional sentence
+      under it, on due and optional lines alike. "Not decided" alone is no longer drawn. The dialogs count all of
+      them: Molefe's Record dialog "Records 12 EPAs as not decided: PAED-002, …" (the nine due and PAED-008, 009,
+      013); Ratify "PAED-002 and 11 others were not decided at this sitting."
+  E2. Start is offered as today: to any panel member who may sit, the institution's Coordinator, and the
+      Administrator (T194), never while the chair cannot act (Q11). A reader who may not start reads, in the bar:
+      "Only the coordinators of the panel's institution, and those of its members who are active committee members
+      there, can start this review." Draw David Naidoo's Scheduled bar WITH Start; draw the chair-cannot-act bar
+      with no Start for every reader.
+  E3. The decisions-due page reads "Not decided" for a window only when the line was due at that sitting or its
+      window has ended; an annual EPA left unstaged at a semester-1 sitting still reads "Due by year end". Put this
+      in the Spec's D53 words table.
+  E4. An entrustment-only review cannot be recorded with nothing staged. Record stays reachable and refuses, beside
+      it: "This review decides entrustment only, so stage at least one decision before recording it." Draw it on the
+      entrustment-only board.
+  E5. A remitted appeal's replacement decision carries the sentence about the EPAs not decided. Spec only.
+  E6. "Training year 4" is the training year at the end of the review's period. Spec only.
+  E7. "As of 14:02 SAST" when it is today; "As of 2026-10-04 14:02 SAST" on another day. Draw both.
+  E8. Only the chair's bar sticks (from 641 px): state, count and her next act on one line. A member's and an
+      administrator's bar is static, under the title, and scrolls away.
+  E9. One open line at a time. Opening another line keeps the first's typed form as a draft: the first line closes
+      and reads "Draft kept" beside Stage, which reopens it as typed. A draft lasts until staged, cancelled (Cancel
+      discards it) or the page is left. Draw PAED-010 open with PAED-001 reading "Draft kept".
+  Settled from the code: the sentence is stored once, on the decision; "Not decided at this sitting" is written when
+  the review is ratified (between Record and Ratify the page shows the same words); "Lerato Molefe's progress" is
+  drawn only for Committee member, Coordinator, Speciality admin and Sub-speciality admin readers (flow 06's
+  registrar page admits no others), never when the trainee trains elsewhere: remove it from Nolwazi Mbatha's
+  boards. T324's sentences: "Choose a progression category." and "Give the committee's rationale.".
+
+CORRECTIONS (the review's numbers; round 3's check takes them one by one):
+  7. The quorum line: "Only the chair is ticked. A committee decision needs at least two panel members present: the
+     chair and at least one other." When the panel itself cannot sit a quorum (too few members who may sit), that
+     reason shows instead and ticking cannot cure it: draw it once.
+  8. The evidence reader shows the activity as it is now. Where it has moved since Start, say so under its heading:
+     "Now Completed. Frozen at Start as Awaiting review." Draw it once. No action and no move is offered in it.
+  9. Flow 03's page: the review's "← Back to Lerato Molefe · 2026 S2" REPLACES the page's own "Back to …" link when
+     present (one back link, never two). It shows only to a reader who may read that review.
+  11. The Start dialog adds, when it applies, the existing sentence "Starting now leaves out 1 feedback campaign that
+     closed in this window and is not yet released." (T173). Its count: "the 9 items observed from 2026-01-01 to 2026-12-31 (8 activities and
+     the MSF campaign report)". The opened line's standing, when one of its parts fails to load, drops that part and
+     says "Standing could not be loaded." in its place: draw it once.
+  13. Add one frame: an EPA no longer in use, in the sampling card and a staged line: "PAED-0xx (no longer in use)" (T273).
+  14. The sitting bar's z-index sits under the shell's sidebar and above the page's tables (the Spec's T356 sentence
+      is wrong: the sidebar is sticky with no z-index, so a positioned table container paints over the top bar).
+      Rewrite the Spec's sentence: ".sidebar gains z-index 10 at 641 px and wider; .sitting-bar z-index 1".
+  15. Focus is never hidden under the bars: html scroll-padding-top = the top bar (56 px) plus the chair's stuck bar
+      (--sitting-bar-h, measured); scroll-margin-top on every heading and result that takes the focus. On the Spec.
+  16. Record decision… and Stage pending decision are never natively disabled: aria-disabled with .is-unavailable
+      (DESIGN.md's rule), the reason beside them. Draw them so.
+  17. Remove… is an outline small button (.btn .btn-sm .btn-outline), like Stage.
+  18. Class names: no "__" elements (app.css uses flat kebab names): .sitting-bar-state, .sitting-bar-count,
+      .sitting-bar-sentence, .sitting-bar-as-of, .sitting-bar-actions. The open row reuses tr.is-editing; one new rule
+      only for the stacked line's stripe.
+  19. The progress link is PageHeader's SubtitleContent (not a new slot). Amend DESIGN.md's "the primary page action
+      lives in the PageHeader action slot" on the Spec: on the committee review it lives in the sitting bar.
+  20. The agenda stacks by a container query on its table container (not the viewport), with explicit table roles.
+      "Show the other N snapshot lines" is a button with aria-expanded. A link on its own line has a 24 px target
+      (44 at 390).
+  21. After Refresh the status says what changed: "As of 14:31 SAST. Now Decided." Only the quorum line is a live
+      region; the bar's "Present" words and the hints are not.
+  22. Dialog safe buttons: "Not yet" everywhere, except Remove's "Keep it".
+  23. Instruments by their stored names: "Mini-CEX (Paediatrics)", "Case-Based Discussion (Paediatrics)", "DOPS
+      (Paediatrics)"; no "CBD".
+  24. The Window column: PAED-001, 002, 004, 005, 010 and 012 read "2026 S2"; the other nine read "2026". Every board.
+  25. The pre-graduation sitting: caption "13 EPAs for 2026 S2 · 13 staged"; the agenda is PAED-002 to 009, 011, 013,
+      014, 015, and the chair's PAED-010 line ("Added by the chair."); under the caption "Already decided in this
+      window, so not on the agenda: PAED-001 and PAED-012." "Decided elsewhere" stays on the Spec's badge list only.
+  26. PAED-001's standing reads "MSF: None released yet"; PAED-010's and PAED-012's read "MSF: Covered".
+  27. Counts: PAED-012's Evidence reads 3 items. In the pre-graduation sitting, each of the twelve lines rests on 1
+      item, "Default MSF #1", with both hints ("Only one item is named. …" and "None of the named items is about
+      PAED-0xx."), and Evidence 0 items; PAED-010 rests on 2. Recount the pre-graduation journey (about 80).
+  28. Before Start, the bar also says the evidence window and the mode: "Summative · evidence 2026-01-01 to
+      2026-12-31" (a formative check-in: "Formative: an interim check-in, no binding decision").
+  29. Add to the Spec's D53 words table: the schedule preview's "must be decided at this sitting, or deferred with a
+      reason, before it is ratified" becomes "is due at this sitting".
+  30. The snapshot and the picker group by instrument, alphabetically: Case-Based Discussion #13, DOPS #14, Mini-CEX
+      #12. A staged line reads "Rests on 2 items of the snapshot: Mini-CEX (Paediatrics) #12; Case-Based Discussion
+      (Paediatrics) #13."
+  31. PAED-012's sampling line: "2 ratings · 2 assessors · 2 sources". Step 4.20 ticks DOPS #14 (rated 4, Mohammed
+      Patel). PAED-010's MSF record reads "Not recorded". The 390 boards' review is Molefe's pre-graduation review
+      (A.7.6 and A.7.13 play review #7): redraw the 390 agenda frame on it. Step 4.23's Expect says Record cannot be
+      pressed and the server's refusal stays only as the backstop.
+
+FILLS (replace every bracket):
+  EPA titles: PAED-002 Managing common paediatric presentations · 003 Providing intensive care to children · 004
+  Managing common neonatal conditions · 005 Providing neonatal care in intensive and high-care settings · 006
+  Managing long-term health conditions (LTHCs) · 007 Maintaining and promoting the health and well-being of children
+  · 008 Evaluating and managing neurodevelopmental and behavioural presentations in children · 009 Providing care for
+  an adolescent patient · 010 Leading and operating within a clinical team · 011 Managing population health
+  challenges · 012 Communicating with and counselling patients, caregivers and healthcare teams · 013 Managing child
+  protection, legal and ethical aspects of children at risk · 014 Providing palliative and end-of-life care.
+  Molefe's snapshot (D = 2026-10-05): PAED-001: Mini-CEX (Paediatrics) #12, Thandi Zulu, 2026-09-23, rated 5;
+  Case-Based Discussion (Paediatrics) #13, David Naidoo, 2026-09-24, rated 5; DOPS (Paediatrics) #14, Mohammed Patel,
+  2026-09-26, rated 4. PAED-010: Direct Observation, Thandi Zulu, 2026-10-01, rated 5; MSF record #22, Not recorded.
+  PAED-012: Mini-CEX (Paediatrics) #15, Sarah Botha, 2026-09-28, rated 5; Case-Based Discussion (Paediatrics) #16,
+  Fatima Khumalo, 2026-09-30, rated 5; MSF record #23. Not about a single EPA: the MSF campaign report, Default MSF
+  #1, Released, 6 responses.
+  STARs: Act 4 PAED-001 #1, PAED-010 #2, PAED-012 #3. Act 5 #6 to #18 (PAED-010's is #18, superseding #2).
+  Act 5: "Lerato Molefe · 2026 S2", "Pre-graduation review", evidence 2023-01-15 to 2026-12-31.
+  Entrustment-only: Anele Dlamini · 2026 S1, training year 3, Neonatal team Clinical Competency Committee; present
+  Thandi Zulu (chair), Sarah Botha.
+  Where a figure is still not given, keep the bracket and list it on the Spec.
