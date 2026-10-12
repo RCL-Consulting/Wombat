@@ -40,8 +40,9 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   (`2c85ce94`); review brief `review-lanes.md` (`f7afd09d`). Six suites green on `t361`: 814 / 3747 / 1020 / 52 /
   3547 / 489, 0 warnings. Lane P left unfilled (no data): the ratified graduation summary, a chair's line's earlier STAR,
   a decided line's level and expiry, who can start when the chair cannot act.
-- **Running:** the runbook lane `t361-runbook`. Then: merge it; three Sonnet reviewers; `build-review.md`; one fix pass
-  `t361-fix`; squash onto master. Not pushed. T356's browser check waits for the replay.
+- **Runbook lane merged** (`e07311d9`; 4.21 removed, numbers kept). **Reviewed** by three Sonnet lenses:
+  `build-review.md` (`61e47aa1`), 16 findings, none high; 15 to fix, R5 left. **Running:** the fix pass `t361-fix`.
+  Then: merge it, six suites, squash onto master. Not pushed. T356's browser check waits for the replay.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator
