@@ -1076,13 +1076,11 @@ already teach is here.
 - **An agent can die mid-act on an API error and resume with its context.** Observed: the states agent stopped on a
   403; the working tree showed nothing half-written (it writes its rows last), and a message to the same agent resumed
   it where it was. *Changed:* nothing; check the tree before resuming, and tell it to edit in place.
-- **A tool with no `--help` runs for real when given one.** Observed: `sync_verbatim_steps.py --help` re-pasted five
-  briefs. The change was the wanted one, but it was not a dry run. *Changed:* nothing; read a tool's usage line, and use
-  `--dry-run`.
+- **A tool with no help flag runs for real when given one.** Observed: the verbatim-sync script, given a help flag,
+  re-pasted five briefs. The change was the wanted one, but it was not a dry run. *Changed:* nothing; read a tool's
+  usage line, and pass its dry-run flag.
 - **Compare the bundle with app.css's git blob, not the working copy.** Observed: on Windows the working `app.css` is
-  CRLF; the re-sync's search for `
-body {
-` found nothing and copied the whole file in, and the implementer caught it
+  CRLF; the re-sync's search for a newline, `body {` and a newline found nothing and copied the whole file in, and the implementer caught it
   and rebuilt from `git show HEAD:…`. *Changed:* nothing; the re-sync and its review both compare against the blob.
 - **The live design system's version can move without its files changing.** Observed: v17's publish was 1791219142;
   the live version was v18, 1791814724, and all 131 `project/` files matched HEAD (two licence files differ only in line

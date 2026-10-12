@@ -1,163 +1,324 @@
 # F08 Panels, what is due, and the schedule
 
-The institution's programme staff form the review panel and see which panel decides each EPA. They read what the
-committee must decide this period, and schedule each registrar's annual, formative or pre-graduation review from it.
-They must be stopped from scheduling a duplicate. A missed decision is a missed milestone for a registrar.
+**Who and why:** the people who run the programme form the review panels, read what the committee must decide this
+period, and schedule each registrar's review from it. A decision missed in its window is a missed milestone for a
+registrar (Step 4.2), and a second binding review for a period is refused only after Create (Step 4.8). Four pages
+carry it today: Decision panels, a panel's own page, Decisions due, and Committee reviews with its scheduling form.
+None has been redesigned since 2026-09-26; flows 01–07 changed only their titles, their menus and (flow 07, D53) the
+words for a line left undecided.
 
-Written 2026-09-26 for T332, following `design/BRIEF.md` § 2.4. Paths to screenshots are under `design/baseline/`
-(gitignored). Claims about Claude Design use BRIEF § 2.0's source keys.
+Restated 2026-10-12 for T364 (the brief of 2026-09-26, T332, predates flows 01–07). Paths to screenshots are under
+`design/baseline/` (gitignored). Code is cited at `b62997a5`; `W/` is `src/Wombat.Web/Components/Pages/CommitteeDecisions/`,
+`A/` is `src/Wombat.Application/Features/CommitteeDecisions/`, `D/` is `src/Wombat.Domain/CommitteeDecisions/`.
 
 | | |
 |---|---|
-| People | InstitutionalAdmin: Prof Nolwazi Mbatha. SpecialityAdmin: Dr Refilwe Mokoena. SubSpecialityAdmin: Dr Kabelo Sithole. Coordinator: Mr Pieter Smit. CommitteeMembers Dr David Naidoo and Dr Sarah Botha read the panels and the schedule; scheduling and Decisions Due are refused to them (Step 4.5) (`README.md` § Cast) |
-| Pages | `/committee/panels` (`CommitteeDecisions/PanelsList.razor`), `/committee/panels/new` and `/committee/panels/{PanelId:int}` (`PanelEdit.razor`), `/committee/decisions-due` (`DecisionsDue.razor`), `/committee/reviews` (`ReviewsSchedule.razor`), `/committee/reviews/{ReviewId:int}` before its sitting (`ReviewDetail.razor`), `/access-denied` (`coverage.md` § Pages) |
-| Steps | 30: 2.20–2.25, 2.32, 4.1–4.13, 4.33, 4.34, 4.37, 4.49, 5.1, 5.2, 5.29, A.1.10, A.7.5, A.7.8 |
-| Frequency and stakes | Each semester. Weekly for the Coordinator around a sitting. Medium-high: a registrar whose EPA is not decided in its window shows as Missed (Step 4.2). |
-| Mode | **Straight to fidelity** for the panels and the schedule: their List and Form shapes hold (BRIEF § 4, recommendation). **Wireframe first** for Decisions Due, a summary plus a long list in a scroll region. |
-| Held | **Nothing held.** No group-1 task changes these pages. Two of the steps' Home captures, `act-2/2.32-1-smit-home.png` and `act-4/4.3-1-mokoena-dashboard-nav.png`, were re-captured after T297 on 2026-09-26; they are F06's dashboards and are not used here (BRIEF § 10). |
+| Decision | **Restructure, with UX in scope** (W-008; BRIEF.md § 4), inside flow 01's shell. Marked **F/W** in BRIEF.md § 8: the panels' list and form are expected to keep their shape (F), Decisions due and the schedule may change a lot (W). |
+| Mode | **Structure first** (BRIEF.md § 2.3, as § 11 corrected it). Round 1: 2–3 structural variations of the calendar (Decisions due, the schedule and its form: one page or two, where the form lives, how one registrar is read), and ONE proposal for the panels (list, form, the panel's own page) to confirm or correct. Round 2, after the pick: fidelity with every state. Then a review round from the boards' text, the operator's decisions, and one correction round. |
+| Viewports | Desktop 1280×800 and phone 390×844; the build is also checked at 768 (§ 11, flow 06) |
+| Variations | 2–3 for the calendar in round 1, one for the panels; the chosen one in round 2 |
+| People | InstitutionalAdmin: Prof Nolwazi Mbatha (head of department). SpecialityAdmin: Dr Refilwe Mokoena (programme director). SubSpecialityAdmin: Dr Kabelo Sithole (sub-speciality lead). Coordinator: Mr Pieter Smit (programme administrator). CommitteeMembers: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha, Dr John van Rensburg (external), who read the panels and their panels' reviews and are refused Decisions due (Step 4.5). The registrars: Dr Lerato Molefe (training year 4), Dr Anele Dlamini (3), Dr Pieter du Plessis (2), Dr Nomsa Mahlangu and Dr Sipho Ndlovu (1) (`README.md` § Cast) |
+| Runbook steps | 30, pasted verbatim in § 8: 2.20–2.25 and 2.32 (Act 2), 4.1–4.13, 4.33, 4.34, 4.37 and 4.49 (Act 4), 5.1, 5.2 and 5.29 (Act 5), A.1.10, A.7.5 and A.7.8 (appendix) |
+| Pages (`coverage.md` templates) | `/committee/panels` (`W/PanelsList.razor`, 295 lines), `/committee/panels/new` and `/committee/panels/{PanelId:int}` (`W/PanelEdit.razor`, 702), `/committee/decisions-due` (`W/DecisionsDue.razor`, 376, with `DecisionsDueText.cs`), `/committee/reviews` (`W/ReviewsSchedule.razor`, 548: the list and the scheduling form, inline), `/committee/reviews/{ReviewId:int}` before its sitting (flow 07's page; this flow only arrives there), `/access-denied` (flow 01's). Checked at `b62997a5`. |
+| Menus (`W/../../Navigation/NavItems.cs`) | Decisions due, Committee reviews and Decision panels: grouped under "Reviews" for the Administrator and InstitutionalAdmin (`:146`, `:153`); flat for the Speciality and SubSpecialityAdmin, beside Programme trainees, Waiting for assessors and Entrustment decisions (`:165–168`); the Coordinator's menu has all three (`:175`, Decision panels since flow 06, `85d5a508`); a CommitteeMember's has Committee reviews and Decision panels, not Decisions due (`:169`). A list lights itself and draws no trail; a panel's page is owned by Decision panels for those who keep panels (`NavOwners.cs:63`, `:116`); a review by Committee reviews (`:106–113`). The Coordinator may read the panels list but not open a panel (access denied, Step 2.32). |
+| Components drawn at runtime | `PageHeader`, `StatePanel` (no page passes `OnRetry`), `Skeleton`, `DataTable` (panels and reviews lists: no caption, no `Stack`, no `scope`), raw `table.clinic-table` (Decisions due's two tables), `PagerControls` (Decisions due only), `FormField`, `FormActions`, `FieldHelp`, `InFlight` (panel form only), `ActionResult` (panel form only), `Alert`, `BadgeFor`, native `<select multiple>` (Members, External members). Not used: `ConfirmDialog`, flow 01's not-found panel, `ActionResult` on the schedule. Queries: `ListDecisionPanels`, `GetCommitteeRouting`, `GetDecisionPanelFormOptions`, `GetDecisionPanelById`, `ListPanelMemberCandidates`, `GetEntrustmentDecisionsDue`, `ListReviewsForPanel`, `PreviewCommitteeAgenda`, `GetCommitteeReviewsAccess`; commands `CreateDecisionPanel`, `UpdateDecisionPanel`, `SetDecisionPanelBody`, `ScheduleCommitteeReview` (all `A/`) |
+| Held | None. Every step capture is from the T361 replay (2026-10-12), on the shell as built. The `states/panels-list--*` and `states/panel-edit--*` captures are from 2026-09-26 on the old frame; the step captures stand in for most (§ 3). |
+| Depends on | Flow 01, built (`b347e11c`): the shell, the trail, `ActionResult`, `ConfirmDialog`, `StatePanel` with Try again, access denied and not found. Flow 04 (`06aa51d7`): row actions named per row, counts as words, the pager's ends aria-disabled. Flow 05 (`b020c942`): ISO dates (D1), stacked rows below 641 px. Flow 06 (`85d5a508`): the committee and coordinator Homes, Programme trainees, the Coordinator's Decision panels link. Flow 07 (`44de180b`): the review page these pages open, D53's Not decided, the formative label on the list. The design system is **version 19**, re-synced to flow 07 as built |
+
+**How to run this thread** (BRIEF.md § 2.3 step 4; § 11):
+1. **Stage the upload set:** `pwsh design/tools/stage_upload.ps1 -Flow 08`. Open each screenshot. Leave out anything in
+   `design/upload/crop-first/`, or crop its link first (none of this flow's captures shows a link or token; checked
+   2026-10-12). Do not stage `states/panel-edit--one-member.png` (a broken stitch: its top 1,094 px have no shell) or
+   `states/panels-list--narrow.png` (375 px, and it shows scratch rows of a curriculum 11.2).
+2. **Start a new canvas** from the main app's Design page, on the Wombat design system v19
+   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Flow 08's canvas: (to come).
+3. **Copy the mark into the canvas before round 1** (`Artifact publish`, `asset: true`, `from_url` = the design
+   system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Put the returned `/_blob/` URL in § 1 and in
+   `design/flows/08-committee-calendar/round-1-ask.txt`, where they read `/_blob/MARK`.
+4. **Send § 1 and § 8 as ONE message** (`design/flows/08-committee-calendar/round-1-ask.txt`), with the key screenshots
+   in § 4. Read `project/canvas.json`'s version before and after: a send can draw nothing. Read round 1's notes for a
+   line saying it never received the attachments (§ 11, flow 06); re-attach and name the folder before round 2 if so.
+5. **Pick one structure,** say why in a sentence, and answer § 6's questions one sentence each; the operator's are
+   marked. A question whose answer rests on an open task names it, and the task lands before the build (§ 11, flow 05).
+   Ask for round 2.
+6. **Review round 2 from the boards' text** (`Artifact read`), as `design/flows/07-review-sitting/round-2-review.md`
+   did: one reviewer on the code (and the ask), one on the cast and the runbook, one on the design system. Put the
+   decisions to the operator, then ask for one correction round.
+7. **Record every round** in `design/flows/08-committee-calendar/` before moving on.
 
 ---
 
-## 1. How to run this thread
+## 1. The ask (paste this first, with § 8 in the same message)
 
-1. Run F01 first (BRIEF § 2.3, step 2).
-2. Start a new thread. Attach the key screenshots in § 5.1, then paste § 2.1 as one message.
-3. The panels and the schedule go straight to fidelity. For Decisions Due, pick a wireframe first. Record in the chat,
-   in one sentence, whether Decisions Due and the schedule become one page or stay two. Then paste § 2.2.
-4. Attach the state captures in § 5.2 as the chat asks for them.
-5. Export the chosen artboards to `design/flows/08-committee-calendar/` before moving on. There is no version history
-   [start].
-
-## 2. The ask
-
-### 2.1 Paste this first, with the key screenshots attached
-
-```
+```text
 FLOW 08 — Panels, what is due, and the schedule
 
-GOAL: The people who run the programme must be able to:
-- form a review panel (a chair, members and external members) and see which panel decides each EPA;
-- see what the committee must decide this period, per registrar and per EPA, and where each decision stands;
-- schedule each registrar's review from that list: an annual progression review, a formative check-in (no binding
-  decision), or a pre-graduation review;
-- be stopped, before they press Create, from scheduling a second binding review for a period the registrar already
-  has one for.
+This is flow 08 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 01 (the shell), 02 (sign-in and
+  account), 03 (a registrar files an activity), 04 (an assessor's inbox), 05 (a registrar reads where she stands),
+  06 (watching the programme) and 07 (the review sitting) are designed and built; these pages sit inside the shell.
+  Structure first, then fidelity: round 1 is 2–3 structural variations of the calendar (Decisions due, Committee
+  reviews and scheduling) as wireframes, plus ONE proposal for the panels (the list, the form, a panel's own page) for
+  me to confirm or correct. I pick before round 2. The runbook steps follow below in this same message. The brand mark
+  is at /_blob/MARK: use it, never a drawn disc.
 
-What is wrong today:
-- The agenda preview gives no sign that the registrar already holds the period's binding review. The refusal comes only
-  on Create review.
-- A formative check-in is typed and shown as "Annual progression review", because the Review type select stays live
-  when "Formative only" is ticked. Since flow 07's build (T361, T309 item 2) the review page and My committee reviews
-  call it "Formative check-in" ("Formative" in My committee reviews' Type column); the schedule's own list and form do
-  not yet.
-- A panel's own page never shows the panel's name, scope or speciality.
-- While the panels list loads, it already says "There is no committee routing to show for your institution."
-- The panel form is a narrow column. Members are chosen from native multi-selects ("Hold Ctrl (Windows) / Cmd (Mac) to
-  select multiple") that cut names short.
-- Decisions Due's summary scrolls sideways at 390 px, and its focus ring is the browser's thin default.
-- The Coordinator may open Decision Panels, but his nav has no link to it.
+GOAL: The people who run the programme must be able to:
+  - form a review panel (a name, a scope, a chair, members and external members, and the College committee it sits
+    as, if any), see who sits on it, and see which panel decides each EPA of each programme;
+  - read what the committee must decide in a semester, per registrar and per EPA, and where each decision stands
+    (decided, on an open review's agenda, not decided at a sitting, revoked, missed, optional);
+  - read one registrar's fifteen EPAs together (Step 5.1);
+  - schedule a registrar's review from what is due: an annual progression review, a pre-graduation review, an
+    entrustment-only review, or a formative check-in that decides nothing;
+  - know, before pressing Create, that the registrar already holds the period's binding review, and open it.
+  Committee members read the panels and the reviews of the panels they sit on; they never schedule, and Decisions due
+  is not theirs.
+  What is wrong today (the attached screenshots show each; all on the shell as built, 2026-10-12, except one):
+  - A panel's own page is titled "Decision panel" and never shows the panel's name, scope, institution or speciality
+    (2.22). Saving a new panel reloads the page with no word that it was created. "Back to panels" repeats the trail.
+  - The panel form is one narrow card at 1280 (about 315 px). Chair, Members and External members cut names and
+    emails short ("Thandi Zulu (zulu@kgk.wombat.loc"); Members and External members are native multi-selects ("Hold
+    Ctrl (Windows) / Cmd (Mac) to select multiple.") that do not work by touch at 390.
+  - A refused change of College committee shows a ten-line danger box inside the narrow card, and the select keeps the
+    refused choice until a reload (4.13). After a save, "1 member of this panel can no longer sit on it" stays until a
+    reload, and is never announced.
+  - The panels list's Scope column prints "Institution" or "Speciality" and names no speciality or institution; while
+    the list loads, "Who decides each EPA" already says "There is no committee routing to show for your institution."
+    (the one old-frame capture; brief from its body).
+  - Decisions due is 3,781 px for 75 rows at 1280 (10,276 with a hundred a page). It has no trainee filter, so reading
+    Dr Molefe's fifteen rows means paging past Dr Dlamini's (5.1). Its filters apply on change, one round trip each.
+  - Every row wanting a sitting offers Schedule, a Missed row in a semester that has ended included (4.2). A Not
+    decided or revoked row can show Open review and Schedule stacked in a cramped Action column; "Open review" wraps.
+  - At 390 the list's Status and Action columns are off-screen to the right, and By EPA's EPA names are cut as it
+    scrolls (A.7.5). The schedule's list shows Trainee, Panel and a Period broken a word a line; Type, State, Decision
+    and Open are off-screen (A.7.8).
+  - The scheduling form opens above the list, toggled by Schedule review, which stays in the header while the form is
+    open; the focus does not move into it. Dates show in the browser's format ("2026/01/01") where the list is ISO.
+  - The agenda preview gives no sign that the registrar already holds the period's binding review. The refusal comes
+    after Create, at the top of the page, unfocused, with "(scheduled, scheduled 2026-10-12)" doubled and no link to
+    the review it names (4.8).
+  - With Formative only ticked, Review type still shows and reads "Annual progression review", with the semester-2
+    help (4.49); a pre-graduation review shows the same semester-2 help (5.2).
+  - When the preview fails it prints the exception ("The agenda could not be previewed: An exception has been raised
+    that is likely due to a transient failure."), and Create stays enabled. Create has no busy state.
+  - Headings go h1 to h3 to h4 on every page; the panels and reviews tables have no caption; the pager's "Per page:"
+    names nothing.
 
 AUDIENCE:
-- InstitutionalAdmin: Prof Nolwazi Mbatha (head of department). She manages every panel at her institution.
-- SpecialityAdmin: Dr Refilwe Mokoena (programme director). SubSpecialityAdmin: Dr Kabelo Sithole (sub-speciality
-  lead). They manage their speciality's panels and schedule reviews.
-- Coordinator: Mr Pieter Smit (programme administrator). He schedules reviews and reads the panels.
-- CommitteeMembers Dr David Naidoo and Dr Sarah Botha. They read the panels and the reviews of the panels they sit on;
-  they are not offered scheduling or Decisions Due.
-- Kgosi Kgari Teaching Hospital, Paediatrics, five registrars. Desktop 1280×800 and phone 390×844.
+  - InstitutionalAdmin: Prof Nolwazi Mbatha. She manages every panel at her institution and alone says which College
+    committee a panel sits as.
+  - SpecialityAdmin: Dr Refilwe Mokoena; SubSpecialityAdmin: Dr Kabelo Sithole. They manage their speciality's panels
+    and schedule reviews.
+  - Coordinator: Mr Pieter Smit. He schedules every review, weekly around a sitting, and reads the panels.
+  - CommitteeMembers: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha (each also an Assessor), Dr John van
+    Rensburg (external, CommitteeMember only). They read the panels and their panels' reviews.
+  - Kgosi Kgari Teaching Hospital (KGK), Paediatrics, on the College's (CPSA) curriculum 11.1, fifteen EPAs (PAED-001 to
+    PAED-015): six decided every semester, nine once a year; PAED-004 and PAED-005 are the College's neonatal
+    committee's (the "Neonatal team Clinical Competency Committee"). Five registrars: Dr Lerato Molefe (training year 4),
+    Dr Anele Dlamini (3), Dr Pieter du Plessis (2), Dr Nomsa Mahlangu and Dr Sipho Ndlovu (1). Desktop 1280×800 and
+    phone 390×844.
 
-WHAT THE PAGES CARRY TODAY:
-- Decision panels (list):
-  - A table: Name, Scope (Institution or Speciality), Decides for (General panel, or a College committee such as the
-    "Neonatal team Clinical Competency Committee"), Members, and Edit for those who manage the panel.
-  - New panel in the header.
-  - A card, "Who decides each EPA": per curriculum, the EPAs and the panel that decides them. For example "PAED-004,
-    PAED-005 → Paed Annual Review Panel. No panel covering this programme sits as the Neonatal team Clinical
-    Competency Committee, so the general panel decides."
-- Decision panel (form):
-  - Panel name, Scope, Speciality, Decides for (the InstitutionalAdmin only; read-only for a speciality admin), Chair,
-    Members, External members, and Save panel.
-  - Choosing the chair drops her from Members, with the note "Thandi Zulu is the chair now, so is no longer selected
-    under Members."
-  - Refusals: "A panel needs at least two members: the chair and at least one other, so that no decision is one
-    person's." And, while a review before the panel is open, a change of committee is refused: "Review #1 (2026 S2,
-    scheduled) still sits before this panel. …"
-  - Once saved, the page has a "Decides for" card (Save committee) and "Update members".
-- Decisions due:
-  - Filters: Period (the current semester by default), Status ("Outstanding: not yet decided" by default, "Every
-    status", or each status), and EPA. An Administrator also picks an Institution.
-  - The opening sentence names the period, how many trainees and where, and what Missed means.
-  - "By EPA": a summary table, EPA × Due, Decided, Scheduled, Not decided, To schedule, Missed, Optional. It scrolls
-    sideways at 390 px.
-  - A count: "75 of 75 decisions due in 2026 S2 shown."
-  - The list: Trainee, EPA, window ("2026 S2", or "2026" for an annual EPA), status (a badge plus a sentence), and an
-    action. Twenty rows a page; 75 rows for five registrars.
-  - Statuses: Not scheduled, Scheduled ("On the agenda of review #1, which is still open."), Decided ("STAR #1, issued
-    at review #1."), Not decided (an amber badge, "Not decided at review #4. A later sitting for 2026 S2 plans it
-    again.": a ratified review left it unstaged, read so only where it was due at that sitting or its window has ended,
-    T361, D53, E3), As opportunity allows, Due by year end, Missed ("2026 S1 has ended with nothing decided or on an
-    open review's agenda."), and "Revoked: re-decide". There is no Deferred since D53.
-  - Actions: Schedule, which opens the schedule form already filled with panel, trainee and period; and Open review.
-- Committee reviews (the schedule):
-  - Schedule review in the header, for those who may schedule.
-  - The form: Panel; Trainee (disabled until a panel is chosen); Period ("2026 S2 · 1 Jul to 31 Dec 2026"); Review
-    period from and to (filled from the period); Scheduled on; Review type (Annual progression review or
-    Pre-graduation review, with Entrustment-only review in semester 1); and Formative only.
-  - The agenda preview: "15 EPAs will be on the agenda for 2026 S2." It names the EPAs due at this sitting ("… are due
-    at this sitting.", since flow 07's build: no "or deferred with a reason", D53), lists the optional ones, and says "Already decided in this window, so not on the agenda: …". For a formative review: "A
-    formative review carries no agenda: it decides no EPA."
-  - A list: Trainee, Period with its window, Type, Mode, State, Decision, and Open.
-  - The duplicate refusal, in full: "Review #1 already puts this trainee before Paed Annual Review Panel for 2026 S2
-    (scheduled, scheduled 2026-09-26). A trainee has one binding review for each period before the panels that decide
-    the same EPAs, until it is ratified: open that review, or ratify it before scheduling another."
-- The review page before its sitting: the Review card (trainee, panel, period, window, type, mode, state), Start review
-  for those who may start it, or "Only the coordinators of the panel's institution, and those of its members who are
-  active committee members there, can start this review." The sitting itself is Flow 07.
+THE RULES THE PAGES CARRY TODAY (real words; they are the data to draw with, and the rules hold whatever the shape):
+  - Who is offered what. Decision panels: everyone above reads it; New panel only for someone who may create a panel
+    somewhere (hidden, never disabled); Edit per row only on a panel the reader keeps. An InstitutionalAdmin keeps every
+    panel at her institution; a Speciality admin the Speciality-scoped panels of her speciality; a Sub-speciality admin
+    those of her sub-speciality's parent; a Coordinator and a member keep none. A panel's page: those who keep panels;
+    the Coordinator and members are refused (access denied). Decisions due: the schedulers (Coordinator, the three
+    admins, an Administrator), never a CommitteeMember. Scheduling: the same schedulers. Anyone holding Trainee as well
+    is refused every change, with "You hold the Trainee role, so you cannot create or change a decision panel,
+    including one that reviews you." (and the schedule's equivalent).
+  - The panels list: Name, Scope ("Institution" or "Speciality"), Decides for (a College committee, or "General
+    panel"), Members (a count), and Edit ("Edit Paed Annual Review Panel"). Empty: "No decision panels" / "Create a
+    panel before scheduling reviews." (or "No decision panel runs at your institution yet." for a reader). Then "Who
+    decides each EPA": "Which panel takes each EPA's entrustment decision for a trainee of each programme at Kgosi
+    Kgari Teaching Hospital. An EPA the College gives to a named committee (EPAs 4 and 5 to the neonatal CCC) goes to a
+    panel sitting as it, one covering the trainee's speciality before an institution-wide one, and to the general
+    panels while none does." Per programme ("Paediatric EPA Curriculum 11.1"), a table of EPAs and Decided by, rows
+    grouped by answer: "PAED-004, PAED-005 → Paed Annual Review Panel. No panel covering this programme sits as the
+    Neonatal team Clinical Competency Committee, so the general panel decides."; with no panel, "No panel at this
+    institution covers this programme."; an Administrator first chooses an institution ("Choose an institution to see
+    which panel decides each EPA there.").
+  - A panel's form. Creating: Panel name; Scope (Institution, Speciality; it starts on Speciality wherever one is
+    offered); Institution (an Administrator, or Scope Institution); Speciality ("The panel runs at your institution.
+    Only the specialities it has adopted a curriculum in are listed."); Decides for (the InstitutionalAdmin and an
+    Administrator only; a speciality admin gets no field); Chair ("Choose a chair."); Members; External members
+    ("External examiners, who sit with the chair on the panel's appeal body. Only active committee members at the
+    panel's institution who are not trainees are listed: cross-institution externals are not yet supported."). Choosing
+    a chair drops her from Members: "Thandi Zulu is the chair now, so is no longer selected under Members." (a live
+    note). Candidates are the institution's active committee members who are not trainees, by surname. Name, scope,
+    institution and speciality cannot change after creation; only the members and the committee can.
+  - A saved panel: "Decides for" (a select and Save committee for the InstitutionalAdmin, with "A panel sitting as a
+    College committee decides the EPAs the College gives that committee (the neonatal CCC decides EPAs 4 and 5), and
+    nothing else. Where no panel sits as it, the general panels decide them. It cannot change while a review before the
+    panel is scheduled, in progress or awaiting ratification."; for a speciality admin, read-only with "Only an
+    institutional administrator can change which College committee a panel sits as."), and "Update members" with Save
+    panel. Members may change while reviews are open; the committee may not.
+  - Panel refusals: "A panel needs at least two members: the chair and at least one other, so that no decision is one
+    person's."; "A panel member is listed more than once."; "Only an active committee member at the panel's
+    institution who is not a trainee can sit on it."; "Your institution has adopted no curriculum in this speciality,
+    so a panel for it would have no trainee to review."; "Paed Annual Review Panel already sits as the Neonatal team
+    Clinical Competency Committee for this speciality. An institution has one such panel, and one per speciality:
+    change that panel instead."; and, while a review is open, "Review #1 (2026 S2, scheduled) still sits before this
+    panel. What a review decides, and its agenda, follow the College committee the panel sat as when it was scheduled,
+    so the panel keeps what it sits as until its open reviews are ratified, or closed if formative." Results: "Panel
+    members updated."; "The panel is a general panel." / "The panel sits as the Neonatal team Clinical Competency
+    Committee.". The warning "1 member of this panel can no longer sit on it, so is not listed below: only an active
+    committee member at its institution who is not a trainee can. Saving takes that member off the panel." Not found:
+    "The decision panel could not be found." (an out-of-scope panel reads the same). A panel manager with nowhere to
+    create one: "You cannot create a decision panel. A speciality or sub-speciality administrator creates panels for
+    their own speciality at their own institution, once the institution has adopted a curriculum in it. An
+    institutional administrator creates the institution's panels."
+  - Decisions due. Filters: Institution (an Administrator only, "Select institution"; until then "Choose an
+    institution" / "An administrator belongs to no institution, so the decisions due are shown for the one chosen
+    above."); Period (three semesters back, the current, two ahead, as "2026 S2 · 1 Jul to 31 Dec 2026"); Status
+    ("Outstanding: not yet decided" by default, "Every status", then each status); EPA ("Every EPA", "PAED-001 —
+    Managing common paediatric emergencies" …). The opening: "The EPAs due for an entrustment decision in 2026 S2 for
+    the 5 trainees you oversee at Kgosi Kgari Teaching Hospital, by each EPA's decision cadence: every semester, or
+    once a year. Missed is read today: the EPA's window has ended with nothing decided or on an open review's agenda."
+    "By EPA", a summary per EPA (Due, Decided, Scheduled, Not decided, To schedule, Missed, Optional), captioned "How
+    many trainees stand where on each EPA due in 2026 S2. To schedule: not scheduled, due by year end, or revoked.
+    Optional: a partial period, or decided as opportunity allows."; the filters do not narrow it. "75 of 75 decisions
+    due in 2026 S2 shown." The list: Trainee, EPA, Window ("2026 S2", or "2026" for an annual EPA), Status (a badge
+    and a sentence), Action; sorted by trainee then EPA; 20 a page (10, 20, 50, 100).
+  - The statuses and their sentences: Not scheduled ("No open review holds it, and 2026 S2 has not ended."); Scheduled
+    ("On the agenda of review #1, which is still open."); Decided ("STAR #1, issued at review #1." or "STAR #1 stands
+    for 2026."), green; Not decided ("Not decided at review #4. A later sitting for 2026 S2 plans it again."), amber
+    (D53); Revoked: re-decide ("STAR #5, issued for 2026 S2, was revoked. Schedule a review to decide it again."), red;
+    Due by year end ("Decided once a year: due by the last sitting of 2026, and not missed before the year ends.");
+    Partial period ("The trainee joined the window part-way through: optional, never missed."); As opportunity allows
+    ("Decided as opportunity allows: optional, never missed."); Missed ("2026 S1 has ended with nothing decided or on
+    an open review's agenda."), red. Where an open review already holds the period: " Review #2 is open for 2026 S2
+    before Paed Annual Review Panel: decide it there, or ratify that review before scheduling another." Optional rows
+    are never Missed. Only current registrars are listed (an ended, withdrawn or locked one is not).
+  - The Action: "Open review" ("Open review #1 for Lerato Molefe, PAED-001") where a review holds the row; "Open review
+    #2" where another open review holds the period; otherwise "Schedule" ("Schedule a review of Lerato Molefe for
+    PAED-004 before Paed Annual Review Panel"), which opens the schedule form filled with panel, trainee and period; or
+    "No panel you can schedule before decides it." Empty: "Nothing due for 2026 S2" / "No trainee you oversee at Kgosi
+    Kgari Teaching Hospital owes an entrustment decision in 2026 S2."; filtered to nothing: "No decision matches the
+    filters" / "Choose another status or EPA above."
+  - Committee reviews: subtitle "Schedule progression reviews and open existing ones." (or "Open existing committee
+    reviews." for a member); Schedule review in the header for a scheduler. The list, newest scheduled first, unpaged:
+    Trainee, Panel, Period ("2026 S2 · 2026-01-01 to 2026-12-31"), Type ("Annual progression", "Pre-graduation",
+    "Entrustment only", "Formative"), Mode ("Summative", "Formative"), State (Scheduled, In progress, Decided,
+    Ratified, Under appeal, Closed, Withdrawn), Decision (a category's label, "Entrustment decisions only", "Pending",
+    "No binding decision", "None: the review was withdrawn", or "—" for a formative review), and Open ("Open the 2026 S2
+    review of Lerato Molefe before Paed Annual Review Panel"). Empty: "No reviews yet" / "The reviews you can open
+    appear here once they are scheduled. Use Schedule review to put a trainee before a panel." (a member: "The reviews
+    of the panels you sit on appear here once they are scheduled.").
+  - The scheduling form: Panel (only panels with a trainee you can schedule); Trainee ("Choose a panel first. The list
+    holds the trainees at its institution you can schedule."; current registrars only, Step 5.29); Period ("The
+    semester the committee decides for. Choosing one fills the evidence window from the start of its academic year, so
+    the annual EPAs a semester-2 sitting decides are judged on the whole year."); Review period from and to; Scheduled
+    on (today); Review type (for a general panel in S2: Annual progression review, Pre-graduation review, "The
+    semester-2 sitting decides the trainee's progression for the year."; in S1 also Entrustment-only review; before a
+    College committee only Entrustment-only review, "… which decides entrustment only: a review before it records no
+    progression category."); Formative only ("Formative review — closes without a binding decision and cannot issue
+    entrustment decisions. Use for interim progress check-ins."); Create review. Created, the review's page opens
+    (flow 07's, Scheduled).
+  - The agenda preview, live as the form fills: "Choose a panel, a trainee and a period to see which EPAs the review
+    will be there to decide."; then "15 EPAs will be on the agenda for 2026 S2." and "PAED-001, PAED-002, … and
+    PAED-015 are due at this sitting.", the optional lines ("PAED-007 — … · As opportunity allows"), "PAED-004 and
+    PAED-005 are decided by {panel}: schedule them separately." where another panel decides them, and "Already decided
+    in this window, so not on the agenda: PAED-001, PAED-010 and PAED-012." (5.2). Formative: "A formative review
+    carries no agenda: it decides no EPA." Nothing-to-decide sentences: "This trainee follows no curriculum, so the
+    review will have no agenda."; "Every EPA this panel decides that is due for 2026 S2 is already decided in its
+    window, so the review will have nothing on its agenda."
+  - Scheduling refusals: the duplicate, "Review #1 already puts this trainee before Paed Annual Review Panel for 2026
+    S2 (scheduled, scheduled 2026-10-12). A trainee has one binding review for each period before the panels that
+    decide the same EPAs, until it is ratified: open that review, or ratify it before scheduling another." (a formative
+    review takes no seat and is never refused so); "A review can only be scheduled on a panel of your institution that
+    covers the trainee's programme, for a trainee at that institution whose programme you oversee."; "A general
+    panel's semester-2 sitting decides the trainee's progression for the year, so it is an annual progression or a
+    pre-graduation review. An entrustment-only review sits in semester 1, or before a College committee such as the
+    neonatal CCC."; "Only a trainee in a programme now can be put before a panel: …"; "Choose a trainee from the
+    list."; "Choose the period the review sits for."
+  - The review page before its sitting is flow 07's (its sitting bar reads Scheduled with Start review… for a
+    Coordinator or a seated member, or "Only the coordinators of the panel's institution, and those of its members who
+    are active committee members there, can start this review."). This flow only arrives there.
+  - Data volumes: none (no panels; nothing due; no reviews); typical (one panel of four seats; 75 decisions due for five
+    registrars; five reviews); heavy (two panels, one sitting as the neonatal committee; eight reviews and two formative
+    check-ins; a revoked STAR to decide again; a hundred rows a page; a deleted user's pseudonym in the list, flow 14's).
 
-DATA VOLUMES: none (no panels; nothing due; no reviews); typical (1 panel with 4 members; 75 decisions due for 5
-registrars; 5 reviews); heavy (two panels, one sitting as the neonatal committee; 8 reviews; revoked STARs to decide
-again).
-
-MODE: Full fidelity for screens 1, 2, 4 and 5, which keep today's List and Form shapes. Wireframe first for screen 3,
-Decisions Due, and for the question whether it merges with screen 4.
+WHAT FLOW 08 MAY CHANGE OF WHAT EARLIER FLOWS BUILT, AND WHAT IT MAY NOT:
+  May not: the shell (flow 01: the trail, the acting role, access denied, not found, the reconnect dialog); the
+    menus' items (flow 06 settled them); flow 07's review page; the rules above (who may act, the seat rule, the
+    quorum of two, what is Missed and what is optional, which types a panel and a semester allow).
+  May, for these pages: their whole structure (Decisions due and the schedule as one page or two; the form inline, in
+    a page of its own, or opened on a row; a trainee filter or a per-registrar view), the panels' form and how members
+    are chosen, the panel's page title, the order and grouping of parts, titles and subtitles, where each result and
+    refusal shows and where focus goes, confirmations, the lists' stacking at 390, and the words. Mark PROPOSED any
+    rule change (refusing Schedule on an ended semester's row, renaming a panel, refusing a member change while a
+    review is open): those are the operator's. The runbook's Expects change with the words.
+  Say which of these each variation changes, and why.
 
 SCREENS, in order:
-1. /committee/panels — Decision panels: empty; the manager's list; a speciality admin's; a member's (no New panel, no
-   Edit); the coordinator's; and "who decides each EPA".
-2. /committee/panels/new and /committee/panels/{id} — a panel: new; the chair note; a panel of one refused; saved; as a
-   speciality admin (Decides for read-only) and a sub-speciality admin (Speciality scope only); the committee change
-   refused; a member who can no longer sit; not found.
-3. /committee/decisions-due — Decisions Due: nothing due; an Administrator who must choose an institution; outstanding;
-   no row matches the filters; a past semester with Missed rows; all scheduled; after the sitting (Decided, Not decided);
-   a revoked STAR to decide again.
-4. /committee/reviews — the schedule: empty for a scheduler and for a member; the form; the agenda preview; a duplicate
-   refused; scheduled; filled from Decisions Due; formative; pre-graduation; ratified; the preview failed.
-5. /committee/reviews/{id} before its sitting: scheduled with no Start for this viewer, and a formative review as
-   scheduled.
+  1. Decision panels: empty; the manager's list with "Who decides each EPA"; a speciality admin's; a member's and the
+     Coordinator's (no New panel, no Edit); an Administrator choosing an institution; loading.
+  2. A panel: new (the InstitutionalAdmin's, with Decides for; a sub-speciality admin's, Speciality only); the chair
+     note; a panel of one refused; created (the result, and the page now naming the panel); members updated; read-only
+     committee (a speciality admin); the committee change refused; a member who can no longer sit; nowhere to create;
+     not found.
+  3. Decisions due: an Administrator choosing an institution; outstanding (the opening, By EPA, the list); one
+     registrar's rows; no row matches; a past semester with Missed rows; all scheduled; after the sitting (Decided,
+     Not decided, optional); a revoked STAR to decide again; nothing due.
+  4. Scheduling: the form, empty and filled from a Decisions due row; the agenda preview (15 EPAs; pre-graduation with
+     "Already decided"); the period's binding review already held (the warning before Create); formative (no type, no
+     agenda); the preview failed; created.
+  5. Committee reviews: empty for a scheduler and for a member; scheduled; ratified (decisions by label); with a
+     formative check-in; a member's list.
+  6. 390 px for every page, and access denied (the Coordinator on a panel's page; a member on Decisions due).
 
-STEPS: 2.20–2.25, 2.32, 4.1–4.13, 4.33, 4.34, 4.37, 4.49, 5.1, 5.2, 5.29, A.1.10, A.7.5 and A.7.8, pasted verbatim at
-the end of this message (Role / Route / Do / Expect). In them, D is the day the story is replayed, <P> the semester
-holding D (for example 2026 S2) and <Y> its year; J is the latest 15 January on or before D.
+STEPS: 2.20–2.25, 2.32, 4.1–4.13, 4.33, 4.34, 4.37, 4.49, 5.1, 5.2, 5.29, A.1.10, A.7.5 and A.7.8. Pasted verbatim
+  below (Role / Route / Do / Expect). In them, D is the day the story is replayed, <P> the semester holding D (for
+  example 2026 S2) and <Y> its year; J is the latest 15 January on or before D. Where an Expect quotes today's wording
+  or layout, that is today's page, not a requirement on the new one.
 
-STATES TO SHOW: every state named in SCREENS, plus loading and 390 px for each page, and access denied for a role a
-page refuses (the Coordinator on the new-panel form; a committee member on Decisions Due).
+STATES TO SHOW:
+  Every state named in SCREENS; loading for every page (the header and a skeleton, no action offered until the read is
+  in; "Who decides each EPA" never says there is no routing while it loads); a load error (a sentence and Try again,
+  never an exception's text); each confirmation the design adds, its cancel, and the result after it with focus on
+  it; 390 px for every page; the heavy volumes.
 
-REQUIREMENTS FROM KNOWN DEFECTS (each is testable):
-- T309: when the registrar already holds the period's binding review, the agenda preview says so first, in the create's
-  own words, with an Open review link. Create review is shown disabled with that reason. A formative check-in is named
-  "Formative check-in" everywhere, and the Review type select is hidden while "Formative only" is ticked.
-- T259: Decisions Due names the panel the holding review sits before, not the panel the EPA routes to.
-- T260: after a panel save, no stale "can no longer sit" warning remains. The panel's page names the panel, its scope
-  and its speciality.
-- T329: the panels list never says "no committee routing" while it is still loading: a skeleton shows instead.
-- T328: a focusable scroll region (the By EPA summary) shows the design's focus ring.
-- T264: identical row actions get per-row names. Pagers keep the focus on a page change.
-- T280: the pager's page-size select has a name ("Per page" is a label, not loose text).
+REQUIREMENTS FROM KNOWN DEFECTS:
+  - A5 (BRIEF.md § 6): every action reports its outcome where the focus goes and where the person is working; a
+    refusal shows beside the control that caused it and keeps what was typed; a refused select shows the saved value,
+    or says it was not saved.
+  - T309: when the registrar already holds the period's binding review, the preview says so before Create, in the
+    create's own words, with a link to that review, and Create is not offered for it (or is refused with that reason
+    beside it). A formative check-in shows no Review type, and reads "Formative check-in" wherever its type shows.
+  - T260: a panel's page names the panel, its scope, its institution and its speciality; after a save, no stale "can no
+    longer sit" warning; Decision panels says why New panel is missing for a manager who can create nowhere.
+  - T259: a holding review's sentence names the panel that review sits before.
+  - T329 and T338: every page renders its header from the first moment, then a skeleton; a failed read is an alert
+    with Try again, never an exception's text; the preview's failure says the agenda could not be read, and why in
+    words.
+  - T324: a missing panel name, trainee or panel is refused in Wombat's words, never "The Name field is required.".
+  - T272: no refusal or warning prints framework text.
+  - T280: the pager's page-size select is named; every table has a caption; headings in order (one h1, then h2).
+  - T264: every row action named for its row (done for the lists; keep it); the focus stays on the pager or moves to
+    the list's heading on a page change.
+  - Content (BRIEF.md § 6): sentence case; people by name as stored; states, types and categories by their labels;
+    ISO dates (flow 05's D1); no doubled words ("scheduled, scheduled").
+  - Done since the old brief, keep them: the Coordinator's Decision panels link (flow 06); the design's focus ring on
+    By EPA's scroll region (T328); the formative label in the list (flow 07, T309 item 2); D53's Not decided.
 
 QUESTIONS THE DESIGN MUST ANSWER:
-1. Should Decisions Due and the schedule be one page (what is due, and scheduling it in place) or two linked pages?
-2. How does a scheduler see, before saving, that the registrar already has a binding review this period?
-3. Should the Coordinator get a Decision Panels link? The page admits him today; his nav has none.
+  1. Decisions due and the schedule: one page (what is due, and scheduling it in place) or two linked pages? Where
+     does the scheduling form live: inline above the list, a page of its own, or opened on a Decisions due row?
+  2. How does a scheduler read one registrar's fifteen EPAs (5.1): a trainee filter, rows grouped by registrar, or a
+     per-registrar view?
+  3. How does a scheduler see, before Create, that the registrar already holds the period's binding review (4.8)?
+  4. What does the list show at 390 px (A.7.5, A.7.8): stacked rows, fewer columns, or a different view?
+  5. How are a panel's members chosen, at 1280 and by touch at 390, with whole names?
+  6. What does a panel's own page show above its forms, and where do Decides for and the members sit?
+  7. (The operator's) A Missed row in an ended semester offers Schedule for that semester. Keep it, refuse it, or
+     schedule it for the current semester?
+  8. (The operator's) A panel's name, scope and speciality cannot change after creation, and members may change while
+     its reviews are open (only the committee may not). Keep both rules, or change either?
+  9. (The operator's) One semester, two labels: the schedule's "2026 S2 · 1 Jul to 31 Dec 2026" and the registrar
+     pages' "Semester 2, 2026 · July to November" (the College's nominal end, D40). Keep both, and say why where both
+     appear, or align them?
+  10. (The operator's) T309, T259, T260, T329, T338, T324, T272 and T280 touch only these pages: fold them into the
+     build, or land any first as its own task?
 
 CONSTRAINTS:
 WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
@@ -184,6 +345,13 @@ Components (compose from these; mark anything else NEW): PageHeader (the page's 
   loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
   text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
   (hand-drawn SVG, no chart library), ReferenceBlock.
+  Since flow 03 also: ActivityStatus, ActivityAbout, ActivityForm, ActivityWorkflowActions, SubmitCheck,
+  RefusalSummary, ActivityHistory, NeedsYouList, InstrumentPicker, and DataTable's stacked rows (Stack). Since flow 04:
+  the rung picker, WaitingList, WayOn, the Overdue badge and the other-role line. Since flow 05: the progress index
+  (an EPA per row, its name its own link), the figure over its caption, EntrustmentStandingPanel's stacked rows, and
+  TrajectoryChart's two drawings with its visible table. Since flow 06: the committee and coordinator Homes, the
+  registrar list with its filters. Since flow 07: ReviewSitting, SittingBar, AgendaTable (its container-query stack),
+  AgendaLineForm, EvidenceReader, DecisionForm, ReviewReturnLink.
 Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
   denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
   them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
@@ -194,21 +362,265 @@ Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the 
   ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
   reduced motion honoured.
 Viewports: 1280×800 and 390×844.
+Also: each page has exactly one h1, and its headings are in order. A confirmation is flow 01's native <dialog>
+  ConfirmDialog. Flow 07's review page is arrived at, not redrawn.
 
-ASK: 2–3 variations. Full fidelity for the panels and the schedule; wireframes first for Decisions Due. Name every
-design-system component you use and mark anything else NEW. Say which DESIGN.md rule a variation breaks. Flag edge
-cases and draw the none, typical and heavy data volumes. Review the result for accessibility against WCAG 2.1 AA.
+ASK:
+  - Round 1: 2–3 STRUCTURAL variations of the calendar as wireframes (screens 3–5): what is due, how one registrar is
+    read, where scheduling happens and how the seat warning shows before Create, and the lists at 390. Give each its
+    reasoning and its step count per journey, at 1280 and 390 px: Mr Smit scheduling Dr Molefe from an empty schedule
+    (4.1, 4.6, 4.7) and being stopped from a second review (4.8); Dr Mokoena scheduling Dr Mahlangu from what is due
+    (4.9); Mr Smit reading Dr Molefe's fifteen rows and scheduling her pre-graduation review (5.1, 5.2); Prof Mbatha
+    after the sitting (4.34); Mr Smit on his phone (A.7.5). Plus ONE proposal for the panels (screens 1–2: Prof
+    Mbatha's 2.20–2.22 and 4.13), wireframed, for me to confirm or correct. No colour or type choices yet. Stop and
+    wait for my pick.
+  - Round 2: the chosen structure at full fidelity on the design system's tokens, every screen and state above, at
+    1280 and 390 px, each role's view, every confirmation, and where the focus lands after each action.
+  - Name every design-system component you use, and mark anything else NEW. Say which DESIGN.md rule a variation
+    changes (§ Table system; § Form system; § Pager; § Page-level patterns: List page, Detail page, Form page, and the
+    title rule; the owner table's rows for a panel and a review; Decisions due's own section).
+  - Mark PROPOSED anything not built: a confirmation, a new route, a rule change.
+  - Flag edge cases: an Administrator who belongs to no institution; a panel of two (the chair and one member); a
+    panel sitting as the neonatal committee; a registrar whose review is already held; a formative check-in on the same
+    period; a registrar who has graduated or withdrawn (not offered); a deleted user's pseudonym in the list; the
+    120-character EPA title ("PAED-015 — Teaching and applying evidence-based care responsibly and ethically in
+    clinical decision-making and research").
+  - Run an accessibility review against WCAG 2.1 AA: one h1, headings in order, every table captioned, every row
+    action named for its row, badges read as words, the pager's select named, focus after every action, page change
+    and confirmation; targets ≥ 24 px (44 at 390).
 
-ATTACHED: states/panel-edit--chair-note.png, states/panels-list--manager.png, act-2/2.24-1-who-decides.png,
-states/decisions-due--outstanding.png, states/decisions-due--missed.png, states/reviews-schedule--preview.png,
-states/reviews-schedule--refused.png, states/reviews-schedule--prefilled.png,
-act-A/A.7.5-4-decisions-due-390.png, states/panels-list--loading.png
+ATTACHED: act-2/2.21-1-chair-chosen.png, act-2/2.22-1-panel-saved.png, act-2/2.24-1-who-decides.png,
+  act-4/4.13-1-mbatha-committee-change-refused.png, act-4/4.1-1-smit-decisions-due-outstanding.png,
+  act-4/4.2-1-mbatha-previous-semester-missed.png, act-4/4.37-2-sithole-revoked-re-decide.png,
+  act-4/4.6-1-smit-molefe-schedule-form.png, act-4/4.8-1-smit-second-review-refused.png,
+  act-4/4.49-1-smit-formative-form.png, act-5/5.1-2-smit-molefe-rows-page1.png, act-5/5.2-1-smit-pre-graduation-form.png,
+  act-A/A.7.5-4-decisions-due-390.png, act-A/A.7.8-3-reviews-390.png, states/panels-list--loading.png (old frame: read
+  its body only). Several are full pages of 3,000–10,000 px, which you will see scaled. In every tall capture at 1280
+  the sidebar's colour stops at 800 px: that is the capture, not the page.
+```
 
-RUNBOOK STEPS, VERBATIM:
+---
 
---- from execution/knowledge/scenario-paediatrics/act-2-onboarding.md ---
+## 2. The journey
 
-### Step 2.20 — Decision panels before any exist
+| Step | Page | Who does | They must be able to see |
+|---|---|---|---|
+| 2.20 | `/committee/panels` | Prof Mbatha | no panels: "No decision panels", New panel; "who decides" says no panel covers the programme |
+| 2.21 | `/committee/panels/new` | Prof Mbatha | the form's options, the chair note, a panel of one refused (D46); names cut short in a 315 px card |
+| 2.22 | `/committee/panels/new` → `/committee/panels/{PanelId:int}` | Prof Mbatha | the panel saved: no word that it was created, and the page never names it (T260) |
+| 2.23 | `/account/login` → `/` → `/committee/panels` → `/committee/panels/{PanelId:int}` → `/committee/panels` | Dr Mokoena | adds Dr Botha; Decides for read-only for her; "Panel members updated."; Members reads 4 |
+| 2.24 | `/committee/panels` | Prof Mbatha | "who decides": PAED-004 and 005 fall back to the general panel with the College's reason; the other thirteen go to it |
+| 2.25 | `/account/login` → `/` → `/committee/panels` → `/committee/panels/new` | Dr Sithole | Speciality scope only, no Decides for; "Select speciality" though one is offered; leaves without saving |
+| 2.32 | `/account/login` → `/` → `/admin/invitations` → `/access-denied` → `/committee/panels` → `/committee/panels/new` → `/access-denied` | Mr Smit | Decision panels in his menu, lit (no New, no Edit); the new-panel form is access denied, which does not say which page (D4) |
+| 4.1 | `/` → `/committee/decisions-due` | Mr Smit | outstanding: the opening, By EPA (12 To schedule, 3 Optional), "75 of 75", 20 a page, Schedule named per row; filtered to five PAED-004 rows; 3,781 px |
+| 4.2 | `/` → `/committee/decisions-due` | Prof Mbatha | no Institution filter; the previous semester's Missed rows, each still offering Schedule; optional EPAs never missed; 10,276 px at a hundred a page |
+| 4.3 | `/account/login` → `/` → `/committee/decisions-due` | Dr Mokoena | the same 75 rows |
+| 4.4 | `/account/login` → `/` → `/committee/decisions-due` | Dr Sithole | the same, for his sub-speciality |
+| 4.5 | `/committee/decisions-due` → `/access-denied` | Dr Naidoo | not in his menu; typed, access denied |
+| 4.6 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | the form above the list, the period filling the window, dates in the browser's format, the preview (15 EPAs, 12 due); then the review, Scheduled, Start offered |
+| 4.7 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | two more; three rows, each Open named for its review |
+| 4.8 | `/committee/reviews` | Mr Smit | a second review of Dr Molefe: the preview warns of nothing; Create refused at the top, unfocused, "scheduled, scheduled", no link (T309) |
+| 4.9 | `/committee/decisions-due` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Mokoena | three registrars Scheduled ("Open review" wrapping); Schedule on Dr Mahlangu's row opens the form filled; the review opens with no Start for her |
+| 4.10 | `/committee/decisions-due` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Sithole | Dr Ndlovu the same way; all 75 rows Scheduled (9,556 px) |
+| 4.11 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Naidoo | his panel's five reviews, no Schedule review; Start offered to him as a seated member |
+| 4.12 | `/committee/reviews` → `/committee/decisions-due` | Prof Mbatha | all five scheduled; each row's Open review opens the review holding it |
+| 4.13 | `/committee/panels` → `/committee/panels/{PanelId:int}` | Prof Mbatha | the committee change refused while reviews are open: a ten-line box in the narrow card; the select keeps the refused choice |
+| 4.33 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | after the sitting: five Ratified, each Decision by its label (T250); the Period wraps mid-date |
+| 4.34 | `/committee/decisions-due` | Prof Mbatha | 70 outstanding; Every status: Decided (STAR and review), Not decided (amber, D53), optional |
+| 4.37 | `/admin/entrustment-decisions` → `/committee/decisions-due` | Dr Sithole | after a revocation (flow 09's list): "Revoked: re-decide" with Schedule; Not decided rows with Open review and Schedule stacked |
+| 4.49 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | a formative check-in: Review type still shown ("Annual progression review", the semester-2 help); no agenda; the list reads "Formative"; the review "Formative check-in" (flow 07) |
+| 5.1 | `/committee/decisions-due` | Mr Smit | Dr Molefe's fifteen rows, from row 16 of page 1 on: no trainee filter |
+| 5.2 | `/committee/decisions-due` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | her pre-graduation review from a row: the form filled, the window widened to her start, the preview naming what is already decided; the semester-2 help |
+| 5.29 | `/committee/reviews` | Mr Smit | only current registrars offered; a graduate and a withdrawn registrar are not |
+| A.1.10 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | another formative check-in, for the data-rights appendix |
+| A.7.5 | `/` → `/msf/campaigns` → `/msf/campaigns/{CampaignId:int}` → `/committee/decisions-due` → `/admin/data-rights` | Mr Smit at 390 | By EPA a focusable region with the design's ring, its EPA names cut as it scrolls; the list's Status and Action off-screen |
+| A.7.8 | `/` → `/committee/reviews` → `/committee/decisions-due` → `/placeholder/{Feature}` → `/placeholder/{Feature}` | Dr Sithole at 390 | Committee reviews shows Trainee, Panel and a Period a word a line, the rest off-screen; a deleted user's pseudonym; Decisions due as above |
+
+## 3. States to design
+
+Each screenshot is under `design/baseline/`. How to reach each is in `states.md` § Committee. The step captures and
+the `states/decisions-due--*`, `states/reviews-schedule--*` and `states/review-detail--*` captures are from the T361
+replay (2026-10-12) on the shell as built; many are the same image as a step capture. The `states/panels-list--*` and
+`states/panel-edit--*` captures are from 2026-09-26 on the old frame (a flat Title Case sidebar, an email in the top
+bar): brief from their page body. Where a state has a step capture, brief from that.
+
+| Page | State | Screenshot | Reached at |
+|---|---|---|---|
+| `/committee/panels` | No panels | `act-2/2.20-1-panels-empty.png` (`states/panels-list--empty.png`, old) | Step 2.20 |
+| `/committee/panels` | The manager's list, who decides | `act-2/2.24-1-who-decides.png` (`states/panels-list--manager.png`, old) | Step 2.24 |
+| `/committee/panels` | A speciality admin's list | `act-2/2.23-4-mokoena-panels-after.png` (`states/panels-list--speciality-admin.png`, old) | Step 2.23 |
+| `/committee/panels` | A sub-speciality admin's list | `act-2/2.25-1-sithole-panels.png` | Step 2.25 |
+| `/committee/panels` | A member's list | `act-4/4.14-1-botha-decision-panels.png` (`states/panels-list--member.png`, old) | Step 4.14 |
+| `/committee/panels` | The Coordinator's list | `act-2/2.32-3-smit-panels.png` (`states/panels-list--coordinator.png`, old) | Step 2.32 |
+| `/committee/panels` | Loading | `states/panels-list--loading.png` (old frame) | A held read: "no committee routing" too soon (T329) |
+| `/committee/panels` | 390 px | `states/panels-list--narrow.png` (old frame, 375 px, scratch rows: do not attach) | Step A.7.7 |
+| `/committee/panels/new` | The new-panel form | `states/panel-edit--new.png` (old frame; the only one with Decides for on a new form) | Step 2.21 |
+| `/committee/panels/new` | Chair moved out of Members | `act-2/2.21-1-chair-chosen.png` (`states/panel-edit--chair-note.png`, old) | Step 2.21 |
+| `/committee/panels/new` | A panel of one refused | `act-2/2.21-2-panel-of-one-refused.png` (`states/panel-edit--one-member.png` is a broken stitch: do not attach) | Step 2.21 |
+| `/committee/panels/{PanelId:int}` | Saved | `act-2/2.22-1-panel-saved.png` (`states/panel-edit--saved.png`, old) | Step 2.22 |
+| `/committee/panels/{PanelId:int}` | Read-only committee, members updated | `act-2/2.23-2-mokoena-panel-edit.png`, `act-2/2.23-3-botha-added.png` (`states/panel-edit--speciality-admin.png`, old) | Step 2.23 |
+| `/committee/panels/new` | Speciality scope only | `act-2/2.25-2-sithole-new-panel.png` (`states/panel-edit--sub-speciality-admin.png`, old) | Step 2.25 |
+| `/committee/panels/{PanelId:int}` | Committee change refused | `act-4/4.13-1-mbatha-committee-change-refused.png` (`states/panel-edit--body-refused.png`, old) | Step 4.13 |
+| `/committee/panels/{PanelId:int}` | A member who can no longer sit | `states/panel-edit--unseatable.png` (old frame) | Scratch (post-appendix): Dr Botha locked out |
+| `/committee/panels/{PanelId:int}` | Not found | `states/panel-edit--not-found.png` (old frame) | Typed `/committee/panels/999999` |
+| `/committee/panels/{PanelId:int}` | 390 px | `states/panel-edit--narrow.png` (old frame, 375 px) | Step 2.22 |
+| `/committee/panels/new` | Access denied | `act-2/2.32-4-new-panel-denied.png` | Step 2.32 |
+| `/committee/decisions-due` | Nothing due | `states/decisions-due--nothing-due.png` | After Step 1.22, before any admission |
+| `/committee/decisions-due` | An administrator, no institution | `states/decisions-due--choose-institution.png` | devadmin, any time after Act 1 |
+| `/committee/decisions-due` | Outstanding | `act-4/4.1-1-smit-decisions-due-outstanding.png` (`states/decisions-due--outstanding.png`) | Step 4.1 |
+| `/committee/decisions-due` | Filtered to one EPA | `act-4/4.1-2-smit-not-scheduled-paed004.png` | Step 4.1 |
+| `/committee/decisions-due` | No row matches | `states/decisions-due--no-match.png` | Step 4.1, Status Missed |
+| `/committee/decisions-due` | A past semester, missed | `act-4/4.2-1-mbatha-previous-semester-missed.png` (`states/decisions-due--missed.png`; 10,276 px) | Step 4.2 |
+| `/committee/decisions-due` | Some scheduled | `act-4/4.9-1-mokoena-decisions-due-three-scheduled.png` | Step 4.9 |
+| `/committee/decisions-due` | All scheduled | `act-4/4.10-4-sithole-all-scheduled.png` (`states/decisions-due--scheduled.png`) | Step 4.10 |
+| `/committee/decisions-due` | After the sitting | `act-4/4.34-1-mbatha-decisions-due-every-status.png` (the 800 px top only); `states/decisions-due--after-sitting.png` (after Step 4.37: it includes the revoked row) | Step 4.34 |
+| `/committee/decisions-due` | Revoked, to decide again | `act-4/4.37-2-sithole-revoked-re-decide.png` (`states/decisions-due--revoked.png`) | Step 4.37 |
+| `/committee/decisions-due` | One registrar's rows | `act-5/5.1-1-smit-decisions-due-every-status.png`, `act-5/5.1-2-smit-molefe-rows-page1.png` | Step 5.1 |
+| `/committee/decisions-due` | Loading | `states/decisions-due--loading.png` | A held read |
+| `/committee/decisions-due` | Access denied, a member | `act-4/4.5-2-naidoo-decisions-due-denied.png` | Step 4.5 |
+| `/committee/decisions-due` | 390 px | `act-A/A.7.5-4-decisions-due-390.png` (`states/decisions-due--narrow.png`), `act-A/A.7.8-4-decisions-due-390.png` | Steps A.7.5, A.7.8 |
+| `/committee/reviews` | None yet, a scheduler | `states/reviews-schedule--empty-scheduler.png` | Step 4.1, before 4.6 |
+| `/committee/reviews` | None yet, a member | `states/reviews-schedule--empty-member.png` | Step 4.5 |
+| `/committee/reviews` | The form, no panel chosen | `states/reviews-schedule--form.png` | Step 4.6 |
+| `/committee/reviews` | The agenda preview | `act-4/4.6-1-smit-molefe-schedule-form.png` (`states/reviews-schedule--preview.png`) | Step 4.6 |
+| `/committee/reviews` | A second review refused | `act-4/4.8-1-smit-second-review-refused.png` (`states/reviews-schedule--refused.png`) | Step 4.8 |
+| `/committee/reviews` | Scheduled | `act-4/4.7-1-smit-three-scheduled.png` (`states/reviews-schedule--scheduled.png`) | Step 4.7 |
+| `/committee/reviews` | Filled from Decisions due | `act-4/4.9-2-mokoena-schedule-form-filled.png` (`states/reviews-schedule--prefilled.png`), `act-4/4.10-2-sithole-schedule-form-filled.png` | Steps 4.9, 4.10 |
+| `/committee/reviews` | A member's list | `act-4/4.11-1-naidoo-five-scheduled.png` | Step 4.11 |
+| `/committee/reviews` | Formative | `act-4/4.49-1-smit-formative-form.png` (`states/reviews-schedule--formative.png`), `act-4/4.49-3-smit-formative-scheduled-list.png` | Step 4.49 |
+| `/committee/reviews` | Already decided in this window | `act-5/5.2-1-smit-pre-graduation-form.png` (`states/reviews-schedule--pre-graduation.png`) | Step 5.2 |
+| `/committee/reviews` | Current registrars only | `act-5/5.29-1-smit-current-trainees-only.png` (`states/reviews-schedule--current-only.png`) | Step 5.29 |
+| `/committee/reviews` | Ratified | `act-4/4.33-1-smit-five-ratified.png` (`states/reviews-schedule--ratified.png`) | Step 4.33 |
+| `/committee/reviews` | Preview failed | `states/reviews-schedule--preview-failed.png` | A held read during Step 4.6 |
+| `/committee/reviews` | Loading | `states/reviews-schedule--loading.png` | A held read |
+| `/committee/reviews` | 390 px | `act-A/A.7.8-3-reviews-390.png` (`states/reviews-schedule--narrow.png`) | Step A.7.8 |
+| `/committee/reviews/{ReviewId:int}` | Scheduled, Start offered | `act-4/4.6-2-smit-molefe-review-scheduled.png` | Step 4.6 |
+| `/committee/reviews/{ReviewId:int}` | Scheduled, no Start | `act-4/4.9-3-mokoena-review-scheduled-no-start.png` (`states/review-detail--scheduled-no-start.png`) | Step 4.9 |
+| `/committee/reviews/{ReviewId:int}` | Formative, scheduled | `act-4/4.49-2-smit-formative-scheduled.png` (`states/review-detail--formative.png`) | Step 4.49 |
+
+Not captured, so describe them in words (`states.md`; `coverage.md` § Flows and states not played):
+- On the new shell: the panels list loading and at 390; a panel's page at 390, not found and with a member who can no
+  longer sit; the InstitutionalAdmin's blank new-panel form. The old-frame captures above stand in.
+- Anywhere: a panel's page loading; the Administrator with an institution chosen on Decisions due (D46); "You cannot
+  create a decision panel" (T194; every manager in the cast can create); the "holds Trainee" notes on the panels and
+  the schedule (T237, T256; no cast member holds Trainee beside a staff role); a second panel sitting as the neonatal
+  committee (flow 07's scratch captures `states/review-detail--entrustment-only.png` and `--decided-elsewhere.png` show
+  its review); field validation on either form; a result after a panel is created (there is none).
+- Not built: the seat warning before Create and the hidden Review type (T309); draw them from § 1.
+
+**Belongs to other flows:** flow 07: the review page itself. Flow 09: Entrustment decisions and the revocation (Step
+4.37's first capture). Flow 14: the pseudonym after an erasure (`states/reviews-schedule--pseudonym.png`). Flow 06:
+the Homes (`act-2/2.32-1-smit-home.png`, `act-4/4.3-1-mokoena-dashboard-nav.png`, `act-4/4.4-1-sithole-dashboard-nav.png`).
+
+## 4. Attach
+
+Paths are relative to `design/baseline/`. Every key screenshot below was opened and checked on 2026-10-12; none shows a
+link, a token or a password. Several are full pages of 3,000–10,000 px, which the canvas will see scaled: say so in the
+message. In every tall capture at 1280 the sidebar's colour stops at 800 px: an artefact of the capture.
+
+**Key screenshots (attach these first, with § 1):**
+1. `act-2/2.21-1-chair-chosen.png`: the panel form, a 315 px card; the chair note; multi-selects cutting names
+2. `act-2/2.22-1-panel-saved.png`: a saved panel's page that never names the panel (T260)
+3. `act-2/2.24-1-who-decides.png`: the panels list and "Who decides each EPA"
+4. `act-4/4.13-1-mbatha-committee-change-refused.png`: the refusal inside the narrow card; the select keeps the refused
+   choice
+5. `act-4/4.1-1-smit-decisions-due-outstanding.png`: Decisions due, outstanding (3,781 px)
+6. `act-4/4.2-1-mbatha-previous-semester-missed.png`: Missed rows, each offering Schedule (10,276 px)
+7. `act-4/4.37-2-sithole-revoked-re-decide.png`: Revoked and Not decided, Open review and Schedule stacked
+8. `act-5/5.1-2-smit-molefe-rows-page1.png`: one registrar's rows start at row 16: no trainee filter
+9. `act-4/4.6-1-smit-molefe-schedule-form.png`: the form and the agenda preview
+10. `act-4/4.8-1-smit-second-review-refused.png`: the duplicate refused only after Create (T309)
+11. `act-4/4.49-1-smit-formative-form.png`: Formative ticked, Review type still "Annual progression review" (T309)
+12. `act-5/5.2-1-smit-pre-graduation-form.png`: pre-graduation; "Already decided"; the semester-2 help
+13. `act-A/A.7.5-4-decisions-due-390.png`: Decisions due at 390: By EPA's ring; Status and Action off-screen
+14. `act-A/A.7.8-3-reviews-390.png`: Committee reviews at 390: three columns visible, a pseudonym
+15. `states/panels-list--loading.png`: "no committee routing" while loading (old frame: its body only)
+
+**States (attach as the chat asks):** every row of § 3 not already attached above, flagging the old-frame ones.
+
+**Do not attach:** `states/panel-edit--one-member.png` (a broken stitch) or `states/panels-list--narrow.png` (375 px,
+scratch rows).
+
+## 5. Known problems this design must solve
+
+The evidence column is for the operator and for Claude Code. Attach only what § 4 lists. Code is cited at `b62997a5`.
+
+| Task | What it means for the design | Evidence |
+|---|---|---|
+| **A5** (BRIEF § 6; no task) | The schedule's refusals are a danger Alert at the page's top, above the form (`W/ReviewsSchedule.razor:21–24`), with no focus move; Create has no busy state (`:94`). The panel form's refusals are in `ActionResult` but not focused (`W/PanelEdit.razor:16–19`); Save committee's refusal sits in its card and the select keeps the refused value (`:422–425`). A new panel's save reloads the page with no result (`:646`). Each outcome shows, and takes the focus, where the person works. | `act-4/4.8-1-smit-second-review-refused.png`, `act-4/4.13-1-mbatha-committee-change-refused.png` |
+| **T309** (P3) | Item 1: the preview runs the scope check and the planner only (`A/PreviewCommitteeAgenda.cs:46–86`); the seat check is the create's (`A/ScheduleCommitteeReview.cs:124–130`, `:233–237`), so the warning comes after Create. Item 2 (the list's "Formative") is done (`44de180b`). Item 3: Review type stays shown while Formative only is ticked (`W/ReviewsSchedule.razor` Review type and `#review-formative`). The refusal doubles "scheduled" ("(scheduled, scheduled 2026-10-12)"). | `act-4/4.8-1…`, `act-4/4.49-1…` |
+| **T260** (P3) | The panel's page is titled "Decision panel" (`W/PanelEdit.razor:10`); name, scope and speciality render only on a new panel (`:115–173`). The unseatable warning is not reset after a save (`:625–634`) and has no live role. Decision panels does not say why New panel is missing (`W/PanelsList.razor:12–15`). | `act-2/2.22-1-panel-saved.png`, `states/panel-edit--unseatable.png` |
+| **T259** (P3) | The holding sentence names the panel the EPA routes to (`SchedulePanelName`, `W/DecisionsDueText.cs:80–84`), not the holding review's own panel. | Step 4.37 |
+| **T329** (P2) | `_routingLoading` starts false (`W/PanelsList.razor:184`), so "There is no committee routing to show for your institution." shows while the list loads. | `states/panels-list--loading.png` |
+| **T338** (P3) | No page here passes `StatePanel`'s `OnRetry`; a failed read prints `RefusalText`. The preview's failure prints the exception (`W/ReviewsSchedule.razor` `AgendaPreview`, "The agenda could not be previewed: …") and leaves Create live (T272 too). Decisions due hides an Administrator's failed institution list behind "Choose an institution" (`W/DecisionsDue.razor:63`, `:223–230`). | `states/reviews-schedule--preview-failed.png` |
+| **T324** (P3) | Only Chair has a message (`W/PanelEdit.razor:687`); Panel name, Trainee and Panel print DataAnnotations' defaults (inferred: "The Name field is required."). | — |
+| **T280** (P3) | `PagerControls`' "Per page:" is a loose span (`Shared/PagerControls.razor:30–31`); the panels and reviews tables have no caption and no `scope`; every page goes h1 → h3 → h4. | Step 4.1 |
+| **T264** (P3) | Row actions are named per row (keep). The page does not move focus after a page change (`W/DecisionsDue.razor:271`). | Step 4.1 |
+| Missed rows (observed, not filed) | Every row wanting a sitting offers Schedule (`W/DecisionsDue.razor:148–177`), a Missed row of an ended semester included: Schedule then opens the form on that past semester (question 7). | `act-4/4.2-1…` |
+| One registrar (observed, not filed) | Decisions due has no trainee filter; rows sort by trainee then EPA, 20 a page (`A/GetEntrustmentDecisionsDue.cs:350–356`). | `act-5/5.1-2…` |
+| 390 px (observed, not filed) | Decisions due's list is a raw table with no stacking (`W/DecisionsDue.razor`, `#due-items`); the reviews list a `DataTable` with no `Stack`. Both scroll sideways in their boxes. | `act-A/A.7.5-4…`, `act-A/A.7.8-3…` |
+| The panel form (observed, not filed) | One `section.detail-card` in a `details-grid` (`1fr 2fr`); native multi-selects (`W/PanelEdit.razor`, Members and External members); options "{First} {Last} ({email})" (`:432–433`). `Design/MultiSelectOptionKeyTests` pins today's multi-select. | `act-2/2.21-1…` |
+| The panels list (observed, not filed) | Scope prints the enum (`W/PanelsList.razor:51`); no speciality, no institution, even for an Administrator who sees every institution's panels. | `act-2/2.24-1…` |
+| Panel rules (observed; question 8) | No command renames a panel or changes its scope; `UpdateDecisionPanel` changes members with no open-review check (`A/UpdateDecisionPanel.cs:63–84`); only `SetDecisionPanelBody` refuses while a review is open (`A/SetDecisionPanelBody.cs:172–220`). | Step 4.13 |
+| Two labels (observed; question 9) | The schedule's "2026 S2 · 1 Jul to 31 Dec 2026" (`A/CommitteeReviewPeriods.cs:92–94`); the registrar pages' "Semester 2, 2026 · July to November" (D40, flow 05). | `act-4/4.6-1…` |
+| The form's dates (observed) | `InputDate` renders in the browser's locale ("2026/01/01"); the list is ISO. | `act-4/4.6-1…` |
+| The pre-graduation help (observed) | The type's help is by semester only, so a pre-graduation review reads "The semester-2 sitting decides the trainee's progression for the year." | `act-5/5.2-1…` |
+
+**Dropped from the old brief (fixed since):** the Coordinator's missing Decision panels link (flow 06, `85d5a508`;
+`NavItems.cs:175`); the browser's thin focus ring on By EPA (the global ring, T328); the schedule list's formative label
+(flow 07, `44de180b`); Entrustment decisions missing from the speciality admins' menus (flow 06); the pager's buttons
+disabling themselves at either end (T350: aria-disabled).
+
+## 6. Questions the design must answer
+
+1. **One page or two:** Decisions due and the schedule, and where the scheduling form lives.
+2. **One registrar's rows** (5.1): a trainee filter, grouped rows, or a per-registrar view.
+3. **The held seat before Create** (4.8; T309).
+4. **The lists at 390** (A.7.5, A.7.8).
+5. **Choosing members** with whole names, at 1280 and by touch at 390.
+6. **A panel's own page:** what it shows above its forms (T260), and where Decides for and the members sit.
+7. **(The operator's) Missed rows of an ended semester:** keep Schedule, refuse it, or schedule for the current semester?
+8. **(The operator's) The panel's rules:** a name and scope fixed at creation; members changeable while reviews are open.
+9. **(The operator's) One semester, two labels** (D40): keep both and explain, or align?
+10. **(The operator's) T309, T259, T260, T329, T338, T324, T272, T280:** folded into the build, or any landed first?
+
+## 7. Acceptance
+
+A flow is done when BRIEF.md § 9's four checks hold. For this flow:
+
+- **Replay the whole runbook** on a fresh database (the flow's steps span Acts 2, 4, 5 and the appendix; § 9): every
+  Expect must hold, the refusals' exact words included. **Rewrite the steps that change:** 4.8 (the warning before
+  Create); 4.49 and A.1.10 (no Review type when formative); 2.22 (the panel's page names it; a result after create);
+  4.13 (the refusal where the committee is chosen); 5.1 (one registrar's rows); every Route line through scheduling if
+  the form moves (4.6, 4.7, 4.9, 4.10, 5.2); A.7.5 and A.7.8 (the lists at 390); search the whole runbook (BRIEF.md § 9
+  item 7) for the words that change. A new page or route needs a step (`Scenario/ScenarioRunbookTests`). A new step
+  takes a letter when its number is taken (§ 11, flow 06).
+- **Checks the design adds:** 2.20 and 4.1 with a held read, the header and a skeleton, never "no committee routing"
+  (T329); 2.22, the panel named (T260); 4.8, the warning before Create with a link to review #1 (T309); 4.13, the
+  refusal beside the select and the saved value shown; 4.49, no Review type (T309); 4.37, the holding review's own panel
+  (T259); A.7.5 and A.7.8, nothing scrolls sideways at 390, every page checked at 768 as well; one h1 and headings in
+  order on every page; every table captioned; the pager's select named (T280).
+- **The tests pass** (`dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj`, never with `--no-build`), with all
+  six suites green. They must include:
+  - `CommitteeDecisions/DecisionsDuePageTests`; `PanelDecisionBodyTests`, `PanelEdit*Tests`, `PanelPagesTraineeFirstTests`;
+    `ReviewsSchedule*Tests` (AgendaPreview, ListScope, PanelList, Prefill, TraineeFirst, TraineePicker);
+    `CommitteeReviewStateLabelTests`;
+  - `Navigation/NavMenuAuthorizationTests`, `ActiveNavItemTests`; `Hosting/PageTitleTests`;
+  - `Accessibility/RowNamesTests`, `ActionFocusTests`, `AccessibleNamesTests`, `IdReferencesTests`;
+  - `Design/*`, including `MultiSelectOptionKeyTests` (which changes with the members' control), `NarrowLayoutTests`,
+    `DefinedClassTests`, `ContrastTests`; the scenario guard in `Scenario/`.
+- **Re-capture** the states in § 3 (the old-frame ones on scratch copies, as `states.md` says) and the steps' own
+  captures, keeping their names; `check_baseline_paths.py` at missing 0. Compare them with the chosen artboards.
+- **Browser check** at 1280, 768 and 390 px as the InstitutionalAdmin, the SpecialityAdmin, the SubSpecialityAdmin, the
+  Coordinator and a CommitteeMember.
+
+## 8. The runbook steps, verbatim (sent with § 1, in the same message)
+
+These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Each Expect
+describes the product as flow 07's build left it (T361, 2026-10-12). `D` is the replay day.
+
+```text
+Step 2.20 — Decision panels before any exist
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels
 Do: Open Decision panels.
@@ -216,7 +628,7 @@ Expect: The page reads "No decision panels" / "Create a panel before scheduling 
   decides each EPA" names `Paediatric EPA Curriculum 11.1` and says against every EPA "No panel at this institution
   covers this programme."
 
-### Step 2.21 — The new-panel form, and a panel of one refused
+Step 2.21 — The new-panel form, and a panel of one refused
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels/new
 Do: Name it "Paed Annual Review Panel", with scope Speciality, speciality Paediatrics and Decides for General panel.
@@ -229,7 +641,7 @@ Expect: Scope offers Institution and Speciality and starts on Speciality. Specia
   is refused: "A panel needs at least two members: the chair and at least one other, so that no decision is one
   person's." (D46).
 
-### Step 2.22 — Mbatha saves the panel
+Step 2.22 — Mbatha saves the panel
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels/new → /committee/panels/{PanelId:int}
 Do: Select Naidoo under Members and van Rensburg under External members, then save. Botha is left for Step 2.23.
@@ -238,7 +650,7 @@ Expect: The page reloads as the panel's own page. It has a "Decides for" card re
   members help text says external members sit with the chair on the appeal body and that cross-institution externals
   are not yet supported.
 
-### Step 2.23 — Dr Mokoena adds Dr Botha to the panel
+Step 2.23 — Dr Mokoena adds Dr Botha to the panel
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/panels → /committee/panels/{PanelId:int} → /committee/panels
 Do: Sign in, open Decision panels and Edit the panel. Select Botha under Members as well, then save and go back to the
@@ -248,7 +660,7 @@ Expect: The list offers her New panel and an Edit on this panel, a Speciality-sc
   which College committee a panel sits as." The save reads "Panel members updated.", and the list's Members column
   reads 4.
 
-### Step 2.24 — Who decides each EPA now
+Step 2.24 — Who decides each EPA now
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels
 Do: Read the list and the routing card.
@@ -256,7 +668,7 @@ Expect: One row: Paed Annual Review Panel, Speciality, General panel, 4 members,
   the panel with "No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the
   general panel decides." (T131). The other thirteen EPAs go to the panel.
 
-### Step 2.25 — Dr Sithole looks at what he may create
+Step 2.25 — Dr Sithole looks at what he may create
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /account/login → / → /committee/panels → /committee/panels/new
 Do: Sign in, open Decision panels, press New panel and read the form. He leaves without saving.
@@ -264,7 +676,7 @@ Expect: The list offers him New panel and an Edit on the panel. The form's Scope
   sub-speciality administrator manages the Speciality-scoped panels of his sub-speciality's speciality (T194, T245).
   Speciality offers Paediatrics. There is no Decides for field. Nothing is created.
 
-### Step 2.32 — Mr Smit, Coordinator
+Step 2.32 — Mr Smit, Coordinator
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
 Do: Sign in and read the dashboard and nav. Type the invitations address. Open Decision panels from the menu, then type
@@ -285,9 +697,7 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
   C10). The panel form reads "You cannot open this page" in the same words: the Coordinator reads panels, and edits none
   (D4).
 
---- from execution/knowledge/scenario-paediatrics/act-4-annual-review.md ---
-
-### Step 4.1 — Mr Smit reads the decisions due
+Step 4.1 — Mr Smit reads the decisions due
 Role: Coordinator — Mr Pieter Smit
 Route: / → /committee/decisions-due
 Do: Open Decisions due from the menu. Leave Period on `<P>` and Status on "Outstanding: not yet decided". Page through
@@ -303,7 +713,7 @@ Expect: The opening sentence names `<P>`, "5 trainees you oversee at Kgosi Kgari
   Every Not scheduled row offers Schedule, named by trainee and EPA. The filters leave five PAED-004 rows, one per
   registrar; the By EPA card does not change. No Missed row exists.
 
-### Step 4.2 — Prof Mbatha reads the same period
+Step 4.2 — Prof Mbatha reads the same period
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /committee/decisions-due
 Do: Open Decisions due from the menu. Look for an Institution filter, then switch Period to the previous semester and
@@ -316,7 +726,7 @@ Expect: No Institution filter is offered, because she reads her own institution.
   - the annual EPAs read "Due by year end";
   - PAED-008, 009 and 013 read "As opportunity allows", since an optional EPA is never missed.
 
-### Step 4.3 — Dr Mokoena reads what is due in her speciality
+Step 4.3 — Dr Mokoena reads what is due in her speciality
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/decisions-due
 Do: Sign in, read her menu, and open Decisions due.
@@ -329,14 +739,14 @@ Expect:
   - **The page:** the same five registrars, all in Paediatrics, and 75 rows, each Schedule link offered.
   - **Entrustment decisions** is in the menu (Step A.7.7 opens it from there); no card on Home names it.
 
-### Step 4.4 — Dr Sithole reads what is due in his sub-speciality
+Step 4.4 — Dr Sithole reads what is due in his sub-speciality
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /account/login → / → /committee/decisions-due
 Do: Sign in and open Decisions due.
 Expect: The same five registrars and 75 rows as Step 4.3: all five train in the Paediatrics sub-speciality Dr Sithole
   administers. Dr Sithole's menu and Home's cards read as Dr Mokoena's.
 
-### Step 4.5 — Dr Naidoo is not offered what is due
+Step 4.5 — Dr Naidoo is not offered what is due
 Role: CommitteeMember — Dr David Naidoo
 Route: /dashboard/switch/{role} → / → /committee/decisions-due → /access-denied
 Do: He still acts as Assessor, his choice from Step 3.5: choose Switch to Committee member in the sidebar. Look for
@@ -344,7 +754,7 @@ Do: He still acts as Assessor, his choice from Step 3.5: choose Switch to Commit
 Expect: His menu has Committee reviews and Decision panels but no Decisions due. The typed address lands on the
   access-denied page, and nothing in his menu is lit there: the page is for the roles that schedule reviews.
 
-### Step 4.6 — Mr Smit schedules Dr Molefe's review
+Step 4.6 — Mr Smit schedules Dr Molefe's review
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Committee reviews from the menu and choose Schedule review. Fill in:
@@ -373,7 +783,7 @@ Expect:
     a review (E2). He leaves it for the chair.
   - **Evidence snapshot:** "No evidence has been frozen yet. Starting the review captures the current bundle."
 
-### Step 4.7 — Mr Smit schedules Dr Dlamini's and Dr du Plessis's reviews
+Step 4.7 — Mr Smit schedules Dr Dlamini's and Dr du Plessis's reviews
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Schedule the same kind of review for Dr Dlamini, then for Dr du Plessis: same panel, `<P>`, window as filled,
@@ -387,7 +797,7 @@ Expect: Each opens as Scheduled with a 15-EPA preview like Step 4.6's. Committee
   - Decision Pending.
   Each row's Open is named by the review it opens.
 
-### Step 4.8 — A second review of Dr Molefe for the same period is refused
+Step 4.8 — A second review of Dr Molefe for the same period is refused
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews
 Do: Schedule another Annual progression review of Dr Molefe before the same panel for `<P>`.
@@ -395,7 +805,7 @@ Expect: Refused, and nothing is created. The refusal names the open review: "Rev
   Paed Annual Review Panel for `<P>` (scheduled, scheduled `D`). A trainee has one binding review for each period …".
   The wording is a product decision (T131 slice 4). The list still holds three rows.
 
-### Step 4.9 — Dr Mokoena schedules Dr Mahlangu's review from what is due
+Step 4.9 — Dr Mokoena schedules Dr Mahlangu's review from what is due
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: On Decisions due, choose Schedule on Dr Mahlangu's PAED-001 row. Check the form it opens, set Scheduled on `D`, and
@@ -410,7 +820,7 @@ Expect:
     says: "Only the coordinators of the panel's institution, and those of its members who are active committee members
     there, can start this review." (T194, E2), with "As of hh:mm SAST" and Refresh.
 
-### Step 4.10 — Dr Sithole schedules Dr Ndlovu's review from what is due
+Step 4.10 — Dr Sithole schedules Dr Ndlovu's review from what is due
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: On Decisions due, choose Schedule on one of Dr Ndlovu's rows. Set Scheduled on `D` and create the review.
@@ -418,7 +828,7 @@ Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Star
   bar says who can start it. Decisions due then
   reads Scheduled on all 75 rows, and By EPA reads Scheduled 5 and To schedule 0 for every EPA.
 
-### Step 4.11 — Dr Naidoo lists the panel's reviews
+Step 4.11 — Dr Naidoo lists the panel's reviews
 Role: CommitteeMember — Dr David Naidoo
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Committee reviews, then open Dr Dlamini's review.
@@ -428,14 +838,14 @@ Expect:
   - **Dlamini's review:** Start review… is offered to him in the sitting bar, as a member who may sit on the panel (E2).
     He leaves it.
 
-### Step 4.12 — Prof Mbatha checks the schedule
+Step 4.12 — Prof Mbatha checks the schedule
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/reviews → /committee/decisions-due
 Do: Read Committee reviews, then Decisions due.
 Expect: Committee reviews offers Schedule review and lists all five reviews. Decisions due reads Scheduled on all 75
   rows. Each row's "Open review" opens the review holding it, and no row offers Schedule.
 
-### Step 4.13 — The panel cannot change what it decides while its reviews are open
+Step 4.13 — The panel cannot change what it decides while its reviews are open
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels → /committee/panels/{PanelId:int}
 Do: Open the panel. In Decides for, choose the Neonatal team Clinical Competency Committee and save the committee.
@@ -443,7 +853,7 @@ Expect: Refused, and the panel stays a General panel. The refusal names the firs
   scheduled) still sits before this panel. What a review decides, and its agenda, follow the College committee the
   panel sat as when it was scheduled …" (T131 slice 5). The select's help text says the same rule before she tries.
 
-### Step 4.33 — Mr Smit reads the ratified schedule
+Step 4.33 — Mr Smit reads the ratified schedule
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Read Committee reviews, then open Dr Molefe's review.
@@ -455,7 +865,7 @@ Expect: All five read Ratified. The Decision column reads:
   No state or category prints an enum name (T250). Molefe's review shows its decision, agenda and STAR numbers, and
   offers Smit no action.
 
-### Step 4.34 — Prof Mbatha reads what is due after the sitting
+Step 4.34 — Prof Mbatha reads what is due after the sitting
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/decisions-due
 Do: Read `<P>` with the default filter, then with "Every status".
@@ -471,7 +881,7 @@ Expect:
   - **By EPA:** PAED-001 reads Due 5, Decided 2 and Not decided 3.
   - **Actions:** a Not decided row offers Open review and Schedule, since no open review holds its seat now.
 
-### Step 4.37 — Dr Sithole reads the list and what must be decided again
+Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
 Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
@@ -486,7 +896,7 @@ Expect:
   - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
 
-### Step 4.49 — Mr Smit schedules a formative check-in for Dr Ndlovu
+Step 4.49 — Mr Smit schedules a formative check-in for Dr Ndlovu
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Schedule a review of Dr Ndlovu before the panel for `<P>`, Scheduled on `D`, with Formative only ticked.
@@ -499,9 +909,7 @@ Expect:
     Decision, Agenda or Appeals section: only the evidence snapshot, the standing, MSF coverage and the trajectories.
   - **The list:** the review shows Mode Formative and Decision "—".
 
---- from execution/knowledge/scenario-paediatrics/act-5-graduation.md ---
-
-### Step 5.1 — Mr Smit reads what Dr Molefe's committee still has to decide
+Step 5.1 — Mr Smit reads what Dr Molefe's committee still has to decide
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/decisions-due
 Do: Open Decisions due for the period holding `D`, set the status filter to every status, and read Dr Molefe's rows.
@@ -513,7 +921,7 @@ Expect: There is one row for each EPA due for her in the period, and each row gi
     decided at Act 4 but optional, read As opportunity allows while their window `<Y>` is open (E3).
   Every row that is not yet decided offers Schedule. KGK's other registrars are listed too, and nobody outside KGK is.
 
-### Step 5.2 — Mr Smit schedules Dr Molefe's pre-graduation review
+Step 5.2 — Mr Smit schedules Dr Molefe's pre-graduation review
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Follow Schedule on one of Dr Molefe's outstanding rows. If Act 4 decided every EPA that is due, use Schedule review
@@ -535,16 +943,14 @@ Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the peri
   Training year 4", and its sitting bar Scheduled, "12 EPAs on the agenda" and "Summative · evidence `J−3y` to
   `<Y>`-12-31" (ISO dates). Mr Smit is offered Start review… in the bar, but leaves it to the chair.
 
-### Step 5.29 — Neither ended programme can be put before the panel
+Step 5.29 — Neither ended programme can be put before the panel
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews
 Do: Open Schedule review, choose the Paed Annual Review Panel and read the trainee list.
 Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu. A graduate and a registrar who has withdrawn are not
   current trainees (T238). He closes the form without scheduling anything.
 
---- from execution/knowledge/scenario-paediatrics/appendix-cross-cutting.md ---
-
-### Step A.1.10 — Mr Smit schedules a formative check-in for Dr Ndlovu
+Step A.1.10 — Mr Smit schedules a formative check-in for Dr Ndlovu
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period holding `D`, Scheduled on `D`,
@@ -553,7 +959,7 @@ Expect: The review opens as at Step 4.49: the subtitle "Formative check-in · Pa
   1", and the sitting bar Scheduled with "Formative: an interim check-in, no binding decision · evidence …" (T361). It
   is open, so the erasure at A.1.12 has a review to end.
 
-### Step A.7.5 — Mr Smit on his phone
+Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
@@ -563,7 +969,7 @@ Expect: Home's header action, Start an MSF campaign, is a row of its own below t
   within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as a labelled, focusable
   region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
 
-### Step A.7.8 — Dr Sithole on his phone
+Step A.7.8 — Dr Sithole on his phone
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: / → /committee/reviews → /committee/decisions-due
 Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
@@ -571,268 +977,3 @@ Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks th
   "Acting as" over "Sub-speciality admin", in two lines: the bar grows, and the role is never cut. Dr Sithole's menu
   reads as Dr Mokoena's (A.5.12), each row 44px.
 ```
-
-### 2.2 After you pick, paste this
-
-```
-Take the panels (screens 1–2) and the schedule (screens 4–5) in variation <letter>, and Decisions Due in wireframe
-<letter>, to full fidelity at 1280×800 and 390×844, in the design system you hold. If we chose one page for Decisions
-Due and scheduling, draw it with the form open on a row. Draw every state under SCREENS, plus loading, 390 px and access
-denied. For each artboard, list the components used and mark NEW ones. For each colour, name the token, or give a NEW
-token and its value. Then check contrast (text 4.5:1; borders and the focus ring 3:1) and every target (at least 24 px).
-```
-
-## 3. The journey
-
-One line per step: what the person does, and what they must be able to see. The step's full text is in § 2.1.
-
-| Step | Page template | Who | Does, and must see |
-|---|---|---|---|
-| 2.20 | `/committee/panels` | Prof Mbatha | No panels yet: "No decision panels", New panel, and "who decides" saying no panel covers the programme. |
-| 2.21 | `/committee/panels/new` | Prof Mbatha | The form's options (Scope, Speciality, Decides for, Chair, Members, External members), the chair note, and a panel of one refused (D46). |
-| 2.22 | `/committee/panels/new` → `/committee/panels/{PanelId:int}` | Prof Mbatha | Saves. The panel's page shows "Decides for" and "Update members", but never the panel's name (F-2.22a, T260). |
-| 2.23 | `/account/login` → `/` → `/committee/panels` → `/committee/panels/{PanelId:int}` → `/committee/panels` | Dr Mokoena | Adds Dr Botha. Decides for is read-only for her; "Panel members updated."; Members reads 4. |
-| 2.24 | `/committee/panels` | Prof Mbatha | One panel, and "who decides": PAED-004 and 005 fall back to the general panel with the College's reason; the other thirteen go to it. |
-| 2.25 | `/account/login` → `/` → `/committee/panels` → `/committee/panels/new` | Dr Sithole | May create Speciality-scoped panels only, with no Decides for field. Leaves without saving. |
-| 2.32 | `/account/login` → `/` → `/admin/invitations` → `/access-denied` → `/committee/panels` → `/committee/panels/new` → `/access-denied` | Mr Smit | Since flow 06 (T358) his nav has Decision panels, lit on the list (no New, no Edit); the new-panel form is access denied (D4). |
-| 4.1 | `/` → `/committee/decisions-due` | Mr Smit | Outstanding for the period: the opening sentence, By EPA (12 To schedule, 3 Optional), "75 of 75", 20 a page, Schedule named per row; filters to five PAED-004 rows. |
-| 4.2 | `/` → `/committee/decisions-due` | Prof Mbatha | No Institution filter for her. The previous semester shows Missed rows; optional EPAs are never missed. |
-| 4.3 | `/account/login` → `/` → `/committee/decisions-due` | Dr Mokoena | The same 75 rows. Entrustment Decisions is in neither her nav nor her dashboard. |
-| 4.4 | `/account/login` → `/` → `/committee/decisions-due` | Dr Sithole | The same, for his sub-speciality. |
-| 4.5 | `/committee/decisions-due` → `/access-denied` | Dr Naidoo | Not in his nav; typed, access denied. |
-| 4.6 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | Schedules Dr Molefe: the form's options, the period filling the window, the agenda preview (15 EPAs, 12 to decide), then the review, Scheduled, Start offered to him. |
-| 4.7 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | Schedules two more; the list reads three rows, each Open named for its review. |
-| 4.8 | `/committee/reviews` | Mr Smit | A second review of Dr Molefe for the period: the preview shows no warning, and Create review is refused with the review it collides with (T309). |
-| 4.9 | `/committee/decisions-due` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Mokoena | Decisions Due shows three registrars Scheduled. Schedule on Dr Mahlangu's row opens the form filled. The review opens Scheduled, with no Start for her. |
-| 4.10 | `/committee/decisions-due` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Sithole | Schedules Dr Ndlovu the same way; then all 75 rows read Scheduled. |
-| 4.11 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Dr Naidoo | The five reviews of his panel, no Schedule review; Start is offered to him as a seated member. |
-| 4.12 | `/committee/reviews` → `/committee/decisions-due` | Prof Mbatha | All five scheduled; every row's Open review opens the review holding it. |
-| 4.13 | `/committee/panels` → `/committee/panels/{PanelId:int}` | Prof Mbatha | Changing what the panel decides is refused while its reviews are open. The select keeps the refused choice until a reload (observed in the step's Actual). |
-| 4.33 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | After the sitting: all five Ratified, each Decision by its label, never an enum name (T250). |
-| 4.34 | `/committee/decisions-due` | Prof Mbatha | After the sitting: 70 outstanding; Every status shows Decided (with STAR and review), Not decided (amber, D53, E3) and optional rows. |
-| 4.37 | `/admin/entrustment-decisions` → `/committee/decisions-due` | Dr Sithole | After a revocation (the list is F09's): "Revoked: re-decide", with Schedule. |
-| 4.49 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | A formative check-in: no agenda in the preview, and no Decision or Agenda section on the review, which reads "Formative check-in" since flow 07 (T361); the schedule still types it "Annual progression" (T309). |
-| 5.1 | `/committee/decisions-due` | Mr Smit | Dr Molefe's fifteen rows in words: Decided, Not decided, As opportunity allows. |
-| 5.2 | `/committee/decisions-due` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | Schedules her pre-graduation review from a row: the form filled, the window widened to her start, the preview naming what is already decided. |
-| 5.29 | `/committee/reviews` | Mr Smit | Only current registrars are offered; a graduate and a withdrawn registrar are not. |
-| A.1.10 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | Another formative check-in, for the data-rights appendix. |
-| A.7.5 | `/` → `/msf/campaigns` → `/msf/campaigns/{CampaignId:int}` → `/committee/decisions-due` → `/admin/data-rights` | Mr Smit | At 390 px, Decisions Due's summary is a focusable region, 685 px wide in 291 px, with the browser's focus ring (T328). |
-| A.7.8 | `/` → `/committee/reviews` → `/committee/decisions-due` → `/placeholder/{Feature}` → `/placeholder/{Feature}` | Dr Sithole | At 390 px, Committee Reviews' table (902 px) scrolls in its container; Decisions Due as above. |
-
-## 4. States to design
-
-From `execution/knowledge/scenario-paediatrics/states.md` § Committee. Each file is
-`design/baseline/states/<page>--<state>.png`.
-
-| Page | State | Capture | Reached at |
-|---|---|---|---|
-| `/committee/panels` | No panels | `panels-list--empty.png` | Step 2.20 |
-| `/committee/panels` | The manager's list | `panels-list--manager.png` | Step 2.24, with the routing card |
-| `/committee/panels` | A speciality admin's list | `panels-list--speciality-admin.png` | Step 2.23 |
-| `/committee/panels` | A member's list | `panels-list--member.png` | Step 4.14 |
-| `/committee/panels` | A coordinator's list | `panels-list--coordinator.png` | Step 2.32 |
-| `/committee/panels` | Loading | `panels-list--loading.png` | A held read: "no committee routing" shown too soon (T329) |
-| `/committee/panels` | 390 px | `panels-list--narrow.png` | Step A.7.7 |
-| `/committee/panels/new` | The new-panel form | `panel-edit--new.png` | Step 2.21 |
-| `/committee/panels/new` | Chair moved out of Members | `panel-edit--chair-note.png` | Step 2.21 |
-| `/committee/panels/new` | A panel of one refused | `panel-edit--one-member.png` | Step 2.21 |
-| `/committee/panels/{PanelId:int}` | Saved | `panel-edit--saved.png` | Step 2.22 |
-| `/committee/panels/{PanelId:int}` | Read-only committee | `panel-edit--speciality-admin.png` | Step 2.23 |
-| `/committee/panels/new` | Speciality scope only | `panel-edit--sub-speciality-admin.png` | Step 2.25 |
-| `/committee/panels/{PanelId:int}` | Committee change refused | `panel-edit--body-refused.png` | Step 4.13 |
-| `/committee/panels/{PanelId:int}` | A member who can no longer sit | `panel-edit--unseatable.png` | Scratch (post-appendix): Dr Botha locked out |
-| `/committee/panels/{PanelId:int}` | Not found | `panel-edit--not-found.png` | Typed `/committee/panels/999999` |
-| `/committee/panels/{PanelId:int}` | 390 px | `panel-edit--narrow.png` | Step 2.22 |
-| `/committee/decisions-due` | Nothing due | `decisions-due--nothing-due.png` | After Step 1.22, before any admission |
-| `/committee/decisions-due` | An administrator, no institution | `decisions-due--choose-institution.png` | devadmin, any time after Act 1 |
-| `/committee/decisions-due` | Outstanding | `decisions-due--outstanding.png` | Step 4.1 |
-| `/committee/decisions-due` | No row matches | `decisions-due--no-match.png` | Step 4.1, Status Missed |
-| `/committee/decisions-due` | A past semester, missed | `decisions-due--missed.png` | Step 4.2 |
-| `/committee/decisions-due` | All scheduled | `decisions-due--scheduled.png` | Step 4.10 |
-| `/committee/decisions-due` | After the sitting | `decisions-due--after-sitting.png` | Step 4.34, Every status |
-| `/committee/decisions-due` | Revoked, to decide again | `decisions-due--revoked.png` | Step 4.37 |
-| `/committee/decisions-due` | Loading | `decisions-due--loading.png` | A held read |
-| `/committee/decisions-due` | 390 px | `decisions-due--narrow.png` | Step A.7.5 |
-| `/committee/reviews` | None yet, a scheduler | `reviews-schedule--empty-scheduler.png` | Step 4.1, before 4.6 |
-| `/committee/reviews` | None yet, a member | `reviews-schedule--empty-member.png` | Step 4.5 |
-| `/committee/reviews` | The form, no panel chosen | `reviews-schedule--form.png` | Step 4.6 |
-| `/committee/reviews` | The agenda preview | `reviews-schedule--preview.png` | Step 4.6 |
-| `/committee/reviews` | A second review refused | `reviews-schedule--refused.png` | Step 4.8 |
-| `/committee/reviews` | Scheduled | `reviews-schedule--scheduled.png` | Step 4.7 |
-| `/committee/reviews` | Filled from Decisions Due | `reviews-schedule--prefilled.png` | Step 4.9 |
-| `/committee/reviews` | Formative preview | `reviews-schedule--formative.png` | Step 4.49 |
-| `/committee/reviews` | Already decided in this window | `reviews-schedule--pre-graduation.png` | Step 5.2 |
-| `/committee/reviews` | Ratified | `reviews-schedule--ratified.png` | Step 4.33 |
-| `/committee/reviews` | Preview failed | `reviews-schedule--preview-failed.png` | A held read during Step 4.6 |
-| `/committee/reviews` | Loading | `reviews-schedule--loading.png` | A held read |
-| `/committee/reviews` | 390 px | `reviews-schedule--narrow.png` | Step A.7.8 |
-| `/committee/reviews/{ReviewId:int}` | Scheduled, no Start | `review-detail--scheduled-no-start.png` | Step 4.9 |
-| `/committee/reviews/{ReviewId:int}` | Formative, scheduled | `review-detail--formative.png` | Step 4.49 |
-
-**Not captured, to be drawn from their description** (`states.md:779-781`; `coverage.md` § Flows and states not
-played):
-- The "holds Trainee" notes on the panel list and form and on Committee Reviews (T237, T256). No cast member holds
-  Trainee beside a staff role.
-- The panel form's "You cannot create a decision panel" card (T194). Every panel manager in the cast has a scope to
-  create in.
-- The Administrator on Decisions Due with an institution chosen (D46). The Administrator acts only in Acts 1 and 6 and
-  the appendix.
-- A second panel sitting as the neonatal committee, and the agenda's "Decided by another panel". These are captured on
-  a scratch database for F07 (`review-detail--entrustment-only`, `--decided-elsewhere`).
-
-**Also on disk, placed elsewhere:** `reviews-schedule--current-only.png` (Step 5.29, current trainees only) and
-`reviews-schedule--pseudonym.png` (after an erasure, F14's). Attach the first if the chat asks about the trainee picker.
-
-## 5. Attach
-
-Every path below is under `design/baseline/` and was checked with `ls` on 2026-09-26. Open each before you upload it
-(BRIEF § 3.3). None of them is an invitation page. `act-2/2.32-2-invitations-denied.png` shows the access-denied page,
-not the invitations list.
-
-### 5.1 Key screenshots (attach with the ask)
-
-1. `states/panel-edit--chair-note.png`: the panel form, with the chair note and the multi-selects.
-2. `states/panels-list--manager.png`: the list and "Who decides each EPA".
-3. `act-2/2.24-1-who-decides.png`: the routing card from the story.
-4. `states/decisions-due--outstanding.png`: Decisions Due, outstanding (3,971 px tall at 1280).
-5. `states/decisions-due--missed.png`: a past semester with Missed rows.
-6. `states/reviews-schedule--preview.png`: the form and the agenda preview.
-7. `states/reviews-schedule--refused.png`: the duplicate refused after Create.
-8. `states/reviews-schedule--prefilled.png`: the form filled from a Decisions Due row.
-9. `act-A/A.7.5-4-decisions-due-390.png`: the summary region at 390 px, with its focus ring (the design's since
-   T335).
-10. `states/panels-list--loading.png`: "no committee routing" shown while loading.
-
-### 5.2 State captures (add as the chat asks)
-
-- Panels:
-  - `states/panels-list--empty.png`
-  - `states/panels-list--speciality-admin.png`
-  - `states/panels-list--member.png`
-  - `states/panels-list--coordinator.png`
-  - `states/panels-list--narrow.png`
-  - `states/panel-edit--new.png`
-  - `states/panel-edit--one-member.png`
-  - `states/panel-edit--saved.png`
-  - `states/panel-edit--speciality-admin.png`
-  - `states/panel-edit--sub-speciality-admin.png`
-  - `states/panel-edit--body-refused.png`
-  - `states/panel-edit--unseatable.png`
-  - `states/panel-edit--not-found.png`
-  - `states/panel-edit--narrow.png`
-- Decisions Due:
-  - `states/decisions-due--nothing-due.png`
-  - `states/decisions-due--choose-institution.png`
-  - `states/decisions-due--no-match.png`
-  - `states/decisions-due--scheduled.png`
-  - `states/decisions-due--after-sitting.png`
-  - `states/decisions-due--revoked.png`
-  - `states/decisions-due--loading.png`
-  - `states/decisions-due--narrow.png`
-- Schedule:
-  - `states/reviews-schedule--empty-scheduler.png`
-  - `states/reviews-schedule--empty-member.png`
-  - `states/reviews-schedule--form.png`
-  - `states/reviews-schedule--scheduled.png`
-  - `states/reviews-schedule--formative.png`
-  - `states/reviews-schedule--pre-graduation.png`
-  - `states/reviews-schedule--ratified.png`
-  - `states/reviews-schedule--preview-failed.png`
-  - `states/reviews-schedule--loading.png`
-  - `states/reviews-schedule--narrow.png`
-  - `states/reviews-schedule--current-only.png`
-- Review page:
-  - `states/review-detail--scheduled-no-start.png`
-  - `states/review-detail--formative.png`
-- Step captures for detail:
-  - `act-2/2.22-1-panel-saved.png`
-  - `act-2/2.25-2-sithole-new-panel.png`
-  - `act-2/2.32-3-smit-panels.png`
-  - `act-2/2.32-4-new-panel-denied.png`
-  - `act-4/4.5-2-naidoo-decisions-due-denied.png`
-  - `act-4/4.8-1-smit-second-review-refused.png`
-  - `act-4/4.13-1-mbatha-committee-change-refused.png`
-  - `act-4/4.34-1-mbatha-decisions-due-every-status.png`
-  - `act-4/4.37-2-sithole-revoked-re-decide.png`
-  - `act-4/4.49-3-smit-formative-scheduled-list.png`
-  - `act-5/5.2-1-smit-pre-graduation-form.png`
-  - `act-A/A.7.8-3-reviews-390.png`
-  - `act-A/A.7.8-4-decisions-due-390.png`
-
-### 5.3 Held
-
-None for this flow's pages. Do not use `act-2/2.32-1-smit-home.png` or `act-4/4.3-1-mokoena-dashboard-nav.png` here:
-they are F06's dashboards (re-captured after T297 on 2026-09-26).
-
-## 6. Known problems this design must solve
-
-| Task | Problem today | What it means for the design | Evidence |
-|---|---|---|---|
-| T309 (P3) | The preview runs only the scope check and the agenda planner (`PreviewCommitteeAgenda.cs`). The seat check is private to the create (`ScheduleCommitteeReview.cs:205-222`). The Review type select stays live while "Formative only" is ticked (`ReviewsSchedule.razor:74-90`). | The preview warns first, in the create's own words (`AlreadyScheduled`), with Open review. Create review is disabled with that reason (the T107 pattern). A formative review reads "Formative check-in" (short "Formative") on every surface, and the type select hides. | `states/reviews-schedule--refused.png`, `states/review-detail--formative.png` |
-| T259 (P3) | A "Revoked: re-decide" row names the panel the EPA routes to (`SchedulePanelName`), not the panel the holding review sits before. | The status sentence names the holding review's own panel. | `states/decisions-due--revoked.png` |
-| T260 (P3) | After a panel save, the "can no longer sit" warning stays until a reload. The panel's page never names the panel, its scope or its speciality (F-2.22a). The revocation form's button (on `/admin/entrustment-decisions`, F09's) enables only when the reason loses focus. | Re-read after save. The panel's page header names the panel. On F09's revocation form, the button enables as the reason is typed. | `states/panel-edit--unseatable.png`, `act-2/2.22-1-panel-saved.png` |
-| T329 (P2; BRIEF A6) | `PanelsList.razor:184` starts `_routingLoading` false, so "There is no committee routing to show for your institution." shows while the list loads. | The routing card shows a skeleton from the first render. Every page here: header first, skeleton, then content or an alert. | `states/panels-list--loading.png` |
-| T328 (P3; BRIEF A4) | The By EPA region (`DecisionsDue.razor:79`, `tabindex="0" role="region"`) has no `:focus-visible` rule. | The design's focus ring on a focusable region. | `act-A/A.7.5-4-decisions-due-390.png` (re-taken after T335: the design's ring) |
-| T264 (P3; BRIEF A5) | Pagers drop the focus: `PagerControls`' Next and Previous disable themselves at either end. Some row actions share a name. Decisions Due's Schedule and Open review links are already named per row (Steps 4.1, 4.12). | Keep the pager mounted and the focus on the pressed control or the list heading. Every row action is named for its row. | Step 4.1 |
-| T280 (P3; BRIEF A14) | "Per page:" is loose text, not a label, so the page-size select has no name (F-4.1a). It is the shared pager, on every paged list. | The pager's select is labelled. | Step 4.1 |
-| Reached only by address (`coverage.md:160`) | `/committee/panels` admits the Coordinator; his nav has no Decision Panels (DESIGN.md:199). | Give him the link, or record why not. A nav change is a DESIGN.md change (`NavMenuAuthorizationTests` parses the table). | `act-2/2.32-3-smit-panels.png` |
-| Observed, not filed | The panel form is one narrow card at 1280 px. Members and External members are native multi-selects ("Hold Ctrl (Windows) / Cmd (Mac) to select multiple") that clip "Sarah Botha (botha@kgk.wombat.loc". | Choose members in a control that shows whole names and works by touch at 390 px. `Design/MultiSelectOptionKeyTests` pins today's multi-select. | `states/panel-edit--chair-note.png` |
-| Observed, not filed | After a refused committee change, the Decides for select keeps the unsaved choice until a reload (Step 4.13's Actual). | After a refusal, show the saved value, or mark the field as not saved (BRIEF § 6 A5). | `states/panel-edit--body-refused.png` |
-| Observed, not filed | One semester, two labels. The schedule form reads "2026 S2 · 1 Jul to 31 Dec 2026" (DESIGN.md:1412-1414). The registrar's pages read "Semester 2, 2026 · July to November", the College's nominal end (D40; F05). | Decide whether both labels stay, and say why they differ where both appear. | `states/reviews-schedule--preview.png` |
-
-## 7. Questions the design must answer
-
-1. **Should Decisions Due and the schedule be one page, or two linked pages?** One page would show what is due and
-   schedule it in place. Today Schedule on a row opens `/committee/reviews?panel=…&trainee=…&period=…`, already filled
-   (Step 4.9; DESIGN.md:1576-1610).
-2. **How does a scheduler see, before saving, that the registrar already has a binding review this period?** Today the
-   refusal comes only on Create (Step 4.8; T309).
-3. **Should the Coordinator get a Decision Panels link?** The page admits him; his nav has none (`coverage.md` § Reached
-   only by address).
-
-## 8. Acceptance
-
-Claude Code builds the chosen design as one task per page, or one for Decisions Due and the schedule if they merge
-(BRIEF § 9). It is done when all of the following hold.
-
-**Tests.**
-- `dotnet test tests/Wombat.Web.Tests/Wombat.Web.Tests.csproj` is green. Never use `--no-build` (CLAUDE.md § Testing).
-- The run includes the tests that pin these pages:
-  - `CommitteeDecisions/DecisionsDuePageTests`;
-  - `PanelDecisionBodyTests`, `PanelEdit*Tests` and `PanelPagesTraineeFirstTests`;
-  - `ReviewsSchedule*Tests` (AgendaPreview, ListScope, PanelList, Prefill, TraineeFirst, TraineePicker);
-  - `CommitteeReviewStateLabelTests`;
-  - `Navigation/NavMenuAuthorizationTests`, if the Coordinator gains a link;
-  - `Accessibility/RowNamesTests` and `Design/*`, including `MultiSelectOptionKeyTests`;
-  - the scenario guard in `Scenario/`.
-
-**The replay.**
-- Replay the flow's steps on a fresh database (`tools/scenario-replay.ps1`, BRIEF § 9):
-  - 2.20–2.25 and 2.32 (Act 2);
-  - 4.1–4.13, 4.33, 4.34, 4.37 and 4.49 (Act 4);
-  - 5.1, 5.2 and 5.29 (Act 5);
-  - A.1.10, A.7.5 and A.7.8 (appendix).
-- Each act may instead start from its predecessor's snapshot, `recovery/scenario-post-act<N>.dump` (README § How to
-  play, "Snapshots"). Every Expect must hold, the refusals' exact words included.
-- **Update the steps the design changes** (BRIEF § 9, item 7):
-  - Step 4.8's preview now warns before Create.
-  - Step 4.49's review reads "Formative check-in".
-  - Step 2.32 changes if the Coordinator gains Decision Panels.
-  - If Decisions Due and the schedule merge, the Route lines of 4.9, 4.10 and 5.2 change.
-
-**Checks the design adds.**
-- Step 4.8: the preview names review #1 and offers Open review, and Create review is disabled with that reason (T309).
-- Step 4.49: the review and the list read "Formative check-in", and the form shows no Review type while "Formative only"
-  is ticked (T309).
-- Step 2.22: the saved panel's page names the panel, its scope and its speciality (T260).
-- The panels list, loaded with a held read: a skeleton, never "no committee routing" (T329).
-- Steps A.7.5 and A.7.8 at 390 px:
-  - the By EPA region shows the design's focus ring (T328);
-  - no page scrolls sideways;
-  - the pager keeps the focus (T264) and its select is named (T280).
-
-**Re-capture.** Take the 42 state captures in § 4 and this flow's step captures again (`states.md` § How to capture).
-Compare them with the chosen artboards.
-
-**Browser check.** Check as each of the five roles at 1280 px and at 390 px: the InstitutionalAdmin, the SpecialityAdmin,
-the SubSpecialityAdmin, the Coordinator and a CommitteeMember.
