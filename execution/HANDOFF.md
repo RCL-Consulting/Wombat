@@ -22,15 +22,22 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   `design/flows/07-review-sitting/round-1-ask.txt` is § 1 + § 8 as one paste. T361's Verification lines are now
   flow 07's own.
 
-### Next: T361 step 4–5, round 1 in the canvas
+- **T361 steps 3–5** (2026-10-12): the canvas and the mark (`025da574`); round 1's 13 boards recorded (`7b00819a`):
+  A (the agenda is the page), B (three steps), C (a workspace per EPA). The operator took every recommendation:
+  **A**, with C's per-EPA content in an opened line and its evidence reader inside a staging line; the decisions and
+  C1–C9 are `design/flows/07-review-sitting/round-2-ask.txt` and T361's Notes. **D53** (EPA-PROGRAMME § 3D, the
+  operator's): no deferral; unstaged closing lines are recorded "Not decided at this sitting", overruling T131's O2.
+  Live following for members proposed as **T362**.
 
-- **Canvas:** https://claude.ai/artifact/9hVRTiLRBUugygR7bHB1CS (the operator's, 2026-10-11); the mark copied in as
-  `/_blob/33198ce497bf7fb3aeac9b59047b615b`, now in the brief and `round-1-ask.txt`. It has no design system attached
-  yet: choose Wombat (v17) when sending round 1.
-- The operator sends `round-1-ask.txt` as ONE message with § 4's 14 key screenshots. Before uploading, move
-  `design/baseline/act-4/4.27-1-zulu-ratified-stars-issued.png`'s copy back from `design/upload/crop-first/` (held for
-  its name; no link) and stage flow 05's two boards by hand (§ 4). Then pick, and answer § 6.
-- Questions 10–12 are the operator's: T329/T273/T325/T309/T260/T324 folded or first; T260's Start; T314's export.
+### Next: T361 step 5, round 2 (fidelity) in the canvas
+
+- **Canvas:** https://claude.ai/artifact/9hVRTiLRBUugygR7bHB1CS. The operator pastes `round-2-ask.txt` as ONE message;
+  round 1 reported no missing attachment, so none is re-attached. When it says done, read the boards
+  (`Artifact read`, `paths`), then the review of round 2: code, cast and design-system reviewers on Sonnet, the
+  operator's decisions, one correction round.
+- **The build is not presentation only:** D53 changes the domain (Record's gate, the Deferred state and its check
+  constraint, `DeferAgendaLine`, the decisions-due status, runbook steps 4.21 and 4.28–4.32). Plan its review as a
+  domain change.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator

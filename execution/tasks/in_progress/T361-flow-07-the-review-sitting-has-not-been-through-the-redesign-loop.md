@@ -57,6 +57,20 @@ Run the loop as flow 06 ran it (`design/flows/06-programme-oversight/`, BRIEF §
   flow 07's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
 
+## Notes
+
+- **2026-10-12, round 1 picked: A** (the agenda is the page), with C's per-EPA content in an opened line and C's
+  evidence reader inside a staging line. The operator's decisions are in `round-2-ask.txt`, on recommendation:
+  confirmations for Start, Remove, Record, Ratify and Close; the return link on flow 03's page; members Refresh, not
+  live (live following filed as T362); T329, T273, T325, T309, T260 and T324 folded into the build; Start withheld
+  while the chair cannot act; T314's export stays in flow 13.
+- **D53 (the operator's): no deferral.** It overrules T131's O2 and Decision 6, so the build changes the domain, not
+  only the page: Record no longer waits on closing lines; unstaged closing lines are written "Not decided at this
+  sitting" at Record, with one optional sentence; Defer and Reinstate go (`DeferAgendaLine.cs`, the check constraint
+  "Deferred iff a reason"); the decisions-due page's Deferred reads Not decided; a later sitting in the window plans
+  the line again. Runbook steps 4.21 and 4.28–4.32 change. Size the build's review to that (CLAUDE.md: a domain change
+  gets the full pipeline).
+
 ## Related
 
 W-008, T358 (flow 06), BRIEF § 8 and § 11; flow 07's page is the committee review (/committee/reviews/{ReviewId:int}), which flow 05's trajectory and standing panel already draw.

@@ -32,13 +32,13 @@ replayed journey catalogue with a screenshot baseline, and **six redesign flows 
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The GUI redesign: T361, flow 07 (the review sitting), step 1, the brief. Opus.**
+- **The redesign: T361, flow 07 (the review sitting): A picked; round 2 with the operator; D53 (no deferral) in the build.**
 
 ## Open questions
 
 - **Defaults adopted on recommendation (the operator may overrule).** All are in EPA-PROGRAMME § 3:
   - D33 part 1, D34, D35, D38(a), D44–D52 (D51: appeals are Dismissed or Remitted; D52: the College authors its types);
-  - T131's O1–O8, T237 (no Trainee in any panel seat), T240 (the draft reminder is a digest);
+  - T131's O1 and O3–O8 (O2 overruled by the operator's D53, 2026-10-12: no deferral), T237 (no Trainee in any panel seat), T240 (the draft reminder is a digest);
   - T258 (erasure may be requested whatever the reviews' state), T268 (a locked account is not current);
   - T273, T281 (no credit after the last day), T284 (opening a draft is new work); flow 03's 3.10 (T342);
   - T305: an archived record has no correction path yet (a start found wrong after graduation): open.

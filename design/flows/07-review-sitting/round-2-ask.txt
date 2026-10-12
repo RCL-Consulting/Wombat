@@ -1,0 +1,100 @@
+ROUND 1 PICKED: A, "the agenda is the page", with the corrections below. Round 2: A at full fidelity on the design
+system's tokens (Wombat, v17), every screen and state at 1280 and 390, and the chair's working view also at 768. Drop
+B's and C's boards from round 2 (keep them, and Main, on round 1's page), except where a correction below borrows from
+C. The brand mark is at /_blob/33198ce497bf7fb3aeac9b59047b615b: use it, never a drawn disc.
+
+DECISIONS (the operator's, 2026-10-12; one sentence each):
+  Pick: A. One page, one address; the sitting bar; each agenda line opens its staging form in place.
+  Q1: as the pick; a member keeps up by Refresh (C4), not live.
+  Q2: an opened line shows that EPA's own snapshot lines first, its standing in one line, and a link to its chart
+    (C2); the rest of the agenda stays above and below it.
+  Q3: the decision form after the agenda, reached from the sitting bar's "Go to the decision"; Present and the quorum
+    read live from the ticks, Record disabled with the reason until the quorum is met, as round 1 drew.
+  Q4: confirm Start, Remove, Record, Ratify and Close review, each naming what it does, as round 1's D1 board drew
+    (minus the bulk deferral, which goes: C1).
+  Q5: results and refusals beside the control that caused them, taking the focus, as round 1 drew (A5).
+  Q6: both: inside an open staging line, evidence opens in place (C3); everywhere else it goes to flow 03's activity
+    page, which gains "← Back to <registrar> · <period>" when it was opened from a review (PROPOSED, now decided).
+  Q7: h1 "Lerato Molefe · 2026 S2", subtitle "Annual progression review · Paed Annual Review Panel · Training year 4".
+  Q8: the notes in one card, "Before the committee decides", none dismissible, as round 1 drew.
+  Q9: as round 1's A3 board: at 390 the sitting bar under the title (not sticky), the agenda as stacked lines with
+    44 px actions.
+  Q10: T329, T273, T325, T309, T260 and T324 are folded into this flow's build; draw each as fixed.
+  Q11: Start is not offered while the chair cannot act; the bar's sentence says why (T260).
+  Q12: no "Export portfolio" here (flow 13). Under the h1, a quiet link "Lerato Molefe's progress" opens flow 06's
+    registrar page, /programme/trainees/{ProfileId:int}, for readers it admits; for others it is not drawn.
+  NEW, D53: NO DEFERRAL. The chair no longer defers anything (C1).
+
+CORRECTIONS TO A (round 2's review checks each by number):
+  C1. No deferral (D53, the operator's, 2026-10-12, overruling the rule that every EPA due at the sitting must be
+      staged or deferred with a reason before Record). Remove from every board: Defer, Reinstate, the deferral form,
+      "Defer lines still due…" and its dialog, the Deferred badge on a new sitting, and every "or deferred with a
+      reason" / "still to stage or defer". In their place:
+      a. A Due line reads "Due at this sitting" with no other sentence; As opportunity allows, Due by year end and
+         Partial period keep round 1's words.
+      b. The agenda's caption: "15 EPAs for 2026 S2 · 3 staged". The sitting bar: "3 staged" (not "12 still to …").
+      c. Record is not held back by unstaged lines. It is disabled only for the quorum (and refuses a missing
+         category or rationale in Wombat's words, T324).
+      d. The decision form gains one optional field after Rationale: "About the EPAs not decided (optional)", hint
+         "The registrar sees this once the review is ratified." It is written on every line recorded as not decided.
+      e. The Record dialog names them: "Fixes 3 staged decisions: PAED-001 at 5, PAED-010 at 4 (expires
+         2026-10-25), PAED-012 at 5. Records 9 EPAs due at this sitting as not decided: PAED-002, PAED-003, …".
+      f. After Record, such a line reads "Not decided at this sitting" with the optional sentence under it
+         ("To be decided at her final review."). Optional lines left unstaged read "Not decided" as today.
+      g. The Ratify dialog: "PAED-002 and 8 others were not decided at this sitting." in place of "The 9 deferred
+         lines keep their reasons".
+      h. Draw, on the Spec board, the decisions-due page's status changing in words only: "Deferred" becomes "Not
+         decided" (a sitting held it and did not decide it); "Missed" stays (the window ended and no sitting held it).
+         Draw the registrar's reviews page line the same way. These pages are not redrawn here.
+  C2. The opened line, borrowing C's content: its header "Stage a decision on PAED-001"; one line of standing ("Year 4
+      target 5 · no STAR yet · 3 ratings in the review window · MSF: Covered"); "Evidence it rests on" with this EPA's
+      snapshot lines first and "Show the other N snapshot lines"; the hint (one item; none about the EPA) beside the
+      ticks; then the form. "Rating chart for PAED-001" moves the focus to that EPA's chart in the trajectories card
+      on the same page, whose heading then offers "Back to PAED-001's line". Draw both ends.
+  C3. A's weak point, fixed: inside an open staging line, a snapshot line's "Read" opens the activity in place of the
+      form (C's evidence reader: flow 03's ActivityStatus and ActivityAbout, read-only, no moves), with "← Back to
+      PAED-001"; Back restores the form exactly as typed and puts the focus on that Read. Nothing navigates, so
+      nothing typed is lost. In the Evidence snapshot card, "open" goes to flow 03's page with its return link (Q6),
+      and Back lands on the snapshot line it came from.
+  C4. Not live. Replace "Updated 14:02 SAST · follows the chair's changes" (PROPOSED) with "As of 14:02 · Refresh" on a
+      member's and an administrator's view; Refresh re-reads the review and keeps the reader's place. Live following
+      is filed as T362 and is NOT drawn. The chair's own page needs no Refresh.
+  C5. Start withheld while the chair cannot act (Q11): round 1's "chair can no longer act" board, Scheduled, shows the
+      bar's sentence and no Start. Draw the trainee-at-another-institution sentence in the same slot.
+  C6. Real words, not grey bars. Use the EPA titles from the catalogue (Step 4.15's screenshot lists all fifteen;
+      PAED-015's is the long one that wraps), the dates and names § 8 gives (Step 4.17's "Issued on" is today on
+      the South African calendar, T325), and the snapshot's real items at Steps 4.16–4.19. Where § 8 truly gives no
+      figure, keep the bracket and say so on the board.
+  C7. The pre-graduation thirteen (round 1's A2 frame 7): the sitting bar reads "13 staged"; PAED-001's "Decided
+      elsewhere" line keeps its sentence; the table's long titles wrap within their cell at 1280 and 768.
+  C8. The sticky sitting bar sits below the fixed top bar and never paints over it (T356); check at 768 too.
+  C9. Every date ISO (2026-10-05), as flow 05's D1.
+
+STATES TO DRAW (round 2), at 1280 and 390 each:
+  The chair: scheduled (Start…); scheduled while the chair cannot act (no Start); the Start dialog; started ("Review
+    started." atop the agenda, the focus there); a line opened (Stage, focus on Authorised level); a piece of evidence
+    read in place and Back; staged (the result under the line); a refusal in the line (the expiry, Step 4.18); a
+    second decision on PAED-001 refused (Step 4.20); Remove… and its dialog and result; the chair's line for an EPA
+    not on the agenda; the decision form with only the chair ticked (Record disabled, the quorum sentence); a missing
+    category refused (Step 4.24); ready (4 present, quorum met); the Record dialog (C1e); decided (Ratify…); the
+    Ratify dialog; ratified (STARs issued, the not-decided lines with their sentence); ratified with nothing staged
+    (du Plessis, Step 4.30); Outcome Deferred (Ndlovu, Step 4.32: a progression category, unrelated to C1; say so);
+    pre-graduation, thirteen staged; Graduate ratified with the exit rule.
+  A member (David Naidoo): mid-sitting with "As of … · Refresh"; after Refresh.
+  The administrator (Nolwazi Mbatha): decided, no Ratify, the sentence.
+  A formative check-in: in progress ("Formative check-in" as its type, T309); the Close dialog; closed.
+  An entrustment-only review: recorded, no category.
+  Every review: loading (header and skeleton, no actions, T329); load error; not found.
+  Flow 03's activity page with the return link (one board, 1280 and 390).
+  The chair's working view (a line opened, the sitting bar stuck) also at 768.
+
+ALSO, as flows 05 and 06's round 2 did:
+  - A Spec board: every NEW and changed component (the sitting bar; the agenda line that opens in place; the evidence
+    reader in place; the decision form's optional field; the Refresh line; the return link on flow 03's page), its
+    classes, and the DESIGN.md rule text each changes. Name D53's wording changes (C1h).
+  - A Steps board: each of the 26 runbook steps in § 8 of round 1's message, and what its Expect will say once A is
+    built. Steps 4.21 (deferring) goes: say what replaces it (nothing: the not-decided lines are written at 4.25's
+    Record) and recount Act 4's sitting and the thirteen staged, presses and fields, at 1280 and 390. Steps 4.28–4.32
+    defer 10–12 lines each: say what each becomes.
+  - Tokens by name; every colour an existing token or a NEW one with its value; contrast and targets checked (text
+    4.5:1, borders and the focus ring 3:1, targets 24 px, 44 at 390).
