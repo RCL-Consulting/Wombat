@@ -49,12 +49,18 @@ Run the loop as flow 06 ran it (`design/flows/06-programme-oversight/`, BRIEF §
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`9a204a5c`; exit 0, baseline paths missing 0)
-- [ ] The canvas is created, with the mark copied in before round 1 — its link. (https://claude.ai/artifact/9hVRTiLRBUugygR7bHB1CS; mark `/_blob/33198ce497bf7fb3aeac9b59047b615b`, 2026-10-11)
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/07-review-sitting/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 07) — the squash commit and counts.
-- [ ] The whole runbook replays on a fresh database with no regression from flow 07, the baseline is re-captured, and
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`9a204a5c`; exit 0, baseline paths missing 0)
+- [x] The canvas is created, with the mark copied in before round 1 — its link. (https://claude.ai/artifact/9hVRTiLRBUugygR7bHB1CS; mark `/_blob/33198ce497bf7fb3aeac9b59047b615b`, 2026-10-11)
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/07-review-sitting/`.
+  (Round 1 A, `7b00819a`; round 2 and 3, `round-2-review.md`, `round-3-check.md`; D53 in EPA-PROGRAMME § 3D.)
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 07) — the squash commit and counts.
+  (`44de180b`: 814 / 3750 / 1022 / 52 / 3557 / 489, 0 warnings; DESIGN.md `2c85ce94`. The replay's four fixes after it:
+  `59bb72fd`, `6ad6c57a`, `6b149fff`, `14378856`; Web 3565.)
+- [x] The whole runbook replays on a fresh database with no regression from flow 07, the baseline is re-captured, and
   flow 07's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+  (2026-10-12, `wombat_scenario_t361`: acts 1–6 and A, `ebece7f6`..`337ef44c`; 5 regressions found (4.17, 5.4, A.7.6,
+  the stacked caption, the pick line's space), each fixed and re-checked in the browser; states 82 of 83 hold, the 83rd
+  fixed in `14378856` (`cdd12d9a`); missing 0.)
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Notes

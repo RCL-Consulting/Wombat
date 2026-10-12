@@ -1,11 +1,12 @@
 ---
 id: T273
 title: The committee review page's sampling list and staged STAR lines do not mark an EPA that is no longer in force
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-10-12
 ---
 
 # T273 — The committee review page's sampling list and staged STAR lines do not mark an EPA that is no longer in force
@@ -30,7 +31,12 @@ created: 2026-09-25
 
 ## Verification
 
-- [ ] The sampling list and staged lines mark a deactivated EPA. bUnit.
+- [x] The sampling list and staged lines mark a deactivated EPA. bUnit.
+  Done by T361 (`44de180b`): `ReviewPageAgendaTests`/`ReviewPageStatesTests` (the agenda line and the notes card mark "(no longer in use)"); the T361 states pass on a scratch copy with PAED-012 paused showed the mark in the sampling warnings and on the agenda line.
+
+## Notes
+
+- **2026-10-12:** closed by T361 (flow 07).
 
 ## Related
 

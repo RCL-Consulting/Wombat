@@ -1,11 +1,12 @@
 ---
 id: T356
 title: A scrolled table paints over the fixed top bar, covering Sign out
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-04
+completed: 2026-10-12
 ---
 
 # T356 — A scrolled table paints over the fixed top bar, covering Sign out
@@ -39,8 +40,13 @@ the page body (the chart's scroll region, the skeletons, dialogs keep their own 
 
 ## Verification
 
-- [ ] A bUnit or stylesheet test pins the bar's stacking order; a browser check at 1280 and 390 on a page with a long
+- [x] A bUnit or stylesheet test pins the bar's stacking order; a browser check at 1280 and 390 on a page with a long
   table shows Sign out on top while scrolled.
+  Done by T361 (`44de180b`): `.sidebar` z-index 10 from 641px (MainLayout.razor.css), pinned by `StylesheetRuleTests.Flow07`; T361 replay 2026-10-12: Sign out never covered at 1280 and 768 (4.15, 4.16, 4.25, 4.50, 5.3, the states pass), and A.7.6 at 390.
+
+## Notes
+
+- **2026-10-12:** closed by T361 (flow 07), which fixed the stacking in the shell, not only on the review page.
 
 ## Related
 
