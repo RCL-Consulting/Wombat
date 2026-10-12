@@ -29,20 +29,19 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   operator's): no deferral; unstaged closing lines are recorded "Not decided at this sitting", overruling T131's O2.
   Live following for members proposed as **T362**.
 
-### Next: T361 step 6, the build in waves (in flight)
+### T361 step 6 done: the build squashed onto master (`44de180b`); next step 7, the replay
 
-- **Design final:** `design/flows/07-review-sitting/round-3-check.md` (`8236dd8b`). **Build plan** (`aed269d8`):
-  `build-lanes.md` and `build-contracts.md` beside it. Integration branch `t361` (from `aed269d8`).
-- **Wave 1 merged** into `t361` (`0dfcac16`; contracts as built `fe5d6337`): lane A `fd808a23` (D53, migration
-  `20261012055324_T361_NoDeferral`; Not decided badges amber), lane R `b8b7f13e`..`afb2166a`. Six suites green on `t361`:
-  814 / 3747 / 1020 / 52 / 3453 / 489, 0 warnings.
-- **Wave 2 merged** (`e5e9c7b8`, lane P `ecbfccf3`..`a5d94669`); DESIGN.md banner and decisions due reconciled
-  (`2c85ce94`); review brief `review-lanes.md` (`f7afd09d`). Six suites green on `t361`: 814 / 3747 / 1020 / 52 /
-  3547 / 489, 0 warnings. Lane P left unfilled (no data): the ratified graduation summary, a chair's line's earlier STAR,
-  a decided line's level and expiry, who can start when the chair cannot act.
-- **Runbook lane merged** (`e07311d9`; 4.21 removed, numbers kept). **Reviewed** by three Sonnet lenses:
-  `build-review.md` (`61e47aa1`), 16 findings, none high; 15 to fix, R5 left. **Running:** the fix pass `t361-fix`.
-  Then: merge it, six suites, squash onto master. Not pushed. T356's browser check waits for the replay.
+- **Built** from round 3 (`round-3-check.md`) in lanes A (D53, migration `20261012055324_T361_NoDeferral`), R (reads,
+  return link, stacking), P (the page), runbook; reviewed by three Sonnet lenses (`build-review.md`: 16 findings, none
+  high; 15 fixed, R5 left); one fix pass. Six suites on the squashed tree: 814 / 3750 / 1022 / 52 / 3557 / 489,
+  0 warnings. **Not pushed.** Branches `t361`, `t361-*` kept locally; worktrees removed.
+- **Next, step 7: the replay** on a fresh database from master. It must confirm: T356's browser check (the chair's bar
+  never over Sign out at 768/1280), "As of … No change.", the brackets (round-3-check's list; the runbook's `[#n]`), the
+  new states rows ("Narrow, in progress", failed Refresh, quorum shortfall), A.7.6's progress link for Dr Zulu after
+  graduation, and the symptoms the squash names (T356, T273, T309 item 2, T329's and T260's review halves, T324's
+  decision form) before any of those tasks closes. Then step 8 (design system v18), step 9 (BRIEF § 11 lessons).
+- **Known gaps the page leaves (no data):** the ratified graduation summary, a chair's line's earlier STAR, a decided
+  line's level and expiry, who can start when the chair cannot act. Candidates for a proposal after the replay.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator

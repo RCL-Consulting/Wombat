@@ -32,7 +32,7 @@ replayed journey catalogue with a screenshot baseline, and **six redesign flows 
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign: T361, flow 07 (the review sitting): design final (round 3 checked); next the build, D53 (no deferral) with it.**
+- **The redesign: T361, flow 07 (the review sitting): built and squashed (`44de180b`, D53 with it); next the replay (step 7).**
 
 ## Open questions
 
