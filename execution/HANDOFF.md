@@ -36,8 +36,12 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 - **Wave 1 merged** into `t361` (`0dfcac16`; contracts as built `fe5d6337`): lane A `fd808a23` (D53, migration
   `20261012055324_T361_NoDeferral`; Not decided badges amber), lane R `b8b7f13e`..`afb2166a`. Six suites green on `t361`:
   814 / 3747 / 1020 / 52 / 3453 / 489, 0 warnings.
-- **Wave 2 running:** lane P `t361-page` (the review page). Then: merge P, six suites; the runbook lane; three Sonnet
-  reviewers; one fix pass; squash onto master. Not pushed. T356's browser check waits for the replay.
+- **Wave 2 merged** (`e5e9c7b8`, lane P `ecbfccf3`..`a5d94669`); DESIGN.md banner and decisions due reconciled
+  (`2c85ce94`); review brief `review-lanes.md` (`f7afd09d`). Six suites green on `t361`: 814 / 3747 / 1020 / 52 /
+  3547 / 489, 0 warnings. Lane P left unfilled (no data): the ratified graduation summary, a chair's line's earlier STAR,
+  a decided line's level and expiry, who can start when the chair cannot act.
+- **Running:** the runbook lane `t361-runbook`. Then: merge it; three Sonnet reviewers; `build-review.md`; one fix pass
+  `t361-fix`; squash onto master. Not pushed. T356's browser check waits for the replay.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator
