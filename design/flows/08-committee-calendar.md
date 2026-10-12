@@ -113,8 +113,9 @@ AUDIENCE:
   - CommitteeMembers: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha (each also an Assessor), Dr John van
     Rensburg (external, CommitteeMember only). They read the panels and their panels' reviews.
   - Kgosi Kgari Teaching Hospital (KGK), Paediatrics, on the College's (CPSA) curriculum 11.1, fifteen EPAs (PAED-001 to
-    PAED-015): six decided every semester, nine once a year; PAED-004 and PAED-005 are the College's neonatal
-    committee's (the "Neonatal team Clinical Competency Committee"). Five registrars: Dr Lerato Molefe (training year 4),
+    PAED-015): six decided every semester (001, 002, 004, 005, 010, 012), nine once a year (008, 009 and 013 as
+    opportunity allows); PAED-001 is "Providing paediatric emergency care to children"; PAED-004 and PAED-005 are the
+    College's neonatal committee's (the "Neonatal team Clinical Competency Committee"). Five registrars: Dr Lerato Molefe (training year 4),
     Dr Anele Dlamini (3), Dr Pieter du Plessis (2), Dr Nomsa Mahlangu and Dr Sipho Ndlovu (1). Desktop 1280×800 and
     phone 390×844.
 
