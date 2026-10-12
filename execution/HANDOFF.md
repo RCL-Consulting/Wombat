@@ -32,7 +32,7 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 ### T361 done (2026-10-12): flow 07 built, replayed, in the design system (version 19)
 
 - **Build** `44de180b` (D53 with it), reviewed by three Sonnet lenses; six suites green (814 / 3750 / 1022 / 52 / 3557 /
-  489). **Not pushed.** Branches `t361`, `t361-*` kept locally.
+  489). **Pushed** to origin 2026-10-12. Branches `t361`, `t361-*` kept locally.
 - **Replay** (`wombat_scenario_t361`, one agent per act): 331 steps, 267 with no gap; five flow-07 faults found and
   fixed in the session, each re-checked in the browser: the return link's `#snap-n` (`59bb72fd`), the foot form's
   Issued on (`6ad6c57a`), 21 px snapshot links at 390 (`6b149fff`), the stacked caption and a pick line's space
