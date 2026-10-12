@@ -35,7 +35,8 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   return link, stacking), P (the page), runbook; reviewed by three Sonnet lenses (`build-review.md`: 16 findings, none
   high; 15 fixed, R5 left); one fix pass. Six suites on the squashed tree: 814 / 3750 / 1022 / 52 / 3557 / 489,
   0 warnings. **Not pushed.** Branches `t361`, `t361-*` kept locally; worktrees removed.
-- **Next, step 7: the replay** on a fresh database from master. It must confirm: T356's browser check (the chair's bar
+- **Step 7 running** (brief `replay-brief.md`, `05b743f6`): app on `:5180`, `wombat_scenario_t361`, published from
+  `57046f14`; acts in order, one agent each, then the states; scratch `g361` in this session's scratchpad. It must confirm: T356's browser check (the chair's bar
   never over Sign out at 768/1280), "As of … No change.", the brackets (round-3-check's list; the runbook's `[#n]`), the
   new states rows ("Narrow, in progress", failed Refresh, quorum shortfall), A.7.6's progress link for Dr Zulu after
   graduation, and the symptoms the squash names (T356, T273, T309 item 2, T329's and T260's review halves, T324's
@@ -52,7 +53,7 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 
 ### Environment left
 
-- **The replay app on `:5180`** runs `wombat_scenario_t358_end` (flow 06's appendix end state), published from
+- **The replay app on `:5180`** now runs `wombat_scenario_t361` (above); it ran `wombat_scenario_t358_end` (flow 06's appendix end state), published from
   `94edf2b7`. Dumps `recovery/scenario-t358-post-act{1..6,A}`, `scenario-t358-pre-a515`.
 - **Replay scratch:** this session's scratchpad `g358` (`replay-pw.env`; act and states scripts). Khumalo's and du
   Plessis's pre-appendix passwords are the `_A` keys.
