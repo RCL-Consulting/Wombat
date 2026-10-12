@@ -602,7 +602,7 @@ Expect:
   - The inbox lights Activity inbox in the menu: Home and Activity inbox, then My data rights. There is no Recent
     activities: the flow 01 pick dropped it, with its placeholder.
 
-Step 5.25 — Dr Naidoo rates it (act-5-graduation.md:630)
+Step 5.25 — Dr Naidoo rates it (act-5-graduation.md:661)
 Role: Assessor — Dr David Naidoo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: He has acted as a Committee member since Step 4.5: choose Switch to Assessor in the sidebar, then open Dr du
