@@ -47,7 +47,8 @@ Run the loop as flow 07 ran it (`design/flows/07-review-sitting/`, BRIEF § 11 "
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`c6740da1`; exit 0, baseline
+  paths missing 0, verbatim 424 steps 0 problems)
 - [ ] The canvas is created, with the mark copied in before round 1 — its link.
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/08-committee-calendar/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 08) — the squash commit and counts.
@@ -60,3 +61,7 @@ Run the loop as flow 07 ran it (`design/flows/07-review-sitting/`, BRIEF § 11 "
 T361 (flow 07), T362, T363, T309 (the scheduling preview's seat warning), T329; W-008; D53; BRIEF § 8, § 11.
 
 ## Notes
+
+- **2026-10-12, steps 1–2.** Restated from two read-only audits (code at `b62997a5`; every capture opened). Staged
+  with `stage_upload.ps1 -Flow 08` (87 files, 6.2 MB, nothing to crop); `design/flows/08-committee-calendar/round-1-ask.txt`
+  is § 1 + § 8 as one paste, with `/_blob/MARK` until the mark is copied into the canvas. Waits for the operator's canvas link.

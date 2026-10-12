@@ -42,7 +42,14 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 - **Design system** re-synced (`design/system/`, one Sonnet review) and published as **version 19** (1791816174-d002);
   the live v18 matched HEAD first. **Lessons** in BRIEF § 11 "Flow 07".
 - **Proposed:** T363 (the page's four data gaps). T362 (live following) still waits. **T290** stays in progress.
-- **Next in the redesign:** flow 08 (BRIEF § 8), when the operator says.
+- **Next in the redesign:** flow 08, started (below).
+
+### T364, flow 08 (panels, what is due, the schedule): steps 1–2 done, 2026-10-12
+
+- The operator said "flow 08". T364 filed and started (`b610cabd`). Brief restated in flow 07's layout (`c6740da1`) from
+  two read-only audits; all checkers clean; staged (`stage_upload.ps1 -Flow 08`, 87 files). `round-1-ask.txt` holds
+  `/_blob/MARK` until the mark is copied. **Waits for the operator's new canvas link** (main app's Design page, design
+  system v19); then copy the mark, send round 1, record it in `design/flows/08-committee-calendar/`.
 
 ### For the operator
 
