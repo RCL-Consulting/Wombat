@@ -493,6 +493,7 @@ Actual (2026-10-12, T361 replay, wombat_scenario_t361): Snapshot line "Mini-CEX 
 Gap: new: the activity page's "Back to Lerato Molefe · 2026 S2" (/committee/reviews/1#snap-8) opens the review at its
   top with the focus on the h1, not at the snapshot line: the page draws after the navigation, so the fragment is never
   scrolled to.
+  Fixed in `59bb72fd`: replayed on the republished app (2026-10-12), the link lands with #snap-8 in view and focused.
 
 ### Step 4.18 — An expiry before the issue date is refused
 Role: CommitteeMember (chair) — Dr Thandi Zulu

@@ -131,8 +131,8 @@ Do: Open Dr Molefe's pre-graduation review from Committee reviews and start it t
 Expect: Before Start, the h1 reads "Lerato Molefe · `<P>`" with "Pre-graduation review" in the subtitle, and the bar
   "Summative · evidence `J−3y` to `<Y>`-12-31" (round 3 item 28). The Start dialog counts "the [n] items observed from
   `J−3y` to `<Y>`-12-31 (…)". The page then says "Review started." atop the agenda and the review reads In progress.
-  - The agenda's caption reads "12 EPAs for `<P>` · none staged", and under it "Already decided in this window, so not
-    on the agenda: PAED-001, PAED-010 and PAED-012." (round 3 item 25).
+  - Above the agenda's caption "12 EPAs for `<P>` · none staged", it says "Already decided in this window, so not on
+    the agenda: PAED-001, PAED-010 and PAED-012." (round 3 item 25).
   - The snapshot freezes her evidence observed since `J−3y`, grouped by EPA, including the released MSF
     campaign.
   - The standing reads training year 4, and "2 at or above · 1 below · 12 with no decision, of 15 EPAs". Its exit rule
@@ -160,8 +160,8 @@ Actual (2026-10-12, T361 replay, wombat_scenario_t361): Menu Home, Programme tra
   decision needs at least two panel members present: …", naming no line. Sampling warnings on PAED-010 (1 assessor) and
   PAED-012 (2), refusing nothing. T356: at 1280 and 768 px, scrolled from 0 to the foot, the sticky bar (56-110 px once
   stuck) never covers Sign out (14-42 px); elementFromPoint hits Sign out at every offset.
-Gap: runbook: the "Already decided in this window…" line sits above the caption "12 EPAs for 2026 S2 · none staged",
-  not under it as the Expect says; the wording is as decided (round 3 item 25).
+Gap: none (the Expect said the "Already decided…" line sits under the caption; it sits above it, and the Expect now
+  says so; the wording is as decided, round 3 item 25).
 
 ### Step 5.4 — Dr Zulu stages a STAR at its exit level on every EPA not yet there
 Role: CommitteeMember — Dr Thandi Zulu (chair)
@@ -205,6 +205,7 @@ Actual (2026-10-12, T361 replay, wombat_scenario_t361): Staged 13 decisions on r
   EPA; I typed 2026-10-12.
 Gap: new: the foot form's Issued on opens on 0001-01-01 instead of D, so a chair who does not retype it stages a
   decision dated year 1 or is refused (ReviewDetail's `_foot = new()` sets no IssuedOn; each line's form opens on D).
+  Fixed in `6ad6c57a` (the foot form opens and reopens on today; bUnit test); not yet replayed.
 
 ### Step 5.5 — The panel records its decision: Graduate
 Role: CommitteeMember — Dr Thandi Zulu (chair)
