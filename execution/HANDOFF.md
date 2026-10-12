@@ -33,11 +33,11 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 
 - **Design final:** `design/flows/07-review-sitting/round-3-check.md` (`8236dd8b`). **Build plan** (`aed269d8`):
   `build-lanes.md` and `build-contracts.md` beside it. Integration branch `t361` (from `aed269d8`).
-- **Wave 1 running** (the operator said "go", 2026-10-12): lane A `t361-domain` (D53: no deferral, the migration
-  `T361_NoDeferral`, decisions-due E3, E4, E5) and lane R `t361-reads` (detail DTO's profile id and training year,
-  `GetStartPreviewQuery`, Start refused while the chair cannot act, T273's flags, flow 03's return link, the stacking
-  for T356), worktrees under `.claude/worktrees/`. Then: merge A then R into `t361`, six suites, "As built" in the
-  contracts; wave 2 lane P (the page); the runbook lane; three Sonnet reviewers; one fix pass; squash. Not pushed.
+- **Wave 1 merged** into `t361` (`0dfcac16`; contracts as built `fe5d6337`): lane A `fd808a23` (D53, migration
+  `20261012055324_T361_NoDeferral`; Not decided badges amber), lane R `b8b7f13e`..`afb2166a`. Six suites green on `t361`:
+  814 / 3747 / 1020 / 52 / 3453 / 489, 0 warnings.
+- **Wave 2 running:** lane P `t361-page` (the review page). Then: merge P, six suites; the runbook lane; three Sonnet
+  reviewers; one fix pass; squash onto master. Not pushed. T356's browser check waits for the replay.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator
