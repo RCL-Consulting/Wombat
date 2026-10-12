@@ -344,6 +344,17 @@ public sealed class ReviewPageAgendaTests : ReviewPageTestBase
     }
 
     [Fact]
+    public void TheFootForm_OpensIssuedToday_AsEachLinesFormDoes()
+    {
+        // The replay's 5.4: it opened on 0001-01-01, before and after an EPA was chosen.
+        var cut = Render(Review());
+
+        cut.Find("#stage-0-issued").GetAttribute("value").Should().Be("2026-10-05");
+        cut.Find("#stage-0-epa").Change("1");
+        cut.Find("#stage-0-issued").GetAttribute("value").Should().Be("2026-10-05");
+    }
+
+    [Fact]
     public void ASecondDecisionOnAnEpa_FromTheFootForm_IsRefusedAtItsTop_InTheServersWords()
     {
         var cut = Render(Review());

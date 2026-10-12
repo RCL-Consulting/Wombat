@@ -243,6 +243,9 @@
 
   // ─── Reading ─────────────────────────────────────────────────────────────────
 
+  // The foot form opens on today, as each line's own does (5.4, T361 replay); the clock is not there for an initializer.
+  protected override void OnInitialized() => _foot = NewDraft(0);
+
   protected override async Task OnParametersSetAsync()
   {
     _loading = true;
@@ -851,7 +854,7 @@
       var epaId = draft.EpaId;
       if (foot)
       {
-        _foot = new LineDraft();
+        _foot = NewDraft(0);
       }
       else
       {
