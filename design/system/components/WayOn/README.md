@@ -7,7 +7,7 @@ The way on (`Components/Shared/Activities/WayOn.razor`): after an assessor's mov
 `<WayOn Next="@_next" BackLabel="@($"Back to {ownerLabel}")" BackHref="@ownerHref" />`
 
 - `Next`: the first row still waiting for the reader once the activity just moved is left out (`ListWaitingForYouQuery`, read again after the move); null when nothing waits.
-- `BackLabel` and `BackHref`: the acting role's list the activity page sits under, by the owner table (`NavOwners.OwnerFor(typeof(ActivityView), role)`): "Back to Activity inbox" for an Assessor; "Back to Home" (`/`) where the role has no owner.
+- `BackLabel` and `BackHref`: the acting role's list the activity page sits under, by the owner table (`NavOwners.OwnerFor(typeof(ActivityView), role)`): "Back to Activity inbox" for an Assessor; "Back to Home" (`/`) where the role has no owner. **Opened from a committee review's snapshot** (flow 07, T361; ReviewReturnLink), the review's way back instead: "Back to Lerato Molefe · 2026 S2", to the snapshot line it was opened from.
 
 The page draws it only after a move the reader made as someone other than the activity's author. A move made as the author keeps flow 03's result ("It is in Fatima Khumalo's Activity inbox."). A read that fails is logged and costs only the count and the way on, never the result.
 
@@ -27,7 +27,7 @@ No automatic advance (Q6): the assessor chooses. The row's link is out of the ta
 ## Rules (DESIGN.md § Page-level patterns, "Record page with a workflow", R3)
 
 - The live region says the result and the count only; the row and its buttons are not announced.
-- "Back to" names the list by the owner table, never a remembered referrer.
+- "Back to" names the list by the owner table, never a remembered referrer. The one exception is the committee review's (flow 07): the address itself carries it (`?from=review-{id}&at=snap-{itemId}`), and the page offers it only to a reader the review's own query answers.
 
 ## Contrast
 

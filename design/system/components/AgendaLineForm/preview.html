@@ -1,0 +1,130 @@
+<!-- @dsCard group="Committee" height=1900 width=974 subtitle="One staging form inside its agenda line: the standing in one line, Rating chart for, the evidence ticks with Read and the other lines behind a button, the hints, the level, the dates and the rationale; Stage pending decision unavailable until a line is ticked; a refusal at the top" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AgendaLineForm</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-cell { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); box-shadow: inset 4px 0 0 var(--secondary-color); }
+</style>
+</head>
+<body>
+<p class="pv-cap">PAED-001's line, opened by its Stage (Step 4.17): nothing ticked yet, so Stage pending decision is unavailable and says why beside it</p>
+<div class="pv-cell">
+<div class="agenda-form" role="group" aria-labelledby="stage-1-heading">
+  <h3 class="agenda-form-heading" id="stage-1-heading" tabindex="-1">Stage a decision on PAED-001</h3>
+  <p class="agenda-form-standing">Year 4 target 5 · no STAR yet · 3 ratings in the review window · MSF: None released yet</p>
+  <a class="chart-jump" href="#">Rating chart for PAED-001</a>
+  <div class="form-grid">
+    <fieldset class="form-group full-width snapshot-pick" aria-describedby="stage-1-hints">
+      <legend>Evidence it rests on <span aria-hidden="true">*</span><span class="visually-hidden">required</span></legend>
+      <div class="snapshot-pick-line">
+        <div class="form-check">
+          <input id="stage-1-evidence-12" class="form-check-input" type="checkbox" />
+          <label for="stage-1-evidence-12">Mini-CEX (Paediatrics) #12 · Thandi Zulu<span class="muted"> Rated 5 · 2026-09-23 · Completed</span></label>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline" aria-label="Read Mini-CEX (Paediatrics) #12">Read</button>
+      </div>
+      <div class="snapshot-pick-line">
+        <div class="form-check">
+          <input id="stage-1-evidence-14" class="form-check-input" type="checkbox" />
+          <label for="stage-1-evidence-14">Mini-CEX (Paediatrics) #14 · David Naidoo<span class="muted"> Rated 4 · 2026-09-28 · Awaiting review</span></label>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline" aria-label="Read Mini-CEX (Paediatrics) #14">Read</button>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline snapshot-pick-more" aria-expanded="false">Show the other 6 snapshot lines</button>
+      <div id="stage-1-hints"></div>
+    </fieldset>
+    <div class="form-group">
+      <label for="stage-1-level">Authorised level <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <select id="stage-1-level" class="form-select"><option>Choose a rung…</option></select>
+      <small class="page-subtitle">Rungs of CPSA Paediatric Entrustment Scale v11.1, the ladder this EPA is assessed on.</small>
+    </div>
+    <div class="form-group">
+      <label for="stage-1-issued">Issued on <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input id="stage-1-issued" type="date" class="form-control" value="2026-10-05" />
+    </div>
+    <div class="form-group">
+      <label for="stage-1-expires">Expires on (optional)</label>
+      <input id="stage-1-expires" type="date" class="form-control" />
+    </div>
+    <div class="form-group full-width">
+      <label for="stage-1-rationale">Rationale <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <textarea id="stage-1-rationale" class="form-control"></textarea>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="button" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="stage-1-reason">Stage pending decision</button>
+    <p class="move-reasons move-reasons--beside" id="stage-1-reason">Name at least one item of the evidence snapshot.</p>
+    <button type="button" class="btn btn-outline">Cancel</button>
+  </div>
+</div>
+</div>
+
+<p class="pv-cap">One line ticked, the other lines shown, and a hint under the ticks (said, never enforced); refused before anything was sent, the summary at the top and each field marked</p>
+<div class="pv-cell">
+<div class="agenda-form" role="group" aria-labelledby="stage-2-heading">
+  <h3 class="agenda-form-heading" id="stage-2-heading" tabindex="-1">Stage a decision on PAED-002</h3>
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert">Not staged. Choose the authorised level. An expiry date must be after the issue date.</div></div>
+  <p class="agenda-form-standing">Year 4 target 5 · no STAR yet · 1 rating in the review window · MSF: Covered</p>
+  <div class="form-grid">
+    <fieldset class="form-group full-width snapshot-pick" aria-describedby="stage-2-hints">
+      <legend>Evidence it rests on <span aria-hidden="true">*</span><span class="visually-hidden">required</span></legend>
+      <div class="snapshot-pick-line">
+        <div class="form-check">
+          <input id="stage-2-evidence-13" class="form-check-input" type="checkbox" checked />
+          <label for="stage-2-evidence-13">Case-Based Discussion (Paediatrics) #13 · Mohammed Patel<span class="muted"> Rated 4 · 2026-09-25 · Completed</span></label>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline" aria-label="Read Case-Based Discussion (Paediatrics) #13">Read</button>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline snapshot-pick-more" aria-expanded="true">Show the other 8 snapshot lines</button>
+      <div>
+        <div class="snapshot-pick-group">PAED-010 — Leading and operating within a clinical team</div>
+        <div class="snapshot-pick-line">
+          <div class="form-check">
+            <input id="stage-2-evidence-15" class="form-check-input" type="checkbox" />
+            <label for="stage-2-evidence-15">Direct Observation (Paediatrics) #15 · Sarah Botha<span class="muted"> Rated 4 · 2026-09-30 · Completed</span></label>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline" aria-label="Read Direct Observation (Paediatrics) #15">Read</button>
+        </div>
+        <div class="snapshot-pick-group">Not about a single EPA</div>
+        <div class="snapshot-pick-line">
+          <div class="form-check">
+            <input id="stage-2-evidence-20" class="form-check-input" type="checkbox" />
+            <label for="stage-2-evidence-20">Default MSF #1<span class="muted"> Released</span></label>
+          </div>
+        </div>
+      </div>
+      <div id="stage-2-hints"><p class="field-warning">Only one item is named. The College's rule is that an entrustment decision is never taken from a single form.</p></div>
+    </fieldset>
+    <div class="form-group">
+      <label for="stage-2-level">Authorised level <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <select id="stage-2-level" class="form-select" aria-invalid="true"><option>Choose a rung…</option></select>
+      <small class="page-subtitle">Rungs of CPSA Paediatric Entrustment Scale v11.1, the ladder this EPA is assessed on.</small>
+      <div class="validation-message">Choose the authorised level.</div>
+    </div>
+    <div class="form-group">
+      <label for="stage-2-issued">Issued on <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input id="stage-2-issued" type="date" class="form-control" value="2026-10-05" />
+    </div>
+    <div class="form-group">
+      <label for="stage-2-expires">Expires on (optional)</label>
+      <input id="stage-2-expires" type="date" class="form-control" value="2026-10-01" aria-invalid="true" />
+      <div class="validation-message">An expiry date must be after the issue date.</div>
+    </div>
+    <div class="form-group full-width">
+      <label for="stage-2-rationale">Rationale <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <textarea id="stage-2-rationale" class="form-control">Consistent independent management across the window.</textarea>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="button" class="btn btn-primary">Stage pending decision</button>
+    <button type="button" class="btn btn-outline">Cancel</button>
+  </div>
+</div>
+</div>
+</body>
+</html>

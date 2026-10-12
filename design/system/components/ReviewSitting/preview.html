@@ -1,0 +1,151 @@
+<!-- @dsCard group="Committee" height=2300 width=974 subtitle="A committee review, sat: the agenda is the page. The header with the progress link, the chair's sitting bar, the notes, the agenda, the decision under it, the snapshot; loading, load failed and not found" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ReviewSitting</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The chair's bar sticks under the 56px top bar in the app; the preview has no top bar, so it is drawn in place. */
+  .pv-static .sitting-bar { position: static; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Thandi Zulu, the chair, as Committee member, the review in progress (Steps 4.10 to 4.20): the trail, the h1 the trainee and the period, the subtitle and "Lerato Molefe's progress"; the chair's bar; the notes; the agenda with PAED-012 staged; the decision under the agenda</p>
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumbs">
+    <li class="breadcrumb-ancestor">
+      <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a>
+      <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+    </li>
+    <li class="breadcrumb-parent">
+      <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Committee reviews</a>
+      <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+    </li>
+    <li class="breadcrumb-current"><span aria-current="page">Lerato Molefe · 2026 S2</span></li>
+  </ol>
+</nav>
+<div class="header-container">
+  <div>
+    <h1 tabindex="-1">Lerato Molefe · 2026 S2</h1>
+    <p class="page-subtitle"><span>Annual progression review · Paed Annual Review Panel · Training year 4</span><a class="review-progress-link" href="#">Lerato Molefe's progress</a></p>
+  </div>
+</div>
+<p class="visually-hidden" role="status"></p>
+<div class="review-page pv-static">
+  <section class="sitting-bar" id="sitting-bar" aria-labelledby="sitting-heading">
+    <h2 id="sitting-heading" class="visually-hidden">The sitting</h2>
+    <div class="sitting-bar-line">
+      <span class="badge badge-submitted sitting-bar-state">In progress</span>
+      <span class="sitting-bar-count">1 staged</span>
+      <span class="sitting-bar-present">Present: the chair · one more member needed</span>
+    </div>
+    <div class="sitting-bar-actions">
+      <button type="button" class="btn btn-outline" id="sitting-go-to-decision">Go to the decision</button>
+    </div>
+  </section>
+
+  <section class="detail-card" id="notes" aria-labelledby="notes-heading">
+    <h2 id="notes-heading" class="review-section-title">Before the committee decides</h2>
+    <h3 id="sampling-heading">Sampling concentration warnings</h3>
+    <ul class="list-unstyled review-notes-list" aria-labelledby="sampling-heading">
+      <li>PAED-010 · 1 rating · 1 assessor · 1 source. All ratings came from a single source of evidence. Fewer than three distinct assessors across this EPA's evidence.</li>
+      <li>PAED-012 · 2 ratings · 2 assessors · 2 sources. Fewer than three distinct assessors across this EPA's evidence.</li>
+    </ul>
+  </section>
+
+  <section class="detail-card" id="agenda" aria-labelledby="agenda-heading">
+    <h2 id="agenda-heading" class="review-section-title">Agenda</h2>
+    <div class="table-container agenda-table-container">
+      <table class="clinic-table agenda-table" role="table">
+        <caption>15 EPAs for 2026 S2 · 1 staged</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">EPA</th>
+            <th scope="col" role="columnheader">Window</th>
+            <th scope="col" role="columnheader">State</th>
+            <th scope="col" role="columnheader">Evidence</th>
+            <th scope="col" role="columnheader">Action</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr class="agenda-line" role="row">
+            <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-001</span><span class="agenda-epa-title">Providing paediatric emergency care to children</span></th>
+            <td role="cell" data-label="Window">2026 S2</td>
+            <td role="cell" data-label="State"><span class="badge badge-draft">Due at this sitting</span></td>
+            <td role="cell" data-label="Evidence">3 items</td>
+            <td role="cell" class="agenda-line-action"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-expanded="false" aria-label="Stage a decision on PAED-001">Stage</button></div></td>
+          </tr>
+          <tr class="agenda-line" role="row">
+            <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-002</span><span class="agenda-epa-title">Managing common paediatric presentations</span></th>
+            <td role="cell" data-label="Window">2026 S2</td>
+            <td role="cell" data-label="State"><span class="badge badge-draft">Due at this sitting</span></td>
+            <td role="cell" data-label="Evidence">1 item</td>
+            <td role="cell" class="agenda-line-action"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-expanded="false" aria-label="Stage a decision on PAED-002">Stage</button></div></td>
+          </tr>
+          <tr class="agenda-line" role="row">
+            <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-012</span><span class="agenda-epa-title">Communicating with and counselling patients, caregivers and healthcare teams</span></th>
+            <td role="cell" data-label="Window">2026</td>
+            <td role="cell" data-label="State"><span class="badge badge-submitted">Staged</span><span class="agenda-line-detail"> Level 5 · issued 2026-10-05 · no expiry.</span><span class="agenda-line-detail"> Rests on 2 items of the snapshot: Mini-CEX (Paediatrics) #12; Case-Based Discussion (Paediatrics) #13.</span></td>
+            <td role="cell" data-label="Evidence">2 items</td>
+            <td role="cell" class="agenda-line-action"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Remove the staged decision on PAED-012">Remove…</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="detail-card" id="decision" aria-labelledby="decision-heading">
+    <h2 id="decision-heading" class="review-section-title" tabindex="-1">Decision</h2>
+    <p class="muted">The decision form (DecisionForm) for the chair while the review is in progress; above the agenda once recorded.</p>
+  </section>
+
+  <section class="detail-card" id="evidence-snapshot" aria-labelledby="evidence-snapshot-heading">
+    <h2 id="evidence-snapshot-heading" class="review-section-title">Evidence snapshot</h2>
+    <p class="muted">Frozen when the review started, 2026-10-05 · 9 items</p>
+    <h3 id="evidence-epa-1" class="snapshot-group-heading">PAED-001 — Providing paediatric emergency care to children</h3>
+    <div class="table-container">
+      <table class="clinic-table clinic-table--stack" role="table" aria-labelledby="evidence-epa-1">
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Item</th>
+            <th scope="col" role="columnheader">Assessor</th>
+            <th scope="col" role="columnheader">Rating</th>
+            <th scope="col" role="columnheader">Encounter</th>
+            <th scope="col" role="columnheader">State</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row" id="snap-12">
+            <th scope="row" role="rowheader"><a href="#">Mini-CEX (Paediatrics) #12</a></th>
+            <td role="cell" data-label="Assessor">Thandi Zulu</td>
+            <td role="cell" data-label="Rating">5</td>
+            <td role="cell" data-label="Encounter">2026-09-23</td>
+            <td role="cell" data-label="State">Completed</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">Loading (board 8): the header says what the page is, a skeleton, no action</p>
+<div class="header-container"><div><h1 tabindex="-1">Committee review</h1></div></div>
+<div class="review-page" aria-busy="true">
+  <p class="muted" aria-hidden="true">Loading the review…</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+</div>
+
+<p class="pv-cap">The read failed: one fixed sentence and Try again (T329)</p>
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">The review could not be loaded. Nothing on it has changed.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+
+<p class="pv-cap">An unknown id, or one out of reach (T194): flow 01's Page not found, with the page's sentence</p>
+<div class="header-container"><div><h1 class="page-title-with-icon"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>Page not found</h1></div></div>
+<div class="system-panel">
+  <p>The committee review could not be found among the reviews you can view.</p>
+  <div class="actions-cell"><a class="btn btn-primary" href="#">Back to Committee reviews</a></div>
+</div>
+</body>
+</html>

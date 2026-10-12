@@ -37,6 +37,7 @@ The crumb before the page's own is `.breadcrumb-parent`; any before it `.breadcr
 ## Rules (DESIGN.md § Breadcrumbs)
 
 - The trail follows the owning list for the acting role (D5), not the page the person came from.
+- **One back link, never two** (flow 07, T361; round 3 item 9): an activity opened from a committee review's snapshot shows the review's "Back to Lerato Molefe · 2026 S2" above its header (ReviewReturnLink), and below 641px `.activity-page--from-review` hides the trail (`nav:has(> .breadcrumbs)`), so the return link is the phone's one 44px back row. From 641px the trail stays, by the owner table.
 - A page drawn in place of another names itself (Access denied), so it draws no trail of the refused page's.
 - Its words are the pages' own: a nav label, the h1 and the tab share them. The exception is a record's own crumb, which the page may set through PageHeader's `CurrentCrumb`: a data-rights request's crumb is its id, and the College admin on a College's specialities reads Home › Specialities › {College name} under the h1 "Specialities".
 - No trail on Home, on a list the acting role's menu offers, on My account and the sign-in pages, or on the system pages. Change password is the one account page with one: Home › My account › Change password.

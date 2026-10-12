@@ -1,0 +1,144 @@
+<!-- @dsCard group="Committee" height=2050 width=974 subtitle="The agenda: one line per EPA, one open at a time with Draft kept beside another, a staged line in item 30's words, a result under its line; once decided, Not decided at this sitting; stacked under 760px of its own width" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AgendaTable</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-narrow { max-width: 358px; }
+  .pv-form { color: var(--muted-text); margin: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">In progress, the chair: PAED-002 open (its form in the row under it, drawn whole in AgendaLineForm), PAED-001 holding a draft, PAED-012 staged with its result under it</p>
+<section class="detail-card" aria-labelledby="pv-agenda-1">
+  <h2 id="pv-agenda-1" class="review-section-title">Agenda</h2>
+  <div class="table-container agenda-table-container">
+    <table class="clinic-table agenda-table" role="table">
+      <caption>15 EPAs for 2026 S2 · 1 staged</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Window</th>
+          <th scope="col" role="columnheader">State</th>
+          <th scope="col" role="columnheader">Evidence</th>
+          <th scope="col" role="columnheader">Action</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr class="agenda-line" role="row">
+          <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-001</span><span class="agenda-epa-title">Providing paediatric emergency care to children</span></th>
+          <td role="cell" data-label="Window">2026 S2</td>
+          <td role="cell" data-label="State"><span class="badge badge-draft">Due at this sitting</span></td>
+          <td role="cell" data-label="Evidence">3 items</td>
+          <td role="cell" class="agenda-line-action"><div class="actions-cell"><span class="agenda-draft-kept">Draft kept</span><button type="button" class="btn btn-sm btn-outline" aria-expanded="false" aria-label="Stage a decision on PAED-001 (draft kept)">Stage</button></div></td>
+        </tr>
+        <tr class="agenda-line is-editing" role="row">
+          <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-002</span><span class="agenda-epa-title">Managing common paediatric presentations</span></th>
+          <td role="cell" data-label="Window">2026 S2</td>
+          <td role="cell" data-label="State"><span class="badge badge-draft">Due at this sitting</span></td>
+          <td role="cell" data-label="Evidence">1 item</td>
+          <td role="cell" class="agenda-line-action"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-expanded="true" aria-controls="agenda-form-2" aria-label="Stage a decision on PAED-002">Stage</button></div></td>
+        </tr>
+        <tr class="is-editing agenda-form-row" id="agenda-form-2" role="row">
+          <td colspan="5" role="cell"><p class="pv-form">Stage a decision on PAED-002: the staging form (AgendaLineForm), or Read's reader in its place (EvidenceReader).</p></td>
+        </tr>
+        <tr class="agenda-line" role="row">
+          <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-014</span><span class="agenda-epa-title">Providing palliative and end-of-life care</span></th>
+          <td role="cell" data-label="Window">2026</td>
+          <td role="cell" data-label="State"><span class="badge badge-draft">As opportunity allows</span><span class="agenda-line-detail"> Decided as opportunity allows: optional.</span></td>
+          <td role="cell" data-label="Evidence">0 items</td>
+          <td role="cell" class="agenda-line-action"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-expanded="false" aria-label="Stage a decision on PAED-014">Stage</button></div></td>
+        </tr>
+        <tr class="agenda-line" role="row">
+          <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-012</span><span class="agenda-epa-title">Communicating with and counselling patients, caregivers and healthcare teams</span></th>
+          <td role="cell" data-label="Window">2026</td>
+          <td role="cell" data-label="State"><span class="badge badge-submitted">Staged</span><span class="agenda-line-detail"> Level 5 · issued 2026-10-05 · no expiry.</span><span class="agenda-line-detail"> Rests on 2 items of the snapshot: Mini-CEX (Paediatrics) #12; Case-Based Discussion (Paediatrics) #13.</span></td>
+          <td role="cell" data-label="Evidence">2 items</td>
+          <td role="cell" class="agenda-line-action"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Remove the staged decision on PAED-012">Remove…</button></div></td>
+        </tr>
+        <tr class="agenda-result-row" role="row">
+          <td colspan="5" role="cell"><div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">Pending entrustment decision staged.</div></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<p class="pv-cap">Decided, read by a member: fixed with the decision; PAED-012 staged; every line left unstaged reads Not decided at this sitting with the decision's one sentence (D53, E1); no Action column</p>
+<section class="detail-card" aria-labelledby="pv-agenda-2">
+  <h2 id="pv-agenda-2" class="review-section-title">Agenda</h2>
+  <p class="muted">Fixed when the committee's decision was recorded: ratifying issues exactly these.</p>
+  <div class="table-container agenda-table-container">
+    <table class="clinic-table agenda-table" role="table">
+      <caption>15 EPAs for 2026 S2</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Window</th>
+          <th scope="col" role="columnheader">State</th>
+          <th scope="col" role="columnheader">Evidence</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr class="agenda-line" role="row">
+          <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-002</span><span class="agenda-epa-title">Managing common paediatric presentations</span></th>
+          <td role="cell" data-label="Window">2026 S2</td>
+          <td role="cell" data-label="State"><span class="badge badge-accepted">Not decided at this sitting</span><span class="agenda-line-detail"> To be decided at the final review.</span></td>
+          <td role="cell" data-label="Evidence">1 item</td>
+        </tr>
+        <tr class="agenda-line" role="row">
+          <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-012</span><span class="agenda-epa-title">Communicating with and counselling patients, caregivers and healthcare teams</span></th>
+          <td role="cell" data-label="Window">2026</td>
+          <td role="cell" data-label="State"><span class="badge badge-submitted">Staged</span><span class="agenda-line-detail"> Level 5 · issued 2026-10-05 · no expiry.</span><span class="agenda-line-detail"> Rests on 2 items of the snapshot: Mini-CEX (Paediatrics) #12; Case-Based Discussion (Paediatrics) #13.</span></td>
+          <td role="cell" data-label="Evidence">2 items</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<p class="pv-cap">Under 760px of its own width (here a 358px column, a phone's): each line a block, its caption a block, each cell naming its column, the open line's stripe on the row's own edge</p>
+<div class="pv-narrow">
+<section class="detail-card" aria-labelledby="pv-agenda-3">
+  <h2 id="pv-agenda-3" class="review-section-title">Agenda</h2>
+  <div class="table-container agenda-table-container">
+    <table class="clinic-table agenda-table" role="table">
+      <caption>15 EPAs for 2026 S2 · 1 staged</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Window</th>
+          <th scope="col" role="columnheader">State</th>
+          <th scope="col" role="columnheader">Evidence</th>
+          <th scope="col" role="columnheader">Action</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr class="agenda-line is-editing" role="row">
+          <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-002</span><span class="agenda-epa-title">Managing common paediatric presentations</span></th>
+          <td role="cell" data-label="Window">2026 S2</td>
+          <td role="cell" data-label="State"><span class="badge badge-draft">Due at this sitting</span></td>
+          <td role="cell" data-label="Evidence">1 item</td>
+          <td role="cell" class="agenda-line-action"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-expanded="true" aria-label="Stage a decision on PAED-002">Stage</button></div></td>
+        </tr>
+        <tr class="is-editing agenda-form-row" role="row">
+          <td colspan="5" role="cell"><p class="pv-form">The staging form, one column.</p></td>
+        </tr>
+        <tr class="agenda-line" role="row">
+          <th scope="row" role="rowheader"><span class="agenda-epa-code">PAED-012</span><span class="agenda-epa-title">Communicating with and counselling patients, caregivers and healthcare teams</span></th>
+          <td role="cell" data-label="Window">2026</td>
+          <td role="cell" data-label="State"><span class="badge badge-submitted">Staged</span><span class="agenda-line-detail"> Level 5 · issued 2026-10-05 · no expiry.</span></td>
+          <td role="cell" data-label="Evidence">2 items</td>
+          <td role="cell" class="agenda-line-action"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Remove the staged decision on PAED-012">Remove…</button></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+</div>
+</body>
+</html>

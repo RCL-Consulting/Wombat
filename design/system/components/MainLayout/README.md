@@ -40,6 +40,8 @@ The static pages a visitor reaches (Access denied, Page not found, the error pag
 - **One Sign out.** The nav has no Sign out and no My account; the account row carries both, at every width.
 - **Landmarks:** one `<header>` (the banner) holding the brand, the navigation and the account row, then `<main>`. No landmark relies on `display: contents`.
 - **In a Windows contrast theme** My account's underline, a box-shadow, is drawn again as a 3px `CanvasText` text underline.
+- **Stacking** (flow 07, T361, T356; DESIGN.md § Stacking): from 641px the sidebar takes `z-index: 10`, so its fixed top bar paints above every positioned element of the page, a scrolled `.table-container`, a chart, the committee review's chair's sitting bar (`z-index: 1`, SittingBar) alike; until then a scrolled table painted over Sign out (T356). Below 641px the phone bar is not fixed and takes none. Dialogs open in the top layer, above both; the error bar keeps its 1000. `Design/StylesheetRuleTests` fails a `z-index` of 10 or more in `app.css`.
+- **Focus is never hidden under the bars** (WCAG 2.4.11): from 641px `html { scroll-padding-top: calc(56px + var(--sitting-bar-h, 0px)); }`, `--sitting-bar-h` (`:root`, 0px) being the chair's stuck sitting bar's height, measured by `js/sticky-offset.js` (SittingBar). Below 641px nothing is reserved.
 - **The page has a side gutter at every width** (T226), and a page's content never scrolls sideways; a wide table scrolls inside its `.table-container`.
 
 ## Contrast

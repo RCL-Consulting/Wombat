@@ -1,0 +1,110 @@
+<!-- @dsCard group="Committee" height=1700 width=974 subtitle="The decision: the chair's form with Present and the live quorum line; Record decision… unavailable short of a quorum and available with its hint; refused before any dialog; the Record dialog; the decision recorded" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DecisionForm</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens the dialog with showModal(); a static preview paints its backdrop itself, as ConfirmDialog's does. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-2xl) 0; box-sizing: border-box; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+</style>
+</head>
+<body>
+<p class="pv-cap">The chair, in progress (Step 4.22): only the chair ticked, so Record decision… is aria-disabled and named by the quorum line, never natively disabled</p>
+<section class="detail-card" id="decision" aria-labelledby="decision-heading">
+  <h2 id="decision-heading" class="review-section-title" tabindex="-1">Decision</h2>
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="decision-category">Category <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <select id="decision-category" class="form-select"><option>Select a category…</option><option>Satisfactory Progress</option></select>
+    </div>
+    <div class="form-group full-width">
+      <label for="decision-rationale">Rationale <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <textarea id="decision-rationale" class="form-control"></textarea>
+    </div>
+    <div class="form-group full-width">
+      <label for="decision-undecided">About the EPAs not decided (optional)</label>
+      <textarea id="decision-undecided" class="form-control" aria-describedby="decision-undecided-help"></textarea>
+      <small class="page-subtitle" id="decision-undecided-help">The registrar sees this once the review is ratified.</small>
+    </div>
+    <div class="form-group full-width">
+      <label for="decision-conditions">Conditions</label>
+      <textarea id="decision-conditions" class="form-control"></textarea>
+    </div>
+    <fieldset class="form-group full-width" aria-describedby="decision-present-help">
+      <legend>Present <span aria-hidden="true">*</span><span class="visually-hidden">required</span></legend>
+      <p id="decision-present-help" class="page-subtitle">Tick every panel member at this sitting. A committee decision needs at least two panel members present: the chair and at least one other.</p>
+      <div class="check-grid">
+        <div class="form-check"><input id="decision-present-0" class="form-check-input" type="checkbox" checked disabled /><label for="decision-present-0">Thandi Zulu (chair)</label></div>
+        <div class="form-check"><input id="decision-present-1" class="form-check-input" type="checkbox" /><label for="decision-present-1">David Naidoo</label></div>
+        <div class="form-check"><input id="decision-present-2" class="form-check-input" type="checkbox" /><label for="decision-present-2">Sarah Botha</label></div>
+        <div class="form-check"><input id="decision-present-3" class="form-check-input" type="checkbox" /><label for="decision-present-3">John van Rensburg (external)</label></div>
+      </div>
+    </fieldset>
+  </div>
+  <div class="decision-actions">
+    <button type="button" id="record-decision" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="quorum-line">Record decision…</button>
+    <div class="decision-actions-text">
+      <p class="quorum-line" id="quorum-line" aria-live="polite">Only the chair is ticked. A committee decision needs at least two panel members present: the chair and at least one other.</p>
+    </div>
+  </div>
+</section>
+
+<p class="pv-cap">Three more ticked: the quorum met, Record available, the hint beside it; pressed with no rationale, refused at the top before any dialog (T324)</p>
+<section class="detail-card" aria-labelledby="pv-d2">
+  <h2 id="pv-d2" class="review-section-title" tabindex="-1">Decision</h2>
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert">Not recorded. Give the committee's rationale.</div></div>
+  <div class="form-grid">
+    <div class="form-group full-width">
+      <label for="pv-rationale">Rationale <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <textarea id="pv-rationale" class="form-control" aria-invalid="true" aria-describedby="pv-rationale-message"></textarea>
+      <div class="validation-message" id="pv-rationale-message">Give the committee's rationale.</div>
+    </div>
+  </div>
+  <div class="decision-actions">
+    <button type="button" class="btn btn-primary" aria-describedby="pv-hint">Record decision…</button>
+    <div class="decision-actions-text">
+      <p class="quorum-line" aria-live="polite">4 present: the chair and 3 others. The quorum is met.</p>
+      <p class="muted" id="pv-hint">Recording fixes the 3 staged decisions, and records the 12 EPAs not staged as not decided.</p>
+    </div>
+  </div>
+</section>
+
+<p class="pv-cap">The Record dialog (E1): what it fixes, what it records as not decided, who was present; opened on Not yet</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-rec-title" aria-describedby="pv-rec-body">
+    <div class="form-container">
+      <h2 id="pv-rec-title">Record Satisfactory Progress for Lerato Molefe?</h2>
+      <div id="pv-rec-body" class="dialog-body">
+        <p>Fixes 3 staged decisions: PAED-001 at 5, PAED-010 at 4 (expires 2026-10-25), PAED-012 at 5.</p>
+        <p>Records 12 EPAs as not decided: PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-008, PAED-009, PAED-011, PAED-013, PAED-014 and PAED-015.</p>
+        <p>Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external).</p>
+        <p>Afterwards only a decision that no longer fits the trainee's curriculum can be removed.</p>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" autofocus>Not yet</button>
+        <button type="button" class="btn btn-primary">Record decision</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">Recorded: the section above the agenda, the decision as recorded, its result taking the focus</p>
+<section class="detail-card" aria-labelledby="pv-d3">
+  <h2 id="pv-d3" class="review-section-title" tabindex="-1">Decision</h2>
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">Decision recorded.</div></div>
+  <div class="stack-list">
+    <article class="decision-record" aria-labelledby="pv-dec-h">
+      <h3 id="pv-dec-h">Satisfactory Progress</h3>
+      <p>Consistent progress across the year; three EPAs entrusted at the year 4 target.</p>
+      <p>About the EPAs not decided: To be decided at the final review.</p>
+      <p>Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)</p>
+    </article>
+  </div>
+</section>
+</body>
+</html>

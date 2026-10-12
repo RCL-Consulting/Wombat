@@ -20,4 +20,6 @@ Flow 05 (T355) added 1: `target` (the Trainee's Your targets card, which replace
 
 Flow 06 (T358) added none, so nothing is to upload. It names icons already in the set in new places: `users` on Home's Registrars card and the menu's Programme trainees, `clock` on Home's Waiting for assessors card and the menu's Waiting for assessors, `award` on the menu's Entrustment decisions (both speciality admins), `clipboard-list` on the Coordinator's Nothing filed in 30 days, `book` on Targets by EPA, `plus` on the Coordinator's header action Start an MSF campaign, `refresh-cw` on the registrar page's sections' Try again, and `search` on Page not found drawn in a page's place. The Coordinator's Home no longer names `alert-triangle`, which no page names now.
 
+Flow 07 (T361) added none, so nothing is to upload. It names icons already in the set in new places: `arrow-left` on the committee review's evidence reader ("Back to PAED-001") and on an activity opened from a review's snapshot ("Back to Lerato Molefe · 2026 S2"), `refresh-cw` on a reader's Refresh in the sitting bar and the review's Try again, and `search` on the review's Page not found. Still 60 icons, 53 named by a page.
+
 Add an icon by copying its Lucide SVG into `wwwroot/icons/` and giving its root `id="i"`. Never use the Bootstrap Icons font, emoji or pictures instead.

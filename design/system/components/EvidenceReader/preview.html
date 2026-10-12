@@ -1,0 +1,59 @@
+<!-- @dsCard group="Committee" height=1100 width=974 subtitle="Read, in place: inside an open agenda line, the activity as it is now in flow 03's cards with no action, the line moved since Start, Back to the form as typed; reading and failed" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EvidenceReader</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-cell { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); box-shadow: inset 4px 0 0 var(--secondary-color); }
+  .pv-cell .activity-status { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Read on Mini-CEX (Paediatrics) #14 in PAED-001's line (Step 4.17): frozen at Start as Awaiting review, completed since; the activity's own sections at h4 under the reader's h3, no action</p>
+<div class="pv-cell">
+<div class="evidence-reader" role="group" aria-labelledby="stage-1-reader-heading">
+  <button type="button" class="btn btn-sm btn-outline evidence-reader-back" id="stage-1-reader-back"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>Back to PAED-001</button>
+  <h3 class="evidence-reader-heading" id="stage-1-reader-heading" tabindex="-1">Mini-CEX (Paediatrics) #14 · PAED-001</h3>
+  <p class="evidence-reader-moved">Now Completed. Frozen at Start as Awaiting review.</p>
+  <section class="detail-card activity-status activity-status--done" aria-labelledby="pv-status">
+    <div class="activity-status-main">
+      <p class="activity-status-label" id="pv-status">Who has it now</p>
+      <p class="activity-status-head"><span class="badge badge-completed">Completed</span><span class="activity-status-headline">Done. David Naidoo completed it on 2026-10-06 08:00 SAST.</span></p>
+      <p class="activity-status-body">Rated 4. Credited 1 item to PAED-001.</p>
+    </div>
+  </section>
+  <section class="detail-card activity-about" aria-labelledby="pv-about">
+    <h4 id="pv-about" class="activity-card-title">About</h4>
+    <dl class="details-list">
+      <div><dt>Registrar</dt><dd>Lerato Molefe</dd></div>
+      <div><dt>Assessor</dt><dd>David Naidoo</dd></div>
+      <div><dt>EPA</dt><dd>PAED-001 — Providing paediatric emergency care to children</dd></div>
+      <div><dt>Encounter</dt><dd>2026-09-28</dd></div>
+    </dl>
+  </section>
+  <p class="muted">Then the form, read-only (ActivityDetail at SectionHeadingLevel 4): each section's h4, its answers, "Filled in by David Naidoo".</p>
+</div>
+</div>
+
+<p class="pv-cap">While the activity is read; and a read that failed (the review untouched)</p>
+<div class="pv-cell">
+<div class="evidence-reader" role="group" aria-labelledby="pv-r2">
+  <button type="button" class="btn btn-sm btn-outline evidence-reader-back"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>Back to PAED-001</button>
+  <h3 class="evidence-reader-heading" id="pv-r2" tabindex="-1">Mini-CEX (Paediatrics) #12 · PAED-001</h3>
+  <p class="muted" role="status">Reading the activity…</p>
+</div>
+</div>
+<p class="pv-cap"></p>
+<div class="pv-cell">
+<div class="evidence-reader" role="group" aria-labelledby="pv-r3">
+  <button type="button" class="btn btn-sm btn-outline evidence-reader-back"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>Back to PAED-001</button>
+  <h3 class="evidence-reader-heading" id="pv-r3" tabindex="-1">Mini-CEX (Paediatrics) #12 · PAED-001</h3>
+  <div class="alert alert-warning">The activity could not be read. Nothing on the review has changed.</div>
+</div>
+</div>
+</body>
+</html>

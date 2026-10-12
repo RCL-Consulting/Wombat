@@ -2142,8 +2142,8 @@ Cancel discards the draft, closes the line, and returns the focus to its Stage.
 
 **Read, in place** (`EvidenceReader`, `.evidence-reader`; C3, round 3 item 8). Read on a line swaps the form for the
 activity as it is now: flow 03's `ActivityStatus` (with no action), `ActivityAbout` and the form read-only
-(`ActivityDetail`), no action and no move, even to its assessor. Its h4 ("Mini-CEX (Paediatrics) #12 · PAED-001") takes
-the focus. Where the state moved since Start, "Now Completed. Frozen at Start as Awaiting review." stands under it: the
+(`ActivityDetail`), no action and no move, even to its assessor. Its h3 ("Mini-CEX (Paediatrics) #12 · PAED-001", the
+staging form's level) takes the focus; the activity's About and form sections sit under it at h4 (review D1). Where the state moved since Start, "Now Completed. Frozen at Start as Awaiting review." stands under it: the
 snapshot keeps the state at Start, and the hints read that. "Back to PAED-001" restores the form as typed and returns the
 focus to the Read that was pressed.
 

@@ -515,8 +515,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-05T16:45:00Z",
-    "via": "Claude Code · Wombat@6be346de",
-    "note": "Re-synced to flow 06 as built (T358, 85d5a508 with 94edf2b7): no token value changed; 10 records added: 8 in a new Programme group (ProgrammeTrainees, ProgrammeTraineeDetail, WaitingForAssessors, RegistrarRoster, RegistrarsCard, AssessorsWaitingCard, EpaTargetCoverageList, ReminderAction), FilterBar (Data) and EndedRecord (Progress); revised DashboardCard (the oversight Homes, BadgeTone, the Coordinator's header action), WaitingList (the staff reading), DataTable (stacked from 900px), NavMenu (the flat limit, the four roles' menus, a page drawn as not found lights nothing), PageHeader, NotFound, Badge, EpaProgressTable, TrajectoryChart, EntrustmentStandingPanel, MyProgress, EpaPage, Icon, the README, tokens' ref, and the bundle; no icon added (60 in all, 53 named by a page)."
+    "at": "2026-10-12T16:00:00Z",
+    "via": "Claude Code · Wombat@be59879b",
+    "note": "Re-synced to flow 07 as built (T361, 44de180b with 59bb72fd, 6ad6c57a, 6b149fff and 14378856): one token added (size: sitting-bar-h, 0px, measured by js/sticky-offset.js), no other value changed; 7 records added in a new Committee group (ReviewSitting, SittingBar, AgendaTable, AgendaLineForm, EvidenceReader, DecisionForm, ReviewReturnLink); revised ConfirmDialog (BodyContent, the review's five dialogs), Badge (Not decided amber, the review's state badge), MainLayout (stacking: the sidebar's z-index 10, focus clearance), TrajectoryChart (HeadContent, h3 under the review's h2), EntrustmentStandingPanel, ActivityAbout and ActivityForm (heading levels), WayOn and Breadcrumbs (the review's way back), StatePanel, Button (is-unavailable), ProgrammeTraineeDetail (the formative label), Icon, the Icons group, the README, tokens' ref and source map, and the bundle (the sidebar's z-index carried into its layout tail); no icon added (60 in all, 53 named by a page)."
   }
 }
